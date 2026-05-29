@@ -516,6 +516,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA0146" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[尝试检查“{0}”是否为正确对齐的 ELF 文件时失败并出现异常，忽略此文件的对齐检查。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0147" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[尝试检查“{0}”是否为有效 ELF 文件时失败并出现异常，忽略此文件的 AOT 检查。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0148" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[尝试检查“{0}”是否为有效 ELF 文件时失败并出现异常，忽略此文件的符号 "{1}@{2}" 检查。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}]]></Val>
@@ -947,6 +974,24 @@
           <Val><![CDATA[In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[在引用的程序集 {0} 中，Java.Interop.DoNotPackageAttribute 需要非 null 的文件名。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA2024" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to load assembly '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[无法加载程序集“{0}”。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA2025" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly {0} does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[程序集 {0} 不存在。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
