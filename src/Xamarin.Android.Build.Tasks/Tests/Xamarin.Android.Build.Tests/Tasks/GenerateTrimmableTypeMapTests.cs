@@ -239,6 +239,49 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
 		}
 
+		[Test]
+		public void Execute_GenerateNativeAotProguardConfiguration_UsesDgmlTypeMetadata ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
+			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (dgmlFile, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+				  <Nodes>
+				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
+				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
+				    <Node Id="3" Label="Type metadata: [My.Assembly]Duplicate.Type" />
+				    <Node Id="4" Label="Unrelated node" />
+				  </Nodes>
+				</DirectedGraph>
+				""");
+			File.WriteAllText (acwMapFile, """
+				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
+				Android.App.Activity, Mono.Android;android.app.Activity
+				Duplicate.Type, My.Assembly;my.app.Duplicate
+				Duplicate.Type;wrong.Duplicate
+				Other.Type;other.Type
+				""");
+
+			var task = new GenerateNativeAotProguardConfiguration {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
+				AcwMapFile = acwMapFile,
+				OutputFile = outputFile,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			var proguard = File.ReadAllText (outputFile);
+			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
+			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
+			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
+			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
+			StringAssert.DoesNotContain ("other.Type", proguard);
+		}
+
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
 			IList<BuildMessageEventArgs>? messages = null, IList<BuildWarningEventArgs>? warnings = null, string tfv = "v11.0")
 		{

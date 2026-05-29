@@ -1759,6 +1759,33 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4318", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No NativeAOT DGML files were provided..
+        /// </summary>
+        public static string XA4319 {
+            get {
+                return ResourceManager.GetString("XA4319", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ACW map file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4320 {
+            get {
+                return ResourceManager.GetString("XA4320", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NativeAOT DGML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4321 {
+            get {
+                return ResourceManager.GetString("XA4321", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..

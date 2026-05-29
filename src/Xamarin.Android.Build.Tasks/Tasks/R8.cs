@@ -35,6 +35,7 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
 		public string []? ProguardConfigurationFiles { get; set; }
+		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
 
 		protected override string MainClass => "com.android.tools.r8.R8";
 
@@ -95,7 +96,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (!AcwMapFile.IsNullOrEmpty ()) {
+				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					File.WriteAllText (ProguardGeneratedApplicationConfiguration, "# ACW keep rules are generated from NativeAOT ILC metadata.\n");
+				} else if (!AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {
@@ -110,7 +113,13 @@ namespace Xamarin.Android.Tasks
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						GetType ().Assembly.GetManifestResourceStream ("proguard_xamarin.cfg").CopyTo (xamcfg.BaseStream);
+						if (UseTrimmableNativeAotProguardConfiguration) {
+							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
+							stream.CopyTo (xamcfg.BaseStream);
+						} else {
+							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
+							stream.CopyTo (xamcfg.BaseStream);
+						}
 						if (IgnoreWarnings) {
 							xamcfg.WriteLine ("-ignorewarnings");
 						}
@@ -157,6 +166,15 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		Stream GetEmbeddedResourceStream (string resourceName)
+		{
+			var stream = GetType ().Assembly.GetManifestResourceStream (resourceName);
+			if (stream == null) {
+				throw new InvalidOperationException ($"Missing embedded resource '{resourceName}'.");
+			}
+			return stream;
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify
