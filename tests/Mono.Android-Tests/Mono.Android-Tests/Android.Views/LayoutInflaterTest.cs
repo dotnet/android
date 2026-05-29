@@ -19,5 +19,8 @@ public class LayoutInflaterTest
 		// Remapped to "net/dot/android/test/MyLayoutInflater"
 		var from = LayoutInflater.From (Application.Context);
 		Assert.IsNotNull (from);
+
+		var fromContext = LayoutInflater.FromContext (Application.Context);
+		Assert.IsNotNull (fromContext);
 	}
 }
