@@ -137,6 +137,13 @@
   <Target Name="_ReadGeneratedTrimmableTypeMapAssemblies"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
       DependsOnTargets="_GenerateTrimmableTypeMap">
+    <MakeDir
+        Directories="$(_TypeMapOutputDirectory)"
+        Condition=" '@(ReferencePath->Count())' == '0' and '$(_OuterIntermediateOutputPath)' == '' and !Exists('$(_TypeMapAssembliesListFile)')" />
+    <Touch
+        Files="$(_TypeMapAssembliesListFile)"
+        AlwaysCreate="true"
+        Condition=" '@(ReferencePath->Count())' == '0' and '$(_OuterIntermediateOutputPath)' == '' and !Exists('$(_TypeMapAssembliesListFile)')" />
     <Error
         Condition=" !Exists('$(_TypeMapAssembliesListFile)') "
         Text="Trimmable typemap assembly list '$(_TypeMapAssembliesListFile)' was not found." />

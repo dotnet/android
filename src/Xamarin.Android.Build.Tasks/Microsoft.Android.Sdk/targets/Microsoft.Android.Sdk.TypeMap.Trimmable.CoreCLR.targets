@@ -87,7 +87,6 @@
       <_PostTrimGeneratedJavaFiles Remove="@(_PostTrimGeneratedJavaFiles)" />
     </ItemGroup>
   </Target>
-
   <!-- Add linked TypeMap DLLs to the normal publish assembly pipeline.  The SDK R2R
        target only compiles ResolvedFileToPublish items with PostprocessAssembly=true. -->
   <Target Name="_AddTrimmableTypeMapToResolvedFileToPublish"
