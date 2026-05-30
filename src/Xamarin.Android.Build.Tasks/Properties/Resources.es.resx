@@ -838,6 +838,20 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
 {1} - The exception message.
 </comment>
   </data>
+  <data name="XA4319" xml:space="preserve">
+    <value>No NativeAOT DGML files were provided.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
+  </data>
+  <data name="XA4320" xml:space="preserve">
+    <value>ACW map file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: ACW
+{0} - The path to the ACW map file.</comment>
+  </data>
+  <data name="XA4321" xml:space="preserve">
+    <value>NativeAOT DGML file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML
+{0} - The path to the NativeAOT DGML file.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Falta el directorio de cadenas de herramientas de Android NDK "{0}". Instale Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
