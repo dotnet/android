@@ -31,6 +31,10 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 
 		// There can be only one, since we run in the inner build
 		ITaskItem? outputFile = GenerateNativeAotLibraryLoadAssemblerSources.FindOutputFile (OutputSources, abi: abi, rid: RID);
+		if (outputFile == null) {
+			Log.LogError ($"Could not find output file for ABI '{abi}' and RID '{RID}'");
+			return false;
+		}
 		Log.LogDebugMessage ($"Environment variables file to generate: {outputFile.ItemSpec}");
 
 		string environmentLlFilePath = outputFile.ItemSpec;
@@ -39,9 +43,9 @@ public class GenerateNativeAotEnvironmentAssemblerSources : AndroidTask
 		using var environmentWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
 		bool fileFullyWritten = false;
 		try {
-			generator.Generate (environmentModule, targetArch, environmentWriter, environmentLlFilePath!);
+			generator.Generate (environmentModule, targetArch, environmentWriter, environmentLlFilePath);
 			environmentWriter.Flush ();
-			Files.CopyIfStreamChanged (environmentWriter.BaseStream, environmentLlFilePath!);
+			Files.CopyIfStreamChanged (environmentWriter.BaseStream, environmentLlFilePath);
 			fileFullyWritten = true;
 		} finally {
 			// Log partial contents for debugging if generation failed
