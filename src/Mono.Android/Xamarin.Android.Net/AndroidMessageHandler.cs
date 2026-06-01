@@ -147,8 +147,6 @@ namespace Xamarin.Android.Net
 				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
 					try {
 						await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
-					} catch (global::System.OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
-						throw;
 					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
 						throw new global::System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
 					}
@@ -173,8 +171,6 @@ namespace Xamarin.Android.Net
 				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
 					try {
 						return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
-					} catch (global::System.OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
-						throw;
 					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
 						throw new global::System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
 					}
@@ -198,10 +194,11 @@ namespace Xamarin.Android.Net
 
 			void QueueAbortRead ()
 			{
-				Task.Run (AbortRead).ContinueWith (t => {
-					if (t.Exception != null)
-						Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {t.Exception}");
-				}, TaskScheduler.Default);
+				Task.Run (AbortRead).ContinueWith (
+					LogAbortReadException,
+					CancellationToken.None,
+					TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+					TaskScheduler.Default);
 			}
 
 			void AbortRead ()
@@ -228,6 +225,11 @@ namespace Xamarin.Android.Net
 					ex is ObjectDisposedException ||
 					ex is WebException
 				);
+			}
+
+			static void LogAbortReadException (Task task)
+			{
+				Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {task.Exception}");
 			}
 		}
 

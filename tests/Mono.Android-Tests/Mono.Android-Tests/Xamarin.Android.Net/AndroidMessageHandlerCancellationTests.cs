@@ -55,7 +55,7 @@ namespace Xamarin.Android.NetTests
 
 			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
 			cts.Cancel ();
-			await AssertCanceledPromptly (readTask, server.ReleaseBody).ConfigureAwait (false);
+			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
 		[Test]
@@ -72,7 +72,7 @@ namespace Xamarin.Android.NetTests
 
 			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
 			readCts.Cancel ();
-			await AssertCanceledPromptly (readContentTask, server.ReleaseBody).ConfigureAwait (false);
+			await AssertCanceledPromptly (readContentTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
 		static int GetAvailablePort ()
@@ -82,17 +82,6 @@ namespace Xamarin.Android.NetTests
 			int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
 			tcpListener.Stop ();
 			return port;
-		}
-
-		static async Task WriteRemainingResponseBody (HttpListenerResponse response)
-		{
-			var buffer = new byte [4096];
-			int remainingBytes = StalledResponseContentLength - InitialResponseChunk.Length;
-			while (remainingBytes > 0) {
-				int bytesToWrite = Math.Min (remainingBytes, buffer.Length);
-				await response.OutputStream.WriteAsync (buffer, 0, bytesToWrite).ConfigureAwait (false);
-				remainingBytes -= bytesToWrite;
-			}
 		}
 
 		static async Task WaitForBodyReadToBlock (Task bodyStarted)
@@ -105,11 +94,11 @@ namespace Xamarin.Android.NetTests
 			await Task.Delay (BodyReadBlockDelayMilliseconds).ConfigureAwait (false);
 		}
 
-		static async Task AssertCanceledPromptly (Task readTask, TaskCompletionSource<bool> releaseBody)
+		static async Task AssertCanceledPromptly (Task readTask, Action releaseBody)
 		{
 			var completed = await Task.WhenAny (readTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
 			if (completed != readTask) {
-				releaseBody.TrySetResult (true);
+				releaseBody ();
 				await ObserveReadTaskAfterRelease (readTask).ConfigureAwait (false);
 				Assert.Fail ($"Response body read did not observe cancellation within {PromptCancellationTimeoutMilliseconds}ms.");
 			}
@@ -118,6 +107,7 @@ namespace Xamarin.Android.NetTests
 				await readTask.ConfigureAwait (false);
 				Assert.Fail ("Response body read completed successfully after cancellation.");
 			} catch (OperationCanceledException) {
+				return;
 			}
 		}
 
@@ -134,19 +124,11 @@ namespace Xamarin.Android.NetTests
 			}
 		}
 
-		static async Task ObserveServerTask (Task serverTask)
-		{
-			var completed = await Task.WhenAny (serverTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
-			if (completed != serverTask)
-				return;
-
-			await serverTask.ConfigureAwait (false);
-		}
-
 		sealed class StalledResponseServer
 		{
 			readonly HttpListener listener;
 			readonly TaskCompletionSource<bool> bodyStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly TaskCompletionSource<bool> releaseBody = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			readonly Task serverTask;
 
 			public StalledResponseServer ()
@@ -163,13 +145,16 @@ namespace Xamarin.Android.NetTests
 
 			public Task BodyStartedTask => bodyStarted.Task;
 
-			public TaskCompletionSource<bool> ReleaseBody { get; } = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-
 			public async Task StopAsync ()
 			{
-				ReleaseBody.TrySetResult (true);
+				ReleaseResponseBody ();
 				listener.Close ();
-				await ObserveServerTask (serverTask).ConfigureAwait (false);
+				await ObserveServerTask ().ConfigureAwait (false);
+			}
+
+			public void ReleaseResponseBody ()
+			{
+				releaseBody.TrySetResult (true);
 			}
 
 			async Task ServeStalledResponseBody ()
@@ -183,7 +168,7 @@ namespace Xamarin.Android.NetTests
 					await response.OutputStream.FlushAsync ().ConfigureAwait (false);
 					bodyStarted.TrySetResult (true);
 
-					await ReleaseBody.Task.ConfigureAwait (false);
+					await releaseBody.Task.ConfigureAwait (false);
 					await WriteRemainingResponseBody (response).ConfigureAwait (false);
 				} catch (Exception ex) {
 					if (!BodyStartedTask.IsCompleted) {
@@ -192,6 +177,26 @@ namespace Xamarin.Android.NetTests
 					}
 					Console.WriteLine ($"Exception while serving stalled response body: {ex}");
 				}
+			}
+
+			async Task WriteRemainingResponseBody (HttpListenerResponse response)
+			{
+				var buffer = new byte [4096];
+				int remainingBytes = StalledResponseContentLength - InitialResponseChunk.Length;
+				while (remainingBytes > 0) {
+					int bytesToWrite = Math.Min (remainingBytes, buffer.Length);
+					await response.OutputStream.WriteAsync (buffer, 0, bytesToWrite).ConfigureAwait (false);
+					remainingBytes -= bytesToWrite;
+				}
+			}
+
+			async Task ObserveServerTask ()
+			{
+				var completed = await Task.WhenAny (serverTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
+				if (completed != serverTask)
+					return;
+
+				await serverTask.ConfigureAwait (false);
 			}
 		}
 	}
