@@ -24,6 +24,7 @@
 *.xml	text
 *.md	text
 Makefile	eol=lf
+*.sh	eol=lf
 *.targets	eol=crlf
 *.proj	eol=crlf
 *.vcproj	eol=crlf

@@ -99,6 +99,8 @@ static class ModelBuilder
 			}
 		}
 
+		BuildNativeRegistrations (model);
+
 		// Compute IgnoresAccessChecksTo from cross-assembly references
 		var referencedAssemblies = new SortedSet<string> (StringComparer.Ordinal);
 		foreach (var proxy in model.ProxyTypes) {
@@ -314,7 +316,6 @@ static class ModelBuilder
 		if (isAcw) {
 			BuildUcoMethods (peer, proxy);
 			BuildUcoConstructors (peer, proxy);
-			BuildNativeRegistrations (proxy);
 		}
 
 		return proxy;
@@ -337,7 +338,7 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
-				ExportMethodDispatch = mm.IsExport ? new ExportMethodDispatchData {
+				ExportMethodDispatch = (mm.IsExport || mm.CallManagedMethodDirectly) ? new ExportMethodDispatchData {
 					ManagedMethodName = mm.ManagedMethodName,
 					ParameterTypes = mm.ManagedParameterTypes,
 					ParameterKinds = mm.ManagedParameterExportKinds,
@@ -353,6 +354,13 @@ static class ModelBuilder
 	static void BuildUcoConstructors (JavaPeerInfo peer, JavaPeerProxyData proxy)
 	{
 		if (peer.ActivationCtor == null || peer.JavaConstructors.Count == 0) {
+			return;
+		}
+
+		// Abstract types are never directly instantiated from Java — the ACW
+		// constructor's getClass() guard prevents activation. Skip generating
+		// UCO constructor wrappers for them.
+		if (peer.IsAbstract) {
 			return;
 		}
 
@@ -374,30 +382,99 @@ static class ModelBuilder
 		}
 	}
 
-	static void BuildNativeRegistrations (JavaPeerProxyData proxy)
+	static void BuildNativeRegistrations (TypeMapAssemblyData model)
 	{
-		foreach (var uco in proxy.UcoMethods) {
-			proxy.NativeRegistrations.Add (new NativeRegistrationData {
-				JniMethodName = uco.CallbackMethodName,
-				JniSignature = uco.JniSignature,
-				WrapperMethodName = uco.WrapperName,
-			});
+		var sharedWrapperTargets = new Dictionary<UcoWrapperReuseKey, UcoWrapperTargetData> ();
+		foreach (var proxy in model.ProxyTypes) {
+			foreach (var uco in proxy.UcoMethods) {
+				if (!CanShareUcoWrapper (proxy, uco)) {
+					continue;
+				}
+
+				var reuseKey = CreateUcoWrapperReuseKey (uco);
+				if (!sharedWrapperTargets.ContainsKey (reuseKey)) {
+					sharedWrapperTargets.Add (reuseKey, UcoWrapperTargetData.From (proxy, uco.WrapperName));
+				}
+			}
 		}
 
-		foreach (var uco in proxy.UcoConstructors) {
-			string jniName = uco.WrapperName;
-			int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
-			if (ucoSuffix >= 0) {
-				jniName = jniName.Substring (0, ucoSuffix);
+		foreach (var proxy in model.ProxyTypes) {
+			var reusedUcoMethods = new HashSet<UcoMethodData> ();
+
+			foreach (var uco in proxy.UcoMethods) {
+				var wrapperTarget = UcoWrapperTargetData.From (proxy, uco.WrapperName);
+				if (CanReuseUcoWrapper (proxy, uco) &&
+				    sharedWrapperTargets.TryGetValue (CreateUcoWrapperReuseKey (uco), out var sharedWrapperTarget)) {
+					wrapperTarget = sharedWrapperTarget;
+					reusedUcoMethods.Add (uco);
+				}
+				proxy.NativeRegistrations.Add (new NativeRegistrationData {
+					JniMethodName = uco.CallbackMethodName,
+					JniSignature = uco.JniSignature,
+					WrapperMethodName = wrapperTarget.MethodName,
+					WrapperTarget = wrapperTarget,
+				});
 			}
 
-			proxy.NativeRegistrations.Add (new NativeRegistrationData {
-				JniMethodName = jniName,
-				JniSignature = uco.JniSignature,
-				WrapperMethodName = uco.WrapperName,
-			});
+			if (reusedUcoMethods.Count > 0) {
+				proxy.UcoMethods.RemoveAll (uco => reusedUcoMethods.Contains (uco));
+			}
+
+			foreach (var uco in proxy.UcoConstructors) {
+				string jniName = uco.WrapperName;
+				int ucoSuffix = jniName.LastIndexOf ("_uco", StringComparison.Ordinal);
+				if (ucoSuffix >= 0) {
+					jniName = jniName.Substring (0, ucoSuffix);
+				}
+
+				var wrapperTarget = UcoWrapperTargetData.From (proxy, uco.WrapperName);
+				proxy.NativeRegistrations.Add (new NativeRegistrationData {
+					JniMethodName = jniName,
+					JniSignature = uco.JniSignature,
+					WrapperMethodName = wrapperTarget.MethodName,
+					WrapperTarget = wrapperTarget,
+				});
+			}
 		}
 	}
+
+	static bool CanShareUcoWrapper (JavaPeerProxyData proxy, UcoMethodData uco)
+	{
+		return IsUcoWrapperReuseCandidate (proxy, uco) && IsCallbackOwnedByProxy (proxy, uco);
+	}
+
+	static bool CanReuseUcoWrapper (JavaPeerProxyData proxy, UcoMethodData uco)
+	{
+		return IsUcoWrapperReuseCandidate (proxy, uco) && !IsCallbackOwnedByProxy (proxy, uco);
+	}
+
+	static bool IsUcoWrapperReuseCandidate (JavaPeerProxyData proxy, UcoMethodData uco)
+	{
+		return !uco.UsesExportMethodDispatch &&
+			!proxy.IsGenericDefinition &&
+			!uco.CallbackType.ManagedTypeName.Contains ('`');
+	}
+
+	static bool IsCallbackOwnedByProxy (JavaPeerProxyData proxy, UcoMethodData uco)
+	{
+		return string.Equals (uco.CallbackType.ManagedTypeName, proxy.TargetType.ManagedTypeName, StringComparison.Ordinal) &&
+			string.Equals (uco.CallbackType.AssemblyName, proxy.TargetType.AssemblyName, StringComparison.Ordinal);
+	}
+
+	static UcoWrapperReuseKey CreateUcoWrapperReuseKey (UcoMethodData uco)
+	{
+		return new UcoWrapperReuseKey (
+			uco.CallbackType.ManagedTypeName,
+			uco.CallbackType.AssemblyName,
+			uco.CallbackMethodName,
+			uco.JniSignature);
+	}
+
+	readonly record struct UcoWrapperReuseKey (
+		string CallbackTypeName,
+		string CallbackAssemblyName,
+		string CallbackMethodName,
+		string JniSignature);
 
 	static TypeMapAttributeData BuildEntry (JavaPeerInfo peer, JavaPeerProxyData? proxy,
 		string outputAssemblyName, string jniName)

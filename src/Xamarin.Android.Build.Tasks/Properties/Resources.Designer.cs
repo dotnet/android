@@ -585,6 +585,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a correctly aligned ELF file failed with exception, ignoring alignment check for the file..
+        /// </summary>
+        public static string XA0146 {
+            get {
+                return ResourceManager.GetString("XA0146", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a valid ELF file failed with exception, ignoring AOT check for the file..
+        /// </summary>
+        public static string XA0147 {
+            get {
+                return ResourceManager.GetString("XA0147", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a valid ELF file failed with exception, ignoring symbol &apos;{1}@{2}&apos; check for the file..
+        /// </summary>
+        public static string XA0148 {
+            get {
+                return ResourceManager.GetString("XA0148", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
@@ -996,6 +1023,24 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2002_NuGet {
             get {
                 return ResourceManager.GetString("XA2002_NuGet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load assembly &apos;{0}&apos;..
+        /// </summary>
+        public static string XA2024 {
+            get {
+                return ResourceManager.GetString("XA2024", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly {0} does not exist..
+        /// </summary>
+        public static string XA2025 {
+            get {
+                return ResourceManager.GetString("XA2025", resourceCulture);
             }
         }
         
@@ -1685,6 +1730,60 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4315 {
             get {
                 return ResourceManager.GetString("XA4315", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified input file &apos;{0}&apos; does not exist. Ignoring..
+        /// </summary>
+        public static string XA4316 {
+            get {
+                return ResourceManager.GetString("XA4316", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; does not start with &apos;&lt;replacements/&gt;&apos;. Skipping..
+        /// </summary>
+        public static string XA4317 {
+            get {
+                return ResourceManager.GetString("XA4317", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; could not be read: {1}. Skipping..
+        /// </summary>
+        public static string XA4318 {
+            get {
+                return ResourceManager.GetString("XA4318", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No NativeAOT DGML files were provided..
+        /// </summary>
+        public static string XA4319 {
+            get {
+                return ResourceManager.GetString("XA4319", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ACW map file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4320 {
+            get {
+                return ResourceManager.GetString("XA4320", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NativeAOT DGML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4321 {
+            get {
+                return ResourceManager.GetString("XA4321", resourceCulture);
             }
         }
         
