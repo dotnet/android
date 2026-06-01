@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 			string linkSkip = "FormsViewGroup";
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
 			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			app.SetAndroidSupportedAbis (supportedAbis);
+			app.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
@@ -105,7 +105,7 @@ namespace Xamarin.Android.Build.Tests
 			// Mono-only test
 			proj.SetRuntime (AndroidRuntime.MonoVM);
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
@@ -140,7 +140,7 @@ namespace Xamarin.Android.Build.Tests
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
 			// MonoVM-only test
 			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 
 			using (var b = CreateApkBuilder ()) {
 				proj.SetProperty ("AndroidEnableSGenConcurrent", "False");
@@ -158,83 +158,6 @@ namespace Xamarin.Android.Build.Tests
 				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
 				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
 				Assert.AreEqual (expectedUpdatedValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedUpdatedValue}' when concurrent GC is enabled.");
-			}
-		}
-
-		[Test]
-		public void CheckForInvalidHttpClientHandlerType ([Values] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				proj.SetProperty ("AndroidHttpClientHandlerType", "Android.App.Application");
-				Assert.IsFalse (b.Build (proj), "Build should not have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "XA1031"), "Output should contain XA1031");
-			}
-		}
-
-		[Test]
-		public void CheckHttpClientHandlerType ([Values] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			var httpClientHandlerVarName = "XA_HTTP_CLIENT_HANDLER_TYPE";
-			var expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
-			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
-
-			string supportedAbis = runtime switch {
-				AndroidRuntime.MonoVM  => "armeabi-v7a;arm64-v8a",
-				AndroidRuntime.CoreCLR => "arm64-v8a;x86_64",
-				AndroidRuntime.NativeAOT => "arm64-v8a;x86_64",
-				_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-			};
-			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (supportedAbis);
-			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "var _ = new System.Net.Http.HttpClient ();");
-
-			using (var b = CreateApkBuilder ()) {
-				proj.SetProperty ("AndroidHttpClientHandlerType", expectedDefaultValue);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-
-				List<EnvironmentHelper.EnvironmentFile>? envFiles = null;
-				Dictionary<string, string> envvars;
-
-				if (runtime == AndroidRuntime.NativeAOT) {
-					envvars = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediateOutputDir);
-				} else {
-					envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
-					envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
-				}
-
-				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
-				Assert.AreEqual (expectedDefaultValue, envvars[httpClientHandlerVarName]);
-
-				proj.SetProperty ("AndroidHttpClientHandlerType", expectedUpdatedValue);
-				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
-
-				if (runtime == AndroidRuntime.NativeAOT) {
-					envvars = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediateOutputDir);
-				} else {
-					envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, runtime);
-					envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, runtime);
-				}
-
-				Assert.IsTrue (envvars.ContainsKey (httpClientHandlerVarName), $"Environment should contain '{httpClientHandlerVarName}'.");
-				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);
 			}
 		}
 	}

@@ -2,19 +2,70 @@
      Adds generated typemap assemblies to ILC inputs. -->
 <Project>
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+    <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
+    <AndroidDexTool Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
+    <AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
+    <AndroidCreateProguardMappingFile Condition=" '$(AndroidCreateProguardMappingFile)' == '' and '$(AndroidLinkTool)' == 'r8' ">True</AndroidCreateProguardMappingFile>
+    <IlcGenerateDgmlFile Condition=" '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
+    <_UseTrimmableNativeAotProguardConfiguration Condition=" '$(_UseTrimmableNativeAotProguardConfiguration)' == '' ">true</_UseTrimmableNativeAotProguardConfiguration>
+    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateTrimmableTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
 
-  <!-- After typemap generation, add generated assemblies to ILC inputs.
+  <!-- Before ILC input computation, add generated assemblies to ILC inputs.
        NOT as TrimmerRootAssembly — ILC must process TypeMapAttributes and trim entries
        whose trimTarget types were removed. -->
   <Target Name="_AddTrimmableTypeMapAssembliesToIlc"
-      AfterTargets="_GenerateJavaStubs"
-      Condition=" '@(_GeneratedTypeMapAssemblies->Count())' != '0' ">
+      BeforeTargets="_AndroidComputeIlcCompileInputs"
+      DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
-      <IlcReference Include="@(_GeneratedTypeMapAssemblies)" />
-      <UnmanagedEntryPointsAssembly Include="@(_GeneratedTypeMapAssemblies)" />
+      <_TrimmableTypeMapIlcAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)" />
+      <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(ResolvedFrameworkAssemblies->'_%(Filename).TypeMap')" />
+      <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(PrivateSdkAssemblies->'_%(Filename).TypeMap')" />
+      <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(ReferencePath->'_%(Filename).TypeMap')"
+          Condition=" '%(ReferencePath.FrameworkAssembly)' == 'true' " />
+      <!-- The root assembly (_Microsoft.Android.TypeMaps) only contains TypeMapLoader.Initialize()
+            and assembly-level attributes — no types that need vtable generation.
+            Framework per-assembly typemap DLLs must remain IlcReference inputs so ILC can read
+            their conditional TypeMap attributes, but they must not be unmanaged-entrypoint roots. -->
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblyNames Include="@(_TrimmableTypeMapIlcAssemblies->'%(Filename)')" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblyNames Remove="$(_TypeMapAssemblyName)" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblyNames Remove="_Java.Interop.TypeMap;_Mono.Android.TypeMap" />
+      <_TrimmableTypeMapUnmanagedEntryPointAssemblyNames Remove="@(_TrimmableTypeMapFrameworkIlcAssemblyNames)" />
+      <IlcReference Include="@(_TrimmableTypeMapIlcAssemblies)" />
+      <IlcArg Include="--typemap-entry-assembly:$(_TypeMapAssemblyName)" />
+      <UnmanagedEntryPointsAssembly Include="@(_TrimmableTypeMapUnmanagedEntryPointAssemblyNames)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CollectTrimmableNativeAotDgmlFiles"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+    <ItemGroup>
+      <_TrimmableNativeAotRuntimeIdentifiers Remove="@(_TrimmableNativeAotRuntimeIdentifiers)" />
+      <_TrimmableNativeAotDgmlFiles Remove="@(_TrimmableNativeAotDgmlFiles)" />
+      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifier)" Condition=" '$(RuntimeIdentifier)' != '' " />
+      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' != '' " />
+      <!-- RuntimeIdentifier, RuntimeIdentifiers, and no-RID publishes place ILC DGML under different intermediate paths. -->
+      <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' == '' " />
+      <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' != '' " />
+      <_TrimmableNativeAotDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' == '' and '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' " />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
+      DependsOnTargets="_CollectTrimmableNativeAotDgmlFiles"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
+      Outputs="$(_ProguardProjectConfiguration)">
+    <GenerateNativeAotProguardConfiguration
+        NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
+        AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
+        OutputFile="$(_ProguardProjectConfiguration)" />
+    <ItemGroup>
+      <FileWrites Include="$(_ProguardProjectConfiguration)" />
     </ItemGroup>
   </Target>
 

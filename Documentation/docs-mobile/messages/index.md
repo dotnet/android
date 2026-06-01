@@ -107,6 +107,9 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0140](xa0140.md):
 + [XA0141](xa0141.md): NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details
 + [XA0142](xa0142.md): Command '{0}' failed.\n{1}
++ [XA0146](xa0146.md): Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.
++ [XA0147](xa0147.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.
++ [XA0148](xa0148.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.
 
 ## XA1xxx: Project related
 
@@ -139,9 +142,6 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1027](xa1027.md): The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1028](xa1028.md): The 'AndroidEnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.
 + [XA1029](xa1029.md): The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.
-+ [XA1031](xa1031.md): The 'AndroidHttpClientHandlerType' has an invalid value.
-+ [XA1032](xa1032.md):Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.
-+ [XA1033](xa1033.md): Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.
 + [XA1035](xa1035.md): The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.
 + [XA1036](xa1036.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '29' does not match the $(SupportedOSPlatformVersion) value '21' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
 Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).
@@ -150,12 +150,18 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + [XA1040](xa1040.md): The NativeAOT runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
 + [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
++ [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
++ [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
++ [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
++ [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
 
 ## XA2xxx: Linker
 
 + [XA2000](xa2000.md): Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 6 will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.
 + [XA2001](xa2001.md): Source file '{filename}' could not be found.
 + [XA2002](xa2002.md): Can not resolve reference: \`{missing}\`, referenced by {assembly}. Perhaps it doesn't exist in the .NET for Android profile?
++ [XA2024](xa2024.md): Unable to load assembly '{assembly}'.
++ [XA2025](xa2025.md): Assembly {assembly} does not exist.
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
 + XA2007: Exception while loading assemblies: {exception}
 + XA2008: In referenced assembly {assembly}, Java.Interop.DoNotPackageAttribute requires non-null file name.
@@ -168,6 +174,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA3005: The detected Android NDK version is incompatible with the targeted LLVM configuration.
 + XA3006: Could not compile native assembly file: {file}
 + XA3007: Could not link native shared library: {library}
++ XA3008: Failed to extract debug info from '{library}'
 
 ## XA4xxx: Code generation
 
@@ -179,6 +186,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4215](xa4215.md): The Java type \`com.contoso.library1.Class1\` is generated by more than one managed type. Please change the \[Register\] attribute so that the same Java type is not emitted.
 + [XA4216](xa4216.md): The deployment target '19' is not supported (the minimum is '21'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.
 + XA4217: Cannot override Kotlin-generated method '{method}' because it is not a valid Java method name. This method can only be overridden from Kotlin.
++ [XA4217](xa4217.md): Architecture '{arch}' has Java types which have no counterparts in template architecture '{templateArch}': {types}
 + [XA4218](xa4218.md): Unable to find //manifest/application/uses-library at path: {path}
 + XA4219: Cannot find binding generator for language {language} or {defaultLanguage}.
 + XA4220: Partial class item '{file}' does not have an associated binding for layout '{layout}'.
@@ -188,6 +196,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA4224: Malformed full class name '{name}'. Missing class name.
 + XA4225: Widget '{widget}' in layout '{layout}' has multiple instances with different types. The property type will be set to: {type}
 + XA4226: Resource item '{file}' does not have the required metadata item '{metadataName}'.
++ [XA4227](xa4227.md): Architecture '{arch}' doesn't match all marshal methods in architecture '{templateArch}'. Please see detailed MSBuild logs for more information.
 + XA4228: Unable to find specified //activity-alias/@android:targetActivity: '{targetActivity}'
 + XA4229: Unrecognized \`TransformFile\` root element: {element}.
 + XA4230: Error parsing XML: {exception}
@@ -208,6 +217,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4248](xa4248.md): Could not find NuGet package '{nugetId}' version '{version}' in lock file. Ensure NuGet Restore has run since this `<PackageReference>` was added.
 + [XA4235](xa4249.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id:version'.
 + [XA4250](xa4250.md): Manifest-referenced type '{type}' was not found in any scanned assembly. It may be a framework type.
++ [XA4252](xa4252.md): Insecure HTTP Maven repository URL '{url}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.
++ [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -224,6 +235,12 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4313](xa4313.md): Framework assembly has been deprecated.
 + [XA4314](xa4314.md): `$(Property)` is empty. A value for `$(Property)` should be provided.
 + [XA4315](xa4315.md): Ignoring {file}. Manifest does not have the required 'package' attribute on the manifest element.
++ [XA4316](xa4316.md): Specified input file '{file}' does not exist. Ignoring.
++ [XA4317](xa4317.md): Input file '{file}' does not start with `<replacements/>`. Skipping.
++ [XA4318](xa4318.md): Input file '{file}' could not be read: {message}. Skipping.
++ [XA4319](xa4319.md): No NativeAOT DGML files were provided.
++ [XA4320](xa4320.md): ACW map file '{file}' was not found.
++ [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
 
 ## XA5xxx: GCC and toolchain
 
@@ -240,6 +257,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5300](xa5300.md): The Android/Java SDK Directory could not be found.
 + [XA5301](xa5301.md): Failed to generate Java type for class: {managedType} due to MAX_PATH: {exception}
 + [XA5302](xa5302.md): Two processes may be building this project at once. Lock file exists at path: {path}
++ [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
 
 ## XA6xxx: Internal tools
 

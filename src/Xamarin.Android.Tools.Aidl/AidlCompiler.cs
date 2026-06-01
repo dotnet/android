@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,10 +22,10 @@ namespace Xamarin.Android.Tools.Aidl
 		}
 	
 		Dictionary<string,CompilationUnit> units = new Dictionary<string,CompilationUnit> ();
-		string output_path;
-		string output_ns;
+		string? output_path;
+		string? output_ns;
 		
-		public event Action<string,string> FileWritten;
+		public event Action<string,string>? FileWritten;
 		
 		public Result Run (ConverterOptions opts, Func<string,AssemblyDefinition> resolveAssembly)
 		{
@@ -72,14 +73,14 @@ namespace Xamarin.Android.Tools.Aidl
 					csharp = csharp.Replace (pair.Value.Package.ToString (), output_ns);
 				using (var fw = File.CreateText (file))
 					fw.Write (csharp);
-				FileWritten (file, csharp);
+				FileWritten?.Invoke (file, csharp);
 			}
 
 			return result;
 		}
 
 		// This overload is primarily for unit tests.
-		public Result Run (string input, out string output, AssemblyDefinition[] references = null, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
+		public Result Run (string input, out string? output, AssemblyDefinition[]? references = null, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
 		{
 			var result = new Result ();
 			var database = new BindingDatabase (references ?? Array.Empty<AssemblyDefinition> ());

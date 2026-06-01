@@ -44,7 +44,7 @@ stages:
       name: $(SharedMacPool)
       demands:
       - macOS.Name -equals $(SharedMacName)
-      - Agent.OSArchitecture -equals $(SharedMacArch)
+      - macOS.Architecture -equals $(SharedMacArch)
     timeoutInMinutes: 420
     workspace:
       clean: all
@@ -138,7 +138,7 @@ stages:
         avdApiLevel: $(avdApiLevel)
         avdAbi: $(avdAbi)
         avdType: $(avdType)
-        emulatorMSBuildArgs: -p:JavaSdkDirectory=$(JI_JAVA_HOME_DEFAULT)
+        emulatorMSBuildArgs: -p:JavaSdkDirectory=$(JAVA_HOME)
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:

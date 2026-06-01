@@ -148,6 +148,14 @@ namespace Xamarin.Android.Build.Tests
 			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+
+			var compressedAssembliesSource = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android", $"compressed_assemblies.{abi}.ll");
+			FileAssert.Exists (compressedAssembliesSource);
+			var compressedAssembliesSourceText = File.ReadAllText (compressedAssembliesSource);
+			StringAssert.Contains ("@compressed_assembly_count = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@compressed_assembly_descriptors = dso_local local_unnamed_addr global [0 x %struct.CompressedAssemblyDescriptor] zeroinitializer, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@uncompressed_assemblies_data_size = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
 		[Test]
@@ -335,7 +343,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
 			proj.AotAssemblies = false; // Release defaults to Profiled AOT for .NET 6
-			proj.SetAndroidSupportedAbis ("arm64-v8a");
+			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
@@ -374,7 +382,6 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (
 					isRelease: false,
-					xamarinForms: false,
 					multidex: false,
 					packageFormat: "apk",
 					runtime
@@ -382,15 +389,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: false,
-					xamarinForms: true,
-					multidex: false,
-					packageFormat: "apk",
-					runtime
-				);
-
-				AddTestData (
-					isRelease: false,
-					xamarinForms: true,
 					multidex: true,
 					packageFormat: "apk",
 					runtime
@@ -398,15 +396,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: true,
-					xamarinForms: false,
-					multidex: false,
-					packageFormat: "apk",
-					runtime
-				);
-
-				AddTestData (
-					isRelease: true,
-					xamarinForms: true,
 					multidex: false,
 					packageFormat: "apk",
 					runtime
@@ -414,7 +403,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: false,
-					xamarinForms: false,
 					multidex: false,
 					packageFormat: "aab",
 					runtime
@@ -422,7 +410,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: true,
-					xamarinForms: false,
 					multidex: false,
 					packageFormat: "aab",
 					runtime
@@ -431,11 +418,10 @@ namespace Xamarin.Android.Build.Tests
 
 			return ret;
 
-			void AddTestData (bool isRelease, bool xamarinForms, bool multidex, string packageFormat, AndroidRuntime runtime)
+			void AddTestData (bool isRelease, bool multidex, string packageFormat, AndroidRuntime runtime)
 			{
 				ret.Add (new object[] {
 					isRelease,
-					xamarinForms,
 					multidex,
 					packageFormat,
 					runtime
@@ -445,19 +431,17 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (Get_BuildHasNoWarningsData))]
-		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat, AndroidRuntime runtime)
+		public void BuildHasNoWarnings (bool isRelease, bool multidex, string packageFormat, AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			var proj = xamarinForms ?
-				new XamarinFormsAndroidApplicationProject () :
-				new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
 			proj.SetRuntime (runtime);
 			// Enable full trimming
-			if (!xamarinForms && isRelease) {
+			if (isRelease) {
 				proj.TrimModeRelease = TrimMode.Full;
 			}
 			if (multidex) {
@@ -478,20 +462,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					int numberOfExpectedWarnings;
-					bool validateWarnings;
-					if (xamarinForms && !multidex && packageFormat == "apk") {
-						// NativeAOT goes nuts here (Nov 2025) with 120 different ILC warnings, too many to verify them here in a way that makes sense
-						numberOfExpectedWarnings = 120;
-						validateWarnings = false;
-					} else {
-						// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
-						// bits of code. Even though this test expects no warnings and the above likely make the app not work
-						// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
-						// of other warnings.
-						numberOfExpectedWarnings = 6;
-						validateWarnings = true;
-					}
+					// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
+					// bits of code. Even though this test expects no warnings and the above likely make the app not work
+					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
+					// of other warnings.
+					int numberOfExpectedWarnings = 6;
 
 					Assert.IsTrue (
 						StringAssertEx.ContainsText (
@@ -501,12 +476,9 @@ namespace Xamarin.Android.Build.Tests
 						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
 					);
 
-					if (validateWarnings) {
-						const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
-						var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-						Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
-					}
-
+					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
+					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
+					Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
 				} else {
 					b.AssertHasNoWarnings ();
 				}
@@ -890,16 +862,14 @@ class MemTest {
 		[Test]
 		[Category ("XamarinBuildDownload")]
 		[NonParallelizable] // parallel NuGet restore causes failures
-		public void BuildXamarinFormsMapsApplication ([Values] bool multidex, [Values] AndroidRuntime runtime)
+		public void BuildXamarinFormsMapsApplication ([Values] bool multidex, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
-			var proj = new XamarinFormsMapsApplicationProject {
-				IsRelease = isRelease,
-			};
+			var proj = new XamarinFormsMapsApplicationProject ();
 			proj.SetRuntime (runtime);
 
 			if (multidex)
@@ -1197,17 +1167,19 @@ namespace UnamedProject
 				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after the second `Build`.");
 
 				//NOTE: none of these targets should run, since we have not actually changed anything!
-				var targetsToBeSkipped = new [] {
-					//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
-					//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
-					//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
-					//"_LinkAssembliesNoShrink",
-					"_UpdateAndroidResgen",
-					"_BuildLibraryImportsCache",
-					"_CompileJava",
-				};
-				foreach (var targetName in targetsToBeSkipped) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					var targetsToBeSkipped = new [] {
+						//TODO: We would like for this assertion to work, but the <Compile /> item group changes between DTB and regular builds
+						//      $(IntermediateOutputPath)designtime\Resource.designer.cs -> Resources\Resource.designer.cs
+						//      And so the built assembly changes between DTB and regular build, triggering `_LinkAssembliesNoShrink`
+						//"_LinkAssembliesNoShrink",
+						"_UpdateAndroidResgen",
+						"_BuildLibraryImportsCache",
+						"_CompileJava",
+					};
+					foreach (var targetName in targetsToBeSkipped) {
+						Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
+					}
 				}
 
 				b.Target = "Clean";
@@ -1347,13 +1319,15 @@ namespace UnamedProject
 				//One last build with no changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 
-				// NativeAOT always runs the linking step
-				if (runtime != AndroidRuntime.NativeAOT) {
-					b.Output.AssertTargetIsSkipped (isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink);
+				if (TestEnvironment.CommercialBuildAvailable) {
+					// NativeAOT always runs the linking step
+					if (runtime != AndroidRuntime.NativeAOT) {
+						b.Output.AssertTargetIsSkipped (isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink);
+					}
+					b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
+					b.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+					b.Output.AssertTargetIsSkipped ("_CompileJava");
 				}
-				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
-				b.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
-				b.Output.AssertTargetIsSkipped ("_CompileJava");
 			}
 		}
 

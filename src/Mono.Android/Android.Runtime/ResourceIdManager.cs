@@ -34,16 +34,9 @@ namespace Android.Runtime
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 		static Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
-			const string rootAssembly = "Resources.UpdateIdValues() methods are trimmed away by the LinkResourceDesigner trimmer step. This codepath is not called unless $(AndroidUseDesignerAssembly) is disabled.";
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = rootAssembly)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = rootAssembly)]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			static Type AssemblyGetType (Assembly a, string name) => a.GetType (name);
-
 			foreach (var customAttribute in assembly.GetCustomAttributes (typeof (ResourceDesignerAttribute), true)) {
 				if (customAttribute is ResourceDesignerAttribute resourceDesignerAttribute && resourceDesignerAttribute.IsApplication) {
-					var type = AssemblyGetType (assembly, resourceDesignerAttribute.FullName);
+					var type = resourceDesignerAttribute.GetResourceTypeFromAssembly (assembly);
 					if (type != null)
 						return type;
 				}
@@ -52,4 +45,3 @@ namespace Android.Runtime
 		}
 	}
 }
-

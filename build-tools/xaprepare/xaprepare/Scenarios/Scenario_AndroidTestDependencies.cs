@@ -8,7 +8,7 @@ namespace Xamarin.Android.Prepare
 		protected virtual AndroidToolchainComponentType AndroidSdkNdkType => AndroidToolchainComponentType.CoreDependency;
 
 		public Scenario_AndroidTestDependencies () 
-			: base ("AndroidTestDependencies", "Install Android SDK, OpenJDK and .NET preview test dependencies.")
+			: base ("AndroidTestDependencies", "Install Android SDK and .NET preview test dependencies.")
 		{}
 
 		protected Scenario_AndroidTestDependencies (string name, string description) 
@@ -18,7 +18,6 @@ namespace Xamarin.Android.Prepare
 		protected override void AddSteps (Context context)
 		{
 			Steps.Add (new Step_InstallDotNetPreview ());
-			Steps.Add (new Step_InstallMicrosoftOpenJDK (allowJIJavaHomeMatch: true));
 			Steps.Add (new Step_Android_SDK_NDK (AndroidSdkNdkType));
 
 			// disable installation of missing programs...

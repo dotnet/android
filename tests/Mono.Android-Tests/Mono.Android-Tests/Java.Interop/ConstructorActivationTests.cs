@@ -58,6 +58,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("InheritedActivationCreateInstance")]
+		public void CreateInstanceWithInheritedActivationCtorDoesNotRegisterPeerInsideNewObjectScope ()
+		{
+			ConstructorActivationMarshalObject.Reset ();
+
+			IntPtr handle = JNIEnv.CreateInstance (typeof (ConstructorActivationMarshalObject), "(Z)V", new JValue (true));
+			try {
+				var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (handle));
+
+				Assert.AreEqual (0, ConstructorActivationMarshalObject.ConstructorInvocations);
+				Assert.IsNull (peer);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
 		public void JavaSideConstructorReinvokesExistingActivatablePeer ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -95,7 +112,7 @@ namespace Java.InteropTests
 					new JValue (Application.Context))) {
 				Assert.AreEqual (1, ConstructorActivationContextView.ConstructorInvocations);
 				Assert.IsNotNull (instance.ContextValue);
-				Assert.AreEqual (Application.Context.Handle, instance.ContextValue.Handle);
+				AssertSameJavaObject (Application.Context, instance.ContextValue);
 			}
 		}
 
@@ -110,7 +127,7 @@ namespace Java.InteropTests
 					JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationAttributeSetView.ConstructorInvocations);
 				Assert.IsNotNull (instance.ContextValue);
-				Assert.AreEqual (Application.Context.Handle, instance.ContextValue.Handle);
+				AssertSameJavaObject (Application.Context, instance.ContextValue);
 				Assert.IsNull (instance.AttributeSetValue);
 			}
 		}
@@ -127,7 +144,7 @@ namespace Java.InteropTests
 					new JValue (42))) {
 				Assert.AreEqual (1, ConstructorActivationStyledView.ConstructorInvocations);
 				Assert.IsNotNull (instance.ContextValue);
-				Assert.AreEqual (Application.Context.Handle, instance.ContextValue.Handle);
+				AssertSameJavaObject (Application.Context, instance.ContextValue);
 				Assert.IsNull (instance.AttributeSetValue);
 				Assert.AreEqual (42, instance.DefStyleAttrValue);
 			}
@@ -474,7 +491,7 @@ namespace Java.InteropTests
 				Assert.IsNotNull (instance.ObjectArrayValue);
 				Assert.AreEqual (2, instance.ObjectArrayValue.Length);
 				Assert.AreEqual ("object-array-value", instance.ObjectArrayValue [0].ToString ());
-				Assert.AreEqual (Application.Context.Handle, instance.ObjectArrayValue [1].Handle);
+				AssertSameJavaObject (Application.Context, instance.ObjectArrayValue [1]);
 			}
 		}
 
@@ -563,6 +580,15 @@ namespace Java.InteropTests
 				if (registered != null && !object.ReferenceEquals (instance, registered))
 					registered.Dispose ();
 			}
+		}
+
+		static void AssertSameJavaObject (Java.Lang.Object expected, Java.Lang.Object actual)
+		{
+			Assert.IsNotNull (expected);
+			Assert.IsNotNull (actual);
+			Assert.IsTrue (
+				JniEnvironment.Types.IsSameObject (expected.PeerReference, actual.PeerReference),
+				$"Expected Java object identity to match. Expected handle: {expected.Handle}, actual handle: {actual.Handle}.");
 		}
 	}
 

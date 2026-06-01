@@ -107,6 +107,185 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void TrimmableTypeMapInheritedVirtualOverrideUsesCorrectUco ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			const string expectedLogcatOutput = "UCO_OVERRIDE_REUSE_RESULTS 107:211:1:1:405:1:0";
+
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "ucoverride")) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetDefaultTargetDevice ();
+			proj.Sources.Add (new BuildItem.Source ("UcoOverrideTypes.cs") {
+				TextContent = () => @"using System;
+using Android.Content;
+using Android.Runtime;
+using Android.Views;
+
+namespace UnnamedProject
+{
+	[Register (""my/app/UcoOverrideBase"")]
+	public abstract class UcoOverrideBase : View
+	{
+		public UcoOverrideBase (Context context) : base (context) { }
+
+		protected UcoOverrideBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public abstract override int SolidColor { get; }
+	}
+
+	[Register (""my/app/UcoOverrideOne"")]
+	public class UcoOverrideOne : UcoOverrideBase
+	{
+		readonly int value;
+		public static int Calls;
+
+		public UcoOverrideOne (Context context, int value) : base (context)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideOne (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 100;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideTwo"")]
+	public class UcoOverrideTwo : UcoOverrideBase
+	{
+		readonly int value;
+		public static int Calls;
+
+		public UcoOverrideTwo (Context context, int value) : base (context)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideTwo (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 200;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenBase"")]
+	public class UcoOverrideHiddenBase : View
+	{
+		public static int Calls;
+
+		public UcoOverrideHiddenBase (Context context) : base (context) { }
+
+		protected UcoOverrideHiddenBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public override int SolidColor {
+			get {
+				Calls++;
+				return 300;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenIntermediate"")]
+	public class UcoOverrideHiddenIntermediate : UcoOverrideHiddenBase
+	{
+		public UcoOverrideHiddenIntermediate (Context context) : base (context) { }
+
+		protected UcoOverrideHiddenIntermediate (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Deliberately hide the base virtual slot while reusing the same JNI signature.
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public new virtual int SolidColor {
+			get {
+				return 400;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenLeaf"")]
+	public class UcoOverrideHiddenLeaf : UcoOverrideHiddenIntermediate
+	{
+		readonly int value;
+		public static new int Calls;
+
+		public UcoOverrideHiddenLeaf (Context context, int value) : base (context)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideHiddenLeaf (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 400;
+			}
+		}
+	}
+}
+",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				@"var one = new UcoOverrideOne (this, 7);
+var two = new UcoOverrideTwo (this, 11);
+int oneResult = InvokeDoWork (one);
+int twoResult = InvokeDoWork (two);
+var leaf = new UcoOverrideHiddenLeaf (this, 5);
+int leafResult = InvokeDoHiddenWork (leaf);
+Console.WriteLine ($""# UCO_OVERRIDE_REUSE_RESULTS {oneResult}:{twoResult}:{UcoOverrideOne.Calls}:{UcoOverrideTwo.Calls}:{leafResult}:{UcoOverrideHiddenLeaf.Calls}:{UcoOverrideHiddenBase.Calls}"");
+if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOverrideTwo.Calls != 1 ||
+		leafResult != 405 || UcoOverrideHiddenLeaf.Calls != 1 || UcoOverrideHiddenBase.Calls != 0) {
+	throw new InvalidOperationException (""Unexpected UCO override dispatch result."");
+}
+
+static int InvokeDoWork (Java.Lang.Object instance)
+{
+	return InvokeIntMethod (instance, ""getSolidColor"");
+}
+
+static int InvokeDoHiddenWork (Java.Lang.Object instance)
+{
+	return InvokeIntMethod (instance, ""getSolidColor"");
+}
+
+static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
+{
+	IntPtr klass = global::Android.Runtime.JNIEnv.GetObjectClass (instance.Handle);
+	IntPtr method = global::Android.Runtime.JNIEnv.GetMethodID (klass, methodName, ""()I"");
+	try {
+		return global::Android.Runtime.JNIEnv.CallIntMethod (instance.Handle, method);
+	} finally {
+		global::Android.Runtime.JNIEnv.DeleteLocalRef (klass);
+	}
+}");
+			using var builder = CreateApkBuilder ();
+			Assert.True (builder.Install (proj), "Project should have installed.");
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
+			Assert.True (builder.Uninstall (proj), "Project should have uninstalled.");
+		}
+
+		[Test]
 		public void DotNetRunWaitForExit ()
 		{
 			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
@@ -618,13 +797,13 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 			};
 			proj.SetRuntime (runtime);
 
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 				} else {
 					proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 				}
@@ -661,7 +840,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			};
 			proj.SetRuntime (runtime);
 			if (runtime == AndroidRuntime.MonoVM) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+				proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 			} else {
 				proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 			}
@@ -746,7 +925,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		{
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
 				Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) => {
@@ -773,6 +952,77 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				MonitorAdbLogcat (CreateLineChecker (expectedRaiser),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "unhandled-logcat.log"), timeout: 60),
 				$"Output did not contain {expectedRaiser}!");
+		}
+
+		[Test]
+		public void NativeCrashProducesManagedStackTrace ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			// This test verifies that when a native crash (SIGSEGV) occurs, the .NET runtime
+			// logs a managed stack trace in logcat BEFORE Android's signal handler takes over.
+			// This is enabled by the System.Runtime.CrashReportBeforeSignalChaining config option.
+			// See: https://github.com/dotnet/android/pull/11291
+			// See: https://github.com/dotnet/runtime/pull/123735
+			// See: https://github.com/dotnet/runtime/pull/123824
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("AllowUnsafeBlocks", "true");
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
+
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using System.Runtime.InteropServices;")
+				.Replace ("//${AFTER_ONCREATE}", """
+						// Force a native crash (SIGSEGV) via P/Invoke to libc memset with a null pointer.
+						// The .NET runtime's crash reporting should log the managed stack trace before
+						// Android's signal handler aborts the process.
+						CrashHelper.ForceNativeSegfault ();
+				""")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					static class CrashHelper
+					{
+						[DllImport ("libc", EntryPoint = "memset")]
+						static extern unsafe void MemSet (void* ptr, int value, nuint count);
+
+						public static unsafe void ForceNativeSegfault ()
+						{
+							MemSet (null, 0, (nuint)1);
+						}
+					}
+				""");
+
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			// CoreCLR logs the managed stack trace via the DOTNET logcat tag when crash reporting
+			// runs before signal chaining. The output includes:
+			//   E DOTNET  : Got a SIGSEGV while executing native code. ...
+			//   E DOTNET  :    at <namespace>.CrashHelper.ForceNativeSegfault()
+			string logcatFile = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
+			bool foundSigsegv = false;
+			bool foundManagedFrame = false;
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					(line) => {
+						if (line.Contains ("DOTNET") && line.Contains ("SIGSEGV")) {
+							foundSigsegv = true;
+						}
+						if (line.Contains ("DOTNET") && line.Contains ("ForceNativeSegfault")) {
+							foundManagedFrame = true;
+						}
+						return foundSigsegv && foundManagedFrame;
+					},
+					logcatFilePath: logcatFile,
+					timeout: 30),
+				"Crash reporting should have logged 'SIGSEGV' and a managed stack trace containing 'ForceNativeSegfault' via the DOTNET logcat tag. " +
+				"Verify the System.Runtime.CrashReportBeforeSignalChaining config option is set and the runtime supports it.");
 		}
 
 		[Test]
@@ -804,7 +1054,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -863,9 +1113,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				Sources = {
 					new BuildItem.Source ("SomeClass.cs") {
 						TextContent = () => "namespace Library1 { public class SomeClass { } }"
-					},
-					new BuildItem.Source ("NonPreserved.cs") {
-						TextContent = () => "namespace Library1 { public class NonPreserved { } }"
 					},
 					new BuildItem.Source ("LinkerClass.cs") {
 						TextContent = () => @"
@@ -1016,7 +1263,7 @@ namespace Library1 {
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
 			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis (DeviceAbi);
+				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
@@ -1116,7 +1363,7 @@ using System.Runtime.Serialization.Json;
 			};
 			proj.SetRuntime (runtime);
 			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
 			builder = CreateApkBuilder ();
 			builder.BuildLogFile = "install.log";
@@ -1152,7 +1399,7 @@ using System.Runtime.Serialization.Json;
 			};
 			// Mono-only test
 			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
+			proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 			proj.SetProperty ("EnableLLVM", true.ToString ());
 
 			builder = CreateApkBuilder ();
@@ -1211,7 +1458,7 @@ using System.Runtime.Serialization.Json;
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
 
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
@@ -1355,7 +1602,7 @@ namespace Styleable.Library {
 				_ => throw new NotSupportedException ($"Unsupported runtime {runtime}")
 			};
 
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			var libBuilder = CreateDllBuilder (Path.Combine (rootPath, lib.ProjectName));
 			Assert.IsTrue (libBuilder.Build (lib), "Library should have built succeeded.");
 			builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
@@ -1397,7 +1644,7 @@ namespace Styleable.Library {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetAndroidSupportedAbis (DeviceAbi);
+			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			var builder = CreateApkBuilder (packageName: packageName);
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -1664,7 +1911,7 @@ namespace UnnamedProject
 			proj.SetRuntime (runtime);
 
 			// Requires 32-bit ABIs
-			proj.SetAndroidSupportedAbis (["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
+			proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
@@ -1874,10 +2121,9 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 
-			// Note: To properly test, Desugaring must be *enabled*, which requires that
-			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
-			// but set this explicitly anyway just so that this implicit requirement is explicit.
-			proj.SupportedOSPlatformVersion = "21";
+			// Note: To properly test, static interface default methods (Java 8+) must be compiled correctly.
+			// With $(SupportedOSPlatformVersion) >= 24, D8 handles them natively without desugaring.
+			proj.SupportedOSPlatformVersion = "24";
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine ($""# jonp static interface default method invocation; IStaticMethodsInterface.Value={Example.IStaticMethodsInterface.Value}"");
@@ -2109,7 +2355,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				.Replace ("Icon = \"@drawable/icon\")]", "Icon = \"@drawable/icon\", Theme = \"@style/Theme.AppCompat.Light.DarkActionBar\")]")
 				.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
 			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			builder = CreateApkBuilder ();
 			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -2372,10 +2618,13 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.IsTrue (dotnet.Build (target: "Install", parameters: buildParameters.ToArray ()), "`dotnet build -t:Install` should succeed");
 
 			// Run based on mode
-			var runParameters = buildParameters.Select (p => $"/p:{p}").ToArray ();
+			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
+			if (mode == "test")
+				runParameters.Add ("--report-trx");
+
 			using var process = mode == "run"
-				? dotnet.StartRun (waitForExit: true, parameters: runParameters)
-				: dotnet.StartTest (parameters: runParameters);
+				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
+				: dotnet.StartTest (parameters: runParameters.ToArray ());
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
@@ -2428,6 +2677,17 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				StringAssert.Contains ("succeeded: 1", outputText, $"Output should report 1 passed test. See {logPath} for details.");
 				StringAssert.Contains ("failed: 1", outputText, $"Output should report 1 failed test. See {logPath} for details.");
 				StringAssert.Contains ("skipped: 1", outputText, $"Output should report 1 skipped test. See {logPath} for details.");
+
+				// Verify that a TRX file was produced by --report-trx
+				var trxFiles = Directory.GetFiles (projectDirectory, "*.trx", SearchOption.AllDirectories);
+				Assert.IsTrue (trxFiles.Length > 0, $"Expected at least one .trx file in {projectDirectory}. See {logPath} for details.");
+
+				TestContext.AddTestAttachment (trxFiles [0]);
+
+				var trxDoc = XDocument.Load (trxFiles [0]);
+				var trxNs = trxDoc.Root?.Name.Namespace ?? XNamespace.None;
+				var resultSummary = trxDoc.Root?.Element (trxNs + "ResultSummary");
+				Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxFiles [0]}");
 			}
 		}
 

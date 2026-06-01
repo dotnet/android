@@ -123,6 +123,92 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void NonGenericCollection_CopyTo_ViewArray_UsesTrimmableTypeMapForArrayElementConversion ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using (var arrayList = new Java.Util.ArrayList ()) {
+				var viewClass = JniEnvironment.Types.FindClass ("android/view/View");
+				var viewHandle = IntPtr.Zero;
+				try {
+					var constructor = JNIEnv.GetMethodID (viewClass.Handle, "<init>", "(Landroid/content/Context;)V");
+					viewHandle = JNIEnv.NewObject (viewClass.Handle, constructor, new JValue (Android.App.Application.Context.Handle));
+					AddToJavaCollection (arrayList, viewHandle);
+
+					var values = new View [1];
+					CopyToJavaCollection (arrayList, values);
+					Assert.IsTrue (JNIEnv.IsSameObject (viewHandle, values [0].Handle));
+
+					values = new View [1];
+					CopyToJavaList (arrayList, values);
+					Assert.IsTrue (JNIEnv.IsSameObject (viewHandle, values [0].Handle));
+				} finally {
+					JNIEnv.DeleteLocalRef (viewHandle);
+					JniObjectReference.Dispose (ref viewClass);
+				}
+			}
+		}
+
+		[Test]
+		public void NonGenericCollection_CopyTo_ObjectArray_PreservesNullElement ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using (var arrayList = new Java.Util.ArrayList ()) {
+				arrayList.Add (42);
+				arrayList.Add (null);
+
+				var values = new object [2];
+				CopyToJavaCollection (arrayList, values);
+				Assert.AreEqual (42, values [0]);
+				Assert.IsNull (values [1]);
+
+				values = new object [2];
+				CopyToJavaList (arrayList, values);
+				Assert.AreEqual (42, values [0]);
+				Assert.IsNull (values [1]);
+			}
+		}
+
+		[Test]
+		public void NonGenericCollection_CopyTo_StringArray_ConvertsJavaString ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using (var arrayList = new Java.Util.ArrayList ()) {
+				arrayList.Add ("alpha");
+
+				var values = new string [1];
+				CopyToJavaCollection (arrayList, values);
+				Assert.AreEqual ("alpha", values [0]);
+
+				values = new string [1];
+				CopyToJavaList (arrayList, values);
+				Assert.AreEqual ("alpha", values [0]);
+			}
+		}
+
+		static void CopyToJavaCollection (Java.Util.ArrayList arrayList, Array values)
+		{
+			using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+				collection.CopyTo (values, 0);
+			}
+		}
+
+		static void CopyToJavaList (Java.Util.ArrayList arrayList, Array values)
+		{
+			using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+				list.CopyTo (values, 0);
+			}
+		}
+
+		static void AddToJavaCollection (Java.Util.ArrayList arrayList, IntPtr handle)
+		{
+			var add = JNIEnv.GetMethodID (arrayList.Class.Handle, "add", "(Ljava/lang/Object;)Z");
+			JNIEnv.CallBooleanMethod (arrayList.Handle, add, new JValue (handle));
+		}
+
 		static T CreateFromJava<T> ()
 			where T : Java.Lang.Object
 		{

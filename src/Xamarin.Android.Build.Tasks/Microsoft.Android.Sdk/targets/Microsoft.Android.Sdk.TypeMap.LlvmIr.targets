@@ -133,7 +133,6 @@
         AdditionalProviderSources="@(_AdditionalProviderSources)"
         AndroidRuntime="$(_AndroidRuntime)"
         Environments="@(_EnvironmentFiles)"
-        HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
@@ -174,7 +173,6 @@
         Used for the <ILLink CustomData="@(_TrimmerCustomData)" /> value:
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L147
         -->
-      <_TrimmerCustomData Include="AndroidHttpClientHandlerType" Value="$(AndroidHttpClientHandlerType)" />
       <_TrimmerCustomData Include="AndroidCustomViewMapFile" Value="$(_OuterCustomViewMapFile)" />
       <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
 
@@ -198,7 +196,10 @@
           AfterStep="CleanStep"
           Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
       />
-      <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
+      <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml"
+          Exclude="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml" />
+      <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml"
+          Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
       <TrimmerRootAssembly Include="Microsoft.Android.Runtime.NativeAOT" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' " RootMode="All" />
     </ItemGroup>

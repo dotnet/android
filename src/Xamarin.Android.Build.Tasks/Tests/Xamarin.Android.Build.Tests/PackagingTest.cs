@@ -1,15 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
-using Xamarin.ProjectTools;
 using System.Linq;
 using System.Text;
-using System.Collections.Generic;
 using System.Xml.Linq;
-using Xamarin.Tools.Zip;
+using Microsoft.Build.Framework;
+using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
-using Microsoft.Build.Framework;
+using Xamarin.ProjectTools;
+using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -252,7 +252,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			};
 			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetAndroidSupportedAbis ("x86_64");
+			proj.SetRuntimeIdentifiers (new[] { "x86_64" });
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
@@ -469,6 +469,49 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 		}
 
 		[Test]
+		[NonParallelizable]
+		public void MonoAndroidExportIsNotPackagedWithTrimmableTypeMap ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const bool isRelease = false;
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				References = {
+					new BuildItem.Reference ("Mono.Android.Export"),
+				},
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
+				TextContent = () => @"using System;
+using Java.Interop;
+
+namespace UnnamedProject {
+	class ContainsExportedMethods : Java.Lang.Object {
+		[Export]
+		public void Exported ()
+		{
+			Console.WriteLine (""# ExportedCallbackInvoked"");
+		}
+	}
+}"
+			});
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build failed");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+				var contents = helper.ListArchiveContents ();
+
+				Assert.IsFalse (
+					contents.Any (e => Path.GetFileName (e).Equals ("Mono.Android.Export.dll", StringComparison.Ordinal)),
+					$"APK file `{apk}` should not contain Mono.Android.Export.dll when the trimmable type map is enabled.");
+			}
+		}
+
+		[Test]
 		public void CheckSignApk ([Values] bool useApkSigner, [Values] bool perAbiApk, [Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -513,7 +556,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
 			if (perAbiApk) {
 				if (runtime == AndroidRuntime.MonoVM) {
-					proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "arm64-v8a", "x86_64");
+					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "x86", "arm64-v8a", "x86_64" });
 				} else {
 					proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
 				}
@@ -531,9 +574,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					using (var zip = ZipHelper.OpenZip (apk)) {
-						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-					}
+					AssertApkIsSigned (apk);
 				}
 
 				// Make sure the APKs have unique version codes
@@ -568,9 +609,7 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					using (var zip = ZipHelper.OpenZip (apk)) {
-						Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apk}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-					}
+					AssertApkIsSigned (apk);
 				}
 			}
 
@@ -613,8 +652,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
+						Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+					}
 				}
 			}
 		}
@@ -1010,7 +1051,7 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				// This combination produces android:extractNativeLibs="false" by default
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 				ManifestMerger = "manifestmerger.jar",
 			};
 			proj.SetRuntime (runtime);

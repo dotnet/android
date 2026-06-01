@@ -1,0 +1,38 @@
+<Project>
+
+  <PropertyGroup>
+    <_SdkManagerDir>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</_SdkManagerDir>
+    <_SdkManagerPath Condition=" '$(HostOS)' == 'Windows' ">$(_SdkManagerDir)\sdkmanager.bat</_SdkManagerPath>
+    <_SdkManagerPath Condition=" '$(HostOS)' != 'Windows' ">$(_SdkManagerDir)\sdkmanager</_SdkManagerPath>
+    <_LicensesAcceptedFile>$(AndroidSdkFullPath)\licenses\.licenses-accepted</_LicensesAcceptedFile>
+  </PropertyGroup>
+
+  <Target Name="_AcceptAndroidSdkLicenses"
+      BeforeTargets="Build"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="$(_LicensesAcceptedFile)">
+    <Error
+        Condition=" !Exists('$(_SdkManagerPath)') "
+        Text="sdkmanager not found at $(_SdkManagerPath)"
+    />
+    <!-- Pipe 'y' responses to accept all licenses -->
+    <Exec
+        Condition=" '$(HostOS)' == 'Windows' "
+        Command="powershell -NoProfile -Command &quot;1..10 | ForEach-Object { 'y' } | &amp; '$(_SdkManagerPath)' --licenses&quot;"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+        IgnoreExitCode="true"
+    />
+    <Exec
+        Condition=" '$(HostOS)' != 'Windows' "
+        Command="yes | &quot;$(_SdkManagerPath)&quot; --licenses"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
+        IgnoreExitCode="true"
+    />
+    <Touch Files="$(_LicensesAcceptedFile)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="_CleanAndroidSdkLicenses" BeforeTargets="Clean">
+    <Delete Files="$(_LicensesAcceptedFile)" />
+  </Target>
+
+</Project>

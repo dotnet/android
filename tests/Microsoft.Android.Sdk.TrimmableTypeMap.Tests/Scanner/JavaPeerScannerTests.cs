@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
@@ -40,6 +43,57 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	public void Scan_IsUnconditional (string javaName, bool expected)
 	{
 		Assert.Equal (expected, FindFixtureByJavaName (javaName).IsUnconditional);
+	}
+
+	[Fact]
+	public void Scan_MarksFrameworkAssemblyPeers ()
+	{
+		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var reader = peReader.GetMetadataReader ();
+		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
+		using var scanner = new JavaPeerScanner (frameworkAssemblyNames: new HashSet<string> (StringComparer.OrdinalIgnoreCase) { assemblyName });
+
+		var peers = scanner.Scan (new List<(string, PEReader)> { (assemblyName, peReader) });
+
+		Assert.NotEmpty (peers);
+		Assert.All (peers, p => Assert.True (p.IsFrameworkAssembly, $"{p.ManagedTypeName} should be marked as a framework peer."));
+		Assert.All (peers, p => Assert.False (p.GenerateArrayEntries, $"{p.ManagedTypeName} should not emit array entries unless referenced from a non-framework assembly."));
+	}
+
+	[Fact]
+	public void Scan_JniAddNativeMethodRegistrationAttribute_LogsError ()
+	{
+		// The trimmable typemap refuses to support [JniAddNativeMethodRegistrationAttribute]
+		// by design (XA4251). The scanner reports each offending type via the logger.
+		var errors = new List<string> ();
+		var logger = new RecordingLogger (errors);
+
+		using var scanner = new JavaPeerScanner (logger: logger);
+		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
+		var reader = peReader.GetMetadataReader ();
+		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
+		_ = scanner.Scan (new List<(string, PEReader)> { (assemblyName, peReader) });
+
+		Assert.Contains (errors, e => e.Contains ("HandWrittenNativeRegistrationPeer"));
+		Assert.Contains (errors, e => e.Contains ("NonPeerNativeRegistration"));
+		Assert.DoesNotContain (errors, e => e.Contains ("OtherNamespaceNativeRegistration"));
+		Assert.DoesNotContain (errors, e => e.Contains ("MyHelper"));
+	}
+
+	sealed class RecordingLogger (List<string> errors) : ITrimmableTypeMapLogger
+	{
+		public void LogNoJavaPeerTypesFound () { }
+		public void LogJavaPeerScanInfo (int assemblyCount, int peerCount) { }
+		public void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount) { }
+		public void LogDeferredRegistrationTypesInfo (int typeCount) { }
+		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) { }
+		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) { }
+		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) { }
+		public void LogGeneratedJcwFilesInfo (int sourceCount) { }
+		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) { }
+		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) { }
+		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
+			errors.Add ($"XA4251: {managedTypeName}");
 	}
 
 	[Fact]

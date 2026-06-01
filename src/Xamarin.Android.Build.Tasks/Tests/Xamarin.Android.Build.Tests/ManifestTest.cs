@@ -220,6 +220,7 @@ namespace Bug12935
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar",
@@ -536,7 +537,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
 				/* props */ null,
 				/* shouldBuild */ true,
-				/* expected */ "221012;321012",
+				/* expected */ "224012;324012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -546,7 +547,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
 				/* props */ "screen=24",
 				/* shouldBuild */ true,
-				/* expected */ "22124012;32124012",
+				/* expected */ "22424012;32424012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -556,7 +557,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ true,
-				/* expected */ "221241012;321241012",
+				/* expected */ "224241012;324241012",
 			},
 			new object[] {
 				/* seperateApk */ true,
@@ -566,7 +567,7 @@ namespace Bug12935
 				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
 				/* props */ "screen=24;foo=$(Foo)",
 				/* shouldBuild */ false,
-				/* expected */ "2212401012;3212401012",
+				/* expected */ "2242401012;3242401012",
 			},
 		};
 
@@ -577,8 +578,8 @@ namespace Bug12935
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				MinSdkVersion = "21",
-				SupportedOSPlatformVersion = "21.0",
+				MinSdkVersion = "24",
+				SupportedOSPlatformVersion = "24.0",
 			};
 
 			// MonoVM-only test, for now (changing anything in the test data changes the codes, each case must be
@@ -588,7 +589,7 @@ namespace Bug12935
 			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
 			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
 			if (!string.IsNullOrEmpty (abis))
-				proj.SetAndroidSupportedAbis (abis);
+				proj.SetRuntimeIdentifiers (abis.Split (';'));
 			if (!string.IsNullOrEmpty (versionCodePattern))
 				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
 			else
@@ -1238,7 +1239,7 @@ class TestActivity : Activity { }"
 				/* removeUsesSdk */		false,
 			},
 			new object[] {
-				/* minSdkVersion */		"21.0",
+				/* minSdkVersion */		"24.0",
 				/* removeUsesSdk */		true,
 			},
 			new object[] {
@@ -1269,7 +1270,7 @@ class TestActivity : Activity { }"
 				);
 
 				AddTestData (
-					minSdkVersion: "21.0",
+					minSdkVersion: "24.0",
 					removeUsesSdkElement: true,
 					runtime: runtime
 				);

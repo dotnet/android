@@ -46,4 +46,5 @@ CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' 
 MembersMustExist : Member 'public void Android.Telecom.CallControl.Answer(Android.Telecom.CallType, Java.Util.Concurrent.IExecutor, Android.OS.IOutcomeReceiver)' does not exist in the implementation but it does exist in the contract.
 MembersMustExist : Member 'public void Android.Telecom.CallControl.RequestVideoState(Android.Telecom.CallType, Java.Util.Concurrent.IExecutor, Android.OS.IOutcomeReceiver)' does not exist in the implementation but it does exist in the contract.
 TypesMustExist : Type 'Android.Text.IInputType' does not exist in the implementation but it does exist in the contract.
+TypesMustExist : Type 'Xamarin.Android.Net.AndroidClientHandler' does not exist in the implementation but it does exist in the contract.
 CannotRemoveBaseTypeOrInterface : Type 'Android.Views.InputMethods.EditorInfo' does not implement interface 'Android.Text.IInputType' in the implementation but it does in the contract.

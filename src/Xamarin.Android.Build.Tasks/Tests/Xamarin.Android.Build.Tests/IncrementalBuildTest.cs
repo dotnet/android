@@ -22,6 +22,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -68,6 +69,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			if (runtime != AndroidRuntime.MonoVM) { // temporarily
 				Assert.Ignore ("Runtimes other than MonoVM are currently broken here.");
@@ -103,6 +105,81 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void JniRemappingCountsSurviveIncrementalBuild ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => """
+<replacements>
+  <replace-type from="android/app/Activity" to="example/RemapActivity" />
+  <replace-method
+      source-type="example/RemapActivity"
+      source-method-name="onCreate"
+      target-type="example/RemapActivity"
+      target-method-name="onMyCreate"
+      target-method-instance-to-static="false" />
+</replacements>
+""",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				var remapSourceTimestamps = GetJniRemappingSourceTimestamps (proj, b);
+
+				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
+				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				AssertJniRemappingSourceTimestamps (remapSourceTimestamps);
+			}
+		}
+
+		void AssertJniRemappingCounts (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, "arm64-v8a;x86_64", required: true, runtime: AndroidRuntime.CoreCLR);
+			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
+			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
+		}
+
+		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android");
+			var timestamps = new Dictionary<string, DateTime> (StringComparer.Ordinal);
+			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
+				string path = Path.Combine (objDirPath, $"jni_remap.{abi}.ll");
+				FileAssert.Exists (path);
+				timestamps.Add (path, File.GetLastWriteTimeUtc (path));
+			}
+			return timestamps;
+		}
+
+		void AssertJniRemappingSourceTimestamps (Dictionary<string, DateTime> expectedTimestamps)
+		{
+			foreach (var expectedTimestamp in expectedTimestamps) {
+				Assert.AreEqual (
+					expectedTimestamp.Value,
+					File.GetLastWriteTimeUtc (expectedTimestamp.Key),
+					$"{expectedTimestamp.Key} should not be touched when regenerated with unchanged contents."
+				);
+			}
+		}
+
+		[Test]
 		public void CheckNothingIsDeletedByIncrementalClean ([Values] bool enableMultiDex, [Values] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -117,7 +194,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var path = Path.Combine ("temp", TestName);
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
 				IsRelease = isRelease,
 			};
@@ -352,6 +429,7 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var app = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -487,7 +565,7 @@ namespace Lib2
 					if (runtime == AndroidRuntime.MonoVM) {
 						// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
 						// Keep it as it was.
-						app.SetAndroidSupportedAbis (abi);
+						app.SetRuntimeIdentifiers (new[] { abi });
 					} else {
 						app.SetRuntimeIdentifier (abi);
 					}
@@ -532,6 +610,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
 				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
@@ -670,6 +749,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -746,16 +826,18 @@ namespace Lib2
 				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
-				appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
-				appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
-				appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
-				appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
+					appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+					appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
+					appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 
-				appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
+					appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
 
-				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_CopyPackage");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_Sign");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_CopyPackage");
+					appBuilder.Output.AssertTargetIsNotSkipped ("_Sign");
+				}
 			}
 		}
 
@@ -848,6 +930,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -990,13 +1073,15 @@ namespace Lib2
 				appBuilder.BuildLogFile = "build2.log";
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
-				var targetsShouldSkip = new [] {
-					"_BuildLibraryImportsCache",
-					"_ResolveLibraryProjectImports",
-					"_ConvertCustomView",
-				};
-				foreach (var target in targetsShouldSkip) {
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				if (TestEnvironment.CommercialBuildAvailable) {
+					var targetsShouldSkip = new [] {
+						"_BuildLibraryImportsCache",
+						"_ResolveLibraryProjectImports",
+						"_ConvertCustomView",
+					};
+					foreach (var target in targetsShouldSkip) {
+						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+					}
 				}
 
 				var targetsShouldRun = new [] {
@@ -1007,16 +1092,18 @@ namespace Lib2
 					"_CopyPackage",
 					"_Sign",
 				};
-				foreach (var target in targetsShouldRun) {
-					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
-				}
+				if (TestEnvironment.CommercialBuildAvailable) {
+					foreach (var target in targetsShouldRun) {
+						Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+					}
 
-				var aapt2TargetsShouldBeSkipped = new [] {
-					"_FixupCustomViewsForAapt2",
-					"_CompileResources"
-				};
-				foreach (var target in aapt2TargetsShouldBeSkipped) {
-					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"{target} should be skipped!");
+					var aapt2TargetsShouldBeSkipped = new [] {
+						"_FixupCustomViewsForAapt2",
+						"_CompileResources"
+					};
+					foreach (var target in aapt2TargetsShouldBeSkipped) {
+						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"{target} should be skipped!");
+					}
 				}
 			}
 		}
@@ -1028,6 +1115,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -1233,6 +1321,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 
 			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
 			if (runtime == AndroidRuntime.NativeAOT) {
@@ -1257,7 +1346,7 @@ namespace Lib2
 			if (runtime == AndroidRuntime.MonoVM) {
 				// Using `SetRuntimeIdentifier` would change the intermediate path (by adding the RID component to it) and, thus, the way this test used to work.
 				// Keep it as it was.
-				proj.SetAndroidSupportedAbis (abi);
+				proj.SetRuntimeIdentifiers (new[] { abi });
 			} else {
 				proj.SetRuntimeIdentifier (abi);
 			}
@@ -1381,7 +1470,7 @@ namespace Lib2
 			if (aotAssemblies) {
 				targets.Add ("_AndroidAot");
 			}
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			if (!string.IsNullOrEmpty (androidAotMode))
 			    proj.SetProperty ("AndroidAotMode", androidAotMode);
 			using (var b = CreateApkBuilder (path)) {
@@ -1669,6 +1758,7 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1802,7 +1892,7 @@ namespace Lib2
 				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			};
 
-			proj.SetAndroidSupportedAbis (supportedAbi);
+			proj.SetRuntimeIdentifiers (new[] { supportedAbi });
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
 				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-{alternativeRid}" }, doNotCleanupOnUpdate: true);

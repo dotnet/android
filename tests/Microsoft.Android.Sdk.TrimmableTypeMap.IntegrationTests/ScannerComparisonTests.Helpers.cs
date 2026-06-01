@@ -88,6 +88,30 @@ public partial class ScannerComparisonTests
 		return javaName;
 	}
 
+	static string NormalizeCrc64InJniValue (string value)
+	{
+		// Marshal-method signatures/connectors can embed generated user-peer JNI names.
+		// Normalize the hash portion there too so legacy/new scanner comparison stays
+		// structural instead of depending on the CRC64 implementation.
+		return System.Text.RegularExpressions.Regex.Replace (value, @"s?crc64[0-9a-f]{16}", "crc64...");
+	}
+
+	static List<TypeMethodGroup> NormalizeMethodGroups (List<TypeMethodGroup> groups)
+	{
+		return groups
+			.Select (g => new TypeMethodGroup (
+				g.ManagedName,
+				g.Methods
+					.Select (m => new MethodEntry (
+						NormalizeCrc64 (m.JniName),
+						NormalizeCrc64InJniValue (m.JniSignature),
+						m.Connector is null ? null : NormalizeCrc64InJniValue (m.Connector)
+					))
+					.ToList ()
+			))
+			.ToList ();
+	}
+
 	void AssertTypeMapMatch (List<TypeMapEntry> legacy, List<TypeMapEntry> newEntries)
 	{
 		var legacyMap = legacy.GroupBy (e => e.JavaName).ToDictionary (g => g.Key, g => g.ToList ());

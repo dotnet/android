@@ -30,7 +30,6 @@
 
   <ItemGroup Condition=" '$(HostOS)' != 'Windows' ">
     <Compile Remove="**/*Windows*" />
-    <Compile Include="Steps/Step_Get_Windows_Binutils.cs" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HostOS)' == 'Windows' ">
@@ -43,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" GeneratePathProperty="true" />
+    <PackageReference Include="7-Zip.CommandLine" Version="25.1.0" GeneratePathProperty="true" />
     <PackageReference Include="Kajabity.Tools.Java" Version="0.2.6862.30334" />
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageReference Include="Mono.Unix" Version="7.1.0-final.1.21458.1" />

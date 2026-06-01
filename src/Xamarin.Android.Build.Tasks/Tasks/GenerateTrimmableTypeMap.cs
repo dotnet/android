@@ -15,6 +15,12 @@ namespace Xamarin.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
+	static readonly string [] DefaultFrameworkAssemblyNames = [
+		"Java.Interop",
+		"Mono.Android",
+		"Mono.Android.Runtime",
+	];
+
 	sealed class MSBuildTrimmableTypeMapLogger (TaskLoggingHelper log) : ITrimmableTypeMapLogger
 	{
 		public void LogNoJavaPeerTypesFound () =>
@@ -37,12 +43,16 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
+		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
+			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
 	}
 
 	public override string TaskPrefix => "GTT";
 
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
+	public ITaskItem [] ResolvedFrameworkAssemblies { get; set; } = [];
+	public string [] FrameworkAssemblyNames { get; set; } = [];
 	[Required]
 	public string OutputDirectory { get; set; } = "";
 	[Required]
@@ -53,6 +63,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? AcwMapOutputFile { get; set; }
 
 	public string? ApplicationRegistrationOutputFile { get; set; }
+
+	public string? GeneratedAssembliesListFile { get; set; }
 
 	public string? ManifestTemplate { get; set; }
 
@@ -76,6 +88,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
 	/// </summary>
 	public int MaxArrayRank { get; set; }
+
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -90,9 +103,19 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public override bool RunTask ()
 	{
 		var systemRuntimeVersion = ParseTargetFrameworkVersion (TargetFrameworkVersion);
-		var assemblyPaths = ResolvedAssemblies.Select (i => i.ItemSpec).Distinct ().ToList ();
-		// TODO(#10792): populate with framework assembly names to skip JCW generation for pre-compiled framework types
-		var frameworkAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		var frameworkAssemblyPaths = new HashSet<string> (
+			ResolvedFrameworkAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
+			StringComparer.OrdinalIgnoreCase);
+		var assemblyInputs = ResolvedAssemblies
+			.GroupBy (i => Path.GetFullPath (i.ItemSpec), StringComparer.OrdinalIgnoreCase)
+			.Select (g => (
+				Path: g.Key,
+				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem)))
+			.ToList ();
+		var frameworkAssemblyNames = new HashSet<string> (DefaultFrameworkAssemblyNames, StringComparer.OrdinalIgnoreCase);
+		foreach (var assemblyName in FrameworkAssemblyNames) {
+			frameworkAssemblyNames.Add (assemblyName);
+		}
 
 		Directory.CreateDirectory (OutputDirectory);
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
@@ -101,11 +124,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var assemblies = new List<(string Name, PEReader Reader)> ();
 		TrimmableTypeMapResult? result = null;
 		try {
-			foreach (var path in assemblyPaths) {
+			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
 				var peReader = new PEReader (File.OpenRead (path));
 				peReaders.Add (peReader);
 				var mdReader = peReader.GetMetadataReader ();
-				assemblies.Add ((mdReader.GetString (mdReader.GetAssemblyDefinition ().Name), peReader));
+				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
+				assemblies.Add ((assemblyName, peReader));
+				if (isFrameworkAssembly) {
+					frameworkAssemblyNames.Add (assemblyName);
+				}
 			}
 
 			ManifestConfig? manifestConfig = null;
@@ -143,7 +170,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				packageNamingPolicy: PackageNamingPolicy,
 				maxArrayRank: MaxArrayRank);
 
-			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyPaths);
+			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
+			WriteGeneratedAssembliesListFile (GeneratedAssemblies);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
 
 			// Write manifest to disk if generated
@@ -196,6 +224,27 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		return !Log.HasLoggedErrors;
+	}
+
+	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
+		string.Equals (item.GetMetadata ("FrameworkAssembly"), bool.TrueString, StringComparison.OrdinalIgnoreCase) ||
+		MonoAndroidHelper.IsFrameworkAssembly (item);
+
+	void WriteGeneratedAssembliesListFile (IReadOnlyList<ITaskItem> assemblies)
+	{
+		if (GeneratedAssembliesListFile.IsNullOrEmpty ()) {
+			return;
+		}
+
+		var directory = Path.GetDirectoryName (GeneratedAssembliesListFile);
+		if (!directory.IsNullOrEmpty ()) {
+			Directory.CreateDirectory (directory);
+		}
+
+		var text = assemblies.Count == 0
+			? ""
+			: string.Join (Environment.NewLine, assemblies.Select (a => a.ItemSpec)) + Environment.NewLine;
+		Files.CopyIfStringChanged (text, GeneratedAssembliesListFile);
 	}
 
 	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)

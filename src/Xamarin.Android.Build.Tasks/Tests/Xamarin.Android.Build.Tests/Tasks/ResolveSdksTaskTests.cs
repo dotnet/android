@@ -219,5 +219,36 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
+		[Test]
+		public void ResolveAndroidToolingWithMissingResolvedSdkDoesNotThrow ()
+		{
+			var path = Path.Combine (Path.GetTempPath (), "xa-tests", nameof (ResolveAndroidToolingWithMissingResolvedSdkDoesNotThrow), Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (path);
+			var errors = new List<BuildErrorEventArgs> ();
+			var originalAndroidSdk = MonoAndroidHelper.AndroidSdk;
+			try {
+				MonoAndroidHelper.AndroidSdk = null;
+				IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+				var androidTooling = new Xamarin.Android.Tasks.ResolveAndroidTooling {
+					BuildEngine = engine,
+					AndroidSdkPath = path,
+					AndroidSdkBuildToolsVersion = "36.0.0",
+					TargetPlatformVersion = "37.0",
+					AotAssemblies = false,
+					SequencePointsMode = "None",
+					AndroidApplication = true,
+				};
+
+				Assert.IsFalse (androidTooling.Execute (), "ResolveAndroidTooling should fail when SDK resolution has not succeeded.");
+				Assert.AreEqual ("37", androidTooling.AndroidApiLevel, "AndroidApiLevel should still be calculated for dependency resolution.");
+				Assert.IsTrue (errors.Any (e => e.Code == "XA5300"), "XA5300 should be logged when Android SDK tooling is unavailable.");
+				Assert.IsFalse (errors.Any (e => e.Code == "XARAT7001"), "ResolveAndroidTooling should not throw when AndroidSdk is unavailable.");
+			} finally {
+				MonoAndroidHelper.AndroidSdk = originalAndroidSdk;
+				if (Directory.Exists (path))
+					Directory.Delete (path, recursive: true);
+			}
+		}
+
 	}
 }

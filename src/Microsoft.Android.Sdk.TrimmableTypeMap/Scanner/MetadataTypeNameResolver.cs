@@ -35,6 +35,14 @@ static class MetadataTypeNameResolver
 		return GetFullName (reader.GetTypeDefinition (handle), reader);
 	}
 
+	public static TypeRefData GetTypeRefFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, string assemblyName, byte rawTypeKind)
+	{
+		return new TypeRefData {
+			ManagedTypeName = GetTypeFromDefinition (reader, handle, rawTypeKind),
+			AssemblyName = assemblyName,
+		};
+	}
+
 	public static string GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
 	{
 		var typeRef = reader.GetTypeReference (handle);
@@ -45,5 +53,29 @@ static class MetadataTypeNameResolver
 		}
 		var ns = reader.GetString (typeRef.Namespace);
 		return JoinNamespaceAndName (ns, name);
+	}
+
+	public static TypeRefData GetTypeRefFromReference (MetadataReader reader, TypeReferenceHandle handle, string fallbackAssemblyName, byte rawTypeKind)
+	{
+		var typeRef = reader.GetTypeReference (handle);
+		var managedTypeName = GetTypeFromReference (reader, handle, rawTypeKind);
+		var assemblyName = GetAssemblyNameFromResolutionScope (reader, typeRef.ResolutionScope, fallbackAssemblyName);
+
+		return new TypeRefData {
+			ManagedTypeName = managedTypeName,
+			AssemblyName = assemblyName,
+		};
+	}
+
+	static string GetAssemblyNameFromResolutionScope (MetadataReader reader, EntityHandle scope, string fallbackAssemblyName)
+	{
+		switch (scope.Kind) {
+			case HandleKind.AssemblyReference:
+				return reader.GetString (reader.GetAssemblyReference ((AssemblyReferenceHandle) scope).Name);
+			case HandleKind.TypeReference:
+				return GetAssemblyNameFromResolutionScope (reader, reader.GetTypeReference ((TypeReferenceHandle) scope).ResolutionScope, fallbackAssemblyName);
+			default:
+				return fallbackAssemblyName;
+		}
 	}
 }

@@ -478,30 +478,6 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>La propiedad "RunAOTCompilation" de MSBuild solo se admite cuando el recorte está habilitado. Edite el archivo del proyecto en un editor de texto para establecer "PublishTrimmed" en "true" para esta configuración de compilación.</value>
     <comment>The following are literal names and should not be translated: 'RunAOTCompilation', 'PublishTrimmed'</comment>
   </data>
-  <data name="XA1031" xml:space="preserve">
-    <value>El valor de la propiedad "AndroidHttpClientHandlerType" "{0}" debe derivar de "{1}".
-Cambie el valor a un nombre de tipo de ensamblado que herede de "{1}" o quite la propiedad por completo.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.
-{1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
-  </data>
-  <data name="XA1031_HCH" xml:space="preserve">
-    <value>El valor "{0}" de la propiedad "AndroidHttpClientHandlerType" no debe derivar de "System.Net.Htt.HttpClientHandler".
-Cambie el valor a un nombre de tipo calificado para ensamblado que herede de "System.Net.Http.HttpMessageHandler" o quite la propiedad por completo.</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'System.Net.Htt.HttpClientHandler', 'System.Net.Http.HttpMessageHandler',
-{0} - The value of the property.</comment>
-  </data>
-  <data name="XA1032" xml:space="preserve">
-    <value>No se pudo resolver "{0}" desde "{1}". Compruebe la configuración de "AndroidHttpClientHandlerType".</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.
-{1} - The name of the assembly.</comment>
-  </data>
-  <data name="XA1033" xml:space="preserve">
-    <value>No se pudo resolver "{0}". Compruebe la configuración de "AndroidHttpClientHandlerType".</value>
-    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
-{0} - The value of the property.</comment>
-  </data>
   <data name="XA1034" xml:space="preserve">
     <value>El proyecto hace referencia a "{0}", que usa el ensamblado "_Microsoft.Android.Resource.Designer", pero no tiene esta característica habilitada. Establezca la propiedad "AndroidUseDesignerAssembly" de MSBuild en "true" en el archivo del proyecto.</value>
     <comment>The following are literal names and should not be translated: '_Microsoft.Android.Resource.Desinger', 'AndroidUseDesignerAssembly', 'true'
@@ -539,6 +515,14 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
     <comment>{0} - The name of the missing assembly
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
+  </data>
+  <data name="XA2024" xml:space="preserve">
+    <value>Unable to load assembly '{0}'.</value>
+    <comment>{0} - The path to the assembly that could not be loaded.</comment>
+  </data>
+  <data name="XA2025" xml:space="preserve">
+    <value>Assembly {0} does not exist.</value>
+    <comment>{0} - The path to the assembly that does not exist.</comment>
   </data>
   <data name="XA2006" xml:space="preserve">
     <value>No se pudo resolver la referencia a "{0}" (definida en el ensamblado "{1}") con el ámbito "{2}"'. Cuando el ámbito es diferente del ensamblado de definición, normalmente significa que el tipo se reenvía.</value>
@@ -588,6 +572,10 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
   <data name="XA3007" xml:space="preserve">
     <value>No se pudo vincular la biblioteca compartida nativa: {0}{1}</value>
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
+  </data>
+  <data name="XA3008" xml:space="preserve">
+    <value>No se pudo extraer la información de depuración de "{0}"{1}</value>
+    <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
     <value>No se pudo generar el tipo Java {0} para la clase debido a lo siguiente: {1}</value>
@@ -647,6 +635,12 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
 {0} - The target SDK version number
 {1} - The API version number</comment>
   </data>
+  <data name="XA4217" xml:space="preserve">
+    <value>La arquitectura "{0}" tiene tipos de Java que no tienen homólogos en la arquitectura de plantilla "{1}": {2}</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name
+{2} - Comma-separated list of Java type names that have no counterparts</comment>
+  </data>
   <data name="XA4218" xml:space="preserve">
     <value>No se puede encontrar //manifest/application/uses-library en la ruta de acceso: {0}</value>
     <comment>The following are literal names and should not be translated: //manifest/application/uses-library</comment>
@@ -697,6 +691,11 @@ In this mesage, the term "layout" means an Android UI layout.
     <value>El elemento del recurso "{0}" no tiene el elemento de metadatos "{1}" necesario.</value>
     <comment>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</comment>
+  </data>
+  <data name="XA4227" xml:space="preserve">
+    <value>La arquitectura "{0}" no coincide con todos los métodos de serialización de la arquitectura "{1}". Consulte los registros detallados de MSBuild para obtener más información.</value>
+    <comment>{0} - The target architecture name
+{1} - The template architecture name</comment>
   </data>
   <data name="XA4228" xml:space="preserve">
     <value>No se encuentra el elemento //activity-alias/@android:targetActivity especificado: "{0}"</value>
@@ -823,6 +822,22 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
     <comment>{0} - The path the the file.
 </comment>
   </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>El archivo de entrada especificado "{0}" no existe. Omitiendo.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>El archivo de entrada "{0}" no empieza por "&lt;replacements/&gt;". Omitiendo.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>No se pudo leer el archivo de entrada "{0}": {1}. Omitiendo.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Falta el directorio de cadenas de herramientas de Android NDK "{0}". Instale Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -920,6 +935,12 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
   <data name="XA5302" xml:space="preserve">
     <value>Puede que haya dos procesos compilando este proyecto a la vez. El archivo de bloqueo existe en la ruta de acceso {0}</value>
   </data>
+  <data name="XA5303" xml:space="preserve">
+    <value>No se pudo analizar el valor de metadatos 'DescriptorIndex' '{0}' para el ensamblado '{1}'.</value>
+    <comment>
+{0} - The DescriptorIndex metadata value that could not be parsed
+{1} - The assembly ItemSpec</comment>
+  </data>
   <data name="XA_Manifest_AutoGenerated_Header" xml:space="preserve">
     <value>
     Una herramienta generó este código.
@@ -1015,6 +1036,18 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The name of the .NET runtime (e.g. CoreCLR, NativeAOT).
 </comment>
   </data>
+  <data name="XA1045" xml:space="preserve">
+    <value>El archivo de entrada `{0}` no empieza por `&lt;replacements/&gt;`.</value>
+    <comment>{0} - file path</comment>
+  </data>
+  <data name="XA1046" xml:space="preserve">
+    <value>El atributo "{0}" del elemento "{1}" tiene un valor "{2}" que no se puede analizar como booleano; {3} línea {4}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - attribute value; {3} - file path; {4} - line number</comment>
+  </data>
+  <data name="XA1047" xml:space="preserve">
+    <value>Falta el atributo obligatorio "{0}" del elemento "{1}"; {2} línea {3}.</value>
+    <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
   <data name="XA4241" xml:space="preserve">
     <value>No se cumple la dependencia de Java "{0}".</value>
     <comment>The following are literal names and should not be translated: Java.
@@ -1080,6 +1113,20 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <comment>The following are literal names and should not be translated: Manifest, framework.
 {0} - Java type name from AndroidManifest.xml</comment>
   </data>
+  <data name="XA4251" xml:space="preserve">
+    <value>El tipo "{0}" usa [JniAddNativeMethodRegistrationAttribute], que no es compatible con la asignación de tipos recortables. Para solucionar este problema, no use la asignación de tipos recortables (por ejemplo, al cambiar a la implementación de la asignación de tipos 'llvm-ir') e informe de este caso en https://github.com/dotnet/android/issues para que el equipo pueda evaluar si debe admitirse.</value>
+    <comment>The following are literal names and should not be translated: JniAddNativeMethodRegistrationAttribute, llvm-ir.
+{0} - Fully-qualified managed type name</comment>
+  </data>
+  <data name="XA4252" xml:space="preserve">
+    <value>No se permite la dirección URL del repositorio de Maven HTTP "{0}" no segura. Use una URL HTTPS o configure el metadato AllowInsecureHttp="true" en el elemento para invalidar esta comprobación.</value>
+    <comment>The following are literal names and should not be translated: HTTP, HTTPS, Maven, AllowInsecureHttp
+{0} - The insecure HTTP URL</comment>
+  </data>
+  <data name="XA4253" xml:space="preserve">
+    <value>Código contenedor Java invocable generado cambiado: "{0}"</value>
+    <comment>{0} - The path to the generated Java callable wrapper file</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Error del comando '{0}'.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1100,6 +1147,20 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>
+  </data>
+  <data name="XA0146" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0147" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0148" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.</value>
+    <comment>{0} - The file path.
+{1} - The symbol name.
+{2} - The section name.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>No se encontró el ejecutable 'gradlew' en el directorio del proyecto '{0}'. Asegúrese de que la ruta de acceso a la carpeta del proyecto de Gradle es correcta y que contiene scripts de contenedores de Gradle.</value>

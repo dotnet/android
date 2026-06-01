@@ -23,6 +23,7 @@ public class TrimmableTypeMap
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
 	static bool s_nativeMethodsRegistered;
+	static JniMethodInfo? s_classGetInterfacesMethod;
 
 	internal static TrimmableTypeMap Instance =>
 		s_instance ?? throw new InvalidOperationException (
@@ -31,6 +32,7 @@ public class TrimmableTypeMap
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
+	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
 
 	TrimmableTypeMap (ITypeMap typeMap)
 	{
@@ -255,6 +257,19 @@ public class TrimmableTypeMap
 						}
 					}
 
+					// When targetType is an interface, also check the Java interfaces
+					// at each level. getInterfaces() only returns directly declared
+					// interfaces so we must call it at each class in the hierarchy.
+					// This handles the case where an intermediate class entry (e.g.,
+					// X509ExtendedTrustManager) was trimmed but the Java interface
+					// entry (e.g., X509TrustManager) survives.
+					if (targetType is { IsInterface: true } && className != null) {
+						var result = GetProxyForJavaInterfaces (self, jniClass, className, targetType);
+						if (result != null) {
+							return result;
+						}
+					}
+
 					var super = JniEnvironment.Types.GetSuperclass (jniClass);
 					JniObjectReference.Dispose (ref jniClass);
 					jniClass = super;
@@ -264,6 +279,70 @@ public class TrimmableTypeMap
 			}
 
 			return null;
+		}
+
+		static JavaPeerProxy? GetProxyForJavaInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, string className, Type targetType)
+		{
+			var proxy = self._interfaceProxyCache.GetOrAdd (
+				(className, targetType),
+				_ => TryMatchInterfaces (self, jniClass, targetType) ?? s_noPeerSentinel);
+			return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+		}
+
+		// getInterfaces() returns only directly declared interfaces (not transitive),
+		// so we recurse into super-interfaces to find the matching TypeMap entry.
+		static JavaPeerProxy? TryMatchInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, Type targetType)
+		{
+			var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
+			try {
+				if (!interfaces.IsValid) {
+					return null;
+				}
+
+				int count = JniEnvironment.Arrays.GetArrayLength (interfaces);
+				for (int i = 0; i < count; i++) {
+					var iface = JniEnvironment.Arrays.GetObjectArrayElement (interfaces, i);
+					try {
+						var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
+						if (ifaceName != null) {
+							var proxy = self.GetProxyForJniClass (ifaceName, targetType);
+							if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
+								return proxy;
+							}
+						}
+
+						// Recurse into super-interfaces
+						var result = TryMatchInterfaces (self, iface, targetType);
+						if (result != null) {
+							return result;
+						}
+					} finally {
+						JniObjectReference.Dispose (ref iface);
+					}
+				}
+			} finally {
+				JniObjectReference.Dispose (ref interfaces);
+			}
+
+			return null;
+		}
+
+		static JniMethodInfo GetClassGetInterfacesMethod ()
+		{
+			var method = s_classGetInterfacesMethod;
+			if (method != null) {
+				return method;
+			}
+
+			var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
+			try {
+				method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
+			} finally {
+				JniObjectReference.Dispose (ref classClass);
+			}
+
+			var previous = Interlocked.CompareExchange (ref s_classGetInterfacesMethod, method, null);
+			return previous ?? method;
 		}
 
 		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
@@ -304,7 +383,73 @@ public class TrimmableTypeMap
 		}
 	}
 
+	internal IJavaPeerable? CreateInstance (
+			IntPtr handle,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+	{
+		var proxy = GetProxyForJavaObject (handle, targetType);
+
+		IJavaPeerable? peer;
+		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
+			peer = ActivateUsingReflection (targetType, handle, JniHandleOwnership.DoNotTransfer);
+		} else {
+			peer = proxy?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+		}
+		if (peer is not null) {
+			MarkCreatedPeer (peer);
+		}
+		return peer;
+	}
+
+	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
+	{
+		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+		if (peer is not null) {
+			MarkCreatedPeer (peer);
+		}
+		return peer;
+	}
+
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+
+	static bool ShouldActivateClosedGenericTarget (
+			[NotNullWhen (true)] JavaPeerProxy? proxy,
+			[NotNullWhen (true)] Type? targetType)
+	{
+		return proxy is not null &&
+			proxy.TargetType.IsGenericTypeDefinition &&
+			targetType is not null &&
+			targetType.IsGenericType &&
+			!targetType.IsGenericTypeDefinition;
+	}
+
+	static IJavaPeerable? ActivateUsingReflection (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type closedType,
+			IntPtr handle,
+			JniHandleOwnership transfer)
+	{
+		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
+		if (ctor is null) {
+			return null;
+		}
+
+		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+	}
+
+	static void MarkCreatedPeer (IJavaPeerable peer)
+	{
+		var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
+		if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
+			peerState |= JniManagedPeerStates.Activatable;
+		}
+		peer.SetJniManagedPeerState (peerState);
+	}
 
 	/// <summary>
 	/// Match the proxy's stored target type against a hint from the caller.
@@ -316,16 +461,11 @@ public class TrimmableTypeMap
 	/// closed subclasses of an open generic class peer.
 	/// </summary>
 	/// <remarks>
-	/// Implementers of an open generic <em>interface</em> peer are intentionally
-	/// not matched here: <see cref="TryGetProxyFromHierarchy"/> walks only the
-	/// JNI class chain (<c>getSuperclass</c>), never JNI interfaces, so the
-	/// proxy returned from that walk is always a class peer. Matching on
-	/// <c>Type.GetInterfaces()</c> would also force a trimmer
+	/// Open generic <em>interface</em> peers are intentionally not matched here:
+	/// matching on <c>Type.GetInterfaces()</c> would force a trimmer
 	/// <c>DynamicallyAccessedMembers(Interfaces)</c> annotation up the chain
-	/// (ultimately into Java.Interop's <c>CreatePeer</c> API). If we ever need
-	/// to discover interface peers, the generator should emit an explicit
-	/// implementer→interface map so runtime can avoid reflection over
-	/// interface lists.
+	/// (ultimately into Java.Interop's <c>CreatePeer</c> API). Interface peer
+	/// discovery is handled from the Java class metadata instead.
 	/// </remarks>
 	internal static bool TargetTypeMatches (Type targetType, Type proxyTargetType)
 	{

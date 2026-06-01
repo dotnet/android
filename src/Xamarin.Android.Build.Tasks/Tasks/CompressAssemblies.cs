@@ -35,7 +35,7 @@ public class CompressAssemblies : AndroidTask
 				break;
 
 			if (!uint.TryParse (descriptor_index_string, out var descriptor_index)) {
-				Log.LogError ($"Failed to parse 'DescriptorIndex' metadata value '{descriptor_index_string}' for assembly '{assembly.ItemSpec}'");
+				Log.LogCodedError ("XA5303", Properties.Resources.XA5303, descriptor_index_string, assembly.ItemSpec);
 				break;
 			}
 			
