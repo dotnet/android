@@ -38,8 +38,9 @@ namespace Xamarin.Android.NetTests
 			var server = stalledResponseServer;
 			stalledResponseServer = null;
 
+			// NUnitLite used by the on-device tests does not support async TearDown methods.
 			if (server != null)
-				server.StopAsync ().GetAwaiter ().GetResult ();
+				server.Stop ();
 		}
 
 		[Test]
@@ -77,7 +78,7 @@ namespace Xamarin.Android.NetTests
 
 		static int GetAvailablePort ()
 		{
-			using var tcpListener = new TcpListener (IPAddress.Any, 0);
+			using var tcpListener = new TcpListener (IPAddress.Loopback, 0);
 			tcpListener.Start ();
 			int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
 			tcpListener.Stop ();
@@ -135,7 +136,7 @@ namespace Xamarin.Android.NetTests
 			{
 				Port = GetAvailablePort ();
 				listener = new HttpListener ();
-				listener.Prefixes.Add ($"http://+:{Port}/");
+				listener.Prefixes.Add ($"http://localhost:{Port}/");
 				listener.Start ();
 
 				serverTask = ServeStalledResponseBody ();
@@ -145,11 +146,11 @@ namespace Xamarin.Android.NetTests
 
 			public Task BodyStartedTask => bodyStarted.Task;
 
-			public async Task StopAsync ()
+			public void Stop ()
 			{
 				ReleaseResponseBody ();
 				listener.Close ();
-				await ObserveServerTask ().ConfigureAwait (false);
+				ObserveServerTask ().GetAwaiter ().GetResult ();
 			}
 
 			public void ReleaseResponseBody ()

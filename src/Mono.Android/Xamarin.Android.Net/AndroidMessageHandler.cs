@@ -108,6 +108,7 @@ namespace Xamarin.Android.Net
 		{
 			readonly Stream stream;
 			readonly HttpURLConnection httpConnection;
+			int streamDisposed;
 
 			public CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
 			{
@@ -128,8 +129,7 @@ namespace Xamarin.Android.Net
 			protected override void Dispose (bool disposing)
 			{
 				if (disposing) {
-					stream.Dispose ();
-					httpConnection.Dispose ();
+					DisposeStream ();
 				}
 
 				base.Dispose (disposing);
@@ -210,10 +210,16 @@ namespace Xamarin.Android.Net
 				}
 
 				try {
-					stream.Dispose ();
+					DisposeStream ();
 				} catch (Exception ex) {
 					Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
 				}
+			}
+
+			void DisposeStream ()
+			{
+				if (Interlocked.Exchange (ref streamDisposed, 1) == 0)
+					stream.Dispose ();
 			}
 
 			static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
