@@ -27,7 +27,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ExistingJavaArchiveEntriesAreRetained ()
+		public void ExistingJavaArchiveEntriesAreUpdated ()
 		{
 			var apk = Path.Combine (tempDirectory, "app.apk");
 			var jar = Path.Combine (tempDirectory, "classes.jar");
@@ -48,7 +48,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (task.RunTask (), "task should have succeeded");
 
 			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
-				archive.AssertEntryContents (apk, "commonMain/default/manifest", "existing");
+				archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
 				archive.AssertDoesNotContainEntry (apk, "stale.txt");
 			}
 		}
