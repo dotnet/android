@@ -104,6 +104,133 @@ namespace Xamarin.Android.Net
 			}
 		}
 
+		sealed class CancellationAwareResponseStream : Stream
+		{
+			readonly Stream stream;
+			readonly HttpURLConnection httpConnection;
+
+			public CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
+			{
+				this.stream = stream ?? throw new ArgumentNullException (nameof (stream));
+				this.httpConnection = httpConnection ?? throw new ArgumentNullException (nameof (httpConnection));
+			}
+
+			public override bool CanRead => stream.CanRead;
+			public override bool CanSeek => stream.CanSeek;
+			public override bool CanWrite => stream.CanWrite;
+			public override long Length => stream.Length;
+
+			public override long Position {
+				get => stream.Position;
+				set => stream.Position = value;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (disposing) {
+					stream.Dispose ();
+					httpConnection.Dispose ();
+				}
+
+				base.Dispose (disposing);
+			}
+
+			public override void Flush ()
+			{
+				stream.Flush ();
+			}
+
+			public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+
+				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+					try {
+						await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
+					} catch (global::System.OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
+						throw;
+					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+						throw new global::System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+					}
+				}
+			}
+
+			public override int Read (byte[] buffer, int offset, int count)
+			{
+				return stream.Read (buffer, offset, count);
+			}
+
+			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+			{
+				return ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+			}
+
+			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
+			public override async ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+
+				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+					try {
+						return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
+					} catch (global::System.OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
+						throw;
+					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+						throw new global::System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+					}
+				}
+			}
+
+			public override long Seek (long offset, SeekOrigin origin)
+			{
+				return stream.Seek (offset, origin);
+			}
+
+			public override void SetLength (long value)
+			{
+				stream.SetLength (value);
+			}
+
+			public override void Write (byte[] buffer, int offset, int count)
+			{
+				stream.Write (buffer, offset, count);
+			}
+
+			void QueueAbortRead ()
+			{
+				Task.Run (AbortRead).ContinueWith (t => {
+					if (t.Exception != null)
+						Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {t.Exception}");
+				}, TaskScheduler.Default);
+			}
+
+			void AbortRead ()
+			{
+				try {
+					httpConnection.Disconnect ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, LOG_APP, $"Disconnection exception: {ex}");
+				}
+
+				try {
+					stream.Dispose ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
+				}
+			}
+
+			static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
+			{
+				return cancellationToken.IsCancellationRequested && (
+					ex is global::System.IO.IOException ||
+					ex is Java.IO.IOException ||
+					ex is InvalidDataException ||
+					ex is ObjectDisposedException ||
+					ex is WebException
+				);
+			}
+		}
+
 		internal const string LOG_APP = "monodroid-net";
 
 		const string GZIP_ENCODING = "gzip";
@@ -903,10 +1030,10 @@ namespace Xamarin.Android.Net
 			return ret ?? inputStream;
 		}
 
-		HttpContent GetContent (URLConnection httpConnection, Stream contentStream, ContentState contentState)
+		HttpContent GetContent (HttpURLConnection httpConnection, Stream contentStream, ContentState contentState)
 		{
 			Stream inputStream = GetDecompressionWrapper (httpConnection, new BufferedStream (contentStream), contentState);
-			return new StreamContent (inputStream);
+			return new StreamContent (new CancellationAwareResponseStream (inputStream, httpConnection));
 		}
 
 		bool HandleRedirect (HttpStatusCode redirectCode, HttpURLConnection httpConnection, RequestRedirectionState redirectState, out bool disposeRet)

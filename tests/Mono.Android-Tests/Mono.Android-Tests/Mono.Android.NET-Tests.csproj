@@ -136,6 +136,7 @@
     <Compile Include="System.Threading\InterlockedTest.cs" />
     <Compile Include="System.Xml\XmlSerializer.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHandlerTestBase.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerIntegrationTests.cs" />
