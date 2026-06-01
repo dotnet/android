@@ -224,6 +224,14 @@ namespace Xamarin.Android.Net
 
 			static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
 			{
+				return cancellationToken.IsCancellationRequested &&
+					ex is global::System.IO.IOException
+						or Java.IO.IOException
+						or InvalidDataException
+						or ObjectDisposedException
+						or WebException;
+			}
+			{
 				return cancellationToken.IsCancellationRequested && (
 					ex is global::System.IO.IOException ||
 					ex is Java.IO.IOException ||
