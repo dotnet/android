@@ -291,7 +291,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void ReleaseCoreClrTrimmableTypeMap_SingleRuntimeIdentifier_DoesNotPackageUnlinkedTypeMapAssemblies ()
+		public void ReleaseCoreClrTrimmableTypeMap_SingleRuntimeIdentifier_PackagesLinkedOrReadyToRunTypeMapAssemblies ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
