@@ -158,16 +158,25 @@ public class BuildArchive : AndroidTask
 				// ItemSpec for these will be "<jarfile>#<entrypath>
 				// eg: "obj/myjar.jar#myfile.txt"
 				var jar_file_path = disk_path.Substring (0, disk_path.Length - (jar_entry_name.Length + 1));
-				existingEntries.Remove (apk_path);
-
-				if (apk.ContainsEntry (apk_path)) {
-					Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", jar_entry_name, Path.GetFileName (jar_file_path));
-					continue;
-				}
+				var wasExistingOutputEntry = existingEntries.Remove (apk_path);
 
 				using (var stream = File.OpenRead (jar_file_path))
 				using (var jar = ZipArchive.Open (stream)) {
 					var jar_item = jar.ReadEntry (jar_entry_name);
+
+					if (apk.ContainsEntry (apk_path)) {
+						if (!wasExistingOutputEntry) {
+							Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", jar_entry_name, Path.GetFileName (jar_file_path));
+							continue;
+						}
+
+						if (apk.GetEntry (apk_path).CRC == jar_item.CRC) {
+							Log.LogDebugMessage ("Skipping {0} from {1} as it is up to date.", jar_entry_name, jar_file_path);
+							continue;
+						}
+
+						apk.DeleteEntry (apk_path);
+					}
 
 					byte [] data;
 					var d = MemoryStreamPool.Shared.Rent ();
