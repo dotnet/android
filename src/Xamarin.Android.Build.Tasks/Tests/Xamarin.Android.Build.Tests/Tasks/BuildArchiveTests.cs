@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
@@ -50,6 +51,35 @@ namespace Xamarin.Android.Build.Tests
 			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
 				archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
 				archive.AssertDoesNotContainEntry (apk, "stale.txt");
+			}
+		}
+
+		[Test]
+		public void ExistingJavaArchiveEntriesAreSkippedWhenUpToDate ()
+		{
+			var apk = Path.Combine (tempDirectory, "app.apk");
+			var jar = Path.Combine (tempDirectory, "classes.jar");
+
+			CreateArchive (apk, ("commonMain/default/manifest", "current"));
+			CreateArchive (jar, ("commonMain/default/manifest", "current"));
+
+			var item = new TaskItem ($"{jar}#commonMain/default/manifest");
+			item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
+			item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+			var messages = new List<BuildMessageEventArgs> ();
+
+			var task = new BuildArchive {
+				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+				ApkOutputPath = apk,
+				FilesToAddToArchive = new ITaskItem [] { item },
+			};
+
+			Assert.IsTrue (task.RunTask (), "task should have succeeded");
+
+			Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Skipping commonMain/default/manifest from {jar} as it is up to date."));
+
+			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
+				archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
 			}
 		}
 
