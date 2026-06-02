@@ -743,6 +743,33 @@ namespace Lib2
 		}
 
 		[Test]
+		public void CreateAarRunsOnceWithGeneratePackageOnBuild ()
+		{
+			// https://github.com/dotnet/android/issues/11514
+			// `_CreateAar` was being invoked twice for a single library build when
+			// `GeneratePackageOnBuild=true`: once via `BuildDependsOn`, and again via
+			// NuGet pack's per-TFM dispatch which entered the project at
+			// `_GetFrameworkAssemblyReferences`. That target transitively pulled in
+			// `UpdateAndroidResources` -> `_UpdateAndroidResources` -> `_CreateAar`
+			// via `_UpdateAndroidResourcesDependsOn`. The second invocation can race
+			// the first writer when parallel builds (-m) consumers concurrently read
+			// the .aar via `Files.HashFile`, producing `XARLP7024`.
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.SetProperty ("GeneratePackageOnBuild", "true");
+			using (var b = CreateDllBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				// MSBuild emits "Building target X completely" only when the target
+				// actually runs (not when it is entered then skipped due to empty
+				// Inputs/Outputs). Counting that message gives us the number of real
+				// `_CreateAar` executions, which is what races on disk in #11514.
+				int count = b.LastBuildOutput.Count (l => l.Contains ("Building target \"_CreateAar\""));
+				Assert.AreEqual (1, count,
+					$"`_CreateAar` should only execute once per build of a library project; was {count}.");
+			}
+		}
+
+		[Test]
 		public void ManifestMergerIncremental ([Values] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;

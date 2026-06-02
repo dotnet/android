@@ -126,27 +126,6 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public const string HashAlgorithm = "SHA1";
 
-			public static readonly Dictionary<string, string> AndroidToolchainPrefixes = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "armeabi-v7a",    "arm-linux-androideabi" },
-				{ "arm64-v8a",      "aarch64-linux-android" },
-				{ "x86",            "i686-linux-android" },
-				{ "x86_64",         "x86_64-linux-android" },
-			};
-
-			public static readonly Dictionary<string, string> AbiToRID = new (StringComparer.Ordinal) {
-				{ "armeabi-v7a", "android-arm" },
-				{ "arm64-v8a",   "android-arm64" },
-				{ "x86",         "android-x86" },
-				{ "x86_64",      "android-x64" },
-			};
-
-			public static readonly Dictionary<string, string> AbiToClangArch = new (StringComparer.Ordinal) {
-				{ "armeabi-v7a", "arm" },
-				{ "arm64-v8a",   "aarch64" },
-				{ "x86",         "i686" },
-				{ "x86_64",      "x86_64" },
-			};
-
 			/// <summary>
 			/// ABIs that support the NativeAOT runtime.  Used to determine which ABIs
 			/// need the higher API-level CRT/sysroot files in the NativeAOT runtime pack.
@@ -232,10 +211,6 @@ namespace Xamarin.Android.Prepare
 
 			// Other
 			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
-			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
-			public static string AndroidClangRootDirectory           => GetCachedPath (ref androidClangRootDirectory,           () => Path.Combine (AndroidToolchainRootDirectory, "lib", "clang"));
-			public static string AndroidToolchainBinDirectory        => GetCachedPath (ref androidToolchainBinDirectory,        () => Path.Combine (AndroidToolchainRootDirectory, "bin"));
-			public static string AndroidToolchainSysrootLibDirectory => GetCachedPath (ref androidToolchainSysrootLibDirectory, () => Path.Combine (AndroidToolchainRootDirectory, "sysroot", "usr", "lib"));
 			public static string AndroidBuildToolsCacheDir           => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory);
 
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
@@ -264,15 +239,6 @@ namespace Xamarin.Android.Prepare
 				);
 			}
 
-			static string EnsureAndroidToolchainBinDirectories ()
-			{
-				if (androidToolchainBinDirectory != null)
-					return androidToolchainBinDirectory;
-
-				androidToolchainBinDirectory = Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory), "toolchains", "llvm", "prebuilt", NdkToolchainOSTag, "bin");
-				return androidToolchainBinDirectory;
-			}
-
 			static string GetCachedPath (ref string? variable, Func<string> creator)
 			{
 				if (!String.IsNullOrEmpty (variable))
@@ -285,10 +251,6 @@ namespace Xamarin.Android.Prepare
 			static string? testBinDir;
 			static string? buildBinDir;
 			static string? binDir;
-			static string? androidToolchainRootDirectory;
-			static string? androidClangRootDirectory;
-			static string? androidToolchainBinDirectory;
-			static string? androidToolchainSysrootLibDirectory;
 			static string? installMSBuildDir;
 			static string? monoAndroidFrameworksRootDir;
 			static string? externalJavaInteropDir;
