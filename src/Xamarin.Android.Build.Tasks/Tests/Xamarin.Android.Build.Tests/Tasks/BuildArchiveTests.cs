@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -28,7 +29,7 @@ public class BuildArchiveTests
 	[TearDown]
 	public void TearDown ()
 	{
-		if (tempDirectory != null && Directory.Exists (tempDirectory))
+		if (!tempDirectory.IsNullOrEmpty () && Directory.Exists (tempDirectory))
 			Directory.Delete (tempDirectory, recursive: true);
 	}
 
@@ -97,7 +98,6 @@ public class BuildArchiveTests
 
 		CreateArchive (apk, ("stale.txt", "stale"));
 		CreateArchive (firstJar, ("commonMain/default/manifest", "first"));
-		CreateArchive (secondJar, ("commonMain/default/manifest", "second"));
 
 		var firstItem = new TaskItem ($"{firstJar}#commonMain/default/manifest");
 		firstItem.SetMetadata ("ArchivePath", "commonMain/default/manifest");
