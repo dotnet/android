@@ -21,6 +21,14 @@
       ],
       "justification": "Reference to the Android package format APK.",
       "createdDate": "2023-02-24 00:05:39Z"
+    },
+    "f6b030160282487b57238c2920a8320973ac5bb97889723a753c79553d86a862": {
+      "signature": "f6b030160282487b57238c2920a8320973ac5bb97889723a753c79553d86a862",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Cantonese term table flags incidental letters 'PK' inside a machine-translated Chinese (Traditional) localization string for XA0138_ErrorReadingStdin. False positive in auto-generated localization output.",
+      "createdDate": "2026-05-28 00:00:00Z"
     }
   }
 }

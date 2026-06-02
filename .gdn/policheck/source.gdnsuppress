@@ -176,6 +176,22 @@
       ],
       "justification": "Verbatim GPLv3 license text in THIRD-PARTY-NOTICES.TXT (gnu/binutils).",
       "createdDate": "2026-05-05 00:00:00Z"
+    },
+    "dd3653a71847ff622e134c85d308328bd803a0ccadff0e0918ee7dda8a7cbfc5": {
+      "signature": "dd3653a71847ff622e134c85d308328bd803a0ccadff0e0918ee7dda8a7cbfc5",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "'country' is the X.509 distinguished-name field (C=) used when generating Android signing keystores. Required by the spec.",
+      "createdDate": "2026-05-28 00:00:00Z"
+    },
+    "d91e97a7a1124eef0a8666e84b775855e74a3bdd74e3ead9a77bd351372183f5": {
+      "signature": "d91e97a7a1124eef0a8666e84b775855e74a3bdd74e3ead9a77bd351372183f5",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "'country' is the X.509 distinguished-name field (C=) used when generating Android signing keystores. Required by the spec.",
+      "createdDate": "2026-05-28 00:00:00Z"
     }
   }
 }
