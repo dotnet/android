@@ -312,7 +312,7 @@
         fine. `NoSubdirectory=false` (the default) strips the single
         top-level directory; `NoSubdirectory=true` extracts as-is.
       * Unix (Linux + macOS): `unzip` into a sibling `.staging` directory
-        followed by `find ... -exec mv` to emulate `strip-components`. GNU
+        followed by an MSBuild `<Move/>` to emulate `strip-components`. GNU
         tar on Linux cannot read `.zip` at all, and bsdtar on macOS silently
         drops symlinks from `.zip` archives - the NDK has many symlinks
         (`clang++ -> clang` etc) which then fail with
@@ -330,34 +330,47 @@
       <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
       <_ZipPath>$([System.IO.Path]::Combine('$(AndroidToolchainCacheDirectory)', '%(_AndroidSdkPackage.Identity)'))</_ZipPath>
       <_StagingDir>%(_AndroidSdkPackage.Destination).staging</_StagingDir>
-      <_FindMinDepth Condition=" '$(_StripComponents)' == '1' ">2</_FindMinDepth>
-      <_FindMinDepth Condition=" '$(_StripComponents)' == '0' ">1</_FindMinDepth>
+      <_DestDir>%(_AndroidSdkPackage.Destination)</_DestDir>
       <_NoSubdirectory Condition=" '$(_StripComponents)' == '1' ">false</_NoSubdirectory>
       <_NoSubdirectory Condition=" '$(_StripComponents)' == '0' ">true</_NoSubdirectory>
     </PropertyGroup>
-    <RemoveDir Directories="%(_AndroidSdkPackage.Destination)" />
-    <MakeDir Directories="%(_AndroidSdkPackage.Destination)" />
+    <RemoveDir Directories="$(_DestDir);$(_StagingDir)" />
+    <MakeDir Directories="$(_DestDir)" />
     <!-- Windows: LibZipSharp via UnzipDirectoryChildren BootstrapTask. -->
     <UnzipDirectoryChildren
         Condition=" '$(HostOS)' == 'Windows' "
         SourceFiles="$(_ZipPath)"
-        DestinationFolder="%(_AndroidSdkPackage.Destination)"
+        DestinationFolder="$(_DestDir)"
         NoSubdirectory="$(_NoSubdirectory)"
     />
     <!--
-      Unix: extract into a sibling .staging directory, then `find ... mv` the
-      contents at depth StripComponents+1 into Destination so we don't depend on
-      knowing the top-level subdirectory name per package.
+      Unix: `unzip` (preserves symlinks; LibZipSharp does not, which the NDK needs)
+      into a sibling .staging directory, then `<Move/>` every file into
+      $(_DestDir). When StripComponents=1, glob from inside the single
+      top-level directory of the zip so that `%(RecursiveDir)` already excludes
+      it - no path-rewriting required. Empty staging dirs are pruned afterwards.
     -->
-    <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
     <MakeDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' "
         Command="unzip -q -o &quot;$(_ZipPath)&quot; -d &quot;$(_StagingDir)&quot;"
     />
-    <Exec
+    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_StripComponents)' == '1' ">
+      <_StagedTopDir Remove="@(_StagedTopDir)" />
+      <_StagedTopDir Include="$([System.IO.Directory]::GetDirectories('$(_StagingDir)'))" />
+    </ItemGroup>
+    <PropertyGroup Condition=" '$(HostOS)' != 'Windows' ">
+      <_GlobRoot Condition=" '$(_StripComponents)' == '1' ">@(_StagedTopDir)</_GlobRoot>
+      <_GlobRoot Condition=" '$(_StripComponents)' == '0' ">$(_StagingDir)</_GlobRoot>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(HostOS)' != 'Windows' ">
+      <_StagedFile Remove="@(_StagedFile)" />
+      <_StagedFile Include="$(_GlobRoot)\**\*" />
+    </ItemGroup>
+    <Move
         Condition=" '$(HostOS)' != 'Windows' "
-        Command="find &quot;$(_StagingDir)&quot; -mindepth $(_FindMinDepth) -maxdepth $(_FindMinDepth) -exec sh -c 'mv &quot;$@&quot; &quot;$0&quot;' &quot;%(_AndroidSdkPackage.Destination)/&quot; {} +"
+        SourceFiles="@(_StagedFile)"
+        DestinationFiles="@(_StagedFile->'$(_DestDir)\%(RecursiveDir)%(Filename)%(Extension)')"
     />
     <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
   </Target>
