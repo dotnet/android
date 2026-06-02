@@ -5,14 +5,14 @@ using System.Runtime.InteropServices;
 using System.Threading;
 
 using Android.App;
-using Android.Content;
 using Android.Graphics;
-using Android.OS;
 using Android.Runtime;
+using Android.Content;
 
 using Java.Interop;
 
 using NUnit.Framework;
+using Android.OS;
 
 namespace Java.InteropTests
 {
@@ -77,21 +77,14 @@ namespace Java.InteropTests
 		public void ThreadReuse ()
 		{
 			CB cb = (env, instance) => {
-				// NOTE: This callback runs on a raw native pthread spawned by
-				// libreuse-threads.so and attached to the JVM. It is NOT a thread NUnit
-				// knows about. NUnit 3 replaces Console.Out with a TextCapture that looks
-				// up the current TestExecutionContext on every write; from an unknown
-				// thread that NREs (AdhocContext ctor → MethodWrapper.get_Name on null).
-				// Use Android.Util.Log here to bypass the Console redirection.
-				Android.Util.Log.Info ("ThreadReuse",
-						"CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
+				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
 				if (env != JNIEnv.Handle)
-					Android.Util.Log.Info ("ThreadReuse", "GOOD: they should differ (on the second call)....");
+					Console.WriteLine ("GOOD: they should differ (on the second call)....");
 				if (instance == IntPtr.Zero)
 					return;
 				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
-					Android.Util.Log.Info ("ThreadReuse", "CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
+					Console.WriteLine ("CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
 				}
 			};
 			rt_invoke_callback_on_new_thread (cb);
@@ -516,24 +509,13 @@ namespace Java.InteropTests
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
 
 			WeakReference r = null;
-			Exception threadException = null;
 			var t = new Thread (() => {
-				try {
-					var c = new MyCb ();
-					Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
-					r = new WeakReference (c);
-				} catch (Exception e) {
-					// NUnit 3: an unhandled exception on a background thread terminates the process,
-					// which causes the entire test run to be reported as "0 tests ran". Capture and
-					// rethrow on the main test thread so this surfaces as a normal test failure.
-					threadException = e;
-				}
+				var c = new MyCb ();
+				Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
+				r = new WeakReference (c);
 			});
 			t.Start ();
 			t.Join ();
-
-			if (threadException != null)
-				throw threadException;
 
 			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
