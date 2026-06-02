@@ -95,6 +95,11 @@
       StripComponents     - number of leading path components to strip (default 1)
       GeneratePackageXml  - if "true", write a `package.xml` next to the extracted source.properties
   -->
+  <ItemDefinitionGroup>
+    <_AndroidSdkPackage>
+      <Url>%(Identity)</Url>
+    </_AndroidSdkPackage>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <!-- commandlinetools: one zip per HostOS -->
     <_AndroidSdkPackage Include="commandlinetools-mac-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' ">
@@ -280,14 +285,6 @@
       Outputs="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)">
     <DownloadFile
         SourceUrl="$(_AndroidRepositoryUrl)%(_AndroidSdkPackage.Url)"
-        Condition=" '%(_AndroidSdkPackage.Url)' != '' "
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="%(_AndroidSdkPackage.Identity)"
-        Retries="3"
-    />
-    <DownloadFile
-        SourceUrl="$(_AndroidRepositoryUrl)%(_AndroidSdkPackage.Identity)"
-        Condition=" '%(_AndroidSdkPackage.Url)' == '' "
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
         DestinationFileName="%(_AndroidSdkPackage.Identity)"
         Retries="3"
@@ -312,7 +309,8 @@
         refuses to extract through symlinks, and `C:\Android\android-sdk`
         on the CI image is a junction, so `tar -xf` fails there. The
         Windows SDK zips have no symlinks of their own, so LibZipSharp is
-        fine. `NoSubdirectory=true` strips the single top-level dir.
+        fine. `NoSubdirectory=false` (the default) strips the single
+        top-level directory; `NoSubdirectory=true` extracts as-is.
       * Unix (Linux + macOS): `unzip` into a sibling `.staging` directory
         followed by `find ... -exec mv` to emulate `strip-components`. GNU
         tar on Linux cannot read `.zip` at all, and bsdtar on macOS silently
@@ -359,7 +357,7 @@
     />
     <Exec
         Condition=" '$(HostOS)' != 'Windows' "
-        Command="find &quot;$(_StagingDir)&quot; -mindepth $(_FindMinDepth) -maxdepth $(_FindMinDepth) -exec mv {} &quot;%(_AndroidSdkPackage.Destination)&quot;/ \;"
+        Command="find &quot;$(_StagingDir)&quot; -mindepth $(_FindMinDepth) -maxdepth $(_FindMinDepth) -exec sh -c 'mv &quot;$@&quot; &quot;$0&quot;' &quot;%(_AndroidSdkPackage.Destination)/&quot; {} +"
     />
     <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
   </Target>
