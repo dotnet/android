@@ -192,6 +192,142 @@
       ],
       "justification": "'country' is the X.509 distinguished-name field (C=) used when generating Android signing keystores. Required by the spec.",
       "createdDate": "2026-05-28 00:00:00Z"
+    },
+    "a0e948514523326635048c6ee0cbc97367731c21b2dd92bbe8eeaed44ba4b9a1": {
+      "signature": "a0e948514523326635048c6ee0cbc97367731c21b2dd92bbe8eeaed44ba4b9a1",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "033dfe9eb4aef0323a350e6dd6bd0cd2c41378f59ef94e42c738880e87945b48": {
+      "signature": "033dfe9eb4aef0323a350e6dd6bd0cd2c41378f59ef94e42c738880e87945b48",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "8217a3c04a6aa50532cdad59201d3bef0b1ec84c0b4cb08ab107d455554953d6": {
+      "signature": "8217a3c04a6aa50532cdad59201d3bef0b1ec84c0b4cb08ab107d455554953d6",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "7f29203d683db072390bd6e9903bc174149c4efb5d2bb968950078ac12ec2de3": {
+      "signature": "7f29203d683db072390bd6e9903bc174149c4efb5d2bb968950078ac12ec2de3",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "82fe02d7739bef798b996a4830f934ad94bc53e0e5f2a4da7b7b729ab4d6a547": {
+      "signature": "82fe02d7739bef798b996a4830f934ad94bc53e0e5f2a4da7b7b729ab4d6a547",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "0979aaf8f6f2432ca4d180cfbef3f1af8d7f5c7ce31ce937ca1f643b7e5e1da6": {
+      "signature": "0979aaf8f6f2432ca4d180cfbef3f1af8d7f5c7ce31ce937ca1f643b7e5e1da6",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "b0fa94c74d47d90d023ed1000d40aa79d9776b258eb1e49b2370692adb19a16f": {
+      "signature": "b0fa94c74d47d90d023ed1000d40aa79d9776b258eb1e49b2370692adb19a16f",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "87026159c3fdf4aa2df78596485ea7d86e30b2a1d5fdabc83b01f8671b9c9c7e": {
+      "signature": "87026159c3fdf4aa2df78596485ea7d86e30b2a1d5fdabc83b01f8671b9c9c7e",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "a5326eb0963ed824ec2cb923f641bb26bf13d9d891c0a590d49d355003933d60": {
+      "signature": "a5326eb0963ed824ec2cb923f641bb26bf13d9d891c0a590d49d355003933d60",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "677f1486b22ca60adc3d3585f3d866a6c90db63747fa1fafd0d617e9f0bdeb6d": {
+      "signature": "677f1486b22ca60adc3d3585f3d866a6c90db63747fa1fafd0d617e9f0bdeb6d",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "513c0f620f144d3487fcd8dc2a2cb0d5095f750f8fb3df38bc7d6f07c9ad66e8": {
+      "signature": "513c0f620f144d3487fcd8dc2a2cb0d5095f750f8fb3df38bc7d6f07c9ad66e8",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "43dffec2f9a7dbc4e1749fbd8bbfbadc48a663a2c576a95312faa682402dad4a": {
+      "signature": "43dffec2f9a7dbc4e1749fbd8bbfbadc48a663a2c576a95312faa682402dad4a",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "df8d626fcc7507a5f9b51e390092eb37cddd4606148e6dca886ab0883a503286": {
+      "signature": "df8d626fcc7507a5f9b51e390092eb37cddd4606148e6dca886ab0883a503286",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "53221abf96d49aebaff75d59276f135e4f6248051584efa08fb55f52c63fec49": {
+      "signature": "53221abf96d49aebaff75d59276f135e4f6248051584efa08fb55f52c63fec49",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "b46fed778b7ed28541c1788476a3af23fe93b9d93c2ac80c7424388e73ecbde9": {
+      "signature": "b46fed778b7ed28541c1788476a3af23fe93b9d93c2ac80c7424388e73ecbde9",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "c52d3ff6ce1b6bd645841371b74b30c7893b14c44d29125158dac434eca6c4ab": {
+      "signature": "c52d3ff6ce1b6bd645841371b74b30c7893b14c44d29125158dac434eca6c4ab",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Verbatim Google Android SDK / Google TV Add-on / GDK license text in AndroidManifestFeed_d18.0.xml. Must not be modified.",
+      "createdDate": "2026-06-02 00:00:00Z"
+    },
+    "50e11913ca432d4f277d772defe82135f9d6ec83c3f7559e9407ca85b41c1569": {
+      "signature": "50e11913ca432d4f277d772defe82135f9d6ec83c3f7559e9407ca85b41c1569",
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Doc comment in third-party Kajabity.Tools.Java/JavaPropertyReader.cs example illustrating embedded-space keys ('Hong Kong' as sample data).",
+      "createdDate": "2026-06-02 00:00:00Z"
     }
   }
 }
