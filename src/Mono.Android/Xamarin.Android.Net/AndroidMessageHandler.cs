@@ -231,15 +231,6 @@ namespace Xamarin.Android.Net
 						or ObjectDisposedException
 						or WebException;
 			}
-			{
-				return cancellationToken.IsCancellationRequested && (
-					ex is global::System.IO.IOException ||
-					ex is Java.IO.IOException ||
-					ex is InvalidDataException ||
-					ex is ObjectDisposedException ||
-					ex is WebException
-				);
-			}
 
 			static void LogAbortReadException (Task task)
 			{
