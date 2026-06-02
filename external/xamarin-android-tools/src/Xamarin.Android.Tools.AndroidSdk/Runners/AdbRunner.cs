@@ -356,6 +356,145 @@ public class AdbRunner
 	}
 
 	/// <summary>
+	/// Sets up forward port forwarding via 'adb -s &lt;serial&gt; forward &lt;local&gt; &lt;remote&gt;'.
+	/// The host-side &lt;local&gt; socket is forwarded to the device-side &lt;remote&gt; socket,
+	/// the symmetric pair to <see cref="ReversePortAsync"/>.
+	/// </summary>
+	/// <param name="serial">Device serial number.</param>
+	/// <param name="local">Local (host-side) port spec.</param>
+	/// <param name="remote">Remote (device-side) port spec.</param>
+	/// <param name="cancellationToken">Cancellation token.</param>
+	public virtual async Task ForwardPortAsync (string serial, AdbPortSpec local, AdbPortSpec remote, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+		if (local is null)
+			throw new ArgumentNullException (nameof (local));
+		if (remote is null)
+			throw new ArgumentNullException (nameof (remote));
+		if (local.Port <= 0 || local.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (local), local.Port, "Port must be between 1 and 65535.");
+		if (remote.Port <= 0 || remote.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (remote), remote.Port, "Port must be between 1 and 65535.");
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "forward", local.ToSocketSpec (), remote.ToSocketSpec ());
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} forward {local} {remote}", stderr, stdout);
+	}
+
+	/// <summary>
+	/// Removes a specific forward port forwarding rule via
+	/// 'adb -s &lt;serial&gt; forward --remove &lt;local&gt;'.
+	/// </summary>
+	/// <param name="serial">Device serial number.</param>
+	/// <param name="local">Local (host-side) port spec to remove.</param>
+	/// <param name="cancellationToken">Cancellation token.</param>
+	public virtual async Task RemoveForwardPortAsync (string serial, AdbPortSpec local, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+		if (local is null)
+			throw new ArgumentNullException (nameof (local));
+		if (local.Port <= 0 || local.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (local), local.Port, "Port must be between 1 and 65535.");
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "forward", "--remove", local.ToSocketSpec ());
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} forward --remove {local}", stderr, stdout);
+	}
+
+	/// <summary>
+	/// Removes all forward port forwarding rules for the specified device.
+	/// </summary>
+	/// <remarks>
+	/// The underlying <c>adb forward --remove-all</c> command (and its wire-protocol
+	/// equivalent <c>host-serial:&lt;serial&gt;:killforward-all</c>) operates globally on the
+	/// adb daemon — the <c>-s &lt;serial&gt;</c> flag does not scope it, and calling it
+	/// would remove forwards for every connected device. To honour the per-device
+	/// contract of this method, we list the forwards for <paramref name="serial"/>
+	/// via <see cref="ListForwardPortsAsync"/> and remove them individually via
+	/// <see cref="RemoveForwardPortAsync"/>.
+	/// </remarks>
+	public virtual async Task RemoveAllForwardPortsAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+
+		var rules = await ListForwardPortsAsync (serial, cancellationToken).ConfigureAwait (false);
+		foreach (var rule in rules) {
+			cancellationToken.ThrowIfCancellationRequested ();
+			await RemoveForwardPortAsync (serial, rule.Local, cancellationToken).ConfigureAwait (false);
+		}
+	}
+
+	/// <summary>
+	/// Lists active forward port forwarding rules for the specified device via
+	/// 'adb forward --list'.
+	/// The underlying command always lists rules across all devices, so the
+	/// result is filtered to entries matching <paramref name="serial"/>.
+	/// </summary>
+	public virtual async Task<IReadOnlyList<AdbPortRule>> ListForwardPortsAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "forward", "--list");
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb forward --list", stderr, stdout);
+
+		return ParseForwardListOutput (stdout.ToString ().Split ('\n'), serial);
+	}
+
+	/// <summary>
+	/// Parses the output of 'adb forward --list'.
+	/// Each line is "&lt;serial&gt; &lt;local&gt; &lt;remote&gt;", e.g. "emulator-5554 tcp:5000 tcp:6000".
+	/// Only rules matching <paramref name="serial"/> are returned. Lines with
+	/// unparseable socket specs are skipped.
+	/// </summary>
+	/// <remarks>
+	/// Note the field-order asymmetry vs <see cref="ParseReverseListOutput"/>:
+	///   forward --list: &lt;serial&gt; &lt;local&gt; &lt;remote&gt;
+	///   reverse --list: (reverse) &lt;remote&gt; &lt;local&gt;
+	/// Both parsers construct an <see cref="AdbPortRule"/> whose constructor takes
+	/// (Remote, Local), so the order in which we pass the parsed parts differs between
+	/// the two parsers — keep that in mind when modifying either of them.
+	/// </remarks>
+	internal static IReadOnlyList<AdbPortRule> ParseForwardListOutput (IEnumerable<string> lines, string serial)
+	{
+		var rules = new List<AdbPortRule> ();
+		if (string.IsNullOrEmpty (serial))
+			return rules;
+
+		foreach (var line in lines) {
+			var trimmed = line.Trim ();
+			if (string.IsNullOrEmpty (trimmed))
+				continue;
+
+			// Expected format: "<serial> <local> <remote>" — see <remarks> above for
+			// the field-order asymmetry with reverse --list.
+			var parts = trimmed.Split ((char[]?) null, StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length < 3)
+				continue;
+
+			if (!string.Equals (parts [0], serial, StringComparison.Ordinal))
+				continue;
+
+			var local = AdbPortSpec.TryParse (parts [1]);
+			var remote = AdbPortSpec.TryParse (parts [2]);
+			if (local is { } l && remote is { } r)
+				rules.Add (new AdbPortRule (r, l));
+		}
+
+		return rules;
+	}
+
+	/// <summary>
 	/// Parses the output lines from 'adb devices -l'.
 	/// Accepts an <see cref="IEnumerable{T}"/> to avoid allocating a joined string.
 	/// </summary>
