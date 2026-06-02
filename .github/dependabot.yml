@@ -9,7 +9,7 @@ updates:
   #
   # Workaround: target a release branch whose projects build against
   # the SDK Dependabot has. PRs land on release/10.0.1xx; forward-port
-  # them to `main` by cherry-picking onto a branch off `main`:
+  # them to `main` by cherry-picking onto a branch off `main` (PowerShell example):
   #
   #     gh pr checkout <dependabot-pr-number>
   #     $sha = git rev-parse HEAD
