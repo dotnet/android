@@ -22,7 +22,7 @@ namespace Xamarin.Android.NetTests
 		const int BodyReadBlockDelayMilliseconds = 250;
 		const int PromptCancellationTimeoutMilliseconds = 3000;
 
-		static readonly byte[] InitialResponseChunk = new byte[] { 42 };
+		static readonly byte[] InitialResponseChunk = [42];
 
 		[SetUp]
 		public void SetUp ()
