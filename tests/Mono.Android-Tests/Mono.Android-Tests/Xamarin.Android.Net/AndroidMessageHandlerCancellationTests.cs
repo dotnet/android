@@ -24,8 +24,6 @@ namespace Xamarin.Android.NetTests
 
 		static readonly byte[] InitialResponseChunk = new byte[] { 42 };
 
-		static readonly byte[] InitialResponseChunk = [42];
-
 		[SetUp]
 		public void SetUp ()
 		{
