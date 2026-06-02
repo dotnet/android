@@ -23,6 +23,7 @@ namespace Xamarin.Android.NetTests
 		const int PromptCancellationTimeoutMilliseconds = 3000;
 
 		static readonly byte[] InitialResponseChunk = [42];
+		StalledResponseServer? stalledResponseServer;
 
 		[SetUp]
 		public void SetUp ()

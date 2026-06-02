@@ -135,10 +135,7 @@ namespace Xamarin.Android.Net
 				base.Dispose (disposing);
 			}
 
-			public override void Flush ()
-			{
-				stream.Flush ();
-			}
+			public override void Flush () => stream.Flush ();
 
 			public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
 			{
@@ -148,20 +145,14 @@ namespace Xamarin.Android.Net
 					try {
 						await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
 					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
-						throw new global::System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
 					}
 				}
 			}
 
-			public override int Read (byte[] buffer, int offset, int count)
-			{
-				return stream.Read (buffer, offset, count);
-			}
+			public override int Read (byte[] buffer, int offset, int count) => stream.Read (buffer, offset, count);
 
-			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-			{
-				return ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
-			}
+			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
 
 			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
 			public override async ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
@@ -172,34 +163,23 @@ namespace Xamarin.Android.Net
 					try {
 						return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
 					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
-						throw new global::System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
 					}
 				}
 			}
 
-			public override long Seek (long offset, SeekOrigin origin)
-			{
-				return stream.Seek (offset, origin);
-			}
+			public override long Seek (long offset, SeekOrigin origin) => stream.Seek (offset, origin);
 
-			public override void SetLength (long value)
-			{
-				stream.SetLength (value);
-			}
+			public override void SetLength (long value) => stream.SetLength (value);
 
-			public override void Write (byte[] buffer, int offset, int count)
-			{
-				stream.Write (buffer, offset, count);
-			}
+			public override void Write (byte[] buffer, int offset, int count) => stream.Write (buffer, offset, count);
 
-			void QueueAbortRead ()
-			{
+			void QueueAbortRead () =>
 				Task.Run (AbortRead).ContinueWith (
-					LogAbortReadException,
+					task => Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {task.Exception}"),
 					CancellationToken.None,
 					TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
 					TaskScheduler.Default);
-			}
 
 			void AbortRead ()
 			{
@@ -232,10 +212,6 @@ namespace Xamarin.Android.Net
 						or WebException;
 			}
 
-			static void LogAbortReadException (Task task)
-			{
-				Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {task.Exception}");
-			}
 		}
 
 		internal const string LOG_APP = "monodroid-net";
