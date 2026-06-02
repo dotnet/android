@@ -80,7 +80,7 @@ extends:
           name: $(SharedMacPool)
           demands:
           - macOS.Name -equals $(SharedMacName)
-          - Agent.OSArchitecture -equals $(SharedMacArch)
+          - macOS.Architecture -equals $(SharedMacArch)
           os: macOS
         timeoutInMinutes: 120
         workspace:
