@@ -759,7 +759,11 @@ namespace Lib2
 			using (var b = CreateDllBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				int count = b.LastBuildOutput.Count (l => l.Contains ("Target \"_CreateAar\" in file"));
+				// MSBuild emits "Building target X completely" only when the target
+				// actually runs (not when it is entered then skipped due to empty
+				// Inputs/Outputs). Counting that message gives us the number of real
+				// `_CreateAar` executions, which is what races on disk in #11514.
+				int count = b.LastBuildOutput.Count (l => l.Contains ("Building target \"_CreateAar\""));
 				Assert.AreEqual (1, count,
 					$"`_CreateAar` should only execute once per build of a library project; was {count}.");
 			}
