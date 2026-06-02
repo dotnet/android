@@ -219,18 +219,19 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		public void UrlEscaping_Bug43411 ()
+		public async Task UrlEscaping_Bug43411 ()
 		{
-			UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
-			UrlEscaping_TestUrl ($"http://{TestHost}/?query=anna%20%26%20lotte&param2=true", "#2");
+			await UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
+			await UrlEscaping_TestUrl ($"http://{TestHost}/?query=anna%20%26%20lotte&param2=true", "#2");
 		}
 
-		void UrlEscaping_TestUrl (string url, string messagePrefix)
+		async Task UrlEscaping_TestUrl (string url, string messagePrefix)
 		{
-			bool? failed = null;
+			var expectedPathAndQuery = new Uri (url).PathAndQuery;
+			string receivedRawUrl = null;
 
 			var listener = CreateListener (l => {
-					failed = true;
+					receivedRawUrl = l.Request.RawUrl;
 				});
 
 			using (listener) {
@@ -238,11 +239,12 @@ namespace Xamarin.Android.NetTests {
 					var client = new HttpClient ();
 					var request = new HttpRequestMessage (HttpMethod.Get, url);
 
-					client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).Wait ();
-					// Use AbsoluteUri to preserve percent-encoding; Uri.ToString() returns the
-					// "human-readable" form and unescapes %20 → space (per .NET docs).
+					await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead);
+					// Use AbsoluteUri rather than ToString(): ToString() returns the
+					// "human-readable" form and unescapes safe characters like %20,
+					// while AbsoluteUri preserves the canonical percent-encoding.
 					Assert.AreEqual (url, request.RequestUri.AbsoluteUri, $"{messagePrefix}-1");
-					Assert.IsNull (failed, $"{messagePrefix}-2");
+					Assert.AreEqual (expectedPathAndQuery, receivedRawUrl, $"{messagePrefix}-2");
 				} finally {
 					listener.Abort ();
 					listener.Close ();
