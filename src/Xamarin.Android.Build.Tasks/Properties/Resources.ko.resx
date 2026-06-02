@@ -516,6 +516,14 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
+  <data name="XA2024" xml:space="preserve">
+    <value>Unable to load assembly '{0}'.</value>
+    <comment>{0} - The path to the assembly that could not be loaded.</comment>
+  </data>
+  <data name="XA2025" xml:space="preserve">
+    <value>Assembly {0} does not exist.</value>
+    <comment>{0} - The path to the assembly that does not exist.</comment>
+  </data>
   <data name="XA2006" xml:space="preserve">
     <value>범위가 '{2}'인 '{0}'('{1}' 어셈블리에 정의되어 있음)에 대한 참조를 확인할 수 없습니다. 범위가 정의 어셈블리와 다르면 일반적으로 형식이 전달되었음을 의미합니다.</value>
     <comment>{0} - The member name, such as a class name
@@ -628,7 +636,7 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>아키텍처 '{0}'에 템플릿 아키텍처 '{1}'에 대응되는 Java 형식이 없는 Java 형식이 있습니다. {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +693,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>아키텍처 '{0}'가 아키텍처 '{1}'의 모든 마샬 메서드와 일치하지 않습니다. 자세한 내용은 MSBuild 로그를 확인하세요.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -815,20 +823,34 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 </comment>
   </data>
   <data name="XA4316" xml:space="preserve">
-    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <value>지정한 입력 파일 '{0}'이(가) 없습니다. 무시하는 중입니다.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4317" xml:space="preserve">
-    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <value>입력 파일 '{0}'이(가) '&lt;replacements/&gt;'로 시작하지 않습니다. 건너뛰는 중입니다.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4318" xml:space="preserve">
-    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <value>입력 파일 '{0}'을(를) 읽을 수 없습니다. {1} 건너뛰는 중입니다.</value>
     <comment>{0} - The path to the file.
 {1} - The exception message.
 </comment>
+  </data>
+  <data name="XA4319" xml:space="preserve">
+    <value>No NativeAOT DGML files were provided.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
+  </data>
+  <data name="XA4320" xml:space="preserve">
+    <value>ACW map file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: ACW
+{0} - The path to the ACW map file.</comment>
+  </data>
+  <data name="XA4321" xml:space="preserve">
+    <value>NativeAOT DGML file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML
+{0} - The path to the NativeAOT DGML file.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK 도구 체인 디렉터리 '{0}'이(가) 없습니다. Android NDK를 설치하세요.</value>
@@ -928,7 +950,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>두 프로세스에서 이 프로젝트를 동시에 빌드할 수 있습니다. 잠금 파일은 {0} 경로에 있습니다.</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>어셈블리 '{0}'에 대해 'DescriptorIndex' 메타데이터 값 '{1}'을(를) 구문 분석하지 못했습니다.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1116,7 +1138,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>생성된 Java 호출 가능 래퍼 코드가 변경되었습니다. '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
@@ -1139,6 +1161,20 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>
+  </data>
+  <data name="XA0146" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0147" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0148" xml:space="preserve">
+    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.</value>
+    <comment>{0} - The file path.
+{1} - The symbol name.
+{2} - The section name.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>프로젝트 디렉터리 '{0}'에서 실행 파일 'gradlew'를 찾을 수 없습니다. Gradle 프로젝트 폴더의 경로가 올바르고 Gradle Wrapper 스크립트가 포함되어 있는지 확인하세요.</value>

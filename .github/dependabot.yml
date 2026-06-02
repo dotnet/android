@@ -1,8 +1,18 @@
 # https://docs.github.com/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/
 version: 2
 updates:
+  # NuGet scanning is intentionally scoped to a curated allow-list of
+  # directories whose projects build against the previous-stable .NET
+  # SDK (currently net10.0) with no Android workload. `main` always
+  # targets the next .NET release, so Dependabot's container (which
+  # only has the stable SDK) cannot evaluate net*-android projects.
+  # Extend this list when a new non-android-workload project is added
+  # in a different folder.
   - package-ecosystem: "nuget"
-    directory: "/"
+    directories:
+      - "/build-tools"
+      - "/tools"
+      - "/src/Xamarin.Android.Build.Tasks"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gradle"
