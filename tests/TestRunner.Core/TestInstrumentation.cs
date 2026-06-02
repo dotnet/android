@@ -335,7 +335,10 @@ public abstract class TestInstrumentation : Instrumentation
 		readonly DefaultTestAssemblyBuilder inner = new ();
 
 		public ITest Build (Assembly assembly, IDictionary<string, object> options)
-			=> inner.Build (assembly.GetName ().Name!, options);
+		{
+			var name = assembly.GetName ().Name ?? throw new InvalidOperationException ($"Assembly '{assembly}' has no simple name.");
+			return inner.Build (name, options);
+		}
 
 		public ITest Build (string assemblyNameOrPath, IDictionary<string, object> options)
 			=> inner.Build (assemblyNameOrPath, options);

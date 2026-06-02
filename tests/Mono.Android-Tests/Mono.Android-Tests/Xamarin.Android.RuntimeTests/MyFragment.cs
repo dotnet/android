@@ -14,5 +14,5 @@ namespace Xamarin.Android.RuntimeTests
 			};
 		}
 	}
-#endif  // ANDROID_11
+#endif  // __ANDROID_11__
 }

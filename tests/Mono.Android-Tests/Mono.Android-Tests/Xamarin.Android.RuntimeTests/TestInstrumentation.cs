@@ -32,8 +32,35 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("Export");
 				}
 
+				// Build-time flags flow in via [AssemblyMetadata] (see Mono.Android.NET-Tests.csproj).
+				if (HasAssemblyMetadata ("PublishAot")) {
+					// TODO: https://github.com/dotnet/android/issues/10079
+					categories.Add ("NativeAOTIgnore");
+					categories.Add ("SSL");
+					categories.Add ("NTLM");
+					categories.Add ("Export");
+				}
+
+				if (HasAssemblyMetadata ("EnableLLVM")) {
+					// FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
+					categories.Add ("LLVMIgnore");
+					// InetAccess: https://github.com/dotnet/runtime/issues/73304
+					categories.Add ("InetAccess");
+					// NetworkInterfaces: https://github.com/dotnet/runtime/issues/75155
+					categories.Add ("NetworkInterfaces");
+				}
+
 				return categories.Count > 0 ? categories : null;
 			}
+		}
+
+		static bool HasAssemblyMetadata (string key)
+		{
+			foreach (var attr in typeof (TestInstrumentation).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute> ()) {
+				if (string.Equals (attr.Key, key, StringComparison.Ordinal))
+					return string.Equals (attr.Value, "true", StringComparison.OrdinalIgnoreCase);
+			}
+			return false;
 		}
 
 		protected override IEnumerable<string>? ExcludedTestNames {

@@ -22,20 +22,30 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
-    <!--
-      TODO: Fix excluded tests
-      For $(EnableLLVM)
-        InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
-        NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
-    -->
-    <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
-    <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:Export</ExcludeCategories>
-    <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
-    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
-    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
+
+  <!--
+    These category exclusions used to flow through `am instrument -e` via the
+    custom `RunTestApp` target. With the migration to `dotnet test` + MTP,
+    the on-device instrumentation reads them from `[AssemblyMetadata]` set
+    here instead. See `TestInstrumentation.ExcludedCategories`.
+  -->
+  <ItemGroup>
+    <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition=" '$(PublishAot)' == 'true' ">
+      <_Parameter1>PublishAot</_Parameter1>
+      <_Parameter2>true</_Parameter2>
+    </AssemblyAttribute>
+    <!--
+      FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
+      InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
+      NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
+    -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition=" '$(EnableLLVM)' == 'true' ">
+      <_Parameter1>EnableLLVM</_Parameter1>
+      <_Parameter2>true</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <PropertyGroup>
     <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
