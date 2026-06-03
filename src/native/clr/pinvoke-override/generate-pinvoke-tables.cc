@@ -1,12 +1,14 @@
 //
-// To build and run this utility run (on Linux or macOS):
+// This generator emits the CoreCLR `internal_pinvokes` table (symbols linked into the host itself:
+// `xa-internal-api`, `java-interop`, `liblog`) and the library-name hashes. It is NOT wired into
+// `build-tools/scripts/generate-pinvoke-tables.sh` (that script only regenerates the MonoVM table),
+// because the CoreCLR override no longer serves the .NET BCL p/invokes from a static table. Run it by
+// hand only when the internal p/invoke list changes, by compiling this file with a C++20 compiler
+// (g++ 10+, clang 11+, on mac it may require XCode 12.5 or newer) against the CoreCLR host include
+// dirs and running the resulting binary with the output `pinvoke-tables.include` path.
 //
-//   ../../../../build-tools/scripts/generate-pinvoke-tables.sh
-//
-// A reasonable C++20 compiler is required (g++ 10+, clang 11+, on mac it may require XCode 12.5 or newer)
-//
-// Whenever a new p/invoke (or entire new shared libary which is part of dotnet distribution) is added, try to keep the
-// entries sorted alphabetically.  This is not required by the generator but easier to examine by humans.
+// Whenever a new internal p/invoke is added, try to keep the entries sorted alphabetically.  This is
+// not required by the generator but easier to examine by humans.
 //
 // If a new library is added, please remember to generate a hash of its name and update pinvoke-override-api.cc
 //
