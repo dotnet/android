@@ -77,14 +77,23 @@ namespace Java.InteropTests
 		public void ThreadReuse ()
 		{
 			CB cb = (env, instance) => {
-				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
+				// NOTE: this callback runs on a raw native pthread spawned by
+				// libreuse-threads.so and attached to the JVM. NUnit 3 replaces
+				// Console.Out with a TextCapture that resolves the current
+				// TestExecutionContext on every write; from a thread NUnit doesn't
+				// know about it tries to manufacture an AdhocContext and NREs in
+				// MethodWrapper.get_Name, which SIGABRTs the entire process and
+				// causes the test host to report "0 tests ran" for the assembly.
+				// Route diagnostics through Android.Util.Log instead.
+				Android.Util.Log.Info ("ThreadReuse",
+						"CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
 				if (env != JNIEnv.Handle)
-					Console.WriteLine ("GOOD: they should differ (on the second call)....");
+					Android.Util.Log.Info ("ThreadReuse", "GOOD: they should differ (on the second call)....");
 				if (instance == IntPtr.Zero)
 					return;
 				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
-					Console.WriteLine ("CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
+					Android.Util.Log.Info ("ThreadReuse", "CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
 				}
 			};
 			rt_invoke_callback_on_new_thread (cb);
