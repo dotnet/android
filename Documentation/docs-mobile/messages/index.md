@@ -107,6 +107,9 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0140](xa0140.md):
 + [XA0141](xa0141.md): NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details
 + [XA0142](xa0142.md): Command '{0}' failed.\n{1}
++ [XA0146](xa0146.md): Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.
++ [XA0147](xa0147.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.
++ [XA0148](xa0148.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.
 
 ## XA1xxx: Project related
 
@@ -157,6 +160,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA2000](xa2000.md): Use of AppDomain.CreateDomain() detected in assembly: {assembly}. .NET 6 will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.
 + [XA2001](xa2001.md): Source file '{filename}' could not be found.
 + [XA2002](xa2002.md): Can not resolve reference: \`{missing}\`, referenced by {assembly}. Perhaps it doesn't exist in the .NET for Android profile?
++ [XA2024](xa2024.md): Unable to load assembly '{assembly}'.
++ [XA2025](xa2025.md): Assembly {assembly} does not exist.
 + XA2006: Could not resolve reference to '{member}' (defined in assembly '{assembly}') with scope '{scope}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.
 + XA2007: Exception while loading assemblies: {exception}
 + XA2008: In referenced assembly {assembly}, Java.Interop.DoNotPackageAttribute requires non-null file name.
@@ -214,6 +219,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4250](xa4250.md): Manifest-referenced type '{type}' was not found in any scanned assembly. It may be a framework type.
 + [XA4252](xa4252.md): Insecure HTTP Maven repository URL '{url}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.
 + [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
++ [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
++ [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -233,6 +240,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4316](xa4316.md): Specified input file '{file}' does not exist. Ignoring.
 + [XA4317](xa4317.md): Input file '{file}' does not start with `<replacements/>`. Skipping.
 + [XA4318](xa4318.md): Input file '{file}' could not be read: {message}. Skipping.
++ [XA4319](xa4319.md): No NativeAOT DGML files were provided.
++ [XA4320](xa4320.md): ACW map file '{file}' was not found.
++ [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
 
 ## XA5xxx: GCC and toolchain
 

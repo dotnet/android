@@ -1,8 +1,43 @@
 # https://docs.github.com/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/
 version: 2
 updates:
+  # Dependabot's NuGet updater runs in a container that only has the
+  # previous-stable .NET SDK installed. `main` targets the next .NET
+  # release, so restore fails on most projects with NETSDK1045 and
+  # discovery silently aborts -- meaning we only get PRs for things
+  # discoverable via text scanning (e.g. msbuild-sdks in global.json).
+  #
+  # Workaround: target a release branch whose projects build against
+  # the SDK Dependabot has. PRs land on release/10.0.1xx; forward-port
+  # them to `main` by cherry-picking onto a branch off `main` (PowerShell example):
+  #
+  #     gh pr checkout <dependabot-pr-number>
+  #     $sha = git rev-parse HEAD
+  #     git fetch origin main
+  #     git checkout -b bump/<package>-<version> origin/main
+  #     git cherry-pick $sha
+  #     git push -u origin HEAD
+  #     gh pr create --base main `
+  #         --title "<copy from dependabot PR>" `
+  #         --body  "Forward-port of #<dependabot-pr-number>"
+  #
+  # Do NOT use GitHub's "Change base branch" button to retarget the
+  # Dependabot PR at `main` -- the branch is based on release/10.0.1xx,
+  # so the resulting diff would include every commit on the release
+  # branch that isn't on `main`.
+  #
+  # The directories list is also scoped to a curated allow-list of
+  # folders whose projects don't require the Android workload to
+  # restore (Dependabot's nuget container doesn't install workloads, so
+  # net*-android projects fail with NETSDK1139 regardless of branch).
+  # Extend this list when a new non-android-workload project is added
+  # in a different folder.
   - package-ecosystem: "nuget"
-    directory: "/"
+    directories:
+      - "/build-tools"
+      - "/tools"
+      - "/src/Xamarin.Android.Build.Tasks"
+    target-branch: "release/10.0.1xx"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gradle"
