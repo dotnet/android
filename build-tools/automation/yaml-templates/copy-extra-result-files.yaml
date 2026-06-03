@@ -29,9 +29,9 @@ steps:
     flattenFolders: false
 
 # Build-side files from bin/Build$(Configuration); flat at the destination
-# root, matching the old CopyFilesSimple behavior. Use the repo root as
-# sourceFolder so a missing bin/Build$(Configuration) is just 0 matches
-# rather than a hard error (matches the old C# Directory.Exists guard).
+# root. Use the repo root as sourceFolder so a missing
+# bin/Build$(Configuration) is just 0 matches rather than a hard error
+# (matches the old C# Directory.Exists guard).
 - task: CopyFiles@2
   displayName: Copy bin/Build$(Configuration) result files
   condition: ${{ parameters.condition }}
