@@ -219,6 +219,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4250](xa4250.md): Manifest-referenced type '{type}' was not found in any scanned assembly. It may be a framework type.
 + [XA4252](xa4252.md): Insecure HTTP Maven repository URL '{url}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.
 + [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
++ [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
++ [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -238,6 +240,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4316](xa4316.md): Specified input file '{file}' does not exist. Ignoring.
 + [XA4317](xa4317.md): Input file '{file}' does not start with `<replacements/>`. Skipping.
 + [XA4318](xa4318.md): Input file '{file}' could not be read: {message}. Skipping.
++ [XA4319](xa4319.md): No NativeAOT DGML files were provided.
++ [XA4320](xa4320.md): ACW map file '{file}' was not found.
++ [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
 
 ## XA5xxx: GCC and toolchain
 

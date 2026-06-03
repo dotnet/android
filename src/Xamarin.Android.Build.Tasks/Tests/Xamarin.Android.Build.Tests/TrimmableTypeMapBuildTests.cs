@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -288,6 +290,83 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				dynamicCodeDisabledTrimmable.LinkedTypeMapAssembliesContainArrayRankSentinels,
 				"trimmable typemap builds should emit array typemap sentinels when dynamic code is disabled.");
+		}
+
+		[Test]
+		public void ReleaseCoreClrTrimmableTypeMap_SingleRuntimeIdentifier_PackagesLinkedOrReadyToRunTypeMapAssemblies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.typemapcomparison",
+				ProjectName = "TypemapComparison",
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+			proj.SetProperty ("TrimMode", "full");
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", $"TypemapComparison_trimmable_single_rid_{Guid.NewGuid ():N}"));
+			Assert.IsTrue (builder.Build (proj), "trimmable single-RID build should have succeeded.");
+
+			var apkDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var apkPath = Directory.GetFiles (apkDirectory, "*-Signed.apk", SearchOption.AllDirectories).Single ();
+			var typeMapDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap"));
+			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
+			var readyToRunAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "R2R"));
+			var javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "src"));
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin", "classes.dex"));
+			var acwMapPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "acw-map.txt"));
+			var proguardPrimaryPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_primary.cfg"));
+
+			DirectoryAssert.Exists (typeMapDirectory, "trimmable build should generate typemap assemblies.");
+			DirectoryAssert.Exists (linkedAssemblyDirectory, "Release trimmable build should run ILLink.");
+
+			var generatedTypeMapAssemblies = Directory.GetFiles (typeMapDirectory, "*.dll")
+				.Where (IsTypeMapAssemblyPath)
+				.ToDictionary (Path.GetFileName, StringComparer.Ordinal);
+			var linkedTypeMapAssemblies = Directory.GetFiles (linkedAssemblyDirectory, "*.dll")
+				.Where (IsTypeMapAssemblyPath)
+				.ToDictionary (Path.GetFileName, StringComparer.Ordinal);
+			var expectedPackagedTypeMapAssemblies = linkedTypeMapAssemblies.ToDictionary (
+				pair => pair.Key,
+				pair => File.Exists (Path.Combine (readyToRunAssemblyDirectory, pair.Key))
+					? Path.Combine (readyToRunAssemblyDirectory, pair.Key)
+					: pair.Value,
+				StringComparer.Ordinal);
+			var postLinkModifiedTypeMapAssemblies = expectedPackagedTypeMapAssemblies
+				.Where (pair => generatedTypeMapAssemblies.TryGetValue (pair.Key, out var generatedPath) && !FileContentsAreEqual (generatedPath, pair.Value))
+				.OrderBy (pair => pair.Key, StringComparer.Ordinal)
+				.ToArray ();
+			Assert.IsNotEmpty (postLinkModifiedTypeMapAssemblies, "Test setup should include typemap assemblies changed by ILLink or ReadyToRun.");
+
+			var packagedAssemblyNames = ReadPackagedManagedAssemblyNames (apkPath, AndroidTargetArch.Arm64);
+			var packagedUnexpectedTypeMapAssemblies = packagedAssemblyNames
+				.Where (IsTypeMapAssemblyName)
+				.Except (expectedPackagedTypeMapAssemblies.Keys, StringComparer.Ordinal)
+				.OrderBy (name => name, StringComparer.Ordinal)
+				.ToArray ();
+			Assert.IsEmpty (
+				packagedUnexpectedTypeMapAssemblies,
+				$"{apkPath} should package post-link typemap assemblies, not generated typemap assemblies absent from ILLink output.");
+			var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: true);
+			foreach (var pair in postLinkModifiedTypeMapAssemblies) {
+				using var packagedAssembly = helper.ReadEntry ($"assemblies/arm64-v8a/{pair.Key}", AndroidTargetArch.Arm64);
+				Assert.IsNotNull (packagedAssembly, $"{pair.Key} should be packaged in the APK.");
+				var expectedHash = ComputeFileHash (pair.Value);
+				var packagedHash = ComputeHash (packagedAssembly);
+				Assert.IsTrue (
+					expectedHash.SequenceEqual (packagedHash),
+					$"{apkPath} should package post-link typemap assembly {pair.Key} from {pair.Value}, not the generated pre-link copy.");
+			}
+
+			AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (dexFile, javaSourceDirectory, acwMapPath, proguardPrimaryPath);
 		}
 
 		[Test]
@@ -613,6 +692,50 @@ namespace UnnamedProject {
 				TypeMapAssembliesContainType (linkedAssemblyDirectory, "__ArrayMapRank1"));
 		}
 
+		ISet<string> ReadPackagedManagedAssemblyNames (string apkPath, AndroidTargetArch targetArch)
+		{
+			(var explorers, var errorMessage) = AssemblyStoreExplorer.Open (apkPath);
+			Assert.IsNull (errorMessage, $"{apkPath} should contain readable assembly stores.");
+			Assert.IsNotNull (explorers, $"{apkPath} should contain assembly stores.");
+
+			var explorer = explorers.FirstOrDefault (e => e.TargetArch == targetArch);
+			Assert.IsNotNull (explorer, $"{apkPath} should contain an {targetArch} assembly store.");
+
+			return explorer.Assemblies
+				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase) && !a.Name.EndsWith (".ni.dll", StringComparison.OrdinalIgnoreCase))
+				.Select (a => a.Name)
+				.ToHashSet (StringComparer.Ordinal);
+		}
+
+		void AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (string dexFile, string javaSourceDirectory, string acwMapPath, string proguardPrimaryPath)
+		{
+			const string deadManagedType = "Android.Animation.Animator+IAnimatorListenerImplementor";
+			const string deadJavaName = "Lmono/android/animation/Animator_AnimatorListenerImplementor;";
+			const string deadJavaDotName = "mono.android.animation.Animator_AnimatorListenerImplementor";
+
+			Assert.IsTrue (
+				Directory.EnumerateFiles (javaSourceDirectory, "MainActivity.java", SearchOption.AllDirectories).Any (),
+				"Post-trim Java source generation should keep the app activity JCW.");
+			FileAssert.DoesNotExist (
+				Path.Combine (javaSourceDirectory, "mono", "android", "animation", "Animator_AnimatorListenerImplementor.java"),
+				"Post-trim Java source generation should not copy framework listener implementors removed by ILLink.");
+
+			FileAssert.Exists (acwMapPath, "Post-trim scan should rewrite acw-map.txt for R8.");
+			var acwMap = File.ReadAllText (acwMapPath);
+			Assert.IsFalse (acwMap.Contains (deadManagedType, StringComparison.Ordinal), $"{acwMapPath} should be based on linked assemblies.");
+			Assert.IsFalse (acwMap.Contains (deadJavaDotName, StringComparison.Ordinal), $"{acwMapPath} should not keep removed framework listener implementors.");
+
+			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a primary proguard configuration from the post-trim acw-map.");
+			Assert.IsFalse (
+				File.ReadAllText (proguardPrimaryPath).Contains (deadJavaDotName, StringComparison.Ordinal),
+				$"{proguardPrimaryPath} should not keep removed framework listener implementors.");
+
+			FileAssert.Exists (dexFile, "R8 should produce classes.dex.");
+			Assert.IsFalse (
+				DexUtils.ContainsClass (deadJavaName, dexFile, AndroidSdkPath),
+				$"{dexFile} should not contain the removed framework listener implementor.");
+		}
+
 		string FindOutputFile (ProjectBuilder builder, XamarinAndroidApplicationProject proj, string fileName)
 		{
 			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
@@ -639,9 +762,29 @@ namespace UnnamedProject {
 
 		bool IsTypeMapAssemblyPath (string file)
 		{
-			var fileName = Path.GetFileName (file);
+			return IsTypeMapAssemblyName (Path.GetFileName (file));
+		}
+
+		bool IsTypeMapAssemblyName (string fileName)
+		{
 			return fileName.EndsWith (".TypeMap.dll", StringComparison.Ordinal) ||
 				fileName.StartsWith ("_Microsoft.Android.TypeMap", StringComparison.Ordinal);
+		}
+
+		static bool FileContentsAreEqual (string first, string second)
+		{
+			return ComputeFileHash (first).SequenceEqual (ComputeFileHash (second));
+		}
+
+		static byte [] ComputeFileHash (string path)
+		{
+			using var stream = File.OpenRead (path);
+			return ComputeHash (stream);
+		}
+
+		static byte [] ComputeHash (Stream stream)
+		{
+			return SHA256.HashData (stream);
 		}
 
 		sealed record DynamicCodeSupportProfile (
