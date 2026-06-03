@@ -517,11 +517,11 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
   <data name="XA2024" xml:space="preserve">
-    <value>Unable to load assembly '{0}'.</value>
+    <value>'{0}' 어셈블리를 로드할 수 없습니다.</value>
     <comment>{0} - The path to the assembly that could not be loaded.</comment>
   </data>
   <data name="XA2025" xml:space="preserve">
-    <value>Assembly {0} does not exist.</value>
+    <value>{0} 어셈블리가 없습니다.</value>
     <comment>{0} - The path to the assembly that does not exist.</comment>
   </data>
   <data name="XA2006" xml:space="preserve">
@@ -839,16 +839,16 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 </comment>
   </data>
   <data name="XA4319" xml:space="preserve">
-    <value>No NativeAOT DGML files were provided.</value>
+    <value>NativeAOT DGML 파일이 제공되지 않았습니다.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
   </data>
   <data name="XA4320" xml:space="preserve">
-    <value>ACW map file '{0}' was not found.</value>
+    <value>ACW 맵 파일 '{0}'을(를) 찾을 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: ACW
 {0} - The path to the ACW map file.</comment>
   </data>
   <data name="XA4321" xml:space="preserve">
-    <value>NativeAOT DGML file '{0}' was not found.</value>
+    <value>NativeAOT DGML 파일 '{0}'을(를) 찾을 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, DGML
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
@@ -1141,6 +1141,17 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>생성된 Java 호출 가능 래퍼 코드가 변경되었습니다. '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' 명령이 실패했습니다.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1163,15 +1174,15 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The timeout in seconds.</comment>
   </data>
   <data name="XA0146" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.</value>
+    <value>'{0}'이(가) 올바르게 정렬된 ELF 파일인지 확인하려는 시도가 예외로 인해 실패했으며, 파일에 대한 정렬 검사를 건너뜁니다.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0147" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.</value>
+    <value>'{0}'이(가) 유효한 ELF 파일인지 확인하려는 시도가 예외로 인해 실패했으며, 파일에 대한 AOT 검사를 건너뜁니다.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.</value>
+    <value>'{0}'이(가) 유효한 ELF 파일인지 확인하려는 시도가 예외로 인해 실패했으며, 파일에 대한 기호 '{1}@{2}' 검사를 건너뜁니다.</value>
     <comment>{0} - The file path.
 {1} - The symbol name.
 {2} - The section name.</comment>
