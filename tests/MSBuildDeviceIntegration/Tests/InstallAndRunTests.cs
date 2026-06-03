@@ -93,8 +93,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
 			}
 
-			if (runtime == AndroidRuntime.CoreCLR && isRelease && typemapImplementation == "trimmable") {
-				Assert.Ignore ("TODO: re-enable when dotnet run --no-build succeeds for Release CoreCLR trimmable typemap in MSBuildDeviceIntegration");
+			// `dotnet run --no-build` re-runs GenerateNativeApplicationConfigSources, which fails with
+			// XAGCA7023 because obj/<config>/android/assets/<rid>/Mono.Android.dll is not present in the
+			// no-build incremental state for the CoreCLR trimmable typemap (both Debug and Release).
+			if (runtime == AndroidRuntime.CoreCLR && typemapImplementation == "trimmable") {
+				Assert.Ignore ("TODO: re-enable when dotnet run --no-build succeeds for CoreCLR trimmable typemap in MSBuildDeviceIntegration");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
