@@ -29,54 +29,58 @@ steps:
     flattenFolders: false
 
 # Build-side files from bin/Build$(Configuration); flat at the destination
-# root, matching the old CopyFilesSimple behavior.
+# root, matching the old CopyFilesSimple behavior. Use the repo root as
+# sourceFolder so a missing bin/Build$(Configuration) is just 0 matches
+# rather than a hard error (matches the old C# Directory.Exists guard).
 - task: CopyFiles@2
   displayName: Copy bin/Build$(Configuration) result files
   condition: ${{ parameters.condition }}
   continueOnError: true
   inputs:
-    sourceFolder: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}
+    sourceFolder: ${{ parameters.xaSourcePath }}
     contents: |
-      XABuildConfig.cs
-      *.binlog
-      prepare*log
-      *.json
-      *.mk
-      *.projitems
-      *.cmake
-      *.targets
-      CMakeCache.txt
-      .ninja_log
-      clang-tidy*.log
+      bin/Build${{ parameters.configuration }}/XABuildConfig.cs
+      bin/Build${{ parameters.configuration }}/*.binlog
+      bin/Build${{ parameters.configuration }}/prepare*log
+      bin/Build${{ parameters.configuration }}/*.json
+      bin/Build${{ parameters.configuration }}/*.mk
+      bin/Build${{ parameters.configuration }}/*.projitems
+      bin/Build${{ parameters.configuration }}/*.cmake
+      bin/Build${{ parameters.configuration }}/*.targets
+      bin/Build${{ parameters.configuration }}/CMakeCache.txt
+      bin/Build${{ parameters.configuration }}/.ninja_log
+      bin/Build${{ parameters.configuration }}/clang-tidy*.log
     targetFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
     flattenFolders: true
 
 # Test-side files from bin/Test$(Configuration); top-level only, flat.
+# Same pattern: sourceFolder is the repo root so missing folders don't error.
 - task: CopyFiles@2
   displayName: Copy bin/Test$(Configuration) result files
   condition: ${{ parameters.condition }}
   continueOnError: true
   inputs:
-    sourceFolder: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}
+    sourceFolder: ${{ parameters.xaSourcePath }}
     contents: |
-      *.apkdesc
-      *.aabdesc
-      logcat-*.txt
-      *log
-      TestOutput-*.txt
-      Timing_*
-      *.runsettings
+      bin/Test${{ parameters.configuration }}/*.apkdesc
+      bin/Test${{ parameters.configuration }}/*.aabdesc
+      bin/Test${{ parameters.configuration }}/logcat-*.txt
+      bin/Test${{ parameters.configuration }}/*log
+      bin/Test${{ parameters.configuration }}/TestOutput-*.txt
+      bin/Test${{ parameters.configuration }}/Timing_*
+      bin/Test${{ parameters.configuration }}/*.runsettings
     targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}
     flattenFolders: true
 
-# Test-side compatibility subfolder.
+# Test-side compatibility subfolder. sourceFolder at the repo root so a
+# missing compatibility/ doesn't error.
 - task: CopyFiles@2
   displayName: Copy bin/Test$(Configuration)/compatibility files
   condition: ${{ parameters.condition }}
   continueOnError: true
   inputs:
-    sourceFolder: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/compatibility
-    contents: '*'
+    sourceFolder: ${{ parameters.xaSourcePath }}
+    contents: bin/Test${{ parameters.configuration }}/compatibility/*
     targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}/compatibility
     flattenFolders: true
 
@@ -98,10 +102,10 @@ steps:
     $tempDir = [System.IO.Path]::GetTempPath()
     $destDir = "$(Build.StagingDirectory)/Test${{ parameters.configuration }}/test-extras"
     if (Test-Path $tempDir) {
-        $matches = Get-ChildItem -Path $tempDir -Filter 'llc.exe-*' -File -ErrorAction SilentlyContinue
-        if ($matches) {
+        $llcFiles = Get-ChildItem -Path $tempDir -Filter 'llc.exe-*' -File -ErrorAction SilentlyContinue
+        if ($llcFiles) {
             New-Item -ItemType Directory -Force -Path $destDir | Out-Null
-            $matches | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $destDir -Force -ErrorAction SilentlyContinue }
+            $llcFiles | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $destDir -Force -ErrorAction SilentlyContinue }
         }
     }
   displayName: Copy llc.exe-* temp files to test-extras
