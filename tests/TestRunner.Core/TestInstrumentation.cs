@@ -39,6 +39,16 @@ public abstract class TestInstrumentation : Instrumentation
 	public override void OnCreate (Bundle? arguments)
 	{
 		instrumentationArguments = arguments;
+		// Log unhandled exceptions from any thread so a crash on an NUnit
+		// worker / runner thread doesn't just SIGABRT the process silently
+		// (which surfaces as "Zero tests ran" with no diagnostics).
+		AppDomain.CurrentDomain.UnhandledException += (_, e) => {
+			var ex = e.ExceptionObject as Exception;
+			Log.Error (LogTag, $"Unhandled exception (terminating={e.IsTerminating}): {ex}");
+		};
+		TaskScheduler.UnobservedTaskException += (_, e) => {
+			Log.Error (LogTag, $"Unobserved task exception: {e.Exception}");
+		};
 		base.OnCreate (arguments);
 		Start ();
 	}
