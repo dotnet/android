@@ -11,7 +11,6 @@ namespace Xamarin.Android.Prepare
 
 		partial class Paths
 		{
-			public const string NdkToolchainOSTag = "linux-x86_64";
 		}
 	}
 }
