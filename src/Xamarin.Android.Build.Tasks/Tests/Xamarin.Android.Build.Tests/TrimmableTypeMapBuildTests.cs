@@ -384,15 +384,20 @@ namespace UnnamedProject {
 			// to avoid coupling to the hash.
 			string? exportShapesJava = null;
 			string? exportShapesText = null;
+			var managedPeerReferences = new List<string> ();
 			foreach (var f in allJavaFiles) {
 				var text = File.ReadAllText (f);
-				StringAssert.DoesNotContain ("net.dot.jni.ManagedPeer", text,
-					$"Trimmable generated Java source should not reference net.dot.jni.ManagedPeer: {f}");
+				if (text.Contains ("net.dot.jni.ManagedPeer", StringComparison.Ordinal)) {
+					managedPeerReferences.Add (f);
+				}
 				if (exportShapesJava == null && text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
 					exportShapesJava = f;
 					exportShapesText = text;
 				}
 			}
+			Assert.IsEmpty (managedPeerReferences,
+				"Trimmable generated Java source should not reference net.dot.jni.ManagedPeer. Offending files:\n  " +
+				string.Join ("\n  ", managedPeerReferences));
 			Assert.IsNotNull (exportShapesJava,
 				$"Could not find a generated JCW Java file referencing both EchoString and InitialFoo under {javaDir}.");
 			Assert.IsNotNull (exportShapesText,
@@ -576,7 +581,6 @@ namespace UnnamedProject {
 			var javaDir = Path.Combine (typemapDir, "java");
 			DirectoryAssert.Exists (javaDir, "Trimmable JCW Java output directory should exist.");
 			var javaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
-			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 		}
 		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)
