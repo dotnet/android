@@ -14,6 +14,12 @@
     <DebuggingToolsOutputDirectory Condition=" '$(DebuggingToolsOutputDirectory)' == '' ">$(MicrosoftAndroidSdkOutDir.TrimEnd('\\').TrimEnd('/'))</DebuggingToolsOutputDirectory>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Ensure the Android SDK (including cmake) is fully downloaded and extracted before fastdev's
+         native build invokes cmake. Same pattern used by proguard-android/bundletool/r8/etc. -->
+    <ProjectReference Include="..\..\src\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
+  </ItemGroup>
+
   <Import Project="fastdevtools.targets" />
 
 </Project>
