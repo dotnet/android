@@ -115,6 +115,185 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void TrimmableTypeMapInheritedVirtualOverrideUsesCorrectUco ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			const string expectedLogcatOutput = "UCO_OVERRIDE_REUSE_RESULTS 107:211:1:1:405:1:0";
+
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "ucoverride")) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetDefaultTargetDevice ();
+			proj.Sources.Add (new BuildItem.Source ("UcoOverrideTypes.cs") {
+				TextContent = () => @"using System;
+using Android.Content;
+using Android.Runtime;
+using Android.Views;
+
+namespace UnnamedProject
+{
+	[Register (""my/app/UcoOverrideBase"")]
+	public abstract class UcoOverrideBase : View
+	{
+		public UcoOverrideBase (Context context) : base (context) { }
+
+		protected UcoOverrideBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public abstract override int SolidColor { get; }
+	}
+
+	[Register (""my/app/UcoOverrideOne"")]
+	public class UcoOverrideOne : UcoOverrideBase
+	{
+		readonly int value;
+		public static int Calls;
+
+		public UcoOverrideOne (Context context, int value) : base (context)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideOne (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 100;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideTwo"")]
+	public class UcoOverrideTwo : UcoOverrideBase
+	{
+		readonly int value;
+		public static int Calls;
+
+		public UcoOverrideTwo (Context context, int value) : base (context)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideTwo (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 200;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenBase"")]
+	public class UcoOverrideHiddenBase : View
+	{
+		public static int Calls;
+
+		public UcoOverrideHiddenBase (Context context) : base (context) { }
+
+		protected UcoOverrideHiddenBase (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public override int SolidColor {
+			get {
+				Calls++;
+				return 300;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenIntermediate"")]
+	public class UcoOverrideHiddenIntermediate : UcoOverrideHiddenBase
+	{
+		public UcoOverrideHiddenIntermediate (Context context) : base (context) { }
+
+		protected UcoOverrideHiddenIntermediate (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		// Deliberately hide the base virtual slot while reusing the same JNI signature.
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public new virtual int SolidColor {
+			get {
+				return 400;
+			}
+		}
+	}
+
+	[Register (""my/app/UcoOverrideHiddenLeaf"")]
+	public class UcoOverrideHiddenLeaf : UcoOverrideHiddenIntermediate
+	{
+		readonly int value;
+		public static new int Calls;
+
+		public UcoOverrideHiddenLeaf (Context context, int value) : base (context)
+		{
+			this.value = value;
+		}
+
+		protected UcoOverrideHiddenLeaf (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register (""getSolidColor"", ""()I"", ""GetGetSolidColorHandler"")]
+		public override int SolidColor {
+			get {
+				Calls++;
+				return value + 400;
+			}
+		}
+	}
+}
+",
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				@"var one = new UcoOverrideOne (this, 7);
+var two = new UcoOverrideTwo (this, 11);
+int oneResult = InvokeDoWork (one);
+int twoResult = InvokeDoWork (two);
+var leaf = new UcoOverrideHiddenLeaf (this, 5);
+int leafResult = InvokeDoHiddenWork (leaf);
+Console.WriteLine ($""# UCO_OVERRIDE_REUSE_RESULTS {oneResult}:{twoResult}:{UcoOverrideOne.Calls}:{UcoOverrideTwo.Calls}:{leafResult}:{UcoOverrideHiddenLeaf.Calls}:{UcoOverrideHiddenBase.Calls}"");
+if (oneResult != 107 || twoResult != 211 || UcoOverrideOne.Calls != 1 || UcoOverrideTwo.Calls != 1 ||
+		leafResult != 405 || UcoOverrideHiddenLeaf.Calls != 1 || UcoOverrideHiddenBase.Calls != 0) {
+	throw new InvalidOperationException (""Unexpected UCO override dispatch result."");
+}
+
+static int InvokeDoWork (Java.Lang.Object instance)
+{
+	return InvokeIntMethod (instance, ""getSolidColor"");
+}
+
+static int InvokeDoHiddenWork (Java.Lang.Object instance)
+{
+	return InvokeIntMethod (instance, ""getSolidColor"");
+}
+
+static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
+{
+	IntPtr klass = global::Android.Runtime.JNIEnv.GetObjectClass (instance.Handle);
+	IntPtr method = global::Android.Runtime.JNIEnv.GetMethodID (klass, methodName, ""()I"");
+	try {
+		return global::Android.Runtime.JNIEnv.CallIntMethod (instance.Handle, method);
+	} finally {
+		global::Android.Runtime.JNIEnv.DeleteLocalRef (klass);
+	}
+}");
+			using var builder = CreateApkBuilder ();
+			Assert.True (builder.Install (proj), "Project should have installed.");
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45), $"Output did not contain {expectedLogcatOutput}!");
+			Assert.True (builder.Uninstall (proj), "Project should have uninstalled.");
+		}
+
+		[Test]
 		public void DotNetRunWaitForExit ()
 		{
 			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832

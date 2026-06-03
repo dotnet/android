@@ -187,7 +187,11 @@ namespace Android.Runtime
 				return new AndroidValueManager ();
 			}
 
-			if (RuntimeFeature.IsCoreClrRuntime || RuntimeFeature.IsNativeAotRuntime) {
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				return new JavaMarshalValueManager ();
+			}
+
+			if (RuntimeFeature.IsNativeAotRuntime) {
 				return new JavaMarshalValueManager ();
 			}
 
