@@ -1,0 +1,109 @@
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  configuration: $(XA.Build.Configuration)
+  condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
+
+# Copies extra build and test result files into $(Build.StagingDirectory) so
+# they can be uploaded as pipeline artifacts. This template replaces the old
+# `Step_CopyExtraResultFilesForCI` xaprepare step.
+steps:
+# Build-side files: configuration files scattered across the source tree.
+# Preserve the relative paths so e.g. external/.../config.log lands at
+# Build$(Configuration)/external/.../config.log.
+- task: CopyFiles@2
+  displayName: Copy extra build result files (preserve paths)
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+  inputs:
+    sourceFolder: ${{ parameters.xaSourcePath }}
+    contents: |
+      **/Configuration.OperatingSystem.props
+      **/Configuration.Override.props
+      **/config.log
+      **/config.status
+      **/config.h
+      **/android-*.config.cache
+      CMakeFiles/*.log
+      external/Java.Interop/bin/Build${{ parameters.configuration }}/*.props
+    targetFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
+    flattenFolders: false
+
+# Build-side files from bin/Build$(Configuration); flat at the destination
+# root, matching the old CopyFilesSimple behavior.
+- task: CopyFiles@2
+  displayName: Copy bin/Build$(Configuration) result files
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+  inputs:
+    sourceFolder: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}
+    contents: |
+      XABuildConfig.cs
+      *.binlog
+      prepare*log
+      *.json
+      *.mk
+      *.projitems
+      *.cmake
+      *.targets
+      CMakeCache.txt
+      .ninja_log
+      clang-tidy*.log
+    targetFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
+    flattenFolders: true
+
+# Test-side files from bin/Test$(Configuration); top-level only, flat.
+- task: CopyFiles@2
+  displayName: Copy bin/Test$(Configuration) result files
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+  inputs:
+    sourceFolder: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}
+    contents: |
+      *.apkdesc
+      *.aabdesc
+      logcat-*.txt
+      *log
+      TestOutput-*.txt
+      Timing_*
+      *.runsettings
+    targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}
+    flattenFolders: true
+
+# Test-side compatibility subfolder.
+- task: CopyFiles@2
+  displayName: Copy bin/Test$(Configuration)/compatibility files
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+  inputs:
+    sourceFolder: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/compatibility
+    contents: '*'
+    targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}/compatibility
+    flattenFolders: true
+
+# Repo-root TestResult*.xml and *.csv files into test-extras (top-level only).
+- task: CopyFiles@2
+  displayName: Copy TestResult*.xml and *.csv to test-extras
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+  inputs:
+    sourceFolder: ${{ parameters.xaSourcePath }}
+    contents: |
+      TestResult*.xml
+      *.csv
+    targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}/test-extras
+    flattenFolders: true
+
+# Stray llc.exe-* files from the system temp directory (matches Path.GetTempPath()).
+- pwsh: |
+    $tempDir = [System.IO.Path]::GetTempPath()
+    $destDir = "$(Build.StagingDirectory)/Test${{ parameters.configuration }}/test-extras"
+    if (Test-Path $tempDir) {
+        $matches = Get-ChildItem -Path $tempDir -Filter 'llc.exe-*' -File -ErrorAction SilentlyContinue
+        if ($matches) {
+            New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+            $matches | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $destDir -Force -ErrorAction SilentlyContinue }
+        }
+    }
+  displayName: Copy llc.exe-* temp files to test-extras
+  condition: ${{ parameters.condition }}
+  continueOnError: true
