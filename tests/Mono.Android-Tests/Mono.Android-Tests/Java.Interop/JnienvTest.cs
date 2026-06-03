@@ -509,13 +509,20 @@ namespace Java.InteropTests
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
 
 			WeakReference r = null;
+			Exception threadException = null;
 			var t = new Thread (() => {
-				var c = new MyCb ();
-				Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
-				r = new WeakReference (c);
+				try {
+					var c = new MyCb ();
+					Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
+					r = new WeakReference (c);
+				} catch (Exception e) {
+					threadException = e;
+				}
 			});
 			t.Start ();
 			t.Join ();
+			if (threadException != null)
+				throw new Exception ("Worker thread failed", threadException);
 
 			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
