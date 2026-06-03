@@ -121,9 +121,9 @@ public sealed class JavaPeerScanner : IDisposable
 			if (frameworkAssemblyNames.Contains (index.AssemblyName)) {
 				continue;
 			}
-			foreach (var frameworkAssemblyName in frameworkAssemblyNames) {
-				if (index.ReferencedTypeNamesByAssembly.TryGetValue (frameworkAssemblyName, out var typeNames)) {
-					referencedFrameworkTypes.UnionWith (typeNames);
+			foreach (var referencedTypeNames in index.ReferencedTypeNamesByAssembly) {
+				if (frameworkAssemblyNames.Contains (referencedTypeNames.Key)) {
+					referencedFrameworkTypes.UnionWith (referencedTypeNames.Value);
 				}
 			}
 		}
