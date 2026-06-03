@@ -35,3 +35,9 @@ Makefile	eol=lf
 *.wixproj	eol=crlf
 *.wxs	eol=crlf
 *.rtf	eol=crlf
+
+# Gradle wrapper must stay LF on all platforms (executed under Bash on Unix)
+gradlew	eol=lf
+*.properties	eol=lf
+*.kt	eol=lf
+*.kts	eol=lf

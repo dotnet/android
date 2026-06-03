@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using MonoDroid.Utils;
 
@@ -23,7 +24,9 @@ namespace Java.Interop.Tools.Generator.Transformation
 			// We need to generate C# compatible names as well as prevent overriding 
 			// them as we cannot generate JCW for them.
 
-			foreach (var method in c.Methods.Where (m => m.IsKotlinNameMangled)) {
+			var mangled = c.Methods.Where (m => m.IsKotlinNameMangled).ToList ();
+
+			foreach (var method in mangled) {
 
 				// If the method is virtual, mark it as !virtual as it can't be overridden in Java
 				if (!method.IsFinal)
@@ -34,12 +37,52 @@ namespace Java.Interop.Tools.Generator.Transformation
 
 				FixMethodName (method);
 			}
+
+			RemoveCollidingSiblings (c, mangled);
 		}
 
 		private static void FixupInterface (InterfaceGen gen)
 		{
-			foreach (var method in gen.Methods.Where (m => m.IsKotlinNameMangled))
+			var mangled = gen.Methods.Where (m => m.IsKotlinNameMangled).ToList ();
+
+			foreach (var method in mangled)
 				FixMethodName (method);
+
+			RemoveCollidingSiblings (gen, mangled);
+		}
+
+		// After the rename above, hash-mangled siblings can collide with each
+		// other AND with pre-existing non-mangled overloads. Both cases produce
+		// CS0111 in the generated code. Until step 2 of dotnet/java-interop#1431
+		// projects inline-class params as strongly-typed wrappers, drop the
+		// mangled duplicate deterministically and warn so the user can override
+		// via Metadata.xml if desired. Non-mangled methods are always kept; only
+		// mangled methods are ever removed.
+		private static void RemoveCollidingSiblings (GenBase gen, List<Method> renamed)
+		{
+			if (renamed.Count == 0)
+				return;
+
+			foreach (var method in renamed) {
+				// A mangled method is always the "lesser" choice compared to a
+				// real non-mangled Kotlin API, so drop it whenever ANY non-mangled
+				// overload matches — regardless of source order.
+				var nonMangledMatch = gen.Methods
+					.FirstOrDefault (m => m != method && !m.IsKotlinNameMangled
+						&& m.Name == method.Name && m.Matches (method));
+				if (nonMangledMatch == null) {
+					// Otherwise (only mangled siblings collide), keep the
+					// first-declared one and drop later mangled duplicates.
+					var earlierMangled = gen.Methods
+						.TakeWhile (m => m != method)
+						.FirstOrDefault (m => m.Name == method.Name && m.Matches (method));
+					if (earlierMangled == null)
+						continue;
+				}
+
+				Report.LogCodedWarning (0, Report.WarningKotlinNameMangledCollision, method, gen.FullName, method.Name, method.JavaName);
+				gen.Methods.Remove (method);
+			}
 		}
 
 		private static void FixMethodName (Method method)

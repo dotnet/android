@@ -74,6 +74,7 @@ namespace Java.Interop.Tools.Generator
 		public static LocalizedMessage WarningUnknownGenericConstraint => new LocalizedMessage (0x8B00, Localization.Resources.Generator_BG8B00);
 		public static LocalizedMessage WarningBaseInterfaceNotFound => new LocalizedMessage (0x8C00, Localization.Resources.Generator_BG8C00);
 		public static LocalizedMessage WarningBaseInterfaceInvalid => new LocalizedMessage (0x8C01, Localization.Resources.Generator_BG8C01);
+		public static LocalizedMessage WarningKotlinNameMangledCollision => new LocalizedMessage (0x8C02, Localization.Resources.Generator_BG8C02);
 
 		public static void LogCodedErrorAndExit (LocalizedMessage message, params string [] args)
 			=> LogCodedErrorAndExit (message, null, null, args);

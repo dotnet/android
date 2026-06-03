@@ -430,6 +430,15 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to For type &apos;{0}&apos;, the Kotlin name-mangled method &apos;{1}&apos; (originally &apos;{2}&apos;) has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning..
+        /// </summary>
+        public static string Generator_BG8C02 {
+            get {
+                return ResourceManager.GetString("Generator_BG8C02", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot generate Java wrapper for type &apos;{0}&apos;. Only &apos;class&apos; types are supported..
         /// </summary>
         public static string JavaCallableWrappers_XA4200 {

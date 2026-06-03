@@ -308,6 +308,10 @@ The following terms should not be translated: Metadata.xml, path.</comment>
     <value>For type '{0}', base interface '{1}' is invalid.</value>
     <comment>{0}, {1} - .NET types.</comment>
   </data>
+  <data name="Generator_BG8C02" xml:space="preserve">
+    <value>For type '{0}', the Kotlin name-mangled method '{1}' (originally '{2}') has multiple hash-suffixed siblings that erase to the same C# signature. Only the first will be emitted; remove the duplicate via Metadata.xml to suppress this warning.</value>
+    <comment>{0} - .NET type. {1} - C# method name. {2} - Original (mangled) JVM method name.</comment>
+  </data>
   <data name="JavaCallableWrappers_XA4200" xml:space="preserve">
     <value>Cannot generate Java wrapper for type '{0}'. Only 'class' types are supported.</value>
     <comment>{0} - Java type.
