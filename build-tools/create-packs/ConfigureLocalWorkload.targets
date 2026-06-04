@@ -80,7 +80,10 @@
     <PropertyGroup>
       <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetSdkManifestsFolder)\</_LocalSdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
-      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
+      <!-- NOTE: place the synthetic workload manifest under the SDK's full feature band (which includes any preview
+           suffix, e.g. "10.0.400-preview.0") so that SdkDirectoryWorkloadManifestProvider, which probes
+           sdk-manifests/<SdkFeatureBand.ToString()>/, can discover it on prerelease SDKs. -->
+      <_EmptyWorkloadDir>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetPreviewVersionBand)\android.deps.workload\0.0.1\</_EmptyWorkloadDir>
     </PropertyGroup>
 
     <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
