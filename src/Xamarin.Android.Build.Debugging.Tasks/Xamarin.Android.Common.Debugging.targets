@@ -1,0 +1,434 @@
+﻿<!--
+***********************************************************************************************
+Xamarin.Android.Common.Debugging.targets
+
+WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and have
+  created a backup copy.  Incorrect changes to this file will make it
+  impossible to load or build your projects from the command-line or the IDE.
+
+This file imports the version- and platform-specific targets for the project importing
+this file. This file also defines targets to produce an error if the specified targets
+file does not exist, but the project is built anyway (command-line or IDE build).
+
+Copyright (C) 2016 Xamarin. All rights reserved.
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<UsingTask TaskName="Xamarin.Android.Tasks.Adb" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.DetectAndroidManifestDependencyChanges" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.DetectIfAppWasUninstalled" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GetPrimaryCpuAbi" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GetGdbSymbols" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.GenerateGdbEnvironment" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.MoveSubfolder" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.ResolveXamarinAndroidTools" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.RunActivity" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.RunTests" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.WaitForAppDetection" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+
+<!--
+*******************************************
+  Extensibility hook that allows VS to
+  provide extra behavior without modifying
+  the core targets.
+*******************************************
+-->
+<Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets"
+	Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets')"/>
+
+<!--
+*******************************************
+  Designer Targets
+*******************************************
+-->
+<Target Name="_SetupDesignTimeBuildForIntellisense">
+	<PropertyGroup>
+		<DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' And '$(BuildingInsideVisualStudio)' == 'true' ">true</DesignTimeBuild>
+	</PropertyGroup>
+</Target>
+
+<!--
+*******************************************
+  FastDev/Instant Run Targets
+*******************************************
+-->
+
+<PropertyGroup>
+	<_DevicePropertyCache>$(IntermediateOutputPath)devices.cache</_DevicePropertyCache>
+	<_UploadFlag>$(IntermediateOutputPath)upload.flag</_UploadFlag>
+	<_ConfigurationCacheDirectory>$(BaseIntermediateOutputPath).cache\</_ConfigurationCacheDirectory>
+</PropertyGroup>
+
+<PropertyGroup>
+	<_OnResolveMonoAndroidSdks>
+		$(_OnResolveMonoAndroidSdks)
+		;_ResolveXamarinAndroidTools
+	</_OnResolveMonoAndroidSdks>
+</PropertyGroup>
+
+<Target Name="_ResolveXamarinAndroidTools" DependsOnTargets="_SetLatestTargetFrameworkVersion">
+	<!-- Sets static values on Xamarin.AndroidTools.AndroidSdk and MonoDroidSdk -->
+	<ResolveXamarinAndroidTools
+			AndroidSdkPath="$(_AndroidSdkDirectory)"
+			AndroidNdkPath="$(_AndroidNdkDirectory)"
+			JavaSdkPath="$(_JavaSdkDirectory)"
+			MonoAndroidToolsPath="$(MonoAndroidToolsDirectory)"
+			MonoAndroidBinDirectory="$(MonoAndroidBinDirectory)"
+			ReferenceAssemblyPaths="$(_XATargetFrameworkDirectories)"
+	/>
+</Target>
+
+<Target Name="_SetDexExtension">
+	<CreateProperty Value="dex">
+		<Output TaskParameter="Value" PropertyName="_JavaConversionExtension" />
+	</CreateProperty>
+</Target>
+
+<Target Name="_CompileFastDevDex" DependsOnTargets="_IncludeNativeSystemLibraries">
+	<ItemGroup>
+		<_DexFileForFastDev Include="@(_DexFile)" />
+		<_DexFileForFastDevInput Include="@(_DexFile)" />
+		<_AndroidNativeLibraryForFastDev Include="@(AndroidNativeLibrary)" />
+	</ItemGroup>
+</Target>
+
+<!--
+*******************************************
+  Gdb Debugging Targets
+*******************************************
+-->
+
+<Target Name="_GetPrimaryCpuAbi"
+		DependsOnTargets="_SetupDesignTimeBuildForIntellisense;_ResolveXamarinAndroidTools;_ValidateAndroidPackageProperties"
+		Condition=" '$(AndroidApplication)' == 'true' and '$(EmbedAssembliesIntoApk)' == 'false' ">
+	<GetPrimaryCpuAbi
+			AndroidPackage="$(_AndroidPackage)"
+			AdbTarget="$(AdbTarget)"
+			AdbTargetArchitecture="$(AdbTargetArchitecture)"
+			AdbOptions="$(AdbOptions)"
+			DevicePropertyCache="$(_DevicePropertyCache)"
+			RuntimeIdentifiers="$(RuntimeIdentifier);$(RuntimeIdentifiers)"
+			Condition=" '$(DesignTimeBuild)' != 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+		<Output TaskParameter="ResultingAbi" PropertyName="_PrimaryCpuAbi" />
+		<Output TaskParameter="ToolsAbi" PropertyName="_FastDevToolsAbi" />
+		<Output TaskParameter="RuntimeIdentifier" PropertyName="_PrimaryRuntimeIdentifier" />
+		<Output TaskParameter="SdkVersion" PropertyName="_DeviceSdkVersion" />
+	</GetPrimaryCpuAbi>
+	<PropertyGroup>
+		<_PrimaryCpuAbi Condition="$(_PrimaryCpuAbi) == ''">@(_BuildTargetAbis)</_PrimaryCpuAbi>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(UsingAndroidNETSdk)' == 'true' and '$(_PrimaryRuntimeIdentifier)' != '' ">
+		<!-- Use a single $(RuntimeIdentifier) -->
+		<RuntimeIdentifier>$(_PrimaryRuntimeIdentifier)</RuntimeIdentifier>
+		<RuntimeIdentifiers></RuntimeIdentifiers>
+		<AndroidSupportedAbis>$(_PrimaryCpuAbi)</AndroidSupportedAbis>
+	</PropertyGroup>
+</Target>
+
+<Target Name="_DetectIfAppWasUninstalled"
+		Condition="'$(AndroidApplication)'!='' And $(AndroidApplication) And ('$(DesignTimeBuild)' == 'false' Or '$(DesignTimeBuild)' == '') And '$(_AndroidPackage)' != ''"
+	>
+	<DetectIfAppWasUninstalled
+			ContinueOnError="true"
+			AdbTarget="$(AdbTarget)"
+			PackageName="$(_AndroidPackage)"
+			UploadFlagFile="$(_UploadFlag)"
+			UserID="$(AndroidDeviceUserId)"
+	/>
+</Target>
+
+<Target Name="_GetTargetSymbols"
+		DependsOnTargets="AndroidPrepareForBuild;_GetPrimaryCpuAbi"
+		Outputs="$(AndroidGdbSymbolsPath)\app_process"
+		Condition="!Exists ('$(AndroidGdbSymbolsPath)\app_process')">
+	<MakeDir Directories="$(AndroidGdbSymbolsPath)" />
+
+	<CreateProperty Condition="!$(_Android32bitArchitectures.Contains($(_PrimaryCpuAbi)))" Value="lib64">
+		<Output TaskParameter="Value" PropertyName="_AndroidLibDirectory" />
+	</CreateProperty>
+	<CreateProperty Condition="'$(_AndroidLibDirectory)' == ''" Value="lib">
+		<Output TaskParameter="Value" PropertyName="_AndroidLibDirectory" />
+	</CreateProperty>
+
+	<CreateProperty Condition="(!$(_Android32bitArchitectures.Contains($(_PrimaryCpuAbi))))" Value="app_process64">
+		<Output TaskParameter="Value" PropertyName="_AndroidAppProcess" />
+	</CreateProperty>
+	<CreateProperty Condition="($(_Android32bitArchitectures.Contains($(_PrimaryCpuAbi)))) And ($(_DeviceSdkVersion) &gt;= 21)" Value="app_process32">
+		<Output TaskParameter="Value" PropertyName="_AndroidAppProcess" />
+	</CreateProperty>
+	<CreateProperty Condition="('$(_AndroidAppProcess)' == '') Or ($(_DeviceSdkVersion) &lt; 21)" Value="app_process">
+		<Output TaskParameter="Value" PropertyName="_AndroidAppProcess" />
+	</CreateProperty>
+
+	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) pull /system/$(_AndroidLibDirectory)     $(AndroidGdbSymbolsPath)" />
+	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) pull /system/bin/$(_AndroidAppProcess)   $(AndroidGdbSymbolsPath)\app_process" />
+
+	<GetGdbSymbols
+		AdbTarget="$(AdbTarget)"
+		PrimaryCpuAbi="$(_PrimaryCpuAbi)"
+		GdbSymbolsPath="$(AndroidGdbSymbolsPath)"
+		Package="$(_AndroidPackage)"
+		OutputPath="$(OutputPath)"
+	/>
+</Target>
+
+<Target Name="_PrepGdbConnection"
+		DependsOnTargets="AndroidPrepareForBuild;_GetPrimaryCpuAbi;_GetTargetSymbols">
+	<GenerateGdbEnvironment
+			OutputFile="$(AndroidGdbSymbolsPath)\gdb.env"
+			GdbSymbolsPath="$(AndroidGdbSymbolsPath)"
+			GdbTargetPort="$(AndroidGdbTargetPort)"
+	/>
+	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) forward tcp:$(AndroidGdbTargetPort) tcp:$(AndroidGdbHostPort)" />
+	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) shell setprop debug.mono.gdbport $(AndroidGdbTargetPort)" />
+</Target>
+
+<Target Name="_GetProjectNdkBuildSymbols"
+		DependsOnTargets="_PrepGdbConnection"
+		Condition="Exists ('obj\local')">
+	<ItemGroup>
+		<_NdkBuildNativeLibs Include="obj\local\$(_AdbTargetAbi)\lib*.so"/>
+	</ItemGroup>
+	<Copy
+			SourceFiles="@(_NdkBuildNativeLibs)"
+			DestinationFolder="$(AndroidGdbSymbolsPath)"
+	/>
+</Target>
+
+<Target Name="_Run"
+		DependsOnTargets="AndroidPrepareForBuild"
+		Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
+	<PropertyGroup>
+		<AndroidSdbTargetPort Condition="'$(AndroidSdbTargetPort)' == ''">10000</AndroidSdbTargetPort>
+		<AndroidSdbHostPort Condition="'$(AndroidSdbHostPort)' == ''">10000</AndroidSdbHostPort>
+		<AndroidAttachDebugger Condition="'$(AndroidAttachDebugger)' == ''">False</AndroidAttachDebugger>
+		<AndroidDebuggerServer Condition="'$(AndroidDebuggerServer)' == ''">True</AndroidDebuggerServer>
+		<_AndroidRunForceStop Condition="'$(_AndroidRunForceStop)' == ''">True</_AndroidRunForceStop>
+		<_AndroidAllowJavaDebugging Condition="'$(_AndroidAllowJavaDebugging)' == ''">True</_AndroidAllowJavaDebugging>
+	</PropertyGroup>
+	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) forward tcp:$(AndroidSdbTargetPort) tcp:$(AndroidSdbHostPort)"
+		Condition="'$(AndroidAttachDebugger)' == 'True' And '$(AndroidDebuggerServer)' == 'True'" />
+	<GetAndroidActivityName
+			Condition=" '$(RunActivity)' == '' "
+			ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
+		<Output TaskParameter="ActivityName" PropertyName="RunActivity" />
+	</GetAndroidActivityName>
+	<RunActivity
+			ActivityName="$(RunActivity)"
+			AdbTarget="$(AdbTarget)"
+			PackageName="$(_AndroidPackage)"
+			AttachDebugger="$(AndroidAttachDebugger)"
+			Port="$(AndroidSdbTargetPort)"
+			UserID="$(AndroidDeviceUserId)"
+			Server="$(AndroidDebuggerServer)"
+			ForceStop="$(_AndroidRunForceStop)"
+			AllowJavaDebugging="$(_AndroidAllowJavaDebugging)"
+	/>
+</Target>
+
+<Target Name="_Gdb"
+		DependsOnTargets="AndroidPrepareForBuild;_GetPrimaryCpuAbi;_GetTargetSymbols;_PrepGdbConnection;_GetProjectNdkBuildSymbols;_Run"
+		Condition="'$(AndroidApplication)' != '' And $(AndroidApplication)">
+	<Message Text="AndroidGdbSymbolsPath: $(AndroidGdbSymbolsPath)" />
+	<Message Text="  PackageOverridePath: $(_PackageOverridePath)" />
+	<Message Text="          PackagePath: /data/data/$(_AndroidPackage)" />
+	<Message Text="gdb-bin: $(_GdbPath)" />
+	<Message Text="gdb-env: $(AndroidGdbSymbolsPath)\gdb.env" />
+	<Message Text="&quot;$(_GdbPath)&quot; -x &quot;$(AndroidGdbSymbolsPath)\gdb.env&quot;" />
+</Target>
+
+<Target Name="_lldb"
+		DependsOnTargets="AndroidPrepareForBuild">
+  <WriteLinesToFile File="$(_LldbConfigFile)" Lines="PKG=$(_AndroidPackage)" Overwrite="true"/>
+  <WriteLinesToFile File="$(_LldbConfigFile)" Lines="MANIFEST=$(IntermediateOutputPath)android\AndroidManifest.xml"/>
+</Target>
+
+<!--
+*******************************************
+  Install Run Targets
+*******************************************
+-->
+
+<Target Name="_CheckForConfigurationChange">
+	<ItemGroup>
+		<_ConfigurationCacheItems Include="$(Configuration)$(Platform)$(AdbTarget)" />
+	</ItemGroup>
+	<ReadLinesFromFile File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag"
+			Condition="Exists('$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag')">
+		<Output TaskParameter="Lines" ItemName="_ConfigurationCache"/>
+	</ReadLinesFromFile>
+	<Delete Files="$(_UploadFlag)" Condition="'@(_ConfigurationCache)' != '@(_ConfigurationCacheItems)'" />
+</Target>
+
+<Target Name="_GetUploadInputs">
+	<WaitForAppDetection />
+	<ItemGroup>
+		<_UploadInputs Include="$(ApkFileSigned)" />
+		<_UploadInputs Include="@(_ResolvedAssemblies)" />
+		<_UploadInputs Include="@(_AndroidResolvedSatellitePaths)" />
+		<_UploadInputs Include="@(_ResolvedUserAssemblies)" />
+		<_UploadInputs Include="@(_DexFile)" />
+		<_UploadInputs Include="@(AndroidNativeLibrary)" />
+		<_UploadInputs Include="@(AndroidEnvironment)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == 'true' " />
+		<_UploadInputs Include="@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == 'true' " />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(_AndroidUseNewTypemaps)' == 'True' ">
+		<_AndroidTypeMaps Include="@(_AndroidTypeMapping)" />
+	</ItemGroup>
+</Target>
+
+<Target Name="_ComputeFastDevFiles">
+  <ItemGroup>
+    <_FastDevFiles Include="@(_ResolvedAssemblies)" Condition=" '%(_ResolvedAssemblies.AndroidSkipAddToPackage)' != 'True' And '%(_ResolvedAssemblies.Abi)' == '$(_PrimaryCpuAbi)' ">
+       <TargetPath Condition=" '%(_ResolvedAssemblies.TargetPath)' == '' and '%(_ResolvedAssemblies.DestinationSubDirectory)' != '' ">%(_ResolvedAssemblies.DestinationSubDirectory)%(Filename)%(Extension)</TargetPath>
+    </_FastDevFiles>
+    <_FastDevFiles Include="@(_ResolvedUserAssemblies)" Condition=" '%(_ResolvedUserAssemblies.AndroidSkipAddToPackage)' != 'True' And '%(_ResolvedUserAssemblies.Abi)' == '$(_PrimaryCpuAbi)' ">
+      <TargetPath Condition=" '%(_ResolvedUserAssemblies.TargetPath)' == '' and '%(_ResolvedUserAssemblies.DestinationSubDirectory)' != '' ">%(_ResolvedUserAssemblies.DestinationSubDirectory)%(Filename)%(Extension)</TargetPath>
+    </_FastDevFiles>
+    <_FastDevFiles Include="@(_AndroidResolvedSatellitePaths)" Condition=" '%(_AndroidResolvedSatellitePaths.AndroidSkipAddToPackage)' != 'True' And '%(_AndroidResolvedSatellitePaths.Abi)' == '$(_PrimaryCpuAbi)' ">
+      <TargetPath Condition=" ('%(_AndroidResolvedSatellitePaths.TargetPath)' == '' Or '%(_AndroidResolvedSatellitePaths.TargetPath)' == '%(_AndroidResolvedSatellitePaths.Culture)\%(Filename)%(Extension)') And '%(_AndroidResolvedSatellitePaths.DestinationSubDirectory)' != '' ">%(_AndroidResolvedSatellitePaths.DestinationSubDirectory)%(Filename)%(Extension)</TargetPath>
+    </_FastDevFiles>
+    <_FastDevFiles Include="@(_ResolvedSymbols)" Condition=" '%(_ResolvedSymbols.Abi)' == '$(_PrimaryCpuAbi)' ">
+        <TargetPath Condition=" '%(_ResolvedSymbols.TargetPath)' == '' and '%(_ResolvedSymbols.DestinationSubDirectory)' != '' ">%(_ResolvedSymbols.DestinationSubDirectory)%(Filename)%(Extension)</TargetPath>
+    </_FastDevFiles>
+  </ItemGroup>
+</Target>
+
+<PropertyGroup>
+	<_UploadDependsOnTargets>
+		_PrepareAssemblies;
+		_GetPrimaryCpuAbi;
+		_DetectIfAppWasUninstalled;
+		_CheckForConfigurationChange;
+		_ReadAndroidManifest;
+		_GetUploadInputs;
+		_DeployAppBundle;
+		_ComputeFastDevFiles;
+	</_UploadDependsOnTargets>
+</PropertyGroup>
+
+<Target Name="_Upload"
+        Condition=" '$(DesignTimeBuild)' != 'True' And '$(AndroidApplication)' == 'True' "
+        Inputs="@(_UploadInputs)"
+        Outputs="$(_UploadFlag)"
+        DependsOnTargets="$(_UploadDependsOnTargets)"
+>
+    <PropertyGroup>
+      <_ApkToInstall Condition=" '$(AndroidPackageFormat)' != 'aab' ">$(ApkFileSigned)</_ApkToInstall>
+      <_ReInstall Condition=" '$(_ReInstall)' == '' ">False</_ReInstall>
+      <_AndroidIsTestOnlyPackage Condition=" '$(_AndroidIsTestOnlyPackage)' == '' ">False</_AndroidIsTestOnlyPackage>
+      <_FastDeploymentDiagnosticLogging Condition=" '$(_FastDeploymentDiagnosticLogging)' == '' ">False</_FastDeploymentDiagnosticLogging>
+    </PropertyGroup>
+    <RemoveDuplicates
+        Inputs="@(_FastDevFiles)">
+      <Output TaskParameter="Filtered" ItemName="_FilteredFastDevFiles"/>
+    </RemoveDuplicates>
+    <MakeDir Directories="$(IntermediateOutputPath)diagnostics" Condition="!Exists('$(IntermediateOutputPath)diagnostics')" />
+    <ItemGroup Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == 'true' ">
+        <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" />
+    </ItemGroup>
+    <FastDeploy
+      AdbTarget="$(AdbTarget)"
+      DiagnosticLogging="$(_FastDeploymentDiagnosticLogging)"
+      FastDevFiles="@(_FilteredFastDevFiles);@(_ResolvedConfigFiles)"
+      FastDevToolPath="$(MSBuildThisFileDirectory)\lib"
+      EmbedAssembliesIntoApk="$(EmbedAssembliesIntoApk)"
+      PrimaryCpuAbi="$(_PrimaryCpuAbi)"
+      ToolsAbi="$(_FastDevToolsAbi)"
+      PreserveUserData="$(AndroidPreserveUserData)"
+      PackageName="$(_AndroidPackage)"
+      PackageFile="$(_ApkToInstall)"
+      ReInstall="$(_ReInstall)"
+      ToolVersion="$(AndroidFastDeploymentToolVersion)"
+      UploadFlagFile="$(_UploadFlag)"
+      UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
+      UserID="$(AndroidDeviceUserId)"
+      IsTestOnly="$(_AndroidIsTestOnlyPackage)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      EnvironmentFiles="@(_EnvironmentFiles)"
+    />
+    <Touch Files="$(_UploadFlag)" AlwaysCreate="True" />
+    <MakeDir Directories="$(_ConfigurationCacheDirectory)" Condition="!Exists('$(_ConfigurationCacheDirectory)')" />
+    <WriteLinesToFile
+      File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag"
+      Lines="$(Configuration)$(Platform)$(AdbTarget)"
+      Overwrite="true"/>
+    <ItemGroup>
+      <FileWrites Include="$(_UploadFlag)" />
+      <FileWrites Include="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag" />
+      <FileWrites Include="$(IntermediateOutputPath)diagnostics\*.json" />
+      <EmbedInBinlog Include="$(IntermediateOutputPath)diagnostics\*.json" />
+    </ItemGroup>
+</Target>
+
+<PropertyGroup>
+	<InstallDependsOnTargets>
+		SignAndroidPackage;
+		_Upload
+	</InstallDependsOnTargets>
+</PropertyGroup>
+
+<Target Name="Install" DependsOnTargets="$(InstallDependsOnTargets)" Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)" />
+
+<Target Name="Uninstall" DependsOnTargets="AndroidPrepareForBuild" Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)">
+	<Exec Command='"$(_AndroidPlatformToolsDirectory)adb" $(AdbTarget) $(AdbOptions) uninstall $(_AndroidPackage) $(AdbUninstallOptions)' />
+	<RemoveDir Directories="$(_ConfigurationCacheDirectory)" Condition="Exists('$(_ConfigurationCacheDirectory)')" />
+</Target>
+
+<!--
+*******************************************
+  Test runner support
+*******************************************
+-->
+
+<!-- I dare to not add 'Install' as a dependency target. It is sometimes unwanted. Run Install explicitly. -->
+<Target Name="RunTests" DependsOnTargets="AndroidPrepareForBuild" Condition="'$(AndroidApplication)'!='' And $(AndroidApplication)">
+	<GetAndroidActivityName
+			Condition=" '$(RunActivity)' == '' "
+			ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
+		<Output TaskParameter="ActivityName" PropertyName="TargetTestActivity" />
+	</GetAndroidActivityName>
+	<RunTests
+		AdbTarget="$(AdbTarget)"
+		AdbOptions="$(AdbOptions)"
+		AndroidPackage="$(_AndroidPackage)"
+		TargetTestActivity="$(TargetTestActivity)"
+		ToolPath="$(AdbToolPath)"
+		ToolExe="$(AdbToolExe)"
+	/>
+</Target>
+
+
+<PropertyGroup>
+	<CleanDependsOn>
+		$(CleanDependsOn);
+		_CleanDebuggingCaches;
+		_CleanMultiDexFiles;
+	</CleanDependsOn>
+</PropertyGroup>
+
+<Target Name="_CleanMultiDexFiles">
+	<Delete Files="$(IntermediateOutputPath)xamarin.android.keep" />
+</Target>
+
+<Target Name="_CleanDebuggingCaches" DependsOnTargets="_CheckForConfigurationChange">
+	<Delete Files="$(IntermediateOutputPath)manifestdatarecord.cache;$(_DevicePropertyCache);$(IntermediateOutputPath)extract.stamp" />
+	<Delete Files="$(_UploadFlag)" />
+	<RemoveDir Directories="$(_ConfigurationCacheDirectory)"
+		Condition="Exists('$(_ConfigurationCacheDirectory)') And '@(_ConfigurationCache)' == '@(_ConfigurationCacheItems)'" />
+</Target>
+
+<!--
+*******************************************
+  Extensibility hook that allows VS to
+  provide extra behavior without modifying
+  the core targets.
+*******************************************
+-->
+<Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets"
+	Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).After.targets')"/>
+
+</Project>

@@ -16,16 +16,7 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. (For Microsoft team members only) (Optional) Prepare external
-    proprietary git dependencies
-
-        make prepare-external-git-dependencies
-
-    This will clone or update a monodroid checkout in `external` and
-    ensure that subsequent `prepare` and `make` invocations will build
-    proprietary components.
-
- 6. Prepare the project:
+ 5. Prepare the project:
 
         make prepare
         # -or-
@@ -107,9 +98,6 @@ Alternatively, .NET for Android workload packs can be built with:
     make pack-dotnet
 
 Several `.nupkg` files will be output in `./bin/Build$(Configuration)/nuget-unsigned`.
-
-Commercial installers will be created by this command if the
-`make prepare-external-git-dependencies` command was ran before building.
 
 
 # Running Unit Tests

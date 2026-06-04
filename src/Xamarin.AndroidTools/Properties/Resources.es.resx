@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CreateKeyError_AliasContainsInvalidCharacters" xml:space="preserve">
+    <value>El alias no puede tener caracteres no permitidos en los nombres de archivo</value>
+  </data>
+  <data name="CreateKeyError_ErrorImportingKey" xml:space="preserve">
+    <value>Error al importar la clave</value>
+  </data>
+  <data name="CreateKeyError_GenericError" xml:space="preserve">
+    <value>Error al crear la clave</value>
+  </data>
+  <data name="CreateKeyError_KeyStoreNotFound" xml:space="preserve">
+    <value>No se encontró el almacén de claves</value>
+  </data>
+  <data name="CreateKeyError_MinimumOneYearValidity" xml:space="preserve">
+    <value>La validez no puede ser inferior a 1 año</value>
+  </data>
+  <data name="CreateKeyError_NotInitialized" xml:space="preserve">
+    <value>KeyStoreManagement no se ha inicializado</value>
+  </data>
+  <data name="CreateKeyError_UnsupportedPlatform" xml:space="preserve">
+    <value>Plataforma no admitida</value>
+  </data>
+  <data name="JdwpClientDisconnectError" xml:space="preserve">
+    <value>Se produjo un error inesperado al intentar desconectar el cliente Jdwp.</value>
+  </data>
+  <data name="XA5300_AndroidSdk_JdkInfo" xml:space="preserve">
+    <value>Se produjo una excepción al recuperar las propiedades de la instalación del SDK de Java que se ha seleccionado. Compruebe que dicha instalación contenga una versión de Java compatible y que "java -XshowSettings:properties -version" se ejecute correctamente para esa instalación. Excepción: {0}</value>
+    <comment>The following terms should not be translated: java -XshowSettings:properties -version
+{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA5300_AndroidSdk_Refresh_Exception" xml:space="preserve">
+    <value>Se produjo una excepción al buscar el SDK de Java o Android SDK. Excepción: {0}</value>
+    <comment>{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA5300_Android_SDK" xml:space="preserve">
+    <value>No se encontró el directorio de Android SDK. Compruebe que el Administrador de Android SDK en Visual Studio muestre una instalación válida. Para usar una ruta de acceso de SDK personalizada para una compilación de línea de comandos, establezca la propiedad "AndroidSdkDirectory" de MSBuild en la ruta de acceso personalizada.</value>
+    <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
+  </data>
+  <data name="XA5300_Java_SDK" xml:space="preserve">
+    <value>No se encontró el directorio del SDK de Java. Asegúrese de que la sección de Android de las opciones de Visual Studio tenga configurado un directorio válido del SDK de Java. Para usar una ruta de acceso del SDK personalizada para una compilación de línea de comandos, establezca la propiedad "JavaSdkDirectory" de MSBuild en la ruta de acceso personalizada.</value>
+    <comment>The following terms should not be translated: JavaSdkDirectory</comment>
+  </data>
+  <data name="XA5300_MonoDroidSdk_Refresh_Exception" xml:space="preserve">
+    <value>Se produjo una excepción al validar la instalación de .NET para Android. El uso del instalador de Visual Studio para reparar o reinstalar el componente .NET MAUI podría resolver este problema. Excepción: {0}</value>
+    <comment>{0} - The exception message of the associated exception</comment>
+  </data>
+  <data name="XA5300_MonoDroidSdk_XA_Version" xml:space="preserve">
+    <value>No se puede determinar la versión de .NET para Android.</value>
+  </data>
+</root>
