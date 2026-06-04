@@ -18,7 +18,6 @@
     <LibExtension Condition=" '$(HostOS)' == 'Linux' ">so</LibExtension>
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
-    <_HasCommercialFiles Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.Debugging.targets')">True</_HasCommercialFiles>
   </PropertyGroup>
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
@@ -246,9 +245,8 @@
   </ItemGroup>
   <!-- monodroid: in-tree installer/debugging projects under src/Xamarin.Installer.*,
        src/Mono.AndroidTools, src/Xamarin.AndroidTools,
-       src/Xamarin.Android.Build.Debugging.Tasks, and tools/fastdev.
-       Only included for commercial builds (see _HasCommercialFiles above). -->
-  <ItemGroup Condition=" '$(_HasCommercialFiles)' == 'True' ">
+       src/Xamarin.Android.Build.Debugging.Tasks, and tools/fastdev. -->
+  <ItemGroup>
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)INIFileParser.dll" />
