@@ -101,6 +101,21 @@
     </ItemGroup>
     <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
+    <!--
+      Reset timestamps to "now" on the local agent. The zip entries inside
+      Microsoft.NET.Sdk.Android.Manifest-*.nupkg carry the pack agent's local
+      clock, which on the dnceng-public ACES_VM_SharedPool_Tahoe macOS pool
+      can be ~5 hours ahead of the test agent. If we leave the extracted
+      mtimes as-is, $(MSBuildAllProjects) imports WorkloadManifest.targets
+      with a future mtime and every Android incremental target re-runs on
+      subsequent builds, breaking "target should be skipped" assertions.
+    -->
+    <ItemGroup>
+      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\WorkloadManifest.targets" />
+      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\WorkloadManifest.json" />
+      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\WorkloadDependencies.json" />
+    </ItemGroup>
+    <Touch Files="@(_WLExtractedDestFiles)" />
 
     <!-- Parse NuGet.config -->
     <XmlPeek
