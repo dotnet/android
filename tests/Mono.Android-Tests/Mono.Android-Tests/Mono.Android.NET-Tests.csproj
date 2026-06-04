@@ -27,54 +27,32 @@
   <!--
     These category exclusions used to flow through `am instrument -e` via the
     custom `RunTestApp` target. With the migration to `dotnet test` + MTP,
-    the on-device instrumentation reads them from `[AssemblyMetadata]` set
-    here instead. See `TestInstrumentation.ExcludedCategories` /
-    `TestInstrumentation.IncludedCategories`.
+    the on-device instrumentation reads them from runtimeconfig.json via
+    `AppContext.GetData` / `AppContext.TryGetSwitch`. See
+    `TestInstrumentation.ExcludedCategories` / `TestInstrumentation.IncludedCategories`.
 
-    Note: `<GenerateAssemblyInfo>false</GenerateAssemblyInfo>` (set above to
-    avoid conflicting with `Properties/AssemblyInfo.cs`) also suppresses the
-    SDK's emission of `<AssemblyAttribute>` items, so we generate a small
-    `.g.cs` file ourselves with `WriteCodeFragment`.
+    `<RuntimeHostConfigurationOption>` is preferred over `<AssemblyAttribute>` here
+    because `<GenerateAssemblyInfo>false</GenerateAssemblyInfo>` (set above to avoid
+    clashing with `Properties/AssemblyInfo.cs`) silently suppresses
+    `<AssemblyAttribute>` items.
   -->
-  <Target Name="_GenerateTestAssemblyMetadata"
-      BeforeTargets="CoreCompile"
-      Inputs="$(MSBuildProjectFullPath)"
-      Outputs="$(IntermediateOutputPath)TestAssemblyMetadata.g.cs">
-    <ItemGroup>
-      <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-      <_TestAssemblyMetadata Include="System.Reflection.AssemblyMetadataAttribute" Condition=" '$(PublishAot)' == 'true' ">
-        <_Parameter1>PublishAot</_Parameter1>
-        <_Parameter2>true</_Parameter2>
-      </_TestAssemblyMetadata>
-      <!--
-        FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
-        InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
-        NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
-      -->
-      <_TestAssemblyMetadata Include="System.Reflection.AssemblyMetadataAttribute" Condition=" '$(EnableLLVM)' == 'true' ">
-        <_Parameter1>EnableLLVM</_Parameter1>
-        <_Parameter2>true</_Parameter2>
-      </_TestAssemblyMetadata>
-      <!--
-        $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune)
-        to restrict the on-device test run to a comma-separated list of NUnit [Category]
-        names. Used by lanes like `Mono.Android.NET_Tests-IsAssignableFrom` which only
-        wants tests tagged [Category("Intune")] to run.
-      -->
-      <_TestAssemblyMetadata Include="System.Reflection.AssemblyMetadataAttribute" Condition=" '$(IncludeCategories)' != '' ">
-        <_Parameter1>IncludeCategories</_Parameter1>
-        <_Parameter2>$(IncludeCategories)</_Parameter2>
-      </_TestAssemblyMetadata>
-    </ItemGroup>
-    <WriteCodeFragment
-        AssemblyAttributes="@(_TestAssemblyMetadata)"
-        Language="C#"
-        OutputDirectory="$(IntermediateOutputPath)"
-        OutputFile="TestAssemblyMetadata.g.cs">
-      <Output TaskParameter="OutputFile" ItemName="Compile" />
-      <Output TaskParameter="OutputFile" ItemName="FileWrites" />
-    </WriteCodeFragment>
-  </Target>
+  <ItemGroup>
+    <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
+    <RuntimeHostConfigurationOption Include="PublishAot" Value="true" Condition=" '$(PublishAot)' == 'true' " />
+    <!--
+      FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
+      InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
+      NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
+    -->
+    <RuntimeHostConfigurationOption Include="EnableLLVM" Value="true" Condition=" '$(EnableLLVM)' == 'true' " />
+    <!--
+      $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune)
+      to restrict the on-device test run to a comma-separated list of NUnit [Category]
+      names. Used by lanes like `Mono.Android.NET_Tests-IsAssignableFrom` which only
+      want tests tagged [Category("Intune")] to run.
+    -->
+    <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
+  </ItemGroup>
 
   <PropertyGroup>
     <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>

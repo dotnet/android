@@ -32,8 +32,9 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("Export");
 				}
 
-				// Build-time flags flow in via [AssemblyMetadata] (see Mono.Android.NET-Tests.csproj).
-				if (HasAssemblyMetadata ("PublishAot")) {
+				// Build-time flags flow in via runtimeconfig.json properties
+				// (see <RuntimeHostConfigurationOption> entries in Mono.Android.NET-Tests.csproj).
+				if (HasAppContextSwitch ("PublishAot")) {
 					// TODO: https://github.com/dotnet/android/issues/10079
 					categories.Add ("NativeAOTIgnore");
 					categories.Add ("SSL");
@@ -41,7 +42,7 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("Export");
 				}
 
-				if (HasAssemblyMetadata ("EnableLLVM")) {
+				if (HasAppContextSwitch ("EnableLLVM")) {
 					// FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
 					categories.Add ("LLVMIgnore");
 					// InetAccess: https://github.com/dotnet/runtime/issues/73304
@@ -56,28 +57,21 @@ namespace Xamarin.Android.RuntimeTests
 
 		protected override IEnumerable<string>? IncludedCategories {
 			get {
-				// Wired up from the MSBuild $(IncludeCategories) pipeline property via
-				// [AssemblyMetadata("IncludeCategories", "Cat1,Cat2")] in the test csproj.
+				// Wired up from the MSBuild $(IncludeCategories) pipeline property via a
+				// `<RuntimeHostConfigurationOption Include="IncludeCategories" Value="..." />`
+				// entry in the test csproj. The SDK writes that into runtimeconfig.json's
+				// `configProperties` section, and we read it back with `AppContext.GetData`.
 				// Used by lanes that want to scope a run to specific categories, e.g.
 				// `-p:IncludeCategories=Intune` in stage-package-tests.yaml.
-				var value = GetAssemblyMetadata ("IncludeCategories");
+				var value = AppContext.GetData ("IncludeCategories") as string;
 				if (string.IsNullOrEmpty (value))
 					return null;
 				return value!.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			}
 		}
 
-		static bool HasAssemblyMetadata (string key)
-			=> string.Equals (GetAssemblyMetadata (key), "true", StringComparison.OrdinalIgnoreCase);
-
-		static string? GetAssemblyMetadata (string key)
-		{
-			foreach (var attr in typeof (TestInstrumentation).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute> ()) {
-				if (string.Equals (attr.Key, key, StringComparison.Ordinal))
-					return attr.Value;
-			}
-			return null;
-		}
+		static bool HasAppContextSwitch (string key)
+			=> AppContext.TryGetSwitch (key, out var value) && value;
 
 		protected override IEnumerable<string>? ExcludedTestNames {
 			get {
