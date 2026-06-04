@@ -288,8 +288,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		[Test]
 		public void DotNetRunWaitForExit ()
 		{
-			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
-
 			const string logcatMessage = "DOTNET_RUN_TEST_MESSAGE_12345";
 			var proj = new XamarinAndroidApplicationProject ();
 
@@ -357,8 +355,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		[Test]
 		public void DotNetRunCtrlC ()
 		{
-			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
-
 			const string logcatMessage = "DOTNET_RUN_CTRLC_TEST_99999";
 			var proj = new XamarinAndroidApplicationProject ();
 
@@ -456,8 +452,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		[Test]
 		public void DotNetRunWithDeviceParameter ()
 		{
-			AssertCommercialBuild (); //FIXME: https://github.com/dotnet/android/issues/10832
-
 			const string logcatMessage = "DOTNET_RUN_DEVICE_TEST_67890";
 			var proj = new XamarinAndroidApplicationProject ();
 
@@ -662,15 +656,9 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			dotnet.AssertTargetIsNotSkipped ("_EnsureDeviceBooted");
 
 			// Verify correct targets ran based on FastDev support
-			if (TestEnvironment.CommercialBuildAvailable) {
-				dotnet.AssertTargetIsNotSkipped ("_Upload");
-				dotnet.AssertTargetIsSkipped ("_DeployApk", defaultIfNotUsed: true);
-				dotnet.AssertTargetIsSkipped ("_DeployAppBundle", defaultIfNotUsed: true);
-			} else {
-				dotnet.AssertTargetIsSkipped ("_Upload", defaultIfNotUsed: true);
-				dotnet.AssertTargetIsNotSkipped ("_DeployApk");
-				dotnet.AssertTargetIsNotSkipped ("_DeployAppBundle");
-			}
+			dotnet.AssertTargetIsNotSkipped ("_Upload");
+			dotnet.AssertTargetIsSkipped ("_DeployApk", defaultIfNotUsed: true);
+			dotnet.AssertTargetIsSkipped ("_DeployAppBundle", defaultIfNotUsed: true);
 
 			// Launch the app using adb
 			ClearAdbLogcat ();
@@ -801,7 +789,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			};
 			proj.SetRuntime (runtime);
 
-			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
+			if (isRelease) {
 				if (runtime == AndroidRuntime.MonoVM) {
 					proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
 				} else {
@@ -1262,7 +1250,7 @@ namespace Library1 {
 			// error SYSLIB0011: 'BinaryFormatter.Serialize(Stream, object)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.'
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
-			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
+			if (isRelease) {
 				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 
@@ -1447,8 +1435,6 @@ using System.Runtime.Serialization.Json;
 				// TODO: investigate, it's odd it doesn't work
 				Assert.Ignore ("NativeAOT doesn't currently work in test-only applications.");
 			}
-
-			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
@@ -2160,7 +2146,6 @@ namespace UnnamedProject
 			}
 
 			if (embedAssembliesIntoApk) {
-				AssertCommercialBuild ();
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {

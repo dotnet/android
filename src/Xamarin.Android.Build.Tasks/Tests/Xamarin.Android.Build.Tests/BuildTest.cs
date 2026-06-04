@@ -169,13 +169,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
-			bool expectEmbeddedAssembies = !(TestEnvironment.CommercialBuildAvailable && !isRelease);
+			bool expectEmbeddedAssembies = isRelease;
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
 			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
 			if (runtime != AndroidRuntime.NativeAOT) {
 				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
-				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !TestEnvironment.CommercialBuildAvailable && !isRelease);
+				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: false);
 				helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 				helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
@@ -1265,8 +1265,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 			if (IgnoreUnsupportedConfiguration (runtime)) {
 				return;
 			}
-
-			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,

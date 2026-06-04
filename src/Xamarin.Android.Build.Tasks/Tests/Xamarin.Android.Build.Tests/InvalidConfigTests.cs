@@ -76,8 +76,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void XA0119 ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
@@ -91,8 +89,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void XA0119AAB ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			proj.SetProperty ("AndroidPackageFormat", "aab");
