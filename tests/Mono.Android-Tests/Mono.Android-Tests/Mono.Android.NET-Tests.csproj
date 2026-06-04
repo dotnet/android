@@ -45,6 +45,17 @@
       <_Parameter1>EnableLLVM</_Parameter1>
       <_Parameter2>true</_Parameter2>
     </AssemblyAttribute>
+    <!--
+      $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune) to
+      restrict the on-device test run to a comma-separated list of NUnit [Category] names.
+      With the move to `dotnet test` + MTP we no longer pass it via `am instrument -e include`;
+      flow it through [AssemblyMetadata] and let TestInstrumentation translate it into an
+      NUnit filter at runtime instead.
+    -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition=" '$(IncludeCategories)' != '' ">
+      <_Parameter1>IncludeCategories</_Parameter1>
+      <_Parameter2>$(IncludeCategories)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <PropertyGroup>

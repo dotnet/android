@@ -54,13 +54,29 @@ namespace Xamarin.Android.RuntimeTests
 			}
 		}
 
+		protected override IEnumerable<string>? IncludedCategories {
+			get {
+				// Wired up from the MSBuild $(IncludeCategories) pipeline property via
+				// [AssemblyMetadata("IncludeCategories", "Cat1,Cat2")] in the test csproj.
+				// Used by lanes that want to scope a run to specific categories, e.g.
+				// `-p:IncludeCategories=Intune` in stage-package-tests.yaml.
+				var value = GetAssemblyMetadata ("IncludeCategories");
+				if (string.IsNullOrEmpty (value))
+					return null;
+				return value!.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+			}
+		}
+
 		static bool HasAssemblyMetadata (string key)
+			=> string.Equals (GetAssemblyMetadata (key), "true", StringComparison.OrdinalIgnoreCase);
+
+		static string? GetAssemblyMetadata (string key)
 		{
 			foreach (var attr in typeof (TestInstrumentation).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute> ()) {
 				if (string.Equals (attr.Key, key, StringComparison.Ordinal))
-					return string.Equals (attr.Value, "true", StringComparison.OrdinalIgnoreCase);
+					return attr.Value;
 			}
-			return false;
+			return null;
 		}
 
 		protected override IEnumerable<string>? ExcludedTestNames {

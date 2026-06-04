@@ -28,6 +28,12 @@ public abstract class TestInstrumentation : Instrumentation
 	protected virtual IEnumerable<string>? ExcludedCategories => null;
 
 	/// <summary>
+	/// Override to return categories that should be included in the test run.
+	/// When non-empty, ONLY tests in these categories will execute.
+	/// </summary>
+	protected virtual IEnumerable<string>? IncludedCategories => null;
+
+	/// <summary>
 	/// Override to return fully-qualified test names that should be excluded.
 	/// Useful for skipping tests from submodules (e.g. Java.Interop) where
 	/// adding attributes is not practical.
@@ -126,15 +132,22 @@ public abstract class TestInstrumentation : Instrumentation
 		bool noExclusions = GetBoolExtra ("noexclusions");
 		var filterElements = new List<XElement> ();
 
-		// Include categories from extras: am instrument -e include "Cat1,Cat2"
-		var includeExtras = GetListExtra ("include");
-		if (includeExtras.Count > 0) {
+		// Include categories from two sources:
+		//   1. `am instrument -e include "Cat1,Cat2"` (legacy CLI extras)
+		//   2. The IncludedCategories subclass property (typically populated
+		//      from [AssemblyMetadata("IncludeCategories", ...)] which is in
+		//      turn set from the MSBuild `IncludeCategories` property by the
+		//      test csproj; this is the supported plumbing under `dotnet test`).
+		var includes = new List<string> (GetListExtra ("include"));
+		if (IncludedCategories is not null)
+			includes.AddRange (IncludedCategories);
+		if (includes.Count > 0) {
 			var orElement = new XElement ("or");
-			foreach (var cat in includeExtras) {
+			foreach (var cat in includes) {
 				orElement.Add (new XElement ("cat", cat));
 				Log.Info (LogTag, $"Including category: {cat}");
 			}
-			filterElements.Add (includeExtras.Count == 1 ? orElement.Elements ().First () : orElement);
+			filterElements.Add (includes.Count == 1 ? orElement.Elements ().First () : orElement);
 		}
 
 		if (!noExclusions) {
