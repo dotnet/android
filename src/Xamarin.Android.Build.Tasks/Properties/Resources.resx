@@ -156,10 +156,6 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Unhandled exception: {0}</value>
     <comment>{0} - The exception message of the associated exception</comment>
   </data>
-  <data name="XA0000_PrepareAbiItems_UnknownMode" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
-    <comment>{0} - The unknown mode string value</comment>
-  </data>
   <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
     <value>Could not determine $(TargetFrameworkVersion) for API level '{0}.'</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -224,6 +220,10 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
   <data name="XA0036" xml:space="preserve">
     <value>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>

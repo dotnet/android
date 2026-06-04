@@ -185,15 +185,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown mode: {0}.
-        /// </summary>
-        public static string XA0000_PrepareAbiItems_UnknownMode {
-            get {
-                return ResourceManager.GetString("XA0000_PrepareAbiItems_UnknownMode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not determine $(TargetFrameworkVersion) for API level &apos;{0}.&apos;.
         /// </summary>
         public static string XA0000_TargetFrameworkVersion_for_API {
@@ -309,6 +300,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA0036 {
             get {
                 return ResourceManager.GetString("XA0036", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown mode: {0}.
+        /// </summary>
+        public static string XA0037 {
+            get {
+                return ResourceManager.GetString("XA0037", resourceCulture);
             }
         }
         
