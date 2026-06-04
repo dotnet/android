@@ -655,7 +655,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Verify _EnsureDeviceBooted actually ran in the chain
 			dotnet.AssertTargetIsNotSkipped ("_EnsureDeviceBooted");
 
-			// Verify correct targets ran based on FastDev support
+			// Verify FastDev targets ran (Fast Deployment is always available now)
 			dotnet.AssertTargetIsNotSkipped ("_Upload");
 			dotnet.AssertTargetIsSkipped ("_DeployApk", defaultIfNotUsed: true);
 			dotnet.AssertTargetIsSkipped ("_DeployAppBundle", defaultIfNotUsed: true);
