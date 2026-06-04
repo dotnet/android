@@ -170,6 +170,11 @@ public class BuildArchive : AndroidTask
 				using (var jar = ZipArchive.Open (stream)) {
 					var jar_item = jar.ReadEntry (jar_entry_name);
 
+					if (jar_item == null) {
+						Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jar_entry_name, Path.GetFileName (jar_file_path));
+						continue;
+					}
+
 					if (hasApkEntry) {
 						if (apk.GetEntry (apk_path).CRC == jar_item.CRC) {
 							Log.LogDebugMessage ("Skipping {0} from {1} as it is up to date.", jar_entry_name, jar_file_path);

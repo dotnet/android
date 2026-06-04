@@ -98,6 +98,7 @@ public class BuildArchiveTests
 
 		CreateArchive (apk, ("stale.txt", "stale"));
 		CreateArchive (firstJar, ("commonMain/default/manifest", "first"));
+		CreateArchive (secondJar, ("commonMain/default/manifest", "second"));
 
 		var firstItem = new TaskItem ($"{firstJar}#commonMain/default/manifest");
 		firstItem.SetMetadata ("ArchivePath", "commonMain/default/manifest");
