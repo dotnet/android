@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="fastdevtools.projitems" />
+
+  <Target Name="_PrepareCMakeFlags">
+    <ItemGroup>
+      <_CmakeToolPath Condition=" !Exists('$(CmakePath)') " Include="$(AndroidSdkDirectory)\cmake\*\bin\cmake*" />
+      <_NinjaToolPath Condition=" !Exists('$(NinjaPath)') " Include="$(AndroidSdkDirectory)\cmake\*\bin\ninja*" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CmakePath Condition=" !Exists('$(CmakePath)')  ">%(_CmakeToolPath.Identity)</CmakePath>
+      <CmakePath Condition=" !Exists('$(CmakePath)')  ">cmake</CmakePath>
+      <NinjaPath Condition=" !Exists('$(NinjaPath)') ">%(_NinjaToolPath.Identity)</NinjaPath>
+      <NinjaPath Condition=" !Exists('$(NinjaPath)') ">ninja</NinjaPath>
+      <_CmakeAndroidFlags>-GNinja -DENABLE_NDK=ON -DCMAKE_MAKE_PROGRAM=&quot;$(NinjaPath)&quot; -DANDROID_TOOLCHAIN=clang -DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON</_CmakeAndroidFlags>
+      <_CmakeAndroidFlags>$(_CmakeAndroidFlags) -DCMAKE_TOOLCHAIN_FILE=&quot;$(AndroidNdkDirectory)/build/cmake/android.toolchain.cmake&quot;</_CmakeAndroidFlags>
+      <_CmakeAndroidFlags>$(_CmakeAndroidFlags) -DANDROID_NDK=&quot;$(AndroidNdkDirectory)&quot; -DCMAKE_BUILD_TYPE=Debug</_CmakeAndroidFlags>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_PrepareBuild"
+    DependsOnTargets="_PrepareCMakeFlags"
+    Inputs="@(FastDevBuildItems->'%(App)\CMakeLists.txt')"
+    Outputs="@(FastDevBuildItems->'$(IntermediateOutputPath)%(Identity)\CMakeCache.txt')"
+  >
+    <MakeDir Directories="$(IntermediateOutputPath)%(FastDevBuildItems.Identity)" />
+    <Exec Command="&quot;$(CmakePath)&quot; $(_CmakeAndroidFlags) %(FastDevBuildItems.CmakeFlags) -DCMAKE_BUILD_TYPE=$(Configuration) -DANDROID_ABI=%(FastDevBuildItems.Arch) -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=%(FastDevBuildItems.OutputPath) %(FastDevBuildItems.Source)" WorkingDirectory="$(IntermediateOutputPath)%(FastDevBuildItems.Identity)" />
+  </Target>
+
+  <Target Name="_PrepareElfCleaner" Condition="!$([MSBuild]::IsOsPlatform('Windows'))">
+    <PropertyGroup>
+      <ElfCleanerPath>$(IntermediateOutputPath)elfcleaner</ElfCleanerPath>
+      <ElfCleanerSourcePath>..\..\..\elfcleaner</ElfCleanerSourcePath>
+      <ElfCleanerTool>elfcleaner</ElfCleanerTool>
+    </PropertyGroup>
+    <MakeDir Directories="$(ElfCleanerPath)" />
+    <Exec Command="&quot;$(CmakePath)&quot; -GNinja -DCMAKE_MAKE_PROGRAM=$(NinjaPath) -DANDROID_TOOLCHAIN=clang -DCMAKE_BUILD_TYPE=$(Configuration) $(ElfCleanerSourcePath)" WorkingDirectory="$(ElfCleanerPath)" />
+    <Exec Command="&quot;$(NinjaPath)&quot;" WorkingDirectory="$(ElfCleanerPath)" />
+  </Target>
+
+  <Target Name="_BuildFastDevTools"
+    BeforeTargets="Build"
+    DependsOnTargets="_PrepareBuild;_PrepareElfCleaner"
+    Inputs="@(FastDevBuildItems->'%(Identity)\main.cc')"
+    Outputs="@(FastDevBuildItems->'%(OutputPath)\%(App)')"
+  >
+    <MakeDir Directories="@(FastDevBuildItems->'%(OutputPath)')" />
+    <Exec Command="&quot;$(NinjaPath)&quot;" WorkingDirectory="$(IntermediateOutputPath)%(FastDevBuildItems.Identity)" />
+    <Exec Command="./$(ElfCleanerTool) %(OutputPath)\%(FastDevBuildItems.App)"
+        Condition="!$([MSBuild]::IsOsPlatform('Windows'))"
+        WorkingDirectory="$(ElfCleanerPath)"
+    />
+    <ItemGroup>
+      <FileWrites Include="@(FastDevBuildItems->'%(OutputPath)\%(App)')" />
+    </ItemGroup>
+  </Target>
+</Project>

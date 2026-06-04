@@ -132,10 +132,6 @@ prepare:
 prepare-help:
 	$(call SYSTEM_DOTNET_BINLOG,prepare-help,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- -h
 
-prepare-external-git-dependencies:
-	$(call SYSTEM_DOTNET_BINLOG,prepare-external-git-dependencies,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
-		-- -s:PrepareExternalGitDependencies $(_PREPARE_ARGS)
-
 APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
 
 update-apk-sizes-reference:

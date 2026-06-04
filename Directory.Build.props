@@ -57,6 +57,16 @@
     <ELFSharpVersion>2.17.3</ELFSharpVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.3</MdocPackageVersion>
+    <!-- Used by the installer-side projects under src/Xamarin.Installer.*, src/Mono.AndroidTools, src/Xamarin.AndroidTools -->
+    <GitInfoVersion>2.3.0</GitInfoVersion>
+    <IniParserNetstandardVersion>2.5.2</IniParserNetstandardVersion>
+    <MicrosoftWin32RegistryVersion>5.0.0</MicrosoftWin32RegistryVersion>
+    <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
+    <PollyVersion>7.2.4</PollyVersion>
+    <ProtobufNetVersion>3.2.26</ProtobufNetVersion>
+    <ProtobufNetCoreVersion>3.2.26</ProtobufNetCoreVersion>
+    <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
+    <SystemTextEncodingCodePagesVersion>7.0.0</SystemTextEncodingCodePagesVersion>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -74,6 +84,8 @@
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'TestRunner.Core.NET.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Installer.AndroidSDK.csproj' ">true</_AllowProjectWarnings>
+    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Installer.Common.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.ProjectTools.csproj' ">true</_AllowProjectWarnings>
     <TreatWarningsAsErrors Condition=" ('$(RunningOnCI)' == 'true' OR '$(_AndroidTreatWarningsAsErrors)' == 'true') AND '$(_AllowProjectWarnings)' != 'true' ">true</TreatWarningsAsErrors>
   </PropertyGroup>

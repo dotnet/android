@@ -57,6 +57,7 @@ ms.date: 04/11/2024
 + [XA0034](xa0034.md): Failed to get the Java SDK version.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
 + [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
++ [XA0037](xa0037.md): Unknown mode passed to the `PrepareAbiItems` task.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
 + [XA0102](xa0102.md): Generic `lint` Warning.
@@ -219,6 +220,8 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4250](xa4250.md): Manifest-referenced type '{type}' was not found in any scanned assembly. It may be a framework type.
 + [XA4252](xa4252.md): Insecure HTTP Maven repository URL '{url}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.
 + [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
++ [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
++ [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

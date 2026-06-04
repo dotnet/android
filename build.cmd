@@ -10,9 +10,6 @@ IF ERRORLEVEL 1 CALL :DEFAULT_CASE
 :Prepare_CASE
     dotnet msbuild Xamarin.Android.sln -t:Prepare -nodeReuse:false
     GOTO END_CASE
-:PrepareExternal_CASE
-    dotnet build Xamarin.Android.sln -t:PrepareExternal -nodeReuse:false
-    GOTO END_CASE
 :Build_CASE
     dotnet-local.cmd build Xamarin.Android.sln  -nodeReuse:false
     GOTO END_CASE
