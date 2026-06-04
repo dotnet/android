@@ -510,12 +510,21 @@ namespace Java.InteropTests
 
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
 
+			// `Runtime.GetSurfacedObjects()` is process-global: NUnit/MTP
+			// infrastructure (per-test TestExecutionContext, listeners, Console
+			// capture, etc.) creates and releases transient Java.Lang.Object
+			// peers around every test, so the count drifts by a few entries
+			// between the snapshots below. Allow a small tolerance instead of
+			// requiring an exact count -- a real leak would dwarf this.
+			const int tolerance = 5;
+
 			WeakReference r = null;
 			Exception threadException = null;
 			var t = new Thread (() => {
 				try {
 					var c = new MyCb ();
-					Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
+					Assert.That (Runtime.GetSurfacedObjects ().Count,
+							Is.EqualTo (startCount + 1).Within (tolerance), "#2");
 					r = new WeakReference (c);
 				} catch (Exception e) {
 					threadException = e;
@@ -532,7 +541,7 @@ namespace Java.InteropTests
 			GC.WaitForPendingFinalizers ();
 
 			surfaced  = Runtime.GetSurfacedObjects ();
-			Assert.AreEqual (startCount, surfaced.Count, "#3");
+			Assert.That (surfaced.Count, Is.EqualTo (startCount).Within (tolerance), "#3");
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
 		}
 	}
