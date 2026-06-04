@@ -111,9 +111,7 @@
       subsequent builds, breaking "target should be skipped" assertions.
     -->
     <ItemGroup>
-      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\WorkloadManifest.targets" />
-      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\WorkloadManifest.json" />
-      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\WorkloadDependencies.json" />
+      <_WLExtractedDestFiles Include="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\*" />
     </ItemGroup>
     <Touch Files="@(_WLExtractedDestFiles)" />
 
