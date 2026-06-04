@@ -25,6 +25,9 @@
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
     <_TypeMapAssembliesListFile>$(_TypeMapOutputDirectory)typemap-assemblies.txt</_TypeMapAssembliesListFile>
     <_PostTrimTypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
+    <_PostTrimTypeMapRuntimeIdentifiers Condition=" '$(_OuterRuntimeIdentifiers)' != '' ">$(_OuterRuntimeIdentifiers)</_PostTrimTypeMapRuntimeIdentifiers>
+    <_PostTrimTypeMapRuntimeIdentifiers Condition=" '$(_PostTrimTypeMapRuntimeIdentifiers)' == '' ">$(RuntimeIdentifiers)</_PostTrimTypeMapRuntimeIdentifiers>
+    <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(_PostTrimTypeMapRuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(_PostTrimTypeMapRuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_PostTrimTrimmableTypeMapJavaStamp>$(_TypeMapBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>

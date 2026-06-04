@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -17,10 +15,6 @@ namespace Xamarin.Android.Tasks;
 
 public class GenerateTrimmableTypeMap : AndroidTask
 {
-	const int ERROR_ACCESS_DENIED = -2147024891; // 0x80070005
-	const int ERROR_SHARING_VIOLATION = -2147024864; // 0x80070020
-	const int ERROR_DIR_NOT_EMPTY = -2147024751; // 0x80070091
-
 	static readonly string [] DefaultFrameworkAssemblyNames = [
 		"Java.Interop",
 		"Mono.Android",
@@ -136,7 +130,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		Directory.CreateDirectory (OutputDirectory);
 		if (CleanJavaSourceOutputDirectory && Directory.Exists (JavaSourceOutputDirectory)) {
-			DeleteDirectoryWithRetry (JavaSourceOutputDirectory);
+			Directory.Delete (JavaSourceOutputDirectory, recursive: true);
 		}
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
@@ -385,39 +379,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			return version;
 		}
 		throw new ArgumentException ($"Cannot parse TargetFrameworkVersion '{tfv}' as a Version.");
-	}
-
-	static void DeleteDirectoryWithRetry (string directory)
-	{
-		int retryCount = 0;
-		int attempts = Files.GetFileWriteRetryAttempts ();
-		int delay = Files.GetFileWriteRetryDelay ();
-
-		while (retryCount <= attempts) {
-			try {
-				if (retryCount == 1) {
-					Files.SetDirectoryWriteable (directory);
-				}
-				Directory.Delete (directory, recursive: true);
-				return;
-			} catch (Exception e) {
-				switch (e) {
-					case DirectoryNotFoundException:
-						return;
-					case UnauthorizedAccessException:
-					case IOException:
-						int code = Marshal.GetHRForException (e);
-						if ((code != ERROR_ACCESS_DENIED && code != ERROR_SHARING_VIOLATION && code != ERROR_DIR_NOT_EMPTY) || retryCount >= attempts) {
-							throw;
-						}
-						break;
-					default:
-						throw;
-				}
-			}
-			Thread.Sleep (delay);
-			retryCount++;
-		}
 	}
 
 	static string GenerateApplicationRegistrationJava (IReadOnlyList<string> registrationTypes)

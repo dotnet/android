@@ -122,6 +122,7 @@ _ResolveAssemblies MSBuild target.
         ;_OuterIntermediateSatelliteAssembliesWithTargetPath=@(IntermediateSatelliteAssembliesWithTargetPath)
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
+        ;_OuterRuntimeIdentifiers=$(RuntimeIdentifiers)
         ;_OuterCustomViewMapFile=$(_CustomViewMapFile)
         ;_AndroidNdkDirectory=$(_AndroidNdkDirectory)
       </_AdditionalProperties>
