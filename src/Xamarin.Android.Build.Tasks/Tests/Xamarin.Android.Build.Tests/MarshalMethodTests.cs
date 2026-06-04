@@ -141,8 +141,9 @@ public class MarshalMethodTests : BaseTest
 		Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 		builder.AssertHasNoWarnings ();
 
-		// Rescan for modified marshal methods
-		var intermediateReleaseOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked");
+		// Rescan for modified marshal methods from the afterlink/ directory,
+		// where AssemblyModifierPipeline writes its rewritten output.
+		var intermediateReleaseOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "afterlink", "arm64-v8a");
 		var outputReleaseDll = Path.Combine (intermediateReleaseOutputPath, $"{proj.ProjectName}.dll");
 
 		xaResolver = new XAAssemblyResolver (Tools.AndroidTargetArch.Arm64, log, false);
