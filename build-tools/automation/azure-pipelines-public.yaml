@@ -16,10 +16,10 @@ pr:
 parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
-- name: skipTests                      # Skip all test stages (builds only). Use 'auto' to auto-skip for non-fork PRs.
+- name: skipTests                      # Skip all test stages (builds only). Default 'false' so PRs run the full test matrix.
   displayName: Skip Tests
   type: string
-  default: 'auto'
+  default: 'false'
   values:
   - 'auto'
   - 'true'
@@ -51,13 +51,9 @@ variables:
   value: windows.vs2022.amd64.open
 - name: LinuxPoolImageNetCorePublic
   value: build.Ubuntu.2204.amd64.open
-# Skip tests for non-fork PRs (they should use DevDiv pipeline) unless explicitly requested
+# Skip tests when explicitly requested; otherwise run full PR test matrix.
 - name: SkipTestStages
   ${{ if eq(parameters.skipTests, 'true') }}:
-    value: true
-  ${{ elseif eq(parameters.skipTests, 'false') }}:
-    value: false
-  ${{ elseif and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')) }}:
     value: true
   ${{ else }}:
     value: false
@@ -67,7 +63,6 @@ stages:
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
-  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
@@ -104,7 +99,6 @@ stages:
 - stage: win_build_test
   displayName: Windows
   dependsOn: []
-  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: win_build_test
     displayName: Windows > Build & Smoke Test
@@ -126,7 +120,6 @@ stages:
 - stage: linux_build
   displayName: Linux
   dependsOn: []
-  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: linux_build_create_sdk_pack
     displayName: Linux > Build
@@ -174,7 +167,7 @@ stages:
   dependsOn: 
   - mac_build
   - linux_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
@@ -270,7 +263,7 @@ stages:
 - stage: msbuild_dotnet
   displayName: MSBuild Tests
   dependsOn: mac_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_msbuild_tests
     strategy:
@@ -362,7 +355,7 @@ stages:
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
   dependsOn: mac_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
