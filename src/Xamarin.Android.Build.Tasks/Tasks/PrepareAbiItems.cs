@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tasks
 			} else if (MonoAndroidHelper.StringEquals ("jni_init", Mode, StringComparison.OrdinalIgnoreCase)) {
 				baseName = JniInitFuncsBase;
 			} else {
-				Log.LogError ($"Unknown mode: {Mode}");
+				Log.LogCodedError ("XA0000", Properties.Resources.XA0000_PrepareAbiItems_UnknownMode, Mode);
 				return false;
 			}
 

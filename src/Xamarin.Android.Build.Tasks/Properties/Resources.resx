@@ -156,6 +156,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>Unhandled exception: {0}</value>
     <comment>{0} - The exception message of the associated exception</comment>
   </data>
+  <data name="XA0000_PrepareAbiItems_UnknownMode" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0000_TargetFrameworkVersion_for_API" xml:space="preserve">
     <value>Could not determine $(TargetFrameworkVersion) for API level '{0}.'</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
