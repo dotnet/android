@@ -51,9 +51,28 @@ namespace Android.Graphics
 		#endregion
 
 		#region Public Properties
+		/// <summary>
+		/// Gets or sets the alpha (opacity) component of the color, where 0 is fully transparent and 255 is fully opaque.
+		/// </summary>
+		/// <value>A <see cref="byte"/> representing the alpha component, in the range 0–255.</value>
 		public byte A { get { return (byte)(color >> 24); } set { color = FromArgb (R, G, B, value); } }
+
+		/// <summary>
+		/// Gets or sets the blue component of the color.
+		/// </summary>
+		/// <value>A <see cref="byte"/> representing the blue component, in the range 0–255.</value>
 		public byte B { get { return (byte)color; } set { color = FromArgb (R, G, value, A); } }
+
+		/// <summary>
+		/// Gets or sets the green component of the color.
+		/// </summary>
+		/// <value>A <see cref="byte"/> representing the green component, in the range 0–255.</value>
 		public byte G { get { return (byte)(color >> 8); } set { color = FromArgb (R, value, B, A); } }
+
+		/// <summary>
+		/// Gets or sets the red component of the color.
+		/// </summary>
+		/// <value>A <see cref="byte"/> representing the red component, in the range 0–255.</value>
 		public byte R { get { return (byte)(color >> 16); } set { color = FromArgb (value, G, B, A); } }
 		#endregion
 
