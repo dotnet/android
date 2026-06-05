@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.5)
 # Set the project name
 project (elfcleaner C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
@@ -25,9 +25,14 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -Wall")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -Wall")
 
 set(ELFCLEANER_SOURCES
-  ../../../external/termux-elf-cleaner/termux-elf-cleaner.cpp
+  ../../../external/termux-elf-cleaner/elf-cleaner.cpp
   )
 
 # Add an executable
 add_executable(elfcleaner ${ELFCLEANER_SOURCES})
+target_compile_definitions(elfcleaner
+  PRIVATE "COPYRIGHT=\"Copyright (C) 2022-2024 Termux and contributors.\""
+  PRIVATE "PACKAGE_VERSION=\"3.0.1\""
+  PRIVATE "PACKAGE_NAME=\"termux-elf-cleaner\""
+  )
 set_target_properties(elfcleaner PROPERTIES LINK_FLAGS_RELEASE -s)
