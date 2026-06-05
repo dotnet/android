@@ -221,6 +221,10 @@ Poznámka: Android Designer není kompatibilní se sadou Java SDK 11.0: https://
     <value>Vlastnost MSBuildu AndroidSupportedAbis se už nepodporuje. Upravte soubor projektu v textovém editoru, odeberte všechna použití vlastnosti AndroidSupportedAbis a místo ní použijte vlastnost MSBuildu RuntimeIdentifiers.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>Knihovna EmbeddedNativeLibrary {0} v projektech aplikací pro Android není platná. Použijte prosím místo ní AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
