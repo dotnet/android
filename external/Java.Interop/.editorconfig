@@ -270,7 +270,7 @@ dotnet_diagnostic.CA5391.severity = suggestion	# Use antiforgery tokens in ASP.N
 dotnet_diagnostic.IA6450.severity = suggestion	# Custom web token handler was found
 dotnet_diagnostic.IA6451.severity = suggestion	# Implement required validations for app asserted actor token
 
-# Adding the FxCopAnalyzers NuGet package automatically starts analyzing code at the default
+# Adding the NetAnalyzers NuGet package automatically starts analyzing code at the default
 # severity levels for each rule. We're not ready for that yet, so disable all other rules.
 
 dotnet_diagnostic.CA2310.severity = none		# Do not use insecure deserializer NetDataContractSerializer

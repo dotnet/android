@@ -71,7 +71,7 @@ namespace Xamarin.Android.ApiTools.DroidDocImporter
 						      "HTML",
 						      "-//W3C//DTD HTML 4.01//EN",
 			                              "file:///strict.dtd",
-						      string.Empty, new NameTable (), new EmbeddedResourceEntityResolver ());
+						      string.Empty, new EmbeddedResourceEntityResolver ());
 		}
 
 		public XElement GetJavaDocFile (string path)

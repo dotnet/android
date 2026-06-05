@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_XamarinAndroidCecilVersion Condition=" '$(_XamarinAndroidCecilVersion)' == '' ">0.11.4</_XamarinAndroidCecilVersion>
+    <_XamarinAndroidCecilVersion Condition=" '$(_XamarinAndroidCecilVersion)' == '' ">0.11.6</_XamarinAndroidCecilVersion>
   </PropertyGroup>
   <ItemGroup Condition=" '$(_XamarinAndroidCecilPath)' == '' ">
     <PackageReference Include="Mono.Cecil" Version="$(_XamarinAndroidCecilVersion)" />
