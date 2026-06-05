@@ -221,6 +221,10 @@ Remarque : le Android Designer est incompatible avec le Kit de développement l
     <value>La propriété MSBuild 'AndroidSupportedAbis' n'est plus prise en charge. Modifiez le fichier projet dans un éditeur de texte, supprimez les utilisations de 'AndroidSupportedAbis', et utilisez à la place la propriété MSBuild 'RuntimeIdentifiers'.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' est non valide dans les projets d'application Android. Utilisez AndroidNativeLibrary à la place.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -1142,13 +1146,13 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>Le répertoire d’entrée source Java « {0} » et le répertoire de sortie « {1} » de Trimmable type map Java doivent être différents.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>La source Java générée « {0} » pour trimmable type map est introuvable.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

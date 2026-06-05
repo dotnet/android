@@ -221,6 +221,10 @@ Uwaga: Android Designer jest niezgodny z zestawem Java SDK 11.0: https://aka.ms/
     <value>Właściwość „AndroidSupportedAbis” programu MSBuild nie jest już obsługiwana. Edytuj plik projektu w edytorze tekstu, usuń wszystkie wystąpienia właściwości „AndroidSupportedAbis” i użyj zamiast niej właściwości „RuntimeIdentifiers” programu MSBuild.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>Biblioteka EmbeddedNativeLibrary „{0}” jest nieprawidłowa w projektach aplikacji systemu Android. Zamiast niej należy użyć biblioteki AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary

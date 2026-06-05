@@ -221,6 +221,10 @@ In this message, the phrase "should not be reached" means that this error messag
     <value>'AndroidSupportedAbis' MSBuild プロパティはサポートされなくなりました。プロジェクト ファイルをテキスト エディターで編集し、'AndroidSupportedAbis' の使用をすべて削除して、代わりに 'RuntimeIdentifiers' MSBuild プロパティを使用してください。</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' は Android アプリケーション プロジェクトでは無効です。代わりに AndroidNativeLibrary を使用してください。</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -1143,13 +1147,13 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>トリミング可能な型マップの Java ソース入力ディレクトリ '{0}' と出力ディレクトリ '{1}' は異なる必要があります。</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>生成されたトリミング可能な型マップの Java ソース '{0}' が見つかりませんでした。</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>
