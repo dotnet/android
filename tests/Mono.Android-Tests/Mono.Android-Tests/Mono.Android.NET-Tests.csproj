@@ -94,8 +94,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' or '$(PublishAot)' == 'true' " />
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' or '$(PublishAot)' == 'true' " />
+    <!--
+      NUnit's value-comparison constraints reflect over `IEquatable<T>` and other
+      generic interface implementations on test types. Under NativeAOT the trimmer
+      strips those metadata, producing `IndexOutOfRangeException` from
+      `EquatablesComparer.GetEquatableImplementations`. Root the NUnit assembly so
+      its reflection paths keep working. (Mono+trimmable is fine here because it
+      links from roots and we already root the test assemblies above.)
+    -->
+    <TrimmerRootAssembly Include="nunit.framework" RootMode="All" Condition=" '$(PublishAot)' == 'true' " />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <_AndroidRemapMembers Include="Remaps.xml" />
