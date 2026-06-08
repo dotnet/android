@@ -1,0 +1,18 @@
+﻿<#@ template language="C#" #>
+using System;
+using System.Reflection;
+
+[assembly: AssemblyCopyright("Copyright © Microsoft <#=DateTime.Now.Year#>")]
+[assembly: AssemblyCompany("Microsoft")]
+
+[assembly: AssemblyVersion (ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.BaseVersion.Patch + "." + ThisAssembly.Git.Commits)]
+
+[assembly: AssemblyFileVersion (ThisAssembly.Git.SemVer.Major + "." + ThisAssembly.Git.SemVer.Minor + "." + ThisAssembly.Git.BaseVersion.Patch + "." + ThisAssembly.Git.Commits)]
+
+[assembly: AssemblyInformationalVersion (
+	ThisAssembly.Git.SemVer.Major + "." +
+	ThisAssembly.Git.SemVer.Minor + "." +
+	ThisAssembly.Git.BaseVersion.Patch + "." +
+	ThisAssembly.Git.Commits + "-" +
+	ThisAssembly.Git.Branch + "+" +
+	ThisAssembly.Git.Commit)]

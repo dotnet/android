@@ -135,6 +135,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; contains reference to obsolete attribute &apos;Android.Runtime.PreserveAttribute&apos;. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead.
+        /// </summary>
+        public static string IL6001 {
+            get {
+                return ResourceManager.GetString("IL6001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Directory &apos;{0}&apos; is from &apos;{1}&apos;..
         /// </summary>
         public static string XA_Directory_Is_From {
@@ -300,6 +309,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA0036 {
             get {
                 return ResourceManager.GetString("XA0036", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown mode: {0}.
+        /// </summary>
+        public static string XA0037 {
+            get {
+                return ResourceManager.GetString("XA0037", resourceCulture);
             }
         }
         

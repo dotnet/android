@@ -221,6 +221,10 @@ Not: Android Designer, Java SDK 11.0 ile uyumsuzdur: https://aka.ms/vs2019-and-j
     <value>'AndroidSupportedAbis' MSBuild özelliği artık desteklenmiyor. Proje dosyasını bir metin düzenleyicisinde düzenleyin, tüm 'AndroidSupportedAbis' kullanımlarını kaldırın ve bunun yerine 'RuntimeIdentifiers' MSBuild özelliğini kullanın.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>Android Uygulama projelerinde '{0}' EmbeddedNativeLibrary geçersiz. Lütfen bunun yerine AndroidNativeLibrary kullanın.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -1142,13 +1146,13 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>Trimmable type map Java source giriş dizini '{0}' ve çıkış dizini '{1}' farklı olmalıdır.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>Oluşturulan trimmable type map Java source '{0}' bulunamadı.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

@@ -221,6 +221,10 @@ Hinweis: Die Android Designer ist nicht mit Java SDK 11.0 kompatibel: https://ak
     <value>Die MSBuild-Eigenschaft "AndroidSupportedAbis" wird nicht mehr unterstützt. Bearbeiten Sie die Projektdatei in einem Text-Editor, entfernen Sie alle Vorkommen von "AndroidSupportedAbis", und verwenden Sie stattdessen die MSBuild-Eigenschaft "RuntimeIdentifiers".</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary "{0}" ist in Android-Anwendungsprojekten ungültig. Verwenden Sie stattdessen AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -1142,13 +1146,13 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>Das Eingabeverzeichnis „{0}“ und das Ausgabeverzeichnis „{1}“ für den Java-Quelltext von der trimmbaren Typzuordnung müssen unterschiedlich sein.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>Die generierte Java-Quelldatei „{0}“ für die trimmbare Typzuordnung wurde nicht gefunden.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

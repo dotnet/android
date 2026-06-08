@@ -142,6 +142,9 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
   <data name="APT0005" xml:space="preserve">
     <value>Invalid file name: Filenames cannot use Java reserved words.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
   <data name="XA0036" xml:space="preserve">
     <value>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
