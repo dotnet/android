@@ -253,18 +253,6 @@
     We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
   -->
-  <!--
-    NOTE: _CleanIntermediateIfNeeded must NOT be listed here. It already runs early in the
-    normal build via _AndroidBuildDependsOn (BuildOrder.targets). During an incremental
-    `dotnet run` without a build, the entry point is the Install/DeployToDevice chain, which does
-    not run the early Build chain, so listing _CleanIntermediateIfNeeded here would make it run
-    for the first time *after* _PrepareAssemblies has already populated
-    obj/<config>/android/assets/<abi>/*.dll. It would then delete obj/<config>/android, but
-    _PrepareAssemblies (already executed this invocation) would be skipped and not recreate the
-    assemblies, causing _GeneratePackageManagerJava to fail with XAGCA7023
-    (DirectoryNotFoundException on assets/<abi>/Mono.Android.dll). This mirrors the llvm-ir
-    _GenerateJavaStubs target, which also omits _CleanIntermediateIfNeeded.
-  -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
       Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;@(_EnvironmentFiles)"
