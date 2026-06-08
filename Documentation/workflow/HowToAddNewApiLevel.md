@@ -127,8 +127,10 @@ Then update the following files:
     `Include` is the binding framework version (e.g. `v16.1`).  `Level` is the
     integer API level (`Major` of `VersionCodeFull`).  `Id` is the platform ID
     used to locate `android-$(Id)` directories under the Android SDK.  `Stable`
-    should be `True` for shipping platforms and `False` for unsupported preview
-    API levels.
+    should be `True`; every entry currently in the projitems uses `True`,
+    including preview codenames like CANARY.  (Setting it to `False` would
+    exclude the entry from being picked as the default stable framework
+    version by some build-time selection logic.)
 
     TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
 
