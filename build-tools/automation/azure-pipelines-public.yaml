@@ -435,6 +435,8 @@ stages:
       PublicApiType: Generate
     steps:
     - checkout: self
+      clean: true
+      submodules: recursive
       path: s/android
       persistCredentials: false
 
