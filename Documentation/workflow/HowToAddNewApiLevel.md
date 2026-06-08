@@ -111,17 +111,26 @@ For the new API level, you need:
 
 Then update the following files:
 
-  - Add new `AndroidPlatform` value to
-    [`/build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs`](../../build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs):
+  - Add a new `<AndroidApiInfo>` entry to
+    [`/src/Mono.Android/Mono.Android.Apis.projitems`](../../src/Mono.Android/Mono.Android.Apis.projitems):
 
-    ```csharp
-    new AndroidPlatform (apiName: "CANARY", apiLevel: new Version (36, 1), platformID: "CANARY", include: "v16.0",   framework: "v16.1", stable: false),
-
+    ```xml
+    <AndroidApiInfo Include="v16.1">
+      <Name>CANARY</Name>
+      <Level>36</Level>
+      <VersionCodeFull>36.1</VersionCodeFull>
+      <Id>36.1</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
     ```
 
-    TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
+    `Include` is the binding framework version (e.g. `v16.1`).  `Level` is the
+    integer API level (`Major` of `VersionCodeFull`).  `Id` is the platform ID
+    used to locate `android-$(Id)` directories under the Android SDK.  `Stable`
+    should be `True` for shipping platforms and `False` for unsupported preview
+    API levels.
 
-    What are `include` and `framework` used for?
+    TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
 
   - Add new level to
     [`/build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs`](../../build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs):
