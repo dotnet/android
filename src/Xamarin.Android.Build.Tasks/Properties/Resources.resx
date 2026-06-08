@@ -1145,17 +1145,6 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <value>Generated Java callable wrapper code changed: '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
-  <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
-    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
-{0} - Full path to the Java source input directory
-{1} - Full path to the Java source output directory</comment>
-  </data>
-  <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
-    <comment>The following are literal names and should not be translated: trimmable type map, Java.
-{0} - Full path to the generated Java source file</comment>
-  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Command '{0}' failed.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>

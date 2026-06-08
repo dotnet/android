@@ -48,45 +48,6 @@
         OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
-  <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and Exists('$(IntermediateOutputPath)linked/Link.semaphore') "
-      AfterTargets="ILLink"
-      BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
-      Inputs="$(IntermediateOutputPath)linked/Link.semaphore"
-      Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
-    <ItemGroup>
-      <_PostTrimTrimmableTypeMapInputAssemblies Include="@(ResolvedFileToPublish)"
-          Condition=" '%(Extension)' == '.dll' " />
-    </ItemGroup>
-
-    <GenerateTrimmableTypeMap
-        ResolvedAssemblies="@(_PostTrimTrimmableTypeMapInputAssemblies)"
-        FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
-        OutputDirectory="$(_TypeMapOutputDirectory)"
-        JavaSourceOutputDirectory="$(_PostTrimTypeMapJavaOutputDirectory)"
-        JavaSourceInputDirectory="$(_TypeMapJavaOutputDirectory)"
-        TargetFrameworkVersion="$(TargetFrameworkVersion)"
-        PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
-        MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
-        GenerateTypeMapAssemblies="false"
-        CleanJavaSourceOutputDirectory="true"
-        AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
-        ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
-      <Output TaskParameter="GeneratedJavaFiles" ItemName="_PostTrimGeneratedJavaFiles" />
-    </GenerateTrimmableTypeMap>
-
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_PostTrimTrimmableTypeMapJavaStamp)'))" />
-    <Touch Files="$(_PostTrimTrimmableTypeMapJavaStamp)" AlwaysCreate="true" />
-
-    <ItemGroup>
-      <FileWrites Include="@(_PostTrimGeneratedJavaFiles)" />
-      <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
-      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
-      <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" />
-      <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
-      <_PostTrimGeneratedJavaFiles Remove="@(_PostTrimGeneratedJavaFiles)" />
-    </ItemGroup>
-  </Target>
   <!-- Add linked TypeMap DLLs to the normal publish assembly pipeline.  The SDK R2R
        target only compiles ResolvedFileToPublish items with PostprocessAssembly=true. -->
   <Target Name="_AddTrimmableTypeMapToResolvedFileToPublish"

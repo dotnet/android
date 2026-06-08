@@ -318,11 +318,6 @@ namespace Xamarin.Android.Build.Tests {
 			var typeMapDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap"));
 			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
 			var readyToRunAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "R2R"));
-			var javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "src"));
-			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin", "classes.dex"));
-			var acwMapPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "acw-map.txt"));
-			var proguardPrimaryPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_primary.cfg"));
-
 			DirectoryAssert.Exists (typeMapDirectory, "trimmable build should generate typemap assemblies.");
 			DirectoryAssert.Exists (linkedAssemblyDirectory, "Release trimmable build should run ILLink.");
 
@@ -363,8 +358,6 @@ namespace Xamarin.Android.Build.Tests {
 					expectedHash.SequenceEqual (packagedHash),
 					$"{apkPath} should package post-link typemap assembly {pair.Key} from {pair.Value}, not the generated pre-link copy.");
 			}
-
-			AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (dexFile, javaSourceDirectory, acwMapPath, proguardPrimaryPath);
 		}
 
 		[Test]
@@ -650,35 +643,6 @@ namespace UnnamedProject {
 				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase) && !a.Name.EndsWith (".ni.dll", StringComparison.OrdinalIgnoreCase))
 				.Select (a => a.Name)
 				.ToHashSet (StringComparer.Ordinal);
-		}
-
-		void AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (string dexFile, string javaSourceDirectory, string acwMapPath, string proguardPrimaryPath)
-		{
-			const string deadManagedType = "Android.Animation.Animator+IAnimatorListenerImplementor";
-			const string deadJavaName = "Lmono/android/animation/Animator_AnimatorListenerImplementor;";
-			const string deadJavaDotName = "mono.android.animation.Animator_AnimatorListenerImplementor";
-
-			Assert.IsTrue (
-				Directory.EnumerateFiles (javaSourceDirectory, "MainActivity.java", SearchOption.AllDirectories).Any (),
-				"Post-trim Java source generation should keep the app activity JCW.");
-			FileAssert.DoesNotExist (
-				Path.Combine (javaSourceDirectory, "mono", "android", "animation", "Animator_AnimatorListenerImplementor.java"),
-				"Post-trim Java source generation should not copy framework listener implementors removed by ILLink.");
-
-			FileAssert.Exists (acwMapPath, "Post-trim scan should rewrite acw-map.txt for R8.");
-			var acwMap = File.ReadAllText (acwMapPath);
-			Assert.IsFalse (acwMap.Contains (deadManagedType, StringComparison.Ordinal), $"{acwMapPath} should be based on linked assemblies.");
-			Assert.IsFalse (acwMap.Contains (deadJavaDotName, StringComparison.Ordinal), $"{acwMapPath} should not keep removed framework listener implementors.");
-
-			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a primary proguard configuration from the post-trim acw-map.");
-			Assert.IsFalse (
-				File.ReadAllText (proguardPrimaryPath).Contains (deadJavaDotName, StringComparison.Ordinal),
-				$"{proguardPrimaryPath} should not keep removed framework listener implementors.");
-
-			FileAssert.Exists (dexFile, "R8 should produce classes.dex.");
-			Assert.IsFalse (
-				DexUtils.ContainsClass (deadJavaName, dexFile, AndroidSdkPath),
-				$"{dexFile} should not contain the removed framework listener implementor.");
 		}
 
 		string FindOutputFile (ProjectBuilder builder, XamarinAndroidApplicationProject proj, string fileName)
