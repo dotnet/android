@@ -375,7 +375,14 @@ public class TrimmableTypeMap
 					return null;
 				}
 				var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
-				return isAssignable ? proxy : null;
+				if (!isAssignable && RuntimeFeature.IsAssignableFromCheck) {
+					return null;
+				}
+				if (!isAssignable && Logger.LogAssembly) {
+					var message = $"Handle 0x{handle:x} is of type '{JniEnvironment.Types.GetJniTypeNameFromInstance (selfRef)}' which is not assignable to '{targetJniName}'";
+					Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+				}
+				return proxy;
 			} finally {
 				JniObjectReference.Dispose (ref objClass);
 				JniObjectReference.Dispose (ref targetClass);

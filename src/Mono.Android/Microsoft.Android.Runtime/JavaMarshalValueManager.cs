@@ -540,7 +540,139 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			}
 		}
 
+		if (!RuntimeFeature.IsAssignableFromCheck) {
+			return CreatePeerAllowingIncompatibleJavaType (ref reference, transfer, targetType);
+		}
+
 		return base.CreatePeer (ref reference, transfer, targetType);
+	}
+
+	IJavaPeerable? CreatePeerAllowingIncompatibleJavaType (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions transfer,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType)
+	{
+		// Mirrors Java.Interop's CreatePeer path, but lets the Android assignability
+		// feature switch decide whether a Java type mismatch rejects peer creation.
+		var resolvedTargetType = ResolvePeerType (targetType ?? typeof (global::Java.Interop.JavaObject));
+		if (resolvedTargetType is null) {
+			return null;
+		}
+
+		if (!typeof (IJavaPeerable).IsAssignableFrom (resolvedTargetType)) {
+			throw new ArgumentException ($"targetType `{resolvedTargetType.AssemblyQualifiedName}` must implement IJavaPeerable!", nameof (targetType));
+		}
+
+		var targetSig = Runtime.TypeManager.GetTypeSignature (resolvedTargetType);
+		if (!targetSig.IsValid || targetSig.SimpleReference == null) {
+			throw new ArgumentException ($"Could not determine Java type corresponding to `{resolvedTargetType.AssemblyQualifiedName}`.", nameof (targetType));
+		}
+
+		var refClass = JniEnvironment.Types.GetObjectClass (reference);
+		JniObjectReference targetClass;
+		try {
+			targetClass = JniEnvironment.Types.FindClass (targetSig.SimpleReference);
+		} catch (Exception e) {
+			JniObjectReference.Dispose (ref refClass);
+			throw new ArgumentException ($"Could not find Java class `{targetSig.SimpleReference}`.",
+					nameof (targetType),
+					e);
+		}
+
+		if (!JniEnvironment.Types.IsAssignableFrom (refClass, targetClass) && Logger.LogAssembly) {
+			var message = $"Handle 0x{reference.Handle:x} is of type '{JniEnvironment.Types.GetJniTypeNameFromInstance (reference)}' which is not assignable to '{targetSig.SimpleReference}'";
+			Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+		}
+
+		JniObjectReference.Dispose (ref targetClass);
+
+		var peer = CreatePeerInstance (ref refClass, resolvedTargetType, ref reference, transfer);
+		if (peer == null) {
+			throw new NotSupportedException (string.Format (CultureInfo.InvariantCulture, "Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
+					JniEnvironment.Types.GetJniTypeNameFromInstance (reference), resolvedTargetType));
+		}
+		peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+		return peer;
+	}
+
+	IJavaPeerable? CreatePeerInstance (
+			ref JniObjectReference klass,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type targetType,
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions transfer)
+	{
+		var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
+
+		while (jniTypeName != null) {
+			if (!JniTypeSignature.TryParse (jniTypeName, out var sig)) {
+				return null;
+			}
+
+			Type? type = GetTypeAssignableTo (sig, targetType);
+			if (type != null) {
+				var peer = TryCreatePeerInstance (ref reference, transfer, type);
+
+				if (peer != null) {
+					JniObjectReference.Dispose (ref klass);
+					return peer;
+				}
+			}
+
+			var super = JniEnvironment.Types.GetSuperclass (klass);
+			jniTypeName = super.IsValid
+				? JniEnvironment.Types.GetJniTypeNameFromClass (super)
+				: null;
+
+			JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
+			klass = super;
+		}
+		JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
+
+		return TryCreatePeerInstance (ref reference, transfer, targetType);
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Types returned here should be preserved via other means.")]
+		[return: DynamicallyAccessedMembers (Constructors)]
+		Type? GetTypeAssignableTo (JniTypeSignature sig, Type targetType)
+		{
+			foreach (var type in Runtime.TypeManager.GetTypes (sig)) {
+				if (targetType.IsAssignableFrom (type)) {
+					return type;
+				}
+			}
+			return null;
+		}
+	}
+
+	IJavaPeerable? TryCreatePeerInstance (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
+	{
+		type = Runtime.TypeManager.GetInvokerType (type) ?? type;
+
+		var self = GetUninitializedObject (type);
+		var constructed = false;
+		try {
+			constructed = TryConstructPeer (self, ref reference, options, type);
+		} finally {
+			if (!constructed) {
+				GC.SuppressFinalize (self);
+				self = null;
+			}
+		}
+		return self;
+
+		static IJavaPeerable GetUninitializedObject (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type type)
+		{
+			var value = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (type);
+			value.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+			return value;
+		}
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
@@ -585,8 +717,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			}
 
 			if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
-				// Bad cast: callers translate null to the expected result.
-				return true;
+				if (Logger.LogAssembly) {
+					var message = $"Handle 0x{reference.Handle:x} is of type '{JniEnvironment.Types.GetJniTypeNameFromInstance (reference)}' which is not assignable to '{targetJniName}'";
+					Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+				}
+				// Bad casts translate to null unless the assignability check is explicitly disabled.
+				return RuntimeFeature.IsAssignableFromCheck;
 			}
 		} finally {
 			JniObjectReference.Dispose (ref instanceClass);

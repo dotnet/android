@@ -198,6 +198,16 @@ stages:
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
+        testName: Mono.Android.NET_Tests-CoreCLR-IsAssignableFrom
+        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+        testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)CoreCLRIsAssignableFrom.xml
+        extraBuildArgs: -p:TestsFlavor=CoreCLRIsAssignableFrom -p:IncludeCategories=Intune -p:_AndroidIsAssignableFromCheck=false -p:UseMonoRuntime=false
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
+        artifactFolder: $(DotNetTargetFramework)-CoreCLR-IsAssignableFrom
+
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-CoreCLR
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)CoreCLR.xml
