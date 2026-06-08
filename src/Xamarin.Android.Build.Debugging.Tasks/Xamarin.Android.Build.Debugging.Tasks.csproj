@@ -1,0 +1,84 @@
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <DefineConstants>$(DefineConstants);MSBUILD</DefineConstants>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>product.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+
+  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+
+  <ItemGroup>
+    <Compile Remove="external\**" />
+    <Compile Remove="Linker\**" />
+    <Compile Remove="Mono.Android\**" />
+    <Compile Remove="Resources\**" />
+    <Compile Remove="Xamarin.AndroidTools.Aidl\**" />
+    <EmbeddedResource Remove="external\**" />
+    <EmbeddedResource Remove="Linker\**" />
+    <EmbeddedResource Remove="Mono.Android\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <EmbeddedResource Remove="Xamarin.AndroidTools.Aidl\**" />
+    <None Remove="external\**" />
+    <None Remove="Linker\**" />
+    <None Remove="Mono.Android\**" />
+    <None Remove="Xamarin.AndroidTools.Aidl\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Xamarin.Android.Common.Debugging.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Xamarin.Android.Common.Debugging.props">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
+    <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+  </ItemGroup>
+
+  <Target Name="_SetAssemblyVersion"
+      DependsOnTargets="GetXAVersionInfo"
+      BeforeTargets="GetAssemblyVersion">
+    <PropertyGroup>
+      <Version>$(ProductVersion).$(PackVersionCommitCount)</Version>
+    </PropertyGroup>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.6" />
+  </ItemGroup>
+
+</Project>

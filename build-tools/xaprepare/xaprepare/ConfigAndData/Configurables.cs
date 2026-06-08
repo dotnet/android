@@ -67,14 +67,6 @@ namespace Xamarin.Android.Prepare
 			public static CompressionFormat DefaultCompressionFormat => CompressionFormats [SevenZipCompressionFormatName];
 
 			/// <summary>
-			///   Set of .external "submodules" to check out when the <see
-			///   cref="KnownConditions.IncludeCommercial" /> condition is set.
-			/// </summary>
-			public static HashSet<string> CommercialExternalDependencies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
-				"xamarin/monodroid"
-			};
-
-			/// <summary>
 			///   Default execution mode. One of:
 			///
 			///     * CI: continuous integration (a.k.a. bot, a.k.a. dull, a.k.a. sad) mode in which no color, no fancy
@@ -162,8 +154,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly string BuildToolsScriptsDir             = Path.Combine (BuildToolsDir, "scripts");
 			public static readonly string BinDirRoot                       = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin");
 			public static readonly string ExternalDir                      = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "external");
-			public static readonly string ExternalGitDepsFilePath          = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".external");
-			public static readonly string ExternalGitDepsDestDir           = ExternalDir;
 			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
 			public static readonly string NativeSourcesDir                 = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "native");
 

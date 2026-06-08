@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\Xamarin.Installer.Build.Tasks\Properties\Resources.resx" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="tr-TR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Settings Name="@vsLocTools@\default.lss" Type="Lss" />
+  <Item ItemId=";Resources.resx" ItemType="0" PsrId="211" Leaf="false">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+    <Item ItemId=";Strings" ItemType="0" PsrId="211" Leaf="false">
+      <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";AndroidSdk_Not_Found" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to locate Android SDK at path `{0}`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[`{0}` yolunda Android SDK bulunamadı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AndroidSdk_Not_Set" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The path to the Android SDK has not been set. Either provide the '-p:AndroidSdkDirectory' MSbuild property with a valid path or set the 'ANDROID_HOME' or 'ANDROID_SDK_ROOT' environment variables and try again.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Android SDK’sının yolu ayarlanmadı. Geçerli bir yol içeren '-p:AndroidSdkDirectory' MSbuild özelliğini sağlayın ya da 'ANDROID_HOME' veya 'ANDROID_SDK_ROOT' bağımsız değişkenini ayarlayın ve yeniden deneyin.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Invalid_JavaSdkDirectory" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to install the Java SDK into `{0}`. Please set `$(JavaSdkDirectory)` to a valid non-administrator path.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Java SDK `{0}` dizinine yüklenemedi. Lütfen '$(JavaSdkDirectory)' dizinini geçerli bir non-administrator yola ayarlayın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Invalid_JavaSdkDirectory_ExistingInstall" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Detected an out of date Java SDK with version `{1}` at `{0}`, but we are unable to install the recommended Java SDK (version `{2}`) to this location.]D;]A;Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a valid non-administrator path to install the recommended Java SDK version to a new location.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' sürümünde '{0}' sürümüne sahip güncel olmayan bir Java SDK'sı algılandı ancak önerilen Java SDK'sı (sürüm '{2}') bu konuma yüklenemedi.]D;]A;Lütfen Java SDK'nızı '{2}' sürümüne güncelleştirin veya önerilen Java SDK sürümünü yeni bir konuma yüklemek için '$(JavaSdkDirectory)' öğesini geçerli bir yönetici olmayan yola ayarlayın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Invalid_JavaSdkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to find a Java SDK with version `{0}`. Please set `$(JavaSdkVersion)` to a valid version.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' sürümüne sahip bir Java SDK bulunamıyor. Lütfen '$(JavaSdkVersion)' sürümünü geçerli bir sürüme ayarlayın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";License_Not_Accepted" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The Android SDK license agreements were not accepted, please set `$(AcceptAndroidSDKLicenses)` to accept.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Android SDK lisans sözleşmeleri kabul edilmedi, lütfen `$(AcceptAndroidSDKLicenses)` seçeneğini kabul et olarak ayarlayın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Licenses_Acceptance_Failed" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[an error occurred trying to accept the Android SDK licenses. {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Android SDK lisansları kabul edilmeye çalışılırken bir hata oluştu. {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Required_Downloadable_Mismatch" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Internal error: expected to install {0} components, but no downloads were available.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[İç hata: {0} bileşenin yüklenmesi bekleniyordu, ancak kullanılabilir indirme yoktu.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Required_Not_Installed" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Dependency `{0}` should have been installed but could not be resolved. You can attempt to install it with: `{1} --install "{0}"`]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[`{0}` bağımlılığı yüklenmiş olmalıdır, ancak çözümlenemedi. `{1} --install "{0}"` ile yüklemeyi deneyebilirsiniz]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Task_Cancelled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attempt to install required Android SDK components timed out or was cancelled. Consider setting `$(AndroidDependencyInstallationTimeout)` to a value larger than `{0}` minutes.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Gerekli Android SDK bileşenlerini yükleme girişimi zaman aşımına uğradı veya iptal edildi. `$(AndroidDependencyInstallationTimeout)` seçeneğini `{0}` dakikadan büyük bir değere ayarlamayı deneyin.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Task_Failed" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to install required Android SDK components.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Gerekli Android SDK bileşenlerinin yüklenemedi.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Failed to install required Android SDK components. Consider setting `$(AndroidDependencyInstallationTimeout)` to a value larger than `{0}` minutes.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";Unsupported_Manifest_Type" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[`$(AndroidManifestType)` value of `{0}` is not supported. Defaulting to `Xamarin`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[`{0}` öğesinin `$(AndroidManifestType)` değeri desteklenmiyor. Varsayılan olarak `Xamarin` değerine ayarlanıyor.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+    </Item>
+  </Item>
+</LCX>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <FastDevArch Include="x86_64">
+      <NativeApiLevel>21</NativeApiLevel>
+      <Arch>%(Identity)</Arch>
+    </FastDevArch>
+    <FastDevArch Include="arm64-v8a">
+      <NativeApiLevel>21</NativeApiLevel>
+      <Arch>%(Identity)</Arch>
+    </FastDevArch>
+    <FastDevArch Include="x86">
+      <NativeApiLevel>16</NativeApiLevel>
+      <Arch>%(Identity)</Arch>
+    </FastDevArch>
+    <FastDevArch Include="armeabi-v7a">
+      <NativeApiLevel>16</NativeApiLevel>
+      <Arch>%(Identity)</Arch>
+    </FastDevArch>
+  </ItemGroup>
+  <ItemGroup>
+    <FastDevBuildItems Include="@(FastDevArch->'%(Identity)\xamarin.sync')">
+      <App>xamarin.sync</App>
+      <Source>..\..\..\..\xamarin.sync</Source>
+      <OutputPath>$(DebuggingToolsOutputDirectory)\lib\%(FastDevBuildItems.Arch)</OutputPath>
+      <CmakeFlags>-DLZ4_SRC_DIR=../../../external/lz4/lib -DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
+    </FastDevBuildItems>
+    <FastDevBuildItems Include="@(FastDevArch->'%(Identity)\xamarin.find')">
+      <App>xamarin.find</App>
+      <Source>..\..\..\..\xamarin.find</Source>
+      <OutputPath>$(DebuggingToolsOutputDirectory)\lib\%(FastDevBuildItems.Arch)</OutputPath>
+      <CmakeFlags>-DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
+    </FastDevBuildItems>
+    <FastDevBuildItems Include="@(FastDevArch->'%(Identity)\xamarin.stat')">
+      <App>xamarin.stat</App>
+      <Source>..\..\..\..\xamarin.stat</Source>
+      <OutputPath>$(DebuggingToolsOutputDirectory)\lib\%(FastDevBuildItems.Arch)</OutputPath>
+      <CmakeFlags>-DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
+    </FastDevBuildItems>
+    <FastDevBuildItems Include="@(FastDevArch->'%(Identity)\xamarin.cp')">
+      <App>xamarin.cp</App>
+      <Source>..\..\..\..\xamarin.cp</Source>
+      <OutputPath>$(DebuggingToolsOutputDirectory)\lib\%(FastDevBuildItems.Arch)</OutputPath>
+      <CmakeFlags>-DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
+    </FastDevBuildItems>
+  </ItemGroup>
+</Project>
