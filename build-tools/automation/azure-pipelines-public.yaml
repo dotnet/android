@@ -450,6 +450,7 @@ stages:
         androidSdkPlatforms: $(DefaultTestSdkPlatforms)
         dotnetVersion: $(DotNetSdkVersion)
         dotnetQuality: $(DotNetSdkQuality)
+        useAgentJdkPath: false
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2
