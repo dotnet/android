@@ -4,6 +4,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Xamarin.Android.Tasks;
+using Resources = Xamarin.Android.Tasks.Properties.Resources;
 
 namespace MonoDroid.Tuner;
 
@@ -24,7 +25,7 @@ class CheckForObsoletePreserveAttributeStep : IAssemblyModifierPipelineStep
 	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
 		if (HasObsoletePreserveAttribute (assembly)) {
-			log.LogCodedWarning ("IL6001", $"Assembly '{assembly.Name.Name}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead");
+			log.LogCodedWarning ("IL6001", Resources.IL6001, assembly.Name.Name);
 		}
 	}
 

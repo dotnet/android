@@ -29,7 +29,6 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			AssertCommercialBuild ();
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				References = {
@@ -119,7 +118,6 @@ namespace UnnamedProject
 				return;
 			}
 
-			AssertCommercialBuild ();
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				References = {
