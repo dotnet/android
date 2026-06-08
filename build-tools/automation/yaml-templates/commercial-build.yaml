@@ -26,16 +26,6 @@ steps:
 #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
 - checkout: maui
 
-- ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-  - checkout: android-platform-support
-    submodules: recursive
-    path: s/android/external/android-platform-support
-    persistCredentials: true
-
-  - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-    workingDirectory: ${{ parameters.xaSourcePath }}
-    displayName: make prepare-external-git-dependencies
-
 - task: CodeQL3000Init@0
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))

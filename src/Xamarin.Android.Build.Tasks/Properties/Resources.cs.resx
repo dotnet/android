@@ -221,6 +221,10 @@ Poznámka: Android Designer není kompatibilní se sadou Java SDK 11.0: https://
     <value>Vlastnost MSBuildu AndroidSupportedAbis se už nepodporuje. Upravte soubor projektu v textovém editoru, odeberte všechna použití vlastnosti AndroidSupportedAbis a místo ní použijte vlastnost MSBuildu RuntimeIdentifiers.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>Knihovna EmbeddedNativeLibrary {0} v projektech aplikací pro Android není platná. Použijte prosím místo ní AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -517,11 +521,11 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
   <data name="XA2024" xml:space="preserve">
-    <value>Unable to load assembly '{0}'.</value>
+    <value>Nelze načíst sestavení „{0}“.</value>
     <comment>{0} - The path to the assembly that could not be loaded.</comment>
   </data>
   <data name="XA2025" xml:space="preserve">
-    <value>Assembly {0} does not exist.</value>
+    <value>Sestavení {0} neexistuje.</value>
     <comment>{0} - The path to the assembly that does not exist.</comment>
   </data>
   <data name="XA2006" xml:space="preserve">
@@ -839,16 +843,16 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 </comment>
   </data>
   <data name="XA4319" xml:space="preserve">
-    <value>No NativeAOT DGML files were provided.</value>
+    <value>Nebyly poskytnuty žádné soubory NativeAOT DGML.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
   </data>
   <data name="XA4320" xml:space="preserve">
-    <value>ACW map file '{0}' was not found.</value>
+    <value>Soubor mapy ACW {0} nebyl nalezen.</value>
     <comment>The following are literal names and should not be translated: ACW
 {0} - The path to the ACW map file.</comment>
   </data>
   <data name="XA4321" xml:space="preserve">
-    <value>NativeAOT DGML file '{0}' was not found.</value>
+    <value>Soubor NativeAOT DGML {0} nebyl nalezen.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, DGML
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
@@ -1141,6 +1145,17 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Vygenerovaný kód volatelné obálky Java se změnil: {0}.</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1163,15 +1178,15 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - The timeout in seconds.</comment>
   </data>
   <data name="XA0146" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.</value>
+    <value>Pokus o kontrolu, zda je „{0}“ správně přidruženým souborem ELF, selhal s výjimkou. Kontrola přidružení tohoto souboru bude ignorována.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0147" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.</value>
+    <value>Pokus o kontrolu, zda je „{0}“ platný soubor ELF, selhal s výjimkou. Kontrola AOT pro tento soubor bude ignorována.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.</value>
+    <value>Pokus o kontrolu, zda je „{0}“ platný soubor ELF, selhal s výjimkou. Kontrola symbolu „{1}@{2}“ pro tento soubor bude ignorována.</value>
     <comment>{0} - The file path.
 {1} - The symbol name.
 {2} - The section name.</comment>

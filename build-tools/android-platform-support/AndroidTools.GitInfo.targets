@@ -1,0 +1,45 @@
+<Project>
+  <!--
+    Originally lived in DevDiv/android-platform-support/src/AndroidTools.GitInfo.targets.
+    Imported by Mono.AndroidTools.csproj and Xamarin.AndroidTools.csproj to derive their
+    version from git and to defer MicroBuild signing until after compilation.
+  -->
+
+  <PropertyGroup>
+    <GitThisAssembly>false</GitThisAssembly>
+    <GitDefaultBranch>main</GitDefaultBranch>
+    <!-- Force GitInfo to use the GitInfo.txt next to this file rather than walking up from the consuming project. -->
+    <GitInfoFile>$(MSBuildThisFileDirectory)GitInfo.txt</GitInfoFile>
+  </PropertyGroup>
+
+  <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion" DependsOnTargets="GitVersion">
+    <PropertyGroup>
+      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+      <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <PropertyGroup>
+    <!--
+        Disable MicroBuild signing by default, then only enable it after compilation.
+        This way, if compilation is skipped because it the project has already been built, signing
+        will remain turned off and we will not redundantly submit already-signed files to sign.
+
+        This property group must remain in Directory.Build.targets file (as opposed to *.props) because
+        the initial MicroBuild_SigningEnabled value is not set until after Directory.Build.props has been processed.
+    -->
+    <MicroBuild_SigningEnabled_Old>$(MicroBuild_SigningEnabled)</MicroBuild_SigningEnabled_Old>
+    <MicroBuild_SigningEnabled>false</MicroBuild_SigningEnabled>
+
+    <TargetsTriggeredByCompilation>
+        $(TargetsTriggeredByCompilation);
+        EnableMicroBuildSigningPostCompile
+    </TargetsTriggeredByCompilation>
+  </PropertyGroup>
+
+  <Target Name="EnableMicroBuildSigningPostCompile">
+    <PropertyGroup>
+      <MicroBuild_SigningEnabled>$(MicroBuild_SigningEnabled_Old)</MicroBuild_SigningEnabled>
+    </PropertyGroup>
+  </Target>
+</Project>

@@ -221,6 +221,10 @@ Remarque : le Android Designer est incompatible avec le Kit de développement l
     <value>La propriété MSBuild 'AndroidSupportedAbis' n'est plus prise en charge. Modifiez le fichier projet dans un éditeur de texte, supprimez les utilisations de 'AndroidSupportedAbis', et utilisez à la place la propriété MSBuild 'RuntimeIdentifiers'.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' est non valide dans les projets d'application Android. Utilisez AndroidNativeLibrary à la place.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -517,11 +521,11 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
   <data name="XA2024" xml:space="preserve">
-    <value>Unable to load assembly '{0}'.</value>
+    <value>Impossible de charger l'assembly « {0} ».</value>
     <comment>{0} - The path to the assembly that could not be loaded.</comment>
   </data>
   <data name="XA2025" xml:space="preserve">
-    <value>Assembly {0} does not exist.</value>
+    <value>L’assembly {0} n’existe pas.</value>
     <comment>{0} - The path to the assembly that does not exist.</comment>
   </data>
   <data name="XA2006" xml:space="preserve">
@@ -839,16 +843,16 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 </comment>
   </data>
   <data name="XA4319" xml:space="preserve">
-    <value>No NativeAOT DGML files were provided.</value>
+    <value>Aucun fichier DGML NativeAOT n’a été fourni.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
   </data>
   <data name="XA4320" xml:space="preserve">
-    <value>ACW map file '{0}' was not found.</value>
+    <value>Le fichier de mappage ACW « {0} » n’a pas été trouvé.</value>
     <comment>The following are literal names and should not be translated: ACW
 {0} - The path to the ACW map file.</comment>
   </data>
   <data name="XA4321" xml:space="preserve">
-    <value>NativeAOT DGML file '{0}' was not found.</value>
+    <value>Le fichier DGML NativeAOT « {0} » n’a pas été trouvé.</value>
     <comment>The following are literal names and should not be translated: NativeAOT, DGML
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
@@ -1141,6 +1145,17 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <value>Code de wrapper joignable Java généré modifié : « {0} »</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>Le répertoire d’entrée source Java « {0} » et le répertoire de sortie « {1} » de Trimmable type map Java doivent être différents.</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>La source Java générée « {0} » pour trimmable type map est introuvable.</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>La commande « {0} » a échoué.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1163,15 +1178,15 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The timeout in seconds.</comment>
   </data>
   <data name="XA0146" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.</value>
+    <value>La tentative de vérification de la conformité du fichier ELF « {0} » a échoué avec une exception, la vérification de l’alignement du fichier est ignorée.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0147" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.</value>
+    <value>La tentative de vérification de la validité du fichier ELF « {0} » a échoué avec une exception, la vérification AOT du fichier est ignorée.</value>
     <comment>{0} - The file path.</comment>
   </data>
   <data name="XA0148" xml:space="preserve">
-    <value>Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.</value>
+    <value>La tentative de vérification de la validité du fichier ELF « {0} » a échoué avec une exception, la vérification du symbole « {1}@{2} » pour le fichier est ignorée.</value>
     <comment>{0} - The file path.
 {1} - The symbol name.
 {2} - The section name.</comment>
