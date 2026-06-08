@@ -447,6 +447,18 @@ stages:
       path: s/maui
       persistCredentials: true
 
+    # Restore ~/.gradle/caches between runs so MAUI's Gradle resolution
+    # for android-gradle-plugin/sdklib/ddmlib is not gated on the
+    # dotnet-public-maven Maven feed every build. The dnceng-public Maven
+    # feed periodically rate-limits ('exceeding usage of resource Concurrency
+    # in namespace IPAddress', HTTP 500), which deterministically fails
+    # MAUI's ./build.ps1 --target=dotnet-pack.
+    # Adapted from upstream dotnet/maui, which adopted the pattern from us:
+    # https://github.com/dotnet/maui/blob/net11.0/eng/pipelines/common/cache-gradle.yml
+    - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+      parameters:
+        xaSourcePath: $(Build.SourcesDirectory)/android
+
     - template: /build-tools/automation/yaml-templates/setup-test-environment-steps.yaml
       parameters:
         xaSourcePath: $(Build.SourcesDirectory)/android
