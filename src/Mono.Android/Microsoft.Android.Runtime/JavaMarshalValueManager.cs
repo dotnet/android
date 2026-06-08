@@ -597,11 +597,11 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 				Type? type = GetTypeAssignableTo (sig, targetType);
 				if (type != null) {
-					var createdPeer = TryCreatePeerInstance (ref reference, transfer, type);
+					var peer = TryCreatePeerInstance (ref reference, transfer, type);
 
-					if (createdPeer != null) {
+					if (peer != null) {
 						JniObjectReference.Dispose (ref klass);
-						return createdPeer;
+						return peer;
 					}
 				}
 

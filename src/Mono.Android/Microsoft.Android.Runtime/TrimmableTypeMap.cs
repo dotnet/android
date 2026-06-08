@@ -378,9 +378,6 @@ public class TrimmableTypeMap
 					if (!JniEnvironment.Types.IsAssignableFrom (objClass, targetClass)) {
 						return null;
 					}
-				} else if (Logger.LogAssembly) {
-					var message = $"Skipping Java assignability check for handle 0x{handle:x} targeting '{targetJniName}' because {nameof (RuntimeFeature.IsAssignableFromCheck)} is disabled.";
-					Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
 				}
 				return proxy;
 			} finally {
