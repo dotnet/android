@@ -124,6 +124,35 @@ public class BuildArchiveTests
 		}
 	}
 
+	[Test]
+	public void MissingJarEntryIsSkippedAndExistingOutputEntryIsRemoved ()
+	{
+		var apk = Path.Combine (TempDirectory, "app.apk");
+		var jar = Path.Combine (TempDirectory, "classes.jar");
+
+		CreateArchive (apk, ("commonMain/default/manifest", "existing"));
+		CreateArchive (jar, ("other-entry.txt", "contents"));
+
+		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
+		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
+		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		var messages = new List<BuildMessageEventArgs> ();
+
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = new ITaskItem [] { item },
+		};
+
+		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+
+		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Failed to add jar entry commonMain/default/manifest from {jar}: entry not found in jar."));
+
+		using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
+			archive.AssertDoesNotContainEntry (apk, "commonMain/default/manifest");
+		}
+	}
+
 	static void CreateArchive (string path, params (string name, string contents) [] entries)
 	{
 		using (var stream = File.Create (path))

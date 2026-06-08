@@ -171,7 +171,9 @@ public class BuildArchive : AndroidTask
 					var jar_item = jar.ReadEntry (jar_entry_name);
 
 					if (jar_item == null) {
-						Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jar_entry_name, Path.GetFileName (jar_file_path));
+						Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jar_entry_name, jar_file_path);
+						if (wasExistingOutputEntry)
+							existingEntries.Add (apk_path);
 						continue;
 					}
 
