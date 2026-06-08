@@ -425,7 +425,8 @@ stages:
     pool:
       name: $(NetCorePublicPoolName)
       demands:
-      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      - ImageOverride -equals 1es-windows-2022-open
+      os: windows
     timeoutInMinutes: 180
     workspace:
       clean: all
