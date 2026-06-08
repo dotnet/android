@@ -16,37 +16,38 @@ returns a `SafeHandle` ALLOCATES A NEW GC OBJECT.
 
 So...how bad is that?
 
-What's in this directory is insanity: there are four different "strategies"
-for dealing with JNI:
+What's in this directory is insanity: there are four different active
+non-`SafeHandle` "strategies" for dealing with JNI:
 
- 1. `SafeHandle` All The Things! (`SafeTiming`)
-
- 2. Xamarin.Android JNI handling from 2011 until Xamarin.Android 6.1 (2016)
+ 1. Xamarin.Android JNI handling from 2011 until Xamarin.Android 6.1 (2016)
     (`XAIntPtrTiming`)
 
     This uses `IntPtr`s *everywhere*, e.g. `JNIEnv::CallObjectMethod()` returns
     an `IntPtr`.
 
- 3. "Happier Medium?" (`JIIntPtrTiming`)
+ 2. "Happier Medium?" (`JIIntPtrTiming`)
 
     `IntPtr`s everywhere means it's trivial to forget that
     a JNI handle is a GREF vs. an LREF vs… What if we used the same `JNIEnv`
     invocation logic as `XAIntPtrTiming`, but instead of `IntPtr`s everywhere
     we instead had a `JniObjectReference` structure?
 
- 4. "Optimize (3)" (`JIPinvokeTiming`)
+ 3. "Optimize (2)" (`JIPinvokeTiming`)
 
-    (3) was slower than (2).  What if we rethought the `JNIEnv`
+    (2) was slower than (1).  What if we rethought the `JNIEnv`
     invocation logic and removed all the `Marshal.GetDelegateForFunctionPointer()`
     invocations with normal P/Invokes?
 
-To compare these four strategies, `jnienv-gen.exe` was updated so that *all*
-of them could be emitted into the same `.cs` file, into separate namespaces.
+ 4. Function pointer invocation with error handling (`JIFunctionPointersTiming`)
+
+To compare these strategies, `jnienv-gen.exe` was updated so that *all* of them
+could be emitted into the same `.cs` file, into separate namespaces.
 These "core" JNI bindings could then be used with to invoke
 `java.util.Arrays.binarySearch(int[], int)`, 10,000,000 times, and compare
 the results.
 
-Result in 2015 (commit [25de1f38][25de]):
+Historically, this benchmark also included a `SafeHandle` strategy.  Result in
+2015 (commit [25de1f38][25de]):
 
 [25de]: https://github.com/xamarin/Java.Interop/commit/25de1f38bb6b3ef2d4c98d2d95923a4bd50d2ea0
 
@@ -83,48 +84,16 @@ be a viable option here.
 
 ---
 
-Does this mean SafeHandle-oriented use should die a horrible flaming death?
+These historical results led to `JniObjectReference` becoming the stable public
+API instead of exposing `JniLocalReference` or other `SafeHandle` subclasses.
+The optional SafeHandle-backed implementation was kept for migration and
+comparison, but was never used by the active build and is no longer maintained.
+The supported representation is now the `IntPtr`-backed `JniObjectReference`
+struct.
 
-Perhaps.
+## Historical 2021 Timing Update
 
-However, I still fear a future precise-stack-scanning world, or handle-swizzling, or...
-and SafeHandles and HandleRefs are the only ways I know of to help support precise GCs.
-Unfortunately, `HandleRef` is NOT in *any* PCL profile, and thus isn't viable either
-while fulfilling the other desires/requirements of Java.Interop, so that just leaves
-`SafeHandle`s.
-
-Which means, for "sanity", we'd want an API that can support both...at least with minor variations.
-
-Meaning we "abstract out" the actual handle representation.
-
-This isn't entirely straightforward; the point to an abstraction would be a stable API.
-
-For example, what should `JNIEnv::CallObjectMethod()` return? It needs to return a `jobject`,
-in some form, and that type itself needs to be part of the stable API.
-
-We could say that it should be `IJavaObject` (or whatever), but the low-level wrappers shouldn't be *hidden*.
-Sometimes you don't want that marshaling overhead! (See also recent Java.Interop.Dynamic-related commits).
-
-The origial SafeHandle idea was that `JNIEnv::CallObjectMethod()` would return `JniLocalReference`,
-but that's clearly no good now.
-
-I think what we could instead do is have `JniObjectReference` as the stable API.
-When supporting SafeHandles as a backend, JniObjectReference can contain the SafeHandle
-as a member instead of the current IntPtr, thus preserving compatibility.
-
-That handles return types. What about arguments?
-
-The wonderful thing about SafeHandles (see above waxing poetic about precise GCs) is that
-when passed as an argument to native code they'll be automagically pinned and kept alive.
-(`HandleRef` does that too, but no `HandleRef` in PCL!)
-
-The current (above) timing comparison uses `IntPtr` for arguments.
-
-We should standardize on `JniObjectReference` (again).
-
-## 2021 Timing Update
-
-How do these timings compare in 2021 on Desktop Mono (macOS)?
+How did the old `SafeHandle` timings compare in 2021 on Desktop Mono (macOS)?
 
     # SafeTiming timing: 00:00:09.3850449
     #	Average Invocation: 0.00093850449ms

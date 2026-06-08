@@ -237,21 +237,12 @@ they don't require cleanup *anyway*. Furthermore, these values should be
 *cached* -- see `JniPeerMembers` -- so making them GC objects shouldn't be
 a long-term problem.
 
-By doing so, we allow Java.Interop to have *two separate implementations*,
-controlled by build-time `#define`s:
-
-* `FEATURE_HANDLES_ARE_SAFE_HANDLES`: Causes `JniObjectReference` to
-    contain a `SafeHandle` wrapping the underlying JNI handle.
-* `FEATURE_HANDLES_ARE_INTPTRS`: Causes `JniObjectReference` to contain
-    an `IntPtr` for the underlying JNI handle.
-
-The rationale for this is twofold:
-
-1. It allows swapping out "safer" `SafeHandle` and "less safe" `IntPtr`
-    implementations, permitting easier performance comparisons.
-2. It allows migrating the existing code, as some of the existing
-    tests may assume that JNI handles are garbage collected, which
-    won't be the case when `FEATURE_HANDLES_ARE_INTPTRS` is set.
+Historically, `JniObjectReference` retained an optional `SafeHandle`
+implementation behind a build-time feature switch so the safer but slower
+representation could be compared with the `IntPtr` representation during the
+migration.  That experiment is no longer active: the supported implementation is
+the `IntPtr`-backed `JniObjectReference` struct, with explicit ownership
+transfer and disposal via `JniObjectReference.Dispose (ref reference)`.
 
 
 ## Naming Conventions
@@ -288,5 +279,4 @@ I halted the above loop after reaching 25686556 instances.
 
 I'm not sure when the JDK would stop handing out references, but it's probably
 bound to process heap limits (e.g. depends on 32-bit vs. 64-bit process).
-
 

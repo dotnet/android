@@ -152,17 +152,6 @@ namespace Java.Interop {
 			if (!peer.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (self);
 
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			var lref    = peer.SafeHandle as JniLocalReference;
-			if (lref != null && !JniEnvironment.IsHandleValid (lref)) {
-				var t = self.GetType ().FullName;
-				throw new NotSupportedException (
-						"You've created a " + t + " in one thread and are using it " +
-						"from another thread without calling IJavaPeerable.Register(). " +
-						"Passing JNI local references between threads is not supported; " +
-						"call IJavaObject.RegisterWithVM() if sharing between threads is required.");
-			}
-#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 		}
 
 		internal static int GetSignatureSeparatorIndex (string encodedMember)
@@ -189,4 +178,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

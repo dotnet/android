@@ -15,9 +15,6 @@ namespace Java.Interop {
 			pendingException    = null;
 
 			JniEnvironment.SetEnvironmentPointer (environmentPointer);
-#if FEATURE_JNIENVIRONMENT_SAFEHANDLES
-			JniEnvironment.PushLocalReferenceFrame ();
-#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES
 		}
 
 		public void SetPendingException (Exception exception)
@@ -39,10 +36,6 @@ namespace Java.Interop {
 				JniEnvironment.Runtime.RaisePendingException (pendingException);
 				pendingException    = null;
 			}
-#if FEATURE_JNIENVIRONMENT_SAFEHANDLES
-			JniEnvironment.PopLocalReferenceFrame ();
-#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES
 		}
 	}
 }
-

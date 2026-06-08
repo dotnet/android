@@ -14,12 +14,7 @@ namespace Java.Interop
 		public int                      JniIdentityHashCode { get; private set; }
 		public JniManagedPeerStates     JniManagedPeerState { get; private set; }
 
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-		JniObjectReference  reference;
-#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		unsafe  JniObjectReferenceControlBlock* jniObjectReferenceControlBlock;
-#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 		protected   static  readonly    JniObjectReference*     InvalidJniObjectReference = null;
 
@@ -96,16 +91,11 @@ namespace Java.Interop
 
 		public          JniObjectReference          PeerReference {
 			get {
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-				return reference;
-#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 				var c = jniObjectReferenceControlBlock;
 				if (c == null) {
 					return default;
 				}
 				return new JniObjectReference (c->handle, (JniObjectReferenceType) c->handle_type);
-#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			}
 		}
 
@@ -131,10 +121,6 @@ namespace Java.Interop
 				return;
 			}
 
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-			this.reference      = reference;
-#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			var c   = jniObjectReferenceControlBlock;
 			if (c == null) {
 				c   = jniObjectReferenceControlBlock    =
@@ -143,7 +129,6 @@ namespace Java.Interop
 				c->handle       = reference.Handle;
 				c->handle_type  = (int) reference.Type;
 			}
-#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 			JniObjectReference.Dispose (ref reference, options);
 		}
@@ -287,15 +272,12 @@ namespace Java.Interop
 		void IJavaPeerable.SetPeerReference (JniObjectReference reference)
 		{
 			SetPeerReference (ref reference, JniObjectReferenceOptions.Copy);
-#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 			if (!reference.IsValid && JniManagedPeerState.HasFlag (Disposed)) {
 				Java.Interop.JniObjectReferenceControlBlock.Free (ref jniObjectReferenceControlBlock);
 			}
-#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		}
 
 		IntPtr IJavaPeerable.JniObjectReferenceControlBlock =>
 			(IntPtr) jniObjectReferenceControlBlock;
 	}
 }
-

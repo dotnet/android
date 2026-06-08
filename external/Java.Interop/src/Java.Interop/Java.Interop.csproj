@@ -22,7 +22,7 @@
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   <PropertyGroup>
-    <DefineConstants>INTEROP;FEATURE_JNIOBJECTREFERENCE_INTPTRS;$(JavaInteropDefineConstants)</DefineConstants>
+    <DefineConstants>INTEROP;$(JavaInteropDefineConstants)</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <DocumentationFile>$(ToolOutputFullPath)Java.Interop.xml</DocumentationFile>

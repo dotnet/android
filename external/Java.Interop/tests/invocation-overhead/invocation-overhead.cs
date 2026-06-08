@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Java.Interop;
 
-using SafeEnv       = Java.Interop.SafeHandles.JniEnvironment;
 using JIIntPtrEnv   = Java.Interop.JIIntPtrs.JniEnvironment;
 using PinvokeEnv    = Java.Interop.JIPinvokes.JniEnvironment;
 using XAIntPtrEnv   = Java.Interop.XAIntPtrs.JniEnvironment;
@@ -42,203 +41,6 @@ public class XMethodInfo
 	public override string ToString ()
 	{
 		return string.Format ("{0}(0x{1})", GetType ().FullName, ID.ToString ("x"));
-	}
-}
-
-
-namespace Java.Interop.SafeHandles {
-	public class JniFieldInfo : XFieldInfo {
-		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
-			: base (name, signature, id, isStatic)
-		{
-		}
-	}
-	public class JniMethodInfo : XMethodInfo {
-		public JniMethodInfo (string name, string signature, IntPtr id, bool isStatic)
-			: base (name, signature, id, isStatic)
-		{
-		}
-	}
-	public struct JniObjectReference
-	{
-		public  JniReferenceSafeHandle      SafeHandle  {get; private set;}
-		public  IntPtr                      Handle  {get; private set;}
-		public  JniObjectReferenceType      Type    {get; private set;}
-		public  bool                        IsValid {
-			get {
-				return (SafeHandle != null && !SafeHandle.IsInvalid) ||
-					Handle != IntPtr.Zero;
-			}
-		}
-
-		public JniObjectReference (JniReferenceSafeHandle handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
-		{
-			SafeHandle = handle;
-			Handle  = IntPtr.Zero;
-			Type    = type;
-		}
-
-		public JniObjectReference (IntPtr handle, JniObjectReferenceType type = JniObjectReferenceType.Invalid)
-		{
-			SafeHandle = null;
-			Handle  = handle;
-			Type    = type;
-		}
-	}
-	public abstract class JniReferenceSafeHandle : SafeHandle
-	{
-		protected JniReferenceSafeHandle ()
-			: this (ownsHandle:true)
-		{
-		}
-
-		internal JniReferenceSafeHandle (bool ownsHandle)
-			: base (IntPtr.Zero, ownsHandle)
-		{
-		}
-
-		public override bool IsInvalid {
-			get {return base.handle == IntPtr.Zero;}
-		}
-
-		public JniObjectReferenceType ReferenceType {
-			get {
-				if (IsInvalid)
-					throw new ObjectDisposedException (GetType ().FullName);
-				return SafeHandles.JniEnvironment.References.GetObjectRefType (new JniObjectReference (this));
-			}
-		}
-
-		internal IntPtr _GetAndClearHandle ()
-		{
-			var h   = handle;
-			handle  = IntPtr.Zero;
-			return h;
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
-		}
-	}
-	public class JniLocalReference : JniReferenceSafeHandle {
-
-		internal JniLocalReference ()
-		{
-		}
-
-		protected override bool ReleaseHandle ()
-		{
-			SafeHandles.JniEnvironment.References.DeleteLocalRef (handle);
-			return true;
-		}
-	}
-	public class JniWeakGlobalReference : JniReferenceSafeHandle {
-		protected override bool ReleaseHandle ()
-		{
-			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			SafeHandles.JniEnvironment.References.DeleteWeakGlobalRef (handle);
-			return true;
-		}
-	}
-	public class JniGlobalReference : JniReferenceSafeHandle {
-		protected override bool ReleaseHandle ()
-		{
-			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			SafeHandles.JniEnvironment.References.DeleteGlobalRef (handle);
-			return true;
-		}
-	}
-	public sealed class JniEnvironmentSafeHandle : SafeHandle
-	{
-		JniEnvironmentSafeHandle ()
-			: base (IntPtr.Zero, ownsHandle:false)
-		{
-		}
-
-		public JniEnvironmentSafeHandle (IntPtr handle)
-			: this ()
-		{
-			SetHandle (handle);
-		}
-
-		public override bool IsInvalid {
-			get {return handle == IntPtr.Zero;}
-		}
-
-		protected override bool ReleaseHandle ()
-		{
-			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			return false;
-		}
-
-		internal unsafe SafeHandles.JniEnvironmentInvoker CreateInvoker ()
-		{
-			IntPtr p = Marshal.ReadIntPtr (handle);
-			return new SafeHandles.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
-		}
-	}
-
-	public sealed class JavaVMSafeHandle : SafeHandle {
-
-		JavaVMSafeHandle ()
-			: base (IntPtr.Zero, ownsHandle:false)
-		{
-		}
-
-		public JavaVMSafeHandle (IntPtr handle)
-			: this ()
-		{
-			SetHandle (handle);
-		}
-
-		public override bool IsInvalid {
-			get {return handle == IntPtr.Zero;}
-		}
-
-		internal IntPtr Handle {
-			get {return base.handle;}
-		}
-
-		protected override bool ReleaseHandle ()
-		{
-			Console.WriteLine ("# {0}.ReleaseHandle()", GetType ().FullName);
-			return false;
-		}
-
-		public override string ToString ()
-		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, handle.ToString ("x"));
-		}
-	}
-
-	class JniEnvironmentInfo {
-		public IntPtr EnvironmentPointer;
-		public JniEnvironmentInvoker Invoker;
-	}
-	public static partial class JniEnvironment {
-		internal static JniEnvironmentInfo CurrentInfo;
-
-		internal static void LogCreateLocalRef (JniLocalReference value)
-		{
-		}
-		public static Exception GetExceptionForLastThrowable ()
-		{
-			var v = SafeEnv.Exceptions.ExceptionOccurred ();
-			if (v.SafeHandle == null || v.SafeHandle.IsInvalid || v.SafeHandle.IsClosed)
-				return null;
-			Console.WriteLine ("exception?!");
-			SafeEnv.Exceptions.ExceptionDescribe();
-			SafeEnv.Exceptions.ExceptionClear ();
-			LogCreateLocalRef ((JniLocalReference) v.SafeHandle);
-			v.SafeHandle.Dispose ();
-			return new Exception ("yada yada yada");
-		}
 	}
 }
 
@@ -481,7 +283,6 @@ class App {
 		var GlobalRuntime   = runtimeOptions.CreateJreVM ();
 		IntPtr _env         = global::Java.Interop.JniEnvironment.EnvironmentPointer;
 
-		SafeTiming (_env);
 		XAIntPtrTiming (_env);
 		JIIntPtrTiming (_env);
 		JIPinvokeTiming (_env);
@@ -491,33 +292,6 @@ class App {
 	}
 
 	const int C = 10000000;
-
-	static unsafe void SafeTiming (IntPtr _env)
-	{
-		SafeEnv.CurrentInfo = new Java.Interop.SafeHandles.JniEnvironmentInfo {
-			EnvironmentPointer  = _env,
-			Invoker             = new Java.Interop.SafeHandles.JniEnvironmentInvoker ((JniNativeInterfaceStruct*) Marshal.ReadIntPtr (_env)),
-		};
-		var Arrays_class = SafeEnv.Types._FindClass ("java/util/Arrays");
-		var Arrays_binarySearch = SafeEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
-		var intArray = SafeEnv.Arrays.NewIntArray (3);
-		fixed (int* p = new int[]{1,2,3})
-			SafeEnv.Arrays.SetIntArrayRegion (intArray, 0, 3, p);
-
-		var t = Stopwatch.StartNew ();
-		var args = stackalloc JniArgumentValue [2];
-		args [0] = new JniArgumentValue (intArray.SafeHandle.DangerousGetHandle ());
-		args [1] = new JniArgumentValue (2);
-		for (int i = 0; i < C; ++i) {
-			int r = SafeEnv.StaticMethods.CallStaticIntMethod (Arrays_class, Arrays_binarySearch, args);
-		}
-		t.Stop ();
-		Console.WriteLine ("# {0} timing: {1}", nameof (SafeTiming), t.Elapsed);
-		Console.WriteLine ("#\tAverage Invocation: {0}ms", t.Elapsed.TotalMilliseconds / C);
-		GC.KeepAlive (intArray);
-		GC.KeepAlive (Arrays_class);
-		GC.KeepAlive (Arrays_binarySearch);
-	}
 
 	static unsafe void JIIntPtrTiming (IntPtr _env)
 	{

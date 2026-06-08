@@ -17,10 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Java.Interop\JniReferenceSafeHandleTest.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Mono.Linq.Expressions" />
     <PackageReference Include="nunit" />

@@ -149,69 +149,6 @@ namespace Java.Interop {
 			Runtime.ObjectReferenceManager.CreatedLocalReference (CurrentInfo, value);
 		}
 
-#if FEATURE_JNIENVIRONMENT_SAFEHANDLES
-		internal    static  void    PushLocalReferenceFrame ()
-		{
-			Info.Value.LocalReferences.Add (new List<JniLocalReference> ());
-		}
-
-		internal    static  void    PopLocalReferenceFrame ()
-		{
-			var localRefs   = Info.Value.LocalReferences;
-			int last        = localRefs.Count - 1;
-			var curRefs     = localRefs [last];
-			localRefs.RemoveAt (last);
-
-			foreach (var lref in curRefs) {
-				// check required due to https://bugzilla.xamarin.com/show_bug.cgi?id=25850
-				if (!lref.IsClosed)
-					lref.Dispose ();
-			}
-		}
-
-		internal    static  void    AddLocalReference (JniLocalReference value)
-		{
-			var localRefs   = Info.Value.LocalReferences;
-			var cur         = localRefs [localRefs.Count - 1];
-			cur.Add (value);
-		}
-
-		internal    static  void    LogCreateLocalRef (JniLocalReference value)
-		{
-			if (value == null || value.IsInvalid || value.IsClosed)
-				return;
-			var r = new JniObjectReference (value, JniObjectReferenceType.Local);
-			LogCreateLocalRef (r);
-		}
-
-		internal static     void    DeleteLocalReference (JniLocalReference value, IntPtr handle)
-		{
-			var localRefs   = Info.Value.LocalReferences;
-			var c           = localRefs.FirstOrDefault (r => r.Contains (value));
-			if (c == null) {
-				Runtime.ObjectReferenceManager.WriteLocalReferenceLine (
-						"Deleting JNI local reference handle 0x{0} from wrong thread {1}! Ignoring...",
-						handle.ToString ("x"), Runtime.GetCurrentThreadDescription ());
-				Runtime.ObjectReferenceManager.WriteLocalReferenceLine ("{0}",
-						System.Activator.CreateInstance (Type.GetType ("System.Diagnostics.StackTrace")));
-				return;
-			}
-			c.Remove (value);
-			var lref    = new JniObjectReference (value, JniObjectReferenceType.Local);
-			Runtime.ObjectReferenceManager.DeleteLocalReference (Info.Value, ref lref);
-			value.SetHandleAsInvalid ();
-		}
-
-		internal    static  bool    IsHandleValid (JniLocalReference lref)
-		{
-			if (lref == null || lref.IsInvalid || lref.IsClosed)
-				return false;
-
-			return  Info.Value.LocalReferences.FirstOrDefault (r => r.Contains (lref)) != null;
-		}
-#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES
-
-#if FEATURE_JNIOBJECTREFERENCE_INTPTRS
 		internal    static  void    LogCreateLocalRef (IntPtr value)
 		{
 			if (value == IntPtr.Zero)
@@ -219,7 +156,6 @@ namespace Java.Interop {
 			var r = new JniObjectReference (value, JniObjectReferenceType.Local);
 			LogCreateLocalRef (r);
 		}
-#endif  // FEATURE_JNIOBJECTREFERENCE_INTPTRS
 
 		partial class References {
 
@@ -344,12 +280,6 @@ namespace Java.Interop {
 			disposed                = true;
 		}
 
-#if FEATURE_JNIENVIRONMENT_SAFEHANDLES
-		internal    List<List<JniLocalReference>>   LocalReferences = new List<List<JniLocalReference>> () {
-			new List<JniLocalReference> (),
-		};
-#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES
-
 #if !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 		internal    JniEnvironmentInvoker   Invoker                 {get; private set;}
 
@@ -361,4 +291,3 @@ namespace Java.Interop {
 #endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 	}
 }
-

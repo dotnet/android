@@ -88,19 +88,19 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen-interop and rerun");
 			o.WriteLine ("#nullable enable");
 			o.WriteLine ();
-			o.WriteLine ("#if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
+			o.WriteLine ("#if !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
 			o.WriteLine ("#define FEATURE_JNIENVIRONMENT_JI_PINVOKES");
-			o.WriteLine ("#endif  // !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS");
+			o.WriteLine ("#endif  // !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
 			o.WriteLine ();
-			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_INTPTRS");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_JI_INTPTRS && (FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_XA_INTPTRS || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)");
 			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_INTPTRS");
-			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_PINVOKES");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_JI_INTPTRS && (FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_XA_INTPTRS || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_JI_PINVOKES && (FEATURE_JNIENVIRONMENT_XA_INTPTRS || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)");
 			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_JI_PINVOKES");
-			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_XA_INTPTRS");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_JI_PINVOKES && (FEATURE_JNIENVIRONMENT_XA_INTPTRS || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_XA_INTPTRS && FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
 			o.WriteLine ("#define _NAMESPACE_PER_HANDLE");
-			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES && FEATURE_JNIENVIRONMENT_XA_INTPTRS");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_XA_INTPTRS && FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
 			o.WriteLine ();
 			o.WriteLine ("using System;");
 			o.WriteLine ("using System.Linq;");
@@ -123,7 +123,6 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("namespace Java.Interop {");
 			GenerateJniNativeInterface (o);
 			o.WriteLine ("}");
-			WriteSection (o, HandleStyle.SafeHandle,                "FEATURE_JNIENVIRONMENT_SAFEHANDLES",               "Java.Interop.SafeHandles");
 			WriteSection (o, HandleStyle.JIIntPtr,                  "FEATURE_JNIENVIRONMENT_JI_INTPTRS",                "Java.Interop.JIIntPtrs");
 			WriteSection (o, HandleStyle.JIIntPtrPinvokeWithErrors, "FEATURE_JNIENVIRONMENT_JI_PINVOKES",               "Java.Interop.JIPinvokes");
 			WriteSection (o, HandleStyle.XAIntPtr,                  "FEATURE_JNIENVIRONMENT_XA_INTPTRS",                "Java.Interop.XAIntPtrs");
@@ -149,7 +148,6 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ();
 			switch (style) {
 			case HandleStyle.JIIntPtr:
-			case HandleStyle.SafeHandle:
 			case HandleStyle.XAIntPtr:
 				GenerateJniNativeInterfaceInvoker (o, style);
 				break;
@@ -172,7 +170,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("#pragma warning disable 0169	// Field never used; ignore since these fields make the structure have the right layout.");
 			o.WriteLine ();
 
-			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_SAFEHANDLES || FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_XA_INTPTRS");
+			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_XA_INTPTRS");
 			o.WriteLine ("\t[StructLayout (LayoutKind.Sequential)]");
 			o.WriteLine ("\tpartial struct JniNativeInterfaceStruct {");
 			o.WriteLine ();
@@ -186,7 +184,7 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ("\t\tpublic  IntPtr  {0};{1}  // {2}", e.Name, new string (' ', maxName - e.Name.Length), e.Prototype);
 			}
 			o.WriteLine ("\t}");
-			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_SAFEHANDLES || FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_XA_INTPTRS");
+			o.WriteLine ("#endif  // FEATURE_JNIENVIRONMENT_JI_INTPTRS || FEATURE_JNIENVIRONMENT_XA_INTPTRS");
 			o.WriteLine ();
 
 			o.WriteLine ("#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
@@ -961,7 +959,6 @@ namespace Xamarin.Java.Interop
 		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.XAIntPtr:
 				return new [] {
 					string.Format ("JniEnvironment.LogCreateLocalRef ({0});", variable),
@@ -1070,7 +1067,6 @@ namespace Xamarin.Java.Interop
 		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1084,7 +1080,6 @@ namespace Xamarin.Java.Interop
 		public override string GetManagedToMarshalExpression (HandleStyle style, string variable)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1099,7 +1094,6 @@ namespace Xamarin.Java.Interop
 				? variable.Substring (1)
 				: variable;
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1122,7 +1116,6 @@ namespace Xamarin.Java.Interop
 		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1186,20 +1179,17 @@ namespace Xamarin.Java.Interop
 
 	abstract class ObjectReferenceTypeInfo : TypeInfo {
 
-		string  safeType, refType;
+		string  refType;
 
-		public ObjectReferenceTypeInfo (string jni, string safeType, string refType)
+		public ObjectReferenceTypeInfo (string jni, string refType)
 			: base (jni)
 		{
-			this.safeType   = safeType;
 			this.refType    = refType;
 		}
 
 		public override string GetMarshalType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
-				return isReturn ? safeType : "JniReferenceSafeHandle";
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1212,7 +1202,6 @@ namespace Xamarin.Java.Interop
 		public override string GetManagedType (HandleStyle style, bool isReturn, bool isPinvoke)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1226,8 +1215,6 @@ namespace Xamarin.Java.Interop
 		public override string GetManagedToMarshalExpression (HandleStyle style, string variable)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
-				return string.Format ("{0}.SafeHandle", variable);
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1241,7 +1228,6 @@ namespace Xamarin.Java.Interop
 		public override string[] GetMarshalToManagedStatements (HandleStyle style, string variable, JniFunction entry)
 		{
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1262,7 +1248,6 @@ namespace Xamarin.Java.Interop
 				? variable.Substring (1)
 				: variable;
 			switch (style) {
-			case HandleStyle.SafeHandle:
 			case HandleStyle.JIIntPtr:
 			case HandleStyle.JIIntPtrPinvokeWithErrors:
 			case HandleStyle.JIFunctionPtrWithErrors:
@@ -1283,7 +1268,7 @@ namespace Xamarin.Java.Interop
 	class LocalReferenceTypeInfo : ObjectReferenceTypeInfo {
 
 		public LocalReferenceTypeInfo (string jni)
-			: base (jni, "JniLocalReference", "JniObjectReferenceType.Local")
+			: base (jni, "JniObjectReferenceType.Local")
 		{
 		}
 
@@ -1300,7 +1285,7 @@ namespace Xamarin.Java.Interop
 	class WeakGlobalReferenceTypeInfo : ObjectReferenceTypeInfo {
 
 		public WeakGlobalReferenceTypeInfo (string jni)
-			: base (jni, "JniWeakGlobalReference", "JniObjectReferenceType.WeakGlobal")
+			: base (jni, "JniObjectReferenceType.WeakGlobal")
 		{
 		}
 	}
@@ -1308,7 +1293,7 @@ namespace Xamarin.Java.Interop
 	class GlobalReferenceTypeInfo : ObjectReferenceTypeInfo {
 
 		public GlobalReferenceTypeInfo (string jni)
-			: base (jni, "JniGlobalReference", "JniObjectReferenceType.Global")
+			: base (jni, "JniObjectReferenceType.Global")
 		{
 		}
 	}
@@ -1399,11 +1384,9 @@ namespace Xamarin.Java.Interop
 	}
 
 	enum HandleStyle {
-		SafeHandle,
 		JIIntPtr,
 		JIIntPtrPinvokeWithErrors,
 		XAIntPtr,
 		JIFunctionPtrWithErrors,
 	}
 }
-

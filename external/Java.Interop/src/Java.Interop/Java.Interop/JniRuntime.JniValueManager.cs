@@ -204,15 +204,6 @@ namespace Java.Interop
 							value.GetType ().ToString (),
 							JniEnvironment.Types.GetJniTypeNameFromInstance (h));
 				}
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-				var lref = value.PeerReference.SafeHandle as JniLocalReference;
-				if (lref != null && !JniEnvironment.IsHandleValid (lref)) {
-					// `lref` was created on another thread, and CANNOT be disposed on this thread.
-					// Just invalidate the reference and move on.
-					lref.SetHandleAsInvalid ();
-				}
-#endif  // FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-
 				JniObjectReference.Dispose (ref h);
 				value.SetPeerReference (new JniObjectReference ());
 				GC.SuppressFinalize (value);

@@ -71,46 +71,10 @@ namespace Java.Interop
 					return default;
 
 				throw new InvalidOperationException ($"Could not find Java class '{classname}'.");
+#else
+				throw new NotSupportedException (
+						"Rebuild with FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS or FEATURE_JNIENVIRONMENT_JI_PINVOKES set!");
 #endif  // !(FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)
-#if FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
-				var c       = info.Invoker.FindClass (info.EnvironmentPointer, classname);
-				var thrown  = info.Invoker.ExceptionOccurred (info.EnvironmentPointer);
-				if (thrown.IsInvalid) {
-					JniEnvironment.LogCreateLocalRef (c);
-					return new JniObjectReference (c, JniObjectReferenceType.Local);
-				}
-				info.Invoker.ExceptionClear (info.EnvironmentPointer);
-				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-				LogCreateLocalRef (findClassThrown);
-				var pendingException    = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
-
-				var java    = info.ToJavaName (classname);
-				var __args  = stackalloc JniArgumentValue [1];
-				__args [0]  = new JniArgumentValue (java);
-
-				c       = info.Invoker.CallObjectMethodA (info.EnvironmentPointer, info.Runtime.ClassLoader.SafeHandle, info.Runtime.ClassLoader_LoadClass.ID, __args);
-				JniObjectReference.Dispose (ref java);
-				thrown  = info.Invoker.ExceptionOccurred (info.EnvironmentPointer);
-				if (ignoreThrown.IsInvalid) {
-					(pendingException as IJavaPeerable)?.Dispose ();
-					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
-					JniEnvironment.LogCreateLocalRef (r);
-					return r;
-				}
-				info.Invoker.ExceptionClear (info.EnvironmentPointer);
-				if (pendingException != null) {
-					thrown.Dispose ();
-					throw pendingException;
-				}
-				var loadClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
-				LogCreateLocalRef (loadClassThrown);
-				pendingException    = info.Runtime.GetExceptionForThrowable (ref loadClassThrown, JniObjectReferenceOptions.CopyAndDispose);
-				if (!throwOnError) {
-					(pendingException as IJavaPeerable)?.Dispose ();
-					return default;
-				}
-				throw pendingException!;
-#endif  // !FEATURE_JNIOBJECTREFERENCE_SAFEHANDLES
 			}
 
 			static unsafe bool TryLoadClassWithFallback (JniEnvironmentInfo info, IntPtr thrown, JniObjectReference classNameJavaString, bool throwOnError, out JniObjectReference result)
