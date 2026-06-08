@@ -221,6 +221,10 @@ Observação: o Android Designer é incompatível com o SDK do Java 11.0: https:
     <value>Não há mais suporte para a propriedade 'AndroidSupportedAbis' do MSBuild. Edite o arquivo de projeto em um editor de texto, remova todas as ocorrências de 'AndroidSupportedAbis' e use a propriedade 'RuntimeIdentifiers' MSBuild em seu lugar.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
+  </data>
   <data name="XA0100" xml:space="preserve">
     <value>A EmbeddedNativeLibrary '{0}' é inválida nos projetos de Aplicativo Android. Use a AndroidNativeLibrary.</value>
     <comment>The following are literal names and should not be translated: EmbeddedNativeLibrary, AndroidNativeLibrary
@@ -1142,13 +1146,13 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>No mapa do tipo recortável, o diretório de entrada de código-fonte Java '{0}' e o diretório de saída '{1}' devem ser diferentes.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>O código-fonte Java '{0}' do mapa de tipo recortável gerado não foi encontrado.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,15 +15,15 @@ namespace Xamarin.Android.Tasks {
 		CancellationTokenSource tcs = new CancellationTokenSource ();
 		public override string TaskPrefix => "DIAWI";
 
-		public string AdbTarget { get; set; }
+		public string? AdbTarget { get; set; }
 
 		[Required]
-		public string PackageName { get; set; }
+		public string PackageName { get; set; } = "";
 
 		[Required]
-		public string UploadFlagFile { get; set; }
+		public string UploadFlagFile { get; set; } = "";
 
-		public string UserID { get; set; }
+		public string? UserID { get; set; }
 
 		public CancellationToken Token { get { return tcs.Token; } }
 
@@ -57,7 +58,7 @@ namespace Xamarin.Android.Tasks {
 		}
 
 
-		async System.Threading.Tasks.Task<List<AndroidInstalledPackage>> QueryPackages (AndroidDevice device, string uploadFlagFileFullPath)
+		async System.Threading.Tasks.Task<List<AndroidInstalledPackage>?> QueryPackages (AndroidDevice device, string uploadFlagFileFullPath)
 		{
 			// DO NOT use the Log.XXXX methods in this method.
 			// Because this is running on a background thread they will

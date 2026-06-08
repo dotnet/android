@@ -81,12 +81,10 @@ namespace Xamarin.Android.Prepare
 			};
 
 			AddOSSpecificSteps (context, steps);
-			AddUnixPostBuildSteps (context, steps);
 
 			return steps;
 		}
 
-		partial void AddUnixPostBuildSteps (Context context, List<GeneratedFile> steps);
 		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
 
 		GeneratedFile Get_Cmake_XA_Build_Configuration (Context context)

@@ -32,8 +32,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -60,8 +58,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallAndUnInstall ([Values (false, true)] bool isRelease)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -93,8 +89,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ChangeKeystoreRedeploy ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageName = "com.xamarin.keytest"
 			};
@@ -122,8 +116,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SwitchConfigurationsShouldRedeploy ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
@@ -167,8 +159,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -217,8 +207,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallErrorCode ()
 		{
-			AssertCommercialBuild ();
-
 			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
 			var abi = "armeabi-v7a";
 			var proj = new XamarinAndroidApplicationProject {
@@ -241,8 +229,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ToggleFastDev ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 				OtherBuildItems = {
@@ -278,7 +264,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ToggleDebugReleaseWithSigning ([Values ("aab", "apk")] string packageFormat)
 		{
-			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			string path = Path.Combine ("temp", TestName.Replace ("\"", string.Empty));
@@ -323,8 +308,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void LoggingPropsShouldCreateOverrideDirForRelease ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
@@ -350,8 +333,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BlankAdbTarget ()
 		{
-			AssertCommercialBuild ();
-
 			var serial = GetAttachedDeviceSerial ();
 			var proj = new XamarinAndroidApplicationProject () {
 			};
@@ -469,8 +450,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("aab")]
 		public void LocalizedAssemblies_ShouldBeFastDeployed (string packageFormat)
 		{
-			AssertCommercialBuild ();
-
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
@@ -511,8 +490,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("aab")]
 		public void IncrementalFastDeployment (string packageFormat)
 		{
-			AssertCommercialBuild ();
-
 			var class1src = new BuildItem.Source ("Class1.cs") {
 				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 500; } }"
 			};
@@ -638,7 +615,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void AdbTargetArchitecture ()
 		{
-			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			const string abi = "x86_64";
