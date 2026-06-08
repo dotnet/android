@@ -31,7 +31,10 @@ steps:
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+# NOTE: -p:UseSharedCompilation=false is a workaround for a Roslyn build-server hang on macOS
+# (the VBCSCompiler named-pipe write deadlocks on first `csc` invocation under the .NET 11 preview.6 SDK).
+# See dotnet/android PR #11477.
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:UseSharedCompilation=false'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 
@@ -48,7 +51,7 @@ steps:
       /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:UseSharedCompilation=false'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 

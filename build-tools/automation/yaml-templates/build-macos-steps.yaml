@@ -41,11 +41,14 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+# NOTE: -p:UseSharedCompilation=false is a workaround for a Roslyn build-server hang on macOS
+# (the VBCSCompiler named-pipe write deadlocks on first `csc` invocation under the .NET 11 preview.6 SDK).
+# See dotnet/android PR #11477.
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:UseSharedCompilation=false'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:UseSharedCompilation=false'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
