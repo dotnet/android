@@ -78,7 +78,12 @@
   <Target Name="InstallManifestAndDependencies"
       DependsOnTargets="_GetDefaultPackageVersion">
     <PropertyGroup>
-      <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetSdkManifestsFolder)\</_LocalSdkManifestsFolder>
+      <!-- NOTE: place the local sdk-manifests folder under the SDK's full feature band (which includes any preview
+           suffix, e.g. "10.0.400-preview.0") so that SdkDirectoryWorkloadManifestProvider, which probes
+           sdk-manifests/<SdkFeatureBand.ToString()>/ when DOTNETSDK_WORKLOAD_MANIFEST_ROOTS is set, can discover
+           our manifests on prerelease SDKs. This affects both `dotnet workload install android-deps` below and
+           later `dotnet-local.cmd new android` template lookups. -->
+      <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetPreviewVersionBand)\</_LocalSdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
       <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
     </PropertyGroup>
@@ -111,6 +116,10 @@
         File="$(_EmptyWorkloadDir)WorkloadManifest.json"
         Lines="$(_EmptyWorkloadJsonContent)"
         Overwrite="true"
+    />
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; workload config --update-mode manifests"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
     />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install android-deps --configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot; --skip-manifest-update --skip-sign-check --verbosity diag"
