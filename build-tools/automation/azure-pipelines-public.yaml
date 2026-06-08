@@ -488,6 +488,14 @@ stages:
       retryCountOnTaskFailure: 3
       workingDirectory: $(Build.SourcesDirectory)/maui
 
+    - task: NodeTool@0
+      displayName: Install Node.js
+      # MAUI's TypeScript build steps for the BlazorWebView project shell out
+      # to node.exe; the dnceng-public windows.vs2022.amd64.open image does
+      # not preinstall Node, so install it explicitly.
+      inputs:
+        versionSpec: '20.x'
+
     - pwsh: |
         $sdk = "$env:USERPROFILE\android-toolchain\sdk"
         if (-not (Test-Path $sdk)) {
