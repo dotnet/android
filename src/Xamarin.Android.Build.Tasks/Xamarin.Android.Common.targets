@@ -157,8 +157,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<TargetFrameworkIdentifier Condition="'$(TargetFrameworkIdentifier)' == ''">MonoAndroid</TargetFrameworkIdentifier>
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
-	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_AndroidFastDeploymentSupported)' == 'True' ">False</EmbedAssembliesIntoApk>
-	<EmbedAssembliesIntoApk Condition=" '$(_AndroidFastDeploymentSupported)' == 'False' ">True</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' ">False</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
   <AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
@@ -2881,14 +2880,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
-        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') And '$(DesignTimeBuild)' != 'true' "/>
+        Condition=" '$(DesignTimeBuild)' != 'true' "/>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
         Condition=" '$(AndroidApplication)' == 'True' "/>
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
-        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets') And '$(DesignTimeBuild)' != 'true' "/>
+        Condition=" '$(DesignTimeBuild)' != 'true' "/>
   <Target Name="_ValidateAndroidTypeMapImplementation"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(_AndroidTypeMapImplementation)' != '' and '$(_AndroidTypeMapImplementation)' != 'llvm-ir' and '$(_AndroidTypeMapImplementation)' != 'managed' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "

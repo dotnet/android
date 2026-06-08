@@ -77,7 +77,6 @@ namespace Xamarin.Android.Build.Tests
 		public void XA0119 ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
 			using (var b = CreateApkBuilder ()) {
 				b.Target = "Build"; // SignAndroidPackage would fail for OSS builds
@@ -90,7 +89,6 @@ namespace Xamarin.Android.Build.Tests
 		public void XA0119AAB ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
