@@ -488,6 +488,21 @@ stages:
       retryCountOnTaskFailure: 3
       workingDirectory: $(Build.SourcesDirectory)/maui
 
+    - pwsh: |
+        $sdk = "$env:USERPROFILE\android-toolchain\sdk"
+        if (-not (Test-Path $sdk)) {
+          Write-Error "Expected xa-prepare-managed Android SDK at '$sdk' but it does not exist"
+        }
+        Write-Host "Setting ANDROID_HOME / ANDROID_SDK_ROOT to '$sdk'"
+        Write-Host "##vso[task.setvariable variable=ANDROID_HOME]$sdk"
+        Write-Host "##vso[task.setvariable variable=ANDROID_SDK_ROOT]$sdk"
+      displayName: Point ANDROID_HOME at xa-prepare SDK
+      # The dnceng-public Windows image's preinstalled Android SDK at
+      # C:\Program Files (x86)\Android\android-sdk lacks the API levels
+      # listed in $(DefaultTestSdkPlatforms). xa-prepare's androidsdk
+      # step installs them under %USERPROFILE%\android-toolchain\sdk, so
+      # redirect the MAUI build there.
+
     - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Pack .NET Maui
       workingDirectory: $(Build.SourcesDirectory)/maui
