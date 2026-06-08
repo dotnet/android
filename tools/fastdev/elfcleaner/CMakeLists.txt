@@ -1,7 +1,9 @@
 # Set the minimum version of CMake that can be used
 # To find the cmake version run
 # $ cmake --version
-cmake_minimum_required(VERSION 3.5)
+# 3.20+ is required so policy CMP0128 is NEW and the C++ standard flag
+# (e.g. -std=c++20) is always emitted; elf-cleaner.cpp uses std::counting_semaphore.
+cmake_minimum_required(VERSION 3.20)
 
 # Set the project name
 project (elfcleaner C CXX)
