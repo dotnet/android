@@ -8,12 +8,14 @@ cmake_minimum_required(VERSION 3.20)
 # Set the project name
 project (elfcleaner C CXX)
 
-# Keep in sync with external/termux-elf-cleaner/CMakeLists.txt
+# Keep ELFCLEANER_VERSION, CMAKE_CXX_STANDARD, and the PACKAGE_NAME/
+# PACKAGE_VERSION/COPYRIGHT compile definitions below in sync with
+# external/termux-elf-cleaner/CMakeLists.txt.
 set(ELFCLEANER_VERSION "3.0.1")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
