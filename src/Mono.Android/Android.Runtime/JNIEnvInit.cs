@@ -122,8 +122,6 @@ namespace Android.Runtime
 		}
 
 		// Only used for MonoVM and CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
-		[RequiresDynamicCode ("MonoVM and non-trimmable CoreCLR startup can use reflection-backed type and value managers.")]
-		[RequiresUnreferencedCode ("MonoVM and non-trimmable CoreCLR startup can use reflection-backed type and value managers.")]
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
@@ -170,23 +168,31 @@ namespace Android.Runtime
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
-		[RequiresDynamicCode ("Creates reflection-backed type managers when trimmable typemap is disabled.")]
-		[RequiresUnreferencedCode ("Creates reflection-backed type managers when trimmable typemap is disabled.")]
 		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ($"{nameof (RuntimeFeature.IsNativeAotRuntime)} requires {nameof (RuntimeFeature.TrimmableTypeMap)}.");
+			}
+
+			if (RuntimeFeature.ManagedTypeMap) {
 				return new ManagedTypeManager ();
 			}
 
-			return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+			if (RuntimeFeature.IsMonoRuntime) {
+				return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+			}
+
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+			}
+
+			throw new NotSupportedException ("Internal error: unknown runtime not supported");
 		}
 
-		[RequiresDynamicCode ("Creates reflection-backed value managers when trimmable typemap is disabled.")]
-		[RequiresUnreferencedCode ("Creates reflection-backed value managers when trimmable typemap is disabled.")]
 		internal static JniRuntime.JniValueManager CreateValueManager ()
 		{
 			if (RuntimeFeature.IsMonoRuntime) {
