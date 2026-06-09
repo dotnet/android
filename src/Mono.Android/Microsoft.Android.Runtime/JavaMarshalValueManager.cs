@@ -478,6 +478,26 @@ class JavaMarshalPeerManager : IDisposable
 
 }
 
+static class JavaMarshalValueManagerHelper
+{
+	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	public static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+	{
+		if (type is null) {
+			return null;
+		}
+		if (type == typeof (object) || type == typeof (IJavaPeerable)) {
+			return typeof (global::Java.Interop.JavaObject);
+		}
+		if (type == typeof (Exception)) {
+			return typeof (JavaException);
+		}
+		return type;
+	}
+}
+
 [RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
 [RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniValueManager
@@ -486,6 +506,8 @@ abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniV
 
 	readonly JavaMarshalPeerManager peerManager;
 
+	[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
+	[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 	protected JavaMarshalReflectionValueManagerBase ()
 	{
 		peerManager = new JavaMarshalPeerManager (GetType ().Name);
@@ -532,21 +554,6 @@ abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniV
 		return peerManager.GetSurfacedPeers ();
 	}
 
-	[return: DynamicallyAccessedMembers (Constructors)]
-	protected static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
-	{
-		if (type is null) {
-			return null;
-		}
-		if (type == typeof (object) || type == typeof (IJavaPeerable)) {
-			return typeof (global::Java.Interop.JavaObject);
-		}
-		if (type == typeof (Exception)) {
-			return typeof (JavaException);
-		}
-		return type;
-	}
-
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
 	{
 		var proxy = value as JavaProxyThrowable;
@@ -568,6 +575,12 @@ class CoreClrJavaMarshalValueManager : JavaMarshalReflectionValueManagerBase
 	static  readonly    Type[]  JIConstructorSignature  = new Type [] { ByRefJniObjectReference, typeof (JniObjectReferenceOptions) };
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
+	[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
+	[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
+	public CoreClrJavaMarshalValueManager ()
+	{
+	}
+
 	public override IJavaPeerable? CreatePeer (
 			ref JniObjectReference reference,
 			JniObjectReferenceOptions transfer,
@@ -580,7 +593,7 @@ class CoreClrJavaMarshalValueManager : JavaMarshalReflectionValueManagerBase
 			return null;
 		}
 
-		targetType = ResolvePeerType (targetType) ?? typeof (global::Java.Interop.JavaObject);
+		targetType = JavaMarshalValueManagerHelper.ResolvePeerType (targetType) ?? typeof (global::Java.Interop.JavaObject);
 
 		if (!typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 			throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", nameof (targetType));
@@ -847,7 +860,7 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			// Mirror legacy GetPeerType: callers commonly request universal
 			// interfaces / boxes (IJavaPeerable, object, Exception) — map these
 			// to a concrete peer type so the proxy lookup can succeed.
-			var resolvedTargetType = ResolvePeerType (targetType);
+			var resolvedTargetType = JavaMarshalValueManagerHelper.ResolvePeerType (targetType);
 
 			var typeMap = TrimmableTypeMap.Instance;
 			var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
@@ -880,21 +893,6 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		} finally {
 			JniObjectReference.Dispose (ref reference, transfer);
 		}
-	}
-
-	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
-	{
-		if (type is null) {
-			return null;
-		}
-		if (type == typeof (object) || type == typeof (IJavaPeerable)) {
-			return typeof (global::Java.Interop.JavaObject);
-		}
-		if (type == typeof (Exception)) {
-			return typeof (JavaException);
-		}
-		return type;
 	}
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)

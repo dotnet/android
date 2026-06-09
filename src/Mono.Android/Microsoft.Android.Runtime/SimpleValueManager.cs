@@ -24,6 +24,8 @@ class SimpleValueManager : JniRuntime.ReflectionJniValueManager
 
 	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
 
+	[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
+	[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 	internal SimpleValueManager ()
 	{
 	}
