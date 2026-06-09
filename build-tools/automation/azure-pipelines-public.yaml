@@ -510,19 +510,30 @@ stages:
         versionSpec: '20.x'
 
     - pwsh: |
-        $sdk = "$env:USERPROFILE\android-toolchain\sdk"
-        if (-not (Test-Path $sdk)) {
-          Write-Error "Expected xa-prepare-managed Android SDK at '$sdk' but it does not exist"
+        # Match Configuration.props: prefer ANDROID_SDK_ROOT if set+exists,
+        # else $(HOME)\android-toolchain\sdk, else $env:USERPROFILE fallback.
+        $candidates = @()
+        if ($env:ANDROID_SDK_ROOT) { $candidates += $env:ANDROID_SDK_ROOT }
+        if ($env:ANDROID_HOME)     { $candidates += $env:ANDROID_HOME }
+        if ($env:HOME)             { $candidates += "$env:HOME\android-toolchain\sdk" }
+        if ($env:USERPROFILE)      { $candidates += "$env:USERPROFILE\android-toolchain\sdk" }
+        $sdk = $candidates | Where-Object { $_ -and (Test-Path (Join-Path $_ 'platforms')) } | Select-Object -First 1
+        if (-not $sdk) {
+          Write-Error "Could not find an Android SDK install with a 'platforms' subdir. Tried:`n$($candidates -join "`n")"
+          exit 1
         }
         Write-Host "Setting ANDROID_HOME / ANDROID_SDK_ROOT to '$sdk'"
+        Get-ChildItem (Join-Path $sdk 'platforms') | ForEach-Object { Write-Host "  platforms\$($_.Name)" }
         Write-Host "##vso[task.setvariable variable=ANDROID_HOME]$sdk"
         Write-Host "##vso[task.setvariable variable=ANDROID_SDK_ROOT]$sdk"
       displayName: Point ANDROID_HOME at xa-prepare SDK
-      # The dnceng-public Windows image's preinstalled Android SDK at
-      # C:\Program Files (x86)\Android\android-sdk lacks the API levels
-      # listed in $(DefaultTestSdkPlatforms). xa-prepare's androidsdk
-      # step installs them under %USERPROFILE%\android-toolchain\sdk, so
-      # redirect the MAUI build there.
+      # androidsdk.csproj's install path follows Configuration.props rules:
+      # ANDROID_SDK_ROOT if it exists, otherwise %HOME%\android-toolchain\sdk.
+      # On the 1es-windows-2022-open image, ANDROID_SDK_ROOT is preset to
+      # the agent's preinstalled SDK (e.g. C:\Program Files (x86)\Android\android-sdk),
+      # so xa-prepare ends up extending that location with the requested
+      # API levels. Whichever path it picked, MAUI's build needs the same
+      # ANDROID_HOME / ANDROID_SDK_ROOT so it sees API 37, etc.
 
     - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Pack .NET Maui
