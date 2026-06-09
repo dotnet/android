@@ -44,5 +44,6 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>36.99.0</AndroidPackVersion>
+    <AndroidPackVersionSuffix>preview.6</AndroidPackVersionSuffix>
   </PropertyGroup>
 </Project>

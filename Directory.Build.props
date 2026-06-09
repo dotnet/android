@@ -33,7 +33,6 @@
 
   <PropertyGroup>
     <ProductVersion>16.0.0</ProductVersion>
-    <AndroidPackVersionSuffix>preview.6</AndroidPackVersionSuffix>
     <!-- Final value set by GetXAVersionInfo target -->
     <IsStableBuild>false</IsStableBuild>
   </PropertyGroup>

@@ -32,7 +32,7 @@ darc add-default-channel --channel ".NET 10.0.1xx SDK Preview 42" --branch "rele
 See [eng/README.md][2] for details on `darc` commands.
 
 6. Open a PR to `dotnet/android/main`, such that
-   `$(AndroidPackVersionSuffix)` in `Directory.Build.props` is
+   `$(AndroidPackVersionSuffix)` in `eng/Versions.props` is
    incremented to the *next* version: `preview.43`. You may also need
    to update `$(AndroidPackVersion)` in `eng/Versions.props` if `main`
    needs to target a new .NET version band.
