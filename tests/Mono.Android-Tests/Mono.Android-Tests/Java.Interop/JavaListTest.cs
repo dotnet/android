@@ -16,6 +16,7 @@ namespace Java.InteropTests
 		public void Setup () => list = new T ();
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void Add ()
 		{
 			list.Add ("foo");
@@ -28,6 +29,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void AddWithIndex ()
 		{
 			list.Add ("Apple");
@@ -63,6 +65,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void ForEach ()
 		{
 			list.Add ("foo");
@@ -113,6 +116,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void Insert ()
 		{
 			list.Add ("foo");
@@ -122,6 +126,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void RemoveAt ()
 		{
 			list.Add ("foo");
@@ -139,6 +144,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void Set ()
 		{
 			list.Add ("foo");
@@ -147,6 +153,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void SubList ()
 		{
 			list.Add ("foo");

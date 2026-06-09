@@ -92,6 +92,7 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")] // https://github.com/dotnet/android/issues/11224 - NUnit IEquatable<T> reflection broken under NativeAOT
 		public void CopyArray_JavaLangObjectArrayToJavaLangStringArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {

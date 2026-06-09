@@ -116,6 +116,7 @@ namespace Java.InteropTests
 		static  readonly  bool  HaveJavaInterop   = AppDomain.CurrentDomain.GetAssemblies ().Any (a => a.FullName.StartsWith ("Java.Interop,"));
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void InvokingNullInstanceDoesNotCrashDalvik ()
 		{
 			using (var o = new Java.Lang.Object (IntPtr.Zero, JniHandleOwnership.TransferLocalRef)) {
@@ -147,12 +148,14 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArrayWithNullArray ()
 		{
 			Assert.AreEqual (IntPtr.Zero, JNIEnv.NewObjectArray<Java.Lang.Object> (null), "#1");
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArrayWithObjectArray ()
 		{
 			var array = JNIEnv.NewObjectArray<Java.Lang.String> (new Java.Lang.String [0]);
@@ -169,6 +172,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArrayWithNullElement ()
 		{
 			var array = JNIEnv.NewObjectArray<Java.Lang.String> (new Java.Lang.String [1]);
@@ -179,6 +183,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArrayWithIntArray ()
 		{
 			var array = JNIEnv.NewObjectArray<int> (new int [1]);
@@ -189,6 +194,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArrayWithIntArrayAndEmptyArray ()
 		{
 			//empty array gives the right type
@@ -200,6 +206,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArrayWithNonJavaType ()
 		{
 			//empty array gives the right type
@@ -210,6 +217,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArrayWithNonJavaTypeAndEmptyArray ()
 		{
 			//empty array gives the right type
@@ -239,6 +247,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
 		public void NewObjectArray_UsesOnlyTypeParameter ()
 		{
 			using (var s = new Java.Lang.String ("foo"))
