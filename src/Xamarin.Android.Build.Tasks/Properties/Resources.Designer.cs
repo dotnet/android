@@ -135,6 +135,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; contains reference to obsolete attribute &apos;Android.Runtime.PreserveAttribute&apos;. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead.
+        /// </summary>
+        public static string IL6001 {
+            get {
+                return ResourceManager.GetString("IL6001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Directory &apos;{0}&apos; is from &apos;{1}&apos;..
         /// </summary>
         public static string XA_Directory_Is_From {
@@ -300,6 +309,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA0036 {
             get {
                 return ResourceManager.GetString("XA0036", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown mode: {0}.
+        /// </summary>
+        public static string XA0037 {
+            get {
+                return ResourceManager.GetString("XA0037", resourceCulture);
             }
         }
         
@@ -1552,6 +1570,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Trimmable type map Java source input directory &apos;{0}&apos; and output directory &apos;{1}&apos; must be different..
+        /// </summary>
+        public static string XA4254 {
+            get {
+                return ResourceManager.GetString("XA4254", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generated trimmable type map Java source &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4255 {
+            get {
+                return ResourceManager.GetString("XA4255", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
@@ -1757,6 +1793,33 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4318 {
             get {
                 return ResourceManager.GetString("XA4318", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No NativeAOT DGML files were provided..
+        /// </summary>
+        public static string XA4319 {
+            get {
+                return ResourceManager.GetString("XA4319", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ACW map file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4320 {
+            get {
+                return ResourceManager.GetString("XA4320", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NativeAOT DGML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4321 {
+            get {
+                return ResourceManager.GetString("XA4321", resourceCulture);
             }
         }
         

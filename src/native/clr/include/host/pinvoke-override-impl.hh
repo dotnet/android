@@ -84,27 +84,6 @@ namespace xamarin::android {
 		return entry_handle;
 	}
 
-	PINVOKE_OVERRIDE_INLINE
-	void PinvokeOverride::load_library_entry (std::string_view const& library_name, std::string_view const& entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept
-	{
-		void *entry_handle = load_library_symbol (library_name, entrypoint_name, dso_handle);
-		void *expected_null = nullptr;
-
-		bool already_loaded = !__atomic_compare_exchange (
-			/* ptr */              &entry.func,
-			/* expected */         &expected_null,
-			/* desired */          &entry_handle,
-			/* weak */              false,
-			/* success_memorder */  __ATOMIC_ACQUIRE,
-			/* failure_memorder */  __ATOMIC_RELAXED
-		);
-
-		if (already_loaded) {
-			log_debug (LOG_ASSEMBLY, "Entry '%.*s' from library '%.*s' already loaded by another thread", static_cast<int>(entrypoint_name.length ()), entrypoint_name.data (), static_cast<int>(library_name.length ()), library_name.data ());
-		}
-	}
-
-	PINVOKE_OVERRIDE_INLINE
 	auto PinvokeOverride::fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*
 	{
 		auto iter = api_map->find (entrypoint_name, entrypoint_name_hash);

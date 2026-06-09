@@ -9,6 +9,8 @@ trigger:
   - release/*
   - feature/*
 
+pr: none
+
 # External sources, scripts, tests, and yaml template files.
 resources:
   repositories:
@@ -18,10 +20,6 @@ resources:
   - repository: yaml-templates
     type: git
     name: DevDiv/Xamarin.yaml-templates
-    ref: refs/heads/main
-  - repository: android-platform-support
-    type: git
-    name: DevDiv/android-platform-support
     ref: refs/heads/main
   - repository: maui
     type: github
@@ -75,9 +73,6 @@ extends:
         image: $(WindowsPoolImage1ESPT)
         os: windows
       sourceRepositoriesToScan:
-        include:
-        - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-          - repository: android-platform-support
         exclude:
         - repository: yaml-templates
         - repository: maui

@@ -12,7 +12,6 @@ namespace Xamarin.Android.Prepare
 		partial class Paths
 		{
 			public const string MonoCrossRuntimeInstallPath = "Darwin";
-			public const string NdkToolchainOSTag = "darwin-x86_64";
 		}
 	}
 }

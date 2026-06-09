@@ -239,14 +239,12 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 				Assert.IsTrue (b.Build (proj), "Second Build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					Assert.IsTrue (
-						b.Output.IsTargetSkipped ("_CompileJava"),
-						"the _CompileJava target should be skipped");
-					Assert.IsTrue (
-						b.Output.IsTargetSkipped ("_BuildApkEmbed"),
-						"the _BuildApkEmbed target should be skipped");
-				}
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_CompileJava"),
+					"the _CompileJava target should be skipped");
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
+					"the _BuildApkEmbed target should be skipped");
 			}
 		}
 
@@ -289,14 +287,12 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 				Assert.IsTrue (b.Build (proj), "Second Build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					Assert.IsTrue (
-						b.Output.IsTargetSkipped ("_CompileJava"),
-						"the _CompileJava target should be skipped");
-					Assert.IsTrue (
-						b.Output.IsTargetSkipped ("_BuildApkEmbed"),
-						"the _BuildApkEmbed target should be skipped");
-				}
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_CompileJava"),
+					"the _CompileJava target should be skipped");
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
+					"the _BuildApkEmbed target should be skipped");
 			}
 		}
 

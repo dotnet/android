@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 	public class GenerateSupportedPlatforms : Task
 	{
 		/// <summary>
-		/// @(AndroidApiInfo) from .\bin\Build$(Configuration)\Mono.Android.Apis.projitems
+		/// @(AndroidApiInfo) from src\Mono.Android\Mono.Android.Apis.projitems
 		/// </summary>
 		[Required]
 		public ITaskItem [] AndroidApiInfo { get; set; } = [];

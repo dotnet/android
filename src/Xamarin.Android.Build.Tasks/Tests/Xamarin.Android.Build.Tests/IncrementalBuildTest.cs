@@ -22,7 +22,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -69,8 +68,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			if (runtime != AndroidRuntime.MonoVM) { // temporarily
 				Assert.Ignore ("Runtimes other than MonoVM are currently broken here.");
 			}
@@ -429,8 +426,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			var app = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				ProjectName = "App",
@@ -610,8 +605,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
 				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
 				("_ResolveLibraryProjectImports", false),
@@ -743,14 +736,39 @@ namespace Lib2
 		}
 
 		[Test]
+		public void CreateAarRunsOnceWithGeneratePackageOnBuild ()
+		{
+			// https://github.com/dotnet/android/issues/11514
+			// `_CreateAar` was being invoked twice for a single library build when
+			// `GeneratePackageOnBuild=true`: once via `BuildDependsOn`, and again via
+			// NuGet pack's per-TFM dispatch which entered the project at
+			// `_GetFrameworkAssemblyReferences`. That target transitively pulled in
+			// `UpdateAndroidResources` -> `_UpdateAndroidResources` -> `_CreateAar`
+			// via `_UpdateAndroidResourcesDependsOn`. The second invocation can race
+			// the first writer when parallel builds (-m) consumers concurrently read
+			// the .aar via `Files.HashFile`, producing `XARLP7024`.
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.SetProperty ("GeneratePackageOnBuild", "true");
+			using (var b = CreateDllBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				// MSBuild emits "Building target X completely" only when the target
+				// actually runs (not when it is entered then skipped due to empty
+				// Inputs/Outputs). Counting that message gives us the number of real
+				// `_CreateAar` executions, which is what races on disk in #11514.
+				int count = b.LastBuildOutput.Count (l => l.Contains ("Building target \"_CreateAar\""));
+				Assert.AreEqual (1, count,
+					$"`_CreateAar` should only execute once per build of a library project; was {count}.");
+			}
+		}
+
+		[Test]
 		public void ManifestMergerIncremental ([Values] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar"
@@ -826,18 +844,16 @@ namespace Lib2
 				Assert.IsTrue (libBuilder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
-				if (TestEnvironment.CommercialBuildAvailable) {
-					appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
-					appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
-					appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
-					appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				appBuilder.Output.AssertTargetIsSkipped ("CoreCompile");
+				appBuilder.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
+				appBuilder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
+				appBuilder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 
-					appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
+				appBuilder.Output.AssertTargetIsPartiallyBuilt (KnownTargets.LinkAssembliesNoShrink);
 
-					appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
-					appBuilder.Output.AssertTargetIsNotSkipped ("_CopyPackage");
-					appBuilder.Output.AssertTargetIsNotSkipped ("_Sign");
-				}
+				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildApkEmbed");
+				appBuilder.Output.AssertTargetIsNotSkipped ("_CopyPackage");
+				appBuilder.Output.AssertTargetIsNotSkipped ("_Sign");
 			}
 		}
 
@@ -930,7 +946,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -966,8 +981,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1073,15 +1086,13 @@ namespace Lib2
 				appBuilder.BuildLogFile = "build2.log";
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "second app build should have succeeded.");
 
-				if (TestEnvironment.CommercialBuildAvailable) {
-					var targetsShouldSkip = new [] {
-						"_BuildLibraryImportsCache",
-						"_ResolveLibraryProjectImports",
-						"_ConvertCustomView",
-					};
-					foreach (var target in targetsShouldSkip) {
-						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
-					}
+				var targetsShouldSkip = new [] {
+					"_BuildLibraryImportsCache",
+					"_ResolveLibraryProjectImports",
+					"_ConvertCustomView",
+				};
+				foreach (var target in targetsShouldSkip) {
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
 
 				var targetsShouldRun = new [] {
@@ -1092,18 +1103,16 @@ namespace Lib2
 					"_CopyPackage",
 					"_Sign",
 				};
-				if (TestEnvironment.CommercialBuildAvailable) {
-					foreach (var target in targetsShouldRun) {
-						Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
-					}
+				foreach (var target in targetsShouldRun) {
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
+				}
 
-					var aapt2TargetsShouldBeSkipped = new [] {
-						"_FixupCustomViewsForAapt2",
-						"_CompileResources"
-					};
-					foreach (var target in aapt2TargetsShouldBeSkipped) {
-						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"{target} should be skipped!");
-					}
+				var aapt2TargetsShouldBeSkipped = new [] {
+					"_FixupCustomViewsForAapt2",
+					"_CompileResources"
+				};
+				foreach (var target in aapt2TargetsShouldBeSkipped) {
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"{target} should be skipped!");
 				}
 			}
 		}
@@ -1115,8 +1124,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1321,8 +1328,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
@@ -1758,7 +1763,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1941,6 +1945,42 @@ namespace Lib2
 					Assert.IsTrue (secondApkWrite > firstApkWrite,
 						$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
 				}
+			}
+		}
+
+		[Test]
+		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("PublishTrimmed", "true");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_RunAfterILLinkAdditionalSteps");
+				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+
+				// Verify afterlink/ output directory was created with per-ABI subdirectories containing assemblies
+				var afterlinkDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "afterlink");
+				Assert.IsTrue (Directory.Exists (afterlinkDir), "afterlink/ directory should exist after first build");
+				var abiDirs = Directory.GetDirectories (afterlinkDir);
+				Assert.IsTrue (abiDirs.Length > 0, "afterlink/ should contain ABI subdirectories");
+				foreach (var abiDir in abiDirs) {
+					var afterlinkFiles = Directory.GetFiles (abiDir, "*.dll");
+					Assert.IsTrue (afterlinkFiles.Length > 0, $"afterlink/{Path.GetFileName (abiDir)}/ should contain assemblies");
+				}
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				b.Output.AssertTargetIsSkipped ("_RunAfterILLinkAdditionalSteps");
+				// The outer target must always run to update assembly itemgroups for downstream targets
+				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
 			}
 		}
 

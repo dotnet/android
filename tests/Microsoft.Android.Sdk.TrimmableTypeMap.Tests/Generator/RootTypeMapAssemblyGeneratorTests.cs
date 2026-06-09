@@ -62,6 +62,31 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_InitializeConfiguresTypeMappingEntryAssembly ()
+	{
+		using var stream = GenerateRootAssembly (new [] { "_App.TypeMap" }, assemblyName: "MyRoot");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var typeRefs = reader.TypeReferences
+			.Select (h => reader.GetTypeReference (h))
+			.ToList ();
+		Assert.Contains (typeRefs, t =>
+			reader.GetString (t.Name) == "AppContext" &&
+			reader.GetString (t.Namespace) == "System");
+
+		var setDataMemberRefs = reader.MemberReferences
+			.Select (h => reader.GetMemberReference (h))
+			.Where (m => reader.GetString (m.Name) == "SetData")
+			.ToList ();
+		Assert.NotEmpty (setDataMemberRefs);
+
+		var loadedStrings = GetLoadStringOperands (pe, reader, "Initialize");
+		Assert.Contains ("System.Runtime.InteropServices.TypeMappingEntryAssembly", loadedStrings);
+		Assert.Contains ("MyRoot", loadedStrings);
+	}
+
+	[Fact]
 	public void Generate_ReferencesGenericTypeMapAssemblyTargetAttribute ()
 	{
 		using var stream = GenerateRootAssembly (new [] { "_App.TypeMap" });
@@ -388,6 +413,26 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			if (value is not null) {
 				result.Add (value);
 			}
+		}
+		return result;
+	}
+
+	static List<string> GetLoadStringOperands (PEReader pe, MetadataReader reader, string methodName)
+	{
+		var result = new List<string> ();
+		var method = reader.GetMethodDefinition (FindMethodDefinition (reader, methodName));
+		var body = pe.GetMethodBody (method.RelativeVirtualAddress);
+		var il = body.GetILBytes ();
+		if (il is null) {
+			throw new InvalidOperationException ($"{methodName} has no IL body.");
+		}
+		for (int i = 0; i + 4 < il.Length; i++) {
+			if (il [i] != 0x72) {
+				continue;
+			}
+			var token = BitConverter.ToInt32 (il, i + 1);
+			result.Add (reader.GetUserString (MetadataTokens.UserStringHandle (token)));
+			i += 4;
 		}
 		return result;
 	}

@@ -6,9 +6,6 @@ namespace Xamarin.Android.Prepare
 	{
 		void InitDefaults ()
 		{
-			properties.Add (KnownProperties.AndroidCmakeUrlPrefix,               StripQuotes ("@AndroidCmakeUrlPrefix@"));
-			properties.Add (KnownProperties.AndroidCmakeVersion,                 StripQuotes ("@AndroidCmakeVersion@"));
-			properties.Add (KnownProperties.AndroidCmakeVersionPath,             StripQuotes (@"@AndroidCmakeVersionPath@"));
 			properties.Add (KnownProperties.AndroidMinimumDotNetApiLevel,        StripQuotes ("@AndroidMinimumDotNetApiLevel@"));
 			properties.Add (KnownProperties.AndroidDefaultTargetDotnetApiLevel,  StripQuotes ("@AndroidDefaultTargetDotnetApiLevel@"));
 			properties.Add (KnownProperties.AndroidLatestStableApiLevel,         StripQuotes ("@AndroidLatestStableApiLevel@"));
@@ -60,7 +57,6 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.XAInstallPrefix,                     StripQuotes (@"@XAInstallPrefix@"));
 			properties.Add (KnownProperties.XAPackagesDir,                       StripQuotes (@"@XAPackagesDir@"));
 			properties.Add (KnownProperties.XAPlatformToolsVersion,              StripQuotes ("@XAPlatformToolsVersion@"));
-			properties.Add (KnownProperties.XAPlatformToolsPackagePrefix,        StripQuotes ("@XAPlatformToolsPackagePrefix@"));
 		}
 
 		string StripQuotes (string input)

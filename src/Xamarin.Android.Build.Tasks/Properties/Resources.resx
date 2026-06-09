@@ -142,6 +142,9 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
   <data name="APT0005" xml:space="preserve">
     <value>Invalid file name: Filenames cannot use Java reserved words.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs
   <data name="XA0036" xml:space="preserve">
     <value>The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.</value>
@@ -838,6 +845,20 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {1} - The exception message.
 </comment>
   </data>
+  <data name="XA4319" xml:space="preserve">
+    <value>No NativeAOT DGML files were provided.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
+  </data>
+  <data name="XA4320" xml:space="preserve">
+    <value>ACW map file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: ACW
+{0} - The path to the ACW map file.</comment>
+  </data>
+  <data name="XA4321" xml:space="preserve">
+    <value>NativeAOT DGML file '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML
+{0} - The path to the NativeAOT DGML file.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1126,6 +1147,17 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
   <data name="XA4253" xml:space="preserve">
     <value>Generated Java callable wrapper code changed: '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
+  </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Command '{0}' failed.\n{1}</value>
