@@ -103,6 +103,16 @@
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
 
+  <!--
+    NativeAOT trims the closed-generic-instantiation metadata for IEquatable<T>,
+    so NUnit's EquatablesComparer.GetEquatableImplementations() ends up calling
+    GetGenericArguments()[0] on an empty array. Force ILC to keep complete type
+    metadata for all reachable types so that reflection over IEquatable<T> works.
+  -->
+  <PropertyGroup Condition=" '$(PublishAot)' == 'true' ">
+    <IlcGenerateCompleteTypeMetadata>true</IlcGenerateCompleteTypeMetadata>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Android.App\ApplicationTest.cs" />
