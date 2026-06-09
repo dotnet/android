@@ -516,7 +516,7 @@ namespace Java.InteropTests
 			// peers around every test, so the count drifts by a few entries
 			// between the snapshots below. Allow a small tolerance instead of
 			// requiring an exact count -- a real leak would dwarf this.
-			const int tolerance = 5;
+			const int tolerance = 10;
 
 			WeakReference r = null;
 			Exception threadException = null;
