@@ -500,15 +500,20 @@ static class JavaMarshalValueManagerHelper
 
 [RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
 [RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
-abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniValueManager
+class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 {
-	protected const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+	static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
+	static  readonly    Type[]  JIConstructorSignature  = new Type [] { ByRefJniObjectReference, typeof (JniObjectReferenceOptions) };
+	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
 	readonly JavaMarshalPeerManager peerManager;
 
 	[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
 	[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
-	protected JavaMarshalReflectionValueManagerBase ()
+	public CoreClrJavaMarshalValueManager ()
 	{
 		peerManager = new JavaMarshalPeerManager (GetType ().Name);
 	}
@@ -552,33 +557,6 @@ abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniV
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		return peerManager.GetSurfacedPeers ();
-	}
-
-	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
-	{
-		var proxy = value as JavaProxyThrowable;
-		if (proxy != null) {
-			result = proxy.InnerException;
-			return true;
-		}
-		return base.TryUnboxPeerObject (value, out result);
-	}
-}
-
-[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
-[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
-class CoreClrJavaMarshalValueManager : JavaMarshalReflectionValueManagerBase
-{
-	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-	static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
-	static  readonly    Type[]  JIConstructorSignature  = new Type [] { ByRefJniObjectReference, typeof (JniObjectReferenceOptions) };
-	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
-
-	[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
-	[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
-	public CoreClrJavaMarshalValueManager ()
-	{
 	}
 
 	public override IJavaPeerable? CreatePeer (
@@ -733,6 +711,16 @@ class CoreClrJavaMarshalValueManager : JavaMarshalReflectionValueManagerBase
 		}
 
 		return false;
+	}
+
+	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
+	{
+		var proxy = value as JavaProxyThrowable;
+		if (proxy != null) {
+			result = proxy.InnerException;
+			return true;
+		}
+		return base.TryUnboxPeerObject (value, out result);
 	}
 }
 
