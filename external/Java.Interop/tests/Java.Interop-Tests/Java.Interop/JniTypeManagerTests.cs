@@ -246,4 +246,3 @@ namespace Java.InteropTests
 		public  T   Value   {get; set;}
 	}
 }
-

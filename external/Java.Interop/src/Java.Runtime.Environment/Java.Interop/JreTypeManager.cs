@@ -8,7 +8,9 @@ using System.Reflection;
 
 namespace Java.Interop {
 
-	public class JreTypeManager : JniRuntime.JniTypeManager {
+	[RequiresDynamicCode ("JreTypeManager uses ReflectionJniTypeManager reflection-based behavior and is not compatible with Native AOT.")]
+	[RequiresUnreferencedCode ("JreTypeManager uses ReflectionJniTypeManager reflection-based behavior and is not trimming-compatible.")]
+	public class JreTypeManager : JniRuntime.ReflectionJniTypeManager {
 
 		IDictionary<string, Type>? typeMappings;
 
@@ -30,6 +32,17 @@ namespace Java.Interop {
 				yield break;
 			if (typeMappings.TryGetValue (jniSimpleReference, out var target))
 				yield return target;
+		}
+
+		[return: DynamicallyAccessedMembers (JniRuntime.JniTypeManager.MethodsConstructors)]
+		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+		{
+			var type = base.GetTypeForSimpleReference (jniSimpleReference);
+			if (type != null)
+				return type;
+			if (typeMappings == null)
+				return null;
+			return typeMappings.TryGetValue (jniSimpleReference, out var target) ? target : null;
 		}
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)

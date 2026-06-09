@@ -110,7 +110,7 @@ namespace Java.Interop {
 			}
 
 			[MethodImpl (MethodImplOptions.AggressiveInlining)]
-			void AssertValid ()
+			private protected void AssertValid ()
 			{
 				if (!disposed)
 					return;
@@ -144,34 +144,11 @@ namespace Java.Interop {
 				if (type == null)
  					throw new ArgumentNullException (nameof (type));
 
-
-				type = GetUnderlyingType (type, out int rank);
-
-				JniTypeSignature signature = JniTypeSignature.Empty;
-				if (GetBuiltInTypeSignature (type, ref signature))
-					return signature.AddArrayRank (rank);
-				if (GetBuiltInTypeArraySignature (type, ref signature))
-					return signature.AddArrayRank (rank);
-
-				var isGeneric = type.IsGenericType;
-				var genericDef = isGeneric ? type.GetGenericTypeDefinition () : type;
-				if (isGeneric) {
-					if (genericDef == typeof (JavaArray<>) || genericDef == typeof (JavaObjectArray<>)) {
-						var r = GetTypeSignature (type.GenericTypeArguments [0]);
-						return r.AddArrayRank (rank + 1);
-					}
-
-					var genericSimpleRef = GetSimpleReference (genericDef);
-					if (genericSimpleRef != null)
-						return new JniTypeSignature (genericSimpleRef, rank, false);
-				}
-
-				var simpleRef = GetSimpleReference (type);
-				if (simpleRef != null)
-					return new JniTypeSignature (simpleRef, rank, false);
-
-				return default;
+				var builtIn = GetBuiltInTypeSignature (type);
+				return builtIn.IsValid ? builtIn : GetTypeSignatureCore (type);
 			}
+
+			protected virtual JniTypeSignature GetTypeSignatureCore (Type type) => default;
 
 			// NOTE: This method needs to be kept in sync with GetTypeSignature()
 			public IEnumerable<JniTypeSignature> GetTypeSignatures (Type type)
@@ -179,201 +156,117 @@ namespace Java.Interop {
 				AssertValid ();
 
 				if (type == null)
-					yield break;
+					return [];
 
-				type = GetUnderlyingType (type, out int rank);
+				var builtIn = GetBuiltInTypeSignature (type);
+				if (builtIn.IsValid)
+					return new [] { builtIn };
 
-				var signature = JniTypeSignature.Empty;
-				if (GetBuiltInTypeSignature (type, ref signature))
-					yield return signature.AddArrayRank (rank);
-				if (GetBuiltInTypeArraySignature (type, ref signature))
-					yield return signature.AddArrayRank (rank);
-
-				var isGeneric = type.IsGenericType;
-				var genericDef = isGeneric ? type.GetGenericTypeDefinition () : type;
-				if (isGeneric) {
-					if (genericDef == typeof (JavaArray<>) || genericDef == typeof (JavaObjectArray<>)) {
-						var r = GetTypeSignature (type.GenericTypeArguments [0]);
-						yield return r.AddArrayRank (rank + 1);
-					}
-
-					foreach (var genericSimpleRef in GetSimpleReferences (genericDef)) {
-						if (genericSimpleRef == null)
-							continue;
-						yield return new JniTypeSignature (genericSimpleRef, rank, false);
-					}
-				}
-
-				foreach (var simpleRef in GetSimpleReferences (type)) {
-					if (simpleRef == null)
-						continue;
-					yield return new JniTypeSignature (simpleRef, rank, false);
-				}
+				return GetTypeSignaturesCore (type);
 			}
 
-			static Type GetUnderlyingType (Type type, out int rank)
-			{
-				rank = 0;
-				var originalType = type;
-				while (type.IsArray) {
-					if (type.IsArray && type.GetArrayRank () > 1)
-						throw new ArgumentException ("Multidimensional array '" + originalType.FullName + "' is not supported.", nameof (type));
-					rank++;
-					type = type.GetElementType ()!;
-				}
+			protected virtual IEnumerable<JniTypeSignature> GetTypeSignaturesCore (Type type) => [];
 
-				if (type.IsEnum)
-					type = Enum.GetUnderlyingType (type);
-
-				return type;
-			}
-
-			// `type` will NOT be an array type.
-			protected virtual string? GetSimpleReference (Type type)
-			{
-				return GetSimpleReferences (type).FirstOrDefault ();
-			}
-
-			// `type` will NOT be an array type.
-			protected virtual IEnumerable<string> GetSimpleReferences (Type type)
-			{
-				AssertValid ();
-
-				if (type == null)
-					throw new ArgumentNullException (nameof (type));
-				if (type.IsArray)
-					throw new ArgumentException ("Array type '" + type.FullName + "' is not supported.", nameof (type));
-
-				var name = type.GetCustomAttribute<JniTypeSignatureAttribute> (inherit: false);
-				if (name != null) {
-					var altRef = GetReplacementType (name.SimpleReference);
-					if (altRef != null) {
-						yield return altRef;
-					} else {
-						yield return name.SimpleReference;
-					}
-				}
-
-				yield break;
-			}
-
-			static  readonly    string[]    EmptyStringArray    = Array.Empty<string> ();
-			static  readonly    Type[]      EmptyTypeArray      = Array.Empty<Type> ();
-			const string NotUsedInAndroid = "This code path is not used in Android projects.";
-
-			// FIXME: https://github.com/dotnet/java-interop/issues/1192
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = NotUsedInAndroid)]
-			static Type MakeArrayType (Type type) =>
-				type.MakeArrayType ();
-
-			// FIXME: https://github.com/dotnet/java-interop/issues/1192
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = NotUsedInAndroid)]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = NotUsedInAndroid)]
-			static Type MakeGenericType (Type type, Type arrayType) =>
-				type.MakeGenericType (arrayType);
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Types returned here should be preserved via other means.")]
 			[return: DynamicallyAccessedMembers (MethodsConstructors)]
 			public  Type?    GetType (JniTypeSignature typeSignature)
 			{
 				AssertValid ();
 
-				return GetTypes (typeSignature).FirstOrDefault ();
+				if (!typeSignature.IsValid || typeSignature.SimpleReference == null)
+					return null;
+
+				var builtIn = GetBuiltInType (typeSignature);
+				if (builtIn != null)
+					return builtIn;
+
+				var type = GetTypeForSimpleReference (typeSignature.SimpleReference);
+				if (type == null)
+					return null;
+				if (typeSignature.ArrayRank == 0)
+					return type;
+				throw new NotSupportedException ($"DAM-annotated type lookup for array signature `{typeSignature}` is not supported. Use {nameof (GetTypes)} instead.");
 			}
 
-			public virtual IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
-			{
-				AssertValid ();
+			protected virtual string? GetSimpleReference (Type type) => null;
+			protected virtual IEnumerable<string> GetSimpleReferences (Type type) => [];
+			[return: DynamicallyAccessedMembers (MethodsConstructors)]
+			protected virtual Type? GetTypeForSimpleReference (string jniSimpleReference) => null;
+			public virtual IEnumerable<Type> GetTypes (JniTypeSignature typeSignature) => [];
 
-				if (typeSignature.SimpleReference == null)
-					return EmptyTypeArray;
-				return CreateGetTypesEnumerator (typeSignature);
+			public virtual IEnumerable<ReflectionConstructibleType> GetReflectionConstructibleTypes (JniTypeSignature typeSignature) => [];
+
+			public class ReflectionConstructibleType
+			{
+				public ReflectionConstructibleType (
+						[DynamicallyAccessedMembers (Constructors)]
+						Type type)
+				{
+					Type = type;
+				}
+
+				[DynamicallyAccessedMembers (Constructors)]
+				public Type Type { get; }
 			}
 
-			IEnumerable<Type> CreateGetTypesEnumerator (JniTypeSignature typeSignature)
+			protected virtual IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference) => [];
+
+			static JniTypeSignature GetBuiltInTypeSignature (Type type)
 			{
-				if (!typeSignature.IsValid)
-					yield break;
-				foreach (var type in GetTypesForSimpleReference (typeSignature.SimpleReference ?? throw new InvalidOperationException ("Should not be reached")) ){
-					if (typeSignature.ArrayRank == 0) {
-						yield return type;
-						continue;
-					}
-
-					if (typeSignature.IsKeyword) {
-						foreach (var t in GetPrimitiveArrayTypesForSimpleReference (typeSignature, type)) {
-							yield return t;
-						}
-						continue;
-					}
-
-					if (typeSignature.ArrayRank > 0) {
-						var rank        = typeSignature.ArrayRank;
-						var arrayType   = type;
-						while (rank-- > 0) {
-							arrayType   = MakeGenericType (typeof (JavaObjectArray<>), arrayType);
-						}
-						yield return arrayType;
-					}
-
-					if (typeSignature.ArrayRank > 0) {
-						var rank        = typeSignature.ArrayRank;
-						var arrayType   = type;
-						while (rank-- > 0) {
-							arrayType   = MakeArrayType (arrayType);
-						}
-						yield return arrayType;
-					}
-				}
+				if (type == typeof (JavaProxyObject))
+					return new JniTypeSignature (JavaProxyObject.JniTypeName, 0, false);
+				if (type == typeof (JavaProxyThrowable))
+					return new JniTypeSignature (JavaProxyThrowable.JniTypeName, 0, false);
+				return default;
 			}
 
-			IEnumerable<Type> GetPrimitiveArrayTypesForSimpleReference (JniTypeSignature typeSignature, Type type)
+			// IL2026/IL2111: The MethodsConstructors DAM annotation on the return type causes ILLink to analyze
+			// JavaProxyObject/JavaProxyThrowable/ManagedPeer's delegate-typed nested members, whose base
+			// constructors (Delegate.Delegate(Object,String)) are marked RequiresUnreferencedCode.
+			// These warnings are false positives: the delegate constructors are invoked with
+			// compile-time-known static method references, not via string-based reflection.
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Delegate constructors in JavaProxyObject/JavaProxyThrowable/ManagedPeer are invoked with compile-time-known method references, not via reflection.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL2111", Justification = "Delegate constructors in JavaProxyObject/JavaProxyThrowable/ManagedPeer are invoked with compile-time-known method references, not via reflection.")]
+			[return: DynamicallyAccessedMembers (MethodsConstructors)]
+			static Type? GetBuiltInType (JniTypeSignature typeSignature)
 			{
-				int index   = -1;
-				for (int i = 0; i < JniPrimitiveArrayTypes.Length; ++i) {
-					if (JniPrimitiveArrayTypes [i].PrimitiveType == type) {
-						index   = i;
-						break;
-					}
+				if (typeSignature.ArrayRank != 0)
+					return null;
+				if (!typeSignature.IsKeyword) {
+					return typeSignature.SimpleReference switch {
+						JavaProxyObject.JniTypeName     => typeof (JavaProxyObject),
+						JavaProxyThrowable.JniTypeName  => typeof (JavaProxyThrowable),
+						ManagedPeer.JniTypeName         => typeof (ManagedPeer),
+						_                               => null,
+					};
 				}
-				if (index == -1) {
-					throw new InvalidOperationException ($"Should not be reached; Could not find JniPrimitiveArrayInfo for {type}");
-				}
-				foreach (var t in JniPrimitiveArrayTypes [index].ArrayTypes) {
-					var rank        = typeSignature.ArrayRank-1;
-					var arrayType   = t;
-					while (rank-- > 0) {
-						arrayType   = MakeGenericType (typeof (JavaObjectArray<>), arrayType);
-					}
-					yield return arrayType;
-
-					rank            = typeSignature.ArrayRank-1;
-					arrayType       = t;
-					while (rank-- > 0) {
-						arrayType   = MakeArrayType (arrayType);
-					}
-					yield return arrayType;
-				}
+				return typeSignature.SimpleReference switch {
+					"V" => typeof (void),
+					"Z" => typeof (bool),
+					"B" => typeof (sbyte),
+					"C" => typeof (char),
+					"S" => typeof (short),
+					"I" => typeof (int),
+					"J" => typeof (long),
+					"F" => typeof (float),
+					"D" => typeof (double),
+					_   => null,
+				};
 			}
 
-			protected virtual IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
+			protected static bool TryRegisterBuiltInNativeMembers (
+					JniType nativeClass,
+					string jniSimpleReference,
+					ReadOnlySpan<char> methods)
 			{
-				AssertValid ();
-				AssertSimpleReference (jniSimpleReference);
-
-				// Not sure why CS8604 is reported on following line when we check against null ~9 lines above...
-				return CreateGetTypesForSimpleReferenceEnumerator (jniSimpleReference!);
-			}
-
-			IEnumerable<Type> CreateGetTypesForSimpleReferenceEnumerator (string jniSimpleReference)
-			{
-				if (JniBuiltinSimpleReferenceToType.Value.TryGetValue (jniSimpleReference, out var ret)) {
-					yield return ret;
+				if (jniSimpleReference == JavaProxyObject.JniTypeName) {
+					var registrations = new List<JniNativeMethodRegistration> ();
+					JavaProxyObject.RegisterNativeMembers (new JniNativeMethodRegistrationArguments (registrations, null));
+					if (registrations.Count > 0)
+						nativeClass.RegisterNativeMethods (registrations.ToArray ());
+					return true;
 				}
-				if (RuntimeFeature.ManagedPeerNativeRegistration && jniSimpleReference == ManagedPeer.JniTypeName) {
-					yield return typeof (ManagedPeer);
-				}
-				yield break;
+
+				return jniSimpleReference == JavaProxyThrowable.JniTypeName && methods.IsEmpty;
 			}
 
 			/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='M:GetInvokerType']/*" />
@@ -387,45 +280,9 @@ namespace Java.Interop {
 				}
 				return null;
 			}
-
+			
 			[return: DynamicallyAccessedMembers (Constructors)]
-			protected virtual Type? GetInvokerTypeCore (
-					[DynamicallyAccessedMembers (Constructors)]
-					Type type)
-			{
-				// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
-				const string makeGenericTypeMessage = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
-
-				// FIXME: https://github.com/dotnet/java-interop/issues/1192
-				[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
-				[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = makeGenericTypeMessage)]
-				[return: DynamicallyAccessedMembers (Constructors)]
-				static Type MakeGenericType (
-						[DynamicallyAccessedMembers (Constructors)]
-						Type type,
-						Type [] arguments) =>
-					type.MakeGenericType (arguments);
-
-				var signature   = type.GetCustomAttribute<JniTypeSignatureAttribute> ();
-				if (signature == null || signature.InvokerType == null) {
-					return null;
-				}
-
-				Type[] arguments = type.GetGenericArguments ();
-				if (arguments.Length == 0)
-					return signature.InvokerType;
-
-				return MakeGenericType (signature.InvokerType, arguments);
-			}
-
-
-			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
-			{
-				AssertValid ();
-				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
-
-				return GetStaticMethodFallbackTypesCore (jniSimpleReference);
-			}
+			protected virtual Type? GetInvokerTypeCore ([DynamicallyAccessedMembers (Constructors)] Type type) => null;
 
 			protected virtual IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimple) => null;
 
@@ -438,6 +295,14 @@ namespace Java.Interop {
 			}
 
 			protected virtual string? GetReplacementTypeCore (string jniSimpleReference) => null;
+
+			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
+			{
+				AssertValid ();
+				AssertSimpleReference (jniSimpleReference, nameof (jniSimpleReference));
+
+				return GetStaticMethodFallbackTypesCore (jniSimpleReference);
+			}
 
 			public ReplacementMethodInfo? GetReplacementMethodInfo (string jniSimpleReference, string jniMethodName, string jniMethodSignature)
 			{
@@ -455,28 +320,14 @@ namespace Java.Interop {
 
 			protected virtual ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, string jniMethodName, string jniMethodSignature) => null;
 
+			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
+			// provide reflection-based registration. Override to provide custom registration.
 			public virtual void RegisterNativeMembers (
 					JniType nativeClass,
 					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
 					Type type,
 					ReadOnlySpan<char> methods)
 			{
-				TryRegisterNativeMembers (nativeClass, type, methods);
-			}
-
-			protected bool TryRegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					ReadOnlySpan<char> methods)
-			{
-				AssertValid ();
-
-#pragma warning disable CS1717
-				methods = methods;
-#pragma warning restore CS1717
-
-				return TryLoadJniMarshalMethods (nativeClass, type, null) || TryRegisterNativeMembers (nativeClass, type, null, null);
 			}
 
 			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
@@ -486,116 +337,6 @@ namespace Java.Interop {
 					Type type,
 					string? methods)
 			{
-				TryRegisterNativeMembers (nativeClass, type, methods);
-			}
-
-			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-			protected bool TryRegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					string? methods)
-			{
-				AssertValid ();
-
-				return TryLoadJniMarshalMethods (nativeClass, type, methods) || TryRegisterNativeMembers (nativeClass, type, methods, null);
-			}
-
-			static Type [] registerMethodParameters = new Type [] { typeof (JniNativeMethodRegistrationArguments) };
-
-			// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/PreserveRegistrations.cs#L85
-			const string MarshalMethods = "'jni_marshal_methods' is preserved by the PreserveRegistrations trimmer step.";
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = MarshalMethods)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = MarshalMethods)]
-			bool TryLoadJniMarshalMethods (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
-					Type type,
-					string? methods)
-			{
-				var marshalType = type?.GetNestedType ("__<$>_jni_marshal_methods", BindingFlags.NonPublic);
-				if (marshalType == null) {
-					return false;
-				}
-
-				var registerMethod = marshalType.GetMethod (
-						name:           "__RegisterNativeMembers",
-						bindingAttr:    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
-						binder:         null,
-						callConvention: default,
-						types:          registerMethodParameters,
-						modifiers:      null);
-				return TryRegisterNativeMembers (nativeClass, marshalType, methods, registerMethod);
-			}
-
-			static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
-
-			bool TryRegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (Methods)]
-					Type marshalType,
-					string? methods,
-					MethodInfo? registerMethod)
-			{
-				bool lockTaken = false;
-				bool rv = false;
-
-				try {
-					Monitor.TryEnter (sharedRegistrations, ref lockTaken);
-					List<JniNativeMethodRegistration> registrations;
-					if (lockTaken) {
-						sharedRegistrations.Clear ();
-						registrations = sharedRegistrations;
-					} else {
-						registrations = new List<JniNativeMethodRegistration> ();
-					}
-					JniNativeMethodRegistrationArguments arguments = new JniNativeMethodRegistrationArguments (registrations, methods);
-					if (registerMethod != null) {
-						registerMethod.Invoke (null, new object [] { arguments });
-						rv = true;
-					} else
-						rv = FindAndCallRegisterMethod (marshalType, arguments);
-
-					if (registrations.Count > 0)
-						nativeClass.RegisterNativeMethods (registrations.ToArray ());
-				} finally {
-					if (lockTaken) {
-						Monitor.Exit (sharedRegistrations);
-					}
-				}
-
-				return rv;
-			}
-
-			bool FindAndCallRegisterMethod (
-					[DynamicallyAccessedMembers (Methods)]
-					Type marshalType,
-					JniNativeMethodRegistrationArguments arguments)
-			{
-				if (!Runtime.JniAddNativeMethodRegistrationAttributePresent)
-					return false;
-
-				bool found = false;
-
-				foreach (var methodInfo in marshalType.GetRuntimeMethods ()) {
-					if (methodInfo.GetCustomAttribute (typeof (JniAddNativeMethodRegistrationAttribute)) == null) {
-						continue;
-					}
-
-					var declaringTypeName = methodInfo.DeclaringType?.FullName ?? "<no-decl-type>";
-
-					if ((methodInfo.Attributes & MethodAttributes.Static) != MethodAttributes.Static) {
-						throw new InvalidOperationException ($"The method `{declaringTypeName}.{methodInfo}` marked with [{nameof (JniAddNativeMethodRegistrationAttribute)}] must be static!");
-					}
-
-					var register = (Action<JniNativeMethodRegistrationArguments>)methodInfo.CreateDelegate (typeof (Action<JniNativeMethodRegistrationArguments>));
-					register (arguments);
-
-					found = true;
-				}
-
-				return found;
 			}
 		}
 	}

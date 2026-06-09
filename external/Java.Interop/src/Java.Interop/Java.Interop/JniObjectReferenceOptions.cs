@@ -20,7 +20,7 @@ namespace Java.Interop
 	}
 
 	partial class JniRuntime {
-		partial class JniValueManager {
+		partial class ReflectionJniValueManager {
 			const   JniObjectReferenceOptions   DoNotRegisterTarget = (JniObjectReferenceOptions) (1 << 2);
 		}
 	}

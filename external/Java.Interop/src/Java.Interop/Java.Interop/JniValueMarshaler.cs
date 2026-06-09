@@ -169,17 +169,14 @@ namespace Java.Interop {
 				: Expression.Convert (call, targetType);
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		Expression CreateSelf (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			var self = Expression.Variable (GetType (), sourceValue.Name + "_marshaler");
 			context.LocalVariables.Add (self);
-			context.CreationStatements.Add (Expression.Assign (self, Expression.New (_GetType ())));
+			context.CreationStatements.Add (Expression.Assign (self, Expression.New (GetType ())));
 			return self;
 		}
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = ExpressionRequiresUnreferencedCode)]
-		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
-		Type _GetType () => GetType ();
 
 		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]

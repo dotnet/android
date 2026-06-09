@@ -13,8 +13,7 @@ namespace Java.Interop {
 
 	partial class JniRuntime {
 
-		partial class JniTypeManager {
-
+		partial class ReflectionJniTypeManager {
 			readonly struct JniPrimitiveArrayInfo {
 				public  readonly    JniTypeSignature    JniTypeSignature;
 				public  readonly    Type                PrimitiveType;

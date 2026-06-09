@@ -15,7 +15,7 @@ namespace Java.Interop {
 		Jni,
 	}
 
-	class MonoRuntimeValueManager : JniRuntime.JniValueManager {
+	class MonoRuntimeValueManager : JniRuntime.ReflectionJniValueManager {
 
 		#pragma warning disable 0649
 		// This field is mutated by the java-interop native lib
@@ -23,6 +23,12 @@ namespace Java.Interop {
 		#pragma warning restore 0649
 
 		IntPtr                                      bridge;
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Java.Runtime.Environment is the desktop/JRE runtime path and is removed by dotnet/java-interop#1447.")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Java.Runtime.Environment is the desktop/JRE runtime path and is removed by dotnet/java-interop#1447.")]
+		public MonoRuntimeValueManager ()
+		{
+		}
 
 		public override void OnSetRuntime (JniRuntime runtime)
 		{
@@ -415,4 +421,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

@@ -37,11 +37,10 @@ static class JavaInteropRuntime
 		try {
 			var options = new JreRuntimeOptions {
 				EnvironmentPointer          = jnienv,
-				TypeManager                 = new NativeAotTypeManager (),
 				JniGlobalReferenceLogWriter = new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:GREF"),
 				JniLocalReferenceLogWriter  = new LogcatTextWriter (AndroidLogLevel.Debug, "NativeAot:LREF"),
 			};
-			runtime = options.CreateJreVM ();
+			runtime = options.CreateJreVM (new NativeAotTypeManager ());
 		}
 		catch (Exception e) {
 			AndroidLog.Print (AndroidLogLevel.Error, "JavaInteropRuntime", $"JavaInteropRuntime.init: error: {e}");

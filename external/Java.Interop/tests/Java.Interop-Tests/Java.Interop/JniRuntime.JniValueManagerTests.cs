@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Collections.Generic;
 
@@ -29,7 +30,9 @@ namespace Java.InteropTests {
 			}
 		}
 
-		class MyValueManager : JniRuntime.JniValueManager {
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "MyValueManager intentionally uses reflection-backed value manager behavior for tests.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "MyValueManager intentionally uses reflection-backed value manager behavior for tests.")]
+		class MyValueManager : JniRuntime.ReflectionJniValueManager {
 
 			public override void WaitForGCBridgeProcessing ()
 			{

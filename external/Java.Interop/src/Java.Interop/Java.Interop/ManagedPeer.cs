@@ -75,6 +75,7 @@ namespace Java.Interop {
 				Console.WriteLine ($"error: could not begin ManagedPeer.Construct!");
 				return;
 			}
+			
 			try {
 				var runtime = JniEnvironment.Runtime;
 				var r_self  = new JniObjectReference (n_self);

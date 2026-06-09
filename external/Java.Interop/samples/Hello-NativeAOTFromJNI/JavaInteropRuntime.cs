@@ -28,9 +28,8 @@ static class JavaInteropRuntime
 		try {
 			var options = new JreRuntimeOptions {
 				EnvironmentPointer  = jnienv,
-				TypeManager             = new NativeAotTypeManager (),
 			};
-			runtime = options.CreateJreVM ();
+			runtime = options.CreateJreVM (new NativeAotTypeManager ());
 		}
 		catch (Exception e) {
 			Console.Error.WriteLine ($"JavaInteropRuntime.init: error: {e}");
