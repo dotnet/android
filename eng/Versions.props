@@ -44,8 +44,5 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>36.99.0</AndroidPackVersion>
-    <MicrosoftAndroidSdkPackName Condition=" '$(MicrosoftAndroidSdkPackName)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">Microsoft.Android.Sdk.Windows</MicrosoftAndroidSdkPackName>
-    <MicrosoftAndroidSdkPackName Condition=" '$(MicrosoftAndroidSdkPackName)' == '' and $([MSBuild]::IsOSPlatform('linux')) ">Microsoft.Android.Sdk.Linux</MicrosoftAndroidSdkPackName>
-    <MicrosoftAndroidSdkPackName Condition=" '$(MicrosoftAndroidSdkPackName)' == '' and $([MSBuild]::IsOSPlatform('osx')) ">Microsoft.Android.Sdk.Darwin</MicrosoftAndroidSdkPackName>
   </PropertyGroup>
 </Project>

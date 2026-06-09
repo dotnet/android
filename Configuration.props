@@ -54,6 +54,11 @@
     <HostOSArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString())</HostOSArchitecture>
   </PropertyGroup>
   <PropertyGroup>
+    <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('windows'))">Microsoft.Android.Sdk.Windows</MicrosoftAndroidSdkPackName>
+    <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('linux'))">Microsoft.Android.Sdk.Linux</MicrosoftAndroidSdkPackName>
+    <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('osx'))">Microsoft.Android.Sdk.Darwin</MicrosoftAndroidSdkPackName>
+  </PropertyGroup>
+  <PropertyGroup>
     <MicrosoftAndroidPacksRootDir>$(BuildOutputDirectory)lib\packs\</MicrosoftAndroidPacksRootDir>
     <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
     <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
