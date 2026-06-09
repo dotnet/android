@@ -36,7 +36,6 @@ namespace Xamarin.Android.Build.Tests
 			// been added to the Xamarin manifest yet.
 			var xamarin_manifest_needs_updating = false;
 
-			AssertCommercialBuild ();
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
 			try {

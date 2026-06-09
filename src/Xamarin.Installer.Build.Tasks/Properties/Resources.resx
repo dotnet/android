@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AndroidSdk_Not_Set" xml:space="preserve">
+    <value>The path to the Android SDK has not been set. Either provide the '-p:AndroidSdkDirectory' MSbuild property with a valid path or set the 'ANDROID_HOME' or 'ANDROID_SDK_ROOT' environment variables and try again.</value>
+    <comment>The following are literal names and should not be translated: `Android SDK`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` and `-p:AndroidSdkDirectory` </comment>
+  </data>
+  <data name="AndroidSdk_Not_Found" xml:space="preserve">
+    <value>Failed to locate Android SDK at path `{0}`.</value>
+    <comment>The following are literal names and should not be translated: `Android SDK`
+{0} - The path to the Android SDK</comment>
+  </data>
+  <data name="License_Not_Accepted" xml:space="preserve">
+    <value>The Android SDK license agreements were not accepted, please set `$(AcceptAndroidSDKLicenses)` to accept.</value>
+    <comment>The following are literal names and should not be translated: `Android SDK`, `$(AcceptAndroidSDKLicenses)`</comment>
+  </data>
+  <data name="Required_Downloadable_Mismatch" xml:space="preserve">
+    <value>Internal error: expected to install {0} components, but no downloads were available.</value>
+    <comment>{0} - The number of SDK components that need to be installed</comment>
+  </data>
+  <data name="Required_Not_Installed" xml:space="preserve">
+    <value>Dependency `{0}` should have been installed but could not be resolved. You can attempt to install it with: `{1} --install "{0}"`</value>
+    <comment>The following are literal names and should not be translated: `{1} --install "{0}"`
+{0} - The dependency that was not installed
+{1} - The path to the sdkmanager tool</comment>
+  </data>
+  <data name="Task_Failed" xml:space="preserve">
+    <value>Failed to install required Android SDK components.</value>
+    <comment>The following are literal names and should not be translated: `Android SDK`</comment>
+  </data>
+  <data name="Task_Cancelled" xml:space="preserve">
+    <value>Attempt to install required Android SDK components timed out or was cancelled. Consider setting `$(AndroidDependencyInstallationTimeout)` to a value larger than `{0}` minutes.</value>
+    <comment>The following are literal names and should not be translated: `Android SDK`, `$(AndroidDependencyInstallationTimeout)`
+{0} - The timeout value for the task</comment>
+  </data>
+  <data name="Unsupported_Manifest_Type" xml:space="preserve">
+    <value>`$(AndroidManifestType)` value of `{0}` is not supported. Defaulting to `Xamarin`.</value>
+    <comment>The following are literal names and should not be translated: `$(AndroidManifestType)`, `Xamarin`
+{0} - The unsupported manifest name</comment>
+  </data>
+  <data name="Invalid_JavaSdkDirectory" xml:space="preserve">
+    <value>Unable to install the Java SDK into `{0}`. Please set `$(JavaSdkDirectory)` to a valid non-administrator path.</value>
+    <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
+{0} - The value of $(JavaSdkDirectory) that was provided to the task</comment>
+  </data>
+  <data name="Invalid_JavaSdkDirectory_ExistingInstall" xml:space="preserve">
+    <value>Detected an out of date Java SDK with version `{1}` at `{0}`, but we are unable to install the recommended Java SDK (version `{2}`) to this location.
+Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a valid non-administrator path to install the recommended Java SDK version to a new location.</value>
+    <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
+{0} - The value of $(JavaSdkDirectory) that was provided to the task
+{1} - The major version of the the Java SDK that was already installed
+{2} - The major version of the the Java SDK to install</comment>
+  </data>
+  <data name="Invalid_JavaSdkVersion" xml:space="preserve">
+    <value>Unable to find a Java SDK with version `{0}`. Please set `$(JavaSdkVersion)` to a valid version.</value>
+    <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkVersion)`
+{0} - The value of $(JavaSdkVersion) that was provided to the task</comment>
+  </data>
+  <data name="Licenses_Acceptance_Failed" xml:space="preserve">
+    <value>an error occurred trying to accept the Android SDK licenses. {0}</value>
+  </data>
+</root>

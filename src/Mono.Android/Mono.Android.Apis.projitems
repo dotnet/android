@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- See Documentation/workflow/HowToAddNewApiLevel.md for instructions on adding new API levels. -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <AndroidApiInfo Include="v1.6">
+      <Name>Donut</Name>
+      <Level>4</Level>
+      <VersionCodeFull>4.0</VersionCodeFull>
+      <Id>4</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v2.0">
+      <Name>Eclair</Name>
+      <Level>5</Level>
+      <VersionCodeFull>5.0</VersionCodeFull>
+      <Id>5</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v2.0.1">
+      <Name>Eclair</Name>
+      <Level>6</Level>
+      <VersionCodeFull>6.0</VersionCodeFull>
+      <Id>6</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v2.1">
+      <Name>Eclair</Name>
+      <Level>7</Level>
+      <VersionCodeFull>7.0</VersionCodeFull>
+      <Id>7</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v2.2">
+      <Name>Froyo</Name>
+      <Level>8</Level>
+      <VersionCodeFull>8.0</VersionCodeFull>
+      <Id>8</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v2.3">
+      <Name>Gingerbread</Name>
+      <Level>10</Level>
+      <VersionCodeFull>10.0</VersionCodeFull>
+      <Id>10</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v3.0">
+      <Name>Honeycomb</Name>
+      <Level>11</Level>
+      <VersionCodeFull>11.0</VersionCodeFull>
+      <Id>11</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v3.1">
+      <Name>Honeycomb</Name>
+      <Level>12</Level>
+      <VersionCodeFull>12.0</VersionCodeFull>
+      <Id>12</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v3.2">
+      <Name>Honeycomb</Name>
+      <Level>13</Level>
+      <VersionCodeFull>13.0</VersionCodeFull>
+      <Id>13</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v4.0">
+      <Name>Ice Cream Sandwich</Name>
+      <Level>14</Level>
+      <VersionCodeFull>14.0</VersionCodeFull>
+      <Id>14</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v4.0.3">
+      <Name>Ice Cream Sandwich</Name>
+      <Level>15</Level>
+      <VersionCodeFull>15.0</VersionCodeFull>
+      <Id>15</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v4.1">
+      <Name>Jelly Bean</Name>
+      <Level>16</Level>
+      <VersionCodeFull>16.0</VersionCodeFull>
+      <Id>16</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v4.2">
+      <Name>Jelly Bean</Name>
+      <Level>17</Level>
+      <VersionCodeFull>17.0</VersionCodeFull>
+      <Id>17</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v4.3">
+      <Name>Jelly Bean</Name>
+      <Level>18</Level>
+      <VersionCodeFull>18.0</VersionCodeFull>
+      <Id>18</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v4.4">
+      <Name>Kit Kat</Name>
+      <Level>19</Level>
+      <VersionCodeFull>19.0</VersionCodeFull>
+      <Id>19</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v4.4.87">
+      <Name>Kit Kat + Wear support</Name>
+      <Level>20</Level>
+      <VersionCodeFull>20.0</VersionCodeFull>
+      <Id>20</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v5.0">
+      <Name>Lollipop</Name>
+      <Level>21</Level>
+      <VersionCodeFull>21.0</VersionCodeFull>
+      <Id>21</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v5.1">
+      <Name>Lollipop</Name>
+      <Level>22</Level>
+      <VersionCodeFull>22.0</VersionCodeFull>
+      <Id>22</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v6.0">
+      <Name>Marshmallow</Name>
+      <Level>23</Level>
+      <VersionCodeFull>23.0</VersionCodeFull>
+      <Id>23</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v7.0">
+      <Name>Nougat</Name>
+      <Level>24</Level>
+      <VersionCodeFull>24.0</VersionCodeFull>
+      <Id>24</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v7.1">
+      <Name>Nougat</Name>
+      <Level>25</Level>
+      <VersionCodeFull>25.0</VersionCodeFull>
+      <Id>25</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v8.0">
+      <Name>Oreo</Name>
+      <Level>26</Level>
+      <VersionCodeFull>26.0</VersionCodeFull>
+      <Id>26</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v8.1">
+      <Name>Oreo</Name>
+      <Level>27</Level>
+      <VersionCodeFull>27.0</VersionCodeFull>
+      <Id>27</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v9.0">
+      <Name>Pie</Name>
+      <Level>28</Level>
+      <VersionCodeFull>28.0</VersionCodeFull>
+      <Id>28</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v10.0">
+      <Name>Q</Name>
+      <Level>29</Level>
+      <VersionCodeFull>29.0</VersionCodeFull>
+      <Id>29</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v11.0">
+      <Name>R</Name>
+      <Level>30</Level>
+      <VersionCodeFull>30.0</VersionCodeFull>
+      <Id>30</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v12.0">
+      <Name>S</Name>
+      <Level>31</Level>
+      <VersionCodeFull>31.0</VersionCodeFull>
+      <Id>31</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v12.1">
+      <Name>Sv2</Name>
+      <Level>32</Level>
+      <VersionCodeFull>32.0</VersionCodeFull>
+      <Id>32</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v13.0">
+      <Name>Tiramisu</Name>
+      <Level>33</Level>
+      <VersionCodeFull>33.0</VersionCodeFull>
+      <Id>33</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v14.0">
+      <Name>UpsideDownCake</Name>
+      <Level>34</Level>
+      <VersionCodeFull>34.0</VersionCodeFull>
+      <Id>34</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v15.0">
+      <Name>VanillaIceCream</Name>
+      <Level>35</Level>
+      <VersionCodeFull>35.0</VersionCodeFull>
+      <Id>35</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v16.0">
+      <Name>Baklava</Name>
+      <Level>36</Level>
+      <VersionCodeFull>36.0</VersionCodeFull>
+      <Id>36</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v16.1">
+      <Name>CANARY</Name>
+      <Level>36</Level>
+      <VersionCodeFull>36.1</VersionCodeFull>
+      <Id>36.1</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v17.0">
+      <Name>CinnamonBun</Name>
+      <Level>37</Level>
+      <VersionCodeFull>37.0</VersionCodeFull>
+      <Id>37.0</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+  </ItemGroup>
+</Project>

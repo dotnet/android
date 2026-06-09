@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="XA0010_Adb" xml:space="preserve">
+    <value>adb 未執行。{0}</value>
+    <comment>The following are literal names and should not be translated: adb
+{0} - further detailed error message</comment>
+  </data>
+  <data name="XA0010_AdbTarget" xml:space="preserve">
+    <value>不正確 adb 目標名稱 '{0}'。目標名稱必須以 '-d'、'-e' 或 '-s' 開頭。</value>
+    <comment>The following are literal names and should not be translated: adb, `-d`, `-e`, `-s`
+{0} - the target name the user supplied</comment>
+  </data>
+  <data name="XA0010_NoDevice" xml:space="preserve">
+    <value>沒有可用的裝置。</value>
+  </data>
+  <data name="XA0010_Selected" xml:space="preserve">
+    <value>選取的裝置未執行。</value>
+  </data>
+  <data name="XA0010_NoAbi" xml:space="preserve">
+    <value>無法為已連結的裝置或模擬器 `{0}` 擷取 Android ABI。請重新連接裝置或重新啟動模擬器，然後再試一次。</value>
+    <comment>The following are literal names and should not be translated: ABI
+ABI - is an acronym for Application Binary Interface.
+{0} - the target name the user supplied
+    </comment>
+  </data>
+  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
+    <value>無法將 [快速部署] 工具複製到目標裝置上的 '{0}/{1}'。
+此裝置可能與 [快速部署] 不相容。
+請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A device path
+{1} - A filename</comment>
+  </data>
+  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
+    <value>使用 '{1}: {2}' 部署 '{0}' 時發生錯誤。
+請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
+    <value>目標裝置或模擬器上的 'log.redirect-stdio' Android 系統屬性設定為 'true'。
+若要啟用與 [快速部署] 的相容性，請將屬性設定為 'false' 或重新啟動裝置或模擬器以清除值。</value>
+  </data>
+  <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
+    <value>部署 '{0}'時發生錯誤。
+請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A filename</comment>
+  </data>
+  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
+    <value>抱歉。只有運行 Android 5.0 (API 層級 21) 或更高版本的裝置才支援 [快速部署]。
+請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
+  </data>
+  <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
+    <value>此裝置上的 'run-as' 工具已停用。啟用裝置上的開發人員選項，或將 'ro.boot.disable_runas' 設為 'false' 以啟用此功能。</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+'ro.boot.disable_runas' - the android property which disables the `run-as` tool.
+    </comment>
+  </data>
+  <data name="XA0132_PackageNotInstalled" xml:space="preserve">
+    <value>未安裝套件。請檢查您並未在任何其他使用者下安裝此套件。
+如果套件確實顯示在裝置上，請嘗試手動解除安裝，然後再試一次。
+您應該可以透過裝置上的 [設定] 應用程式解除安裝應用程式。</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0133_RunAsPermissionDenied" xml:space="preserve">
+    <value>製造商已停用此裝置上的 [快速部署] 系統所需的 'run-as' 工具。
+請停用 Visual Studio 專案屬性頁面中的 [快速部署]，或在文字編輯器中編輯專案檔案，並將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'。</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+    </comment>
+  </data>
+  <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
+    <value>應用程式未在 AndroidManifest.xml 中設定 'android: debuggable' 屬性。
+必須設定屬性，[快速部署] 才能運作。此功能通常是由 .NET for Android 的建置系統
+為 [偵錯] 組建預設啟用的功能。請檢查您的 'AndroidManifest.xml' 中的 'application' 元素
+是否未設定該屬性。
+如果您有衍生自 'Android.App.Application' 的類別，並使用了 '[Application]' 屬性，請確認
+系統未設定 'Debuggable' 屬性，因為這將會覆寫偵錯組建的值。
+</value>
+    <comment>The following are literal names and should not be translated:
+AndroidManifest.xml - A xml file
+application - A xml element within a xml file.
+Application - A code attribute.
+Debuggable - A code property
+android:debuggable - An attribute in a xml file.
+    </comment>
+  </data>
+  <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
+    <value>封裝是 'system' 應用程式。這些是在裝置上以 'system' 使用者身份
+ 安裝的應用程式。這些類型的應用程式無法使用 'run-as'。
+ [快速部署] 系統應該會自動處理這個特定錯誤
+ 並使用備份安裝路徑。不過，如果您看到此錯誤，請使用
+ Visual Studio 中的 '說明-&gt;傳送意見反應-&gt;回報問題' 功能表項目，或在 Visual Studio for Mac 中的
+ '說明-&gt;回報問題' 中提交包含完整錯誤訊息的問題報告。可能的話，請附加完整的診斷組建
+ 記錄到意見反應報告，以協助我們診斷問題。</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0136_RunAsCorruptInstallation" xml:space="preserve">
+    <value>'run-as' 命令失敗，錯誤為 '{0}'。
+套件目前的安裝已損毀。請手動在所有使用者的裝置上
+解除安裝套件，然後再試一次。如果這樣沒有用，您可以停用 [快速部署]。
+您可以停用 Visual Studio 專案屬性頁面中的 [快速部署]，或在文字編輯器中編輯專案檔案，並將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'。
+</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0137_RunAsOSCorrupt" xml:space="preserve">
+    <value>'run-as' 命令失敗，錯誤為 '{0}'。
+此裝置目前不支援 [快速部署]。
+請在 Visual Studio 中的 '說明-&gt;傳送意見反應-&gt;回報問題' 功能表項目，或在 Visual Studio for Mac 中的
+'說明-&gt;回報問題' 中提交包含完整錯誤訊息的問題報告。
+請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
+    <value>使用 '{1}: {2}' 部署 '{0}' 時發生錯誤。
+這通常是由傳送檔案資料至裝置時在 `adb` 中發生的錯誤所導致。
+此錯誤的常見原因是鬆動或品質較差的 USB 纜線。請嘗試其他纜線。
+或者，請嘗試使用 Wifi 偵錯程式，這比特定裝置上的 USB 偵錯程式更可靠。
+如果這些方式都失敗，請將 'EmbedAssembliesIntoApk' MSBuild 屬性設定為 'true'，以停用 Visual Studio 專案屬性頁面中的快速部署，或在文字編輯器中編輯專案檔案。</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
+    <value>  正在啟動 {0} 上的偵錯工具:{1}
+啟動 sdb，然後執行下列命令
+  連線 {0} {1}
+    </value>
+    <comment>The following are literal names and should not be translated:
+{0} - An ip address of  a computer.
+{1} - An interger value describing the port to use.
+    </comment>
+  </data>
+</root>

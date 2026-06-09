@@ -36,6 +36,10 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26302.103">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>e0aa94285c859b6ab5061903e91dafffeee8094c</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="11.0.0-beta.26268.112">
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>c5d1f734662eb718e7431a4e679a29e47c380f04</Sha>
@@ -44,9 +48,9 @@
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>c5d1f734662eb718e7431a4e679a29e47c380f04</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="4.3.0-preview.26281.6">
+    <Dependency Name="MSTest" Version="4.3.0-preview.26307.5">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>a22ece549a9d4be9158ed6f5946e42abf0c69e9f</Sha>
+      <Sha>1bc655fcf8929af69d33d0d4142ccf4f019158ac</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

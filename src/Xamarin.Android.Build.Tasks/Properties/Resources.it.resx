@@ -142,6 +142,9 @@ Questo errore è probabilmente causato da un problema con il file di AndroidMani
   <data name="APT0005" xml:space="preserve">
     <value>Nome file non valido: i nomi di file non possono usare parole riservate in Java.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Non è stato possibile determinare il livello API per $(TargetFrameworkVersion) di '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ Nota: Android Designer non è compatibile con Java SDK 11.0: https://aka.ms/vs20
   <data name="XA0036" xml:space="preserve">
     <value>La proprietà 'AndroidSupportedAbis' di MSBuild non è più supportata. Modificare il file di progetto in un editor di testo, rimuovere tutti gli utilizzi di 'AndroidSupportedAbis' e sostituirli con la proprietà 'RuntimeIdentifiers' di MSBuild.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>La libreria '{0}' di EmbeddedNativeLibrary non è valida in progetti Applicazione Android. In alternativa usare AndroidNativeLibrary.</value>
@@ -1142,13 +1149,13 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>La directory di input del codice sorgente Java "{0}" e la directory di output "{1}" di trimmable type map devono essere diverse.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>Il codice sorgente Java generato"{0}" di trimmable type map non è stato trovato.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

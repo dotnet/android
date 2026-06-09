@@ -5,8 +5,6 @@ HOST="$(uname | tr A-Z a-z)"
 NATIVE_DIR="${MY_DIR}/../../src/native"
 MONODROID_SOURCE_DIR="${NATIVE_DIR}/mono/pinvoke-override"
 MONODROID_INCLUDE_DIR="${NATIVE_DIR}/mono/shared"
-CLR_SOURCE_DIR="${NATIVE_DIR}/clr/pinvoke-override"
-CLR_INCLUDE_DIR="${NATIVE_DIR}/clr/include/shared"
 GENERATOR_SOURCE="generate-pinvoke-tables.cc"
 GENERATOR_BINARY="generate-pinvoke-tables"
 TARGET_FILE="pinvoke-tables.include"
@@ -113,15 +111,5 @@ cat <<EOF
 **
 EOF
 generate "${MONODROID_SOURCE_DIR}" "${MONODROID_INCLUDE_DIR}"
-
-cat <<EOF
-
---------------------------------------
-
-**
-** Generating for CoreCLR
-**
-EOF
-generate "${CLR_SOURCE_DIR}" "${CLR_INCLUDE_DIR}"
 
 exit ${RETVAL}

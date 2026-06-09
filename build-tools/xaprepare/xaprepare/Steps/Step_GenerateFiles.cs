@@ -76,17 +76,13 @@ namespace Xamarin.Android.Prepare
 			if (onlyRequired)
 				return null;
 
-			var steps = new List <GeneratedFile> {
-				new GeneratedMonoAndroidProjitemsFile (),
-			};
+			var steps = new List <GeneratedFile> ();
 
 			AddOSSpecificSteps (context, steps);
-			AddUnixPostBuildSteps (context, steps);
 
 			return steps;
 		}
 
-		partial void AddUnixPostBuildSteps (Context context, List<GeneratedFile> steps);
 		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
 
 		GeneratedFile Get_Cmake_XA_Build_Configuration (Context context)

@@ -12,10 +12,6 @@
   <Target Name="_BuildXAPrepare">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xaprepare\xaprepare.sln" Targets="Restore;Build" />
   </Target>
-  <Target Name="PrepareExternal"
-          DependsOnTargets="_BuildXAPrepare">
-    <Exec Command="dotnet $(_XAPrepareExe) -s:PrepareExternalGitDependencies $(_XAPrepareStandardArgs)" />
-  </Target>
   <Target Name="Prepare"
           DependsOnTargets="_BuildXAPrepare">
     <Error
