@@ -71,14 +71,6 @@ steps:
 
 - template: run-dotnet-test.yaml
   parameters:
-    testRunTitle: Java.Interop-Performance ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    testAssemblyName: Java.Interop-PerformanceTests
-    condition: eq('${{ parameters.runNativeTests }}', 'true')
-    retryCount: 1
-    extraArguments: --logger "console;verbosity=detailed"
-
-- template: run-dotnet-test.yaml
-  parameters:
     testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     testAssemblyName: Java.Base-Tests
     condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 
 using Java.Interop;
-using Java.Interop.GenericMarshaler;
-
 using NUnit.Framework;
 
 namespace Java.InteropTests

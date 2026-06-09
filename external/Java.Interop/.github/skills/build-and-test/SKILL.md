@@ -58,7 +58,6 @@ Common test projects:
 - `Java.Interop.Dynamic-Tests` — dynamic invocation tests
 - `Java.Base-Tests` — Java.Base binding tests
 - `generator-Tests` — C# binding generator tests
-- `Java.Interop-PerformanceTests` — performance benchmarks
 - `Java.Interop.Tools.JavaCallableWrappers-Tests` — JCW generation tests
 
 ## Step 4: Summarize Results

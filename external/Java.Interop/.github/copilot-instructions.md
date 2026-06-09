@@ -54,7 +54,6 @@
 
 ### Testing (`tests/`)
 - Unit tests for all major components
-- Performance benchmarks (`Java.Interop-PerformanceTests/`)
 - Integration tests with real JVM instances
 - Generator tests with sample API descriptions
 

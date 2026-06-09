@@ -2,8 +2,6 @@
 using System;
 
 using Java.Interop;
-using Java.Interop.GenericMarshaler;
-
 using NUnit.Framework;
 
 namespace Java.InteropTests
@@ -211,4 +209,3 @@ namespace Java.InteropTests
 	}
 #endif  // !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 }
-

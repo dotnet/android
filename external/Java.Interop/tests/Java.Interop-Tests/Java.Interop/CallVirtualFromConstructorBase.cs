@@ -2,8 +2,6 @@
 using System.Runtime.CompilerServices;
 
 using Java.Interop;
-using Java.Interop.GenericMarshaler;
-
 namespace Java.InteropTests {
 
 	[JniTypeSignature (CallVirtualFromConstructorBase.JniTypeName, GenerateJavaPeer=false)]
@@ -55,4 +53,3 @@ namespace Java.InteropTests {
 		}
 	}
 }
-
