@@ -108,10 +108,19 @@
     so NUnit's EquatablesComparer.GetEquatableImplementations() ends up calling
     GetGenericArguments()[0] on an empty array. Force ILC to keep complete type
     metadata for all reachable types so that reflection over IEquatable<T> works.
+
+    NativeAOT.rd.xml also forces ILC to generate invocation thunks for the
+    specific IEquatable<T>.Equals(T) closed instantiations our tests rely on,
+    and the closed NUnit TaskAwaitAdapter+GenericAdapter<VoidTaskResult> that
+    is built via Type.MakeGenericType for async Task tests.
   -->
   <PropertyGroup Condition=" '$(PublishAot)' == 'true' ">
     <IlcGenerateCompleteTypeMetadata>true</IlcGenerateCompleteTypeMetadata>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(PublishAot)' == 'true' ">
+    <RdXmlFile Include="NativeAOT.rd.xml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

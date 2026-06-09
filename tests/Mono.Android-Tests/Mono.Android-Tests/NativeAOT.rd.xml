@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  NativeAOT runtime directives for the Mono.Android-Tests test app.
+
+  These instantiations are needed at runtime by NUnit 3.13.3, but the trimmer
+  cannot see them statically:
+
+  * NUnit's EquatablesComparer uses MethodInfo.Invoke on IEquatable<T>.Equals
+    via the *interface* MethodInfo. NativeAOT needs invocation thunks for each
+    closed instantiation that Assert.AreEqual is called against in our tests.
+
+  * NUnit's TaskAwaitAdapter.Create uses Type.MakeGenericType to build
+    GenericAdapter<T> where T comes from the base Task<T>. For a non-generic
+    Task that resolves to GenericAdapter<VoidTaskResult>, an internal CoreLib
+    type the trimmer cannot reach via static analysis.
+-->
+<Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
+  <Application>
+    <Assembly Name="System.Private.CoreLib">
+      <Type Name="System.IEquatable`1[[System.String,System.Private.CoreLib]]" Dynamic="Required All" />
+      <Type Name="System.IEquatable`1[[System.Boolean,System.Private.CoreLib]]" Dynamic="Required All" />
+      <Type Name="System.IEquatable`1[[System.IntPtr,System.Private.CoreLib]]" Dynamic="Required All" />
+      <Type Name="System.IEquatable`1[[System.TimeSpan,System.Private.CoreLib]]" Dynamic="Required All" />
+      <Type Name="System.IEquatable`1[[System.DateTime,System.Private.CoreLib]]" Dynamic="Required All" />
+    </Assembly>
+    <Assembly Name="nunit.framework">
+      <Type Name="NUnit.Framework.Internal.TaskAwaitAdapter+GenericAdapter`1[[System.Threading.Tasks.VoidTaskResult,System.Private.CoreLib]]" Dynamic="Required All" />
+    </Assembly>
+  </Application>
+</Directives>
