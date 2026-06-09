@@ -32,8 +32,8 @@ stages:
     workspace:
       clean: all
     variables:
-      CXX: g++-10
-      CC: gcc-10
+      CXX: g++-11
+      CC: gcc-11
     ${{ if eq(parameters.use1ESTemplate, true) }}:
       templateContext:
         outputs:

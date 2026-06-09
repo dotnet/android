@@ -52,7 +52,7 @@ case ${HOST} in
 		if [ "${RUNNING_ON_CI}" == "no" ]; then
 			COMPILER="g++"
 		else
-			COMPILER="g++-10"
+			COMPILER="g++-11"
 		fi ;;
 
 	darwin)

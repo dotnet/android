@@ -138,8 +138,8 @@ stages:
     workspace:
       clean: all
     variables:
-      CXX: g++-10
-      CC: gcc-10
+      CXX: g++-11
+      CC: gcc-11
     steps:
     - checkout: self
       path: s/android
@@ -151,8 +151,8 @@ stages:
 
     - script: |
         sudo apt-get update
-        sudo apt-get install -y g++-10 gcc-10
-      displayName: install g++-10 and gcc-10
+        sudo apt-get install -y g++-11 gcc-11
+      displayName: install g++-11 and gcc-11
 
     - template: /build-tools/automation/yaml-templates/build-linux-steps.yaml
       parameters:
