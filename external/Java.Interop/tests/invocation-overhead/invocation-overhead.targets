@@ -25,22 +25,13 @@
 
   <Target Name="Run">
     <MSBuild Projects="$(MSBuildThisFileDirectory)invocation-overhead.csproj"
-        Properties="TargetFramework=net472"
-        Targets="_Run_net472"
-    />
-    <MSBuild Projects="$(MSBuildThisFileDirectory)invocation-overhead.csproj"
         Properties="TargetFramework=$(DotNetTargetFramework)"
-        Targets="_Run_netcoreapp"
+        Targets="_Run"
     />
   </Target>
 
-  <Target Name="_Run_net472">
-    <Message Text="Mono timing:" Importance="High" />
-    <Exec Command="JI_JVM_PATH=&quot;$(JdkJvmPath)&quot; $(Runtime) $(TargetPath)" />
-  </Target>
-
-  <Target Name="_Run_netcoreapp">
-    <Message Text=".NET Core timing:" Importance="High" />
+  <Target Name="_Run">
+    <Message Text=".NET timing:" Importance="High" />
     <Exec Command="JI_JVM_PATH=&quot;$(JdkJvmPath)&quot; dotnet $(TargetPath)" />
   </Target>
 </Project>

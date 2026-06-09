@@ -14,7 +14,6 @@ namespace Java.Interop {
 
 	public partial class JniRuntime {
 
-#if NET
 		[SuppressMessage ("Design", "CA1034:Nested types should not be visible",
 			Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`; see 045b8af7.")]
 		public struct ReplacementMethodInfo : IEquatable<ReplacementMethodInfo>
@@ -77,7 +76,6 @@ namespace Java.Interop {
 			public static bool operator==(ReplacementMethodInfo a, ReplacementMethodInfo b) => a.Equals (b);
 			public static bool operator!=(ReplacementMethodInfo a, ReplacementMethodInfo b) => !a.Equals (b);
 		}
-#endif  // NET
 
 		/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='T:JniTypeManager']/*" />
 		public partial class JniTypeManager : IDisposable, ISetRuntime {
@@ -420,7 +418,6 @@ namespace Java.Interop {
 				return MakeGenericType (signature.InvokerType, arguments);
 			}
 
-#if NET
 
 			public IReadOnlyList<string>? GetStaticMethodFallbackTypes (string jniSimpleReference)
 			{
@@ -481,11 +478,8 @@ namespace Java.Interop {
 
 				return TryLoadJniMarshalMethods (nativeClass, type, null) || TryRegisterNativeMembers (nativeClass, type, null, null);
 			}
-#endif  // NET
 
-#if NET
 			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-#endif  // NET
 			public virtual void RegisterNativeMembers (
 					JniType nativeClass,
 					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
@@ -495,9 +489,7 @@ namespace Java.Interop {
 				TryRegisterNativeMembers (nativeClass, type, methods);
 			}
 
-#if NET
 			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-#endif  // NET
 			protected bool TryRegisterNativeMembers (
 					JniType nativeClass,
 					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]

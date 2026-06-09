@@ -197,7 +197,6 @@ namespace Java.Interop
 #endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			}
 
-#if NET
 			public static bool TryFindClass (string classname, out JniObjectReference instance)
 			{
 				if (classname == null)
@@ -208,7 +207,6 @@ namespace Java.Interop
 				instance = TryFindClass (classname, throwOnError: false);
 				return instance.IsValid;
 			}
-#endif  // NET
 
 			public static JniType? GetTypeFromInstance (JniObjectReference instance)
 			{
@@ -265,7 +263,7 @@ namespace Java.Interop
 					throw new ArgumentOutOfRangeException (nameof (numMethods), numMethods,
 							$"`numMethods` must be between 0 and `methods.Length` ({methods?.Length ?? 0})!");
 				}
-#if DEBUG && NETCOREAPP
+#if DEBUG
 				for (int i = 0; methods != null && i < numMethods; ++i) {
 					var m   = methods [i];
 					if (m.Marshaler != null && m.Marshaler.GetType ().GenericTypeArguments.Length != 0) {
@@ -275,7 +273,7 @@ namespace Java.Interop
 						Debug.WriteLine ($"  Marshaler Type={m.Marshaler.GetType ().FullName} Method={method.DeclaringType?.FullName}.{method.Name}");
 					}
 				}
-#endif  // DEBUG && NETCOREAPP
+#endif  // DEBUG
 
 				int r   = _RegisterNatives (type, methods ?? Array.Empty<JniNativeMethodRegistration>(), numMethods);
 

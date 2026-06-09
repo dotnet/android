@@ -12,7 +12,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <!-- This package erroneously contains /netcoreapp3.1/SgmlReader.exe and /netcoreapp3.1/SgmlReaderDll.dll.
+    <!-- This package erroneously contains executable assets we do not use.
          We are going to use a package reference to download the nuget, and a regular reference to actually
          reference the correct assembly. -->
     <PackageReference Include="Microsoft.Xml.SgmlReader" ExcludeAssets="Compile" GeneratePathProperty="true" />

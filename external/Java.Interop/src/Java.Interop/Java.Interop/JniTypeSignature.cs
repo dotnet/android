@@ -176,11 +176,7 @@ namespace Java.Interop
 
 		public override int GetHashCode ()
 		{
-#if NETCOREAPP
 			return QualifiedReference.GetHashCode (StringComparison.Ordinal);
-#else
-			return QualifiedReference.GetHashCode ();
-#endif
 		}
 
 		public override bool Equals (object? obj)

@@ -100,7 +100,7 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			//    at Java.Lang.Object..ctor() in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Base/obj/Debug-net7.0/mcw/Java.Lang.Object.cs:line 32
+			//    at Java.Lang.Object..ctor() in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Base/obj/Debug/mcw/Java.Lang.Object.cs:line 32
 			//    at Java.BaseTests.MyIntConsumer..ctor(Action`1 action) in /Users/jon/Developer/src/xamarin/java.interop/tests/Java.Base-Tests/Java.Base/JavaToManagedTests.cs:line 77
 			//    at Java.BaseTests.JavaToManagedTests.InterfaceInvokerMethod() in /Users/jon/Developer/src/xamarin/java.interop/tests/Java.Base-Tests/Java.Base/JavaToManagedTests.cs:line 26
 			methods = new JniInstanceMethods (declaringType);
@@ -133,7 +133,6 @@ namespace Java.Interop
 
 		JniMethodInfo GetMethodInfo (string method, string signature)
 		{
-#if NET
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
@@ -153,7 +152,6 @@ namespace Java.Interop
 				}
 				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{typeName}.{methodName}.{methodSig}`!");
 			}
-#endif  // NET
 			return JniPeerType.GetInstanceMethod (method, signature);
 		}
 
@@ -205,4 +203,3 @@ namespace Java.Interop
 	}
 	}
 }
-

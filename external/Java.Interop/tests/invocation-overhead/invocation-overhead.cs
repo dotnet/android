@@ -8,9 +8,7 @@ using Java.Interop;
 using JIIntPtrEnv   = Java.Interop.JIIntPtrs.JniEnvironment;
 using PinvokeEnv    = Java.Interop.JIPinvokes.JniEnvironment;
 using XAIntPtrEnv   = Java.Interop.XAIntPtrs.JniEnvironment;
-#if NET
 using JIFuncPtrEnv  = Java.Interop.JIFunctionPointers.JniEnvironment;
-#endif  // NET
 
 public class XFieldInfo
 {
@@ -207,7 +205,6 @@ namespace Java.Interop.XAIntPtrs {
 	}
 }
 
-#if NET
 namespace Java.Interop.JIFunctionPointers {
 	public class JniFieldInfo : XFieldInfo {
 		public JniFieldInfo (string name, string signature, IntPtr id, bool isStatic)
@@ -266,7 +263,6 @@ namespace Java.Interop.JIFunctionPointers {
 		}
 	}
 }
-#endif  // NET
 
 class App {
 
@@ -364,7 +360,6 @@ class App {
 
 	static unsafe void JIFunctionPointersTiming (IntPtr _env)
 	{
-#if NET
 		JIFuncPtrEnv.EnvironmentPointer = _env;
 		var Arrays_class = JIFuncPtrEnv.Types._FindClass ("java/util/Arrays");
 		var Arrays_binarySearch = JIFuncPtrEnv.StaticMethods.GetStaticMethodID (Arrays_class, "binarySearch", "([II)I");
@@ -382,6 +377,5 @@ class App {
 		t.Stop ();
 		Console.WriteLine ("# {0} timing: {1}", nameof (JIFunctionPointersTiming), t.Elapsed);
 		Console.WriteLine ("#\tAverage Invocation: {0}ms", t.Elapsed.TotalMilliseconds / C);
-#endif  // NET
 	}
 }

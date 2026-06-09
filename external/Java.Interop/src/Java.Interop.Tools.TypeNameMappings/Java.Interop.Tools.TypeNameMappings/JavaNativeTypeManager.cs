@@ -788,4 +788,3 @@ namespace Java.Interop.Tools.TypeNameMappings
 	}
 }
 
-

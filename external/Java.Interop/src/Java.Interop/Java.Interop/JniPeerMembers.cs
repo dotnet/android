@@ -23,11 +23,9 @@ namespace Java.Interop {
 
 		static string GetReplacementType (string jniPeerTypeName)
 		{
-#if NET
 			var replacement = JniEnvironment.Runtime.TypeManager.GetReplacementType (jniPeerTypeName);
 			if (replacement != null)
 				return replacement;
-#endif  // NET
 			return jniPeerTypeName;
 		}
 

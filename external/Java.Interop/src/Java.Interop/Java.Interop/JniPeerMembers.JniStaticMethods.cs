@@ -43,7 +43,6 @@ namespace Java.Interop
 
 		JniMethodInfo GetMethodInfo (string method, string signature)
 		{
-#if NET
 			var m              = (JniMethodInfo?) null;
 			var newMethod      = JniEnvironment.Runtime.TypeManager.GetReplacementMethodInfo (Members.JniPeerTypeName, method, signature);
 			if (newMethod.HasValue) {
@@ -62,23 +61,19 @@ namespace Java.Interop
 			if (m != null) {
 				return m;
 			}
-#endif  // NET
 			return Members.JniPeerType.GetStaticMethod (method, signature);
 		}
 
 #pragma warning disable CA1801
 		JniType GetMethodDeclaringType (JniMethodInfo method)
 		{
-#if NET
 			if (method.StaticRedirect != null) {
 				return method.StaticRedirect;
 			}
-#endif  // NET
 			return Members.JniPeerType;
 		}
 #pragma warning restore CA1801
 
-#if NET
 		JniMethodInfo? FindInFallbackTypes (string method, string signature)
 		{
 			var fallbackTypes  = JniEnvironment.Runtime.TypeManager.GetStaticMethodFallbackTypes (Members.JniPeerTypeName);
@@ -103,7 +98,6 @@ namespace Java.Interop
 			}
 			return null;
 		}
-#endif  // NET
 
 		public unsafe void InvokeVoidMethod (string encodedMember, JniArgumentValue* parameters)
 		{

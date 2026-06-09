@@ -1,7 +1,5 @@
 #nullable enable
 
-#if NET
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
@@ -146,5 +144,3 @@ namespace Java.Interop
 		public static bool operator!= (JniMemberSignature a, JniMemberSignature b) => !a.Equals (b);
 	}
 }
-
-#endif  // NET

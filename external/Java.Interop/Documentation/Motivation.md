@@ -11,10 +11,9 @@ intended to fix some of the shortcomings and design mistakes I've made over the 
 
 In particular, it attempts to fix the following issues: 
 
-* Split out the core invocation logic so that the containing assembly is in the
-  `xbuild-frameworks\MonoAndroid\v1.0` directory, allowing low-level JNI use
-  without taking an API-level constraint.
-* Make the assembly a PCL lib.
+* Split out the core invocation logic so it can be used without taking an
+  API-level constraint.
+* Make the assembly a reusable .NET library.
 * Support use of the lib on "desktop" Java VMs. This would allow more testing
   without an Android device, could allow using Xamarin.Android Views to be shown
   in the GUI designer, etc.
@@ -27,5 +26,4 @@ local refs vs. global refs vs. ...). This culminates in `JNIEnv.FindClass()`,
 which returns a global reference while most other methods return a local ref.
 
 The `JNIEnv` API is also huge, unwieldy, and terrible.
-
 

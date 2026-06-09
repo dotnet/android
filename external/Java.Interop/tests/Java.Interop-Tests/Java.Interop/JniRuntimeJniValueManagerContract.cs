@@ -408,14 +408,6 @@ namespace Java.InteropTests {
 	}
 
 #if !__ANDROID__
-#if !NETCOREAPP
-	[TestFixture]
-	public class JniRuntimeJniValueManagerContract_Mono : JniRuntimeJniValueManagerContract {
-		static Type MonoRuntimeValueManagerType = Type.GetType ("Java.Interop.MonoRuntimeValueManager, Java.Runtime.Environment", throwOnError:true)!;
-
-		protected override Type ValueManagerType => MonoRuntimeValueManagerType;
-	}
-#endif	// !NETCOREAPP
 
 	[TestFixture]
 	public class JniRuntimeJniValueManagerContract_NoGCIntegration : JniRuntimeJniValueManagerContract {

@@ -27,7 +27,6 @@ namespace Java.Interop {
 			}
 		}
 
-#if NET
 		public static bool TryParse (string name, [NotNullWhen (true)] out JniType? type)
 		{
 			if (!JniEnvironment.Types.TryFindClass (name, out var peerReference)) {
@@ -37,7 +36,6 @@ namespace Java.Interop {
 			type    = new JniType (ref peerReference, JniObjectReferenceOptions.CopyAndDispose);
 			return true;
 		}
-#endif  // NET
 
 		bool    registered;
 		JniObjectReference  peerReference;
@@ -250,7 +248,6 @@ namespace Java.Interop {
 			return JniEnvironment.InstanceMethods.GetMethodID (PeerReference, name, signature);
 		}
 
-#if NET
 		internal bool TryGetInstanceMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)
 		{
 			AssertValid ();
@@ -293,7 +290,6 @@ namespace Java.Interop {
 #error  Unsupported backend
 #endif
 		}
-#endif  // NET
 
 		public JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
 		{
@@ -315,7 +311,6 @@ namespace Java.Interop {
 			return JniEnvironment.StaticMethods.GetStaticMethodID (PeerReference, name, signature);
 		}
 
-#if NET
 		internal bool TryGetStaticMethod (string name, string signature, [NotNullWhen(true)] out JniMethodInfo? method)
 		{
 			AssertValid ();
@@ -358,7 +353,6 @@ namespace Java.Interop {
 #error  Unsupported backend
 #endif
 		}
-#endif  // NET
 
 		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
 		{

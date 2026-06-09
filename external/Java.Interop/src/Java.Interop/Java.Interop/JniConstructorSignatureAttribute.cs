@@ -3,7 +3,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-#if NET
 
 namespace Java.Interop
 {
@@ -16,5 +15,3 @@ namespace Java.Interop
 		}
 	}
 }
-
-#endif  // NET

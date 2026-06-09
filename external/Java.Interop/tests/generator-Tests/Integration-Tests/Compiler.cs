@@ -40,9 +40,7 @@ namespace generatortests
 			if (options.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				preprocessorSymbols.Add ("JAVA_INTEROP1");
 			}
-#if NET
 			preprocessorSymbols.Add ("NET");
-#endif  // NET
 
 			var parseOptions = new CSharpParseOptions (preprocessorSymbols:preprocessorSymbols);
 
@@ -63,9 +61,7 @@ namespace generatortests
 				typeof(Uri).Assembly.Location,
 				Path.Combine (binDir, "Java.Interop.dll"),
 				Path.Combine (facDir, "netstandard.dll"),
-#if NET
 				Path.Combine (facDir, "System.Runtime.dll"),
-#endif  // NET
 			};
 
 			var references = referencePaths.Select (p => MetadataReference.CreateFromFile (p)).ToArray ();

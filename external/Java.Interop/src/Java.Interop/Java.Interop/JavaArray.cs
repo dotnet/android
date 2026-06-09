@@ -31,7 +31,7 @@ namespace Java.Interop
 
 		[MaybeNull]
 		public abstract T this [int index] {
-			// I think this will be fixable in .NET5+ with support for "T?"
+			// Keep this until nullable annotations can fully express this indexer contract.
 #pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
 			get;
 #pragma warning restore CS8766
@@ -422,4 +422,3 @@ namespace Java.Interop
 		}
 	}
 }
-

@@ -1,6 +1,5 @@
 using System;
 
-#if NET
 
 namespace Java.Interop
 {
@@ -16,5 +15,3 @@ namespace Java.Interop
 		public string [] TypeParameters { get; }
 	}
 }
-
-#endif  // NET

@@ -2,7 +2,6 @@
 
 using System;
 
-#if NET
 
 namespace Java.Interop
 {
@@ -23,5 +22,3 @@ namespace Java.Interop
 		public      string      MemberSignature     {get;}
 	}
 }
-
-#endif  // NET
