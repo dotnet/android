@@ -16,12 +16,11 @@ pr:
 parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
-- name: skipTests                      # Skip all test stages (builds only). Use 'auto' to auto-skip for non-fork PRs.
+- name: skipTests                      # Skip all test stages (builds only). Default 'false' so PRs run the full test matrix.
   displayName: Skip Tests
   type: string
-  default: 'auto'
+  default: 'false'
   values:
-  - 'auto'
   - 'true'
   - 'false'
 
@@ -33,6 +32,11 @@ resources:
     name: dotnet/android-tools
     endpoint: public
     ref: refs/heads/main
+  - repository: maui
+    type: github
+    name: dotnet/maui
+    endpoint: public
+    ref: net11.0
 
 # Global variables
 variables:
@@ -51,13 +55,9 @@ variables:
   value: windows.vs2022.amd64.open
 - name: LinuxPoolImageNetCorePublic
   value: build.Ubuntu.2204.amd64.open
-# Skip tests for non-fork PRs (they should use DevDiv pipeline) unless explicitly requested
+# Skip tests when explicitly requested; otherwise run full PR test matrix.
 - name: SkipTestStages
   ${{ if eq(parameters.skipTests, 'true') }}:
-    value: true
-  ${{ elseif eq(parameters.skipTests, 'false') }}:
-    value: false
-  ${{ elseif and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')) }}:
     value: true
   ${{ else }}:
     value: false
@@ -67,7 +67,6 @@ stages:
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
-  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
@@ -104,7 +103,6 @@ stages:
 - stage: win_build_test
   displayName: Windows
   dependsOn: []
-  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: win_build_test
     displayName: Windows > Build & Smoke Test
@@ -126,7 +124,6 @@ stages:
 - stage: linux_build
   displayName: Linux
   dependsOn: []
-  condition: eq(variables['System.PullRequest.IsFork'], 'True')
   jobs:
   - job: linux_build_create_sdk_pack
     displayName: Linux > Build
@@ -174,7 +171,7 @@ stages:
   dependsOn: 
   - mac_build
   - linux_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
@@ -270,7 +267,7 @@ stages:
 - stage: msbuild_dotnet
   displayName: MSBuild Tests
   dependsOn: mac_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_msbuild_tests
     strategy:
@@ -362,11 +359,11 @@ stages:
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
   dependsOn: mac_build
-  condition: and(succeeded(), eq(variables['System.PullRequest.IsFork'], 'True'), ne(variables['SkipTestStages'], 'true'))
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
-      parallel: 8
+      parallel: 12
     displayName: "macOS > Tests > MSBuild+Emulator"
     # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
     pool:
@@ -415,3 +412,191 @@ stages:
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
         condition: true
+
+# MAUI Tests Stage
+- stage: maui_tests
+  displayName: MAUI Tests
+  dependsOn: mac_build
+  condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+  jobs:
+  - job: maui_tests_integration
+    displayName: MAUI Integration
+    pool:
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals 1es-windows-2022-open
+      os: windows
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    variables:
+      BuildVersion: $(Build.BuildId)
+      # Ignore MAUI's public API analyzer errors (RS0016) - dotnet/android does not care about those
+      PublicApiType: Generate
+    steps:
+    - checkout: self
+      clean: true
+      submodules: recursive
+      path: s/android
+      persistCredentials: false
+
+    - checkout: maui
+      clean: true
+      submodules: recursive
+      path: s/maui
+      persistCredentials: true
+
+    # Restore ~/.gradle/caches between runs so MAUI's Gradle resolution
+    # for android-gradle-plugin/sdklib/ddmlib is not gated on the
+    # dotnet-public-maven Maven feed every build. The dnceng-public Maven
+    # feed periodically rate-limits ('exceeding usage of resource Concurrency
+    # in namespace IPAddress', HTTP 500), which deterministically fails
+    # MAUI's ./build.ps1 --target=dotnet-pack.
+    # Adapted from upstream dotnet/maui, which adopted the pattern from us:
+    # https://github.com/dotnet/maui/blob/net11.0/eng/pipelines/common/cache-gradle.yml
+    - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+      parameters:
+        xaSourcePath: $(Build.SourcesDirectory)/android
+
+    - template: /build-tools/automation/yaml-templates/setup-test-environment-steps.yaml
+      parameters:
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        androidSdkPlatforms: $(DefaultTestSdkPlatforms)
+        dotnetVersion: $(DotNetSdkVersion)
+        dotnetQuality: $(DotNetSdkQuality)
+        useAgentJdkPath: false
+        use1ESTemplate: false
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(Build.StagingDirectory)/android-packs
+
+    - pwsh: |
+        $searchPath = Join-Path $(Build.StagingDirectory) android-packs
+        $wlmanPack = Get-ChildItem $searchPath -Filter *Android*Manifest*.nupkg | Select-Object -First 1
+        $dest = Join-Path $searchPath "tmp-wlman" "$($wlmanPack.BaseName)"
+        Expand-Archive -LiteralPath $wlmanPack -DestinationPath $dest
+        $wlmanJsonPath = Join-Path $dest "data" "WorkloadManifest.json"
+        $json = Get-Content $wlmanJsonPath | ConvertFrom-Json -AsHashtable
+        Write-Host "Setting variable ANDROID_PACK_VERSION = $($json["version"])"
+        Write-Host "##vso[task.setvariable variable=ANDROID_PACK_VERSION;]$($json["version"])"
+      displayName: Set ANDROID_PACK_VERSION
+
+    - pwsh: >-
+        $(Build.SourcesDirectory)/maui/eng/scripts/update-version-props.ps1
+        -xmlFileName "$(Build.SourcesDirectory)/maui/eng/Versions.props"
+        -androidVersion $(ANDROID_PACK_VERSION)
+      displayName: Update MAUI's Android dependency
+
+    - task: DotNetCoreCLI@2
+      displayName: Update Android SDK band in Workloads.csproj
+      inputs:
+        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+        arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
+
+    - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
+      displayName: Install .NET
+      retryCountOnTaskFailure: 3
+      workingDirectory: $(Build.SourcesDirectory)/maui
+
+    - task: NodeTool@0
+      displayName: Install Node.js
+      # MAUI's TypeScript build steps for the BlazorWebView project shell out
+      # to node.exe; the dnceng-public windows.vs2022.amd64.open image does
+      # not preinstall Node, so install it explicitly.
+      inputs:
+        versionSpec: '20.x'
+
+    - pwsh: |
+        # Match Configuration.props: prefer ANDROID_SDK_ROOT if set+exists,
+        # else $(HOME)\android-toolchain\sdk, else $env:USERPROFILE fallback.
+        $candidates = @()
+        if ($env:ANDROID_SDK_ROOT) { $candidates += $env:ANDROID_SDK_ROOT }
+        if ($env:ANDROID_HOME)     { $candidates += $env:ANDROID_HOME }
+        if ($env:HOME)             { $candidates += "$env:HOME\android-toolchain\sdk" }
+        if ($env:USERPROFILE)      { $candidates += "$env:USERPROFILE\android-toolchain\sdk" }
+        $sdk = $candidates | Where-Object { $_ -and (Test-Path (Join-Path $_ 'platforms')) } | Select-Object -First 1
+        if (-not $sdk) {
+          Write-Error "Could not find an Android SDK install with a 'platforms' subdir. Tried:`n$($candidates -join "`n")"
+          exit 1
+        }
+        Write-Host "Setting ANDROID_HOME / ANDROID_SDK_ROOT to '$sdk'"
+        Get-ChildItem (Join-Path $sdk 'platforms') | ForEach-Object { Write-Host "  platforms\$($_.Name)" }
+        Write-Host "##vso[task.setvariable variable=ANDROID_HOME]$sdk"
+        Write-Host "##vso[task.setvariable variable=ANDROID_SDK_ROOT]$sdk"
+      displayName: Point ANDROID_HOME at xa-prepare SDK
+      # androidsdk.csproj's install path follows Configuration.props rules:
+      # ANDROID_SDK_ROOT if it exists, otherwise %HOME%\android-toolchain\sdk.
+      # On the 1es-windows-2022-open image, ANDROID_SDK_ROOT is preset to
+      # the agent's preinstalled SDK (e.g. C:\Program Files (x86)\Android\android-sdk),
+      # so xa-prepare ends up extending that location with the requested
+      # API levels. Whichever path it picked, MAUI's build needs the same
+      # ANDROID_HOME / ANDROID_SDK_ROOT so it sees API 37, etc.
+
+    - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
+      displayName: Pack .NET Maui
+      workingDirectory: $(Build.SourcesDirectory)/maui
+
+    - task: DotNetCoreCLI@2
+      displayName: Install MAUI workload packs
+      retryCountOnTaskFailure: 3
+      inputs:
+        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+        arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        command: new
+        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        displayName: Create MAUI template
+        continueOnError: false
+
+    - powershell: |
+        $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
+        [xml] $xml = Get-Content $project
+        $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
+        $node.InnerText = '$(DotNetTargetFramework)-android'
+        $xml.Save($project)
+      displayName: set TargetFrameworks to Android-only
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        arguments: >-
+          -f $(DotNetTargetFramework)-android -c Debug
+          --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+          -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        displayName: Build MAUI template - Debug
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        arguments: >-
+          -f $(DotNetTargetFramework)-android -c Release
+          --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+          -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        displayName: Build MAUI template - Release
+
+    - task: CopyFiles@2
+      displayName: copy build logs
+      condition: always()
+      inputs:
+        Contents: |
+          $(Build.SourcesDirectory)/android/bin/*$(XA.Build.Configuration)/*.*log
+          $(Build.SourcesDirectory)/maui/artifacts/logs/**
+        TargetFolder: $(Build.StagingDirectory)/logs
+        flattenFolders: true
+
+    - template: /build-tools/automation/yaml-templates/publish-artifact.yaml
+      parameters:
+        displayName: upload build and test results
+        artifactName: Test Results - MAUI Integration
+        targetPath: $(Build.StagingDirectory)/logs
+        condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
+        use1ESTemplate: false
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
