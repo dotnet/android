@@ -229,7 +229,7 @@
   <PropertyGroup>
     <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
     <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.16.3</NUnitConsoleVersion>
-    <NUnitVersion Condition=" '$(NUnitVersion)' == '' ">3.14.0</NUnitVersion>
+    <NUnitVersion Condition=" '$(NUnitVersion)' == '' ">3.13.3</NUnitVersion>
   </PropertyGroup>
 
   <!-- Fix for IDEs -->
