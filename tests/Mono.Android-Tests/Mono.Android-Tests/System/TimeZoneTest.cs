@@ -90,7 +90,6 @@ namespace Xamarin.Android.RuntimeTests
 		}
 
 		[Test]
-		[Category ("NativeAOTIgnore")]
 		public void Transitions ()
 		{
 			var hasDst  = TimeZoneInfo.Local.SupportsDaylightSavingTime;
@@ -192,7 +191,6 @@ namespace Xamarin.Android.RuntimeTests
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=23405#c23
 		[Test]
-		[Category ("NativeAOTIgnore")]
 		public void DifferentDateTimeInit_ShouldHaveSameValue ()
 		{
 			var utcNow = DateTime.UtcNow;

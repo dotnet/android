@@ -151,7 +151,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("NativeAOTIgnore")]
 		public void JavaSideBooleanConstructorForwardsTrue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -163,7 +162,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("NativeAOTIgnore")]
 		public void JavaSideBooleanConstructorForwardsFalse ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -253,7 +251,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Category ("NativeAOTIgnore")]
 		public void JavaSidePrimitiveMixedConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
