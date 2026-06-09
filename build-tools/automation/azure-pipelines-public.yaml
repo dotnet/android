@@ -21,7 +21,6 @@ parameters:
   type: string
   default: 'false'
   values:
-  - 'auto'
   - 'true'
   - 'false'
 
