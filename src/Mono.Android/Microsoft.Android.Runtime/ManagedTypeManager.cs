@@ -7,14 +7,14 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
+[RequiresDynamicCode ("This type manager is reflection-backed and is not compatible with Native AOT.")]
+[RequiresUnreferencedCode ("This type manager is reflection-backed and is not trimming-compatible.")]
 class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "ManagedTypeManager is selected for managed typemap paths that use reflection-backed Java.Interop behavior.")]
-	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "ManagedTypeManager is selected for managed typemap paths that use reflection-backed Java.Interop behavior.")]
 	public ManagedTypeManager ()
 	{
 	}

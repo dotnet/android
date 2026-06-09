@@ -42,8 +42,16 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
+		const DynamicallyAccessedMemberTypes MethodsConstructors =
+			DynamicallyAccessedMemberTypes.PublicMethods |
+			DynamicallyAccessedMemberTypes.NonPublicMethods |
+			DynamicallyAccessedMemberTypes.NonPublicNestedTypes |
+			DynamicallyAccessedMemberTypes.PublicConstructors |
+			DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		protected JavaPeerProxy (
 			string jniName,
+			[DynamicallyAccessedMembers (MethodsConstructors)]
 			Type targetType,
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type? invokerType)
@@ -70,6 +78,7 @@ namespace Java.Interop
 		/// <summary>
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
+		[DynamicallyAccessedMembers (MethodsConstructors)]
 		public Type TargetType { get; }
 
 		/// <summary>
@@ -143,7 +152,12 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy<
 		// TODO (https://github.com/dotnet/android/issues/10794): Remove this DAM annotation
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		[DynamicallyAccessedMembers (
+			DynamicallyAccessedMemberTypes.PublicMethods |
+			DynamicallyAccessedMemberTypes.NonPublicMethods |
+			DynamicallyAccessedMemberTypes.NonPublicNestedTypes |
+			DynamicallyAccessedMemberTypes.PublicConstructors |
+			DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 		T
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{

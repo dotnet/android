@@ -478,14 +478,14 @@ class JavaMarshalPeerManager : IDisposable
 
 }
 
+[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
+[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniValueManager
 {
 	protected const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 	readonly JavaMarshalPeerManager peerManager;
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This base is shared by Android runtime-specific value managers; runtime feature switches select only compatible managers.")]
-	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "This base is shared by Android runtime-specific value managers; runtime feature switches select only compatible managers.")]
 	protected JavaMarshalReflectionValueManagerBase ()
 	{
 		peerManager = new JavaMarshalPeerManager (GetType ().Name);
@@ -558,6 +558,8 @@ abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniV
 	}
 }
 
+[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
+[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 class CoreClrJavaMarshalValueManager : JavaMarshalReflectionValueManagerBase
 {
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;

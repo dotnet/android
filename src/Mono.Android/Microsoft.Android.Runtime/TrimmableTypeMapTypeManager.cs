@@ -69,8 +69,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 
 		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
-			foreach (var type in types) {
-				yield return type;
+			foreach (var typeInfo in types) {
+				yield return typeInfo.Type;
 			}
 		}
 	}
@@ -125,7 +125,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	}
 
 	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes | DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-	[UnconditionalSuppressMessage ("Trimming", "IL2063", Justification = "Trimmable typemap target types are generated from preserved Java peer metadata.")]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
 		if (TryGetBuiltInTypeForSimpleReference (jniSimpleReference, out var type)) {
@@ -133,7 +132,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 
 		return TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types) && types.Length > 0
-			? types [0]
+			? types [0].Type
 			: null;
 	}
 
@@ -173,7 +172,14 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	public override IEnumerable<ReflectionConstructibleType> GetReflectionConstructibleTypes (JniTypeSignature typeSignature)
 	{
-		yield break;
+		if (!typeSignature.IsValid || typeSignature.ArrayRank != 0 || typeSignature.SimpleReference == null)
+			yield break;
+
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (typeSignature.SimpleReference, out var types)) {
+			foreach (var typeInfo in types) {
+				yield return new ReflectionConstructibleType (typeInfo.Type);
+			}
+		}
 	}
 
 	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]

@@ -19,6 +19,13 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 public class TrimmableTypeMap
 {
+	internal const DynamicallyAccessedMemberTypes MethodsConstructors =
+		DynamicallyAccessedMemberTypes.PublicMethods |
+		DynamicallyAccessedMemberTypes.NonPublicMethods |
+		DynamicallyAccessedMemberTypes.NonPublicNestedTypes |
+		DynamicallyAccessedMemberTypes.PublicConstructors |
+		DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
@@ -156,7 +163,7 @@ public class TrimmableTypeMap
 	/// single-element array. For alias groups, returns the surviving target types from
 	/// each alias key. Returns false when no mapping exists or all aliases were trimmed.
 	/// </summary>
-	internal bool TryGetTargetTypes (string jniName, [NotNullWhen (true)] out Type[]? types)
+	internal bool TryGetTargetTypes (string jniName, [NotNullWhen (true)] out TargetTypeInfo[]? types)
 	{
 		var proxies = GetProxiesForJniName (jniName);
 		if (proxies.Length == 0) {
@@ -164,11 +171,24 @@ public class TrimmableTypeMap
 			return false;
 		}
 
-		types = new Type [proxies.Length];
+		types = new TargetTypeInfo [proxies.Length];
 		for (int i = 0; i < proxies.Length; i++) {
-			types [i] = proxies [i].TargetType;
+			types [i] = new TargetTypeInfo (proxies [i].TargetType);
 		}
 		return true;
+	}
+
+	internal sealed class TargetTypeInfo
+	{
+		public TargetTypeInfo (
+				[DynamicallyAccessedMembers (MethodsConstructors)]
+				Type type)
+		{
+			Type = type;
+		}
+
+		[DynamicallyAccessedMembers (MethodsConstructors)]
+		public Type Type { get; }
 	}
 
 	/// <summary>

@@ -122,6 +122,8 @@ namespace Android.Runtime
 		}
 
 		// Only used for MonoVM and CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
+		[RequiresDynamicCode ("MonoVM and non-trimmable CoreCLR startup can use reflection-backed type and value managers.")]
+		[RequiresUnreferencedCode ("MonoVM and non-trimmable CoreCLR startup can use reflection-backed type and value managers.")]
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
@@ -168,6 +170,8 @@ namespace Android.Runtime
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
+		[RequiresDynamicCode ("Creates reflection-backed type managers when trimmable typemap is disabled.")]
+		[RequiresUnreferencedCode ("Creates reflection-backed type managers when trimmable typemap is disabled.")]
 		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
@@ -181,6 +185,8 @@ namespace Android.Runtime
 			return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
 		}
 
+		[RequiresDynamicCode ("Creates reflection-backed value managers when trimmable typemap is disabled.")]
+		[RequiresUnreferencedCode ("Creates reflection-backed value managers when trimmable typemap is disabled.")]
 		internal static JniRuntime.JniValueManager CreateValueManager ()
 		{
 			if (RuntimeFeature.IsMonoRuntime) {
