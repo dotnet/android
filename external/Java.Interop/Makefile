@@ -22,7 +22,6 @@ NET_SUFFIX = -net7.0
 
 TESTS = \
 	bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll \
-	bin/Test$(CONFIGURATION)/Java.Interop.Dynamic-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll \
 	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaSource-Tests.dll \
 	bin/Test$(CONFIGURATION)/logcat-parse-Tests.dll \
@@ -95,7 +94,6 @@ bin/Test$$(CONFIGURATION)/$(1)-Tests.dll: $(wildcard src/$(1)/*/*.cs src/$(1)/Te
 endef # TestAssemblyTemplate
 
 $(eval $(call TestAssemblyTemplate,Java.Interop))
-$(eval $(call TestAssemblyTemplate,Java.Interop.Dynamic))
 $(eval $(call TestAssemblyTemplate,Java.Interop.Export))
 $(eval $(call TestAssemblyTemplate,Java.Interop.Tools.JavaCallableWrappers))
 

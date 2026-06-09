@@ -64,13 +64,6 @@ steps:
 
 - template: run-dotnet-test.yaml
   parameters:
-    testRunTitle: Java.Interop.Dynamic (${{ parameters.platformName }})
-    testAssemblyName: Java.Interop.Dynamic-Tests
-    condition: eq('${{ parameters.runNativeTests }}', 'true')
-    retryCount: 1
-
-- template: run-dotnet-test.yaml
-  parameters:
     testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     testAssemblyName: Java.Base-Tests
     condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))

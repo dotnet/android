@@ -41,11 +41,10 @@ The following **make**(1) variables may be specified:
 * `$(TESTS)`: Which unit tests to execute. Useful in conjunction with the
     `make run-tests` target:
 
-        make run-tests TESTS=bin/Debug/Java.Interop.Dynamic-Tests.dll
+        make run-tests TESTS=bin/Debug/Java.Interop-Tests.dll
 
 * `$(V)`: If set to a non-empty string, adds `/v:diag` to `$(MSBUILD_FLAGS)`
     invocations.
 * `$(MSBUILD)`: The MSBuild build tool to execute for builds.
     Default value is `xbuild`.
-
 

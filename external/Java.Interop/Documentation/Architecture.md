@@ -85,16 +85,10 @@ The problem with Xamarin.Android is a lack of flexibility:
     JNI glue code elsewhere (the desktop JVM?).
 * An incomplete binding ABI restricts fully embracing AOT
 
-Relatedly, there has long been a desire to provide a
-[C# 4 `dynamic` provider][Java.Interop.Dynamic] to permit invoking Java methods
-without requiring a separately generated binding assembly. `dynamic` providers,
-in turn, implement the [IDynamicMetaObjectProvider][IDynamicMetaObjectProvider]
-interface, which is based ~entirely upon
-[System.Linq.Expressions][System.Linq.Expressions], which *also* supports
-generating IL for execution at runtime (or saving to disk).
+Relatedly, there has long been a desire to embrace
+[System.Linq.Expressions][System.Linq.Expressions], which supports generating IL
+for execution at runtime (or saving to disk).
 
-[Java.Interop.Dynamic]: src/Java.Interop.Dynamic
-[IDynamicMetaObjectProvider]: https://msdn.microsoft.com/en-us/library/system.dynamic.idynamicmetaobjectprovider%28v=vs.110%29.aspx
 [System.Linq.Expressions]: https://msdn.microsoft.com/en-us/library/system.linq.expressions.aspx
 
 Thus, the solution to *all our problems*? *Embrace* `System.Linq.Expressions`.
