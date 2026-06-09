@@ -142,6 +142,9 @@
   <data name="APT0005" xml:space="preserve">
     <value>잘못된 파일 이름: 파일 이름은 Java 예약어를 사용할 수 없습니다.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}'의 $(TargetFrameworkVersion)에 대한 API 레벨을 확인할 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)

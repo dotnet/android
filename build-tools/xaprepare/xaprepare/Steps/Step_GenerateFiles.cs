@@ -76,9 +76,7 @@ namespace Xamarin.Android.Prepare
 			if (onlyRequired)
 				return null;
 
-			var steps = new List <GeneratedFile> {
-				new GeneratedMonoAndroidProjitemsFile (),
-			};
+			var steps = new List <GeneratedFile> ();
 
 			AddOSSpecificSteps (context, steps);
 

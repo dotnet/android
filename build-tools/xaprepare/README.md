@@ -101,9 +101,8 @@ The files mentioned above are found in the [ConfigAndData](xaprepare/ConfigAndDa
    helper methods used throughout the preparation utility code. **Be very careful** when modifying the names there as it may
    break the build!
  - [BuildAndroidPlatforms.cs](xaprepare/ConfigAndData/BuildAndroidPlatforms.cs)
-   Modified whenever a new Android platform is added, this file names all of the Android API levels along with platform/API
-   identifiers and .NET for Android framework names corresponding to specific API levels. The file also contains specification
-   of minimum NDK API levels used for all the Android device targets.
+   Contains the NDK release/revision constants and the minimum NDK API levels used for all the Android device targets.
+   The Android API level list itself lives in [`/src/Mono.Android/Mono.Android.Apis.projitems`](../../src/Mono.Android/Mono.Android.Apis.projitems).
  - [CommonLicenses.cs](xaprepare/ConfigAndData/CommonLicenses.cs)
    A file with constants containing paths to licenses commonly used by software .NET for Android uses. The licenses are used
    when generating Third Party Notices.
