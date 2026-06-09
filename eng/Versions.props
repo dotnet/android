@@ -1,11 +1,6 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <!-- Sentinel so consumers (Directory.Build.props and Configuration.props) can
-         guard their <Import> of this file and avoid an MSB4011 duplicate-import warning. -->
-    <_XAVersionsPropsImported>true</_XAVersionsPropsImported>
-  </PropertyGroup>
-  <PropertyGroup>
     <MicrosoftNETSdkPackageVersion>11.0.100-preview.5.26268.112</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
     <MicrosoftNETILLinkPackageVersion>11.0.0-preview.5.26268.112</MicrosoftNETILLinkPackageVersion>

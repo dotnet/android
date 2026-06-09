@@ -5,7 +5,7 @@
        This file is restricted to collision-free package-version-shaped properties;
        importing the full Directory.Build.props/Configuration.props chain would
        overwrite Java.Interop's own DotNetTargetFrameworkVersion. -->
-  <Import Project="$(MSBuildThisFileDirectory)..\eng\Versions.props" Condition=" '$(_XAVersionsPropsImported)' != 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)..\eng\Versions.props" />
 
   <PropertyGroup>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>

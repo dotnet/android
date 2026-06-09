@@ -1,6 +1,6 @@
 <Project>
 
-  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" Condition=" '$(_XAVersionsPropsImported)' != 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" />
 
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
