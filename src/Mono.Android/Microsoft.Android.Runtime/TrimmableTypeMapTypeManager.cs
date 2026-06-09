@@ -223,7 +223,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			Type type,
 			string? methods)
 	{
-		RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
+		throw new UnreachableException (
+			$"RegisterNativeMembers should not be called in the trimmable typemap path. " +
+			$"Native methods for '{type.FullName}' should be registered by JCW static initializer blocks.");
 	}
 
 	static bool TryGetBuiltInTypeSignature (Type type, out JniTypeSignature signature)
