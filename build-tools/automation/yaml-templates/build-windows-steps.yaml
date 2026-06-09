@@ -29,6 +29,7 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: Prepare Solution
+  retryCountOnTaskFailure: 3
   inputs:
     projects: Xamarin.Android.sln
     arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
