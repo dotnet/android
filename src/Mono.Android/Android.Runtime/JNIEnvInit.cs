@@ -189,14 +189,14 @@ namespace Android.Runtime
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
 				if (RuntimeFeature.TrimmableTypeMap) {
-					return new TrimmableJavaMarshalValueManager ();
+					return new TrimmableTypeMapValueManager ();
 				}
 
 				return new CoreClrJavaMarshalValueManager ();
 			}
 
 			if (RuntimeFeature.IsNativeAotRuntime) {
-				return new TrimmableJavaMarshalValueManager ();
+				return new TrimmableTypeMapValueManager ();
 			}
 
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");

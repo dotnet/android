@@ -478,7 +478,7 @@ class JavaMarshalPeerManager : IDisposable
 
 }
 
-abstract class JavaMarshalValueManagerBase : JniRuntime.ReflectionJniValueManager
+abstract class JavaMarshalReflectionValueManagerBase : JniRuntime.ReflectionJniValueManager
 {
 	protected const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -486,7 +486,7 @@ abstract class JavaMarshalValueManagerBase : JniRuntime.ReflectionJniValueManage
 
 	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This base is shared by Android runtime-specific value managers; runtime feature switches select only compatible managers.")]
 	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "This base is shared by Android runtime-specific value managers; runtime feature switches select only compatible managers.")]
-	protected JavaMarshalValueManagerBase ()
+	protected JavaMarshalReflectionValueManagerBase ()
 	{
 		peerManager = new JavaMarshalPeerManager (GetType ().Name);
 	}
@@ -558,7 +558,7 @@ abstract class JavaMarshalValueManagerBase : JniRuntime.ReflectionJniValueManage
 	}
 }
 
-class CoreClrJavaMarshalValueManager : JavaMarshalValueManagerBase
+class CoreClrJavaMarshalValueManager : JavaMarshalReflectionValueManagerBase
 {
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -721,11 +721,112 @@ class CoreClrJavaMarshalValueManager : JavaMarshalValueManagerBase
 	}
 }
 
-class TrimmableJavaMarshalValueManager : JavaMarshalValueManagerBase
+class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 {
+	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	const JniObjectReferenceOptions DoNotRegisterTarget = (JniObjectReferenceOptions)(1 << 2);
+
+	readonly JavaMarshalPeerManager peerManager;
+
+	public TrimmableTypeMapValueManager ()
+	{
+		peerManager = new JavaMarshalPeerManager (GetType ().Name);
+	}
+
+	protected override void Dispose (bool disposing)
+	{
+		peerManager.Dispose ();
+		base.Dispose (disposing);
+	}
+
+	public override void WaitForGCBridgeProcessing ()
+	{
+		peerManager.WaitForGCBridgeProcessing ();
+	}
+
+	public override void CollectPeers ()
+	{
+		peerManager.CollectPeers ();
+	}
+
+	public override void AddPeer (IJavaPeerable value)
+	{
+		peerManager.AddPeer (value);
+	}
+
+	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
+	{
+		return peerManager.PeekPeer (reference);
+	}
+
+	public override void RemovePeer (IJavaPeerable value)
+	{
+		peerManager.RemovePeer (value);
+	}
+
+	public override void FinalizePeer (IJavaPeerable value)
+	{
+		peerManager.FinalizePeer (value);
+	}
+
+	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
+	{
+		return peerManager.GetSurfacedPeers ();
+	}
+
 	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
 		throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
+	}
+
+	protected override void ConstructPeerCore (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
+	{
+		if (peer == null)
+			throw new ArgumentNullException (nameof (peer));
+
+		var newRef = peer.PeerReference;
+		if (newRef.IsValid) {
+			JniObjectReference.Dispose (ref reference, options);
+
+			// Activation? See ManagedPeer.Construct, CreatePeer
+			// Instance was already added, don't add again
+			if (peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable)) {
+				return;
+			}
+			var orig = newRef;
+			newRef = orig.NewGlobalRef ();
+			JniObjectReference.Dispose (ref orig);
+		} else if (options == JniObjectReferenceOptions.None) {
+			// `reference` is likely *InvalidJniObjectReference, and can't be touched
+			return;
+		} else if (!reference.IsValid) {
+			throw new ArgumentException ("JNI Object Reference is invalid.", nameof (reference));
+		} else {
+			newRef = reference;
+
+			if ((options & JniObjectReferenceOptions.Copy) == JniObjectReferenceOptions.Copy) {
+				newRef = reference.NewGlobalRef ();
+			}
+
+			JniObjectReference.Dispose (ref reference, options);
+		}
+
+		peer.SetPeerReference (newRef);
+		peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (newRef));
+
+		var o = Runtime.ObjectReferenceManager;
+		if (o.LogGlobalReferenceMessages) {
+			o.WriteGlobalReferenceLine ("Created PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3}, Java.Type={4}",
+					newRef.ToString (),
+					peer.JniIdentityHashCode.ToString ("x", CultureInfo.InvariantCulture),
+					RuntimeHelpers.GetHashCode (peer).ToString ("x", CultureInfo.InvariantCulture),
+					peer.GetType ().FullName,
+					JniEnvironment.Types.GetJniTypeNameFromInstance (newRef));
+		}
+
+		if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
+			AddPeer (peer);
+		}
 	}
 
 	public override IJavaPeerable? CreatePeer (
@@ -777,6 +878,84 @@ class TrimmableJavaMarshalValueManager : JavaMarshalValueManagerBase
 		} finally {
 			JniObjectReference.Dispose (ref reference, transfer);
 		}
+	}
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+	{
+		if (type is null) {
+			return null;
+		}
+		if (type == typeof (object) || type == typeof (IJavaPeerable)) {
+			return typeof (global::Java.Interop.JavaObject);
+		}
+		if (type == typeof (Exception)) {
+			return typeof (JavaException);
+		}
+		return type;
+	}
+
+	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
+	{
+		var proxy = value as JavaProxyThrowable;
+		if (proxy != null) {
+			result = proxy.InnerException;
+			return true;
+		}
+		return base.TryUnboxPeerObject (value, out result);
+	}
+
+	[return: MaybeNull]
+	protected override T CreateValueCore<[DynamicallyAccessedMembers (Constructors)] T> (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+	{
+		throw CreateValueMarshalingNotSupportedException ();
+	}
+
+	protected override object? CreateValueCore (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+	{
+		throw CreateValueMarshalingNotSupportedException ();
+	}
+
+	[return: MaybeNull]
+	protected override T GetValueCore<[DynamicallyAccessedMembers (Constructors)] T> (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+	{
+		throw CreateValueMarshalingNotSupportedException ();
+	}
+
+	protected override object? GetValueCore (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+	{
+		throw CreateValueMarshalingNotSupportedException ();
+	}
+
+	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
+	{
+		throw CreateValueMarshalingNotSupportedException ();
+	}
+
+	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
+	{
+		throw CreateValueMarshalingNotSupportedException ();
+	}
+
+	static NotSupportedException CreateValueMarshalingNotSupportedException ()
+	{
+		return new NotSupportedException ($"{nameof (TrimmableTypeMapValueManager)} does not support value marshaling yet.");
 	}
 
 	/// <summary>
