@@ -142,6 +142,9 @@ Tato chyba je pravděpodobně způsobená problémem se souborem AndroidManifest
   <data name="APT0005" xml:space="preserve">
     <value>Neplatný název souboru: Názvy souborů nemůžou používat vyhrazená slova Java.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nepovedlo se určit úroveň rozhraní API pro $(TargetFrameworkVersion) {0}.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
