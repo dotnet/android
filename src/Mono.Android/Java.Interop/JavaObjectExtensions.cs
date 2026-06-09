@@ -108,21 +108,16 @@ namespace Java.Interop {
 		// typeof(Foo) -> FooInvoker
 		// typeof(Foo<>) -> FooInvoker`1
 		[return: DynamicallyAccessedMembers (Constructors)]
+		[RequiresDynamicCode ("Invoker lookup can construct generic invoker types.")]
+		[RequiresUnreferencedCode ("Invoker lookup uses reflection over preserved Java peer types.")]
 		internal static Type? GetInvokerType (Type type)
 		{
-			const string InvokerTypes = "*Invoker types are preserved by the MarkJavaObjects linker step.";
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = InvokerTypes)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = InvokerTypes)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = InvokerTypes)]
 			[return: DynamicallyAccessedMembers (Constructors)]
 			static Type? AssemblyGetType (Assembly assembly, string typeName) =>
 				assembly.GetType (typeName);
 
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
 			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = InvokerTypes)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = InvokerTypes)]
 			[return: DynamicallyAccessedMembers (Constructors)]
 			static Type MakeGenericType (Type type, params Type [] typeArguments) =>
 				#pragma warning disable IL3050
