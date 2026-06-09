@@ -61,69 +61,6 @@ namespace Xamarin.AndroidTools.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Alias cannot have characters that are not allowed in file names.
-        /// </summary>
-        internal static string CreateKeyError_AliasContainsInvalidCharacters {
-            get {
-                return ResourceManager.GetString("CreateKeyError_AliasContainsInvalidCharacters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There was an error importing the key.
-        /// </summary>
-        internal static string CreateKeyError_ErrorImportingKey {
-            get {
-                return ResourceManager.GetString("CreateKeyError_ErrorImportingKey", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There was an error creating the key.
-        /// </summary>
-        internal static string CreateKeyError_GenericError {
-            get {
-                return ResourceManager.GetString("CreateKeyError_GenericError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The keystore was not found.
-        /// </summary>
-        internal static string CreateKeyError_KeyStoreNotFound {
-            get {
-                return ResourceManager.GetString("CreateKeyError_KeyStoreNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Validity cannot be less than 1 year.
-        /// </summary>
-        internal static string CreateKeyError_MinimumOneYearValidity {
-            get {
-                return ResourceManager.GetString("CreateKeyError_MinimumOneYearValidity", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to KeyStoreManagement has not been initialized.
-        /// </summary>
-        internal static string CreateKeyError_NotInitialized {
-            get {
-                return ResourceManager.GetString("CreateKeyError_NotInitialized", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unsupported Platform.
-        /// </summary>
-        internal static string CreateKeyError_UnsupportedPlatform {
-            get {
-                return ResourceManager.GetString("CreateKeyError_UnsupportedPlatform", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unexpected error occurred trying to disconnect Jdwp client..
         /// </summary>
         internal static string JdwpClientDisconnectError {
