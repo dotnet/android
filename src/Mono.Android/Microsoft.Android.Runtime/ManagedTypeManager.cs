@@ -22,6 +22,8 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
+	[RequiresDynamicCode ("This invoker lookup can construct generic invoker types.")]
+	[RequiresUnreferencedCode ("This invoker lookup uses reflection over preserved Java peer types.")]
 	protected override Type? GetInvokerTypeCore (
 			[DynamicallyAccessedMembers (Constructors)]
 			Type type)
@@ -29,16 +31,10 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 		const string suffix = "Invoker";
 
 		// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
-		const string assemblyGetTypeMessage = "'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
-		const string makeGenericTypeMessage = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = assemblyGetTypeMessage)]
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = assemblyGetTypeMessage)]
 		[return: DynamicallyAccessedMembers (Constructors)]
 		static Type? AssemblyGetType (Assembly assembly, string typeName) =>
 			assembly.GetType (typeName);
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
 		[return: DynamicallyAccessedMembers (Constructors)]
 		static Type MakeGenericType (
 				[DynamicallyAccessedMembers (Constructors)]
@@ -63,10 +59,7 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 		return MakeGenericType (suffixDefinition, arguments);
 	}
 
-	// NOTE: suppressions below also in `src/Mono.Android/Android.Runtime/AndroidRuntime.cs`
-	[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+	[RequiresUnreferencedCode ("Native member registration resolves callback types and delegates from generated method metadata.")]
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
 			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]

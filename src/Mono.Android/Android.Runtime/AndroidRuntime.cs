@@ -389,8 +389,7 @@ namespace Android.Runtime {
 		static MethodInfo? dynamic_callback_gen;
 
 		// See ExportAttribute.cs
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
+		[RequiresUnreferencedCode ("Export callback registration uses reflection over Mono.Android.Export.dll.")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
@@ -492,9 +491,7 @@ namespace Android.Runtime {
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+		[RequiresUnreferencedCode ("Native member registration resolves callback types and delegates from generated method metadata.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
