@@ -34,8 +34,8 @@ See [eng/README.md][2] for details on `darc` commands.
 6. Open a PR to `dotnet/android/main`, such that
    `$(AndroidPackVersionSuffix)` in `Directory.Build.props` is
    incremented to the *next* version: `preview.43`. You may also need
-   to update `$(AndroidPackVersion)` if `main` needs to target a new
-   .NET version band.
+   to update `$(AndroidPackVersion)` in `eng/Versions.props` if `main`
+   needs to target a new .NET version band.
 
 Note that release candidates will use values such as `rc.1`, `rc.2`, etc.
 

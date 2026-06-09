@@ -1,8 +1,17 @@
 <Project>
 
+  <!-- Pull in dotnet/android's shared properties so Java.Interop sees the same
+       values (MonoCecilVersion, MicrosoftAndroidSdkPackName, AndroidPackVersion).
+       This file is restricted to collision-free package-version-shaped properties;
+       importing the full Directory.Build.props/Configuration.props chain would
+       overwrite Java.Interop's own DotNetTargetFrameworkVersion. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\eng\Versions.props" Condition=" '$(_XAVersionsPropsImported)' != 'true' " />
+
   <PropertyGroup>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
     <Standalone>True</Standalone>
+    <_XamarinAndroidCecilVersion>$(MonoCecilVersion)</_XamarinAndroidCecilVersion>
+    <UtilityOutputFullPathCoreApps>$(MSBuildThisFileDirectory)..\bin\$(Configuration)\lib\packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\tools\</UtilityOutputFullPathCoreApps>
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-2b2a06c8/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>

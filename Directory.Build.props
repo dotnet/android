@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" Condition=" '$(_XAVersionsPropsImported)' != 'true' " />
+
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
     <DotNetTargetFrameworkVersion>11.0</DotNetTargetFrameworkVersion>
@@ -31,12 +33,6 @@
 
   <PropertyGroup>
     <ProductVersion>16.0.0</ProductVersion>
-    <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
-         Rules:
-         * Major/Minor match Android stable API level, such as 30.0 for API 30.
-         * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
-    -->
-    <AndroidPackVersion>36.99.0</AndroidPackVersion>
     <AndroidPackVersionSuffix>preview.6</AndroidPackVersionSuffix>
     <!-- Final value set by GetXAVersionInfo target -->
     <IsStableBuild>false</IsStableBuild>
@@ -46,7 +42,6 @@
   <PropertyGroup>
     <LibZipSharpVersion>3.3.0</LibZipSharpVersion>
     <MicroBuildCoreVersion>1.0.0</MicroBuildCoreVersion>
-    <MonoCecilVersion>0.11.5</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.3</NewtonsoftJsonPackageVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.3.6</LZ4PackageVersion>

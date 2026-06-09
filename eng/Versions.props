@@ -1,6 +1,11 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
+    <!-- Sentinel so consumers (Directory.Build.props and Configuration.props) can
+         guard their <Import> of this file and avoid an MSB4011 duplicate-import warning. -->
+    <_XAVersionsPropsImported>true</_XAVersionsPropsImported>
+  </PropertyGroup>
+  <PropertyGroup>
     <MicrosoftNETSdkPackageVersion>11.0.100-preview.5.26268.112</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
     <MicrosoftNETILLinkPackageVersion>11.0.0-preview.5.26268.112</MicrosoftNETILLinkPackageVersion>
@@ -32,5 +37,20 @@
     <DotNetEmscriptenManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadEmscriptenPackageVersion), $(VersionSuffixRegex)))</DotNetEmscriptenManifestVersionBand>
     <!-- NOTE: sometimes we hardcode this when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Properties shared between dotnet/android and the Java.Interop submodule.
+         Imported by Directory.Build.props, Configuration.props, and
+         external/Java.Interop.override.props. -->
+    <MonoCecilVersion>0.11.5</MonoCecilVersion>
+    <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
+         Rules:
+         * Major/Minor match Android stable API level, such as 30.0 for API 30.
+         * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
+    -->
+    <AndroidPackVersion>36.99.0</AndroidPackVersion>
+    <MicrosoftAndroidSdkPackName Condition=" '$(MicrosoftAndroidSdkPackName)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">Microsoft.Android.Sdk.Windows</MicrosoftAndroidSdkPackName>
+    <MicrosoftAndroidSdkPackName Condition=" '$(MicrosoftAndroidSdkPackName)' == '' and $([MSBuild]::IsOSPlatform('linux')) ">Microsoft.Android.Sdk.Linux</MicrosoftAndroidSdkPackName>
+    <MicrosoftAndroidSdkPackName Condition=" '$(MicrosoftAndroidSdkPackName)' == '' and $([MSBuild]::IsOSPlatform('osx')) ">Microsoft.Android.Sdk.Darwin</MicrosoftAndroidSdkPackName>
   </PropertyGroup>
 </Project>

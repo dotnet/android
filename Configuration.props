@@ -7,7 +7,7 @@
       Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
-  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" />
+  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" Condition=" '$(_XAVersionsPropsImported)' != 'true' " />
   <Import
       Project="$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props')"
@@ -53,11 +53,6 @@
     <HostOS Condition="$([MSBuild]::IsOSPlatform('linux'))">Linux</HostOS>
     <HostOS Condition="$([MSBuild]::IsOSPlatform('osx'))">Darwin</HostOS>
     <HostOSArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString())</HostOSArchitecture>
-  </PropertyGroup>
-  <PropertyGroup>
-    <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('windows'))">Microsoft.Android.Sdk.Windows</MicrosoftAndroidSdkPackName>
-    <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('linux'))">Microsoft.Android.Sdk.Linux</MicrosoftAndroidSdkPackName>
-    <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('osx'))">Microsoft.Android.Sdk.Darwin</MicrosoftAndroidSdkPackName>
   </PropertyGroup>
   <PropertyGroup>
     <MicrosoftAndroidPacksRootDir>$(BuildOutputDirectory)lib\packs\</MicrosoftAndroidPacksRootDir>
