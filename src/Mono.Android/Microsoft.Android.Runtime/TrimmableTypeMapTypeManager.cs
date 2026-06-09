@@ -14,10 +14,16 @@ namespace Microsoft.Android.Runtime;
 /// Type manager for the trimmable typemap path. Delegates type lookups
 /// to <see cref="TrimmableTypeMap"/>.
 /// </summary>
-class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
+class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 {
 	const string NoSimpleReference = "\0";
 	readonly ConcurrentDictionary<Type, string> _simpleReferenceCache = new ();
+
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This manager reuses Java.Interop built-in type mappings while trimmable typemap lookups avoid reflection fallback.")]
+	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "This manager reuses Java.Interop built-in type mappings while trimmable typemap lookups avoid reflection fallback.")]
+	public TrimmableTypeMapTypeManager ()
+	{
+	}
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{

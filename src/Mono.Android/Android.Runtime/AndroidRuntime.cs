@@ -310,13 +310,15 @@ namespace Android.Runtime {
 		}
 	}
 
-	class AndroidTypeManager : JniRuntime.JniTypeManager {
+	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "AndroidTypeManager is selected for the Mono/legacy reflection-backed typemap path.")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "AndroidTypeManager is selected for the Mono/legacy reflection-backed typemap path.")]
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
@@ -623,9 +625,15 @@ namespace Android.Runtime {
 		}
 	}
 
-	class AndroidValueManager : JniRuntime.JniValueManager {
+	class AndroidValueManager : JniRuntime.ReflectionJniValueManager {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "AndroidValueManager is selected for the Mono runtime path.")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "AndroidValueManager is selected for the Mono runtime path.")]
+		public AndroidValueManager ()
+		{
+		}
 
 		public override void WaitForGCBridgeProcessing ()
 		{

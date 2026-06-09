@@ -18,36 +18,36 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class JavaMarshalValueManager : JniRuntime.JniValueManager
+class JavaMarshalPeerManager : IDisposable
 {
-	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
+	readonly string ownerName;
 
 	bool disposed;
 
-	public unsafe JavaMarshalValueManager ()
+	public unsafe JavaMarshalPeerManager (string ownerName)
 	{
-		var javaMarshalValueManagerHandle = new GCHandle<JavaMarshalValueManager> (this);
+		this.ownerName = ownerName;
+
+		var javaMarshalPeerManagerHandle = new GCHandle<JavaMarshalPeerManager> (this);
 		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
-			GCHandle<JavaMarshalValueManager>.ToIntPtr (javaMarshalValueManagerHandle), &BridgeProcessingStarted, &BridgeProcessingFinished);
+			GCHandle<JavaMarshalPeerManager>.ToIntPtr (javaMarshalPeerManagerHandle), &BridgeProcessingStarted, &BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
-	protected override void Dispose (bool disposing)
+	public void Dispose ()
 	{
 		disposed = true;
-		base.Dispose (disposing);
 	}
 
 	void ThrowIfDisposed ()
 	{
 		if (disposed)
-			throw new ObjectDisposedException (nameof (JavaMarshalValueManager));
+			throw new ObjectDisposedException (ownerName);
 	}
 
-	public override void WaitForGCBridgeProcessing ()
+	public void WaitForGCBridgeProcessing ()
 	{
 		// Intentionally empty. The Mono runtime's own implementation acknowledges this
 		// pattern is fundamentally flawed (see FIXME in sgen-bridge.c): a thread that
@@ -57,7 +57,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		// they are not affected by the bridge swapping control_block handles.
 	}
 
-	public unsafe override void CollectPeers ()
+	public unsafe void CollectPeers ()
 	{
 		ThrowIfDisposed ();
 
@@ -91,7 +91,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 	}
 
-	public override void AddPeer (IJavaPeerable value)
+	public void AddPeer (IJavaPeerable value)
 	{
 		ThrowIfDisposed ();
 
@@ -137,7 +137,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)
 	{
-		Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
+		JniEnvironment.Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
 				"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
 				"keeping previously registered PeerReference={5} Instance={6} Instance.Type={7} Java.Type={8}.",
 				ignoreValue.PeerReference.ToString (),
@@ -151,14 +151,14 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				JniEnvironment.Types.GetJniTypeNameFromInstance (keepValue.PeerReference));
 	}
 
-	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
+	public IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
 		ThrowIfDisposed ();
 
 		if (!reference.IsValid)
 			return null;
 
-		int key = GetJniIdentityHashCode (reference);
+		int key = JniEnvironment.References.GetIdentityHashCode (reference);
 
 		lock (RegisteredInstances) {
 			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
@@ -178,7 +178,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		return null;
 	}
 
-	public override void RemovePeer (IJavaPeerable value)
+	public void RemovePeer (IJavaPeerable value)
 	{
 		ThrowIfDisposed ();
 
@@ -207,10 +207,10 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		}
 	}
 
-	public override void FinalizePeer (IJavaPeerable value)
+	public void FinalizePeer (IJavaPeerable value)
 	{
 		var h = value.PeerReference;
-		var o = Runtime.ObjectReferenceManager;
+		var o = JniEnvironment.Runtime.ObjectReferenceManager;
 		// MUST NOT use SafeHandle.ReferenceType: local refs are tied to a JniEnvironment
 		// and the JniEnvironment's corresponding thread; it's a thread-local value.
 		// Accessing SafeHandle.ReferenceType won't kill anything (so far...), but
@@ -242,15 +242,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		value.Finalized ();
 	}
 
-	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
-	{
-		if (RuntimeFeature.TrimmableTypeMap)
-			throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
-
-		base.ActivatePeer (reference, type, cinfo, argumentValues);
-	}
-
-	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
+	public List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		ThrowIfDisposed ();
 
@@ -423,13 +415,13 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	}
 
 	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingFinished (IntPtr javaMarshalValueManagerHandle, MarkCrossReferencesArgs* mcr)
+	static unsafe void BridgeProcessingFinished (IntPtr javaMarshalPeerManagerHandle, MarkCrossReferencesArgs* mcr)
 	{
 		if (mcr == null) {
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		JavaMarshalValueManager instance = GCHandle<JavaMarshalValueManager>.FromIntPtr (javaMarshalValueManagerHandle).Target;
+		JavaMarshalPeerManager instance = GCHandle<JavaMarshalPeerManager>.FromIntPtr (javaMarshalPeerManagerHandle).Target;
 
 		ReadOnlySpan<GCHandle> handlesToFree = instance.ProcessCollectedContexts (mcr);
 
@@ -484,67 +476,64 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 		return CollectionsMarshal.AsSpan (handlesToFree);
 	}
 
-	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+}
 
-	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+abstract class JavaMarshalValueManagerBase : JniRuntime.ReflectionJniValueManager
+{
+	protected const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	public override IJavaPeerable? CreatePeer (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions transfer,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType)
+	readonly JavaMarshalPeerManager peerManager;
+
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This base is shared by Android runtime-specific value managers; runtime feature switches select only compatible managers.")]
+	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "This base is shared by Android runtime-specific value managers; runtime feature switches select only compatible managers.")]
+	protected JavaMarshalValueManagerBase ()
 	{
-		ThrowIfDisposed ();
+		peerManager = new JavaMarshalPeerManager (GetType ().Name);
+	}
 
-		if (!reference.IsValid) {
-			return null;
-		}
+	protected override void Dispose (bool disposing)
+	{
+		peerManager.Dispose ();
+		base.Dispose (disposing);
+	}
 
-		if (RuntimeFeature.TrimmableTypeMap) {
-			try {
-				// Mirror legacy GetPeerType: callers commonly request universal
-				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
-				// to a concrete peer type so the proxy lookup can succeed.
-				var resolvedTargetType = ResolvePeerType (targetType);
+	public override void WaitForGCBridgeProcessing ()
+	{
+		peerManager.WaitForGCBridgeProcessing ();
+	}
 
-				var typeMap = TrimmableTypeMap.Instance;
-				var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
-				if (peer is not null) {
-					return peer;
-				}
+	public override void CollectPeers ()
+	{
+		peerManager.CollectPeers ();
+	}
 
-				// Disambiguate the failure — match the contract of the base
-				// JniRuntime.JniValueManager.CreatePeer so JavaCast / JavaAs
-				// surface the right exception (or null) to callers:
-				//
-				//  (a) target type has no Java mapping at all → ArgumentException
-				//  (b) Java instance is not assignable to the target's Java class
-				//      → return null (JavaAs returns null; JavaCast wraps to
-				//      InvalidCastException via its `??` clause)
-				//  (c) classes are compatible but no proxy / activation failed
-				//      → NotSupportedException (genuine generator gap)
-				if (resolvedTargetType is not null &&
-						IsIncompatibleCast (typeMap, ref reference, resolvedTargetType)) {
-					return null;
-				}
+	public override void AddPeer (IJavaPeerable value)
+	{
+		peerManager.AddPeer (value);
+	}
 
-				var targetName = resolvedTargetType?.AssemblyQualifiedName ?? "<null>";
-				var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
+	{
+		return peerManager.PeekPeer (reference);
+	}
 
-				throw new NotSupportedException (
-					$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
-					$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
-					$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
-			} finally {
-				JniObjectReference.Dispose (ref reference, transfer);
-			}
-		}
+	public override void RemovePeer (IJavaPeerable value)
+	{
+		peerManager.RemovePeer (value);
+	}
 
-		return base.CreatePeer (ref reference, transfer, targetType);
+	public override void FinalizePeer (IJavaPeerable value)
+	{
+		peerManager.FinalizePeer (value);
+	}
+
+	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
+	{
+		return peerManager.GetSurfacedPeers ();
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+	protected static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
 	{
 		if (type is null) {
 			return null;
@@ -556,6 +545,238 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			return typeof (JavaException);
 		}
 		return type;
+	}
+
+	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
+	{
+		var proxy = value as JavaProxyThrowable;
+		if (proxy != null) {
+			result = proxy.InnerException;
+			return true;
+		}
+		return base.TryUnboxPeerObject (value, out result);
+	}
+}
+
+class CoreClrJavaMarshalValueManager : JavaMarshalValueManagerBase
+{
+	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+	static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
+	static  readonly    Type[]  JIConstructorSignature  = new Type [] { ByRefJniObjectReference, typeof (JniObjectReferenceOptions) };
+	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+
+	public override IJavaPeerable? CreatePeer (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions transfer,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType)
+	{
+		EnsureNotDisposed ();
+
+		if (!reference.IsValid) {
+			return null;
+		}
+
+		targetType = ResolvePeerType (targetType) ?? typeof (global::Java.Interop.JavaObject);
+
+		if (!typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
+			throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", nameof (targetType));
+		}
+
+		var targetSig = Runtime.TypeManager.GetTypeSignature (targetType);
+		if (!targetSig.IsValid || targetSig.SimpleReference == null) {
+			throw new ArgumentException ($"Could not determine Java type corresponding to `{targetType.AssemblyQualifiedName}`.", nameof (targetType));
+		}
+
+		var refClass = JniEnvironment.Types.GetObjectClass (reference);
+		JniObjectReference targetClass;
+		try {
+			targetClass = JniEnvironment.Types.FindClass (targetSig.SimpleReference);
+		} catch (Exception e) {
+			JniObjectReference.Dispose (ref refClass);
+			throw new ArgumentException ($"Could not find Java class `{targetSig.SimpleReference}`.",
+					nameof (targetType),
+					e);
+		}
+
+		if (!JniEnvironment.Types.IsAssignableFrom (refClass, targetClass)) {
+			JniObjectReference.Dispose (ref refClass);
+			JniObjectReference.Dispose (ref targetClass);
+			return null;
+		}
+
+		JniObjectReference.Dispose (ref targetClass);
+
+		var peer = CreatePeerInstance (ref refClass, targetType, ref reference, transfer);
+		if (peer == null) {
+			throw new NotSupportedException (string.Format (CultureInfo.InvariantCulture, "Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
+					JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
+		}
+		peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+		return peer;
+	}
+
+	IJavaPeerable? CreatePeerInstance (
+			ref JniObjectReference klass,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type targetType,
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions transfer)
+	{
+		var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
+
+		while (jniTypeName != null) {
+			JniTypeSignature sig;
+			if (!JniTypeSignature.TryParse (jniTypeName, out sig))
+				return null;
+
+			Type? type = GetTypeAssignableTo (sig, targetType);
+			if (type != null) {
+				var peer = TryCreatePeerInstance (ref reference, transfer, type);
+
+				if (peer != null) {
+					JniObjectReference.Dispose (ref klass);
+					return peer;
+				}
+			}
+
+			var super = JniEnvironment.Types.GetSuperclass (klass);
+			jniTypeName = super.IsValid
+				? JniEnvironment.Types.GetJniTypeNameFromClass (super)
+				: null;
+
+			JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
+			klass = super;
+		}
+		JniObjectReference.Dispose (ref klass, JniObjectReferenceOptions.CopyAndDispose);
+
+		return TryCreatePeerInstance (ref reference, transfer, targetType);
+
+		[return: DynamicallyAccessedMembers (Constructors)]
+		Type? GetTypeAssignableTo (JniTypeSignature sig, Type targetType)
+		{
+			foreach (var t in Runtime.TypeManager.GetReflectionConstructibleTypes (sig)) {
+				if (targetType.IsAssignableFrom (t.Type)) {
+					return t.Type;
+				}
+			}
+			return null;
+		}
+	}
+
+	IJavaPeerable? TryCreatePeerInstance (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
+	{
+		type = Runtime.TypeManager.GetInvokerType (type) ?? type;
+
+		var self = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (type);
+		self.SetJniManagedPeerState (JniManagedPeerStates.Replaceable | JniManagedPeerStates.Activatable);
+
+		var constructed = false;
+		try {
+			constructed = TryConstructPeer (self, ref reference, options, type);
+		} finally {
+			if (!constructed) {
+				GC.SuppressFinalize (self);
+				self = null;
+			}
+		}
+		return self;
+	}
+
+	bool TryConstructPeer (
+			IJavaPeerable self,
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
+	{
+		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
+		if (c != null) {
+			var args = new object[] {
+				reference.Handle,
+				JniHandleOwnership.DoNotTransfer,
+			};
+			c.Invoke (self, args);
+			JniObjectReference.Dispose (ref reference, options);
+			return true;
+		}
+
+		c = type.GetConstructor (ActivationConstructorBindingFlags, null, JIConstructorSignature, null);
+		if (c != null) {
+			var args = new object[] {
+				reference,
+				options,
+			};
+			c.Invoke (self, args);
+			reference = (JniObjectReference) args [0];
+			return true;
+		}
+
+		return false;
+	}
+}
+
+class TrimmableJavaMarshalValueManager : JavaMarshalValueManagerBase
+{
+	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
+	{
+		throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
+	}
+
+	public override IJavaPeerable? CreatePeer (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions transfer,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType)
+	{
+		EnsureNotDisposed ();
+
+		if (!reference.IsValid) {
+			return null;
+		}
+
+		try {
+			// Mirror legacy GetPeerType: callers commonly request universal
+			// interfaces / boxes (IJavaPeerable, object, Exception) — map these
+			// to a concrete peer type so the proxy lookup can succeed.
+			var resolvedTargetType = ResolvePeerType (targetType);
+
+			var typeMap = TrimmableTypeMap.Instance;
+			var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
+			if (peer is not null) {
+				return peer;
+			}
+
+			// Disambiguate the failure — match the contract of the base
+			// JniRuntime.JniValueManager.CreatePeer so JavaCast / JavaAs
+			// surface the right exception (or null) to callers:
+			//
+			//  (a) target type has no Java mapping at all → ArgumentException
+			//  (b) Java instance is not assignable to the target's Java class
+			//      → return null (JavaAs returns null; JavaCast wraps to
+			//      InvalidCastException via its `??` clause)
+			//  (c) classes are compatible but no proxy / activation failed
+			//      → NotSupportedException (genuine generator gap)
+			if (resolvedTargetType is not null &&
+					IsIncompatibleCast (typeMap, ref reference, resolvedTargetType)) {
+				return null;
+			}
+
+			var targetName = resolvedTargetType?.AssemblyQualifiedName ?? "<null>";
+			var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+
+			throw new NotSupportedException (
+				$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
+				$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+				$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
+		} finally {
+			JniObjectReference.Dispose (ref reference, transfer);
+		}
 	}
 
 	/// <summary>
@@ -595,35 +816,5 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 		// Compatible classes mean a proxy/activation gap.
 		return false;
-	}
-
-	protected override bool TryConstructPeer (
-			IJavaPeerable self,
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
-	{
-		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (c != null) {
-			var args = new object[] {
-				reference.Handle,
-				JniHandleOwnership.DoNotTransfer,
-			};
-			c.Invoke (self, args);
-			JniObjectReference.Dispose (ref reference, options);
-			return true;
-		}
-		return base.TryConstructPeer (self, ref reference, options, type);
-	}
-
-	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
-	{
-		var proxy = value as JavaProxyThrowable;
-		if (proxy != null) {
-			result = proxy.InnerException;
-			return true;
-		}
-		return base.TryUnboxPeerObject (value, out result);
 	}
 }

@@ -16,12 +16,14 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class SimpleValueManager : JniRuntime.JniValueManager
+class SimpleValueManager : JniRuntime.ReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 	Dictionary<int, List<IJavaPeerable>>?   RegisteredInstances = new Dictionary<int, List<IJavaPeerable>>();
 
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "SimpleValueManager is a reflection-backed test/runtime helper and is not used by NativeAOT trimmable startup.")]
+	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "SimpleValueManager is a reflection-backed test/runtime helper and is not used by NativeAOT trimmable startup.")]
 	internal SimpleValueManager ()
 	{
 	}
@@ -227,13 +229,13 @@ class SimpleValueManager : JniRuntime.JniValueManager
 
 	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	protected override bool TryConstructPeer (
+	[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "SimpleValueManager is reflection-backed and requires preserved peer constructors.")]
+	protected override void ConstructPeerCore (
 			IJavaPeerable self,
 			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
+			JniObjectReferenceOptions options)
 	{
+		Type type = self.GetType ();
 		var c = type.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
 		if (c != null) {
 			var args = new object[] {
@@ -242,9 +244,9 @@ class SimpleValueManager : JniRuntime.JniValueManager
 			};
 			c.Invoke (self, args);
 			JniObjectReference.Dispose (ref reference, options);
-			return true;
+			return;
 		}
-		return base.TryConstructPeer (self, ref reference, options, type);
+		base.ConstructPeerCore (self, ref reference, options);
 	}
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)]out object? result)

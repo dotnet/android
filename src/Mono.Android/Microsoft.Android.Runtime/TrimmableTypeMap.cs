@@ -370,7 +370,7 @@ public class TrimmableTypeMap
 					// FindClass throws for managed types whose Java peer class is
 					// not present in the APK (e.g. test types annotated with
 					// [JniTypeSignature("__missing__")]). Treat as "no match" so
-					// JavaMarshalValueManager.CreatePeer can surface the correct
+					// TrimmableJavaMarshalValueManager.CreatePeer can surface the correct
 					// ArgumentException instead of leaking ClassNotFoundException.
 					return null;
 				}
