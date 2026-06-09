@@ -36,7 +36,7 @@ steps:
 # Set as an environment variable so it propagates to all nested `dotnet build` <Exec> calls
 # (e.g. the PrepareJavaInterop target which spawns its own `dotnet build` for Java.Interop.sln).
 # See dotnet/android PR #11477.
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:UseSharedCompilation=false'
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   env:
@@ -55,7 +55,7 @@ steps:
       /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
 
-- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:UseSharedCompilation=false'
+- script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
   env:
