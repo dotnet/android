@@ -27,19 +27,6 @@ namespace Xamarin.AndroidTools.Debugging
 			this.Debugger = new DebuggerOptions();
 		}
 
-		public ExecutionConfiguration(string packageName, string runCommand)
-		{
-			if (string.IsNullOrEmpty(packageName))
-				throw new ArgumentException(nameof(packageName));
-
-			this.PackageName = packageName;
-			this.Debugger = new DebuggerOptions();
-
-			if (!string.IsNullOrEmpty(runCommand)) {
-				this.RunCommand = AmIntentCommandParser.Parse(runCommand, packageName);
-			}
-		}
-
 		/// <summary>
 		/// Gets the name of the package that is being debugged. This is needed to set FastDev property files for
 		/// devices that fail to the debug properties corectly
