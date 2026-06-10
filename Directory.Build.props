@@ -82,7 +82,6 @@
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'TestRunner.Core.NET.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.Build.Tests.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.NUnitLite.NET.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Installer.AndroidSDK.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Installer.Common.csproj' ">true</_AllowProjectWarnings>
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.ProjectTools.csproj' ">true</_AllowProjectWarnings>

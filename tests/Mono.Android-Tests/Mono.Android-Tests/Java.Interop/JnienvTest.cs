@@ -43,7 +43,6 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
-			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", Application.Context.ClassLoader.Handle);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -77,7 +76,6 @@ namespace Java.InteropTests
 		[Test]
 		public void ThreadReuse ()
 		{
-			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			CB cb = (env, instance) => {
 				// NOTE: this callback runs on a raw native pthread spawned by
 				// libreuse-threads.so and attached to the JVM. NUnit 3 replaces
