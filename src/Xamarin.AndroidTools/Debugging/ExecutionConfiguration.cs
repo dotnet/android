@@ -1,3 +1,4 @@
+#nullable enable
 //
 // ExecutionConfiguration.cs
 //
@@ -5,7 +6,6 @@
 //       Greg Munn <greg.munn@xamarin.com>
 //
 // Copyright (c) 2016 Xamarin Inc
-//
 
 using System;
 using Mono.AndroidTools;
@@ -17,14 +17,14 @@ namespace Xamarin.AndroidTools.Debugging
 	/// </summary>
 	public sealed class ExecutionConfiguration
 	{
-		public ExecutionConfiguration(string packageName, AmIntentCommand runCommand)
+		public ExecutionConfiguration (string packageName, AmIntentCommand runCommand)
 		{
-			if (string.IsNullOrEmpty(packageName))
-				throw new ArgumentException(nameof(packageName));
-			
+			if (string.IsNullOrEmpty (packageName))
+				throw new ArgumentException (nameof (packageName));
+
 			this.PackageName = packageName;
 			this.RunCommand = runCommand;
-			this.Debugger = new DebuggerOptions();
+			this.Debugger = new DebuggerOptions ();
 		}
 
 		/// <summary>
@@ -36,7 +36,7 @@ namespace Xamarin.AndroidTools.Debugging
 		/// <summary>
 		/// Gets the command that will be used to run the application
 		/// </summary>
-		public AmIntentCommand RunCommand { get; private set; }
+		public AmIntentCommand? RunCommand { get; private set; }
 
 		/// <summary>
 		/// Gets the debugger options that will instruct the runtime how to connect to the debugger
@@ -51,12 +51,12 @@ namespace Xamarin.AndroidTools.Debugging
 		/// <summary>
 		/// Gets or sets the adb command to execute prior to executing the RunCommand
 		/// </summary>
-		public string BeforeRunCommand { get; set; }
+		public string? BeforeRunCommand { get; set; }
 
 		/// <summary>
 		/// Gets or sets the adb command to execute after the debugging session has ended
 		/// </summary>
-		public string AfterRunCommand { get; set; }
+		public string? AfterRunCommand { get; set; }
 
 		/// <summary>
 		/// Gets or sets an action to write a string to the application output log
@@ -65,6 +65,6 @@ namespace Xamarin.AndroidTools.Debugging
 		/// We want to be able to output the results of the run / before run / after run commands to a log that is
 		/// visisble to the user. This property should provide a method to do so.
 		/// </remarks>
-		public Action<string> LogWiter { get; set; }
+		public Action<string>? LogWiter { get; set; }
 	}
 }
