@@ -181,7 +181,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'. ]D;]A;This is usually due to an error in `adb` when the file data is sent over to the device. ]D;]A;The normal cause for this is a loose or low quality USB cable. Please try a different cable.]D;]A;Alternatively try using Wifi Debugging, this can be more reliable than USB debugging for certain devices. ]D;]A;If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[‘{1}: {2}’을(를) 사용하여 '{0}'을(를) 배포하는 동안 오류가 발생했습니다. ]D;]A;이는 일반적으로 파일 데이터가 디바이스로 전송될 때 'adb'의 오류 때문입니다. ]D;]A;일반적인 원인은 느리거나 품질이 낮은 USB 케이블입니다. 다른 케이블을 사용해 보세요.]D;]A;또는 Wifi 디버깅을 사용해 보세요. 이는 특정 디바이스에 대한 USB 디버깅보다 더 안정적일 수 있습니다. ]D;]A;이 모든 작업이 실패하면 'EmbedAssembliesIntoApk' MSBuild 속성을 'true'로 설정하여 Visual Studio 프로젝트 속성 페이지에서 빠른 배포를 사용하지 않도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하세요.]]></Val>
+            <Val><![CDATA[‘{1}: {2}’을(를) 사용하여 '{0}'을(를) 배포하는 동안 오류가 발생했습니다. ]D;]A;이는 일반적으로 파일 데이터가 디바이스로 전송될 때 `adb`의 오류 때문입니다. ]D;]A;일반적인 원인은 느리거나 품질이 낮은 USB 케이블입니다. 다른 케이블을 사용해 보세요.]D;]A;또는 Wifi 디버깅을 사용해 보세요. 이는 특정 디바이스에 대한 USB 디버깅보다 더 안정적일 수 있습니다. ]D;]A;이 모든 작업이 실패하면 'EmbedAssembliesIntoApk' MSBuild 속성을 'true'로 설정하여 Visual Studio 프로젝트 속성 페이지에서 빠른 배포를 사용하지 않도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
