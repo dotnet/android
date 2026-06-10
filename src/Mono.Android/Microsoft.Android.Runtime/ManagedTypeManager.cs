@@ -15,56 +15,30 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-	[RequiresDynamicCode ("This type manager is reflection-backed and is not compatible with Native AOT.")]
-	[RequiresUnreferencedCode ("This type manager is reflection-backed and is not trimming-compatible.")]
-	public ManagedTypeManager ()
-	{
-	}
-
 	[return: DynamicallyAccessedMembers (Constructors)]
-	[RequiresDynamicCode ("This invoker lookup can construct generic invoker types.")]
-	[RequiresUnreferencedCode ("This invoker lookup uses reflection over preserved Java peer types.")]
-	protected override Type? GetInvokerTypeCore (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
+	protected override Type? GetInvokerTypeCore ([DynamicallyAccessedMembers (Constructors)] Type type)
 	{
 		const string suffix = "Invoker";
 
-		// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type? AssemblyGetType (Assembly assembly, string typeName) =>
-			assembly.GetType (typeName);
-
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type MakeGenericType (
-				[DynamicallyAccessedMembers (Constructors)]
-				Type type,
-				Type [] arguments) =>
-			// FIXME: https://github.com/dotnet/java-interop/issues/1192
-			#pragma warning disable IL3050
-			type.MakeGenericType (arguments);
-			#pragma warning restore IL3050
-
 		Type[] arguments = type.GetGenericArguments ();
 		if (arguments.Length == 0)
-			return AssemblyGetType (type.Assembly, type + suffix) ?? base.GetInvokerTypeCore (type);
+			return type.Assembly.GetType (type + suffix) ?? base.GetInvokerTypeCore (type);
 		Type definition = type.GetGenericTypeDefinition ();
 		int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
 		if (bt == -1)
 			throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
-		Type? suffixDefinition = AssemblyGetType (definition.Assembly,
-				definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
+		string suffixDefinitionName = definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt);
+		Type? suffixDefinition = definition.Assembly.GetType (suffixDefinitionName);
 		if (suffixDefinition == null)
 			return base.GetInvokerTypeCore (type);
-		return MakeGenericType (suffixDefinition, arguments);
+		return suffixDefinition.MakeGenericType (arguments);
 	}
 
-	[RequiresUnreferencedCode ("Native member registration resolves callback types and delegates from generated method metadata.")]
 	public override void RegisterNativeMembers (
-			JniType nativeClass,
-			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-			Type type,
-			ReadOnlySpan<char> methods)
+		JniType nativeClass,
+		[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
+		Type type,
+		ReadOnlySpan<char> methods)
 	{
 		if (methods.IsEmpty) {
 			base.RegisterNativeMembers (nativeClass, type, methods);
@@ -124,7 +98,6 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 			JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 		}
 	}
-
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
