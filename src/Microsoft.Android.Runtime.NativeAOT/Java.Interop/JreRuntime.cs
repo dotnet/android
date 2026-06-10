@@ -57,10 +57,10 @@ namespace Java.Interop {
 					string.IsNullOrEmpty (builder.JvmLibraryPath))
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
 
-#if NET
-			builder.TypeManager     ??= CreateDefaultTypeManager ();
-#endif  // NET
+			if (!RuntimeFeature.TrimmableTypeMap)
+				throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
 
+			builder.TypeManager     		??= new TrimmableTypeMapTypeManager ();
 			builder.ValueManager            ??= new TrimmableTypeMapValueManager ();
 			builder.ObjectReferenceManager  ??= new Android.Runtime.AndroidObjectReferenceManager ();
 
@@ -73,15 +73,6 @@ namespace Java.Interop {
 		internal protected JreRuntime (NativeAotRuntimeOptions builder)
 			: base (CreateJreVM (builder))
 		{
-		}
-
-		static JniRuntime.JniTypeManager CreateDefaultTypeManager ()
-		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return new TrimmableTypeMapTypeManager ();
-			}
-
-			return new ManagedTypeManager ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()

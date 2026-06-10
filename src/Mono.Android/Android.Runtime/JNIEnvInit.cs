@@ -178,10 +178,6 @@ namespace Android.Runtime
 				throw new NotSupportedException ($"{nameof (RuntimeFeature.IsNativeAotRuntime)} requires {nameof (RuntimeFeature.TrimmableTypeMap)}.");
 			}
 
-			if (RuntimeFeature.ManagedTypeMap) {
-				return new ManagedTypeManager ();
-			}
-
 			if (RuntimeFeature.IsMonoRuntime) {
 				return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
 			}
@@ -195,20 +191,20 @@ namespace Android.Runtime
 
 		internal static JniRuntime.JniValueManager CreateValueManager ()
 		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return new TrimmableTypeMapValueManager ();
+			}
+
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
+			}
+
 			if (RuntimeFeature.IsMonoRuntime) {
 				return new AndroidValueManager ();
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				if (RuntimeFeature.TrimmableTypeMap) {
-					return new TrimmableTypeMapValueManager ();
-				}
-
 				return new CoreClrJavaMarshalValueManager ();
-			}
-
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				return new TrimmableTypeMapValueManager ();
 			}
 
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");
