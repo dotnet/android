@@ -18,7 +18,7 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class JavaMarshalPeerManager : IDisposable
+sealed class JavaMarshalPeerManager : IDisposable
 {
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
@@ -496,27 +496,58 @@ static class JavaMarshalValueManagerHelper
 		}
 		return type;
 	}
+
+	/// <summary>
+	/// Returns true when <paramref name="targetType"/>'s Java class is not assignable from
+	/// <paramref name="reference"/>. Throws when <paramref name="targetType"/> has no usable mapping.
+	/// </summary>
+	public static bool IsIncompatibleCast (
+		string targetJniName,
+		ref JniObjectReference reference,
+		Type targetType)
+	{
+		var instanceClass = JniEnvironment.Types.GetObjectClass (reference);
+		JniObjectReference targetClass = default;
+		try {
+			targetClass = JniEnvironment.Types.FindClass (targetJniName);
+
+			if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
+				// TODO revisit this logging
+				if (Logger.LogAssembly) {
+					var targetSig = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (targetType);
+					var message = $"Handle 0x{reference.Handle:x} is of type '{JNIEnv.GetClassNameFromInstance (reference.Handle)}' which is not assignable to '{targetSig.SimpleReference}'";
+					Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+				}
+
+				if (RuntimeFeature.IsAssignableFromCheck) {
+					return true;
+				}
+			}
+		} catch (Java.Lang.ClassNotFoundException e) {
+			throw new ArgumentException (
+				$"Could not find Java class '{targetJniName}'.",
+				nameof (targetType), e);
+		} finally {
+			JniObjectReference.Dispose (ref instanceClass);
+			JniObjectReference.Dispose (ref targetClass);
+		}
+
+		// Compatible classes mean a proxy/activation gap.
+		return false;
+	}
 }
 
 [RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
 [RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
-class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
+sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-	static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
-	static  readonly    Type[]  JIConstructorSignature  = new Type [] { ByRefJniObjectReference, typeof (JniObjectReferenceOptions) };
-	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+	static readonly Type[] JIConstructorSignature  = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
+	static readonly Type[] XAConstructorSignature  = [typeof (IntPtr), typeof (JniHandleOwnership)];
 
-	readonly JavaMarshalPeerManager peerManager;
-
-	[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
-	[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
-	public CoreClrJavaMarshalValueManager ()
-	{
-		peerManager = new JavaMarshalPeerManager (GetType ().Name);
-	}
+	readonly JavaMarshalPeerManager peerManager = new (nameof (CoreClrJavaMarshalValueManager));
 
 	protected override void Dispose (bool disposing)
 	{
@@ -582,40 +613,30 @@ class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 			throw new ArgumentException ($"Could not determine Java type corresponding to `{targetType.AssemblyQualifiedName}`.", nameof (targetType));
 		}
 
-		var refClass = JniEnvironment.Types.GetObjectClass (reference);
-		JniObjectReference targetClass;
-		try {
-			targetClass = JniEnvironment.Types.FindClass (targetSig.SimpleReference);
-		} catch (Exception e) {
-			JniObjectReference.Dispose (ref refClass);
-			throw new ArgumentException ($"Could not find Java class `{targetSig.SimpleReference}`.",
-					nameof (targetType),
-					e);
-		}
-
-		if (!JniEnvironment.Types.IsAssignableFrom (refClass, targetClass)) {
-			JniObjectReference.Dispose (ref refClass);
-			JniObjectReference.Dispose (ref targetClass);
+		if (JavaMarshalValueManagerHelper.IsIncompatibleCast (targetSig.SimpleReference, ref reference, targetType)) {
 			return null;
 		}
 
-		JniObjectReference.Dispose (ref targetClass);
-
-		var peer = CreatePeerInstance (ref refClass, targetType, ref reference, transfer);
-		if (peer == null) {
-			throw new NotSupportedException (string.Format (CultureInfo.InvariantCulture, "Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
-					JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
+		var refClass = JniEnvironment.Types.GetObjectClass (reference);
+		try {
+			var peer = CreatePeerInstance (ref refClass, targetType, ref reference, transfer);
+			if (peer == null) {
+				throw new NotSupportedException (string.Format (CultureInfo.InvariantCulture, "Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
+						JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
+			}
+			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+			return peer;
+		} finally {
+			JniObjectReference.Dispose (ref refClass);
 		}
-		peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-		return peer;
 	}
 
 	IJavaPeerable? CreatePeerInstance (
-			ref JniObjectReference klass,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type targetType,
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions transfer)
+		ref JniObjectReference klass,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type targetType,
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions transfer)
 	{
 		var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
 
@@ -724,17 +745,12 @@ class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 	}
 }
 
-class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
+sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniObjectReferenceOptions DoNotRegisterTarget = (JniObjectReferenceOptions)(1 << 2);
 
-	readonly JavaMarshalPeerManager peerManager;
-
-	public TrimmableTypeMapValueManager ()
-	{
-		peerManager = new JavaMarshalPeerManager (GetType ().Name);
-	}
+	readonly JavaMarshalPeerManager peerManager = new (nameof (TrimmableTypeMapValueManager));
 
 	protected override void Dispose (bool disposing)
 	{
@@ -779,10 +795,13 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
-		throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
+		throw new PlatformNotSupportedException ("Activating Java peers through the value manager is not supported when TrimmableTypeMap is enabled.");
 	}
 
-	protected override void ConstructPeerCore (IJavaPeerable peer, ref JniObjectReference reference, JniObjectReferenceOptions options)
+	protected override void ConstructPeerCore (
+		IJavaPeerable peer,
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options)
 	{
 		if (peer == null)
 			throw new ArgumentNullException (nameof (peer));
@@ -791,7 +810,6 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		if (newRef.IsValid) {
 			JniObjectReference.Dispose (ref reference, options);
 
-			// Activation? See ManagedPeer.Construct, CreatePeer
 			// Instance was already added, don't add again
 			if (peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable)) {
 				return;
@@ -833,10 +851,10 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	}
 
 	public override IJavaPeerable? CreatePeer (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions transfer,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType)
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions transfer,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType)
 	{
 		EnsureNotDisposed ();
 
@@ -866,9 +884,16 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			//      InvalidCastException via its `??` clause)
 			//  (c) classes are compatible but no proxy / activation failed
 			//      → NotSupportedException (genuine generator gap)
-			if (resolvedTargetType is not null &&
-					IsIncompatibleCast (typeMap, ref reference, resolvedTargetType)) {
-				return null;
+			if (targetType is not null && resolvedTargetType is not null) {
+				if (!typeMap.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+					throw new ArgumentException (
+						$"Could not determine Java type corresponding to '{targetType.AssemblyQualifiedName}'.",
+						nameof (targetType));
+				}
+
+				if (JavaMarshalValueManagerHelper.IsIncompatibleCast (targetJniName, ref reference, resolvedTargetType)) {
+					return null;
+				}
 			}
 
 			var targetName = resolvedTargetType?.AssemblyQualifiedName ?? "<null>";
@@ -883,50 +908,40 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 	}
 
-	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
-	{
-		var proxy = value as JavaProxyThrowable;
-		if (proxy != null) {
-			result = proxy.InnerException;
-			return true;
-		}
-		return base.TryUnboxPeerObject (value, out result);
-	}
-
 	[return: MaybeNull]
 	protected override T CreateValueCore<[DynamicallyAccessedMembers (Constructors)] T> (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType = null)
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType = null)
 	{
 		throw CreateValueMarshalingNotSupportedException ();
 	}
 
 	protected override object? CreateValueCore (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType = null)
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType = null)
 	{
 		throw CreateValueMarshalingNotSupportedException ();
 	}
 
 	[return: MaybeNull]
 	protected override T GetValueCore<[DynamicallyAccessedMembers (Constructors)] T> (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType = null)
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType = null)
 	{
 		throw CreateValueMarshalingNotSupportedException ();
 	}
 
 	protected override object? GetValueCore (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType = null)
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType = null)
 	{
 		throw CreateValueMarshalingNotSupportedException ();
 	}
@@ -944,44 +959,5 @@ class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	static NotSupportedException CreateValueMarshalingNotSupportedException ()
 	{
 		return new NotSupportedException ($"{nameof (TrimmableTypeMapValueManager)} does not support value marshaling yet.");
-	}
-
-	/// <summary>
-	/// Returns true when <paramref name="targetType"/>'s Java class is not assignable from
-	/// <paramref name="reference"/>. Throws when <paramref name="targetType"/> has no usable mapping.
-	/// </summary>
-	static bool IsIncompatibleCast (
-			TrimmableTypeMap typeMap,
-			ref JniObjectReference reference,
-			Type targetType)
-	{
-		if (!typeMap.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
-			throw new ArgumentException (
-				$"Could not determine Java type corresponding to '{targetType.AssemblyQualifiedName}'.",
-				nameof (targetType));
-		}
-
-		var instanceClass = JniEnvironment.Types.GetObjectClass (reference);
-		JniObjectReference targetClass = default;
-		try {
-			try {
-				targetClass = JniEnvironment.Types.FindClass (targetJniName);
-			} catch (Java.Lang.ClassNotFoundException e) {
-				throw new ArgumentException (
-					$"Could not find Java class '{targetJniName}'.",
-					nameof (targetType), e);
-			}
-
-			if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
-				// Bad cast: callers translate null to the expected result.
-				return true;
-			}
-		} finally {
-			JniObjectReference.Dispose (ref instanceClass);
-			JniObjectReference.Dispose (ref targetClass);
-		}
-
-		// Compatible classes mean a proxy/activation gap.
-		return false;
 	}
 }
