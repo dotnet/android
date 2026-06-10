@@ -13,7 +13,7 @@
         <Str Cat="Text">
           <Val><![CDATA[  Starting Debugger on {0}:{1}]D;]A;Start sdb then run the following command]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[  Debugger wird auf {0} gestartet:{1}]D;]A;Starten Sie „sdb“, und führen Sie dann die folgende Befehls-]D;-]A;  Verbindung {0} {1}]D; aus.]A;    ]]></Val>
+            <Val><![CDATA[  Debugger wird auf {0} gestartet:{1}]D;]A;Starten Sie „sdb“, und führen Sie dann die folgende Befehls-]D;-]A;  Verbindung {0} {1}]D; aus]A;    ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -181,7 +181,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'. ]D;]A;This is usually due to an error in `adb` when the file data is sent over to the device. ]D;]A;The normal cause for this is a loose or low quality USB cable. Please try a different cable.]D;]A;Alternatively try using Wifi Debugging, this can be more reliable than USB debugging for certain devices. ]D;]A;If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Fehler beim Bereitstellen von „{0}“ mit „{1}: {2}“. ]D;]A;Dies ist in der Regel auf einen Fehler in „adb“ zurückzuführen, wenn die Dateidaten an das Gerät gesendet werden. ]D;]A;Die normale Ursache hierfür ist ein USB-Kabel, das lose oder von schlechter Qualität ist. Versuchen Sie es mit einem anderen Kabel.]D;]A;Versuchen Sie alternativ, das WLAN-Debuggen zu verwenden. Dies kann für bestimmte Geräte zuverlässiger als das USB-Debuggen sein. ]D;]A;Wenn all dies fehlschlägt, legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um die Schnelle Bereitstellung auf den Visual Studio-Projekteigenschaftenseiten zu deaktivieren, oder bearbeiten Sie die Projektdatei in einem Text-Editor.]]></Val>
+            <Val><![CDATA[Fehler beim Bereitstellen von „{0}“ mit „{1}: {2}“. ]D;]A;Dies ist in der Regel auf einen Fehler in `adb` zurückzuführen, wenn die Dateidaten an das Gerät gesendet werden. ]D;]A;Die normale Ursache hierfür ist ein USB-Kabel, das lose oder von schlechter Qualität ist. Versuchen Sie es mit einem anderen Kabel.]D;]A;Versuchen Sie alternativ, das WLAN-Debuggen zu verwenden. Dies kann für bestimmte Geräte zuverlässiger als das USB-Debuggen sein. ]D;]A;Wenn all dies fehlschlägt, legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um die Schnelle Bereitstellung auf den Visual Studio-Projekteigenschaftenseiten zu deaktivieren, oder bearbeiten Sie die Projektdatei in einem Text-Editor.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

@@ -27,6 +27,10 @@ steps:
   parameters:
     xaSourcePath: $(System.DefaultWorkingDirectory)
 
+- template: /build-tools/automation/yaml-templates/cache-android-archives.yaml
+  parameters:
+    xaSourcePath: $(System.DefaultWorkingDirectory)
+
 - task: DotNetCoreCLI@2
   displayName: Prepare Solution
   retryCountOnTaskFailure: 1

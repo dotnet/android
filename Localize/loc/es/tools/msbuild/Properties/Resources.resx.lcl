@@ -79,7 +79,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Error al implementar '{0}' mediante '{1}: {2}'.]D;]A;Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.]]></Val>
+            <Val><![CDATA[Error al implementar "{0}" mediante "{1}: {2}".]D;]A;Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -97,7 +97,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Error al implementar '{0}'.]D;]A;Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.]]></Val>
+            <Val><![CDATA[Error al implementar "{0}".]D;]A;Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -142,7 +142,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the .NET for Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[La aplicación no tiene el atributo "android:debuggable" establecido en el AndroidManifest.xml.]D;]A;Esto es necesario para que la implementación rápida funcione. Normalmente, esta opción está habilitada de forma predeterminada por ]D;]A;el sistema de compilación de .NET para Android para compilaciones de depuración. Compruebe que no tiene este atributo]D;]A;se establece en el elemento "application" de la "AndroidManifest.xml".]D;]A;Si tiene una clase que deriva de "Android.App.Application" y usa "[Application]5D;", asegúrese de que el ]D;]A;La propiedad 'Debuggable' no está establecida en absoluto, ya que invalidará el valor de las compilaciones de depuración.]D;]A;]]></Val>
+            <Val><![CDATA[La aplicación no tiene el atributo "android:debuggable" establecido en el AndroidManifest.xml.]D;]A;Esto es necesario para que la implementación rápida funcione. Normalmente, esta opción está habilitada de forma predeterminada por ]D;]A;el sistema de compilación de .NET para Android para compilaciones de depuración. Compruebe que no tiene este atributo]D;]A;se establece en el elemento "application" de la "AndroidManifest.xml".]D;]A;Si tiene una clase que deriva de "Android.App.Application" y usa "[Application]5D;", asegúrese de que el ]D;]A;La propiedad "Debuggable" no está establecida en absoluto, ya que invalidará el valor de las compilaciones de depuración.]D;]A;]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the Xamarin.Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
@@ -181,7 +181,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'. ]D;]A;This is usually due to an error in `adb` when the file data is sent over to the device. ]D;]A;The normal cause for this is a loose or low quality USB cable. Please try a different cable.]D;]A;Alternatively try using Wifi Debugging, this can be more reliable than USB debugging for certain devices. ]D;]A;If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Error al implementar '{0}' con '{1}: {2}'. ]D;]A;Esto suele deberse a un error en "adb" cuando los datos del archivo se envían al dispositivo. ]D;]A;La causa normal de esto es un cable USB flexible o de baja calidad. Pruebe con otro cable.]D;]A;Como alternativa, pruebe a usar la depuración Wi-Fi, esto puede ser más confiable que la depuración USB para determinados dispositivos. ]D;]A;Si se produce un error en todo esto, establezca la propiedad MSBuild "EmbedAssembliesIntoApk" en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio o edite el archivo de proyecto en un editor de texto.]]></Val>
+            <Val><![CDATA[Error al implementar "{0}" con "{1}: {2}". ]D;]A;Esto suele deberse a un error en `adb` cuando los datos del archivo se envían al dispositivo. ]D;]A;La causa normal de esto es un cable USB flexible o de baja calidad. Pruebe con otro cable.]D;]A;Como alternativa, pruebe a usar la depuración Wi-Fi, esto puede ser más confiable que la depuración USB para determinados dispositivos. ]D;]A;Si se produce un error en todo esto, establezca la propiedad MSBuild "EmbedAssembliesIntoApk" en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio o edite el archivo de proyecto en un editor de texto.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

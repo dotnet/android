@@ -32,7 +32,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to install the Java SDK into `{0}`. Please set `$(JavaSdkDirectory)` to a valid non-administrator path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[No se pudo instalar el Java SDK en "{0}". Establezca "$(JavaSdkDirectory)" en una ruta de acceso que no sea de administrador válida.]]></Val>
+            <Val><![CDATA[No se pudo instalar el SDK de Java en `{0}`. Establezca `$(JavaSdkDirectory)` en una ruta de acceso que no sea de administrador válida.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -41,7 +41,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Detected an out of date Java SDK with version `{1}` at `{0}`, but we are unable to install the recommended Java SDK (version `{2}`) to this location.]D;]A;Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a valid non-administrator path to install the recommended Java SDK version to a new location.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Se detectó un SDK de Java obsoleto con la versión "{1}" en "{0}", pero no se puede instalar el SDK de Java recomendado (versión "{2}") en esta ubicación.]D;]A;Actualice el SDK de Java a la versión "{2}" o establezca "$(JavaSdkDirectory)" en una ruta de acceso válida que no sea de administrador para instalar la versión recomendada del SDK de Java en una nueva ubicación.]]></Val>
+            <Val><![CDATA[Se detectó un SDK de Java obsoleto con la versión `{1}` en `{0}`, pero no se puede instalar el SDK de Java recomendado (versión `{2}`) en esta ubicación.]D;]A;Actualice el SDK de Java a la versión `{2}` o establezca `$(JavaSdkDirectory)` en una ruta de acceso válida que no sea de administrador para instalar la versión recomendada del SDK de Java en una nueva ubicación.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -50,7 +50,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to find a Java SDK with version `{0}`. Please set `$(JavaSdkVersion)` to a valid version.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[No se encuentra un Java SDK con la versión "{0}". Establezca "$(JavaSdkVersion)" en una versión válida.]]></Val>
+            <Val><![CDATA[No se encuentra un SDK de Java con la versión `{0}`. Establezca `$(JavaSdkVersion)` en una versión válida.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -95,7 +95,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Attempt to install required Android SDK components timed out or was cancelled. Consider setting `$(AndroidDependencyInstallationTimeout)` to a value larger than `{0}` minutes.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Se agotó el tiempo de espera del intento de instalación de los componentes de Android SDK necesarios o se canceló. Considere la posibilidad de establecer "$(AndroidDependencyInstallationTimeout)" en un valor mayor que "{0}" minutos.]]></Val>
+            <Val><![CDATA[Se agotó el tiempo de espera del intento de instalación de los componentes de Android SDK necesarios o se canceló. Considere la posibilidad de establecer `$(AndroidDependencyInstallationTimeout)` en un valor mayor que `{0}` minutos.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
