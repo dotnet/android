@@ -40,6 +40,10 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
+- template: /build-tools/automation/yaml-templates/cache-android-archives.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}

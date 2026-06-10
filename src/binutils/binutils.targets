@@ -17,7 +17,8 @@
         SourceUrl="$(_BinutilsArchiveUrl)"
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
         DestinationFileName="xamarin-android-toolchain-$(XABinutilsVersion).7z"
-        Retries="3"
+        Retries="5"
+        RetryDelayMilliseconds="5000"
     />
     <GetFileHash Files="$(_BinutilsArchive)" Algorithm="SHA256">
       <Output TaskParameter="Hash" PropertyName="_BinutilsActualHash" />
