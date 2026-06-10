@@ -15,14 +15,9 @@ This file contains targets specific for Android application projects.
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
-    <!-- If Xamarin.Android.Common.Debugging.targets exists, we can rely on _Run for debugging. -->
-    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' == 'true' ">
+    <_RunDependsOn>
       Install;
       _Run;
-    </_RunDependsOn>
-    <_RunDependsOn Condition=" '$(_AndroidFastDeploymentSupported)' != 'true' ">
-      Install;
-      StartAndroidActivity;
     </_RunDependsOn>
     <_AndroidComputeRunArgumentsDependsOn Condition=" '$(_AndroidComputeRunArgumentsDependsOn)' == '' ">
       _ResolveMonoAndroidSdks;

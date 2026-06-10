@@ -9,6 +9,8 @@ trigger:
   - release/*
   - feature/*
 
+pr: none
+
 # External sources, scripts, tests, and yaml template files.
 resources:
   repositories:

@@ -277,8 +277,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			var proj = new XamarinAndroidApplicationProject  {
 				IsRelease = isRelease,
 			};
@@ -544,9 +542,7 @@ namespace UnnamedProject
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "AndroidResgen: Warning while updating Resource XML"),
 					"Warning while processing resources should not have been raised.");
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					Assert.IsTrue (b.Output.IsTargetSkipped ("_GenerateJavaStubs"), "Target _GenerateJavaStubs should have been skipped");
-				}
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_GenerateJavaStubs"), "Target _GenerateJavaStubs should have been skipped");
 
 				lib.Touch ("CustomTextView.cs");
 
@@ -1087,14 +1083,10 @@ namespace Lib1 {
 					appBuilder.Output.AssertTargetIsNotSkipped ("_UpdateAndroidResgen");
 					foo.Timestamp = DateTimeOffset.UtcNow;
 					Assert.IsTrue (libBuilder.Build (libProj, doNotCleanupOnUpdate: true, saveProject: false), "Library project should have built");
-					if (TestEnvironment.CommercialBuildAvailable) {
-						libBuilder.Output.AssertTargetIsSkipped (target);
-					}
+					libBuilder.Output.AssertTargetIsSkipped (target);
 					appBuilder.BuildLogFile = "build1.log";
 					Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true, saveProject: false), "Application Build should have succeeded.");
-					if (TestEnvironment.CommercialBuildAvailable) {
-						appBuilder.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
-					}
+					appBuilder.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 					// Check Contents of the file in the apk are correct.
 					string apk = Path.Combine (Root, appBuilder.ProjectDirectory, appProj.OutputPath, appProj.PackageName + "-Signed.apk");
 					byte[] rawContentBuildOne = ZipHelper.ReadFileFromZip (apk,
@@ -1176,16 +1168,12 @@ namespace Lib1 {
 				appBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (appBuilder.Build (appProj, doNotCleanupOnUpdate: true),
 					"Normal Application Build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
-						"Target '_ManagedUpdateAndroidResgen' should not have run.");
-				}
+				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
+					"Target '_ManagedUpdateAndroidResgen' should not have run.");
 				appBuilder.BuildLogFile = "designtimebuild.log";
 				Assert.IsTrue (appBuilder.DesignTimeBuild (appProj, doNotCleanupOnUpdate: true), "DesignTime Application Build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
-						"Target '_ManagedUpdateAndroidResgen' should not have run.");
-				}
+				Assert.IsTrue (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen", defaultIfNotUsed: true),
+					"Target '_ManagedUpdateAndroidResgen' should not have run.");
 
 				Assert.IsTrue (appBuilder.Clean (appProj), "Clean should have succeeded");
 				Assert.IsTrue (File.Exists (designerFile), $"'{designerFile}' should not have been cleaned.");
@@ -1462,14 +1450,12 @@ namespace UnnamedProject
 				proj.Touch (@"Resources\layout\Main.axml");
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					Assert.IsTrue (
-						b.Output.IsTargetPartiallyBuilt ("_CompileResources"),
-						"The target _CompileResources should have been partially built");
-					Assert.IsTrue (
-						b.Output.IsTargetSkipped ("_FixupCustomViewsForAapt2", defaultIfNotUsed: true),
-						"The target _FixupCustomViewsForAapt2 should have been skipped");
-				}
+				Assert.IsTrue (
+					b.Output.IsTargetPartiallyBuilt ("_CompileResources"),
+					"The target _CompileResources should have been partially built");
+				Assert.IsTrue (
+					b.Output.IsTargetSkipped ("_FixupCustomViewsForAapt2", defaultIfNotUsed: true),
+					"The target _FixupCustomViewsForAapt2 should have been skipped");
 
 				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", proj.PackageNameJavaIntermediatePath, "R.java");
 				FileAssert.Exists (r_java);
@@ -1529,9 +1515,7 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					b.Output.AssertTargetIsSkipped ("_CompileResources");
-				}
+				b.Output.AssertTargetIsSkipped ("_CompileResources");
 			}
 		}
 

@@ -142,6 +142,9 @@
   <data name="APT0005" xml:space="preserve">
     <value>잘못된 파일 이름: 파일 이름은 Java 예약어를 사용할 수 없습니다.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}'의 $(TargetFrameworkVersion)에 대한 API 레벨을 확인할 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ In this message, the phrase "should not be reached" means that this error messag
   <data name="XA0036" xml:space="preserve">
     <value>'AndroidSupportedAbis' MSBuild 속성은 더 이상 지원되지 않습니다. 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidSupportedAbis' 사용을 모두 제거한 후 대신 'RuntimeIdentifiers' MSBuild 속성을 사용하세요.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Unknown mode: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>Android 애플리케이션 프로젝트의 EmbeddedNativeLibrary '{0}'이(가) 잘못되었습니다. 대신 AndroidNativeLibrary를 사용하세요.</value>
@@ -1142,13 +1149,13 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>Trimmable type map Java source 입력 디렉터리 '{0}'과(와) 출력 디렉터리 '{1}'은(는) 같을 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>생성된 trimmable type map Java source '{0}'을(를) 찾을 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

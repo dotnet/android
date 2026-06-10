@@ -1,5 +1,3 @@
--include bin/configuration.mk
-
 V             ?= 0
 prefix         = /usr/local
 CONFIGURATION ?= Debug

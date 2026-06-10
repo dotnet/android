@@ -141,7 +141,9 @@ public class MarshalMethodTests : BaseTest
 		Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 		builder.AssertHasNoWarnings ();
 
-		// Rescan for modified marshal methods
+		// Rescan for modified marshal methods from the linked/ directory.
+		// When marshal methods are enabled, AssemblyModifierPipeline writes in-place
+		// to linked/ (not afterlink/) so that _RunAotForAllRIDs re-AOTs correctly.
 		var intermediateReleaseOutputPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked");
 		var outputReleaseDll = Path.Combine (intermediateReleaseOutputPath, $"{proj.ProjectName}.dll");
 
