@@ -13,7 +13,7 @@
         <Str Cat="Text">
           <Val><![CDATA[  Starting Debugger on {0}:{1}]D;]A;Start sdb then run the following command]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[  Запуск отладчика на {0} : {1}]D;]A;Запустите sdb, затем выполните следующую команду ]D;]A;  подключить {0} {1}]D;]A;    ]]></Val>
+            <Val><![CDATA[  Запуск отладчика на {0}:{1}]D;]A;Запустите sdb, затем выполните следующую команду ]D;]A;  подключить {0} {1}]D;]A;    ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -70,7 +70,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to copy Fast Deployment tools to '{0}/{1}' on the target device.]D;]A;This device might not be compatible with Fast Deployment.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Невозможно скопировать инструменты быстрого развертывания в " {0} / {1} " на целевом устройстве. ]D;]A;Это устройство может быть несовместимо с функцией быстрого развертывания. ]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
+            <Val><![CDATA[Невозможно скопировать инструменты быстрого развертывания в "{0}/{1}" на целевом устройстве.]D;]A;Это устройство может быть несовместимо с функцией быстрого развертывания.]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -79,7 +79,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ошибка развертывания " {0} " с использованием "{1} : {2} ". ]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
+            <Val><![CDATA[Ошибка развертывания "{0}" с использованием "{1} : {2}".]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -88,7 +88,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'log.redirect-stdio' Android system property is set to 'true' on the target device or emulator.]D;]A;To enable compatibility with Fast Deployment, set the property to 'false' or reboot the device or emulator to clear the value.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Системное свойство Android "log.redirect-stdio" установлено в значение "true" на целевом устройстве или эмуляторе. ]D;]A;Чтобы включить совместимость с быстрым развертыванием, установите для свойства значение "false" или перезагрузите устройство или эмулятор, чтобы очистить значение.]]></Val>
+            <Val><![CDATA[Системное свойство Android "log.redirect-stdio" установлено в значение "true" на целевом устройстве или эмуляторе.]D;]A;Чтобы включить совместимость с быстрым развертыванием, установите для свойства значение "false" или перезагрузите устройство или эмулятор, чтобы очистить значение.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -97,7 +97,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ошибка развертывания ' {0} '. ]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
+            <Val><![CDATA[Ошибка развертывания "{0}".]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -106,7 +106,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Sorry. Fast Deployment is only supported on devices running Android 5.0 (API level 21) or higher.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Приносим свои извинения. Быстрое развертывание поддерживается только на устройствах под управлением Android 5.0 (уровень API 21) или выше. ]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
+            <Val><![CDATA[Приносим свои извинения. Быстрое развертывание поддерживается только на устройствах под управлением Android 5.0 (уровень API 21) или выше.]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -124,7 +124,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The package was not installed. Please check you do not have it installed under any other user.]D;]A;If the package does show up on the device, try manually uninstalling it then try again.]D;]A;You should be able to uninstall the app via the Settings app on the device.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Пакет не был установлен. Проверьте, не установлен ли он под другим пользователем. ]D;]A;Если пакет отображается на устройстве, попробуйте удалить его вручную, а затем повторите попытку. ]D;]A;Вы можете удалить приложение через приложение "Настройки" на устройстве.]]></Val>
+            <Val><![CDATA[Пакет не был установлен. Проверьте, не установлен ли он под другим пользователем.]D;]A;Если пакет отображается на устройстве, попробуйте удалить его вручную, а затем повторите попытку.]D;]A;Вы можете удалить приложение через приложение "Настройки" на устройстве.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -133,7 +133,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'run-as' tool required by the Fast Deployment system has been disabled on this device by the manufacturer.]D;]A;Please disable Fast Deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Инструмент "запустить как", необходимый для системы быстрого развертывания, был отключен на этом устройстве производителем. ]D;]A;Отключите быстрое развертывание на страницах свойств проекта Visual Studio или отредактируйте файл проекта в текстовом редакторе и установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true".]]></Val>
+            <Val><![CDATA[Инструмент "запустить как", необходимый для системы быстрого развертывания, был отключен на этом устройстве производителем.]D;]A;Отключите быстрое развертывание на страницах свойств проекта Visual Studio или отредактируйте файл проекта в текстовом редакторе и установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true".]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -142,7 +142,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the .NET for Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[В AndroidManifest.xml для приложения не установлен атрибут "android:debuggable". ]D;]A;Это необходимо для работы функции быстрого развертывания. Обычно эта функция включена по умолчанию ]D;]A;в системе сборки .NET для Android для отладочных сборок. Убедитесь, что этот атрибут не установлен ]D;]A;для элемента "application" в файле "AndroidManifest.xml". ]D;]A;Если у вас есть класс, производный от "Android.App.Application", и вы используете "[Application]5D;", убедитесь, что ]D;]A;Свойство "Debuggable" вообще не задано, так как оно переопределит значение для отладочных сборок. ]D;]A;]]></Val>
+            <Val><![CDATA[В AndroidManifest.xml для приложения не установлен атрибут "android:debuggable".]D;]A;Это необходимо для работы функции быстрого развертывания. Обычно эта функция включена по умолчанию]D;]A;в системе сборки .NET для Android для отладочных сборок. Убедитесь, что этот атрибут не установлен]D;]A;для элемента "application" в файле "AndroidManifest.xml".]D;]A;Если у вас есть класс, производный от "Android.App.Application", и вы используете "[Application]5D;", убедитесь, что ]D;]A;Свойство "Debuggable" вообще не задано, так как оно переопределит значение для отладочных сборок.]D;]A;]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the Xamarin.Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
@@ -154,7 +154,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The package is a 'system' application. These are applications which install under]D;]A; the 'system' user on a device. These types of applications cannot use 'run-as'.]D;]A; The Fast Deployment system should have handled this particular error automatically]D;]A; and used a backup installation path. However if you are seeing this error please file]D;]A; an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A; or 'Help->Report a Problem' in Visual Studio for Mac. If possible attach a full diagnostic build]D;]A; log to the feedback report as this will help us diagnose the issue.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Пакет представляет собой "системное" приложение. Это приложения, которые устанавливаются на ]D;]A; устройстве под учетной записью "системного" пользователя. Приложения такого типа не могут использовать функцию "запуск от имени". ]D;]A; Система быстрого развертывания должна была автоматически обработать эту конкретную ошибку ]D;]A; и использовать резервный путь установки. Однако если вы видите эту ошибку, ]D;]A; сообщите о проблеме, указав точное сообщение об ошибке, используя пункт меню "Справка->Отправить отзыв->Сообщить о проблеме" в Visual Studio. ]D;]A; или "Справка->Сообщить о проблеме" в Visual Studio для Mac. Если возможно, прикрепите к отзыву ]D;]A; полный журнал диагностической сборки, так как это поможет нам диагностировать проблему.]]></Val>
+            <Val><![CDATA[Пакет представляет собой "системное" приложение. Это приложения, которые устанавливаются на ]D;]A; устройстве под учетной записью "системного" пользователя. Приложения такого типа не могут использовать функцию "запуск от имени".]D;]A; Система быстрого развертывания должна была автоматически обработать эту конкретную ошибку ]D;]A; и использовать резервный путь установки. Однако если вы видите эту ошибку, ]D;]A; сообщите о проблеме, указав точное сообщение об ошибке, используя пункт меню "Справка->Отправить отзыв->Сообщить о проблеме" в Visual Studio. ]D;]A; или "Справка->Сообщить о проблеме" в Visual Studio для Mac. Если возможно, прикрепите к отзыву ]D;]A; полный журнал диагностической сборки, так как это поможет нам диагностировать проблему.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -163,7 +163,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;The currently installation of the package in corrupt. Please manually uninstall the ]D;]A;package from all the users on device and try again. If that does not work you can disable Fast Deployment.]D;]A;Fast Deployment can be disabled in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Команда "запустить как" не выполнена с " {0} ". ]D;]A;Текущая установка пакета повреждена. Вручную удалите ]D;]A;пакет от всех пользователей на устройстве и повторите попытку. Если это не сработает, вы можете отключить быстрое развертывание. ]D;]A;Быстрое развертывание можно отключить на страницах свойств проекта Visual Studio или отредактировать файл проекта в текстовом редакторе и установить для свойства MSBuild "EmbedAssembliesIntoApk" значение "true". ]D;]A;]]></Val>
+            <Val><![CDATA[Команда "запустить как" не выполнена с "{0}".]D;]A;Текущая установка пакета повреждена. Вручную удалите ]D;]A;пакет от всех пользователей на устройстве и повторите попытку. Если это не сработает, вы можете отключить быстрое развертывание.]D;]A;Быстрое развертывание можно отключить на страницах свойств проекта Visual Studio или отредактировать файл проекта в текстовом редакторе и установить для свойства MSBuild "EmbedAssembliesIntoApk" значение "true".]D;]A;]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -172,7 +172,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;Fast Deployment is not currently supported on this device.]D;]A;Please file an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A;or 'Help->Report a Problem' in Visual Studio for Mac.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Команда "запустить как" не выполнена с " {0} ". ]D;]A;Быстрое развертывание в настоящее время не поддерживается на этом устройстве. ]D;]A;Отправьте сообщение об ошибке с точным текстом сообщения об ошибке, используя пункт меню "Справка->Отправить отзыв->Сообщить о проблеме" в Visual Studio ]D;]A;или "Справка->Сообщить о проблеме" в Visual Studio для Mac. ]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
+            <Val><![CDATA[Команда "запустить как" не выполнена с "{0}".]D;]A;Быстрое развертывание сейчас не поддерживается на этом устройстве.]D;]A;Отправьте сообщение об ошибке с точным текстом сообщения об ошибке, используя пункт меню "Справка->Отправить отзыв->Сообщить о проблеме" в Visual Studio]D;]A;или "Справка->Сообщить о проблеме" в Visual Studio для Mac.]D;]A;Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -181,7 +181,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'. ]D;]A;This is usually due to an error in `adb` when the file data is sent over to the device. ]D;]A;The normal cause for this is a loose or low quality USB cable. Please try a different cable.]D;]A;Alternatively try using Wifi Debugging, this can be more reliable than USB debugging for certain devices. ]D;]A;If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ошибка развертывания " {0} " с использованием " {1}" : "{2} ". ]D;]A;Обычно это происходит из-за ошибки в `adb` при отправке данных файла на устройство. ]D;]A;Обычной причиной этого является неплотно подключенный или некачественный USB-кабель. Попробуйте использовать другой кабель. ]D;]A;В качестве альтернативы попробуйте использовать отладку по Wi-Fi, для некоторых устройств это может быть более надежно, чем отладка по USB. ]D;]A;Если все это не помогло, установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
+            <Val><![CDATA[Ошибка развертывания "{0}" с использованием "{1}" : "{2}". ]D;]A;Обычно это происходит из-за ошибки в `adb` при отправке данных файла на устройство. ]D;]A;Обычной причиной этого является неплотно подключенный или некачественный USB-кабель. Попробуйте использовать другой кабель.]D;]A;В качестве альтернативы попробуйте использовать отладку по Wi-Fi, для некоторых устройств это может быть более надежно, чем отладка по USB. ]D;]A;Если все это не помогло, установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

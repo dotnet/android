@@ -17,8 +17,6 @@
     <GenerateDependencyFile Condition=" '$(GenerateDependencyFile)' == '' ">false</GenerateDependencyFile>
     <CopyLocalLockFileAssemblies Condition=" '$(CopyLocalLockFileAssemblies)' == '' ">false</CopyLocalLockFileAssemblies>
     <ComputeNETCoreBuildOutputFiles Condition=" '$(ComputeNETCoreBuildOutputFiles)' == '' ">false</ComputeNETCoreBuildOutputFiles>
-    <_AndroidFastDeploymentSupported Condition=" Exists ('$(MSBuildThisFileDirectory)../tools/Xamarin.Android.Common.Debugging.targets') ">true</_AndroidFastDeploymentSupported>
-    <_AndroidFastDeploymentSupported Condition=" '$(_AndroidFastDeploymentSupported)' == '' ">False</_AndroidFastDeploymentSupported>
 
     <!--
       Disable @(Content) from referenced projects

@@ -41,7 +41,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Detected an out of date Java SDK with version `{1}` at `{0}`, but we are unable to install the recommended Java SDK (version `{2}`) to this location.]D;]A;Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a valid non-administrator path to install the recommended Java SDK version to a new location.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[`{0}`에서 `{1}` 버전의 오래된 Java SDK를 감지했지만 이 위치에 권장 Java SDK(`{2}` 버전)를 설치할 수 없습니다.]D;]A;Java SDK를 `{2}` 버전으로 업데이트하거나 `$(JavaSdkDirectory)`를 관리자가 아닌 올바른 경로로 설정하여 권장되는 Java SDK 버전을 새 위치에 설치하세요.]]></Val>
+            <Val><![CDATA[`{0}`에서 `{1}` 버전의 오래된 Java SDK를 감지했지만 이 위치에 권장 Java SDK(`{2}` 버전)를 설치할 수 없습니다.]D;]A;Java SDK를 `{2}` 버전으로 업데이트하거나 `$(JavaSdkDirectory)`를 관리자가 아닌 유효한 경로로 설정하여 권장되는 Java SDK 버전을 새 위치에 설치하세요.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

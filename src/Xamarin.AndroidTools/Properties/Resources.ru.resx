@@ -117,27 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CreateKeyError_AliasContainsInvalidCharacters" xml:space="preserve">
-    <value>Псевдоним не может содержать символы, запрещенные в именах файлов</value>
-  </data>
-  <data name="CreateKeyError_ErrorImportingKey" xml:space="preserve">
-    <value>При импорте ключа произошла ошибка</value>
-  </data>
-  <data name="CreateKeyError_GenericError" xml:space="preserve">
-    <value>При создании ключа произошла ошибка</value>
-  </data>
-  <data name="CreateKeyError_KeyStoreNotFound" xml:space="preserve">
-    <value>Хранилище ключей не найдено</value>
-  </data>
-  <data name="CreateKeyError_MinimumOneYearValidity" xml:space="preserve">
-    <value>Срок действия не может быть меньше 1 года</value>
-  </data>
-  <data name="CreateKeyError_NotInitialized" xml:space="preserve">
-    <value>KeyStoreManagement не инициализировано</value>
-  </data>
-  <data name="CreateKeyError_UnsupportedPlatform" xml:space="preserve">
-    <value>Неподдерживаемая платформа</value>
-  </data>
   <data name="JdwpClientDisconnectError" xml:space="preserve">
     <value>Произошла непредвиденная ошибка при попытке отключить клиент JDWP.</value>
   </data>

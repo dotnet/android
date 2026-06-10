@@ -32,7 +32,7 @@
   <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
   <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props"
-      Condition="Exists('$(MSBuildThisFileDirectory)..\tools\Xamarin.Android.Common.Debugging.props') And '$(DesignTimeBuild)' != 'true' "/>
+      Condition=" '$(DesignTimeBuild)' != 'true' "/>
   <Import Project="Microsoft.Android.Sdk.$(_AndroidRuntime).targets" Condition=" '$(_AndroidRuntime)' != '' " />
 
 </Project>
