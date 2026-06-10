@@ -117,27 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CreateKeyError_AliasContainsInvalidCharacters" xml:space="preserve">
-    <value>别名不能包含文件名中不允许的字符</value>
-  </data>
-  <data name="CreateKeyError_ErrorImportingKey" xml:space="preserve">
-    <value>导入密钥时出错。</value>
-  </data>
-  <data name="CreateKeyError_GenericError" xml:space="preserve">
-    <value>创建密钥时出错</value>
-  </data>
-  <data name="CreateKeyError_KeyStoreNotFound" xml:space="preserve">
-    <value>找不到密钥存储</value>
-  </data>
-  <data name="CreateKeyError_MinimumOneYearValidity" xml:space="preserve">
-    <value>有效期不能少于 1 年</value>
-  </data>
-  <data name="CreateKeyError_NotInitialized" xml:space="preserve">
-    <value>尚未初始化 KeyStoreManagement</value>
-  </data>
-  <data name="CreateKeyError_UnsupportedPlatform" xml:space="preserve">
-    <value>不受支持的平台</value>
-  </data>
   <data name="JdwpClientDisconnectError" xml:space="preserve">
     <value>尝试断开 Jdwp 客户端的连接时出现了意外错误。</value>
   </data>
