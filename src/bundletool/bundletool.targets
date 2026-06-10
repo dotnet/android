@@ -20,6 +20,10 @@
     <GetFileHash Files="$(_BundleToolDownloadLocation)" Algorithm="SHA256">
       <Output TaskParameter="Hash" PropertyName="_BundleToolActualHash" />
     </GetFileHash>
+    <Delete
+        Condition=" '$(_BundleToolActualHash)' != '$(XABundleToolHash)' "
+        Files="$(_BundleToolDownloadLocation)"
+    />
     <Error
         Condition=" '$(_BundleToolActualHash)' != '$(XABundleToolHash)' "
         Text="SHA256 mismatch for bundletool-all-$(XABundleToolVersion).jar. Expected: $(XABundleToolHash) Actual: $(_BundleToolActualHash)"
