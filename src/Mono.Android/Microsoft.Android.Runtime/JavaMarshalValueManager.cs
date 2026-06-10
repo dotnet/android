@@ -18,7 +18,7 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class JavaMarshalValueManager : JniRuntime.JniValueManager
+class JavaMarshalValueManager : AndroidReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
