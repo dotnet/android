@@ -41,7 +41,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Detected an out of date Java SDK with version `{1}` at `{0}`, but we are unable to install the recommended Java SDK (version `{2}`) to this location.]D;]A;Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a valid non-administrator path to install the recommended Java SDK version to a new location.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{1}' sürümünde '{0}' sürümüne sahip güncel olmayan bir Java SDK'sı algılandı ancak önerilen Java SDK'sı (sürüm '{2}') bu konuma yüklenemedi.]D;]A;Lütfen Java SDK'nızı '{2}' sürümüne güncelleştirin veya önerilen Java SDK sürümünü yeni bir konuma yüklemek için '$(JavaSdkDirectory)' öğesini geçerli bir yönetici olmayan yola ayarlayın.]]></Val>
+            <Val><![CDATA[`{1}` sürümünde `{0}` sürümüne sahip güncel olmayan bir Java SDK'sı algılandı ancak önerilen Java SDK'sı (sürüm `{2}`) bu konuma yüklenemedi.]D;]A;Lütfen Java SDK'nızı `{2}` sürümüne güncelleştirin veya önerilen Java SDK sürümünü yeni bir konuma yüklemek için `$(JavaSdkDirectory)` öğesini geçerli bir yönetici olmayan yola ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

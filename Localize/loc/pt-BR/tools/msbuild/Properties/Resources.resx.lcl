@@ -13,7 +13,7 @@
         <Str Cat="Text">
           <Val><![CDATA[  Starting Debugger on {0}:{1}]D;]A;Start sdb then run the following command]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[  Iniciando o depurador em {0}:{1}]D;]A;Inicie o sdb e depois execute o seguinte comando]D;]A;  conectar {0} {1}]D;]A;    ]]></Val>
+            <Val><![CDATA[  Iniciando o Depurador em {0}:{1}]D;]A;Inicie o sdb e depois execute o seguinte comando]D;]A;  conectar {0} {1}]D;]A;    ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -106,7 +106,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Sorry. Fast Deployment is only supported on devices running Android 5.0 (API level 21) or higher.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Lamentamos. A Implantação Rápida só tem suporte em dispositivos Android 5.0 (nível de API 21) ou superior.]D;]A;Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilitar a Implantação Rápida nas páginas de propriedades do projeto do Visual Studio ou edite o arquivo do projeto em um editor de texto.]]></Val>
+            <Val><![CDATA[Desculpe. A Implantação Rápida só tem suporte em dispositivos Android 5.0 (nível de API 21) ou superior.]D;]A;Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilitar a Implantação Rápida nas páginas de propriedades do projeto do Visual Studio ou edite o arquivo do projeto em um editor de texto.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -142,7 +142,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the .NET for Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[O aplicativo não tem o atributo "android:debuggable" definido no AndroidManifest.xml.]D;]A;Isso é necessário para que a Implantação Rápida funcione. Normalmente, isso é habilitado por padrão por ]D;]A;o sistema de compilação do .NET para Android para compilações de Depuração. Verifique se você não tem este atributo]D;]A;definido no elemento "application" em seu "AndroidManifest.xml".]D;]A;Se você tiver uma classe derivada de "Android.App.Application" e estiver usando o "[Application]5D;", verifique se a propriedade "Debuggable" ]D;]A;não está definida, pois substituirá o valor de compilações de depuração.]D;]A;]]></Val>
+            <Val><![CDATA[O aplicativo não tem o atributo "android:debuggable" definido no AndroidManifest.xml.]D;]A;Isso é necessário para que a Implantação Rápida funcione. Normalmente, isso é habilitado por padrão pelo ]D;]A;sistema de compilação do .NET para Android para compilações de Depuração. Verifique se você não tem este atributo]D;]A;definido no elemento "application" em seu "AndroidManifest.xml".]D;]A;Se você tiver uma classe derivada de "Android.App.Application" e estiver usando o "[Application]5D;", verifique se ]D;]A;a propriedade "Debuggable" não está definida, pois substituirá o valor de compilações de depuração.]D;]A;]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the Xamarin.Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
