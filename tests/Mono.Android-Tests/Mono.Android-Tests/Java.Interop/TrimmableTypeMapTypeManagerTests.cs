@@ -294,10 +294,13 @@ namespace Java.InteropTests
 
 		static void AssumeTrimmableTypeMapEnabled ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
+			if (!IsTrimmableTypeMapEnabled ()) {
 				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
 			}
 		}
+
+		static bool IsTrimmableTypeMapEnabled ()
+			=> AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap", out bool isEnabled) && isEnabled;
 
 		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
 		{

@@ -44,6 +44,8 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
         Value="true" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration"
+        Value="false" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
     <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper

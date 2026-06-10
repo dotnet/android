@@ -195,7 +195,7 @@ sealed class JavaMarshalPeerManager : IDisposable
 
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				ReferenceTrackingHandle peer = peers [i];
-				IJavaPeerable target = peer.Target;
+				IJavaPeerable? target = peer.Target;
 				if (ReferenceEquals (value, target)) {
 					peers.RemoveAt (i);
 					peer.Dispose ();
@@ -264,7 +264,7 @@ sealed class JavaMarshalPeerManager : IDisposable
 
 	unsafe struct ReferenceTrackingHandle : IDisposable
 	{
-		WeakReference<IJavaPeerable> _weakReference;
+		WeakReference<IJavaPeerable?> _weakReference;
 		HandleContext* _context;
 
 		public bool BelongsToContext (HandleContext* context)
@@ -273,7 +273,7 @@ sealed class JavaMarshalPeerManager : IDisposable
 		public ReferenceTrackingHandle (IJavaPeerable peer)
 		{
 			_context = HandleContext.Alloc (peer);
-			_weakReference = new WeakReference<IJavaPeerable> (peer);
+			_weakReference = new (peer);
 		}
 
 		public IJavaPeerable? Target
@@ -915,7 +915,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType = null)
 	{
-		throw CreateValueMarshalingNotSupportedException ();
+		return GetValueCore<T> (ref reference, options, targetType);
 	}
 
 	protected override object? CreateValueCore (
@@ -924,7 +924,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType = null)
 	{
-		throw CreateValueMarshalingNotSupportedException ();
+		return GetValueCore (ref reference, options, targetType);
 	}
 
 	[return: MaybeNull]
@@ -934,7 +934,29 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType = null)
 	{
-		throw CreateValueMarshalingNotSupportedException ();
+		EnsureNotDisposed ();
+		if (!reference.IsValid) {
+#pragma warning disable 8653
+			return default (T);
+#pragma warning restore 8653
+		}
+
+		if (targetType != null && !typeof (T).IsAssignableFrom (targetType)) {
+			throw new ArgumentException (
+				string.Format (CultureInfo.InvariantCulture, "Requested runtime '{0}' value of '{1}' is not compatible with requested compile-time type T of '{2}'.",
+					nameof (targetType),
+					targetType,
+					typeof (T)),
+				nameof (targetType));
+		}
+
+		var value = GetValueCore (ref reference, options, targetType ?? typeof (T));
+		if (value is null) {
+#pragma warning disable 8653
+			return default (T);
+#pragma warning restore 8653
+		}
+		return (T) value;
 	}
 
 	protected override object? GetValueCore (
@@ -943,21 +965,281 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType = null)
 	{
-		throw CreateValueMarshalingNotSupportedException ();
+		EnsureNotDisposed ();
+		if (!reference.IsValid) {
+			return null;
+		}
+
+		var existing = PeekValue (reference);
+		if (existing != null && (targetType == null || targetType.IsAssignableFrom (existing.GetType ()))) {
+			JniObjectReference.Dispose (ref reference, options);
+			return existing;
+		}
+
+		if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
+			return CreatePeer (ref reference, options, targetType);
+		}
+
+		var transfer = ToJniHandleOwnership (reference, options);
+		var value = JavaConvert.FromJniHandle (reference.Handle, transfer, targetType);
+		if (transfer != JniHandleOwnership.DoNotTransfer) {
+			reference = default;
+		}
+		return value;
 	}
 
 	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
 	{
-		throw CreateValueMarshalingNotSupportedException ();
+		EnsureNotDisposed ();
+		if (type == null) {
+			throw new ArgumentNullException (nameof (type));
+		}
+		if (type.ContainsGenericParameters) {
+			throw new ArgumentException ("Generic type definitions are not supported.", nameof (type));
+		}
+
+		if (type == typeof (bool))
+			return TrimmableValueMarshaler<bool>.Instance;
+		if (type == typeof (bool?))
+			return TrimmableValueMarshaler<bool?>.Instance;
+		if (type == typeof (byte))
+			return TrimmableValueMarshaler<byte>.Instance;
+		if (type == typeof (sbyte))
+			return TrimmableValueMarshaler<sbyte>.Instance;
+		if (type == typeof (sbyte?))
+			return TrimmableValueMarshaler<sbyte?>.Instance;
+		if (type == typeof (char))
+			return TrimmableValueMarshaler<char>.Instance;
+		if (type == typeof (char?))
+			return TrimmableValueMarshaler<char?>.Instance;
+		if (type == typeof (short))
+			return TrimmableValueMarshaler<short>.Instance;
+		if (type == typeof (short?))
+			return TrimmableValueMarshaler<short?>.Instance;
+		if (type == typeof (int))
+			return TrimmableValueMarshaler<int>.Instance;
+		if (type == typeof (int?))
+			return TrimmableValueMarshaler<int?>.Instance;
+		if (type == typeof (long))
+			return TrimmableValueMarshaler<long>.Instance;
+		if (type == typeof (long?))
+			return TrimmableValueMarshaler<long?>.Instance;
+		if (type == typeof (float))
+			return TrimmableValueMarshaler<float>.Instance;
+		if (type == typeof (float?))
+			return TrimmableValueMarshaler<float?>.Instance;
+		if (type == typeof (double))
+			return TrimmableValueMarshaler<double>.Instance;
+		if (type == typeof (double?))
+			return TrimmableValueMarshaler<double?>.Instance;
+		if (type == typeof (string))
+			return TrimmableValueMarshaler<string>.Instance;
+		if (type == typeof (object))
+			return TrimmableValueMarshaler<object>.Instance;
+		if (type == typeof (int[]))
+			return TrimmableValueMarshaler<int[]>.Instance;
+		if (type == typeof (IList<int>))
+			return TrimmableValueMarshaler<IList<int>>.Instance;
+		if (type == typeof (global::Java.Interop.JavaArray<int>))
+			return TrimmableValueMarshaler<global::Java.Interop.JavaArray<int>>.Instance;
+		if (type == typeof (JavaPrimitiveArray<int>))
+			return TrimmableValueMarshaler<JavaPrimitiveArray<int>>.Instance;
+		if (type == typeof (JavaInt32Array))
+			return TrimmableValueMarshaler<JavaInt32Array>.Instance;
+		if (type == typeof (IJavaPeerable) || typeof (IJavaPeerable).IsAssignableFrom (type))
+			return TrimmablePeerableValueMarshaler.Instance;
+
+		return TrimmableValueMarshaler<object>.Instance;
 	}
 
 	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
 	{
-		throw CreateValueMarshalingNotSupportedException ();
+		EnsureNotDisposed ();
+		if (typeof (T) == typeof (IJavaPeerable)) {
+			return (JniValueMarshaler<T>)(object) TrimmablePeerableValueMarshaler.Instance;
+		}
+		return TrimmableValueMarshaler<T>.Instance;
 	}
 
-	static NotSupportedException CreateValueMarshalingNotSupportedException ()
+	static JniHandleOwnership ToJniHandleOwnership (JniObjectReference reference, JniObjectReferenceOptions options)
 	{
-		return new NotSupportedException ($"{nameof (TrimmableTypeMapValueManager)} does not support value marshaling yet.");
+		const JniObjectReferenceOptions DisposeSource = (JniObjectReferenceOptions)(1 << 1);
+		if ((options & DisposeSource) != DisposeSource) {
+			return JniHandleOwnership.DoNotTransfer;
+		}
+		return reference.Type switch {
+			JniObjectReferenceType.Local => JniHandleOwnership.TransferLocalRef,
+			JniObjectReferenceType.Global => JniHandleOwnership.TransferGlobalRef,
+			_ => JniHandleOwnership.DoNotTransfer,
+		};
+	}
+
+	sealed class TrimmablePeerableValueMarshaler : JniValueMarshaler<IJavaPeerable?>
+	{
+		public static readonly TrimmablePeerableValueMarshaler Instance = new ();
+
+		public override IJavaPeerable? CreateGenericValue (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType)
+		{
+			return JniEnvironment.Runtime.ValueManager.CreatePeer (ref reference, options, targetType);
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IJavaPeerable? value, ParameterAttributes synchronize)
+		{
+			if (value == null || !value.PeerReference.IsValid) {
+				return new JniValueMarshalerState ();
+			}
+			return new JniValueMarshalerState (value.PeerReference.NewLocalRef ());
+		}
+
+		public override void DestroyGenericArgumentState ([AllowNull] IJavaPeerable? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			DisposeReferenceState (ref state);
+		}
+	}
+
+	sealed class TrimmableValueMarshaler<[DynamicallyAccessedMembers (Constructors)] T> : JniValueMarshaler<T>
+	{
+		public static readonly TrimmableValueMarshaler<T> Instance = new ();
+
+		public override bool IsJniValueType => IsPrimitiveJniValueType (typeof (T));
+
+		public override Type MarshalType => IsJniValueType ? typeof (T) : base.MarshalType;
+
+		[return: MaybeNull]
+		public override T CreateGenericValue (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType)
+		{
+			return JniEnvironment.Runtime.ValueManager.GetValue<T> (ref reference, options, targetType);
+		}
+
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = ParameterAttributes.In)
+		{
+			if (IsJniValueType) {
+				return new JniValueMarshalerState (CreatePrimitiveArgumentValue (value));
+			}
+			return CreateGenericObjectReferenceArgumentState (value, synchronize);
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] T value, ParameterAttributes synchronize)
+		{
+			if (value == null) {
+				return new JniValueMarshalerState ();
+			}
+			if (TryCreateInt32ArrayArgumentState (value, synchronize, out var state)) {
+				return state;
+			}
+
+			var handle = JavaConvert.ToLocalJniHandle (value);
+			return handle == IntPtr.Zero
+				? new JniValueMarshalerState ()
+				: new JniValueMarshalerState (new JniObjectReference (handle, JniObjectReferenceType.Local));
+		}
+
+		public override void DestroyGenericArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			if (TryDestroyInt32ArrayArgumentState (value, ref state, synchronize)) {
+				return;
+			}
+			DisposeReferenceState (ref state);
+		}
+
+		static bool TryCreateInt32ArrayArgumentState ([MaybeNull] T value, ParameterAttributes synchronize, out JniValueMarshalerState state)
+		{
+			state = new JniValueMarshalerState ();
+
+			if (value is not IList<int> list) {
+				return false;
+			}
+
+			synchronize = GetCopyDirection (synchronize);
+			var copyToJava = (synchronize & ParameterAttributes.In) == ParameterAttributes.In;
+			var array = copyToJava
+				? new JavaInt32Array (list)
+				: new JavaInt32Array (list.Count);
+			state = new JniValueMarshalerState (array);
+			return true;
+		}
+
+		static bool TryDestroyInt32ArrayArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			if (state.PeerableValue is not JavaInt32Array array) {
+				return false;
+			}
+
+			synchronize = GetCopyDirection (synchronize);
+			if ((synchronize & ParameterAttributes.Out) == ParameterAttributes.Out && value is IList<int> list) {
+				if (value is int[] targetArray) {
+					array.CopyTo (targetArray, 0);
+				} else {
+					int count = Math.Min (array.Length, list.Count);
+					for (int i = 0; i < count; i++) {
+						list [i] = array [i];
+					}
+				}
+			}
+
+			array.Dispose ();
+			state = new JniValueMarshalerState ();
+			return true;
+		}
+
+		static ParameterAttributes GetCopyDirection (ParameterAttributes value)
+		{
+			const ParameterAttributes inout = ParameterAttributes.In | ParameterAttributes.Out;
+			if ((value & inout) != 0) {
+				return value & inout;
+			}
+			return inout;
+		}
+
+		static bool IsPrimitiveJniValueType (Type type)
+		{
+			return type == typeof (bool) ||
+				type == typeof (byte) ||
+				type == typeof (sbyte) ||
+				type == typeof (char) ||
+				type == typeof (short) ||
+				type == typeof (ushort) ||
+				type == typeof (int) ||
+				type == typeof (uint) ||
+				type == typeof (long) ||
+				type == typeof (ulong) ||
+				type == typeof (float) ||
+				type == typeof (double);
+		}
+
+		static JniArgumentValue CreatePrimitiveArgumentValue ([MaybeNull] T value)
+		{
+			return value switch {
+				null => throw new ArgumentNullException (nameof (value), "Value cannot be null for primitive JNI value types."),
+				bool v => new JniArgumentValue (v),
+				byte v => new JniArgumentValue (v),
+				sbyte v => new JniArgumentValue (v),
+				char v => new JniArgumentValue (v),
+				short v => new JniArgumentValue (v),
+				ushort v => new JniArgumentValue (v),
+				int v => new JniArgumentValue (v),
+				uint v => new JniArgumentValue (v),
+				long v => new JniArgumentValue (v),
+				ulong v => new JniArgumentValue (v),
+				float v => new JniArgumentValue (v),
+				double v => new JniArgumentValue (v),
+				_ => throw new NotSupportedException ($"Type '{typeof (T).AssemblyQualifiedName}' is not a JNI primitive value type."),
+			};
+		}
+	}
+
+	static void DisposeReferenceState (ref JniValueMarshalerState state)
+	{
+		var r = state.ReferenceValue;
+		JniObjectReference.Dispose (ref r);
+		state = new JniValueMarshalerState ();
 	}
 }

@@ -11,7 +11,8 @@ namespace SystemTests
 		public void FeatureFlagIsEnabled ()
 		{
 			// NOTE: this is set to true in tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj
-			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.StartupHookSupport, "RuntimeFeature.StartupHookSupport should be true");
+			AppContext.TryGetSwitch ("System.StartupHookProvider.IsSupported", out bool startupHookSupport);
+			Assert.IsTrue (startupHookSupport, "System.StartupHookProvider.IsSupported should be true");
 		}
 
 		[Test]
