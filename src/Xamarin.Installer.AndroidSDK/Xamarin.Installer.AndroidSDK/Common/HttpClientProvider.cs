@@ -27,6 +27,8 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 		/// </summary>
 		/// <returns>The HttpClient.</returns>
 		/// <param name="uri">The request url.</param>
+		/// <param name="cookieContainer">The cookie container to use, or null to not use cookies.</param>
+		/// <param name="automaticDecompression">The decompression methods to support.</param>
 		public static HttpClient CreateHttpClient (Uri uri, CookieContainer cookieContainer = null, DecompressionMethods automaticDecompression = DecompressionMethods.None)
 		{
 			if (httpClientFactory != null)

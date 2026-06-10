@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
 using Microsoft.Android.Runtime;
@@ -238,7 +236,11 @@ namespace Java.Interop {
 				return null;
 			}
 
-			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			if (string.IsNullOrEmpty (managedAssemblyName)) {
+				return null;
+			}
+
 			Assembly assembly = Assembly.Load (managedAssemblyName);
 			Type? ret = null;
 			foreach (Module module in assembly.Modules) {
@@ -262,20 +264,20 @@ namespace Java.Interop {
 			}
 		}
 
-		static Type? GetJavaToManagedTypeCore (string class_name)
+		static Type? GetJavaToManagedTypeCore (string? class_name)
 		{
-			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
+			if (class_name is not null && TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
 				return type;
 			}
 
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 				throw new System.Diagnostics.UnreachableException (
 					$"{nameof (TypeManager)}.{nameof (GetJavaToManagedTypeCore)} should not be used when " +
-					$"{nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
+					$"{nameof (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
 					$"types through {nameof (TrimmableTypeMapTypeManager)}.");
-			} else if (RuntimeFeature.IsMonoRuntime) {
+			} else if (Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
 				type = monovm_typemap_java_to_managed (class_name);
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
+			} else if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
 				type = clr_typemap_java_to_managed (class_name);
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -370,7 +372,7 @@ namespace Java.Interop {
 						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
 						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
 					}
-					if (RuntimeFeature.IsAssignableFromCheck) {
+					if (Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck) {
 						return null;
 					}
 				}

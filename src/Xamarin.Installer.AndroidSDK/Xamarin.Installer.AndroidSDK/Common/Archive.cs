@@ -22,7 +22,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
     {
         /// <summary>
         /// Gets the collection of patches for this archive. This library currently does not support applying these
-        /// patches, instead it always downloads the full archive from the specified <see cref="Url"/>
+        /// patches, instead it always downloads the full archive from the specified Url
         /// </summary>
         /// <value>The list of patches (if any)</value>
         public IList<ArchivePatch> Patches { get; set; }

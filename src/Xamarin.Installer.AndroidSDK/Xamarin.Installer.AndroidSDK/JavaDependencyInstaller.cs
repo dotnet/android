@@ -72,7 +72,9 @@ namespace Xamarin.Installer.AndroidSDK
 			// If the requested path is not writable, request a different path
 			try {
 				Directory.CreateDirectory (JdkPath);
+#pragma warning disable CS0642 // Possible mistaken empty statement
 				using (File.Create (Path.Combine (JdkPath, "tmp"), 1, FileOptions.DeleteOnClose));
+#pragma warning restore CS0642
 			} catch (Exception) {
 				return false;
 			}

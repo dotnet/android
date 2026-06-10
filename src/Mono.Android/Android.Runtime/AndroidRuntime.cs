@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Reflection;
 
@@ -868,7 +866,7 @@ namespace Android.Runtime {
 							value.GetType ().ToString (),
 							value.PeerReference.ToString (),
 							value.JniIdentityHashCode,
-							RuntimeHelpers.GetHashCode (value)));
+							System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode (value)));
 			}
 
 			// FIXME: need hash cleanup mechanism.

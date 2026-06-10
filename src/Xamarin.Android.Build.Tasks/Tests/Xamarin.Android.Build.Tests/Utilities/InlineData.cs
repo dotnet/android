@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Globalization;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests

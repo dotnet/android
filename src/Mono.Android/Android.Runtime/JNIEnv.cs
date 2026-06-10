@@ -26,7 +26,7 @@ namespace Android.Runtime {
 
 		static Array ArrayCreateInstance (Type elementType, int length)
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					// CoreCLR runtime type loader can construct any T[] dynamically.
 					// IsDynamicCodeSupported is a [FeatureGuard] so this branch is
@@ -134,11 +134,11 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-				if (RuntimeFeature.IsMonoRuntime) {
+				if (Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
 					MonoDroidUnhandledException (innerException ?? javaException);
-				} else if (RuntimeFeature.IsCoreClrRuntime) {
+				} else if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
-				} else if (RuntimeFeature.IsNativeAotRuntime) {
+				} else if (Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -441,7 +441,7 @@ namespace Android.Runtime {
 				return NewObject (jclass, jmethod, p);
 		}
 
-		public static string GetClassNameFromInstance (IntPtr jobject)
+		public static string? GetClassNameFromInstance (IntPtr jobject)
 		{
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
@@ -471,7 +471,7 @@ namespace Android.Runtime {
 
 		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 				// The trimmable typemap doesn't use the native typemap tables.
 				// Delegate to the managed TrimmableTypeMap instead.
 				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
@@ -491,9 +491,9 @@ namespace Android.Runtime {
 
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
-				if (RuntimeFeature.IsMonoRuntime) {
+				if (Microsoft.Android.Runtime.RuntimeFeature.IsMonoRuntime) {
 					ret = monovm_typemap_managed_to_java (type, mvidptr);
-				} else if (RuntimeFeature.IsCoreClrRuntime) {
+				} else if (Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
 					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -696,7 +696,7 @@ namespace Android.Runtime {
 					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
 					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
 					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type t) =>
+					static object? GetObject (IntPtr e, Type? t) =>
 						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
@@ -718,7 +718,7 @@ namespace Android.Runtime {
 			}
 
 			if (array != IntPtr.Zero) {
-				string type = GetClassNameFromInstance (array);
+				string? type = GetClassNameFromInstance (array);
 				if (type == null || type.Length < 1 || type [0] != '[')
 					throw new InvalidOperationException ("Unsupported java array type: " + type);
 

@@ -58,6 +58,10 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 		/// Reports the total progress of all the download and installation steps
 		/// </summary>
 		/// <param name="loadPercentage">Overall progress percentage from 0.0 to 1.0</param>
+		/// <param name="mainComponentsCount">Total number of main components</param>
+		/// <param name="mainComponentIndex">Index of the current main component</param>
+		/// <param name="subComponentsCount">Total number of sub-components</param>
+		/// <param name="subComponentIndex">Index of the current sub-component</param>
 		void ReportTotalProgress (double loadPercentage,
 			int mainComponentsCount, int mainComponentIndex,
 			int subComponentsCount, int subComponentIndex);
