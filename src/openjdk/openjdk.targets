@@ -41,7 +41,8 @@
         SourceUrl="$(_OpenJDKArchiveUrl)"
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
         DestinationFileName="$(_OpenJDKFileName)"
-        Retries="3"
+        Retries="5"
+        RetryDelayMilliseconds="5000"
     />
     <!-- Download the SHA-256 hash file from Microsoft and parse the expected hash.
          File format: "6ecfa864...  microsoft-jdk-21.0.8-windows-x64.zip" -->
@@ -49,7 +50,8 @@
         SourceUrl="$(_OpenJDKHashUrl)"
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
         DestinationFileName="$(_OpenJDKHashFileName)"
-        Retries="3"
+        Retries="5"
+        RetryDelayMilliseconds="5000"
     />
     <PropertyGroup>
       <_OpenJDKExpectedHash>$([System.IO.File]::ReadAllText('$(_OpenJDKHashFile)').Substring(0, 64).ToUpperInvariant())</_OpenJDKExpectedHash>

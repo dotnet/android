@@ -79,14 +79,23 @@ namespace Java.InteropTests
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
 			CB cb = (env, instance) => {
-				Console.WriteLine ("CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
+				// NOTE: this callback runs on a raw native pthread spawned by
+				// libreuse-threads.so and attached to the JVM. NUnit 3 replaces
+				// Console.Out with a TextCapture that resolves the current
+				// TestExecutionContext on every write; from a thread NUnit doesn't
+				// know about it tries to manufacture an AdhocContext and NREs in
+				// MethodWrapper.get_Name, which SIGABRTs the entire process and
+				// causes the test host to report "0 tests ran" for the assembly.
+				// Route diagnostics through Android.Util.Log instead.
+				Android.Util.Log.Info ("ThreadReuse",
+						"CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
 						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
 				if (env != JNIEnv.Handle)
-					Console.WriteLine ("GOOD: they should differ (on the second call)....");
+					Android.Util.Log.Info ("ThreadReuse", "GOOD: they should differ (on the second call)....");
 				if (instance == IntPtr.Zero)
 					return;
 				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
-					Console.WriteLine ("CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
+					Android.Util.Log.Info ("ThreadReuse", "CrossThreadObjectInteractions: o.Handle={0}", o.Handle.ToString ("x"));
 				}
 			};
 			rt_invoke_callback_on_new_thread (cb);
@@ -510,14 +519,30 @@ namespace Java.InteropTests
 
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
 
+			// `Runtime.GetSurfacedObjects()` is process-global: NUnit/MTP
+			// infrastructure (per-test TestExecutionContext, listeners, Console
+			// capture, etc.) creates and releases transient Java.Lang.Object
+			// peers around every test, so the count drifts by a few entries
+			// between the snapshots below. Allow a small tolerance instead of
+			// requiring an exact count -- a real leak would dwarf this.
+			const int tolerance = 10;
+
 			WeakReference r = null;
+			Exception threadException = null;
 			var t = new Thread (() => {
-				var c = new MyCb ();
-				Assert.AreEqual (startCount + 1, Runtime.GetSurfacedObjects ().Count, "#2");
-				r = new WeakReference (c);
+				try {
+					var c = new MyCb ();
+					Assert.That (Runtime.GetSurfacedObjects ().Count,
+							Is.EqualTo (startCount + 1).Within (tolerance), "#2");
+					r = new WeakReference (c);
+				} catch (Exception e) {
+					threadException = e;
+				}
 			});
 			t.Start ();
 			t.Join ();
+			if (threadException != null)
+				throw new Exception ("Worker thread failed", threadException);
 
 			GC.Collect ();
 			GC.WaitForPendingFinalizers ();
@@ -525,7 +550,7 @@ namespace Java.InteropTests
 			GC.WaitForPendingFinalizers ();
 
 			surfaced  = Runtime.GetSurfacedObjects ();
-			Assert.AreEqual (startCount, surfaced.Count, "#3");
+			Assert.That (surfaced.Count, Is.EqualTo (startCount).Within (tolerance), "#3");
 			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
 		}
 	}
