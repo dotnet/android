@@ -26,7 +26,7 @@ namespace Android.Runtime {
 
 		static Array ArrayCreateInstance (Type elementType, int length)
 		{
-			if (Microsoft.Android.Runtime.AndroidRuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					// CoreCLR runtime type loader can construct any T[] dynamically.
 					// IsDynamicCodeSupported is a [FeatureGuard] so this branch is
@@ -134,11 +134,11 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-				if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsMonoRuntime) {
+				if (AndroidRuntimeFeature.IsMonoRuntime) {
 					MonoDroidUnhandledException (innerException ?? javaException);
-				} else if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsCoreClrRuntime) {
+				} else if (AndroidRuntimeFeature.IsCoreClrRuntime) {
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
-				} else if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsNativeAotRuntime) {
+				} else if (AndroidRuntimeFeature.IsNativeAotRuntime) {
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -471,7 +471,7 @@ namespace Android.Runtime {
 
 		internal static unsafe string? TypemapManagedToJava (Type type)
 		{
-			if (Microsoft.Android.Runtime.AndroidRuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				// The trimmable typemap doesn't use the native typemap tables.
 				// Delegate to the managed TrimmableTypeMap instead.
 				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
@@ -491,9 +491,9 @@ namespace Android.Runtime {
 
 			IntPtr ret;
 			fixed (byte* mvidptr = mvid_data) {
-				if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsMonoRuntime) {
+				if (AndroidRuntimeFeature.IsMonoRuntime) {
 					ret = monovm_typemap_managed_to_java (type, mvidptr);
-				} else if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsCoreClrRuntime) {
+				} else if (AndroidRuntimeFeature.IsCoreClrRuntime) {
 					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");

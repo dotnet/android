@@ -9,7 +9,6 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Microsoft.Android.Runtime;
-using RuntimeFeature = Microsoft.Android.Runtime.AndroidRuntimeFeature;
 
 namespace Android.Runtime
 {
@@ -108,10 +107,10 @@ namespace Android.Runtime
 		// Only used for NativeAOT after the runtime has been created. MonoVM and CoreCLR use Initialize().
 		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
-			if (!RuntimeFeature.IsNativeAotRuntime) {
+			if (!AndroidRuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
 			}
-			if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
+			if (AndroidRuntimeFeature.IsMonoRuntime || AndroidRuntimeFeature.IsCoreClrRuntime) {
 				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with MonoVM or CoreCLR.");
 			}
 
@@ -125,10 +124,10 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			if (RuntimeFeature.IsNativeAotRuntime) {
+			if (AndroidRuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
 			}
-			if (RuntimeFeature.IsMonoRuntime == RuntimeFeature.IsCoreClrRuntime) {
+			if (AndroidRuntimeFeature.IsMonoRuntime == AndroidRuntimeFeature.IsCoreClrRuntime) {
 				throw new NotSupportedException ("Internal error: exactly one of AndroidRuntimeFeature.IsMonoRuntime or AndroidRuntimeFeature.IsCoreClrRuntime must be enabled.");
 			}
 
@@ -157,7 +156,7 @@ namespace Android.Runtime
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
-			if (!RuntimeFeature.TrimmableTypeMap) {
+			if (!AndroidRuntimeFeature.TrimmableTypeMap) {
 				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 			}
 			RunStartupHooksIfNeeded ();
@@ -170,11 +169,11 @@ namespace Android.Runtime
 
 		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
+			if (AndroidRuntimeFeature.IsNativeAotRuntime || AndroidRuntimeFeature.ManagedTypeMap) {
 				return new ManagedTypeManager ();
 			}
 
@@ -183,15 +182,15 @@ namespace Android.Runtime
 
 		internal static JniRuntime.JniValueManager CreateValueManager ()
 		{
-			if (RuntimeFeature.IsMonoRuntime) {
+			if (AndroidRuntimeFeature.IsMonoRuntime) {
 				return new AndroidValueManager ();
 			}
 
-			if (RuntimeFeature.IsCoreClrRuntime) {
+			if (AndroidRuntimeFeature.IsCoreClrRuntime) {
 				return new JavaMarshalValueManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime) {
+			if (AndroidRuntimeFeature.IsNativeAotRuntime) {
 				return new JavaMarshalValueManager ();
 			}
 
@@ -217,14 +216,14 @@ namespace Android.Runtime
 
 		static void InitializeTrimmableTypeMapDataIfNeeded ()
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				InitializeTrimmableTypeMapData ();
 			}
 		}
 
 		static void RegisterTrimmableTypeMapNativeMethodsIfNeeded ()
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				// TypeMapLoader.Initialize() only loads managed typemap data. Registering
 				// mono.android.Runtime natives requires JniRuntime.Current and its ClassLoader.
 				TrimmableTypeMap.RegisterNativeMethods ();
@@ -242,9 +241,9 @@ namespace Android.Runtime
 		static void RunStartupHooksIfNeeded ()
 		{
 			// Return if startup hooks are disabled or not CoreCLR
-			if (!RuntimeFeature.IsCoreClrRuntime)
+			if (!AndroidRuntimeFeature.IsCoreClrRuntime)
 				return;
-			if (!RuntimeFeature.StartupHookSupport)
+			if (!AndroidRuntimeFeature.StartupHookSupport)
 				return;
 
 			RunStartupHooks ();

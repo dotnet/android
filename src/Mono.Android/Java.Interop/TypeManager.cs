@@ -274,14 +274,14 @@ namespace Java.Interop {
 				return type;
 			}
 
-			if (Microsoft.Android.Runtime.AndroidRuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				throw new System.Diagnostics.UnreachableException (
 					$"{nameof (TypeManager)}.{nameof (GetJavaToManagedTypeCore)} should not be used when " +
-					$"{nameof (Microsoft.Android.Runtime.AndroidRuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
+					$"{nameof (AndroidRuntimeFeature.TrimmableTypeMap)} is enabled. The trimmable path should resolve " +
 					$"types through {nameof (TrimmableTypeMapTypeManager)}.");
-			} else if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsMonoRuntime) {
+			} else if (AndroidRuntimeFeature.IsMonoRuntime) {
 				type = monovm_typemap_java_to_managed (class_name);
-			} else if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsCoreClrRuntime) {
+			} else if (AndroidRuntimeFeature.IsCoreClrRuntime) {
 				type = clr_typemap_java_to_managed (class_name);
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -376,7 +376,7 @@ namespace Java.Interop {
 						var message = $"Handle 0x{handle:x} is of type '{JNIEnv.GetClassNameFromInstance (handle)}' which is not assignable to '{typeSig.SimpleReference}'";
 						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
 					}
-					if (Microsoft.Android.Runtime.AndroidRuntimeFeature.IsAssignableFromCheck) {
+					if (AndroidRuntimeFeature.IsAssignableFromCheck) {
 						return null;
 					}
 				}
