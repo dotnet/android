@@ -1,0 +1,40 @@
+# Shared Android toolchain archives cache template
+# Caches downloads under $(AndroidToolchainCacheDirectory) (default:
+# $HOME/android-archives) between pipeline runs to avoid transient
+# network failures when downloading from dl.google.com, aka.ms, and
+# github.com (binutils, bundletool).
+#
+# Cache safety: every download under this directory is verified against
+# a hardcoded SHA-256 hash by the corresponding MSBuild target (see
+# src/androidsdk/androidsdk.targets, src/openjdk/openjdk.targets,
+# src/binutils/binutils.targets, src/aapt2/aapt2.targets,
+# src/bundletool/bundletool.targets). Any stale/corrupt cached file is
+# deleted and re-downloaded.
+#
+# See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
+
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+
+steps:
+- script: echo "##vso[task.setvariable variable=ANDROID_ARCHIVES_DIR]$HOME/android-archives"
+  displayName: prepare android-archives cache variables
+  condition: ne(variables['Agent.OS'], 'Windows_NT')
+
+- pwsh: |
+    $dir = Join-Path $env:USERPROFILE 'android-archives'
+    Write-Host "##vso[task.setvariable variable=ANDROID_ARCHIVES_DIR]$dir"
+  displayName: prepare android-archives cache variables
+  condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+# Key off every file that defines what gets downloaded or its expected hash.
+# Bumping a version or hash in any of these invalidates the cache; the
+# `restoreKeys` fallback still recovers most of the previous cache when only
+# a subset changes (e.g. a single component bump).
+- task: Cache@2
+  displayName: cache Android toolchain archives
+  inputs:
+    key: '"android-archives" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/binutils/binutils.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
+    restoreKeys: |
+      "android-archives" | "v1" | "$(Agent.OS)"
+    path: $(ANDROID_ARCHIVES_DIR)
