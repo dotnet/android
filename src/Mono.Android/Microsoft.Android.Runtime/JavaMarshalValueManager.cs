@@ -244,7 +244,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
-		if (RuntimeFeature.TrimmableTypeMap)
+		if (AndroidRuntimeFeature.TrimmableTypeMap)
 			throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
 
 		base.ActivatePeer (reference, type, cinfo, argumentValues);
@@ -500,7 +500,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			return null;
 		}
 
-		if (RuntimeFeature.TrimmableTypeMap) {
+		if (AndroidRuntimeFeature.TrimmableTypeMap) {
 			try {
 				// Mirror legacy GetPeerType: callers commonly request universal
 				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
@@ -533,7 +533,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 				throw new NotSupportedException (
 					$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
-					$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+					$"with targetType '{targetName}' while {nameof (AndroidRuntimeFeature.TrimmableTypeMap)} is enabled. " +
 					$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
 			} finally {
 				JniObjectReference.Dispose (ref reference, transfer);

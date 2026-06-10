@@ -27,7 +27,7 @@ public class TrimmableTypeMap
 
 	internal static TrimmableTypeMap Instance =>
 		s_instance ?? throw new InvalidOperationException (
-			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
+			"TrimmableTypeMap has not been initialized. Ensure AndroidRuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
@@ -138,7 +138,7 @@ public class TrimmableTypeMap
 
 			if (s_instance is null) {
 				throw new InvalidOperationException (
-					"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
+					"TrimmableTypeMap has not been initialized. Ensure AndroidRuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 			}
 
 			using var runtimeClass = new JniType ("mono/android/Runtime"u8);

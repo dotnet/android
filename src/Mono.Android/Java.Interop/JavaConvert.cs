@@ -81,7 +81,7 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				var factoryConverter = TryGetFactoryBasedConverter (target);
 				if (factoryConverter != null)
 					return factoryConverter;
@@ -148,7 +148,7 @@ namespace Java.Interop {
 			if (!typeof (IJavaPeerable).IsAssignableFrom (elementType))
 				return null;
 
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (AndroidRuntimeFeature.TrimmableTypeMap) {
 				return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
 			}
 
@@ -198,7 +198,7 @@ namespace Java.Interop {
 					return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
 
 				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
-					if (RuntimeFeature.TrimmableTypeMap)
+					if (AndroidRuntimeFeature.TrimmableTypeMap)
 						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
 					return Java.Lang.Object.GetObject (handle, transfer, elementType);
 				}

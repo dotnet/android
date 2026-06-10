@@ -9,7 +9,7 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Microsoft.Android.Runtime;
-using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
+using RuntimeFeature = Microsoft.Android.Runtime.AndroidRuntimeFeature;
 
 namespace Android.Runtime
 {
@@ -129,7 +129,7 @@ namespace Android.Runtime
 				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
 			}
 			if (RuntimeFeature.IsMonoRuntime == RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: exactly one of RuntimeFeature.IsMonoRuntime or RuntimeFeature.IsCoreClrRuntime must be enabled.");
+				throw new NotSupportedException ("Internal error: exactly one of AndroidRuntimeFeature.IsMonoRuntime or AndroidRuntimeFeature.IsCoreClrRuntime must be enabled.");
 			}
 
 			IntPtr total_timing_sequence = IntPtr.Zero;

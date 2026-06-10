@@ -124,7 +124,7 @@ namespace Android.Runtime {
 		{
 			var r = base.CreateLocalReference (value, ref localReferenceCount);
 
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogLocalRef) {
 					var tname = Thread.CurrentThread.Name;
 					var tid   = Thread.CurrentThread.ManagedThreadId;
@@ -138,7 +138,7 @@ namespace Android.Runtime {
 
 		public override void DeleteLocalReference (ref JniObjectReference value, ref int localReferenceCount)
 		{
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogLocalRef) {
 					var tname = Thread.CurrentThread.Name;
 					var tid   = Thread.CurrentThread.ManagedThreadId;
@@ -152,7 +152,7 @@ namespace Android.Runtime {
 		public override void CreatedLocalReference (JniObjectReference value, ref int localReferenceCount)
 		{
 			base.CreatedLocalReference (value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogLocalRef) {
 					var tname = Thread.CurrentThread.Name;
 					var tid   = Thread.CurrentThread.ManagedThreadId;
@@ -165,7 +165,7 @@ namespace Android.Runtime {
 		public override IntPtr ReleaseLocalReference (ref JniObjectReference value, ref int localReferenceCount)
 		{
 			var r = base.ReleaseLocalReference (ref value, ref localReferenceCount);
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogLocalRef) {
 					var tname = Thread.CurrentThread.Name;
 					var tid   = Thread.CurrentThread.ManagedThreadId;
@@ -181,7 +181,7 @@ namespace Android.Runtime {
 
 		public override void WriteLocalReferenceLine (string format, params object?[] args)
 		{
-			if (!RuntimeFeature.ObjectReferenceLogging) {
+			if (!AndroidRuntimeFeature.ObjectReferenceLogging) {
 				return;
 			}
 			if (!Logger.LogLocalRef) {
@@ -194,7 +194,7 @@ namespace Android.Runtime {
 
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
-			if (!RuntimeFeature.ObjectReferenceLogging) {
+			if (!AndroidRuntimeFeature.ObjectReferenceLogging) {
 				return;
 			}
 			if (!Logger.LogGlobalRef) {
@@ -210,7 +210,7 @@ namespace Android.Runtime {
 			var r = base.CreateGlobalReference (value);
 
 			int gc;
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogGlobalRef) {
 					var ctype = GetObjectRefType (value.Type);
 					var ntype = GetObjectRefType (r.Type);
@@ -249,7 +249,7 @@ namespace Android.Runtime {
 
 		public override void DeleteGlobalReference (ref JniObjectReference value)
 		{
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogGlobalRef) {
 					var ctype = GetObjectRefType (value.Type);
 					var tname = Thread.CurrentThread.Name;
@@ -270,7 +270,7 @@ namespace Android.Runtime {
 		{
 			var r = base.CreateWeakGlobalReference (value);
 
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogGlobalRef) {
 					var ctype = GetObjectRefType (value.Type);
 					var ntype = GetObjectRefType (r.Type);
@@ -290,7 +290,7 @@ namespace Android.Runtime {
 
 		public override void DeleteWeakGlobalReference (ref JniObjectReference value)
 		{
-			if (RuntimeFeature.ObjectReferenceLogging) {
+			if (AndroidRuntimeFeature.ObjectReferenceLogging) {
 				if (Logger.LogGlobalRef) {
 					var ctype = GetObjectRefType (value.Type);
 					var tname = Thread.CurrentThread.Name;

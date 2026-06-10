@@ -15,11 +15,11 @@ namespace Android.Runtime
 
 		static AndroidRuntimeInternal ()
 		{
-			if (RuntimeFeature.IsMonoRuntime) {
+			if (AndroidRuntimeFeature.IsMonoRuntime) {
 				mono_unhandled_exception = MonoUnhandledException;
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
+			} else if (AndroidRuntimeFeature.IsCoreClrRuntime) {
 				mono_unhandled_exception = CoreClrUnhandledException;
-			} else if (RuntimeFeature.IsNativeAotRuntime) {
+			} else if (AndroidRuntimeFeature.IsNativeAotRuntime) {
 				mono_unhandled_exception = CoreClrUnhandledException;
 			} else {
 				throw new NotSupportedException ("Internal error: unknown runtime not supported");
