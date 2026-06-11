@@ -117,27 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CreateKeyError_AliasContainsInvalidCharacters" xml:space="preserve">
-    <value>별칭에는 파일 이름에 허용되지 않는 문자가 있을 수 없습니다.</value>
-  </data>
-  <data name="CreateKeyError_ErrorImportingKey" xml:space="preserve">
-    <value>키를 가져오는 동안 오류가 발생했습니다.</value>
-  </data>
-  <data name="CreateKeyError_GenericError" xml:space="preserve">
-    <value>키를 만드는 동안 오류가 발생했습니다.</value>
-  </data>
-  <data name="CreateKeyError_KeyStoreNotFound" xml:space="preserve">
-    <value>키 저장소를 찾을 수 없습니다.</value>
-  </data>
-  <data name="CreateKeyError_MinimumOneYearValidity" xml:space="preserve">
-    <value>유효 기간은 1년 미만일 수 없습니다.</value>
-  </data>
-  <data name="CreateKeyError_NotInitialized" xml:space="preserve">
-    <value>KeyStoreManagement가 초기화되지 않았습니다.</value>
-  </data>
-  <data name="CreateKeyError_UnsupportedPlatform" xml:space="preserve">
-    <value>지원되지 않는 플랫폼</value>
-  </data>
   <data name="JdwpClientDisconnectError" xml:space="preserve">
     <value>Jdwp 클라이언트의 연결을 끊는 동안 예기치 않은 오류가 발생했습니다.</value>
   </data>

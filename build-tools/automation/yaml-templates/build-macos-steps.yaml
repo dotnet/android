@@ -40,6 +40,10 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
+- template: /build-tools/automation/yaml-templates/cache-android-archives.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 # Prepare and Build everything
 # NOTE: UseSharedCompilation=false is a workaround for a Roslyn build-server hang on macOS
 # (the VBCSCompiler named-pipe write deadlocks on first `csc` invocation under the .NET 11 preview.6 SDK).

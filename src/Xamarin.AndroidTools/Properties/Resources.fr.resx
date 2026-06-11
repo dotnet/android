@@ -117,27 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CreateKeyError_AliasContainsInvalidCharacters" xml:space="preserve">
-    <value>L’alias ne peut pas contenir de caractères non autorisés dans les noms de fichiers</value>
-  </data>
-  <data name="CreateKeyError_ErrorImportingKey" xml:space="preserve">
-    <value>Désolé, une erreur s’est produite lors de l’importation du contrôle AI.</value>
-  </data>
-  <data name="CreateKeyError_GenericError" xml:space="preserve">
-    <value>Désolé, une erreur s’est produite lors de la création de la clé</value>
-  </data>
-  <data name="CreateKeyError_KeyStoreNotFound" xml:space="preserve">
-    <value>Le magasin de clés est introuvable</value>
-  </data>
-  <data name="CreateKeyError_MinimumOneYearValidity" xml:space="preserve">
-    <value>La validité ne peut pas être inférieure à 1 an</value>
-  </data>
-  <data name="CreateKeyError_NotInitialized" xml:space="preserve">
-    <value>KeyStoreManagement n’a pas été initialisé</value>
-  </data>
-  <data name="CreateKeyError_UnsupportedPlatform" xml:space="preserve">
-    <value>Plateforme non prise en charge</value>
-  </data>
   <data name="JdwpClientDisconnectError" xml:space="preserve">
     <value>Une erreur inattendue s’est produite lors de la tentative de déconnexion du client Jdwp.</value>
   </data>
