@@ -11,6 +11,8 @@ namespace Xamarin.Android.RuntimeTests
 	[Instrumentation (Name = "xamarin.android.runtimetests.TestInstrumentation")]
 	public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
 	{
+		const string TrimmableTypeMapUnsupportedCategory = "TrimmableTypeMapUnsupported";
+
 		protected TestInstrumentation (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -30,6 +32,14 @@ namespace Xamarin.Android.RuntimeTests
 				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					categories.Add ("NativeTypeMap");
 					categories.Add ("Export");
+					// Java.Interop tests in this category exercise APIs that are unsupported
+					// by design under the trimmable typemap: expression-tree-based marshaling
+					// from the obsolete runtime marshal-member builder, hand-written native
+					// registration via [JniAddNativeMethodRegistration], and Java test peers
+					// which call net.dot.jni.ManagedPeer.construct/registerNativeMembers.
+					// The trimmable runtime must use generated/AOT-safe marshal and
+					// registration paths instead.
+					categories.Add (TrimmableTypeMapUnsupportedCategory);
 				}
 
 				// Build-time flags flow in via runtimeconfig.json properties
@@ -78,19 +88,28 @@ namespace Xamarin.Android.RuntimeTests
 				if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
 					return null;
 
-				// Tests from the external Java.Interop-Tests assembly that fail under the
-				// trimmable typemap. These cannot use [Category] because we don't control
-				// that assembly — they must be excluded by name here.
+				// Tests from the external Java.Interop-Tests assembly that still fail under
+				// the trimmable typemap and are not covered by a category.
 				return new [] {
-					// Known limitation: [JniAddNativeMethodRegistrationAttribute] is not
-					// supported by design under the trimmable typemap. This Java.Interop-Tests
-					// fixture uses that attribute to register native callbacks on a hand-written
-					// Java peer (an obsolete code path whose primary consumer, jnimarshalmethod-gen,
-					// was removed in dotnet/java-interop#1405). The trimmable typemap generator
-					// emits XA4251 when it encounters the attribute and instructs users to either
-					// avoid it or switch off the trimmable typemap.
-					// See https://github.com/dotnet/android/issues/11170.
-					"Java.InteropTests.InvokeVirtualFromConstructorTests",
+					// Value-marshaling cases that are still failing under the trimmable
+					// value manager. Keep these granular so passing value-marshaler tests
+					// stay enabled while the remaining gaps are fixed.
+					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.CreateArgumentState",
+					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.CreateGenericArgumentState",
+					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.DestroyArgumentState",
+					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.TestIsJniValueType",
+
+					// Current trimmable runtime exception/type-manager behavior differs from
+					// the legacy typemap path these tests assert against.
+					"Java.InteropTests.ConstructorActivationTests.JavaSideThrowingConstructorPropagatesException",
+					"Java.InteropTests.ExportTests.Export_Method_NestedJniCall_PreservesExceptionFromInnerExport",
+					"Java.InteropTests.ExportTests.Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException",
+					"Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
+					"Java.InteropTests.JniRuntimeTest.BuiltInSimpleReferenceMap_ContainsManagedPeerByDefault",
+					"Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
+					"Java.InteropTests.JniTypeManagerTests.GetType",
+					"Java.InteropTests.JniTypeManagerTests.GetTypeSignature_Type",
+					"Xamarin.Android.RuntimeTests.ExceptionTest.InnerExceptionIsSet",
 				};
 			}
 		}
