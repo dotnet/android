@@ -14,6 +14,7 @@ namespace Microsoft.Android.Runtime;
 /// Type manager for the trimmable typemap path. Delegates type lookups
 /// to <see cref="TrimmableTypeMap"/>.
 /// </summary>
+[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
 class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 {
 	const string NoSimpleReference = "\0";
@@ -36,6 +37,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 		}
 	}
 
+	[UnconditionalSuppressMessage ("Trimming", "IL2063", Justification = "Temporary suppression until trimmable typemap type entries carry DAM annotations.")]
 	[return: DynamicallyAccessedMembers (MethodsConstructors)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{

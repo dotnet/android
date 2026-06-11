@@ -310,6 +310,7 @@ namespace Android.Runtime {
 		}
 	}
 
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
@@ -333,6 +334,7 @@ namespace Android.Runtime {
 				yield return t;
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Temporary suppression until legacy typemap entries carry DAM annotations.")]
 		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 		{
@@ -638,6 +640,7 @@ namespace Android.Runtime {
 		}
 	}
 
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
 	class AndroidValueManager : JniRuntime.ReflectionJniValueManager {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
