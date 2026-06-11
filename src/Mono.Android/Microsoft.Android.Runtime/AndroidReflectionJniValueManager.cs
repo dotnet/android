@@ -7,9 +7,6 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-// Temporarily reflection-based until follow-up work removes AOT/trimming suppressions.
-[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
-[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
 abstract class AndroidReflectionJniValueManager : JniRuntime.ReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
