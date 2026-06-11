@@ -11,8 +11,6 @@ namespace Xamarin.Android.RuntimeTests
 	[Instrumentation (Name = "xamarin.android.runtimetests.TestInstrumentation")]
 	public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
 	{
-		const string TrimmableTypeMapUnsupportedCategory = "TrimmableTypeMapUnsupported";
-
 		protected TestInstrumentation (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
@@ -39,7 +37,6 @@ namespace Xamarin.Android.RuntimeTests
 					// which call net.dot.jni.ManagedPeer.construct/registerNativeMembers.
 					// The trimmable runtime must use generated/AOT-safe marshal and
 					// registration paths instead.
-					categories.Add (TrimmableTypeMapUnsupportedCategory);
 				}
 
 				// Build-time flags flow in via runtimeconfig.json properties
