@@ -113,6 +113,11 @@ stages:
           avdType: google_apis
     pool:
       vmImage: $(HostedMacImageWithEmulator)
+    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
+    # See dotnet/android PR #11477.  Job-level variables are exported as env vars to every step.
+    variables:
+    - name: UseSharedCompilation
+      value: false
     workspace:
       clean: all
     steps:
@@ -121,15 +126,11 @@ stages:
         xaprepareScenario: EmulatorTestDependencies
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
-    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
-    # See dotnet/android PR #11477.
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
         displayName: prepare java.interop $(XA.Build.Configuration)
-        env:
-          UseSharedCompilation: false
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
