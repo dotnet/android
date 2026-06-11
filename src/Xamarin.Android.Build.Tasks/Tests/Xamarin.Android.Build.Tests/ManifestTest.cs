@@ -1340,7 +1340,8 @@ class TestActivity : Activity { }"
 			} else {
 				if (runtime == AndroidRuntime.NativeAOT) {
 					// 2 of: warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
-					StringAssertEx.Contains ("2 Warning(s)", builder.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					// 2 of: warning IL2104: Assembly 'Mono.Android' produced trim warnings.
+					StringAssertEx.Contains ("4 Warning(s)", builder.LastBuildOutput, "NativeAOT should produce four warnings");
 				} else {
 					builder.AssertHasNoWarnings ();
 				}

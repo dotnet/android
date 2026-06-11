@@ -569,7 +569,7 @@ namespace UnnamedProject {
 				if (runtime != AndroidRuntime.NativeAOT) {
 					b.AssertHasNoWarnings ();
 				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					StringAssertEx.Contains ("4 Warning(s)", b.LastBuildOutput, "NativeAOT should produce four warnings");
 				}
 
 				//Make sure the APKs are signed

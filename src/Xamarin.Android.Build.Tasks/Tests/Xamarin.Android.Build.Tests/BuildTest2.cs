@@ -462,11 +462,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
+					// NativeAOT currently (Nov 2025) produces 10 `ILC : AOT analysis warning IL3050` warnings for various
 					// bits of code. Even though this test expects no warnings and the above likely make the app not work
 					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
 					// of other warnings.
-					int numberOfExpectedWarnings = 6;
+					int numberOfExpectedWarnings = 10;
 
 					Assert.IsTrue (
 						StringAssertEx.ContainsText (
@@ -501,15 +501,15 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					AddTestData (runtime, "", new string [0], true);
 				}
-				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 3);
 				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
-				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, runtime == AndroidRuntime.NativeAOT ? 2 : 3);
 				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 2);
 				} else {
-					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3);
+					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 4);
 				}
 			}
 
