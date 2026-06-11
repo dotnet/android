@@ -12,8 +12,6 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-delegate JniValueMarshaler ValueMarshalerFactory ();
-
 /// <summary>
 /// Central type map for the trimmable typemap path. Owns the ITypeMap
 /// and provides peer creation, invoker resolution, container factories, and native
@@ -39,8 +37,6 @@ public class TrimmableTypeMap
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly ITypeMap _typeMap;
-	readonly Dictionary<Type, ValueMarshalerFactory> _valueMarshalerFactories = new ();
-	readonly ConcurrentDictionary<Type, JniValueMarshaler> _valueMarshalerCache = new ();
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
@@ -138,30 +134,6 @@ public class TrimmableTypeMap
 
 			s_instance = new TrimmableTypeMap (typeMap);
 		}
-	}
-
-	internal static void RegisterValueMarshaler (Type valueType, ValueMarshalerFactory factory)
-	{
-		ArgumentNullException.ThrowIfNull (valueType);
-		ArgumentNullException.ThrowIfNull (factory);
-
-		lock (s_initLock) {
-			var instance = s_instance ?? throw new InvalidOperationException (
-				"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
-
-			instance._valueMarshalerFactories.Add (valueType, factory);
-		}
-	}
-
-	internal bool TryGetValueMarshaler (Type type, [NotNullWhen (true)] out JniValueMarshaler? marshaler)
-	{
-		if (!_valueMarshalerFactories.ContainsKey (type)) {
-			marshaler = null;
-			return false;
-		}
-
-		marshaler = _valueMarshalerCache.GetOrAdd (type, static (t, self) => self._valueMarshalerFactories [t] (), this);
-		return true;
 	}
 
 	internal static unsafe void RegisterNativeMethods ()

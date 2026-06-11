@@ -31,12 +31,9 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("NativeTypeMap");
 					categories.Add ("Export");
 					// Java.Interop tests in this category exercise APIs that are unsupported
-					// by design under the trimmable typemap: expression-tree-based marshaling
-					// from the obsolete runtime marshal-member builder, hand-written native
-					// registration via [JniAddNativeMethodRegistration], and Java test peers
-					// which call net.dot.jni.ManagedPeer.construct/registerNativeMembers.
-					// The trimmable runtime must use generated/AOT-safe marshal and
-					// registration paths instead.
+					// by design under the trimmable typemap, such as obsolete
+					// marshal-member-builder paths or runtime swaps that are not part of
+					// the generated/AOT-safe trimmable runtime path.
 				}
 
 				// Build-time flags flow in via runtimeconfig.json properties

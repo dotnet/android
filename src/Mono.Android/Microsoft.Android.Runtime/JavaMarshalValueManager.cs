@@ -1141,8 +1141,6 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			throw new ArgumentException ("Generic type definitions are not supported.", nameof (type));
 		}
 
-		if (TrimmableTypeMap.Instance.TryGetValueMarshaler (type, out var customMarshaler))
-			return customMarshaler;
 		if (TrimmableValueMarshalerHelper.TryGetPrimitiveValueMarshaler (type, out var primitiveMarshaler))
 			return primitiveMarshaler;
 		if (type == typeof (string))

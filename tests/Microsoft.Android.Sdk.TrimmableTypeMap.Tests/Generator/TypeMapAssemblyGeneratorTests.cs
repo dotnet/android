@@ -14,13 +14,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 {
 	static MemoryStream GenerateAssembly (IReadOnlyList<JavaPeerInfo> peers, string assemblyName = "TestTypeMap")
-		=> GenerateAssembly (peers, [], assemblyName);
-
-	static MemoryStream GenerateAssembly (IReadOnlyList<JavaPeerInfo> peers, IReadOnlyList<ValueMarshalerInfo> valueMarshalers, string assemblyName = "TestTypeMap")
 	{
 		var stream = new MemoryStream ();
 		var generator = new TypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (peers, valueMarshalers, stream, assemblyName);
+		generator.Generate (peers, stream, assemblyName);
 		stream.Position = 0;
 		return stream;
 	}
@@ -285,32 +282,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.NotNull (reader);
 		var asmDef = reader.GetAssemblyDefinition ();
 		Assert.Equal ("EmptyTest", reader.GetString (asmDef.Name));
-	}
-
-	[Fact]
-	public void Generate_ValueMarshalerMapping_EmitsLazyFactoryMap ()
-	{
-		var valueMarshalers = ScanFixtureValueMarshalers ();
-
-		using var stream = GenerateAssembly ([], valueMarshalers, "ValueMarshalerTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var mappingType = reader.TypeDefinitions
-			.Select (h => reader.GetTypeDefinition (h))
-			.Single (t =>
-				reader.GetString (t.Namespace) == "_TypeMap" &&
-				reader.GetString (t.Name) == "ValueMarshalerMapping");
-		var methodNames = mappingType.GetMethods ()
-			.Select (h => reader.GetMethodDefinition (h))
-			.Select (m => reader.GetString (m.Name))
-			.ToList ();
-
-		Assert.Contains ("CreateValueMarshaler_0", methodNames);
-		Assert.Contains ("RegisterValueMarshalers", methodNames);
-		Assert.Contains ("ValueMarshalerFactory", GetTypeRefNames (reader));
-		Assert.Contains ("JniValueMarshaler", GetTypeRefNames (reader));
-		Assert.Contains ("DemoValueTypeMarshaler", GetTypeRefNames (reader));
 	}
 
 	[Fact]

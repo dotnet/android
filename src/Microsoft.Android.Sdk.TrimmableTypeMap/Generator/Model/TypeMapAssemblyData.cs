@@ -35,8 +35,6 @@ sealed class TypeMapAssemblyData
 	/// </summary>
 	public List<TypeMapAssociationData> Associations { get; } = new ();
 
-	public List<ValueMarshalerData> ValueMarshalers { get; } = new ();
-
 	/// <summary>
 	/// Alias holder types to emit — one per alias group (≥2 types sharing a JNI name).
 	/// </summary>
@@ -405,12 +403,6 @@ sealed record TypeMapAssociationData
 	/// Assembly-qualified proxy type reference (the alias holder).
 	/// </summary>
 	public required string AliasProxyTypeReference { get; init; }
-}
-
-sealed record ValueMarshalerData
-{
-	public required TypeRefData ValueType { get; init; }
-	public required TypeRefData MarshalerType { get; init; }
 }
 
 /// <summary>
