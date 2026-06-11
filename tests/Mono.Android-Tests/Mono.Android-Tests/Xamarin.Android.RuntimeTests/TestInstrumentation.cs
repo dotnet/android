@@ -88,17 +88,13 @@ namespace Xamarin.Android.RuntimeTests
 				// Tests from the external Java.Interop-Tests assembly that still fail under
 				// the trimmable typemap and are not covered by a category.
 				return new [] {
-					// Current trimmable runtime exception/type-manager behavior differs from
-					// the legacy typemap path these tests assert against.
-					"Java.InteropTests.ConstructorActivationTests.JavaSideThrowingConstructorPropagatesException",
-					"Java.InteropTests.ExportTests.Export_Method_NestedJniCall_PreservesExceptionFromInnerExport",
-					"Java.InteropTests.ExportTests.Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException",
+					// Current trimmable runtime type-manager behavior differs from the
+					// legacy typemap path these tests assert against.
 					"Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
 					"Java.InteropTests.JniRuntimeTest.BuiltInSimpleReferenceMap_ContainsManagedPeerByDefault",
 					"Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
 					"Java.InteropTests.JniTypeManagerTests.GetType",
 					"Java.InteropTests.JniTypeManagerTests.GetTypeSignature_Type",
-					"Xamarin.Android.RuntimeTests.ExceptionTest.InnerExceptionIsSet",
 				};
 			}
 		}

@@ -58,6 +58,10 @@ namespace Android.Runtime {
 			if (!reference.IsValid)
 				return null;
 			var peeked      = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
+			if (peeked is JavaProxyThrowable proxyThrowable) {
+				JniObjectReference.Dispose (ref reference, options);
+				return proxyThrowable.InnerException;
+			}
 			var peekedExc   = peeked as Exception;
 			if (peekedExc == null) {
 				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
