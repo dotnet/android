@@ -976,6 +976,10 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return existing;
 		}
 
+		if (TryCreateJavaArrayWrapper (ref reference, options, targetType, out var arrayWrapper)) {
+			return arrayWrapper;
+		}
+
 		if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 			return CreatePeer (ref reference, options, targetType);
 		}
@@ -986,6 +990,21 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			reference = default;
 		}
 		return value;
+	}
+
+	static bool TryCreateJavaArrayWrapper (
+		ref JniObjectReference reference,
+		JniObjectReferenceOptions options,
+		Type? targetType,
+		[NotNullWhen (true)] out object? value)
+	{
+		if (targetType == typeof (JavaInt32Array) || targetType == typeof (JavaPrimitiveArray<int>)) {
+			value = new JavaInt32Array (ref reference, options);
+			return true;
+		}
+
+		value = null;
+		return false;
 	}
 
 	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
@@ -1110,6 +1129,9 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			}
 			if (TryCreateInt32ArrayArgumentState (value, synchronize, out var state)) {
 				return state;
+			}
+			if (value is IJavaPeerable peerable) {
+				return PeerableValueMarshaler.CreateObjectReferenceArgumentState (peerable, synchronize);
 			}
 
 			var handle = JavaConvert.ToLocalJniHandle (value);

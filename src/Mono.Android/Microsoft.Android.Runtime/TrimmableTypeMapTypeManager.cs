@@ -129,6 +129,32 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 					return true;
 				}
 
+				if (GetPrimitiveArrayWrapperKeywordTypeName (type) is string primitiveArrayKeywordTypeName) {
+					signature = new JniTypeSignature (primitiveArrayKeywordTypeName, 1, keyword: true);
+					return true;
+				}
+
+				static string? GetPrimitiveArrayWrapperKeywordTypeName (Type type)
+				{
+					if (type == typeof (JavaBooleanArray) || type == typeof (JavaPrimitiveArray<bool>))
+						return "Z";
+					if (type == typeof (JavaSByteArray) || type == typeof (JavaPrimitiveArray<sbyte>))
+						return "B";
+					if (type == typeof (JavaCharArray) || type == typeof (JavaPrimitiveArray<char>))
+						return "C";
+					if (type == typeof (JavaInt16Array) || type == typeof (JavaPrimitiveArray<short>))
+						return "S";
+					if (type == typeof (JavaInt32Array) || type == typeof (JavaPrimitiveArray<int>))
+						return "I";
+					if (type == typeof (JavaInt64Array) || type == typeof (JavaPrimitiveArray<long>))
+						return "J";
+					if (type == typeof (JavaSingleArray) || type == typeof (JavaPrimitiveArray<float>))
+						return "F";
+					if (type == typeof (JavaDoubleArray) || type == typeof (JavaPrimitiveArray<double>))
+						return "D";
+					return null;
+				}
+
 				signature = default;
 				return false;
 			}
