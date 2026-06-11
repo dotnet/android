@@ -254,13 +254,10 @@ namespace Java.InteropTests
 
 		static void AssumeTrimmableExportExceptionRouting ()
 		{
-			if (!IsTrimmableTypeMapEnabled ()) {
+			if (!RuntimeFeature.TrimmableTypeMap) {
 				Assert.Ignore ("[Export] exception routing coverage is only relevant for the trimmable typemap path.");
 			}
 		}
-
-		static bool IsTrimmableTypeMapEnabled ()
-			=> AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap", out bool isEnabled) && isEnabled;
 
 		// ---------------------------------------------------------------
 		// Group D — [ExportField] runtime visibility from Java

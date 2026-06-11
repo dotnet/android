@@ -53,12 +53,9 @@ namespace Xamarin.Android.NetTests
 
 		static void AssumeTrimmableTypeMapEnabled ()
 		{
-			if (!IsTrimmableTypeMapEnabled ()) {
+			if (!RuntimeFeature.TrimmableTypeMap) {
 				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
 			}
 		}
-
-		static bool IsTrimmableTypeMapEnabled ()
-			=> System.AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap", out bool isEnabled) && isEnabled;
 	}
 }

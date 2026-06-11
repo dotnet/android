@@ -528,13 +528,10 @@ namespace Java.InteropTests
 
 		static void AssumeTrimmableConstructorParameterMarshalling ()
 		{
-			if (!IsTrimmableTypeMapEnabled ()) {
+			if (!RuntimeFeature.TrimmableTypeMap) {
 				Assert.Ignore ("Legacy TypeManager.n_Activate does not marshal string, short, or array constructor parameters; this case validates trimmable constructor UCO parameter marshalling.");
 			}
 		}
-
-		static bool IsTrimmableTypeMapEnabled ()
-			=> AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap", out bool isEnabled) && isEnabled;
 
 		static T CreateFromJava<T> (string constructorSignature, params JValue [] arguments)
 			where T : Java.Lang.Object
@@ -576,7 +573,7 @@ namespace Java.InteropTests
 			var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);
 			try {
 				Assert.AreSame (instance, registered);
-				if (IsTrimmableTypeMapEnabled ()) {
+				if (RuntimeFeature.TrimmableTypeMap) {
 					Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
 				}
 			} finally {

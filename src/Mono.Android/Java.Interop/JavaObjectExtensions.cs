@@ -125,9 +125,7 @@ namespace Java.Interop {
 					definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
 			if (suffixDefinition == null)
 				return null;
-#pragma warning disable IL3050
 			return suffixDefinition.MakeGenericType (arguments);
-#pragma warning restore IL3050
 		}
 	}
 }

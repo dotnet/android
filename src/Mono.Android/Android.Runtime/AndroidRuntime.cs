@@ -387,7 +387,6 @@ namespace Android.Runtime {
 		static MethodInfo? dynamic_callback_gen;
 
 		// See ExportAttribute.cs
-		[RequiresUnreferencedCode ("Export callback registration uses reflection over Mono.Android.Export.dll.")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
@@ -489,7 +488,6 @@ namespace Android.Runtime {
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		[RequiresUnreferencedCode ("Native member registration resolves callback types and delegates from generated method metadata.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
@@ -627,10 +625,6 @@ namespace Android.Runtime {
 	class AndroidValueManager : JniRuntime.ReflectionJniValueManager {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
-
-		public AndroidValueManager ()
-		{
-		}
 
 		public override void WaitForGCBridgeProcessing ()
 		{

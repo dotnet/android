@@ -574,6 +574,81 @@ static class TrimmableValueMarshalerHelper
 			_ => throw new NotSupportedException ($"Type '{type.AssemblyQualifiedName}' is not a JNI primitive value type."),
 		};
 	}
+
+	public static bool TryGetPrimitiveValueMarshaler (Type type, [NotNullWhen (true)] out JniValueMarshaler? marshaler)
+	{
+		if (type == typeof (bool)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<bool>.Instance;
+			return true;
+		}
+		if (type == typeof (bool?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<bool?>.Instance;
+			return true;
+		}
+		if (type == typeof (byte)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<byte>.Instance;
+			return true;
+		}
+		if (type == typeof (sbyte)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<sbyte>.Instance;
+			return true;
+		}
+		if (type == typeof (sbyte?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<sbyte?>.Instance;
+			return true;
+		}
+		if (type == typeof (char)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<char>.Instance;
+			return true;
+		}
+		if (type == typeof (char?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<char?>.Instance;
+			return true;
+		}
+		if (type == typeof (short)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<short>.Instance;
+			return true;
+		}
+		if (type == typeof (short?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<short?>.Instance;
+			return true;
+		}
+		if (type == typeof (int)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<int>.Instance;
+			return true;
+		}
+		if (type == typeof (int?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<int?>.Instance;
+			return true;
+		}
+		if (type == typeof (long)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<long>.Instance;
+			return true;
+		}
+		if (type == typeof (long?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<long?>.Instance;
+			return true;
+		}
+		if (type == typeof (float)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<float>.Instance;
+			return true;
+		}
+		if (type == typeof (float?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<float?>.Instance;
+			return true;
+		}
+		if (type == typeof (double)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<double>.Instance;
+			return true;
+		}
+		if (type == typeof (double?)) {
+			marshaler = TrimmableTypeMapValueManager.TrimmableValueMarshaler<double?>.Instance;
+			return true;
+		}
+
+		marshaler = null;
+		return false;
+	}
 }
 
 [RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
@@ -1063,40 +1138,8 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			throw new ArgumentException ("Generic type definitions are not supported.", nameof (type));
 		}
 
-		if (type == typeof (bool))
-			return TrimmableValueMarshaler<bool>.Instance;
-		if (type == typeof (bool?))
-			return TrimmableValueMarshaler<bool?>.Instance;
-		if (type == typeof (byte))
-			return TrimmableValueMarshaler<byte>.Instance;
-		if (type == typeof (sbyte))
-			return TrimmableValueMarshaler<sbyte>.Instance;
-		if (type == typeof (sbyte?))
-			return TrimmableValueMarshaler<sbyte?>.Instance;
-		if (type == typeof (char))
-			return TrimmableValueMarshaler<char>.Instance;
-		if (type == typeof (char?))
-			return TrimmableValueMarshaler<char?>.Instance;
-		if (type == typeof (short))
-			return TrimmableValueMarshaler<short>.Instance;
-		if (type == typeof (short?))
-			return TrimmableValueMarshaler<short?>.Instance;
-		if (type == typeof (int))
-			return TrimmableValueMarshaler<int>.Instance;
-		if (type == typeof (int?))
-			return TrimmableValueMarshaler<int?>.Instance;
-		if (type == typeof (long))
-			return TrimmableValueMarshaler<long>.Instance;
-		if (type == typeof (long?))
-			return TrimmableValueMarshaler<long?>.Instance;
-		if (type == typeof (float))
-			return TrimmableValueMarshaler<float>.Instance;
-		if (type == typeof (float?))
-			return TrimmableValueMarshaler<float?>.Instance;
-		if (type == typeof (double))
-			return TrimmableValueMarshaler<double>.Instance;
-		if (type == typeof (double?))
-			return TrimmableValueMarshaler<double?>.Instance;
+		if (TrimmableValueMarshalerHelper.TryGetPrimitiveValueMarshaler (type, out var primitiveMarshaler))
+			return primitiveMarshaler;
 		if (type == typeof (string))
 			return TrimmableValueMarshaler<string>.Instance;
 		if (type == typeof (object))
@@ -1137,7 +1180,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		};
 	}
 
-	sealed class TrimmableValueMarshaler<[DynamicallyAccessedMembers (Constructors)] T> : JniValueMarshaler<T>
+	internal sealed class TrimmableValueMarshaler<[DynamicallyAccessedMembers (Constructors)] T> : JniValueMarshaler<T>
 	{
 		public static readonly TrimmableValueMarshaler<T> Instance = new ();
 
