@@ -1035,7 +1035,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		if (type == typeof (string))
 			return TrimmableValueMarshaler<string>.Instance;
 		if (type == typeof (object))
-			return TrimmableValueMarshaler<object>.Instance;
+			return ObjectValueMarshaler;
 		if (type == typeof (int[]))
 			return TrimmableValueMarshaler<int[]>.Instance;
 		if (type == typeof (IList<int>))
@@ -1047,16 +1047,19 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		if (type == typeof (JavaInt32Array))
 			return TrimmableValueMarshaler<JavaInt32Array>.Instance;
 		if (type == typeof (IJavaPeerable) || typeof (IJavaPeerable).IsAssignableFrom (type))
-			return TrimmablePeerableValueMarshaler.Instance;
+			return PeerableValueMarshaler;
 
-		return TrimmableValueMarshaler<object>.Instance;
+		return ObjectValueMarshaler;
 	}
 
 	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
 	{
 		EnsureNotDisposed ();
+		if (typeof (T) == typeof (object)) {
+			return (JniValueMarshaler<T>)(object) ObjectValueMarshaler;
+		}
 		if (typeof (T) == typeof (IJavaPeerable)) {
-			return (JniValueMarshaler<T>)(object) TrimmablePeerableValueMarshaler.Instance;
+			return (JniValueMarshaler<T>)(object) PeerableValueMarshaler;
 		}
 		return TrimmableValueMarshaler<T>.Instance;
 	}
@@ -1072,33 +1075,6 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			JniObjectReferenceType.Global => JniHandleOwnership.TransferGlobalRef,
 			_ => JniHandleOwnership.DoNotTransfer,
 		};
-	}
-
-	sealed class TrimmablePeerableValueMarshaler : JniValueMarshaler<IJavaPeerable?>
-	{
-		public static readonly TrimmablePeerableValueMarshaler Instance = new ();
-
-		public override IJavaPeerable? CreateGenericValue (
-			ref JniObjectReference reference,
-			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType)
-		{
-			return JniEnvironment.Runtime.ValueManager.CreatePeer (ref reference, options, targetType);
-		}
-
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IJavaPeerable? value, ParameterAttributes synchronize)
-		{
-			if (value == null || !value.PeerReference.IsValid) {
-				return new JniValueMarshalerState ();
-			}
-			return new JniValueMarshalerState (value.PeerReference.NewLocalRef ());
-		}
-
-		public override void DestroyGenericArgumentState ([AllowNull] IJavaPeerable? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
-		{
-			DisposeReferenceState (ref state);
-		}
 	}
 
 	sealed class TrimmableValueMarshaler<[DynamicallyAccessedMembers (Constructors)] T> : JniValueMarshaler<T>
