@@ -1,6 +1,7 @@
 using System;
 using Android.App;
 using Android.Views;
+using Microsoft.Android.Runtime;
 using NUnit.Framework;
 
 namespace Android.ViewsTests;
@@ -12,8 +13,7 @@ public class LayoutInflaterTest
 	[Category ("Intune")]
 	public void From ()
 	{
-		AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck", out bool isAssignableFromCheck);
-		Console.WriteLine ($"{nameof (LayoutInflaterTest)}: RuntimeFeature.IsAssignableFromCheck={isAssignableFromCheck}");
+		Console.WriteLine ($"{nameof (LayoutInflaterTest)}: RuntimeFeature.IsAssignableFromCheck={RuntimeFeature.IsAssignableFromCheck}");
 
 		// See: tests\Mono.Android-Tests\Mono.Android-Tests\IsAssignableFromRemaps.xml
 		// Remapped to "net/dot/android/test/MyLayoutInflater"
