@@ -161,7 +161,7 @@
   </data>
   <data name="Invalid_JavaSdkDirectory_ExistingInstall" xml:space="preserve">
     <value>`{0}`에서 `{1}` 버전의 오래된 Java SDK를 감지했지만 이 위치에 권장 Java SDK(`{2}` 버전)를 설치할 수 없습니다.
-Java SDK를 `{2}` 버전으로 업데이트하거나 `$(JavaSdkDirectory)`를 관리자가 아닌 올바른 경로로 설정하여 권장되는 Java SDK 버전을 새 위치에 설치하세요.</value>
+Java SDK를 `{2}` 버전으로 업데이트하거나 `$(JavaSdkDirectory)`를 관리자가 아닌 유효한 경로로 설정하여 권장되는 Java SDK 버전을 새 위치에 설치하세요.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
 {0} - The value of $(JavaSdkDirectory) that was provided to the task
 {1} - The major version of the the Java SDK that was already installed

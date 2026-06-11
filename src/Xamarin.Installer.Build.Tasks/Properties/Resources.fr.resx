@@ -160,8 +160,8 @@
 {0} - The value of $(JavaSdkDirectory) that was provided to the task</comment>
   </data>
   <data name="Invalid_JavaSdkDirectory_ExistingInstall" xml:space="preserve">
-    <value>Un Kit de développement logiciel (SDK) Java obsolète avec la version « {1} » a été détecté à « {0} », mais nous ne pouvons pas installer le Kit de développement logiciel (SDK) Java recommandé (version « {2} ») à cet emplacement.
-Mettez à jour votre Kit de développement logiciel (SDK) Java vers la version « {2} », ou définissez « $(JavaSdkDirectory) » sur un chemin d’accès non administrateur(-trice) valide pour installer la version recommandée du Kit de développement logiciel (SDK) Java à un nouvel emplacement.</value>
+    <value>Un Kit de développement logiciel (SDK) Java obsolète avec la version `{1}` a été détecté à `{0}`, mais nous ne pouvons pas installer le Kit de développement logiciel (SDK) Java recommandé (version `{2}`) à cet emplacement.
+Mettez à jour votre Kit de développement logiciel (SDK) Java vers la version `{2}`, ou définissez `$(JavaSdkDirectory)` sur un chemin d’accès non administrateur valide pour installer la version recommandée du Kit de développement logiciel (SDK) Java à un nouvel emplacement.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
 {0} - The value of $(JavaSdkDirectory) that was provided to the task
 {1} - The major version of the the Java SDK that was already installed

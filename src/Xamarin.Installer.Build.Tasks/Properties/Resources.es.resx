@@ -145,7 +145,7 @@
     <comment>The following are literal names and should not be translated: `Android SDK`</comment>
   </data>
   <data name="Task_Cancelled" xml:space="preserve">
-    <value>Se agotó el tiempo de espera del intento de instalación de los componentes de Android SDK necesarios o se canceló. Considere la posibilidad de establecer "$(AndroidDependencyInstallationTimeout)" en un valor mayor que "{0}" minutos.</value>
+    <value>Se agotó el tiempo de espera del intento de instalación de los componentes de Android SDK necesarios o se canceló. Considere la posibilidad de establecer `$(AndroidDependencyInstallationTimeout)` en un valor mayor que `{0}` minutos.</value>
     <comment>The following are literal names and should not be translated: `Android SDK`, `$(AndroidDependencyInstallationTimeout)`
 {0} - The timeout value for the task</comment>
   </data>
@@ -155,20 +155,20 @@
 {0} - The unsupported manifest name</comment>
   </data>
   <data name="Invalid_JavaSdkDirectory" xml:space="preserve">
-    <value>No se pudo instalar el Java SDK en "{0}". Establezca "$(JavaSdkDirectory)" en una ruta de acceso que no sea de administrador válida.</value>
+    <value>No se pudo instalar el SDK de Java en `{0}`. Establezca `$(JavaSdkDirectory)` en una ruta de acceso que no sea de administrador válida.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
 {0} - The value of $(JavaSdkDirectory) that was provided to the task</comment>
   </data>
   <data name="Invalid_JavaSdkDirectory_ExistingInstall" xml:space="preserve">
-    <value>Se detectó un SDK de Java obsoleto con la versión "{1}" en "{0}", pero no se puede instalar el SDK de Java recomendado (versión "{2}") en esta ubicación.
-Actualice el SDK de Java a la versión "{2}" o establezca "$(JavaSdkDirectory)" en una ruta de acceso válida que no sea de administrador para instalar la versión recomendada del SDK de Java en una nueva ubicación.</value>
+    <value>Se detectó un SDK de Java obsoleto con la versión `{1}` en `{0}`, pero no se puede instalar el SDK de Java recomendado (versión `{2}`) en esta ubicación.
+Actualice el SDK de Java a la versión `{2}` o establezca `$(JavaSdkDirectory)` en una ruta de acceso válida que no sea de administrador para instalar la versión recomendada del SDK de Java en una nueva ubicación.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
 {0} - The value of $(JavaSdkDirectory) that was provided to the task
 {1} - The major version of the the Java SDK that was already installed
 {2} - The major version of the the Java SDK to install</comment>
   </data>
   <data name="Invalid_JavaSdkVersion" xml:space="preserve">
-    <value>No se encuentra un Java SDK con la versión "{0}". Establezca "$(JavaSdkVersion)" en una versión válida.</value>
+    <value>No se encuentra un SDK de Java con la versión `{0}`. Establezca `$(JavaSdkVersion)` en una versión válida.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkVersion)`
 {0} - The value of $(JavaSdkVersion) that was provided to the task</comment>
   </data>

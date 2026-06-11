@@ -141,15 +141,15 @@ ABI - is an acronym for Application Binary Interface.
     </comment>
   </data>
   <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
-    <value>Невозможно скопировать инструменты быстрого развертывания в " {0} / {1} " на целевом устройстве. 
-Это устройство может быть несовместимо с функцией быстрого развертывания. 
+    <value>Невозможно скопировать инструменты быстрого развертывания в "{0}/{1}" на целевом устройстве.
+Это устройство может быть несовместимо с функцией быстрого развертывания.
 Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A device path
 {1} - A filename</comment>
   </data>
   <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Ошибка развертывания " {0} " с использованием "{1} : {2} ". 
+    <value>Ошибка развертывания "{0}" с использованием "{1} : {2}".
 Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
 <comment>The following are literal names and should not be translated:
 {0} - A filename
@@ -157,17 +157,17 @@ ABI - is an acronym for Application Binary Interface.
 {2} - The actual error that occured.</comment>
   </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
-    <value>Системное свойство Android "log.redirect-stdio" установлено в значение "true" на целевом устройстве или эмуляторе. 
+    <value>Системное свойство Android "log.redirect-stdio" установлено в значение "true" на целевом устройстве или эмуляторе.
 Чтобы включить совместимость с быстрым развертыванием, установите для свойства значение "false" или перезагрузите устройство или эмулятор, чтобы очистить значение.</value>
   </data>
   <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
-    <value>Ошибка развертывания ' {0} '. 
+    <value>Ошибка развертывания "{0}".
 Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
   </data>
   <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Приносим свои извинения. Быстрое развертывание поддерживается только на устройствах под управлением Android 5.0 (уровень API 21) или выше. 
+    <value>Приносим свои извинения. Быстрое развертывание поддерживается только на устройствах под управлением Android 5.0 (уровень API 21) или выше.
 Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
@@ -178,26 +178,26 @@ ABI - is an acronym for Application Binary Interface.
     </comment>
   </data>
   <data name="XA0132_PackageNotInstalled" xml:space="preserve">
-    <value>Пакет не был установлен. Проверьте, не установлен ли он под другим пользователем. 
-Если пакет отображается на устройстве, попробуйте удалить его вручную, а затем повторите попытку. 
+    <value>Пакет не был установлен. Проверьте, не установлен ли он под другим пользователем.
+Если пакет отображается на устройстве, попробуйте удалить его вручную, а затем повторите попытку.
 Вы можете удалить приложение через приложение "Настройки" на устройстве.</value>
     <comment>The following are literal names and should not be translated:
     </comment>
   </data>
   <data name="XA0133_RunAsPermissionDenied" xml:space="preserve">
-    <value>Инструмент "запустить как", необходимый для системы быстрого развертывания, был отключен на этом устройстве производителем. 
+    <value>Инструмент "запустить как", необходимый для системы быстрого развертывания, был отключен на этом устройстве производителем.
 Отключите быстрое развертывание на страницах свойств проекта Visual Studio или отредактируйте файл проекта в текстовом редакторе и установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true".</value>
     <comment>The following are literal names and should not be translated:
 'run-as' - a native android tool
     </comment>
   </data>
   <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
-    <value>В AndroidManifest.xml для приложения не установлен атрибут "android:debuggable". 
-Это необходимо для работы функции быстрого развертывания. Обычно эта функция включена по умолчанию 
-в системе сборки .NET для Android для отладочных сборок. Убедитесь, что этот атрибут не установлен 
-для элемента "application" в файле "AndroidManifest.xml". 
+    <value>В AndroidManifest.xml для приложения не установлен атрибут "android:debuggable".
+Это необходимо для работы функции быстрого развертывания. Обычно эта функция включена по умолчанию
+в системе сборки .NET для Android для отладочных сборок. Убедитесь, что этот атрибут не установлен
+для элемента "application" в файле "AndroidManifest.xml".
 Если у вас есть класс, производный от "Android.App.Application", и вы используете "[Application]", убедитесь, что 
-Свойство "Debuggable" вообще не задано, так как оно переопределит значение для отладочных сборок. 
+Свойство "Debuggable" вообще не задано, так как оно переопределит значение для отладочных сборок.
 </value>
     <comment>The following are literal names and should not be translated:
 AndroidManifest.xml - A xml file
@@ -209,7 +209,7 @@ android:debuggable - An attribute in a xml file.
   </data>
   <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
     <value>Пакет представляет собой "системное" приложение. Это приложения, которые устанавливаются на 
- устройстве под учетной записью "системного" пользователя. Приложения такого типа не могут использовать функцию "запуск от имени". 
+ устройстве под учетной записью "системного" пользователя. Приложения такого типа не могут использовать функцию "запуск от имени".
  Система быстрого развертывания должна была автоматически обработать эту конкретную ошибку 
  и использовать резервный путь установки. Однако если вы видите эту ошибку, 
  сообщите о проблеме, указав точное сообщение об ошибке, используя пункт меню "Справка-&gt;Отправить отзыв-&gt;Сообщить о проблеме" в Visual Studio. 
@@ -219,10 +219,10 @@ android:debuggable - An attribute in a xml file.
     </comment>
   </data>
   <data name="XA0136_RunAsCorruptInstallation" xml:space="preserve">
-    <value>Команда "запустить как" не выполнена с " {0} ". 
+    <value>Команда "запустить как" не выполнена с "{0}".
 Текущая установка пакета повреждена. Вручную удалите 
-пакет от всех пользователей на устройстве и повторите попытку. Если это не сработает, вы можете отключить быстрое развертывание. 
-Быстрое развертывание можно отключить на страницах свойств проекта Visual Studio или отредактировать файл проекта в текстовом редакторе и установить для свойства MSBuild "EmbedAssembliesIntoApk" значение "true". 
+пакет от всех пользователей на устройстве и повторите попытку. Если это не сработает, вы можете отключить быстрое развертывание.
+Быстрое развертывание можно отключить на страницах свойств проекта Visual Studio или отредактировать файл проекта в текстовом редакторе и установить для свойства MSBuild "EmbedAssembliesIntoApk" значение "true".
 </value>
     <comment>The following are literal names and should not be translated:
 'run-as' - a native android tool
@@ -230,10 +230,10 @@ android:debuggable - An attribute in a xml file.
     </comment>
   </data>
   <data name="XA0137_RunAsOSCorrupt" xml:space="preserve">
-    <value>Команда "запустить как" не выполнена с " {0} ". 
-Быстрое развертывание в настоящее время не поддерживается на этом устройстве. 
-Отправьте сообщение об ошибке с точным текстом сообщения об ошибке, используя пункт меню "Справка-&gt;Отправить отзыв-&gt;Сообщить о проблеме" в Visual Studio 
-или "Справка-&gt;Сообщить о проблеме" в Visual Studio для Mac. 
+    <value>Команда "запустить как" не выполнена с "{0}".
+Быстрое развертывание сейчас не поддерживается на этом устройстве.
+Отправьте сообщение об ошибке с точным текстом сообщения об ошибке, используя пункт меню "Справка-&gt;Отправить отзыв-&gt;Сообщить о проблеме" в Visual Studio
+или "Справка-&gt;Сообщить о проблеме" в Visual Studio для Mac.
 Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
     <comment>The following are literal names and should not be translated:
 'run-as' - a native android tool
@@ -241,9 +241,9 @@ android:debuggable - An attribute in a xml file.
     </comment>
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
-    <value>Ошибка развертывания " {0} " с использованием " {1}" : "{2} ". 
+    <value>Ошибка развертывания "{0}" с использованием "{1}" : "{2}". 
 Обычно это происходит из-за ошибки в `adb` при отправке данных файла на устройство. 
-Обычной причиной этого является неплотно подключенный или некачественный USB-кабель. Попробуйте использовать другой кабель. 
+Обычной причиной этого является неплотно подключенный или некачественный USB-кабель. Попробуйте использовать другой кабель.
 В качестве альтернативы попробуйте использовать отладку по Wi-Fi, для некоторых устройств это может быть более надежно, чем отладка по USB. 
 Если все это не помогло, установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
 <comment>The following are literal names and should not be translated:
@@ -252,7 +252,7 @@ android:debuggable - An attribute in a xml file.
 {2} - The actual error that occured.</comment>
   </data>
   <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  Запуск отладчика на {0} : {1}
+    <value>  Запуск отладчика на {0}:{1}
 Запустите sdb, затем выполните следующую команду 
   подключить {0} {1}
     </value>
