@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -15,6 +16,7 @@ using System.Runtime.InteropServices.Java;
 using System.Threading;
 using Android.Runtime;
 using Java.Interop;
+using Java.Interop.Expressions;
 
 namespace Microsoft.Android.Runtime;
 
@@ -863,6 +865,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniObjectReferenceOptions DoNotRegisterTarget = (JniObjectReferenceOptions)(1 << 2);
+	const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
 	readonly JavaMarshalPeerManager peerManager = new (nameof (TrimmableTypeMapValueManager));
 
@@ -1226,6 +1229,39 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		public override void DestroyGenericArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			DisposeReferenceState (ref state);
+		}
+
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
+		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
+		{
+			if (IsJniValueType) {
+				return sourceValue;
+			}
+			return base.CreateParameterFromManagedExpression (context, sourceValue, synchronize);
+		}
+
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
+		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			if (IsJniValueType) {
+				return sourceValue;
+			}
+			if (typeof (T) == typeof (string)) {
+				return CreateStringReturnValueFromManagedExpression (context, sourceValue);
+			}
+			return base.CreateReturnValueFromManagedExpression (context, sourceValue);
+		}
+
+		Expression CreateStringReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
+		{
+			Func<string, JniObjectReference> createString = JniEnvironment.Strings.NewString;
+
+			var reference = Expression.Variable (typeof (JniObjectReference), sourceValue.Name + "_ref");
+			context.LocalVariables.Add (reference);
+			context.CreationStatements.Add (Expression.Assign (reference, Expression.Call (createString.GetMethodInfo (), sourceValue)));
+			context.CleanupStatements.Add (DisposeObjectReference (reference));
+			return ReturnObjectReferenceToJni (context, sourceValue.Name, reference);
 		}
 	}
 
