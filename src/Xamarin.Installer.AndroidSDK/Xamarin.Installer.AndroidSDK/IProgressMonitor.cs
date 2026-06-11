@@ -13,20 +13,6 @@ using System.Threading;
 namespace Xamarin.Installer.AndroidSDK.Manager
 {
 	/// <summary>
-	/// The Progress monitor factory interface is used by <see cref="T:Xamarin.Installer.AndroidSDK.Manager.AndroidSDKManager"/> to
-	/// create installation progress monitors on demand.
-	/// </summary>
-	public interface IProgressMonitorFactory
-	{
-		/// <summary>
-		/// Creates a progress monitor to observe the SDK Manager installation progress.
-		/// </summary>
-		/// <returns>The progress monitor.</returns>
-		/// <remarks>The SDK Manager will create a new progress monitor for each installation process.</remarks>
-		IProgressMonitor CreateProgressMonitor ();
-	}
-
-	/// <summary>
 	/// The cancellable progress monitor can cancel a running operation.
 	/// </summary>
 	/// <remarks>
