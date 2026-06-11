@@ -29,7 +29,6 @@ tests/api-compatibility/reference/*/*.cs
 Novell
 *.patch
 *.keystore
-/omnisharp.json
 src/native/CMakePresets.json
 src/native/clr/pinvoke-override/generate-pinvoke-tables
 src/native/clr/pinvoke-override/pinvoke-tables.include.generated
