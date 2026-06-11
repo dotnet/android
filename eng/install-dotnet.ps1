@@ -1,37 +1,43 @@
 <#
 .SYNOPSIS
-  Provisions the .NET SDK pinned in global.json (tools.dotnet) into
-  bin\$Configuration\dotnet\ via Arcade's eng\common\tools.ps1 helpers.
+  Provisions the .NET SDK into bin\$Configuration\dotnet\.
 
 .DESCRIPTION
-  Thin wrapper around InitializeDotNetCli so callers that only want SDK
-  provisioning don't have to invoke eng\common\build.ps1, which also
-  restores the Arcade toolset MSBuild project.
+  The SDK version is read from eng\Versions.props (single source of truth
+  kept up to date by darc when Microsoft.NET.Sdk flows from dotnet/dotnet),
+  so global.json does not need a 'tools.dotnet' pin.
 #>
 [CmdletBinding(PositionalBinding=$false)]
 param(
   [string][Alias('c')] $configuration = $(if ($env:CONFIGURATION) { $env:CONFIGURATION } else { 'Debug' })
 )
 
-Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $scriptroot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = (Resolve-Path (Join-Path $scriptroot '..')).Path
 
-# Pin the SDK install location to bin\$Configuration\dotnet\. Arcade
-# reads DOTNET_INSTALL_DIR first (use existing SDK if present); when
-# nothing is found there, it installs into DOTNET_GLOBAL_INSTALL_DIR.
-# Setting both to the same path makes the install idempotent.
-$env:DOTNET_INSTALL_DIR = Join-Path $repoRoot "bin\$configuration\dotnet"
-$env:DOTNET_GLOBAL_INSTALL_DIR = $env:DOTNET_INSTALL_DIR
-New-Item -ItemType Directory -Force -Path $env:DOTNET_INSTALL_DIR | Out-Null
+$versionsProps = Join-Path $repoRoot 'eng\Versions.props'
+[xml] $versionsXml = Get-Content -LiteralPath $versionsProps
+$sdkVersion = $versionsXml.SelectSingleNode('//MicrosoftNETSdkPackageVersion').InnerText
+if ([string]::IsNullOrWhiteSpace($sdkVersion)) {
+  Write-Error "Could not read <MicrosoftNETSdkPackageVersion> from $versionsProps"
+  exit 1
+}
 
-# Don't fall back to a system dotnet that happens to match the pinned
-# version; we always want the SDK in our own bin\ folder so the rest of
-# the build picks it up via dotnet-local.{cmd,sh}.
-$useInstalledDotNetCli = $false
+$installDir = Join-Path $repoRoot "bin\$configuration\dotnet"
+New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
-. (Join-Path $scriptroot 'common\tools.ps1')
+# Download Microsoft's official dotnet-install.ps1 (cached under $installDir
+# to avoid hitting the CDN on idempotent re-runs).
+$installScript = Join-Path $installDir 'dotnet-install.ps1'
+if (-not (Test-Path $installScript)) {
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+  Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1' -OutFile $installScript -UseBasicParsing
+}
 
-InitializeDotNetCli -install $true | Out-Null
+Write-Host "Installing .NET SDK $sdkVersion into $installDir"
+& $installScript -Version $sdkVersion -InstallDir $installDir -NoPath
+if ($LASTEXITCODE -ne 0) {
+  exit $LASTEXITCODE
+}

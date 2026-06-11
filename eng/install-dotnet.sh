@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 #
-# Provisions the .NET SDK pinned in global.json (tools.dotnet) into
-# bin/$Configuration/dotnet/ via Arcade's eng/common/tools.sh helpers.
+# Provisions the .NET SDK into bin/$Configuration/dotnet/.
 #
-# This is a thin wrapper around InitializeDotNetCli so that callers who
-# only want SDK provisioning don't have to invoke eng/common/build.sh,
-# which also restores the Arcade toolset MSBuild project.
+# The SDK version is read from eng/Versions.props (single source of truth
+# kept up to date by darc when Microsoft.NET.Sdk flows from dotnet/dotnet),
+# so global.json does not need a 'tools.dotnet' pin.
 #
 # Inputs (env vars):
 #   CONFIGURATION   - Debug (default) or Release; controls install path.
-#   ci              - 'true' on CI; disables telemetry, etc. (Arcade convention)
 #
 
 set -euo pipefail
@@ -19,19 +17,23 @@ repo_root="$( cd -P "$scriptroot/.." && pwd )"
 
 configuration="${CONFIGURATION:-Debug}"
 
-# Pin the SDK install location to bin/$Configuration/dotnet/. Arcade
-# reads DOTNET_INSTALL_DIR first (use existing SDK if present); when
-# nothing is found there, it installs into DOTNET_GLOBAL_INSTALL_DIR.
-# Setting both to the same path makes the install idempotent.
-export DOTNET_INSTALL_DIR="$repo_root/bin/$configuration/dotnet"
-export DOTNET_GLOBAL_INSTALL_DIR="$DOTNET_INSTALL_DIR"
-mkdir -p "$DOTNET_INSTALL_DIR"
+versions_props="$repo_root/eng/Versions.props"
+sdk_version="$(sed -n 's|.*<MicrosoftNETSdkPackageVersion>\([^<]*\)</MicrosoftNETSdkPackageVersion>.*|\1|p' "$versions_props" | head -n 1)"
+if [[ -z "$sdk_version" ]]; then
+  echo "error: could not read <MicrosoftNETSdkPackageVersion> from $versions_props" >&2
+  exit 1
+fi
 
-# Don't fall back to a system dotnet that happens to match the pinned
-# version; we always want the SDK in our own bin/ folder so the rest of
-# the build picks it up via dotnet-local.{cmd,sh}.
-use_installed_dotnet_cli=false
+install_dir="$repo_root/bin/$configuration/dotnet"
+mkdir -p "$install_dir"
 
-. "$scriptroot/common/tools.sh"
+# Download Microsoft's official dotnet-install.sh (cached per-run under
+# $install_dir to avoid hitting the CDN on idempotent re-runs).
+install_script="$install_dir/dotnet-install.sh"
+if [[ ! -f "$install_script" ]]; then
+  curl -fsSL "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh" -o "$install_script"
+  chmod +x "$install_script"
+fi
 
-InitializeDotNetCli true
+echo "Installing .NET SDK $sdk_version into $install_dir"
+"$install_script" --version "$sdk_version" --install-dir "$install_dir" --no-path
