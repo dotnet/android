@@ -537,6 +537,45 @@ static class JavaMarshalValueManagerHelper
 	}
 }
 
+static class TrimmableValueMarshalerHelper
+{
+	public static bool IsPrimitiveJniValueType (Type type)
+	{
+		return type == typeof (bool) ||
+			type == typeof (byte) ||
+			type == typeof (sbyte) ||
+			type == typeof (char) ||
+			type == typeof (short) ||
+			type == typeof (ushort) ||
+			type == typeof (int) ||
+			type == typeof (uint) ||
+			type == typeof (long) ||
+			type == typeof (ulong) ||
+			type == typeof (float) ||
+			type == typeof (double);
+	}
+
+	public static JniArgumentValue CreatePrimitiveArgumentValue (object? value, Type type)
+	{
+		return value switch {
+			null => throw new ArgumentNullException (nameof (value), "Value cannot be null for primitive JNI value types."),
+			bool v => new JniArgumentValue (v),
+			byte v => new JniArgumentValue (v),
+			sbyte v => new JniArgumentValue (v),
+			char v => new JniArgumentValue (v),
+			short v => new JniArgumentValue (v),
+			ushort v => new JniArgumentValue (v),
+			int v => new JniArgumentValue (v),
+			uint v => new JniArgumentValue (v),
+			long v => new JniArgumentValue (v),
+			ulong v => new JniArgumentValue (v),
+			float v => new JniArgumentValue (v),
+			double v => new JniArgumentValue (v),
+			_ => throw new NotSupportedException ($"Type '{type.AssemblyQualifiedName}' is not a JNI primitive value type."),
+		};
+	}
+}
+
 [RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
 [RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
@@ -936,9 +975,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	{
 		EnsureNotDisposed ();
 		if (!reference.IsValid) {
-#pragma warning disable 8653
 			return default (T);
-#pragma warning restore 8653
 		}
 
 		if (targetType != null && !typeof (T).IsAssignableFrom (targetType)) {
@@ -952,9 +989,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		var value = GetValueCore (ref reference, options, targetType ?? typeof (T));
 		if (value is null) {
-#pragma warning disable 8653
 			return default (T);
-#pragma warning restore 8653
 		}
 		return (T) value;
 	}
@@ -1106,7 +1141,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	{
 		public static readonly TrimmableValueMarshaler<T> Instance = new ();
 
-		public override bool IsJniValueType => IsPrimitiveJniValueType (typeof (T));
+		public override bool IsJniValueType => TrimmableValueMarshalerHelper.IsPrimitiveJniValueType (typeof (T));
 
 		public override Type MarshalType => IsJniValueType ? typeof (T) : base.MarshalType;
 
@@ -1123,7 +1158,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			if (IsJniValueType) {
-				return new JniValueMarshalerState (CreatePrimitiveArgumentValue (value));
+				return new JniValueMarshalerState (TrimmableValueMarshalerHelper.CreatePrimitiveArgumentValue (value, typeof (T)));
 			}
 			return CreateGenericObjectReferenceArgumentState (value, synchronize);
 		}
@@ -1146,42 +1181,6 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		public override void DestroyGenericArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			DisposeReferenceState (ref state);
-		}
-
-		static bool IsPrimitiveJniValueType (Type type)
-		{
-			return type == typeof (bool) ||
-				type == typeof (byte) ||
-				type == typeof (sbyte) ||
-				type == typeof (char) ||
-				type == typeof (short) ||
-				type == typeof (ushort) ||
-				type == typeof (int) ||
-				type == typeof (uint) ||
-				type == typeof (long) ||
-				type == typeof (ulong) ||
-				type == typeof (float) ||
-				type == typeof (double);
-		}
-
-		static JniArgumentValue CreatePrimitiveArgumentValue ([MaybeNull] T value)
-		{
-			return value switch {
-				null => throw new ArgumentNullException (nameof (value), "Value cannot be null for primitive JNI value types."),
-				bool v => new JniArgumentValue (v),
-				byte v => new JniArgumentValue (v),
-				sbyte v => new JniArgumentValue (v),
-				char v => new JniArgumentValue (v),
-				short v => new JniArgumentValue (v),
-				ushort v => new JniArgumentValue (v),
-				int v => new JniArgumentValue (v),
-				uint v => new JniArgumentValue (v),
-				long v => new JniArgumentValue (v),
-				ulong v => new JniArgumentValue (v),
-				float v => new JniArgumentValue (v),
-				double v => new JniArgumentValue (v),
-				_ => throw new NotSupportedException ($"Type '{typeof (T).AssemblyQualifiedName}' is not a JNI primitive value type."),
-			};
 		}
 	}
 
