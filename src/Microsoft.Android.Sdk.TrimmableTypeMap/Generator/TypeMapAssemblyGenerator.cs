@@ -29,8 +29,11 @@ public sealed class TypeMapAssemblyGenerator
 	/// </param>
 	/// <param name="maxArrayRank">Max rank for per-rank array <c>TypeMap</c> entries. 0 disables.</param>
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false, int maxArrayRank = 0)
+		=> Generate (peers, [], stream, assemblyName, useSharedTypemapUniverse, maxArrayRank);
+
+	public void Generate (IReadOnlyList<JavaPeerInfo> peers, IReadOnlyList<ValueMarshalerInfo> valueMarshalers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false, int maxArrayRank = 0)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank);
+		var model = ModelBuilder.Build (peers, valueMarshalers, assemblyName + ".dll", assemblyName, maxArrayRank);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, stream, useSharedTypemapUniverse);
 	}

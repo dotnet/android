@@ -44,10 +44,10 @@ public class TrimmableTypeMapGenerator
 			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
 		}
 
-		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames);
-		if (allPeers.Count == 0) {
+		var (allPeers, valueMarshalers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames);
+		if (allPeers.Count == 0 && valueMarshalers.Count == 0) {
 			logger.LogNoJavaPeerTypesFound ();
-			return new TrimmableTypeMapResult ([], [], allPeers);
+			return new TrimmableTypeMapResult ([], [], allPeers, []);
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
@@ -56,7 +56,7 @@ public class TrimmableTypeMapGenerator
 		PropagateCannotRegisterToDescendants (allPeers);
 
 		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank)
+			? GenerateTypeMapAssemblies (allPeers, valueMarshalers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -71,7 +71,7 @@ public class TrimmableTypeMapGenerator
 			? GenerateManifest (allPeers, assemblyManifestInfo, manifestConfig, manifestTemplate)
 			: null;
 
-		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, valueMarshalers, manifest, appRegTypes);
 	}
 
 	internal static List<string> CollectApplicationRegistrationTypes (List<JavaPeerInfo> allPeers)
@@ -155,17 +155,19 @@ public class TrimmableTypeMapGenerator
 		return new GeneratedManifest (doc, providerNames.Count > 0 ? providerNames.ToArray () : []);
 	}
 
-	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies, string? packageNamingPolicy, HashSet<string> frameworkAssemblyNames)
+	(List<JavaPeerInfo> peers, List<ValueMarshalerInfo> valueMarshalers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies, string? packageNamingPolicy, HashSet<string> frameworkAssemblyNames)
 	{
 		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger, frameworkAssemblyNames);
 		var peers = scanner.Scan (assemblies);
+		var valueMarshalers = scanner.GetValueMarshalers ();
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);
-		return (peers, manifestInfo);
+		return (peers, valueMarshalers, manifestInfo);
 	}
 
 	List<GeneratedAssembly> GenerateTypeMapAssemblies (
 		List<JavaPeerInfo> allPeers,
+		List<ValueMarshalerInfo> valueMarshalers,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
 		int maxArrayRank)
@@ -190,21 +192,37 @@ public class TrimmableTypeMapGenerator
 				.ToList ();
 		}
 
+		var valueMarshalersByAssembly = valueMarshalers
+			.GroupBy (m => m.ValueTypeAssemblyName, StringComparer.Ordinal)
+			.ToDictionary (g => g.Key, g => g.ToList (), StringComparer.Ordinal);
+		var assemblyNames = new SortedSet<string> (peersByAssembly.Select (p => p.AssemblyName), StringComparer.Ordinal);
+		assemblyNames.UnionWith (valueMarshalersByAssembly.Keys);
+		var peersByAssemblyMap = peersByAssembly.ToDictionary (p => p.AssemblyName, p => p.Peers, StringComparer.Ordinal);
+
 		var generatedAssemblies = new List<GeneratedAssembly> ();
 		var perAssemblyNames = new List<string> ();
+		var valueMarshalerTypeMapNames = new List<string> ();
 		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
-		foreach (var (assemblyName, peers) in peersByAssembly) {
+		foreach (var assemblyName in assemblyNames) {
+			peersByAssemblyMap.TryGetValue (assemblyName, out var peers);
+			peers ??= [];
+			valueMarshalersByAssembly.TryGetValue (assemblyName, out var assemblyValueMarshalers);
+			assemblyValueMarshalers ??= [];
+
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
+			if (assemblyValueMarshalers.Count > 0) {
+				valueMarshalerTypeMapNames.Add (typeMapAssemblyName);
+			}
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank);
+			generator.Generate (peers, assemblyValueMarshalers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank);
+		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank, valueMarshalerTypeMapNames: valueMarshalerTypeMapNames);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);

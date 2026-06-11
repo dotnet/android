@@ -22,19 +22,21 @@ public abstract class FixtureTestBase
 		}
 	}
 
-	static readonly Lazy<(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo)> _cachedScanResult = new (() => {
+	static readonly Lazy<(List<JavaPeerInfo> peers, List<ValueMarshalerInfo> valueMarshalers, AssemblyManifestInfo manifestInfo)> _cachedScanResult = new (() => {
 		using var scanner = new JavaPeerScanner ();
 		var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
 		var mdReader = peReader.GetMetadataReader ();
 		var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
 		var assemblies = new [] { (assemblyName, peReader) };
 		var peers = scanner.Scan (assemblies);
+		var valueMarshalers = scanner.GetValueMarshalers ();
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		peReader.Dispose ();
-		return (peers, manifestInfo);
+		return (peers, valueMarshalers, manifestInfo);
 	});
 
 	private protected static List<JavaPeerInfo> ScanFixtures () => _cachedScanResult.Value.peers;
+	private protected static List<ValueMarshalerInfo> ScanFixtureValueMarshalers () => _cachedScanResult.Value.valueMarshalers;
 
 	private protected static List<JavaPeerInfo> ScanFixtures (string packageNamingPolicy)
 	{

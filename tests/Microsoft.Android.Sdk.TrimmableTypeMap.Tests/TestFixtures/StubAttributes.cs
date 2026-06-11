@@ -178,6 +178,18 @@ namespace Android.Content
 
 namespace Java.Interop
 {
+	public abstract class JniValueMarshaler
+	{
+	}
+
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Struct, AllowMultiple = false)]
+	public sealed class JniValueMarshalerAttribute : Attribute
+	{
+		public Type MarshalerType { get; }
+
+		public JniValueMarshalerAttribute (Type marshalerType) => MarshalerType = marshalerType;
+	}
+
 	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
 	public sealed class ExportAttribute : Attribute
 	{

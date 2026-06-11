@@ -88,14 +88,6 @@ namespace Xamarin.Android.RuntimeTests
 				// Tests from the external Java.Interop-Tests assembly that still fail under
 				// the trimmable typemap and are not covered by a category.
 				return new [] {
-					// Value-marshaling cases that are still failing under the trimmable
-					// value manager. Keep these granular so passing value-marshaler tests
-					// stay enabled while the remaining gaps are fixed.
-					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.CreateArgumentState",
-					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.CreateGenericArgumentState",
-					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.DestroyArgumentState",
-					"Java.InteropTests.JniValueMarshaler_DemoValueType_ContractTests.JniValueMarshalerContractTests`1.TestIsJniValueType",
-
 					// Current trimmable runtime exception/type-manager behavior differs from
 					// the legacy typemap path these tests assert against.
 					"Java.InteropTests.ConstructorActivationTests.JavaSideThrowingConstructorPropagatesException",

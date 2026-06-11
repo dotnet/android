@@ -8,6 +8,8 @@ using Android.Views;
 
 using Java.Interop;
 
+using Microsoft.Android.Runtime;
+
 using NUnit.Framework;
 
 namespace Java.InteropTests

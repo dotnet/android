@@ -114,6 +114,15 @@ public sealed class JavaPeerScanner : IDisposable
 		return new List<JavaPeerInfo> (resultsByQualifiedName.Values);
 	}
 
+	internal List<ValueMarshalerInfo> GetValueMarshalers ()
+	{
+		var valueMarshalers = new List<ValueMarshalerInfo> ();
+		foreach (var index in assemblyCache.Values) {
+			valueMarshalers.AddRange (index.ValueMarshalers);
+		}
+		return valueMarshalers;
+	}
+
 	void MarkFrameworkArrayEntryPeers (IEnumerable<JavaPeerInfo> peers)
 	{
 		var referencedFrameworkTypes = new HashSet<string> (StringComparer.Ordinal);

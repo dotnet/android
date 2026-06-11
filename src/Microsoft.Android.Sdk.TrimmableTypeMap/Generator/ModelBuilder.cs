@@ -41,9 +41,15 @@ static class ModelBuilder
 	/// for ranks 1..<paramref name="maxArrayRank"/>. 0 disables array entry emission.
 	/// </param>
 	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
+		=> Build (peers, [], outputPath, assemblyName, maxArrayRank);
+
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, IReadOnlyList<ValueMarshalerInfo> valueMarshalers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
+		}
+		if (valueMarshalers is null) {
+			throw new ArgumentNullException (nameof (valueMarshalers));
 		}
 		if (outputPath is null) {
 			throw new ArgumentNullException (nameof (outputPath));
@@ -100,6 +106,18 @@ static class ModelBuilder
 		}
 
 		BuildNativeRegistrations (model);
+		foreach (var valueMarshaler in valueMarshalers.OrderBy (m => m.ValueTypeName, StringComparer.Ordinal)) {
+			model.ValueMarshalers.Add (new ValueMarshalerData {
+				ValueType = new TypeRefData {
+					ManagedTypeName = valueMarshaler.ValueTypeName,
+					AssemblyName = valueMarshaler.ValueTypeAssemblyName,
+				},
+				MarshalerType = new TypeRefData {
+					ManagedTypeName = valueMarshaler.MarshalerTypeName,
+					AssemblyName = valueMarshaler.MarshalerAssemblyName,
+				},
+			});
+		}
 
 		// Compute IgnoresAccessChecksTo from cross-assembly references
 		var referencedAssemblies = new SortedSet<string> (StringComparer.Ordinal);
@@ -111,6 +129,10 @@ static class ModelBuilder
 			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
 				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
+		}
+		foreach (var valueMarshaler in model.ValueMarshalers) {
+			AddIfCrossAssembly (referencedAssemblies, valueMarshaler.ValueType.AssemblyName, assemblyName);
+			AddIfCrossAssembly (referencedAssemblies, valueMarshaler.MarshalerType.AssemblyName, assemblyName);
 		}
 
 		// Always include Mono.Android — the emitter calls internal JNIEnv.DeleteRef

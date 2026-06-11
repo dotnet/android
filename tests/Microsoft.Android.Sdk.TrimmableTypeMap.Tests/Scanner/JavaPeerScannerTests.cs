@@ -172,6 +172,16 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Scan_JniValueMarshalerAttribute_IsDiscovered ()
+	{
+		var valueMarshaler = Assert.Single (ScanFixtureValueMarshalers ());
+		Assert.Equal ("MyApp.ValueMarshalers.DemoValueType", valueMarshaler.ValueTypeName);
+		Assert.Equal ("TestFixtures", valueMarshaler.ValueTypeAssemblyName);
+		Assert.Equal ("MyApp.ValueMarshalers.DemoValueTypeMarshaler", valueMarshaler.MarshalerTypeName);
+		Assert.Equal ("TestFixtures", valueMarshaler.MarshalerAssemblyName);
+	}
+
+	[Fact]
 	public void Scan_JniTypeSignature_DuplicateJniName_BothPresent ()
 	{
 		// Java.Interop.TestTypes.JavaObject has [JniTypeSignature("java/lang/Object", GenerateJavaPeer=false)]

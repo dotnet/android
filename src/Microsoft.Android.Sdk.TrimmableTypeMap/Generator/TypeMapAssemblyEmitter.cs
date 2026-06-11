@@ -92,6 +92,9 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _systemArrayRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
 	TypeReferenceHandle _jniTypeRef;
+	TypeReferenceHandle _jniValueMarshalerRef;
+	TypeReferenceHandle _trimmableTypeMapRef;
+	TypeReferenceHandle _valueMarshalerFactoryRef;
 	TypeReferenceHandle _notSupportedExceptionRef;
 	TypeReferenceHandle _runtimeHelpersRef;
 	TypeReferenceHandle _javaPeerAliasesAttrRef;
@@ -222,6 +225,10 @@ sealed class TypeMapAssemblyEmitter
 			EmitTypeMapAssociationAttribute (assoc);
 		}
 
+		if (model.ValueMarshalers.Count > 0) {
+			EmitValueMarshalerMapping (model.ValueMarshalers);
+		}
+
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
 	}
 
@@ -302,6 +309,12 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("RuntimeTypeHandle"));
 		_jniTypeRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniType"));
+		_jniValueMarshalerRef = metadata.AddTypeReference (_javaInteropRef,
+			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniValueMarshaler"));
+		_trimmableTypeMapRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Microsoft.Android.Runtime"), metadata.GetOrAddString ("TrimmableTypeMap"));
+		_valueMarshalerFactoryRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Microsoft.Android.Runtime"), metadata.GetOrAddString ("ValueMarshalerFactory"));
 		_notSupportedExceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("NotSupportedException"));
 		_runtimeHelpersRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -1764,6 +1777,81 @@ sealed class TypeMapAssemblyEmitter
 			b.WriteSerializedString (assoc.AliasProxyTypeReference);
 		});
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef, blob);
+	}
+
+	void EmitValueMarshalerMapping (IReadOnlyList<ValueMarshalerData> valueMarshalers)
+	{
+		var metadata = _pe.Metadata;
+		var objectRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Object"));
+
+		int typeFieldStart = metadata.GetRowCount (TableIndex.Field) + 1;
+		int typeMethodStart = metadata.GetRowCount (TableIndex.MethodDef) + 1;
+
+		var factoryMethods = new MethodDefinitionHandle [valueMarshalers.Count];
+		for (int i = 0; i < valueMarshalers.Count; i++) {
+			factoryMethods [i] = EmitValueMarshalerFactoryMethod (i, valueMarshalers [i]);
+		}
+
+		EmitRegisterValueMarshalersMethod (valueMarshalers, factoryMethods);
+
+		metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+			metadata.GetOrAddString ("_TypeMap"),
+			metadata.GetOrAddString ("ValueMarshalerMapping"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (typeFieldStart),
+			MetadataTokens.MethodDefinitionHandle (typeMethodStart));
+	}
+
+	MethodDefinitionHandle EmitValueMarshalerFactoryMethod (int index, ValueMarshalerData valueMarshaler)
+	{
+		var marshalerType = _pe.ResolveTypeRef (valueMarshaler.MarshalerType);
+		var marshalerCtor = _pe.AddMemberRef (marshalerType, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+
+		return _pe.EmitBody ($"CreateValueMarshaler_{index}",
+			MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature ().Parameters (0,
+				rt => rt.Type ().Type (_jniValueMarshalerRef, false),
+				p => { }),
+			encoder => {
+				encoder.NewObject (marshalerCtor, parameterCount: 0);
+				encoder.Return (returnsValue: true);
+			});
+	}
+
+	void EmitRegisterValueMarshalersMethod (IReadOnlyList<ValueMarshalerData> valueMarshalers, MethodDefinitionHandle[] factoryMethods)
+	{
+		var factoryCtor = _pe.AddMemberRef (_valueMarshalerFactoryRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Object ();
+					p.AddParameter ().Type ().IntPtr ();
+				}));
+		var registerValueMarshaler = _pe.AddMemberRef (_trimmableTypeMapRef, "RegisterValueMarshaler",
+			sig => sig.MethodSignature ().Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Type (_valueMarshalerFactoryRef, false);
+				}));
+
+		_pe.EmitBody ("RegisterValueMarshalers",
+			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
+			encoder => {
+				for (int i = 0; i < valueMarshalers.Count; i++) {
+					encoder.LoadToken (_pe.ResolveTypeRef (valueMarshalers [i].ValueType));
+					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
+					encoder.OpCode (ILOpCode.Ldnull);
+					encoder.LoadFunction (factoryMethods [i]);
+					encoder.NewObject (factoryCtor, parameterCount: 2);
+					encoder.Call (registerValueMarshaler, parameterCount: 2);
+				}
+				encoder.Return ();
+			});
 	}
 
 	/// <summary>

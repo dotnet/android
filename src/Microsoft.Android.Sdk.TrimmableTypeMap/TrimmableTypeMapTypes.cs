@@ -8,6 +8,7 @@ public record TrimmableTypeMapResult (
 	IReadOnlyList<GeneratedAssembly> GeneratedAssemblies,
 	IReadOnlyList<GeneratedJavaSource> GeneratedJavaSources,
 	IReadOnlyList<JavaPeerInfo> AllPeers,
+	IReadOnlyList<ValueMarshalerInfo>? ValueMarshalers = null,
 	GeneratedManifest? Manifest = null,
 	IReadOnlyList<string>? ApplicationRegistrationTypes = null)
 {

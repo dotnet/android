@@ -12,11 +12,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
 
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null, int maxArrayRank = 0)
+	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null, int maxArrayRank = 0, IReadOnlyList<string>? valueMarshalerTypeMapNames = null)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName, maxArrayRank: maxArrayRank);
+		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName, maxArrayRank: maxArrayRank, valueMarshalerTypeMapNames: valueMarshalerTypeMapNames);
 		stream.Position = 0;
 		return stream;
 	}
@@ -343,6 +343,23 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 		Assert.DoesNotContain ("_App.TypeMap", asmRefs);
 		Assert.DoesNotContain ("_Mono.Android.TypeMap", asmRefs);
+	}
+
+	[Fact]
+	public void Generate_WithValueMarshalerMaps_ReferencesPerAssemblyRegistration ()
+	{
+		using var stream = GenerateRootAssembly (
+			["_App.TypeMap", "_Mono.Android.TypeMap"],
+			useSharedTypemapUniverse: true,
+			valueMarshalerTypeMapNames: ["_App.TypeMap"]);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var asmRefs = reader.AssemblyReferences
+			.Select (h => reader.GetString (reader.GetAssemblyReference (h).Name))
+			.ToList ();
+		Assert.Contains ("_App.TypeMap", asmRefs);
+		Assert.Contains ("RegisterValueMarshalers", GetMemberRefNames (reader));
 	}
 
 	[Fact]

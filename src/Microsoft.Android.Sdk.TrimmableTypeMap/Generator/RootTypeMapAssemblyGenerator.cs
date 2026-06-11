@@ -80,7 +80,7 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// sentinels. Must match the value passed to the per-assembly generators. 0 means
 	/// no array sentinels were emitted; the loader passes <c>null</c> for array maps.
 	/// </param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, int maxArrayRank = 0)
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, int maxArrayRank = 0, IReadOnlyList<string>? valueMarshalerTypeMapNames = null)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -135,7 +135,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
 		// Emit TypeMapLoader class with Initialize() method
-		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, maxArrayRank, assemblyName);
+		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, maxArrayRank, assemblyName, valueMarshalerTypeMapNames ?? []);
 
 		pe.WritePE (stream);
 	}
@@ -201,7 +201,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
 	}
 
-	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, int maxArrayRank, string assemblyName)
+	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, int maxArrayRank, string assemblyName, IReadOnlyList<string> valueMarshalerTypeMapNames)
 	{
 		var metadata = pe.Metadata;
 
@@ -226,6 +226,8 @@ public sealed class RootTypeMapAssemblyGenerator
 		var getProxyMemberRef = AddTypeMappingMethodRef (pe, typeMappingRef, "GetOrCreateProxyTypeMapping",
 			iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 
+		var valueMarshalerMaps = CreateValueMarshalerMapContext (pe, valueMarshalerTypeMapNames);
+
 		// Define the TypeMapLoader type (public static class in Microsoft.Android.Runtime namespace)
 		metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.Class,
@@ -243,22 +245,62 @@ public sealed class RootTypeMapAssemblyGenerator
 			if (maxArrayRank > 0) {
 				var initializeRef = AddInitializeSingleWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 				EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef,
-					initializeRef, externalDictTypeSpec, externalDictArrayTypeSpec, perAssemblyTypeMapNames, maxArrayRank, assemblyName);
+					initializeRef, externalDictTypeSpec, externalDictArrayTypeSpec, perAssemblyTypeMapNames, maxArrayRank, assemblyName, valueMarshalerMaps);
 			} else {
 				var initializeRef = AddInitializeSingleNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
-				EmitInitializeWithSingleTypeMapNoArrays (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef, assemblyName);
+				EmitInitializeWithSingleTypeMapNoArrays (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef, assemblyName, valueMarshalerMaps);
 			}
 		} else {
 			var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 			if (maxArrayRank > 0) {
 				var initializeRef = AddInitializeAggregateWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 				EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
-					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, externalDictArrayTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, maxArrayRank, assemblyName);
+					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, externalDictArrayTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, maxArrayRank, assemblyName, valueMarshalerMaps);
 			} else {
 				var initializeRef = AddInitializeAggregateNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 				EmitInitializeWithAggregateTypeMapNoArrays (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
-					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName);
+					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName, valueMarshalerMaps);
 			}
+		}
+	}
+
+	sealed class ValueMarshalerMapContext
+	{
+		public EntityHandle[] RegisterRefs { get; init; } = [];
+		public bool HasMaps => RegisterRefs.Length > 0;
+	}
+
+	static ValueMarshalerMapContext CreateValueMarshalerMapContext (
+		PEAssemblyBuilder pe,
+		IReadOnlyList<string> valueMarshalerTypeMapNames)
+	{
+		if (valueMarshalerTypeMapNames.Count == 0) {
+			return new ValueMarshalerMapContext ();
+		}
+
+		var registerRefs = new EntityHandle [valueMarshalerTypeMapNames.Count];
+		for (int i = 0; i < valueMarshalerTypeMapNames.Count; i++) {
+			var asmRef = pe.FindOrAddAssemblyRef (valueMarshalerTypeMapNames [i]);
+			var valueMarshalerMappingRef = pe.Metadata.AddTypeReference (asmRef,
+				pe.Metadata.GetOrAddString ("_TypeMap"),
+				pe.Metadata.GetOrAddString ("ValueMarshalerMapping"));
+			registerRefs [i] = pe.AddMemberRef (valueMarshalerMappingRef, "RegisterValueMarshalers",
+				sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
+		}
+
+		return new ValueMarshalerMapContext {
+			RegisterRefs = registerRefs,
+		};
+	}
+
+	static void EmitInitializeValueMarshalerMaps (TrackedInstructionEncoder encoder, ValueMarshalerMapContext valueMarshalerMaps)
+	{
+		if (!valueMarshalerMaps.HasMaps) {
+			return;
+		}
+
+		for (int i = 0; i < valueMarshalerMaps.RegisterRefs.Length; i++) {
+			encoder.Call (valueMarshalerMaps.RegisterRefs [i], parameterCount: 0);
 		}
 	}
 
@@ -275,7 +317,8 @@ public sealed class RootTypeMapAssemblyGenerator
 		TypeSpecificationHandle externalDictArrayTypeSpec,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef,
 		int maxArrayRank,
-		string assemblyName)
+		string assemblyName,
+		ValueMarshalerMapContext valueMarshalerMaps)
 	{
 		var count = perAssemblyTypeMapNames.Count;
 
@@ -307,6 +350,7 @@ public sealed class RootTypeMapAssemblyGenerator
 				encoder.LoadLocal (1);
 				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
 				encoder.Call (initializeRef, parameterCount: 3);
+				EmitInitializeValueMarshalerMaps (encoder, valueMarshalerMaps);
 				encoder.Return ();
 			},
 			encodeLocals: localsSig => {
@@ -348,7 +392,8 @@ public sealed class RootTypeMapAssemblyGenerator
 		MemberReferenceHandle initializeRef,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle proxyDictTypeSpec,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef,
-		string assemblyName)
+		string assemblyName,
+		ValueMarshalerMapContext valueMarshalerMaps)
 	{
 		var count = perAssemblyTypeMapNames.Count;
 
@@ -376,6 +421,7 @@ public sealed class RootTypeMapAssemblyGenerator
 				encoder.LoadLocal (0);
 				encoder.LoadLocal (1);
 				encoder.Call (initializeRef, parameterCount: 2);
+				EmitInitializeValueMarshalerMaps (encoder, valueMarshalerMaps);
 				encoder.Return ();
 			},
 			encodeLocals: localsSig => {
@@ -437,7 +483,8 @@ public sealed class RootTypeMapAssemblyGenerator
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle externalDictArrayTypeSpec,
 		IReadOnlyList<string> perAssemblyTypeMapNames,
 		int maxArrayRank,
-		string assemblyName)
+		string assemblyName,
+		ValueMarshalerMapContext valueMarshalerMaps)
 	{
 		var getExternalSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
 		var getProxySpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
@@ -452,6 +499,7 @@ public sealed class RootTypeMapAssemblyGenerator
 				encoder.Call (getProxySpec, parameterCount: 0, returnsValue: true);
 				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
 				encoder.Call (initializeRef, parameterCount: 3);
+				EmitInitializeValueMarshalerMaps (encoder, valueMarshalerMaps);
 				encoder.Return ();
 			});
 	}
@@ -463,7 +511,8 @@ public sealed class RootTypeMapAssemblyGenerator
 	static void EmitInitializeWithSingleTypeMapNoArrays (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle,
 		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		MemberReferenceHandle initializeRef,
-		string assemblyName)
+		string assemblyName,
+		ValueMarshalerMapContext valueMarshalerMaps)
 	{
 		var getExternalSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, anchorTypeHandle);
 		var getProxySpec = MakeGenericMethodSpec (pe, getProxyMemberRef, anchorTypeHandle);
@@ -476,6 +525,7 @@ public sealed class RootTypeMapAssemblyGenerator
 				encoder.Call (getExternalSpec, parameterCount: 0, returnsValue: true);
 				encoder.Call (getProxySpec, parameterCount: 0, returnsValue: true);
 				encoder.Call (initializeRef, parameterCount: 2);
+				EmitInitializeValueMarshalerMaps (encoder, valueMarshalerMaps);
 				encoder.Return ();
 			});
 	}
@@ -640,4 +690,5 @@ public sealed class RootTypeMapAssemblyGenerator
 		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (systemTypeRef));
 	}
+
 }

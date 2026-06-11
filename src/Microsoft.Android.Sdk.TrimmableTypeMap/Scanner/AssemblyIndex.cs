@@ -33,6 +33,8 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
+	public List<ValueMarshalerInfo> ValueMarshalers { get; } = new ();
+
 	/// <summary>
 	/// Type references grouped by referenced assembly name.
 	/// </summary>
@@ -103,10 +105,14 @@ sealed class AssemblyIndex : IDisposable
 
 			TypesByFullName [fullName] = typeHandle;
 
-			var (registerInfo, attrInfo) = ParseAttributes (typeDef);
+			var (registerInfo, attrInfo, valueMarshalerInfo) = ParseAttributes (typeDef, fullName);
 
 			if (attrInfo is not null) {
 				AttributesByType [typeHandle] = attrInfo;
+			}
+
+			if (valueMarshalerInfo is not null) {
+				ValueMarshalers.Add (valueMarshalerInfo);
 			}
 
 			if (registerInfo is not null) {
@@ -131,10 +137,11 @@ sealed class AssemblyIndex : IDisposable
 		return false;
 	}
 
-	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)
+	(RegisterInfo? register, TypeAttributeInfo? attrs, ValueMarshalerInfo? valueMarshaler) ParseAttributes (TypeDefinition typeDef, string fullName)
 	{
 		RegisterInfo? registerInfo = null;
 		TypeAttributeInfo? attrInfo = null;
+		ValueMarshalerInfo? valueMarshalerInfo = null;
 
 		// Collect intent filters and metadata separately to avoid ordering issues:
 		// if [IntentFilter] appears before [Activity], we must not create attrInfo
@@ -150,7 +157,9 @@ sealed class AssemblyIndex : IDisposable
 				continue;
 			}
 
-			if (attrName == "RegisterAttribute") {
+			if (IsCustomAttributeMatch (ca, Reader, "Java.Interop", "JniValueMarshalerAttribute")) {
+				valueMarshalerInfo = ParseValueMarshalerAttribute (ca, fullName);
+			} else if (attrName == "RegisterAttribute") {
 				registerInfo = ParseRegisterAttribute (ca);
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
 			} else if (attrName == "JniTypeSignatureAttribute") {
@@ -211,7 +220,40 @@ sealed class AssemblyIndex : IDisposable
 			}
 		}
 
-		return (registerInfo, attrInfo);
+		return (registerInfo, attrInfo, valueMarshalerInfo);
+	}
+
+	ValueMarshalerInfo? ParseValueMarshalerAttribute (CustomAttribute ca, string valueTypeName)
+	{
+		var value = DecodeAttribute (ca);
+		if (value.FixedArguments.Length == 0 || value.FixedArguments [0].Value is not string marshalerTypeReference) {
+			return null;
+		}
+
+		var marshalerType = ParseAttributeTypeReference (marshalerTypeReference, AssemblyName);
+		return new ValueMarshalerInfo {
+			ValueTypeName = valueTypeName,
+			ValueTypeAssemblyName = AssemblyName,
+			MarshalerTypeName = marshalerType.TypeName,
+			MarshalerAssemblyName = marshalerType.AssemblyName,
+		};
+	}
+
+	static (string TypeName, string AssemblyName) ParseAttributeTypeReference (string typeReference, string defaultAssemblyName)
+	{
+		var commaIndex = typeReference.IndexOf (',');
+		if (commaIndex < 0) {
+			return (typeReference.Trim (), defaultAssemblyName);
+		}
+
+		var typeName = typeReference.Substring (0, commaIndex).Trim ();
+		var assemblyName = typeReference.Substring (commaIndex + 1).Trim ();
+		var assemblyNameEnd = assemblyName.IndexOf (',');
+		if (assemblyNameEnd >= 0) {
+			assemblyName = assemblyName.Substring (0, assemblyNameEnd).Trim ();
+		}
+
+		return (typeName, assemblyName);
 	}
 
 	static readonly HashSet<string> KnownComponentAttributes = new (StringComparer.Ordinal) {

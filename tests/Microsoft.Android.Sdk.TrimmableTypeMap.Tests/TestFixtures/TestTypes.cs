@@ -232,6 +232,18 @@ namespace Xamarin.Android.Net
 	}
 }
 
+namespace MyApp.ValueMarshalers
+{
+	[Java.Interop.JniValueMarshaler (typeof (DemoValueTypeMarshaler))]
+	internal struct DemoValueType
+	{
+	}
+
+	internal sealed class DemoValueTypeMarshaler : Java.Interop.JniValueMarshaler
+	{
+	}
+}
+
 namespace MyApp
 {
 	[Activity (MainLauncher = true, Label = "My App", Name = "my.app.MainActivity")]

@@ -157,6 +157,14 @@ public sealed record JavaPeerInfo
 	public ComponentInfo? ComponentAttribute { get; init; }
 }
 
+public sealed record ValueMarshalerInfo
+{
+	public required string ValueTypeName { get; init; }
+	public required string ValueTypeAssemblyName { get; init; }
+	public required string MarshalerTypeName { get; init; }
+	public required string MarshalerAssemblyName { get; init; }
+}
+
 /// <summary>
 /// Describes a marshal method (a method with [Register] or [Export]) on a Java peer type.
 /// Contains all data needed to generate a UCO wrapper, a JCW native declaration,
