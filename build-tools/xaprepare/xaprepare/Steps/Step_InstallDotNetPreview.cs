@@ -33,16 +33,6 @@ namespace Xamarin.Android.Prepare
 
 			AddToInventory ();
 
-			// Delete all relevant NuGet package install directories, as we could possibly be using a new runtime commit with a previously installed version (6.0.0)
-			var runtimeDirs = Directory.GetDirectories (Configurables.Paths.XAPackagesDir, "microsoft.netcore.app.runtime.mono.android*");
-			var packageDirsToRemove = new List<string> (runtimeDirs);
-			packageDirsToRemove.Add (Configurables.Paths.MicrosoftNETWorkloadMonoPackageDir);
-			foreach (var packageDir in packageDirsToRemove) {
-				if (Directory.Exists (packageDir)) {
-					Utilities.DeleteDirectory (packageDir);
-				}
-			}
-
 			// Install runtime packs associated with the SDK previously installed.
 			var packageDownloadProj = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "build-tools", "xaprepare", "xaprepare", "package-download.proj");
 			var logPathBase = Path.Combine (Configurables.Paths.BuildBinDir, $"msbuild-{context.BuildTimeStamp}-download-runtime-packs");
@@ -82,14 +72,6 @@ namespace Xamarin.Android.Prepare
 			var dotnets = new [] { "net6", "net7", "net8", "net9", "net10", "current" };
 			foreach (var dotnet in dotnets) {
 				var destination = Path.Combine (sdk_manifests,
-					context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand),
-					$"microsoft.net.workload.mono.toolchain.{dotnet}",
-					context.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadMonoToolChainPackageVersion));
-				Utilities.DeleteDirectory (destination, recurse: true);
-				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "*")) {
-					Utilities.CopyFileToDir (file, destination);
-				}
-				destination = Path.Combine (sdk_manifests,
 					context.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand),
 					$"microsoft.net.workload.emscripten.{dotnet}",
 					context.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion));
