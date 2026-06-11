@@ -41,8 +41,17 @@
       The trimmable variant uses a distinct output jar so MSBuild up-to-date
       checks cannot reuse a non-trimmable jar with the desktop GetThis class.
     -->
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java" />
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CrossReferenceBridge.java" />
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallNonvirtualBase.java" />
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallNonvirtualDerived.java" />
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallNonvirtualDerived2.java" />
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\RenameClassBase1.java" />
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\RenameClassBase2.java" />
+    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\RenameClassDerived.java" />
+
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
-                  Exclude="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java;$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CrossReferenceBridge.java"
+                  Exclude="@(_TrimmableJavaInteropDesktopFixture)"
                   Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
                   Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
