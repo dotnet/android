@@ -38,19 +38,27 @@ stages:
         projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
 
+    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
+    # See dotnet/android PR #11477.
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
+        env:
+          UseSharedCompilation: false
 
+    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
+    # See dotnet/android PR #11477.
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
+        env:
+          UseSharedCompilation: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
@@ -139,19 +147,27 @@ stages:
         projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
         arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
 
+    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
+    # See dotnet/android PR #11477.
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
+        env:
+          UseSharedCompilation: false
 
+    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
+    # See dotnet/android PR #11477.
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
+        env:
+          UseSharedCompilation: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 

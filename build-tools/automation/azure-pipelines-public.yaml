@@ -388,12 +388,16 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Currently needed for samples/NativeAOT
+    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
+    # See dotnet/android PR #11477.
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
+        env:
+          UseSharedCompilation: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
