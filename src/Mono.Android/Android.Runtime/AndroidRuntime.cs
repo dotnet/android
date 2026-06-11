@@ -319,8 +319,6 @@ namespace Android.Runtime {
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
-		[RequiresDynamicCode ("This type manager is reflection-backed and is not compatible with Native AOT.")]
-		[RequiresUnreferencedCode ("This type manager is reflection-backed and is not trimming-compatible.")]
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
@@ -630,8 +628,6 @@ namespace Android.Runtime {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
 
-		[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
-		[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 		public AndroidValueManager ()
 		{
 		}

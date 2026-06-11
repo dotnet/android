@@ -985,11 +985,21 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 
 		var transfer = ToJniHandleOwnership (reference, options);
-		var value = JavaConvert.FromJniHandle (reference.Handle, transfer, targetType);
+		var value = JavaConvert.FromJniHandle (reference.Handle, transfer, GetValueConversionTargetType (targetType));
 		if (transfer != JniHandleOwnership.DoNotTransfer) {
 			reference = default;
 		}
 		return value;
+	}
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	static Type? GetValueConversionTargetType ([DynamicallyAccessedMembers (Constructors)] Type? targetType)
+	{
+		if (targetType == typeof (sbyte?)) {
+			return typeof (sbyte);
+		}
+
+		return targetType;
 	}
 
 	static bool TryCreateJavaArrayWrapper (

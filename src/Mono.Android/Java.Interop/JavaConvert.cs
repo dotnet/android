@@ -26,10 +26,6 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ByteValue ();
 			} },
-			{ typeof (sbyte?), (handle, transfer) => {
-				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.ByteValue ();
-			} },
 			{ typeof (char), (handle, transfer) => {
 				using (var value = new Java.Lang.Character (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.CharValue ();
