@@ -121,10 +121,14 @@ list-nunit-tests:
 include build-tools/scripts/runtime-helpers.mk
 
 .PHONY: prepare
-prepare:
+prepare: install-dotnet
 	$(call SYSTEM_DOTNET_BINLOG,prepare-run,run) $(PREPARE_MSBUILD_FLAGS) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- $(_PREPARE_ARGS)
 	$(call SYSTEM_DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
 	$(call DOTNET_BINLOG,prepare-java.interop) $(SOLUTION) -t:PrepareJavaInterop
+
+.PHONY: install-dotnet
+install-dotnet:
+	./eng/install-dotnet.sh
 
 .PHONY: prepare-help
 prepare-help:

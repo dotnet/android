@@ -9,7 +9,13 @@
     <_XAPrepareStandardArgs Condition=" '$(XA_FORCE_COMPONENT_REFRESH)' == 'true' ">$(_XAPrepareStandardArgs) -refresh</_XAPrepareStandardArgs>
   </PropertyGroup>
   <Import Project="$(_TopDir)\Configuration.props" />
-  <Target Name="_BuildXAPrepare">
+  <Target Name="_InstallDotNet">
+    <Exec
+        Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(_TopDir)\eng\install-dotnet.ps1&quot; -configuration $(Configuration)"
+        WorkingDirectory="$(_TopDir)"
+    />
+  </Target>
+  <Target Name="_BuildXAPrepare" DependsOnTargets="_InstallDotNet">
     <MSBuild Projects="$(MSBuildThisFileDirectory)..\xaprepare\xaprepare.sln" Targets="Restore;Build" />
   </Target>
   <Target Name="Prepare"
