@@ -81,7 +81,7 @@ namespace Android.Runtime
 			JniType? jniType = null;
 			JniType.GetCachedJniType (ref jniType, className);
 
-			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
+			string methods = new string ((char*) methods_ptr, 0, methods_len);
 			if (androidRuntime is null) {
 				throw new InvalidOperationException ("androidRuntime has not been initialized");
 			}
