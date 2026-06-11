@@ -8,8 +8,6 @@ using Android.Views;
 
 using Java.Interop;
 
-using Microsoft.Android.Runtime;
-
 using NUnit.Framework;
 
 namespace Java.InteropTests
@@ -530,7 +528,7 @@ namespace Java.InteropTests
 
 		static void AssumeTrimmableConstructorParameterMarshalling ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 				Assert.Ignore ("Legacy TypeManager.n_Activate does not marshal string, short, or array constructor parameters; this case validates trimmable constructor UCO parameter marshalling.");
 			}
 		}
@@ -575,7 +573,7 @@ namespace Java.InteropTests
 			var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);
 			try {
 				Assert.AreSame (instance, registered);
-				if (RuntimeFeature.TrimmableTypeMap) {
+				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
 				}
 			} finally {
@@ -980,6 +978,5 @@ namespace Java.InteropTests
 		{
 			ConstructorInvocations = 0;
 		}
-
 	}
 }

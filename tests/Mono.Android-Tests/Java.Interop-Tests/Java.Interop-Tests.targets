@@ -27,12 +27,17 @@
   <ItemGroup>
     <!--
       java-trimmable/net/dot/jni/test/*.java contains Android trimmable
-      typemap variants of Java.Interop test fixtures. They omit
-      the desktop-JVM static initializer (net.dot.jni.ManagedPeer.registerNativeMembers /
-      ManagedPeer.construct) that is only registered by the Java.Interop test
-      JVM and throws UnsatisfiedLinkError on Android. Each variant declares
-      the same public Java class as its desktop counterpart, so include exactly one based on
-      $(_AndroidTypeMapImplementation). The trimmable variant lives in this
+      typemap variants of Java.Interop test fixtures. The Java.Interop test
+      sources and prebuilt test jar use desktop-JVM fixtures that call
+      net.dot.jni.ManagedPeer.registerNativeMembers / ManagedPeer.construct.
+      The trimmable Android runtime intentionally does not ship ManagedPeer, so
+      those classes throw NoClassDefFoundError before the managed test can run.
+
+      These replacements keep the Java behavior under test but omit the desktop
+      ManagedPeer hooks; managed peer construction/registration is instead done
+      by the generated trimmable typemap. Each variant declares the same public
+      Java class as its desktop counterpart, so include exactly one based on
+      $(_AndroidTypeMapImplementation). The trimmable variants live in this
       project (not the submodule) and in a parallel directory because javac
       requires the file name match the public class name.
     -->
