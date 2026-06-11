@@ -80,25 +80,6 @@ namespace Xamarin.Android.RuntimeTests
 		static bool HasAppContextSwitch (string key)
 			=> AppContext.TryGetSwitch (key, out var value) && value;
 
-		protected override IEnumerable<string>? ExcludedTestNames {
-			get {
-				if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap)
-					return null;
-
-				// Tests from the external Java.Interop-Tests assembly that still fail under
-				// the trimmable typemap and are not covered by a category.
-				return new [] {
-					// Current trimmable runtime type-manager behavior differs from the
-					// legacy typemap path these tests assert against.
-					"Java.InteropTests.JnienvTest.NewOpenGenericTypeThrows",
-					"Java.InteropTests.JniRuntimeTest.BuiltInSimpleReferenceMap_ContainsManagedPeerByDefault",
-					"Java.InteropTests.JniTypeManagerTests.CannotCreateGenericHolderFromJava",
-					"Java.InteropTests.JniTypeManagerTests.GetType",
-					"Java.InteropTests.JniTypeManagerTests.GetTypeSignature_Type",
-				};
-			}
-		}
-
 		public override void OnCreate (Bundle? arguments)
 		{
 			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");

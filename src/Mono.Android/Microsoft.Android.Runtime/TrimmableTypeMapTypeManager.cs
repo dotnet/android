@@ -17,10 +17,29 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 {
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	static readonly Type[] EmptyTypeArray = [];
+	static readonly Dictionary<Type, Type> ArrayTypes = [];
+	static readonly Dictionary<Type, Type> JavaObjectArrayTypes = [];
+	static readonly Dictionary<Type, Type[]> PrimitiveArrayTypes = [];
 	readonly ConcurrentDictionary<Type, JniTypeSignature> _typeSignatureCache = new ();
 
 	// This type manager has 2 core APIs: GetTypeSignatureCore for managed-to-Java lookups, and GetTypeForSimpleReference for Java-to-managed lookups.
 	// The rest of the APIs are unsupported and will throw if called, as they are not needed internally anywhere.
+
+	static TrimmableTypeMapTypeManager ()
+	{
+		AddKnownArrayTypes<string> ();
+		AddKnownArrayTypes<JavaObject> ();
+
+		AddKnownPrimitiveArrayTypes<bool, JavaBooleanArray> ();
+		AddKnownPrimitiveArrayTypes<sbyte, JavaSByteArray> ();
+		AddKnownPrimitiveArrayTypes<char, JavaCharArray> ();
+		AddKnownPrimitiveArrayTypes<short, JavaInt16Array> ();
+		AddKnownPrimitiveArrayTypes<int, JavaInt32Array> ();
+		AddKnownPrimitiveArrayTypes<long, JavaInt64Array> ();
+		AddKnownPrimitiveArrayTypes<float, JavaSingleArray> ();
+		AddKnownPrimitiveArrayTypes<double, JavaDoubleArray> ();
+	}
 
 	protected override JniTypeSignature GetTypeSignatureCore (Type type)
 	{
@@ -32,6 +51,14 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 			if (TryGetBuiltInTypeSignature (type, out var signature)) {
 				return signature.AddArrayRank (rank);
+			}
+
+			if (type.IsGenericType) {
+				var genericDefinition = type.GetGenericTypeDefinition ();
+				if (genericDefinition == typeof (JavaArray<>) || genericDefinition == typeof (JavaObjectArray<>)) {
+					var elementSignature = GetTypeSignatureUncached (type.GenericTypeArguments [0]);
+					return elementSignature.AddArrayRank (rank + 1);
+				}
 			}
 
 			// Walk the base type chain for managed-only subclasses (e.g., JavaProxyThrowable
@@ -144,7 +171,20 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	[return: DynamicallyAccessedMembers (Methods | Constructors | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
-		var builtInType = jniSimpleReference switch {
+		var builtInType = GetBuiltInTypeForSimpleReference (jniSimpleReference);
+		if (builtInType is not null) {
+			return builtInType;
+		}
+
+		return TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types) && types.Length > 0
+			? types [0].Type
+			: null;
+	}
+
+	[return: DynamicallyAccessedMembers (Methods | Constructors | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
+	static Type? GetBuiltInTypeForSimpleReference (string jniSimpleReference)
+	{
+		return jniSimpleReference switch {
 			"java/lang/String"     => typeof (string),
 			"V"                    => typeof (void),
 			"Z"                    => typeof (bool),
@@ -165,14 +205,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			"java/lang/Double"     => typeof (double?),
 			_                      => null,
 		};
-
-		if (builtInType is not null) {
-			return builtInType;
-		}
-
-		return TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types) && types.Length > 0
-			? types [0].Type
-			: null;
 	}
 
 	// Remapping APIs for InTune support
@@ -205,9 +237,12 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			$"Simple reference lookup should use {nameof (GetTypeSignatureCore)} to get the full type signature, including simple reference.");
 
 	public override IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
-		=> throw new UnreachableException (
-			$"{nameof (GetTypes)} should not be called in the trimmable typemap path. " +
-			$"Java-to-managed constructor activation should use generated {nameof (JavaPeerProxy)} instances.");
+	{
+		if (typeSignature.SimpleReference is null) {
+			return EmptyTypeArray;
+		}
+		return CreateGetTypesEnumerator (typeSignature);
+	}
 
 	public override IEnumerable<ReflectionConstructibleType> GetReflectionConstructibleTypes (JniTypeSignature typeSignature)
 		=> throw new UnreachableException (
@@ -215,14 +250,141 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			$"Managed peer construction should use generated {nameof (JavaPeerProxy)} instances.");
 
 	protected override IEnumerable<JniTypeSignature> GetTypeSignaturesCore (Type type)
-		=> throw new UnreachableException (
-			$"{nameof (GetTypeSignaturesCore)} should not be called in the trimmable typemap path. " +
-			$"Runtime type signature lookup should use {nameof (GetTypeSignatureCore)}.");
+	{
+		var signature = GetTypeSignatureCore (type);
+		if (signature.IsValid) {
+			yield return signature;
+		}
+	}
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
-		=> throw new UnreachableException (
-			$"{nameof (GetTypesForSimpleReference)} should not be called in the trimmable typemap path. " +
-			$"Simple reference lookup should use {nameof (GetTypeForSimpleReference)}.");
+	{
+		var builtInType = GetBuiltInTypeForSimpleReference (jniSimpleReference);
+		if (builtInType is not null) {
+			yield return builtInType;
+		}
+
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
+			foreach (var type in types) {
+				yield return type.Type;
+			}
+		}
+	}
+
+	IEnumerable<Type> CreateGetTypesEnumerator (JniTypeSignature typeSignature)
+	{
+		if (!typeSignature.IsValid) {
+			yield break;
+		}
+
+		foreach (var type in GetTypesForSimpleReference (typeSignature.SimpleReference ?? throw new InvalidOperationException ("Should not be reached"))) {
+			if (typeSignature.ArrayRank == 0) {
+				yield return type;
+				continue;
+			}
+
+			if (IsKeywordSignature (typeSignature)) {
+				foreach (var primitiveArrayType in GetPrimitiveArrayTypesForSimpleReference (typeSignature, type)) {
+					yield return primitiveArrayType;
+				}
+				continue;
+			}
+
+			if (TryMakeJavaObjectArrayType (type, typeSignature.ArrayRank, out var javaObjectArrayType)) {
+				yield return javaObjectArrayType;
+			}
+
+			if (TryMakeArrayType (type, typeSignature.ArrayRank, out var arrayType)) {
+				yield return arrayType;
+			}
+		}
+	}
+
+	IEnumerable<Type> GetPrimitiveArrayTypesForSimpleReference (JniTypeSignature typeSignature, Type type)
+	{
+		foreach (var primitiveArrayType in GetPrimitiveArrayTypes (type)) {
+			var rank = typeSignature.ArrayRank - 1;
+			if (TryMakeJavaObjectArrayType (primitiveArrayType, rank, out var javaObjectArrayType)) {
+				yield return javaObjectArrayType;
+			}
+
+			if (TryMakeArrayType (primitiveArrayType, rank, out var arrayType)) {
+				yield return arrayType;
+			}
+		}
+	}
+
+	static bool IsKeywordSignature (JniTypeSignature typeSignature)
+		=> typeSignature.SimpleReference is string simpleReference &&
+			typeSignature.QualifiedReference == new string ('[', typeSignature.ArrayRank) + simpleReference;
+
+	static bool TryMakeArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
+	{
+		arrayType = elementType;
+		for (int i = 0; i < rank; i++) {
+			if (!TryMakeArrayType (arrayType, out arrayType)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	static bool TryMakeArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	{
+		if (ArrayTypes.TryGetValue (elementType, out arrayType)) {
+			return true;
+		}
+
+		return TrimmableTypeMap.Instance.TryGetArrayType (elementType, out arrayType);
+	}
+
+	static bool TryMakeJavaObjectArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
+	{
+		arrayType = elementType;
+		for (int i = 0; i < rank; i++) {
+			if (!TryMakeJavaObjectArrayType (arrayType, out arrayType)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	static bool TryMakeJavaObjectArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	{
+		return JavaObjectArrayTypes.TryGetValue (elementType, out arrayType);
+	}
+
+	static Type[] GetPrimitiveArrayTypes (Type primitiveType)
+		=> PrimitiveArrayTypes.TryGetValue (primitiveType, out var types) ? types : EmptyTypeArray;
+
+	static void AddKnownPrimitiveArrayTypes<
+			[DynamicallyAccessedMembers (Constructors)]
+			T,
+			[DynamicallyAccessedMembers (Constructors)]
+			TArray> ()
+	{
+		AddKnownArrayTypes<T> ();
+		AddKnownArrayTypes<JavaArray<T>> ();
+		AddKnownArrayTypes<JavaPrimitiveArray<T>> ();
+		AddKnownArrayTypes<TArray> ();
+		PrimitiveArrayTypes [typeof (T)] = [
+			typeof (T[]),
+			typeof (JavaArray<T>),
+			typeof (JavaPrimitiveArray<T>),
+			typeof (TArray),
+		];
+	}
+
+	static void AddKnownArrayTypes<
+			[DynamicallyAccessedMembers (Constructors)]
+			T> ()
+	{
+		ArrayTypes [typeof (T)] = typeof (T[]);
+		ArrayTypes [typeof (T[])] = typeof (T[][]);
+		ArrayTypes [typeof (T[][])] = typeof (T[][][]);
+		JavaObjectArrayTypes [typeof (T)] = typeof (JavaObjectArray<T>);
+		JavaObjectArrayTypes [typeof (JavaObjectArray<T>)] = typeof (JavaObjectArray<JavaObjectArray<T>>);
+	}
 
 	public override void RegisterNativeMembers (JniType nativeClass, [DynamicallyAccessedMembers (Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] Type type, ReadOnlySpan<char> methods)
 		=> throw new UnreachableException (
