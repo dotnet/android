@@ -995,11 +995,12 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	static bool TryCreateJavaArrayWrapper (
 		ref JniObjectReference reference,
 		JniObjectReferenceOptions options,
+		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType,
 		[NotNullWhen (true)] out object? value)
 	{
-		if (targetType == typeof (JavaInt32Array) || targetType == typeof (JavaPrimitiveArray<int>)) {
-			value = new JavaInt32Array (ref reference, options);
+		if (targetType != null && TryGetPrimitiveArrayValueMarshaler (targetType, out var marshaler)) {
+			value = marshaler.CreateValue (ref reference, options, targetType);
 			return true;
 		}
 
@@ -1055,16 +1056,8 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return TrimmableValueMarshaler<string>.Instance;
 		if (type == typeof (object))
 			return ObjectValueMarshaler;
-		if (type == typeof (int[]))
-			return TrimmableValueMarshaler<int[]>.Instance;
-		if (type == typeof (IList<int>))
-			return TrimmableValueMarshaler<IList<int>>.Instance;
-		if (type == typeof (global::Java.Interop.JavaArray<int>))
-			return TrimmableValueMarshaler<global::Java.Interop.JavaArray<int>>.Instance;
-		if (type == typeof (JavaPrimitiveArray<int>))
-			return TrimmableValueMarshaler<JavaPrimitiveArray<int>>.Instance;
-		if (type == typeof (JavaInt32Array))
-			return TrimmableValueMarshaler<JavaInt32Array>.Instance;
+		if (TryGetPrimitiveArrayValueMarshaler (type, out var primitiveArrayMarshaler))
+			return primitiveArrayMarshaler;
 		if (type == typeof (IJavaPeerable) || typeof (IJavaPeerable).IsAssignableFrom (type))
 			return PeerableValueMarshaler;
 
@@ -1074,13 +1067,16 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
 	{
 		EnsureNotDisposed ();
-		if (typeof (T) == typeof (object)) {
-			return (JniValueMarshaler<T>)(object) ObjectValueMarshaler;
+		var type = typeof (T);
+		if (type.IsArray && !TryGetPrimitiveArrayValueMarshaler (type, out _)) {
+			return TrimmableValueMarshaler<T>.Instance;
 		}
-		if (typeof (T) == typeof (IJavaPeerable)) {
-			return (JniValueMarshaler<T>)(object) PeerableValueMarshaler;
+
+		var marshaler = GetValueMarshaler (type);
+		if (marshaler is JniValueMarshaler<T> typedMarshaler) {
+			return typedMarshaler;
 		}
-		return TrimmableValueMarshaler<T>.Instance;
+		return CreateDelegatingValueMarshaler<T> (marshaler);
 	}
 
 	static JniHandleOwnership ToJniHandleOwnership (JniObjectReference reference, JniObjectReferenceOptions options)
@@ -1127,9 +1123,6 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			if (value == null) {
 				return new JniValueMarshalerState ();
 			}
-			if (TryCreateInt32ArrayArgumentState (value, synchronize, out var state)) {
-				return state;
-			}
 			if (value is IJavaPeerable peerable) {
 				return PeerableValueMarshaler.CreateObjectReferenceArgumentState (peerable, synchronize);
 			}
@@ -1142,59 +1135,7 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		public override void DestroyGenericArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
-			if (TryDestroyInt32ArrayArgumentState (value, ref state, synchronize)) {
-				return;
-			}
 			DisposeReferenceState (ref state);
-		}
-
-		static bool TryCreateInt32ArrayArgumentState ([MaybeNull] T value, ParameterAttributes synchronize, out JniValueMarshalerState state)
-		{
-			state = new JniValueMarshalerState ();
-
-			if (value is not IList<int> list) {
-				return false;
-			}
-
-			synchronize = GetCopyDirection (synchronize);
-			var copyToJava = (synchronize & ParameterAttributes.In) == ParameterAttributes.In;
-			var array = copyToJava
-				? new JavaInt32Array (list)
-				: new JavaInt32Array (list.Count);
-			state = new JniValueMarshalerState (array);
-			return true;
-		}
-
-		static bool TryDestroyInt32ArrayArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
-		{
-			if (state.PeerableValue is not JavaInt32Array array) {
-				return false;
-			}
-
-			synchronize = GetCopyDirection (synchronize);
-			if ((synchronize & ParameterAttributes.Out) == ParameterAttributes.Out && value is IList<int> list) {
-				if (value is int[] targetArray) {
-					array.CopyTo (targetArray, 0);
-				} else {
-					int count = Math.Min (array.Length, list.Count);
-					for (int i = 0; i < count; i++) {
-						list [i] = array [i];
-					}
-				}
-			}
-
-			array.Dispose ();
-			state = new JniValueMarshalerState ();
-			return true;
-		}
-
-		static ParameterAttributes GetCopyDirection (ParameterAttributes value)
-		{
-			const ParameterAttributes inout = ParameterAttributes.In | ParameterAttributes.Out;
-			if ((value & inout) != 0) {
-				return value & inout;
-			}
-			return inout;
 		}
 
 		static bool IsPrimitiveJniValueType (Type type)

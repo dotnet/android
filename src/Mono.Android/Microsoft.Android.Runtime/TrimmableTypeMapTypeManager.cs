@@ -19,6 +19,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	readonly ConcurrentDictionary<Type, JniTypeSignature> _typeSignatureCache = new ();
 
+	// This type manager has 2 core APIs: GetTypeSignatureCore for managed-to-Java lookups, and GetTypeForSimpleReference for Java-to-managed lookups.
+	// The rest of the APIs are unsupported and will throw if called, as they are not needed internally anywhere.
+
 	protected override JniTypeSignature GetTypeSignatureCore (Type type)
 	{
 		return _typeSignatureCache.GetOrAdd (type, GetTypeSignatureUncached);
@@ -129,31 +132,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 					return true;
 				}
 
-				if (GetPrimitiveArrayWrapperKeywordTypeName (type) is string primitiveArrayKeywordTypeName) {
-					signature = new JniTypeSignature (primitiveArrayKeywordTypeName, 1, keyword: true);
+				if (TryGetPrimitiveArrayTypeSignature (type, out signature))
 					return true;
-				}
-
-				static string? GetPrimitiveArrayWrapperKeywordTypeName (Type type)
-				{
-					if (type == typeof (JavaBooleanArray) || type == typeof (JavaPrimitiveArray<bool>))
-						return "Z";
-					if (type == typeof (JavaSByteArray) || type == typeof (JavaPrimitiveArray<sbyte>))
-						return "B";
-					if (type == typeof (JavaCharArray) || type == typeof (JavaPrimitiveArray<char>))
-						return "C";
-					if (type == typeof (JavaInt16Array) || type == typeof (JavaPrimitiveArray<short>))
-						return "S";
-					if (type == typeof (JavaInt32Array) || type == typeof (JavaPrimitiveArray<int>))
-						return "I";
-					if (type == typeof (JavaInt64Array) || type == typeof (JavaPrimitiveArray<long>))
-						return "J";
-					if (type == typeof (JavaSingleArray) || type == typeof (JavaPrimitiveArray<float>))
-						return "F";
-					if (type == typeof (JavaDoubleArray) || type == typeof (JavaPrimitiveArray<double>))
-						return "D";
-					return null;
-				}
 
 				signature = default;
 				return false;
@@ -195,12 +175,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			: null;
 	}
 
-	[return: DynamicallyAccessedMembers (Constructors)]
-	protected override Type? GetInvokerTypeCore ([DynamicallyAccessedMembers (Constructors)] Type type)
-		// => TrimmableTypeMap.Instance.GetInvokerType (type);
-		=> throw new UnreachableException (
-			$"{nameof (GetInvokerTypeCore)} should not be called in the trimmable typemap path. " +
-			$"Invoker types should use generated {nameof (JavaPeerProxy)} instances.");
+	// Remapping APIs for InTune support
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		=> JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
@@ -211,20 +186,20 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
 		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 
+	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	protected override Type? GetInvokerTypeCore ([DynamicallyAccessedMembers (Constructors)] Type type)
+		=> throw new UnreachableException (
+			$"{nameof (GetInvokerTypeCore)} should not be called in the trimmable typemap path. " +
+			$"Invoker types should use generated {nameof (JavaPeerProxy)} instances.");
+
 	protected override string? GetSimpleReference (Type type)
-	// {
-	// 	var typeSignature = GetTypeSignature (type);
-	// 	return typeSignature.IsValid ? typeSignature.SimpleReference : null;
-	// }
 		=> throw new UnreachableException (
 			$"{nameof (GetSimpleReference)} should not be called in the trimmable typemap path. " +
 			$"Simple reference lookup should use {nameof (GetTypeSignatureCore)} to get the full type signature, including simple reference.");
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)
-	// {
-	// 	var simpleReference = GetSimpleReference (type);
-	// 	return simpleReference is not null ? [simpleReference] : [];
-	// }
 		=> throw new UnreachableException (
 			$"{nameof (GetSimpleReferences)} should not be called in the trimmable typemap path. " +
 			$"Simple reference lookup should use {nameof (GetTypeSignatureCore)} to get the full type signature, including simple reference.");
