@@ -4,8 +4,8 @@
 <Project>
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
   <PropertyGroup>
-    <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">18.6.3</MSBuildPackageReferenceVersion>
-    <SystemReflectionMetadataPackageVersion Condition=" '$(SystemReflectionMetadataPackageVersion)' == '' ">10.0.3</SystemReflectionMetadataPackageVersion>
+    <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">18.7.1</MSBuildPackageReferenceVersion>
+    <SystemReflectionMetadataPackageVersion Condition=" '$(SystemReflectionMetadataPackageVersion)' == '' ">10.0.4</SystemReflectionMetadataPackageVersion>
     <LibZipSharpVersion Condition=" '$(LibZipSharpVersion)' == '' " >3.3.0</LibZipSharpVersion>
     <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
   </PropertyGroup>
@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.Build.Framework"      Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core"     Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" IncludeAssets="None" PrivateAssets="All" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.1.11" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
     <PackageReference Include="Mono.Unix" Version="$(MonoUnixVersion)" GeneratePathProperty="true" />
