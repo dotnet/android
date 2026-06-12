@@ -278,7 +278,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		return false;
 	}
 
-	protected override JniObjectReference CreateObjectReferenceArgumentCore (
+	protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (
 		[DynamicallyAccessedMembers (Constructors)]
 		Type type,
 		object? value)
