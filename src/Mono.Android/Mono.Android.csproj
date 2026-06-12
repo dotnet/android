@@ -363,8 +363,6 @@
     <Compile Include="Microsoft.Android.Runtime\AggregateTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\ITypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\JniRemappingLookup.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SimpleValueManager.cs" />

@@ -98,7 +98,6 @@
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
         SupportedAbis="@(_BuildTargetAbis)"
-        TypemapImplementation="$(_AndroidTypeMapImplementation)"
         TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
     </GenerateTypeMappings>
 
@@ -165,7 +164,6 @@
         -->
       <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
       <_AndroidLinkerCustomStepAssembly>$(MSBuildThisFileDirectory)..\tools\Microsoft.Android.Sdk.ILLink.dll</_AndroidLinkerCustomStepAssembly>
-      <_SystemIOHashingAssemblyPath>$(MSBuildThisFileDirectory)..\tools\System.IO.Hashing.dll</_SystemIOHashingAssemblyPath>
       <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
     </PropertyGroup>
     <ItemGroup>
@@ -174,7 +172,6 @@
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L147
         -->
       <_TrimmerCustomData Include="AndroidCustomViewMapFile" Value="$(_OuterCustomViewMapFile)" />
-      <_TrimmerCustomData Include="SystemIOHashingAssemblyPath" Value="$(_SystemIOHashingAssemblyPath)" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:
@@ -190,12 +187,6 @@
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
       <!-- Custom steps that run after MarkStep -->
       <!-- Custom steps that run after CleanStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
-      />
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml"
           Exclude="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml" />
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml"

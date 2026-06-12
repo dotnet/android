@@ -2930,8 +2930,10 @@ because xbuild doesn't support framework reference assemblies.
         Condition=" '$(DesignTimeBuild)' != 'true' "/>
   <Target Name="_ValidateAndroidTypeMapImplementation"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
-    <Error Condition=" '$(_AndroidTypeMapImplementation)' != '' and '$(_AndroidTypeMapImplementation)' != 'llvm-ir' and '$(_AndroidTypeMapImplementation)' != 'managed' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
-           Text="Invalid value for _AndroidTypeMapImplementation: '$(_AndroidTypeMapImplementation)'. Valid values are: llvm-ir, managed, trimmable." />
+    <Error Condition=" '$(_AndroidTypeMapImplementation)' != '' and '$(_AndroidTypeMapImplementation)' != 'llvm-ir' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
+           Text="Invalid value for _AndroidTypeMapImplementation: '$(_AndroidTypeMapImplementation)'. Valid values are: llvm-ir, trimmable." />
+    <Error Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
+           Text="NativeAOT requires _AndroidTypeMapImplementation=trimmable." />
   </Target>
 
   <Target Name="_LinkAssemblies"
@@ -2942,6 +2944,6 @@ because xbuild doesn't support framework reference assemblies.
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.Trimmable.targets"
     Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
 <Import Project="$(MSBuildThisFileDirectory)..\targets\Microsoft.Android.Sdk.TypeMap.LlvmIr.targets"
-    Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
+    Condition=" '$(_AndroidTypeMapImplementation)' == 'llvm-ir' " />
 
 </Project>

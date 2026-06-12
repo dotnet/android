@@ -77,11 +77,7 @@ namespace Java.Interop {
 
 		static JniRuntime.JniTypeManager CreateDefaultTypeManager ()
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return new TrimmableTypeMapTypeManager ();
-			}
-
-			return new ManagedTypeManager ();
+			return new TrimmableTypeMapTypeManager ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()

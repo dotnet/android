@@ -86,7 +86,7 @@ namespace Java.LangTests
 			value.Dispose ();
 		}
 
-		// TODO: fix on CoreCLR once new managed type maps are implemented. Currently fails with
+		// TODO: fix on CoreCLR once the typemap behavior is fixed. Currently fails with
 		//       java/lang/Object is typemap'd to Java.InteropTests.JavaLangRemappingTestObject, not Java.Lang.Object, Mono.Android!
 		[Test]
 		public void java_lang_Object_Is_Java_Lang_Object ()

@@ -1,4 +1,4 @@
-<!-- Trimmable typemap: managed type mapping instead of native binary typemaps. -->
+<!-- Trimmable typemap: attribute-based type mapping instead of native binary typemaps. -->
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />

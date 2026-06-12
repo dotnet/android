@@ -51,9 +51,10 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (true, "llvm-ir", runtime);
 				AddTestData (false, "llvm-ir", runtime);
-				AddTestData (true, "managed", runtime);
-				// NOTE: TypeMappingStep is not yet setup for Debug mode
-				//AddTestData (false, "managed", runtime);
+				if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
+					AddTestData (true, "trimmable", runtime);
+					AddTestData (false, "trimmable", runtime);
+				}
 			}
 
 			return ret;
@@ -82,7 +83,7 @@ namespace Xamarin.Android.Build.Tests
 			//    Input file "obj/Release/build.props" is newer than output file "obj/Release/stamp/_GeneratePackageManagerJava.stamp".
 			//
 			if (runtime == AndroidRuntime.MonoVM && isRelease) {
-				Assert.Ignore ("dotnet run --no-build breaks marshal methods (both managed and llvm-ir) on MonoVM");
+				Assert.Ignore ("dotnet run --no-build breaks marshal methods on MonoVM");
 			}
 
 			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation == "llvm-ir") {

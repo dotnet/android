@@ -42,9 +42,9 @@
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
   </ItemGroup>
 
-  <!-- Some of tests included in the files below fail on CoreCLR. This is PROBABLY caused by managed typemaps, which 
-       will be replaced at some point by a different implementation. Until then, these tests can remain disabled. -->
-  <!-- TODO: put these back when new typemap implementation is available -->
+  <!-- Some tests included in the files below fail on CoreCLR. This is PROBABLY caused by typemap behavior.
+       Until then, these tests can remain disabled. -->
+  <!-- TODO: put these back when the typemap behavior is fixed. -->
   <ItemGroup>
     <Compile Remove="Java.InteropTests\AndroidValueManagerContractTests.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
