@@ -52,8 +52,6 @@
       want tests tagged [Category("Intune")] to run.
     -->
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
-    <RuntimeHostConfigurationOption Include="ExcludeCategories" Value="$(ExcludeCategories);TrimmableTypeMapUnsupported" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <RuntimeHostConfigurationOption Include="ExcludeCategories" Value="$(ExcludeCategories)" Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' and '$(ExcludeCategories)' != '' " />
   </ItemGroup>
 
   <PropertyGroup>

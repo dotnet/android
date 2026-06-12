@@ -15,29 +15,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <!--
-      java-trimmable/net/dot/jni/test/*.java are added explicitly via
+      java-trimmable/net/dot/jni/test/GetThis.java is added explicitly via
       TestJarEntry below when building for the trimmable typemap; it must be
       removed from the implicit AndroidJavaSource glob so the .NET SDK does
-      not also try to compile them as regular AndroidJavaSource items (which
-      would collide with the desktop Java fixtures in the test JAR).
+      not also try to compile it as a regular AndroidJavaSource (which would
+      collide with the desktop GetThis.java in the test JAR).
     -->
     <AndroidJavaSource Remove="java-trimmable\**\*.java" />
   </ItemGroup>
 
   <ItemGroup>
     <!--
-      java-trimmable/net/dot/jni/test/*.java contains Android trimmable
-      typemap variants of Java.Interop test fixtures. The Java.Interop test
-      sources and prebuilt test jar use desktop-JVM fixtures that call
-      net.dot.jni.ManagedPeer.registerNativeMembers / ManagedPeer.construct.
-      The trimmable Android runtime intentionally does not ship ManagedPeer, so
-      those classes throw NoClassDefFoundError before the managed test can run.
-
-      These replacements keep the Java behavior under test but omit the desktop
-      ManagedPeer hooks; managed peer construction/registration is instead done
-      by the generated trimmable typemap. Each variant declares the same public
-      Java class as its desktop counterpart, so include exactly one based on
-      $(_AndroidTypeMapImplementation). The trimmable variants live in this
+      java-trimmable/net/dot/jni/test/GetThis.java is the Android trimmable
+      typemap variant of the Java.Interop GetThis.java test fixture. It omits
+      the desktop-JVM static initializer (net.dot.jni.ManagedPeer.registerNativeMembers /
+      ManagedPeer.construct) that is only registered by the Java.Interop test
+      JVM and throws UnsatisfiedLinkError on Android. Both files declare
+      `public class net.dot.jni.test.GetThis`, so include exactly one based on
+      $(_AndroidTypeMapImplementation). The trimmable variant lives in this
       project (not the submodule) and in a parallel directory because javac
       requires the file name match the public class name.
     -->
@@ -46,21 +41,12 @@
       The trimmable variant uses a distinct output jar so MSBuild up-to-date
       checks cannot reuse a non-trimmable jar with the desktop GetThis class.
     -->
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java" />
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CrossReferenceBridge.java" />
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallNonvirtualBase.java" />
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallNonvirtualDerived.java" />
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\CallNonvirtualDerived2.java" />
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\RenameClassBase1.java" />
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\RenameClassBase2.java" />
-    <_TrimmableJavaInteropDesktopFixture Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\RenameClassDerived.java" />
-
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
-                  Exclude="@(_TrimmableJavaInteropDesktopFixture)"
+                  Exclude="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java"
                   Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
                   Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)java-trimmable\net\dot\jni\test\*.java"
+    <TestJarEntry Include="$(MSBuildThisFileDirectory)java-trimmable\net\dot\jni\test\GetThis.java"
                   Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
   </ItemGroup>
   <Target Name="_CopyTestJarFiles">

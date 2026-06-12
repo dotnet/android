@@ -30,10 +30,7 @@ namespace Xamarin.Android.RuntimeTests
 				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					categories.Add ("NativeTypeMap");
 					categories.Add ("Export");
-					// Java.Interop tests in this category exercise APIs that are unsupported
-					// by design under the trimmable typemap, such as obsolete
-					// marshal-member-builder paths or runtime swaps that are not part of
-					// the generated/AOT-safe trimmable runtime path.
+					categories.Add ("TrimmableTypeMapUnsupported");
 				}
 
 				// Build-time flags flow in via runtimeconfig.json properties

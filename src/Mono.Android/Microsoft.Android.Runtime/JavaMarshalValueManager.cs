@@ -20,22 +20,21 @@ using Java.Interop.Expressions;
 
 namespace Microsoft.Android.Runtime;
 
-sealed class JavaMarshalPeerManager : IDisposable
+sealed class JavaMarshalRegisteredPeers : IDisposable
 {
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
-	readonly string ownerName;
 
 	bool disposed;
 
-	public unsafe JavaMarshalPeerManager (string ownerName)
+	public JavaMarshalRegisteredPeers ()
 	{
-		this.ownerName = ownerName;
-
-		var javaMarshalPeerManagerHandle = new GCHandle<JavaMarshalPeerManager> (this);
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
-			GCHandle<JavaMarshalPeerManager>.ToIntPtr (javaMarshalPeerManagerHandle), &BridgeProcessingStarted, &BridgeProcessingFinished);
-		JavaMarshal.Initialize (mark_cross_references_ftn);
+		unsafe {
+			var registeredPeersHandle = new GCHandle<JavaMarshalRegisteredPeers> (this);
+			var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
+				GCHandle<JavaMarshalRegisteredPeers>.ToIntPtr (registeredPeersHandle), &BridgeProcessingStarted, &BridgeProcessingFinished);
+			JavaMarshal.Initialize (mark_cross_references_ftn);
+		}
 	}
 
 	public void Dispose ()
@@ -46,49 +45,41 @@ sealed class JavaMarshalPeerManager : IDisposable
 	void ThrowIfDisposed ()
 	{
 		if (disposed)
-			throw new ObjectDisposedException (ownerName);
+			throw new ObjectDisposedException (nameof (JavaMarshalRegisteredPeers));
 	}
 
-	public void WaitForGCBridgeProcessing ()
-	{
-		// Intentionally empty. The Mono runtime's own implementation acknowledges this
-		// pattern is fundamentally flawed (see FIXME in sgen-bridge.c): a thread that
-		// passes the check can still race with bridge processing that starts immediately
-		// after. The wait cannot prevent the race, only reduce its window. On CoreCLR,
-		// JNI wrapper threads hold their own handle copies via JniObjectReference, so
-		// they are not affected by the bridge swapping control_block handles.
-	}
-
-	public unsafe void CollectPeers ()
+	public void CollectPeers ()
 	{
 		ThrowIfDisposed ();
 
-		while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
-			Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
-			HandleContext* context = (HandleContext*)contextPtr;
-			
-			lock (RegisteredInstances) {
-				Remove (context);
-			}
+		unsafe {
+			while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
+				Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
+				HandleContext* context = (HandleContext*)contextPtr;
 
-			HandleContext.Free (ref context);
-		}
-
-		void Remove (HandleContext* context)
-		{
-			int key = context->PeerIdentityHashCode;
-			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
-				return;
-
-			for (int i = peers.Count - 1; i >= 0; i--) {
-				var peer = peers [i];
-				if (peer.BelongsToContext (context)) {
-					peers.RemoveAt (i);
+				lock (RegisteredInstances) {
+					Remove (context);
 				}
+
+				HandleContext.Free (ref context);
 			}
 
-			if (peers.Count == 0) {
-				RegisteredInstances.Remove (key);
+			void Remove (HandleContext* context)
+			{
+				int key = context->PeerIdentityHashCode;
+				if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
+					return;
+
+				for (int i = peers.Count - 1; i >= 0; i--) {
+					var peer = peers [i];
+					if (peer.BelongsToContext (context)) {
+						peers.RemoveAt (i);
+					}
+				}
+
+				if (peers.Count == 0) {
+					RegisteredInstances.Remove (key);
+				}
 			}
 		}
 	}
@@ -417,13 +408,13 @@ sealed class JavaMarshalPeerManager : IDisposable
 	}
 
 	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingFinished (IntPtr javaMarshalPeerManagerHandle, MarkCrossReferencesArgs* mcr)
+	static unsafe void BridgeProcessingFinished (IntPtr registeredPeersHandle, MarkCrossReferencesArgs* mcr)
 	{
 		if (mcr == null) {
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		JavaMarshalPeerManager instance = GCHandle<JavaMarshalPeerManager>.FromIntPtr (javaMarshalPeerManagerHandle).Target;
+		JavaMarshalRegisteredPeers instance = GCHandle<JavaMarshalRegisteredPeers>.FromIntPtr (registeredPeersHandle).Target;
 
 		ReadOnlySpan<GCHandle> handlesToFree = instance.ProcessCollectedContexts (mcr);
 
@@ -663,47 +654,52 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 	static readonly Type[] JIConstructorSignature  = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
 	static readonly Type[] XAConstructorSignature  = [typeof (IntPtr), typeof (JniHandleOwnership)];
 
-	readonly JavaMarshalPeerManager peerManager = new (nameof (CoreClrJavaMarshalValueManager));
+	readonly JavaMarshalRegisteredPeers registeredPeers = new ();
 
 	protected override void Dispose (bool disposing)
 	{
-		peerManager.Dispose ();
+		registeredPeers.Dispose ();
 		base.Dispose (disposing);
 	}
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		peerManager.WaitForGCBridgeProcessing ();
+		// Intentionally empty. The Mono runtime's own implementation acknowledges this
+		// pattern is fundamentally flawed (see FIXME in sgen-bridge.c): a thread that
+		// passes the check can still race with bridge processing that starts immediately
+		// after. The wait cannot prevent the race, only reduce its window. On CoreCLR,
+		// JNI wrapper threads hold their own handle copies via JniObjectReference, so
+		// they are not affected by the bridge swapping control_block handles.
 	}
 
 	public override void CollectPeers ()
 	{
-		peerManager.CollectPeers ();
+		registeredPeers.CollectPeers ();
 	}
 
 	public override void AddPeer (IJavaPeerable value)
 	{
-		peerManager.AddPeer (value);
+		registeredPeers.AddPeer (value);
 	}
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
-		return peerManager.PeekPeer (reference);
+		return registeredPeers.PeekPeer (reference);
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
-		peerManager.RemovePeer (value);
+		registeredPeers.RemovePeer (value);
 	}
 
 	public override void FinalizePeer (IJavaPeerable value)
 	{
-		peerManager.FinalizePeer (value);
+		registeredPeers.FinalizePeer (value);
 	}
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
-		return peerManager.GetSurfacedPeers ();
+		return registeredPeers.GetSurfacedPeers ();
 	}
 
 	public override IJavaPeerable? CreatePeer (
@@ -854,7 +850,7 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 	{
 		var proxy = value as JavaProxyThrowable;
 		if (proxy != null) {
-			result = proxy.InnerException;
+			result = proxy.Exception;
 			return true;
 		}
 		return base.TryUnboxPeerObject (value, out result);
@@ -867,47 +863,52 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	const JniObjectReferenceOptions DoNotRegisterTarget = (JniObjectReferenceOptions)(1 << 2);
 	const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
-	readonly JavaMarshalPeerManager peerManager = new (nameof (TrimmableTypeMapValueManager));
+	readonly JavaMarshalRegisteredPeers registeredPeers = new ();
 
 	protected override void Dispose (bool disposing)
 	{
-		peerManager.Dispose ();
+		registeredPeers.Dispose ();
 		base.Dispose (disposing);
 	}
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		peerManager.WaitForGCBridgeProcessing ();
+		// Intentionally empty. The Mono runtime's own implementation acknowledges this
+		// pattern is fundamentally flawed (see FIXME in sgen-bridge.c): a thread that
+		// passes the check can still race with bridge processing that starts immediately
+		// after. The wait cannot prevent the race, only reduce its window. On CoreCLR,
+		// JNI wrapper threads hold their own handle copies via JniObjectReference, so
+		// they are not affected by the bridge swapping control_block handles.
 	}
 
 	public override void CollectPeers ()
 	{
-		peerManager.CollectPeers ();
+		registeredPeers.CollectPeers ();
 	}
 
 	public override void AddPeer (IJavaPeerable value)
 	{
-		peerManager.AddPeer (value);
+		registeredPeers.AddPeer (value);
 	}
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
-		return peerManager.PeekPeer (reference);
+		return registeredPeers.PeekPeer (reference);
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
-		peerManager.RemovePeer (value);
+		registeredPeers.RemovePeer (value);
 	}
 
 	public override void FinalizePeer (IJavaPeerable value)
 	{
-		peerManager.FinalizePeer (value);
+		registeredPeers.FinalizePeer (value);
 	}
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
-		return peerManager.GetSurfacedPeers ();
+		return registeredPeers.GetSurfacedPeers ();
 	}
 
 	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
@@ -1231,36 +1232,16 @@ sealed class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
-		{
-			if (IsJniValueType) {
-				return sourceValue;
-			}
-			return base.CreateParameterFromManagedExpression (context, sourceValue, synchronize);
-		}
+			=> throw new UnreachableException (
+				$"{nameof (CreateParameterFromManagedExpression)} should not be called in the trimmable typemap path. " +
+				"Generated marshal methods use pregenerated value marshaling.");
 
 		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
-		{
-			if (IsJniValueType) {
-				return sourceValue;
-			}
-			if (typeof (T) == typeof (string)) {
-				return CreateStringReturnValueFromManagedExpression (context, sourceValue);
-			}
-			return base.CreateReturnValueFromManagedExpression (context, sourceValue);
-		}
-
-		Expression CreateStringReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
-		{
-			Func<string, JniObjectReference> createString = JniEnvironment.Strings.NewString;
-
-			var reference = Expression.Variable (typeof (JniObjectReference), sourceValue.Name + "_ref");
-			context.LocalVariables.Add (reference);
-			context.CreationStatements.Add (Expression.Assign (reference, Expression.Call (createString.GetMethodInfo (), sourceValue)));
-			context.CleanupStatements.Add (DisposeObjectReference (reference));
-			return ReturnObjectReferenceToJni (context, sourceValue.Name, reference);
-		}
+			=> throw new UnreachableException (
+				$"{nameof (CreateReturnValueFromManagedExpression)} should not be called in the trimmable typemap path. " +
+				"Generated marshal methods use pregenerated value marshaling.");
 	}
 
 	static void DisposeReferenceState (ref JniValueMarshalerState state)

@@ -210,6 +210,11 @@ public sealed class JavaPeerScanner : IDisposable
 
 			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
 
+			// Framework/runtime assemblies contain internal [JniAddNativeMethodRegistration]
+			// users such as Java.Interop.JavaProxyObject and Java.Interop.ManagedPeer.
+			// The diagnostic is for user assemblies because the trimmable runtime either
+			// has generated replacements for framework registration or intentionally
+			// disables unsupported runtime paths.
 			if (!frameworkAssemblyNames.Contains (index.AssemblyName) &&
 			    index.MayUseJniAddNativeMethodRegistrationAttribute &&
 			    HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {

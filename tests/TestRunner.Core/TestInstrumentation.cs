@@ -151,18 +151,11 @@ public abstract class TestInstrumentation : Instrumentation
 		}
 
 		if (!noExclusions) {
-			// Exclude categories from two sources:
-			//   1. The ExcludedCategories subclass property
-			//   2. `ExcludeCategories` from runtimeconfig.json, set from the MSBuild
-			//      property of the same name.
-			var excludes = new List<string> ();
 			if (ExcludedCategories is not null) {
-				excludes.AddRange (ExcludedCategories);
-			}
-			excludes.AddRange (GetConfiguredCategories ("ExcludeCategories"));
-			foreach (var cat in excludes) {
-				filterElements.Add (new XElement ("not", new XElement ("cat", cat)));
-				Log.Info (LogTag, $"Excluding category: {cat}");
+				foreach (var cat in ExcludedCategories) {
+					filterElements.Add (new XElement ("not", new XElement ("cat", cat)));
+					Log.Info (LogTag, $"Excluding category: {cat}");
+				}
 			}
 
 			if (ExcludedTestNames is not null) {
@@ -222,16 +215,6 @@ public abstract class TestInstrumentation : Instrumentation
 		var value = GetStringExtra (key);
 		if (value is null)
 			return [];
-		return value.Split ([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-			.ToList ();
-	}
-
-	static List<string> GetConfiguredCategories (string key)
-	{
-		var value = AppContext.GetData (key) as string;
-		if (value is null) {
-			return [];
-		}
 		return value.Split ([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 			.ToList ();
 	}

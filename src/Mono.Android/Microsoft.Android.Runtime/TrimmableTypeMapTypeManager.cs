@@ -18,7 +18,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	static readonly Type[] EmptyTypeArray = [];
-	static readonly Dictionary<Type, Type> ArrayTypes = [];
 	static readonly Dictionary<Type, Type> JavaObjectArrayTypes = [];
 	static readonly Dictionary<Type, Type[]> PrimitiveArrayTypes = [];
 	readonly ConcurrentDictionary<Type, JniTypeSignature> _typeSignatureCache = new ();
@@ -28,8 +27,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	static TrimmableTypeMapTypeManager ()
 	{
-		AddKnownArrayTypes<string> ();
-		AddKnownArrayTypes<JavaObject> ();
+		AddKnownJavaObjectArrayTypes<string> ();
+		AddKnownJavaObjectArrayTypes<JavaObject> ();
 
 		AddKnownPrimitiveArrayTypes<bool, JavaBooleanArray> ();
 		AddKnownPrimitiveArrayTypes<sbyte, JavaSByteArray> ();
@@ -331,10 +330,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	static bool TryMakeArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
 	{
-		if (ArrayTypes.TryGetValue (elementType, out arrayType)) {
-			return true;
-		}
-
 		return TrimmableTypeMap.Instance.TryGetArrayType (elementType, out arrayType);
 	}
 
@@ -363,10 +358,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			[DynamicallyAccessedMembers (Constructors)]
 			TArray> ()
 	{
-		AddKnownArrayTypes<T> ();
-		AddKnownArrayTypes<JavaArray<T>> ();
-		AddKnownArrayTypes<JavaPrimitiveArray<T>> ();
-		AddKnownArrayTypes<TArray> ();
+		AddKnownJavaObjectArrayTypes<T> ();
+		AddKnownJavaObjectArrayTypes<JavaArray<T>> ();
+		AddKnownJavaObjectArrayTypes<JavaPrimitiveArray<T>> ();
+		AddKnownJavaObjectArrayTypes<TArray> ();
 		PrimitiveArrayTypes [typeof (T)] = [
 			typeof (T[]),
 			typeof (JavaArray<T>),
@@ -375,13 +370,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		];
 	}
 
-	static void AddKnownArrayTypes<
+	static void AddKnownJavaObjectArrayTypes<
 			[DynamicallyAccessedMembers (Constructors)]
 			T> ()
 	{
-		ArrayTypes [typeof (T)] = typeof (T[]);
-		ArrayTypes [typeof (T[])] = typeof (T[][]);
-		ArrayTypes [typeof (T[][])] = typeof (T[][][]);
 		JavaObjectArrayTypes [typeof (T)] = typeof (JavaObjectArray<T>);
 		JavaObjectArrayTypes [typeof (JavaObjectArray<T>)] = typeof (JavaObjectArray<JavaObjectArray<T>>);
 	}
