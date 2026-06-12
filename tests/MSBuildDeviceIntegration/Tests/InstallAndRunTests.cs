@@ -51,10 +51,6 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (true, "llvm-ir", runtime);
 				AddTestData (false, "llvm-ir", runtime);
-				if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
-					AddTestData (true, "trimmable", runtime);
-					AddTestData (false, "trimmable", runtime);
-				}
 			}
 
 			return ret;

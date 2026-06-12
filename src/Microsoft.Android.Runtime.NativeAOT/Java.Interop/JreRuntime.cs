@@ -56,6 +56,9 @@ namespace Java.Interop {
 					builder.EnvironmentPointer == IntPtr.Zero &&
 					string.IsNullOrEmpty (builder.JvmLibraryPath))
 				throw new InvalidOperationException ($"Member `{nameof (NativeAotRuntimeOptions)}.{nameof (NativeAotRuntimeOptions.JvmLibraryPath)}` must be set.");
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				throw new NotSupportedException ("NativeAOT requires the trimmable typemap.");
+			}
 
 #if NET
 			builder.TypeManager     ??= CreateDefaultTypeManager ();
@@ -77,6 +80,10 @@ namespace Java.Interop {
 
 		static JniRuntime.JniTypeManager CreateDefaultTypeManager ()
 		{
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				throw new NotSupportedException ("NativeAOT requires the trimmable typemap.");
+			}
+
 			return new TrimmableTypeMapTypeManager ();
 		}
 

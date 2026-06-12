@@ -157,7 +157,7 @@ namespace Android.Runtime
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
-			if (!UsesTrimmableTypeMap) {
+			if (!RuntimeFeature.TrimmableTypeMap) {
 				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 			}
 			RunStartupHooksIfNeeded ();
@@ -170,7 +170,11 @@ namespace Android.Runtime
 
 		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
 		{
-			if (UsesTrimmableTypeMap) {
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return new TrimmableTypeMapTypeManager ();
+			}
+
+			if (RuntimeFeature.IsNativeAotRuntime) {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
@@ -213,21 +217,19 @@ namespace Android.Runtime
 
 		static void InitializeTrimmableTypeMapDataIfNeeded ()
 		{
-			if (UsesTrimmableTypeMap) {
+			if (RuntimeFeature.TrimmableTypeMap) {
 				InitializeTrimmableTypeMapData ();
 			}
 		}
 
 		static void RegisterTrimmableTypeMapNativeMethodsIfNeeded ()
 		{
-			if (UsesTrimmableTypeMap) {
+			if (RuntimeFeature.TrimmableTypeMap) {
 				// TypeMapLoader.Initialize() only loads typemap data. Registering
 				// mono.android.Runtime natives requires JniRuntime.Current and its ClassLoader.
 				TrimmableTypeMap.RegisterNativeMethods ();
 			}
 		}
-
-		static bool UsesTrimmableTypeMap => RuntimeFeature.TrimmableTypeMap || RuntimeFeature.IsNativeAotRuntime;
 
 		// Separate method so the JIT doesn't try to resolve TypeMapLoader (from _Microsoft.Android.TypeMaps.dll)
 		// when compiling JNIEnvInit.Initialize() in non-trimmable builds where that assembly isn't present.

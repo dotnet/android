@@ -486,7 +486,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void JavaToManagedTypeResolution ()
+		public void JavaToManagedTypeMapping ()
 		{
 			Type m = JniRuntime.CurrentRuntime.TypeManager.GetType (new JniTypeSignature ("android/content/res/Resources"));
 			Assert.AreNotEqual (null, m);
@@ -495,7 +495,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void ManagedToJavaTypeResolution ()
+		public void ManagedToJavaTypeMapping ()
 		{
 			Type type = typeof(Activity);
 			string m = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (type).SimpleReference;
