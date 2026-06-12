@@ -38,7 +38,7 @@
 
   <Target Name="_DownloadBuildTools"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
-      Outputs="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)">
+      Outputs="@(_BuildTools->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
     <ItemGroup>
       <_DownloadFile Include="@(_BuildTools)">
         <AdditionalProperties>_DownloadUrl=$(_AndroidRepositoryUrl)%(Identity);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=%(Identity);_DownloadSha256=%(Hash)</AdditionalProperties>

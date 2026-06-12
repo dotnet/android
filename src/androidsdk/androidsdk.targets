@@ -284,7 +284,7 @@
   -->
   <Target Name="_DownloadAndroidSdkPackages"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
-      Outputs="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)">
+      Outputs="@(_AndroidSdkPackage->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
     <ItemGroup>
       <_DownloadFile Include="@(_AndroidSdkPackage)">
         <AdditionalProperties>_DownloadUrl=$(_AndroidRepositoryUrl)%(Url);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=%(Identity);_DownloadSha256=%(Hash)</AdditionalProperties>
