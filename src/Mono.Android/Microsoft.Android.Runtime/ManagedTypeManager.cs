@@ -7,15 +7,13 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
-class ManagedTypeManager : JniRuntime.JniTypeManager {
+[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This suppression will be addressed in a follow-up PR.")]
+[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This suppression will be addressed in a follow-up PR.")]
+class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-
-	public ManagedTypeManager ()
-	{
-	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
 	protected override Type? GetInvokerTypeCore (

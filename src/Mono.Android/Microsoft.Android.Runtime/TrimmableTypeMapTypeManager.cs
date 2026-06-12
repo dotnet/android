@@ -14,7 +14,9 @@ namespace Microsoft.Android.Runtime;
 /// Type manager for the trimmable typemap path. Delegates type lookups
 /// to <see cref="TrimmableTypeMap"/>.
 /// </summary>
-class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
+[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This suppression will be addressed in a follow-up PR.")]
+[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This suppression will be addressed in a follow-up PR.")]
+class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 {
 	const string NoSimpleReference = "\0";
 	readonly ConcurrentDictionary<Type, string> _simpleReferenceCache = new ();

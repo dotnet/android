@@ -18,7 +18,9 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class JavaMarshalValueManager : JniRuntime.JniValueManager
+[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This suppression will be addressed in a follow-up PR.")]
+[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This suppression will be addressed in a follow-up PR.")]
+class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
