@@ -41,3 +41,5 @@ gradlew	eol=lf
 *.properties	eol=lf
 *.kt	eol=lf
 *.kts	eol=lf
+
+.github/workflows/*.lock.yml linguist-generated=true merge=ours

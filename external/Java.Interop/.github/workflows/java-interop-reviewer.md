@@ -4,6 +4,7 @@ on:
     name: review
     events: [pull_request_comment]
   roles: [admin, maintainer, write]
+environment: copilot-pr-reviewer
 permissions:
   contents: read
   pull-requests: read
