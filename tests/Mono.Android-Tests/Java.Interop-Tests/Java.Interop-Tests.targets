@@ -41,7 +41,7 @@
       The trimmable variant uses a distinct output jar so MSBuild up-to-date
       checks cannot reuse a non-trimmable jar with the desktop GetThis class.
     -->
-    <_TrimmableJavaInteropTestFixture Include="GetThis;CrossReferenceBridge;RenameClassBase1;RenameClassBase2;RenameClassDerived" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <_TrimmableJavaInteropTestFixture Include="GetThis;CrossReferenceBridge;RenameClassBase1;RenameClassBase2;RenameClassDerived;CallNonvirtualBase;CallNonvirtualDerived;CallNonvirtualDerived2" Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
     <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
                   Exclude="@(_TrimmableJavaInteropTestFixture->'$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\%(Identity).java')"
                   Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
