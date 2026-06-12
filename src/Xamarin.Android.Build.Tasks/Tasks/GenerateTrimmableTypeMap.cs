@@ -10,6 +10,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -98,6 +99,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Output]
 	public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
 	[Output]
+	public ITaskItem [] DeletedJavaFiles { get; set; } = [];
+	[Output]
 	public string[]? AdditionalProviderSources { get; set; }
 
 	public override bool RunTask ()
@@ -173,6 +176,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
 			WriteGeneratedAssembliesListFile (GeneratedAssemblies);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
+			DeletedJavaFiles = DeleteStaleJavaSources (GeneratedJavaFiles);
 
 			// Write manifest to disk if generated
 			if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
@@ -326,6 +330,30 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			items.Add (new TaskItem (outputPath));
 		}
 		return items.ToArray ();
+	}
+
+	ITaskItem [] DeleteStaleJavaSources (IReadOnlyCollection<ITaskItem> generatedJavaFiles)
+	{
+		var expectedFiles = new HashSet<string> (
+			generatedJavaFiles.Select (i => Path.GetFullPath (i.ItemSpec)),
+			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+		var deleted = new List<ITaskItem> ();
+
+		foreach (var path in Directory.EnumerateFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories)) {
+			var fullPath = Path.GetFullPath (path);
+			if (expectedFiles.Contains (fullPath)) {
+				continue;
+			}
+
+			File.Delete (fullPath);
+			Log.LogDebugMessage ($"Deleted stale generated Java source '{fullPath}'.");
+
+			var item = new TaskItem (fullPath);
+			item.SetMetadata ("RelativePath", PathUtil.GetRelativePath (JavaSourceOutputDirectory, fullPath));
+			deleted.Add (item);
+		}
+
+		return deleted.ToArray ();
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)

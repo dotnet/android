@@ -24,6 +24,7 @@
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
     <_TypeMapAssembliesListFile>$(_TypeMapOutputDirectory)typemap-assemblies.txt</_TypeMapAssembliesListFile>
+    <_TrimmableTypeMapOutputStamp>$(_TypeMapOutputDirectory)_GenerateTrimmableTypeMap.stamp</_TrimmableTypeMapOutputStamp>
     <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
          dynamic code is unavailable, so array creation uses the typemap path;
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
@@ -76,7 +77,7 @@
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       Inputs="@(ReferencePath);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
-      Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile)">
+      Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
@@ -115,13 +116,25 @@
         ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
+      <Output TaskParameter="DeletedJavaFiles" ItemName="_DeletedJavaFiles" />
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
     </GenerateTrimmableTypeMap>
 
     <ItemGroup>
+      <_DeletedCopiedJavaFiles Remove="@(_DeletedCopiedJavaFiles)" />
+      <_DeletedCopiedJavaFiles Include="@(_DeletedJavaFiles->'$(IntermediateOutputPath)android/src/%(RelativePath)')" />
+    </ItemGroup>
+    <Delete Files="@(_DeletedCopiedJavaFiles)" />
+    <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedCopiedJavaFiles->Count())' != '0' " />
+    <Touch Files="$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
+
+    <ItemGroup>
+      <FileWrites Remove="@(_DeletedJavaFiles)" />
+      <FileWrites Remove="@(_DeletedCopiedJavaFiles)" />
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
@@ -174,6 +187,7 @@
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites)" />
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
@@ -239,21 +253,21 @@
     so this target only handles JCW file copying, manifest, assembly store setup, and native config.
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
 
-    Inputs uses the TypeMap DLL as a focused sentinel — _GenerateTrimmableTypeMap regenerates
-    the DLL whenever any of its own inputs (assemblies, manifest, etc.) change, so the DLL
-    timestamp is a reliable proxy for "something changed that requires re-copying".
+    Inputs uses the TypeMap output stamp as a focused sentinel — _GenerateTrimmableTypeMap
+    touches it whenever any of its own inputs (assemblies, manifest, etc.) change. The
+    Copy task below then updates android/src only for Java sources whose content changed.
     We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;@(_EnvironmentFiles)"
+      Inputs="$(_TrimmableTypeMapOutputStamp);@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>
       <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
     </ItemGroup>
-    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
+    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" SkipUnchangedFiles="true" />
 
     <ItemGroup>
       <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
