@@ -27,6 +27,7 @@ on:
 permissions:
   contents: read
   issues: read
+environment: copilot-pr-reviewer
 network:
   allowed:
   - defaults
