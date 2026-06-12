@@ -287,7 +287,8 @@
         SourceUrl="$(_AndroidRepositoryUrl)%(_AndroidSdkPackage.Url)"
         DestinationFolder="$(AndroidToolchainCacheDirectory)"
         DestinationFileName="%(_AndroidSdkPackage.Identity)"
-        Retries="3"
+        Retries="5"
+        RetryDelayMilliseconds="5000"
     />
     <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)" Algorithm="SHA256">
       <Output TaskParameter="Hash" PropertyName="_ActualHash" />

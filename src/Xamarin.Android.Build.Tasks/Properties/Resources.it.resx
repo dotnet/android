@@ -143,7 +143,7 @@ Questo errore è probabilmente causato da un problema con il file di AndroidMani
     <value>Nome file non valido: i nomi di file non possono usare parole riservate in Java.</value>
   </data>
   <data name="IL6001" xml:space="preserve">
-    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+    <value>L'assembly '{0}' contiene un riferimento all'attributo obsoleto 'Android.Runtime.PreserveAttribute'. I membri con questo attributo possono essere troncati. Usa invece System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Non è stato possibile determinare il livello API per $(TargetFrameworkVersion) di '{0}'.</value>
@@ -225,7 +225,7 @@ Nota: Android Designer non è compatibile con Java SDK 11.0: https://aka.ms/vs20
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Modalità sconosciuta: {0}</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">

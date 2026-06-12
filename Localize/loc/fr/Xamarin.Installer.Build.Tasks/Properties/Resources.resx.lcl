@@ -41,7 +41,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Detected an out of date Java SDK with version `{1}` at `{0}`, but we are unable to install the recommended Java SDK (version `{2}`) to this location.]D;]A;Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a valid non-administrator path to install the recommended Java SDK version to a new location.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Un Kit de développement logiciel (SDK) Java obsolète avec la version « {1} » a été détecté à « {0} », mais nous ne pouvons pas installer le Kit de développement logiciel (SDK) Java recommandé (version « {2} ») à cet emplacement.]D;]A;Mettez à jour votre Kit de développement logiciel (SDK) Java vers la version « {2} », ou définissez « $(JavaSdkDirectory) » sur un chemin d’accès non administrateur(-trice) valide pour installer la version recommandée du Kit de développement logiciel (SDK) Java à un nouvel emplacement.]]></Val>
+            <Val><![CDATA[Un Kit de développement logiciel (SDK) Java obsolète avec la version `{1}` a été détecté à `{0}`, mais nous ne pouvons pas installer le Kit de développement logiciel (SDK) Java recommandé (version `{2}`) à cet emplacement.]D;]A;Mettez à jour votre Kit de développement logiciel (SDK) Java vers la version `{2}`, ou définissez `$(JavaSdkDirectory)` sur un chemin d’accès non administrateur valide pour installer la version recommandée du Kit de développement logiciel (SDK) Java à un nouvel emplacement.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

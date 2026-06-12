@@ -117,27 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CreateKeyError_AliasContainsInvalidCharacters" xml:space="preserve">
-    <value>Alias nemůže obsahovat znaky, které nejsou v názvech souborů povolené.</value>
-  </data>
-  <data name="CreateKeyError_ErrorImportingKey" xml:space="preserve">
-    <value>Při importu klíče došlo k chybě.</value>
-  </data>
-  <data name="CreateKeyError_GenericError" xml:space="preserve">
-    <value>Při vytváření klíče došlo k chybě.</value>
-  </data>
-  <data name="CreateKeyError_KeyStoreNotFound" xml:space="preserve">
-    <value>Úložiště klíčů se nenašlo.</value>
-  </data>
-  <data name="CreateKeyError_MinimumOneYearValidity" xml:space="preserve">
-    <value>Platnost nemůže být kratší než 1 rok.</value>
-  </data>
-  <data name="CreateKeyError_NotInitialized" xml:space="preserve">
-    <value>KeyStoreManagement se neinicializoval.</value>
-  </data>
-  <data name="CreateKeyError_UnsupportedPlatform" xml:space="preserve">
-    <value>Nepodporovaná platforma</value>
-  </data>
   <data name="JdwpClientDisconnectError" xml:space="preserve">
     <value>Při pokusu o odpojení klienta Jdwp došlo k neočekávané chybě.</value>
   </data>
