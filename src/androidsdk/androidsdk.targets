@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
+
   <!--
     All of the Android SDK component downloads/extractions that used to live in
     `Step_Android_SDK_NDK` in xaprepare. Each component is just a row in the
@@ -277,30 +279,20 @@
   </Target>
 
   <!--
-    Download every `_AndroidSdkPackage` into the toolchain cache, verifying SHA-256.
-    Target batching via `Outputs="...%(Identity)"` runs the body once per item.
+    Download every `_AndroidSdkPackage` into the toolchain cache in parallel,
+    verifying SHA-256 via the shared `DownloadOneFileWithRetry` target.
   -->
   <Target Name="_DownloadAndroidSdkPackages"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)">
-    <DownloadFile
-        SourceUrl="$(_AndroidRepositoryUrl)%(_AndroidSdkPackage.Url)"
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="%(_AndroidSdkPackage.Identity)"
-        Retries="5"
-        RetryDelayMilliseconds="5000"
-    />
-    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)" Algorithm="SHA256">
-      <Output TaskParameter="Hash" PropertyName="_ActualHash" />
-    </GetFileHash>
-    <Delete
-        Condition=" '$(_ActualHash)' != '%(_AndroidSdkPackage.Hash)' "
-        Files="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)"
-    />
-    <Error
-        Condition=" '$(_ActualHash)' != '%(_AndroidSdkPackage.Hash)' "
-        Text="SHA256 mismatch for %(_AndroidSdkPackage.Identity). Expected: %(_AndroidSdkPackage.Hash) Actual: $(_ActualHash)"
-    />
+    <ItemGroup>
+      <_DownloadFile Include="@(_AndroidSdkPackage)">
+        <AdditionalProperties>_DownloadUrl=$(_AndroidRepositoryUrl)%(Url);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=%(Identity);_DownloadSha256=%(Hash)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
   </Target>
 
   <!--

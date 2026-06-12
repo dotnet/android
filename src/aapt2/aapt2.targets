@@ -32,29 +32,21 @@
     </_BuildTools>
   </ItemGroup>
 
+  <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
+
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <Target Name="_DownloadBuildTools"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)">
-    <DownloadFile
-        SourceUrl="$(_AndroidRepositoryUrl)%(_BuildTools.Identity)"
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="%(_BuildTools.Identity)"
-        Retries="5"
-        RetryDelayMilliseconds="5000"
-    />
-    <GetFileHash Files="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)" Algorithm="SHA256">
-      <Output TaskParameter="Hash" PropertyName="_ActualHash" />
-    </GetFileHash>
-    <Delete
-        Condition=" '$(_ActualHash)' != '%(_BuildTools.Hash)' "
-        Files="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"
-    />
-    <Error
-        Condition=" '$(_ActualHash)' != '%(_BuildTools.Hash)' "
-        Text="SHA256 mismatch for %(_BuildTools.Identity). Expected: %(_BuildTools.Hash) Actual: $(_ActualHash)"
-    />
+    <ItemGroup>
+      <_DownloadFile Include="@(_BuildTools)">
+        <AdditionalProperties>_DownloadUrl=$(_AndroidRepositoryUrl)%(Identity);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=%(Identity);_DownloadSha256=%(Hash)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
   </Target>
 
   <Target Name="_ExtractAapt2" BeforeTargets="Build" DependsOnTargets="_DownloadBuildTools"
