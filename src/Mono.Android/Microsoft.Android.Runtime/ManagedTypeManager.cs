@@ -7,38 +7,67 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
-[RequiresDynamicCode ("This type manager is reflection-backed and is not compatible with Native AOT.")]
-[RequiresUnreferencedCode ("This type manager is reflection-backed and is not trimming-compatible.")]
-class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
+class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
+	public ManagedTypeManager ()
+	{
+	}
+
 	[return: DynamicallyAccessedMembers (Constructors)]
-	protected override Type? GetInvokerTypeCore ([DynamicallyAccessedMembers (Constructors)] Type type)
+	protected override Type? GetInvokerTypeCore (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type type)
 	{
 		const string suffix = "Invoker";
 
+		// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L176-L186
+		const string assemblyGetTypeMessage = "'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
+		const string makeGenericTypeMessage = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.";
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = assemblyGetTypeMessage)]
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = assemblyGetTypeMessage)]
+		[return: DynamicallyAccessedMembers (Constructors)]
+		static Type? AssemblyGetType (Assembly assembly, string typeName) =>
+			assembly.GetType (typeName);
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
+		[return: DynamicallyAccessedMembers (Constructors)]
+		static Type MakeGenericType (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type type,
+				Type [] arguments) =>
+			// FIXME: https://github.com/dotnet/java-interop/issues/1192
+			#pragma warning disable IL3050
+			type.MakeGenericType (arguments);
+			#pragma warning restore IL3050
+
 		Type[] arguments = type.GetGenericArguments ();
 		if (arguments.Length == 0)
-			return type.Assembly.GetType (type + suffix) ?? base.GetInvokerTypeCore (type);
+			return AssemblyGetType (type.Assembly, type + suffix) ?? base.GetInvokerTypeCore (type);
 		Type definition = type.GetGenericTypeDefinition ();
 		int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
 		if (bt == -1)
 			throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
-		string suffixDefinitionName = definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt);
-		Type? suffixDefinition = definition.Assembly.GetType (suffixDefinitionName);
+		Type? suffixDefinition = AssemblyGetType (definition.Assembly,
+				definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
 		if (suffixDefinition == null)
 			return base.GetInvokerTypeCore (type);
-		return suffixDefinition.MakeGenericType (arguments);
+		return MakeGenericType (suffixDefinition, arguments);
 	}
 
+	// NOTE: suppressions below also in `src/Mono.Android/Android.Runtime/AndroidRuntime.cs`
+	[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 	public override void RegisterNativeMembers (
-		JniType nativeClass,
-		[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-		Type type,
-		ReadOnlySpan<char> methods)
+			JniType nativeClass,
+			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
+			Type type,
+			ReadOnlySpan<char> methods)
 	{
 		if (methods.IsEmpty) {
 			base.RegisterNativeMembers (nativeClass, type, methods);
@@ -98,6 +127,7 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 			JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 		}
 	}
+
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{

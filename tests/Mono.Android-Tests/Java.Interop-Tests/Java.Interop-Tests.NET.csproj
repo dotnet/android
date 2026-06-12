@@ -40,10 +40,6 @@
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorBase.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorDerived.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
-    <!-- Reflection-backed JniRuntime manager tests are covered by Java.Interop's standalone test suite; the Android trimmable lane uses generated managers. -->
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniTypeManagerTests.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniTypeManagerTests.cs" />
-    <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntimeTest.cs" />
   </ItemGroup>
 
   <!-- Some of tests included in the files below fail on CoreCLR. This is PROBABLY caused by managed typemaps, which 

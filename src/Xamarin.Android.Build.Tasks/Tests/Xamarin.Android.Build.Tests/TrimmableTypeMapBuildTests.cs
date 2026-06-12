@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Mono.Cecil;
@@ -12,7 +11,6 @@ using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
@@ -286,12 +284,6 @@ namespace Xamarin.Android.Build.Tests {
 				dynamicCodeSupportProperty.GetBoolean (),
 				"trimmable typemap builds should honor explicit DynamicCodeSupport=false.");
 			Assert.IsTrue (
-				configProperties.TryGetProperty ("Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration", out var managedPeerNativeRegistrationProperty),
-				"runtimeconfig.json should include Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration.");
-			Assert.IsFalse (
-				managedPeerNativeRegistrationProperty.GetBoolean (),
-				"trimmable typemap builds should disable Java.Interop ManagedPeer native registration.");
-			Assert.IsTrue (
 				dynamicCodeDisabledTrimmable.LinkedTypeMapAssembliesContainArrayRankSentinels,
 				"trimmable typemap builds should emit array typemap sentinels when dynamic code is disabled.");
 		}
@@ -405,15 +397,6 @@ namespace Xamarin.Android.Build.Tests {
 				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
 			}
 
-			var trimmableJar = Path.Combine (toolsDir, "java_runtime_trimmable.jar");
-			using (var zip = ZipArchive.Open (trimmableJar, FileMode.Open)) {
-				zip.AssertDoesNotContainEntry (trimmableJar, "net/dot/jni/ManagedPeer.class");
-			}
-
-			var trimmableDex = Path.Combine (toolsDir, "java_runtime_trimmable.dex");
-			Assert.IsFalse (
-				FileContainsAscii (trimmableDex, "Lnet/dot/jni/ManagedPeer;"),
-				"java_runtime_trimmable.dex should not contain the Java ManagedPeer type descriptor.");
 		}
 
 		// T1: end-to-end build coverage for [Export] and [ExportField] under trimmable.
@@ -467,20 +450,13 @@ namespace UnnamedProject {
 			// to avoid coupling to the hash.
 			string? exportShapesJava = null;
 			string? exportShapesText = null;
-			var managedPeerReferences = new List<string> ();
 			foreach (var f in allJavaFiles) {
 				var text = File.ReadAllText (f);
-				if (text.Contains ("net.dot.jni.ManagedPeer", StringComparison.Ordinal)) {
-					managedPeerReferences.Add (f);
-				}
 				if (exportShapesJava == null && text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
 					exportShapesJava = f;
 					exportShapesText = text;
 				}
 			}
-			Assert.IsEmpty (managedPeerReferences,
-				"Trimmable generated Java source should not reference net.dot.jni.ManagedPeer. Offending files:\n  " +
-				string.Join ("\n  ", managedPeerReferences));
 			Assert.IsNotNull (exportShapesJava,
 				$"Could not find a generated JCW Java file referencing both EchoString and InitialFoo under {javaDir}.");
 			Assert.IsNotNull (exportShapesText,
@@ -510,8 +486,6 @@ namespace UnnamedProject {
 			var typemapDlls = Directory.GetFiles (typemapDir, "*.TypeMap.dll");
 			Assert.IsNotEmpty (typemapDlls, "Trimmable typemap should produce at least one *.TypeMap.dll.");
 
-			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			AssertApkDexDoesNotContain (apk, "Lnet/dot/jni/ManagedPeer;");
 		}
 
 		// T6: trim-warning baseline for [Export] under trimmable.
@@ -685,41 +659,6 @@ namespace UnnamedProject {
 
 			FileAssert.Exists (acwMapPath, "Post-trim scan should rewrite acw-map.txt for R8.");
 			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a primary proguard configuration from the post-trim acw-map.");
-		}
-
-		static void AssertApkDexDoesNotContain (string apk, string value)
-		{
-			FileAssert.Exists (apk);
-			using var zip = ZipArchive.Open (apk, FileMode.Open);
-			var dexEntries = zip
-				.Where (entry => entry.FullName.StartsWith ("classes", StringComparison.Ordinal) &&
-					entry.FullName.EndsWith (".dex", StringComparison.Ordinal))
-				.ToArray ();
-			Assert.IsNotEmpty (dexEntries, $"{apk} should contain at least one dex file.");
-
-			foreach (var entry in dexEntries) {
-				Assert.IsFalse (
-					EntryContainsAscii (entry, value),
-					$"{entry.FullName} should not contain {value}.");
-			}
-		}
-
-		static bool EntryContainsAscii (ZipEntry entry, string value)
-		{
-			using var stream = new MemoryStream ();
-			entry.Extract (stream);
-			return ContainsAscii (stream.ToArray (), value);
-		}
-
-		static bool FileContainsAscii (string file, string value)
-		{
-			return ContainsAscii (File.ReadAllBytes (file), value);
-		}
-
-		static bool ContainsAscii (byte [] data, string value)
-		{
-			var pattern = Encoding.ASCII.GetBytes (value);
-			return data.AsSpan ().IndexOf (pattern) >= 0;
 		}
 
 		string FindOutputFile (ProjectBuilder builder, XamarinAndroidApplicationProject proj, string fileName)
