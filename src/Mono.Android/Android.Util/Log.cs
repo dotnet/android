@@ -229,7 +229,7 @@ namespace Android.Util {
 		}
 
 		/// <summary>
-		/// Sends a <see cref="LogPriority.Wtf"/> log message using a composite format string.
+		/// Sends a <see cref="LogPriority.Assert"/> log message (the priority used by <c>Log.wtf</c>) using a composite format string.
 		/// </summary>
 		/// <param name="tag">Used to identify the source of a log message.</param>
 		/// <param name="format">A composite format string.</param>
@@ -242,7 +242,7 @@ namespace Android.Util {
 		}
 
 		/// <summary>
-		/// Sends a <see cref="LogPriority.Wtf"/> log message with an associated <see cref="Java.Lang.Throwable"/>.
+		/// Sends a <see cref="LogPriority.Assert"/> log message (the priority used by <c>Log.wtf</c>) with an associated <see cref="Java.Lang.Throwable"/>.
 		/// </summary>
 		/// <param name="tag">Used to identify the source of a log message.</param>
 		/// <param name="tr">An exception to log.</param>
@@ -255,7 +255,7 @@ namespace Android.Util {
 		}
 
 		/// <summary>
-		/// Sends a <see cref="LogPriority.Wtf"/> log message using a composite format string, with an associated <see cref="Java.Lang.Throwable"/>.
+		/// Sends a <see cref="LogPriority.Assert"/> log message (the priority used by <c>Log.wtf</c>) using a composite format string, with an associated <see cref="Java.Lang.Throwable"/>.
 		/// </summary>
 		/// <param name="tag">Used to identify the source of a log message.</param>
 		/// <param name="tr">An exception to log.</param>
