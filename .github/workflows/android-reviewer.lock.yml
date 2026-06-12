@@ -67,6 +67,7 @@ jobs:
     needs: pre_activation
     if: "needs.pre_activation.outputs.activated == 'true' && (github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/review ') || startsWith(github.event.comment.body, '/review\n') || github.event.comment.body == '/review') && github.event.issue.pull_request != null || !(github.event_name == 'issue_comment'))"
     runs-on: ubuntu-slim
+    environment: copilot-pr-reviewer
     permissions:
       actions: read
       contents: read
@@ -1268,6 +1269,7 @@ jobs:
     if: >
       always() && needs.agent.result != 'skipped' && (needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true')
     runs-on: ubuntu-latest
+    environment: copilot-pr-reviewer
     permissions:
       contents: read
     outputs:
