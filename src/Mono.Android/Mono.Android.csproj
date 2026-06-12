@@ -365,11 +365,16 @@
     <Compile Include="Microsoft.Android.Runtime\JniRemappingLookup.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
-    <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\CoreClrJavaMarshalValueManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
+    <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManagerHelper.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapTypeManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapValueManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapValueManager.PrimitiveArrayHandler.cs" />
+    <Compile Include="Microsoft.Android.Runtime\TrimmableValueMarshalerHelper.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
     <Compile Include="System.Drawing/PointConverter.cs" />
