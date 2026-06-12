@@ -850,7 +850,7 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 	{
 		var proxy = value as JavaProxyThrowable;
 		if (proxy != null) {
-			result = proxy.Exception;
+			result = proxy.InnerException;
 			return true;
 		}
 		return base.TryUnboxPeerObject (value, out result);

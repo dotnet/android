@@ -60,7 +60,7 @@ namespace Android.Runtime {
 			var peeked      = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
 			if (peeked is JavaProxyThrowable proxyThrowable) {
 				JniObjectReference.Dispose (ref reference, options);
-				return proxyThrowable.Exception;
+				return proxyThrowable.InnerException;
 			}
 			var peekedExc   = peeked as Exception;
 			if (peekedExc == null) {
