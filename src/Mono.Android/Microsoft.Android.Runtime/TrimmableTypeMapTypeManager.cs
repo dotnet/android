@@ -93,6 +93,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 			static bool TryGetBuiltInTypeSignature (Type type, out JniTypeSignature signature)
 			{
+				// Keep the hybrid Type.GetTypeCode + explicit nullable checks. Nullable.GetUnderlyingType ()
+				// allocates a Type[] via GetGenericArguments (), and this path is otherwise allocation-free.
 				if (GetKeywordTypeName (type) is string keywordTypeName) {
 					signature = new JniTypeSignature (keywordTypeName, 0, keyword: true);
 					return true;
