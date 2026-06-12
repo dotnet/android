@@ -93,7 +93,6 @@ jobs:
     if: >
       needs.pre_activation.outputs.activated == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.id == github.repository_id)
     runs-on: ubuntu-slim
-    environment: copilot-pr-reviewer
     permissions:
       actions: read
       contents: read

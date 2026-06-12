@@ -67,7 +67,6 @@ jobs:
     needs: pre_activation
     if: "needs.pre_activation.outputs.activated == 'true' && (github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/review ') || startsWith(github.event.comment.body, '/review\n') || github.event.comment.body == '/review') && github.event.issue.pull_request != null || !(github.event_name == 'issue_comment'))"
     runs-on: ubuntu-slim
-    environment: copilot-pr-reviewer
     permissions:
       actions: read
       contents: read
