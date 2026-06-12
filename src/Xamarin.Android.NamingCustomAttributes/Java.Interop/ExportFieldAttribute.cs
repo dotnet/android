@@ -7,9 +7,6 @@ namespace Java.Interop {
 	[AttributeUsage (AttributeTargets.Method, 
 			AllowMultiple=false, 
 			Inherited=false)]
-#if !NETSTANDARD2_0
-	[RequiresUnreferencedCode ("[ExportFieldAttribute] uses dynamic features.")]
-#endif
 #if !JCW_ONLY_TYPE_NAMES
 	public
 #endif  // !JCW_ONLY_TYPE_NAMES
@@ -24,4 +21,3 @@ namespace Java.Interop {
 		public string                 Name                    {get; set;}
 	}
 }
-

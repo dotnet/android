@@ -563,16 +563,15 @@ namespace UnnamedProject {
 			// trimmable typemap assembly or the [Export] source file.
 			// The regex requires ": warning IL" to avoid matching CSC command lines
 			// that mention IL codes in /nowarn switches.
-			// Exclude IL2026 about ExportAttribute/ExportFieldAttribute constructors
-			// themselves — those are expected (the attributes carry [RequiresUnreferencedCode]).
+			// Exclude IL2026 about ExportAttribute constructors themselves — those
+			// are expected (the attribute carries [RequiresUnreferencedCode]).
 			var ilWarningRegex = new Regex (@":\s*warning\s+(IL[23]\d{3})\b", RegexOptions.Compiled);
 			var offending = new List<string> ();
 			foreach (var line in builder.LastBuildOutput) {
 				if (!ilWarningRegex.IsMatch (line)) {
 					continue;
 				}
-				if ((line.Contains ("ExportAttribute", StringComparison.Ordinal) ||
-						line.Contains ("ExportFieldAttribute", StringComparison.Ordinal))
+				if (line.Contains ("ExportAttribute", StringComparison.Ordinal)
 						&& line.Contains ("RequiresUnreferencedCode", StringComparison.Ordinal)) {
 					continue;
 				}

@@ -167,6 +167,43 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 	}
 
+	static bool TryGetPrimitiveArrayTypeSignature (Type type, out JniTypeSignature signature)
+	{
+		if (TryGetPrimitiveArrayTypeSignature<bool, JavaBooleanArray> (type, "Z", out signature))
+			return true;
+		if (TryGetPrimitiveArrayTypeSignature<sbyte, JavaSByteArray> (type, "B", out signature))
+			return true;
+		if (TryGetPrimitiveArrayTypeSignature<char, JavaCharArray> (type, "C", out signature))
+			return true;
+		if (TryGetPrimitiveArrayTypeSignature<short, JavaInt16Array> (type, "S", out signature))
+			return true;
+		if (TryGetPrimitiveArrayTypeSignature<int, JavaInt32Array> (type, "I", out signature))
+			return true;
+		if (TryGetPrimitiveArrayTypeSignature<long, JavaInt64Array> (type, "J", out signature))
+			return true;
+		if (TryGetPrimitiveArrayTypeSignature<float, JavaSingleArray> (type, "F", out signature))
+			return true;
+		if (TryGetPrimitiveArrayTypeSignature<double, JavaDoubleArray> (type, "D", out signature))
+			return true;
+
+		signature = default;
+		return false;
+	}
+
+	static bool TryGetPrimitiveArrayTypeSignature<
+			T,
+			TArray> (Type type, string jniSimpleReference, out JniTypeSignature signature)
+		where TArray : JavaArray<T>
+	{
+		if (type == typeof (JavaArray<T>) || type == typeof (JavaPrimitiveArray<T>) || type == typeof (TArray)) {
+			signature = new JniTypeSignature (jniSimpleReference, arrayRank: 1, keyword: true);
+			return true;
+		}
+
+		signature = default;
+		return false;
+	}
+
 	[return: DynamicallyAccessedMembers (Methods | Constructors | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
