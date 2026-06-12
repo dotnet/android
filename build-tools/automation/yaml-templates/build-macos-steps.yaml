@@ -45,23 +45,14 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 # Prepare and Build everything
-# NOTE: UseSharedCompilation=false is a workaround for a Roslyn build-server hang on macOS
-# (the VBCSCompiler named-pipe write deadlocks on first `csc` invocation under the .NET 11 preview.6 SDK).
-# Set as an environment variable so it propagates to all nested `dotnet build` <Exec> calls
-# (e.g. the PrepareJavaInterop target which spawns its own `dotnet build` for Java.Interop.sln).
-# See dotnet/android PR #11477.
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1
-  env:
-    UseSharedCompilation: false
 
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
-  env:
-    UseSharedCompilation: false
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 

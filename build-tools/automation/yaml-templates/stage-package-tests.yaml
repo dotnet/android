@@ -18,11 +18,6 @@ stages:
       vmImage: $(HostedMacImageWithEmulator)
       os: macOS
     timeoutInMinutes: 180
-    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
-    # See dotnet/android PR #11477.  Job-level variables are exported as env vars to every step.
-    variables:
-    - name: UseSharedCompilation
-      value: false
     workspace:
       clean: all
     steps:
@@ -49,12 +44,14 @@ stages:
         arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
+
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
+
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
@@ -122,11 +119,6 @@ stages:
       vmImage: $(HostedMacImageWithEmulator)
       os: macOS
     timeoutInMinutes: 180
-    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
-    # See dotnet/android PR #11477.  Job-level variables are exported as env vars to every step.
-    variables:
-    - name: UseSharedCompilation
-      value: false
     workspace:
       clean: all
     steps:
@@ -153,12 +145,14 @@ stages:
         arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
+
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
+
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml

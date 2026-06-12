@@ -31,11 +31,6 @@ stages:
       os: macOS
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
-    # NOTE: UseSharedCompilation=false works around a Roslyn build-server hang on macOS.
-    # See dotnet/android PR #11477.  Job-level variables are exported as env vars to every step.
-    variables:
-    - name: UseSharedCompilation
-      value: false
     workspace:
       clean: all
     steps:

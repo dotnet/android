@@ -31,16 +31,9 @@ steps:
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
 # Prepare and Build everything
-# NOTE: UseSharedCompilation=false is a workaround for a Roslyn build-server hang on macOS
-# (the VBCSCompiler named-pipe write deadlocks on first `csc` invocation under the .NET 11 preview.6 SDK).
-# Set as an environment variable so it propagates to all nested `dotnet build` <Exec> calls
-# (e.g. the PrepareJavaInterop target which spawns its own `dotnet build` for Java.Interop.sln).
-# See dotnet/android PR #11477.
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
-  env:
-    UseSharedCompilation: false
 
 - task: CodeQL3000Finalize@0
   displayName: CodeQL 3000 Finalize
@@ -58,8 +51,6 @@ steps:
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
-  env:
-    UseSharedCompilation: false
 
 - script: >
     mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
