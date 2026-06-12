@@ -514,7 +514,7 @@ static class JavaMarshalValueManagerHelper
 			targetClass = JniEnvironment.Types.FindClass (targetJniName);
 
 			if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
-				// TODO revisit this logging
+				// Match the legacy cast diagnostic when assembly logging is enabled.
 				if (Logger.LogAssembly) {
 					var targetSig = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (targetType);
 					var message = $"Handle 0x{reference.Handle:x} is of type '{JNIEnv.GetClassNameFromInstance (reference.Handle)}' which is not assignable to '{targetSig.SimpleReference}'";

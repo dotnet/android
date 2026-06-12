@@ -208,8 +208,13 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			// Ignore [JniAddNativeMethodRegistrationAttribute] for now while the
-			// trimmable type map runtime path is being refactored.
+			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
+
+			if (!frameworkAssemblyNames.Contains (index.AssemblyName) &&
+			    index.MayUseJniAddNativeMethodRegistrationAttribute &&
+			    HasJniAddNativeMethodRegistrationAttribute (typeDef, index)) {
+				logger?.LogJniAddNativeMethodRegistrationAttributeError (fullName);
+			}
 
 			// Determine the JNI name and whether this is a known Java peer.
 			// Priority:
@@ -250,8 +255,6 @@ public sealed class JavaPeerScanner : IDisposable
 					continue;
 				}
 			}
-
-			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
 
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;

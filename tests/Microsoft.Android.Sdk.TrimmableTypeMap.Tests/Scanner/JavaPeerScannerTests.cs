@@ -61,7 +61,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Scan_JniAddNativeMethodRegistrationAttribute_IgnoresAttribute ()
+	public void Scan_JniAddNativeMethodRegistrationAttribute_ReportsXA4251 ()
 	{
 		var errors = new List<string> ();
 		var logger = new RecordingLogger (errors);
@@ -72,7 +72,8 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
 		_ = scanner.Scan (new List<(string, PEReader)> { (assemblyName, peReader) });
 
-		Assert.Empty (errors);
+		Assert.Contains (errors, e => e.Contains ("HandWrittenNativeRegistrationPeer"));
+		Assert.Contains (errors, e => e.Contains ("NonPeerNativeRegistration"));
 	}
 
 	sealed class RecordingLogger (List<string> errors) : ITrimmableTypeMapLogger

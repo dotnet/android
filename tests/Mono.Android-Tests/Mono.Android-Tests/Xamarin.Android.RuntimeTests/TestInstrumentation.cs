@@ -70,7 +70,7 @@ namespace Xamarin.Android.RuntimeTests
 				var value = AppContext.GetData ("IncludeCategories") as string;
 				if (string.IsNullOrEmpty (value))
 					return null;
-				return value!.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+				return value.Split (new [] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 			}
 		}
 

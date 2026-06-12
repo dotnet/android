@@ -126,6 +126,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _exceptionRef;
 	TypeReferenceHandle _androidRuntimeInternalRef;
 	TypeReferenceHandle _androidEnvironmentInternalRef;
+	TypeReferenceHandle _unconditionalSuppressMessageAttributeRef;
 
 	MemberReferenceHandle _beginMarshalMethodRef;
 	MemberReferenceHandle _endMarshalMethodRef;
@@ -136,6 +137,9 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniTypePeerReferenceRef;
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
+	MemberReferenceHandle _unconditionalSuppressMessageAttributeCtorRef;
+	BlobHandle _suppressIl2026BlobHandle;
+	BlobHandle _suppressIl2111BlobHandle;
 
 	EntityHandle _anchorTypeHandle;
 
@@ -326,6 +330,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidRuntimeInternal"));
 		_androidEnvironmentInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironmentInternal"));
+		_unconditionalSuppressMessageAttributeRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+			metadata.GetOrAddString ("System.Diagnostics.CodeAnalysis"), metadata.GetOrAddString ("UnconditionalSuppressMessageAttribute"));
 
 		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -518,6 +524,16 @@ sealed class TypeMapAssemblyEmitter
 
 		// Legacy marshal-method UCO wrappers use the default unmanaged calling convention.
 		_ucoAttrBlobHandle = _pe.BuildAttributeBlob (b => { });
+
+		_unconditionalSuppressMessageAttributeCtorRef = _pe.AddMemberRef (_unconditionalSuppressMessageAttributeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().String ();
+				}));
+		_suppressIl2026BlobHandle = BuildUnconditionalSuppressMessageBlob ("IL2026");
+		_suppressIl2111BlobHandle = BuildUnconditionalSuppressMessageBlob ("IL2111");
 
 		// JniEnvironment.BeginMarshalMethod(nint jnienv, out JniTransition, out JniRuntime?) -> bool
 		_beginMarshalMethodRef = _pe.AddMemberRef (_jniEnvironmentRef, "BeginMarshalMethod",
@@ -730,6 +746,7 @@ sealed class TypeMapAssemblyEmitter
 		// at runtime for AOT-safe type resolution.
 		var selfAttrBlob = _pe.BuildAttributeBlob (b => { });
 		metadata.AddCustomAttribute (typeDefHandle, selfAttrCtorDef, selfAttrBlob);
+		AddGeneratedProxyConstructorSuppressions (selfAttrCtorDef);
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
@@ -751,6 +768,18 @@ sealed class TypeMapAssemblyEmitter
 		if (proxy.IsAcw) {
 			EmitRegisterNatives (proxy, wrapperHandles);
 		}
+	}
+
+	BlobHandle BuildUnconditionalSuppressMessageBlob (string checkId)
+		=> _pe.BuildAttributeBlob (b => {
+			b.WriteSerializedString ("Trimming");
+			b.WriteSerializedString (checkId);
+		});
+
+	void AddGeneratedProxyConstructorSuppressions (MethodDefinitionHandle method)
+	{
+		_pe.Metadata.AddCustomAttribute (method, _unconditionalSuppressMessageAttributeCtorRef, _suppressIl2026BlobHandle);
+		_pe.Metadata.AddCustomAttribute (method, _unconditionalSuppressMessageAttributeCtorRef, _suppressIl2111BlobHandle);
 	}
 
 	void EmitAliasHolderType (AliasHolderData holder)

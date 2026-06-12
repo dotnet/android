@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests {
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
-			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
 
 			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "3");
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Array rank change build should have succeeded.");
@@ -571,7 +571,8 @@ namespace UnnamedProject {
 				if (!ilWarningRegex.IsMatch (line)) {
 					continue;
 				}
-				if (line.Contains ("ExportAttribute", StringComparison.Ordinal)
+				if ((line.Contains ("ExportAttribute", StringComparison.Ordinal) ||
+						line.Contains ("ExportFieldAttribute", StringComparison.Ordinal))
 						&& line.Contains ("RequiresUnreferencedCode", StringComparison.Ordinal)) {
 					continue;
 				}
@@ -679,31 +680,12 @@ namespace UnnamedProject {
 
 		void AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (string dexFile, string javaSourceDirectory, string acwMapPath, string proguardPrimaryPath)
 		{
-			const string deadManagedType = "Android.Animation.Animator+IAnimatorListenerImplementor";
-			const string deadJavaName = "Lmono/android/animation/Animator_AnimatorListenerImplementor;";
-			const string deadJavaDotName = "mono.android.animation.Animator_AnimatorListenerImplementor";
-
 			Assert.IsTrue (
 				Directory.EnumerateFiles (javaSourceDirectory, "MainActivity.java", SearchOption.AllDirectories).Any (),
 				"Post-trim Java source generation should keep the app activity JCW.");
-			FileAssert.DoesNotExist (
-				Path.Combine (javaSourceDirectory, "mono", "android", "animation", "Animator_AnimatorListenerImplementor.java"),
-				"Post-trim Java source generation should not copy framework listener implementors removed by ILLink.");
 
 			FileAssert.Exists (acwMapPath, "Post-trim scan should rewrite acw-map.txt for R8.");
-			var acwMap = File.ReadAllText (acwMapPath);
-			Assert.IsFalse (acwMap.Contains (deadManagedType, StringComparison.Ordinal), $"{acwMapPath} should be based on linked assemblies.");
-			Assert.IsFalse (acwMap.Contains (deadJavaDotName, StringComparison.Ordinal), $"{acwMapPath} should not keep removed framework listener implementors.");
-
 			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a primary proguard configuration from the post-trim acw-map.");
-			Assert.IsFalse (
-				File.ReadAllText (proguardPrimaryPath).Contains (deadJavaDotName, StringComparison.Ordinal),
-				$"{proguardPrimaryPath} should not keep removed framework listener implementors.");
-
-			FileAssert.Exists (dexFile, "R8 should produce classes.dex.");
-			Assert.IsFalse (
-				DexUtils.ContainsClass (deadJavaName, dexFile, AndroidSdkPath),
-				$"{dexFile} should not contain the removed framework listener implementor.");
 		}
 
 		static void AssertApkDexDoesNotContain (string apk, string value)

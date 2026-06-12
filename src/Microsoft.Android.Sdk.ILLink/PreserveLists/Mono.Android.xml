@@ -27,6 +27,7 @@
 		<type fullname="Android.Runtime.RaiseThrowableEventArgs" />
 		<type fullname="Android.Runtime.RegisterAttribute" />
 		<type fullname="Android.Runtime.TypeManager" />
+		<type fullname="Microsoft.Android.Runtime.ManagedTypeMapping" preserve="all" />
 		<!--
 		<type fullname="Android.Runtime.XmlResourceParserReader" />
 		<type fullname="Android.Runtime.XmlPullParserReader" />
