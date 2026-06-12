@@ -149,21 +149,41 @@ namespace Android.Graphics
 		#endregion
 
 		#region Public Static Methods
+		/// <summary>
+		/// Extracts the alpha (opacity) component from a packed ARGB color integer, where 0 is fully transparent and 255 is fully opaque.
+		/// </summary>
+		/// <param name="color">A packed ARGB color integer, such as the value returned by <see cref="ToArgb"/>.</param>
+		/// <returns>The alpha component of <paramref name="color"/>, in the range 0–255.</returns>
 		public static int GetAlphaComponent (int color)
 		{
 			return (byte)(color >> 24);
 		}
 
+		/// <summary>
+		/// Extracts the blue component from a packed ARGB color integer.
+		/// </summary>
+		/// <param name="color">A packed ARGB color integer, such as the value returned by <see cref="ToArgb"/>.</param>
+		/// <returns>The blue component of <paramref name="color"/>, in the range 0–255.</returns>
 		public static int GetBlueComponent (int color)
 		{
 			return (byte)color;
 		}
 
+		/// <summary>
+		/// Extracts the green component from a packed ARGB color integer.
+		/// </summary>
+		/// <param name="color">A packed ARGB color integer, such as the value returned by <see cref="ToArgb"/>.</param>
+		/// <returns>The green component of <paramref name="color"/>, in the range 0–255.</returns>
 		public static int GetGreenComponent (int color)
 		{
 			return (byte)(color >> 8);
 		}
 
+		/// <summary>
+		/// Extracts the red component from a packed ARGB color integer.
+		/// </summary>
+		/// <param name="color">A packed ARGB color integer, such as the value returned by <see cref="ToArgb"/>.</param>
+		/// <returns>The red component of <paramref name="color"/>, in the range 0–255.</returns>
 		public static int GetRedComponent (int color)
 		{
 			return (byte)(color >> 16);
