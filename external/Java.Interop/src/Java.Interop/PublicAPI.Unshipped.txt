@@ -85,3 +85,4 @@ override Java.Interop.JniRuntime.ReflectionJniTypeManager.GetTypes(Java.Interop.
 override Java.Interop.JniRuntime.ReflectionJniTypeManager.GetTypesForSimpleReference(string! jniSimpleReference) -> System.Collections.Generic.IEnumerable<System.Type!>!
 override Java.Interop.JniRuntime.ReflectionJniTypeManager.RegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, string? methods) -> void
 override Java.Interop.JniRuntime.ReflectionJniTypeManager.RegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, System.ReadOnlySpan<char> methods) -> void
+virtual Java.Interop.JniRuntime.ReflectionJniValueManager.TryConstructPeer(Java.Interop.IJavaPeerable! self, ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type! type) -> bool
