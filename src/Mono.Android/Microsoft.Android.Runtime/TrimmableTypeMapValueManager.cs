@@ -278,38 +278,27 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		return false;
 	}
 
-	protected override JniValueMarshalerState CreateObjectReferenceValueMarshalerStateCore (
+	protected override JniObjectReference CreateObjectReferenceArgumentCore (
 		[DynamicallyAccessedMembers (Constructors)]
 		Type type,
 		object? value)
 	{
 		if (value == null) {
-			return new JniValueMarshalerState ();
+			return new JniObjectReference ();
 		}
-		if (TryCreatePrimitiveArrayArgumentState (value, out var primitiveArrayState)) {
-			return primitiveArrayState;
+		if (TryCreatePrimitiveArrayObjectReference (value, out var primitiveArrayReference)) {
+			return primitiveArrayReference;
 		}
 		if (value is IJavaPeerable peerable) {
 			return peerable.PeerReference.IsValid
-				? new JniValueMarshalerState (peerable.PeerReference.NewLocalRef ())
-				: new JniValueMarshalerState ();
+				? peerable.PeerReference.NewLocalRef ()
+				: new JniObjectReference ();
 		}
 
 		var handle = JavaConvert.ToLocalJniHandle (value);
 		return handle == IntPtr.Zero
-			? new JniValueMarshalerState ()
-			: new JniValueMarshalerState (new JniObjectReference (handle, JniObjectReferenceType.Local));
-	}
-
-	protected override void DestroyValueMarshalerStateCore (ref JniValueMarshalerState state)
-	{
-		if (TryDestroyPrimitiveArrayArgumentState (ref state)) {
-			return;
-		}
-
-		var r = state.ReferenceValue;
-		JniObjectReference.Dispose (ref r);
-		state = new JniValueMarshalerState ();
+			? new JniObjectReference ()
+			: new JniObjectReference (handle, JniObjectReferenceType.Local);
 	}
 
 	protected override JniValueMarshaler GetValueMarshalerCore (Type type)

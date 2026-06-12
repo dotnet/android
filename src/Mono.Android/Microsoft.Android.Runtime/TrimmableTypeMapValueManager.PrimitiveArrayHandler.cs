@@ -9,16 +9,6 @@ sealed partial class TrimmableTypeMapValueManager
 {
 	delegate TArray PrimitiveArrayFactory<TArray> (ref JniObjectReference reference, JniObjectReferenceOptions options);
 
-	readonly struct PrimitiveArrayArgumentState
-	{
-		public readonly bool DisposeArray;
-
-		public PrimitiveArrayArgumentState (bool disposeArray)
-		{
-			DisposeArray = disposeArray;
-		}
-	}
-
 	abstract class PrimitiveArrayHandler
 	{
 		public abstract bool TryCreateWrapper (
@@ -28,9 +18,7 @@ sealed partial class TrimmableTypeMapValueManager
 			Type targetType,
 			[NotNullWhen (true)] out object? value);
 
-		public abstract bool TryCreateArgumentState (object value, out JniValueMarshalerState state);
-
-		public abstract bool TryDestroyArgumentState (ref JniValueMarshalerState state);
+		public abstract bool TryCreateObjectReference (object value, out JniObjectReference reference);
 
 		public abstract bool IsTargetType (Type targetType);
 	}
@@ -73,35 +61,29 @@ sealed partial class TrimmableTypeMapValueManager
 			return true;
 		}
 
-		public override bool TryCreateArgumentState (object value, out JniValueMarshalerState state)
+		public override bool TryCreateObjectReference (object value, out JniObjectReference reference)
 		{
 			if (value is TArray array) {
-				state = new JniValueMarshalerState (array);
+				reference = array.PeerReference.IsValid
+					? array.PeerReference.NewLocalRef ()
+					: new JniObjectReference ();
 				return true;
 			}
 
 			if (value is not IList<T> list) {
-				state = new JniValueMarshalerState ();
+				reference = new JniObjectReference ();
 				return false;
 			}
 
 			var marshaledArray = createCopy (list);
-			state = new JniValueMarshalerState (marshaledArray, new PrimitiveArrayArgumentState (disposeArray: true));
-			return true;
-		}
-
-		public override bool TryDestroyArgumentState (ref JniValueMarshalerState state)
-		{
-			if (state.PeerableValue is not TArray source) {
-				return false;
+			try {
+				reference = marshaledArray.PeerReference.IsValid
+					? marshaledArray.PeerReference.NewLocalRef ()
+					: new JniObjectReference ();
+				return true;
+			} finally {
+				marshaledArray.Dispose ();
 			}
-
-			if (state.Extra is PrimitiveArrayArgumentState { DisposeArray: true }) {
-				source.Dispose ();
-			}
-
-			state = new JniValueMarshalerState ();
-			return true;
 		}
 
 		public override bool IsTargetType (Type targetType)
@@ -165,26 +147,15 @@ sealed partial class TrimmableTypeMapValueManager
 		return false;
 	}
 
-	static bool TryCreatePrimitiveArrayArgumentState (object value, out JniValueMarshalerState state)
+	static bool TryCreatePrimitiveArrayObjectReference (object value, out JniObjectReference reference)
 	{
 		foreach (var handler in PrimitiveArrayHandlers) {
-			if (handler.TryCreateArgumentState (value, out state)) {
+			if (handler.TryCreateObjectReference (value, out reference)) {
 				return true;
 			}
 		}
 
-		state = new JniValueMarshalerState ();
-		return false;
-	}
-
-	static bool TryDestroyPrimitiveArrayArgumentState (ref JniValueMarshalerState state)
-	{
-		foreach (var handler in PrimitiveArrayHandlers) {
-			if (handler.TryDestroyArgumentState (ref state)) {
-				return true;
-			}
-		}
-
+		reference = new JniObjectReference ();
 		return false;
 	}
 
