@@ -49,11 +49,17 @@ namespace Java.Interop
 			DynamicallyAccessedMemberTypes.PublicConstructors |
 			DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
+		internal const DynamicallyAccessedMemberTypes Constructors =
+			DynamicallyAccessedMemberTypes.PublicConstructors |
+			DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Generated proxy constructors pass compile-time-known type tokens to the proxy base constructor.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2111", Justification = "Generated proxy constructors pass compile-time-known type tokens to the proxy base constructor.")]
 		protected JavaPeerProxy (
 			string jniName,
 			[DynamicallyAccessedMembers (MethodsConstructors)]
 			Type targetType,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			[DynamicallyAccessedMembers (Constructors)]
 			Type? invokerType)
 		{
 			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
@@ -85,7 +91,7 @@ namespace Java.Interop
 		/// Gets the invoker type for interfaces and abstract classes.
 		/// Returns null for concrete types that can be directly instantiated.
 		/// </summary>
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		[DynamicallyAccessedMembers (Constructors)]
 		public Type? InvokerType { get; }
 
 		/// <summary>
@@ -161,9 +167,11 @@ namespace Java.Interop
 		T
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Generated proxy constructors pass compile-time-known type tokens to the proxy base constructor.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2111", Justification = "Generated proxy constructors pass compile-time-known type tokens to the proxy base constructor.")]
 		protected JavaPeerProxy (
 			string jniName,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			[DynamicallyAccessedMembers (Constructors)]
 			Type? invokerType) : base (jniName, typeof (T), invokerType)
 		{
 		}
