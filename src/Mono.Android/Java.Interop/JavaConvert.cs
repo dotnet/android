@@ -12,6 +12,8 @@ namespace Java.Interop {
 
 	static class JavaConvert {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+		// Mirrors JniObjectReference.DisposeSource; JniObjectReferenceOptions only exposes it through CopyAndDispose.
+		const JniObjectReferenceOptions DisposeSource = (JniObjectReferenceOptions)(1 << 1);
 
 		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>>() {
 			{ typeof (bool), (handle, transfer) => {
@@ -293,6 +295,31 @@ namespace Java.Interop {
 			// hail mary pass; perhaps there's a MCW which participates in normal
 			// .NET type conversion?
 			return (T?) Convert.ChangeType (v, typeof (T), CultureInfo.InvariantCulture);
+		}
+
+		internal static object? FromObjectReference (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+		{
+			JniHandleOwnership transfer;
+			if ((options & DisposeSource) != DisposeSource) {
+				transfer = JniHandleOwnership.DoNotTransfer;
+			} else {
+				transfer = reference.Type switch {
+					JniObjectReferenceType.Local => JniHandleOwnership.TransferLocalRef,
+					JniObjectReferenceType.Global => JniHandleOwnership.TransferGlobalRef,
+					_ => JniHandleOwnership.DoNotTransfer,
+				};
+			}
+
+			var value = FromJniHandle (reference.Handle, transfer, targetType);
+			if (transfer != JniHandleOwnership.DoNotTransfer) {
+				reference = default;
+			}
+
+			return value;
 		}
 
 		public static object? FromJniHandle (

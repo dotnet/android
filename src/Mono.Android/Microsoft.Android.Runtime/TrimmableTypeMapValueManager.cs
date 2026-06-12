@@ -250,12 +250,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return CreatePeer (ref reference, options, targetType);
 		}
 
-		var transfer = ToJniHandleOwnership (reference, options);
-		var value = JavaConvert.FromJniHandle (reference.Handle, transfer, GetValueConversionTargetType (targetType));
-		if (transfer != JniHandleOwnership.DoNotTransfer) {
-			reference = default;
-		}
-		return value;
+		return JavaConvert.FromObjectReference (ref reference, options, GetValueConversionTargetType (targetType));
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
@@ -283,41 +278,21 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		return false;
 	}
 
-	protected override JniValueMarshalerState CreateValueMarshalerStateCore (Type type, object? value, ParameterAttributes synchronize)
+	protected override JniValueMarshalerState CreateObjectReferenceValueMarshalerStateCore (
+		[DynamicallyAccessedMembers (Constructors)]
+		Type type,
+		object? value)
 	{
-		EnsureNotDisposed ();
 		if (value == null) {
 			return new JniValueMarshalerState ();
 		}
-		if (TrimmableValueMarshalerHelper.IsPrimitiveJniValueType (type)) {
-			return new JniValueMarshalerState (TrimmableValueMarshalerHelper.CreatePrimitiveArgumentValue (value, type));
-		}
-		return CreateObjectReferenceValueMarshalerStateCore (type, value, synchronize);
-	}
-
-	protected override JniValueMarshalerState CreateValueMarshalerStateCore<[DynamicallyAccessedMembers (Constructors)] T> ([MaybeNull] T value, ParameterAttributes synchronize)
-	{
-		EnsureNotDisposed ();
-		if (value == null) {
-			return new JniValueMarshalerState ();
-		}
-		if (TrimmableValueMarshalerHelper.IsPrimitiveJniValueType (typeof (T))) {
-			return new JniValueMarshalerState (TrimmableValueMarshalerHelper.CreatePrimitiveArgumentValue (value, typeof (T)));
-		}
-		return CreateObjectReferenceValueMarshalerStateCore (value, synchronize);
-	}
-
-	protected override JniValueMarshalerState CreateObjectReferenceValueMarshalerStateCore (Type type, object? value, ParameterAttributes synchronize)
-	{
-		EnsureNotDisposed ();
-		if (value == null) {
-			return new JniValueMarshalerState ();
-		}
-		if (TryCreatePrimitiveArrayArgumentState (value, synchronize, out var primitiveArrayState)) {
+		if (TryCreatePrimitiveArrayArgumentState (value, out var primitiveArrayState)) {
 			return primitiveArrayState;
 		}
 		if (value is IJavaPeerable peerable) {
-			return PeerableValueMarshaler.CreateObjectReferenceArgumentState (peerable, synchronize);
+			return peerable.PeerReference.IsValid
+				? new JniValueMarshalerState (peerable.PeerReference.NewLocalRef ())
+				: new JniValueMarshalerState ();
 		}
 
 		var handle = JavaConvert.ToLocalJniHandle (value);
@@ -326,70 +301,21 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			: new JniValueMarshalerState (new JniObjectReference (handle, JniObjectReferenceType.Local));
 	}
 
-	protected override JniValueMarshalerState CreateObjectReferenceValueMarshalerStateCore<[DynamicallyAccessedMembers (Constructors)] T> ([MaybeNull] T value, ParameterAttributes synchronize)
+	protected override void DestroyValueMarshalerStateCore (ref JniValueMarshalerState state)
 	{
-		EnsureNotDisposed ();
-		if (value == null) {
-			return new JniValueMarshalerState ();
-		}
-		if (TryCreatePrimitiveArrayArgumentState (value, synchronize, out var primitiveArrayState)) {
-			return primitiveArrayState;
-		}
-		if (value is IJavaPeerable peerable) {
-			return PeerableValueMarshaler.CreateObjectReferenceArgumentState (peerable, synchronize);
-		}
-
-		var handle = JavaConvert.ToLocalJniHandle (value);
-		return handle == IntPtr.Zero
-			? new JniValueMarshalerState ()
-			: new JniValueMarshalerState (new JniObjectReference (handle, JniObjectReferenceType.Local));
-	}
-
-	protected override void DestroyValueMarshalerStateCore (Type type, object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
-	{
-		EnsureNotDisposed ();
-		if (TryDestroyPrimitiveArrayArgumentState (value, ref state, synchronize)) {
+		if (TryDestroyPrimitiveArrayArgumentState (ref state)) {
 			return;
 		}
-		DisposeReferenceState (ref state);
-	}
 
-	protected override void DestroyValueMarshalerStateCore<[DynamicallyAccessedMembers (Constructors)] T> ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
-	{
-		EnsureNotDisposed ();
-		if (TryDestroyPrimitiveArrayArgumentState (value, ref state, synchronize)) {
-			return;
-		}
-		DisposeReferenceState (ref state);
-	}
-
-	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
-	{
-		throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
-	}
-
-	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
-	{
-		throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
-	}
-
-	static JniHandleOwnership ToJniHandleOwnership (JniObjectReference reference, JniObjectReferenceOptions options)
-	{
-		const JniObjectReferenceOptions DisposeSource = (JniObjectReferenceOptions)(1 << 1);
-		if ((options & DisposeSource) != DisposeSource) {
-			return JniHandleOwnership.DoNotTransfer;
-		}
-		return reference.Type switch {
-			JniObjectReferenceType.Local => JniHandleOwnership.TransferLocalRef,
-			JniObjectReferenceType.Global => JniHandleOwnership.TransferGlobalRef,
-			_ => JniHandleOwnership.DoNotTransfer,
-		};
-	}
-
-	static void DisposeReferenceState (ref JniValueMarshalerState state)
-	{
 		var r = state.ReferenceValue;
 		JniObjectReference.Dispose (ref r);
 		state = new JniValueMarshalerState ();
 	}
+
+	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
+		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
+
+	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
+		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
+
 }
