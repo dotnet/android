@@ -16,6 +16,10 @@
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>8d5d82abe13ac88cf5b2343e77460243b5272a6b</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-11.0.100-preview.6" Version="11.0.100-preview.6.26310.106">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>8d5d82abe13ac88cf5b2343e77460243b5272a6b</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-11.0.100-preview.6" Version="11.0.100-preview.6.26310.106">
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>8d5d82abe13ac88cf5b2343e77460243b5272a6b</Sha>

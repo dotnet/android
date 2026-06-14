@@ -6,6 +6,7 @@
     <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(_Root)..\maui</MauiSourcePath>
     <!-- Arcade SDK outputs packages to artifacts/packages/Configuration/Shipping/ -->
     <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts\packages\$(Configuration)\Shipping</MauiPackagePath>
+    <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
   </PropertyGroup>
 
   <Target Name="PrepareOpenJDK">
@@ -117,6 +118,33 @@
     <Copy Condition=" '$(MauiManifestDiagnosticsPath)' != '' " SourceFiles="@(_WLManifest)" DestinationFolder="$(MauiManifestDiagnosticsPath)" />
     <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
 
+    <!-- Parse NuGet.config -->
+    <XmlPeek
+        Condition=" '$(MauiUseLocalPacks)' == 'true' "
+        XmlInputPath="$(MauiSourcePath)\NuGet.config"
+        Query="/configuration/packageSources/add/@value">
+      <Output TaskParameter="Result" ItemName="_NuGetSources" />
+    </XmlPeek>
+    <XmlPeek
+        XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
+        Query="/configuration/packageSources/add/@value">
+      <Output TaskParameter="Result" ItemName="_NuGetSources" />
+    </XmlPeek>
+
+    <!-- dotnet workload install maui-android -->
+    <ItemGroup>
+      <_NuGetSources Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(MauiPackagePath.TrimEnd('\'))" />
+      <_InstallArguments Include="--skip-manifest-update" />
+      <_InstallArguments Include="--skip-sign-check" />
+      <_InstallArguments Include="--verbosity diag" />
+      <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
+      <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
+    </ItemGroup>
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; workload install $(MauiWorkloadToInstall) @(_InstallArguments, ' ')"
+        WorkingDirectory="$(_TempDirectory)"
+        EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0"
+    />
     <RemoveDir Directories="$(_TempDirectory)" />
   </Target>
 </Project>
