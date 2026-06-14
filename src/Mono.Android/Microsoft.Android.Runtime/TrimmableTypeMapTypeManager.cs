@@ -114,8 +114,20 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			Type type,
 			ReadOnlySpan<char> methods)
 	{
-		throw new UnreachableException (
-			$"RegisterNativeMembers should not be called in the trimmable typemap path. " +
-			$"Native methods for '{type.FullName}' should be registered by JCW static initializer blocks.");
+		// By default, native methods in the trimmable typemap path are registered by JCW static
+		// initializer blocks via the fast path (mono.android.Runtime.registerNatives), so this
+		// reflection-based overload should never be reached. The legacy, reflection-based path is
+		// only supported when explicitly opted into via RuntimeFeature.LegacyJniRegistration (e.g.
+		// to support legacy precompiled jars or Java.Interop.ManagedPeer).
+		if (!RuntimeFeature.LegacyJniRegistration) {
+			throw new UnreachableException (
+				$"RegisterNativeMembers should not be called in the trimmable typemap path " +
+				$"unless RuntimeFeature.LegacyJniRegistration is enabled. Native methods for " +
+				$"'{type.FullName}' should be registered by JCW static initializer blocks.");
+		}
+
+		if (!NativeMethodRegistrar.TryRegisterNativeMembers (nativeClass, type, methods)) {
+			base.RegisterNativeMembers (nativeClass, type, methods);
+		}
 	}
 }

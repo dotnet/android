@@ -20,6 +20,12 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <!-- Enable .NET runtime crash reporting before Android's signal chaining takes place.
          See: https://github.com/dotnet/runtime/pull/123735 -->
     <_AndroidEnableDiagnosticCrashReporting Condition=" '$(_AndroidEnableDiagnosticCrashReporting)' == '' ">true</_AndroidEnableDiagnosticCrashReporting>
+    <!-- Re-enables the legacy, reflection-based JNI native method registration in the trimmable
+         typemap path (NativeMethodRegistrar / Java.Interop.ManagedPeer). Required to support legacy
+         precompiled Java Callable Wrappers (from binding jars/aars) whose static initializers call
+         `mono.android.Runtime.register(...)`, and `ManagedPeer`. Defaults to false so the
+         reflection-based path can be trimmed away when it is not needed. -->
+    <_AndroidEnableLegacyJniRegistration Condition=" '$(_AndroidEnableLegacyJniRegistration)' == '' ">false</_AndroidEnableLegacyJniRegistration>
   </PropertyGroup>
 
   <ItemGroup>
@@ -66,6 +72,10 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ObjectReferenceLogging"
         Condition="'$(_AndroidEnableObjectReferenceLogging)' != ''"
         Value="$(_AndroidEnableObjectReferenceLogging)"
+        Trim="true"
+    />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.LegacyJniRegistration"
+        Value="$([MSBuild]::ValueOrDefault('$(_AndroidEnableLegacyJniRegistration)', 'false'))"
         Trim="true"
     />
     <!-- https://github.com/dotnet/runtime/pull/123735 -->

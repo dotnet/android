@@ -157,7 +157,10 @@ namespace Android.Runtime
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
-			if (!RuntimeFeature.TrimmableTypeMap) {
+			if (!RuntimeFeature.TrimmableTypeMap || RuntimeFeature.LegacyJniRegistration) {
+				// Non-trimmable typemap: always needed. Trimmable typemap: only needed when the
+				// legacy reflection-based registration is opted into (e.g. legacy precompiled jars
+				// whose JCWs call `mono.android.Runtime.register(...)`).
 				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 			}
 			RunStartupHooksIfNeeded ();
