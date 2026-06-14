@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -231,6 +232,48 @@ public class TrimmableTypeMap
 	{
 		jniName = GetProxyForManagedType (managedType)?.JniName;
 		return jniName is not null;
+	}
+
+	/// <summary>
+	/// Registers the JNI native methods for <paramref name="type"/> by reusing the generated
+	/// <see cref="IAndroidCallableWrapper"/> fast path — the same trim-safe registration performed
+	/// by the <c>mono.android.Runtime.registerNatives</c> path (see <see cref="OnRegisterNatives"/>).
+	///
+	/// This lets the legacy entry points that flow through
+	/// <c>JniRuntime.JniTypeManager.RegisterNativeMembers</c> (a legacy precompiled JCW calling
+	/// <c>mono.android.Runtime.register(...)</c>, or <c>Java.Interop.ManagedPeer</c>) register their
+	/// natives without the slow, reflection-based path: the generated proxy keyed off
+	/// <paramref name="type"/> already knows the native callbacks. The <paramref name="methods"/>
+	/// metadata string carried by those entry points is redundant here and is used only for
+	/// validation.
+	/// </summary>
+	/// <returns>
+	/// <see langword="true"/> if a generated ACW proxy was found for <paramref name="type"/> and used;
+	/// otherwise <see langword="false"/> (the caller should fall back).
+	/// </returns>
+	internal bool TryRegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
+	{
+		var proxy = GetProxyForManagedType (type);
+		if (proxy is not IAndroidCallableWrapper acw) {
+			return false;
+		}
+
+		ValidateLegacyRegistration (proxy, nativeClass, methods);
+		acw.RegisterNatives (nativeClass);
+		return true;
+	}
+
+	// The legacy `methods` string and the managed `type` carry no information the generated fast
+	// path needs; they are only cross-checked here to catch mismatches during development.
+	[Conditional ("DEBUG")]
+	static void ValidateLegacyRegistration (JavaPeerProxy proxy, JniType nativeClass, ReadOnlySpan<char> methods)
+	{
+		Debug.Assert (
+			string.Equals (proxy.JniName, nativeClass.Name, StringComparison.Ordinal),
+			$"Legacy RegisterNativeMembers JNI name mismatch: proxy '{proxy.JniName}' vs class '{nativeClass.Name}'.");
+		Debug.Assert (
+			!methods.IsEmpty,
+			$"Legacy RegisterNativeMembers called for '{proxy.JniName}' with an empty methods string.");
 	}
 
 	internal JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)

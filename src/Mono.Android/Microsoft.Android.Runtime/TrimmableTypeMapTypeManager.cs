@@ -116,9 +116,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	{
 		// By default, native methods in the trimmable typemap path are registered by JCW static
 		// initializer blocks via the fast path (mono.android.Runtime.registerNatives), so this
-		// reflection-based overload should never be reached. The legacy, reflection-based path is
-		// only supported when explicitly opted into via RuntimeFeature.LegacyJniRegistration (e.g.
-		// to support legacy precompiled jars or Java.Interop.ManagedPeer).
+		// reflection-based overload should never be reached. The legacy entry points that do call
+		// it (a legacy precompiled JCW's mono.android.Runtime.register(...), or
+		// Java.Interop.ManagedPeer) are only supported when explicitly opted into via
+		// RuntimeFeature.LegacyJniRegistration.
 		if (!RuntimeFeature.LegacyJniRegistration) {
 			throw new UnreachableException (
 				$"RegisterNativeMembers should not be called in the trimmable typemap path " +
@@ -126,8 +127,15 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				$"'{type.FullName}' should be registered by JCW static initializer blocks.");
 		}
 
-		if (!NativeMethodRegistrar.TryRegisterNativeMembers (nativeClass, type, methods)) {
-			base.RegisterNativeMembers (nativeClass, type, methods);
+		// Reuse the trimmable fast path rather than the slow, reflection-based registration: the
+		// generated ACW proxy keyed off `type` already knows the native callbacks, so `methods` is
+		// redundant (used only for validation inside TryRegisterNativeMembers).
+		if (TrimmableTypeMap.Instance.TryRegisterNativeMembers (nativeClass, type, methods)) {
+			return;
 		}
+
+		// No generated ACW proxy for this type (e.g. nothing to register / empty methods). Fall back
+		// to the base marshal-method path, which is a safe no-op in trimmed builds.
+		base.RegisterNativeMembers (nativeClass, type, methods);
 	}
 }
