@@ -734,6 +734,7 @@ namespace Xamarin.Android.Build.Tests
 			CopyRecursively (TestProjectRootDirectory, temporaryProjectPath, ignore);
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
+			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "eng", "Versions.props"), Path.Combine (tempRoot, "eng", "Versions.props"));
 			var project = new XamarinAndroidApplicationProject ();
 			project.CopyNuGetConfig (Path.Combine (tempRoot, "NuGet.config"));
 

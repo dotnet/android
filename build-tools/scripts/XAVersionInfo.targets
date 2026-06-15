@@ -53,7 +53,7 @@
       <Output TaskParameter="CommitCount"             PropertyName="XAVersionCommitCount"   Condition=" '$(XAVersionCommitCount)' == '' " />
     </GitCommitsInRange>
     <GitBlame
-        FileName="Directory.Build.props"
+        FileName="eng/Versions.props"
         LineFilter="&lt;AndroidPackVersion&gt;"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
         ToolPath="$(GitToolPath)"

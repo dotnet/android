@@ -143,7 +143,7 @@ Tato chyba je pravděpodobně způsobená problémem se souborem AndroidManifest
     <value>Neplatný název souboru: Názvy souborů nemůžou používat vyhrazená slova Java.</value>
   </data>
   <data name="IL6001" xml:space="preserve">
-    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+    <value>Sestavení {0} obsahuje odkaz na zastaralý atribut Android.Runtime.PreserveAttribute. Členy s tímto atributem mohou být oříznuty. Místo toho prosím použijte atribut System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute.</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nepovedlo se určit úroveň rozhraní API pro $(TargetFrameworkVersion) {0}.</value>
@@ -225,7 +225,7 @@ Poznámka: Android Designer není kompatibilní se sadou Java SDK 11.0: https://
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Neznámý režim {0}</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">

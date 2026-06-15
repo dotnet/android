@@ -32,7 +32,7 @@ namespace Android.Content.ResTests
 			}
 		};
 
-		string[] AssetPngs = {
+		static string[] AssetPngs = {
 			"hamburger.png",
 			"subfolder/accept_request.png",
 			"problem_solving.png",
