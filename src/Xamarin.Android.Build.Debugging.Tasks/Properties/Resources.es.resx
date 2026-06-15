@@ -149,7 +149,7 @@ Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para desha
 {1} - A filename</comment>
   </data>
   <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>Error al implementar '{0}' mediante '{1}: {2}'.
+    <value>Error al implementar "{0}" mediante "{1}: {2}".
 Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.</value>
 <comment>The following are literal names and should not be translated:
 {0} - A filename
@@ -161,7 +161,7 @@ Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para desha
 Para habilitar la compatibilidad con la implementación rápida, establezca la propiedad en "false" o reinicie el dispositivo o emulador para borrar el valor.</value>
   </data>
   <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
-    <value>Error al implementar '{0}'.
+    <value>Error al implementar "{0}".
 Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio, o bien edite el archivo del proyecto en un editor de texto.</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
@@ -197,7 +197,7 @@ Esto es necesario para que la implementación rápida funcione. Normalmente, est
 el sistema de compilación de .NET para Android para compilaciones de depuración. Compruebe que no tiene este atributo
 se establece en el elemento "application" de la "AndroidManifest.xml".
 Si tiene una clase que deriva de "Android.App.Application" y usa "[Application]", asegúrese de que el 
-La propiedad 'Debuggable' no está establecida en absoluto, ya que invalidará el valor de las compilaciones de depuración.
+La propiedad "Debuggable" no está establecida en absoluto, ya que invalidará el valor de las compilaciones de depuración.
 </value>
     <comment>The following are literal names and should not be translated:
 AndroidManifest.xml - A xml file
@@ -241,8 +241,8 @@ Establezca la propiedad "EmbedAssembliesIntoApk" de MSBuild en "true" para desha
     </comment>
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
-    <value>Error al implementar '{0}' con '{1}: {2}'. 
-Esto suele deberse a un error en "adb" cuando los datos del archivo se envían al dispositivo. 
+    <value>Error al implementar "{0}" con "{1}: {2}". 
+Esto suele deberse a un error en `adb` cuando los datos del archivo se envían al dispositivo. 
 La causa normal de esto es un cable USB flexible o de baja calidad. Pruebe con otro cable.
 Como alternativa, pruebe a usar la depuración Wi-Fi, esto puede ser más confiable que la depuración USB para determinados dispositivos. 
 Si se produce un error en todo esto, establezca la propiedad MSBuild "EmbedAssembliesIntoApk" en "true" para deshabilitar la implementación rápida en las páginas de propiedades del proyecto de Visual Studio o edite el archivo de proyecto en un editor de texto.</value>

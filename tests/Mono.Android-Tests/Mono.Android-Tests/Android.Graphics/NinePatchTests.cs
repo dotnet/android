@@ -13,7 +13,7 @@ namespace Android.GraphicsTests
 	[TestFixture]
 	public class NinePatchTests
 	{
-		object[] NinePatchDrawables = {
+		static object[] NinePatchDrawables = {
 			new object[] {
 				Xamarin.Android.RuntimeTests.Resource.Drawable.image,
 				"image" // Drawable from App project.

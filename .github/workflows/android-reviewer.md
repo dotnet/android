@@ -4,12 +4,13 @@ on:
     name: review
     events: [pull_request_comment]
   roles: [admin, maintainer, write]
+environment: copilot-pr-reviewer
 permissions:
   contents: read
   pull-requests: read
 engine:
   id: copilot
-  model: claude-opus-4.6
+  model: claude-opus-4.8
 network:
   allowed:
     - defaults

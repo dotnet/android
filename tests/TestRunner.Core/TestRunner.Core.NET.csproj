@@ -1,11 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk" >
 
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.UnitTests</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+  </ItemGroup>
 
 </Project>
