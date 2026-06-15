@@ -30,10 +30,6 @@
     path = external/xamarin-android-tools
     url = https://github.com/dotnet/android-tools
     branch = main
-[submodule "external/xxHash"]
-    path = external/xxHash
-    url = https://github.com/Cyan4973/xxHash.git
-    branch = release
 [submodule "external/termux-elf-cleaner"]
 	path = external/termux-elf-cleaner
 	url = https://github.com/termux/termux-elf-cleaner

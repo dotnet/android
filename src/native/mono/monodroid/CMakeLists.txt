@@ -196,6 +196,7 @@ macro(lib_target_options TARGET_NAME)
     PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}/include
     ${EXTERNAL_DIR}
+    ${THIRDPARTY_DIR}
     ${ROBIN_MAP_DIR}/include
   )
 

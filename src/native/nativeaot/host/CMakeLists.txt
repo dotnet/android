@@ -105,6 +105,7 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME} BEFORE
     PRIVATE
     ${EXTERNAL_DIR}
+    ${THIRDPARTY_DIR}
   )
 
   target_include_directories(

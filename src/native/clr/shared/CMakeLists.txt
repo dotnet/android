@@ -22,6 +22,7 @@ macro(lib_target_options TARGET_NAME)
     PUBLIC
     "$<BUILD_INTERFACE:${JAVA_INTEROP_INCLUDE_DIR}>"
     "$<BUILD_INTERFACE:${EXTERNAL_DIR}>"
+    "$<BUILD_INTERFACE:${THIRDPARTY_DIR}>"
   )
 
   target_link_libraries(

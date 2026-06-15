@@ -57,7 +57,6 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 |-----------|-----|-------------|
 | Java.Interop | https://github.com/dotnet/java-interop | `external/Java.Interop/LICENSE` |
 | lz4 | https://github.com/dotnet/lz4 (fork of https://github.com/lz4/lz4) | `external/lz4/lib/LICENSE` |
-| xxHash | https://github.com/Cyan4973/xxHash | `external/xxHash/LICENSE` |
 | constexpr-xxh3 | https://github.com/chys87/constexpr-xxh3 | `external/constexpr-xxh3/LICENSE` |
 | robin-map | https://github.com/xamarin/robin-map (fork of https://github.com/Tessil/robin-map) | `external/robin-map/LICENSE` |
 | libunwind | https://github.com/libunwind/libunwind | `external/libunwind/LICENSE` |
@@ -76,6 +75,7 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
 | `NUnitLite/` | nunit/nunitlite | https://github.com/nunit/nunitlite/ (MIT) |
 | `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
+| `xxHash/` | Cyan4973/xxHash | https://github.com/Cyan4973/xxHash (BSD-2-Clause) |
 
 Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
 
@@ -103,7 +103,7 @@ The `src/Xamarin.Android.Build.Tasks/Linker/External/` directory contains vendor
 | Linker/External/ | mono/linker | https://github.com/mono/linker/ (MIT) |
 
 #### Native Libraries (from CMakeLists.txt)
-Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (lz4, xxHash, libunwind, robin-map) are compiled into native libraries.
+Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (lz4, libunwind, robin-map) are compiled into native libraries. xxHash is vendored at `src-ThirdParty/xxHash/` and used header-only via `XXH_INLINE_ALL`.
 
 #### Android SDK Tools
 These are downloaded and shipped with the SDK:
