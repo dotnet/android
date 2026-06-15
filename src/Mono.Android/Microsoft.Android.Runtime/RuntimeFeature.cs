@@ -53,6 +53,7 @@ static class RuntimeFeature
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (StringBasedJniRegistration)}")]
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	[FeatureGuard (typeof (RequiresDynamicCodeAttribute))]
 	internal static bool StringBasedJniRegistration { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (StringBasedJniRegistration)}", out bool isEnabled) ? isEnabled : StringBasedJniRegistrationEnabledByDefault;
 }

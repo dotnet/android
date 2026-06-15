@@ -478,10 +478,7 @@ namespace Android.Runtime {
 							jniAddNativeMethodRegistrationAttributePresent) {
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
 					}
-					return;
 				}
-
-				throw new NotSupportedException ("String-based JNI registration is disabled.");
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
 			}

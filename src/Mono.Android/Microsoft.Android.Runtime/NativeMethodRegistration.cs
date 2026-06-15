@@ -18,11 +18,13 @@ namespace Microsoft.Android.Runtime;
 /// <see cref="JniEnvironment.Types.RegisterNatives"/>.
 ///
 /// This relies on <see cref="Type.GetType(string, bool)"/> and
-/// <see cref="Delegate.CreateDelegate(Type, Type, string)"/>, so it is not trim-friendly and is
-/// marked <see cref="RequiresUnreferencedCodeAttribute"/>. It is shared by
+/// <see cref="Delegate.CreateDelegate(Type, Type, string)"/>, so it is not trim- or
+/// NativeAOT-friendly. It works on MonoVM and CoreCLR and is shared by
 /// <c>AndroidTypeManager</c> (the default llvm-ir/MonoVM path) and, gated behind
 /// <see cref="RuntimeFeature.StringBasedJniRegistration"/>, by <c>TrimmableTypeMapTypeManager</c>.
 /// </summary>
+[RequiresUnreferencedCode ("Parses the 'methods' metadata string and resolves JNI callbacks via reflection (Type.GetType / Delegate.CreateDelegate).")]
+[RequiresDynamicCode ("Resolves JNI callbacks via reflection and dynamic delegate creation, which is not compatible with NativeAOT.")]
 static class NativeMethodRegistration
 {
 	const DynamicallyAccessedMemberTypes MethodsAndPrivateNested =
@@ -49,7 +51,6 @@ static class NativeMethodRegistration
 	/// or not any natives were registered); <see langword="false"/> if it was empty, in which case the
 	/// caller may fall back to the marshal-methods path.
 	/// </returns>
-	[RequiresUnreferencedCode ("Parses the 'methods' metadata string and resolves JNI callbacks via reflection (Type.GetType / Delegate.CreateDelegate).")]
 	internal static bool TryRegisterNativeMembers (
 			JniType nativeClass,
 			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
@@ -172,9 +173,6 @@ static class NativeMethodRegistration
 		callbackDeclaringType = colonIndex != -1 ? methodLine.Slice (colonIndex + 1) : default;
 	}
 
-	// See ExportAttribute.cs
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
 	static Delegate CreateDynamicCallback (MethodInfo method)
 	{
 		if (dynamic_callback_gen == null) {
