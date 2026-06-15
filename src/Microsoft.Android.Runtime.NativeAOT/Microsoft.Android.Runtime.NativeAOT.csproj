@@ -17,6 +17,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Mono.Android\Microsoft.Android.Runtime\RuntimeFeature.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
   </ItemGroup>
