@@ -26,6 +26,7 @@
     />
     <Exec Command="dotnet $(_XAPrepareExe) $(_XAPrepareStandardArgs) -a" WorkingDirectory="$(_TopDir)" />
     <MSBuild Projects="$(_TopDir)\Xamarin.Android.BootstrapTasks.sln" Targets="Restore;Build" />
+    <MSBuild Projects="$(_TopDir)\src\workloads\workloads.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
     <CallTarget Targets="PrepareJavaInterop" />
   </Target>
 </Project>

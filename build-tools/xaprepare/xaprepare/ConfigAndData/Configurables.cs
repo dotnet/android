@@ -178,22 +178,6 @@ namespace Xamarin.Android.Prepare
 			public static string CoreClrAppRuntimeAndroidX86         => GetCachedPath (ref coreclrAppRuntimeAndroidX86, () => GetCoreClrAppRuntimePath (ctx, "x86"));
 			public static string CoreClrAppRuntimeAndroidX86_64      => GetCachedPath (ref coreclrAppRuntimeAndroidX86_64, () => GetCoreClrAppRuntimePath (ctx, "x64"));
 
-			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
-				XAPackagesDir,
-				$"microsoft.net.workload.mono.toolchain.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand)}",
-				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadMonoToolChainPackageVersion)
-			);
-
-			public static string MicrosoftNETWorkloadMonoToolChainDir => Path.Combine (MicrosoftNETWorkloadMonoPackageDir, "data");
-
-			public static string MicrosoftNETWorkloadEmscriptenPackageDir => Path.Combine (
-				XAPackagesDir,
-				$"microsoft.net.workload.emscripten.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand)}",
-				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion)
-			);
-
-			public static string MicrosoftNETWorkloadEmscriptenDir => Path.Combine (MicrosoftNETWorkloadEmscriptenPackageDir, "data");
-
 			public static string DotNetPreviewPath => ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 
 			public static string DotNetPreviewTool => Path.Combine (DotNetPreviewPath, "dotnet");

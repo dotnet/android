@@ -15,8 +15,6 @@ namespace Xamarin.Android.Prepare
 
 		protected override void AddSteps (Context context)
 		{
-			Steps.Add (new Step_PrepareDotNetWorkloads ());
-
 			// disable installation of missing programs...
 			context.SetCondition (KnownConditions.AllowProgramInstallation, false);
 
