@@ -23,7 +23,7 @@
       <App>xamarin.sync</App>
       <Source>..\..\..\..\xamarin.sync</Source>
       <OutputPath>$(DebuggingToolsOutputDirectory)\lib\%(FastDevBuildItems.Arch)</OutputPath>
-      <CmakeFlags>-DLZ4_SRC_DIR=../../../external/lz4/lib -DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
+      <CmakeFlags>-DLZ4_SRC_DIR=../../../src-ThirdParty/lz4 -DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
     </FastDevBuildItems>
     <FastDevBuildItems Include="@(FastDevArch->'%(Identity)\xamarin.find')">
       <App>xamarin.find</App>

@@ -44,7 +44,7 @@ add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_COMPILER_OPTIONS}>")
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "../../../../out/${ANDROID_ABI}")
 
 if(NOT DEFINED ${LZ4_SRC_DIR})
-  set(LZ4_SRC_DIR, "../../../external/lz4/lib")
+  set(LZ4_SRC_DIR, "../../../src-ThirdParty/lz4")
 endif()
 set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
 set(LZ4_SOURCES

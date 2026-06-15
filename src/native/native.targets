@@ -220,7 +220,7 @@
       <_RuntimeSources Include="common\include\**\*.hh" />
       <_RuntimeSources Include="common\libstub\*.cc;common\libstub\*.hh" />
       <_RuntimeSources Include="common\runtime-base\*.cc" />
-      <_RuntimeSources Include="$(LZ4SourceFullPath)\lib\lz4.c;$(LZ4SourceFullPath)\lib\lz4.h" />
+      <_RuntimeSources Include="$(LZ4SourceFullPath)\lz4.c;$(LZ4SourceFullPath)\lz4.h" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">

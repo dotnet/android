@@ -56,7 +56,6 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 | Submodule | URL | License File |
 |-----------|-----|-------------|
 | Java.Interop | https://github.com/dotnet/java-interop | `external/Java.Interop/LICENSE` |
-| lz4 | https://github.com/dotnet/lz4 (fork of https://github.com/lz4/lz4) | `external/lz4/lib/LICENSE` |
 | xxHash | https://github.com/Cyan4973/xxHash | `external/xxHash/LICENSE` |
 | constexpr-xxh3 | https://github.com/chys87/constexpr-xxh3 | `external/constexpr-xxh3/LICENSE` |
 | robin-map | https://github.com/xamarin/robin-map (fork of https://github.com/Tessil/robin-map) | `external/robin-map/LICENSE` |
@@ -74,6 +73,7 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | `bazel/` | bazelbuild/bazel | https://github.com/bazelbuild/bazel/ (Apache 2.0) |
 | `bionic/` | google/bionic | https://android.googlesource.com/platform/bionic/ (Apache 2.0) |
 | `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
+| `lz4/` | lz4/lz4 | https://github.com/lz4/lz4 (BSD-2-Clause; license header in `src-ThirdParty/lz4/lz4.c`) |
 | `NUnitLite/` | nunit/nunitlite | https://github.com/nunit/nunitlite/ (MIT) |
 | `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
 
@@ -103,7 +103,7 @@ The `src/Xamarin.Android.Build.Tasks/Linker/External/` directory contains vendor
 | Linker/External/ | mono/linker | https://github.com/mono/linker/ (MIT) |
 
 #### Native Libraries (from CMakeLists.txt)
-Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (lz4, xxHash, libunwind, robin-map) are compiled into native libraries.
+Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (xxHash, libunwind, robin-map) and the vendored `src-ThirdParty/lz4/` source are compiled into native libraries.
 
 #### Android SDK Tools
 These are downloaded and shipped with the SDK:

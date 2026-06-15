@@ -1,7 +1,7 @@
 set(LIB_NAME xa-lz4)
 set(LIB_ALIAS xa::lz4)
 
-set(LZ4_SRC_DIR "${EXTERNAL_DIR}/lz4/lib")
+set(LZ4_SRC_DIR "${REPO_ROOT_DIR}/src-ThirdParty/lz4")
 set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
 
 set(LZ4_SOURCES
