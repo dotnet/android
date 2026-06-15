@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Threading;
-using System.Reflection;
 
 using Java.Interop;
-using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
 using System.Diagnostics.CodeAnalysis;
 
@@ -380,34 +379,6 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		delegate Delegate GetCallbackHandler ();
-
-		static MethodInfo? dynamic_callback_gen;
-
-		// See ExportAttribute.cs
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		static Delegate CreateDynamicCallback (MethodInfo method)
-		{
-			if (dynamic_callback_gen == null) {
-				var assembly = Assembly.Load ("Mono.Android.Export");
-				if (assembly == null)
-					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
-				if (type == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
-				dynamic_callback_gen = type.GetMethod ("Create");
-				if (dynamic_callback_gen == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
-			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
-		}
-
-		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
-		// cached in static fields (unlike non-[Export] connector delegates). Without rooting them here,
-		// CoreCLR's GC can collect them between JNI registration and first invocation, causing a crash.
-		static readonly Lock prevent_delegate_gc_lock = new Lock ();
-		static readonly List<Delegate> prevent_delegate_gc = new List<Delegate> ();
 		static List<JniNativeMethodRegistration> sharedRegistrations = new List<JniNativeMethodRegistration> ();
 
 		static bool FastRegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
@@ -488,9 +459,6 @@ namespace Android.Runtime {
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
 				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
@@ -505,121 +473,18 @@ namespace Android.Runtime {
 					return;
 				}
 
-				int methodCount = CountMethods (methods);
-				if (methodCount < 1) {
-					if (jniAddNativeMethodRegistrationAttributePresent) {
+				if (RuntimeFeature.StringBasedJniRegistration) {
+					if (!NativeMethodRegistration.TryRegisterNativeMembers (nativeClass, type, methods) &&
+							jniAddNativeMethodRegistrationAttributePresent) {
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
 					}
 					return;
 				}
 
-				JniNativeMethodRegistration [] natives = new JniNativeMethodRegistration [methodCount];
-				int nativesIndex = 0;
-				MethodInfo []? typeMethods = null;
-
-				ReadOnlySpan<char> methodsSpan = methods;
-				bool needToRegisterNatives = false;
-
-				while (!methodsSpan.IsEmpty) {
-					int newLineIndex = methodsSpan.IndexOf ('\n');
-
-					ReadOnlySpan<char> methodLine = methodsSpan.Slice (0, newLineIndex != -1 ? newLineIndex : methodsSpan.Length);
-					if (!methodLine.IsEmpty) {
-						SplitMethodLine (methodLine,
-							out ReadOnlySpan<char> name,
-							out ReadOnlySpan<char> signature,
-							out ReadOnlySpan<char> callbackString,
-							out ReadOnlySpan<char> callbackDeclaringTypeString);
-
-						Delegate? callback = null;
-						if (callbackString.SequenceEqual ("__export__")) {
-							var mname = name.Slice (2);
-							MethodInfo? minfo = null;
-							typeMethods ??= type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-							foreach (var mi in typeMethods)
-								if (mname.SequenceEqual (mi.Name) && signature.SequenceEqual (JavaNativeTypeManager.GetJniSignature (mi))) {
-									minfo = mi;
-									break;
-								}
-
-							if (minfo == null)
-								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
-							callback = CreateDynamicCallback (minfo);
-							lock (prevent_delegate_gc_lock) {
-								prevent_delegate_gc.Add (callback);
-							}
-							needToRegisterNatives = true;
-						} else {
-							Type callbackDeclaringType = type;
-							if (!callbackDeclaringTypeString.IsEmpty) {
-								callbackDeclaringType = Type.GetType (callbackDeclaringTypeString.ToString (), throwOnError: true)!;
-							}
-							while (callbackDeclaringType.ContainsGenericParameters) {
-								callbackDeclaringType = callbackDeclaringType.BaseType!;
-							}
-
-							GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
-							                                                                             callbackDeclaringType, callbackString.ToString ());
-							callback = connector ();
-						}
-
-						if (callback != null) {
-							needToRegisterNatives = true;
-							natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
-						}
-					}
-
-					methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
-				}
-
-				if (needToRegisterNatives) {
-					JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
-				}
+				throw new NotSupportedException ("String-based JNI registration is disabled.");
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
 			}
-
-			bool ShouldRegisterDynamically (string callbackTypeName, string callbackString, string typeName, string callbackName)
-			{
-				if (String.Compare (typeName, callbackTypeName, StringComparison.Ordinal) != 0) {
-					return false;
-				}
-
-				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
-			}
-		}
-
-		static int CountMethods (ReadOnlySpan<char> methodsSpan)
-		{
-			int count = 0;
-			while (!methodsSpan.IsEmpty) {
-				count++;
-
-				int newLineIndex = methodsSpan.IndexOf ('\n');
-				methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
-			}
-			return count;
-		}
-
-		static void SplitMethodLine (
-			ReadOnlySpan<char> methodLine,
-			out ReadOnlySpan<char> name,
-			out ReadOnlySpan<char> signature,
-			out ReadOnlySpan<char> callback,
-			out ReadOnlySpan<char> callbackDeclaringType)
-		{
-			int colonIndex = methodLine.IndexOf (':');
-			name = methodLine.Slice (0, colonIndex);
-			methodLine = methodLine.Slice (colonIndex + 1);
-
-			colonIndex = methodLine.IndexOf (':');
-			signature = methodLine.Slice (0, colonIndex);
-			methodLine = methodLine.Slice (colonIndex + 1);
-
-			colonIndex = methodLine.IndexOf (':');
-			callback = methodLine.Slice (0, colonIndex != -1 ? colonIndex : methodLine.Length);
-
-			callbackDeclaringType = colonIndex != -1 ? methodLine.Slice (colonIndex + 1) : default;
 		}
 	}
 

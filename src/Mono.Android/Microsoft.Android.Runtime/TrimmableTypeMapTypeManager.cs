@@ -3,9 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
@@ -109,33 +107,33 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	}
 
 	public override void RegisterNativeMembers (
-			JniType nativeClass,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
-			Type type,
-			ReadOnlySpan<char> methods)
+		JniType nativeClass,
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
+		Type type,
+		ReadOnlySpan<char> methods)
 	{
-		// By default, native methods in the trimmable typemap path are registered by JCW static
-		// initializer blocks via the fast path (mono.android.Runtime.registerNatives), so this
-		// reflection-based overload should never be reached. The legacy entry points that do call
-		// it (a legacy precompiled JCW's mono.android.Runtime.register(...), or
-		// Java.Interop.ManagedPeer) are only supported when explicitly opted into via
-		// RuntimeFeature.LegacyJniRegistration.
-		if (!RuntimeFeature.LegacyJniRegistration) {
-			throw new UnreachableException (
-				$"RegisterNativeMembers should not be called in the trimmable typemap path " +
-				$"unless RuntimeFeature.LegacyJniRegistration is enabled. Native methods for " +
-				$"'{type.FullName}' should be registered by JCW static initializer blocks.");
-		}
+		// In the trimmable type map, native methods are registered by Java Callable Wrapper static
+		// initializers via the fast path (mono.android.Runtime.registerNatives). The string-based
+		// entry points that reach this overload (a JCW calling mono.android.Runtime.register(...),
+		// or Java.Interop.ManagedPeer) are disabled by default and only honored when
+		// RuntimeFeature.StringBasedJniRegistration is enabled.
+		if (RuntimeFeature.StringBasedJniRegistration) {
+			if (!NativeMethodRegistration.TryRegisterNativeMembers (nativeClass, type, methods)) {
+				throw new InvalidOperationException ($"Unable to register native methods for '{type.FullName}'.");
+			}
+		} else {
+			throw new NotSupportedException (
+				$"""
+				Java called back to register native methods for '{type.FullName}' using the string-based JNI registration path, which is disabled for the trimmable type map.
 
-		// Reuse the trimmable fast path rather than the slow, reflection-based registration: the
-		// generated ACW proxy keyed off `type` already knows the native callbacks, so `methods` is
-		// redundant (used only for validation inside TryRegisterNativeMembers).
-		if (TrimmableTypeMap.Instance.TryRegisterNativeMembers (nativeClass, type, methods)) {
-			return;
+				This is either:
+				- A bug in .NET for Android - the trimmable type map should have registered these natives via 'mono.android.Runtime.registerNatives'. Please report it at https://github.com/dotnet/android/issues, quoting the type name above.
+				- Caused by an outdated/precompiled Java library whose Java Callable Wrappers call 'mono.android.Runtime.register(...)'. To keep using it, re-enable string-based JNI registration by adding this to your .csproj:
+						<PropertyGroup>
+						<_AndroidEnableStringBasedJniRegistration>true</_AndroidEnableStringBasedJniRegistration>
+						</PropertyGroup>
+					Please also report the library at https://github.com/dotnet/android/issues so we can investigate further.
+				""");
 		}
-
-		// No generated ACW proxy for this type (e.g. nothing to register / empty methods). Fall back
-		// to the base marshal-method path, which is a safe no-op in trimmed builds.
-		base.RegisterNativeMembers (nativeClass, type, methods);
 	}
 }

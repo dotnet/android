@@ -3,10 +3,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Android.Runtime;
 using Java.Interop;
@@ -23,7 +21,6 @@ public class TrimmableTypeMap
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
-	static bool s_nativeMethodsRegistered;
 	static JniMethodInfo? s_classGetInterfacesMethod;
 
 	internal static TrimmableTypeMap Instance =>
@@ -130,28 +127,6 @@ public class TrimmableTypeMap
 		}
 	}
 
-	internal static unsafe void RegisterNativeMethods ()
-	{
-		lock (s_initLock) {
-			if (s_nativeMethodsRegistered) {
-				throw new InvalidOperationException ("TrimmableTypeMap native methods have already been registered.");
-			}
-
-			if (s_instance is null) {
-				throw new InvalidOperationException (
-					"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
-			}
-
-			using var runtimeClass = new JniType ("mono/android/Runtime"u8);
-			fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
-				var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
-				var method = new JniNativeMethod (name, sig, onRegisterNatives);
-				JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
-			}
-			s_nativeMethodsRegistered = true;
-		}
-	}
-
 	/// <summary>
 	/// Returns all target types mapped to a JNI name. For non-alias entries, returns a
 	/// single-element array. For alias groups, returns the surviving target types from
@@ -234,46 +209,27 @@ public class TrimmableTypeMap
 		return jniName is not null;
 	}
 
-	/// <summary>
-	/// Registers the JNI native methods for <paramref name="type"/> by reusing the generated
-	/// <see cref="IAndroidCallableWrapper"/> fast path — the same trim-safe registration performed
-	/// by the <c>mono.android.Runtime.registerNatives</c> path (see <see cref="OnRegisterNatives"/>).
-	///
-	/// This lets the legacy entry points that flow through
-	/// <c>JniRuntime.JniTypeManager.RegisterNativeMembers</c> (a legacy precompiled JCW calling
-	/// <c>mono.android.Runtime.register(...)</c>, or <c>Java.Interop.ManagedPeer</c>) register their
-	/// natives without the slow, reflection-based path: the generated proxy keyed off
-	/// <paramref name="type"/> already knows the native callbacks. The <paramref name="methods"/>
-	/// metadata string carried by those entry points is redundant here and is used only for
-	/// validation.
-	/// </summary>
-	/// <returns>
-	/// <see langword="true"/> if a generated ACW proxy was found for <paramref name="type"/> and used;
-	/// otherwise <see langword="false"/> (the caller should fall back).
-	/// </returns>
-	internal bool TryRegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
+	internal void RegisterNatives (IntPtr nativeClassHandle)
 	{
-		var proxy = GetProxyForManagedType (type);
-		if (proxy is not IAndroidCallableWrapper acw) {
-			return false;
+		var classRef = new JniObjectReference (nativeClassHandle, JniObjectReferenceType.Local);
+		var className = JniEnvironment.Types.GetJniTypeNameFromClass (classRef) ?? throw new InvalidOperationException ($"TrimmableTypeMap: Could not get JNI name for class {classRef.Handle:x8}");
+		var wrapper = GetAndroidCallableWrapper (className);
+		using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
+		wrapper.RegisterNatives (jniType);
+
+		IAndroidCallableWrapper GetAndroidCallableWrapper (string className)
+		{
+			var proxies = GetProxiesForJniName (className);
+			if (proxies.Length == 0) {
+				throw new InvalidOperationException ($"TrimmableTypeMap: No JavaPeerProxy found for Java type '{className}'");
+			} else if (proxies.Length > 1) {
+				throw new InvalidOperationException ($"TrimmableTypeMap: Multiple JavaPeerProxies found for Java type '{className}'");
+			} else if (proxies [0] is not IAndroidCallableWrapper acw) {
+				throw new InvalidOperationException ($"TrimmableTypeMap: JavaPeerProxy for Java type '{className}' does not implement IAndroidCallableWrapper and so cannot register native methods");
+			} else {
+				return acw;
+			}
 		}
-
-		ValidateLegacyRegistration (proxy, nativeClass, methods);
-		acw.RegisterNatives (nativeClass);
-		return true;
-	}
-
-	// The legacy `methods` string and the managed `type` carry no information the generated fast
-	// path needs; they are only cross-checked here to catch mismatches during development.
-	[Conditional ("DEBUG")]
-	static void ValidateLegacyRegistration (JavaPeerProxy proxy, JniType nativeClass, ReadOnlySpan<char> methods)
-	{
-		Debug.Assert (
-			string.Equals (proxy.JniName, nativeClass.Name, StringComparison.Ordinal),
-			$"Legacy RegisterNativeMembers JNI name mismatch: proxy '{proxy.JniName}' vs class '{nativeClass.Name}'.");
-		Debug.Assert (
-			!methods.IsEmpty,
-			$"Legacy RegisterNativeMembers called for '{proxy.JniName}' with an empty methods string.");
 	}
 
 	internal JavaPeerProxy? GetProxyForJavaObject (IntPtr handle, Type? targetType = null)
@@ -610,40 +566,6 @@ public class TrimmableTypeMap
 		if (primitive == typeof (double)) { jni = "D"; return true; }
 		jni = null;
 		return false;
-	}
-
-	[UnmanagedCallersOnly]
-	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
-	{
-		string? className = null;
-		try {
-			if (s_instance is null) {
-				return;
-			}
-
-			var classRef = new JniObjectReference (nativeClassHandle);
-			className = JniEnvironment.Types.GetJniTypeNameFromClass (classRef);
-			if (className is null) {
-				return;
-			}
-
-			var proxies = s_instance.GetProxiesForJniName (className);
-			if (proxies.Length == 0) {
-				return;
-			}
-
-			// Use the class reference passed from Java (via C++) — not JniType(className)
-			// which resolves via FindClass and may get a different class from a different ClassLoader.
-			// Registering natives on that other instance is silently wrong.
-			using var jniType = new JniType (ref classRef, JniObjectReferenceOptions.Copy);
-			foreach (var proxy in proxies) {
-				if (proxy is IAndroidCallableWrapper acw) {
-					acw.RegisterNatives (jniType);
-				}
-			}
-		} catch (Exception ex) {
-			Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
-		}
 	}
 
 	sealed class MissingJavaPeerProxy : JavaPeerProxy

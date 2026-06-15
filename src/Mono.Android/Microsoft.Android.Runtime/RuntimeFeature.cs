@@ -13,7 +13,7 @@ static class RuntimeFeature
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
-	const bool LegacyJniRegistrationEnabledByDefault = false;
+	const bool StringBasedJniRegistrationEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -51,12 +51,8 @@ static class RuntimeFeature
 	internal static bool ObjectReferenceLogging { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}", out bool isEnabled) ? isEnabled : ObjectReferenceLoggingEnabledByDefault;
 
-	// When enabled (together with the trimmable typemap), re-enables the legacy, reflection-based
-	// JNI native method registration (NativeMethodRegistrar / Java.Interop.ManagedPeer). This is
-	// required to support legacy precompiled Java Callable Wrappers (from binding jars/aars) whose
-	// static initializers call `mono.android.Runtime.register(...)`, and `ManagedPeer`. Disabled by
-	// default so the reflection-based path can be trimmed away when it is not needed.
-	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (LegacyJniRegistration)}")]
-	internal static bool LegacyJniRegistration { get; } =
-		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (LegacyJniRegistration)}", out bool isEnabled) ? isEnabled : LegacyJniRegistrationEnabledByDefault;
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (StringBasedJniRegistration)}")]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+	internal static bool StringBasedJniRegistration { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (StringBasedJniRegistration)}", out bool isEnabled) ? isEnabled : StringBasedJniRegistrationEnabledByDefault;
 }

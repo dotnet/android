@@ -20,12 +20,14 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
     <!-- Enable .NET runtime crash reporting before Android's signal chaining takes place.
          See: https://github.com/dotnet/runtime/pull/123735 -->
     <_AndroidEnableDiagnosticCrashReporting Condition=" '$(_AndroidEnableDiagnosticCrashReporting)' == '' ">true</_AndroidEnableDiagnosticCrashReporting>
-    <!-- Re-enables the legacy, reflection-based JNI native method registration in the trimmable
-         typemap path (NativeMethodRegistrar / Java.Interop.ManagedPeer). Required to support legacy
-         precompiled Java Callable Wrappers (from binding jars/aars) whose static initializers call
-         `mono.android.Runtime.register(...)`, and `ManagedPeer`. Defaults to false so the
-         reflection-based path can be trimmed away when it is not needed. -->
-    <_AndroidEnableLegacyJniRegistration Condition=" '$(_AndroidEnableLegacyJniRegistration)' == '' ">false</_AndroidEnableLegacyJniRegistration>
+    <!-- Whether Java can register native methods via the "string-based" path (a Java Callable
+         Wrapper calling mono.android.Runtime.register(...), or Java.Interop.ManagedPeer). The
+         non-trimmable type maps (llvm-ir, managed) always use this, so it defaults to true there.
+         The trimmable type map registers natives via mono.android.Runtime.registerNatives instead,
+         so it defaults to false there (letting the string-based machinery be trimmed away) unless an
+         app explicitly opts back in (e.g. for an outdated precompiled Java library). -->
+    <_AndroidEnableStringBasedJniRegistration Condition=" '$(_AndroidEnableStringBasedJniRegistration)' == '' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">false</_AndroidEnableStringBasedJniRegistration>
+    <_AndroidEnableStringBasedJniRegistration Condition=" '$(_AndroidEnableStringBasedJniRegistration)' == '' ">true</_AndroidEnableStringBasedJniRegistration>
   </PropertyGroup>
 
   <ItemGroup>
@@ -74,8 +76,8 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(_AndroidEnableObjectReferenceLogging)"
         Trim="true"
     />
-    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.LegacyJniRegistration"
-        Value="$([MSBuild]::ValueOrDefault('$(_AndroidEnableLegacyJniRegistration)', 'false'))"
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.StringBasedJniRegistration"
+        Value="$(_AndroidEnableStringBasedJniRegistration)"
         Trim="true"
     />
     <!-- https://github.com/dotnet/runtime/pull/123735 -->

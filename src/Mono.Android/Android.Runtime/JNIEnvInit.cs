@@ -88,6 +88,18 @@ namespace Android.Runtime
 			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods);
 		}
 
+		[UnmanagedCallersOnly]
+		static void RegisterNativesViaTrimmableTypeMap (IntPtr env, IntPtr klass, IntPtr nativeClassHandle)
+		{
+			try {
+				TrimmableTypeMap.Instance.RegisterNatives (nativeClassHandle);
+			} catch (Exception ex) {
+				var classRef = new JniObjectReference (nativeClassHandle);
+				var className = JniEnvironment.Types.GetJniTypeNameFromClass (classRef);
+				Environment.FailFast ($"TrimmableTypeMap: Failed to register natives for class '{className}'.", ex);
+			}
+		}
+
 		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
 		internal static void NativeAotInitializeMaxGrefGet ()
 		{
@@ -157,12 +169,10 @@ namespace Android.Runtime
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
-			if (!RuntimeFeature.TrimmableTypeMap || RuntimeFeature.LegacyJniRegistration) {
-				// Non-trimmable typemap: always needed. Trimmable typemap: only needed when the
-				// legacy reflection-based registration is opted into (e.g. legacy precompiled jars
-				// whose JCWs call `mono.android.Runtime.register(...)`).
+			if (RuntimeFeature.StringBasedJniRegistration) {
 				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 			}
+
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
 		}
@@ -227,10 +237,17 @@ namespace Android.Runtime
 
 		static void RegisterTrimmableTypeMapNativeMethodsIfNeeded ()
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				// TypeMapLoader.Initialize() only loads managed typemap data. Registering
-				// mono.android.Runtime natives requires JniRuntime.Current and its ClassLoader.
-				TrimmableTypeMap.RegisterNativeMethods ();
+			if (!RuntimeFeature.TrimmableTypeMap) {
+				return;
+			}
+
+			using var runtimeClass = new JniType ("mono/android/Runtime"u8);
+			unsafe {
+				fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
+					var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&RegisterNativesViaTrimmableTypeMap;
+					var method = new JniNativeMethod (name, sig, onRegisterNatives);
+					JniEnvironment.Types.RegisterNatives (runtimeClass.PeerReference, [method]);
+				}
 			}
 		}
 
