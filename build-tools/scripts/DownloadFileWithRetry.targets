@@ -1,0 +1,151 @@
+<Project>
+
+  <!--
+    Shared download helper. Wraps MSBuild's `<DownloadFile>` task in an outer
+    retry loop and an optional SHA-256 self-heal step.
+
+    Why this exists:
+      MSBuild's built-in `DownloadFile` task has `Retries` /
+      `RetryDelayMilliseconds`, but its internal `IsRetriable` check only
+      retries when a `HttpRequestException` wraps an inner `IOException`.
+      The `ResponseEnded` failure that flaky CDNs produce is thrown as a
+      top-level `HttpIOException`, so `Retries` does NOT cover it - the task
+      errors out on the first mid-stream disconnect. This file's
+      `DownloadOneFileWithRetry` target wraps `<DownloadFile>` in three
+      outer attempts using `ContinueOnError="WarnAndContinue"`, so transient
+      stream failures get up to 3 retries before failing the build.
+
+    Why callers dispatch via `<MSBuild>` (and not `<CallTarget>`):
+      Two MSBuild semantics force this:
+        1. Items added inside a target body are NOT visible to a target
+           invoked via `<CallTarget>` from that same body. They ARE visible
+           to tasks called from the same body, including the `<MSBuild>`
+           task. Without that, every caller would silently pass an empty
+           item list and download nothing.
+        2. A target executes at most once per build context, so a
+           `<CallTarget>` cannot be used twice (e.g. openjdk's two-phase
+           hash-then-archive flow). `<MSBuild>` with distinct
+           `AdditionalProperties` per item creates distinct build requests,
+           so the same target body runs once per file - and `BuildInParallel`
+           lets MSBuild fan those requests out across worker nodes when
+           there is more than one file to download.
+
+    Required input properties for `DownloadOneFileWithRetry`:
+      _DownloadUrl                 = source URL
+      _DownloadFolder              = destination folder
+      _DownloadFileName            = file name to write inside _DownloadFolder
+
+    Optional input properties:
+      _DownloadSha256              = expected SHA-256 (uppercase hex). When
+                                     set, the downloaded file is hashed and
+                                     removed/errored if the hash does not
+                                     match. If a previously cached file is
+                                     present with the wrong hash, it is also
+                                     deleted up-front so this run re-downloads
+                                     instead of failing.
+      _DownloadCleanupOnMismatch   = semicolon-separated list of additional
+                                     files to delete on Sha256 mismatch. Use
+                                     for sibling files (e.g. a .sha256sum.txt
+                                     whose contents drove the expected hash)
+                                     so the next build re-fetches them.
+
+    Usage pattern. The `_DownloadFile` item group must be built inside the
+    caller's target body (so the items are visible to `<MSBuild>`). Each
+    item carries its per-file parameters as `AdditionalProperties` metadata,
+    and the `<MSBuild>` call projects every item onto this targets file so
+    MSBuild treats each one as a distinct, parallelizable build request:
+
+      <ItemGroup>
+        <_DownloadFile Include="@(_BuildTools)">
+          <AdditionalProperties>_DownloadUrl=$(BaseUrl)%(Identity);_DownloadFolder=$(Cache);_DownloadFileName=%(Identity);_DownloadSha256=%(Hash)</AdditionalProperties>
+        </_DownloadFile>
+      </ItemGroup>
+      <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+          Targets="DownloadOneFileWithRetry"
+          BuildInParallel="true" />
+
+    For a single file, the same shape works - use the file name as the
+    Include so each item still has a distinct identity:
+
+      <ItemGroup>
+        <_DownloadFile Include="$(FileName)">
+          <AdditionalProperties>_DownloadUrl=$(Url);_DownloadFolder=$(Cache);_DownloadFileName=$(FileName);_DownloadSha256=$(Hash)</AdditionalProperties>
+        </_DownloadFile>
+      </ItemGroup>
+      <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+          Targets="DownloadOneFileWithRetry"
+          BuildInParallel="true" />
+  -->
+
+  <PropertyGroup>
+    <DownloadFileWithRetryFile>$(MSBuildThisFileFullPath)</DownloadFileWithRetryFile>
+    <_DownloadRetries>5</_DownloadRetries>
+    <_DownloadRetryDelayMilliseconds>5000</_DownloadRetryDelayMilliseconds>
+  </PropertyGroup>
+
+  <Target Name="DownloadOneFileWithRetry">
+    <PropertyGroup>
+      <_DownloadPath>$(_DownloadFolder)\$(_DownloadFileName)</_DownloadPath>
+    </PropertyGroup>
+
+    <!-- Self-heal: if a cached file already exists AND we know the expected
+         hash, verify it up-front. On mismatch, delete (along with any
+         CleanupOnMismatch siblings) so the download attempts below actually
+         re-fetch in this same build. Without this, a stale/corrupt cached
+         file would skip the download (because of the !Exists guard below)
+         and the final SHA check would fail the build with no recovery. -->
+    <GetFileHash Condition=" Exists('$(_DownloadPath)') and '$(_DownloadSha256)' != '' "
+        Files="$(_DownloadPath)"
+        Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_DownloadExistingSha256" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_DownloadExistingSha256)' != '' and '$(_DownloadExistingSha256)' != '$(_DownloadSha256)' "
+        Files="$(_DownloadPath);$(_DownloadCleanupOnMismatch)"
+    />
+
+    <!-- Outer retry loop. Each `<DownloadFile>` is gated by `!Exists()`, so
+         once a download succeeds the remaining attempts no-op. The first
+         two use `WarnAndContinue` so transient failures don't fail the
+         build; the third lets the error propagate. -->
+    <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
+        SourceUrl="$(_DownloadUrl)"
+        DestinationFolder="$(_DownloadFolder)"
+        DestinationFileName="$(_DownloadFileName)"
+        Retries="$(_DownloadRetries)"
+        RetryDelayMilliseconds="$(_DownloadRetryDelayMilliseconds)"
+        ContinueOnError="WarnAndContinue"
+    />
+    <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
+        SourceUrl="$(_DownloadUrl)"
+        DestinationFolder="$(_DownloadFolder)"
+        DestinationFileName="$(_DownloadFileName)"
+        Retries="$(_DownloadRetries)"
+        RetryDelayMilliseconds="$(_DownloadRetryDelayMilliseconds)"
+        ContinueOnError="WarnAndContinue"
+    />
+    <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
+        SourceUrl="$(_DownloadUrl)"
+        DestinationFolder="$(_DownloadFolder)"
+        DestinationFileName="$(_DownloadFileName)"
+        Retries="$(_DownloadRetries)"
+        RetryDelayMilliseconds="$(_DownloadRetryDelayMilliseconds)"
+    />
+
+    <!-- Final SHA-256 verification (covers the just-downloaded case). -->
+    <GetFileHash Condition=" '$(_DownloadSha256)' != '' "
+        Files="$(_DownloadPath)"
+        Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_DownloadActualSha256" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_DownloadSha256)' != '' and '$(_DownloadActualSha256)' != '$(_DownloadSha256)' "
+        Files="$(_DownloadPath);$(_DownloadCleanupOnMismatch)"
+    />
+    <Error
+        Condition=" '$(_DownloadSha256)' != '' and '$(_DownloadActualSha256)' != '$(_DownloadSha256)' "
+        Text="SHA256 mismatch for $(_DownloadFileName). Expected: $(_DownloadSha256) Actual: $(_DownloadActualSha256)"
+    />
+  </Target>
+
+</Project>

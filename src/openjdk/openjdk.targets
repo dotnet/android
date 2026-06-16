@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
+
   <!-- Determine platform-specific download properties -->
   <PropertyGroup Condition=" '$(HostOS)' == 'Windows' ">
     <_OpenJDKPlatform>windows-x64</_OpenJDKPlatform>
@@ -37,36 +39,34 @@
   <Target Name="_DownloadOpenJDK"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(_OpenJDKArchive)">
-    <DownloadFile
-        SourceUrl="$(_OpenJDKArchiveUrl)"
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="$(_OpenJDKFileName)"
-        Retries="5"
-        RetryDelayMilliseconds="5000"
-    />
-    <!-- Download the SHA-256 hash file from Microsoft and parse the expected hash.
+    <!-- Phase 1: download the .sha256sum.txt to learn the expected hash.
          File format: "6ecfa864...  microsoft-jdk-21.0.8-windows-x64.zip" -->
-    <DownloadFile
-        SourceUrl="$(_OpenJDKHashUrl)"
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="$(_OpenJDKHashFileName)"
-        Retries="5"
-        RetryDelayMilliseconds="5000"
-    />
+    <ItemGroup>
+      <_DownloadFile Include="$(_OpenJDKHashFileName)">
+        <AdditionalProperties>_DownloadUrl=$(_OpenJDKHashUrl);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=$(_OpenJDKHashFileName)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
+
+    <!-- Parse expected hash from the .sha256sum.txt file -->
     <PropertyGroup>
       <_OpenJDKExpectedHash>$([System.IO.File]::ReadAllText('$(_OpenJDKHashFile)').Substring(0, 64).ToUpperInvariant())</_OpenJDKExpectedHash>
     </PropertyGroup>
-    <GetFileHash Files="$(_OpenJDKArchive)" Algorithm="SHA256">
-      <Output TaskParameter="Hash" PropertyName="_OpenJDKActualHash" />
-    </GetFileHash>
-    <Delete
-        Condition=" '$(_OpenJDKActualHash)' != '$(_OpenJDKExpectedHash)' "
-        Files="$(_OpenJDKArchive);$(_OpenJDKHashFile)"
-    />
-    <Error
-        Condition=" '$(_OpenJDKActualHash)' != '$(_OpenJDKExpectedHash)' "
-        Text="SHA256 mismatch for $(_OpenJDKFileName). Expected: $(_OpenJDKExpectedHash) Actual: $(_OpenJDKActualHash)"
-    />
+
+    <!-- Phase 2: download the archive and verify against the parsed hash.
+         If the hash check fails, also delete the .sha256sum.txt so the next
+         build re-fetches it in case the cached copy is what's stale/corrupt. -->
+    <ItemGroup>
+      <_DownloadFile Remove="@(_DownloadFile)" />
+      <_DownloadFile Include="$(_OpenJDKFileName)">
+        <AdditionalProperties>_DownloadUrl=$(_OpenJDKArchiveUrl);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=$(_OpenJDKFileName);_DownloadSha256=$(_OpenJDKExpectedHash);_DownloadCleanupOnMismatch=$(_OpenJDKHashFile)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
   </Target>
 
   <Target Name="_InstallOpenJDK"

@@ -11,6 +11,8 @@ permissions:
 engine:
   id: copilot
   model: claude-opus-4.8
+max-daily-ai-credits: -1
+max-ai-credits: -1
 network:
   allowed:
     - defaults
