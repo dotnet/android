@@ -5,28 +5,28 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 22384
+      "Size": 19036
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 18224
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 92560
+      "Size": 88160
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 119200
+      "Size": 118288
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 26864
+      "Size": 26856
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 24360
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 25552
+      "Size": 25448
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 704944
+      "Size": 638000
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
       "Size": 20224
@@ -35,7 +35,7 @@
       "Size": 19760
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 19976
+      "Size": 19952
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 19296
@@ -89,5 +89,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3320142
+  "PackageSize": 3258702
 }
