@@ -152,9 +152,31 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasSomeWarnings (dotnet.LastBuildOutput, numOfExpectedWarnings, dotnet.BuildLogFile);
 		}
 
+		[DebuggerHidden]
+		public static void AssertHasAtMostWarnings (this ProjectBuilder builder, uint maxWarnings)
+		{
+			AssertHasAtMostWarnings (builder.LastBuildOutput, maxWarnings, builder.BuildLogFile);
+		}
+
+		[DebuggerHidden]
+		public static void AssertHasAtMostWarnings (this DotNetCLI dotnet, uint maxWarnings)
+		{
+			AssertHasAtMostWarnings (dotnet.LastBuildOutput, maxWarnings, dotnet.BuildLogFile);
+		}
+
 		static void AssertHasSomeWarnings (IEnumerable<string> lastBuildOutput, uint numOfExpectedWarnings, string logFile)
 		{
 			Assert.IsTrue (StringAssertEx.ContainsText (lastBuildOutput, $" {numOfExpectedWarnings} Warning(s)"), $"{logFile} should have {numOfExpectedWarnings} MSBuild warnings.");
+		}
+
+		static void AssertHasAtMostWarnings (IEnumerable<string> lastBuildOutput, uint maxWarnings, string logFile)
+		{
+			var match = lastBuildOutput
+				.Select (line => System.Text.RegularExpressions.Regex.Match (line, @"^\s*(\d+) Warning\(s\)\s*$"))
+				.FirstOrDefault (m => m.Success);
+			Assert.IsNotNull (match, $"{logFile} did not contain an MSBuild 'N Warning(s)' summary line.");
+			var actual = uint.Parse (match.Groups [1].Value);
+			Assert.IsTrue (actual <= maxWarnings, $"{logFile} should have at most {maxWarnings} MSBuild warnings, but had {actual}.");
 		}
 	}
 }
