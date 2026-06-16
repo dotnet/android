@@ -453,47 +453,23 @@ namespace Java.Interop {
 			}
 		}
 
-		static Dictionary<string, List<Converter<string, Type?>>>? packageLookup;
-
-		[MemberNotNull (nameof (packageLookup))]
-		static void LazyInitPackageLookup ()
-		{
-			if (packageLookup == null)
-				packageLookup = new Dictionary<string, List<Converter<string, Type?>>> (StringComparer.Ordinal);
-		}
-
+		// The package-based Java-to-managed type registration fallback was removed
+		// (https://github.com/dotnet/android/issues/11663); type resolution now goes
+		// through the native / trimmable type map, and the generator no longer emits
+		// the `Java.Interop.__TypeRegistrations` class that called these methods. They
+		// are retained for API compatibility but no longer register anything.
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
 		{
-			LazyInitPackageLookup ();
-
-			lock (packageLookup!) {
-				if (!packageLookup.TryGetValue (package, out var lookups))
-					packageLookup.Add (package, lookups = new List<Converter<string, Type?>> ());
-				lookups.Add (lookup);
-			}
+			ArgumentNullException.ThrowIfNull (package);
+			ArgumentNullException.ThrowIfNull (lookup);
 		}
 
 		public static void RegisterPackages (string[] packages, Converter<string, Type?>[] lookups)
 		{
-			LazyInitPackageLookup ();
-
-			if (packages == null)
-				throw new ArgumentNullException ("packages");
-			if (lookups == null)
-				throw new ArgumentNullException ("lookups");
+			ArgumentNullException.ThrowIfNull (packages);
+			ArgumentNullException.ThrowIfNull (lookups);
 			if (packages.Length != lookups.Length)
 				throw new ArgumentException ("`packages` and `lookups` arrays must have same number of elements.");
-
-			lock (packageLookup!) {
-				for (int i = 0; i < packages.Length; ++i) {
-					string package                  = packages [i];
-					var lookup			= lookups [i];
-
-					if (!packageLookup.TryGetValue (package, out var _lookups))
-						packageLookup.Add (package, _lookups = new List<Converter<string, Type?>> ());
-					_lookups.Add (lookup);
-				}
-			}
 		}
 
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
