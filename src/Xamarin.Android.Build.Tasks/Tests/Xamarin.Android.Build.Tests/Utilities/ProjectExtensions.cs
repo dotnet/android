@@ -1,5 +1,7 @@
 using System;
 
+using NUnit.Framework;
+
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -47,6 +49,7 @@ public static class ProjectExtensions
 				project.SetProperty ("PublishAot", "true");
 				break;
 			case AndroidRuntime.MonoVM:
+				Assert.Ignore ("The Mono runtime is not supported in .NET 11 and later. Use the .NET 10 SDK to build with the Mono runtime.");
 				project.SetProperty ("UseMonoRuntime", "true");
 				break;
 
