@@ -18,50 +18,27 @@ an [MSBuild ItemGroup](/visualstudio/msbuild/itemgroup-element-msbuild).
 ## AndroidPackageOutput
 
 `@(AndroidPackageOutput)` contains the final Android package files produced
-in the build output directory by the package and signing targets. This item
-group can be used by custom MSBuild targets to discover APK and Android App
-Bundle outputs without recalculating the final file names.
+by package, signing, and publish targets. This item group can be used by
+custom MSBuild targets to discover APK and Android App Bundle outputs without
+recalculating the final file names.
 
 Each item includes the following metadata:
 
 - `%(PackageFormat)`: `apk` or `aab`.
 - `%(Signed)`: `true` when the package is signed.
 - `%(PackageId)`: The resolved Android package name.
-- `%(RuntimeIdentifier)`: The current runtime identifier, if any.
-- `%(TargetFramework)`: The current target framework.
-- `%(Configuration)`: The current configuration.
-- `%(AndroidPackageFormat)`: The effective primary package format.
-- `%(AndroidPackageFormats)`: The requested package formats.
-- `%(IsUniversal)`: `true` for the signed universal APK generated from an Android App Bundle.
-- `%(SourcePackageFormat)`: The package format that produced the item.
-- `%(RelativePath)`: The output file name.
+
+MSBuild also provides well-known metadata for each item. For example,
+`%(Filename)%(Extension)` is the package file name and `%(FullPath)` is the
+full package path.
 
 For example:
 
 ```xml
-<Target Name="WriteAndroidPackageOutputs" AfterTargets="SignAndroidPackage">
+<Target Name="WriteAndroidPackageOutputs" AfterTargets="Publish">
   <WriteLinesToFile
-      File="$(OutputPath)android-package-outputs.txt"
-      Lines="%(AndroidPackageOutput.FullPath)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)"
-      Overwrite="true" />
-</Target>
-```
-
-## AndroidPublishedPackageOutput
-
-`@(AndroidPublishedPackageOutput)` contains the Android package files copied
-to the publish directory by `dotnet publish`. It preserves the metadata from
-`@(AndroidPackageOutput)` and adds:
-
-- `%(OriginalPath)`: The corresponding build output artifact before publish copy.
-
-For example:
-
-```xml
-<Target Name="WriteAndroidPublishedPackageOutputs" AfterTargets="Publish">
-  <WriteLinesToFile
-      File="$(PublishDir)android-published-package-outputs.txt"
-      Lines="%(AndroidPublishedPackageOutput.FullPath)|%(AndroidPublishedPackageOutput.PackageFormat)|%(AndroidPublishedPackageOutput.Signed)"
+      File="$(PublishDir)android-package-outputs.txt"
+      Lines="@(AndroidPackageOutput->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)')"
       Overwrite="true" />
 </Target>
 ```

@@ -552,7 +552,7 @@ namespace UnnamedProject {
   <Target Name="WriteAndroidPackageOutputItems" AfterTargets="Build">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
-        Lines="%(AndroidPackageOutput.RelativePath)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)"
+        Lines="%(AndroidPackageOutput.Filename)%(AndroidPackageOutput.Extension)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.PackageId)"
         Overwrite="true" />
   </Target>
 </Project>
@@ -590,7 +590,7 @@ namespace UnnamedProject {
 				var packageOutputItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "android-package-output-items.txt"));
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					AssertApkIsSigned (apk);
-					var expectedItem = $"{Path.GetFileName (apk)}|apk|true";
+					var expectedItem = $"{Path.GetFileName (apk)}|apk|true|{proj.PackageName}";
 					Assert.IsTrue (packageOutputItems.Contains (expectedItem), $"Expected AndroidPackageOutput item '{expectedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, packageOutputItems)}");
 				}
 

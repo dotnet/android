@@ -315,12 +315,8 @@ public class JavaSourceTest {
   <Target Name="WriteAndroidPackageOutputItems" AfterTargets="Publish">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
-        Lines="package|%(AndroidPackageOutput.RelativePath)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.IsUniversal)|%(AndroidPackageOutput.SourcePackageFormat)|%(AndroidPackageOutput.PackageId)"
+        Lines="%(AndroidPackageOutput.FullPath)|%(AndroidPackageOutput.Filename)%(AndroidPackageOutput.Extension)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.PackageId)"
         Overwrite="true" />
-    <WriteLinesToFile
-        File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
-        Lines="published|%(AndroidPublishedPackageOutput.RelativePath)|%(AndroidPublishedPackageOutput.PackageFormat)|%(AndroidPublishedPackageOutput.Signed)|%(AndroidPublishedPackageOutput.IsUniversal)|%(AndroidPublishedPackageOutput.SourcePackageFormat)|%(AndroidPublishedPackageOutput.PackageId)"
-        Overwrite="false" />
   </Target>
 </Project>
 """
@@ -385,17 +381,14 @@ public class JavaSourceTest {
 
 			var packageOutputItems = ReadAndroidPackageOutputItems (Path.Combine (Root, projBuilder.ProjectDirectory, "android-package-output-items.txt"));
 			if (!isRelease) {
-				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}.apk", "apk", "false", "false", "apk", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}-Signed.apk", "apk", "true", "false", "apk", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}.apk", "apk", "false", "false", "apk", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}-Signed.apk", "apk", "true", "false", "apk", proj.PackageName);
+				Assert.AreEqual (2, packageOutputItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (packageOutputItems)}");
+				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk", "apk", "false", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
 			} else {
-				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}.aab", "aab", "false", "false", "aab", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}-Signed.aab", "aab", "true", "false", "aab", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}-Signed.apk", "apk", "true", "true", "aab", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}.aab", "aab", "false", "false", "aab", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}-Signed.aab", "aab", "true", "false", "aab", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}-Signed.apk", "apk", "true", "true", "aab", proj.PackageName);
+				Assert.AreEqual (3, packageOutputItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (packageOutputItems)}");
+				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab", "aab", "false", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
 			}
 		}
 
@@ -408,18 +401,16 @@ public class JavaSourceTest {
 				.ToList ();
 		}
 
-		static void AssertPackageOutputItem (List<string []> items, string itemType, string relativePath, string packageFormat, string signed, string isUniversal, string sourcePackageFormat, string packageId)
+		static void AssertPackageOutputItem (List<string []> items, string fullPath, string fileName, string packageFormat, string signed, string packageId)
 		{
 			var matches = items.Where (item =>
-				item.Length == 7 &&
-				item [0] == itemType &&
-				item [1] == relativePath &&
+				item.Length == 5 &&
+				item [0] == fullPath &&
+				item [1] == fileName &&
 				item [2] == packageFormat &&
 				item [3] == signed &&
-				item [4] == isUniversal &&
-				item [5] == sourcePackageFormat &&
-				item [6] == packageId).ToList ();
-			Assert.AreEqual (1, matches.Count, $"Expected package output item '{itemType}|{relativePath}|{packageFormat}|{signed}|{isUniversal}|{sourcePackageFormat}|{packageId}'. Actual items:{Environment.NewLine}{FormatPackageOutputItems (items)}");
+				item [4] == packageId).ToList ();
+			Assert.AreEqual (1, matches.Count, $"Expected package output item '{fullPath}|{fileName}|{packageFormat}|{signed}|{packageId}'. Actual items:{Environment.NewLine}{FormatPackageOutputItems (items)}");
 		}
 
 		static string FormatPackageOutputItems (List<string []> items)

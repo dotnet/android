@@ -15,7 +15,7 @@ This file contains the implementation for 'dotnet publish'.
       _CollectAndroidPackageOutputs;
       _CalculateAndroidFilesToPublish;
       CopyFilesToPublishDirectory;
-      _CollectAndroidPublishedPackageOutputs;
+      _UpdateAndroidPackageOutputsForPublish;
     </_PublishDependsOn>
   </PropertyGroup>
 
@@ -26,20 +26,27 @@ This file contains the implementation for 'dotnet publish'.
       <_AndroidFilesToPublish Include="$(AndroidProguardMappingFile)" Condition="Exists ('$(AndroidProguardMappingFile)')" />
       <_AndroidFilesToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)" Condition="Exists('$(_GenerateResourceDesignerAssemblyOutput)')" />
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
-      <ResolvedFileToPublish Include="@(AndroidPackageOutput)" RelativePath="%(AndroidPackageOutput.RelativePath)" />
+      <ResolvedFileToPublish Include="@(AndroidPackageOutput)" RelativePath="%(Filename)%(Extension)" />
       <ResolvedFileToPublish Include="@(_AndroidFilesToPublish)" RelativePath="%(FileName)%(Extension)" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_CollectAndroidPublishedPackageOutputs">
+  <Target Name="_UpdateAndroidPackageOutputsForPublish">
     <ItemGroup>
-      <AndroidPublishedPackageOutput Remove="@(AndroidPublishedPackageOutput)" />
-      <AndroidPublishedPackageOutput
-          Include="@(AndroidPackageOutput->'$(PublishDir)%(RelativePath)')"
-          Condition="Exists('$(PublishDir)%(AndroidPackageOutput.RelativePath)')">
-        <OriginalPath>%(AndroidPackageOutput.FullPath)</OriginalPath>
-      </AndroidPublishedPackageOutput>
-      <AndroidPublishedPackageOutput Update="@(AndroidPublishedPackageOutput)" RelativePath="%(Filename)%(Extension)" />
+      <_AndroidPackageOutputForPublish Remove="@(_AndroidPackageOutputForPublish)" />
+      <_AndroidPackageOutputPublishCopy Remove="@(_AndroidPackageOutputPublishCopy)" />
+      <_AndroidPackageOutputForPublish Include="@(AndroidPackageOutput)" />
+      <_AndroidPackageOutputPublishCopy
+          Include="@(_AndroidPackageOutputForPublish->'$(PublishDir)%(Filename)%(Extension)')"
+          Condition="Exists('$(PublishDir)%(_AndroidPackageOutputForPublish.Filename)%(_AndroidPackageOutputForPublish.Extension)')">
+        <PackageFormat>%(_AndroidPackageOutputForPublish.PackageFormat)</PackageFormat>
+        <Signed>%(_AndroidPackageOutputForPublish.Signed)</Signed>
+        <PackageId>%(_AndroidPackageOutputForPublish.PackageId)</PackageId>
+      </_AndroidPackageOutputPublishCopy>
+      <AndroidPackageOutput Remove="@(AndroidPackageOutput)" />
+      <AndroidPackageOutput Include="@(_AndroidPackageOutputPublishCopy)" />
+      <_AndroidPackageOutputForPublish Remove="@(_AndroidPackageOutputForPublish)" />
+      <_AndroidPackageOutputPublishCopy Remove="@(_AndroidPackageOutputPublishCopy)" />
     </ItemGroup>
   </Target>
 
