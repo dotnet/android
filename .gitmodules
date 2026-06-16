@@ -20,8 +20,8 @@
     branch = v1.8-stable
 [submodule "external/lz4"]
     path = external/lz4
-    url = https://github.com/dotnet/lz4
-    branch = release
+    url = https://github.com/lz4/lz4
+    branch = dev
 [submodule "external/robin-map"]
     path = external/robin-map
     url = https://github.com/xamarin/robin-map
