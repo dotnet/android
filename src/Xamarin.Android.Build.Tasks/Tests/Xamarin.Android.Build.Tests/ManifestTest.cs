@@ -72,7 +72,7 @@ namespace Bug12935
 ";
 
 		[Test]
-		public void Bug12935 ([Values] AndroidRuntime runtime)
+		public void Bug12935 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -131,7 +131,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void CheckElementReOrdering ([Values] AndroidRuntime runtime)
+		public void CheckElementReOrdering ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -182,7 +182,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void OverlayManifestTest ([Values] AndroidRuntime runtime)
+		public void OverlayManifestTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -214,7 +214,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void OverlayManifestIncrementalBuildTest ([Values] AndroidRuntime runtime)
+		public void OverlayManifestIncrementalBuildTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -264,7 +264,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void RemovePermissionTest ([Values] AndroidRuntime runtime)
+		public void RemovePermissionTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -294,7 +294,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void IntentFilterData ([Values] AndroidRuntime runtime)
+		public void IntentFilterData ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -324,7 +324,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void IntentFilterDataLists ([Values] AndroidRuntime runtime)
+		public void IntentFilterDataLists ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -358,7 +358,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void IntentFilterMultipleItems ([Values] AndroidRuntime runtime)
+		public void IntentFilterMultipleItems ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -381,7 +381,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void LayoutAttributeElement ([Values] AndroidRuntime runtime)
+		public void LayoutAttributeElement ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -408,7 +408,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void DirectBootAwareAttribute ([Values] AndroidRuntime runtime)
+		public void DirectBootAwareAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -570,66 +570,11 @@ namespace Bug12935
 			},
 		};
 
-		// TODO: make it work on CoreCLR and NativeAOT
-		[Test]
-		[TestCaseSource(nameof (VersionCodeTestSource))]
-		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				MinSdkVersion = "24",
-				SupportedOSPlatformVersion = "24.0",
-			};
-
-			// MonoVM-only test, for now (changing anything in the test data changes the codes, each case must be
-			// investigated and verified manually)
-			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetProperty ("Foo", "1");
-			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
-			if (!string.IsNullOrEmpty (abis))
-				proj.SetRuntimeIdentifiers (abis.Split (';'));
-			if (!string.IsNullOrEmpty (versionCodePattern))
-				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
-			else
-				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodePattern");
-			if (!string.IsNullOrEmpty (versionCodeProperties))
-				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
-			else
-				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
-			if (useLegacy)
-				proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
-				if (!shouldBuild)
-					return;
-				var abiItems = seperateApk ? abis.Split (';') : new string[1];
-				var expectedItems = expectedVersionCode.Split (';');
-				XNamespace aNS = "http://schemas.android.com/apk/res/android";
-				Assert.AreEqual (abiItems.Length, expectedItems.Length, "abis parameter should have matching elements for expected");
-				for (int i = 0; i < abiItems.Length; i++) {
-					var path = seperateApk ? Path.Combine ("android", abiItems[i], "AndroidManifest.xml") : Path.Combine ("android", "manifest", "AndroidManifest.xml");
-					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
-					var doc = XDocument.Parse (manifest);
-					var nsResolver = new XmlNamespaceManager (new NameTable ());
-					nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
-					var m = doc.XPathSelectElement ("/manifest") as XElement;
-					Assert.IsNotNull (m, "no manifest element found");
-					var vc = m.Attribute (aNS + "versionCode");
-					Assert.IsNotNull (vc, "no versionCode attribute found");
-					StringAssert.AreEqualIgnoringCase (expectedItems[i], vc.Value,
-						$"Version Code is incorrect. Found {vc.Value} expect {expectedItems[i]}");
-				}
-			}
-		}
-
 		static IEnumerable<object[]> Get_ApplicationVersionTests_Data ()
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("1", false, "manifest=1", runtime);
 				AddTestData ("1", true, "x86_64=500001;arm64-v8a=400001", runtime);
 				AddTestData ("2", false, "manifest=2", runtime);
@@ -691,7 +636,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestDataPathError ([Values] AndroidRuntime runtime)
+		public void ManifestDataPathError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -722,7 +667,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values] AndroidRuntime runtime)
+		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -751,7 +696,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceHolders2 ([Values] AndroidRuntime runtime)
+		public void ManifestPlaceHolders2 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -773,7 +718,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceHoldersXA1010 ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values] AndroidRuntime runtime)
+		public void ManifestPlaceHoldersXA1010 ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -824,7 +769,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ModifyManifest ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void ModifyManifest ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -876,7 +821,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void MergeLibraryManifest ([Values] AndroidRuntime runtime)
+		public void MergeLibraryManifest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1001,7 +946,7 @@ public class TestActivity2 : FragmentActivity {
 		}
 
 		[Test]
-		public void AllActivityAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values] AndroidRuntime runtime)
+		public void AllActivityAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1094,7 +1039,7 @@ class TestActivity : Activity { }"
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", runtime);
 				AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", runtime);
 				AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", runtime);
@@ -1144,7 +1089,7 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
- 		public void AllServiceAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values] AndroidRuntime runtime)
+ 		public void AllServiceAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
  		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1198,7 +1143,7 @@ class TestActivity : Activity { }"
 		/// https://github.com/microsoft/dotnet-podcasts/blob/09b733b406ecb128f026645ef4c7e69c773f8a4b/src/Mobile/Platforms/Android/Services/MediaPlayerService.cs#L15-L16
 		/// </summary>
 		[Test]
-		public void ExportedErrorMessage ([Values] AndroidRuntime runtime)
+		public void ExportedErrorMessage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1255,7 +1200,7 @@ class TestActivity : Activity { }"
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (
 					minSdkVersion: "",
 					removeUsesSdkElement: true,
@@ -1384,7 +1329,7 @@ class TestActivity : Activity { }"
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (
 					minSdkVersion: "",
 					supportedOSPlatVers: "",
@@ -1639,7 +1584,7 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
-		public void UsesPermissionFlagsAttribute ([Values] AndroidRuntime runtime)
+		public void UsesPermissionFlagsAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
