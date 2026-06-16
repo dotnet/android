@@ -44,31 +44,6 @@ namespace Xamarin.AndroidTools
 			if (String.IsNullOrEmpty (input))
 				return false;
 
-			try {
-				result = ParseInternal (input);
-				return true;
-			} catch (FormatException) {
-				// Non-numeric version component
-			} catch (OverflowException) {
-				// Version component outside the range of Int32
-			} catch (ArgumentException) {
-				// Negative or otherwise invalid version component (Version constructor)
-			}
-
-			return false;
-		}
-
-		public int CompareTo (AndroidBuildToolsVersion other)
-		{
-			int result = Version.CompareTo (other.Version);
-			if (result != 0)
-				return result;
-
-			return String.Compare (SpecialVersion, other.SpecialVersion, StringComparison.OrdinalIgnoreCase);
-		}
-
-		static AndroidBuildToolsVersion ParseInternal (string input)
-		{
 			string versionText = input.Trim ();
 			string specialVersionText = "";
 
@@ -78,8 +53,20 @@ namespace Xamarin.AndroidTools
 				versionText = versionText.Substring (0, index);
 			}
 
-			Version version = MonoDroidSdk.ParseVersion (versionText);
-			return new AndroidBuildToolsVersion (version, specialVersionText);
+			if (!MonoDroidSdk.TryParseVersion (versionText, out Version version))
+				return false;
+
+			result = new AndroidBuildToolsVersion (version, specialVersionText);
+			return true;
+		}
+
+		public int CompareTo (AndroidBuildToolsVersion other)
+		{
+			int result = Version.CompareTo (other.Version);
+			if (result != 0)
+				return result;
+
+			return String.Compare (SpecialVersion, other.SpecialVersion, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

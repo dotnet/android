@@ -317,12 +317,33 @@ namespace Xamarin.AndroidTools
 
 		internal static Version ParseVersion (string versionString)
 		{
+			if (!TryParseVersion (versionString, out Version version))
+				throw new FormatException (String.Format ("Version string '{0}' is not valid.", versionString));
+			return version;
+		}
+
+		internal static bool TryParseVersion (string versionString, out Version version)
+		{
+			version = null;
+
 			// More accepting than Version.Parse. Only care about first 3 parts.
 			var split = versionString.Trim ().Split ('.');
-			int major = int.Parse (split [0]);
-			int minor = split.Length > 1 ? int.Parse (split [1]) : 0;
-			int build = split.Length > 2 ? int.Parse (split [2]) : 0;
-			return new Version (major, minor, build);
+			if (!TryParseComponent (split, 0, out int major) ||
+					!TryParseComponent (split, 1, out int minor) ||
+					!TryParseComponent (split, 2, out int build))
+				return false;
+
+			version = new Version (major, minor, build);
+			return true;
+		}
+
+		// A component is valid when it is missing (defaults to 0) or a non-negative Int32.
+		static bool TryParseComponent (string [] split, int index, out int value)
+		{
+			value = 0;
+			if (split.Length <= index)
+				return true;
+			return int.TryParse (split [index], out value) && value >= 0;
 		}
 
 		public static bool SupportsSplitApk {
