@@ -26,7 +26,6 @@ on:
         type: choice
 permissions:
   contents: read
-  copilot-requests: write
   issues: read
 environment: copilot-pr-reviewer
 network:
