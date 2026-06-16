@@ -2701,7 +2701,7 @@ because xbuild doesn't support framework reference assemblies.
       <Signed>true</Signed>
     </AndroidPackageOutput>
     <AndroidPackageOutput
-        Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' "
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' "
         Include="$(OutDir)$(_AndroidPackage)*-Signed.apk"
         Exclude="$(ApkFileSigned)">
       <PackageFormat>apk</PackageFormat>
