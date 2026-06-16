@@ -471,7 +471,6 @@ namespace Java.Interop {
 			if (packages.Length != lookups.Length)
 				throw new ArgumentException ("`packages` and `lookups` arrays must have same number of elements.");
 			throw new NotSupportedException ();
-
 		}
 
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
