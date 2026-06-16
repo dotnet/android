@@ -247,8 +247,6 @@ namespace Xamarin.Android.Binder
 
 			new NamespaceMapping (gens).Generate (opt, gen_info);
 
-
-			ClassGen.GenerateTypeRegistrations (opt, gen_info);
 			ClassGen.GenerateEnumList (gen_info);
 
 			// Create the .cs files for the enums

@@ -20,8 +20,6 @@ namespace generator.SourceWriters
 			context.ContextTypes.Push (klass);
 			context.ContextGeneratedMethods = new List<Method> ();
 
-			generationInfo.TypeRegistrations.Add (new KeyValuePair<string, string> (klass.RawJniName, klass.AssemblyQualifiedName));
-
 			var is_enum = klass.base_symbol != null && klass.base_symbol.FullName == "Java.Lang.Enum";
 
 			if (is_enum)

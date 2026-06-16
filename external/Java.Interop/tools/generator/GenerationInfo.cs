@@ -24,7 +24,6 @@ namespace MonoDroid.Generation {
 		public string JavaDir { get; }
 		public ConcurrentBag<string> GeneratedFiles { get; } = new ConcurrentBag<string> ();
 		public ConcurrentBag<string> Enums { get; } = new ConcurrentBag<string> ();
-		public ConcurrentBag<KeyValuePair<string, string>> TypeRegistrations { get; } = new ConcurrentBag<KeyValuePair<string, string>> ();
 
 		public StreamWriter OpenStream (string name) 
 		{
