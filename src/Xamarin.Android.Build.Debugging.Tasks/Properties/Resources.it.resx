@@ -157,7 +157,7 @@ Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilit
 {2} - The actual error that occured.</comment>
   </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
-    <value>La proprietà di sistema Android 'log.redirect-stdio' è impostata su 'true' nell'emulatore o nel dispositivo di destinazione.
+    <value>La proprietà del sistema Android 'log.redirect-stdio' è impostata su 'true' nell'emulatore o nel dispositivo di destinazione.
 Per abilitare la compatibilità con la distribuzione rapida, impostare la proprietà su 'false' o riavviare il dispositivo o l'emulatore per cancellare il valore.</value>
   </data>
   <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
@@ -167,7 +167,7 @@ Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilit
 {0} - A filename</comment>
   </data>
   <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Siamo spiacenti. La distribuzione rapida è supportata solo nei dispositivi che eseguono Android 5.0 (livello API 21) o versione successiva.
+    <value>Siamo spiacenti. La distribuzione rapida è supportata solo nei dispositivi con Android 5.0 (livello API 21) o versione successiva.
 Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilitare la distribuzione rapida nelle pagine delle proprietà del progetto Visual Studio o modificare il file di progetto in un editor di testo.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
@@ -194,10 +194,10 @@ Disabilitare la distribuzione rapida nelle pagine delle proprietà del progetto 
   <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
     <value>L'applicazione non dispone dell'attributo 'android:debuggable' impostato in AndroidManifest.xml.
 Questo è necessario per il funzionamento della distribuzione rapida. Questa funzionalità è in genere abilitata per impostazione predefinita dal
-sistema di compilazione .NET per le compilazioni di debug. Verificare che questo attributo non sia impostato
+sistema di compilazione .NET per Android per le compilazioni di debug. Verificare che questo attributo non sia impostato
 sull'elemento 'application' nel file 'AndroidManifest.xml'.
 Se si dispone di una classe che deriva da 'Android.App.Application' e si usa '[Application]' assicurarsi che 
-La proprietà 'Debuggable' non sia impostata perché sostituirà il valore per le compilazioni di debug.
+la proprietà 'Debuggable' non sia impostata perché sostituirà il valore per le compilazioni di debug.
 </value>
     <comment>The following are literal names and should not be translated:
 AndroidManifest.xml - A xml file
@@ -208,13 +208,13 @@ android:debuggable - An attribute in a xml file.
     </comment>
   </data>
   <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
-    <value>Il pacchetto è un'applicazione 'system'. Si tratta di applicazioni che si installano in
- l'utente 'system' in un dispositivo. Questi tipi di applicazioni non possono usare 'run-as'.
+    <value>Il pacchetto è un'applicazione 'system'. Si tratta di applicazioni che si installano nell'
+ utente 'system' in un dispositivo. Questi tipi di applicazioni non possono usare 'run-as'.
  Il sistema di distribuzione rapida dovrebbe aver gestito automaticamente questo particolare errore
  e usato un percorso di installazione di backup. Tuttavia, se viene visualizzato questo errore, segnalare
  un problema con il messaggio di errore esatto usando la voce di menu 'Guida-&gt;Invia Feedback-&gt;Segnala un problema' in Visual Studio
- o 'Guida-&gt;Segnala un problema' in Visual Studio per Mac. Se possibile, allegare un log di compilazione diagnostica completa
- il report di feedback, perché questo aiuterà a diagnosticare il problema.</value>
+ o 'Guida-&gt;Segnala un problema' in Visual Studio per Mac. Se possibile, allegare un log di diagnostica completa della build
+ alla segnalazione, perché questo aiuterà a diagnosticare il problema.</value>
     <comment>The following are literal names and should not be translated:
     </comment>
   </data>
@@ -242,7 +242,7 @@ Impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilit
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
     <value>Errore durante la distribuzione di '{0}' con '{1}: {2}'. 
-Ciò è in genere dovuto a un errore in 'adb' quando i dati del file vengono inviati al dispositivo. 
+Ciò è in genere dovuto a un errore in `adb` quando i dati del file vengono inviati al dispositivo. 
 La causa di solito è un cavo USB allentato o di bassa qualità. Provare un cavo diverso.
 In alternativa, provare a usare il debug Wi-Fi, che può essere più affidabile del debug USB per determinati dispositivi. 
 Se il problema persiste, impostare la proprietà MSBuild 'EmbedAssembliesIntoApk' su 'true' per disabilitare la distribuzione rapida nelle pagine delle proprietà del progetto Visual Studio o modificare il file di progetto in un editor di testo.</value>
@@ -254,7 +254,7 @@ Se il problema persiste, impostare la proprietà MSBuild 'EmbedAssembliesIntoApk
   <data name="StartDebugger_ipAddress_port" xml:space="preserve">
     <value>  Avvio del debugger in {0}:{1}
 Avviare sdb, quindi eseguire il comando seguente
-  connetti {0} {1}
+  connect {0} {1}
     </value>
     <comment>The following are literal names and should not be translated:
 {0} - An ip address of  a computer.

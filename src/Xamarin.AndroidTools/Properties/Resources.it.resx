@@ -117,27 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CreateKeyError_AliasContainsInvalidCharacters" xml:space="preserve">
-    <value>L'alias non può contenere caratteri non consentiti nei nomi file</value>
-  </data>
-  <data name="CreateKeyError_ErrorImportingKey" xml:space="preserve">
-    <value>Si è verificato un errore durante l'importazione della chiave</value>
-  </data>
-  <data name="CreateKeyError_GenericError" xml:space="preserve">
-    <value>Si è verificato un errore durante la creazione della chiave</value>
-  </data>
-  <data name="CreateKeyError_KeyStoreNotFound" xml:space="preserve">
-    <value>L'archivio chiavi non è stato trovato</value>
-  </data>
-  <data name="CreateKeyError_MinimumOneYearValidity" xml:space="preserve">
-    <value>La validità non può essere inferiore a 1 anno</value>
-  </data>
-  <data name="CreateKeyError_NotInitialized" xml:space="preserve">
-    <value>KeyStoreManagement non inizializzato</value>
-  </data>
-  <data name="CreateKeyError_UnsupportedPlatform" xml:space="preserve">
-    <value>La piattaforma non è supportata</value>
-  </data>
   <data name="JdwpClientDisconnectError" xml:space="preserve">
     <value>Si è verificato un errore imprevisto durante il tentativo di disconnettere il client Jdwp.</value>
   </data>

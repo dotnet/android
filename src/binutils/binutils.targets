@@ -1,4 +1,6 @@
 <Project>
+  <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
+
   <PropertyGroup>
     <_BinutilsArchiveUrl>https://github.com/dotnet/android-native-tools/releases/download/$(XABinutilsVersion)/xamarin-android-toolchain-$(XABinutilsVersion).7z</_BinutilsArchiveUrl>
     <_BinutilsArchive>$(AndroidToolchainCacheDirectory)\xamarin-android-toolchain-$(XABinutilsVersion).7z</_BinutilsArchive>
@@ -13,23 +15,14 @@
   <Target Name="_DownloadBinutils"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(_BinutilsArchive)">
-    <DownloadFile
-        SourceUrl="$(_BinutilsArchiveUrl)"
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="xamarin-android-toolchain-$(XABinutilsVersion).7z"
-        Retries="3"
-    />
-    <GetFileHash Files="$(_BinutilsArchive)" Algorithm="SHA256">
-      <Output TaskParameter="Hash" PropertyName="_BinutilsActualHash" />
-    </GetFileHash>
-    <Delete
-        Condition=" '$(_BinutilsActualHash)' != '$(XABinutilsHash)' "
-        Files="$(_BinutilsArchive)"
-    />
-    <Error
-        Condition=" '$(_BinutilsActualHash)' != '$(XABinutilsHash)' "
-        Text="SHA256 mismatch for xamarin-android-toolchain-$(XABinutilsVersion).7z. Expected: $(XABinutilsHash) Actual: $(_BinutilsActualHash)"
-    />
+    <ItemGroup>
+      <_DownloadFile Include="xamarin-android-toolchain-$(XABinutilsVersion).7z">
+        <AdditionalProperties>_DownloadUrl=$(_BinutilsArchiveUrl);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=xamarin-android-toolchain-$(XABinutilsVersion).7z;_DownloadSha256=$(XABinutilsHash)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
   </Target>
 
   <Target Name="_ExtractBinutils"

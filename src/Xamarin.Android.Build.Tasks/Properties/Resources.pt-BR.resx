@@ -142,6 +142,9 @@ Provavelmente esse erro foi causado por um problema com o arquivo AndroidManifes
   <data name="APT0005" xml:space="preserve">
     <value>Nome de arquivo inválido: os nomes de arquivo não podem usar palavras reservadas para Java.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contém referência ao atributo obsoleto 'Android.Runtime.PreserveAttribute'. Membros com esse atributo podem ser removidos na compactação. Use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute em vez disso</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Não foi possível determinar o nível da API da $(TargetFrameworkVersion) de '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -222,7 +225,7 @@ Observação: o Android Designer é incompatível com o SDK do Java 11.0: https:
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Modo desconhecido: {0}</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">

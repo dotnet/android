@@ -70,7 +70,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to copy Fast Deployment tools to '{0}/{1}' on the target device.]D;]A;This device might not be compatible with Fast Deployment.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Hızlı Dağıtım araçları hedef cihazda “{0}/{1}” hedefine kopyalanamıyor.]D;]A;Bu cihaz Hızlı Dağıtım ile uyumlu olmayabilir.]D;]A;Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
+            <Val><![CDATA[Hızlı Dağıtım araçları hedef cihazda “{0}/{1}” hedefine kopyalanamıyor.]D;]A;Bu cihaz Hızlı Dağıtım ile uyumlu olmayabilir.]D;]A;Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -79,7 +79,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“{1}: {2}” kullanılarak “{0}” dağıtılırken hata oluştu.]D;]A;Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
+            <Val><![CDATA[“{1}: {2}” kullanılarak “{0}” dağıtılırken hata oluştu.]D;]A;Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -97,7 +97,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“{0}” dağıtılırken hata oluştu.]D;]A;Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
+            <Val><![CDATA[“{0}” dağıtılırken hata oluştu.]D;]A;Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -106,7 +106,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Sorry. Fast Deployment is only supported on devices running Android 5.0 (API level 21) or higher.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Üzgünüz. Hızlı Dağıtım yalnızca Android 5.0 (API düzeyi 21) veya üzerini çalıştıran cihazlarda desteklenir.]D;]A;Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
+            <Val><![CDATA[Üzgünüz. Hızlı Dağıtım yalnızca Android 5.0 (API düzeyi 21) veya üzerini çalıştıran cihazlarda desteklenir.]D;]A;Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -124,7 +124,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The package was not installed. Please check you do not have it installed under any other user.]D;]A;If the package does show up on the device, try manually uninstalling it then try again.]D;]A;You should be able to uninstall the app via the Settings app on the device.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Paket yüklenmedi. Lütfen başka bir kullanıcı altında yüklü olmadığından emin olun.]D;]A;Paket cihazda görünüyorsa el ile kaldırıp yeniden başlatmayı deneyin.]D;]A;Uygulamayı cihazdaki Ayarlar uygulaması aracılığıyla kaldırabilirsiniz.]]></Val>
+            <Val><![CDATA[Paket yüklenmedi. Lütfen başka bir kullanıcı altında yüklü olmadığından emin olun.]D;]A;Paket cihazda görünüyorsa el ile kaldırıp yeniden deneyin.]D;]A;Uygulamayı cihazdaki Ayarlar uygulaması aracılığıyla kaldırabilirsiniz.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -133,7 +133,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'run-as' tool required by the Fast Deployment system has been disabled on this device by the manufacturer.]D;]A;Please disable Fast Deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Hızlı Dağıtım sistemi için gereken “run-as” aracı üretici tarafından bu cihazda devre dışı bırakıldı.]D;]A;Visual Studio proje özelliği sayfalarında Hızlı Dağıtımı devre dışı bırakın veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
+            <Val><![CDATA[Hızlı Dağıtım sistemi için gereken “run-as” aracı üretici tarafından bu cihazda devre dışı bırakıldı.]D;]A;Lütfen Visual Studio proje özelliği sayfalarında Hızlı Dağıtım sistemini devre dışı bırakın veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -142,7 +142,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the .NET for Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[AndroidManifest.xml dosyasında uygulamanın “android:debuggable” özniteliği ayarlanmamış.]D;]A;Hızlı Dağıtımın çalışması için bu gereklidir. Bu, normalde Hata ayıklama derlemelerine yönelik olarak Android derleme sistemi için ]D;]A;.NET tarafından varsayılan değer olarak ayarlanır. Lütfen bu özniteliğin]D;]A;“AndroidManifest.xml” içindeki “application” öğesinde ayarlanmadığından emin olun.]D;]A;“Android.App.Application” öğesinden türeyen ve “[Application]5D;” kullanan bir sınıfa sahipseniz ]D;]A;hata ayıklama derlemeleri için değeri geçersiz kılacağından “Debuggable” özelliğinin ayarlanmadığından emin olun.]D;]A;]]></Val>
+            <Val><![CDATA[AndroidManifest.xml dosyasında uygulamanın “android:debuggable” özniteliği ayarlanmamış.]D;]A;Bu, Hızlı Dağıtım sisteminin çalışması için gereklidir. Bu, normalde Hata ayıklama derlemelerine yönelik olarak Android derleme sistemi için ]D;]A;.NET tarafından varsayılan olarak ayarlanır. Lütfen bu özniteliğin]D;]A;“AndroidManifest.xml” dosyanızdaki “application” öğesinde ayarlanmadığından emin olun.]D;]A;“Android.App.Application” öğesinden türeyen ve “[Application]5D;” kullanan bir sınıfa sahipseniz ]D;]A;hata ayıklama derlemeleri için değeri geçersiz kılacağından “Debuggable” özelliğinin ayarlanmadığından emin olun.]D;]A;]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the Xamarin.Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
@@ -154,7 +154,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The package is a 'system' application. These are applications which install under]D;]A; the 'system' user on a device. These types of applications cannot use 'run-as'.]D;]A; The Fast Deployment system should have handled this particular error automatically]D;]A; and used a backup installation path. However if you are seeing this error please file]D;]A; an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A; or 'Help->Report a Problem' in Visual Studio for Mac. If possible attach a full diagnostic build]D;]A; log to the feedback report as this will help us diagnose the issue.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Paket bir “sistem” uygulamasıdır. Bunlar cihaz üzerinde “sistem” kullanıcısı altında]D;]A; yüklenen uygulamalardır. Bu tür uygulamalar “run-as” komutunu kullanamaz.]D;]A; Hızlı Dağıtım sistemi bu hatayı otomatik olarak işlemeli]D;]A; ve bir yedekleme yükleme yolu kullanmalıydı. Ancak bu hatayı görüyorsanız lütfen]D;]A; Visual Studio’da “Yardım-> Geri Bildirim->Sorun Bildir” veya Mac için Visual Studio’da “Yardım->Sorun Bildir” menü öğesini]D;]A; kullanarak tam hata iletisini içeren bir sorun bildirin. Mümkünse sorunun tanılanmasına yardımcı olması için]D;]A; rapora tam tanılama derleme günlüğünü ekleyin.]]></Val>
+            <Val><![CDATA[Paket bir “sistem” uygulamasıdır. Bunlar cihaz üzerinde “sistem” kullanıcısı altında]D;]A; yüklenen uygulamalardır. Bu tür uygulamalar “run-as” komutunu kullanamaz.]D;]A; Hızlı Dağıtım sistemi bu hatayı otomatik olarak işlemeli]D;]A; ve bir yedekleme yükleme yolu kullanmalıydı. Ancak bu hatayı görüyorsanız lütfen]D;]A; Visual Studio’da “Yardım-> Geri Bildirim Gönder->Sorun Bildir” veya Mac için Visual Studio’da “Yardım->Sorun Bildir” menü öğesini]D;]A; kullanarak tam hata iletisini içeren bir sorun bildirin. Mümkünse sorunun tanılanmasına yardımcı olması için]D;]A; rapora tam tanılama derleme günlüğünü ekleyin.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -163,7 +163,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;The currently installation of the package in corrupt. Please manually uninstall the ]D;]A;package from all the users on device and try again. If that does not work you can disable Fast Deployment.]D;]A;Fast Deployment can be disabled in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“run-as” komutu “{0}” hatasıyla başarısız oldu.]D;]A;Paketin geçerli yüklemesi bozuk. Lütfen paketi cihazdaki tüm kullanıcılardan el ile kaldırıp]D;]A;yeniden deneyin. Bu işe yaramazsa Hızlı Dağıtım'ı devre dışı bırakabilirsiniz.]D;]A;Hızlı Dağıtım Visual Studio proje özelliği sayfalarında devre dışı bırakılabilir veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayabilirsiniz.]D;]A;]]></Val>
+            <Val><![CDATA[“run-as” komutu “{0}” hatasıyla başarısız oldu.]D;]A;Paketin geçerli yüklemesi bozuk. Lütfen paketi cihazdaki tüm kullanıcılardan el ile kaldırıp]D;]A;yeniden deneyin. Bu işe yaramazsa Hızlı Dağıtım sistemini devre dışı bırakabilirsiniz.]D;]A;Hızlı Dağıtım sistemini Visual Studio proje özelliği sayfalarında devre dışı bırakılabilir veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayabilirsiniz.]D;]A;]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -172,7 +172,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;Fast Deployment is not currently supported on this device.]D;]A;Please file an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A;or 'Help->Report a Problem' in Visual Studio for Mac.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“run-as” komutu “{0}” hatasıyla başarısız oldu.]D;]A;Hızlı Dağıtım şu anda bu cihazda desteklenmiyor.]D;]A;Visual Studio’da “Yardım-> Geri Bildirim Gönder->Sorun Bildir” veya Mac için Visual Studio’da “Yardım->Sorun Bildir” menü öğesini]D;]A;kullanarak tam hata iletisini içeren bir sorun bildirin.]D;]A;Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
+            <Val><![CDATA[“run-as” komutu “{0}” hatasıyla başarısız oldu.]D;]A;Hızlı Dağıtım şu anda bu cihazda desteklenmiyor.]D;]A;Visual Studio’da “Yardım-> Geri Bildirim Gönder->Sorun Bildir” veya Mac için Visual Studio’da “Yardım->Sorun Bildir” menü öğesini]D;]A;kullanarak tam hata iletisini içeren bir sorun bildirin.]D;]A;Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -181,7 +181,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'. ]D;]A;This is usually due to an error in `adb` when the file data is sent over to the device. ]D;]A;The normal cause for this is a loose or low quality USB cable. Please try a different cable.]D;]A;Alternatively try using Wifi Debugging, this can be more reliable than USB debugging for certain devices. ]D;]A;If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[“{1}: {2}” kullanılarak “{0}” dağıtılırken hata oluştu. ]D;]A;Bunun nedeni genellikle dosya verileri cihaza gönderildiğinde gerçekleşen “adb” içindeki bir hatadır. ]D;]A;Bunun normal nedeni, gevşek veya düşük kaliteli bir USB kablosudur. Lütfen farklı bir kablo deneyin.]D;]A;Alternatif olarak Wi-Fi Hata Ayıklamasını kullanmayı deneyin. Bu, belirli cihazlar için USB hata ayıklamasından daha güvenilir olabilir. ]D;]A;Bunların tamamı başarısız olursa Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
+            <Val><![CDATA[“{1}: {2}” kullanılarak “{0}” dağıtılırken hata oluştu. ]D;]A;Bu, genellikle dosya verileri cihaza gönderildiğinde `adb` içinde gerçekleşen bir hatadan kaynaklanır. ]D;]A;Bunun normal nedeni, gevşek veya düşük kaliteli bir USB kablosudur. Lütfen farklı bir kablo deneyin.]D;]A;Alternatif olarak Wi-Fi Hata Ayıklamasını kullanmayı deneyin. Bu, belirli cihazlar için USB hata ayıklamasından daha güvenilir olabilir. ]D;]A;Bunların tamamı başarısız olursa Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

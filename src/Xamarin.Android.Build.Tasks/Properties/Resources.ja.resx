@@ -142,6 +142,9 @@
   <data name="APT0005" xml:space="preserve">
     <value>無効なファイル名: ファイル名には Java の予約語を使用できません。</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>アセンブリ '{0}' には、非推奨の属性 'Android.Runtime.PreserveAttribute' への参照が含まれています。この属性を持つメンバーはトリミングされる可能性があります。代わりに System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute をお使いください</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}' の $(TargetFrameworkVersion) の API レベルを特定できませんでした。</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -222,7 +225,7 @@ In this message, the phrase "should not be reached" means that this error messag
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>不明なモード: {0}</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">

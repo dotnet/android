@@ -180,24 +180,4 @@ namespace Xamarin.AndroidTools
 		};
 	}
 
-	public static class AndroidVersionExtensions
-	{
-#pragma warning disable CS0618 // Type or member is obsolete
-
-		public static AndroidVersion ToLegacyVersion (this Xamarin.Android.Tools.AndroidVersion androidVersion)
-		{
-			if (!Version.TryParse (androidVersion.OSVersion, out Version version))
-				return null;
-
-			return new AndroidVersion (
-				androidVersion.ApiLevel,
-				androidVersion.OSVersion,
-				androidVersion.CodeName,
-				version
-			);
-		}
-
-#pragma warning restore CS0618
-
-	}
 }

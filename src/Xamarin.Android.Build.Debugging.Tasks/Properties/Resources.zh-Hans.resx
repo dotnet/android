@@ -143,32 +143,32 @@ ABI - is an acronym for Application Binary Interface.
   <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
     <value>无法将快速部署工具复制到目标设备上的“{0}/{1}”。
 此设备可能与快速部署不兼容。
-请将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
+请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
     <comment>The following are literal names and should not be translated:
 {0} - A device path
 {1} - A filename</comment>
   </data>
   <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
-    <value>使用“{1}”部署“{0}”时出错: “{2}”。
-请将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
+    <value>使用“{1}: {2}”部署“{0}”时出错。
+请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
 <comment>The following are literal names and should not be translated:
 {0} - A filename
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
   <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
-    <value>在目标设备或模拟器上，Android 系统属性“log.redirect-stdio”设置为“true”。
-为实现与快速部署的兼容性，请将该属性设置为“false”，或者重启设备或模拟器以清除该值。</value>
+    <value>在目标设备或模拟器上，Android 系统属性 "log.redirect-stdio" 设置为 "true"。
+为实现与快速部署的兼容性，请将该属性设置为 "false"，或者重启设备或模拟器以清除该值。</value>
   </data>
   <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
     <value>部署“{0}”时出错。
-请将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
+请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
     <comment>The following are literal names and should not be translated:
 {0} - A filename</comment>
   </data>
   <data name="XA0130_FastDevNotSupported" xml:space="preserve">
     <value>抱歉。快速部署仅在运行 Android 5.0 (API 级别 21)或更高版本的设备上受支持。
-请将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
+请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
     <value>此设备已禁用 "run-as" 工具。请激活设备上的开发人员选项或将 "ro.boot.disable_runas" 设置为 "false" 来启用它。</value>
@@ -185,19 +185,19 @@ ABI - is an acronym for Application Binary Interface.
     </comment>
   </data>
   <data name="XA0133_RunAsPermissionDenied" xml:space="preserve">
-    <value>制造商已在此设备上禁用快速部署系统所需的“run-as”工具。
-请在 Visual Studio 项目属性页中禁用快速部署，或者在文本编辑器中编辑项目文件，并将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”。</value>
+    <value>制造商已在此设备上禁用快速部署系统所需的 "run-as" 工具。
+请在 Visual Studio 项目属性页中禁用快速部署，或者在文本编辑器中编辑项目文件，并将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"。</value>
     <comment>The following are literal names and should not be translated:
 'run-as' - a native android tool
     </comment>
   </data>
   <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
-    <value>应用程序未在 AndroidManifest.xml 中设置“android: debuggable”属性。
+    <value>应用程序未在 AndroidManifest.xml 中设置 "android: debuggable" 属性。
 必须设置它才能使快速部署正常工作。通常，.NET for Android 生成系统
-在调试生成时默认启用此属性。请检查你是否未在“AndroidManifest.xml”的
-“application”元素上设置此属性。
-如果你有一个派生自“Android.App.Application”的类，并且正在使用“[Application]”，请确保
-未设置“Debuggable”属性，因为它会覆盖调试生成的值。
+在调试生成时默认启用此属性。请检查你是否未在 "AndroidManifest.xml" 的
+"application" 元素上设置此属性。
+如果你有一个派生自 "Android.App.Application" 的类，并且正在使用 "[Application]"，请确保
+未设置 "Debuggable" 属性，因为它会覆盖调试生成的值。
 </value>
     <comment>The following are literal names and should not be translated:
 AndroidManifest.xml - A xml file
@@ -209,7 +209,7 @@ android:debuggable - An attribute in a xml file.
   </data>
   <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
     <value>该包是一个“系统”应用程序。这些是安装在设备上
- “系统”用户下的应用程序。这类应用程序不能使用“run-as”。
+ “系统”用户下的应用程序。这类应用程序不能使用 "run-as"。
  快速部署系统本应自动处理此特定错误
  并使用备用安装路径。但是，如果看到此错误，请使用
  Visual Studio 中的“帮助”-&gt;“发送反馈”-&gt;“报告问题”菜单项
@@ -219,10 +219,10 @@ android:debuggable - An attribute in a xml file.
     </comment>
   </data>
   <data name="XA0136_RunAsCorruptInstallation" xml:space="preserve">
-    <value>“run-as”命令失败，出现“{0}”。
+    <value>"run-as" 命令失败，出现“{0}”。
 当前安装的包已损坏。请为设备上的所有用户
 手动卸载包，然后重试。如果此方法不起作用，可以禁用快速部署。
-可以在 Visual Studio 项目属性页中禁用快速部署，或者在文本编辑器中编辑项目文件，并将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”。
+可以在 Visual Studio 项目属性页中禁用快速部署，或者在文本编辑器中编辑项目文件，并将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"。
 </value>
     <comment>The following are literal names and should not be translated:
 'run-as' - a native android tool
@@ -230,29 +230,29 @@ android:debuggable - An attribute in a xml file.
     </comment>
   </data>
   <data name="XA0137_RunAsOSCorrupt" xml:space="preserve">
-    <value>“run-as”命令失败，出现“{0}”。
+    <value>"run-as" 命令失败，出现“{0}”。
 此设备当前不支持快速部署。
-请使用 Visual Studio 中的“帮助 -&gt; 发送反馈 -&gt; 报告问题”菜单项
+请使用 Visual Studio 中的“帮助”-&gt;“发送反馈”-&gt;“报告问题”菜单项
 或 Visual Studio for Mac 中的“帮助”-&gt;“报告问题”，提交包含确切错误消息的问题反馈。
-请将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
+请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
     <comment>The following are literal names and should not be translated:
 'run-as' - a native android tool
 {0} - The error message raised by the program.
     </comment>
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
-    <value>使用“{1}”部署“{0}”时出错: “{2}”。
-这通常是由于将文件数据发送到设备时，“adb”出错导致的。
+    <value>使用“{1}: {2}”部署“{0}”时出错。
+这通常是由于将文件数据发送到设备时，`adb` 中出现错误。
 造成这种情况的常见原因是 USB 电缆松动或质量低劣。请尝试更换电缆。
 或者尝试使用 Wi-Fi 调试，对于某些设备，这可能比 USB 调试更可靠。
-如果所有这些方法都无效，请将“EmbedAssembliesIntoApk”MSBuild 属性设置为“true”，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
+如果所有这些方法都无效，请将 "EmbedAssembliesIntoApk" MSBuild 属性设置为 "true"，以在 Visual Studio 项目属性页中禁用快速部署，或在文本编辑器中编辑项目文件。</value>
 <comment>The following are literal names and should not be translated:
 {0} - A filename
 {1} - The tool that was used to deploy the file.
 {2} - The actual error that occured.</comment>
   </data>
   <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  在“{0}”上启动调试器: {1}
+    <value>  在 {0}:{1} 上启动调试器
 启动 sdb，然后运行以下命令
   connect {0} {1}
     </value>
