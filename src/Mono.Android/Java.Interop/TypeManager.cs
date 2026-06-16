@@ -459,6 +459,7 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("package");
 			if (lookup == null)
 				throw new ArgumentNullException ("lookup");
+			throw new NotSupportedException ();
 		}
 
 		public static void RegisterPackages (string[] packages, Converter<string, Type?>[] lookups)
@@ -469,6 +470,7 @@ namespace Java.Interop {
 				throw new ArgumentNullException ("lookups");
 			if (packages.Length != lookups.Length)
 				throw new ArgumentException ("`packages` and `lookups` arrays must have same number of elements.");
+			throw new NotSupportedException ();
 
 		}
 
