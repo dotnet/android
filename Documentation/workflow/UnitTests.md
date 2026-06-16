@@ -393,8 +393,7 @@ public void MyAppShouldRunAndRespondToClick ()
 There are a category of tests which run on the device itself, these test the
 runtime behaviour. These run `NUnit` tests directly on the device. Some of
 these are located in the runtime itself. We build them within the repo then run
-the tests on the device. They use a custom mobile version of `NUnit` called
-`NUnitLite`. For the most part they are the same.
+the tests on the device.
 
 These tests are generally found in:
 
@@ -402,19 +401,32 @@ These tests are generally found in:
   * [`tests/EmbeddedDSOs/EmbeddedDSO`](../../tests/EmbeddedDSOs/EmbeddedDSO)
   * [`tests/locales/Xamarin.Android.Locale-Tests`](../../tests/locales/Xamarin.Android.Locale-Tests)
 
-These tests are run by using the `RunTestApp` target on the appropriate project
-file, which includes:
-
-  * `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj`
-
-For example:
+As of [#11224](https://github.com/dotnet/android/pull/11224),
+`Mono.Android.NET-Tests` runs **stock `NUnit`** through `dotnet test` with the
+[Microsoft Testing Platform (MTP)](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro);
+the previous `NUnitLite` mobile runner and the custom `RunTestApp` target have
+been removed. Build and install the instrumentation app with `-t:Install`, then
+run `dotnet test` **from the project directory** so the project-local
+`global.json` (which sets `"runner": "Microsoft.Testing.Platform"`) is picked
+up:
 
 ```zsh
-./dotnet-local.sh build -t:RunTestApp tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+# 1. Build + install on a connected device/emulator:
+./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+
+# 2. Run the on-device tests via dotnet test (MTP):
+( cd tests/Mono.Android-Tests/Mono.Android-Tests && \
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx )
 ```
 
-After running the tests, a `TestResult*.xml` file will be created in the
-top checkout directory containing the results of the tests.
+After running the tests, a `.trx` file (VSTest format) will be created in the
+test results directory containing the results of the tests. Pass
+`--results-directory <dir>` to control where it is written, and
+`-p:IncludeCategories=<Category>` at **build** time to restrict the run to
+specific NUnit `[Category]` names.
+
+> Note: the older `EmbeddedDSO` and `Xamarin.Android.Locale-Tests` apps were out
+> of scope of #11224 and may still use the legacy `RunTestApp` path.
 
 The following is an example unit test.
 

@@ -71,13 +71,18 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
-### On-device runtime tests (NUnitLite, full-build + device)
+### On-device runtime tests (NUnit via `dotnet test` / MTP, full-build + device)
 
-These do NOT use `dotnet test`. Use the `RunTestApp` MSBuild target:
+As of [#11224](https://github.com/dotnet/android/pull/11224) these run **stock NUnit** through `dotnet test` with the Microsoft Testing Platform (MTP) — NUnitLite and the `-t:RunTestApp` target are gone. Build + install the instrumentation APK, then run `dotnet test` **from the project directory** so the project-local `global.json` (`"runner": "Microsoft.Testing.Platform"`) is picked up:
 ```bash
-./dotnet-local.sh build -t:RunTestApp tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+# 1. Build + install on a connected device/emulator:
+./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+
+# 2. Run the on-device tests (MTP):
+( cd tests/Mono.Android-Tests/Mono.Android-Tests && \
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx )
 ```
-Results appear in `TestResult-*.xml` in the repo root.
+Results are a **`.trx`** (VSTest format) in the test results directory — not `TestResult-*.xml`. Restrict to specific NUnit `[Category]` names with `-p:IncludeCategories=Intune` at **build** time (the old `am instrument -e` category args are gone; exclusions now flow through runtimeconfig — see `TestInstrumentation.ExcludedCategories`/`IncludedCategories`).
 
 ### Java.Interop tests
 Tooling tests are standalone (`dotnet test` on `.csproj`). JVM tests require the local SDK:

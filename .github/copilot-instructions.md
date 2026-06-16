@@ -192,9 +192,9 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 
 ## CI / Build Investigation
 
-**dotnet/android's primary CI runs on Azure DevOps (internal), not GitHub Actions.** When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
+**dotnet/android PR validation runs on a public Azure DevOps pipeline (`dotnet-android` on `dnceng-public`), not GitHub Actions.** As of #11578 it runs the full test matrix for every PR (direct and fork); the old internal `Xamarin.Android-PR` (DevDiv) pipeline no longer runs on PRs. When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
 
-1. **ALWAYS invoke the `ci-status` skill first** — do NOT rely on `gh pr checks` alone. GitHub checks may all show ✅ while the internal Azure DevOps build is failing.
+1. **ALWAYS invoke the `ci-status` skill first.** The pipeline surfaces as ~39 `dotnet-android (...)` GitHub checks, but the skill adds build progress, ETA, per-stage failures, and failed-test names that `gh pr checks` alone doesn't give you.
 2. The skill auto-detects the current PR from the git branch when no PR number is given.
 3. For deep .binlog analysis, use the `azdo-build-investigator` skill.
 4. Only after the skill confirms no Azure DevOps failures should you report CI as passing.
@@ -203,16 +203,21 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 
 When diagnosing runtime, build, or test failures, follow these practices. They exist because the .NET ↔ JNI ↔ C++ ↔ generated-native stack is loosely coupled and static reasoning alone is unreliable.
 
-- **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does:
+- **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does (NUnit via `dotnet test` / MTP, see [#11224](https://github.com/dotnet/android/pull/11224)):
   ```bash
   make prepare && make all CONFIGURATION=Release
+  # Build + install the instrumentation APK on a connected device/emulator:
   ./dotnet-local.sh build tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
-      -t:RunTestApp -c Release \
+      -t:Install -c Release \
       -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
       -p:UseMonoRuntime=<true|false>
+  # Run the on-device tests via dotnet test (MTP), from the project dir so the
+  # project-local global.json ("runner": "Microsoft.Testing.Platform") applies:
+  ( cd tests/Mono.Android-Tests/Mono.Android-Tests && \
+    ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx )
   ```
   On Windows, use `build.cmd` and `dotnet-local.cmd` instead of `make`/`dotnet-local.sh`.
-  Results land in `TestResult-Mono.Android.NET_Tests-*.xml` at the repo root.
+  Results land as a `.trx` (VSTest format) in the test results directory — not `TestResult-*.xml`.
 
 - **When the build gets into a weird state, delete `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors. See **Troubleshooting → Build** below.
 
