@@ -47,7 +47,12 @@ namespace Xamarin.AndroidTools
 			try {
 				result = ParseInternal (input);
 				return true;
-			} catch (Exception) {
+			} catch (FormatException) {
+				// Non-numeric version component
+			} catch (OverflowException) {
+				// Version component outside the range of Int32
+			} catch (ArgumentException) {
+				// Negative or otherwise invalid version component (Version constructor)
 			}
 
 			return false;
