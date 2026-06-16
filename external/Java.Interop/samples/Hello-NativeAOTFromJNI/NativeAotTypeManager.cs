@@ -1,148 +1,49 @@
-using Java.Interop;
 using System.Diagnostics.CodeAnalysis;
+
+using Java.Interop;
 
 namespace Hello_NativeAOTFromJNI;
 
-class NativeAotTypeManager : JniRuntime.JniTypeManager {
-	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
-	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-	internal const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+// This sample derives from the reflection-based JniRuntime.ReflectionJniTypeManager, which is
+// annotated [RequiresDynamicCode]/[RequiresUnreferencedCode], so the constructor below suppresses
+// the resulting IL2026/IL3050 trim/AOT warnings.
+//
+// Suppressing here is intentional and good enough: these NativeAOT projects are *samples*, not
+// product code. .NET for Android (what we actually ship) does not pair ReflectionJniTypeManager
+// with NativeAOT, so it isn't worth the effort to make these samples fully trim/AOT-clean right now.
+// The reflection paths were always trim/AOT-unsafe: before dotnet/java-interop#1441 the equivalent
+// suppressions lived (buried) inside JniTypeManager itself, justified "NotUsedInAndroid"; #1441 just
+// moved that responsibility to callers via [RequiresDynamicCode]/[RequiresUnreferencedCode].
+class NativeAotTypeManager : JniRuntime.ReflectionJniTypeManager {
 
-	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
+	const DynamicallyAccessedMemberTypes MethodsConstructors =
+		DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods |
+		DynamicallyAccessedMemberTypes.NonPublicNestedTypes |
+		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Sample only (see class comment): this assembly is rooted via TrimmerRootAssembly and the members reflected over during registration are preserved by the [DynamicallyAccessedMembers] annotations on the RegisterNativeMembers(Type) -> FindAndCallRegisterMethod path, so trimming does not remove what reflection needs.")]
+	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Sample only (see class comment): built-in member registration calls CreateDelegate on compile-time-known static methods (no MakeGenericType / expression compilation), so no runtime code generation is required.")]
+	public NativeAotTypeManager ()
 	{
-		var target = GetTypeForSimpleReference (jniSimpleReference);
-		if (target != null)
-			yield return target;
 	}
 
+	// The base ReflectionJniTypeManager resolves built-in types (primitives, java/lang/String,
+	// JavaProxyObject, ...) and handles registration and the reverse Type->JNI mapping (via the
+	// [JniTypeSignature] attribute) for us. We only need to teach it about this sample's own
+	// managed types.
 	[return: DynamicallyAccessedMembers (MethodsConstructors)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
-		return jniSimpleReference switch {
-			"V"                            => typeof (void),
-			"Z"                            => typeof (bool),
-			"java/lang/Boolean"            => typeof (bool?),
-			"B"                            => typeof (sbyte),
-			"java/lang/Byte"               => typeof (sbyte?),
-			"C"                            => typeof (char),
-			"java/lang/Character"          => typeof (char?),
-			"S"                            => typeof (short),
-			"java/lang/Short"              => typeof (short?),
-			"I"                            => typeof (int),
-			"java/lang/Integer"            => typeof (int?),
-			"J"                            => typeof (long),
-			"java/lang/Long"               => typeof (long?),
-			"F"                            => typeof (float),
-			"java/lang/Float"              => typeof (float?),
-			"D"                            => typeof (double),
-			"java/lang/Double"             => typeof (double?),
-			Example.ManagedType.JniTypeName => typeof (Example.ManagedType),
-			"java/lang/Object"             => typeof (Java.Lang.Object),
-			"java/lang/String"             => typeof (Java.Lang.String),
-			_                              => null,
-		};
+		if (jniSimpleReference == Example.ManagedType.JniTypeName)
+			return typeof (Example.ManagedType);
+		return base.GetTypeForSimpleReference (jniSimpleReference);
 	}
 
-	public override IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
+	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
-		if (!typeSignature.IsValid || typeSignature.ArrayRank != 0 || typeSignature.SimpleReference == null)
-			return [];
-		return GetTypesForSimpleReference (typeSignature.SimpleReference);
-	}
-
-	public override IEnumerable<JniRuntime.JniTypeManager.ReflectionConstructibleType> GetReflectionConstructibleTypes (JniTypeSignature typeSignature)
-	{
-		if (!typeSignature.IsValid || typeSignature.ArrayRank != 0 || typeSignature.SimpleReference == null)
-			yield break;
-		var target = GetTypeForSimpleReference (typeSignature.SimpleReference);
-		if (target != null)
-			yield return new JniRuntime.JniTypeManager.ReflectionConstructibleType (target);
-	}
-
-	protected override IEnumerable<string> GetSimpleReferences (Type type)
-	{
-		return CreateSimpleReferencesEnumerator (type);
-	}
-
-	IEnumerable<string> CreateSimpleReferencesEnumerator (Type type)
-	{
-		if (type == typeof (Example.ManagedType))
-			yield return Example.ManagedType.JniTypeName;
-		else if (type == typeof (Java.Lang.Object))
-			yield return "java/lang/Object";
-		else if (type == typeof (Java.Lang.String))
-			yield return "java/lang/String";
-	}
-
-	protected override string? GetSimpleReference (Type type)
-	{
-		return GetSimpleReferences (type).FirstOrDefault ();
-	}
-
-	protected override JniTypeSignature GetTypeSignatureCore (Type type)
-	{
-		var simpleReference = GetSimpleReference (type);
-		return simpleReference == null ? default : new JniTypeSignature (simpleReference, 0, false);
-	}
-
-	protected override IEnumerable<JniTypeSignature> GetTypeSignaturesCore (Type type)
-	{
-		var signature = GetTypeSignatureCore (type);
-		if (signature.IsValid)
-			yield return signature;
-	}
-
-	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-	protected override Type? GetInvokerTypeCore (
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type type)
-	{
-		return null;
-	}
-
-	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
-	{
-		return null;
-	}
-
-	protected override string? GetReplacementTypeCore (string jniSimpleReference)
-	{
-		return null;
-	}
-
-	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
-	{
-		return null;
-	}
-
-	public override void RegisterNativeMembers (
-			JniType nativeClass,
-			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-			Type type,
-			ReadOnlySpan<char> methods)
-	{
-		if (TryRegisterBuiltInNativeMembers (nativeClass, nativeClass.Name, methods))
-			return;
-
-		if (type != typeof (Example.ManagedType)) {
-			if (!methods.IsEmpty)
-				throw new NotSupportedException ($"Could not register native members for type '{type.FullName}'.");
-			return;
-		}
-
-		var registrations = new List<JniNativeMethodRegistration> ();
-		Example.ManagedType.RegisterNativeMembers (new JniNativeMethodRegistrationArguments (registrations, null));
-		if (registrations.Count > 0)
-			nativeClass.RegisterNativeMethods (registrations.ToArray ());
-	}
-
-	[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-	public override void RegisterNativeMembers (
-			JniType nativeClass,
-			[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-			Type type,
-			string? methods)
-	{
-		RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
+		if (jniSimpleReference == Example.ManagedType.JniTypeName)
+			yield return typeof (Example.ManagedType);
+		foreach (var t in base.GetTypesForSimpleReference (jniSimpleReference))
+			yield return t;
 	}
 }

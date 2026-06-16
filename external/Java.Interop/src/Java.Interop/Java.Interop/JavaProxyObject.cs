@@ -16,7 +16,7 @@ namespace Java.Interop {
 		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();
 
 		[JniAddNativeMethodRegistrationAttribute]
-		internal static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
+		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
 		{
 			args.Registrations.Add (new JniNativeMethodRegistration ("equals",   "(Ljava/lang/Object;)Z", new EqualsMarshalMethod (Equals)));
 			args.Registrations.Add (new JniNativeMethodRegistration ("hashCode", "()I",                   new GetHashCodeMarshalMethod (GetHashCode)));
