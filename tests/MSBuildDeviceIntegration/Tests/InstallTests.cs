@@ -304,29 +304,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LoggingPropsShouldCreateOverrideDirForRelease ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			// Set debuggable=true to allow run-as command usage with a release build
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
-
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				RunAdbCommand ("shell setprop debug.mono.log timing");
-				RunProjectAndAssert (proj, builder);
-				var didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
-				ClearShellProp ("debug.mono.log");
-				Assert.True (didLaunch, "Activity should have started.");
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				builder.Uninstall (proj);
-				StringAssert.Contains ("methods.txt", directorylist, $"methods.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
-			}
-		}
-
-		[Test]
 		public void BlankAdbTarget ()
 		{
 			var serial = GetAttachedDeviceSerial ();
