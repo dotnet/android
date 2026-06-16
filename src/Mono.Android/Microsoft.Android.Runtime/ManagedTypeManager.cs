@@ -143,6 +143,7 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 		}
 	}
 
+	[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = "Temporary suppression until ManagedTypeMapping type entries carry DAM annotations.")]
 	[return: DynamicallyAccessedMembers (MethodsConstructors)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
