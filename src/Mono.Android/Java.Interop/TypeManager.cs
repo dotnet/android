@@ -453,23 +453,23 @@ namespace Java.Interop {
 			}
 		}
 
+		const string TypeRegistrationNotSupported =
+			"Java package type registration is no longer supported. Java-to-managed type resolution now goes through the native and trimmable type maps.";
+
 		// The package-based Java-to-managed type registration fallback was removed
 		// (https://github.com/dotnet/android/issues/11663); type resolution now goes
 		// through the native / trimmable type map, and the generator no longer emits
-		// the `Java.Interop.__TypeRegistrations` class that called these methods. They
-		// are retained for API compatibility but no longer register anything.
+		// the `Java.Interop.__TypeRegistrations` class that called these methods. These
+		// shipped public APIs are retained for binary compatibility but now throw, as
+		// they can no longer register anything.
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
 		{
-			ArgumentNullException.ThrowIfNull (package);
-			ArgumentNullException.ThrowIfNull (lookup);
+			throw new NotSupportedException (TypeRegistrationNotSupported);
 		}
 
 		public static void RegisterPackages (string[] packages, Converter<string, Type?>[] lookups)
 		{
-			ArgumentNullException.ThrowIfNull (packages);
-			ArgumentNullException.ThrowIfNull (lookups);
-			if (packages.Length != lookups.Length)
-				throw new ArgumentException ("`packages` and `lookups` arrays must have same number of elements.");
+			throw new NotSupportedException (TypeRegistrationNotSupported);
 		}
 
 		[Register ("mono/android/TypeManager", DoNotGenerateAcw = true)]
