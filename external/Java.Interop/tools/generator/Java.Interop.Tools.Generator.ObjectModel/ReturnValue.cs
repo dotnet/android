@@ -152,7 +152,26 @@ namespace MonoDroid.Generation {
 				Report.LogCodedWarning (0, Report.WarningInvalidReturnType, owner, java_type, context.GetContextTypeMember ());
 				return false;
 			}
+			ApplyKotlinInlineClassProjection (opt, type_params);
 			return true;
+		}
+
+		// If the owning Method has KotlinInlineClassReturnJniType set, override
+		// managed_type with the wrapper struct's full name so the C# return type
+		// is the struct, while sym remains the underlying primitive for JNI.
+		void ApplyKotlinInlineClassProjection (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		{
+			var jni = owner?.KotlinInlineClassReturnJniType;
+			if (string.IsNullOrEmpty (jni))
+				return;
+			var javaName = TypeNameUtilities.JniSignatureToJavaTypeName (jni);
+			if (javaName == null)
+				return;
+			var wrapper = opt.SymbolTable.Lookup (javaName, type_params) as ClassGen;
+			if (wrapper == null || !wrapper.IsKotlinInlineClass)
+				return;
+			managed_type = wrapper.FullName;
+			NotNull = true;
 		}
 	}
 }

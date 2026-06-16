@@ -5,12 +5,6 @@
     <TestJarNoParameters Include="java/**/*NoParameters.java" />
     <TestJar Include="java\**\*.java" Exclude="@(TestJarNoParameters);java\android\annotation\NonNull.java;" />
     <TestKotlinJar Include="kotlin\**\*.kt" />
-    <TestKotlinGradleSource Include="kotlin-gradle\src\**\*.kt;kotlin-gradle\*.gradle.kts" />
-    <TestKotlinGradleOutput Include="kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" />
-    <TestKotlinGradleOutput Include="kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" />
-    <TestKotlinGradleOutput Include="kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" />
-    <TestKotlinGradleOutput Include="kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" />
-    <TestKotlinGradleOutput Include="kotlin-gradle\classes\xat\bytecode\tests\InlineClassCollisionsKt.class" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,23 +35,10 @@
   </Target>
 
   <!--
-      Build the real Kotlin/Gradle fixture in kotlin-gradle\ using the shared
-      Gradle wrapper from build-tools/gradle. Unlike BuildKotlinClasses above,
-      this is run unconditionally (a JDK is already required for BuildClasses),
-      so the .class files do not need to be committed. The wrapper downloads
-      Gradle + Kotlin on first run.
+      Build the real Kotlin/Gradle fixture in kotlin-gradle\. The shared
+      target file is also imported by generator-Tests, which embeds the
+      same .class files.
   -->
-  <PropertyGroup>
-    <_KotlinGradleProjectDir>$(MSBuildThisFileDirectory)kotlin-gradle</_KotlinGradleProjectDir>
-  </PropertyGroup>
-
-  <Target Name="BuildKotlinGradleProject"
-        BeforeTargets="BeforeCompile"
-        Inputs="@(TestKotlinGradleSource)"
-        Outputs="@(TestKotlinGradleOutput)">
-    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; classes"
-          EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)" />
-  </Target>
 
   <Target Name="BuildJar"
       AfterTargets="BuildClasses"

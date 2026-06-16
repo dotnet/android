@@ -212,6 +212,14 @@ namespace MonoDroid.Generation
 
 		public bool IsFinal { get; set; }
 
+		// Kotlin @JvmInline value class support.
+		// When IsKotlinInlineClass is true, the generator emits a `readonly struct`
+		// wrapper around KotlinInlineClassUnderlyingJniType instead of the usual
+		// peer-class binding.
+		public bool IsKotlinInlineClass { get; set; }
+
+		public string KotlinInlineClassUnderlyingJniType { get; set; }
+
 		public bool NeedsNew { get; set; }
 
 		public string PeerConstructorPartialMethod { get; set; }

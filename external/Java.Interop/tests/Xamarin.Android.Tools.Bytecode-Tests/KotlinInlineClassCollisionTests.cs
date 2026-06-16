@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Bytecode;
@@ -66,5 +67,141 @@ namespace Xamarin.Android.Tools.BytecodeTests
 
 			Assert.Contains ("Lkotlin/jvm/JvmInline;", annotations);
 		}
+
+		// dotnet/java-interop#1431 (Phase 2): KotlinFixups must surface the inline
+		// class's underlying primitive on each `@JvmInline value class` ClassFile so
+		// the generator can later emit a strongly-typed wrapper struct.
+		[Test]
+		public void Fixup_StampsKotlinInlineClassUnderlyingJniType ()
+		{
+			var classes = LoadInlineClassFixture ();
+
+			KotlinFixups.Fixup (classes);
+
+			var byName = classes.ToDictionary (c => c.ThisClass.Name.Value);
+
+			// MyColor and MyAlpha are both ULong-backed -> JNI primitive `J`.
+			Assert.AreEqual ("J", byName ["xat/bytecode/tests/MyColor"].KotlinInlineClassUnderlyingJniType);
+			Assert.AreEqual ("J", byName ["xat/bytecode/tests/MyAlpha"].KotlinInlineClassUnderlyingJniType);
+
+			// MyDp is Float-backed -> JNI primitive `F`.
+			Assert.AreEqual ("F", byName ["xat/bytecode/tests/MyDp"].KotlinInlineClassUnderlyingJniType);
+
+			// Non-inline classes must NOT be stamped.
+			Assert.IsNull (byName ["xat/bytecode/tests/Widgets"].KotlinInlineClassUnderlyingJniType);
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): for every Kotlin function whose
+		// source-level parameter type is a known inline class, KotlinFixups must
+		// stamp the `KotlinInlineClassJniType` on that parameter so the generator
+		// can swap the parameter's symbol for a wrapper-struct projection while
+		// keeping JNI marshaling on the underlying primitive.
+		[Test]
+		public void Fixup_StampsParameterInlineClassJniType ()
+		{
+			var classes = LoadInlineClassFixture ();
+			KotlinFixups.Fixup (classes);
+
+			var widgets = classes.Single (c => c.ThisClass.Name.Value == "xat/bytecode/tests/Widgets");
+
+			var tints = widgets.Methods
+				.Where (m => m.Name.StartsWith ("tint-", StringComparison.Ordinal))
+				.ToList ();
+
+			// Each tint() should have exactly one parameter, and that parameter
+			// should be stamped with the JNI signature of the inline class it
+			// originally came from in Kotlin source.
+			var stampedJniTypes = tints
+				.Select (m => m.GetParameters ().Single ().KotlinInlineClassJniType)
+				.Where (j => !string.IsNullOrEmpty (j))
+				.OrderBy (j => j, StringComparer.Ordinal)
+				.ToList ();
+
+			CollectionAssert.AreEquivalent (
+				new [] {
+					"Lxat/bytecode/tests/MyAlpha;",
+					"Lxat/bytecode/tests/MyColor;",
+					"Lxat/bytecode/tests/MyDp;",
+				},
+				stampedJniTypes,
+				"Each tint(<inline class>) parameter must be stamped with its inline-class JNI signature.");
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): when a method's Kotlin-source-level
+		// return type is a `@JvmInline value class`, KotlinFixups must stamp the
+		// method's `KotlinInlineClassReturnJniType` so the generator can project
+		// the return type to the wrapper struct.
+		[Test]
+		public void Fixup_StampsReturnInlineClassJniType ()
+		{
+			var classes = LoadInlineClassFixture ();
+			KotlinFixups.Fixup (classes);
+
+			var widgets = classes.Single (c => c.ThisClass.Name.Value == "xat/bytecode/tests/Widgets");
+
+			var pads = widgets.Methods
+				.Where (m => m.Name.StartsWith ("pad-", StringComparison.Ordinal))
+				.ToList ();
+
+			Assert.IsTrue (pads.Count > 0, "Expected `pad` overloads in fixture.");
+			Assert.IsTrue (
+				pads.All (m => m.KotlinInlineClassReturnJniType == "Lxat/bytecode/tests/MyDp;"),
+				$"All `pad` overloads return MyDp; got: [{string.Join (", ", pads.Select (m => m.KotlinInlineClassReturnJniType ?? "<null>"))}]");
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): KotlinFixups.FixupProperty must also
+		// stamp inline-class JNI types on property getter return values and setter
+		// parameters, not just on function parameters/returns.
+		[Test]
+		public void Fixup_StampsPropertyInlineClassJniType ()
+		{
+			var classes = LoadInlineClassFixture ();
+			KotlinFixups.Fixup (classes);
+
+			var widgets = classes.Single (c => c.ThisClass.Name.Value == "xat/bytecode/tests/Widgets");
+
+			// `var tintColor: MyColor` emits a mangled getter/setter pair —
+			// the property finder must look past the inline-class mangled name
+			// suffix (`-<hash>`) AND past the erased primitive return/parameter
+			// to bind these to the Kotlin property.
+			var getter = widgets.Methods.Single (m => m.Name.StartsWith ("getTintColor-", StringComparison.Ordinal));
+			var setter = widgets.Methods.Single (m => m.Name.StartsWith ("setTintColor-", StringComparison.Ordinal));
+
+			Assert.AreEqual ("Lxat/bytecode/tests/MyColor;", getter.KotlinInlineClassReturnJniType,
+				"Inline-class typed property getter must be stamped with the wrapper's JNI signature.");
+			Assert.AreEqual ("Lxat/bytecode/tests/MyColor;", setter.GetParameters ().Single ().KotlinInlineClassJniType,
+				"Inline-class typed property setter parameter must be stamped with the wrapper's JNI signature.");
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): the new fields must round-trip
+		// through XmlClassDeclarationBuilder onto the api.xml that the generator
+		// consumes.
+		[Test]
+		public void XmlOutput_ContainsKotlinInlineClassAttributes ()
+		{
+			var classes = LoadInlineClassFixture ();
+			KotlinFixups.Fixup (classes);
+
+			var classPath = new ClassPath { ApiSource = "class-parse" };
+			foreach (var c in classes)
+				classPath.Add (c);
+
+			var sw = new System.IO.StringWriter ();
+			classPath.SaveXmlDescription (sw);
+			var xml = sw.ToString ();
+
+			StringAssert.Contains ("kotlin-inline-class=\"true\"", xml);
+			StringAssert.Contains ("kotlin-inline-class-underlying-jni-type=\"J\"", xml);
+			StringAssert.Contains ("kotlin-inline-class-underlying-jni-type=\"F\"", xml);
+			StringAssert.Contains ("kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"", xml);
+			StringAssert.Contains ("kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"", xml);
+		}
+
+		static List<ClassFile> LoadInlineClassFixture () => new List<ClassFile> {
+			LoadClassFile ("MyColor.class"),
+			LoadClassFile ("MyAlpha.class"),
+			LoadClassFile ("MyDp.class"),
+			LoadClassFile ("Widgets.class"),
+		};
 	}
 }

@@ -31,4 +31,11 @@ object Widgets {
     // A non-colliding pair: different arity, both hash-mangled.
     fun pad(dp: MyDp): MyDp = dp
     fun pad(dp1: MyDp, dp2: MyDp): MyDp = dp1
+
+    // dotnet/java-interop#1431 (Phase 2): a mutable property typed as an
+    // inline class exercises the KotlinFixups.FixupProperty path — the
+    // getter's KotlinInlineClassReturnJniType and the setter's parameter
+    // KotlinInlineClassJniType must both be stamped so the generator emits
+    // `public static MyColor TintColor { get; set; }` instead of long.
+    var tintColor: MyColor = MyColor(0u)
 }

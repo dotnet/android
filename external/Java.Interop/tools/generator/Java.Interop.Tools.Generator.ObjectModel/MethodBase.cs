@@ -119,6 +119,14 @@ namespace MonoDroid.Generation
 			for (int i = 0; i < Parameters.Count; i++) {
 				if (Parameters [i].RawNativeType != other.Parameters [i].RawNativeType)
 					return false;
+				// dotnet/java-interop#1431 (Phase 2): two Kotlin @JvmInline
+				// value classes can share the same underlying JVM primitive
+				// (e.g. multiple `ULong`-backed inline classes on Compose
+				// APIs). Their `RawNativeType` is identical (`long`), but the
+				// projected wrapper structs are distinct C# overloads, so
+				// also compare the inline-class JNI type to keep them apart.
+				if (Parameters [i].KotlinInlineClassJniType != other.Parameters [i].KotlinInlineClassJniType)
+					return false;
 			}
 
 			return true;

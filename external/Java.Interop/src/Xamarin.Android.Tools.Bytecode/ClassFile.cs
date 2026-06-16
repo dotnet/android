@@ -24,6 +24,12 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public Methods              Methods;
 		public AttributeCollection  Attributes;
 
+		// Set by KotlinFixups when this class is a Kotlin `@JvmInline value class`.
+		// The value is the JNI type descriptor of the single backing field
+		// (e.g. "J", "F", "I", "Ljava/lang/String;"). null otherwise.
+		// See dotnet/java-interop#1431 (Phase 2).
+		public string? KotlinInlineClassUnderlyingJniType { get; set; }
+
 		ClassSignature?             signature;
 
 

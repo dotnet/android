@@ -26,7 +26,21 @@
     <ProjectReference Include="..\..\tools\generator\generator.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
   </ItemGroup>
+
+  <!-- Reuse the real Kotlin .class files compiled by the kotlin-gradle/ fixture
+       under tests/Xamarin.Android.Tools.Bytecode-Tests/ so we can exercise the
+       full class-parse -> XmlApiImporter -> generator pipeline against actual
+       Kotlin @JvmInline value classes (dotnet/java-interop#1431, Phase 2). -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" Link="kotlin-gradle\MyColor.class" LogicalName="generatortests.kotlin-gradle.MyColor.class" />
+    <EmbeddedResource Include="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" Link="kotlin-gradle\MyAlpha.class" LogicalName="generatortests.kotlin-gradle.MyAlpha.class" />
+    <EmbeddedResource Include="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" Link="kotlin-gradle\MyDp.class" LogicalName="generatortests.kotlin-gradle.MyDp.class" />
+    <EmbeddedResource Include="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" Link="kotlin-gradle\Widgets.class" LogicalName="generatortests.kotlin-gradle.Widgets.class" />
+  </ItemGroup>
+
+  <Import Project="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle.targets" />
 
   <ItemGroup>
     <Compile Remove="expected\**\*" />

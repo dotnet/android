@@ -41,12 +41,25 @@ namespace Xamarin.Android.Tools.Bytecode {
 					new XAttribute ("static",                   classFile.IsStatic),
 					new XAttribute ("visibility",               GetVisibility (classFile.Visibility)),
 					GetAnnotatedVisibility (classFile.Visibility, classFile.Attributes),
+					GetKotlinInlineClassAttributes (),
 					GetTypeParmeters (signature == null ? null : signature.TypeParameters),
 					GetImplementedInterfaces (),
 					GetConstructors (),
 					GetMethods (),
 					GetFields ()
 			);
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): when this class is a Kotlin
+		// `@JvmInline value class`, emit two extra attributes that drive
+		// generator-side wrapper-struct emission and parameter/return projection.
+		IEnumerable<XAttribute> GetKotlinInlineClassAttributes ()
+		{
+			var underlying = classFile.KotlinInlineClassUnderlyingJniType;
+			if (string.IsNullOrEmpty (underlying))
+				yield break;
+			yield return new XAttribute ("kotlin-inline-class", "true");
+			yield return new XAttribute ("kotlin-inline-class-underlying-jni-type", underlying);
 		}
 
 		string GetElementName ()
@@ -343,9 +356,11 @@ namespace Xamarin.Android.Tools.Bytecode {
 				new XAttribute ("deprecated",   GetDeprecatedValue (method.Attributes)),
 				new XAttribute ("final",        (method.AccessFlags & MethodAccessFlags.Final) != 0),
 				new XAttribute ("name",         name),
+				GetManagedName (method),
 				GetNative (method),
 				ret,
 				jniRet,
+				GetKotlinInlineClassReturnJniType (method),
 				new XAttribute ("static",       (method.AccessFlags & MethodAccessFlags.Static) != 0),
 				GetSynchronized (method),
 				new XAttribute ("visibility",   GetVisibility (method.AccessFlags)),
@@ -357,6 +372,28 @@ namespace Xamarin.Android.Tools.Bytecode {
 				GetTypeParmeters (msig == null ? null : msig.TypeParameters),
 				GetMethodParameters (method),
 				GetExceptions (method));
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): when the Kotlin compiler mangled
+		// the JVM method name for inline-class binary compatibility (e.g.
+		// `tint-Rn_QMJI`), expose the unmangled Kotlin source name via
+		// `managedName` so the generator emits a clean C# overload. The JVM
+		// name remains in `name`/`jni-signature` for JNI invocation.
+		static XAttribute? GetManagedName (MethodInfo method)
+		{
+			if (string.IsNullOrEmpty (method.KotlinName))
+				return null;
+			return new XAttribute ("managedName", method.KotlinName);
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): when a method's Kotlin source-level
+		// return type was a `@JvmInline value class`, surface that type's JNI
+		// signature so the generator can project the return type to a wrapper struct.
+		static XAttribute? GetKotlinInlineClassReturnJniType (MethodInfo method)
+		{
+			if (string.IsNullOrEmpty (method.KotlinInlineClassReturnJniType))
+				return null;
+			return new XAttribute ("kotlin-inline-class-return-jni-type", method.KotlinInlineClassReturnJniType);
 		}
 
 		static XAttribute? GetNative (MethodInfo method)
@@ -415,8 +452,19 @@ namespace Xamarin.Android.Tools.Bytecode {
 						new XAttribute ("name", p.Name),
 						new XAttribute ("type",     genericType),
 						new XAttribute ("jni-type", p.Type.TypeSignature ?? p.Type.BinaryName),
+						GetKotlinInlineClassJniType (p),
 						GetNotNull (annotations, i));
 			}
+		}
+
+		// dotnet/java-interop#1431 (Phase 2): when the parameter's Kotlin source-level
+		// type was a `@JvmInline value class`, surface that type's JNI signature so
+		// the generator can project the parameter to a strongly-typed wrapper struct.
+		static XAttribute? GetKotlinInlineClassJniType (ParameterInfo p)
+		{
+			if (string.IsNullOrEmpty (p.KotlinInlineClassJniType))
+				return null;
+			return new XAttribute ("kotlin-inline-class-jni-type", p.KotlinInlineClassJniType);
 		}
 
 		IEnumerable<XElement> GetExceptions (MethodInfo method)

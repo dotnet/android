@@ -110,6 +110,8 @@ namespace MonoDroid.Generation
 				FromXml = true,
 				IsAbstract = elem.XGetAttribute ("abstract") == "true",
 				IsFinal = elem.XGetAttribute ("final") == "true",
+				IsKotlinInlineClass = elem.XGetAttribute ("kotlin-inline-class") == "true",
+				KotlinInlineClassUnderlyingJniType = elem.XGetAttribute ("kotlin-inline-class-underlying-jni-type"),
 				PeerConstructorPartialMethod = elem.XGetAttribute ("peerConstructorPartialMethod"),
 				// Only use an explicitly set XML attribute
 				Unnest = elem.XGetAttribute ("unnest") == "true" ? true :
@@ -390,6 +392,7 @@ namespace MonoDroid.Generation
 				JavaName = elem.XGetAttribute ("name"),
 				ManagedOverride = elem.XGetAttribute ("managedOverride"),
 				ManagedReturn = elem.XGetAttribute ("managedReturn"),
+				KotlinInlineClassReturnJniType = elem.Attribute ("kotlin-inline-class-return-jni-type") != null ? elem.XGetAttribute ("kotlin-inline-class-return-jni-type") : null,
 				PropertyNameOverride = elem.XGetAttribute ("propertyName"),
 				Return = elem.XGetAttribute ("return"),
 				ReturnNotNull = elem.XGetAttribute ("return-not-null") == "true",
@@ -445,8 +448,11 @@ namespace MonoDroid.Generation
 			string enum_type = elem.Attribute ("enumType") != null ? elem.XGetAttribute ("enumType") : null;
 			string managed_type = elem.Attribute ("managedType") != null ? elem.XGetAttribute ("managedType") : null;
 			var not_null = elem.XGetAttribute ("not-null") == "true";
+			string kotlin_inline_jni = elem.Attribute ("kotlin-inline-class-jni-type") != null ? elem.XGetAttribute ("kotlin-inline-class-jni-type") : null;
 			// FIXME: "enum_type ?? java_type" should be extraneous. Somewhere in generator uses it improperly.
-			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type, not_null);
+			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type, not_null) {
+				KotlinInlineClassJniType = kotlin_inline_jni,
+			};
 			if (elem.Attribute ("sender") != null)
 				result.IsSender = true;
 			SetLineInfo (result, elem, options);

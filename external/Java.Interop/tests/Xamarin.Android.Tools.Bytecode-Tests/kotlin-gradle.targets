@@ -1,0 +1,36 @@
+<Project>
+
+  <!--
+      Shared MSBuild target for compiling the real Kotlin/Gradle fixture in
+      tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/ using the shared
+      Gradle wrapper from build-tools/gradle. The wrapper downloads Gradle +
+      Kotlin on first run, so the resulting .class files do not need to be
+      committed to source control.
+
+      This file is imported by any test project that embeds the resulting
+      .class files as resources (Bytecode-Tests and generator-Tests), so the
+      Gradle build always runs before BeforeCompile regardless of which
+      project triggers it.
+  -->
+
+  <ItemGroup>
+    <TestKotlinGradleSource Include="$(MSBuildThisFileDirectory)kotlin-gradle\src\**\*.kt;$(MSBuildThisFileDirectory)kotlin-gradle\*.gradle.kts" />
+    <TestKotlinGradleOutput Include="$(MSBuildThisFileDirectory)kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" />
+    <TestKotlinGradleOutput Include="$(MSBuildThisFileDirectory)kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" />
+    <TestKotlinGradleOutput Include="$(MSBuildThisFileDirectory)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" />
+    <TestKotlinGradleOutput Include="$(MSBuildThisFileDirectory)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_KotlinGradleProjectDir>$(MSBuildThisFileDirectory)kotlin-gradle</_KotlinGradleProjectDir>
+  </PropertyGroup>
+
+  <Target Name="BuildKotlinGradleProject"
+        BeforeTargets="BeforeCompile"
+        Inputs="@(TestKotlinGradleSource)"
+        Outputs="@(TestKotlinGradleOutput)">
+    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; classes"
+          EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)" />
+  </Target>
+
+</Project>

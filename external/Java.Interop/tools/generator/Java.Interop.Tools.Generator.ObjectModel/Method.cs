@@ -29,6 +29,7 @@ namespace MonoDroid.Generation
 		public string JavaName { get; set; }
 		public string ManagedOverride { get; set; }
 		public string ManagedReturn { get; set; }
+		public string KotlinInlineClassReturnJniType { get; set; }
 		public string PropertyNameOverride { get; set; }
 		public string Return { get; set; }
 		public bool ReturnNotNull { get; set; }
@@ -153,6 +154,7 @@ namespace MonoDroid.Generation
 			clone.JavaName = JavaName;
 			clone.ManagedOverride = ManagedOverride;
 			clone.ManagedReturn = ManagedReturn;
+			clone.KotlinInlineClassReturnJniType = KotlinInlineClassReturnJniType;
 			clone.PropertyNameOverride = PropertyNameOverride;
 			clone.Return = Return;
 			clone.ReturnNotNull = ReturnNotNull;

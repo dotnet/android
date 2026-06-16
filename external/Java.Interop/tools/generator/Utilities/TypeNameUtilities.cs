@@ -9,6 +9,21 @@ namespace MonoDroid.Generation
 {
 	public static class TypeNameUtilities
 	{
+		// Convert a JNI type signature like "Lcom/example/MyColor;" into the Java
+		// type name "com.example.MyColor". Returns null for non-reference signatures
+		// (primitives or arrays) since those are not used by the Kotlin inline-class
+		// projection path.
+		public static string JniSignatureToJavaTypeName (string jniSignature)
+		{
+			if (string.IsNullOrEmpty (jniSignature))
+				return null;
+			if (jniSignature.Length < 3 || jniSignature [0] != 'L' || jniSignature [jniSignature.Length - 1] != ';')
+				return null;
+			return jniSignature.Substring (1, jniSignature.Length - 2)
+				.Replace ('/', '.')
+				.Replace ('$', '.');
+		}
+
 		// These must be sorted for BinarySearch to work
 		// Missing "this" because it's handled elsewhere as "this_"
 		internal static string [] reserved_keywords = new [] {

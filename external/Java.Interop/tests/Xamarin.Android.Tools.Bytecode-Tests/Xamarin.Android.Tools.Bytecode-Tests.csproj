@@ -58,5 +58,6 @@
   </ItemGroup>
 
   <Import Project="Xamarin.Android.Tools.Bytecode-Tests.targets" />
+  <Import Project="kotlin-gradle.targets" />
 
 </Project>
