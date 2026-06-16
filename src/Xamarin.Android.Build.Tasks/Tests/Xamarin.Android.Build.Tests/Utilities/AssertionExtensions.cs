@@ -175,7 +175,7 @@ namespace Xamarin.Android.Build.Tests
 				.Select (line => System.Text.RegularExpressions.Regex.Match (line, @"^\s*(\d+) Warning\(s\)\s*$"))
 				.FirstOrDefault (m => m.Success);
 			Assert.IsNotNull (match, $"{logFile} did not contain an MSBuild 'N Warning(s)' summary line.");
-			var actual = uint.Parse (match.Groups [1].Value);
+			var actual = uint.Parse (match.Groups [1].Value, System.Globalization.CultureInfo.InvariantCulture);
 			Assert.IsTrue (actual <= maxWarnings, $"{logFile} should have at most {maxWarnings} MSBuild warnings, but had {actual}.");
 		}
 	}
