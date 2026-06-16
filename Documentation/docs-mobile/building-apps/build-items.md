@@ -27,6 +27,8 @@ Each item includes the following metadata:
 - `%(PackageFormat)`: `apk` or `aab`.
 - `%(Signed)`: `true` when the package is signed.
 - `%(PackageId)`: The resolved Android package name.
+- `%(Abi)`: The Android ABI for a per-ABI APK output. This metadata is only
+  set for per-ABI APKs.
 
 MSBuild also provides well-known metadata for each item. For example,
 `%(Filename)%(Extension)` is the package file name and `%(FullPath)` is the
@@ -38,7 +40,7 @@ For example:
 <Target Name="WriteAndroidPackageOutputs" AfterTargets="Publish">
   <WriteLinesToFile
       File="$(PublishDir)android-package-outputs.txt"
-      Lines="@(AndroidPackageOutput->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)')"
+      Lines="@(AndroidPackageOutput->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
       Overwrite="true" />
 </Target>
 ```

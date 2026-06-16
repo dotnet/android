@@ -42,6 +42,7 @@ This file contains the implementation for 'dotnet publish'.
         <PackageFormat>%(_AndroidPackageOutputForPublish.PackageFormat)</PackageFormat>
         <Signed>%(_AndroidPackageOutputForPublish.Signed)</Signed>
         <PackageId>%(_AndroidPackageOutputForPublish.PackageId)</PackageId>
+        <Abi Condition=" '%(_AndroidPackageOutputForPublish.Abi)' != '' ">%(_AndroidPackageOutputForPublish.Abi)</Abi>
       </_AndroidPackageOutputPublishCopy>
       <AndroidPackageOutput Remove="@(AndroidPackageOutput)" />
       <AndroidPackageOutput Include="@(_AndroidPackageOutputPublishCopy)" />

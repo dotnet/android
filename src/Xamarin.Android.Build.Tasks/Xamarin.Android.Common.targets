@@ -2690,22 +2690,22 @@ because xbuild doesn't support framework reference assemblies.
       <Signed>false</Signed>
     </AndroidPackageOutput>
     <AndroidPackageOutput
-        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' "
-        Include="$(OutDir)$(_AndroidPackage)*.apk"
-        Exclude="$(ApkFile);$(OutDir)$(_AndroidPackage)*-Signed.apk;$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk">
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' And Exists('$(OutDir)$(_AndroidPackage)-%(_BuildTargetAbis.Identity).apk') "
+        Include="@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity).apk')">
       <PackageFormat>apk</PackageFormat>
       <Signed>false</Signed>
+      <Abi>%(_BuildTargetAbis.Identity)</Abi>
     </AndroidPackageOutput>
     <AndroidPackageOutput Condition="Exists('$(ApkFileSigned)')" Include="$(ApkFileSigned)">
       <PackageFormat>apk</PackageFormat>
       <Signed>true</Signed>
     </AndroidPackageOutput>
     <AndroidPackageOutput
-        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' "
-        Include="$(OutDir)$(_AndroidPackage)*-Signed.apk"
-        Exclude="$(ApkFileSigned)">
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' And Exists('$(OutDir)$(_AndroidPackage)-%(_BuildTargetAbis.Identity)-Signed.apk') "
+        Include="@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity)-Signed.apk')">
       <PackageFormat>apk</PackageFormat>
       <Signed>true</Signed>
+      <Abi>%(_BuildTargetAbis.Identity)</Abi>
     </AndroidPackageOutput>
     <AndroidPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFile)') " Include="$(_AabFile)">
       <PackageFormat>aab</PackageFormat>

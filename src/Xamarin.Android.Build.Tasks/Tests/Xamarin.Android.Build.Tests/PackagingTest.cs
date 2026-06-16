@@ -552,7 +552,7 @@ namespace UnnamedProject {
   <Target Name="WriteAndroidPackageOutputItems" AfterTargets="Build">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
-        Lines="%(AndroidPackageOutput.Filename)%(AndroidPackageOutput.Extension)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.PackageId)"
+        Lines="%(AndroidPackageOutput.Filename)%(AndroidPackageOutput.Extension)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.PackageId)|%(AndroidPackageOutput.Abi)"
         Overwrite="true" />
   </Target>
 </Project>
@@ -590,7 +590,9 @@ namespace UnnamedProject {
 				var packageOutputItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "android-package-output-items.txt"));
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					AssertApkIsSigned (apk);
-					var expectedItem = $"{Path.GetFileName (apk)}|apk|true|{proj.PackageName}";
+					var fileName = Path.GetFileName (apk);
+					var abi = GetPackageOutputAbi (proj.PackageName, fileName);
+					var expectedItem = $"{fileName}|apk|true|{proj.PackageName}|{abi}";
 					Assert.IsTrue (packageOutputItems.Contains (expectedItem), $"Expected AndroidPackageOutput item '{expectedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, packageOutputItems)}");
 				}
 
@@ -625,6 +627,15 @@ namespace UnnamedProject {
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					AssertApkIsSigned (apk);
 				}
+			}
+
+			string GetPackageOutputAbi (string packageName, string fileName)
+			{
+				var prefix = $"{packageName}-";
+				const string suffix = "-Signed.apk";
+				if (fileName == $"{packageName}{suffix}" || !fileName.StartsWith (prefix, StringComparison.Ordinal) || !fileName.EndsWith (suffix, StringComparison.Ordinal))
+					return "";
+				return fileName.Substring (prefix.Length, fileName.Length - prefix.Length - suffix.Length);
 			}
 
 			int GetVersionCodeFromIntermediateManifest (string manifestFilePath)
