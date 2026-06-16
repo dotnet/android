@@ -48,7 +48,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (true, "llvm-ir", runtime);
 				AddTestData (false, "llvm-ir", runtime);
 				AddTestData (true, "managed", runtime);
@@ -526,7 +526,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void DotNetWatchHotReload ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void DotNetWatchHotReload ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const string initialMessage = "DOTNET_WATCH_INITIAL_12345";
 			const string hotReloadMessage = "DOTNET_WATCH_HOT_RELOAD_APPLIED";
@@ -628,7 +628,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void DeployToDevice ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void DeployToDevice ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -671,7 +671,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void ActivityAliasRuns ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -703,7 +703,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values] bool enableMarshalMethods, [Values] AndroidRuntime runtime)
+		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values] bool enableMarshalMethods, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -775,7 +775,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
-		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -809,52 +809,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (MonitorAdbLogcat ((line) => {
 				return line.Contains (expectedLogcatOutput);
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
-		}
-
-		[Test]
-		public void SubscribeToAppDomainUnhandledException ([Values] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR or NativeAOT");
-			}
-
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			if (runtime == AndroidRuntime.MonoVM) {
-				proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
-			} else {
-				proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
-			}
-
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
-@"			AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
-				Console.WriteLine (""# Unhandled Exception: sender={0}; e.IsTerminating={1}; e.ExceptionObject={2}"",
-					sender, e.IsTerminating, e.ExceptionObject);
-			};
-			throw new Exception (""CRASH"");
-");
-			builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			RunProjectAndAssert (proj, builder);
-
-			string? expectedSender = runtime switch
-			{
-				AndroidRuntime.MonoVM => "System.Object", // MonoVM passes the current domain as the sender
-				AndroidRuntime.CoreCLR => null, // CoreCLR explicitly passes a `null` sender
-				_ => throw new NotImplementedException($"Test does not support runtime {runtime}"),
-			};
-			string expectedLogcatOutput = $"# Unhandled Exception: sender={expectedSender}; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-			Assert.IsTrue (
-				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
-					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
-				$"Output did not contain {expectedLogcatOutput}!");
 		}
 
 
@@ -891,7 +845,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("テスト", runtime);
 				AddTestData ("随机生成器", runtime);
 				AddTestData ("中国", runtime);
@@ -909,7 +863,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		public void UnhandledExceptionFromButtonClick ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void UnhandledExceptionFromButtonClick ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
@@ -1075,7 +1029,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void CustomLinkDescriptionPreserve (
 		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
-		  [Values] AndroidRuntime runtime
+		  [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime
 		)
 		{
 			const bool isRelease = true;
@@ -1238,7 +1192,7 @@ namespace Library1 {
 		}
 
 		[Test]
-		public void JsonDeserializationCreatesJavaHandle ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void JsonDeserializationCreatesJavaHandle ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -1334,94 +1288,7 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void RunWithInterpreterEnabled ([Values] bool isRelease, [Values] AndroidRuntime runtime)
-		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// MonoVM-only test, for now (until CoreCLR has interpreter we can use)
-			if (runtime != AndroidRuntime.MonoVM) {
-				Assert.Ignore ("MonoVM-only test for the moment");
-			}
-
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
-				IsRelease = isRelease,
-				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
-			};
-			proj.SetRuntime (runtime);
-			var abis = new string[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetRuntimeIdentifiers (abis);
-			proj.SetProperty (proj.CommonProperties, "UseInterpreter", "True");
-			builder = CreateApkBuilder ();
-			builder.BuildLogFile = "install.log";
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-
-			RunAdbCommand ("shell setprop debug.mono.log all");
-			var logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
-			Assert.AreEqual (logProp, "all", "The debug.mono.log prop was not set correctly.");
-			RunProjectAndAssert (proj, builder);
-
-			Func<string, bool> checkForInterpMessage = line => {
-				return line.Contains ("Enabling Mono Interpreter");
-			};
-			var timeoutInSeconds = ActivityStartTimeoutInSeconds;
-			var didPrintInterpMessage = MonitorAdbLogcat (
-				action: checkForInterpMessage,
-				logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "interpreter-logcat.log"),
-				timeout: timeoutInSeconds);
-			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds);
-			ClearShellProp ("debug.mono.log");
-			logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
-			Assert.AreEqual (logProp, string.Empty, "The debug.mono.log prop was not unset correctly.");
-			Assert.IsTrue (didPrintInterpMessage, "logcat output did not contain 'Enabling Mono Interpreter'.");
-			Assert.IsTrue (didStart, "Activity should have started.");
-		}
-
-		[Test]
-		public void RunWithLLVMEnabled ()
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			// Mono-only test
-			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetRuntimeIdentifiers (new[] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" });
-			proj.SetProperty ("EnableLLVM", true.ToString ());
-
-			builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			RunProjectAndAssert (proj, builder);
-
-			var activityNamespace   = proj.PackageName;
-			var activityName        = "MainActivity";
-			var logcatFilePath      = Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log");
-			var failedToLoad        = new List<string> ();
-			bool appLaunched        = MonitorAdbLogcat ((line) => {
-				if (SeenFailedToLoad (line))
-					failedToLoad.Add (line);
-				return SeenActivityDisplayed (line);
-			}, logcatFilePath, timeout: ActivityStartTimeoutInSeconds);
-
-			Assert.IsTrue (appLaunched, "LLVM app did not launch");
-			Assert.AreEqual (0, failedToLoad.Count, $"LLVM .so files not loaded:\n{string.Join ("\n", failedToLoad)}");
-
-			bool SeenActivityDisplayed (string line)
-			{
-				var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
-				var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
-				return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
-			}
-
-			bool SeenFailedToLoad (string line)
-			{
-				return line.Contains ("Failed to load shared library");
-			}
-		}
-
-		[Test]
-		public void SingleProject_ApplicationId ([Values] bool testOnly, [Values] AndroidRuntime runtime)
+		public void SingleProject_ApplicationId ([Values] bool testOnly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1455,7 +1322,7 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void AppWithStyleableUsageRuns ([Values] bool isRelease,	[Values] bool linkResources, [Values] bool useStringTypeMaps, [Values] AndroidRuntime runtime)
+		public void AppWithStyleableUsageRuns ([Values] bool isRelease,	[Values] bool linkResources, [Values] bool useStringTypeMaps, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -1611,7 +1478,7 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void CheckXamarinFormsAppDeploysAndAButtonWorks ([Values] AndroidRuntime runtime)
+		public void CheckXamarinFormsAppDeploysAndAButtonWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1650,7 +1517,7 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void SkiaSharpCanvasBasedAppRuns ([Values] bool isRelease, [Values] bool addResource, [Values] AndroidRuntime runtime)
+		public void SkiaSharpCanvasBasedAppRuns ([Values] bool isRelease, [Values] bool addResource, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -1771,7 +1638,7 @@ namespace UnnamedProject
 
 
 		[Test]
-		public void CheckResouceIsOverridden ([Values] AndroidRuntime runtime)
+		public void CheckResouceIsOverridden ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1878,7 +1745,7 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviousSdk (
 				[Values] bool isRelease,
-				[Values] AndroidRuntime runtime)
+				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -1962,7 +1829,7 @@ namespace UnnamedProject
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework,
-				[Values] AndroidRuntime runtime)
+				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -2026,7 +1893,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void TypeAndMemberRemapping ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void TypeAndMemberRemapping ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -2077,7 +1944,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void SupportDesugaringStaticInterfaceMethods ([Values] AndroidRuntime runtime)
+		public void SupportDesugaringStaticInterfaceMethods ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2130,7 +1997,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void FastDeployEnvironmentFiles ([Values] bool isRelease, [Values] bool embedAssembliesIntoApk, [Values] AndroidRuntime runtime)
+		public void FastDeployEnvironmentFiles ([Values] bool isRelease, [Values] bool embedAssembliesIntoApk, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -2262,7 +2129,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void FixLegacyResourceDesignerStep ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void FixLegacyResourceDesignerStep ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -2321,7 +2188,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void MicrosoftIntune ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void MicrosoftIntune ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/8548");
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2361,7 +2228,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		}
 
 		[Test]
-		public void GradleFBProj ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void GradleFBProj ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -2513,7 +2380,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void AppStartsWithManagedMarshalMethodsLookupEnabled ([Values] AndroidRuntime runtime)
+		public void AppStartsWithManagedMarshalMethodsLookupEnabled ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2561,9 +2428,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		[TestCase ("run", AndroidRuntime.MonoVM)]
 		[TestCase ("run", AndroidRuntime.CoreCLR)]
-		[TestCase ("test", AndroidRuntime.MonoVM)]
 		[TestCase ("test", AndroidRuntime.CoreCLR)]
 		public void DotNetNewAndroidTest (string mode, AndroidRuntime runtime)
 		{

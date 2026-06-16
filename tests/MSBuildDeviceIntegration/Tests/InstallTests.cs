@@ -157,7 +157,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
+		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -212,8 +212,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = true,
 			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			proj.SetRuntimeIdentifiers (new[] { abi });
 
 			using (var builder = CreateApkBuilder ()) {
@@ -311,8 +309,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
