@@ -318,6 +318,17 @@ public class JavaSourceTest {
         Lines="%(AndroidPackageOutput.FullPath)|%(AndroidPackageOutput.Filename)%(AndroidPackageOutput.Extension)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.PackageId)"
         Overwrite="true" />
   </Target>
+  <Target Name="WriteResolvedPackagePublishItems" AfterTargets="_CalculateAndroidFilesToPublish">
+    <ItemGroup>
+      <_ResolvedPackagePublishItem
+          Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.apk' Or '%(ResolvedFileToPublish.Extension)' == '.aab' " />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/resolved-package-publish-items.txt"
+        Lines="@(_ResolvedPackagePublishItem->'%(FullPath)|%(RelativePath)')"
+        Overwrite="true" />
+  </Target>
 </Project>
 """
 					},
@@ -362,7 +373,8 @@ public class JavaSourceTest {
 				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
 			}
 
-			var publishDirectory = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
+			var packageDirectory = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, runtimeIdentifier);
+			var publishDirectory = Path.Combine (packageDirectory, "publish");
 			var apk = Path.Combine (publishDirectory, $"{proj.PackageName}.apk");
 			var apkSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk");
 			// NOTE: the unsigned .apk doesn't exist when $(AndroidPackageFormats) is `aab;apk`
@@ -377,6 +389,18 @@ public class JavaSourceTest {
 				var aabSigned = Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab");
 				FileAssert.Exists (aab);
 				FileAssert.Exists (aabSigned);
+			}
+
+			var resolvedPackagePublishItems = ReadAndroidPackageOutputItems (Path.Combine (Root, projBuilder.ProjectDirectory, "resolved-package-publish-items.txt"));
+			if (!isRelease) {
+				Assert.AreEqual (2, resolvedPackagePublishItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (resolvedPackagePublishItems)}");
+				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk");
+				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk");
+			} else {
+				Assert.AreEqual (3, resolvedPackagePublishItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (resolvedPackagePublishItems)}");
+				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab");
+				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab");
+				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk");
 			}
 
 			var packageOutputItems = ReadAndroidPackageOutputItems (Path.Combine (Root, projBuilder.ProjectDirectory, "android-package-output-items.txt"));
@@ -411,6 +435,15 @@ public class JavaSourceTest {
 				item [3] == signed &&
 				item [4] == packageId).ToList ();
 			Assert.AreEqual (1, matches.Count, $"Expected package output item '{fullPath}|{fileName}|{packageFormat}|{signed}|{packageId}'. Actual items:{Environment.NewLine}{FormatPackageOutputItems (items)}");
+		}
+
+		static void AssertResolvedPackagePublishItem (List<string []> items, string fullPath, string relativePath)
+		{
+			var matches = items.Where (item =>
+				item.Length == 2 &&
+				item [0] == fullPath &&
+				item [1] == relativePath).ToList ();
+			Assert.AreEqual (1, matches.Count, $"Expected resolved package publish item '{fullPath}|{relativePath}'. Actual items:{Environment.NewLine}{FormatPackageOutputItems (items)}");
 		}
 
 		static string FormatPackageOutputItems (List<string []> items)
