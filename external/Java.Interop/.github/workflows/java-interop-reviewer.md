@@ -7,6 +7,7 @@ on:
 environment: copilot-pr-reviewer
 permissions:
   contents: read
+  copilot-requests: write
   pull-requests: read
 engine:
   id: copilot
