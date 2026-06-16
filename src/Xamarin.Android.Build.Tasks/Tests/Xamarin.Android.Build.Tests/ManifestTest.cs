@@ -570,6 +570,62 @@ namespace Bug12935
 			},
 		};
 
+		// TODO: make it work on CoreCLR and NativeAOT. The test data uses 32-bit ABIs
+		// (armeabi-v7a, x86) that are not supported on CoreCLR/NativeAOT, and the expected
+		// version codes were computed and verified manually for the Mono mobile runtime.
+		[Test]
+		[TestCaseSource(nameof (VersionCodeTestSource))]
+		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
+		{
+			Assert.Ignore ("TODO: rework the test data for CoreCLR/NativeAOT supported ABIs.");
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				MinSdkVersion = "24",
+				SupportedOSPlatformVersion = "24.0",
+			};
+
+			proj.SetProperty ("Foo", "1");
+			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
+			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
+			if (!string.IsNullOrEmpty (abis))
+				proj.SetRuntimeIdentifiers (abis.Split (';'));
+			if (!string.IsNullOrEmpty (versionCodePattern))
+				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
+			else
+				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodePattern");
+			if (!string.IsNullOrEmpty (versionCodeProperties))
+				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
+			else
+				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
+			if (useLegacy)
+				proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
+				if (!shouldBuild)
+					return;
+				var abiItems = seperateApk ? abis.Split (';') : new string[1];
+				var expectedItems = expectedVersionCode.Split (';');
+				XNamespace aNS = "http://schemas.android.com/apk/res/android";
+				Assert.AreEqual (abiItems.Length, expectedItems.Length, "abis parameter should have matching elements for expected");
+				for (int i = 0; i < abiItems.Length; i++) {
+					var path = seperateApk ? Path.Combine ("android", abiItems[i], "AndroidManifest.xml") : Path.Combine ("android", "manifest", "AndroidManifest.xml");
+					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
+					var doc = XDocument.Parse (manifest);
+					var nsResolver = new XmlNamespaceManager (new NameTable ());
+					nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+					var m = doc.XPathSelectElement ("/manifest") as XElement;
+					Assert.IsNotNull (m, "no manifest element found");
+					var vc = m.Attribute (aNS + "versionCode");
+					Assert.IsNotNull (vc, "no versionCode attribute found");
+					StringAssert.AreEqualIgnoringCase (expectedItems[i], vc.Value,
+						$"Version Code is incorrect. Found {vc.Value} expect {expectedItems[i]}");
+				}
+			}
+		}
+
 		static IEnumerable<object[]> Get_ApplicationVersionTests_Data ()
 		{
 			var ret = new List<object[]> ();
