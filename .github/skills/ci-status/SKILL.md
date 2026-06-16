@@ -67,9 +67,38 @@ az rest --method get --resource $RES \
 - **`result: failed` or any ❌ check** → red. Surface the gating failures (the ❌ checks / `result: failed` timeline jobs and their tests). If the build is still running with a job already failed, lead with that so the user can start fixing now.
 - **`result: succeeded` and all checks green** → green, even if `ResultsByBuild` lists failures — those are flaky/non-gating `continueOnError` lanes. Mention them in one line; don't block.
 
-### Report
+### Report — use this format (omit sections that don't apply)
 
-Cover: fork badge (🔀 direct / 🍴 fork), the single `dotnet-android` build (result, elapsed, jobs `N/total done · M running`), an ETA if in-progress (rough window — durations swing ~50 min to ~3 h with agent queue time; see references), failing stages/jobs, and gating vs flaky test failures. For `Package Tests` (on-device) crashes — `UnsatisfiedLinkError`, `SIGSEGV`, a silent `am instrument` — the answer is usually in `logcat-<testName>.txt` inside the `Test Results - APKs ...` artifact, not the test message.
+```
+# CI Status — PR #NNNN "<title>"
+🔀 Direct PR   (or 🍴 Fork PR — may await `/azp run` approval)
+
+## dotnet-android [#<buildId>](<link>)
+**Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
+⏱️ <elapsed>  ·  ETA ~HH:MM UTC (rough — recent runs ≈50 min–3 h)   ← only while in progress
+📊 Jobs: <done>/<total> done · <running> running · <waiting> waiting
+
+| Stage > Job | Status |
+|-------------|--------|
+| Mac > macOS > Build | ✅ |
+| Package Tests > macOS > Tests > APKs 2 | ❌ |
+
+### Failures                ← if any
+❌ <Stage> > <Job> — <first error from issues[]>
+
+### Failed tests            ← if any
+- **Gating** (must fix): `Ns.Class.Test` — <error>
+- **Flaky / non-gating** (build still green; e.g. `SslTest.*`, `-TrimModePartial`/`-NoAab` lanes): `...`
+
+## Verdict: ✅ green  /  ❌ red — <one-line reason>
+
+## What next?
+1. Logs / stack trace for a failure
+2. `.binlog` (+ `logcat-*.txt` for device-test crashes)
+3. Re-run a flaky/failed stage with `/azp run`
+```
+
+Notes: every `dotnet-android (...)` check is one job, so the Stage > Job table *is* the check list (the only non-`dotnet-android` check is `license/cla`). For `Package Tests` (on-device) crashes — `UnsatisfiedLinkError`, `SIGSEGV`, a silent `am instrument` — the cause is usually in `logcat-<testName>.txt` inside the `Test Results - APKs ...` artifact, not the test message.
 
 ## Phase 2 — Deep dive (only if asked)
 
