@@ -5,34 +5,31 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 22384
+      "Size": 19036
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 18224
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 100504
+      "Size": 92568
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 127232
+      "Size": 119168
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 27056
+      "Size": 26872
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 24360
-    },
-    "lib/arm64-v8a/lib_System.IO.Hashing.dll.so": {
-      "Size": 24280
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
       "Size": 25552
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 708120
+      "Size": 704944
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20248
+      "Size": 20224
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
       "Size": 19760
@@ -65,7 +62,7 @@
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19832
+      "Size": 19680
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -92,5 +89,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3340710
+  "PackageSize": 3320142
 }
