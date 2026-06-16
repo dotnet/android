@@ -455,6 +455,10 @@ namespace Java.Interop {
 
 		public static void RegisterPackage (string package, Converter<string, Type> lookup)
 		{
+			if (package == null)
+				throw new ArgumentNullException ("package");
+			if (lookup == null)
+				throw new ArgumentNullException ("lookup");
 		}
 
 		public static void RegisterPackages (string[] packages, Converter<string, Type?>[] lookups)
