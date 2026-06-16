@@ -80,7 +80,7 @@ engine:
   id: copilot
   model: claude-opus-4.8
 max-daily-ai-credits: -1
-max-ai-credits: -1
+max-ai-credits: 100M
 strict: true
 timeout-minutes: 30
 tools:
