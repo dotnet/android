@@ -309,13 +309,13 @@ public class JavaSourceTest {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
 				},
 				Imports = {
-					new Import (() => "PackageOutputs.targets") {
+					new Import (() => "ApplicationArtifacts.targets") {
 						TextContent = () => """
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="WriteAndroidPackageOutputItems" AfterTargets="Publish">
+  <Target Name="WriteApplicationArtifactItems" AfterTargets="Publish">
     <WriteLinesToFile
-        File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
-        Lines="%(AndroidPackageOutput.FullPath)|%(AndroidPackageOutput.Filename)%(AndroidPackageOutput.Extension)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.PackageId)"
+        File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
+        Lines="%(ApplicationArtifact.FullPath)|%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)"
         Overwrite="true" />
   </Target>
   <Target Name="WriteResolvedPackagePublishItems" AfterTargets="_CalculateAndroidFilesToPublish">
@@ -391,32 +391,32 @@ public class JavaSourceTest {
 				FileAssert.Exists (aabSigned);
 			}
 
-			var resolvedPackagePublishItems = ReadAndroidPackageOutputItems (Path.Combine (Root, projBuilder.ProjectDirectory, "resolved-package-publish-items.txt"));
+			var resolvedPackagePublishItems = ReadApplicationArtifactItems (Path.Combine (Root, projBuilder.ProjectDirectory, "resolved-package-publish-items.txt"));
 			if (!isRelease) {
-				Assert.AreEqual (2, resolvedPackagePublishItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (resolvedPackagePublishItems)}");
+				Assert.AreEqual (2, resolvedPackagePublishItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (resolvedPackagePublishItems)}");
 				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk");
 				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk");
 			} else {
-				Assert.AreEqual (3, resolvedPackagePublishItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (resolvedPackagePublishItems)}");
+				Assert.AreEqual (3, resolvedPackagePublishItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (resolvedPackagePublishItems)}");
 				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab");
 				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab");
 				AssertResolvedPackagePublishItem (resolvedPackagePublishItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk");
 			}
 
-			var packageOutputItems = ReadAndroidPackageOutputItems (Path.Combine (Root, projBuilder.ProjectDirectory, "android-package-output-items.txt"));
+			var applicationArtifactItems = ReadApplicationArtifactItems (Path.Combine (Root, projBuilder.ProjectDirectory, "application-artifact-items.txt"));
 			if (!isRelease) {
-				Assert.AreEqual (2, packageOutputItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (packageOutputItems)}");
-				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk", "apk", "false", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
+				Assert.AreEqual (2, applicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (applicationArtifactItems)}");
+				AssertApplicationArtifactItem (applicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk", "apk", "false", proj.PackageName);
+				AssertApplicationArtifactItem (applicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
 			} else {
-				Assert.AreEqual (3, packageOutputItems.Count, $"Actual items:{Environment.NewLine}{FormatPackageOutputItems (packageOutputItems)}");
-				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab", "aab", "false", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName);
-				AssertPackageOutputItem (packageOutputItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
+				Assert.AreEqual (3, applicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (applicationArtifactItems)}");
+				AssertApplicationArtifactItem (applicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab", "aab", "false", proj.PackageName);
+				AssertApplicationArtifactItem (applicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName);
+				AssertApplicationArtifactItem (applicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
 			}
 		}
 
-		static List<string []> ReadAndroidPackageOutputItems (string path)
+		static List<string []> ReadApplicationArtifactItems (string path)
 		{
 			FileAssert.Exists (path);
 			return File.ReadAllLines (path)
@@ -425,7 +425,7 @@ public class JavaSourceTest {
 				.ToList ();
 		}
 
-		static void AssertPackageOutputItem (List<string []> items, string fullPath, string fileName, string packageFormat, string signed, string packageId)
+		static void AssertApplicationArtifactItem (List<string []> items, string fullPath, string fileName, string packageFormat, string signed, string packageId)
 		{
 			var matches = items.Where (item =>
 				item.Length == 5 &&
@@ -434,7 +434,7 @@ public class JavaSourceTest {
 				item [2] == packageFormat &&
 				item [3] == signed &&
 				item [4] == packageId).ToList ();
-			Assert.AreEqual (1, matches.Count, $"Expected package output item '{fullPath}|{fileName}|{packageFormat}|{signed}|{packageId}'. Actual items:{Environment.NewLine}{FormatPackageOutputItems (items)}");
+			Assert.AreEqual (1, matches.Count, $"Expected application artifact item '{fullPath}|{fileName}|{packageFormat}|{signed}|{packageId}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (items)}");
 		}
 
 		static void AssertResolvedPackagePublishItem (List<string []> items, string fullPath, string relativePath)
@@ -443,10 +443,10 @@ public class JavaSourceTest {
 				item.Length == 2 &&
 				item [0] == fullPath &&
 				item [1] == relativePath).ToList ();
-			Assert.AreEqual (1, matches.Count, $"Expected resolved package publish item '{fullPath}|{relativePath}'. Actual items:{Environment.NewLine}{FormatPackageOutputItems (items)}");
+			Assert.AreEqual (1, matches.Count, $"Expected resolved package publish item '{fullPath}|{relativePath}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (items)}");
 		}
 
-		static string FormatPackageOutputItems (List<string []> items)
+		static string FormatApplicationArtifactItems (List<string []> items)
 		{
 			return string.Join (Environment.NewLine, items.Select (item => string.Join ("|", item)));
 		}

@@ -12,10 +12,10 @@ This file contains the implementation for 'dotnet publish'.
     <_PublishDependsOn>
       Build;
       PrepareForPublish;
-      _CollectAndroidPackageOutputs;
+      _CollectApplicationArtifacts;
       _CalculateAndroidFilesToPublish;
       CopyFilesToPublishDirectory;
-      _UpdateAndroidPackageOutputsForPublish;
+      _UpdateApplicationArtifactsForPublish;
     </_PublishDependsOn>
   </PropertyGroup>
 
@@ -26,28 +26,28 @@ This file contains the implementation for 'dotnet publish'.
       <_AndroidFilesToPublish Include="$(AndroidProguardMappingFile)" Condition="Exists ('$(AndroidProguardMappingFile)')" />
       <_AndroidFilesToPublish Include="$(_GenerateResourceDesignerAssemblyOutput)" Condition="Exists('$(_GenerateResourceDesignerAssemblyOutput)')" />
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" />
-      <ResolvedFileToPublish Include="@(AndroidPackageOutput)" RelativePath="%(Filename)%(Extension)" />
+      <ResolvedFileToPublish Include="@(ApplicationArtifact)" RelativePath="%(Filename)%(Extension)" />
       <ResolvedFileToPublish Include="@(_AndroidFilesToPublish)" RelativePath="%(FileName)%(Extension)" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_UpdateAndroidPackageOutputsForPublish">
+  <Target Name="_UpdateApplicationArtifactsForPublish">
     <ItemGroup>
-      <_AndroidPackageOutputForPublish Remove="@(_AndroidPackageOutputForPublish)" />
-      <_AndroidPackageOutputPublishCopy Remove="@(_AndroidPackageOutputPublishCopy)" />
-      <_AndroidPackageOutputForPublish Include="@(AndroidPackageOutput)" />
-      <_AndroidPackageOutputPublishCopy
-          Include="@(_AndroidPackageOutputForPublish->'$(PublishDir)%(Filename)%(Extension)')"
-          Condition="Exists('$(PublishDir)%(_AndroidPackageOutputForPublish.Filename)%(_AndroidPackageOutputForPublish.Extension)')">
-        <PackageFormat>%(_AndroidPackageOutputForPublish.PackageFormat)</PackageFormat>
-        <Signed>%(_AndroidPackageOutputForPublish.Signed)</Signed>
-        <PackageId>%(_AndroidPackageOutputForPublish.PackageId)</PackageId>
-        <Abi Condition=" '%(_AndroidPackageOutputForPublish.Abi)' != '' ">%(_AndroidPackageOutputForPublish.Abi)</Abi>
-      </_AndroidPackageOutputPublishCopy>
-      <AndroidPackageOutput Remove="@(AndroidPackageOutput)" />
-      <AndroidPackageOutput Include="@(_AndroidPackageOutputPublishCopy)" />
-      <_AndroidPackageOutputForPublish Remove="@(_AndroidPackageOutputForPublish)" />
-      <_AndroidPackageOutputPublishCopy Remove="@(_AndroidPackageOutputPublishCopy)" />
+      <_ApplicationArtifactForPublish Remove="@(_ApplicationArtifactForPublish)" />
+      <_ApplicationArtifactPublishCopy Remove="@(_ApplicationArtifactPublishCopy)" />
+      <_ApplicationArtifactForPublish Include="@(ApplicationArtifact)" />
+      <_ApplicationArtifactPublishCopy
+          Include="@(_ApplicationArtifactForPublish->'$(PublishDir)%(Filename)%(Extension)')"
+          Condition="Exists('$(PublishDir)%(_ApplicationArtifactForPublish.Filename)%(_ApplicationArtifactForPublish.Extension)')">
+        <PackageFormat>%(_ApplicationArtifactForPublish.PackageFormat)</PackageFormat>
+        <Signed>%(_ApplicationArtifactForPublish.Signed)</Signed>
+        <PackageId>%(_ApplicationArtifactForPublish.PackageId)</PackageId>
+        <Abi Condition=" '%(_ApplicationArtifactForPublish.Abi)' != '' ">%(_ApplicationArtifactForPublish.Abi)</Abi>
+      </_ApplicationArtifactPublishCopy>
+      <ApplicationArtifact Remove="@(ApplicationArtifact)" />
+      <ApplicationArtifact Include="@(_ApplicationArtifactPublishCopy)" />
+      <_ApplicationArtifactForPublish Remove="@(_ApplicationArtifactForPublish)" />
+      <_ApplicationArtifactPublishCopy Remove="@(_ApplicationArtifactPublishCopy)" />
     </ItemGroup>
   </Target>
 

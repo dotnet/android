@@ -15,12 +15,14 @@ an [MSBuild ItemGroup](/visualstudio/msbuild/itemgroup-element-msbuild).
 > [!NOTE]
 > In .NET for Android there is technically no distinction between an application and a bindings project, so build items will work in both. In practice it is highly recommended to create separate application and bindings projects. Build items that are primarily used in bindings projects are documented in the [MSBuild bindings project items](../binding-libs/msbuild-reference/build-items.md) reference guide.
 
-## AndroidPackageOutput
+## ApplicationArtifact
 
-`@(AndroidPackageOutput)` contains the final Android package files produced
+`@(ApplicationArtifact)` contains the final application artifact files produced
 by package, signing, and publish targets. This item group can be used by
 custom MSBuild targets to discover APK and Android App Bundle outputs without
-recalculating the final file names.
+recalculating the final file names. .NET for Android populates this item group
+with Android-specific artifacts, and other .NET mobile platforms can use the
+same item name for their final application artifacts.
 
 Each item includes the following metadata:
 
@@ -37,10 +39,10 @@ full package path.
 For example:
 
 ```xml
-<Target Name="WriteAndroidPackageOutputs" AfterTargets="Publish">
+<Target Name="WriteApplicationArtifacts" AfterTargets="Publish">
   <WriteLinesToFile
-      File="$(PublishDir)android-package-outputs.txt"
-      Lines="@(AndroidPackageOutput->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
+      File="$(PublishDir)application-artifacts.txt"
+      Lines="@(ApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
       Overwrite="true" />
 </Target>
 ```

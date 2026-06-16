@@ -546,13 +546,13 @@ namespace UnnamedProject {
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				Imports = {
-					new Import (() => "PackageOutputs.targets") {
+					new Import (() => "ApplicationArtifacts.targets") {
 						TextContent = () => """
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="WriteAndroidPackageOutputItems" AfterTargets="Build">
+  <Target Name="WriteApplicationArtifactItems" AfterTargets="Build">
     <WriteLinesToFile
-        File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
-        Lines="%(AndroidPackageOutput.Filename)%(AndroidPackageOutput.Extension)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.PackageId)|%(AndroidPackageOutput.Abi)"
+        File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
+        Lines="%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.Abi)"
         Overwrite="true" />
   </Target>
 </Project>
@@ -587,13 +587,13 @@ namespace UnnamedProject {
 				}
 
 				//Make sure the APKs are signed
-				var packageOutputItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "android-package-output-items.txt"));
+				var applicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "application-artifact-items.txt"));
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					AssertApkIsSigned (apk);
 					var fileName = Path.GetFileName (apk);
-					var abi = GetPackageOutputAbi (proj.PackageName, fileName);
+					var abi = GetApplicationArtifactAbi (proj.PackageName, fileName);
 					var expectedItem = $"{fileName}|apk|true|{proj.PackageName}|{abi}";
-					Assert.IsTrue (packageOutputItems.Contains (expectedItem), $"Expected AndroidPackageOutput item '{expectedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, packageOutputItems)}");
+					Assert.IsTrue (applicationArtifactItems.Contains (expectedItem), $"Expected ApplicationArtifact item '{expectedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, applicationArtifactItems)}");
 				}
 
 				// Make sure the APKs have unique version codes
@@ -629,7 +629,7 @@ namespace UnnamedProject {
 				}
 			}
 
-			string GetPackageOutputAbi (string packageName, string fileName)
+			string GetApplicationArtifactAbi (string packageName, string fileName)
 			{
 				var prefix = $"{packageName}-";
 				const string suffix = "-Signed.apk";

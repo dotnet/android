@@ -2678,53 +2678,53 @@ because xbuild doesn't support framework reference assemblies.
   <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
 </Target>
 
-<Target Name="_CollectAndroidPackageOutputs"
+<Target Name="_CollectApplicationArtifacts"
     Condition=" '$(AndroidApplication)' == 'true' "
     DependsOnTargets="_ValidateAndroidPackageProperties">
   <ItemGroup>
-    <AndroidPackageOutput Remove="@(AndroidPackageOutput)" />
-    <AndroidPackageOutput
+    <ApplicationArtifact Remove="@(ApplicationArtifact)" />
+    <ApplicationArtifact
         Condition=" '$(AndroidPackageFormat)' != 'aab' And Exists('$(ApkFile)') "
         Include="$(ApkFile)">
       <PackageFormat>apk</PackageFormat>
       <Signed>false</Signed>
-    </AndroidPackageOutput>
-    <AndroidPackageOutput
+    </ApplicationArtifact>
+    <ApplicationArtifact
         Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' And Exists('$(OutDir)$(_AndroidPackage)-%(_BuildTargetAbis.Identity).apk') "
         Include="@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity).apk')">
       <PackageFormat>apk</PackageFormat>
       <Signed>false</Signed>
       <Abi>%(_BuildTargetAbis.Identity)</Abi>
-    </AndroidPackageOutput>
-    <AndroidPackageOutput Condition="Exists('$(ApkFileSigned)')" Include="$(ApkFileSigned)">
+    </ApplicationArtifact>
+    <ApplicationArtifact Condition="Exists('$(ApkFileSigned)')" Include="$(ApkFileSigned)">
       <PackageFormat>apk</PackageFormat>
       <Signed>true</Signed>
-    </AndroidPackageOutput>
-    <AndroidPackageOutput
+    </ApplicationArtifact>
+    <ApplicationArtifact
         Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' And Exists('$(OutDir)$(_AndroidPackage)-%(_BuildTargetAbis.Identity)-Signed.apk') "
         Include="@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity)-Signed.apk')">
       <PackageFormat>apk</PackageFormat>
       <Signed>true</Signed>
       <Abi>%(_BuildTargetAbis.Identity)</Abi>
-    </AndroidPackageOutput>
-    <AndroidPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFile)') " Include="$(_AabFile)">
+    </ApplicationArtifact>
+    <ApplicationArtifact Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFile)') " Include="$(_AabFile)">
       <PackageFormat>aab</PackageFormat>
       <Signed>false</Signed>
-    </AndroidPackageOutput>
-    <AndroidPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFileSigned)') " Include="$(_AabFileSigned)">
+    </ApplicationArtifact>
+    <ApplicationArtifact Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFileSigned)') " Include="$(_AabFileSigned)">
       <PackageFormat>aab</PackageFormat>
       <Signed>true</Signed>
-    </AndroidPackageOutput>
-    <AndroidPackageOutput
-        Update="@(AndroidPackageOutput)"
+    </ApplicationArtifact>
+    <ApplicationArtifact
+        Update="@(ApplicationArtifact)"
         PackageId="$(_AndroidPackage)" />
   </ItemGroup>
 </Target>
 
-<Target Name="GetAndroidPackageOutputs"
+<Target Name="GetApplicationArtifacts"
     Condition=" '$(AndroidApplication)' == 'true' "
-    DependsOnTargets="SignAndroidPackage;_CollectAndroidPackageOutputs"
-    Returns="@(AndroidPackageOutput)" />
+    DependsOnTargets="SignAndroidPackage;_CollectApplicationArtifacts"
+    Returns="@(ApplicationArtifact)" />
 
 <Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
