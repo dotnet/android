@@ -2683,43 +2683,38 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_ValidateAndroidPackageProperties">
   <ItemGroup>
     <AndroidPackageOutput Remove="@(AndroidPackageOutput)" />
-    <_AndroidUnsignedApkPackageOutput Remove="@(_AndroidUnsignedApkPackageOutput)" />
-    <_AndroidSignedApkPackageOutput Remove="@(_AndroidSignedApkPackageOutput)" />
-    <_AndroidUnsignedAabPackageOutput Remove="@(_AndroidUnsignedAabPackageOutput)" />
-    <_AndroidSignedAabPackageOutput Remove="@(_AndroidSignedAabPackageOutput)" />
-    <_AndroidUnsignedApkPackageOutput
+    <AndroidPackageOutput
         Condition=" '$(AndroidPackageFormat)' != 'aab' And Exists('$(ApkFile)') "
         Include="$(ApkFile)">
       <PackageFormat>apk</PackageFormat>
       <Signed>false</Signed>
-    </_AndroidUnsignedApkPackageOutput>
-    <_AndroidUnsignedApkPackageOutput
+    </AndroidPackageOutput>
+    <AndroidPackageOutput
         Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' "
         Include="$(OutDir)$(_AndroidPackage)*.apk"
         Exclude="$(ApkFile);$(OutDir)$(_AndroidPackage)*-Signed.apk;$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk">
       <PackageFormat>apk</PackageFormat>
       <Signed>false</Signed>
-    </_AndroidUnsignedApkPackageOutput>
-    <_AndroidSignedApkPackageOutput Condition="Exists('$(ApkFileSigned)')" Include="$(ApkFileSigned)">
+    </AndroidPackageOutput>
+    <AndroidPackageOutput Condition="Exists('$(ApkFileSigned)')" Include="$(ApkFileSigned)">
       <PackageFormat>apk</PackageFormat>
       <Signed>true</Signed>
-    </_AndroidSignedApkPackageOutput>
-    <_AndroidSignedApkPackageOutput
+    </AndroidPackageOutput>
+    <AndroidPackageOutput
         Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' "
         Include="$(OutDir)$(_AndroidPackage)*-Signed.apk"
         Exclude="$(ApkFileSigned)">
       <PackageFormat>apk</PackageFormat>
       <Signed>true</Signed>
-    </_AndroidSignedApkPackageOutput>
-    <_AndroidUnsignedAabPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFile)') " Include="$(_AabFile)">
+    </AndroidPackageOutput>
+    <AndroidPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFile)') " Include="$(_AabFile)">
       <PackageFormat>aab</PackageFormat>
       <Signed>false</Signed>
-    </_AndroidUnsignedAabPackageOutput>
-    <_AndroidSignedAabPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFileSigned)') " Include="$(_AabFileSigned)">
+    </AndroidPackageOutput>
+    <AndroidPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFileSigned)') " Include="$(_AabFileSigned)">
       <PackageFormat>aab</PackageFormat>
       <Signed>true</Signed>
-    </_AndroidSignedAabPackageOutput>
-    <AndroidPackageOutput Include="@(_AndroidUnsignedApkPackageOutput);@(_AndroidSignedApkPackageOutput);@(_AndroidUnsignedAabPackageOutput);@(_AndroidSignedAabPackageOutput)" />
+    </AndroidPackageOutput>
     <AndroidPackageOutput
         Update="@(AndroidPackageOutput)"
         PackageId="$(_AndroidPackage)" />
