@@ -160,8 +160,8 @@
 {0} - The value of $(JavaSdkDirectory) that was provided to the task</comment>
   </data>
   <data name="Invalid_JavaSdkDirectory_ExistingInstall" xml:space="preserve">
-    <value>Обнаружен устаревший пакет SDK для Java с версией "{1}" в "{0}", но не удалось установить рекомендуемый пакет SDK для Java (версия "{2}") в этом расположении.
-Обновите свой пакет SDK для Java до версии "{2}" или настройте для "$(JavaSdkDirectory)" допустимый неадминистративный путь, чтобы установить рекомендуемую версию пакета SDK для Java в новое расположение.</value>
+    <value>Обнаружен устаревший пакет SDK для Java с версией `{1}` в `{0}`, но не удалось установить рекомендуемый пакет SDK для Java (версия `{2}`) в этом расположении.
+Обновите свой пакет SDK для Java до версии `{2}` или настройте для `$(JavaSdkDirectory)` допустимый неадминистративный путь, чтобы установить рекомендуемую версию пакета SDK для Java в новое расположение.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
 {0} - The value of $(JavaSdkDirectory) that was provided to the task
 {1} - The major version of the the Java SDK that was already installed

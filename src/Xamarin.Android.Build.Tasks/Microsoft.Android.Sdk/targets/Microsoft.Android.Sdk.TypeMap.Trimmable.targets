@@ -27,6 +27,8 @@
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_OuterIntermediateOutputPath)' != '' ">$(IntermediateOutputPath)</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_PostTrimTypeMapJavaBaseOutputDir)' == '' ">$(_TypeMapBaseOutputDir)</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaOutputDirectory>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
+    <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
+    <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_PostTrimTrimmableTypeMapJavaStamp>$(_PostTrimTypeMapJavaBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>
@@ -254,7 +256,7 @@
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
   -->
   <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
       Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 

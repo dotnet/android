@@ -7,7 +7,6 @@
       Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
-  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" />
   <Import
       Project="$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props')"

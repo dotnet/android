@@ -143,7 +143,7 @@ Cette erreur est probablement due à un problème avec le fichier AndroidManifes
     <value>Nom de fichier non valide : les noms de fichiers ne peuvent pas utiliser de mots réservés Java.</value>
   </data>
   <data name="IL6001" xml:space="preserve">
-    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+    <value>L’assembly « {0} » contient une référence à l’attribut obsolète « Android.Runtime.PreserveAttribute ». Les membres ayant cet attribut peuvent être tronqués. Veuillez utiliser System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute à la place</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Impossible de déterminer le niveau d'API pour $(TargetFrameworkVersion) '{0}'.</value>
@@ -225,7 +225,7 @@ Remarque : le Android Designer est incompatible avec le Kit de développement l
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Mode inconnu : {0}</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
