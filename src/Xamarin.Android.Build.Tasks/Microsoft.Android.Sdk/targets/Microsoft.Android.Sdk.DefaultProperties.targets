@@ -1,11 +1,5 @@
 <Project>
 
-  <Target Name="_ErrorOnMonoMobileRuntime"
-          BeforeTargets="Build;Publish"
-          Condition=" '$(UseMonoRuntime)' == 'true' ">
-    <Error Code="NETSDK1242" Text="Building Android projects with the Mono runtime is not supported in .NET 11.0 and later. Use the .NET 10.0 SDK to build this project." />
-  </Target>
-
   <!-- User-facing configuration-agnostic defaults -->
   <PropertyGroup>
     <AndroidBoundExceptionType Condition=" '$(AndroidBoundExceptionType)' == '' ">System</AndroidBoundExceptionType>
