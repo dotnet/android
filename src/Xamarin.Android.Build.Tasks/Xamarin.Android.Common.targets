@@ -2678,6 +2678,81 @@ because xbuild doesn't support framework reference assemblies.
   <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
 </Target>
 
+<Target Name="_CollectAndroidPackageOutputs"
+    Condition=" '$(AndroidApplication)' == 'true' "
+    DependsOnTargets="_ValidateAndroidPackageProperties">
+  <ItemGroup>
+    <AndroidPackageOutput Remove="@(AndroidPackageOutput)" />
+    <_AndroidUnsignedApkPackageOutput Remove="@(_AndroidUnsignedApkPackageOutput)" />
+    <_AndroidSignedApkPackageOutput Remove="@(_AndroidSignedApkPackageOutput)" />
+    <_AndroidUnsignedAabPackageOutput Remove="@(_AndroidUnsignedAabPackageOutput)" />
+    <_AndroidSignedAabPackageOutput Remove="@(_AndroidSignedAabPackageOutput)" />
+    <_AndroidUnsignedApkPackageOutput
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And Exists('$(ApkFile)') "
+        Include="$(ApkFile)">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>false</Signed>
+      <SourcePackageFormat>apk</SourcePackageFormat>
+      <IsUniversal>false</IsUniversal>
+    </_AndroidUnsignedApkPackageOutput>
+    <_AndroidUnsignedApkPackageOutput
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' "
+        Include="$(OutDir)$(_AndroidPackage)*.apk"
+        Exclude="$(ApkFile);$(OutDir)$(_AndroidPackage)*-Signed.apk;$(OutDir)$(_AndroidPackage)*-Signed-Unaligned.apk">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>false</Signed>
+      <SourcePackageFormat>apk</SourcePackageFormat>
+      <IsUniversal>false</IsUniversal>
+    </_AndroidUnsignedApkPackageOutput>
+    <_AndroidSignedApkPackageOutput Condition="Exists('$(ApkFileSigned)')" Include="$(ApkFileSigned)">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>true</Signed>
+      <SourcePackageFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">aab</SourcePackageFormat>
+      <SourcePackageFormat Condition=" '$(AndroidPackageFormat)' != 'aab' ">apk</SourcePackageFormat>
+      <IsUniversal Condition=" '$(AndroidPackageFormat)' == 'aab' ">true</IsUniversal>
+      <IsUniversal Condition=" '$(AndroidPackageFormat)' != 'aab' ">false</IsUniversal>
+    </_AndroidSignedApkPackageOutput>
+    <_AndroidSignedApkPackageOutput
+        Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' "
+        Include="$(OutDir)$(_AndroidPackage)*-Signed.apk"
+        Exclude="$(ApkFileSigned)">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>true</Signed>
+      <SourcePackageFormat Condition=" '$(AndroidPackageFormat)' == 'aab' ">aab</SourcePackageFormat>
+      <SourcePackageFormat Condition=" '$(AndroidPackageFormat)' != 'aab' ">apk</SourcePackageFormat>
+      <IsUniversal Condition=" '$(AndroidPackageFormat)' == 'aab' ">true</IsUniversal>
+      <IsUniversal Condition=" '$(AndroidPackageFormat)' != 'aab' ">false</IsUniversal>
+    </_AndroidSignedApkPackageOutput>
+    <_AndroidUnsignedAabPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFile)') " Include="$(_AabFile)">
+      <PackageFormat>aab</PackageFormat>
+      <Signed>false</Signed>
+      <SourcePackageFormat>aab</SourcePackageFormat>
+      <IsUniversal>false</IsUniversal>
+    </_AndroidUnsignedAabPackageOutput>
+    <_AndroidSignedAabPackageOutput Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFileSigned)') " Include="$(_AabFileSigned)">
+      <PackageFormat>aab</PackageFormat>
+      <Signed>true</Signed>
+      <SourcePackageFormat>aab</SourcePackageFormat>
+      <IsUniversal>false</IsUniversal>
+    </_AndroidSignedAabPackageOutput>
+    <AndroidPackageOutput Include="@(_AndroidUnsignedApkPackageOutput);@(_AndroidSignedApkPackageOutput);@(_AndroidUnsignedAabPackageOutput);@(_AndroidSignedAabPackageOutput)" />
+    <AndroidPackageOutput
+        Update="@(AndroidPackageOutput)"
+        PackageId="$(_AndroidPackage)"
+        RuntimeIdentifier="$(RuntimeIdentifier)"
+        TargetFramework="$(TargetFramework)"
+        Configuration="$(Configuration)"
+        AndroidPackageFormat="$(AndroidPackageFormat)"
+        AndroidPackageFormats="$(AndroidPackageFormats)"
+        RelativePath="%(Filename)%(Extension)" />
+  </ItemGroup>
+</Target>
+
+<Target Name="GetAndroidPackageOutputs"
+    Condition=" '$(AndroidApplication)' == 'true' "
+    DependsOnTargets="SignAndroidPackage;_CollectAndroidPackageOutputs"
+    Returns="@(AndroidPackageOutput)" />
+
 <Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>
 

@@ -153,6 +153,9 @@ Creates and signs the Android package (`.apk`) file.
 
 Use with `/p:Configuration=Release` to generate self-contained "Release" packages.
 
+Package files created by this target are available in the
+[`@(AndroidPackageOutput)`](build-items.md#androidpackageoutput) item group.
+
 ## StartAndroidActivity
 
 Starts the default activity on the device or the running emulator.

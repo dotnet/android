@@ -545,6 +545,20 @@ namespace UnnamedProject {
 			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				Imports = {
+					new Import (() => "PackageOutputs.targets") {
+						TextContent = () => """
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="WriteAndroidPackageOutputItems" AfterTargets="Build">
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
+        Lines="%(AndroidPackageOutput.RelativePath)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)"
+        Overwrite="true" />
+  </Target>
+</Project>
+"""
+					},
+				}
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
@@ -573,8 +587,11 @@ namespace UnnamedProject {
 				}
 
 				//Make sure the APKs are signed
+				var packageOutputItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "android-package-output-items.txt"));
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					AssertApkIsSigned (apk);
+					var expectedItem = $"{Path.GetFileName (apk)}|apk|true";
+					Assert.IsTrue (packageOutputItems.Contains (expectedItem), $"Expected AndroidPackageOutput item '{expectedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, packageOutputItems)}");
 				}
 
 				// Make sure the APKs have unique version codes

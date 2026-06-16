@@ -307,6 +307,24 @@ public class JavaSourceTest {
 				EnableDefaultItems = true,
 				ExtraNuGetConfigSources = {
 					Path.Combine (XABuildPaths.BuildOutputDirectory, "nuget-unsigned"),
+				},
+				Imports = {
+					new Import (() => "PackageOutputs.targets") {
+						TextContent = () => """
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="WriteAndroidPackageOutputItems" AfterTargets="Publish">
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
+        Lines="package|%(AndroidPackageOutput.RelativePath)|%(AndroidPackageOutput.PackageFormat)|%(AndroidPackageOutput.Signed)|%(AndroidPackageOutput.IsUniversal)|%(AndroidPackageOutput.SourcePackageFormat)|%(AndroidPackageOutput.PackageId)"
+        Overwrite="true" />
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/android-package-output-items.txt"
+        Lines="published|%(AndroidPublishedPackageOutput.RelativePath)|%(AndroidPublishedPackageOutput.PackageFormat)|%(AndroidPublishedPackageOutput.Signed)|%(AndroidPublishedPackageOutput.IsUniversal)|%(AndroidPublishedPackageOutput.SourcePackageFormat)|%(AndroidPublishedPackageOutput.PackageId)"
+        Overwrite="false" />
+  </Target>
+</Project>
+"""
+					},
 				}
 			};
 			proj.SetRuntime (runtime);
@@ -364,6 +382,49 @@ public class JavaSourceTest {
 				FileAssert.Exists (aab);
 				FileAssert.Exists (aabSigned);
 			}
+
+			var packageOutputItems = ReadAndroidPackageOutputItems (Path.Combine (Root, projBuilder.ProjectDirectory, "android-package-output-items.txt"));
+			if (!isRelease) {
+				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}.apk", "apk", "false", "false", "apk", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}-Signed.apk", "apk", "true", "false", "apk", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}.apk", "apk", "false", "false", "apk", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}-Signed.apk", "apk", "true", "false", "apk", proj.PackageName);
+			} else {
+				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}.aab", "aab", "false", "false", "aab", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}-Signed.aab", "aab", "true", "false", "aab", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "package", $"{proj.PackageName}-Signed.apk", "apk", "true", "true", "aab", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}.aab", "aab", "false", "false", "aab", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}-Signed.aab", "aab", "true", "false", "aab", proj.PackageName);
+				AssertPackageOutputItem (packageOutputItems, "published", $"{proj.PackageName}-Signed.apk", "apk", "true", "true", "aab", proj.PackageName);
+			}
+		}
+
+		static List<string []> ReadAndroidPackageOutputItems (string path)
+		{
+			FileAssert.Exists (path);
+			return File.ReadAllLines (path)
+				.Where (line => line.Length > 0)
+				.Select (line => line.Split ('|'))
+				.ToList ();
+		}
+
+		static void AssertPackageOutputItem (List<string []> items, string itemType, string relativePath, string packageFormat, string signed, string isUniversal, string sourcePackageFormat, string packageId)
+		{
+			var matches = items.Where (item =>
+				item.Length == 7 &&
+				item [0] == itemType &&
+				item [1] == relativePath &&
+				item [2] == packageFormat &&
+				item [3] == signed &&
+				item [4] == isUniversal &&
+				item [5] == sourcePackageFormat &&
+				item [6] == packageId).ToList ();
+			Assert.AreEqual (1, matches.Count, $"Expected package output item '{itemType}|{relativePath}|{packageFormat}|{signed}|{isUniversal}|{sourcePackageFormat}|{packageId}'. Actual items:{Environment.NewLine}{FormatPackageOutputItems (items)}");
+		}
+
+		static string FormatPackageOutputItems (List<string []> items)
+		{
+			return string.Join (Environment.NewLine, items.Select (item => string.Join ("|", item)));
 		}
 
 		[Test]
