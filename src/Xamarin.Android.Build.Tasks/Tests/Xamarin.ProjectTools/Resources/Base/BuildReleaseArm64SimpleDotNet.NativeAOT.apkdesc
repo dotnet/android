@@ -5,19 +5,10 @@
       "Size": 3124
     },
     "classes.dex": {
-      "Size": 25400
+      "Size": 22016
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 5072296
-    },
-    "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
-    },
-    "META-INF/BNDLTOOL.SF": {
-      "Size": 1211
-    },
-    "META-INF/MANIFEST.MF": {
-      "Size": 1084
+      "Size": 5057072
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -44,5 +35,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2126818
+  "PackageSize": 2122523
 }
