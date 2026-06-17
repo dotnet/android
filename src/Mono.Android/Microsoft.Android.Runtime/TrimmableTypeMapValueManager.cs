@@ -154,7 +154,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			//  (c) classes are compatible but no proxy / activation failed
 			//      → NotSupportedException (genuine generator gap)
 			if (targetType is not null && resolvedTargetType is not null) {
-				if (!typeMap.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+				if (!typeMap.TryGetJniNameForManagedType (resolvedTargetType, out var targetJniName)) {
 					throw new ArgumentException (
 						$"Could not determine Java type corresponding to '{targetType.AssemblyQualifiedName}'.",
 						nameof (targetType));
@@ -249,12 +249,30 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return CreatePeer (ref reference, options, targetType);
 		}
 
-		// TODO: why is this needed? why isn't this needed for other nullable primitives (e.g. byte?, int?, ...)?
-		if (targetType == typeof (sbyte?)) {
-			return typeof (sbyte);
+		if (TryUnwrapNullable (targetType, out var innerType)) {
+			targetType = innerType;
 		}
 
 		return JavaConvert.FromObjectReference (ref reference, options, targetType);
+	}
+
+	static bool TryUnwrapNullable (
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType,
+		[NotNullWhen (true)]
+		[DynamicallyAccessedMembers (Constructors)]
+		out Type? innerType)
+	{
+		if (targetType is not null
+			&& targetType.IsGenericType
+			&& targetType.GetGenericTypeDefinition () == typeof (Nullable<>))
+		{
+			innerType = Nullable.GetUnderlyingType (targetType);
+			return innerType is not null;
+		}
+
+		innerType = null;
+		return false;
 	}
 
 	protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (

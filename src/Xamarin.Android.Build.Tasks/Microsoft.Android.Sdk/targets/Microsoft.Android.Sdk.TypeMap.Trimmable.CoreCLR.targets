@@ -56,7 +56,7 @@
       Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
     <ItemGroup>
       <_PostTrimTrimmableTypeMapInputAssemblies Include="@(ResolvedFileToPublish)"
-          Condition=" '%(Extension)' == '.dll' and ('%(RuntimeIdentifier)' == '' or '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' or '%(RuntimeIdentifier)' == '$(_PostTrimTypeMapFirstRuntimeIdentifier)') " />
+          Condition=" '%(Extension)' == '.dll' and ('%(RuntimeIdentifier)' == '' or '$(_PostTrimTypeMapJavaSourceRuntimeIdentifier)' == '' or '%(RuntimeIdentifier)' == '$(_PostTrimTypeMapJavaSourceRuntimeIdentifier)') " />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
