@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -532,6 +531,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (Get_BuildHasTrimmerWarningsData))]
 		public void BuildHasTrimmerWarnings (AndroidRuntime runtime, string properties, string [] codes, bool isRelease, int? totalWarnings = null)
 		{
+			const int maxWarningLinesToShow = 25;
+
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -572,16 +573,12 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				totalWarnings ??= codes.Length;
 
-				string warningSummaryLine = b.LastBuildOutput.LastOrDefault (line =>
-					line.Contains (" Warning(s)", StringComparison.Ordinal) &&
-					line.Contains (" Error(s)", StringComparison.Ordinal)
-				) ?? "";
-				Match totalWarningMatch = Regex.Match (warningSummaryLine, @"\s(?<count>\d+)\sWarning\(s\)", RegexOptions.CultureInvariant);
-				var actualWarnings = totalWarningMatch.Success ? int.Parse (totalWarningMatch.Groups ["count"].Value) : -1;
+				string warningSummaryLine = b.LastBuildOutput.LastOrDefault (line => line.Contains ("Warning(s)", StringComparison.Ordinal)) ?? "";
+				var actualWarnings = GetWarningCount (warningSummaryLine);
 
 				var allWarningLines = b.LastBuildOutput
 					.Where (line => line.Contains (": warning ", StringComparison.OrdinalIgnoreCase))
-					.Take (25)
+					.Take (maxWarningLinesToShow)
 					.ToArray ();
 				Assert.AreEqual (
 					totalWarnings.Value,
@@ -596,6 +593,17 @@ namespace Xamarin.Android.Build.Tests
 						$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
 					);
 				}
+			}
+
+			static int GetWarningCount (string warningSummaryLine)
+			{
+				string [] tokens = warningSummaryLine.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+				for (int i = 1; i < tokens.Length; i++) {
+					if (tokens [i] == "Warning(s)" && int.TryParse (tokens [i - 1], out var warningCount)) {
+						return warningCount;
+					}
+				}
+				return -1;
 			}
 		}
 
