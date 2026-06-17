@@ -49,6 +49,18 @@
                                      whose contents drove the expected hash)
                                      so the next build re-fetches them.
 
+    Incremental no-op gate:
+      A per-file stamp file next to the cached download
+      (`$(_DownloadFolder)\$(_DownloadFileName).$(_DownloadSha256).stamp`,
+      or `.stamp` when no hash is supplied) is touched once the download
+      and SHA verification succeed. The target's `Inputs`/`Outputs` then
+      lets MSBuild skip re-running it - and re-hashing the cached file -
+      on no-op builds. The expected SHA is encoded in the stamp file
+      name so changing `_DownloadSha256` in a caller invalidates the
+      cached stamp and forces re-verification. Listing the cached file
+      itself in `Outputs` preserves self-heal: if it disappears between
+      builds the target still runs and re-fetches.
+
     Usage pattern. The `_DownloadFile` item group must be built inside the
     caller's target body (so the items are visible to `<MSBuild>`). Each
     item carries its per-file parameters as `AdditionalProperties` metadata,
@@ -81,13 +93,19 @@
     <DownloadFileWithRetryFile>$(MSBuildThisFileFullPath)</DownloadFileWithRetryFile>
     <_DownloadRetries>5</_DownloadRetries>
     <_DownloadRetryDelayMilliseconds>5000</_DownloadRetryDelayMilliseconds>
+    <!-- Computed up-front (vs inside the target body) so the per-file
+         destination and stamp paths are visible to the target's
+         Inputs/Outputs incremental gate below. Each `<MSBuild>` build
+         request that calls into this file gets its own evaluated
+         scope with these AdditionalProperties already set. -->
+    <_DownloadPath>$(_DownloadFolder)\$(_DownloadFileName)</_DownloadPath>
+    <_DownloadStamp Condition=" '$(_DownloadSha256)' != '' ">$(_DownloadPath).$(_DownloadSha256).stamp</_DownloadStamp>
+    <_DownloadStamp Condition=" '$(_DownloadSha256)' == '' ">$(_DownloadPath).stamp</_DownloadStamp>
   </PropertyGroup>
 
-  <Target Name="DownloadOneFileWithRetry">
-    <PropertyGroup>
-      <_DownloadPath>$(_DownloadFolder)\$(_DownloadFileName)</_DownloadPath>
-    </PropertyGroup>
-
+  <Target Name="DownloadOneFileWithRetry"
+      Inputs="$(MSBuildThisFileFullPath)"
+      Outputs="$(_DownloadPath);$(_DownloadStamp)">
     <!-- Self-heal: if a cached file already exists AND we know the expected
          hash, verify it up-front. On mismatch, delete (along with any
          CleanupOnMismatch siblings) so the download attempts below actually
@@ -146,6 +164,12 @@
         Condition=" '$(_DownloadSha256)' != '' and '$(_DownloadActualSha256)' != '$(_DownloadSha256)' "
         Text="SHA256 mismatch for $(_DownloadFileName). Expected: $(_DownloadSha256) Actual: $(_DownloadActualSha256)"
     />
+
+    <!-- Record success so subsequent no-op builds can skip this target via
+         the Inputs/Outputs gate above (and avoid re-hashing the cached
+         file). Reached only when the SHA check above passed - or when no
+         hash was supplied to verify against. -->
+    <Touch Files="$(_DownloadStamp)" AlwaysCreate="True" />
   </Target>
 
 </Project>
