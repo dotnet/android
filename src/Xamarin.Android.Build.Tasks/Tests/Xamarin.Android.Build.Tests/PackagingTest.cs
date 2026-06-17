@@ -581,13 +581,13 @@ namespace UnnamedProject {
   <Target Name="WriteApplicationArtifactItems" AfterTargets="Build">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
-        Lines="%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.Abi)"
+        Lines="@(ApplicationArtifact->'%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
         Overwrite="true" />
   </Target>
   <Target Name="WriteQueriedApplicationArtifactItems" AfterTargets="GetApplicationArtifacts">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/queried-application-artifact-items.txt"
-        Lines="%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.Abi)|%(ApplicationArtifact.MauiArtifact)"
+        Lines="@(ApplicationArtifact->'%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)|%(MauiArtifact)')"
         Overwrite="true" />
   </Target>
 </Project>
