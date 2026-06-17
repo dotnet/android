@@ -819,8 +819,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR or NativeAOT");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in NativeAOT");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
