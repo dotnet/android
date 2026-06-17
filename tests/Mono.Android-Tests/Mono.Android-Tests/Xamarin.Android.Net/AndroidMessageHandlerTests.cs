@@ -436,5 +436,33 @@ namespace Xamarin.Android.NetTests
 			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{unusedPort}/"));
 			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
 		}
+
+		[Test]
+		public void ExceedingMaxAutomaticRedirectionsThrowsHttpRequestException ()
+		{
+			// https://github.com/dotnet/android/issues/5761
+			// Failures in the request path must be surfaced as HttpRequestException (per the HttpClient.SendAsync
+			// contract). For back-compat with code migrated from classic Xamarin.Android, the legacy WebException
+			// (and its WebExceptionStatus) is preserved as the inner exception.
+			int port = GetAvailablePort ();
+			using var listener = new HttpListener ();
+			listener.Prefixes.Add ($"http://+:{port}/");
+			listener.Start ();
+			listener.BeginGetContext (ar => {
+				var ctx = listener.EndGetContext (ar);
+				ctx.Response.StatusCode = 302;
+				ctx.Response.RedirectLocation = $"http://localhost:{port}/";
+				ctx.Response.Close ();
+			}, null);
+
+			var handler = new AndroidMessageHandler { MaxAutomaticRedirections = 1 };
+			using var client = new HttpClient (handler);
+
+			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{port}/"));
+			listener.Close ();
+
+			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
+			Assert.IsInstanceOf<WebException> (ex?.InnerException, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
+		}
 	}
 }
