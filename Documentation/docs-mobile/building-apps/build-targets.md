@@ -105,7 +105,7 @@ which contains the APK and Android App Bundle files produced by the build.
 This target depends on `$(GetApplicationArtifactsDependsOn)`, which defaults to
 `Build;$(GetApplicationArtifactsDependsOn)`. Later imports can append targets to
 `$(GetApplicationArtifactsDependsOn)` to update or enrich `@(ApplicationArtifact)`
-metadata before the target returns the items.
+metadata before this target or the `Publish` target returns the items.
 
 ## Install
 

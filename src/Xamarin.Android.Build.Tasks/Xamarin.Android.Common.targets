@@ -2729,7 +2729,6 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="GetApplicationArtifacts"
-    Condition=" '$(AndroidApplication)' == 'true' "
     DependsOnTargets="$(GetApplicationArtifactsDependsOn)"
     Returns="@(ApplicationArtifact)" />
 

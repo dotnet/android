@@ -10,9 +10,8 @@ This file contains the implementation for 'dotnet publish'.
 
   <PropertyGroup>
     <_PublishDependsOn>
-      Build;
+      GetApplicationArtifacts;
       PrepareForPublish;
-      _CollectApplicationArtifacts;
       _CalculateAndroidFilesToPublish;
       CopyFilesToPublishDirectory;
       _UpdateApplicationArtifactsForPublish;
