@@ -2721,27 +2721,9 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<PropertyGroup>
-  <_CreateApplicationArtifactsDependsOn Condition=" '$(AndroidApplication)' == 'true' ">
-    Build;
-    _CopyPackage;
-    _Sign;
-    _CreateUniversalApkFromBundle;
-    _CollectApplicationArtifacts;
-  </_CreateApplicationArtifactsDependsOn>
-  <_CreateApplicationArtifactsDependsOn Condition=" '$(_CreateApplicationArtifactsDependsOn)' == '' ">
-    Build
-  </_CreateApplicationArtifactsDependsOn>
-</PropertyGroup>
-
-<!-- Final application artifacts require Build for compiled outputs. Package, sign, and collect
-     explicitly so this target also works when Build itself does not produce packages. -->
-<Target Name="_CreateApplicationArtifacts"
-    DependsOnTargets="$(_CreateApplicationArtifactsDependsOn)" />
-
 <Target Name="GetApplicationArtifacts"
     DependsOnTargets="
-      _CreateApplicationArtifacts;
+      Build;
       $(GetApplicationArtifactsDependsOn)"
     Returns="@(ApplicationArtifact)" />
 
