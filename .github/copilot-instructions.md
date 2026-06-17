@@ -203,21 +203,23 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 
 When diagnosing runtime, build, or test failures, follow these practices. They exist because the .NET ↔ JNI ↔ C++ ↔ generated-native stack is loosely coupled and static reasoning alone is unreliable.
 
-- **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does (NUnit via `dotnet test` / MTP, see [#11224](https://github.com/dotnet/android/pull/11224)):
+- **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does:
   ```bash
   make prepare && make all CONFIGURATION=Release
-  # Build + install the instrumentation APK on a connected device/emulator:
-  ./dotnet-local.sh build tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
-      -t:Install -c Release \
+  ./dotnet-local.sh build -t:Install -c Release \
+      tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
       -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
       -p:UseMonoRuntime=<true|false>
-  # Run the on-device tests via dotnet test (MTP), from the project dir so the
-  # project-local global.json ("runner": "Microsoft.Testing.Platform") applies:
-  ( cd tests/Mono.Android-Tests/Mono.Android-Tests && \
-    ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx )
+  (
+      cd tests/Mono.Android-Tests/Mono.Android-Tests
+      ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
+          --report-trx --results-directory ../../../bin/TestRelease/TestResults \
+          -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
+          -p:UseMonoRuntime=<true|false>
+  )
   ```
   On Windows, use `build.cmd` and `dotnet-local.cmd` instead of `make`/`dotnet-local.sh`.
-  Results land as a `.trx` (VSTest format) in the test results directory — not `TestResult-*.xml`.
+  Results land in `.trx` files under `bin/TestRelease/TestResults`.
 
 - **When the build gets into a weird state, delete `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors. See **Troubleshooting → Build** below.
 

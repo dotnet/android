@@ -114,7 +114,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-As of [#11224](https://github.com/dotnet/android/pull/11224), `Mono.Android.NET-Tests` runs **stock NUnit** via `dotnet test` + Microsoft Testing Platform (MTP) — NUnitLite and the `-t:RunTestApp` target are gone. (The older `locales` / `embedded DSOs` apps below were out of scope of that PR and may still use the legacy path.)
+These use NUnitLite and run directly on the device via `-t:RunTestApp`. They do NOT use `dotnet test`.
 
 Build: Full-build + the test project itself
 Device: **Yes**
@@ -136,21 +136,19 @@ Device: **Yes**
 
 ### On-device test categories
 
-The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime (now via runtimeconfig read by `TestInstrumentation`, not `am instrument -e`):
+The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
 - **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`, `Export`, `NativeTypeMap`
 - **LLVM**: Excludes `LLVMIgnore`, `InetAccess`, `NetworkInterfaces`
 
-Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`. Restrict a run to specific categories with `-p:IncludeCategories=Intune` at **build** time.
+Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 
-Command (build + install, then `dotnet test` from the project dir so the project-local `global.json` MTP runner is used):
+Command:
 ```bash
-./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-( cd tests/Mono.Android-Tests/Mono.Android-Tests && \
-  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx )
+./dotnet-local.sh build -t:RunTestApp tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 ```
 
-Results are a `.trx` (VSTest format) in the test results directory — not `TestResult-*.xml`.
+Results appear in `TestResult-*.xml` in the repo root.
 
 ---
 
