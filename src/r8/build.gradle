@@ -12,10 +12,19 @@ java {
 repositories {
     google()
     mavenCentral()
+    // R8 patch releases newer than what is published to maven.google.com
+    // are available here. See: https://r8.googlesource.com/r8/#replacing-r8-in-agp
+    maven {
+        url 'https://storage.googleapis.com/r8-releases/raw'
+    }
 }
 
 dependencies {
-    implementation 'com.android.tools:r8:9.1.31'
+    // 9.1.43 contains the fix for the NullPointerException in
+    // AndroidApiLevelCompute.of() when --no-tree-shaking is passed.
+    // See: https://issuetracker.google.com/issues/524775142
+    // See: https://github.com/dotnet/android/issues/11672
+    implementation 'com.android.tools:r8:9.1.43'
 }
 
 jar {
