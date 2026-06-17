@@ -164,12 +164,6 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 )
 ```
 
-### Legacy NUnitLite exceptions
-
-`tests/locales/Xamarin.Android.Locale-Tests/` and `tests/EmbeddedDSOs/EmbeddedDSO/` are old-style projects that still reference `Xamarin.Android.NUnitLite`; dotnet/android#11224 explicitly left them out of the MTP migration until they can move to SDK-style projects.
-
----
-
 ## Java.Interop Tests — Mixed Tiers
 
 Tooling tests are standalone (listed in the Standalone Tests table above).
