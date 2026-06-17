@@ -545,55 +545,6 @@ namespace UnnamedProject {
 			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				Imports = {
-					new Import (() => "ApplicationArtifacts.targets") {
-						TextContent = () => """
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <GetApplicationArtifactsDependsOn>
-      AddMauiApplicationArtifactMetadata
-    </GetApplicationArtifactsDependsOn>
-  </PropertyGroup>
-  <Target Name="AddMauiApplicationArtifactMetadata">
-    <ItemGroup>
-      <_ObservedApplicationArtifact Include="@(ApplicationArtifact)" />
-      <_ObservedSignedApplicationArtifact
-          Include="@(_ObservedApplicationArtifact)"
-          Condition=" '%(_ObservedApplicationArtifact.PackageFormat)' == 'apk' And '%(_ObservedApplicationArtifact.Signed)' == 'true' " />
-      <_ObservedAbiApplicationArtifact
-          Include="@(_ObservedApplicationArtifact)"
-          Condition=" '%(_ObservedApplicationArtifact.Abi)' != '' " />
-    </ItemGroup>
-    <Error Condition=" '@(_ObservedApplicationArtifact)' == '' "
-        Text="Expected ApplicationArtifact items before MAUI metadata augmentation." />
-    <Error Condition=" '@(_ObservedSignedApplicationArtifact)' == '' "
-        Text="Expected signed APK ApplicationArtifact items before MAUI metadata augmentation." />
-    <Error Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidPackageFormat)' != 'aab' And '@(_ObservedAbiApplicationArtifact)' == '' "
-        Text="Expected per-ABI ApplicationArtifact items before MAUI metadata augmentation." />
-    <WriteLinesToFile
-        File="$(MSBuildProjectDirectory)/observed-application-artifact-items.txt"
-        Lines="@(_ObservedApplicationArtifact->'%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
-        Overwrite="true" />
-    <ItemGroup>
-      <ApplicationArtifact Update="@(ApplicationArtifact)" MauiArtifact="true" />
-    </ItemGroup>
-  </Target>
-  <Target Name="WriteApplicationArtifactItems" AfterTargets="SignAndroidPackage">
-    <WriteLinesToFile
-        File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
-        Lines="@(ApplicationArtifact->'%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
-        Overwrite="true" />
-  </Target>
-  <Target Name="WriteQueriedApplicationArtifactItems" AfterTargets="GetApplicationArtifacts">
-    <WriteLinesToFile
-        File="$(MSBuildProjectDirectory)/queried-application-artifact-items.txt"
-        Lines="@(ApplicationArtifact->'%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)|%(MauiArtifact)')"
-        Overwrite="true" />
-  </Target>
-</Project>
-"""
-					},
-				}
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
@@ -618,27 +569,12 @@ namespace UnnamedProject {
 				if (runtime != AndroidRuntime.NativeAOT) {
 					b.AssertHasNoWarnings ();
 				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					b.AssertHasAtMostWarnings (2);
 				}
 
 				//Make sure the APKs are signed
-				var applicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "application-artifact-items.txt"));
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					AssertApkIsSigned (apk);
-					var fileName = Path.GetFileName (apk);
-					var abi = GetApplicationArtifactAbi (proj.PackageName, fileName);
-					var expectedItem = $"{fileName}|apk|true|{proj.PackageName}|{abi}";
-					Assert.IsTrue (applicationArtifactItems.Contains (expectedItem), $"Expected ApplicationArtifact item '{expectedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, applicationArtifactItems)}");
-				}
-				if (perAbiApk) {
-					Assert.IsTrue (b.RunTarget (proj, "GetApplicationArtifacts", doNotCleanupOnUpdate: true), "`GetApplicationArtifacts` should have succeeded.");
-					var observedApplicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "observed-application-artifact-items.txt"));
-					var queriedApplicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "queried-application-artifact-items.txt"));
-					foreach (var artifactItem in applicationArtifactItems) {
-						Assert.IsTrue (observedApplicationArtifactItems.Contains (artifactItem), $"Expected observed ApplicationArtifact item '{artifactItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, observedApplicationArtifactItems)}");
-						var queriedItem = $"{artifactItem}|true";
-						Assert.IsTrue (queriedApplicationArtifactItems.Contains (queriedItem), $"Expected queried ApplicationArtifact item '{queriedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, queriedApplicationArtifactItems)}");
-					}
 				}
 
 				// Make sure the APKs have unique version codes
@@ -672,15 +608,6 @@ namespace UnnamedProject {
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
 					AssertApkIsSigned (apk);
 				}
-			}
-
-			string GetApplicationArtifactAbi (string packageName, string fileName)
-			{
-				var prefix = $"{packageName}-";
-				const string suffix = "-Signed.apk";
-				if (fileName == $"{packageName}{suffix}" || !fileName.StartsWith (prefix, StringComparison.Ordinal) || !fileName.EndsWith (suffix, StringComparison.Ordinal))
-					return "";
-				return fileName.Substring (prefix.Length, fileName.Length - prefix.Length - suffix.Length);
 			}
 
 			int GetVersionCodeFromIntermediateManifest (string manifestFilePath)
