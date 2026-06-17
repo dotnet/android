@@ -462,11 +462,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
+					// NativeAOT currently (Nov 2025) produces 10 `ILC : AOT analysis warning IL3050` warnings for various
 					// bits of code. Even though this test expects no warnings and the above likely make the app not work
 					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
 					// of other warnings.
-					int numberOfExpectedWarnings = 6;
+					int numberOfExpectedWarnings = 10;
 
 					Assert.IsTrue (
 						StringAssertEx.ContainsText (

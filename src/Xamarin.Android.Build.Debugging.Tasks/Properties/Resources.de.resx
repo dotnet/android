@@ -242,7 +242,7 @@ Legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
     <value>Fehler beim Bereitstellen von „{0}“ mit „{1}: {2}“. 
-Dies ist in der Regel auf einen Fehler in „adb“ zurückzuführen, wenn die Dateidaten an das Gerät gesendet werden. 
+Dies ist in der Regel auf einen Fehler in `adb` zurückzuführen, wenn die Dateidaten an das Gerät gesendet werden. 
 Die normale Ursache hierfür ist ein USB-Kabel, das lose oder von schlechter Qualität ist. Versuchen Sie es mit einem anderen Kabel.
 Versuchen Sie alternativ, das WLAN-Debuggen zu verwenden. Dies kann für bestimmte Geräte zuverlässiger als das USB-Debuggen sein. 
 Wenn all dies fehlschlägt, legen Sie die MSBuild-Eigenschaft „EmbedAssembliesIntoApk“ auf WAHR fest, um die Schnelle Bereitstellung auf den Visual Studio-Projekteigenschaftenseiten zu deaktivieren, oder bearbeiten Sie die Projektdatei in einem Text-Editor.</value>
@@ -256,7 +256,7 @@ Wenn all dies fehlschlägt, legen Sie die MSBuild-Eigenschaft „EmbedAssemblies
 Starten Sie „sdb“, und führen Sie dann die folgende Befehls-
 -
   Verbindung {0} {1}
- aus.
+ aus
     </value>
     <comment>The following are literal names and should not be translated:
 {0} - An ip address of  a computer.

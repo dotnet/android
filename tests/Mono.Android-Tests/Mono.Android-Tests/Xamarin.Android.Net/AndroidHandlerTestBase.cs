@@ -29,11 +29,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -165,19 +163,6 @@ namespace Xamarin.Android.NetTests {
 		static bool IsSecureChannelFailure (Exception e)
 		{
 			return Exceptions (e).Any (v => (v as WebException)?.Status == WebExceptionStatus.SecureChannelFailure);
-		}
-
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Tests private fields are preserved by other means")]
-		static Type GetInnerHandlerType (HttpClient httpClient)
-		{
-			BindingFlags bflags = BindingFlags.Instance | BindingFlags.NonPublic;
-			FieldInfo handlerField = typeof (HttpMessageInvoker).GetField ("_handler", bflags);
-			Assert.IsNotNull (handlerField);
-			object handler = handlerField.GetValue (httpClient);
-			FieldInfo innerHandlerField = handler.GetType ().GetField ("_delegatingHandler", bflags);
-			Assert.IsNotNull (handlerField);
-			object innerHandler = innerHandlerField.GetValue (handler);
-			return innerHandler.GetType ();
 		}
 
 		[Test]
