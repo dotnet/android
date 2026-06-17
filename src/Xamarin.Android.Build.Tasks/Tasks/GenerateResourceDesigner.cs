@@ -29,6 +29,9 @@ namespace Xamarin.Android.Tasks
 		public string? Namespace { get; set; }
 
 		[Required]
+		public string AssemblyName { get; set; } = "";
+
+		[Required]
 		public string ProjectDir { get; set; } = "";
 
 		[Required]
@@ -201,7 +204,9 @@ namespace Xamarin.Android.Tasks
 				unit.Namespaces.Add (ns);
 
 				var resgenatt = new CodeAttributeDeclaration (new CodeTypeReference ("Android.Runtime.ResourceDesignerAttribute", CodeTypeReferenceOptions.GlobalReference));
-				resgenatt.Arguments.Add (new CodeAttributeArgument (new CodePrimitiveExpression (namespaceName.Length > 0 ? namespaceName + ".Resource" : "Resource")));
+				var resourceTypeName = namespaceName.Length > 0 ? namespaceName + ".Resource" : "Resource";
+				var resourceAssemblyQualifiedName = $"{resourceTypeName}, {AssemblyName}";
+				resgenatt.Arguments.Add (new CodeAttributeArgument (new CodePrimitiveExpression (resourceAssemblyQualifiedName)));
 				resgenatt.Arguments.Add (new CodeAttributeArgument ("IsApplication", new CodePrimitiveExpression (IsApplication)));
 				unit.AssemblyCustomAttributes.Add (resgenatt);
 

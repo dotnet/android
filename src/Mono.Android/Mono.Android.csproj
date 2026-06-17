@@ -10,7 +10,7 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041;IL3050</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
@@ -363,6 +363,7 @@
     <Compile Include="Microsoft.Android.Runtime\AggregateTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\ITypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\JniRemappingLookup.cs" />
+    <Compile Include="Microsoft.Android.Runtime\AndroidReflectionJniValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
@@ -379,7 +380,6 @@
     <Compile Include="System.Drawing/SizeFConverter.cs" />
     <Compile Include="System.IO\AndroidExtensions.cs" />
     <Compile Include="System.Linq\Extensions.cs" />
-    <Compile Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandler.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHttpResponseMessage.cs" />
     <Compile Include="Xamarin.Android.Net\AuthDigestHeaderParser.cs" />
@@ -395,7 +395,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

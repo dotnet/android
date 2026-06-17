@@ -540,6 +540,9 @@ namespace Xamarin.Android.Build.Tests
 					Console.WriteLine ("CodeBehindTests: using NativeAOT and running on CI, disabling warnings.");
 					noWarn.Add ("IL2091");
 					noWarn.Add ("IL2104");
+					// Transitive AndroidX bindings can still reference ResourceDesignerAttribute(string)
+					// with non-AQN type names; this is expected until those libraries rebuild.
+					noWarn.Add ("IL2122");
 					noWarn.Add ("IL3053");
 					noWarn.Add ("XA1040");
 				}
@@ -731,6 +734,7 @@ namespace Xamarin.Android.Build.Tests
 			CopyRecursively (TestProjectRootDirectory, temporaryProjectPath, ignore);
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
+			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "eng", "Versions.props"), Path.Combine (tempRoot, "eng", "Versions.props"));
 			var project = new XamarinAndroidApplicationProject ();
 			project.CopyNuGetConfig (Path.Combine (tempRoot, "NuGet.config"));
 

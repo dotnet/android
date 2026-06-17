@@ -58,6 +58,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("InheritedActivationCreateInstance")]
+		public void CreateInstanceWithInheritedActivationCtorDoesNotRegisterPeerInsideNewObjectScope ()
+		{
+			ConstructorActivationMarshalObject.Reset ();
+
+			IntPtr handle = JNIEnv.CreateInstance (typeof (ConstructorActivationMarshalObject), "(Z)V", new JValue (true));
+			try {
+				var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (handle));
+
+				Assert.AreEqual (0, ConstructorActivationMarshalObject.ConstructorInvocations);
+				Assert.IsNull (peer);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
 		public void JavaSideConstructorReinvokesExistingActivatablePeer ()
 		{
 			ConstructorActivationDefault.Reset ();

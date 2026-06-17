@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ns2:repository xmlns:ns2="http://schemas.android.com/repository/android/common/01" xmlns:ns3="http://schemas.android.com/repository/android/generic/01">
+  <localPackage path="@PKG_PATH@" obsolete="false">
+    <revision>
+      <major>@PKG_REVISION_MAJOR@</major>
+      <minor>@PKG_REVISION_MINOR@</minor>
+      <micro>@PKG_REVISION_MICRO@</micro>
+    </revision>
+    <display-name>@PKG_DESC@</display-name>
+  </localPackage>
+</ns2:repository>

@@ -277,7 +277,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			var proj = new XamarinAndroidApplicationProject  {
 				IsRelease = isRelease,
 			};

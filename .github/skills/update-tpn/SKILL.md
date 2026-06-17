@@ -71,7 +71,6 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | Directory | Name | License Source |
 |-----------|------|---------------|
 | `android-platform-tools-base/` | android/platform/tools/base | https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE (Apache 2.0) |
-| `bazel/` | bazelbuild/bazel | https://github.com/bazelbuild/bazel/ (Apache 2.0) |
 | `bionic/` | google/bionic | https://android.googlesource.com/platform/bionic/ (Apache 2.0) |
 | `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
 | `NUnitLite/` | nunit/nunitlite | https://github.com/nunit/nunitlite/ (MIT) |

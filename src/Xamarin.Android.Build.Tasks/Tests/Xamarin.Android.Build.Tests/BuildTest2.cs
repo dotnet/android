@@ -148,6 +148,14 @@ namespace Xamarin.Android.Build.Tests
 			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+
+			var compressedAssembliesSource = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, rid, "android", $"compressed_assemblies.{abi}.ll");
+			FileAssert.Exists (compressedAssembliesSource);
+			var compressedAssembliesSourceText = File.ReadAllText (compressedAssembliesSource);
+			StringAssert.Contains ("@compressed_assembly_count = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@compressed_assembly_descriptors = dso_local local_unnamed_addr global [0 x %struct.CompressedAssemblyDescriptor] zeroinitializer, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@uncompressed_assemblies_data_size = dso_local local_unnamed_addr constant i32 0, align 4", compressedAssembliesSourceText);
+			StringAssert.Contains ("@uncompressed_assemblies_data_buffer = dso_local local_unnamed_addr global [0 x i8] zeroinitializer, align 1", compressedAssembliesSourceText);
 		}
 
 		[Test]
@@ -374,7 +382,6 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (
 					isRelease: false,
-					xamarinForms: false,
 					multidex: false,
 					packageFormat: "apk",
 					runtime
@@ -382,15 +389,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: false,
-					xamarinForms: true,
-					multidex: false,
-					packageFormat: "apk",
-					runtime
-				);
-
-				AddTestData (
-					isRelease: false,
-					xamarinForms: true,
 					multidex: true,
 					packageFormat: "apk",
 					runtime
@@ -398,15 +396,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: true,
-					xamarinForms: false,
-					multidex: false,
-					packageFormat: "apk",
-					runtime
-				);
-
-				AddTestData (
-					isRelease: true,
-					xamarinForms: true,
 					multidex: false,
 					packageFormat: "apk",
 					runtime
@@ -414,7 +403,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: false,
-					xamarinForms: false,
 					multidex: false,
 					packageFormat: "aab",
 					runtime
@@ -422,7 +410,6 @@ namespace Xamarin.Android.Build.Tests
 
 				AddTestData (
 					isRelease: true,
-					xamarinForms: false,
 					multidex: false,
 					packageFormat: "aab",
 					runtime
@@ -431,11 +418,10 @@ namespace Xamarin.Android.Build.Tests
 
 			return ret;
 
-			void AddTestData (bool isRelease, bool xamarinForms, bool multidex, string packageFormat, AndroidRuntime runtime)
+			void AddTestData (bool isRelease, bool multidex, string packageFormat, AndroidRuntime runtime)
 			{
 				ret.Add (new object[] {
 					isRelease,
-					xamarinForms,
 					multidex,
 					packageFormat,
 					runtime
@@ -445,19 +431,17 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (Get_BuildHasNoWarningsData))]
-		public void BuildHasNoWarnings (bool isRelease, bool xamarinForms, bool multidex, string packageFormat, AndroidRuntime runtime)
+		public void BuildHasNoWarnings (bool isRelease, bool multidex, string packageFormat, AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			var proj = xamarinForms ?
-				new XamarinFormsAndroidApplicationProject () :
-				new XamarinAndroidApplicationProject ();
+			var proj = new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
 			proj.SetRuntime (runtime);
 			// Enable full trimming
-			if (!xamarinForms && isRelease) {
+			if (isRelease) {
 				proj.TrimModeRelease = TrimMode.Full;
 			}
 			if (multidex) {
@@ -478,20 +462,11 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					int numberOfExpectedWarnings;
-					bool validateWarnings;
-					if (xamarinForms && !multidex && packageFormat == "apk") {
-						// NativeAOT goes nuts here (Nov 2025) with 120 different ILC warnings, too many to verify them here in a way that makes sense
-						numberOfExpectedWarnings = 120;
-						validateWarnings = false;
-					} else {
-						// NativeAOT currently (Nov 2025) produces 6 `ILC : AOT analysis warning IL3050` warnings for various
-						// bits of code. Even though this test expects no warnings and the above likely make the app not work
-						// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
-						// of other warnings.
-						numberOfExpectedWarnings = 6;
-						validateWarnings = true;
-					}
+					// NativeAOT currently (Nov 2025) produces 10 `ILC : AOT analysis warning IL3050` warnings for various
+					// bits of code. Even though this test expects no warnings and the above likely make the app not work
+					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
+					// of other warnings.
+					int numberOfExpectedWarnings = 10;
 
 					Assert.IsTrue (
 						StringAssertEx.ContainsText (
@@ -501,12 +476,9 @@ namespace Xamarin.Android.Build.Tests
 						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
 					);
 
-					if (validateWarnings) {
-						const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
-						var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-						Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
-					}
-
+					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
+					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
+					Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
 				} else {
 					b.AssertHasNoWarnings ();
 				}
@@ -895,7 +867,6 @@ class MemTest {
 			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
 				return;
 			}
-
 			var proj = new XamarinFormsMapsApplicationProject ();
 			proj.SetRuntime (runtime);
 
@@ -1910,8 +1881,6 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			if (IgnoreUnsupportedConfiguration (runtime)) {
 				return;
 			}
-
-			AssertCommercialBuild (); // FIXME: when Fast Deployment isn't available, we would need to use `llvm-objcopy` to extract the debug symbols
 
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {

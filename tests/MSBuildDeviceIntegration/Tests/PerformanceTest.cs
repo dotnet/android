@@ -194,8 +194,6 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_CSharp_Change ()
 		{
-			AssertCommercialBuild (); // This test will fail without Fast Deployment
-
 			var proj = CreateApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity;
 			using (var builder = CreateBuilderWithoutLogFile ()) {
@@ -214,8 +212,6 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_AndroidResource_Change ()
 		{
-			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
-
 			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
@@ -233,8 +229,6 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_AndroidAsset_Change ()
 		{
-			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
-
 			var bytes = new byte [1024*1024*10];
 			var rnd = new Random ();
 			rnd.NextBytes (bytes);
@@ -272,8 +266,6 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_AndroidManifest_Change ()
 		{
-			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
-
 			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
@@ -292,8 +284,6 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_XAML_Change ([Values (true, false)] bool install)
 		{
-			AssertCommercialBuild (); // This test will fail without Fast Deployment
-
 			var path = Path.Combine ("temp", TestName);
 			var xaml =
 @"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -364,8 +354,6 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Install_CSharp_Change ()
 		{
-			AssertCommercialBuild (); // This test will fail without Fast Deployment
-
 			var proj = CreateApplicationProject ();
 			proj.PackageName = "com.xamarin.install_csharp_change";
 			proj.MainActivity = proj.DefaultMainActivity;
@@ -385,8 +373,6 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Install_CSharp_FromClean ()
 		{
-			AssertCommercialBuild (); // This test will fail without Fast Deployment
-
 			var proj = CreateApplicationProject ();
 			proj.PackageName = "com.xamarin.install_csharp_change";
 			proj.MainActivity = proj.DefaultMainActivity;
@@ -405,8 +391,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DesignTimeBuild_CSharp_From_Clean ()
 		{
-			AssertCommercialBuild (); // This test will fail without Fast Deployment
-
 			var proj = CreateApplicationProject ();
 			proj.PackageName = "com.xamarin.designtimebuild_csharp_from_clean";
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);

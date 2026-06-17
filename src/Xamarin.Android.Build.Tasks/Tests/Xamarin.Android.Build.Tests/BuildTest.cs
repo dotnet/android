@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 					"https://api.nuget.org/v3/index.json",
 				},
 				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.3.1.1" },
+					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.7.1.3" },
 					// Using * here, so we explicitly get newer packages
 					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
 					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
@@ -169,13 +169,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
-			bool expectEmbeddedAssembies = !(TestEnvironment.CommercialBuildAvailable && !isRelease);
+			bool expectEmbeddedAssembies = isRelease;
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
 			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
 			if (runtime != AndroidRuntime.NativeAOT) {
 				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
-				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !TestEnvironment.CommercialBuildAvailable && !isRelease);
+				helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: false);
 				helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 				helper.AssertContainsEntry ($"assemblies/de-DE/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
@@ -244,7 +244,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (MonoComponentMaskChecks))]
 		public void CheckMonoComponentsMask (bool enableProfiler, bool useInterpreter, bool debugBuild, uint expectedMask)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = !debugBuild,
 			};
 
@@ -1266,15 +1266,11 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				return;
 			}
 
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidFastDeploymentSupported", "true");
 			using (var b = CreateApkBuilder ()) {
-				//NOTE: build will fail, due to $(_AndroidFastDeploymentSupported)
 				b.ThrowOnBuildFailure = false;
 				b.Build (proj);
 

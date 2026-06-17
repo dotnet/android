@@ -214,7 +214,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var gradleModule = gradleProject.Modules.First ();
 

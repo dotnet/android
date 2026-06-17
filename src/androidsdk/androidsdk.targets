@@ -1,14 +1,465 @@
 <Project>
 
+  <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
+
+  <!--
+    All of the Android SDK component downloads/extractions that used to live in
+    `Step_Android_SDK_NDK` in xaprepare. Each component is just a row in the
+    `_AndroidSdkPackage` ItemGroup below; the `_DownloadAndroidSdkPackages` and
+    `_ExtractAndroidSdkPackages` targets batch over every item.
+
+    Google's SDK manifest only provides SHA-1 checksums but MSBuild's
+    `GetFileHash` task only supports SHA-256+, so each component's SHA-256
+    hash is hardcoded in `Configuration.props`.
+  -->
+
   <PropertyGroup>
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <_AndroidRepositoryUrl>https://dl.google.com/android/repository/</_AndroidRepositoryUrl>
     <_SdkManagerDir>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</_SdkManagerDir>
     <_SdkManagerPath Condition=" '$(HostOS)' == 'Windows' ">$(_SdkManagerDir)\sdkmanager.bat</_SdkManagerPath>
     <_SdkManagerPath Condition=" '$(HostOS)' != 'Windows' ">$(_SdkManagerDir)\sdkmanager</_SdkManagerPath>
     <_LicensesAcceptedFile>$(AndroidSdkFullPath)\licenses\.licenses-accepted</_LicensesAcceptedFile>
+
+    <!-- Emulator/system-image arch differs on Apple Silicon. -->
+    <_HostArch>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_HostArch>
+    <_IsArm64Apple Condition=" '$(HostOS)' == 'Darwin' and '$(_HostArch)' == 'Arm64' ">true</_IsArm64Apple>
+    <_EmulatorArch Condition=" '$(_IsArm64Apple)' == 'true' ">aarch64</_EmulatorArch>
+    <_EmulatorArch Condition=" '$(_EmulatorArch)' == '' ">x64</_EmulatorArch>
+    <_SystemImageArch Condition=" '$(_IsArm64Apple)' == 'true' ">arm64-v8a</_SystemImageArch>
+    <_SystemImageArch Condition=" '$(_SystemImageArch)' == '' ">x86_64</_SystemImageArch>
+
+    <!--
+      Defaults to "latest": only install platform APIs marked IsLatestStable
+      (mirrors xaprepare's android-sdk-platforms default). Set to "all"
+      to install every entry in the platform catalog, or a comma-separated
+      list of API levels (e.g. "29,30,33").
+    -->
+    <AndroidSdkPlatforms Condition=" '$(AndroidSdkPlatforms)' == '' ">latest</AndroidSdkPlatforms>
+    <_InstallAllPlatforms Condition=" '$(AndroidSdkPlatforms.ToLower())' == 'all' ">true</_InstallAllPlatforms>
+    <_InstallLatestPlatformOnly Condition=" '$(AndroidSdkPlatforms.ToLower())' == 'latest' ">true</_InstallLatestPlatformOnly>
+    <_RequestedApiLevels>;$(AndroidSdkPlatforms.Replace(',', ';'));</_RequestedApiLevels>
+
+    <!-- NDK toolchain dir name inside `<NDK>/toolchains/llvm/prebuilt/`. -->
+    <_NdkToolchainOSTag Condition=" '$(HostOS)' == 'Linux'   ">linux-x86_64</_NdkToolchainOSTag>
+    <_NdkToolchainOSTag Condition=" '$(HostOS)' == 'Darwin'  ">darwin-x86_64</_NdkToolchainOSTag>
+    <_NdkToolchainOSTag Condition=" '$(HostOS)' == 'Windows' ">windows-x86_64</_NdkToolchainOSTag>
+    <_NdkHostTag Condition=" '$(HostOS)' == 'Linux'   ">linux</_NdkHostTag>
+    <_NdkHostTag Condition=" '$(HostOS)' == 'Darwin'  ">darwin</_NdkHostTag>
+    <_NdkHostTag Condition=" '$(HostOS)' == 'Windows' ">windows</_NdkHostTag>
+    <_NdkHostHash Condition=" '$(HostOS)' == 'Linux'   ">$(XAAndroidNdkHashLinux)</_NdkHostHash>
+    <_NdkHostHash Condition=" '$(HostOS)' == 'Darwin'  ">$(XAAndroidNdkHashMacOS)</_NdkHostHash>
+    <_NdkHostHash Condition=" '$(HostOS)' == 'Windows' ">$(XAAndroidNdkHashWindows)</_NdkHostHash>
   </PropertyGroup>
+
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
+
+  <!--
+    Catalog of platform APIs. Each item is downloaded as `<Identity>.zip`.
+    `IsLatestStable=true` is the API installed by default; `ApiLevel`
+    is used to honor `$(AndroidSdkPlatforms)`.
+  -->
+  <ItemGroup>
+    <_PlatformPackage Include="android-2.3.3_r02">    <ApiLevel>10</ApiLevel>   <Hash>54BDB0F1CA06BA5747061DDEEA20F431AF72C448334FD4D3D7F84EA2CCD29FEA</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-15_r05">       <ApiLevel>15</ApiLevel>   <Hash>5BC1F93AAE86B4336FFC4CAE9EB8EC41A9A8FD677582DD86A9629798F019BED9</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-16_r05">       <ApiLevel>16</ApiLevel>   <Hash>FD7F269A423D1F1D079EABF9F918CEAB49108702A1C6BB2589D57C23393503D3</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-17_r03">       <ApiLevel>17</ApiLevel>   <Hash>B66E73FB2639F8C916FDE4369AA29012A5C531E156DBB205FE3788FE998FBBE8</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-18_r03">       <ApiLevel>18</ApiLevel>   <Hash>166AE9CF299747A5FAA8F04168F0EE47CD7466A975D8B44ACAAA62A43E767568</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-19_r04">       <ApiLevel>19</ApiLevel>   <Hash>5EFC3A3A682C1D49128DADDB6716C433EDF16E63349F32959B6207524AC04039</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-20_r02">       <ApiLevel>20</ApiLevel>   <Hash>EF08C453E16AB6E656CF5D9413EF61CB8C650607D33B24EE4CE08DAFDFE965A7</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-21_r02">       <ApiLevel>21</ApiLevel>   <Hash>A76CD7AD3080AC6CE9F037CB935B399A1BAD396C0605D4FF42F693695F1DCEFE</Hash></_PlatformPackage>
+    <_PlatformPackage Include="android-22_r02">       <ApiLevel>22</ApiLevel>   <Hash>45EB581BBE53C9256F34C26B2CEA919543C0079140897AC721CF88C0B9F6789E</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-23_r03">      <ApiLevel>23</ApiLevel>   <Hash>4B4BCDDEAD3319708275C54C76294707BFAA953D767E34F1A5B599F3EDD0076C</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-24_r02">      <ApiLevel>24</ApiLevel>   <Hash>F268F5945C6ECE7EA95C1C252067280854D2A20DA924E22AE4720287DF8BDBC9</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-25_r03">      <ApiLevel>25</ApiLevel>   <Hash>9B742D34590FE73FB7229E34835ECFFB1846CA389D9F924F0B2A37DE525DC6B8</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-26_r02">      <ApiLevel>26</ApiLevel>   <Hash>2AAFA7D19C5E9C4B643EE6ADE3D85EF89DC2F79E8383EFDB9BAF7FDDAD74B52A</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-27_r03">      <ApiLevel>27</ApiLevel>   <Hash>020C4C090BC82CE87EBAAE5D1A922E21B39A1D03C78FFA43F0C3E42FC7D28169</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-28_r04">      <ApiLevel>28</ApiLevel>   <Hash>967F8CA99B71D337AA9C7781F9D65DD8110BF5C4746F44304047BF71B20D0DED</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-29_r01">      <ApiLevel>29</ApiLevel>   <Hash>2C9E961858E03900FFA0801A4F6234AA7223363B629FD8E1BE60DA9AA09D86BD</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-30_r01">      <ApiLevel>30</ApiLevel>   <Hash>337B1B0E202A02F90DA2E719305F157FCCDA215C760F5B8F7121ACEDCA44942B</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-31_r01">      <ApiLevel>31</ApiLevel>   <Hash>1D69FE1D7F9788D82FF3A374FAF4F6CCC9D1D372AA84A86B5BCFB517523B0B3F</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-32_r01">      <ApiLevel>32</ApiLevel>   <Hash>01D8DA1C900E70FCF5DA39767D5444E39928935B1A5927055CE749FC348CA7AE</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-33-ext3_r03"> <ApiLevel>33</ApiLevel>   <Hash>B32B10F787867987F03AE8E101D217E053A9065B7136379FB353B388379AED1D</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-34-ext7_r02"> <ApiLevel>34</ApiLevel>   <Hash>5323311CC3E4AD614F0B8053C72B651726F3422448CEDD39E48F00737CDA8AD0</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-35_r02">      <ApiLevel>35</ApiLevel>   <Hash>0988CACAD01B38A18A47BAC14A0695F246BC76C1B06C0EEB8EB0DC825AB0C8E0</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-36_r02">      <ApiLevel>36</ApiLevel>   <Hash>37607369A28C5B640B3A7998868D45898EBCB777565A0E85F9ACF36F29631D2E</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-36.1_r01">    <ApiLevel>36.1</ApiLevel> <Hash>265E9AA7D8DB6ABE7AD1696085D5D62784B341084C625DE46DB530970B1E806D</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-37.0_r01">    <ApiLevel>37.0</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>19BDCF42DE0CB0E9500A27DA6833FC30CDD49A7EC690AA5CABAA0EF893AF9EBE</Hash></_PlatformPackage>
+  </ItemGroup>
+
+  <!--
+    Unified package list. Each entry maps to one zip download + one unzip.
+    Metadata:
+      Identity            - cache filename (also the URL leaf by default)
+      Url                 - full URL relative to $(_AndroidRepositoryUrl) (defaults to Identity)
+      Hash                - expected SHA-256 (hex, uppercase)
+      Destination         - directory to extract into (absolute, under $(AndroidSdkFullPath))
+      StripComponents     - number of leading path components to strip (default 1)
+      GeneratePackageXml  - if "true", write a `package.xml` next to the extracted source.properties
+  -->
+  <ItemDefinitionGroup>
+    <_AndroidSdkPackage>
+      <Url>%(Identity)</Url>
+    </_AndroidSdkPackage>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <!-- commandlinetools: one zip per HostOS -->
+    <_AndroidSdkPackage Include="commandlinetools-mac-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XACmdlineToolsHashMacOS)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="commandlinetools-linux-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XACmdlineToolsHashLinux)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="commandlinetools-win-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XACmdlineToolsHashWindows)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+
+    <!-- platform-tools: one zip per HostOS -->
+    <_AndroidSdkPackage Include="platform-tools_r$(XAPlatformToolsVersion)-darwin.zip" Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XAPlatformToolsHashMacOS)</Hash>
+      <Destination>$(AndroidSdkFullPath)\platform-tools</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="platform-tools_r$(XAPlatformToolsVersion)-linux.zip" Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XAPlatformToolsHashLinux)</Hash>
+      <Destination>$(AndroidSdkFullPath)\platform-tools</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="platform-tools_r$(XAPlatformToolsVersion)-win.zip" Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XAPlatformToolsHashWindows)</Hash>
+      <Destination>$(AndroidSdkFullPath)\platform-tools</Destination>
+    </_AndroidSdkPackage>
+
+    <!--
+      build-tools: same zip that aapt2.targets downloads (single shared cache);
+      here the entire contents are extracted into the SDK directory.
+    -->
+    <_AndroidSdkPackage Include="build-tools_r$(XABuildToolsVersion)_macosx.zip" Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XABuildToolsHashMacOS)</Hash>
+      <Destination>$(AndroidSdkFullPath)\build-tools\$(XABuildToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="build-tools_r$(XABuildToolsVersion)_linux.zip" Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XABuildToolsHashLinux)</Hash>
+      <Destination>$(AndroidSdkFullPath)\build-tools\$(XABuildToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="build-tools_r$(XABuildToolsVersion)_windows.zip" Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XABuildToolsHashWindows)</Hash>
+      <Destination>$(AndroidSdkFullPath)\build-tools\$(XABuildToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+
+    <!-- cmake: one zip per HostOS; zip has no top-level subdirectory -->
+    <_AndroidSdkPackage Include="cmake-$(AndroidCmakeVersion)-darwin.zip" Condition=" '$(HostOS)' == 'Darwin' ">
+      <Hash>$(XACmakeHashMacOS)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmake\$(AndroidCmakeVersionPath)</Destination>
+      <StripComponents>0</StripComponents>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="cmake-$(AndroidCmakeVersion)-linux.zip" Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XACmakeHashLinux)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmake\$(AndroidCmakeVersionPath)</Destination>
+      <StripComponents>0</StripComponents>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="cmake-$(AndroidCmakeVersion)-windows.zip" Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XACmakeHashWindows)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmake\$(AndroidCmakeVersionPath)</Destination>
+      <StripComponents>0</StripComponents>
+    </_AndroidSdkPackage>
+
+    <!--
+      emulator: per-HostOS (and per-arch on Darwin); emits a synthetic package.xml
+      afterwards. Shared metadata (path / desc / revision) is the same across the
+      4 host/arch variants - only one is active per build.
+    -->
+    <_AndroidSdkPackage Include="emulator-darwin_x64-$(EmulatorVersion).zip" Condition=" '$(HostOS)' == 'Darwin' and '$(_IsArm64Apple)' != 'true' ">
+      <Hash>$(XAEmulatorHashMacOSx64)</Hash>
+      <Destination>$(AndroidSdkFullPath)\emulator</Destination>
+      <GeneratePackageXml>true</GeneratePackageXml>
+      <PkgPath>emulator</PkgPath>
+      <PkgDesc>Android Emulator</PkgDesc>
+      <PkgRevision>$(EmulatorPkgRevision)</PkgRevision>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="emulator-darwin_aarch64-$(EmulatorVersion).zip" Condition=" '$(_IsArm64Apple)' == 'true' ">
+      <Hash>$(XAEmulatorHashMacOSArm64)</Hash>
+      <Destination>$(AndroidSdkFullPath)\emulator</Destination>
+      <GeneratePackageXml>true</GeneratePackageXml>
+      <PkgPath>emulator</PkgPath>
+      <PkgDesc>Android Emulator</PkgDesc>
+      <PkgRevision>$(EmulatorPkgRevision)</PkgRevision>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="emulator-linux_x64-$(EmulatorVersion).zip" Condition=" '$(HostOS)' == 'Linux' ">
+      <Hash>$(XAEmulatorHashLinux)</Hash>
+      <Destination>$(AndroidSdkFullPath)\emulator</Destination>
+      <GeneratePackageXml>true</GeneratePackageXml>
+      <PkgPath>emulator</PkgPath>
+      <PkgDesc>Android Emulator</PkgDesc>
+      <PkgRevision>$(EmulatorPkgRevision)</PkgRevision>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="emulator-windows_x64-$(EmulatorVersion).zip" Condition=" '$(HostOS)' == 'Windows' ">
+      <Hash>$(XAEmulatorHashWindows)</Hash>
+      <Destination>$(AndroidSdkFullPath)\emulator</Destination>
+      <GeneratePackageXml>true</GeneratePackageXml>
+      <PkgPath>emulator</PkgPath>
+      <PkgDesc>Android Emulator</PkgDesc>
+      <PkgRevision>$(EmulatorPkgRevision)</PkgRevision>
+    </_AndroidSdkPackage>
+
+    <!--
+      API 29 system image used by the emulator. Lives under `sys-img/android/` on the
+      manifest. On Apple Silicon the URL drops the `-{osTag}` suffix (Google ships one
+      arm64-v8a zip that is valid for any host).
+    -->
+    <_AndroidSdkPackage Include="x86_64-29_r08-darwin.zip" Condition=" '$(HostOS)' == 'Darwin' and '$(_IsArm64Apple)' != 'true' ">
+      <Url>sys-img/android/x86_64-29_r08-darwin.zip</Url>
+      <Hash>$(XASystemImageHashMacOSx64)</Hash>
+      <Destination>$(AndroidSdkFullPath)\system-images\android-29\default\x86_64</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="arm64-v8a-29_r08.zip" Condition=" '$(_IsArm64Apple)' == 'true' ">
+      <Url>sys-img/android/arm64-v8a-29_r08.zip</Url>
+      <Hash>$(XASystemImageHashMacOSArm64)</Hash>
+      <Destination>$(AndroidSdkFullPath)\system-images\android-29\default\arm64-v8a</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="x86_64-29_r08-linux.zip" Condition=" '$(HostOS)' == 'Linux' ">
+      <Url>sys-img/android/x86_64-29_r08-linux.zip</Url>
+      <Hash>$(XASystemImageHashLinux)</Hash>
+      <Destination>$(AndroidSdkFullPath)\system-images\android-29\default\x86_64</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="x86_64-29_r08-windows.zip" Condition=" '$(HostOS)' == 'Windows' ">
+      <Url>sys-img/android/x86_64-29_r08-windows.zip</Url>
+      <Hash>$(XASystemImageHashWindows)</Hash>
+      <Destination>$(AndroidSdkFullPath)\system-images\android-29\default\x86_64</Destination>
+    </_AndroidSdkPackage>
+
+    <!-- SDK build dependencies (host-agnostic). -->
+    <_AndroidSdkPackage Include="android_m2repository_r47.zip">
+      <Hash>$(XAAndroidM2RepositoryHash)</Hash>
+      <Destination>$(AndroidSdkFullPath)\extras\android\m2repository</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="docs-24_r01.zip">
+      <Hash>$(XAAndroidDocsHash)</Hash>
+      <Destination>$(AndroidSdkFullPath)\docs</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="source-36_r01.zip">
+      <Hash>$(XAAndroidSourcesHash)</Hash>
+      <Destination>$(AndroidSdkFullPath)\sources\android-36</Destination>
+    </_AndroidSdkPackage>
+
+    <!--
+      Android NDK: single per-host zip. The zip contains an `android-ndk-r<ver>/`
+      top-level directory which is stripped via `strip-components=1` on Windows
+      (bsdtar) or by post-extraction `mv` on Unix (`unzip`), so the extracted
+      contents land directly in $(AndroidNdkDirectory). On macOS this also
+      matters because bsdtar's `.zip` reader silently turns symlinks
+      (`clang++ -> clang` etc) into zero-byte files; `unzip` preserves them.
+    -->
+    <_AndroidSdkPackage Include="android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip">
+      <Hash>$(_NdkHostHash)</Hash>
+      <Destination>$(AndroidNdkDirectory)</Destination>
+    </_AndroidSdkPackage>
+
+    <!--
+      Platform APIs filtered by $(AndroidSdkPlatforms): default 'latest' installs
+      only IsLatestStable entries; 'all' installs everything; comma-separated list
+      installs the matching ApiLevels. Filter happens in a BeforeTargets target
+      because MSBuild Condition expressions on item Include="@(...)" transforms
+      cannot reference %() metadata.
+    -->
+  </ItemGroup>
+
+  <Target Name="_AddPlatformPackagesToInstall"
+      BeforeTargets="_DownloadAndroidSdkPackages;_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls;_CleanAndroidSdkComponents">
+    <ItemGroup>
+      <_AndroidSdkPackage Include="@(_PlatformPackage->'%(Identity).zip')"
+          Condition=" '$(_InstallAllPlatforms)' == 'true' or
+                      ('$(_InstallLatestPlatformOnly)' == 'true' and '%(_PlatformPackage.IsLatestStable)' == 'true') or
+                      $(_RequestedApiLevels.Contains(';%(_PlatformPackage.ApiLevel);')) ">
+        <Hash>%(_PlatformPackage.Hash)</Hash>
+        <Destination>$(AndroidSdkFullPath)\platforms\android-%(_PlatformPackage.ApiLevel)</Destination>
+      </_AndroidSdkPackage>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Download every `_AndroidSdkPackage` into the toolchain cache in parallel,
+    verifying SHA-256 via the shared `DownloadOneFileWithRetry` target.
+  -->
+  <Target Name="_DownloadAndroidSdkPackages"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="@(_AndroidSdkPackage->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
+    <ItemGroup>
+      <_DownloadFile Include="@(_AndroidSdkPackage)">
+        <AdditionalProperties>_DownloadUrl=$(_AndroidRepositoryUrl)%(Url);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=%(Identity);_DownloadSha256=%(Hash)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
+  </Target>
+
+  <!--
+    Extract every downloaded package into its destination.
+
+      * Windows: `UnzipDirectoryChildren` (LibZipSharp) - bsdtar on Windows
+        refuses to extract through symlinks, and `C:\Android\android-sdk`
+        on the CI image is a junction, so `tar -xf` fails there. The
+        Windows SDK zips have no symlinks of their own, so LibZipSharp is
+        fine. `NoSubdirectory=false` (the default) strips the single
+        top-level directory; `NoSubdirectory=true` extracts as-is.
+      * Unix (Linux + macOS): `unzip` into a sibling `.staging` directory
+        followed by an MSBuild `<Move/>` to emulate `strip-components`. GNU
+        tar on Linux cannot read `.zip` at all, and bsdtar on macOS silently
+        drops symlinks from `.zip` archives - the NDK has many symlinks
+        (`clang++ -> clang` etc) which then fail with
+        `posix_spawn: Exec format error`. `unzip` handles both cleanly.
+
+    `source.properties` is the sentinel produced by every component zip and
+    doubles as an incremental-build skip target.
+  -->
+  <Target Name="_ExtractAndroidSdkPackages"
+      DependsOnTargets="_DownloadAndroidSdkPackages"
+      Inputs="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)"
+      Outputs="%(_AndroidSdkPackage.Destination)\source.properties">
+    <PropertyGroup>
+      <_StripComponents>%(_AndroidSdkPackage.StripComponents)</_StripComponents>
+      <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
+      <_ZipPath>$([System.IO.Path]::Combine('$(AndroidToolchainCacheDirectory)', '%(_AndroidSdkPackage.Identity)'))</_ZipPath>
+      <_StagingDir>%(_AndroidSdkPackage.Destination).staging</_StagingDir>
+      <_DestDir>%(_AndroidSdkPackage.Destination)</_DestDir>
+      <_NoSubdirectory Condition=" '$(_StripComponents)' == '1' ">false</_NoSubdirectory>
+      <_NoSubdirectory Condition=" '$(_StripComponents)' == '0' ">true</_NoSubdirectory>
+    </PropertyGroup>
+    <RemoveDir Directories="$(_DestDir);$(_StagingDir)" />
+    <MakeDir Directories="$(_DestDir)" />
+    <!-- Windows: LibZipSharp via UnzipDirectoryChildren BootstrapTask. -->
+    <UnzipDirectoryChildren
+        Condition=" '$(HostOS)' == 'Windows' "
+        SourceFiles="$(_ZipPath)"
+        DestinationFolder="$(_DestDir)"
+        NoSubdirectory="$(_NoSubdirectory)"
+    />
+    <!--
+      Unix: `unzip` (preserves symlinks; LibZipSharp does not, which the NDK needs)
+      into a sibling .staging directory, then `<Move/>` every file into
+      $(_DestDir). When StripComponents=1, glob from inside the single
+      top-level directory of the zip so that `%(RecursiveDir)` already excludes
+      it - no path-rewriting required. Empty staging dirs are pruned afterwards.
+    -->
+    <MakeDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
+    <Exec
+        Condition=" '$(HostOS)' != 'Windows' "
+        Command="unzip -q -o &quot;$(_ZipPath)&quot; -d &quot;$(_StagingDir)&quot;"
+    />
+    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_StripComponents)' == '1' ">
+      <_StagedTopDir Remove="@(_StagedTopDir)" />
+      <_StagedTopDir Include="$([System.IO.Directory]::GetDirectories('$(_StagingDir)'))" />
+    </ItemGroup>
+    <PropertyGroup Condition=" '$(HostOS)' != 'Windows' ">
+      <_GlobRoot Condition=" '$(_StripComponents)' == '1' ">@(_StagedTopDir)</_GlobRoot>
+      <_GlobRoot Condition=" '$(_StripComponents)' == '0' ">$(_StagingDir)</_GlobRoot>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(HostOS)' != 'Windows' ">
+      <_StagedFile Remove="@(_StagedFile)" />
+      <_StagedFile Include="$(_GlobRoot)\**\*" />
+    </ItemGroup>
+    <Move
+        Condition=" '$(HostOS)' != 'Windows' "
+        SourceFiles="@(_StagedFile)"
+        DestinationFiles="@(_StagedFile->'$(_DestDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+    />
+    <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
+  </Target>
+
+  <!--
+    Generate `package.xml` for components whose upstream zip omits one (e.g. emulator).
+    Reads `package.xml.in` next to this targets file and replaces the `@PKG_*@`
+    placeholders from per-item metadata (PkgPath/PkgDesc/PkgRevision).
+  -->
+  <Target Name="_GenerateAndroidPackageXmls"
+      DependsOnTargets="_ExtractAndroidSdkPackages"
+      Inputs="$(MSBuildThisFileDirectory)package.xml.in;@(_AndroidSdkPackage->'%(Destination)\source.properties')"
+      Outputs="@(_AndroidSdkPackage->'%(Destination)\package.xml')">
+    <ItemGroup>
+      <_PkgXmlItem Include="@(_AndroidSdkPackage)"
+          Condition=" '%(_AndroidSdkPackage.GeneratePackageXml)' == 'true' " />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="%(_PkgXmlItem.Destination)\package.xml"
+        Lines="$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)package.xml.in').Replace('@PKG_PATH@', '%(_PkgXmlItem.PkgPath)').Replace('@PKG_DESC@', '%(_PkgXmlItem.PkgDesc)').Replace('@PKG_REVISION_MAJOR@', $([System.Version]::Parse('%(_PkgXmlItem.PkgRevision)').Major.ToString())).Replace('@PKG_REVISION_MINOR@', $([System.Version]::Parse('%(_PkgXmlItem.PkgRevision)').Minor.ToString())).Replace('@PKG_REVISION_MICRO@', $([System.Version]::Parse('%(_PkgXmlItem.PkgRevision)').Build.ToString())))"
+        Overwrite="true"
+    />
+  </Target>
+
+  <Target Name="_InstallAndroidSdkComponents"
+      BeforeTargets="Build"
+      DependsOnTargets="_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls;_CopyNdkRedistributables"
+  />
+
+  <!--
+    Copy NDK redistributable files (CRT, libc++, libunwind, libclang_rt.builtins)
+    for every supported ABI from the extracted NDK into the runtime redist directory.
+    MSBuild port of `Step_Android_SDK_NDK.CopyRedistributableFiles ()` in xaprepare.
+  -->
+  <ItemGroup>
+    <_NdkAbi Include="armeabi-v7a">
+      <ToolchainPrefix>arm-linux-androideabi</ToolchainPrefix>
+      <ClangArch>arm</ClangArch>
+      <UnwindArchDir>arm</UnwindArchDir>
+      <Rid>android-arm</Rid>
+    </_NdkAbi>
+    <_NdkAbi Include="arm64-v8a">
+      <ToolchainPrefix>aarch64-linux-android</ToolchainPrefix>
+      <ClangArch>aarch64</ClangArch>
+      <UnwindArchDir>aarch64</UnwindArchDir>
+      <Rid>android-arm64</Rid>
+    </_NdkAbi>
+    <_NdkAbi Include="x86">
+      <ToolchainPrefix>i686-linux-android</ToolchainPrefix>
+      <ClangArch>i686</ClangArch>
+      <UnwindArchDir>i386</UnwindArchDir>
+      <Rid>android-x86</Rid>
+    </_NdkAbi>
+    <_NdkAbi Include="x86_64">
+      <ToolchainPrefix>x86_64-linux-android</ToolchainPrefix>
+      <ClangArch>x86_64</ClangArch>
+      <UnwindArchDir>x86_64</UnwindArchDir>
+      <Rid>android-x64</Rid>
+    </_NdkAbi>
+    <_NdkCrtFile      Include="crtbegin_so.o;crtend_so.o;libc.so;libdl.so;liblog.so;libm.so;libz.so" />
+    <_NdkCppAbiFile   Include="libc++_static.a;libc++abi.a" />
+  </ItemGroup>
+
+  <Target Name="_CopyNdkRedistributables"
+      DependsOnTargets="_ExtractAndroidSdkPackages"
+      Inputs="$(AndroidNdkDirectory)\source.properties"
+      Outputs="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(_NdkAbi.Rid)\.ndk-redist-copied">
+    <PropertyGroup>
+      <_NdkToolchainRoot>$(AndroidNdkDirectory)\toolchains\llvm\prebuilt\$(_NdkToolchainOSTag)</_NdkToolchainRoot>
+      <_NdkSysrootLib>$(_NdkToolchainRoot)\sysroot\usr\lib</_NdkSysrootLib>
+      <!-- AndroidVersion.txt starts with the full LLVM version e.g. "19.0.1\n". -->
+      <_NdkVersionFileContent>$([System.IO.File]::ReadAllText('$(_NdkToolchainRoot)\AndroidVersion.txt'))</_NdkVersionFileContent>
+      <_NdkLlvmMajor>$(_NdkVersionFileContent.Substring(0, $(_NdkVersionFileContent.IndexOf('.'))))</_NdkLlvmMajor>
+      <_NdkClangLibLinux>$(_NdkToolchainRoot)\lib\clang\$(_NdkLlvmMajor)\lib\linux</_NdkClangLibLinux>
+      <!-- Per-ABI properties (batched via Outputs="...%(_NdkAbi.Rid)..."). -->
+      <_AbiPrefixDir>$(_NdkSysrootLib)\%(_NdkAbi.ToolchainPrefix)</_AbiPrefixDir>
+      <_AbiOutputDir>$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(_NdkAbi.Rid)</_AbiOutputDir>
+      <_AbiClangArch>%(_NdkAbi.ClangArch)</_AbiClangArch>
+      <_AbiUnwindArchDir>%(_NdkAbi.UnwindArchDir)</_AbiUnwindArchDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_NdkRedist Include="@(_NdkCrtFile    -> '$(_AbiPrefixDir)\$(AndroidMinimumDotNetApiLevel)\%(Identity)')" />
+      <_NdkRedist Include="@(_NdkCppAbiFile -> '$(_AbiPrefixDir)\%(Identity)')" />
+      <_NdkRedist Include="$(_NdkClangLibLinux)\libclang_rt.builtins-$(_AbiClangArch)-android.a" />
+      <_NdkRedist Include="$(_NdkClangLibLinux)\$(_AbiUnwindArchDir)\libunwind.a" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_NdkRedist)" DestinationFolder="$(_AbiOutputDir)" />
+    <Touch Files="$(_AbiOutputDir)\.ndk-redist-copied" AlwaysCreate="true" />
+    <ItemGroup>
+      <_NdkRedist Remove="@(_NdkRedist)" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="_AcceptAndroidSdkLicenses"
       BeforeTargets="Build"
+      DependsOnTargets="_ExtractAndroidSdkPackages"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(_LicensesAcceptedFile)">
     <Error
@@ -31,8 +482,9 @@
     <Touch Files="$(_LicensesAcceptedFile)" AlwaysCreate="true" />
   </Target>
 
-  <Target Name="_CleanAndroidSdkLicenses" BeforeTargets="Clean">
+  <Target Name="_CleanAndroidSdkComponents" BeforeTargets="Clean">
     <Delete Files="$(_LicensesAcceptedFile)" />
+    <RemoveDir Directories="@(_AndroidSdkPackage->'%(Destination)')" />
   </Target>
 
 </Project>

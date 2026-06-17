@@ -5,8 +5,6 @@ namespace Xamarin.Android.Prepare
 	[Scenario (isDefault: false)]
 	partial class Scenario_AndroidTestDependencies : ScenarioNoStandardEndSteps
 	{
-		protected virtual AndroidToolchainComponentType AndroidSdkNdkType => AndroidToolchainComponentType.CoreDependency;
-
 		public Scenario_AndroidTestDependencies () 
 			: base ("AndroidTestDependencies", "Install Android SDK and .NET preview test dependencies.")
 		{}
@@ -18,7 +16,6 @@ namespace Xamarin.Android.Prepare
 		protected override void AddSteps (Context context)
 		{
 			Steps.Add (new Step_InstallDotNetPreview ());
-			Steps.Add (new Step_Android_SDK_NDK (AndroidSdkNdkType));
 
 			// disable installation of missing programs...
 			context.SetCondition (KnownConditions.AllowProgramInstallation, false);

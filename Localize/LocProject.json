@@ -12,6 +12,36 @@
           "CopyOption": "LangIDOnName",
           "SourceFile": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\Resources.resx",
           "OutputPath": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\"
+        },
+        {
+          "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Xamarin.Installer.Common\\Properties\\Resources.resx",
+          "OutputPath": ".\\src\\Xamarin.Installer.Common\\Properties\\",
+          "LclFile": "Localize\\loc\\{Lang}\\Xamarin.Installer.Common\\Properties\\Resources.resx.lcl"
+        },
+        {
+          "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Xamarin.Installer.AndroidSDK\\Properties\\Resources.resx",
+          "OutputPath": ".\\src\\Xamarin.Installer.AndroidSDK\\Properties\\",
+          "LclFile": "Localize\\loc\\{Lang}\\Xamarin.Installer.AndroidSDK\\Properties\\Resources.resx.lcl"
+        },
+        {
+          "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Xamarin.Installer.Build.Tasks\\Properties\\Resources.resx",
+          "OutputPath": ".\\src\\Xamarin.Installer.Build.Tasks\\Properties\\",
+          "LclFile": "Localize\\loc\\{Lang}\\Xamarin.Installer.Build.Tasks\\Properties\\Resources.resx.lcl"
+        },
+        {
+          "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Xamarin.AndroidTools\\Properties\\Resources.resx",
+          "OutputPath": ".\\src\\Xamarin.AndroidTools\\Properties\\",
+          "LclFile": "Localize\\loc\\{Lang}\\Xamarin.AndroidTools\\Properties\\Resources.resx.lcl"
+        },
+        {
+          "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Xamarin.Android.Build.Debugging.Tasks\\Properties\\Resources.resx",
+          "OutputPath": ".\\src\\Xamarin.Android.Build.Debugging.Tasks\\Properties\\",
+          "LclFile": "Localize\\loc\\{Lang}\\tools\\msbuild\\Properties\\Resources.resx.lcl"
         }
       ]
     }

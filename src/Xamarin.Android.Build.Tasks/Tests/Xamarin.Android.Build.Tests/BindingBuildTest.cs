@@ -97,7 +97,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			var targets = new List<string> {
 				"_ExportJarToXml",
 				"GenerateBindings",

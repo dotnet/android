@@ -135,6 +135,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; contains reference to obsolete attribute &apos;Android.Runtime.PreserveAttribute&apos;. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead.
+        /// </summary>
+        public static string IL6001 {
+            get {
+                return ResourceManager.GetString("IL6001", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Directory &apos;{0}&apos; is from &apos;{1}&apos;..
         /// </summary>
         public static string XA_Directory_Is_From {
@@ -300,6 +309,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA0036 {
             get {
                 return ResourceManager.GetString("XA0036", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown mode: {0}.
+        /// </summary>
+        public static string XA0037 {
+            get {
+                return ResourceManager.GetString("XA0037", resourceCulture);
             }
         }
         
@@ -585,6 +603,33 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a correctly aligned ELF file failed with exception, ignoring alignment check for the file..
+        /// </summary>
+        public static string XA0146 {
+            get {
+                return ResourceManager.GetString("XA0146", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a valid ELF file failed with exception, ignoring AOT check for the file..
+        /// </summary>
+        public static string XA0147 {
+            get {
+                return ResourceManager.GetString("XA0147", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a valid ELF file failed with exception, ignoring symbol &apos;{1}@{2}&apos; check for the file..
+        /// </summary>
+        public static string XA0148 {
+            get {
+                return ResourceManager.GetString("XA0148", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
@@ -828,44 +873,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidHttpClientHandlerType&apos; property value &apos;{0}&apos; must derive from &apos;{1}&apos;.
-        ///Please change the value to an assembly-qualifed type name which inherits from &apos;{1}&apos; or remove the property completely..
-        /// </summary>
-        public static string XA1031 {
-            get {
-                return ResourceManager.GetString("XA1031", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;AndroidHttpClientHandlerType&apos; property value &apos;{0}&apos; must not derive from &apos;System.Net.Htt.HttpClientHandler&apos;.
-        ///Please change the value to an assembly-qualifed type name which inherits from &apos;System.Net.Http.HttpMessageHandler&apos; or remove the property completely..
-        /// </summary>
-        public static string XA1031_HCH {
-            get {
-                return ResourceManager.GetString("XA1031_HCH", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to resolve &apos;{0}&apos; from &apos;{1}&apos;. Please check your `AndroidHttpClientHandlerType` setting..
-        /// </summary>
-        public static string XA1032 {
-            get {
-                return ResourceManager.GetString("XA1032", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not resolve &apos;{0}&apos;. Please check your `AndroidHttpClientHandlerType` setting..
-        /// </summary>
-        public static string XA1033 {
-            get {
-                return ResourceManager.GetString("XA1033", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Your project references &apos;{0}&apos; which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file..
         /// </summary>
         public static string XA1034 {
@@ -1034,6 +1041,24 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA2002_NuGet {
             get {
                 return ResourceManager.GetString("XA2002_NuGet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load assembly &apos;{0}&apos;..
+        /// </summary>
+        public static string XA2024 {
+            get {
+                return ResourceManager.GetString("XA2024", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly {0} does not exist..
+        /// </summary>
+        public static string XA2025 {
+            get {
+                return ResourceManager.GetString("XA2025", resourceCulture);
             }
         }
         
@@ -1227,6 +1252,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Architecture &apos;{0}&apos; has Java types which have no counterparts in template architecture &apos;{1}&apos;: {2}.
+        /// </summary>
+        public static string XA4217 {
+            get {
+                return ResourceManager.GetString("XA4217", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to find //manifest/application/uses-library at path: {0}.
         /// </summary>
         public static string XA4218 {
@@ -1304,6 +1338,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4226 {
             get {
                 return ResourceManager.GetString("XA4226", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Architecture &apos;{0}&apos; doesn&apos;t match all marshal methods in architecture &apos;{1}&apos;. Please see detailed MSBuild logs for more information..
+        /// </summary>
+        public static string XA4227 {
+            get {
+                return ResourceManager.GetString("XA4227", resourceCulture);
             }
         }
         
@@ -1509,11 +1552,38 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Generated Java callable wrapper code changed: &apos;{0}&apos;.
+        /// </summary>
+        public static string XA4253 {
+            get {
+                return ResourceManager.GetString("XA4253", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the &apos;llvm-ir&apos; type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
         /// </summary>
         public static string XA4251 {
             get {
                 return ResourceManager.GetString("XA4251", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Trimmable type map Java source input directory &apos;{0}&apos; and output directory &apos;{1}&apos; must be different..
+        /// </summary>
+        public static string XA4254 {
+            get {
+                return ResourceManager.GetString("XA4254", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Generated trimmable type map Java source &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4255 {
+            get {
+                return ResourceManager.GetString("XA4255", resourceCulture);
             }
         }
 
@@ -1696,6 +1766,60 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4315 {
             get {
                 return ResourceManager.GetString("XA4315", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified input file &apos;{0}&apos; does not exist. Ignoring..
+        /// </summary>
+        public static string XA4316 {
+            get {
+                return ResourceManager.GetString("XA4316", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; does not start with &apos;&lt;replacements/&gt;&apos;. Skipping..
+        /// </summary>
+        public static string XA4317 {
+            get {
+                return ResourceManager.GetString("XA4317", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file &apos;{0}&apos; could not be read: {1}. Skipping..
+        /// </summary>
+        public static string XA4318 {
+            get {
+                return ResourceManager.GetString("XA4318", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No NativeAOT DGML files were provided..
+        /// </summary>
+        public static string XA4319 {
+            get {
+                return ResourceManager.GetString("XA4319", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ACW map file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4320 {
+            get {
+                return ResourceManager.GetString("XA4320", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NativeAOT DGML file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string XA4321 {
+            get {
+                return ResourceManager.GetString("XA4321", resourceCulture);
             }
         }
         

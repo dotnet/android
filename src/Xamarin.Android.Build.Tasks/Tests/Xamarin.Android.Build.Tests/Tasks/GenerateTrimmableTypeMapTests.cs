@@ -110,6 +110,71 @@ namespace Xamarin.Android.Build.Tests {
 				"Typemap assembly should NOT be rewritten when content hasn't changed.");
 		}
 
+		[Test]
+		public void Execute_WritesGeneratedAssembliesListFile ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var listFile = Path.Combine (outputDir, "typemap-assemblies.txt");
+			var staleAssembly = Path.Combine (outputDir, "_Stale.TypeMap.dll");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (staleAssembly, "stale");
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
+			task.GeneratedAssembliesListFile = listFile;
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+
+			var generatedAssemblies = task.GeneratedAssemblies.Select (i => i.ItemSpec).ToArray ();
+			var listedAssemblies = File.ReadAllLines (listFile);
+			CollectionAssert.AreEqual (generatedAssemblies, listedAssemblies);
+			CollectionAssert.DoesNotContain (listedAssemblies, staleAssembly);
+		}
+
+		[Test]
+		public void Execute_GeneratesFrameworkJcws ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
+			task.ResolvedFrameworkAssemblies = new [] { monoAndroidItem };
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+
+			var generatedJavaFiles = task.GeneratedJavaFiles.Select (i => i.ItemSpec).ToArray ();
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "android/runtime/JavaProxyThrowable.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_TrustManager.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_TrustManager_FakeSSLSession.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier.java"));
+			CollectionAssert.DoesNotContain (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "android/app/Activity.java"));
+		}
+
 		[TestCase ("v11.0")]
 		[TestCase ("v10.0")]
 		[TestCase ("11.0")]
@@ -172,6 +237,49 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.DoesNotContain ("android.test.InstrumentationTestRunner.class", registrationText);
 			StringAssert.DoesNotContain ("android.test.mock.MockApplication.class", registrationText);
 			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");
+		}
+
+		[Test]
+		public void Execute_GenerateNativeAotProguardConfiguration_UsesDgmlTypeMetadata ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
+			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (dgmlFile, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+				  <Nodes>
+				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
+				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
+				    <Node Id="3" Label="Type metadata: [My.Assembly]Duplicate.Type" />
+				    <Node Id="4" Label="Unrelated node" />
+				  </Nodes>
+				</DirectedGraph>
+				""");
+			File.WriteAllText (acwMapFile, """
+				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
+				Android.App.Activity, Mono.Android;android.app.Activity
+				Duplicate.Type, My.Assembly;my.app.Duplicate
+				Duplicate.Type;wrong.Duplicate
+				Other.Type;other.Type
+				""");
+
+			var task = new GenerateNativeAotProguardConfiguration {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
+				AcwMapFile = acwMapFile,
+				OutputFile = outputFile,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			var proguard = File.ReadAllText (outputFile);
+			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
+			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
+			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
+			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
+			StringAssert.DoesNotContain ("other.Type", proguard);
 		}
 
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,

@@ -3,29 +3,55 @@
     <Aapt2Version>4.0.0-6051327</Aapt2Version>
     <_Destination>$(MicrosoftAndroidSdkOutDir)</_Destination>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <_AndroidRepositoryUrl>https://dl.google.com/android/repository/</_AndroidRepositoryUrl>
   </PropertyGroup>
 
+  <!--
+    Google's SDK manifest (repository2-3.xml) only provides SHA-1 checksums,
+    but MSBuild's GetFileHash task only supports SHA-256 and above.
+    So we hardcode SHA-256 hashes in Configuration.props instead.
+  -->
   <ItemGroup>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_macosx.zip">
       <Platform>osx</Platform>
       <HostOS>Darwin</HostOS>
+      <Hash>$(XABuildToolsHashMacOS)</Hash>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_linux.zip">
       <Platform>linux</Platform>
       <HostOS>Linux</HostOS>
+      <Hash>$(XABuildToolsHashLinux)</Hash>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
     <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_windows.zip">
       <Platform>windows</Platform>
       <HostOS></HostOS>
+      <Hash>$(XABuildToolsHashWindows)</Hash>
       <FilesToExtract>aapt2.exe</FilesToExtract>
     </_BuildTools>
   </ItemGroup>
 
+  <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
+
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
 
-  <Target Name="_ExtractAapt2" BeforeTargets="Build">
+  <Target Name="_DownloadBuildTools"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="@(_BuildTools->'$(AndroidToolchainCacheDirectory)\%(Identity)')">
+    <ItemGroup>
+      <_DownloadFile Include="@(_BuildTools)">
+        <AdditionalProperties>_DownloadUrl=$(_AndroidRepositoryUrl)%(Identity);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=%(Identity);_DownloadSha256=%(Hash)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
+  </Target>
+
+  <Target Name="_ExtractAapt2" BeforeTargets="Build" DependsOnTargets="_DownloadBuildTools"
+      Inputs="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"
+      Outputs="$(_Destination)%(_BuildTools.HostOS)\%(_BuildTools.FilesToExtract)">
     <UnzipDirectoryChildren
         NoSubdirectory="False"
         SourceFiles="$(AndroidToolchainCacheDirectory)\%(_BuildTools.Identity)"

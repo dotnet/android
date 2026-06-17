@@ -91,7 +91,6 @@ namespace Xamarin.Android.Tasks {
 		public string TargetSdkVersion { get; set; }
 		public string MinSdkVersion { get; set; }
 		public bool Debug { get; set; }
-		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
 		public bool ForceExtractNativeLibs { get; set; }
 		public bool ForceDebuggable { get; set; }
@@ -412,9 +411,6 @@ namespace Xamarin.Android.Tasks {
 				throw new InvalidOperationException ("/manifest/@package attribute MUST contain a period ('.').");
 
 			manifest.SetAttributeValue ("package", PackageName);
-
-			if (MultiDex)
-				app.Add (CreateMonoRuntimeProvider ("mono.android.MultiDexLoader", null, initOrder: --AppInitOrder));
 
 			var providerNames = AddMonoRuntimeProviders (app);
 

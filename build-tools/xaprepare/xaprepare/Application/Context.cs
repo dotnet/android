@@ -278,24 +278,9 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   Collection of programs or dependencies which should be reinstalled.
-		/// </summary>
-		public RefreshableComponent ComponentsToRefresh { get; set; }
-
-		/// <summary>
-		///   Collection of Android SDK platform levels to be installed.
-		/// </summary>
-		public IEnumerable<string> AndroidSdkPlatforms { get; set; } = Enumerable.Empty<string> ();
-
-		/// <summary>
 		///   Path to a local .NET SDK archive to use instead of downloading.
 		/// </summary>
 		public string? LocalDotNetSdkArchive { get; set; }
-
-		/// <summary>
-		///   Set by <see cref="Step_Get_Android_BuildTools"/> if the archive has been downloaded and validated.
-		/// </summary>
-		public bool BuildToolsArchiveDownloaded { get; set; }
 
 		/// <summary>
 		///   Determines whether or not we are running on a hosted azure pipelines agent.

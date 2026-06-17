@@ -104,6 +104,116 @@ namespace Xamarin.Android.Net
 			}
 		}
 
+		sealed class CancellationAwareResponseStream : Stream
+		{
+			readonly Stream stream;
+			readonly HttpURLConnection httpConnection;
+			int streamDisposed;
+
+			public CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
+			{
+				this.stream = stream ?? throw new ArgumentNullException (nameof (stream));
+				this.httpConnection = httpConnection ?? throw new ArgumentNullException (nameof (httpConnection));
+			}
+
+			public override bool CanRead => stream.CanRead;
+			public override bool CanSeek => stream.CanSeek;
+			public override bool CanWrite => stream.CanWrite;
+			public override long Length => stream.Length;
+
+			public override long Position {
+				get => stream.Position;
+				set => stream.Position = value;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (disposing) {
+					DisposeStream ();
+				}
+
+				base.Dispose (disposing);
+			}
+
+			public override void Flush () => stream.Flush ();
+
+			public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+
+				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+					try {
+						await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
+					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+					}
+				}
+			}
+
+			public override int Read (byte[] buffer, int offset, int count) => stream.Read (buffer, offset, count);
+
+			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+
+			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
+			public override async ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+
+				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+					try {
+						return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
+					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+					}
+				}
+			}
+
+			public override long Seek (long offset, SeekOrigin origin) => stream.Seek (offset, origin);
+
+			public override void SetLength (long value) => stream.SetLength (value);
+
+			public override void Write (byte[] buffer, int offset, int count) => stream.Write (buffer, offset, count);
+
+			void QueueAbortRead () =>
+				Task.Run (AbortRead).ContinueWith (
+					task => Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {task.Exception}"),
+					CancellationToken.None,
+					TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+					TaskScheduler.Default);
+
+			void AbortRead ()
+			{
+				try {
+					httpConnection.Disconnect ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, LOG_APP, $"Disconnection exception: {ex}");
+				}
+
+				try {
+					DisposeStream ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
+				}
+			}
+
+			void DisposeStream ()
+			{
+				if (Interlocked.Exchange (ref streamDisposed, 1) == 0)
+					stream.Dispose ();
+			}
+
+			static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
+			{
+				return cancellationToken.IsCancellationRequested &&
+					ex is global::System.IO.IOException
+						or Java.IO.IOException
+						or InvalidDataException
+						or ObjectDisposedException
+						or WebException;
+			}
+
+		}
+
 		internal const string LOG_APP = "monodroid-net";
 
 		const string GZIP_ENCODING = "gzip";
@@ -466,7 +576,7 @@ namespace Xamarin.Android.Net
 		/// native Java client defaults are used.
 		/// </para>
 		/// <para>
-		/// The default value is <c>120</c> seconds.
+		/// The default value is <c>24</c> hours, same as <see cref="ReadTimeout"/>.
 		/// </para>
 		/// </summary>
 		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromHours (24);
@@ -520,9 +630,6 @@ namespace Xamarin.Android.Net
 		{
 			return _serverCertificateCustomValidator?.HostnameVerifier;
 		}
-
-		internal IHostnameVerifier? GetSSLHostnameVerifierInternal (HttpsURLConnection connection)
-			=> GetSSLHostnameVerifier (connection);
 
 		/// <summary>
 		/// Creates, configures and processes an asynchronous request to the indicated resource.
@@ -614,9 +721,6 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		internal Task <HttpResponseMessage> SendAsyncInternal (HttpRequestMessage request, CancellationToken cancellationToken)
-			=> SendAsync (request, cancellationToken);
-
 		protected virtual async Task <Java.Net.Proxy?> GetJavaProxy (Uri destination, CancellationToken cancellationToken)
 		{
 			var proxy = Java.Net.Proxy.NoProxy;
@@ -638,9 +742,6 @@ namespace Xamarin.Android.Net
 
 			return proxy;
 		}
-
-		internal Task <Java.Net.Proxy?> GetJavaProxyInternal (Uri destination, CancellationToken cancellationToken)
-			=> GetJavaProxy (destination, cancellationToken);
 
 		Task <HttpResponseMessage?> ProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
@@ -714,9 +815,6 @@ namespace Xamarin.Android.Net
 					stream.Seek (0, SeekOrigin.Begin);
 			}
 		}
-
-		internal Task WriteRequestContentToOutputInternal (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
-			=> WriteRequestContentToOutput (request, httpConnection, cancellationToken);
 
 		async Task <HttpResponseMessage?> DoProcessRequest (HttpRequestMessage request, URL javaUrl, HttpURLConnection httpConnection, CancellationToken cancellationToken, RequestRedirectionState redirectState)
 		{
@@ -915,10 +1013,10 @@ namespace Xamarin.Android.Net
 			return ret ?? inputStream;
 		}
 
-		HttpContent GetContent (URLConnection httpConnection, Stream contentStream, ContentState contentState)
+		HttpContent GetContent (HttpURLConnection httpConnection, Stream contentStream, ContentState contentState)
 		{
 			Stream inputStream = GetDecompressionWrapper (httpConnection, new BufferedStream (contentStream), contentState);
-			return new StreamContent (inputStream);
+			return new StreamContent (new CancellationAwareResponseStream (inputStream, httpConnection));
 		}
 
 		bool HandleRedirect (HttpStatusCode redirectCode, HttpURLConnection httpConnection, RequestRedirectionState redirectState, out bool disposeRet)
@@ -1012,8 +1110,14 @@ namespace Xamarin.Android.Net
 					// meant. The fix doesn't belong here, but rather in the Uri class. So we'll throw...
 
 					redirectUrl = new Uri (location!, UriKind.RelativeOrAbsolute);
-					if (!redirectUrl.IsAbsoluteUri)
+					if (!redirectUrl.IsAbsoluteUri) {
 						redirectUrl = new Uri (baseUrl, location);
+					} else if (string.Equals (baseUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)
+           				&& !string.Equals (redirectUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
+
+						disposeRet = false; // let the client decide what to do next
+						return true;
+					}
 				}
 
 				if (Logger.LogNet)
@@ -1146,9 +1250,6 @@ namespace Xamarin.Android.Net
 			return Task.CompletedTask;
 		}
 
-		internal Task SetupRequestInternal (HttpRequestMessage request, HttpURLConnection conn)
-			=> SetupRequest (request, conn);
-
 		/// <summary>
 		/// Configures the key store. The <paramref name="keyStore"/> parameter is set to instance of <see cref="KeyStore"/>
 		/// created using the <see cref="KeyStore.DefaultType"/> type and with populated with certificates provided in the <see cref="TrustedCerts"/>
@@ -1162,9 +1263,6 @@ namespace Xamarin.Android.Net
 
 			return keyStore;
 		}
-
-		internal KeyStore? ConfigureKeyStoreInternal (KeyStore? keyStore)
-			=> ConfigureKeyStore (keyStore);
 
 		/// <summary>
 		/// Create and configure an instance of <see cref="KeyManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
@@ -1182,9 +1280,6 @@ namespace Xamarin.Android.Net
 			return null;
 		}
 
-		internal KeyManagerFactory? ConfigureKeyManagerFactoryInternal (KeyStore? keyStore)
-			=> ConfigureKeyManagerFactoryInternal (keyStore);
-
 		/// <summary>
 		/// Create and configure an instance of <see cref="TrustManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
 		/// return value of the <see cref="ConfigureKeyStore"/> method, so it might be null if the application overrode the method and provided
@@ -1201,9 +1296,6 @@ namespace Xamarin.Android.Net
 
 			return null;
 		}
-
-		internal TrustManagerFactory? ConfigureTrustManagerFactoryInternal (KeyStore? keyStore)
-			=> ConfigureTrustManagerFactory (keyStore);
 
 		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
@@ -1257,9 +1349,6 @@ namespace Xamarin.Android.Net
 		{
 			return null;
 		}
-
-		internal SSLSocketFactory? ConfigureCustomSSLSocketFactoryInternal (HttpsURLConnection connection)
-			=> ConfigureCustomSSLSocketFactoryInternal (connection);
 
 		void SetupSSL (HttpsURLConnection? httpsConnection, HttpRequestMessage requestMessage)
 		{

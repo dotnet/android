@@ -14,8 +14,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunSimpleBuild ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinFormsAndroidApplicationProject {
 			};
 			var b = CreateApkBuilder ();
@@ -43,8 +41,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void TargetsSkipped ([Values(false, true)] bool useManagedResourceGenerator)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
@@ -117,8 +113,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SimpleInstallAndUninstall ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 			};
 			proj.SetDefaultTargetDevice ();
@@ -131,8 +125,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SkipFastDevAlreadyInstalledFile ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 			};
 			proj.SetDefaultTargetDevice ();
@@ -176,8 +168,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource ("SkipFastDevAlreadyInstalledResourcesSource")] // test for both cases that there is external resources or there are some.
 		public void SkipFastDevAlreadyInstalledResources (Package [] packages, string baseActivityClass)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 			};
 			proj.SetDefaultTargetDevice ();
@@ -205,8 +195,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunResourceChange ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 			};
 			proj.SetDefaultTargetDevice ();
@@ -236,8 +224,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstantRunFastDevDexes ([Values (false, true)] bool useEmbeddedDex)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 			};
 			proj.SetDefaultTargetDevice ();

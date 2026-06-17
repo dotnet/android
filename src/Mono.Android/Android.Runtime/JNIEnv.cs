@@ -138,6 +138,8 @@ namespace Android.Runtime {
 					MonoDroidUnhandledException (innerException ?? javaException);
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
+				} else if (RuntimeFeature.IsNativeAotRuntime) {
+					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}

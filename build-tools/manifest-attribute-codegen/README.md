@@ -15,11 +15,12 @@ This generally only needs to be done each time we bind a new Android API level.
 
 # How to use
 
-Ensure all Android platform SDK levels are installed.  This can be done with `xaprepare`;
-run the following command from the checkout toplevel:
+Ensure all Android platform SDK levels are installed.  This is done via the
+`androidsdk.csproj` project; run the following command from the checkout
+toplevel:
 
 ```dotnetcli
-dotnet run --project "build-tools/xaprepare/xaprepare/xaprepare.csproj" -- -s AndroidTestDependencies --android-sdk-platforms=all
+dotnet build src/androidsdk/androidsdk.csproj -p:AndroidSdkPlatforms=all
 ```
 
 Next, from this directory, run:

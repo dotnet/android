@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="XA0010_Adb" xml:space="preserve">
+    <value>adb не запущен. {0}</value>
+    <comment>The following are literal names and should not be translated: adb
+{0} - further detailed error message</comment>
+  </data>
+  <data name="XA0010_AdbTarget" xml:space="preserve">
+    <value>Недопустимое имя целевого объекта ADB "{0}". Имена целевых объектов должны начинаться с "-d", "-e" или "-s".</value>
+    <comment>The following are literal names and should not be translated: adb, `-d`, `-e`, `-s`
+{0} - the target name the user supplied</comment>
+  </data>
+  <data name="XA0010_NoDevice" xml:space="preserve">
+    <value>Нет доступного устройства.</value>
+  </data>
+  <data name="XA0010_Selected" xml:space="preserve">
+    <value>Выбранное устройство не запущено.</value>
+  </data>
+  <data name="XA0010_NoAbi" xml:space="preserve">
+    <value>Не удалось получить Android ABI для подключенного устройства или эмулятора "{0}". Подключите устройство повторно или перезапустите эмулятор и повторите попытку.</value>
+    <comment>The following are literal names and should not be translated: ABI
+ABI - is an acronym for Application Binary Interface.
+{0} - the target name the user supplied
+    </comment>
+  </data>
+  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
+    <value>Невозможно скопировать инструменты быстрого развертывания в "{0}/{1}" на целевом устройстве.
+Это устройство может быть несовместимо с функцией быстрого развертывания.
+Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A device path
+{1} - A filename</comment>
+  </data>
+  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
+    <value>Ошибка развертывания "{0}" с использованием "{1} : {2}".
+Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
+    <value>Системное свойство Android "log.redirect-stdio" установлено в значение "true" на целевом устройстве или эмуляторе.
+Чтобы включить совместимость с быстрым развертыванием, установите для свойства значение "false" или перезагрузите устройство или эмулятор, чтобы очистить значение.</value>
+  </data>
+  <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
+    <value>Ошибка развертывания "{0}".
+Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A filename</comment>
+  </data>
+  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
+    <value>Приносим свои извинения. Быстрое развертывание поддерживается только на устройствах под управлением Android 5.0 (уровень API 21) или выше.
+Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
+  </data>
+  <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
+    <value>Средство запуска от имени отключено на этом устройстве. Включите его, активировав параметры разработчика на устройстве или установив для ro.boot.disable_runas значение ЛОЖЬ.</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+'ro.boot.disable_runas' - the android property which disables the `run-as` tool.
+    </comment>
+  </data>
+  <data name="XA0132_PackageNotInstalled" xml:space="preserve">
+    <value>Пакет не был установлен. Проверьте, не установлен ли он под другим пользователем.
+Если пакет отображается на устройстве, попробуйте удалить его вручную, а затем повторите попытку.
+Вы можете удалить приложение через приложение "Настройки" на устройстве.</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0133_RunAsPermissionDenied" xml:space="preserve">
+    <value>Инструмент "запустить как", необходимый для системы быстрого развертывания, был отключен на этом устройстве производителем.
+Отключите быстрое развертывание на страницах свойств проекта Visual Studio или отредактируйте файл проекта в текстовом редакторе и установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true".</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+    </comment>
+  </data>
+  <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
+    <value>В AndroidManifest.xml для приложения не установлен атрибут "android:debuggable".
+Это необходимо для работы функции быстрого развертывания. Обычно эта функция включена по умолчанию
+в системе сборки .NET для Android для отладочных сборок. Убедитесь, что этот атрибут не установлен
+для элемента "application" в файле "AndroidManifest.xml".
+Если у вас есть класс, производный от "Android.App.Application", и вы используете "[Application]", убедитесь, что 
+Свойство "Debuggable" вообще не задано, так как оно переопределит значение для отладочных сборок.
+</value>
+    <comment>The following are literal names and should not be translated:
+AndroidManifest.xml - A xml file
+application - A xml element within a xml file.
+Application - A code attribute.
+Debuggable - A code property
+android:debuggable - An attribute in a xml file.
+    </comment>
+  </data>
+  <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
+    <value>Пакет представляет собой "системное" приложение. Это приложения, которые устанавливаются на 
+ устройстве под учетной записью "системного" пользователя. Приложения такого типа не могут использовать функцию "запуск от имени".
+ Система быстрого развертывания должна была автоматически обработать эту конкретную ошибку 
+ и использовать резервный путь установки. Однако если вы видите эту ошибку, 
+ сообщите о проблеме, указав точное сообщение об ошибке, используя пункт меню "Справка-&gt;Отправить отзыв-&gt;Сообщить о проблеме" в Visual Studio. 
+ или "Справка-&gt;Сообщить о проблеме" в Visual Studio для Mac. Если возможно, прикрепите к отзыву 
+ полный журнал диагностической сборки, так как это поможет нам диагностировать проблему.</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0136_RunAsCorruptInstallation" xml:space="preserve">
+    <value>Команда "запустить как" не выполнена с "{0}".
+Текущая установка пакета повреждена. Вручную удалите 
+пакет от всех пользователей на устройстве и повторите попытку. Если это не сработает, вы можете отключить быстрое развертывание.
+Быстрое развертывание можно отключить на страницах свойств проекта Visual Studio или отредактировать файл проекта в текстовом редакторе и установить для свойства MSBuild "EmbedAssembliesIntoApk" значение "true".
+</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0137_RunAsOSCorrupt" xml:space="preserve">
+    <value>Команда "запустить как" не выполнена с "{0}".
+Быстрое развертывание сейчас не поддерживается на этом устройстве.
+Отправьте сообщение об ошибке с точным текстом сообщения об ошибке, используя пункт меню "Справка-&gt;Отправить отзыв-&gt;Сообщить о проблеме" в Visual Studio
+или "Справка-&gt;Сообщить о проблеме" в Visual Studio для Mac.
+Установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
+    <value>Ошибка развертывания "{0}" с использованием "{1}" : "{2}". 
+Обычно это происходит из-за ошибки в `adb` при отправке данных файла на устройство. 
+Обычной причиной этого является неплотно подключенный или некачественный USB-кабель. Попробуйте использовать другой кабель.
+В качестве альтернативы попробуйте использовать отладку по Wi-Fi, для некоторых устройств это может быть более надежно, чем отладка по USB. 
+Если все это не помогло, установите для свойства MSBuild "EmbedAssembliesIntoApk" значение "true", чтобы отключить быстрое развертывание на страницах свойств проекта Visual Studio, или отредактируйте файл проекта в текстовом редакторе.</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
+    <value>  Запуск отладчика на {0}:{1}
+Запустите sdb, затем выполните следующую команду 
+  подключить {0} {1}
+    </value>
+    <comment>The following are literal names and should not be translated:
+{0} - An ip address of  a computer.
+{1} - An interger value describing the port to use.
+    </comment>
+  </data>
+</root>

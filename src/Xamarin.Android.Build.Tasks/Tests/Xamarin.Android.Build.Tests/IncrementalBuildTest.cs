@@ -68,7 +68,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			if (runtime != AndroidRuntime.MonoVM) { // temporarily
 				Assert.Ignore ("Runtimes other than MonoVM are currently broken here.");
 			}
@@ -99,6 +98,81 @@ namespace Xamarin.Android.Build.Tests
 				b.Output.AssertTargetIsNotSkipped ("CoreCompile");
 				b.Output.AssertTargetIsNotSkipped ("_Sign");
 				b.Output.AssertTargetIsPartiallyBuilt ("_CompressAssemblies");
+			}
+		}
+
+		[Test]
+		public void JniRemappingCountsSurviveIncrementalBuild ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => """
+<replacements>
+  <replace-type from="android/app/Activity" to="example/RemapActivity" />
+  <replace-method
+      source-type="example/RemapActivity"
+      source-method-name="onCreate"
+      target-type="example/RemapActivity"
+      target-method-name="onMyCreate"
+      target-method-instance-to-static="false" />
+</replacements>
+""",
+					},
+				},
+			};
+			proj.SetRuntime (runtime);
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build failed");
+				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				var remapSourceTimestamps = GetJniRemappingSourceTimestamps (proj, b);
+
+				proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build failed");
+				AssertJniRemappingCounts (proj, b, expectedTypeCount: 1, expectedMethodCount: 1);
+				AssertJniRemappingSourceTimestamps (remapSourceTimestamps);
+			}
+		}
+
+		void AssertJniRemappingCounts (XamarinAndroidApplicationProject proj, ProjectBuilder builder, uint expectedTypeCount, uint expectedMethodCount)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, "arm64-v8a;x86_64", required: true, runtime: AndroidRuntime.CoreCLR);
+			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
+			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
+		}
+
+		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android");
+			var timestamps = new Dictionary<string, DateTime> (StringComparer.Ordinal);
+			foreach (string abi in new [] { "arm64-v8a", "x86_64" }) {
+				string path = Path.Combine (objDirPath, $"jni_remap.{abi}.ll");
+				FileAssert.Exists (path);
+				timestamps.Add (path, File.GetLastWriteTimeUtc (path));
+			}
+			return timestamps;
+		}
+
+		void AssertJniRemappingSourceTimestamps (Dictionary<string, DateTime> expectedTimestamps)
+		{
+			foreach (var expectedTimestamp in expectedTimestamps) {
+				Assert.AreEqual (
+					expectedTimestamp.Value,
+					File.GetLastWriteTimeUtc (expectedTimestamp.Key),
+					$"{expectedTimestamp.Key} should not be touched when regenerated with unchanged contents."
+				);
 			}
 		}
 
@@ -352,7 +426,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			var app = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				ProjectName = "App",
@@ -532,7 +605,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			var targets = new List<(string target, bool ignoreOnNAOT)> {
 				("_GeneratePackageManagerJava", true), // TODO: NativeAOT doesn't skip this target on 3rd attempt, check if that's ok?
 				("_ResolveLibraryProjectImports", false),
@@ -664,13 +736,39 @@ namespace Lib2
 		}
 
 		[Test]
+		public void CreateAarRunsOnceWithGeneratePackageOnBuild ()
+		{
+			// https://github.com/dotnet/android/issues/11514
+			// `_CreateAar` was being invoked twice for a single library build when
+			// `GeneratePackageOnBuild=true`: once via `BuildDependsOn`, and again via
+			// NuGet pack's per-TFM dispatch which entered the project at
+			// `_GetFrameworkAssemblyReferences`. That target transitively pulled in
+			// `UpdateAndroidResources` -> `_UpdateAndroidResources` -> `_CreateAar`
+			// via `_UpdateAndroidResourcesDependsOn`. The second invocation can race
+			// the first writer when parallel builds (-m) consumers concurrently read
+			// the .aar via `Files.HashFile`, producing `XARLP7024`.
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.SetProperty ("GeneratePackageOnBuild", "true");
+			using (var b = CreateDllBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				// MSBuild emits "Building target X completely" only when the target
+				// actually runs (not when it is entered then skipped due to empty
+				// Inputs/Outputs). Counting that message gives us the number of real
+				// `_CreateAar` executions, which is what races on disk in #11514.
+				int count = b.LastBuildOutput.Count (l => l.Contains ("Building target \"_CreateAar\""));
+				Assert.AreEqual (1, count,
+					$"`_CreateAar` should only execute once per build of a library project; was {count}.");
+			}
+		}
+
+		[Test]
 		public void ManifestMergerIncremental ([Values] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ManifestMerger = "manifestmerger.jar"
@@ -883,8 +981,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1028,7 +1124,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1233,7 +1328,6 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-
 			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
@@ -1851,6 +1945,42 @@ namespace Lib2
 					Assert.IsTrue (secondApkWrite > firstApkWrite,
 						$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
 				}
+			}
+		}
+
+		[Test]
+		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values] AndroidRuntime runtime)
+		{
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			proj.SetProperty ("PublishTrimmed", "true");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should succeed");
+				b.Output.AssertTargetIsNotSkipped ("_RunAfterILLinkAdditionalSteps");
+				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+
+				// Verify afterlink/ output directory was created with per-ABI subdirectories containing assemblies
+				var afterlinkDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "afterlink");
+				Assert.IsTrue (Directory.Exists (afterlinkDir), "afterlink/ directory should exist after first build");
+				var abiDirs = Directory.GetDirectories (afterlinkDir);
+				Assert.IsTrue (abiDirs.Length > 0, "afterlink/ should contain ABI subdirectories");
+				foreach (var abiDir in abiDirs) {
+					var afterlinkFiles = Directory.GetFiles (abiDir, "*.dll");
+					Assert.IsTrue (afterlinkFiles.Length > 0, $"afterlink/{Path.GetFileName (abiDir)}/ should contain assemblies");
+				}
+
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+				b.Output.AssertTargetIsSkipped ("_RunAfterILLinkAdditionalSteps");
+				// The outer target must always run to update assembly itemgroups for downstream targets
+				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
 			}
 		}
 

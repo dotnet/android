@@ -43,18 +43,6 @@ namespace Xamarin.Android.Build.Tests
 			return value;
 		}
 
-		/// <summary>
-		/// Checks if a commercial .NET for Android is available
-		/// * Defaults to Assert.Ignore ()
-		/// </summary>
-		public void AssertCommercialBuild ()
-		{
-			if (!TestEnvironment.CommercialBuildAvailable) {
-				var message = $"'{TestName}' requires a commercial build of .NET for Android.";
-				Assert.Inconclusive (message);
-			}
-		}
-
 		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '|' };
 
 		public string TestName {

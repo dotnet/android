@@ -97,65 +97,48 @@ namespace Android.Runtime
 			}
 		}
 
-		// This is needed to initialize e.g. logging before anything else (useful with e.g. gref
-		// logging where runtime creation causes several grefs to be created and logged without
-		// stack traces because logging categories on the managed side aren't yet set)
-		internal static void InitializeJniRuntimeEarly (JnienvInitializeArgs args)
+		internal static void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
-			Logger.SetLogCategories ((LogCategories)args.logCategories);
+			InitializeCommonState (args);
+			InitializeTrimmableTypeMapDataIfNeeded ();
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		internal static void InitializeJniRuntime (JniRuntime runtime, JnienvInitializeArgs args)
+		// Only used for NativeAOT after the runtime has been created. MonoVM and CoreCLR use Initialize().
+		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
+			if (!RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
+			}
+			if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with MonoVM or CoreCLR.");
+			}
+
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
+			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
 			SetSynchronizationContext ();
 		}
 
+		// Only used for MonoVM and CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			// Should not be allowed
-			if (RuntimeFeature.IsMonoRuntime && RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: both RuntimeFeature.IsMonoRuntime and RuntimeFeature.IsCoreClrRuntime are enabled");
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
+			}
+			if (RuntimeFeature.IsMonoRuntime == RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: exactly one of RuntimeFeature.IsMonoRuntime or RuntimeFeature.IsCoreClrRuntime must be enabled.");
 			}
 
 			IntPtr total_timing_sequence = IntPtr.Zero;
 			IntPtr partial_timing_sequence = IntPtr.Zero;
 
-			Logger.SetLogCategories ((LogCategories)args->logCategories);
+			InitializeBeforeRuntimeCreation (*args);
 
-			gref_gc_threshold = args->grefGcThreshold;
-
-			jniRemappingInUse = args->jniRemappingInUse;
-			MarshalMethodsEnabled = args->marshalMethodsEnabled;
-			java_class_loader = args->grefLoader;
-
-			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
-			if (RuntimeFeature.TrimmableTypeMap) {
-				InitializeTrimmableTypeMapData ();
-			}
-
-			JniRuntime.JniTypeManager typeManager;
-			JniRuntime.JniValueManager? valueManager = null;
-			if (RuntimeFeature.TrimmableTypeMap) {
-				typeManager     = new TrimmableTypeMapTypeManager ();
-				valueManager    = new JavaMarshalValueManager ();
-			} else if (RuntimeFeature.ManagedTypeMap) {
-				typeManager     = new ManagedTypeManager ();
-			} else {
-				typeManager     = new AndroidTypeManager (args->jniAddNativeMethodRegistrationAttributePresent != 0);
-			}
-			if (RuntimeFeature.IsMonoRuntime) {
-				valueManager = new AndroidValueManager ();
-			} else if (RuntimeFeature.IsCoreClrRuntime) {
-				// Note: this will be removed once trimmable typemap is the only supported option for CoreCLR runtime
-				valueManager ??= new JavaMarshalValueManager ();
-			} else {
-				throw new NotSupportedException ("Internal error: unknown runtime not supported");
-			}
+			JniRuntime.JniTypeManager typeManager = CreateTypeManager (*args);
+			JniRuntime.JniValueManager valueManager = CreateValueManager ();
 			androidRuntime = new AndroidRuntime (
 					args->env,
 					args->javaVm,
@@ -165,18 +148,7 @@ namespace Android.Runtime
 					args->jniAddNativeMethodRegistrationAttributePresent != 0
 			);
 			JniRuntime.SetCurrent (androidRuntime);
-			if (RuntimeFeature.TrimmableTypeMap) {
-				// TypeMapLoader.Initialize() only loads managed typemap data. Registering
-				// mono.android.Runtime natives requires JniRuntime.Current and its ClassLoader.
-				TrimmableTypeMap.RegisterNativeMethods ();
-			}
-
-			grefIGCUserPeer_class = args->grefIGCUserPeer;
-			grefGCUserPeerable_class = args->grefGCUserPeerable;
-
-			PropagateExceptions = args->brokenExceptionTransitions == 0;
-
-			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args->packageNamingPolicy;
+			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
 
 			if (args->managedMarshalMethodsLookupEnabled) {
 				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
@@ -195,6 +167,69 @@ namespace Android.Runtime
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
+
+		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
+		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return new TrimmableTypeMapTypeManager ();
+			}
+
+			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
+				return new ManagedTypeManager ();
+			}
+
+			return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+		}
+
+		internal static JniRuntime.JniValueManager CreateValueManager ()
+		{
+			if (RuntimeFeature.IsMonoRuntime) {
+				return new AndroidValueManager ();
+			}
+
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				return new JavaMarshalValueManager ();
+			}
+
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				return new JavaMarshalValueManager ();
+			}
+
+			throw new NotSupportedException ("Internal error: unknown runtime not supported");
+		}
+
+		static void InitializeCommonState (JnienvInitializeArgs args)
+		{
+			Logger.SetLogCategories ((LogCategories)args.logCategories);
+
+			gref_gc_threshold = args.grefGcThreshold;
+			jniRemappingInUse = args.jniRemappingInUse;
+			MarshalMethodsEnabled = args.marshalMethodsEnabled;
+			java_class_loader = args.grefLoader;
+
+			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
+			grefIGCUserPeer_class = args.grefIGCUserPeer;
+			grefGCUserPeerable_class = args.grefGCUserPeerable;
+			PropagateExceptions = args.brokenExceptionTransitions == 0;
+
+			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
+		}
+
+		static void InitializeTrimmableTypeMapDataIfNeeded ()
+		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				InitializeTrimmableTypeMapData ();
+			}
+		}
+
+		static void RegisterTrimmableTypeMapNativeMethodsIfNeeded ()
+		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				// TypeMapLoader.Initialize() only loads managed typemap data. Registering
+				// mono.android.Runtime natives requires JniRuntime.Current and its ClassLoader.
+				TrimmableTypeMap.RegisterNativeMethods ();
+			}
+		}
 
 		// Separate method so the JIT doesn't try to resolve TypeMapLoader (from _Microsoft.Android.TypeMaps.dll)
 		// when compiling JNIEnvInit.Initialize() in non-trimmable builds where that assembly isn't present.

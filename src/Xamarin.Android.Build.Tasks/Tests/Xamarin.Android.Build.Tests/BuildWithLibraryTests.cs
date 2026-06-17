@@ -742,8 +742,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild ();
-
 			const string target = "_GetPrimaryCpuAbi";
 			var proj = new XamarinAndroidLibraryProject ();
 			using (var b = CreateDllBuilder ()) {

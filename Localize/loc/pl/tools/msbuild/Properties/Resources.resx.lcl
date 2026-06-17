@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\tools\msbuild\Properties\Resources.resx" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="pl-PL" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Item ItemId=";Resources.resx" ItemType="0" PsrId="211" Leaf="false">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+    <Item ItemId=";Strings" ItemType="0" PsrId="211" Leaf="false">
+      <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";StartDebugger_ipAddress_port" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[  Starting Debugger on {0}:{1}]D;]A;Start sdb then run the following command]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[  Uruchamianie debugera w {0}:{1}]D;]A;Uruchom bazę SDB, a następnie uruchom następujące polecenie]D;]A;  połącz {0} {1}]D;]A;    ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_Adb" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[adb is not running. {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Narzędzie adb nie jest uruchomione. {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_AdbTarget" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Invalid adb target name '{0}'. Target names must start with `-d`, `-e`, or `-s`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieprawidłowa nazwa elementu docelowego adb „{0}”. Nazwy obiektów docelowych muszą zaczynać się od `-d`, `-e`, or `-s`.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_NoAbi" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not retrieve the Android ABI for the attached device or emulator `{0}`. Please reconnect the device or restart the emulator, and try again.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można pobrać interfejsu ABI systemu Android dla dołączonego urządzenia lub emulatora `{0}`. Podłącz ponownie urządzenie lub uruchom ponownie emulator i spróbuj ponownie.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Could not retrieve the Android ABI for the attached device or emulator. Please reconnect the device or restart the emulator, and try again.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_NoDevice" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[No available device.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Brak dostępnego urządzenia.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_Selected" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Selected device is not running.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wybrane urządzenie nie jest uruchomione.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0126_UnableToCopyFastDevTools" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to copy Fast Deployment tools to '{0}/{1}' on the target device.]D;]A;This device might not be compatible with Fast Deployment.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można skopiować narzędzi szybkiego wdrażania do folderu „{0}/{1}” na urządzeniu docelowym.]D;]A;To urządzenie może nie być zgodne z szybkim wdrażaniem.]D;]A;Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0127_ErrorDeployingFile" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd podczas wdrażania elementu „{0}” przy użyciu elementu „{1}: {2}„.]D;]A;Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0128_RedirectStdioIsEnabled" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'log.redirect-stdio' Android system property is set to 'true' on the target device or emulator.]D;]A;To enable compatibility with Fast Deployment, set the property to 'false' or reboot the device or emulator to clear the value.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Właściwość systemu Android „log.redirect-stdio” jest ustawiona na wartość „true” na urządzeniu docelowym lub emulatorze.]D;]A;Aby włączyć zgodność z szybkim wdrażaniem, ustaw właściwość na wartość „false” lub uruchom ponownie urządzenie lub emulator, aby wyczyścić wartość.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0129_ErrorDeployingFile" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error deploying '{0}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd podczas wdrażania elementu „{0}”.]D;]A;Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0130_FastDevNotSupported" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Sorry. Fast Deployment is only supported on devices running Android 5.0 (API level 21) or higher.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Przepraszamy. Szybkie wdrażanie jest obsługiwane tylko na urządzeniach z systemem Android 5.0 (poziom 21 interfejsu API) lub nowszym.]D;]A;Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0131_DeveloperModeNotEnabled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' tool has been disabled on this device. Either enable it by activating the developer options on the device or by setting `ro.boot.disable_runas` to `false`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Narzędzie „run-as” zostało wyłączone na tym urządzeniu. Włącz je, aktywując opcje dewelopera na urządzeniu lub ustawiając „ro.boot.disable_runas na wartość „false”.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0132_PackageNotInstalled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The package was not installed. Please check you do not have it installed under any other user.]D;]A;If the package does show up on the device, try manually uninstalling it then try again.]D;]A;You should be able to uninstall the app via the Settings app on the device.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pakiet nie został zainstalowany. Sprawdź, czy nie masz zainstalowanej aplikacji pod żadnym innym użytkownikiem.]D;]A;Jeśli pakiet jest wyświetlany na urządzeniu, spróbuj odinstalować go ręcznie, a następnie spróbuj ponownie.]D;]A;Powinno być możliwe odinstalowanie aplikacji za pomocą aplikacji Ustawienia na urządzeniu.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0133_RunAsPermissionDenied" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' tool required by the Fast Deployment system has been disabled on this device by the manufacturer.]D;]A;Please disable Fast Deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Narzędzie „Run-as” wymagane przez system szybkiego wdrażania zostało wyłączone na tym urządzeniu przez producenta.]D;]A;Wyłącz szybkie wdrażanie na stronach właściwości projektu programu Visual Studio lub edytuj plik projektu w edytorze tekstów i ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0134_RunAsPackageNotDebuggable" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the .NET for Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aplikacja nie ma atrybutu „android:debuggable” ustawionego w AndroidManifest.xml.]D;]A;Jest to wymagane, aby szybkie wdrażanie działało. Ta opcja jest domyślnie włączona przez ]D;]A;platformę .NET dla systemu Android na potrzeby kompilacji debugowania. Sprawdź, czy nie masz tego atrybutu]D;]A;ustawionego w elemencie „application" w elemencie „AndroidManifest.xml”.]D;]A;Jeśli masz klasę pochodzącą od elementu „Android.App.Application” i używasz „[Application]5D;”, upewnij się, że ]D;]A;Właściwość „Debuggable” nie jest w ogóle ustawiona, ponieważ zastąpi wartość kompilacji debugowania.]D;]A;]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the Xamarin.Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0135_RunAsPackageNotAndApplication" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The package is a 'system' application. These are applications which install under]D;]A; the 'system' user on a device. These types of applications cannot use 'run-as'.]D;]A; The Fast Deployment system should have handled this particular error automatically]D;]A; and used a backup installation path. However if you are seeing this error please file]D;]A; an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A; or 'Help->Report a Problem' in Visual Studio for Mac. If possible attach a full diagnostic build]D;]A; log to the feedback report as this will help us diagnose the issue.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pakiet jest aplikacją „systemową”. Są to aplikacje instalowane w obszarze]D;]A; użytkownika „systemowego” na urządzeniu. Tego typu aplikacje nie mogą używać polecenia „run-as”.]D;]A; System szybkiego wdrażania powinien automatycznie obsłużyć ten konkretny błąd]D;]A; i użyć ścieżki instalacji kopii zapasowej. Jeśli jednak widzisz ten błąd, zgłoś]D;]A; problem z dokładnym komunikatem o błędzie przy użyciu elementu menu „Pomoc->Prześlij opinię->Zgłoś problem” w programie Visual Studio]D;]A; lub „Pomoc->Zgłoś problem” w programie Visual Studio dla komputerów Mac. Jeśli to możliwe, dołącz dziennik kompilacji]D;]A; pełnej diagnostyki do raportu opinii, ponieważ pomoże nam to zdiagnozować problem.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0136_RunAsCorruptInstallation" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;The currently installation of the package in corrupt. Please manually uninstall the ]D;]A;package from all the users on device and try again. If that does not work you can disable Fast Deployment.]D;]A;Fast Deployment can be disabled in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]D;]A;]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wykonanie polecenia „run-as” nie powiodło się z „{0}”.]D;]A;Bieżąca instalacja pakietu jest uszkodzona. Ręcznie odinstaluj ]D;]A;pakiet ze wszystkich użytkowników na urządzeniu i spróbuj ponownie. Jeśli to nie zadziała, możesz wyłączyć szybkie wdrażanie.]D;]A;Szybkie wdrażanie można wyłączyć na stronach właściwości projektu programu Visual Studio lub edytować plik projektu w edytorze tekstów i ustawić właściwość „EmbedAssembliesIntoApk” programu MSBuild na wartość „true”.]D;]A;]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0137_RunAsOSCorrupt" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;Fast Deployment is not currently supported on this device.]D;]A;Please file an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A;or 'Help->Report a Problem' in Visual Studio for Mac.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Wykonanie polecenia „run-as” nie powiodło się z „{0}”.]D;]A;Szybkie wdrażanie nie jest obecnie obsługiwane na tym urządzeniu.]D;]A;Zgłoś problem z dokładnym komunikatem o błędzie, używając elementu menu „Pomoc-> Prześlij opinię->Zgłoś problem” w programie Visual Studio]D;]A;lub „Pomoc->Zgłoś problem” w programie Visual Studio dla komputerów Mac.]D;]A;Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio, lub edytuj plik projektu w edytorze tekstów.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0138_ErrorReadingStdin" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'. ]D;]A;This is usually due to an error in `adb` when the file data is sent over to the device. ]D;]A;The normal cause for this is a loose or low quality USB cable. Please try a different cable.]D;]A;Alternatively try using Wifi Debugging, this can be more reliable than USB debugging for certain devices. ]D;]A;If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Błąd podczas wdrażania elementu „{0}” przy użyciu elementu „{1}: {2}”. ]D;]A;Zwykle jest to spowodowane błędem w pliku „adb”, gdy dane pliku są wysyłane do urządzenia. ]D;]A;Normalną przyczyną takiego działania jest luźny lub niskiej jakości kabel USB. Spróbuj użyć innego kabla.]D;]A;Możesz też spróbować użyć debugowania sieci Wi-Fi, ponieważ może to być bardziej niezawodne niż debugowanie USB dla niektórych urządzeń. ]D;]A;Jeśli to wszystko się nie powiedzie, ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio lub edytować plik projektu w edytorze tekstów.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+    </Item>
+  </Item>
+</LCX>

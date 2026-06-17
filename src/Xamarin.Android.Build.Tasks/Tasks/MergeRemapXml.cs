@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tasks
 		void MergeInputFile (XmlWriter writer, string file)
 		{
 			if (!File.Exists (file)) {
-				Log.LogWarning ($"Specified input file `{file}` does not exist.  Ignoring.");
+				Log.LogCodedWarning ("XA4316", Properties.Resources.XA4316, file);
 				return;
 			}
 			var settings    = new XmlReaderSettings {
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tasks
 					return;
 				}
 				if (reader.LocalName != "replacements") {
-					Log.LogWarning ($"Input file `{file}` does not start with `<replacements/>`.  Skipping.");
+					Log.LogCodedWarning ("XA4317", Properties.Resources.XA4317, file);
 					return;
 				}
 				while (reader.Read ()) {
@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 			catch (Exception e) {
-				Log.LogWarning ($"Input file `{file}` could not be read: {e.Message}  Skipping.");
+				Log.LogCodedWarning ("XA4318", Properties.Resources.XA4318, file, e.Message);
 				Log.LogDebugMessage ($"Input file `{file}` could not be read: {e.ToString ()}");
 			}
 		}
