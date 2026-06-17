@@ -168,16 +168,17 @@ public class BuildArchive : AndroidTask
 
 				using (var stream = File.OpenRead (jar_file_path))
 				using (var jar = ZipArchive.Open (stream)) {
-					var jar_item = jar.ReadEntry (jar_entry_name);
-
-					if (jar_item == null) {
+					if (!jar.ContainsEntry (jar_entry_name)) {
 						Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jar_entry_name, jar_file_path);
 						if (wasExistingOutputEntry)
 							existingEntries.Add (apk_path);
 						continue;
 					}
 
+					var jar_item = jar.ReadEntry (jar_entry_name);
+
 					if (hasApkEntry) {
+						// CRC is computed on uncompressed data — matching CRC means identical content regardless of compression settings.
 						if (apk.GetEntry (apk_path).CRC == jar_item.CRC) {
 							Log.LogDebugMessage ("Skipping {0} from {1} as it is up to date.", jar_entry_name, jar_file_path);
 							continue;
