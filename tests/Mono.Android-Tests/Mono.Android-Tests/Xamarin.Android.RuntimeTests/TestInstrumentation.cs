@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Android.App;
+using Android.OS;
 using Android.Runtime;
 using Xamarin.Android.UnitTests;
 
@@ -92,6 +93,12 @@ namespace Xamarin.Android.RuntimeTests
 					"Java.InteropTests.InvokeVirtualFromConstructorTests",
 				};
 			}
+		}
+
+		public override void OnCreate (Bundle? arguments)
+		{
+			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
+			base.OnCreate (arguments);
 		}
 
 		protected override IEnumerable<Assembly> GetTestAssemblies ()

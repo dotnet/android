@@ -40,12 +40,6 @@ namespace Java.InteropTests
 		[DllImport ("reuse-threads")]
 		static extern int rt_invoke_callback_on_new_thread (CB cb);
 
-		static JnienvTest ()
-		{
-			// Load through Java so JNI_OnLoad captures the JavaVM before the P/Invokes run.
-			Java.Lang.JavaSystem.LoadLibrary ("reuse-threads");
-		}
-
 		[Test]
 		public void RegisterTypeOnNewNativeThread ()
 		{
