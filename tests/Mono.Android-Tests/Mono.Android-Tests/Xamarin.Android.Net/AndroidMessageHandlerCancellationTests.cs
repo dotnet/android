@@ -19,6 +19,7 @@ namespace Xamarin.Android.NetTests
 	public class AndroidMessageHandlerCancellationTests
 	{
 		const int StalledResponseContentLength = 1024 * 1024;
+		const int UploadContentLength = 16 * 1024 * 1024;
 		const int BodyReadBlockDelayMilliseconds = 250;
 		const int PromptCancellationTimeoutMilliseconds = 3000;
 
@@ -56,6 +57,26 @@ namespace Xamarin.Android.NetTests
 			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
 			cts.Cancel ();
 			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
+		}
+
+		[Test]
+		public async Task RequestBodyUploadCancellationIsPrompt ()
+		{
+			using var uploadServer = new StalledRequestServer ();
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var cts = new CancellationTokenSource ();
+			using var request = new HttpRequestMessage (HttpMethod.Put, $"http://localhost:{uploadServer.Port}/upload") {
+				// A large body ensures the socket send buffer fills while the server stalls reading it,
+				// so the upload is still in progress when the caller cancels.
+				Content = new ByteArrayContent (new byte [UploadContentLength]),
+			};
+
+			Task sendTask = client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+
+			await WaitForBodyReadToBlock (uploadServer.BodyStartedTask).ConfigureAwait (false);
+			cts.Cancel ();
+			await AssertCanceledPromptly (sendTask, uploadServer.ReleaseRequestBody).ConfigureAwait (false);
 		}
 
 		[Test]
@@ -197,6 +218,80 @@ namespace Xamarin.Android.NetTests
 					return;
 
 				await serverTask.ConfigureAwait (false);
+			}
+		}
+
+		sealed class StalledRequestServer : IDisposable
+		{
+			readonly System.Net.Sockets.TcpListener listener;
+			readonly TaskCompletionSource<bool> bodyStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly TaskCompletionSource<bool> releaseBody = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly Task serverTask;
+
+			public StalledRequestServer ()
+			{
+				listener = new System.Net.Sockets.TcpListener (IPAddress.Loopback, 0);
+				listener.Start ();
+				Port = ((IPEndPoint) listener.LocalEndpoint).Port;
+
+				serverTask = StallRequestBody ();
+			}
+
+			public int Port { get; }
+
+			public Task BodyStartedTask => bodyStarted.Task;
+
+			public void ReleaseRequestBody ()
+			{
+				releaseBody.TrySetResult (true);
+			}
+
+			public void Dispose ()
+			{
+				ReleaseRequestBody ();
+				try {
+					listener.Stop ();
+				} catch (Exception ex) {
+					Console.WriteLine ($"Exception while stopping the stalled request server: {ex}");
+				}
+			}
+
+			async Task StallRequestBody ()
+			{
+				try {
+					using var client = await listener.AcceptTcpClientAsync ().ConfigureAwait (false);
+					using var stream = client.GetStream ();
+
+					// Read just the request headers so the upload phase begins, then stop reading the body
+					// to keep the socket send buffer full on the client side until released.
+					await ReadRequestHeaders (stream).ConfigureAwait (false);
+					bodyStarted.TrySetResult (true);
+
+					await releaseBody.Task.ConfigureAwait (false);
+				} catch (Exception ex) {
+					if (!BodyStartedTask.IsCompleted) {
+						bodyStarted.TrySetException (ex);
+						return;
+					}
+					Console.WriteLine ($"Exception while stalling the request body: {ex}");
+				}
+			}
+
+			static async Task ReadRequestHeaders (System.Net.Sockets.NetworkStream stream)
+			{
+				var buffer = new byte [1];
+				int consecutiveLineEndChars = 0;
+				while (consecutiveLineEndChars < 4) {
+					int read = await stream.ReadAsync (buffer, 0, 1).ConfigureAwait (false);
+					if (read == 0)
+						break;
+
+					byte b = buffer [0];
+					if (b == '\r' || b == '\n')
+						consecutiveLineEndChars++;
+					else
+						consecutiveLineEndChars = 0;
+				}
 			}
 		}
 	}
