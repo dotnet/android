@@ -842,11 +842,13 @@ namespace Xamarin.Android.Net
 				await ConnectAsync (httpConnection, cancellationToken).ConfigureAwait (continueOnCapturedContext: false);
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connected");
-			} catch (Java.Net.ConnectException ex) {
+			} catch (HttpRequestException ex) when (ex.InnerException is Java.Net.ConnectException connectException) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Connection exception {ex}");
-				// Wrap it nicely in a "standard" exception so that it's compatible with HttpClientHandler
-				throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.ConnectFailure);
+				// `ConnectAsync` wraps all connection failures in HttpRequestException, so we unwrap the original
+				// `Java.Net.ConnectException` here and re-wrap it to preserve the legacy WebException (with its
+				// WebExceptionStatus) as the inner exception for back-compat with classic Xamarin.Android.
+				throw CreateHttpRequestException (connectException.Message, connectException, WebExceptionStatus.ConnectFailure);
 			}
 
 			if (cancellationToken.IsCancellationRequested) {

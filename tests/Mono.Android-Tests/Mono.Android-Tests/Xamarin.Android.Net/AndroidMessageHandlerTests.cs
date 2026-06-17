@@ -435,6 +435,9 @@ namespace Xamarin.Android.NetTests
 
 			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{unusedPort}/"));
 			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
+			var inner = ex?.InnerException as WebException;
+			Assert.IsNotNull (inner, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
+			Assert.AreEqual (WebExceptionStatus.ConnectFailure, inner.Status, "Inner WebException should preserve ConnectFailure status");
 		}
 
 		[Test]
@@ -462,7 +465,9 @@ namespace Xamarin.Android.NetTests
 			listener.Close ();
 
 			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
-			Assert.IsInstanceOf<WebException> (ex?.InnerException, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
+			var inner = ex?.InnerException as WebException;
+			Assert.IsNotNull (inner, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
+			Assert.AreEqual (WebExceptionStatus.UnknownError, inner.Status, "Inner WebException should preserve UnknownError status");
 		}
 	}
 }
