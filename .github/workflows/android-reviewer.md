@@ -28,11 +28,13 @@ network:
     - "vsassets.io"
 tools:
   github:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
     # Allow reading PR content from external/first-time contributors.
     # The /review command is gated to maintainers, so only trusted users can trigger it.
     min-integrity: none
 safe-outputs:
+  github-token: ${{ secrets.GITHUB_TOKEN }}
   create-pull-request-review-comment:
     max: 50
   submit-pull-request-review:
