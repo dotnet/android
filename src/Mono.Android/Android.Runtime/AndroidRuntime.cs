@@ -338,6 +338,17 @@ namespace Android.Runtime {
 				yield return t;
 		}
 
+		[return: DynamicallyAccessedMembers (Methods | Constructors | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
+		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+		{
+			var type = base.GetTypeForSimpleReference (jniSimpleReference);
+			if (type != null) {
+				return type;
+			}
+
+			return Java.Interop.TypeManager.GetJavaToManagedType (jniSimpleReference);
+		}
+
 		protected override string? GetSimpleReference (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
@@ -353,9 +364,9 @@ namespace Android.Runtime {
 			j   = GetReplacementTypeCore (j) ?? j;
 
 			if (j != null) {
-				return new[]{j};
+				return [j];
 			}
-			return Array.Empty<string> ();
+			return [];
 		}
 
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)

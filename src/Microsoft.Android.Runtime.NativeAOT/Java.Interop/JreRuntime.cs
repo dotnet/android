@@ -61,7 +61,7 @@ namespace Java.Interop {
 			builder.TypeManager     ??= CreateDefaultTypeManager ();
 #endif  // NET
 
-			builder.ValueManager            ??= new JavaMarshalValueManager ();
+			builder.ValueManager            ??= Android.Runtime.JNIEnvInit.CreateValueManager ();
 			builder.ObjectReferenceManager  ??= new Android.Runtime.AndroidObjectReferenceManager ();
 
 			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)
