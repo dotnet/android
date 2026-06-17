@@ -710,13 +710,13 @@ namespace Xamarin.Android.Net
 					request.Method = redirectState.Method;
 					request.RequestUri = redirectState.NewUrl;
 				} catch (Java.Net.SocketTimeoutException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.Timeout, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.Timeout);
 				} catch (Java.Net.UnknownServiceException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.ProtocolError);
 				} catch (Java.Lang.SecurityException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.SecureChannelFailure, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.SecureChannelFailure);
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.UnknownError, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.UnknownError);
 				}
 			}
 		}
@@ -780,6 +780,13 @@ namespace Xamarin.Android.Net
 			}, ct);
 		}
 
+		// As documented for HttpClient.SendAsync (see https://github.com/dotnet/android/issues/5761), transport
+		// failures must be surfaced as HttpRequestException rather than the legacy WebException. To avoid breaking
+		// existing code that migrated from classic Xamarin.Android and still inspects WebException (and its
+		// WebExceptionStatus), we keep the original WebException as the inner exception.
+		static HttpRequestException CreateHttpRequestException (string message, Exception? innerException, WebExceptionStatus status)
+			=> new HttpRequestException (message, new WebException (message, innerException, status, null));
+
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			if (request.Content is null)
@@ -839,7 +846,7 @@ namespace Xamarin.Android.Net
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Connection exception {ex}");
 				// Wrap it nicely in a "standard" exception so that it's compatible with HttpClientHandler
-				throw new WebException (ex.Message, ex, WebExceptionStatus.ConnectFailure, null);
+				throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.ConnectFailure);
 			}
 
 			if (cancellationToken.IsCancellationRequested) {
@@ -1086,7 +1093,7 @@ namespace Xamarin.Android.Net
 
 			redirectState.RedirectCounter++;
 			if (redirectState.RedirectCounter >= MaxAutomaticRedirections)
-				throw new WebException ($"Maximum automatic redirections exceeded (allowed {MaxAutomaticRedirections}, redirected {redirectState.RedirectCounter} times)");
+				throw CreateHttpRequestException ($"Maximum automatic redirections exceeded (allowed {MaxAutomaticRedirections}, redirected {redirectState.RedirectCounter} times)", null, WebExceptionStatus.UnknownError);
 
 			Uri redirectUrl;
 			try {
@@ -1123,7 +1130,7 @@ namespace Xamarin.Android.Net
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Debug, LOG_APP, $"Cooked redirect location: {redirectUrl}");
 			} catch (Exception ex) {
-				throw new WebException ($"Invalid redirect URI received: {location}", ex);
+				throw CreateHttpRequestException ($"Invalid redirect URI received: {location}", ex, WebExceptionStatus.UnknownError);
 			}
 
 			UriBuilder? builder = null;
@@ -1308,7 +1315,7 @@ namespace Xamarin.Android.Net
 			try {
 				httpConnection.RequestMethod = request.Method.ToString ();
 			} catch (Java.Net.ProtocolException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+				throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.ProtocolError);
 			}
 
 			// SSL context must be set up as soon as possible, before adding any content or

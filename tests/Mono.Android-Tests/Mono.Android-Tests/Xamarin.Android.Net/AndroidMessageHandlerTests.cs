@@ -423,5 +423,18 @@ namespace Xamarin.Android.NetTests
 
 			listener.Close ();
 		}
+
+		[Test]
+		public void ConnectionFailureThrowsHttpRequestException ()
+		{
+			// https://github.com/dotnet/android/issues/5761
+			// HttpClient.SendAsync is documented to throw HttpRequestException when there is a problem
+			// connecting to the server. It must not surface the legacy WebException as the primary exception.
+			int unusedPort = GetAvailablePort ();
+			using var client = new HttpClient (new AndroidMessageHandler ());
+
+			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{unusedPort}/"));
+			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
+		}
 	}
 }
