@@ -111,6 +111,16 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.supports.fastdev", "True" },
 				{ "deploy.systemapp", "False" },
 				{ "deploy.duration.ms", "0" },
+				{ "deploy.fastdeploy.tools.install.ms", "" },
+				{ "deploy.fastdeploy.remote.mkdir.ms", "" },
+				{ "deploy.fastdeploy.remote.find.ms", "" },
+				{ "deploy.fastdeploy.compare.ms", "" },
+				{ "deploy.fastdeploy.copy.ms", "" },
+				{ "deploy.fastdeploy.environment.copy.ms", "" },
+				{ "deploy.fastdeploy.stale.remove.ms", "" },
+				{ "deploy.fastdeploy.changed.files", "" },
+				{ "deploy.fastdeploy.skipped.files", "" },
+				{ "deploy.fastdeploy.stale.files", "" },
 				{ "pii.deploy.error", "" },
 				{ "pii.deploy.file", "" },
 			};
@@ -325,9 +335,12 @@ namespace Xamarin.Android.Tasks
 			if (EmbedAssembliesIntoApk)
 				return;
 
+			var phase = Stopwatch.StartNew ();
 			if (!await InstallFastDevTools (ToolsFullPath)) {
+				SetDiagnosticElapsed ("deploy.fastdeploy.tools.install.ms", phase);
 				return;
 			}
+			SetDiagnosticElapsed ("deploy.fastdeploy.tools.install.ms", phase);
 			
 			if (FastDevFiles?.Any () ?? false) {
 				await TerminateApp ();
@@ -665,6 +678,7 @@ namespace Xamarin.Android.Tasks
 			LZ4Level lz4level = LZ4Level.L03_HC;
 
 			LogDiagnostic ("Calculating subdirectories");
+			var phase = Stopwatch.StartNew ();
 			HashSet<string> directories = new HashSet<string> ();
 			directories.Add (overridePath);
 			foreach (var file in FastDevFiles) {
@@ -694,13 +708,19 @@ namespace Xamarin.Android.Tasks
 				args.Add (dir);
 			}
 			await Device.RunAs (packageInfo, args);
+			SetDiagnosticElapsed ("deploy.fastdeploy.remote.mkdir.ms", phase);
 
+			phase.Restart ();
 			string filelist = await Device.RunAs (packageInfo, $"{toolPath}/{FastDevFindTool}", DiagnosticLogging ? "-vd" : "-v", overridePath);
+			SetDiagnosticElapsed ("deploy.fastdeploy.remote.find.ms", phase);
 			LogDiagnostic ($"{FastDevFindTool}: {filelist}");
 			string [] files = Array.Empty<string> ();
 			if (!(filelist.IndexOf ("error:", StringComparison.OrdinalIgnoreCase) >= 0)) {
 				files = filelist.Split (new char [] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			}
+			int changedFiles = 0;
+			int skippedFiles = 0;
+			var compareWatch = Stopwatch.StartNew ();
 			Dictionary<string, (long size, DateTimeOffset mtime)> fileData = new Dictionary<string, (long, DateTimeOffset)> ();
 			foreach (var file in files) {   // file size mtime
 				if (file.IndexOf ("\t") == -1) {
@@ -730,6 +750,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var file in FastDevFiles) {
 				if (!File.Exists (file.ItemSpec)) {
 					LogDebugMessage ($"File '{file.ItemSpec}' does not exists. Skipping.");
+					skippedFiles++;
 					continue;
 				}
 				StartTiming ();
@@ -737,6 +758,7 @@ namespace Xamarin.Android.Tasks
 					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
 					if (abi != PrimaryCpuAbi) {
 						LogDebugMessageWithTiming ($"NotifySync SkipCopyFile {file.ItemSpec} abi not suitable for this device.");
+						skippedFiles++;
 						continue;
 					}
 				}
@@ -758,12 +780,18 @@ namespace Xamarin.Android.Tasks
 				if (!modified) {
 					LogDebugMessageWithTiming ($"NotifySync SkipCopyFile {file.ItemSpec}=>{targetPath} file is up to date.");
 					fileData.Remove (targetPath);
+					skippedFiles++;
 					continue;
 				}
+				changedFiles++;
+				compareWatch.Stop ();
+				phase.Restart ();
 				if (!await DeployFileWithFastDevTool (file, toolPath, overridePath, lz4level, modifiedDateTime)) {
 					diagnosticData.SetProperty ("deploy.result", "Failed");
 					return;
 				}
+				AddDiagnosticElapsed ("deploy.fastdeploy.copy.ms", phase);
+				compareWatch.Start ();
 				LogDebugMessageWithTiming ($"NotifySync CopyFile {file.ItemSpec}.");
 				LogDiagnostic ($"Local Modified Time '{modifiedDateTime.ToUnixTimeMilliseconds ()}' is newer than '{remoteDateTime.ToUnixTimeMilliseconds ()}'.");
 				fileData.Remove (targetPath);
@@ -774,15 +802,26 @@ namespace Xamarin.Android.Tasks
 				if (fileData.ContainsKey (targetPath)) {
 					remoteDateTime = fileData [targetPath].mtime;
 				}
+				compareWatch.Stop ();
+				phase.Restart ();
 				await DeployEnvironmentFiles (EnvironmentFiles, toolPath, overridePath, targetPath, remoteDateTime);
+				AddDiagnosticElapsed ("deploy.fastdeploy.environment.copy.ms", phase);
+				compareWatch.Start ();
 				fileData.Remove (targetPath);
 			}
+			compareWatch.Stop ();
+			SetDiagnosticElapsed ("deploy.fastdeploy.compare.ms", compareWatch);
+			diagnosticData.SetProperty ("deploy.fastdeploy.changed.files", changedFiles);
+			diagnosticData.SetProperty ("deploy.fastdeploy.skipped.files", skippedFiles);
+			diagnosticData.SetProperty ("deploy.fastdeploy.stale.files", fileData.Count);
+			phase.Restart ();
 			foreach (var file in fileData.Keys) {
 				// we need to remove unknown files from the .__override__ path
 				string targetFile = $"{file.Replace ("./", "")}";
 				LogDebugMessage ($"Remove redundant file {OverrideFullPath}/{targetFile}");
 				await Device.RunAs (packageInfo, "rm", "-Rf", $"{OverrideFullPath}/{targetFile}");
 			}
+			SetDiagnosticElapsed ("deploy.fastdeploy.stale.remove.ms", phase);
 			// clean up the temp folder if we are not using the xamarin.sync tool
 			if (!packageInfo.SupportsFastDev)
 				await Device.RunShellCommand ("rm", "-Rf", XAToolsTempPath);
@@ -988,6 +1027,19 @@ namespace Xamarin.Android.Tasks
 		}
 
 		string GetFullPath (string dir) => Path.IsPathRooted (dir) ? dir : Path.GetFullPath (Path.Combine (WorkingDirectory, dir));
+
+		void SetDiagnosticElapsed (string key, Stopwatch stopwatch)
+		{
+			diagnosticData.SetProperty (key, stopwatch.ElapsedMilliseconds);
+		}
+
+		void AddDiagnosticElapsed (string key, Stopwatch stopwatch)
+		{
+			if (!long.TryParse (diagnosticData.Properties [key], out long current)) {
+				current = 0;
+			}
+			diagnosticData.SetProperty (key, current + stopwatch.ElapsedMilliseconds);
+		}
 
 		static string GetErrorCode (string message)
 		{
