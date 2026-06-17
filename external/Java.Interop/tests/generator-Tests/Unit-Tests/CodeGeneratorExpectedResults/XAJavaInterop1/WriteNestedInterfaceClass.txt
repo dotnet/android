@@ -104,21 +104,16 @@ internal partial class IParentInvoker : global::Java.Lang.Object, IParent {
 		return cb_getBar_GetBar_I ??= new _JniMarshal_PP_I (n_GetBar);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static int n_GetBar (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<Com.Xamarin.Android.IParent> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.Bar;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetBar);
 		}
+	}
+	private static int __n_GetBar (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<Com.Xamarin.Android.IParent> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.Bar;
 	}
 #pragma warning restore 0169
 

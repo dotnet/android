@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 
 namespace Java.Interop {
 
-	public static class JniMarshal {
+	public static partial class JniMarshal {
 
 		public static bool RecursiveEquals (object? objA, object? objB)
 		{
@@ -45,4 +45,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

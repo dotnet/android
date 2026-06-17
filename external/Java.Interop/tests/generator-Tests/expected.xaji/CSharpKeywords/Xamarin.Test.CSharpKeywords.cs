@@ -53,21 +53,16 @@ namespace Xamarin.Test {
 			return cb_usePartial_UsePartial_I_Ljava_lang_String_ ??= new _JniMarshal_PPI_L (n_UsePartial_I);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.NewString (__this.UsePartial (partial));
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, partial, &__n_UsePartial_I);
 			}
+		}
+		private static IntPtr __n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.CSharpKeywords> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return JNIEnv.NewString (__this.UsePartial (partial));
 		}
 #pragma warning restore 0169
 

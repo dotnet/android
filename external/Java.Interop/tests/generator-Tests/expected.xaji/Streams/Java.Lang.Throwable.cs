@@ -31,21 +31,16 @@ namespace Java.Lang {
 			return cb_getMessage_GetMessage_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_GetMessage);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GetMessage (IntPtr jnienv, IntPtr native__this)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.NewString (__this.Message);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetMessage);
 			}
+		}
+		private static IntPtr __n_GetMessage (IntPtr jnienv, IntPtr native__this)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Java.Lang.Throwable> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return JNIEnv.NewString (__this.Message);
 		}
 #pragma warning restore 0169
 

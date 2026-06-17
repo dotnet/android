@@ -14,20 +14,16 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 		return cb_DoDefault_DoDefault_V ??= new _JniMarshal_PP_V (n_DoDefault);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	private static void n_DoDefault (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.DoDefault ();
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoDefault);
 		}
+	}
+	private static void __n_DoDefault (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.DoDefault ();
 	}
 #pragma warning restore 0169
 
@@ -106,20 +102,16 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		return cb_DoDeclaration_DoDeclaration_V ??= new _JniMarshal_PP_V (n_DoDeclaration);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.DoDeclaration ();
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoDeclaration);
 		}
+	}
+	private static void __n_DoDeclaration (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.DoDeclaration ();
 	}
 #pragma warning restore 0169
 

@@ -53,21 +53,16 @@ namespace Xamarin.Test {
 			return cb_GenericReturn_GenericReturn_Lxamarin_test_AdapterView_ ??= new _JniMarshal_PP_L (n_GenericReturn);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_GenericReturn (IntPtr jnienv, IntPtr native__this)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GenericReturn);
 			}
+		}
+		private static IntPtr __n_GenericReturn (IntPtr jnienv, IntPtr native__this)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.GenericReturnObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return JNIEnv.ToLocalJniHandle (__this.GenericReturn ());
 		}
 #pragma warning restore 0169
 

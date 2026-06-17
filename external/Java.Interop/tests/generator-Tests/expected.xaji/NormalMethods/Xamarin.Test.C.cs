@@ -54,21 +54,16 @@ namespace Xamarin.Test {
 			return cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_C_ ??= new _JniMarshal_PPI_L (n_SetCustomDimension_I);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.C> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, index, &__n_SetCustomDimension_I);
 			}
+		}
+		private static IntPtr __n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.C> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
 		}
 #pragma warning restore 0169
 

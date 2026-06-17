@@ -64,21 +64,17 @@ namespace Android.Views {
 				return cb_onClick_OnClick_Landroid_view_View__V ??= new _JniMarshal_PPL_V (n_OnClick_Landroid_view_View_);
 			}
 
-			[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 			static void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
 			{
-				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-					return;
-
-				try {
-					var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-					var v = global::Java.Lang.Object.GetObject<global::Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
-					__this.OnClick (v);
-				} catch (global::System.Exception __e) {
-					__r.OnUserUnhandledException (ref __envp, __e);
-				} finally {
-					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				unsafe {
+					global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_v, &__n_OnClick_Landroid_view_View_);
 				}
+			}
+			private static void __n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
+			{
+				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				var v = global::Java.Lang.Object.GetObject<global::Android.Views.View> (native_v, JniHandleOwnership.DoNotTransfer);
+				__this.OnClick (v);
 			}
 #pragma warning restore 0169
 
@@ -161,21 +157,17 @@ namespace Android.Views {
 			return cb_setOnClickListener_SetOnClickListener_Landroid_view_View_OnClickListener__V ??= new _JniMarshal_PPL_V (n_SetOnClickListener_Landroid_view_View_OnClickListener_);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
-				__this.SetOnClickListener (l);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_l, &__n_SetOnClickListener_Landroid_view_View_OnClickListener_);
 			}
+		}
+		private static void __n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			__this.SetOnClickListener (l);
 		}
 #pragma warning restore 0169
 
@@ -200,21 +192,17 @@ namespace Android.Views {
 			return cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V ??= new _JniMarshal_PPL_V (n_SetOn123Listener_Landroid_view_View_OnClickListener_);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
-				__this.SetOn123Listener (l);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_l, &__n_SetOn123Listener_Landroid_view_View_OnClickListener_);
 			}
+		}
+		private static void __n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var l = (global::Android.Views.View.IOnClickListener)global::Java.Lang.Object.GetObject<global::Android.Views.View.IOnClickListener> (native_l, JniHandleOwnership.DoNotTransfer);
+			__this.SetOn123Listener (l);
 		}
 #pragma warning restore 0169
 
@@ -239,21 +227,17 @@ namespace Android.Views {
 			return cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V ??= new _JniMarshal_PPL_V (n_AddTouchables_Ljava_util_ArrayList_);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var views = global::Android.Runtime.JavaList<global::Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
-				__this.AddTouchables (views);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_views, &__n_AddTouchables_Ljava_util_ArrayList_);
 			}
+		}
+		private static void __n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Views.View> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var views = global::Android.Runtime.JavaList<global::Android.Views.View>.FromJniHandle (native_views, JniHandleOwnership.DoNotTransfer);
+			__this.AddTouchables (views);
 		}
 #pragma warning restore 0169
 

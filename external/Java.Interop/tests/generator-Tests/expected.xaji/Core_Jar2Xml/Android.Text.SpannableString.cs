@@ -96,23 +96,18 @@ namespace Android.Text {
 			return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I ??= new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_what)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableString> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var what = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_what, JniHandleOwnership.DoNotTransfer);
-				int __ret = (int) __this.GetSpanFlags (what);
-				return __ret;
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_what, &__n_GetSpanFlags_Ljava_lang_Object_);
 			}
+		}
+		private static int __n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_what)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Android.Text.SpannableString> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var what = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_what, JniHandleOwnership.DoNotTransfer);
+			int __ret = (int) __this.GetSpanFlags (what);
+			return __ret;
 		}
 #pragma warning restore 0169
 

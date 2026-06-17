@@ -60,6 +60,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JniPeerMembers.JniInstanceMethods_Invoke.cs</LastGenOutput>
     </None>
+    <None Include="Java.Interop\JniMarshal.SafeInvoke.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniMarshal.SafeInvoke.cs</LastGenOutput>
+    </None>
     <None Include="Java.Interop\JniPeerMembers.JniFields.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>JniPeerMembers.JniFields.cs</LastGenOutput>
@@ -85,6 +89,9 @@
     </Compile>
     <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.cs">
       <DependentUpon>JniPeerMembers.JniInstanceMethods_Invoke.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniMarshal.SafeInvoke.cs">
+      <DependentUpon>JniMarshal.SafeInvoke.tt</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

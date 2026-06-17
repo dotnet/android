@@ -73,21 +73,16 @@ namespace Xamarin.Test {
 			return cb_getSomeColor_GetSomeColor_I ??= new _JniMarshal_PP_I (n_GetSomeColor);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return __this.SomeColor.ToArgb ();
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetSomeColor);
 			}
+		}
+		private static int __n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.SomeColor.ToArgb ();
 		}
 #pragma warning restore 0169
 
@@ -98,21 +93,17 @@ namespace Xamarin.Test {
 			return cb_setSomeColor_SetSomeColor_I_V ??= new _JniMarshal_PPI_V (n_SetSomeColor_I);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var newvalue = new global::Android.Graphics.Color (native_newvalue);
-				__this.SomeColor = newvalue;
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_newvalue, &__n_SetSomeColor_I);
 			}
+		}
+		private static void __n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.SomeObject> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var newvalue = new global::Android.Graphics.Color (native_newvalue);
+			__this.SomeColor = newvalue;
 		}
 #pragma warning restore 0169
 

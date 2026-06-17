@@ -47,8 +47,6 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			Attributes.Add (new DebuggerDisableUserUnhandledExceptionsAttributeAttr ());
-
 			Parameters.Add (new MethodParameterWriter ("jnienv", TypeReferenceWriter.IntPtr));
 			Parameters.Add (new MethodParameterWriter ("native__this", TypeReferenceWriter.IntPtr));
 
@@ -58,13 +56,26 @@ namespace generator.SourceWriters
 
 		protected override void WriteBody (CodeWriter writer)
 		{
-			writer.WriteLine ("if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))");
-			writer.Indent ();
-			writer.WriteLine (method.IsVoid ? "return;" : "return default;");
-			writer.Unindent ();
+			var paramArgs = string.Join ("", method.Parameters.Select (p => $", {opt.GetSafeIdentifier (p.UnsafeNativeName)}"));
+			var call = $"global::Java.Interop.JniMarshal.{(method.IsVoid ? "SafeInvokeAction" : "SafeInvokeFunc")} (jnienv, native__this{paramArgs}, &__{Name})";
 
-			writer.WriteLine ();
-			writer.WriteLine ("try {");
+			writer.WriteLine ("unsafe {");
+			writer.Indent ();
+			writer.WriteLine (method.IsVoid ? call + ";" : "return " + call + ";");
+			writer.Unindent ();
+			writer.WriteLine ("}");
+		}
+
+		void WriteMarshalBody (CodeWriter writer)
+		{
+			var attributes = new List<AttributeWriter> ();
+			SourceWriterExtensions.AddObsolete (attributes, null, opt, forceDeprecate: !string.IsNullOrWhiteSpace (method.Deprecated), deprecatedSince: method.DeprecatedSince);
+			SourceWriterExtensions.AddSupportedOSPlatform (attributes, method, opt);
+			foreach (var attribute in attributes)
+				attribute.WriteAttribute (writer);
+
+			writer.WriteLine ($"private static {method.RetVal.NativeType} __{Name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+			writer.WriteLine ("{");
 
 			writer.Indent ();
 			writer.WriteLine ($"var __this = global::Java.Lang.Object.GetObject<{opt.GetOutputName (type.FullName)}> (jnienv, native__this, JniHandleOwnership.DoNotTransfer){opt.NullForgivingOperator};");
@@ -92,22 +103,7 @@ namespace generator.SourceWriters
 				writer.WriteLine ("return __ret;");
 
 			writer.Unindent ();
-
-			writer.WriteLine ("} catch (global::System.Exception __e) {");
-			writer.Indent ();
-			writer.WriteLine ("__r.OnUserUnhandledException (ref __envp, __e);");
-
-			if (!method.IsVoid)
-				writer.WriteLine ("return default;");
-
-			writer.Unindent ();
-			writer.WriteLine ("} finally {");
-			writer.Indent ();
-			writer.WriteLine ("global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);");
-			writer.Unindent ();
 			writer.WriteLine ("}");
-
-
 		}
 
 		public override void Write (CodeWriter writer)
@@ -120,6 +116,7 @@ namespace generator.SourceWriters
 			writer.WriteLine ();
 
 			base.Write (writer);
+			WriteMarshalBody (writer);
 
 			writer.WriteLineNoIndent ("#pragma warning restore 0169");
 			writer.WriteLine ();

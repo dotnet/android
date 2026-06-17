@@ -56,21 +56,16 @@ public partial class MyClass {
 		return cb_get_Count_get_Count_I ??= new _JniMarshal_PP_I (n_get_Count);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static int n_get_Count (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.Count;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Count);
 		}
+	}
+	private static int __n_get_Count (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.Count;
 	}
 #pragma warning restore 0169
 
@@ -81,20 +76,16 @@ public partial class MyClass {
 		return cb_set_Count_set_Count_I_V ??= new _JniMarshal_PPI_V (n_set_Count_I);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.Count = value;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_Count_I);
 		}
+	}
+	private static void __n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.Count = value;
 	}
 #pragma warning restore 0169
 
@@ -129,21 +120,16 @@ public partial class MyClass {
 		return cb_get_Key_get_Key_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_get_Key);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.Key);
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Key);
 		}
+	}
+	private static IntPtr __n_get_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return JNIEnv.NewString (__this.Key);
 	}
 #pragma warning restore 0169
 
@@ -154,21 +140,17 @@ public partial class MyClass {
 		return cb_set_Key_set_Key_Ljava_lang_String__V ??= new _JniMarshal_PPL_V (n_set_Key_Ljava_lang_String_);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
-			__this.Key = value;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_value, &__n_set_Key_Ljava_lang_String_);
 		}
+	}
+	private static void __n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+		__this.Key = value;
 	}
 #pragma warning restore 0169
 
@@ -229,21 +211,16 @@ public partial class MyClass {
 		return cb_get_AbstractCount_get_AbstractCount_I ??= new _JniMarshal_PP_I (n_get_AbstractCount);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.AbstractCount;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_AbstractCount);
 		}
+	}
+	private static int __n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.AbstractCount;
 	}
 #pragma warning restore 0169
 
@@ -254,20 +231,16 @@ public partial class MyClass {
 		return cb_set_AbstractCount_set_AbstractCount_I_V ??= new _JniMarshal_PPI_V (n_set_AbstractCount_I);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.AbstractCount = value;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_AbstractCount_I);
 		}
+	}
+	private static void __n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.AbstractCount = value;
 	}
 #pragma warning restore 0169
 
@@ -288,23 +261,18 @@ public partial class MyClass {
 		return cb_GetCountForKey_GetCountForKey_Ljava_lang_String__I ??= new _JniMarshal_PPL_I (n_GetCountForKey_Ljava_lang_String_);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
-			int __ret = __this.GetCountForKey (key);
-			return __ret;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_key, &__n_GetCountForKey_Ljava_lang_String_);
 		}
+	}
+	private static int __n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+		int __ret = __this.GetCountForKey (key);
+		return __ret;
 	}
 #pragma warning restore 0169
 
@@ -331,21 +299,16 @@ public partial class MyClass {
 		return cb_Key_Key_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_Key);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return JNIEnv.NewString (__this.Key ());
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_Key);
 		}
+	}
+	private static IntPtr __n_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return JNIEnv.NewString (__this.Key ());
 	}
 #pragma warning restore 0169
 
@@ -379,20 +342,16 @@ public partial class MyClass {
 		return cb_AbstractMethod_AbstractMethod_V ??= new _JniMarshal_PP_V (n_AbstractMethod);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			__this.AbstractMethod ();
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_AbstractMethod);
 		}
+	}
+	private static void __n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.AbstractMethod ();
 	}
 #pragma warning restore 0169
 

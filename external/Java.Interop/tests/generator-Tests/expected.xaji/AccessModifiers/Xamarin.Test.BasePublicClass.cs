@@ -53,20 +53,16 @@ namespace Xamarin.Test {
 			return cb_baseMethod_BaseMethod_V ??= new _JniMarshal_PP_V (n_BaseMethod);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.BasePublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				__this.BaseMethod ();
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_BaseMethod);
 			}
+		}
+		private static void __n_BaseMethod (IntPtr jnienv, IntPtr native__this)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.BasePublicClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.BaseMethod ();
 		}
 #pragma warning restore 0169
 

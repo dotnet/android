@@ -51,23 +51,18 @@ namespace Com.Google.Android.Exoplayer.Drm {
 			return cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z ??= new _JniMarshal_PPL_B (n_RequiresSecureDecoderComponent_Ljava_lang_String_);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static sbyte n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				var p0 = JNIEnv.GetString (native_p0, JniHandleOwnership.DoNotTransfer);
-				sbyte __ret = __this.RequiresSecureDecoderComponent (p0) ? (sbyte)1 : (sbyte)0;
-				return __ret;
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_p0, &__n_RequiresSecureDecoderComponent_Ljava_lang_String_);
 			}
+		}
+		private static sbyte __n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Com.Google.Android.Exoplayer.Drm.IExoMediaCrypto> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var p0 = JNIEnv.GetString (native_p0, JniHandleOwnership.DoNotTransfer);
+			sbyte __ret = __this.RequiresSecureDecoderComponent (p0) ? (sbyte)1 : (sbyte)0;
+			return __ret;
 		}
 #pragma warning restore 0169
 

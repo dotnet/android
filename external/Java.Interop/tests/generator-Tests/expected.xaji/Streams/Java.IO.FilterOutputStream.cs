@@ -75,20 +75,16 @@ namespace Java.IO {
 			return cb_write_Write_I_V ??= new _JniMarshal_PPI_V (n_Write_I);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Java.IO.FilterOutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				__this.Write (oneByte);
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, oneByte, &__n_Write_I);
 			}
+		}
+		private static void __n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Java.IO.FilterOutputStream> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			__this.Write (oneByte);
 		}
 #pragma warning restore 0169
 

@@ -57,21 +57,16 @@ namespace Xamarin.Test {
 				return cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_A_B_ ??= new _JniMarshal_PPI_L (n_SetCustomDimension_I);
 			}
 
-			[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 			static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
 			{
-				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-					return default;
-
-				try {
-					var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A.B> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-					return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
-				} catch (global::System.Exception __e) {
-					__r.OnUserUnhandledException (ref __envp, __e);
-					return default;
-				} finally {
-					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+				unsafe {
+					return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, index, &__n_SetCustomDimension_I);
 				}
+			}
+			private static IntPtr __n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
+			{
+				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A.B> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+				return JNIEnv.ToLocalJniHandle (__this.SetCustomDimension (index));
 			}
 #pragma warning restore 0169
 
@@ -126,21 +121,16 @@ namespace Xamarin.Test {
 			return cb_getHandle_GetHandle_I ??= new _JniMarshal_PP_I (n_GetHandle);
 		}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 		static int n_GetHandle (IntPtr jnienv, IntPtr native__this)
 		{
-			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-				return default;
-
-			try {
-				var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-				return __this.GetHandle ();
-			} catch (global::System.Exception __e) {
-				__r.OnUserUnhandledException (ref __envp, __e);
-				return default;
-			} finally {
-				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			unsafe {
+				return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_GetHandle);
 			}
+		}
+		private static int __n_GetHandle (IntPtr jnienv, IntPtr native__this)
+		{
+			var __this = global::Java.Lang.Object.GetObject<global::Xamarin.Test.A> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.GetHandle ();
 		}
 #pragma warning restore 0169
 

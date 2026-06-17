@@ -73,21 +73,16 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 		return cb_OnAnimationEnd_OnAnimationEnd_I_Z ??= new _JniMarshal_PPI_B (n_OnAnimationEnd_I);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static sbyte n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.OnAnimationEnd (param1) ? (sbyte)1 : (sbyte)0;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, param1, &__n_OnAnimationEnd_I);
 		}
+	}
+	private static sbyte __n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.OnAnimationEnd (param1) ? (sbyte)1 : (sbyte)0;
 	}
 #pragma warning restore 0169
 
@@ -108,21 +103,16 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 		return cb_OnAnimationEnd_OnAnimationEnd_II_Z ??= new _JniMarshal_PPII_B (n_OnAnimationEnd_II);
 	}
 
-	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
 	static sbyte n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
 	{
-		if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-			return default;
-
-		try {
-			var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			return __this.OnAnimationEnd (param1, param2) ? (sbyte)1 : (sbyte)0;
-		} catch (global::System.Exception __e) {
-			__r.OnUserUnhandledException (ref __envp, __e);
-			return default;
-		} finally {
-			global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+		unsafe {
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, param1, param2, &__n_OnAnimationEnd_II);
 		}
+	}
+	private static sbyte __n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.OnAnimationEnd (param1, param2) ? (sbyte)1 : (sbyte)0;
 	}
 #pragma warning restore 0169
 
