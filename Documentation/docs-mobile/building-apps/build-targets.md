@@ -107,6 +107,20 @@ This target depends on `$(GetApplicationArtifactsDependsOn)`, which defaults to
 `$(GetApplicationArtifactsDependsOn)` to update or enrich `@(ApplicationArtifact)`
 metadata before this target or the `Publish` target returns the items.
 
+Call this target directly when a CI job or custom tool needs the build output
+artifact paths:
+
+```shell
+dotnet msbuild MyApp.csproj -t:GetApplicationArtifacts -getTargetResult:GetApplicationArtifacts
+```
+
+Use the `Publish` target result when the caller needs the copied publish
+outputs in `$(PublishDir)`:
+
+```shell
+dotnet msbuild MyApp.csproj -t:Publish -getTargetResult:Publish
+```
+
 ## Install
 
 [Creates, signs](#signandroidpackage), and installs the Android package onto
@@ -145,6 +159,24 @@ The [`$(AndroidManifestType)`](build-properties.md#androidmanifesttype)
 MSBuild property controls which
 [Visual Studio SDK Manager repository](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection)
 is used for package name and package version detection, and URLs to download.
+
+## Publish
+
+Builds the application, copies final APK and Android App Bundle files to
+`$(PublishDir)`, and returns the
+[`@(ApplicationArtifact)`](build-items.md#applicationartifact) item group.
+Returned items use the copied publish-directory paths and preserve artifact
+metadata such as `%(PackageFormat)`, `%(Signed)`, `%(PackageId)`, and `%(Abi)`.
+
+Targets appended to `$(GetApplicationArtifactsDependsOn)` run before `Publish`
+calculates publish files and before `Publish` returns `@(ApplicationArtifact)`,
+so later imports can enrich artifact metadata for publish callers.
+
+For example, to query the published artifacts:
+
+```shell
+dotnet msbuild MyApp.csproj -t:Publish -getTargetResult:Publish
+```
 
 ## RunWithLogging
 
