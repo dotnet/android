@@ -131,8 +131,6 @@ Device: **Yes**
 | **system.xml** | Same project — tests in `System.Xml/` | XML processing tests |
 | **threading** | Same project — tests in `System.Threading/` | Threading and async tests |
 | **drawing** | Same project — tests in `System.Drawing/` | System.Drawing tests |
-| **locales (on-device)** | `tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj` | Locale/culture/globalization |
-| **embedded DSOs** | `tests/EmbeddedDSOs/EmbeddedDSO/EmbeddedDSO.csproj` | Native library loading |
 
 ### On-device test categories
 

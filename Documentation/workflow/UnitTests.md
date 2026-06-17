@@ -399,8 +399,6 @@ the tests on the device. They use a custom mobile version of `NUnit` called
 These tests are generally found in:
 
   * [`tests/Mono.Android-Tests`](../../tests/Mono.Android-Tests)
-  * [`tests/EmbeddedDSOs/EmbeddedDSO`](../../tests/EmbeddedDSOs/EmbeddedDSO)
-  * [`tests/locales/Xamarin.Android.Locale-Tests`](../../tests/locales/Xamarin.Android.Locale-Tests)
 
 These tests are run by using the `RunTestApp` target on the appropriate project
 file, which includes:
