@@ -13,7 +13,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniObjectReferenceOptions DoNotRegisterTarget = (JniObjectReferenceOptions)(1 << 2);
-	const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
 	readonly JavaMarshalRegisteredPeers registeredPeers = new ();
 
