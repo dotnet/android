@@ -56,6 +56,10 @@ namespace Xamarin.Android.Build.Tests
 				//AddTestData (false, "managed", runtime);
 			}
 
+			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
+			AddTestData (false, "trimmable", AndroidRuntime.CoreCLR);
+			AddTestData (true, "trimmable", AndroidRuntime.NativeAOT);
+
 			return ret;
 
 			void AddTestData (bool isRelease, string typemapImplementation, AndroidRuntime runtime)
@@ -819,8 +823,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			if (runtime == AndroidRuntime.CoreCLR || runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in CoreCLR or NativeAOT");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in NativeAOT");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
