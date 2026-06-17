@@ -205,7 +205,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	{
 		EnsureNotDisposed ();
 		if (!reference.IsValid) {
-			return default (T);
+			return default;
 		}
 
 		if (targetType != null && !typeof (T).IsAssignableFrom (targetType)) {
@@ -219,7 +219,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		var value = GetValueCore (ref reference, options, targetType ?? typeof (T));
 		if (value is null) {
-			return default (T);
+			return default;
 		}
 		return (T) value;
 	}
@@ -241,7 +241,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return existing;
 		}
 
-		if (TryCreateJavaArrayWrapper (ref reference, options, targetType, out var arrayWrapper)) {
+		if (targetType != null && TryCreatePrimitiveArrayWrapper (ref reference, options, targetType, out var arrayWrapper)) {
 			return arrayWrapper;
 		}
 
@@ -249,32 +249,12 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return CreatePeer (ref reference, options, targetType);
 		}
 
-		return JavaConvert.FromObjectReference (ref reference, options, GetValueConversionTargetType (targetType));
-	}
-
-	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type? GetValueConversionTargetType ([DynamicallyAccessedMembers (Constructors)] Type? targetType)
-	{
+		// TODO: why is this needed? why isn't this needed for other nullable primitives (e.g. byte?, int?, ...)?
 		if (targetType == typeof (sbyte?)) {
 			return typeof (sbyte);
 		}
 
-		return targetType;
-	}
-
-	static bool TryCreateJavaArrayWrapper (
-		ref JniObjectReference reference,
-		JniObjectReferenceOptions options,
-		[DynamicallyAccessedMembers (Constructors)]
-		Type? targetType,
-		[NotNullWhen (true)] out object? value)
-	{
-		if (targetType != null && TryCreatePrimitiveArrayWrapper (ref reference, options, targetType, out value)) {
-			return true;
-		}
-
-		value = null;
-		return false;
+		return JavaConvert.FromObjectReference (ref reference, options, targetType);
 	}
 
 	protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (
