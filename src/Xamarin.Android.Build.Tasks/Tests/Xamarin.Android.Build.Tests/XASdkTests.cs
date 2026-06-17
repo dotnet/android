@@ -320,6 +320,35 @@ public class JavaSourceTest {
   </PropertyGroup>
   <Target Name="AddMauiApplicationArtifactMetadata">
     <ItemGroup>
+      <_ObservedApplicationArtifact Include="@(ApplicationArtifact)" />
+      <_ObservedUnsignedApkApplicationArtifact
+          Include="@(_ObservedApplicationArtifact)"
+          Condition=" '%(_ObservedApplicationArtifact.Filename)%(_ObservedApplicationArtifact.Extension)' == '$(_AndroidPackage).apk' And '%(_ObservedApplicationArtifact.PackageFormat)' == 'apk' And '%(_ObservedApplicationArtifact.Signed)' == 'false' " />
+      <_ObservedSignedApkApplicationArtifact
+          Include="@(_ObservedApplicationArtifact)"
+          Condition=" '%(_ObservedApplicationArtifact.Filename)%(_ObservedApplicationArtifact.Extension)' == '$(_AndroidPackage)-Signed.apk' And '%(_ObservedApplicationArtifact.PackageFormat)' == 'apk' And '%(_ObservedApplicationArtifact.Signed)' == 'true' " />
+      <_ObservedUnsignedAabApplicationArtifact
+          Include="@(_ObservedApplicationArtifact)"
+          Condition=" '%(_ObservedApplicationArtifact.Filename)%(_ObservedApplicationArtifact.Extension)' == '$(_AndroidPackage).aab' And '%(_ObservedApplicationArtifact.PackageFormat)' == 'aab' And '%(_ObservedApplicationArtifact.Signed)' == 'false' " />
+      <_ObservedSignedAabApplicationArtifact
+          Include="@(_ObservedApplicationArtifact)"
+          Condition=" '%(_ObservedApplicationArtifact.Filename)%(_ObservedApplicationArtifact.Extension)' == '$(_AndroidPackage)-Signed.aab' And '%(_ObservedApplicationArtifact.PackageFormat)' == 'aab' And '%(_ObservedApplicationArtifact.Signed)' == 'true' " />
+    </ItemGroup>
+    <Error Condition=" '@(_ObservedApplicationArtifact)' == '' "
+        Text="Expected ApplicationArtifact items before MAUI metadata augmentation." />
+    <Error Condition=" '@(_ObservedSignedApkApplicationArtifact)' == '' "
+        Text="Expected signed APK ApplicationArtifact item before MAUI metadata augmentation." />
+    <Error Condition=" '$(Configuration)' != 'Release' And '@(_ObservedUnsignedApkApplicationArtifact)' == '' "
+        Text="Expected unsigned APK ApplicationArtifact item before MAUI metadata augmentation." />
+    <Error Condition=" '$(Configuration)' == 'Release' And '@(_ObservedUnsignedAabApplicationArtifact)' == '' "
+        Text="Expected unsigned AAB ApplicationArtifact item before MAUI metadata augmentation." />
+    <Error Condition=" '$(Configuration)' == 'Release' And '@(_ObservedSignedAabApplicationArtifact)' == '' "
+        Text="Expected signed AAB ApplicationArtifact item before MAUI metadata augmentation." />
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/observed-application-artifact-items.txt"
+        Lines="@(_ObservedApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)')"
+        Overwrite="true" />
+    <ItemGroup>
       <ApplicationArtifact Update="@(ApplicationArtifact)" MauiArtifact="true" />
     </ItemGroup>
   </Target>
@@ -458,6 +487,18 @@ public class JavaSourceTest {
 			}
 
 			Assert.IsTrue (dotnet.Build (target: "GetApplicationArtifacts", parameters: configParam), "`dotnet build -t:GetApplicationArtifacts` should succeed");
+			var observedApplicationArtifactItems = ReadApplicationArtifactItems (Path.Combine (Root, projBuilder.ProjectDirectory, "observed-application-artifact-items.txt"));
+			if (!isRelease) {
+				Assert.AreEqual (2, observedApplicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (observedApplicationArtifactItems)}");
+				AssertApplicationArtifactItem (observedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk", "apk", "false", proj.PackageName);
+				AssertApplicationArtifactItem (observedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
+			} else {
+				Assert.AreEqual (3, observedApplicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (observedApplicationArtifactItems)}");
+				AssertApplicationArtifactItem (observedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab", "aab", "false", proj.PackageName);
+				AssertApplicationArtifactItem (observedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName);
+				AssertApplicationArtifactItem (observedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
+			}
+
 			var queriedApplicationArtifactItems = ReadApplicationArtifactItems (Path.Combine (Root, projBuilder.ProjectDirectory, "queried-application-artifact-items.txt"));
 			if (!isRelease) {
 				Assert.AreEqual (2, queriedApplicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (queriedApplicationArtifactItems)}");

@@ -549,10 +549,46 @@ namespace UnnamedProject {
 					new Import (() => "ApplicationArtifacts.targets") {
 						TextContent = () => """
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <GetApplicationArtifactsDependsOn>
+      $(GetApplicationArtifactsDependsOn);
+      AddMauiApplicationArtifactMetadata
+    </GetApplicationArtifactsDependsOn>
+  </PropertyGroup>
+  <Target Name="AddMauiApplicationArtifactMetadata">
+    <ItemGroup>
+      <_ObservedApplicationArtifact Include="@(ApplicationArtifact)" />
+      <_ObservedSignedApplicationArtifact
+          Include="@(_ObservedApplicationArtifact)"
+          Condition=" '%(_ObservedApplicationArtifact.PackageFormat)' == 'apk' And '%(_ObservedApplicationArtifact.Signed)' == 'true' " />
+      <_ObservedAbiApplicationArtifact
+          Include="@(_ObservedApplicationArtifact)"
+          Condition=" '%(_ObservedApplicationArtifact.Abi)' != '' " />
+    </ItemGroup>
+    <Error Condition=" '@(_ObservedApplicationArtifact)' == '' "
+        Text="Expected ApplicationArtifact items before MAUI metadata augmentation." />
+    <Error Condition=" '@(_ObservedSignedApplicationArtifact)' == '' "
+        Text="Expected signed APK ApplicationArtifact items before MAUI metadata augmentation." />
+    <Error Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' And '@(_ObservedAbiApplicationArtifact)' == '' "
+        Text="Expected per-ABI ApplicationArtifact items before MAUI metadata augmentation." />
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/observed-application-artifact-items.txt"
+        Lines="@(_ObservedApplicationArtifact->'%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
+        Overwrite="true" />
+    <ItemGroup>
+      <ApplicationArtifact Update="@(ApplicationArtifact)" MauiArtifact="true" />
+    </ItemGroup>
+  </Target>
   <Target Name="WriteApplicationArtifactItems" AfterTargets="Build">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
         Lines="%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.Abi)"
+        Overwrite="true" />
+  </Target>
+  <Target Name="WriteQueriedApplicationArtifactItems" AfterTargets="GetApplicationArtifacts">
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/queried-application-artifact-items.txt"
+        Lines="%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.Abi)|%(ApplicationArtifact.MauiArtifact)"
         Overwrite="true" />
   </Target>
 </Project>
@@ -594,6 +630,16 @@ namespace UnnamedProject {
 					var abi = GetApplicationArtifactAbi (proj.PackageName, fileName);
 					var expectedItem = $"{fileName}|apk|true|{proj.PackageName}|{abi}";
 					Assert.IsTrue (applicationArtifactItems.Contains (expectedItem), $"Expected ApplicationArtifact item '{expectedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, applicationArtifactItems)}");
+				}
+				if (perAbiApk) {
+					Assert.IsTrue (b.RunTarget (proj, "GetApplicationArtifacts", doNotCleanupOnUpdate: true), "`GetApplicationArtifacts` should have succeeded.");
+					var observedApplicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "observed-application-artifact-items.txt"));
+					var queriedApplicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "queried-application-artifact-items.txt"));
+					foreach (var item in applicationArtifactItems) {
+						Assert.IsTrue (observedApplicationArtifactItems.Contains (item), $"Expected observed ApplicationArtifact item '{item}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, observedApplicationArtifactItems)}");
+						var queriedItem = $"{item}|true";
+						Assert.IsTrue (queriedApplicationArtifactItems.Contains (queriedItem), $"Expected queried ApplicationArtifact item '{queriedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, queriedApplicationArtifactItems)}");
+					}
 				}
 
 				// Make sure the APKs have unique version codes
