@@ -96,6 +96,17 @@ Creates the `@(AndroidDependency)` item group, which is used by the
 [`InstallAndroidDependencies`](#installandroiddependencies) target to determine
 which Android SDK packages to install.
 
+## GetApplicationArtifacts
+
+Creates and returns the
+[`@(ApplicationArtifact)`](build-items.md#applicationartifact) item group,
+which contains the APK and Android App Bundle files produced by the build.
+
+This target depends on `$(GetApplicationArtifactsDependsOn)`, which defaults to
+`Build;$(GetApplicationArtifactsDependsOn)`. Later imports can append targets to
+`$(GetApplicationArtifactsDependsOn)` to update or enrich `@(ApplicationArtifact)`
+metadata before the target returns the items.
+
 ## Install
 
 [Creates, signs](#signandroidpackage), and installs the Android package onto

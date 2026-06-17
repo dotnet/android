@@ -2721,9 +2721,16 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
+<PropertyGroup>
+  <GetApplicationArtifactsDependsOn>
+    Build;
+    $(GetApplicationArtifactsDependsOn);
+  </GetApplicationArtifactsDependsOn>
+</PropertyGroup>
+
 <Target Name="GetApplicationArtifacts"
     Condition=" '$(AndroidApplication)' == 'true' "
-    DependsOnTargets="SignAndroidPackage;_CollectApplicationArtifacts"
+    DependsOnTargets="$(GetApplicationArtifactsDependsOn)"
     Returns="@(ApplicationArtifact)" />
 
 <Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">

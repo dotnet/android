@@ -19,7 +19,9 @@ This file contains the implementation for 'dotnet publish'.
     </_PublishDependsOn>
   </PropertyGroup>
 
-  <Target Name="Publish" DependsOnTargets="$(_PublishDependsOn)" />
+  <Target Name="Publish"
+      DependsOnTargets="$(_PublishDependsOn)"
+      Returns="@(ApplicationArtifact)" />
 
   <Target Name="_CalculateAndroidFilesToPublish">
     <ItemGroup>

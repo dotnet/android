@@ -312,6 +312,17 @@ public class JavaSourceTest {
 					new Import (() => "ApplicationArtifacts.targets") {
 						TextContent = () => """
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <GetApplicationArtifactsDependsOn>
+      $(GetApplicationArtifactsDependsOn);
+      AddMauiApplicationArtifactMetadata
+    </GetApplicationArtifactsDependsOn>
+  </PropertyGroup>
+  <Target Name="AddMauiApplicationArtifactMetadata">
+    <ItemGroup>
+      <ApplicationArtifact Update="@(ApplicationArtifact)" MauiArtifact="true" />
+    </ItemGroup>
+  </Target>
   <Target Name="WriteApplicationArtifactItems" AfterTargets="Publish">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
@@ -327,6 +338,24 @@ public class JavaSourceTest {
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/resolved-package-publish-items.txt"
         Lines="@(_ResolvedPackagePublishItem->'%(FullPath)|%(RelativePath)')"
+        Overwrite="true" />
+  </Target>
+  <Target Name="WriteQueriedApplicationArtifactItems" AfterTargets="GetApplicationArtifacts">
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/queried-application-artifact-items.txt"
+        Lines="%(ApplicationArtifact.FullPath)|%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.MauiArtifact)"
+        Overwrite="true" />
+  </Target>
+  <Target Name="WritePublishReturnedApplicationArtifactItems">
+    <MSBuild
+        Projects="$(MSBuildProjectFullPath)"
+        Targets="Publish"
+        Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_PublishReturnedApplicationArtifact" />
+    </MSBuild>
+    <WriteLinesToFile
+        File="$(MSBuildProjectDirectory)/publish-returned-application-artifact-items.txt"
+        Lines="@(_PublishReturnedApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)')"
         Overwrite="true" />
   </Target>
 </Project>
@@ -414,6 +443,32 @@ public class JavaSourceTest {
 				AssertApplicationArtifactItem (applicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName);
 				AssertApplicationArtifactItem (applicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
 			}
+
+			Assert.IsTrue (dotnet.Build (target: "WritePublishReturnedApplicationArtifactItems", parameters: configParam), "`dotnet build -t:WritePublishReturnedApplicationArtifactItems` should succeed");
+			var publishReturnedApplicationArtifactItems = ReadApplicationArtifactItems (Path.Combine (Root, projBuilder.ProjectDirectory, "publish-returned-application-artifact-items.txt"));
+			if (!isRelease) {
+				Assert.AreEqual (2, publishReturnedApplicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (publishReturnedApplicationArtifactItems)}");
+				AssertApplicationArtifactItem (publishReturnedApplicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk", "apk", "false", proj.PackageName);
+				AssertApplicationArtifactItem (publishReturnedApplicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
+			} else {
+				Assert.AreEqual (3, publishReturnedApplicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (publishReturnedApplicationArtifactItems)}");
+				AssertApplicationArtifactItem (publishReturnedApplicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab", "aab", "false", proj.PackageName);
+				AssertApplicationArtifactItem (publishReturnedApplicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName);
+				AssertApplicationArtifactItem (publishReturnedApplicationArtifactItems, Path.Combine (publishDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
+			}
+
+			Assert.IsTrue (dotnet.Build (target: "GetApplicationArtifacts", parameters: configParam), "`dotnet build -t:GetApplicationArtifacts` should succeed");
+			var queriedApplicationArtifactItems = ReadApplicationArtifactItems (Path.Combine (Root, projBuilder.ProjectDirectory, "queried-application-artifact-items.txt"));
+			if (!isRelease) {
+				Assert.AreEqual (2, queriedApplicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (queriedApplicationArtifactItems)}");
+				AssertQueriedApplicationArtifactItem (queriedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}.apk"), $"{proj.PackageName}.apk", "apk", "false", proj.PackageName, "true");
+				AssertQueriedApplicationArtifactItem (queriedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "true");
+			} else {
+				Assert.AreEqual (3, queriedApplicationArtifactItems.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (queriedApplicationArtifactItems)}");
+				AssertQueriedApplicationArtifactItem (queriedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}.aab"), $"{proj.PackageName}.aab", "aab", "false", proj.PackageName, "true");
+				AssertQueriedApplicationArtifactItem (queriedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.aab"), $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName, "true");
+				AssertQueriedApplicationArtifactItem (queriedApplicationArtifactItems, Path.Combine (packageDirectory, $"{proj.PackageName}-Signed.apk"), $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "true");
+			}
 		}
 
 		static List<string []> ReadApplicationArtifactItems (string path)
@@ -435,6 +490,19 @@ public class JavaSourceTest {
 				item [3] == signed &&
 				item [4] == packageId).ToList ();
 			Assert.AreEqual (1, matches.Count, $"Expected application artifact item '{fullPath}|{fileName}|{packageFormat}|{signed}|{packageId}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (items)}");
+		}
+
+		static void AssertQueriedApplicationArtifactItem (List<string []> items, string fullPath, string fileName, string packageFormat, string signed, string packageId, string mauiArtifact)
+		{
+			var matches = items.Where (item =>
+				item.Length == 6 &&
+				item [0] == fullPath &&
+				item [1] == fileName &&
+				item [2] == packageFormat &&
+				item [3] == signed &&
+				item [4] == packageId &&
+				item [5] == mauiArtifact).ToList ();
+			Assert.AreEqual (1, matches.Count, $"Expected queried application artifact item '{fullPath}|{fileName}|{packageFormat}|{signed}|{packageId}|{mauiArtifact}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactItems (items)}");
 		}
 
 		static void AssertResolvedPackagePublishItem (List<string []> items, string fullPath, string relativePath)
