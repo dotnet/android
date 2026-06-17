@@ -113,14 +113,14 @@ Call this target directly when a CI job or custom tool needs the build output
 artifact paths:
 
 ```shell
-dotnet msbuild MyApp.csproj -t:GetApplicationArtifacts -getTargetResult:GetApplicationArtifacts
+dotnet build MyApp.csproj -t:GetApplicationArtifacts -getTargetResult:GetApplicationArtifacts
 ```
 
 Use the `Publish` target result when the caller needs the copied publish
 outputs in `$(PublishDir)`:
 
 ```shell
-dotnet msbuild MyApp.csproj -t:Publish -getTargetResult:Publish
+dotnet build MyApp.csproj -t:Publish -getTargetResult:Publish
 ```
 
 ## Install
@@ -180,7 +180,7 @@ callers.
 For example, to query the published artifacts:
 
 ```shell
-dotnet msbuild MyApp.csproj -t:Publish -getTargetResult:Publish
+dotnet build MyApp.csproj -t:Publish -getTargetResult:Publish
 ```
 
 ## RunWithLogging
