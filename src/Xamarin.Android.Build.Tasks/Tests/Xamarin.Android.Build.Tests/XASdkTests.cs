@@ -354,7 +354,7 @@ public class JavaSourceTest {
   <Target Name="WriteApplicationArtifactItems" AfterTargets="Publish">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
-        Lines="%(ApplicationArtifact.FullPath)|%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.MauiArtifact)"
+        Lines="@(ApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(MauiArtifact)')"
         Overwrite="true" />
   </Target>
   <Target Name="WriteResolvedPackagePublishItems" AfterTargets="_CalculateAndroidFilesToPublish">
@@ -371,7 +371,7 @@ public class JavaSourceTest {
   <Target Name="WriteQueriedApplicationArtifactItems" AfterTargets="GetApplicationArtifacts">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/queried-application-artifact-items.txt"
-        Lines="%(ApplicationArtifact.FullPath)|%(ApplicationArtifact.Filename)%(ApplicationArtifact.Extension)|%(ApplicationArtifact.PackageFormat)|%(ApplicationArtifact.Signed)|%(ApplicationArtifact.PackageId)|%(ApplicationArtifact.MauiArtifact)"
+        Lines="@(ApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(MauiArtifact)')"
         Overwrite="true" />
   </Target>
   <Target Name="WritePublishReturnedApplicationArtifactItems">
