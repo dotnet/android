@@ -568,7 +568,7 @@ namespace UnnamedProject {
         Text="Expected ApplicationArtifact items before MAUI metadata augmentation." />
     <Error Condition=" '@(_ObservedSignedApplicationArtifact)' == '' "
         Text="Expected signed APK ApplicationArtifact items before MAUI metadata augmentation." />
-    <Error Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' And '@(_ObservedAbiApplicationArtifact)' == '' "
+    <Error Condition=" '$(AndroidCreatePackagePerAbi)' == 'true' And '$(AndroidPackageFormat)' != 'aab' And '@(_ObservedAbiApplicationArtifact)' == '' "
         Text="Expected per-ABI ApplicationArtifact items before MAUI metadata augmentation." />
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/observed-application-artifact-items.txt"
@@ -578,7 +578,7 @@ namespace UnnamedProject {
       <ApplicationArtifact Update="@(ApplicationArtifact)" MauiArtifact="true" />
     </ItemGroup>
   </Target>
-  <Target Name="WriteApplicationArtifactItems" AfterTargets="Build">
+  <Target Name="WriteApplicationArtifactItems" AfterTargets="SignAndroidPackage">
     <WriteLinesToFile
         File="$(MSBuildProjectDirectory)/application-artifact-items.txt"
         Lines="@(ApplicationArtifact->'%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
@@ -634,9 +634,9 @@ namespace UnnamedProject {
 					Assert.IsTrue (b.RunTarget (proj, "GetApplicationArtifacts", doNotCleanupOnUpdate: true), "`GetApplicationArtifacts` should have succeeded.");
 					var observedApplicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "observed-application-artifact-items.txt"));
 					var queriedApplicationArtifactItems = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, "queried-application-artifact-items.txt"));
-					foreach (var item in applicationArtifactItems) {
-						Assert.IsTrue (observedApplicationArtifactItems.Contains (item), $"Expected observed ApplicationArtifact item '{item}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, observedApplicationArtifactItems)}");
-						var queriedItem = $"{item}|true";
+					foreach (var artifactItem in applicationArtifactItems) {
+						Assert.IsTrue (observedApplicationArtifactItems.Contains (artifactItem), $"Expected observed ApplicationArtifact item '{artifactItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, observedApplicationArtifactItems)}");
+						var queriedItem = $"{artifactItem}|true";
 						Assert.IsTrue (queriedApplicationArtifactItems.Contains (queriedItem), $"Expected queried ApplicationArtifact item '{queriedItem}'. Actual items:{Environment.NewLine}{string.Join (Environment.NewLine, queriedApplicationArtifactItems)}");
 					}
 				}

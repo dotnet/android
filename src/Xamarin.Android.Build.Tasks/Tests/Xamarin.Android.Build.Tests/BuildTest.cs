@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -208,6 +209,76 @@ namespace Xamarin.Android.Build.Tests
 				builder.Output.AssertTargetIsSkipped ("ILLink", defaultIfNotUsed: true);
 				builder.Output.AssertTargetIsNotSkipped ("_LinkAssembliesNoShrink");
 			}
+		}
+
+		[Test]
+		[TestCase ("GetApplicationArtifacts")]
+		[TestCase ("Publish")]
+		public void DotNetBuildReturnsApplicationArtifacts (string target)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+			};
+			using var builder = CreateDllBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath)) {
+				Verbosity = "minimal",
+			};
+			Assert.IsTrue (
+				dotnet.Build (target: target, msbuildArguments: [$"-getTargetResult:{target}"]),
+				$"`dotnet build -t:{target} -getTargetResult:{target}` should succeed");
+
+			var items = ReadApplicationArtifactTargetResultItems (dotnet.ProcessLogFile, target);
+			Assert.AreEqual (2, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+			AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.apk", "apk", "false", proj.PackageName);
+			AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName);
+		}
+
+		static List<Dictionary<string, string>> ReadApplicationArtifactTargetResultItems (string processLogFile, string target)
+		{
+			var output = File.ReadAllText (processLogFile);
+			var jsonStart = output.IndexOf ('{');
+			var jsonEnd = output.LastIndexOf ('}');
+			Assert.GreaterOrEqual (jsonStart, 0, $"Could not find JSON target result in {processLogFile}.{Environment.NewLine}{output}");
+			Assert.Greater (jsonEnd, jsonStart, $"Could not find complete JSON target result in {processLogFile}.{Environment.NewLine}{output}");
+
+			using var document = JsonDocument.Parse (output.Substring (jsonStart, jsonEnd - jsonStart + 1));
+			var targetResult = document.RootElement
+				.GetProperty ("TargetResults")
+				.GetProperty (target);
+			Assert.AreEqual ("Success", targetResult.GetProperty ("Result").GetString (), $"Target {target} should succeed.");
+
+			var items = new List<Dictionary<string, string>> ();
+			foreach (var item in targetResult.GetProperty ("Items").EnumerateArray ()) {
+				var metadata = new Dictionary<string, string> (StringComparer.Ordinal);
+				foreach (var property in item.EnumerateObject ()) {
+					metadata.Add (property.Name, property.Value.GetString () ?? "");
+				}
+				items.Add (metadata);
+			}
+			return items;
+		}
+
+		static void AssertApplicationArtifactTargetResultItem (List<Dictionary<string, string>> items, string fileName, string packageFormat, string signed, string packageId)
+		{
+			var matches = items.Where (item =>
+				GetTargetResultMetadata (item, "Filename") + GetTargetResultMetadata (item, "Extension") == fileName &&
+				GetTargetResultMetadata (item, "PackageFormat") == packageFormat &&
+				GetTargetResultMetadata (item, "Signed") == signed &&
+				GetTargetResultMetadata (item, "PackageId") == packageId).ToList ();
+			Assert.AreEqual (1, matches.Count, $"Expected application artifact item '{fileName}|{packageFormat}|{signed}|{packageId}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+		}
+
+		static string GetTargetResultMetadata (Dictionary<string, string> item, string name)
+		{
+			return item.TryGetValue (name, out var value) ? value : "";
+		}
+
+		static string FormatApplicationArtifactTargetResultItems (List<Dictionary<string, string>> items)
+		{
+			return string.Join (Environment.NewLine, items.Select (item =>
+				$"{GetTargetResultMetadata (item, "Identity")}|{GetTargetResultMetadata (item, "Filename")}{GetTargetResultMetadata (item, "Extension")}|{GetTargetResultMetadata (item, "PackageFormat")}|{GetTargetResultMetadata (item, "Signed")}|{GetTargetResultMetadata (item, "PackageId")}"));
 		}
 
 		static object [] MonoComponentMaskChecks () => new object [] {

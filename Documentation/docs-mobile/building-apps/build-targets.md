@@ -102,12 +102,12 @@ Creates and returns the
 [`@(ApplicationArtifact)`](build-items.md#applicationartifact) item group,
 which contains the APK and Android App Bundle files produced by the build.
 
-This target always depends on `Build`, which populates
-`@(ApplicationArtifact)` with the platform-produced artifacts. Later imports can
-set or append targets to `$(GetApplicationArtifactsDependsOn)` to update those
-existing items with additional metadata before this target or the `Publish`
-target returns them. Replacing `$(GetApplicationArtifactsDependsOn)` does not
-remove the required `Build` dependency.
+This target always runs the required `Build` step, then packages, signs, and
+collects platform-produced artifacts into `@(ApplicationArtifact)`. Later
+imports can set or append targets to `$(GetApplicationArtifactsDependsOn)` to
+update those existing items with additional metadata before this target or the
+`Publish` target returns them. Replacing `$(GetApplicationArtifactsDependsOn)`
+does not remove the required build or artifact-production steps.
 
 Call this target directly when a CI job or custom tool needs the build output
 artifact paths:
@@ -171,11 +171,11 @@ Returned items use the copied publish-directory paths and preserve artifact
 metadata such as `%(PackageFormat)`, `%(Signed)`, `%(PackageId)`, and `%(Abi)`.
 
 `Publish` first runs `GetApplicationArtifacts`, which builds the project and
-populates `@(ApplicationArtifact)` with the platform-produced artifacts. Targets
-appended to `$(GetApplicationArtifactsDependsOn)` then run against those
-existing items before `Publish` calculates publish files and before `Publish`
-returns `@(ApplicationArtifact)`, so later imports can add metadata for publish
-callers.
+populates `@(ApplicationArtifact)` with the platform-produced artifacts after
+package and signing outputs are available. Targets appended to
+`$(GetApplicationArtifactsDependsOn)` then run against those existing items
+before `Publish` calculates publish files and before `Publish` returns
+`@(ApplicationArtifact)`, so later imports can add metadata for publish callers.
 
 For example, to query the published artifacts:
 
