@@ -57,9 +57,14 @@
       lets MSBuild skip re-running it - and re-hashing the cached file -
       on no-op builds. The expected SHA is encoded in the stamp file
       name so changing `_DownloadSha256` in a caller invalidates the
-      cached stamp and forces re-verification. Listing the cached file
-      itself in `Outputs` preserves self-heal: if it disappears between
-      builds the target still runs and re-fetches.
+      cached stamp and forces re-verification. Self-heal for a missing
+      cached file is preserved by `_PrepareDownloadOneFileWithRetry`,
+      which always runs and drops the stamp if the cached file is gone -
+      so this target's `Outputs` becomes incomplete and MSBuild forces
+      it to re-run. Only the stamp is listed in `Outputs`: including the
+      cached file there would defeat the gate, because cache files
+      restored from CI caches keep their original old timestamps and
+      would always look out of date relative to this targets file.
 
     Usage pattern. The `_DownloadFile` item group must be built inside the
     caller's target body (so the items are visible to `<MSBuild>`). Each
@@ -104,8 +109,9 @@
   </PropertyGroup>
 
   <Target Name="DownloadOneFileWithRetry"
+      DependsOnTargets="_PrepareDownloadOneFileWithRetry"
       Inputs="$(MSBuildThisFileFullPath)"
-      Outputs="$(_DownloadPath);$(_DownloadStamp)">
+      Outputs="$(_DownloadStamp)">
     <!-- Self-heal: if a cached file already exists AND we know the expected
          hash, verify it up-front. On mismatch, delete (along with any
          CleanupOnMismatch siblings) so the download attempts below actually
@@ -170,6 +176,17 @@
          file). Reached only when the SHA check above passed - or when no
          hash was supplied to verify against. -->
     <Touch Files="$(_DownloadStamp)" AlwaysCreate="True" />
+  </Target>
+
+  <!-- Self-heal helper for the Inputs/Outputs gate on DownloadOneFileWithRetry.
+       Always runs (no Inputs/Outputs of its own) and is cheap: a single Exists
+       check per file. If the stamp claims a previous successful validation but
+       the cached file is gone, we drop the stamp so the parent target sees its
+       Outputs as incomplete and re-runs to re-fetch. -->
+  <Target Name="_PrepareDownloadOneFileWithRetry">
+    <Delete Condition=" Exists('$(_DownloadStamp)') and !Exists('$(_DownloadPath)') "
+        Files="$(_DownloadStamp)"
+    />
   </Target>
 
 </Project>
