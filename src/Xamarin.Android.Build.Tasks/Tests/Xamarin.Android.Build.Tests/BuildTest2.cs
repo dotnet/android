@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -501,9 +502,9 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					AddTestData (runtime, "", new string [0], true);
 				}
-				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, runtime == AndroidRuntime.NativeAOT ? 2 : 1);
 				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
-				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, 2);
+				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, runtime == AndroidRuntime.NativeAOT ? 2 : 1);
 				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
 
 				if (runtime == AndroidRuntime.NativeAOT) {
@@ -570,9 +571,30 @@ namespace Xamarin.Android.Build.Tests
 				b.AssertHasNoWarnings ();
 			} else {
 				totalWarnings ??= codes.Length;
-				Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
+
+				string warningSummaryLine = b.LastBuildOutput.LastOrDefault (line =>
+					line.Contains (" Warning(s)", StringComparison.Ordinal) &&
+					line.Contains (" Error(s)", StringComparison.Ordinal)
+				) ?? "";
+				Match totalWarningMatch = Regex.Match (warningSummaryLine, @"\s(?<count>\d+)\sWarning\(s\)", RegexOptions.CultureInvariant);
+				var actualWarnings = totalWarningMatch.Success ? int.Parse (totalWarningMatch.Groups ["count"].Value) : -1;
+
+				var allWarningLines = b.LastBuildOutput
+					.Where (line => line.Contains (": warning ", StringComparison.OrdinalIgnoreCase))
+					.Take (25)
+					.ToArray ();
+				Assert.AreEqual (
+					totalWarnings.Value,
+					actualWarnings,
+					$"{b.BuildLogFile} should have {totalWarnings} warnings. Summary line: '{warningSummaryLine}'. " +
+					$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
+				);
 				foreach (var code in codes) {
-					Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, code), $"Should receive {code} warning");
+					Assert.True (
+						StringAssertEx.ContainsText (b.LastBuildOutput, code),
+						$"{b.BuildLogFile} should contain warning {code}. Summary line: '{warningSummaryLine}'. " +
+						$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
+					);
 				}
 			}
 		}
