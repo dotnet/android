@@ -9,6 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests {
 
 	[TestFixture]
+	[Category ("TrimmableTypeMapUnsupported")]
 	public class JavaManagedGCBridgeTests : JavaVMFixture {
 
 #if !NO_GC_BRIDGE_SUPPORT
@@ -66,4 +67,3 @@ namespace Java.InteropTests {
 		}
 	}
 }
-

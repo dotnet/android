@@ -235,7 +235,7 @@ namespace Java.InteropTests {
 		protected virtual string GetExpectedReturnValueFromManagedExpression (string jvm, string value, Expression ret)
 		{
 			var valueType       = GetTypeName (typeof (T));
-			var marshalerType   = marshaler.GetType ().Name;
+			var marshalerType   = GetTypeName (marshaler.GetType ());
 			return $@"{{
 	JniRuntime {jvm};
 	{valueType} {value};
@@ -693,10 +693,10 @@ namespace Java.InteropTests {
 	}
 
 	[TestFixture]
+	[Category ("TrimmableTypeMapUnsupported")]
 	class JniValueMarshaler_DemoValueType_ContractTests : JniValueMarshalerContractTests<DemoValueType> {
 
 		protected   override    DemoValueType       Value           {get {return new DemoValueType (42);}}
 		protected   override    bool                IsJniValueType  {get {return true;}}
 	}
 }
-

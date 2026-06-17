@@ -11,6 +11,7 @@ namespace Java.InteropTests
 	{
 		// https://code.google.com/p/android/issues/detail?id=65710
 		[Test]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public unsafe void CallNonvirtualVoidMethod_WithBaseMethodIDAndDerivedType ()
 		{
 			using (var b = new JniType ("net/dot/jni/test/CallNonvirtualBase"))
@@ -38,4 +39,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-

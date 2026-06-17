@@ -73,6 +73,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public void BuiltInSimpleReferenceMap_ContainsManagedPeerByDefault ()
 		{
 			var types = JniRuntime.CurrentRuntime.TypeManager.GetTypes (new JniTypeSignature (ManagedPeer.JniTypeName));

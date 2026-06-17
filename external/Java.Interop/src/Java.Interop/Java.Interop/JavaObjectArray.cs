@@ -89,10 +89,13 @@ namespace Java.Interop
 
 		void SetElementAt (int index, T value)
 		{
-			var vm  = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-			var s   = vm.CreateGenericObjectReferenceArgumentState (value);
-			JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, s.ReferenceValue);
-			vm.DestroyGenericArgumentState (value, ref s, 0);
+			var vm  = JniEnvironment.Runtime.ValueManager;
+			var r   = vm.CreateLocalObjectReferenceArgument (typeof (T), value);
+			try {
+				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, r);
+			} finally {
+				JniObjectReference.Dispose (ref r);
+			}
 		}
 
 		public override IEnumerator<T> GetEnumerator ()
@@ -108,14 +111,10 @@ namespace Java.Interop
 		public override void Clear ()
 		{
 			int len = Length;
-			var vm  = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
-#pragma warning disable 8653
-			var s   = vm.CreateArgumentState (default (T));
+			var nullReference = new JniObjectReference ();
 			for (int i = 0; i < len; i++) {
-				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, s.ReferenceValue);
+				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, nullReference);
 			}
-			vm.DestroyGenericArgumentState (default (T), ref s, 0);
-#pragma warning restore 8653
 		}
 
 		public override int IndexOf (T item)
@@ -222,4 +221,3 @@ namespace Java.Interop
 		}
 	}
 }
-

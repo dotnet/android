@@ -222,6 +222,8 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 			{
+				EnsureNotDisposed ();
+
 				return CreateValueCore (ref reference, options, targetType);
 			}
 
@@ -232,6 +234,8 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 			{
+				EnsureNotDisposed ();
+
 				return CreateValueCore<T> (ref reference, options, targetType);
 			}
 
@@ -254,6 +258,8 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 			{
+				EnsureNotDisposed ();
+
 				return GetValueCore (ref reference, options, targetType);
 			}
 
@@ -271,6 +277,8 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 			{
+				EnsureNotDisposed ();
+
 				return GetValueCore<T> (ref reference, options, targetType);
 			}
 
@@ -303,6 +311,23 @@ namespace Java.Interop
 
 			public JniValueMarshaler<T> GetValueMarshaler<[DynamicallyAccessedMembers (Constructors)] T> () => GetValueMarshalerCore<T> ();
 			protected abstract JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ();
+
+			internal JniObjectReference CreateLocalObjectReferenceArgument (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type type,
+				object? value)
+			{
+				EnsureNotDisposed ();
+
+				if (type == null)
+					throw new ArgumentNullException (nameof (type));
+				return CreateLocalObjectReferenceArgumentCore (type, value);
+			}
+
+			protected abstract JniObjectReference CreateLocalObjectReferenceArgumentCore (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type type,
+				object? value);
 		}
 	}
 }

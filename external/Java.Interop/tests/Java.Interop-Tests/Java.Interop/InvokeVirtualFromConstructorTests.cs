@@ -8,6 +8,7 @@ using NUnit.Framework;
 namespace Java.InteropTests {
 
 	[TestFixture]
+	[Category ("TrimmableTypeMapUnsupported")]
 #if !__ANDROID__
 	// We want stability around the CallVirtualFromConstructorDerived static fields
 	[NonParallelizable]
@@ -153,4 +154,3 @@ namespace Java.InteropTests {
 		}
 	}
 }
-

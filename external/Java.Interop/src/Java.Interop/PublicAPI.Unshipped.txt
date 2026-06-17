@@ -8,6 +8,7 @@ virtual Java.Interop.JniRuntime.JniTypeManager.GetReflectionConstructibleTypes(J
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeForSimpleReference(string! jniSimpleReference) -> System.Type?
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeSignatureCore(System.Type! type) -> Java.Interop.JniTypeSignature
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeSignaturesCore(System.Type! type) -> System.Collections.Generic.IEnumerable<Java.Interop.JniTypeSignature>!
+abstract Java.Interop.JniRuntime.JniValueManager.CreateLocalObjectReferenceArgumentCore(System.Type! type, object? value) -> Java.Interop.JniObjectReference
 Java.Interop.JavaException.JavaException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions transfer, Java.Interop.JniObjectReference throwableOverride) -> void
 Java.Interop.JavaException.SetJavaStackTrace(Java.Interop.JniObjectReference peerReferenceOverride = default(Java.Interop.JniObjectReference)) -> void
 Java.Interop.JniRuntime.ReflectionJniTypeManager
@@ -64,6 +65,7 @@ abstract Java.Interop.JniRuntime.JniValueManager.GetValueMarshalerCore(System.Ty
 override Java.Interop.JniRuntime.ReflectionJniValueManager.ActivatePeer(Java.Interop.JniObjectReference reference, System.Type! type, System.Reflection.ConstructorInfo! cinfo, object?[]? argumentValues) -> void
 override Java.Interop.JniRuntime.ReflectionJniValueManager.ConstructPeerCore(Java.Interop.IJavaPeerable! peer, ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
 override Java.Interop.JniRuntime.ReflectionJniValueManager.CreatePeer(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions transfer, System.Type? targetType) -> Java.Interop.IJavaPeerable?
+override Java.Interop.JniRuntime.ReflectionJniValueManager.CreateLocalObjectReferenceArgumentCore(System.Type! type, object? value) -> Java.Interop.JniObjectReference
 override Java.Interop.JniRuntime.ReflectionJniValueManager.CreateValueCore(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> object?
 override Java.Interop.JniRuntime.ReflectionJniValueManager.CreateValueCore<T>(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> T
 override Java.Interop.JniRuntime.ReflectionJniValueManager.GetValueCore(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> object?

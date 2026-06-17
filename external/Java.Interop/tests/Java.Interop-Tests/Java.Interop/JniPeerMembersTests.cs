@@ -76,6 +76,7 @@ namespace Java.InteropTests
 
 		[Test]
 		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public void ReplacementTypeUsedForMethodLookup ()
 		{
 			using var o = new RenameClassDerived ();

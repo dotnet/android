@@ -19,6 +19,7 @@ namespace Java.InteropTests {
 	// Modifies JniRuntime.valueManager instance field; can't be done in parallel
 	[NonParallelizable]
 #endif  // !__ANDROID__
+	[Category ("TrimmableTypeMapUnsupported")]
 	public abstract class JniRuntimeJniValueManagerContract : JavaVMFixture {
 
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]

@@ -471,6 +471,24 @@ namespace Java.Interop
 				return ProxyValueMarshaler.Instance;
 			}
 
+			protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type type,
+				object? value)
+			{
+				EnsureNotDisposed ();
+				var marshaler = GetValueMarshaler (type);
+				var state = marshaler.CreateObjectReferenceArgumentState (value);
+				try {
+					if (!state.ReferenceValue.IsValid) {
+						return new JniObjectReference ();
+					}
+					return state.ReferenceValue.NewLocalRef ();
+				} finally {
+					marshaler.DestroyArgumentState (value, ref state);
+				}
+			}
+
 			static Type? GetListType (Type type)
 			{
 				foreach (var iface in type.GetInterfaces ().Concat (new [] { type })) {

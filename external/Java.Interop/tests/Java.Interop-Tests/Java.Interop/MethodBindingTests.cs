@@ -7,6 +7,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 	[TestFixture]
+	[Category ("TrimmableTypeMapUnsupported")]
 	public class MethodBindingTests : JavaVMFixture
 	{
 		//
@@ -76,4 +77,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-
