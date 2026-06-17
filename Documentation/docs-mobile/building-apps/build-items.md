@@ -38,8 +38,9 @@ full package path.
 
 Use the [`GetApplicationArtifacts`](build-targets.md#getapplicationartifacts)
 target when another target needs to query the application artifacts directly.
-Targets appended to `$(GetApplicationArtifactsDependsOn)` can enrich the item
-metadata before `GetApplicationArtifacts` or `Publish` returns the items.
+Targets appended to `$(GetApplicationArtifactsDependsOn)` run after .NET for
+Android populates this item group, so they can update the existing items with
+additional metadata before `GetApplicationArtifacts` or `Publish` returns them.
 
 For example:
 

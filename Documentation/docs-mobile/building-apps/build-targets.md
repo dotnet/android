@@ -103,9 +103,11 @@ Creates and returns the
 which contains the APK and Android App Bundle files produced by the build.
 
 This target depends on `$(GetApplicationArtifactsDependsOn)`, which defaults to
-`Build;$(GetApplicationArtifactsDependsOn)`. Later imports can append targets to
-`$(GetApplicationArtifactsDependsOn)` to update or enrich `@(ApplicationArtifact)`
-metadata before this target or the `Publish` target returns the items.
+`Build;$(GetApplicationArtifactsDependsOn)`. The `Build` target populates
+`@(ApplicationArtifact)` with the platform-produced artifacts, then later
+imports can append targets to `$(GetApplicationArtifactsDependsOn)` to update
+those existing items with additional metadata before this target or the
+`Publish` target returns them.
 
 Call this target directly when a CI job or custom tool needs the build output
 artifact paths:
@@ -168,9 +170,12 @@ Builds the application, copies final APK and Android App Bundle files to
 Returned items use the copied publish-directory paths and preserve artifact
 metadata such as `%(PackageFormat)`, `%(Signed)`, `%(PackageId)`, and `%(Abi)`.
 
-Targets appended to `$(GetApplicationArtifactsDependsOn)` run before `Publish`
-calculates publish files and before `Publish` returns `@(ApplicationArtifact)`,
-so later imports can enrich artifact metadata for publish callers.
+`Publish` first runs `GetApplicationArtifacts`, which builds the project and
+populates `@(ApplicationArtifact)` with the platform-produced artifacts. Targets
+appended to `$(GetApplicationArtifactsDependsOn)` then run against those
+existing items before `Publish` calculates publish files and before `Publish`
+returns `@(ApplicationArtifact)`, so later imports can add metadata for publish
+callers.
 
 For example, to query the published artifacts:
 
