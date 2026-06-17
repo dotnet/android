@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -68,8 +69,9 @@ namespace Xamarin.Android.NetTests
 			using var cts = new CancellationTokenSource ();
 			using var request = new HttpRequestMessage (HttpMethod.Put, $"http://localhost:{uploadServer.Port}/upload") {
 				// A large body ensures the socket send buffer fills while the server stalls reading it,
-				// so the upload is still in progress when the caller cancels.
-				Content = new ByteArrayContent (new byte [UploadContentLength]),
+				// so the upload is still in progress when the caller cancels. The content streams the
+				// bytes in small chunks instead of allocating the whole body up front.
+				Content = new StreamingContent (UploadContentLength),
 			};
 
 			Task sendTask = client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
@@ -221,16 +223,43 @@ namespace Xamarin.Android.NetTests
 			}
 		}
 
+		sealed class StreamingContent : HttpContent
+		{
+			readonly long length;
+
+			public StreamingContent (long length)
+			{
+				this.length = length;
+			}
+
+			protected override async Task SerializeToStreamAsync (Stream stream, System.Net.TransportContext? context)
+			{
+				var buffer = new byte [4096];
+				long remaining = length;
+				while (remaining > 0) {
+					int toWrite = (int) Math.Min (remaining, buffer.Length);
+					await stream.WriteAsync (buffer, 0, toWrite).ConfigureAwait (false);
+					remaining -= toWrite;
+				}
+			}
+
+			protected override bool TryComputeLength (out long computedLength)
+			{
+				computedLength = length;
+				return true;
+			}
+		}
+
 		sealed class StalledRequestServer : IDisposable
 		{
-			readonly System.Net.Sockets.TcpListener listener;
+			readonly TcpListener listener;
 			readonly TaskCompletionSource<bool> bodyStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			readonly TaskCompletionSource<bool> releaseBody = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			readonly Task serverTask;
 
 			public StalledRequestServer ()
 			{
-				listener = new System.Net.Sockets.TcpListener (IPAddress.Loopback, 0);
+				listener = new TcpListener (IPAddress.Loopback, 0);
 				listener.Start ();
 				Port = ((IPEndPoint) listener.LocalEndpoint).Port;
 
@@ -277,7 +306,7 @@ namespace Xamarin.Android.NetTests
 				}
 			}
 
-			static async Task ReadRequestHeaders (System.Net.Sockets.NetworkStream stream)
+			static async Task ReadRequestHeaders (NetworkStream stream)
 			{
 				var buffer = new byte [1];
 				int consecutiveLineEndChars = 0;

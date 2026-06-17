@@ -792,7 +792,7 @@ namespace Xamarin.Android.Net
 				// When the caller cancels the request while the body is being uploaded, the connection
 				// is disconnected which surfaces as a transport exception (e.g. "Socket closed"). Map it
 				// to an OperationCanceledException so callers observe cancellation instead of a WebException.
-				throw new OperationCanceledException ("Request body upload was canceled.", ex, cancellationToken);
+				throw new System.OperationCanceledException ("Request body upload was canceled.", ex, cancellationToken);
 			} finally {
 				//
 				// Rewind the stream to beginning in case the HttpContent implementation
