@@ -2,9 +2,10 @@
 name: tests
 description: >-
   Runs, discovers, or recommends dotnet/android tests. Handles standalone tests
-  (plain dotnet test) and full-build tests (local SDK required). Maps source
-  files to relevant test suites. Trigger on test execution requests, questions
-  about available tests, or "which tests should I run for this change?"
+  (plain dotnet test), full-build tests (local SDK required), and on-device
+  MTP/NUnit tests. Maps source files to relevant test suites. Trigger on test
+  execution requests, questions about available tests, or "which tests should I
+  run for this change?"
 ---
 
 # Tests
@@ -21,7 +22,7 @@ Check for the local SDK:
 ls bin/Debug/dotnet/dotnet 2>/dev/null || ls bin/Release/dotnet/dotnet 2>/dev/null
 ```
 
-**If the local SDK is missing and full-build tests are requested, use `ask_user` before building.** Never silently skip tests. Present the choice: build with `make prepare && make` (slow) or skip full-build tests.
+**If the local SDK is missing and full-build tests are requested, use `ask_user` before building.** Never silently skip tests. Present the choice: build with `make prepare && make all` (slow) or skip full-build tests.
 
 ## Workflow
 
@@ -71,13 +72,17 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
-### On-device runtime tests (NUnitLite, full-build + device)
+### On-device runtime tests (stock NUnit/MTP, full-build + device)
 
-These do NOT use `dotnet test`. Use the `RunTestApp` MSBuild target:
+Build and install the APK first, then run `dotnet test` from the test project directory so the project-local `global.json` enables Microsoft Testing Platform:
 ```bash
-./dotnet-local.sh build -t:RunTestApp tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+./dotnet-local.sh build -t:Install -c Debug tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+(
+  cd tests/Mono.Android-Tests/Mono.Android-Tests
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
+)
 ```
-Results appear in `TestResult-*.xml` in the repo root.
+Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands.
 
 ### Java.Interop tests
 Tooling tests are standalone (`dotnet test` on `.csproj`). JVM tests require the local SDK:
