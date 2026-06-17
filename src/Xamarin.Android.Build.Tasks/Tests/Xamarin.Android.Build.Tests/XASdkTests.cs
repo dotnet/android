@@ -314,7 +314,6 @@ public class JavaSourceTest {
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <GetApplicationArtifactsDependsOn>
-      $(GetApplicationArtifactsDependsOn);
       AddMauiApplicationArtifactMetadata
     </GetApplicationArtifactsDependsOn>
   </PropertyGroup>

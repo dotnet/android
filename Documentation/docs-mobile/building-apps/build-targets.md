@@ -102,12 +102,12 @@ Creates and returns the
 [`@(ApplicationArtifact)`](build-items.md#applicationartifact) item group,
 which contains the APK and Android App Bundle files produced by the build.
 
-This target depends on `$(GetApplicationArtifactsDependsOn)`, which defaults to
-`Build;$(GetApplicationArtifactsDependsOn)`. The `Build` target populates
-`@(ApplicationArtifact)` with the platform-produced artifacts, then later
-imports can append targets to `$(GetApplicationArtifactsDependsOn)` to update
-those existing items with additional metadata before this target or the
-`Publish` target returns them.
+This target always depends on `Build`, which populates
+`@(ApplicationArtifact)` with the platform-produced artifacts. Later imports can
+set or append targets to `$(GetApplicationArtifactsDependsOn)` to update those
+existing items with additional metadata before this target or the `Publish`
+target returns them. Replacing `$(GetApplicationArtifactsDependsOn)` does not
+remove the required `Build` dependency.
 
 Call this target directly when a CI job or custom tool needs the build output
 artifact paths:
