@@ -215,13 +215,13 @@ namespace Xamarin.AndroidTools
 			get { return Path.Combine (RuntimePath, "mdoc.exe"); }
 		}
 
-		[Obsolete ("Please use PlatformPackage.GetPlatformPackagePath")]
+		[Obsolete ("Do not use.")]
 		public static string GetPlatformRuntimePackage (int apiLevel)
 		{
 			return Path.Combine (RuntimePath, "platforms", "android-" + apiLevel, "Mono.Android.Platform.apk");
 		}
 
-		[Obsolete ("Please use PlatformPackage.GetPlatformPackageVersion")]
+		[Obsolete ("Do not use.")]
 		public static int GetPlatformRuntimePackageVersion (int apiLevel)
 		{
 			string manifest = Path.Combine (RuntimePath, "platforms", "android-" + apiLevel, "Mono.Android.Platform.xml");

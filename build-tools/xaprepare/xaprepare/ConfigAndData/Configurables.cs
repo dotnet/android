@@ -165,7 +165,6 @@ namespace Xamarin.Android.Prepare
 			public static string ConfigurationPropsGeneratedPath     => GetCachedPath (ref configurationPropsGeneratedPath, ()     => Path.Combine (BuildBinDir, "Configuration.Generated.props"));
 			public static string MonoAndroidFrameworksSubDir         = Path.Combine ("xbuild-frameworks", "MonoAndroid");
 			public static string MonoAndroidFrameworksRootDir        => GetCachedPath (ref monoAndroidFrameworksRootDir, ()        => Path.Combine (XAInstallPrefix, MonoAndroidFrameworksSubDir));
-			public static string InstallMSBuildDir                   => GetCachedPath (ref installMSBuildDir, ()                   => ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir));
 
 			// .NET 6+
 			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
@@ -241,7 +240,6 @@ namespace Xamarin.Android.Prepare
 			static string? testBinDir;
 			static string? buildBinDir;
 			static string? binDir;
-			static string? installMSBuildDir;
 			static string? monoAndroidFrameworksRootDir;
 			static string? externalJavaInteropDir;
 			static string? configurationPropsGeneratedPath;

@@ -142,6 +142,9 @@ Bu hata, büyük olasılıkla AndroidManifest.xml dosyasında veya kaynak kod do
   <data name="APT0005" xml:space="preserve">
     <value>Geçersiz dosya adı: Dosya adlarında Java ayrılmış sözcükleri kullanılamaz.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>'{0}' derlemesi, kullanımdan kaldırılmış 'Android.Runtime.PreserveAttribute' özniteliğine başvuru içeriyor. Bu özniteliğin bulunduğu üyeler kırpılabilir. Bunun yerine lütfen System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute kullanın</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}' değerine sahip $(TargetFrameworkVersion) için API düzeyi belirlenemedi.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -222,7 +225,7 @@ Not: Android Designer, Java SDK 11.0 ile uyumsuzdur: https://aka.ms/vs2019-and-j
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Bilinmeyen mod: {0}</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">

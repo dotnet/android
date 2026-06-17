@@ -9,20 +9,17 @@
     <_JarPath Condition=" '$(_JarPath)' == '' ">jar</_JarPath>
   </PropertyGroup>
 
+  <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
+
   <Target Name="_DownloadBundleTool">
-    <DownloadFile
-        SourceUrl="https://github.com/google/bundletool/releases/download/$(XABundleToolVersion)/bundletool-all-$(XABundleToolVersion).jar"
-        DestinationFolder="$(AndroidToolchainCacheDirectory)"
-        DestinationFileName="bundletool-all-$(XABundleToolVersion).jar"
-        Retries="3"
-    />
-    <GetFileHash Files="$(_BundleToolDownloadLocation)" Algorithm="SHA256">
-      <Output TaskParameter="Hash" PropertyName="_BundleToolActualHash" />
-    </GetFileHash>
-    <Error
-        Condition=" '$(_BundleToolActualHash)' != '$(XABundleToolHash)' "
-        Text="SHA256 mismatch for bundletool-all-$(XABundleToolVersion).jar. Expected: $(XABundleToolHash) Actual: $(_BundleToolActualHash)"
-    />
+    <ItemGroup>
+      <_DownloadFile Include="bundletool-all-$(XABundleToolVersion).jar">
+        <AdditionalProperties>_DownloadUrl=https://github.com/google/bundletool/releases/download/$(XABundleToolVersion)/bundletool-all-$(XABundleToolVersion).jar;_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=bundletool-all-$(XABundleToolVersion).jar;_DownloadSha256=$(XABundleToolHash)</AdditionalProperties>
+      </_DownloadFile>
+    </ItemGroup>
+    <MSBuild Projects="@(_DownloadFile->'$(DownloadFileWithRetryFile)')"
+        Targets="DownloadOneFileWithRetry"
+        BuildInParallel="true" />
   </Target>
 
   <Target Name="_StripAndCopyBundleTool"

@@ -8,7 +8,7 @@ namespace Xamarin.Android.RuntimeTests
 	[TestFixture]
 	public class EncodingTests
 	{
-		EncodingInfo[] EncodingTestData = Encoding.GetEncodings ();
+		static EncodingInfo[] EncodingTestData = Encoding.GetEncodings ();
 
 		[Test, TestCaseSource (nameof (EncodingTestData))]
 		public void GetAllAvailableEncodings (EncodingInfo info)

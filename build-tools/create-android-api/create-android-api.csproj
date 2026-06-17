@@ -6,7 +6,7 @@
   </PropertyGroup>
   
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
+  <Import Project="..\..\src\Mono.Android\Mono.Android.Apis.projitems" />
 
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />

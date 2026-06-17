@@ -160,8 +160,8 @@
 {0} - The value of $(JavaSdkDirectory) that was provided to the task</comment>
   </data>
   <data name="Invalid_JavaSdkDirectory_ExistingInstall" xml:space="preserve">
-    <value>Byla zjištěna zastaralá sada Java SDK s verzí {1} v adresáři {0}, ale do tohoto umístění nemůžeme nainstalovat doporučenou sadu Java SDK (verze {2}).
-Pokud chcete nainstalovat doporučenou verzi sady Java SDK do nového umístění, aktualizujte prosím sadu Java SDK na verzi {2} nebo nastavte $(JavaSdkDirectory) na platnou cestu, která není určena pro správce.</value>
+    <value>Byla zjištěna zastaralá sada Java SDK s verzí `{1}` v adresáři `{0}`, ale do tohoto umístění nemůžeme nainstalovat doporučenou sadu Java SDK (verze `{2}`).
+Pokud chcete nainstalovat doporučenou verzi sady Java SDK do nového umístění, aktualizujte prosím sadu Java SDK na verzi `{2}` nebo nastavte `$(JavaSdkDirectory)` na platnou cestu, která není určena pro správce.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
 {0} - The value of $(JavaSdkDirectory) that was provided to the task
 {1} - The major version of the the Java SDK that was already installed

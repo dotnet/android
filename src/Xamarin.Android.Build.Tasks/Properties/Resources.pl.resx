@@ -142,6 +142,9 @@ Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidMa
   <data name="APT0005" xml:space="preserve">
     <value>Nieprawidłowa nazwa pliku: nazwy plików nie mogą używać słów zastrzeżonych języka Java.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -1146,13 +1149,13 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>Katalog wejściowy źródła Java dla mapy typu Trimmable „{0}” i katalog wyjściowy „{1}” muszą być różne.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>Nie znaleziono wygenerowanego źródła Java dla mapy typu trimmable „{0}”.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

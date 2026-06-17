@@ -167,7 +167,7 @@ Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilit
 {0} - A filename</comment>
   </data>
   <data name="XA0130_FastDevNotSupported" xml:space="preserve">
-    <value>Lamentamos. A Implantação Rápida só tem suporte em dispositivos Android 5.0 (nível de API 21) ou superior.
+    <value>Desculpe. A Implantação Rápida só tem suporte em dispositivos Android 5.0 (nível de API 21) ou superior.
 Defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true" para desabilitar a Implantação Rápida nas páginas de propriedades do projeto do Visual Studio ou edite o arquivo do projeto em um editor de texto.</value>
   </data>
   <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
@@ -193,11 +193,11 @@ Desabilite a Implantação Rápida nas páginas de propriedades do projeto do Vi
   </data>
   <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
     <value>O aplicativo não tem o atributo "android:debuggable" definido no AndroidManifest.xml.
-Isso é necessário para que a Implantação Rápida funcione. Normalmente, isso é habilitado por padrão por 
-o sistema de compilação do .NET para Android para compilações de Depuração. Verifique se você não tem este atributo
+Isso é necessário para que a Implantação Rápida funcione. Normalmente, isso é habilitado por padrão pelo 
+sistema de compilação do .NET para Android para compilações de Depuração. Verifique se você não tem este atributo
 definido no elemento "application" em seu "AndroidManifest.xml".
-Se você tiver uma classe derivada de "Android.App.Application" e estiver usando o "[Application]", verifique se a propriedade "Debuggable" 
-não está definida, pois substituirá o valor de compilações de depuração.
+Se você tiver uma classe derivada de "Android.App.Application" e estiver usando o "[Application]", verifique se 
+a propriedade "Debuggable" não está definida, pois substituirá o valor de compilações de depuração.
 </value>
     <comment>The following are literal names and should not be translated:
 AndroidManifest.xml - A xml file
@@ -252,7 +252,7 @@ Se tudo falhar, defina a propriedade MSBuild "EmbedAssembliesIntoApk" como "true
 {2} - The actual error that occured.</comment>
   </data>
   <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  Iniciando o depurador em {0}:{1}
+    <value>  Iniciando o Depurador em {0}:{1}
 Inicie o sdb e depois execute o seguinte comando
   conectar {0} {1}
     </value>

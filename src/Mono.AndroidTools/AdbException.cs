@@ -97,20 +97,6 @@ namespace Mono.AndroidTools
 		public string Output { get; private set; }
 	}
 
-	[Obsolete("Use IncompatibleCpuAbiException")]
-	public class IncompatibleCpuAbiExceptiopn : IncompatibleCpuAbiException
-	{
-		public IncompatibleCpuAbiExceptiopn (string message)
-			: base (message)
-		{
-		}
-
-		public IncompatibleCpuAbiExceptiopn (string message, string output)
-			: base (message, output)
-		{
-		}
-	}
-
 	public class IncompatibleCpuAbiException : InstallFailedException
 	{
 		public IncompatibleCpuAbiException (string message)

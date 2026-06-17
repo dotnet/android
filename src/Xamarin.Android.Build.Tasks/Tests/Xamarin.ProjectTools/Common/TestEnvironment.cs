@@ -170,8 +170,6 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public static bool CommercialBuildAvailable => File.Exists (Path.Combine (AndroidMSBuildDirectory, "Xamarin.Android.Common.Debugging.targets"));
-
 		public static string OSBinDirectory {
 			get {
 				var osSubdirName = IsMacOS ? "Darwin" :

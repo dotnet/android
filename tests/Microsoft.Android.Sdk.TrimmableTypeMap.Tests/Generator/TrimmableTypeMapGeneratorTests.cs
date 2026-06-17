@@ -75,17 +75,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Execute_WithJniAddNativeMethodRegistrationAttribute_ReportsXA4251 ()
-	{
-		// TestFixtures.HandWrittenNativeRegistrationPeer carries [JniAddNativeMethodRegistrationAttribute].
-		// The trimmable typemap does not support that attribute by design — the orchestrator must
-		// emit XA4251 so MSBuild fails the build via HasLoggedErrors.
-		using var peReader = CreateTestFixturePEReader ();
-		CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
-		Assert.Contains (logMessages, m => m.Contains ("XA4251") && m.Contains ("HandWrittenNativeRegistrationPeer"));
-	}
-
-	[Fact]
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();

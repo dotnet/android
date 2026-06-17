@@ -929,10 +929,6 @@ namespace Xamarin.Android.Tasks
 		string GetErrorCode (Exception ex)
 		{
 			switch (ex) {
-#pragma warning disable CS0618
-				case IncompatibleCpuAbiExceptiopn e:
-					return "ADB0020";
-#pragma warning restore CS0618
 				case IncompatibleCpuAbiException e:
 					return "ADB0020";
 				case RequiresUninstallException e:
@@ -1004,9 +1000,6 @@ namespace Xamarin.Android.Tasks
 
 		static readonly List<(string code, string message)> error_codes = new List<(string code , string message)> () {
 			{ (code: "ADB0010", message: nameof (InstallFailedException)) },
-#pragma warning disable CS0618
-			{ (code: "ADB0020", message: nameof (IncompatibleCpuAbiExceptiopn)) },
-#pragma warning restore CS0618
 			{ (code: "ADB0020", message: nameof (IncompatibleCpuAbiException)) },
 			{ (code: "ADB0030", message: nameof (RequiresUninstallException)) },
 			{ (code: "ADB0040", message: nameof (SdkNotSupportedException)) },

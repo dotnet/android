@@ -17,7 +17,6 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeSetUp]
 		public void SetUp ()
 		{
-			AssertCommercialBuild ();
 		}
 
 		// https://github.com/xamarin/monodroid/blob/63bbeb076d809c74811a8001d38bf2e9e8672627/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/ResolveXamarinAndroidToolsTests.cs

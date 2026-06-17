@@ -142,6 +142,9 @@ Tato chyba je pravděpodobně způsobená problémem se souborem AndroidManifest
   <data name="APT0005" xml:space="preserve">
     <value>Neplatný název souboru: Názvy souborů nemůžou používat vyhrazená slova Java.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Sestavení {0} obsahuje odkaz na zastaralý atribut Android.Runtime.PreserveAttribute. Členy s tímto atributem mohou být oříznuty. Místo toho prosím použijte atribut System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nepovedlo se určit úroveň rozhraní API pro $(TargetFrameworkVersion) {0}.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -222,7 +225,7 @@ Poznámka: Android Designer není kompatibilní se sadou Java SDK 11.0: https://
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Neznámý režim {0}</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
@@ -1146,13 +1149,13 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
   </data>
   <data name="XA4254" xml:space="preserve">
-    <value>Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.</value>
+    <value>Vstupní adresář zdrojů Java pro mapu typu Trimmable „{0}“ a výstupní adresář „{1}“ se musí lišit.</value>
     <comment>The following are literal names and should not be translated: Trimmable type map, Java.
 {0} - Full path to the Java source input directory
 {1} - Full path to the Java source output directory</comment>
   </data>
   <data name="XA4255" xml:space="preserve">
-    <value>Generated trimmable type map Java source '{0}' was not found.</value>
+    <value>Vygenerovaný zdroj Java pro mapu typu Trimmable „{0}“ nebyl nalezen.</value>
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>

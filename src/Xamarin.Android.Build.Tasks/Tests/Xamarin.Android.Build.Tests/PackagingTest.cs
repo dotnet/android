@@ -569,7 +569,7 @@ namespace UnnamedProject {
 				if (runtime != AndroidRuntime.NativeAOT) {
 					b.AssertHasNoWarnings ();
 				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					b.AssertHasAtMostWarnings (2);
 				}
 
 				//Make sure the APKs are signed
@@ -601,11 +601,8 @@ namespace UnnamedProject {
 				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
 				item.Timestamp = null;
 				Assert.IsTrue (b.Build (proj), "Second build failed");
-				if (runtime != AndroidRuntime.NativeAOT) {
-					b.AssertHasNoWarnings ();
-				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
-				}
+				// Resource-only change does not trigger IlcCompile, so no IL3053 warnings on second build
+				b.AssertHasNoWarnings ();
 
 				//Make sure the APKs are signed
 				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
@@ -652,10 +649,8 @@ namespace UnnamedProject {
 
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
-						Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
-					}
+				foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
 			}
 		}

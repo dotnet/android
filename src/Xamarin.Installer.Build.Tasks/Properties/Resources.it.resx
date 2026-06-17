@@ -160,8 +160,8 @@
 {0} - The value of $(JavaSdkDirectory) that was provided to the task</comment>
   </data>
   <data name="Invalid_JavaSdkDirectory_ExistingInstall" xml:space="preserve">
-    <value>È stato rilevato un SDK Java non aggiornato con versione “{1}” in “{0}”, ma non è possibile installare l'SDK Java consigliato (versione “{2}”) in questo percorso.
-Aggiornare Java SDK alla versione “{2}”oppure impostare “$(JavaSdkDirectory)” su un percorso non amministratore valido per installare la versione consigliata di Java SDK in un nuovo percorso.</value>
+    <value>È stato rilevato un Java SDK non aggiornato con versione `{1}` in `{0}`, ma non è possibile installare il Java SDK consigliato (versione `{2}`) in questo percorso.
+Aggiornare Java SDK alla versione `{2}` oppure impostare `$(JavaSdkDirectory)` su un percorso non amministratore valido per installare la versione consigliata di Java SDK in un nuovo percorso.</value>
     <comment>The following are literal names and should not be translated: `Java SDK`, `$(JavaSdkDirectory)`, `non-administrator`
 {0} - The value of $(JavaSdkDirectory) that was provided to the task
 {1} - The major version of the the Java SDK that was already installed

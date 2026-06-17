@@ -242,7 +242,7 @@ Pokud chcete zakázat rychlé nasazení na stránkách vlastností projektu Visu
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
     <value>Při nasazování {0} pomocí {1} došlo k chybě: {2}. 
-To je obvykle způsobeno chybou v adb, když se data souboru odesílají do zařízení. 
+To je obvykle způsobeno chybou v `adb`, když se data souboru odesílají do zařízení. 
 Obvyklou příčinou je uvolněný nebo nekvalitní kabel USB. Zkuste prosím použít jiný kabel.
 Případně zkuste použít ladění Wifi, které může být u některých zařízení spolehlivější než ladění USB. 
 Pokud se žádným z těchto způsobů nepovede problém vyřešit, nastavte vlastnost MSBuild EmbedAssembliesIntoApk na true, aby se rychlé nasazení zakázalo na stránkách vlastností projektu Visual Studio, nebo upravte soubor projektu v textovém editoru.</value>
