@@ -6,9 +6,6 @@ ifeq ($(PREPARE_CI_PR)$(PREPARE_CI),00)
 else
 	$(MAKE) prepare
 endif
-ifneq ("$(wildcard $(topdir)/external/android-platform-support/src/Xamarin.Android.Build.Debugging.Tasks/Xamarin.Android.Build.Debugging.Tasks.csproj)","")
-	$(call SYSTEM_DOTNET_BINLOG,build-commercial,msbuild) $(SOLUTION) -t:BuildExternal
-endif
 	$(MAKE) leeroy
 
 leeroy:

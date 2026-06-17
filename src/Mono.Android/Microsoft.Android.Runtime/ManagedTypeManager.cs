@@ -7,11 +7,13 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
-class ManagedTypeManager : JniRuntime.JniTypeManager {
+[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
+	internal const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 
 	public ManagedTypeManager ()
 	{
@@ -139,6 +141,18 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 		if (ManagedTypeMapping.TryGetType (jniSimpleReference, out var target)) {
 			yield return target;
 		}
+	}
+
+	[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = "Temporary suppression until ManagedTypeMapping type entries carry DAM annotations.")]
+	[return: DynamicallyAccessedMembers (MethodsConstructors)]
+	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+	{
+		var type = base.GetTypeForSimpleReference (jniSimpleReference);
+		if (type != null) {
+			return type;
+		}
+
+		return ManagedTypeMapping.TryGetType (jniSimpleReference, out var target) ? target : null;
 	}
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)

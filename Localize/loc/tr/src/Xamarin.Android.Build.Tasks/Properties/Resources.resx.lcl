@@ -87,6 +87,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";IL6001" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' derlemesi, kullanımdan kaldırılmış 'Android.Runtime.PreserveAttribute' özniteliğine başvuru içeriyor. Bu özniteliğin bulunduğu üyeler kırpılabilir. Bunun yerine lütfen System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute kullanın]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA0000_API_for_TargetFrameworkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not determine API level for $(TargetFrameworkVersion) of '{0}'.]]></Val>
@@ -227,6 +236,15 @@
           <Val><![CDATA[The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['AndroidSupportedAbis' MSBuild özelliği artık desteklenmiyor. Proje dosyasını bir metin düzenleyicisinde düzenleyin, tüm 'AndroidSupportedAbis' kullanımlarını kaldırın ve bunun yerine 'RuntimeIdentifiers' MSBuild özelliğini kullanın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unknown mode: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bilinmeyen mod: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -516,6 +534,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA0146" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' dosyasının doğru hizalanmış BIR DOSYA olup olmadığını denetleme denemesi, dosya için hizalama denetimi yoksayıldığında özel durumla başarısız oldu.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0147" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' dosyasının geçerli bir ELF dosyası olup olmadığını denetleme girişimi, özel durum nedeniyle başarısız oldu ve dosya için AOT denetimi yoksayıldı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0148" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' dosyasının geçerli bir ELF dosyası olup olmadığını denetleme girişimi, özel durum nedeniyle başarısız oldu ve dosya için symbol '{1}@{2}' denetimi yoksayıldı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}]]></Val>
@@ -759,42 +804,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1031" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.]D;]A;Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' 'AndroidHttpClientHandlerType' özellik değeri '{1}' türünden türetilmelidir.]D;]A;Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönüştürün veya özelliği tamamen kaldırın.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1031_HCH" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.]D;]A;Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[‘AndroidHttpClientHandlerType’ özellik değeri ‘{0}’ ‘System.Net.Htt.HttpClientHandler’ öğesinden türetilmemeli.]D;]A;Lütfen değeri ‘System.Net.Http.HttpMessageHandler’ türünden devralan derlemeye uygun bir tür adına dönüştürün veya özelliği tamamen kaldırın.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1032" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' değeri '{1}' derlemesinden çözümlenemedi. Lütfen `AndroidHttpClientHandlerType` ayarınızı kontrol edin.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1033" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' değeri çözümlenemedi. Lütfen `AndroidHttpClientHandlerType` ayarınızı kontrol edin.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1034" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.]]></Val>
@@ -987,6 +996,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA2024" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to load assembly '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' derlemesi yüklenemedi.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA2025" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly {0} does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} derlemesi yok.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA3001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not AOT the assembly: {0}]]></Val>
@@ -1161,6 +1188,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4217" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' mimarisinin, '{1}' şablon mimarisinde karşılığı olmayan Java türleri var: {2}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA4218" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find //manifest/application/uses-library at path: {0}]]></Val>
@@ -1238,6 +1274,15 @@
           <Val><![CDATA[Resource item '{0}' does not have the required metadata item '{1}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}' kaynak öğesinde gerekli meta veri öğesi ('{1}') yok.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4227" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' mimarisi, '{1}' mimarisindeki tüm hazırlama yöntemleriyle eşleşmiyor. Daha fazla bilgi için lütfen ayrıntılı MSBuild günlüklerine bakın.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1464,6 +1509,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4253" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Generated Java callable wrapper code changed: '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Oluşturulan Java çağrılabilir sarmalayıcı kodu değiştirildi: '{0}']]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4254" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Trimmable type map Java source input directory '{0}' and output directory '{1}' must be different.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Trimmable type map Java source giriş dizini '{0}' ve çıkış dizini '{1}' farklı olmalıdır.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4255" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Generated trimmable type map Java source '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Oluşturulan trimmable type map Java source '{0}' bulunamadı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA4300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.]]></Val>
@@ -1647,6 +1719,60 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4316" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Specified input file '{0}' does not exist. Ignoring.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Belirtilen '{0}' giriş dosyası yok. Yoksayılıyor.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4317" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Input file '{0}' does not start with '<replacements/>'. Skipping.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' giriş dosyası '<replacements/>' ile başlamıyor. Atlanıyor.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4318" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Input file '{0}' could not be read: {1}. Skipping.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' giriş dosyası okunamadı: {1}. Atlanıyor.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4319" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[No NativeAOT DGML files were provided.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAOT DGML dosyası sağlanmadı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4320" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ACW map file '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' ACW eşleme dosyası bulunamadı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4321" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[NativeAOT DGML file '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' NativeAOT DGML dosyası bulunamadı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA5101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.]]></Val>
@@ -1808,6 +1934,15 @@
           <Val><![CDATA[Two processes may be building this project at once. Lock file exists at path: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Bu proje aynı anda iki işlemde derleniyor olabilir. Yolda kilit dosyası var: {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA5303" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' derlemesi için 'DescriptorIndex' meta veri değeri '{0}' ayrıştırılamadı.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

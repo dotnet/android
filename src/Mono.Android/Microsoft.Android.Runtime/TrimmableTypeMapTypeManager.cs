@@ -14,9 +14,14 @@ namespace Microsoft.Android.Runtime;
 /// Type manager for the trimmable typemap path. Delegates type lookups
 /// to <see cref="TrimmableTypeMap"/>.
 /// </summary>
-class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
+[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 {
 	const string NoSimpleReference = "\0";
+	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+	const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
+	const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
+	const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 	readonly ConcurrentDictionary<Type, string> _simpleReferenceCache = new ();
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
@@ -34,6 +39,21 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				yield return type;
 			}
 		}
+	}
+
+	[UnconditionalSuppressMessage ("Trimming", "IL2063", Justification = "Temporary suppression until trimmable typemap type entries carry DAM annotations.")]
+	[return: DynamicallyAccessedMembers (MethodsConstructors)]
+	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+	{
+		var type = base.GetTypeForSimpleReference (jniSimpleReference);
+		if (type != null) {
+			return type;
+		}
+
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
+			return types [0];
+		}
+		return null;
 	}
 
 	protected override string? GetSimpleReference (Type type)

@@ -18,7 +18,7 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class JavaMarshalValueManager : JniRuntime.JniValueManager
+class JavaMarshalValueManager : AndroidReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -27,18 +27,11 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 	bool disposed;
 
-	static JavaMarshalValueManager? s_instance;
-
-	public static JavaMarshalValueManager Instance =>
-		s_instance ?? throw new InvalidOperationException ("JavaMarshalValueManager has not been initialized. Call the constructor first.");
-
-	unsafe internal JavaMarshalValueManager ()
+	public unsafe JavaMarshalValueManager ()
 	{
-		var previous = Interlocked.CompareExchange (ref s_instance, this, null);
-		Debug.Assert (previous is null, "JavaMarshalValueManager must only be created once.");
-
-		// There can only be one instance because JavaMarshal.Initialize can only be called once.
-		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (&BridgeProcessingStarted, &BridgeProcessingFinished);
+		var javaMarshalValueManagerHandle = new GCHandle<JavaMarshalValueManager> (this);
+		var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
+			GCHandle<JavaMarshalValueManager>.ToIntPtr (javaMarshalValueManagerHandle), &BridgeProcessingStarted, &BridgeProcessingFinished);
 		JavaMarshal.Initialize (mark_cross_references_ftn);
 	}
 
@@ -356,6 +349,12 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 
 		public static unsafe void EnsureAllContextsAreOurs (MarkCrossReferencesArgs* mcr)
 		{
+// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.ComponentCount' is only supported on: 'android'.
+// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.Components' is only supported on: 'android'.
+// This call site is reachable on all platforms. 'StronglyConnectedComponent.Count' is only supported on: 'android'.
+// This call site is reachable on all platforms. 'StronglyConnectedComponent.Contexts' is only supported on: 'android'.
+#pragma warning disable CA1416
+
 			lock (referenceTrackingHandles) {
 				for (nuint i = 0; i < mcr->ComponentCount; i++) {
 					StronglyConnectedComponent component = mcr->Components [i];
@@ -375,7 +374,9 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				if (!referenceTrackingHandles.ContainsKey (context)) {
 					throw new InvalidOperationException ("Unknown reference tracking handle.");
 				}
-			}	
+			}
+
+#pragma warning restore CA1416
 		}
 
 		public static HandleContext* Alloc (IJavaPeerable peer)
@@ -422,20 +423,32 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 	}
 
 	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
+	static unsafe void BridgeProcessingFinished (IntPtr javaMarshalValueManagerHandle, MarkCrossReferencesArgs* mcr)
 	{
 		if (mcr == null) {
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
+		JavaMarshalValueManager instance = GCHandle<JavaMarshalValueManager>.FromIntPtr (javaMarshalValueManagerHandle).Target;
+
+		ReadOnlySpan<GCHandle> handlesToFree = instance.ProcessCollectedContexts (mcr);
+
+
+// This call site is reachable on all platforms. 'JavaMarshal.FinishCrossReferenceProcessing(MarkCrossReferencesArgs*, ReadOnlySpan<GCHandle>)' is only supported on: 'android'.
+#pragma warning disable CA1416
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
+#pragma warning restore CA1416
 	}
 
-	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
+	unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
-		JavaMarshalValueManager instance = Instance;
+
+// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.ComponentCount' is only supported on: 'android'.
+// This call site is reachable on all platforms. 'MarkCrossReferencesArgs.Components' is only supported on: 'android'.
+// This call site is reachable on all platforms. 'StronglyConnectedComponent.Count' is only supported on: 'android'.
+// This call site is reachable on all platforms. 'StronglyConnectedComponent.Contexts' is only supported on: 'android'.
+#pragma warning disable CA1416
 
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
@@ -443,6 +456,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				ProcessContext ((HandleContext*)component.Contexts [j]);
 			}
 		}
+
+#pragma warning restore CA1416
 
 		void ProcessContext (HandleContext* context)
 		{
@@ -460,7 +475,7 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
 			// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
 			// them later outside of the bridge processing loop.
-			instance.CollectedContexts.Enqueue ((IntPtr)context);
+			CollectedContexts.Enqueue ((IntPtr)context);
 
 			// important: we must not free the handle before passing it to JavaMarshal.FinishCrossReferenceProcessing
 			handlesToFree.Add (handle);
@@ -500,24 +515,8 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 				}
 
 				var typeMap = TrimmableTypeMap.Instance;
-				var proxy = typeMap.GetProxyForJavaObject (reference.Handle, resolvedTargetType);
-				if (operation.IsActive) {
-					operation.SetTag ("proxy.target.type", proxy?.TargetType.FullName);
-				}
-
-				// Open-generic proxies cannot instantiate closed targets.
-				IJavaPeerable? peer;
-				if (ShouldActivateClosedGenericTarget (proxy, resolvedTargetType)) {
-					peer = ActivateUsingReflection (resolvedTargetType, reference.Handle, JniHandleOwnership.DoNotTransfer);
-				} else {
-					peer = proxy?.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer);
-				}
+				var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
 				if (peer is not null) {
-					var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
-					if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
-						peerState |= JniManagedPeerStates.Activatable;
-					}
-					peer.SetJniManagedPeerState (peerState);
 					if (operation.IsActive) {
 						operation.SetTag ("created", true);
 					}
@@ -570,31 +569,6 @@ class JavaMarshalValueManager : JniRuntime.JniValueManager
 			return typeof (JavaException);
 		}
 		return type;
-	}
-
-	static bool ShouldActivateClosedGenericTarget (
-			[NotNullWhen (true)] JavaPeerProxy? proxy,
-			[NotNullWhen (true)] Type? resolvedTargetType)
-	{
-		return proxy is not null &&
-			proxy.TargetType.IsGenericTypeDefinition &&
-			resolvedTargetType is not null &&
-			resolvedTargetType.IsGenericType &&
-			!resolvedTargetType.IsGenericTypeDefinition;
-	}
-
-	static IJavaPeerable? ActivateUsingReflection (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type closedType,
-			IntPtr handle,
-			JniHandleOwnership transfer)
-	{
-		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (ctor is null) {
-			return null;
-		}
-
-		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
 	}
 
 	/// <summary>

@@ -118,7 +118,6 @@
         ManifestTemplate="$(_AndroidManifestAbs)"
         MergedAndroidManifestOutput="$(_ManifestOutput)"
         MergedManifestDocuments="@(_MergedManifestDocuments)"
-        MultiDex="$(AndroidEnableMultiDex)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         PackageName="$(_AndroidPackage)"
         ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"

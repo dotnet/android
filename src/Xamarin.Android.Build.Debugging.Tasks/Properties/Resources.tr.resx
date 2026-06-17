@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="XA0010_Adb" xml:space="preserve">
+    <value>adb çalışmıyor. {0}</value>
+    <comment>The following are literal names and should not be translated: adb
+{0} - further detailed error message</comment>
+  </data>
+  <data name="XA0010_AdbTarget" xml:space="preserve">
+    <value>Geçersiz adb hedef adı '{0}'. Hedef adları '-d', '-e' veya '-s' ile başlamalıdır.</value>
+    <comment>The following are literal names and should not be translated: adb, `-d`, `-e`, `-s`
+{0} - the target name the user supplied</comment>
+  </data>
+  <data name="XA0010_NoDevice" xml:space="preserve">
+    <value>Kullanılabilir cihaz yok.</value>
+  </data>
+  <data name="XA0010_Selected" xml:space="preserve">
+    <value>Seçili cihaz çalışmıyor.</value>
+  </data>
+  <data name="XA0010_NoAbi" xml:space="preserve">
+    <value>İliştirilmiş cihaz veya `{0}` öykünücüsü için Android ABI alınamadı. Lütfen cihazı yeniden bağlayın veya öykünücüyü yeniden başlatıp tekrar deneyin.</value>
+    <comment>The following are literal names and should not be translated: ABI
+ABI - is an acronym for Application Binary Interface.
+{0} - the target name the user supplied
+    </comment>
+  </data>
+  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
+    <value>Hızlı Dağıtım araçları hedef cihazda “{0}/{1}” hedefine kopyalanamıyor.
+Bu cihaz Hızlı Dağıtım ile uyumlu olmayabilir.
+Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A device path
+{1} - A filename</comment>
+  </data>
+  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
+    <value>“{1}: {2}” kullanılarak “{0}” dağıtılırken hata oluştu.
+Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
+    <value>“log.redirect-stdio” Android sistem özelliği hedef cihazda veya emülatörde “true” olarak ayarlanmış.
+Hızlı Dağıtım ile uyumluluğu etkinleştirmek için özelliği “false” olarak ayarlayın veya değeri temizlemek için cihazı ya da emülatörü yeniden başlatın.</value>
+  </data>
+  <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
+    <value>“{0}” dağıtılırken hata oluştu.
+Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A filename</comment>
+  </data>
+  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
+    <value>Üzgünüz. Hızlı Dağıtım yalnızca Android 5.0 (API düzeyi 21) veya üzerini çalıştıran cihazlarda desteklenir.
+Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
+  </data>
+  <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
+    <value>'farklı çalıştır' aracı bu cihazda devre dışı bırakıldı. Cihazda geliştirici seçeneklerini etkinleştirerek veya 'ro.boot.disable_runas' değerini 'false' olarak ayarlayarak etkinleştirin.</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+'ro.boot.disable_runas' - the android property which disables the `run-as` tool.
+    </comment>
+  </data>
+  <data name="XA0132_PackageNotInstalled" xml:space="preserve">
+    <value>Paket yüklenmedi. Lütfen başka bir kullanıcı altında yüklü olmadığından emin olun.
+Paket cihazda görünüyorsa el ile kaldırıp yeniden deneyin.
+Uygulamayı cihazdaki Ayarlar uygulaması aracılığıyla kaldırabilirsiniz.</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0133_RunAsPermissionDenied" xml:space="preserve">
+    <value>Hızlı Dağıtım sistemi için gereken “run-as” aracı üretici tarafından bu cihazda devre dışı bırakıldı.
+Lütfen Visual Studio proje özelliği sayfalarında Hızlı Dağıtım sistemini devre dışı bırakın veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+    </comment>
+  </data>
+  <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
+    <value>AndroidManifest.xml dosyasında uygulamanın “android:debuggable” özniteliği ayarlanmamış.
+Bu, Hızlı Dağıtım sisteminin çalışması için gereklidir. Bu, normalde Hata ayıklama derlemelerine yönelik olarak Android derleme sistemi için 
+.NET tarafından varsayılan olarak ayarlanır. Lütfen bu özniteliğin
+“AndroidManifest.xml” dosyanızdaki “application” öğesinde ayarlanmadığından emin olun.
+“Android.App.Application” öğesinden türeyen ve “[Application]” kullanan bir sınıfa sahipseniz 
+hata ayıklama derlemeleri için değeri geçersiz kılacağından “Debuggable” özelliğinin ayarlanmadığından emin olun.
+</value>
+    <comment>The following are literal names and should not be translated:
+AndroidManifest.xml - A xml file
+application - A xml element within a xml file.
+Application - A code attribute.
+Debuggable - A code property
+android:debuggable - An attribute in a xml file.
+    </comment>
+  </data>
+  <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
+    <value>Paket bir “sistem” uygulamasıdır. Bunlar cihaz üzerinde “sistem” kullanıcısı altında
+ yüklenen uygulamalardır. Bu tür uygulamalar “run-as” komutunu kullanamaz.
+ Hızlı Dağıtım sistemi bu hatayı otomatik olarak işlemeli
+ ve bir yedekleme yükleme yolu kullanmalıydı. Ancak bu hatayı görüyorsanız lütfen
+ Visual Studio’da “Yardım-&gt; Geri Bildirim Gönder-&gt;Sorun Bildir” veya Mac için Visual Studio’da “Yardım-&gt;Sorun Bildir” menü öğesini
+ kullanarak tam hata iletisini içeren bir sorun bildirin. Mümkünse sorunun tanılanmasına yardımcı olması için
+ rapora tam tanılama derleme günlüğünü ekleyin.</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0136_RunAsCorruptInstallation" xml:space="preserve">
+    <value>“run-as” komutu “{0}” hatasıyla başarısız oldu.
+Paketin geçerli yüklemesi bozuk. Lütfen paketi cihazdaki tüm kullanıcılardan el ile kaldırıp
+yeniden deneyin. Bu işe yaramazsa Hızlı Dağıtım sistemini devre dışı bırakabilirsiniz.
+Hızlı Dağıtım sistemini Visual Studio proje özelliği sayfalarında devre dışı bırakılabilir veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayabilirsiniz.
+</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0137_RunAsOSCorrupt" xml:space="preserve">
+    <value>“run-as” komutu “{0}” hatasıyla başarısız oldu.
+Hızlı Dağıtım şu anda bu cihazda desteklenmiyor.
+Visual Studio’da “Yardım-&gt; Geri Bildirim Gönder-&gt;Sorun Bildir” veya Mac için Visual Studio’da “Yardım-&gt;Sorun Bildir” menü öğesini
+kullanarak tam hata iletisini içeren bir sorun bildirin.
+Lütfen Hızlı Dağıtım sistemini devre dışı bırakmak için Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
+    <value>“{1}: {2}” kullanılarak “{0}” dağıtılırken hata oluştu. 
+Bu, genellikle dosya verileri cihaza gönderildiğinde `adb` içinde gerçekleşen bir hatadan kaynaklanır. 
+Bunun normal nedeni, gevşek veya düşük kaliteli bir USB kablosudur. Lütfen farklı bir kablo deneyin.
+Alternatif olarak Wi-Fi Hata Ayıklamasını kullanmayı deneyin. Bu, belirli cihazlar için USB hata ayıklamasından daha güvenilir olabilir. 
+Bunların tamamı başarısız olursa Hızlı Dağıtımı devre dışı bırakmak için lütfen Visual Studio proje özelliği sayfalarında veya proje dosyasını bir metin düzenleyicisinde düzenleyerek “EmbedAssembliesIntoApk” MSBuild özelliğini “true” olarak ayarlayın.</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
+    <value>  {0}:{1} üzerinde Hata Ayıklayıcısı başlatılıyor
+Sdb’yi başlatın, ardından şu komutu çalıştırın:
+  connect {0} {1}
+    </value>
+    <comment>The following are literal names and should not be translated:
+{0} - An ip address of  a computer.
+{1} - An interger value describing the port to use.
+    </comment>
+  </data>
+</root>

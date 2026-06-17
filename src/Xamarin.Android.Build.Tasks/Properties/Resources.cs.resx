@@ -142,6 +142,9 @@ Tato chyba je pravděpodobně způsobená problémem se souborem AndroidManifest
   <data name="APT0005" xml:space="preserve">
     <value>Neplatný název souboru: Názvy souborů nemůžou používat vyhrazená slova Java.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Sestavení {0} obsahuje odkaz na zastaralý atribut Android.Runtime.PreserveAttribute. Členy s tímto atributem mohou být oříznuty. Místo toho prosím použijte atribut System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute.</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nepovedlo se určit úroveň rozhraní API pro $(TargetFrameworkVersion) {0}.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ Poznámka: Android Designer není kompatibilní se sadou Java SDK 11.0: https://
   <data name="XA0036" xml:space="preserve">
     <value>Vlastnost MSBuildu AndroidSupportedAbis se už nepodporuje. Upravte soubor projektu v textovém editoru, odeberte všechna použití vlastnosti AndroidSupportedAbis a místo ní použijte vlastnost MSBuildu RuntimeIdentifiers.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Neznámý režim {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>Knihovna EmbeddedNativeLibrary {0} v projektech aplikací pro Android není platná. Použijte prosím místo ní AndroidNativeLibrary.</value>
@@ -516,6 +523,14 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
+  <data name="XA2024" xml:space="preserve">
+    <value>Nelze načíst sestavení „{0}“.</value>
+    <comment>{0} - The path to the assembly that could not be loaded.</comment>
+  </data>
+  <data name="XA2025" xml:space="preserve">
+    <value>Sestavení {0} neexistuje.</value>
+    <comment>{0} - The path to the assembly that does not exist.</comment>
+  </data>
   <data name="XA2006" xml:space="preserve">
     <value>Nepodařilo se přeložit odkaz na {0} (definovaný v sestavení {1}) s oborem {2}. Když se obor liší od definujícího sestavení, obvykle to znamená, že je typ předán.</value>
     <comment>{0} - The member name, such as a class name
@@ -566,7 +581,7 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>Nepovedlo se extrahovat ladicí informace z: „{0}“{1}</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -628,7 +643,7 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>Architektura {0} obsahuje typy Javy, které nemají protějšky v architektuře šablony {1}: {2}.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +700,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>Architektura {0} neodpovídá všem metodám zařazování v architektuře {1}. Další informace najdete v podrobných protokolech MSBuild.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -814,6 +829,36 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
     <comment>{0} - The path the the file.
 </comment>
   </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>Zadaný vstupní soubor {0} neexistuje. Ignoruje se.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>Vstupní soubor {0} nezačíná na &lt;replacements/&gt;. Přeskakuje se.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>Vstupní soubor {0} se nepodařilo přečíst: {1}. Přeskakuje se.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
+</comment>
+  </data>
+  <data name="XA4319" xml:space="preserve">
+    <value>Nebyly poskytnuty žádné soubory NativeAOT DGML.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
+  </data>
+  <data name="XA4320" xml:space="preserve">
+    <value>Soubor mapy ACW {0} nebyl nalezen.</value>
+    <comment>The following are literal names and should not be translated: ACW
+{0} - The path to the ACW map file.</comment>
+  </data>
+  <data name="XA4321" xml:space="preserve">
+    <value>Soubor NativeAOT DGML {0} nebyl nalezen.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML
+{0} - The path to the NativeAOT DGML file.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Chybí adresář sady nástrojů Android NDK {0}. Nainstalujte prosím sadu Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -912,7 +957,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <value>Tento projekt možná sestavují dva procesy najednou. Na následující cestě existuje soubor zámku: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>Nepodařilo se analyzovat hodnotu metadat DescriptorIndex {0} pro sestavení {1}.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1100,8 +1145,19 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Vygenerovaný kód volatelné obálky Java se změnil: {0}.</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
+  </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>Vstupní adresář zdrojů Java pro mapu typu Trimmable „{0}“ a výstupní adresář „{1}“ se musí lišit.</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>Vygenerovaný zdroj Java pro mapu typu Trimmable „{0}“ nebyl nalezen.</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>
@@ -1123,6 +1179,20 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>
+  </data>
+  <data name="XA0146" xml:space="preserve">
+    <value>Pokus o kontrolu, zda je „{0}“ správně přidruženým souborem ELF, selhal s výjimkou. Kontrola přidružení tohoto souboru bude ignorována.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0147" xml:space="preserve">
+    <value>Pokus o kontrolu, zda je „{0}“ platný soubor ELF, selhal s výjimkou. Kontrola AOT pro tento soubor bude ignorována.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0148" xml:space="preserve">
+    <value>Pokus o kontrolu, zda je „{0}“ platný soubor ELF, selhal s výjimkou. Kontrola symbolu „{1}@{2}“ pro tento soubor bude ignorována.</value>
+    <comment>{0} - The file path.
+{1} - The symbol name.
+{2} - The section name.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>Spustitelný soubor gradlew nebyl v adresáři projektu {0} nalezen. Ujistěte se prosím, že cesta ke složce projektu Gradle je správná a že obsahuje skripty Gradle Wrapper.</value>

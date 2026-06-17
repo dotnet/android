@@ -76,7 +76,6 @@ namespace xamarin::android {
 	public:
 		static auto load_library_symbol (std::string_view const& library_name, std::string_view const& symbol_name, void **dso_handle = nullptr) noexcept -> void*;
 		static auto load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map) noexcept -> void*;
-		static void load_library_entry (std::string_view const& library_name, std::string_view const& entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept;
 		static auto fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*;
 		static auto find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*;
 		static auto handle_other_pinvoke_request (std::string_view const& library_name, hash_t library_name_hash, std::string_view const& entrypoint_name, hash_t entrypoint_name_hash) noexcept -> void*;
@@ -86,12 +85,5 @@ namespace xamarin::android {
 	private:
 		static inline std::mutex          pinvoke_map_write_lock{};
 		static inline pinvoke_library_map other_pinvoke_map { PinvokeOverride::LIBRARY_MAP_INITIAL_BUCKET_COUNT };
-
-#if defined(PRECOMPILED)
-		static inline void *system_native_library_handle = nullptr;
-		static inline void *system_security_cryptography_native_android_library_handle = nullptr;
-		static inline void *system_io_compression_native_library_handle = nullptr;
-		static inline void *system_globalization_native_library_handle = nullptr;
-#endif
 	};
 }

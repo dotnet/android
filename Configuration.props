@@ -7,7 +7,6 @@
       Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
-  <Import Project="$(MSBuildThisFileDirectory)eng\Versions.props" />
   <Import
       Project="$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Build$(Configuration)\Configuration.Generated.props')"
@@ -111,8 +110,37 @@
     <XABuildToolsHashMacOS>04E7F3A72044DE4926FA038FA0E251A37BBA1E1C3FB8BEAB6F8401BFD9EB4BF3</XABuildToolsHashMacOS>
     <XABuildToolsHashLinux>5D9AC77FB6FF43D9DA518A337B4FCF8F9097113DF531D99CCEFE80EF7CE8250B</XABuildToolsHashLinux>
     <XABuildToolsHashWindows>AA1095CB14D83E483818A748A2C06FAAEB8E601561B06A356A119A1B2CA280D3</XABuildToolsHashWindows>
-    <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>36.0.0</XAPlatformToolsVersion>
+    <XAPlatformToolsHashMacOS>D3E9FA1DF3345CF728586908426615A60863D2632F73F1CE14F0F1349EF000FD</XAPlatformToolsHashMacOS>
+    <XAPlatformToolsHashLinux>0EAD642C943FFE79701FCCCA8F5F1C69C4CE4F43DF2EEFEE553F6CCB27CBFBE8</XAPlatformToolsHashLinux>
+    <XAPlatformToolsHashWindows>12C2841F354E92A0EB2FD7BF6F0F9BF8538ABCE7BD6B060AC8349D6F6A61107C</XAPlatformToolsHashWindows>
+    <XACmdlineToolsHashMacOS>5673201E6F3869F418EEED3B5CB6C4BE7401502BD0AAE1B12A29D164D647A54E</XACmdlineToolsHashMacOS>
+    <XACmdlineToolsHashLinux>7EC965280A073311C339E571CD5DE778B9975026CFCBE79F2B1CDCB1E15317EE</XACmdlineToolsHashLinux>
+    <XACmdlineToolsHashWindows>98B565CB657B012DAE6794CEFC0F66AE1EFB4690C699B78A614B4A6A3505B003</XACmdlineToolsHashWindows>
+    <XACmakeHashMacOS>57024D590691B9D66977D2F66786F10971549441B33B7830D3D2B659F80B93EA</XACmakeHashMacOS>
+    <XACmakeHashLinux>8CF0DC4F7CE0173D13ED71066FB6861A79C73545DF71D12CA3E933430F268D50</XACmakeHashLinux>
+    <XACmakeHashWindows>026982DBA2DBD2DE4A530CF1300FFAD05F6BC7D372D9DF83D46112FE017E0C6B</XACmakeHashWindows>
+    <!-- Android emulator: per-host zips (and per-arch on macOS). -->
+    <XAEmulatorHashMacOSx64>3029489D4B2F868DC5347AA27B1E52FB48D6D28ABD51278E3FBEC2EE73201EDF</XAEmulatorHashMacOSx64>
+    <XAEmulatorHashMacOSArm64>EDA85B9BFFD0926B7A01EA334A30AB41827F573CBDE8F7F97FCD8C5B38F039F6</XAEmulatorHashMacOSArm64>
+    <XAEmulatorHashLinux>58BFDF0572F06EC007A7287154CDC6B2EBFEA947D07A1E26A0F6B5E1A39E9191</XAEmulatorHashLinux>
+    <XAEmulatorHashWindows>9F2855BFE98E80728E61D45B0EA72BA22F64952C9330559FA4E2CD3698A32231</XAEmulatorHashWindows>
+    <!-- API 29 system image used by the emulator: per-host (x86_64) and macOS arm64 (arm64-v8a). -->
+    <XASystemImageHashMacOSx64>B5C3FDA1F4B4931C30518D342E4AD5F7464945E0CDCED3538D4FF2E12F7BF201</XASystemImageHashMacOSx64>
+    <XASystemImageHashMacOSArm64>7FD1610E16A69AC2E202278E82077DE134CE404FE099D872019F69F3A340ACDD</XASystemImageHashMacOSArm64>
+    <XASystemImageHashLinux>B5C3FDA1F4B4931C30518D342E4AD5F7464945E0CDCED3538D4FF2E12F7BF201</XASystemImageHashLinux>
+    <XASystemImageHashWindows>B5C3FDA1F4B4931C30518D342E4AD5F7464945E0CDCED3538D4FF2E12F7BF201</XASystemImageHashWindows>
+    <!-- SDK build dependencies (host-agnostic single zip each). -->
+    <XAAndroidM2RepositoryHash>A3F91808DCE50C1717737DE90C18479ED3A78B147E06985247D138E7AB5123D0</XAAndroidM2RepositoryHash>
+    <XAAndroidDocsHash>68DB2690CB92E4EE5373AC9B792642C90717D8F417D83ECCEA48781171B3182A</XAAndroidDocsHash>
+    <XAAndroidSourcesHash>BD97900346A70C784AC8B15C809539DDEF34ED3B5BE1DF8A9A89CF298BE93798</XAAndroidSourcesHash>
+    <!-- Android NDK: per-host zips. Use a private property name; the public
+         $(AndroidNdkVersion) is set to the pkg revision in Common.props.in. -->
+    <_XAAndroidNdkRelease>28c</_XAAndroidNdkRelease>
+    <_XAAndroidNdkPkgRevision>28.2.13676358</_XAAndroidNdkPkgRevision>
+    <XAAndroidNdkHashMacOS>0D4599E8BBF1A1668A0D51A541729B2246360F350018A2081D0B302DBB594F2A</XAAndroidNdkHashMacOS>
+    <XAAndroidNdkHashLinux>DFB20D396DF28CA02A8C708314B814A4D961DC9074F9A161932746F815AA552F</XAAndroidNdkHashLinux>
+    <XAAndroidNdkHashWindows>6BEC98AC2354D8A919760889A1A41D020132E5E8CFA1B1FE51610A72C36A466B</XAAndroidNdkHashWindows>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.18.3</XABundleToolVersion>
     <XABundleToolHash Condition="'$(XABundleToolHash)' == ''">A099CFA1543F55593BC2ED16A70A7C67FE54B1747BB7301F37FDFD6D91028E29</XABundleToolHash>
     <XABinutilsVersion Condition="'$(XABinutilsVersion)' == ''">L_18.1.6-8.0.0-1</XABinutilsVersion>
@@ -200,6 +228,7 @@
   <PropertyGroup>
     <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
     <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.16.3</NUnitConsoleVersion>
+    <NUnitVersion Condition=" '$(NUnitVersion)' == '' ">3.13.3</NUnitVersion>
   </PropertyGroup>
 
   <!-- Fix for IDEs -->

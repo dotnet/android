@@ -78,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
+			if (isRelease) {
 				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
 			proj.SetDefaultTargetDevice ();
@@ -139,9 +139,6 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "MyApp",
 			};
 			app.SetRuntime (runtime);
-			if (!TestEnvironment.CommercialBuildAvailable) {
-				app.SetRuntimeIdentifiers (new[] { DeviceAbi });
-			}
 			app.SetDefaultTargetDevice ();
 			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
 
@@ -245,7 +242,6 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			AssertCommercialBuild ();
 			SwitchUser ();
 
 			var path = Path.Combine (Root, "temp", TestName);
@@ -470,7 +466,6 @@ namespace ${ROOT_NAMESPACE} {
 				return;
 			}
 
-			AssertCommercialBuild ();
 			SwitchUser ();
 			WaitFor (5000);
 

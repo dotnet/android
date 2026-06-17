@@ -34,7 +34,8 @@ public class TrimmableTypeMapGenerator
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
-		int maxArrayRank = 0)
+		int maxArrayRank = 0,
+		bool generateTypeMapAssemblies = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -48,16 +49,15 @@ public class TrimmableTypeMapGenerator
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
+		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (
-			allPeers,
-			systemRuntimeVersion,
-			useSharedTypemapUniverse,
-			maxArrayRank);
+		var generatedAssemblies = generateTypeMapAssemblies
+			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank)
+			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
@@ -210,6 +210,15 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
+	}
+
+	static void MarkFrameworkAssemblyPeers (List<JavaPeerInfo> allPeers, HashSet<string> frameworkAssemblyNames)
+	{
+		foreach (var peer in allPeers) {
+			if (frameworkAssemblyNames.Contains (peer.AssemblyName)) {
+				peer.IsFrameworkAssembly = true;
+			}
+		}
 	}
 
 	/// <summary>

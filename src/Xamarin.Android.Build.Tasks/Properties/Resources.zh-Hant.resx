@@ -142,6 +142,9 @@
   <data name="APT0005" xml:space="preserve">
     <value>檔案名稱無效: 檔案名稱不能使用 JAVA 保留字。</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>組件 '{0}' 包含過時屬性 'Android.Runtime.PreserveAttribute' 的參考。可以修剪具有此屬性的成員。請改用 System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>無法判斷 '{0}' 的 $(TargetFrameworkVersion) API 層級。</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ In this message, the phrase "should not be reached" means that this error messag
   <data name="XA0036" xml:space="preserve">
     <value>已不再支援 'AndroidSupportedAbis' MSBuild 屬性。請在文字編輯器中編輯專案檔、移除使用的任何 'AndroidSupportedAbis'，並改為使用 'RuntimeIdentifiers' MSBuild 屬性。</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>未知的模式: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>EmbeddedNativeLibrary '{0}' 在 Android 應用程式專案中無效。請改用 AndroidNativeLibrary。</value>
@@ -516,6 +523,14 @@ In this message, the term "binding" means a piece of generated code that makes i
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
+  <data name="XA2024" xml:space="preserve">
+    <value>無法載入組件 '{0}'。</value>
+    <comment>{0} - The path to the assembly that could not be loaded.</comment>
+  </data>
+  <data name="XA2025" xml:space="preserve">
+    <value>組件 {0} 不存在。</value>
+    <comment>{0} - The path to the assembly that does not exist.</comment>
+  </data>
   <data name="XA2006" xml:space="preserve">
     <value>無法解析範圍為 '{2}' 的 '{0}' 參考 (在組件 '{1}' 中定義)。當範圍與定義組件不同時，通常表示已轉寄類型。</value>
     <comment>{0} - The member name, such as a class name
@@ -566,7 +581,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>無法從 '{0}'{1} 擷取偵錯資訊</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -628,7 +643,7 @@ In this message, the term "binding" means a piece of generated code that makes i
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>結構 '{0}' 具有的 Java 類型在範本結構 '{1}' 中沒有對應項目: {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +700,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>結構 '{0}' 與結構 '{1}' 中所有的封送處理方法不符。如需詳細資訊，請參閱詳細的 MSBuild 記錄。</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -814,6 +829,36 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The path the the file.
 </comment>
   </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>指定的輸入檔案 '{0}' 不存在。正在忽略。</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>輸入檔案 '{0}' 不是以 '&lt;replacements/&gt;' 開頭。正在跳過。</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>無法讀取輸入檔案 '{0}': {1}。正在跳過。</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
+</comment>
+  </data>
+  <data name="XA4319" xml:space="preserve">
+    <value>未提供 NativeAOT DGML 檔案。</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
+  </data>
+  <data name="XA4320" xml:space="preserve">
+    <value>找不到 ACW 對應檔案 '{0}'。</value>
+    <comment>The following are literal names and should not be translated: ACW
+{0} - The path to the ACW map file.</comment>
+  </data>
+  <data name="XA4321" xml:space="preserve">
+    <value>找不到 NativeAOT DGML 檔案 '{0}'。</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML
+{0} - The path to the NativeAOT DGML file.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具鏈目錄 '{0}'。請安裝 Android NDK。</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -912,7 +957,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>可能有兩個處理序正在同時建置此專案。鎖定檔案存在於下列路徑: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>無法剖析組件 '{1}' 的 'DescriptorIndex' 中繼資料值 '{0}'。</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1100,8 +1145,19 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>產生的 Java 可呼叫包裝函式代碼已變更: '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
+  </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>Trimmable type map Java 來源輸入目錄 '{0}' 與輸出目錄 '{1}' 必須不同。</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>找不到產生的 trimmable type map Java 來源 '{0}'。</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>指令 '{0}' 失敗。\n{1}</value>
@@ -1123,6 +1179,20 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>
+  </data>
+  <data name="XA0146" xml:space="preserve">
+    <value>嘗試檢查 '{0}' 是否正確對齊 ELF 檔案時失敗，發生例外狀況，因此將略過此檔案的對齊檢查。</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0147" xml:space="preserve">
+    <value>嘗試檢查 '{0}' 是否為有效的 ELF 檔案時失敗，發生例外狀況，因此將略過此檔案的 AOT 檢查。</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0148" xml:space="preserve">
+    <value>嘗試檢查 '{0}' 是否為有效的 ELF 檔案時失敗，發生例外狀況，因此將略過此檔案的符號 '{1}@{2}' 檢查。</value>
+    <comment>{0} - The file path.
+{1} - The symbol name.
+{2} - The section name.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>在專案目錄 '{0}' 中找不到可執行檔 'gradlew'。請確定 Gradle 專案資料夾的路徑正確，且其中包含 Gradle 包裝函式指令碼。</value>

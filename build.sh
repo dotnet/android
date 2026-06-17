@@ -7,10 +7,6 @@ else
             make prepare
             break
         ;;
-        PrepareExternal)
-            make prepare-external-git-dependencies
-            break
-        ;;
         Build)
             make jenkins
             break

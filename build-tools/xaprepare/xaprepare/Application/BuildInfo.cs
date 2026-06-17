@@ -9,17 +9,26 @@ namespace Xamarin.Android.Prepare
 {
 	partial class BuildInfo : AppObject
 	{
-		static readonly char[] NDKPropertySeparator = new [] { '=' };
-
 		public string CommitOfLastVersionChange { get; private set; } = String.Empty;
 
-		// Not available from the start, only after NDK is installed
-		public string NDKRevision            { get; private set; } = String.Empty;
-		public string NDKVersionMajor        { get; private set; } = String.Empty;
-		public string NDKVersionMinor        { get; private set; } = String.Empty;
-		public string NDKVersionMicro        { get; private set; } = String.Empty;
-		public string NDKVersionTag          { get; private set; } = String.Empty;
-		public string NDKMinimumApiAvailable { get; private set; } = String.Empty;
+		// NDK version info is now derived directly from BuildAndroidPlatforms.AndroidNdkPkgRevision
+		// (single source of truth shared with src/androidsdk/androidsdk.targets via Configuration.props).
+		public string NDKRevision => BuildAndroidPlatforms.AndroidNdkPkgRevision;
+		public string NDKVersionMajor => NDKVersion.Major.ToString ();
+		public string NDKVersionMinor => NDKVersion.Minor.ToString ();
+		public string NDKVersionMicro => NDKVersion.Build.ToString ();
+
+		Version? cachedNdkVersion;
+		Version NDKVersion {
+			get {
+				if (cachedNdkVersion != null)
+					return cachedNdkVersion;
+				if (!Utilities.ParseAndroidPkgRevision (BuildAndroidPlatforms.AndroidNdkPkgRevision, out Version? ver, out _) || ver == null)
+					throw new InvalidOperationException ($"Unable to parse NDK revision '{BuildAndroidPlatforms.AndroidNdkPkgRevision}' as a valid version string");
+				cachedNdkVersion = ver;
+				return ver;
+			}
+		}
 
 		public string VersionHash            { get; private set; } = String.Empty;
 		public string XACommitHash           { get; private set; } = String.Empty;
@@ -42,70 +51,6 @@ namespace Xamarin.Android.Prepare
 			GitRunner git = CreateGitRunner (context);
 			XACommitHash = git.GetTopCommitHash (shortHash: false);
 			XABranch = git.GetBranchName ();
-		}
-
-		public bool GatherNDKInfo (Context context)
-		{
-			string ndkDir = Configurables.Paths.AndroidNdkDirectory;
-			string props = Path.Combine (ndkDir, "source.properties");
-			if (!File.Exists (props)) {
-				Log.ErrorLine ("NDK properties file does not exist: ", props, tailColor: Log.DestinationColor);
-				return false;
-			}
-
-			string[] lines = File.ReadAllLines (props);
-			foreach (string l in lines) {
-				string line = l.Trim ();
-				string[] parts = line.Split (NDKPropertySeparator, 2);
-				if (parts.Length != 2)
-					continue;
-
-				if (String.Compare ("Pkg.Revision", parts [0].Trim (), StringComparison.Ordinal) != 0)
-					continue;
-
-				string rev = parts [1].Trim ();
-				NDKRevision = rev;
-
-				if (!Utilities.ParseAndroidPkgRevision (rev, out Version? ver, out string? tag) || ver == null) {
-					Log.ErrorLine ($"Unable to parse NDK revision '{rev}' as a valid version string");
-					return false;
-				}
-
-				NDKVersionMajor = ver.Major.ToString ();
-				NDKVersionMinor = ver.Minor.ToString ();
-				NDKVersionMicro = ver.Build.ToString ();
-				NDKVersionTag = tag ?? String.Empty;
-				break;
-			}
-
-			Log.DebugLine ($"Looking for minimum API available in {ndkDir}");
-			int minimumApi = Int32.MaxValue;
-			foreach (var kvp in Configurables.Defaults.AndroidToolchainPrefixes) {
-				string dirName = kvp.Value;
-				string platforms = Path.Combine (Configurables.Paths.AndroidToolchainSysrootLibDirectory, dirName);
-				Log.DebugLine ($"  searching in {platforms}");
-				foreach (string p in Directory.EnumerateDirectories (platforms, "*", SearchOption.TopDirectoryOnly)) {
-					string plibc = Path.Combine (p, "libc.so");
-					if (!Utilities.FileExists (plibc)) {
-						continue;
-					}
-
-					Log.DebugLine ($"    found {p}");
-					string pdir = Path.GetFileName (p);
-					int api;
-					if (!Int32.TryParse (pdir, out api))
-						continue;
-
-					if (api >= minimumApi)
-						continue;
-
-					minimumApi = api;
-				}
-			}
-
-			Log.DebugLine ($"Detected minimum NDK API level: {minimumApi}");
-			NDKMinimumApiAvailable = minimumApi.ToString ();
-			return true;
 		}
 
 		async Task DetermineLastVersionChangeCommit (Context context)

@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\tools\msbuild\Properties\Resources.resx" PsrId="211" FileType="1" SrcCul="en-US" TgtCul="cs-CZ" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Item ItemId=";Resources.resx" ItemType="0" PsrId="211" Leaf="false">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+    <Item ItemId=";Strings" ItemType="0" PsrId="211" Leaf="false">
+      <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";StartDebugger_ipAddress_port" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[  Starting Debugger on {0}:{1}]D;]A;Start sdb then run the following command]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[  Spouští se ladicí program na {0}:{1}]D;]A;Spusťte sdb a pak spusťte následující příkaz]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_Adb" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[adb is not running. {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Databáze adb není spuštěna. {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_AdbTarget" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Invalid adb target name '{0}'. Target names must start with `-d`, `-e`, or `-s`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Neplatný název cíle adb {0}. Názvy cílů musí začínat na -d, -e nebo -s.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_NoAbi" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not retrieve the Android ABI for the attached device or emulator `{0}`. Please reconnect the device or restart the emulator, and try again.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nelze načíst rozhraní Android ABI pro připojené zařízení nebo emulátor {0}. Znovu připojte zařízení nebo restartujte emulátor a zkuste to znovu.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Could not retrieve the Android ABI for the attached device or emulator. Please reconnect the device or restart the emulator, and try again.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_NoDevice" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[No available device.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Žádné dostupné zařízení.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0010_Selected" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Selected device is not running.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vybrané zařízení není spuštěné.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0126_UnableToCopyFastDevTools" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to copy Fast Deployment tools to '{0}/{1}' on the target device.]D;]A;This device might not be compatible with Fast Deployment.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nepovedlo se zkopírovat nástroje rychlého nasazení do {0}/{1} na cílovém zařízení.]D;]A;Toto zařízení pravděpodobně není kompatibilní s rychlým nasazením.]D;]A;Pokud chcete zakázat rychlé nasazení na stránkách vlastností projektu Visual Studio, nastavte vlastnost MSBuild EmbedAssembliesIntoApk na hodnotu true, nebo upravte soubor projektu v textovém editoru.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0127_ErrorDeployingFile" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Při nasazování {0} pomocí {1} došlo k chybě: {2}.]D;]A;Pokud chcete zakázat rychlé nasazení na stránkách vlastností projektu Visual Studio, nastavte vlastnost MSBuild EmbedAssembliesIntoApk na hodnotu true, nebo upravte soubor projektu v textovém editoru.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0128_RedirectStdioIsEnabled" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'log.redirect-stdio' Android system property is set to 'true' on the target device or emulator.]D;]A;To enable compatibility with Fast Deployment, set the property to 'false' or reboot the device or emulator to clear the value.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Systémová vlastnost log.redirect-stdio zařízení Android je na cílovém zařízení nebo emulátoru nastavená na true.]D;]A;Pokud chcete povolit kompatibilitu s rychlým nasazením, nastavte vlastnost na false nebo restartujte zařízení nebo emulátor, aby se hodnota vymazala.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0129_ErrorDeployingFile" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error deploying '{0}'.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Při nasazování {0} došlo k chybě.]D;]A;Pokud chcete zakázat rychlé nasazení na stránkách vlastností projektu Visual Studio, nastavte vlastnost MSBuild EmbedAssembliesIntoApk na hodnotu true, nebo upravte soubor projektu v textovém editoru.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0130_FastDevNotSupported" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Sorry. Fast Deployment is only supported on devices running Android 5.0 (API level 21) or higher.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Omlouváme se. Rychlé nasazení se podporuje jenom na zařízeních s operačním systémem Android 5.0 (rozhraní API úrovně 21) nebo vyšším.]D;]A;Pokud chcete zakázat rychlé nasazení na stránkách vlastností projektu Visual Studio, nastavte vlastnost MSBuild EmbedAssembliesIntoApk na hodnotu true, nebo upravte soubor projektu v textovém editoru.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0131_DeveloperModeNotEnabled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' tool has been disabled on this device. Either enable it by activating the developer options on the device or by setting `ro.boot.disable_runas` to `false`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nástroj run-as byl na tomto zařízení zakázán. Buď ho povolte aktivací možností pro vývojáře na zařízení, nebo nastavením ro.boot.disable_runas na false.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0132_PackageNotInstalled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The package was not installed. Please check you do not have it installed under any other user.]D;]A;If the package does show up on the device, try manually uninstalling it then try again.]D;]A;You should be able to uninstall the app via the Settings app on the device.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Balíček nebyl nainstalován. Zkontrolujte prosím, že ho nemáte nainstalovaný pod žádným jiným uživatelem.]D;]A;Pokud se balíček na zařízení zobrazí, zkuste ho odinstalovat ručně a zkuste to znovu.]D;]A;Aplikaci byste měli být schopni odinstalovat prostřednictvím aplikace Nastavení na zařízení.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0133_RunAsPermissionDenied" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' tool required by the Fast Deployment system has been disabled on this device by the manufacturer.]D;]A;Please disable Fast Deployment in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nástroj run-as vyžadovaný systémem rychlého nasazení byl na tomto zařízení zakázán výrobcem.]D;]A;Zakažte rychlé nasazení na stránkách vlastností projektu Visual Studio nebo upravte soubor projektu v textovém editoru a nastavte vlastnost MSBuild EmbedAssembliesIntoApk na hodnotu true.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0134_RunAsPackageNotDebuggable" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the .NET for Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aplikace nemá v androidManifest.xml nastaven atribut android:debuggable.]D;]A;Aby rychlé nasazení fungovalo, je to nutné. Ve výchozím nastavení je tato možnost standardně povolená ]D;]A;sestavovacím systémem .NET for Android pro sestavení Debug (ladění). Ověřte, jestli nemáte tento atribut nastavený]D;]A;pro element application v souboru AndroidManifest.xml.]D;]A;Pokud máte třídu, která se odvozuje z Android.App.Application a používáte [Application]5D;, ujistěte se, že vlastnost ]D;]A;Debuggable není vůbec nastavená, protože přepíše hodnotu pro sestavení ladění.]D;]A;]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the Xamarin.Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0135_RunAsPackageNotAndApplication" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The package is a 'system' application. These are applications which install under]D;]A; the 'system' user on a device. These types of applications cannot use 'run-as'.]D;]A; The Fast Deployment system should have handled this particular error automatically]D;]A; and used a backup installation path. However if you are seeing this error please file]D;]A; an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A; or 'Help->Report a Problem' in Visual Studio for Mac. If possible attach a full diagnostic build]D;]A; log to the feedback report as this will help us diagnose the issue.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Balíček je systémová aplikace. Jedná se o aplikace, které se instalují v rámci]D;]A; systémového uživatele na zařízení. Tyto typy aplikací nemohou používat příkaz run-as.]D;]A; Systém rychlého nasazení měl tuto konkrétní chybu zpracovat automaticky]D;]A; a použít záložní instalační cestu. Pokud se vám ale tato chyba zobrazuje, vytvořte prosím]D;]A; problém s přesnou chybovou zprávou pomocí položky nabídky Nápověda->Odeslat zpětnou vazbu->Nahlásit problém v aplikaci Visual Studio]D;]A; nebo Nápověda->Nahlásit problém v aplikaci Visual Studio pro Mac. Pokud je to možné, připojte úplný diagnostický]D;]A; protokol buildu k sestavě zpětné vazby, protože to nám pomůže diagnostikovat problém.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0136_RunAsCorruptInstallation" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;The currently installation of the package in corrupt. Please manually uninstall the ]D;]A;package from all the users on device and try again. If that does not work you can disable Fast Deployment.]D;]A;Fast Deployment can be disabled in the Visual Studio project property pages or edit the project file in a text editor and set the 'EmbedAssembliesIntoApk' MSBuild property to 'true'.]D;]A;]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Příkaz run-as selhal s chybou {0}.]D;]A;Aktuální instalace balíčku je poškozena. Ručně odinstalujte balíček ]D;]A;od všech uživatelů na zařízení a zkuste to znovu. Pokud to nepomůže, můžete rychlé nasazení zakázat.]D;]A;Rychlé nasazení lze zakázat na stránkách vlastností projektu Visual Studio nebo upravit soubor projektu v textovém editoru a nastavit vlastnost MSBuild EmbedAssembliesIntoApk na hodnotu true.]D;]A;]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0137_RunAsOSCorrupt" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'run-as' command failed with '{0}'.]D;]A;Fast Deployment is not currently supported on this device.]D;]A;Please file an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio]D;]A;or 'Help->Report a Problem' in Visual Studio for Mac.]D;]A;Please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Příkaz run-as selhal s chybou {0}.]D;]A;Rychlé nasazení se v současné době na tomto zařízení nepodporuje.]D;]A;Nahlaste prosím problém s přesnou chybovou zprávou pomocí položky nabídky Nápověda->Odeslat zpětnou vazbu->Nahlásit problém v aplikaci Visual Studio]D;]A;nebo Nápověda->Nahlásit problém v aplikaci Visual Studio pro Mac.]D;]A;Pokud chcete zakázat rychlé nasazení na stránkách vlastností projektu Visual Studio, nastavte vlastnost MSBuild EmbedAssembliesIntoApk na hodnotu true, nebo upravte soubor projektu v textovém editoru.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0138_ErrorReadingStdin" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error deploying '{0}' using '{1}: {2}'. ]D;]A;This is usually due to an error in `adb` when the file data is sent over to the device. ]D;]A;The normal cause for this is a loose or low quality USB cable. Please try a different cable.]D;]A;Alternatively try using Wifi Debugging, this can be more reliable than USB debugging for certain devices. ]D;]A;If all of that fails please set the 'EmbedAssembliesIntoApk' MSBuild property to 'true' to disable Fast Deployment in the Visual Studio project property pages, or edit the project file in a text editor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Při nasazování {0} pomocí {1} došlo k chybě: {2}. ]D;]A;To je obvykle způsobeno chybou v `adb`, když se data souboru odesílají do zařízení. ]D;]A;Obvyklou příčinou je uvolněný nebo nekvalitní kabel USB. Zkuste prosím použít jiný kabel.]D;]A;Případně zkuste použít ladění Wifi, které může být u některých zařízení spolehlivější než ladění USB. ]D;]A;Pokud se žádným z těchto způsobů nepovede problém vyřešit, nastavte vlastnost MSBuild EmbedAssembliesIntoApk na true, aby se rychlé nasazení zakázalo na stránkách vlastností projektu Visual Studio, nebo upravte soubor projektu v textovém editoru.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+    </Item>
+  </Item>
+</LCX>

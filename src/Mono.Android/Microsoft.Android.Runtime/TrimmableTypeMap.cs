@@ -424,7 +424,73 @@ public class TrimmableTypeMap
 		}
 	}
 
+	internal IJavaPeerable? CreateInstance (
+			IntPtr handle,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+	{
+		var proxy = GetProxyForJavaObject (handle, targetType);
+
+		IJavaPeerable? peer;
+		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
+			peer = ActivateUsingReflection (targetType, handle, JniHandleOwnership.DoNotTransfer);
+		} else {
+			peer = proxy?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+		}
+		if (peer is not null) {
+			MarkCreatedPeer (peer);
+		}
+		return peer;
+	}
+
+	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
+	{
+		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+		if (peer is not null) {
+			MarkCreatedPeer (peer);
+		}
+		return peer;
+	}
+
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
+
+	static bool ShouldActivateClosedGenericTarget (
+			[NotNullWhen (true)] JavaPeerProxy? proxy,
+			[NotNullWhen (true)] Type? targetType)
+	{
+		return proxy is not null &&
+			proxy.TargetType.IsGenericTypeDefinition &&
+			targetType is not null &&
+			targetType.IsGenericType &&
+			!targetType.IsGenericTypeDefinition;
+	}
+
+	static IJavaPeerable? ActivateUsingReflection (
+			[DynamicallyAccessedMembers (Constructors)]
+			Type closedType,
+			IntPtr handle,
+			JniHandleOwnership transfer)
+	{
+		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
+		if (ctor is null) {
+			return null;
+		}
+
+		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+	}
+
+	static void MarkCreatedPeer (IJavaPeerable peer)
+	{
+		var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
+		if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
+			peerState |= JniManagedPeerStates.Activatable;
+		}
+		peer.SetJniManagedPeerState (peerState);
+	}
 
 	/// <summary>
 	/// Match the proxy's stored target type against a hint from the caller.

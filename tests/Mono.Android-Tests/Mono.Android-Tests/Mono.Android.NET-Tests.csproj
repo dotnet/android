@@ -22,25 +22,41 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
-    <!--
-      TODO: Fix excluded tests
-      For $(EnableLLVM)
-        InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
-        NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
-    -->
-    <!-- TODO: https://github.com/dotnet/android/issues/10069 -->
-    <ExcludeCategories Condition=" '$(UseMonoRuntime)' != 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable' ">$(ExcludeCategories):CoreCLRIgnore:NTLM</ExcludeCategories>
-    <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
-    <ExcludeCategories Condition=" '$(PublishAot)' == 'true' ">$(ExcludeCategories):NativeAOTIgnore:SSL:NTLM:Export:NativeTypeMap</ExcludeCategories>
-    <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
-    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
-    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
+
+  <!--
+    These category exclusions used to flow through `am instrument -e` via the
+    custom `RunTestApp` target. With the migration to `dotnet test` + MTP,
+    the on-device instrumentation reads them from runtimeconfig.json via
+    `AppContext.GetData` / `AppContext.TryGetSwitch`. See
+    `TestInstrumentation.ExcludedCategories` / `TestInstrumentation.IncludedCategories`.
+
+    `<RuntimeHostConfigurationOption>` is preferred over `<AssemblyAttribute>` here
+    because `<GenerateAssemblyInfo>false</GenerateAssemblyInfo>` (set above to avoid
+    clashing with `Properties/AssemblyInfo.cs`) silently suppresses
+    `<AssemblyAttribute>` items.
+  -->
+  <ItemGroup>
+    <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
+    <RuntimeHostConfigurationOption Include="PublishAot" Value="true" Condition=" '$(PublishAot)' == 'true' " />
+    <!--
+      FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190
+      InetAccess excluded: https://github.com/dotnet/runtime/issues/73304
+      NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
+    -->
+    <RuntimeHostConfigurationOption Include="EnableLLVM" Value="true" Condition=" '$(EnableLLVM)' == 'true' " />
+    <!--
+      $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune)
+      to restrict the on-device test run to a comma-separated list of NUnit [Category]
+      names. Used by lanes like `Mono.Android.NET_Tests-IsAssignableFrom` which only
+      want tests tagged [Category("Intune")] to run.
+    -->
+    <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
+  </ItemGroup>
 
   <PropertyGroup>
     <UseMonoRuntime Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishAot)' != 'true' ">false</UseMonoRuntime>
     <TestsFlavor Condition=" '$(TestsFlavor)' == '' and '$(_AndroidTypeMapImplementation)' == 'trimmable' ">CoreCLRTrimmable</TestsFlavor>
-    <ExcludeCategories Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">$(ExcludeCategories):NativeTypeMap</ExcludeCategories>
   </PropertyGroup>
 
   <ItemGroup>
@@ -65,12 +81,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
-    <ProjectReference Include="..\..\TestRunner.NUnit\TestRunner.NUnit.NET.csproj" />
     <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
     <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
-    <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
     <!-- Required for [Export] / [ExportField] runtime support (ExportTests.cs) on the LLVM-IR typemap path -->
     <Reference Include="Mono.Android.Export" Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
   </ItemGroup>
@@ -83,6 +101,25 @@
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
+  </ItemGroup>
+
+  <!--
+    NativeAOT trims the closed-generic-instantiation metadata for IEquatable<T>,
+    so NUnit's EquatablesComparer.GetEquatableImplementations() ends up calling
+    GetGenericArguments()[0] on an empty array. Force ILC to keep complete type
+    metadata for all reachable types so that reflection over IEquatable<T> works.
+
+    NativeAOT.rd.xml also forces ILC to generate invocation thunks for the
+    specific IEquatable<T>.Equals(T) closed instantiations our tests rely on,
+    and the closed NUnit TaskAwaitAdapter+GenericAdapter<VoidTaskResult> that
+    is built via Type.MakeGenericType for async Task tests.
+  -->
+  <PropertyGroup Condition=" '$(PublishAot)' == 'true' ">
+    <IlcGenerateCompleteTypeMetadata>true</IlcGenerateCompleteTypeMetadata>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(PublishAot)' == 'true' ">
+    <RdXmlFile Include="NativeAOT.rd.xml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -131,20 +168,22 @@
     <Compile Include="System.Net\NetworkInterfaces.cs" />
     <Compile Include="System.Net\WebSocketTests.cs" />
     <Compile Include="System.Net.NetworkInformation\NetworkChangeTest.cs" />
+    <Compile Include="System.Net.NetworkInformation\PingTest.cs" />
     <Compile Include="System.Runtime.InteropServices\DllImportTest.cs" />
     <Compile Include="System.Text\EncodingTests.cs" />
     <Compile Include="System.Text.Json\JsonSerializerTest.cs" />
     <Compile Include="System.Threading\InterlockedTest.cs" />
     <Compile Include="System.Xml\XmlSerializer.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHandlerTestBase.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerCancellationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerNegotiateAuthenticationTests.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandlerIntegrationTests.cs" />
     <Compile Include="Xamarin.Android.Net\TrustManagerMarshallingTests.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\MainActivity.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\MyFragment.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
-    <Compile Include="Xamarin.Android.RuntimeTests\NUnitInstrumentation.cs" />
+    <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -182,9 +221,6 @@
     <AndroidResource Include="Resources\layout\FragmentFixup.axml">
       <Link>Resources\layout\FragmentFixup.axml</Link>
     </AndroidResource>
-    <AndroidBoundLayout Include="Resources\layout\Main.axml">
-      <Link>Resources\layout\Main.axml</Link>
-    </AndroidBoundLayout>
   </ItemGroup>
 
   <ItemGroup>
@@ -239,6 +275,13 @@
     <AndroidNativeLibrary Include="..\libs\x86_64\libreuse-threads.so" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_AndroidEnableObjectReferenceLogging>false</_AndroidEnableObjectReferenceLogging>
+    <AndroidInstrumentation>xamarin.android.runtimetests.TestInstrumentation</AndroidInstrumentation>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+
   <!-- Used by AppContextTests.cs -->
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="test_bool"    Value="true" />
@@ -247,33 +290,5 @@
     <!-- Set STARTUP_HOOKS via RuntimeHostConfigurationOption for MonoVM (read via AppContext.GetData) -->
     <RuntimeHostConfigurationOption Include="STARTUP_HOOKS" Value="StartupHook" Condition=" '$(UseMonoRuntime)' == 'true' " />
   </ItemGroup>
-
-  <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-    <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestApk>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(AndroidPackageFormat)' == 'aab' ">
-    <TestAab Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.aab">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <InstrumentationType>xamarin.android.runtimetests.NUnitInstrumentation</InstrumentationType>
-      <ResultsPath>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-      <TimingDefinitionsFilename>$(XamarinAndroidSourcePath)build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
-      <TimingResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-times.csv</TimingResultsFilename>
-      <ApkSizesInputFilename>apk-sizes-$(_MonoAndroidTestPackage)-$(Configuration)$(TestsFlavor).txt</ApkSizesInputFilename>
-      <ApkSizesDefinitionFilename>$(XamarinAndroidSourcePath)build-tools\scripts\ApkSizesDefinitions.txt</ApkSizesDefinitionFilename>
-      <ApkSizesResultsFilename>$(XamarinAndroidSourcePath)TestResult-$(_MonoAndroidTestPackage)-values-$(Configuration).csv</ApkSizesResultsFilename>
-    </TestAab>
-  </ItemGroup>
-
-  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\TestApks.targets" />
 
 </Project>

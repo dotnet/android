@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <XamarinAndroidToolsVersionsFile>$(MSBuildThisFileDirectory)..\Xamarin.Installer.Build.Tasks\Xamarin.Installer.Common.props</XamarinAndroidToolsVersionsFile>
+    </PropertyGroup>
+    <Import Project="$(XamarinAndroidToolsVersionsFile)" />
+    <Target Name="SetupGenerateRequiredComponentVersions">
+        <PropertyGroup>
+            <RequiredCompomentVersionsFile>$(IntermediateOutputPath)RequiredComponentVersions.cs</RequiredCompomentVersionsFile>
+        </PropertyGroup>
+        <ItemGroup>
+            <RequiredComponentsLines Include="namespace Xamarin.Installer.AndroidSDK.Common {" />
+            <RequiredComponentsLines Include="  public static partial class Constants {" />
+            <RequiredComponentsLines Include="      public static partial class RequiredComponentVersions {" />
+            <RequiredComponentsLines Include="          public const string RequiredBuildToolsVersion = &quot;$(AndroidSdkBuildToolsVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="          public const string RequiredCommandLineToolsVersion = &quot;$(AndroidCommandLineToolsVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="          public const string RequiredPlatformToolsVersion = &quot;$(AndroidSdkPlatformToolsVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="          public const string RequiredEmulatorVersion = &quot;$(AndroidSdkEmulatorVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="          public const string RequiredPlatformsVersion = &quot;$(AndroidSdkPlatformVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="          public const string RequiredNdkVersion = &quot;$(AndroidNdkVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="          public const string AndroidManifestFeedVersion = &quot;$(AndroidManifestFeedVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="          public const string RequiredJavaSdkVersion = &quot;$(JavaSdkVersion)&quot;%3B" />
+            <RequiredComponentsLines Include="      }" />
+            <RequiredComponentsLines Include="  }" />
+            <RequiredComponentsLines Include="}" />
+        </ItemGroup>
+    </Target>
+    <Target Name="GenerateRequiredComponentVersions" DependsOnTargets="SetupGenerateRequiredComponentVersions" BeforeTargets="CoreCompile" AfterTargets="BeforeBuild"
+            Inputs="$(XamarinAndroidToolsVersionsFile);..\Directory.Build.props"
+            Outputs="$(RequiredCompomentVersionsFile)">
+        <WriteLinesToFile File="$(RequiredCompomentVersionsFile)" Lines="@(RequiredComponentsLines)" Overwrite="true"/>
+        <ItemGroup>
+            <Compile Include="$(RequiredCompomentVersionsFile)" />
+            <FileWrites Include="$(RequiredCompomentVersionsFile)" />
+        </ItemGroup>
+    </Target>
+</Project>

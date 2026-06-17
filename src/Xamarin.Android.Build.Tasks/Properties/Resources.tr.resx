@@ -142,6 +142,9 @@ Bu hata, büyük olasılıkla AndroidManifest.xml dosyasında veya kaynak kod do
   <data name="APT0005" xml:space="preserve">
     <value>Geçersiz dosya adı: Dosya adlarında Java ayrılmış sözcükleri kullanılamaz.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>'{0}' derlemesi, kullanımdan kaldırılmış 'Android.Runtime.PreserveAttribute' özniteliğine başvuru içeriyor. Bu özniteliğin bulunduğu üyeler kırpılabilir. Bunun yerine lütfen System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute kullanın</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>'{0}' değerine sahip $(TargetFrameworkVersion) için API düzeyi belirlenemedi.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ Not: Android Designer, Java SDK 11.0 ile uyumsuzdur: https://aka.ms/vs2019-and-j
   <data name="XA0036" xml:space="preserve">
     <value>'AndroidSupportedAbis' MSBuild özelliği artık desteklenmiyor. Proje dosyasını bir metin düzenleyicisinde düzenleyin, tüm 'AndroidSupportedAbis' kullanımlarını kaldırın ve bunun yerine 'RuntimeIdentifiers' MSBuild özelliğini kullanın.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Bilinmeyen mod: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>Android Uygulama projelerinde '{0}' EmbeddedNativeLibrary geçersiz. Lütfen bunun yerine AndroidNativeLibrary kullanın.</value>
@@ -516,6 +523,14 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
+  <data name="XA2024" xml:space="preserve">
+    <value>'{0}' derlemesi yüklenemedi.</value>
+    <comment>{0} - The path to the assembly that could not be loaded.</comment>
+  </data>
+  <data name="XA2025" xml:space="preserve">
+    <value>{0} derlemesi yok.</value>
+    <comment>{0} - The path to the assembly that does not exist.</comment>
+  </data>
   <data name="XA2006" xml:space="preserve">
     <value>'{2}' kapsamına sahip ('{1}' bütünleştirilmiş kodunda tanımlanan) '{0}' başvurusu çözümlenemedi. Kapsam, tanımlayan bütünleştirilmiş koddan farklı olduğunda, bu durum genellikle türün iletildiğini gösterir.</value>
     <comment>{0} - The member name, such as a class name
@@ -566,7 +581,7 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
     <comment>The '{1}' placeholder is replaced with full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA3008" xml:space="preserve">
-    <value>Failed to extract debug info from '{0}'{1}</value>
+    <value>'{0}' dosyasından hata ayıklama bilgileri ayıklanamadı{1}</value>
     <comment>'{0}' is the native shared library filename. '{1}' is the full output of the failed command, starting and ending with a newline.</comment>
   </data>
   <data name="XA4209" xml:space="preserve">
@@ -628,7 +643,7 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>'{0}' mimarisinin, '{1}' şablon mimarisinde karşılığı olmayan Java türleri var: {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +700,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>'{0}' mimarisi, '{1}' mimarisindeki tüm hazırlama yöntemleriyle eşleşmiyor. Daha fazla bilgi için lütfen ayrıntılı MSBuild günlüklerine bakın.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -814,6 +829,36 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
     <comment>{0} - The path the the file.
 </comment>
   </data>
+  <data name="XA4316" xml:space="preserve">
+    <value>Belirtilen '{0}' giriş dosyası yok. Yoksayılıyor.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4317" xml:space="preserve">
+    <value>'{0}' giriş dosyası '&lt;replacements/&gt;' ile başlamıyor. Atlanıyor.</value>
+    <comment>{0} - The path to the file.
+</comment>
+  </data>
+  <data name="XA4318" xml:space="preserve">
+    <value>'{0}' giriş dosyası okunamadı: {1}. Atlanıyor.</value>
+    <comment>{0} - The path to the file.
+{1} - The exception message.
+</comment>
+  </data>
+  <data name="XA4319" xml:space="preserve">
+    <value>NativeAOT DGML dosyası sağlanmadı.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
+  </data>
+  <data name="XA4320" xml:space="preserve">
+    <value>'{0}' ACW eşleme dosyası bulunamadı.</value>
+    <comment>The following are literal names and should not be translated: ACW
+{0} - The path to the ACW map file.</comment>
+  </data>
+  <data name="XA4321" xml:space="preserve">
+    <value>'{0}' NativeAOT DGML dosyası bulunamadı.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML
+{0} - The path to the NativeAOT DGML file.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>'{0}' Android NDK araç zincirleri dizini eksik. Lütfen Android NDK'yi yükleyin.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -912,7 +957,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <value>Bu proje aynı anda iki işlemde derleniyor olabilir. Yolda kilit dosyası var: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>'{1}' derlemesi için 'DescriptorIndex' meta veri değeri '{0}' ayrıştırılamadı.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1100,8 +1145,19 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Oluşturulan Java çağrılabilir sarmalayıcı kodu değiştirildi: '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
+  </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>Trimmable type map Java source giriş dizini '{0}' ve çıkış dizini '{1}' farklı olmalıdır.</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>Oluşturulan trimmable type map Java source '{0}' bulunamadı.</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' komutu başarısız oldu.\n{1}</value>
@@ -1123,6 +1179,20 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>
+  </data>
+  <data name="XA0146" xml:space="preserve">
+    <value>'{0}' dosyasının doğru hizalanmış BIR DOSYA olup olmadığını denetleme denemesi, dosya için hizalama denetimi yoksayıldığında özel durumla başarısız oldu.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0147" xml:space="preserve">
+    <value>'{0}' dosyasının geçerli bir ELF dosyası olup olmadığını denetleme girişimi, özel durum nedeniyle başarısız oldu ve dosya için AOT denetimi yoksayıldı.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0148" xml:space="preserve">
+    <value>'{0}' dosyasının geçerli bir ELF dosyası olup olmadığını denetleme girişimi, özel durum nedeniyle başarısız oldu ve dosya için symbol '{1}@{2}' denetimi yoksayıldı.</value>
+    <comment>{0} - The file path.
+{1} - The symbol name.
+{2} - The section name.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>'Gradlew' yürütülebilir dosyası '{0}' proje dizininde bulunamadı. Lütfen Gradle proje klasör yolunun doğru olduğundan ve Gradle Sarmalayıcı betikleri içerdiğinden emin olun.</value>
