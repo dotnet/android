@@ -41,7 +41,6 @@ is used within many of the output directories which are created.
       * `Mono.Android.Export`: Builds `Mono.Android.Export.dll`.
       * `Xamarin.Android.Build.Tasks`: MSBuild tasks for Xamarin.Android projects.
       * `Xamarin.Android.Build.Utilities`: MSBuild tasks support sources.
-      * `Xamarin.Android.NUnitLite`: NUnitLite for Android sources.
       * `Xamarin.AndroidTools.Aidl`: AIDL processor, used in MSBuild tasks.
       * `Xamarin.Android.Tools.BootstrapTasks`: supplemental build tasks used by
         some build-tools. (This should be in `build-tools`; oops.)
