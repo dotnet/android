@@ -128,6 +128,13 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.fastdeploy3.sync.list.files", "" },
 				{ "deploy.fastdeploy3.override.list.ms", "" },
 				{ "deploy.fastdeploy3.missing.files", "" },
+				{ "deploy.orchestration.ensure-properties.ms", "" },
+				{ "deploy.orchestration.property-checks.ms", "" },
+				{ "deploy.orchestration.package-check.ms", "" },
+				{ "deploy.orchestration.package-timestamp.ms", "" },
+				{ "deploy.orchestration.install.ms", "" },
+				{ "deploy.orchestration.terminate.ms", "" },
+				{ "deploy.orchestration.empty-check.ms", "" },
 				{ "pii.deploy.error", "" },
 				{ "pii.deploy.file", "" },
 			};
@@ -216,8 +223,11 @@ namespace Xamarin.Android.Tasks
 
 		async Task RunInstall ()
 		{
+			var phase = Stopwatch.StartNew ();
 			await Device.EnsureProperties (CancellationToken).ConfigureAwait (false);
+			SetDiagnosticElapsed ("deploy.orchestration.ensure-properties.ms", phase);
 
+			phase.Restart ();
 			diagnosticData.SetProperty ("target.prop.ro.product.build.version.sdk", Device.Properties?.BuildVersionSdk);
 			diagnosticData.SetProperty ("target.prop.ro.product.cpu.abilist", string.Join (";", Device.Properties?.ProductCpuAbiList ?? Array.Empty<string> ()));
 			diagnosticData.SetProperty ("target.prop.ro.product.cpu.abi", PrimaryCpuAbi);
@@ -235,8 +245,11 @@ namespace Xamarin.Android.Tasks
 				LogFastDeploy2Error ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
 				return;
 			}
+			SetDiagnosticElapsed ("deploy.orchestration.property-checks.ms", phase);
 
+			phase.Restart ();
 			await CheckAppInstalledAndDebuggable (PackageName);
+			SetDiagnosticElapsed ("deploy.orchestration.package-check.ms", phase);
 
 			if (EmbedAssembliesIntoApk) {
 				await RemoveOverrideDirectory ();
@@ -246,17 +259,26 @@ namespace Xamarin.Android.Tasks
 				await Device.UninstallPackage (PackageName, PreserveUserData, CancellationToken);
 			}
 
-			if (!string.IsNullOrEmpty (PackageFile) &&
-					(packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0 || ReInstall || IsPackageFileOutOfDate ())) {
+			phase.Restart ();
+			bool packageFileOutOfDate = !string.IsNullOrEmpty (PackageFile) &&
+				(packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0 || ReInstall || IsPackageFileOutOfDate ());
+			SetDiagnosticElapsed ("deploy.orchestration.package-timestamp.ms", phase);
+
+			if (packageFileOutOfDate) {
 				try {
+					phase.Restart ();
 					await InstallPackage ();
+					AddDiagnosticElapsed ("deploy.orchestration.install.ms", phase);
 				} catch (Exception ex) {
+					AddDiagnosticElapsed ("deploy.orchestration.install.ms", phase);
 					LogFastDeploy2Error (GetErrorCode (ex), ex.ToString ());
 					return;
 				}
 				if (!EmbedAssembliesIntoApk && packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 					packageInfo.InternalPath = null;
+					phase.Restart ();
 					await CheckAppInstalledAndDebuggable (PackageName);
+					AddDiagnosticElapsed ("deploy.orchestration.package-check.ms", phase);
 					if (RaiseRunAsError (packageInfo.InternalPath)) {
 						return;
 					}
@@ -266,11 +288,16 @@ namespace Xamarin.Android.Tasks
 			if (EmbedAssembliesIntoApk)
 				return;
 
+			phase.Restart ();
 			if ((FastDevFiles?.Length ?? 0) == 0 && (EnvironmentFiles?.Length ?? 0) == 0) {
+				SetDiagnosticElapsed ("deploy.orchestration.empty-check.ms", phase);
 				return;
 			}
+			SetDiagnosticElapsed ("deploy.orchestration.empty-check.ms", phase);
 
+			phase.Restart ();
 			await TerminateApp ();
+			SetDiagnosticElapsed ("deploy.orchestration.terminate.ms", phase);
 			await DeployFastDevFilesWithAdbPush (OverrideFullPath);
 		}
 
