@@ -501,15 +501,15 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					AddTestData (runtime, "", new string [0], true);
 				}
-				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, runtime == AndroidRuntime.NativeAOT ? 2 : 1);
+				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, runtime == AndroidRuntime.NativeAOT ? 2 : 3);
 				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
-				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, runtime == AndroidRuntime.NativeAOT ? 2 : 1);
+				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, runtime == AndroidRuntime.NativeAOT ? 2 : 2);
 				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
 
 				if (runtime == AndroidRuntime.NativeAOT) {
 					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 2);
 				} else {
-					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3);
+					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 4);
 				}
 			}
 
