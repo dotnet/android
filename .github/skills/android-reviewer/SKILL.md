@@ -57,7 +57,6 @@ Review the CI results. **Never post ✅ LGTM if any required CI check is failing
 - Investigate the failure using the **azdo-build-investigator** skill (for Azure DevOps pipeline failures) or GitHub Actions job logs.
 - If the failure is caused by the PR's code changes, flag it as ❌ error.
 - If the failure is a known infrastructure issue or pre-existing flake unrelated to the PR, note it in the summary but still use ⚠️ Needs Changes — the PR isn't mergeable until CI is green.
-- All PR checks now come from the single public `dotnet-android` pipeline (dnceng-public). If you see a `Xamarin.Android-PR` check, it's a branch/official build, not PR validation — don't gate the review on it.
 - If the PR description acknowledges the failure and documents a dependency (e.g., "blocked on X"), note it in the summary.
 
 ### 5. Load review rules

@@ -192,7 +192,7 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 
 ## CI / Build Investigation
 
-**dotnet/android PR validation runs on a public Azure DevOps pipeline (`dotnet-android` on `dnceng-public`), not GitHub Actions.** As of #11578 it runs the full test matrix for every PR (direct and fork); the old internal `Xamarin.Android-PR` (DevDiv) pipeline no longer runs on PRs. When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
+**dotnet/android PR validation runs on the public Azure DevOps `dotnet-android` pipeline on `dnceng-public`, not GitHub Actions.** When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
 
 1. **ALWAYS invoke the `ci-status` skill first.** The pipeline surfaces as ~39 `dotnet-android (...)` GitHub checks, but the skill adds build progress, ETA, per-stage failures, and failed-test names that `gh pr checks` alone doesn't give you.
 2. The skill auto-detects the current PR from the git branch when no PR number is given.

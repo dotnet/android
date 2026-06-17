@@ -19,7 +19,6 @@ Every PR runs **one** public Azure DevOps build: pipeline **`dotnet-android`** o
 Everything else is standard `gh`/`az`; only these are non-obvious:
 
 - **Judge pass/fail by the build `result` + GitHub check states — never by the test API.** Device-test lanes run with `continueOnError`, so flaky failures (notably `System.NetTests.SslTest.*`, or failures only in flavor lanes like `-TrimModePartial`/`-NoAab`) show as failed tests on otherwise-green builds.
-- **Ignore `Xamarin.Android-PR`** (devdiv): it has `pr: none` and never runs on PRs; if present, it's a branch/official build.
 - **Expect a fork PR to await `/azp run` approval** (re-approved per push); direct PRs auto-start on push. Forks change only triggering, not which pipeline runs.
 - **Query test results with `az rest`** — `az devops invoke --area test` 404s on dnceng-public. The `build` area works unauthenticated; `az rest` and log/artifact downloads need `az login` (else 401).
 
