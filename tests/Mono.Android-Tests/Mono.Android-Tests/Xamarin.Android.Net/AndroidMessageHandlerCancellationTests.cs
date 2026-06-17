@@ -232,21 +232,71 @@ namespace Xamarin.Android.NetTests
 				this.length = length;
 			}
 
+			protected override Task<Stream> CreateContentReadStreamAsync ()
+			{
+				// AndroidMessageHandler uses ReadAsStreamAsync () before uploading; override this to avoid
+				// HttpContent's default full-buffering behavior for custom content.
+				return Task.FromResult<Stream> (new ZeroStream (length));
+			}
+
 			protected override async Task SerializeToStreamAsync (Stream stream, System.Net.TransportContext? context)
 			{
-				var buffer = new byte [4096];
-				long remaining = length;
-				while (remaining > 0) {
-					int toWrite = (int) Math.Min (remaining, buffer.Length);
-					await stream.WriteAsync (buffer, 0, toWrite).ConfigureAwait (false);
-					remaining -= toWrite;
-				}
+				using var source = new ZeroStream (length);
+				await source.CopyToAsync (stream, 4096).ConfigureAwait (false);
 			}
 
 			protected override bool TryComputeLength (out long computedLength)
 			{
 				computedLength = length;
 				return true;
+			}
+
+			sealed class ZeroStream : Stream
+			{
+				readonly long length;
+				long position;
+
+				public ZeroStream (long length)
+				{
+					this.length = length;
+				}
+
+				public override bool CanRead => true;
+				public override bool CanSeek => false;
+				public override bool CanWrite => false;
+				public override long Length => length;
+
+				public override long Position {
+					get => position;
+					set => throw new NotSupportedException ();
+				}
+
+				public override int Read (byte[] buffer, int offset, int count)
+				{
+					if (position >= length)
+						return 0;
+
+					int toRead = (int) Math.Min (count, length - position);
+					Array.Clear (buffer, offset, toRead);
+					position += toRead;
+					return toRead;
+				}
+
+				public override ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
+				{
+					if (position >= length)
+						return new ValueTask<int> (0);
+
+					int toRead = (int) Math.Min (buffer.Length, length - position);
+					buffer.Span.Slice (0, toRead).Clear ();
+					position += toRead;
+					return new ValueTask<int> (toRead);
+				}
+
+				public override void Flush () { }
+				public override long Seek (long offset, SeekOrigin origin) => throw new NotSupportedException ();
+				public override void SetLength (long value) => throw new NotSupportedException ();
+				public override void Write (byte[] buffer, int offset, int count) => throw new NotSupportedException ();
 			}
 		}
 
