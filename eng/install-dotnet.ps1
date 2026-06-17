@@ -19,11 +19,12 @@ $repoRoot = (Resolve-Path (Join-Path $scriptroot '..')).Path
 
 $versionsProps = Join-Path $repoRoot 'eng\Versions.props'
 [xml] $versionsXml = Get-Content -LiteralPath $versionsProps
-$sdkVersion = $versionsXml.SelectSingleNode('//MicrosoftNETSdkPackageVersion').InnerText
-if ([string]::IsNullOrWhiteSpace($sdkVersion)) {
+$sdkNode = $versionsXml.SelectSingleNode('//MicrosoftNETSdkPackageVersion')
+if ($null -eq $sdkNode -or [string]::IsNullOrWhiteSpace($sdkNode.InnerText)) {
   Write-Error "Could not read <MicrosoftNETSdkPackageVersion> from $versionsProps"
   exit 1
 }
+$sdkVersion = $sdkNode.InnerText
 
 $installDir = Join-Path $repoRoot "bin\$configuration\dotnet"
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null

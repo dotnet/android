@@ -129,7 +129,7 @@ prepare: install-dotnet
 
 .PHONY: install-dotnet
 install-dotnet:
-	bash ./eng/install-dotnet.sh
+	CONFIGURATION=$(CONFIGURATION) bash ./eng/install-dotnet.sh
 
 .PHONY: prepare-help
 prepare-help:
