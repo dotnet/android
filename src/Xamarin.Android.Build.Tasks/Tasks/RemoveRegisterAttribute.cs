@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 			
 			using (var assembly = resolver.Load (mono_android)) {
 				if (assembly is null) {
-					Log.LogError ($"Unable to load assembly '{mono_android}'");
+					Log.LogCodedError ("XA2024", Properties.Resources.XA2024, mono_android);
 					return false;
 				}
 

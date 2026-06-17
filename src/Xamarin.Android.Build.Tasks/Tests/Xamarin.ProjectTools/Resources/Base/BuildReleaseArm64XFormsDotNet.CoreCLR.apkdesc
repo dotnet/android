@@ -5,10 +5,10 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9411640
+      "Size": 9452072
     },
     "classes2.dex": {
-      "Size": 157320
+      "Size": 108080
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -32,7 +32,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 14097528
+      "Size": 14107192
     },
     "lib/arm64-v8a/libclrjit.so": {
       "Size": 3222704
@@ -2234,5 +2234,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 21143117
+  "PackageSize": 21112005
 }

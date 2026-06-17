@@ -27,8 +27,6 @@ namespace Xamarin.Android.Prepare
 			public string? Configuration       { get; set; }
 			public bool AutoProvision          { get; set; }
 			public bool AutoProvisionUsesSudo  { get; set; }
-			public RefreshableComponent RefreshList { get; set; }
-			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = new [] { "latest" };
 			public string? LocalDotNetSdkArchive { get; set; }
 		}
 
@@ -97,11 +95,9 @@ namespace Xamarin.Android.Prepare
 				{"ls", "List names of all known scenarios", v => parsedOptions.ListScenarios = true },
 				{"cf=", $"{{NAME}} of the compression format to use for some archives (e.g. the XA bundle). One of: {GetCompressionFormatNames ()}; Default: {parsedOptions.CompressionFormat}", v => parsedOptions.CompressionFormat = v?.Trim () ?? String.Empty},
 				{"c|configuration=", $"Build {{CONFIGURATION}}. Default: {Context.Instance.Configuration}", v => parsedOptions.Configuration = v?.Trim ()},
-				{"refresh:", "[sdk,ndk] Comma separated list of components which should be reinstalled. Defaults to all supported components if no value is provided.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim () ?? String.Empty)},
 				"",
 				{"auto-provision=", $"Automatically install software required by .NET for Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
-				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed or 'latest' or 'all'. Defaults to 'latest' if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
 				{"dotnet-sdk-archive=", "Path to a local .NET SDK archive (zip or tar.gz) to use instead of downloading from the internet.", v => parsedOptions.LocalDotNetSdkArchive = v?.Trim () },
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
@@ -132,8 +128,6 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.DebugFileExtension    = parsedOptions.DebugFileExtension;
 			Context.Instance.AutoProvision         = parsedOptions.AutoProvision;
 			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
-			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
-			Context.Instance.AndroidSdkPlatforms   = parsedOptions.AndroidSdkPlatforms;
 			Context.Instance.LocalDotNetSdkArchive = parsedOptions.LocalDotNetSdkArchive;
 
 			if (!String.IsNullOrEmpty (parsedOptions.Configuration))
@@ -297,48 +291,5 @@ namespace Xamarin.Android.Prepare
 			throw new InvalidOperationException ($"Unknown boolean value: {value}");
 		}
 
-		static RefreshableComponent ParseRefreshableComponents (string refreshList)
-		{
-			if (String.IsNullOrEmpty (refreshList))
-				return RefreshableComponent.All;
-
-			if (refreshList.IndexOf (',') == -1)
-				return ParseSingleComponent (refreshList);
-
-			var allParsedComponents = RefreshableComponent.None;
-			var refreshListArray = refreshList.Split (',');
-			foreach (var c in refreshListArray) {
-				RefreshableComponent parsed = ParseSingleComponent (c);
-				if (parsed != RefreshableComponent.None)
-					allParsedComponents |= parsed;
-			}
-
-			return allParsedComponents;
-
-
-			RefreshableComponent ParseSingleComponent (string component) {
-				if (String.Compare ("sdk", component, StringComparison.OrdinalIgnoreCase) == 0)
-					return RefreshableComponent.AndroidSDK;
-
-				if (String.Compare ("ndk", component, StringComparison.OrdinalIgnoreCase) == 0)
-					return RefreshableComponent.AndroidNDK;
-
-				return RefreshableComponent.None;
-			}
-		}
-
-		static IEnumerable<string> ParseAndroidSdkPlatformLevels (string list)
-		{
-			// If the user specified "all" we return 'all' to indicate that all platforms should be installed.
-			if (string.Compare ("all", list, StringComparison.OrdinalIgnoreCase) == 0)
-				return new string [] { "all" };
-
-			// If the user did not specify anything, we return "latest" to indicate that only the latest platform should be installed.
-			if (string.IsNullOrEmpty (list) || string.Compare ("latest", list, StringComparison.OrdinalIgnoreCase) == 0)
-				return new string [] { "latest" };
-
-			// The user specified a list of platform levels to install, so we should respect that.
-			return list.Split (',').Select (item => item.Trim ());
-		}
 	}
 }

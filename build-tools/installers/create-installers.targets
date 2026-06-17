@@ -3,7 +3,7 @@
   <Import Project="..\scripts\XAVersionInfo.targets" />
   <Import Project="..\scripts\LocalizationLanguages.projitems" />
   <Import Project="..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\ProfileAssemblies.projitems')" />
-  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')" />
+  <Import Project="..\..\src\Mono.Android\Mono.Android.Apis.projitems" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
   <PropertyGroup>
     <FrameworkSrcDir>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</FrameworkSrcDir>
@@ -18,8 +18,6 @@
     <LibExtension Condition=" '$(HostOS)' == 'Linux' ">so</LibExtension>
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
-    <_HasCommercialFiles Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.Debugging.targets')">True</_HasCommercialFiles>
-    <_MonoDroidPath Condition=" '$(_MonoDroidPath)' == '' ">..\..\external\android-platform-support</_MonoDroidPath>
   </PropertyGroup>
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
@@ -90,9 +88,6 @@
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\RedistList\FrameworkList.xml" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\System.EnterpriseServices.pdb" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
-    <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.pdb" />
-    <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)android-support-multidex.jar" />
@@ -245,9 +240,37 @@
   <ItemGroup>
     <ThirdPartyNotice Include="$(XamarinAndroidSourcePath)THIRD-PARTY-NOTICES.TXT" />
   </ItemGroup>
-  <!-- monodroid -->
-  <!-- new files to be included from monodroid should be added to the following projitems file in that repo. -->
-  <Import Project="$(_MonoDroidPath)\tools\scripts\installer-files.projitems" Condition=" '$(_HasCommercialFiles)' == 'True' And Exists ('$(_MonoDroidPath)\tools\scripts\installer-files.projitems') " />
+  <!-- monodroid: in-tree installer/debugging projects under src/Xamarin.Installer.*,
+       src/Mono.AndroidTools, src/Xamarin.AndroidTools,
+       src/Xamarin.Android.Build.Debugging.Tasks, and tools/fastdev. -->
+  <ItemGroup>
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)INIFileParser.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.AndroidTools.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.AndroidTools.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.pdb" />
+    <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)%(Identity)\Xamarin.Android.Build.Debugging.Tasks.resources.dll')" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.Debugging.props" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.Debugging.targets" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.AndroidTools.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.AndroidTools.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.AndroidSDK.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.AndroidSDK.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Build.Tasks.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Build.Tasks.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.props" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Installer.Common.targets" />
+    <LegacyTargetsFiles Include="$(XAInstallPrefix)xbuild\Novell\Xamarin.Android.Bindings.targets" />
+    <LegacyTargetsFiles Include="$(XAInstallPrefix)xbuild\Novell\Xamarin.Android.VisualBasic.targets" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.sync')" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.find')" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.stat')" />
+    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\xamarin.cp')" />
+  </ItemGroup>
   <!-- end monodroid -->
   <Target Name="ConstructInstallerItems"
       DependsOnTargets="_FindFrameworkDirs"

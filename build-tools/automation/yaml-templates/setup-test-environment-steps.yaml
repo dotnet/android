@@ -52,8 +52,14 @@ steps:
 
 - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
   parameters:
-    arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
+    arguments: --s=${{ parameters.xaprepareScenario }}
     xaSourcePath: ${{ parameters.xaSourcePath }}
+
+- task: DotNetCoreCLI@2
+  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+  inputs:
+    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
@@ -62,12 +68,8 @@ steps:
     project: ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.csproj
     arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/androidsdk.binlog
     continueOnError: false
-
-- task: DotNetCoreCLI@2
-  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+    env:
+      AndroidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
 
 # Download and install .NET nupkgs
 - task: DownloadPipelineArtifact@2

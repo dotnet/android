@@ -9,13 +9,6 @@
     <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
   </PropertyGroup>
 
-  <Target Name="BuildExternal">
-    <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:XamarinAndroidSourcePath=$(_Root) -p:XAIntegrationBuild=true -bl:$(_BinlogPathPrefix)-build-monodroid.binlog"
-        WorkingDirectory="$(_Root)external\android-platform-support\build-tools"
-    />
-  </Target>
-
   <Target Name="PrepareOpenJDK">
     <!-- Ensure the Microsoft OpenJDK is downloaded and extracted into $(JavaSdkDirectory)
          before Java.Interop's Prepare target scans for a JDK. Otherwise its JdkInfo task

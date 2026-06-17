@@ -42,59 +42,36 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 		return entry->func;
 	}
 
-	// The order of statements below should be kept in the descending probability of occurrence order (as much as
-	// possible, of course). `libSystem.Native` is requested during early startup for each MAUI app, so its
-	// probability is higher, just as it's more likely that `libSystem.Security.Cryptography.Android` will be used
-	// in an app rather than `libSystem.IO.Compression.Native`
-	void **dotnet_dso_handle; // Set to a non-null value only for dotnet shared libraries
-	if (library_name_hash == system_native_library_hash) {
-		dotnet_dso_handle = &system_native_library_handle;
-	} else if (library_name_hash == system_security_cryptography_native_android_library_hash) {
-		dotnet_dso_handle = &system_security_cryptography_native_android_library_handle;
-	} else if (library_name_hash == system_io_compression_native_library_hash) {
-		dotnet_dso_handle = &system_io_compression_native_library_handle;
-	} else if (library_name_hash == system_globalization_native_library_hash) {
-		dotnet_dso_handle = &system_globalization_native_library_handle;
-	} else {
-		dotnet_dso_handle = nullptr;
+	// The .NET BCL native libraries (`libSystem.Native`, `libSystem.Globalization.Native`,
+	// `libSystem.Security.Cryptography.Native.Android` and `libSystem.IO.Compression.Native`) are
+	// shipped as standalone shared libraries in the default (separate-`.so`) runtime layout, so
+	// CoreCLR is able to resolve their p/invoke entry points itself via its default resolution.
+	//
+	// We used to serve them here from a hand-maintained static table (`dotnet_pinvokes`). That table
+	// drifted from the runtime's real exports whenever a p/invoke was added or renamed, aborting the
+	// application on the first missing entry (see https://github.com/dotnet/android/issues/11530).
+	// Measurements on a physical device showed the table provides no measurable startup benefit, so
+	// we return `nullptr` for these libraries and let CoreCLR's own resolver handle them, removing
+	// the whole class of drift bugs.
+	//
+	// NOTE: this only affects the precompiled override used by the default separate-`.so` layout.
+	// The unified-DSO layout uses the generated `find_pinvoke` table in `dynamic.cc`, where these
+	// symbols are hidden inside a single DSO and therefore must still be resolved by the override.
+	if (library_name_hash == system_native_library_hash ||
+			library_name_hash == system_security_cryptography_native_android_library_hash ||
+			library_name_hash == system_io_compression_native_library_hash ||
+			library_name_hash == system_globalization_native_library_hash) {
+		return nullptr;
 	}
 
-	if (dotnet_dso_handle != nullptr) {
-		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, dotnet_pinvokes.data (), dotnet_pinvokes_count);
-		if (entry != nullptr) {
-			if (entry->func != nullptr) {
-				return entry->func;
-			}
-
-			load_library_entry (library_name, entrypoint_name, *entry, dotnet_dso_handle);
-			if (entry->func == nullptr) {
-				log_fatal (LOG_ASSEMBLY, "Failed to load symbol '{}' from shared library '{}'"sv,
-										 optional_string (entrypoint_name), optional_string (library_name));
-				return nullptr; // let Mono deal with the fallout
-			}
-
-			return entry->func;
-		}
-
-		// It's possible we don't have an entry for some `dotnet` p/invoke, fall back to the slow path below
-		log_debug (
-			LOG_ASSEMBLY,
-			"Symbol '{}' in library '{}' not found in the generated tables, falling back to slow path"sv,
-			optional_string (entrypoint_name),
-			optional_string (library_name)
-		);
-
-		// This is temporary, to catch p/invokes we might be missing that are used in the default templates
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			std::format (
-				"Missing pinvoke {}@{}"sv,
-				optional_string (entrypoint_name),
-				optional_string (library_name)
-			)
-		);
-	}
-
+	// Any other library (e.g. `e_sqlite3`, app-specific or third-party native libraries) is resolved
+	// through dotnet/android's own loader. Unlike the BCL libraries above, this is NOT equivalent to
+	// returning `nullptr`: `handle_other_pinvoke_request` goes through `MonodroidDl::monodroid_dlopen`,
+	// which knows how to load DSOs embedded in the APK (`extractNativeLibs=false`), normalizes
+	// `[DllImport ("log")]`/`[DllImport ("liblog")]`-style names, and consults the runtime's lib
+	// directories. CoreCLR's default resolver does not replicate that behaviour, so this path is kept.
+	// It also carries no static table, so it is not subject to the drift problem that motivated the
+	// BCL change above.
 	return handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
 }
 

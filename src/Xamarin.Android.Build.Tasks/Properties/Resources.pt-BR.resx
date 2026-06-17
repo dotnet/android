@@ -142,6 +142,9 @@ Provavelmente esse erro foi causado por um problema com o arquivo AndroidManifes
   <data name="APT0005" xml:space="preserve">
     <value>Nome de arquivo inválido: os nomes de arquivo não podem usar palavras reservadas para Java.</value>
   </data>
+  <data name="IL6001" xml:space="preserve">
+    <value>Assembly '{0}' contém referência ao atributo obsoleto 'Android.Runtime.PreserveAttribute'. Membros com esse atributo podem ser removidos na compactação. Use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute em vez disso</value>
+  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Não foi possível determinar o nível da API da $(TargetFrameworkVersion) de '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -220,6 +223,10 @@ Observação: o Android Designer é incompatível com o SDK do Java 11.0: https:
   <data name="XA0036" xml:space="preserve">
     <value>Não há mais suporte para a propriedade 'AndroidSupportedAbis' do MSBuild. Edite o arquivo de projeto em um editor de texto, remova todas as ocorrências de 'AndroidSupportedAbis' e use a propriedade 'RuntimeIdentifiers' MSBuild em seu lugar.</value>
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
+  </data>
+  <data name="XA0037" xml:space="preserve">
+    <value>Modo desconhecido: {0}</value>
+    <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
     <value>A EmbeddedNativeLibrary '{0}' é inválida nos projetos de Aplicativo Android. Use a AndroidNativeLibrary.</value>
@@ -516,6 +523,14 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
 {1} -  The chain of references that causes a reference to the missing assembly, with &gt; as the separator between items. Example: `System.Memory` &gt; `System.Buffers`
 {2} - The name of the first assembly in the chain of references. Example: System.Memory</comment>
   </data>
+  <data name="XA2024" xml:space="preserve">
+    <value>Não é possível carregar o assembly "{0}".</value>
+    <comment>{0} - The path to the assembly that could not be loaded.</comment>
+  </data>
+  <data name="XA2025" xml:space="preserve">
+    <value>O assembly {0} não existe.</value>
+    <comment>{0} - The path to the assembly that does not exist.</comment>
+  </data>
   <data name="XA2006" xml:space="preserve">
     <value>Não foi possível resolver a referência a '{0}' (definida no assembly '{1}') com o escopo '{2}'. Quando o escopo é diferente do assembly de definição, geralmente o tipo é encaminhado.</value>
     <comment>{0} - The member name, such as a class name
@@ -628,7 +643,7 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
 {1} - The API version number</comment>
   </data>
   <data name="XA4217" xml:space="preserve">
-    <value>Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}</value>
+    <value>A arquitetura '{0}' tem tipos Java que não têm contrapartes na arquitetura de modelo '{1}': {2}</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name
 {2} - Comma-separated list of Java type names that have no counterparts</comment>
@@ -685,7 +700,7 @@ In this mesage, the term "layout" means an Android UI layout.
 {1} - The name of the metadata item</comment>
   </data>
   <data name="XA4227" xml:space="preserve">
-    <value>Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.</value>
+    <value>A arquitetura '{0}' não corresponde a todos os métodos de realizar marshaling na arquitetura '{1}'. Consulte os logs detalhados do MSBuild para obter mais informações.</value>
     <comment>{0} - The target architecture name
 {1} - The template architecture name</comment>
   </data>
@@ -815,20 +830,34 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
 </comment>
   </data>
   <data name="XA4316" xml:space="preserve">
-    <value>Specified input file '{0}' does not exist. Ignoring.</value>
+    <value>O arquivo de entrada especificado '{0}' não existe. Ignorando.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4317" xml:space="preserve">
-    <value>Input file '{0}' does not start with '&lt;replacements/&gt;'. Skipping.</value>
+    <value>O arquivo de entrada '{0}' não começa com '&lt;replacements/&gt;'. Ignorando.</value>
     <comment>{0} - The path to the file.
 </comment>
   </data>
   <data name="XA4318" xml:space="preserve">
-    <value>Input file '{0}' could not be read: {1}. Skipping.</value>
+    <value>O arquivo de entrada '{0}' não pôde ser lido: {1}. Ignorando.</value>
     <comment>{0} - The path to the file.
 {1} - The exception message.
 </comment>
+  </data>
+  <data name="XA4319" xml:space="preserve">
+    <value>Nenhum arquivo DGML NativeAOT foi fornecido.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML</comment>
+  </data>
+  <data name="XA4320" xml:space="preserve">
+    <value>O arquivo de mapa ACW “{0}” não foi encontrado.</value>
+    <comment>The following are literal names and should not be translated: ACW
+{0} - The path to the ACW map file.</comment>
+  </data>
+  <data name="XA4321" xml:space="preserve">
+    <value>O arquivo DGML NativeAOT “{0}” não foi encontrado.</value>
+    <comment>The following are literal names and should not be translated: NativeAOT, DGML
+{0} - The path to the NativeAOT DGML file.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>O diretório de cadeias de ferramentas '{0}' do Android NDK está ausente. Instale o Android NDK.</value>
@@ -928,7 +957,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <value>Dois processos podem estar criando este projeto ao mesmo tempo. O arquivo de bloqueio existe no caminho: {0}</value>
   </data>
   <data name="XA5303" xml:space="preserve">
-    <value>Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.</value>
+    <value>Falha ao analisar o valor de metadados 'DescriptorIndex' '{0}' para o assembly '{1}'.</value>
     <comment>
 {0} - The DescriptorIndex metadata value that could not be parsed
 {1} - The assembly ItemSpec</comment>
@@ -1116,8 +1145,19 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - The insecure HTTP URL</comment>
   </data>
   <data name="XA4253" xml:space="preserve">
-    <value>Generated Java callable wrapper code changed: '{0}'</value>
+    <value>Alterações no código do wrapper chamável em Java gerado: '{0}'</value>
     <comment>{0} - The path to the generated Java callable wrapper file</comment>
+  </data>
+  <data name="XA4254" xml:space="preserve">
+    <value>No mapa do tipo recortável, o diretório de entrada de código-fonte Java '{0}' e o diretório de saída '{1}' devem ser diferentes.</value>
+    <comment>The following are literal names and should not be translated: Trimmable type map, Java.
+{0} - Full path to the Java source input directory
+{1} - Full path to the Java source output directory</comment>
+  </data>
+  <data name="XA4255" xml:space="preserve">
+    <value>O código-fonte Java '{0}' do mapa de tipo recortável gerado não foi encontrado.</value>
+    <comment>The following are literal names and should not be translated: trimmable type map, Java.
+{0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>O comando '{0}' falhou.\n{1}</value>
@@ -1139,6 +1179,20 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>The following is a literal name and should not be translated: BootTimeoutSeconds
 {0} - The AVD name.
 {1} - The timeout in seconds.</comment>
+  </data>
+  <data name="XA0146" xml:space="preserve">
+    <value>Falha na tentativa de verificar se "{0}" é um arquivo ELF alinhado corretamente com exceção, ignorando a verificação de alinhamento do arquivo.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0147" xml:space="preserve">
+    <value>Falha na tentativa de verificar se "{0}" é um arquivo ELF válido com exceção, ignorando a verificação AOT do arquivo.</value>
+    <comment>{0} - The file path.</comment>
+  </data>
+  <data name="XA0148" xml:space="preserve">
+    <value>Falha na tentativa de verificar se "{0}" é um arquivo ELF válido com exceção, ignorando a verificação do símbolo "{1}@{2}" para o arquivo.</value>
+    <comment>{0} - The file path.
+{1} - The symbol name.
+{2} - The section name.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>Executável 'gradlew' não encontrado no diretório do projeto '{0}'. Verifique se o caminho para a pasta do projeto Gradle está correto e se ele contém scripts do Gradle Wrapper.</value>

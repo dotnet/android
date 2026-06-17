@@ -310,12 +310,14 @@ namespace Android.Runtime {
 		}
 	}
 
-	class AndroidTypeManager : JniRuntime.JniTypeManager {
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
+		const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
@@ -332,13 +334,25 @@ namespace Android.Runtime {
 				yield return t;
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Temporary suppression until legacy typemap entries carry DAM annotations.")]
+		[return: DynamicallyAccessedMembers (MethodsConstructors)]
+		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+		{
+			var type = base.GetTypeForSimpleReference (jniSimpleReference);
+			if (type != null) {
+				return type;
+			}
+
+			return Java.Interop.TypeManager.GetJavaToManagedType (jniSimpleReference);
+		}
+
 		protected override string? GetSimpleReference (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
 				return GetReplacementTypeCore (j) ?? j;
 			}
-			return null;
+			return base.GetSimpleReference (type);
 		}
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
@@ -347,9 +361,12 @@ namespace Android.Runtime {
 			j   = GetReplacementTypeCore (j) ?? j;
 
 			if (j != null) {
-				return new[]{j};
+				yield return j;
+				yield break;
 			}
-			return Array.Empty<string> ();
+			foreach (var r in base.GetSimpleReferences (type)) {
+				yield return r;
+			}
 		}
 
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
@@ -623,7 +640,8 @@ namespace Android.Runtime {
 		}
 	}
 
-	class AndroidValueManager : JniRuntime.JniValueManager {
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+	class AndroidValueManager : JniRuntime.ReflectionJniValueManager {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
 
