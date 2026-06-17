@@ -16,11 +16,11 @@ Every PR runs **one** public Azure DevOps build: pipeline **`dotnet-android`** o
 
 ## Pipeline facts (apply throughout)
 
-Everything else is standard `gh`/`az`; only these are non-obvious:
+Everything else is standard `gh`/`az` plus the **azure-devops** CLI extension (`az extension add --name azure-devops`); only these are non-obvious:
 
 - **Judge pass/fail by the build `result` + GitHub check states — never by the test API.** Device-test lanes run with `continueOnError`, so flaky failures (notably `System.NetTests.SslTest.*`, or failures only in flavor lanes like `-TrimModePartial`/`-NoAab`) show as failed tests on otherwise-green builds.
 - **Expect a fork PR to await `/azp run` approval** (re-approved per push); direct PRs auto-start on push. Forks change only triggering, not which pipeline runs.
-- **Query test results with `az rest`** — `az devops invoke --area test` 404s on dnceng-public. The `build` area works unauthenticated; `az rest` and log/artifact downloads need `az login` (else 401).
+- **Query test results with `az rest`** — `az devops invoke --area test --resource runs` 404s on dnceng-public, so use `az rest` for the `runs` and `ResultsByBuild` endpoints. Other `--area test` resources (e.g. `--resource results`, see references/azdo-queries.md) work fine. The `build` area works unauthenticated; `az rest` and log/artifact downloads need `az login` (else 401).
 
 ## Phase 1 — Status (always)
 
@@ -95,7 +95,7 @@ jq -r '
 
 The `reason` function detects timeout from each job's own `issues[]`. Refine a bare `❌ Failed` with the Step 3c count: **0 failed tests ⇒ a canceled `Run tests` task or the `fail if any issues occurred` gate, not a real failure** — say so.
 
-**Step 3c — Fetch failed tests + per-flavor counts** (two `az rest` calls; `--area test` 404s here): **(a)** failed test names + their `runId`; **(b)** every run's per-flavor counts + its phase (`unanalyzedTests`=failed, `notApplicableTests`=skipped):
+**Step 3c — Fetch failed tests + per-flavor counts** (two `az rest` calls; `--area test --resource runs` 404s here, so we use `az rest` directly): **(a)** failed test names + their `runId`; **(b)** every run's per-flavor counts + its phase (`unanalyzedTests`=failed, `notApplicableTests`=skipped):
 
 ```bash
 RES=499b84ac-1321-427f-aa17-267ca6975798   # Azure DevOps app id

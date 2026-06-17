@@ -7,7 +7,7 @@ ORG=https://dev.azure.com/dnceng-public; PROJECT=public
 RES=499b84ac-1321-427f-aa17-267ca6975798   # Azure DevOps app id, for `az rest --resource`
 ```
 
-`build`-area `az devops invoke` works unauthenticated; the `test` area is broken (404) so the test data goes through `az rest`; `az rest` and artifact/log downloads need `az login`.
+`build`-area `az devops invoke` works unauthenticated; in the `test` area only `--resource runs` is broken (404 on dnceng-public, so `runs` and `ResultsByBuild` go through `az rest`) — other resources like `--resource results` work fine. `az rest` and artifact/log downloads need `az login`.
 
 ## ETA for an in-progress build
 

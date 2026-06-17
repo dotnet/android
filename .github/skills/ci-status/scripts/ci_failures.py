@@ -145,11 +145,13 @@ def section_crashes(bid, runs, timeline):
         seen.add((name, why))
         print(f"- **{name}** - {why}")
     print()
-    print("To name the culprit, download that lane's logs artifact (large: 100MB-2GB - prefer the `Debug` lane) "
-          "and scan its logcat (see references/azdo-queries.md):\n")
+    print("To name the culprit, list this build's artifacts and download the matching `Test Results - ...` lane "
+          "(large: 100MB-2GB - prefer a `Debug` lane), then scan its logcat (see references/azdo-queries.md):\n")
     print("```bash")
+    print(f'az pipelines runs artifact list --run-id {bid} --org {ORG} --project {PROJECT} \\')
+    print(r"  --query '[?starts_with(name, `Test Results`)].name' -o tsv")
     print(f'az pipelines runs artifact download --run-id {bid} --org {ORG} --project {PROJECT} \\')
-    print('  --artifact-name "Test Results - APKs .NET Debug - macOS 1" --path /tmp/cilogs')
+    print('  --artifact-name "<paste matching Test Results - ... name>" --path /tmp/cilogs')
     print(r"grep -nE 'Running |\[PASS\]|\[FAIL\]|SIGSEGV|SIGABRT|tombstone|FATAL|art::|JNI DETECTED|Process .*died' \\")
     print('  /tmp/cilogs/**/logcat-*.txt | tail -60   # last test that STARTED with no PASS/FAIL = crasher')
     print("```\n")
