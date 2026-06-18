@@ -6,8 +6,10 @@
 #include <cerrno>
 #include <cstring>
 #include <limits>
+#include <string>
 
 #include <constants.hh>
+#include <xamarin-app.hh>
 #include <host/fastdev-assemblies.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/util.hh>
@@ -110,4 +112,53 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	log_debug (LOG_ASSEMBLY, "Read {} bytes of FastDev assembly '{}'"sv, nread, name);
 
 	return reinterpret_cast<void*>(buffer);
+}
+
+auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
+{
+	tpa_list.clear ();
+
+	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
+	if (!Util::dir_exists (override_dir_path)) {
+		return false;
+	}
+
+	DIR *dir = opendir (override_dir_path.c_str ());
+	if (dir == nullptr) {
+		log_warn (LOG_ASSEMBLY, "FastDev: failed to open override dir '{}'. {}"sv, override_dir_path, std::strerror (errno));
+		return false;
+	}
+	int dir_fd = dirfd (dir);
+
+	size_t count = 0;
+	uint64_t expected_count = type_map.unique_assemblies_count;
+	for (uint64_t i = 0; i < expected_count; i++) {
+		TypeMapAssembly const &asm_entry = type_map_unique_assemblies[i];
+		std::string_view name {
+			&type_map_assembly_names[asm_entry.name_offset],
+			static_cast<size_t>(asm_entry.name_length)
+		};
+
+		// `Name` is the simple assembly name (e.g. "Mono.Android"), no extension.
+		std::string file_name;
+		file_name.reserve (name.size () + 4);
+		file_name.append (name);
+		file_name.append (".dll");
+
+		if (!Util::file_exists (dir_fd, file_name)) {
+			continue;
+		}
+
+		if (!tpa_list.empty ()) {
+			tpa_list.append (":");
+		}
+		tpa_list.append (override_dir_path);
+		tpa_list.append ("/");
+		tpa_list.append (file_name);
+		count++;
+	}
+	closedir (dir);
+
+	log_debug (LOG_ASSEMBLY, "FastDev: built TPA list with {} assemblies from '{}'"sv, count, override_dir_path);
+	return count > 0;
 }

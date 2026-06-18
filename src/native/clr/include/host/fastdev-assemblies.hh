@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <mutex>
+#include <string>
 #include <string_view>
 
 namespace xamarin::android {
@@ -12,10 +13,16 @@ namespace xamarin::android {
 	public:
 #if defined(DEBUG)
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
+		static auto build_tpa_list (std::string &tpa_list) noexcept -> bool;
 #else
 		static auto open_assembly ([[maybe_unused]] std::string_view const& name, [[maybe_unused]]  int64_t &size) noexcept -> void*
 		{
 			return nullptr;
+		}
+
+		static auto build_tpa_list ([[maybe_unused]] std::string &tpa_list) noexcept -> bool
+		{
+			return false;
 		}
 #endif
 
