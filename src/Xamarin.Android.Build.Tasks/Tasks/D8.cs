@@ -16,6 +16,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "DX8";
 
+		string? responseFilePath;
+
 		[Required]
 		public string JarPath { get; set; } = "";
 
@@ -44,6 +46,17 @@ namespace Xamarin.Android.Tasks
 
 		public string? ExtraArguments { get; set; }
 
+		public override bool RunTask ()
+		{
+			try {
+				return base.RunTask ();
+			} finally {
+				if (!responseFilePath.IsNullOrEmpty () && File.Exists (responseFilePath)) {
+					File.Delete (responseFilePath);
+				}
+			}
+		}
+
 		protected override string GenerateCommandLineCommands ()
 		{
 			return GetCommandLineBuilder ().ToString ();
@@ -57,32 +70,72 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
-			if (JavaOptions is { Length: > 0 }) {
+			// Only JVM arguments go on the command line, everything else goes in the response file
+			if (!JavaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (JavaOptions);
 			}
 			cmd.AppendSwitchIfNotNull ("-Xmx", JavaMaximumHeapSize);
 			cmd.AppendSwitchIfNotNull ("-classpath ", JarPath);
 			cmd.AppendSwitch (MainClass);
 
-			if (ExtraArguments is { Length: > 0 })
-				cmd.AppendSwitch (ExtraArguments); // it should contain "--dex".
+			// Create response file with all D8/R8 arguments to avoid command line length limits
+			responseFilePath = CreateResponseFile ();
+			cmd.AppendSwitch ($"@{responseFilePath}");
+
+			return cmd;
+		}
+
+		/// <summary>
+		/// Creates a response file containing all D8/R8 arguments.
+		/// This avoids command line length limits that can occur with many jar libraries.
+		/// </summary>
+		protected virtual string CreateResponseFile ()
+		{
+			var responseFile = Path.GetTempFileName ();
+			Log.LogDebugMessage ($"[{MainClass}] response file: {responseFile}");
+
+			using var response = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
+
+			// D8/R8 switches
+			if (!ExtraArguments.IsNullOrEmpty ())
+				WriteArg (response, ExtraArguments); // it should contain "--dex".
 			if (Debug)
-				cmd.AppendSwitch ("--debug");
+				WriteArg (response, "--debug");
 			else
-				cmd.AppendSwitch ("--release");
+				WriteArg (response, "--release");
 
 			//NOTE: if this is blank, we can omit --min-api in this call
-			if (AndroidManifestFile is { Length: > 0 }) {
+			if (!AndroidManifestFile.IsNullOrEmpty ()) {
 				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
 				if (doc.MinSdkVersion.HasValue) {
 					MinSdkVersion = doc.MinSdkVersion.Value;
-					cmd.AppendSwitchIfNotNull ("--min-api ", MinSdkVersion.ToString ());
+					WriteArg (response, "--min-api");
+					WriteArg (response, MinSdkVersion.ToString ());
 				}
 			}
 
 			if (!EnableDesugar)
-				cmd.AppendSwitch ("--no-desugaring");
+				WriteArg (response, "--no-desugaring");
 
+			if (!OutputDirectory.IsNullOrEmpty ()) {
+				WriteArg (response, "--output");
+				WriteArg (response, OutputDirectory);
+			}
+
+			// --map-diagnostics
+			if (MapDiagnostics != null) {
+				foreach (var diagnostic in MapDiagnostics) {
+					var from = diagnostic.ItemSpec;
+					var to = diagnostic.GetMetadata ("To");
+					if (from.IsNullOrEmpty () || to.IsNullOrEmpty ())
+						continue;
+					WriteArg (response, "--map-diagnostics");
+					WriteArg (response, from);
+					WriteArg (response, to);
+				}
+			}
+
+			// --lib and input jars
 			var injars = new List<string> ();
 			var libjars = new List<string> ();
 			if (AlternativeJarLibrariesToEmbed?.Length > 0) {
@@ -92,7 +145,7 @@ namespace Xamarin.Android.Tasks
 				}
 			} else if (JavaLibrariesToEmbed != null) {
 				Log.LogDebugMessage ("  processing ClassesZip, JavaLibrariesToEmbed...");
-				if (ClassesZip is { Length: > 0 } && File.Exists (ClassesZip)) {
+				if (!ClassesZip.IsNullOrEmpty () && File.Exists (ClassesZip)) {
 					injars.Add (ClassesZip);
 				}
 				foreach (var jar in JavaLibrariesToEmbed) {
@@ -106,25 +159,25 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			cmd.AppendSwitchIfNotNull ("--output ", OutputDirectory);
-			foreach (var jar in libjars)
-				cmd.AppendSwitchIfNotNull ("--lib ", jar);
-			foreach (var jar in injars)
-				cmd.AppendFileNameIfNotNull (jar);
-
-			if (MapDiagnostics != null) {
-				foreach (var diagnostic in MapDiagnostics) {
-					var from = diagnostic.ItemSpec;
-					var to = diagnostic.GetMetadata ("To");
-					if (from is not { Length: > 0 } || to is not { Length: > 0 })
-						continue;
-					cmd.AppendSwitch ("--map-diagnostics");
-					cmd.AppendSwitch (from);
-					cmd.AppendSwitch (to);
-				}
+			foreach (var jar in libjars) {
+				WriteArg (response, "--lib");
+				WriteArg (response, jar);
+			}
+			foreach (var jar in injars) {
+				WriteArg (response, jar);
 			}
 
-			return cmd;
+			return responseFile;
+		}
+
+		/// <summary>
+		/// Writes a single argument to the response file.
+		/// R8/D8 response files treat each line as a complete argument, so no quoting is needed.
+		/// </summary>
+		protected void WriteArg (StreamWriter writer, string arg)
+		{
+			writer.WriteLine (arg);
+			Log.LogDebugMessage ($"  {arg}");
 		}
 
 		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify
