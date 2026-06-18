@@ -75,6 +75,7 @@ namespace Xamarin.Android.Tasks
 		PackageInfo packageInfo = new PackageInfo ();
 		DateTime lastUpload = DateTime.MinValue;
 		Queue<string> diagnosticLogs = new Queue<string> ();
+		readonly object diagnosticLogsLock = new object ();
 		DiagnosticData diagnosticData = new DiagnosticData ();
 
 		protected virtual string RemoteStagingRoot => "/tmp/fastdev2";
@@ -674,7 +675,7 @@ namespace Xamarin.Android.Tasks
 			var stagedFiles = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var file in FastDevFiles ?? Array.Empty<ITaskItem> ()) {
 				if (!File.Exists (file.ItemSpec)) {
-					LogDebugMessage ($"File '{file.ItemSpec}' does not exists. Skipping.");
+					LogDebugMessage ($"File '{file.ItemSpec}' does not exist. Skipping.");
 					continue;
 				}
 				if (Path.GetExtension (file.ItemSpec) == ".so") {
@@ -714,7 +715,7 @@ namespace Xamarin.Android.Tasks
 		{
 			string targetPath = file.GetMetadata ("TargetPath");
 			if (string.IsNullOrEmpty (targetPath)) {
-				LogDiagnostic ($"'TargetPath' meta data not found on '{file.ItemSpec}'. Falling back to'DestinationSubPath'");
+				LogDiagnostic ($"'TargetPath' metadata not found on '{file.ItemSpec}'. Falling back to 'DestinationSubPath'");
 				targetPath = file.GetMetadata ("DestinationSubPath");
 			}
 			if (!string.IsNullOrEmpty (targetPath)) {
@@ -1024,7 +1025,6 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 			SetAdbPushFileCounts (result.Output);
-			LogDiagnostic (result.Output);
 			return true;
 		}
 
@@ -1045,7 +1045,6 @@ namespace Xamarin.Android.Tasks
 					pushed += counts.pushed;
 					skipped += counts.skipped;
 					batches++;
-					LogDiagnostic (result.Output);
 				}
 			}
 			SetDiagnosticProperty ("deploy.fastdeploy2.adb.pushed.files", pushed);
@@ -1057,6 +1056,7 @@ namespace Xamarin.Android.Tasks
 		IEnumerable<List<string>> BatchPushFiles (List<DirectPushFile> files, string remoteDirectory)
 		{
 			var batch = CreatePushArgsPrefix ();
+			int prefixCount = batch.Count;
 			int length = EstimateCommandLength (batch) + remoteDirectory.Length + 4;
 			foreach (var file in files) {
 				if (Path.GetFileName (file.LocalPath) != Path.GetFileName (file.RelativePath)) {
@@ -1065,7 +1065,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				int itemLength = file.LocalPath.Length + 3;
-				if (batch.Count > 3 && length + itemLength >= 4096) {
+				if (batch.Count > prefixCount && length + itemLength >= 4096) {
 					batch.Add (remoteDirectory);
 					yield return batch;
 					batch = CreatePushArgsPrefix ();
@@ -1074,7 +1074,7 @@ namespace Xamarin.Android.Tasks
 				batch.Add (file.LocalPath);
 				length += itemLength;
 			}
-			if (batch.Count > 3) {
+			if (batch.Count > prefixCount) {
 				batch.Add (remoteDirectory);
 				yield return batch;
 			}
@@ -1257,6 +1257,14 @@ namespace Xamarin.Android.Tasks
 			return string.IsNullOrEmpty (UserID) ? "0" : UserID;
 		}
 
+		protected string GetDeviceId ()
+		{
+			if (Device != null && !string.IsNullOrEmpty (Device.ID)) {
+				return Device.ID;
+			}
+			return string.IsNullOrEmpty (AdbTarget) ? "any" : AdbTarget;
+		}
+
 		protected void LogFastDeploy2Error (string errorCode, string error, string file = "")
 		{
 			LogDiagnosticDataError (errorCode, error, file);
@@ -1274,13 +1282,22 @@ namespace Xamarin.Android.Tasks
 				LogDebugMessage (message);
 				return;
 			}
-			diagnosticLogs.Enqueue (message);
+			lock (diagnosticLogsLock) {
+				diagnosticLogs.Enqueue (message);
+			}
 		}
 
 		void PrintDiagnostics ()
 		{
-			while (diagnosticLogs.Count > 0) {
-				LogMessage (diagnosticLogs.Dequeue ());
+			while (true) {
+				string message;
+				lock (diagnosticLogsLock) {
+					if (diagnosticLogs.Count == 0) {
+						break;
+					}
+					message = diagnosticLogs.Dequeue ();
+				}
+				LogMessage (message);
 			}
 			LogMessage ($"{diagnosticData.Task}");
 			foreach (var t in diagnosticData.Properties) {

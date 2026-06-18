@@ -381,7 +381,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Quiet;
 				builder.Install (proj);
 				builder.AutomaticNuGetRestore = false;
-				ProfileTask (builder, "FastDeploy", 20, b => {
+				ProfileTask (builder, "FastDeploy2", 20, b => {
 					b.Uninstall (proj);
 					b.Install (proj);
 				});

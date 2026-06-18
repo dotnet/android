@@ -14,6 +14,7 @@ namespace Xamarin.Android.Tasks
 	{
 		const string RemoteStagingRootPath = "/tmp/fastdeploy2";
 		const string RemoteReadyMarker = ".fastdeploy2-ready";
+		const string OverrideSymlinkReadyMarker = ".fastdeploy2-symlinks";
 		const int MaxAdbCommandLength = 4096;
 
 		public override string TaskPrefix => "FD2";
@@ -37,6 +38,9 @@ namespace Xamarin.Android.Tasks
 			var previousManifest = remoteReady ? LoadPreviousManifest () : null;
 			if (previousManifest == null) {
 				SetDiagnosticProperty ("deploy.fastdeploy2.manifest.full.push", 1);
+				if (!await ResetRemoteStagingDirectory (remoteStagingPath)) {
+					return false;
+				}
 			}
 
 			var changedFiles = GetChangedFiles (currentManifest, previousManifest);
@@ -85,9 +89,11 @@ namespace Xamarin.Android.Tasks
 
 		async Task<bool> UpdateOverrideShellSymlinks (string remoteStagingPath, string overridePath, Dictionary<string, ManifestEntry> currentManifest, Dictionary<string, ManifestEntry> previousManifest, List<string> removedFiles)
 		{
-			var newFiles = previousManifest == null ?
+			bool overrideSymlinksReady = await IsOverrideSymlinkReady (overridePath);
+			var previousSymlinkManifest = overrideSymlinksReady ? previousManifest : null;
+			var newFiles = previousSymlinkManifest == null ?
 				new HashSet<string> (currentManifest.Keys, StringComparer.Ordinal) :
-				new HashSet<string> (currentManifest.Keys.Where (file => !previousManifest.ContainsKey (file)), StringComparer.Ordinal);
+				new HashSet<string> (currentManifest.Keys.Where (file => !previousSymlinkManifest.ContainsKey (file)), StringComparer.Ordinal);
 			SetDiagnosticProperty ("deploy.fastdeploy2.changed.files", newFiles.Count);
 			SetDiagnosticProperty ("deploy.symlink.created.files", newFiles.Count);
 			SetDiagnosticProperty ("deploy.symlink.removed.files", removedFiles.Count + newFiles.Count);
@@ -95,11 +101,15 @@ namespace Xamarin.Android.Tasks
 			SetDiagnosticProperty ("deploy.symlink.tool.result", "shell");
 
 			var phase = Stopwatch.StartNew ();
-			if (!await RunCombinedShellSymlinkUpdate (remoteStagingPath, overridePath, currentManifest, previousManifest, newFiles, removedFiles)) {
+			if (!await RunCombinedShellSymlinkUpdate (remoteStagingPath, overridePath, currentManifest, previousSymlinkManifest, newFiles, removedFiles)) {
 				SetDiagnosticElapsed ("deploy.symlink.shell.update.ms", phase);
 				return await FallbackToCopy (remoteStagingPath, overridePath);
 			}
 			SetDiagnosticElapsed ("deploy.symlink.shell.update.ms", phase);
+
+			if (!await MarkOverrideSymlinkReady (overridePath)) {
+				return await FallbackToCopy (remoteStagingPath, overridePath);
+			}
 
 			return true;
 		}
@@ -118,7 +128,7 @@ namespace Xamarin.Android.Tasks
 				string targetDirectory = string.IsNullOrEmpty (directory) ? overridePath : $"{overridePath}/{directory}";
 				string sourceDirectory = string.IsNullOrEmpty (directory) ? remoteStagingPath : $"{remoteStagingPath}/{directory}";
 
-				if (previousManifest == null || newInDirectory.Count == currentInDirectory.Count) {
+				if (currentInDirectory.Count > 0 && (previousManifest == null || newInDirectory.Count == currentInDirectory.Count)) {
 					string script = $"rm -f {ShellQuote (targetDirectory)}/*; mkdir -p {ShellQuote (targetDirectory)}; ln -sf {ShellQuote (sourceDirectory)}/* {ShellQuote (targetDirectory)}/";
 					string output = await RunAs ("sh", "-c", script);
 					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
@@ -257,11 +267,16 @@ namespace Xamarin.Android.Tasks
 		async Task<bool> UpdateOverrideCopies (string remoteStagingPath, string overridePath)
 		{
 			var phase = Stopwatch.StartNew ();
+			if (!await ClearOverrideSymlinkReady (overridePath)) {
+				return false;
+			}
+
 			var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
 			SetDiagnosticElapsed ("deploy.fastdeploy2.staging.stat.ms", phase);
 			if (stagedFileData == null) {
 				return false;
 			}
+			stagedFileData.Remove (RemoteReadyMarker);
 
 			phase.Restart ();
 			var overrideFileData = await GetRemoteFileData (overridePath, runAs: true);
@@ -342,7 +357,6 @@ namespace Xamarin.Android.Tasks
 					pushed += counts.pushed;
 					skipped += counts.skipped;
 					batches++;
-					LogDiagnostic (result.Output);
 				}
 			}
 			SetDiagnosticProperty ("deploy.fastdeploy2.adb.pushed.files", pushed);
@@ -365,9 +379,20 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
+		async Task<bool> ResetRemoteStagingDirectory (string remoteStagingPath)
+		{
+			var result = await RunAdbCommand ("shell", "rm", "-rf", remoteStagingPath);
+			if (result.ExitCode != 0 || IsShellError (result.Output, "rm")) {
+				LogFastDeploy2Error ("XA0129", result.Output, remoteStagingPath);
+				return false;
+			}
+			return true;
+		}
+
 		IEnumerable<List<string>> BatchPushFilesWithoutSync (List<DirectPushFile> files, string remoteDirectory)
 		{
 			var batch = CreatePushArgsPrefix ();
+			int prefixCount = batch.Count;
 			int length = EstimateCommandLength (batch) + remoteDirectory.Length + 4;
 			foreach (var file in files) {
 				if (Path.GetFileName (file.LocalPath) != Path.GetFileName (file.RelativePath)) {
@@ -376,7 +401,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				int itemLength = file.LocalPath.Length + 3;
-				if (batch.Count > 1 && length + itemLength >= MaxAdbCommandLength) {
+				if (batch.Count > prefixCount && length + itemLength >= MaxAdbCommandLength) {
 					batch.Add (remoteDirectory);
 					yield return batch;
 					batch = CreatePushArgsPrefix ();
@@ -385,7 +410,7 @@ namespace Xamarin.Android.Tasks
 				batch.Add (file.LocalPath);
 				length += itemLength;
 			}
-			if (batch.Count > 1) {
+			if (batch.Count > prefixCount) {
 				batch.Add (remoteDirectory);
 				yield return batch;
 			}
@@ -424,6 +449,35 @@ namespace Xamarin.Android.Tasks
 			return result.ExitCode == 0;
 		}
 
+		async Task<bool> IsOverrideSymlinkReady (string overridePath)
+		{
+			string output = await RunAs ("sh", "-c", $"test -f {ShellQuote ($"{overridePath}/{OverrideSymlinkReadyMarker}")} && echo yes || true");
+			if (RaiseRunAsError (output)) {
+				return false;
+			}
+			return string.Equals (output?.Trim (), "yes", StringComparison.Ordinal);
+		}
+
+		async Task<bool> MarkOverrideSymlinkReady (string overridePath)
+		{
+			string output = await RunAs ("sh", "-c", $"mkdir -p {ShellQuote (overridePath)}; touch {ShellQuote ($"{overridePath}/{OverrideSymlinkReadyMarker}")}");
+			if (RaiseRunAsError (output) || IsShellError (output, "mkdir") || IsShellError (output, "touch")) {
+				LogFastDeploy2Error ("XA0129", output, overridePath);
+				return false;
+			}
+			return true;
+		}
+
+		async Task<bool> ClearOverrideSymlinkReady (string overridePath)
+		{
+			string output = await RunAs ("rm", "-f", $"{overridePath}/{OverrideSymlinkReadyMarker}");
+			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
+				LogFastDeploy2Error ("XA0129", output, overridePath);
+				return false;
+			}
+			return true;
+		}
+
 		async Task MarkRemoteReady (string remoteStagingPath)
 		{
 			await RunAdbCommand ("shell", "touch", $"{remoteStagingPath}/{RemoteReadyMarker}");
@@ -454,7 +508,7 @@ namespace Xamarin.Android.Tasks
 
 		string GetManifestFilePath ()
 		{
-			return Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy2", GetSafeFileName (PackageName), GetSafeFileName (GetUserId ()), GetSafeFileName (PrimaryCpuAbi), "manifest.json");
+			return Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy2", GetSafeFileName (GetDeviceId ()), GetSafeFileName (PackageName), GetSafeFileName (GetUserId ()), GetSafeFileName (PrimaryCpuAbi), "manifest.json");
 		}
 
 		static string GetSafeFileName (string value)
