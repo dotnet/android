@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -108,6 +109,34 @@ namespace Xamarin.Android.Build.Tests {
 			var secondWriteTime = File.GetLastWriteTimeUtc (typeMapPath);
 			Assert.AreEqual (firstWriteTime, secondWriteTime,
 				"Typemap assembly should NOT be rewritten when content hasn't changed.");
+		}
+
+		[Test]
+		public void Execute_MaxArrayRankChange_RewritesGeneratedAssemblies ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+
+			var task1 = CreateTask (assemblies, outputDir, javaDir);
+			task1.MaxArrayRank = 0;
+			Assert.IsTrue (task1.Execute (), "First run should succeed.");
+			Assert.IsFalse (GeneratedAssembliesContainType (task1.GeneratedAssemblies, "__ArrayMapRank1"),
+				"MaxArrayRank=0 should not emit array-rank sentinel types.");
+
+			var task2 = CreateTask (assemblies, outputDir, javaDir);
+			task2.MaxArrayRank = 1;
+			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
+			Assert.IsTrue (GeneratedAssembliesContainType (task2.GeneratedAssemblies, "__ArrayMapRank1"),
+				"Changing MaxArrayRank should rewrite generated typemap assemblies even when source assemblies did not change.");
 		}
 
 		[Test]
@@ -333,6 +362,17 @@ namespace Xamarin.Android.Build.Tests {
 			var item = new TaskItem (path);
 			item.SetMetadata ("HasMonoAndroidReference", "True");
 			return item;
+		}
+
+		static bool GeneratedAssembliesContainType (IEnumerable<ITaskItem> assemblies, string typeName)
+		{
+			foreach (var assemblyPath in assemblies.Select (a => a.ItemSpec)) {
+				using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+				if (assembly.Modules.SelectMany (m => m.Types).Any (t => t.Name == typeName)) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

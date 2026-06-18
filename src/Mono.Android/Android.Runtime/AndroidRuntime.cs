@@ -355,6 +355,9 @@ namespace Android.Runtime {
 			if (j != null) {
 				return GetReplacementTypeCore (j) ?? j;
 			}
+			// Intentionally don't call base.GetSimpleReference(type): Android's
+			// non-trimmable runtime uses the generated/registered typemap, not
+			// Java.Interop's JniTypeSignatureAttribute fallback.
 			return null;
 		}
 
@@ -366,6 +369,7 @@ namespace Android.Runtime {
 			if (j != null) {
 				return [j];
 			}
+			// Keep this in sync with GetSimpleReference(): no base fallback.
 			return [];
 		}
 

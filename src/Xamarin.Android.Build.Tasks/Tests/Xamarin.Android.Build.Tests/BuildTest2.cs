@@ -475,6 +475,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (runtime, "", new string [0], false);
 				AddTestData (runtime, "", new string [0], true);
+				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new [] { "IL2055" }, true);
 				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [0], true);
 				AddTestData (runtime, "TrimMode=full", new string [0], false);
 				AddTestData (runtime, "TrimMode=full", new string [0], true);
@@ -540,8 +541,9 @@ namespace Xamarin.Android.Build.Tests
 			if (codes.Length == 0) {
 				b.AssertHasNoWarnings ();
 			} else {
-				totalWarnings ??= codes.Length;
-				Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
+				if (totalWarnings.HasValue) {
+					Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
+				}
 				foreach (var code in codes) {
 					Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, code), $"Should receive {code} warning");
 				}

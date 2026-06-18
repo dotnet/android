@@ -173,7 +173,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				packageNamingPolicy: PackageNamingPolicy,
 				maxArrayRank: MaxArrayRank);
 
-			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
+			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies);
 			WriteGeneratedAssembliesListFile (GeneratedAssemblies);
 			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
 			DeletedJavaFiles = DeleteStaleJavaSources (GeneratedJavaFiles);
@@ -251,17 +251,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		Files.CopyIfStringChanged (text, GeneratedAssembliesListFile);
 	}
 
-	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
+	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies)
 	{
-		// Build a map from assembly name -> source path for timestamp comparison
-		var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
-		foreach (var path in assemblyPaths) {
-			var name = Path.GetFileNameWithoutExtension (path);
-			sourcePathByName [name] = path;
-		}
-
 		var items = new List<ITaskItem> ();
-		bool anyRegenerated = false;
 
 		foreach (var assembly in assemblies) {
 			if (assembly.Name == "_Microsoft.Android.TypeMaps") {
@@ -269,48 +261,21 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			}
 
 			string outputPath = Path.Combine (OutputDirectory, assembly.Name + ".dll");
-			// Extract the original assembly name from the typemap name (e.g., "_Foo.TypeMap" -> "Foo")
-			string originalName = assembly.Name;
-			if (originalName.StartsWith ("_", StringComparison.Ordinal) && originalName.EndsWith (".TypeMap", StringComparison.Ordinal)) {
-				originalName = originalName.Substring (1, originalName.Length - ".TypeMap".Length - 1);
-			}
-
-			if (IsUpToDate (outputPath, originalName, sourcePathByName)) {
-				Log.LogDebugMessage ($"  {assembly.Name}: up to date, skipping");
-			} else {
-				Files.CopyIfStreamChanged (assembly.Content, outputPath);
-				anyRegenerated = true;
-				Log.LogDebugMessage ($"  {assembly.Name}: written");
-			}
+			var changed = Files.CopyIfStreamChanged (assembly.Content, outputPath);
+			Log.LogDebugMessage ($"  {assembly.Name}: {(changed ? "written" : "unchanged")}");
 
 			items.Add (new TaskItem (outputPath));
 		}
 
-		// Root assembly — regenerate if any per-assembly typemap changed
 		var rootAssembly = assemblies.FirstOrDefault (a => a.Name == "_Microsoft.Android.TypeMaps");
 		if (rootAssembly is not null) {
 			string rootOutputPath = Path.Combine (OutputDirectory, rootAssembly.Name + ".dll");
-			if (anyRegenerated || !File.Exists (rootOutputPath)) {
-				Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
-				Log.LogDebugMessage ($"  Root: written");
-			} else {
-				Log.LogDebugMessage ($"  Root: up to date, skipping");
-			}
+			var changed = Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
+			Log.LogDebugMessage ($"  Root: {(changed ? "written" : "unchanged")}");
 			items.Add (new TaskItem (rootOutputPath));
 		}
 
 		return items.ToArray ();
-	}
-
-	static bool IsUpToDate (string outputPath, string assemblyName, Dictionary<string, string> sourcePathByName)
-	{
-		if (!File.Exists (outputPath)) {
-			return false;
-		}
-		if (!sourcePathByName.TryGetValue (assemblyName, out var sourcePath)) {
-			return false;
-		}
-		return File.GetLastWriteTimeUtc (outputPath) >= File.GetLastWriteTimeUtc (sourcePath);
 	}
 
 	ITaskItem [] WriteJavaSourcesToDisk (IReadOnlyList<GeneratedJavaSource> javaSources)
