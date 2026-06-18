@@ -1241,6 +1241,23 @@ namespace Xamarin.Android.Tasks
 			return result;
 		}
 
+		protected async Task<string> RunAsShell (string script)
+		{
+			List<string> args = BuildRunAsArgs ();
+			args.Add ("sh");
+			args.Add ("-c");
+			args.Add (script);
+			string command = string.Join (" ", args.Select (QuoteShellArgument));
+			string result = await Device.RunShellCommand (command, CancellationToken);
+			LogDebugMessage ($"sh returned: {result}");
+			return result;
+		}
+
+		static string QuoteShellArgument (string value)
+		{
+			return "'" + value.Replace ("'", "'\"'\"'") + "'";
+		}
+
 		protected string ResolveAdbPath ()
 		{
 			var exe = string.IsNullOrEmpty (AdbToolExe) ? "adb" : AdbToolExe;
