@@ -91,6 +91,7 @@ namespace Xamarin.Android.Tasks
 			public bool AdbIsRoot { get; set; } = false;
 			public string UserId { get; set; } = null;
 			public string PackageName { get; set; } = null;
+			public int ProcessId { get; set; } = 0;
 		}
 
 		class DiagnosticData {
@@ -144,6 +145,7 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.orchestration.run-as-disabled-check.ms", "" },
 				{ "deploy.orchestration.package-check.ensure-user.ms", "" },
 				{ "deploy.orchestration.package-check.run-as-pwd.ms", "" },
+				{ "deploy.orchestration.package-check.run-as-pwd-pidof.ms", "" },
 				{ "deploy.orchestration.package-check.readlink.ms", "" },
 				{ "deploy.orchestration.package-check.system-app.ms", "" },
 				{ "deploy.orchestration.package-check.evaluate.ms", "" },
@@ -349,10 +351,19 @@ namespace Xamarin.Android.Tasks
 			var phase = Stopwatch.StartNew ();
 			packageInfo.UserId = UserID;
 			packageInfo.PackageName = packageName;
+			packageInfo.ProcessId = 0;
 			await EnsureUserIsRunning ();
 			SetDiagnosticElapsed ("deploy.orchestration.package-check.ensure-user.ms", phase);
 			phase.Restart ();
-			packageInfo.InternalPath = packageInfo.InternalPath ?? await RunAs ("pwd");
+			string packageInfoOutput = IsSafePackageNameForShell (packageName) ?
+				await RunAs ("sh", "-c", $"pwd; pidof {packageName} 2>/dev/null || true") :
+				await RunAs ("pwd");
+			SetDiagnosticElapsed ("deploy.orchestration.package-check.run-as-pwd-pidof.ms", phase);
+			ParsePackageInfoOutput (packageInfoOutput);
+			if (string.IsNullOrEmpty (packageInfo.InternalPath)) {
+				packageInfo.InternalPath = packageInfoOutput?.Trim ();
+			}
+			phase.Restart ();
 			SetDiagnosticElapsed ("deploy.orchestration.package-check.run-as-pwd.ms", phase);
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
 				phase.Restart ();
@@ -387,6 +398,43 @@ namespace Xamarin.Android.Tasks
 				diagnosticData.SetProperty ("deploy.supports.fastdev", value: false);
 			}
 			SetDiagnosticElapsed ("deploy.orchestration.package-check.evaluate.ms", phase);
+		}
+
+		static bool IsSafePackageNameForShell (string packageName)
+		{
+			if (string.IsNullOrEmpty (packageName)) {
+				return false;
+			}
+			foreach (char c in packageName) {
+				if (!(char.IsLetterOrDigit (c) || c == '.' || c == '_')) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		void ParsePackageInfoOutput (string output)
+		{
+			if (string.IsNullOrEmpty (output)) {
+				return;
+			}
+
+			string [] lines = output.Replace ("\r", "").Split (new char [] { '\n' }, StringSplitOptions.None);
+			if (lines.Length > 0 && !string.IsNullOrEmpty (lines [0])) {
+				packageInfo.InternalPath = lines [0].Trim ();
+			}
+			if (lines.Length <= 1) {
+				return;
+			}
+
+			string pidLine = lines [1].Trim ();
+			int space = pidLine.IndexOf (' ');
+			if (space >= 0) {
+				pidLine = pidLine.Substring (0, space);
+			}
+			if (int.TryParse (pidLine, out int pid)) {
+				packageInfo.ProcessId = pid;
+			}
 		}
 
 		async Task EnsureUserIsRunning ()
@@ -471,7 +519,10 @@ namespace Xamarin.Android.Tasks
 		async Task TerminateApp ()
 		{
 			var phase = Stopwatch.StartNew ();
-			var pid = await Device.GetProcessId (PackageName, CancellationToken);
+			var pid = packageInfo.ProcessId;
+			if (pid == 0 && packageInfo.IsSystemApplication) {
+				pid = await Device.GetProcessId (PackageName, CancellationToken);
+			}
 			SetDiagnosticElapsed ("deploy.orchestration.terminate.get-pid.ms", phase);
 			if (pid == 0) {
 				LogDebugMessage ($"{PackageName} was not running, skipping kill");
