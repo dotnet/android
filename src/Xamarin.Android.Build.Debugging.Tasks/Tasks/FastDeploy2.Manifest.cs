@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class FastDeploy2
 	{
-		const string RemoteStagingRootPath = "/tmp/fastdeploy2";
+		const string RemoteStagingRootPath = "/data/local/tmp/fastdeploy2";
 		const string RemoteReadyMarker = ".fastdeploy2-ready";
 		const string OverrideSymlinkReadyMarker = ".fastdeploy2-symlinks";
 
@@ -109,7 +109,7 @@ namespace Xamarin.Android.Tasks
 				string sourceDirectory = CombineRemotePath (remoteStagingPath, directory);
 
 				if (currentInDirectory.Count > 0 && (previousManifest == null || newInDirectory.Count == currentInDirectory.Count)) {
-					string script = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&rm -f ./*&&ln -sf \"$s\"/* .";
+					string script = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&rm -rf ./*&&ln -sf \"$s\"/* .";
 					string output = await RunAsShell (script);
 					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
 						LogDiagnostic ($"Shell symlink glob update failed with '{output}'.");
