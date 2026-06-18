@@ -35,13 +35,13 @@
       "Size": 25360
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 103344
+      "Size": 103352
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 559248
+      "Size": 561072
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 26856
+      "Size": 26912
     },
     "lib/arm64-v8a/lib_mscorlib.dll.so": {
       "Size": 21408
@@ -94,6 +94,9 @@
     "lib/arm64-v8a/lib_System.IO.Compression.dll.so": {
       "Size": 34616
     },
+    "lib/arm64-v8a/lib_System.IO.Hashing.dll.so": {
+      "Size": 24280
+    },
     "lib/arm64-v8a/lib_System.IO.IsolatedStorage.dll.so": {
       "Size": 28240
     },
@@ -116,7 +119,7 @@
       "Size": 26984
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 1002392
+      "Size": 1002512
     },
     "lib/arm64-v8a/lib_System.Private.DataContractSerialization.dll.so": {
       "Size": 217816
@@ -131,7 +134,7 @@
       "Size": 35480
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20360
+      "Size": 20376
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
       "Size": 19760
@@ -161,7 +164,7 @@
       "Size": 19248
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 22032
+      "Size": 22048
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Activity.dll.so": {
       "Size": 34896
@@ -257,7 +260,7 @@
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 350464
+      "Size": 350608
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -2435,5 +2438,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 11044711
+  "PackageSize": 11052991
 }

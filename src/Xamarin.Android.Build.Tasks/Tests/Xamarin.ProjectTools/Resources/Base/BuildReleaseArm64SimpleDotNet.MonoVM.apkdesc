@@ -11,31 +11,34 @@
       "Size": 18224
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 92568
+      "Size": 93856
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 119168
+      "Size": 119984
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 26872
+      "Size": 26912
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 24360
+    },
+    "lib/arm64-v8a/lib_System.IO.Hashing.dll.so": {
+      "Size": 24280
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
       "Size": 25552
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 704944
+      "Size": 705536
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 20224
+      "Size": 20232
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
       "Size": 19760
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 20096
+      "Size": 19976
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 19296
@@ -44,7 +47,7 @@
       "Size": 36416
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1387064
+      "Size": 1387008
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3111632
@@ -62,7 +65,7 @@
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19680
+      "Size": 19824
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -89,5 +92,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3320142
+  "PackageSize": 3328422
 }
