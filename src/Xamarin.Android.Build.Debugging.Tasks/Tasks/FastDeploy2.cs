@@ -420,7 +420,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var file in FastDevFiles ?? []) {
 				string localPath = GetFullPath (file.ItemSpec);
 				if (!File.Exists (localPath)) {
-					LogDebugMessage ($"File '{file.ItemSpec}' does not exist. Skipping.");
+					LogDiagnostic ($"File '{file.ItemSpec}' does not exist. Skipping.");
 					continue;
 				}
 				if (Path.GetExtension (file.ItemSpec) == ".so") {
@@ -813,7 +813,7 @@ namespace Xamarin.Android.Tasks
 			List<string> args = BuildRunAsArgs ();
 			args.AddRange (arguments);
 			string result = await Device.RunShellCommand (CancellationToken, args.ToArray ());
-			LogDebugMessage ($"{arguments [0]} returned: {result}");
+			LogCommandOutput (arguments [0], result);
 			return result;
 		}
 
@@ -825,8 +825,16 @@ namespace Xamarin.Android.Tasks
 			args.Add (script);
 			string command = string.Join (" ", args.Select (QuoteShellArgument));
 			string result = await Device.RunShellCommand (command, CancellationToken);
-			LogDebugMessage ($"sh returned: {result}");
+			LogCommandOutput ("sh", result);
 			return result;
+		}
+
+		void LogCommandOutput (string command, string output)
+		{
+			if (string.IsNullOrWhiteSpace (output)) {
+				return;
+			}
+			LogDebugMessage ($"{command} returned: {output.Trim ()}");
 		}
 
 		static string QuoteShellArgument (string value)
