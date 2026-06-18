@@ -1882,20 +1882,7 @@ namespace UnnamedProject
 				StringAssertEx.Contains ("error XA4310", builder.LastBuildOutput, "Error should be XA4310");
 				StringAssertEx.Contains ("`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
 
-				if (runtime != AndroidRuntime.NativeAOT) {
-					builder.AssertHasNoWarnings ();
-					return;
-				}
-
-				// NativeAOT currently (Nov 2025) produces the following warning
-				//  warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
-				string expectedWarning = "warning IL3053:";
-				Assert.IsNotNull (
-					builder.LastBuildOutput
-					  .SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-					  .FirstOrDefault (x => x.Contains (expectedWarning)),
-					$"Build output should contain '{expectedWarning}'."
-				);
+				builder.AssertHasNoWarnings ();
 			}
 		}
 
