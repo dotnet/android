@@ -2256,22 +2256,20 @@ MONO_GC_PARAMS=bridge-implementation=new",
 			Assert.IsTrue (builder.Install (proj), "App should have installed.");
 			RunProjectAndAssert (proj, builder);
 
-			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
 			Assert.IsTrue (
-				WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile, ActivityStartTimeoutInSeconds),
-				"MainActivity should have launched!"
+				MonitorAdbLogcat (line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60),
+				"Stack trace end marker not found in logcat (output may be missing or truncated)."
 			);
 
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
-			StringAssert.Contains ("#STACKTRACE-END#", logcatOutput, "Stack trace end marker not found in logcat (output may be truncated)");
 
 			// Expect a frame in MainActivity.OnCreate to include
-			// "in <path>MainActivity.cs:line <N>".
+			// "in <path>MainActivity.cs:line <N>" on a single line.
 			var match = Regex.Match (
 				logcatOutput,
-				@"at\s+\S*MainActivity\.OnCreate.*\sin\s+\S+MainActivity\.cs:line\s+\d+",
-				RegexOptions.Singleline
+				@"at\s+\S*MainActivity\.OnCreate.*\sin\s+\S+MainActivity\.cs:line\s+\d+"
 			);
 			Assert.IsTrue (
 				match.Success,
