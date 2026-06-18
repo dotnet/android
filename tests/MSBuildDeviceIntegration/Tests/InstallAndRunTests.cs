@@ -2263,7 +2263,8 @@ MONO_GC_PARAMS=bridge-implementation=new",
 			);
 
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
-			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace marker not found in logcat");
+			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
+			StringAssert.Contains ("#STACKTRACE-END#", logcatOutput, "Stack trace end marker not found in logcat (output may be truncated)");
 
 			// Expect a frame in MainActivity.OnCreate to include
 			// "in <path>MainActivity.cs:line <N>".

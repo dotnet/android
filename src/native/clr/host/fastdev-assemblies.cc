@@ -129,6 +129,11 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 		return false;
 	}
 	int dir_fd = dirfd (dir);
+	if (dir_fd < 0) {
+		log_warn (LOG_ASSEMBLY, "FastDev: failed to obtain fd for override dir '{}'. {}"sv, override_dir_path, std::strerror (errno));
+		closedir (dir);
+		return false;
+	}
 
 	size_t count = 0;
 	uint64_t expected_count = type_map.unique_assemblies_count;
