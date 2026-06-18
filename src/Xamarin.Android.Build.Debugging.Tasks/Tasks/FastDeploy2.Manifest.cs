@@ -171,11 +171,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		IEnumerable<string> BatchShellArguments (string prefix, IEnumerable<string> arguments, string suffix = "")
-		{
-			return BatchShellWords (prefix, arguments.Select (ShellQuote), string.IsNullOrEmpty (suffix) ? "" : " " + suffix);
-		}
-
 		IEnumerable<string> BatchShellWords (string prefix, IEnumerable<string> words, string suffix = "")
 		{
 			var builder = new StringBuilder (prefix);
@@ -210,60 +205,6 @@ namespace Xamarin.Android.Tasks
 		static string ShellQuote (string value)
 		{
 			return "'" + value.Replace ("'", "'\"'\"'") + "'";
-		}
-
-		async Task<bool> RemoveOverridePaths (string overridePath, IEnumerable<string> paths)
-		{
-			foreach (var batch in BatchArguments ("rm", "-f", paths.Select (file => $"{overridePath}/{file}"))) {
-				string output = await RunAs (batch.ToArray ());
-				if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-					LogDiagnostic ($"Shell symlink remove failed with '{output}'.");
-					return false;
-				}
-			}
-			return true;
-		}
-
-		async Task<bool> CreateOverrideShellSymlinks (string remoteStagingPath, string overridePath, HashSet<string> newFiles)
-		{
-			var filesByDirectory = new Dictionary<string, List<string>> (StringComparer.Ordinal);
-			foreach (string file in newFiles) {
-				string directory = Path.GetDirectoryName (file)?.Replace ("\\", "/") ?? "";
-				if (!filesByDirectory.TryGetValue (directory, out List<string> files)) {
-					files = new List<string> ();
-					filesByDirectory.Add (directory, files);
-				}
-				files.Add (file);
-			}
-
-			var phase = Stopwatch.StartNew ();
-			foreach (var group in filesByDirectory) {
-				string targetDirectory = string.IsNullOrEmpty (group.Key) ? overridePath : $"{overridePath}/{group.Key}";
-				phase.Restart ();
-				string output = await RunAs ("mkdir", "-p", targetDirectory);
-				AddDiagnosticElapsed ("deploy.fastdeploy2.override.mkdir.ms", phase);
-				if (RaiseRunAsError (output) || IsShellError (output, "mkdir")) {
-					LogDiagnostic ($"Shell symlink mkdir failed with '{output}'.");
-					return false;
-				}
-
-				for (int i = 0; i < group.Value.Count; i += 25) {
-					var args = new List<string> { "ln", "-sf" };
-					foreach (string file in group.Value.Skip (i).Take (25)) {
-						args.Add ($"{remoteStagingPath}/{file}");
-					}
-					args.Add (targetDirectory);
-					phase.Restart ();
-					output = await RunAs (args.ToArray ());
-					AddDiagnosticElapsed ("deploy.fastdeploy2.override.copy.ms", phase);
-					if (RaiseRunAsError (output) || IsShellError (output, "ln")) {
-						LogDiagnostic ($"Shell symlink ln failed with '{output}'.");
-						return false;
-					}
-				}
-			}
-
-			return true;
 		}
 
 		async Task<bool> FallbackToCopy (string remoteStagingPath, string overridePath)

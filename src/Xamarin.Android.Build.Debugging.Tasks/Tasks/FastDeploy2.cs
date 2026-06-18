@@ -660,57 +660,6 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		protected virtual bool UseSymlinkAppFileTransfer ()
-		{
-			return false;
-		}
-
-		protected HashSet<string> PrepareAdbPushStagingDirectory (string stagingDirectory)
-		{
-			if (Directory.Exists (stagingDirectory)) {
-				Directory.Delete (stagingDirectory, recursive: true);
-			}
-			Directory.CreateDirectory (stagingDirectory);
-
-			var stagedFiles = new HashSet<string> (StringComparer.Ordinal);
-			foreach (var file in FastDevFiles ?? Array.Empty<ITaskItem> ()) {
-				if (!File.Exists (file.ItemSpec)) {
-					LogDebugMessage ($"File '{file.ItemSpec}' does not exist. Skipping.");
-					continue;
-				}
-				if (Path.GetExtension (file.ItemSpec) == ".so") {
-					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
-					if (abi != PrimaryCpuAbi) {
-						LogDebugMessage ($"NotifySync SkipCopyFile {file.ItemSpec} abi not suitable for this device.");
-						continue;
-					}
-				}
-
-				string targetPath = GetAdbPushTargetPath (file);
-				string destination = GetStagingFilePath (stagingDirectory, targetPath);
-				Directory.CreateDirectory (Path.GetDirectoryName (destination));
-				File.Copy (file.ItemSpec, destination, overwrite: true);
-				File.SetLastWriteTimeUtc (destination, File.GetLastWriteTimeUtc (file.ItemSpec));
-				stagedFiles.Add (targetPath.Replace ("\\", "/"));
-				LogDiagnostic ($"Staged {file.ItemSpec} => {targetPath}");
-			}
-
-			if (EnvironmentFiles?.Length > 0) {
-				string targetPath = $"{PrimaryCpuAbi}/environment";
-				string destination = GetStagingFilePath (stagingDirectory, targetPath);
-				Directory.CreateDirectory (Path.GetDirectoryName (destination));
-				byte [] environmentData = CreateEnvironmentFileData (EnvironmentFiles, out DateTime newestFileDateTime);
-				if (environmentData.Length > 0) {
-					File.WriteAllBytes (destination, environmentData);
-					File.SetLastWriteTimeUtc (destination, newestFileDateTime);
-					stagedFiles.Add (targetPath);
-					LogDiagnostic ($"Staged @(AndroidEnvironment) files => {targetPath}");
-				}
-			}
-
-			return stagedFiles;
-		}
-
 		string GetAdbPushTargetPath (ITaskItem file)
 		{
 			string targetPath = file.GetMetadata ("TargetPath");
@@ -722,19 +671,6 @@ namespace Xamarin.Android.Tasks
 				return targetPath.Replace ("\\", "/");
 			}
 			return Path.GetFileName (file.ItemSpec);
-		}
-
-		static string GetStagingFilePath (string stagingDirectory, string targetPath)
-		{
-			string fullStagingDirectory = Path.GetFullPath (stagingDirectory);
-			string destination = Path.GetFullPath (Path.Combine (fullStagingDirectory, targetPath.Replace ('/', Path.DirectorySeparatorChar)));
-			string stagingPrefix = fullStagingDirectory.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal) ?
-				fullStagingDirectory :
-				fullStagingDirectory + Path.DirectorySeparatorChar;
-			if (!destination.StartsWith (stagingPrefix, StringComparison.Ordinal)) {
-				throw new InvalidOperationException ($"FastDev target path '{targetPath}' escapes staging directory '{stagingDirectory}'.");
-			}
-			return destination;
 		}
 
 		byte [] CreateEnvironmentFileData (ITaskItem [] environments, out DateTime newestFileDateTime)
@@ -1001,31 +937,6 @@ namespace Xamarin.Android.Tasks
 		protected void SetDiagnosticProperty (string key, string value)
 		{
 			diagnosticData.SetProperty (key, value);
-		}
-
-		protected virtual string GetLocalStagingDirectory ()
-		{
-			return Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy2");
-		}
-
-		protected virtual async Task<bool> UploadStagingDirectory (string stagingDirectory, string remoteStagingPath)
-		{
-			var args = new List<string> { "push" };
-			if (!string.IsNullOrEmpty (AdbPushCompressionAlgorithm)) {
-				args.Add ("-z");
-				args.Add (AdbPushCompressionAlgorithm);
-			}
-			args.Add ("--sync");
-			args.Add (Path.Combine (stagingDirectory, "."));
-			args.Add (remoteStagingPath);
-
-			var result = await RunAdbCommand (args.ToArray ());
-			if (result.ExitCode != 0) {
-				LogFastDeploy2Error ("XA0129", result.Output, stagingDirectory);
-				return false;
-			}
-			SetAdbPushFileCounts (result.Output);
-			return true;
 		}
 
 		protected async Task<bool> UploadFiles (string remoteStagingPath, List<DirectPushFile> files)
