@@ -192,6 +192,11 @@ namespace Xamarin.Android.Tasks
 			public long ModifiedTime { get; set; }
 		}
 
+		protected class DirectPushFile {
+			public string LocalPath { get; set; }
+			public string RelativePath { get; set; }
+		}
+
 		void DebugHandler (string task, string message)
 		{
 			LogDiagnostic ($"DEBUG {task} {message}");
@@ -544,20 +549,20 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath)
 		{
-			string stagingDirectory = GetLocalStagingDirectory ();
 			var phase = Stopwatch.StartNew ();
-			var stagedFiles = PrepareAdbPushStagingDirectory (stagingDirectory);
+			var directPushFiles = PrepareDirectPushFiles ();
+			var stagedFiles = new HashSet<string> (directPushFiles.Select (file => file.RelativePath), StringComparer.Ordinal);
 			SetDiagnosticElapsed ("deploy.fastdeploy2.local.stage.ms", phase);
 			if (stagedFiles.Count == 0) {
-				LogDiagnostic ("No FastDev files were staged for adb push deployment.");
+				LogDiagnostic ("No FastDev files were prepared for adb push deployment.");
 				return true;
 			}
 
 			string remoteStagingPath = GetRemoteAdbPushStagingPath ();
 			phase.Restart ();
-			string output = await Device.RunShellCommand (CancellationToken, "mkdir", "-p", remoteStagingPath);
+			string output = await CreateRemoteStagingDirectories (remoteStagingPath, stagedFiles);
 			SetDiagnosticElapsed ("deploy.fastdeploy2.remote.mkdir.ms", phase);
-			if (IsShellError (output, "mkdir")) {
+			if (!string.IsNullOrEmpty (output) && IsShellError (output, "mkdir")) {
 				LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
 				return false;
 			}
@@ -567,7 +572,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			phase.Restart ();
-			if (!await UploadStagingDirectory (stagingDirectory, remoteStagingPath)) {
+			if (!await UploadFiles (remoteStagingPath, directPushFiles)) {
 				return false;
 			}
 			SetDiagnosticElapsed ("deploy.fastdeploy2.upload.ms", phase);
@@ -595,6 +600,63 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return await CopyChangedFiles (remoteStagingPath, overridePath, stagedFileData, overrideFileData);
+		}
+
+		async Task<string> CreateRemoteStagingDirectories (string remoteStagingPath, HashSet<string> stagedFiles)
+		{
+			var directories = new HashSet<string> (StringComparer.Ordinal) { remoteStagingPath };
+			foreach (var file in stagedFiles) {
+				string directory = Path.GetDirectoryName (file)?.Replace ("\\", "/") ?? "";
+				if (!string.IsNullOrEmpty (directory)) {
+					directories.Add ($"{remoteStagingPath}/{directory}");
+				}
+			}
+
+			var output = new StringBuilder ();
+			foreach (var batch in BatchArguments ("mkdir", "-p", directories)) {
+				output.Append (await Device.RunShellCommand (CancellationToken, batch.ToArray ()));
+			}
+			return output.ToString ();
+		}
+
+		protected List<DirectPushFile> PrepareDirectPushFiles ()
+		{
+			var files = new List<DirectPushFile> ();
+			foreach (var file in FastDevFiles ?? Array.Empty<ITaskItem> ()) {
+				if (!File.Exists (file.ItemSpec)) {
+					LogDebugMessage ($"File '{file.ItemSpec}' does not exists. Skipping.");
+					continue;
+				}
+				if (Path.GetExtension (file.ItemSpec) == ".so") {
+					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
+					if (abi != PrimaryCpuAbi) {
+						LogDebugMessage ($"NotifySync SkipCopyFile {file.ItemSpec} abi not suitable for this device.");
+						continue;
+					}
+				}
+
+				files.Add (new DirectPushFile {
+					LocalPath = GetFullPath (file.ItemSpec),
+					RelativePath = GetAdbPushTargetPath (file),
+				});
+				LogDiagnostic ($"Prepared {file.ItemSpec} => {files [files.Count - 1].RelativePath}");
+			}
+
+			if (EnvironmentFiles?.Length > 0) {
+				byte [] environmentData = CreateEnvironmentFileData (EnvironmentFiles, out DateTime newestFileDateTime);
+				if (environmentData.Length > 0) {
+					string environmentFile = Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy2-environment", PrimaryCpuAbi, "environment");
+					Directory.CreateDirectory (Path.GetDirectoryName (environmentFile));
+					File.WriteAllBytes (environmentFile, environmentData);
+					File.SetLastWriteTimeUtc (environmentFile, newestFileDateTime);
+					files.Add (new DirectPushFile {
+						LocalPath = environmentFile,
+						RelativePath = $"{PrimaryCpuAbi}/environment",
+					});
+				}
+			}
+
+			return files;
 		}
 
 		protected virtual bool UseSymlinkAppFileTransfer ()
@@ -1074,6 +1136,101 @@ namespace Xamarin.Android.Tasks
 			SetAdbPushFileCounts (result.Output);
 			LogDiagnostic (result.Output);
 			return true;
+		}
+
+		protected async Task<bool> UploadFiles (string remoteStagingPath, List<DirectPushFile> files)
+		{
+			int pushed = 0;
+			int skipped = 0;
+			int batches = 0;
+			foreach (var group in files.GroupBy (file => Path.GetDirectoryName (file.RelativePath)?.Replace ("\\", "/") ?? "", StringComparer.Ordinal)) {
+				string remoteDirectory = string.IsNullOrEmpty (group.Key) ? remoteStagingPath : $"{remoteStagingPath}/{group.Key}";
+				foreach (var batch in BatchPushFiles (group.ToList (), remoteDirectory)) {
+					var result = await RunAdbCommand (batch.ToArray ());
+					if (result.ExitCode != 0) {
+						LogFastDeploy2Error ("XA0129", result.Output, remoteDirectory);
+						return false;
+					}
+					var counts = TryParsePushSummary (result.Output);
+					pushed += counts.pushed;
+					skipped += counts.skipped;
+					batches++;
+					LogDiagnostic (result.Output);
+				}
+			}
+			SetDiagnosticProperty ("deploy.fastdeploy2.adb.pushed.files", pushed);
+			SetDiagnosticProperty ("deploy.fastdeploy2.adb.skipped.files", skipped);
+			SetDiagnosticProperty ("deploy.fastdeploy4.bulk.batches", batches);
+			return true;
+		}
+
+		IEnumerable<List<string>> BatchPushFiles (List<DirectPushFile> files, string remoteDirectory)
+		{
+			var batch = CreatePushArgsPrefix ();
+			int length = EstimateCommandLength (batch) + remoteDirectory.Length + 4;
+			foreach (var file in files) {
+				if (Path.GetFileName (file.LocalPath) != Path.GetFileName (file.RelativePath)) {
+					yield return CreatePushArgs (file.LocalPath, $"{remoteDirectory}/{Path.GetFileName (file.RelativePath)}");
+					continue;
+				}
+
+				int itemLength = file.LocalPath.Length + 3;
+				if (batch.Count > 3 && length + itemLength >= 4096) {
+					batch.Add (remoteDirectory);
+					yield return batch;
+					batch = CreatePushArgsPrefix ();
+					length = EstimateCommandLength (batch) + remoteDirectory.Length + 4;
+				}
+				batch.Add (file.LocalPath);
+				length += itemLength;
+			}
+			if (batch.Count > 3) {
+				batch.Add (remoteDirectory);
+				yield return batch;
+			}
+		}
+
+		List<string> CreatePushArgs (string localPath, string remotePath)
+		{
+			var args = CreatePushArgsPrefix ();
+			args.Add (localPath);
+			args.Add (remotePath);
+			return args;
+		}
+
+		List<string> CreatePushArgsPrefix ()
+		{
+			var args = new List<string> { "push" };
+			if (!string.IsNullOrEmpty (AdbPushCompressionAlgorithm)) {
+				args.Add ("-z");
+				args.Add (AdbPushCompressionAlgorithm);
+			}
+			args.Add ("--sync");
+			return args;
+		}
+
+		int EstimateCommandLength (List<string> args)
+		{
+			int length = 0;
+			foreach (var arg in args) {
+				length += arg.Length + 3;
+			}
+			return length;
+		}
+
+		(int pushed, int skipped) TryParsePushSummary (string output)
+		{
+			int pushed = 0;
+			int skipped = 0;
+			foreach (var line in output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+				var match = AdbPushSummaryRegex.Match (line);
+				if (!match.Success) {
+					continue;
+				}
+				pushed = int.Parse (match.Groups ["pushed"].Value);
+				skipped = int.Parse (match.Groups ["skipped"].Value);
+			}
+			return (pushed, skipped);
 		}
 
 		protected void SetAdbPushFileCounts (string output)

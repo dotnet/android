@@ -110,7 +110,7 @@ namespace Xamarin.Android.Tasks
 			return await CopyChangedFiles (remoteStagingPath, overridePath, changedFiles);
 		}
 
-		List<DirectPushFile> PrepareDirectPushFiles ()
+		new List<DirectPushFile> PrepareDirectPushFiles ()
 		{
 			var files = new List<DirectPushFile> ();
 			foreach (var file in FastDevFiles ?? Array.Empty<Microsoft.Build.Framework.ITaskItem> ()) {
@@ -480,7 +480,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		class DirectPushFile
+		new class DirectPushFile
 		{
 			public string LocalPath { get; set; }
 			public string RelativePath { get; set; }

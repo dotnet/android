@@ -326,6 +326,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <_FastDeploymentDiagnosticLogging Condition=" '$(_FastDeploymentDiagnosticLogging)' == '' ">False</_FastDeploymentDiagnosticLogging>
       <_AndroidFastDevStrategy Condition=" '$(_AndroidFastDevStrategy)' == '' ">FastDeploy</_AndroidFastDevStrategy>
       <_AndroidFastDeploy4PushMode Condition=" '$(_AndroidFastDeploy4PushMode)' == '' ">SingleFile</_AndroidFastDeploy4PushMode>
+      <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' And '$(_AndroidFastDevStrategy)' == 'FastDeploy2' ">Symlink</_AndroidFastDeployAppFileTransferMode>
       <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
       <AndroidFastDeploymentAdbCompressionAlgorithm Condition=" '$(AndroidFastDeploymentAdbCompressionAlgorithm)' == '' ">any</AndroidFastDeploymentAdbCompressionAlgorithm>
     </PropertyGroup>
