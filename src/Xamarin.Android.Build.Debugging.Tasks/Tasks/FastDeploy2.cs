@@ -618,6 +618,11 @@ namespace Xamarin.Android.Tasks
 		{
 			var files = new List<DirectPushFile> ();
 			foreach (var file in FastDevFiles ?? Array.Empty<ITaskItem> ()) {
+				string localPath = GetFullPath (file.ItemSpec);
+				if (!File.Exists (localPath)) {
+					LogDebugMessage ($"File '{file.ItemSpec}' does not exist. Skipping.");
+					continue;
+				}
 				if (Path.GetExtension (file.ItemSpec) == ".so") {
 					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
 					if (abi != PrimaryCpuAbi) {
@@ -627,7 +632,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				files.Add (new DirectPushFile {
-					LocalPath = GetFullPath (file.ItemSpec),
+					LocalPath = localPath,
 					RelativePath = GetAdbPushTargetPath (file),
 				});
 				LogDiagnostic ($"Prepared {file.ItemSpec} => {files [files.Count - 1].RelativePath}");

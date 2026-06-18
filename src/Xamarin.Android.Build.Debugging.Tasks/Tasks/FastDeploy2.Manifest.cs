@@ -210,13 +210,17 @@ namespace Xamarin.Android.Tasks
 		async Task<bool> FallbackToCopy (string remoteStagingPath, string overridePath)
 		{
 			SetDiagnosticProperty ("deploy.symlink.tool.result", "shell fallback to copy");
-			return await UpdateOverrideCopies (remoteStagingPath, overridePath);
+			return await UpdateOverrideCopies (remoteStagingPath, overridePath, clearOverrideDirectory: true);
 		}
 
-		async Task<bool> UpdateOverrideCopies (string remoteStagingPath, string overridePath)
+		async Task<bool> UpdateOverrideCopies (string remoteStagingPath, string overridePath, bool clearOverrideDirectory = false)
 		{
 			var phase = Stopwatch.StartNew ();
-			if (!await ClearOverrideSymlinkReady (overridePath)) {
+			if (clearOverrideDirectory) {
+				if (!await ClearOverrideDirectory (overridePath)) {
+					return false;
+				}
+			} else if (!await ClearOverrideSymlinkState (overridePath)) {
 				return false;
 			}
 
@@ -417,9 +421,20 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		async Task<bool> ClearOverrideSymlinkReady (string overridePath)
+		async Task<bool> ClearOverrideSymlinkState (string overridePath)
 		{
-			string output = await RunAs ("rm", "-f", $"{overridePath}/{OverrideSymlinkReadyMarker}");
+			string markerPath = $"{overridePath}/{OverrideSymlinkReadyMarker}";
+			string output = await RunAsShell ($"if test -f {ShellQuote (markerPath)}; then rm -rf {ShellQuote (overridePath)}; else rm -f {ShellQuote (markerPath)}; fi");
+			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
+				LogFastDeploy2Error ("XA0129", output, overridePath);
+				return false;
+			}
+			return true;
+		}
+
+		async Task<bool> ClearOverrideDirectory (string overridePath)
+		{
+			string output = await RunAs ("rm", "-rf", overridePath);
 			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
 				LogFastDeploy2Error ("XA0129", output, overridePath);
 				return false;
