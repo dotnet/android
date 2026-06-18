@@ -610,7 +610,7 @@ namespace Xamarin.Android.Tasks
 			return await CopyChangedFiles (remoteStagingPath, overridePath, stagedFileData, overrideFileData);
 		}
 
-		async Task<string> CreateRemoteStagingDirectories (string remoteStagingPath, HashSet<string> stagedFiles)
+		protected async Task<string> CreateRemoteStagingDirectories (string remoteStagingPath, HashSet<string> stagedFiles)
 		{
 			var directories = new HashSet<string> (StringComparer.Ordinal) { remoteStagingPath };
 			foreach (var file in stagedFiles) {
@@ -935,7 +935,7 @@ namespace Xamarin.Android.Tasks
 			return files;
 		}
 
-		async Task<bool> RemoveStaleOverrideFiles (string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
+		protected async Task<bool> RemoveStaleOverrideFiles (string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
 		{
 			var phase = Stopwatch.StartNew ();
 			var staleFiles = new List<string> ();
@@ -960,7 +960,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		async Task<bool> UpdateOverrideSymlinks (string remoteStagingPath, string overridePath, HashSet<string> stagedFiles)
+		protected async Task<bool> UpdateOverrideSymlinks (string remoteStagingPath, string overridePath, HashSet<string> stagedFiles)
 		{
 			var toolInstallPhase = Stopwatch.StartNew ();
 			bool linkToolInstalled = await InstallLinkTool ();
@@ -1117,7 +1117,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		async Task<bool> CopyChangedFiles (string remoteStagingPath, string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
+		protected async Task<bool> CopyChangedFiles (string remoteStagingPath, string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
 		{
 			var phase = Stopwatch.StartNew ();
 			var changedFiles = new List<string> ();
@@ -1171,7 +1171,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		IEnumerable<List<string>> BatchArguments (string command, string option, IEnumerable<string> values)
+		protected IEnumerable<List<string>> BatchArguments (string command, string option, IEnumerable<string> values)
 		{
 			var batch = new List<string> { command, option };
 			int length = command.Length + option.Length + 2;
@@ -1319,7 +1319,7 @@ namespace Xamarin.Android.Tasks
 			return length;
 		}
 
-		(int pushed, int skipped) TryParsePushSummary (string output)
+		protected (int pushed, int skipped) TryParsePushSummary (string output)
 		{
 			int pushed = 0;
 			int skipped = 0;
