@@ -16,13 +16,13 @@ using Xamarin.Android.Build.Debugging.Tasks.Properties;
 
 namespace Xamarin.Android.Tasks
 {
-	public abstract partial class FastDeploy2Base : AsyncTask
+	public partial class FastDeploy2 : AsyncTask
 	{
 		const string OverridePath = "files/.__override__";
 		const int StaleFileRemovalBatchSize = 100;
 		const int CopyBatchSize = 25;
 		const int MaxShellCommandLength = 900;
-		protected const int MaxAdbCommandLength = 4096;
+		const int MaxAdbCommandLength = 4096;
 
 		public override string TaskPrefix => "FD2";
 
@@ -66,9 +66,6 @@ namespace Xamarin.Android.Tasks
 		DateTime lastUpload = DateTime.MinValue;
 		Queue<string> diagnosticLogs = new Queue<string> ();
 		readonly object diagnosticLogsLock = new object ();
-		DiagnosticData diagnosticData = new DiagnosticData ();
-
-		protected virtual string RemoteStagingRoot => "/tmp/fastdev2";
 
 		string OverrideFullPath {
 			get { return packageInfo.IsSystemApplication ? $"{packageInfo.InternalPath}/{OverridePath}" : OverridePath; }
@@ -88,14 +85,39 @@ namespace Xamarin.Android.Tasks
 			public int ProcessId { get; set; } = 0;
 		}
 
-		protected class RemoteFileInfo {
+		class RemoteFileInfo {
 			public long Size { get; set; }
 			public long ModifiedTime { get; set; }
 		}
 
-		protected class DirectPushFile {
+		class DirectPushFile {
 			public string LocalPath { get; set; }
 			public string RelativePath { get; set; }
+		}
+
+		void LogDiagnostic (string message)
+		{
+			if (DiagnosticLogging) {
+				LogDebugMessage (message);
+				return;
+			}
+			lock (diagnosticLogsLock) {
+				diagnosticLogs.Enqueue (message);
+			}
+		}
+
+		void PrintDiagnostics ()
+		{
+			while (true) {
+				string message;
+				lock (diagnosticLogsLock) {
+					if (diagnosticLogs.Count == 0) {
+						break;
+					}
+					message = diagnosticLogs.Dequeue ();
+				}
+				LogMessage (message);
+			}
 		}
 
 		void DebugHandler (string task, string message)
@@ -105,32 +127,23 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
-			var phase = Stopwatch.StartNew ();
 			Device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4);
-			SetDiagnosticElapsed ("deploy.execute.parse-target.ms", phase);
 			if (Device == null) {
 				PrintDiagnostics ();
 				return false;
 			}
 			LogMessage ($"Found device: {Device.ID}");
 
-			phase.Restart ();
 			if (string.IsNullOrEmpty (PrimaryCpuAbi) && !EmbedAssembliesIntoApk) {
-				SetDiagnosticElapsed ("deploy.execute.no-abi-check.ms", phase);
 				PrintDiagnostics ();
 				LogCodedError ("XA0010", Resources.XA0010_NoAbi, Device.ID);
 				return false;
 			}
-			SetDiagnosticElapsed ("deploy.execute.no-abi-check.ms", phase);
 
-			phase.Restart ();
 			var flagFilePath = GetFullPath (UploadFlagFile);
 			lastUpload = File.GetLastWriteTimeUtc (flagFilePath);
 			LogDiagnostic ($"LastWriteTime of `{flagFilePath}`: {lastUpload}");
-			diagnosticData.Task = GetType ().Name;
-			SetDiagnosticElapsed ("deploy.execute.upload-flag-stat.ms", phase);
 
-			phase.Restart ();
 			var lifetime = RegisteredTaskObjectLifetime.AppDomain;
 			var key = ProjectSpecificTaskObjectKey ($"{Device.ID}_{PackageName}_{GetType ().Name}");
 			if (!File.Exists (UploadFlagFile)) {
@@ -138,7 +151,6 @@ namespace Xamarin.Android.Tasks
 			} else {
 				packageInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<PackageInfo> (key, lifetime) ?? new PackageInfo ();
 			}
-			SetDiagnosticElapsed ("deploy.execute.task-cache.ms", phase);
 
 			AndroidLogger.Debug += DebugHandler;
 			try {
@@ -151,52 +163,31 @@ namespace Xamarin.Android.Tasks
 
 		public async override Task RunTaskAsync ()
 		{
-			var sw = Stopwatch.StartNew ();
 			try {
 				await RunInstall ();
 			} catch {
 				PrintDiagnostics ();
 				throw;
-			} finally {
-				sw.Stop ();
-				SaveDiagnosticData (sw.ElapsedMilliseconds);
 			}
 		}
 
 		async Task RunInstall ()
 		{
-			var phase = Stopwatch.StartNew ();
 			await Device.EnsureProperties (CancellationToken).ConfigureAwait (false);
-			SetDiagnosticElapsed ("deploy.orchestration.ensure-properties.ms", phase);
 
-			phase.Restart ();
-			diagnosticData.SetProperty ("target.prop.ro.product.build.version.sdk", Device.Properties?.BuildVersionSdk);
-			diagnosticData.SetProperty ("target.prop.ro.product.cpu.abilist", string.Join (";", Device.Properties?.ProductCpuAbiList ?? []));
-			diagnosticData.SetProperty ("target.prop.ro.product.cpu.abi", PrimaryCpuAbi);
-			diagnosticData.SetProperty ("target.prop.ro.product.manufacturer", Device.Properties?.ProductManufacturer);
-			diagnosticData.SetProperty ("target.prop.ro.product.model", Device.Properties?.ProductModel);
-			SetDiagnosticElapsed ("deploy.orchestration.property-capture.ms", phase);
-
-			phase.Restart ();
 			string redirectStdio = Device.Properties.Get ("log.redirect-stdio");
-			SetDiagnosticElapsed ("deploy.orchestration.redirect-stdio-check.ms", phase);
 			if (redirectStdio != null && string.Equals ("true", redirectStdio.Trim (), StringComparison.OrdinalIgnoreCase)) {
 				LogFastDeploy2Error ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
 				return;
 			}
 
-			phase.Restart ();
 			string runAsDisabled = Device.Properties.Get ("ro.boot.disable_runas");
-			SetDiagnosticElapsed ("deploy.orchestration.run-as-disabled-check.ms", phase);
 			if (runAsDisabled != null && string.Equals ("true", runAsDisabled.Trim (), StringComparison.OrdinalIgnoreCase)) {
 				LogFastDeploy2Error ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
 				return;
 			}
-			SetDiagnosticElapsed ("deploy.orchestration.property-checks.ms", phase);
 
-			phase.Restart ();
 			await CheckAppInstalledAndDebuggable (PackageName);
-			SetDiagnosticElapsed ("deploy.orchestration.package-check.ms", phase);
 
 			if (EmbedAssembliesIntoApk) {
 				await RemoveOverrideDirectory ();
@@ -206,26 +197,19 @@ namespace Xamarin.Android.Tasks
 				await Device.UninstallPackage (PackageName, PreserveUserData, CancellationToken);
 			}
 
-			phase.Restart ();
 			bool packageFileOutOfDate = !string.IsNullOrEmpty (PackageFile) &&
 				(packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0 || ReInstall || IsPackageFileOutOfDate ());
-			SetDiagnosticElapsed ("deploy.orchestration.package-timestamp.ms", phase);
 
 			if (packageFileOutOfDate) {
 				try {
-					phase.Restart ();
 					await InstallPackage ();
-					AddDiagnosticElapsed ("deploy.orchestration.install.ms", phase);
 				} catch (Exception ex) {
-					AddDiagnosticElapsed ("deploy.orchestration.install.ms", phase);
 					LogFastDeploy2Error (GetErrorCode (ex), ex.ToString ());
 					return;
 				}
 				if (!EmbedAssembliesIntoApk && packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 					packageInfo.InternalPath = null;
-					phase.Restart ();
 					await CheckAppInstalledAndDebuggable (PackageName);
-					AddDiagnosticElapsed ("deploy.orchestration.package-check.ms", phase);
 					if (RaiseRunAsError (packageInfo.InternalPath)) {
 						return;
 					}
@@ -235,82 +219,59 @@ namespace Xamarin.Android.Tasks
 			if (EmbedAssembliesIntoApk)
 				return;
 
-			phase.Restart ();
 			if ((FastDevFiles?.Length ?? 0) == 0 && (EnvironmentFiles?.Length ?? 0) == 0) {
-				SetDiagnosticElapsed ("deploy.orchestration.empty-check.ms", phase);
 				return;
 			}
-			SetDiagnosticElapsed ("deploy.orchestration.empty-check.ms", phase);
 
-			diagnosticData.SetProperty ("deploy.app.file.transfer.mode", AppFileTransferMode);
-			phase.Restart ();
 			await TerminateApp ();
-			SetDiagnosticElapsed ("deploy.orchestration.terminate.ms", phase);
 			await DeployFastDevFilesWithAdbPush (OverrideFullPath);
 		}
 
 		bool IsPackageFileOutOfDate ()
 		{
-			var phase = Stopwatch.StartNew ();
 			var packageFile = GetFullPath (PackageFile);
 			var lastPackage = File.GetLastWriteTimeUtc (packageFile);
 			LogDiagnostic ($"LastWriteTime of `{packageFile}`: {lastPackage}");
-			SetDiagnosticElapsed ("deploy.orchestration.package-timestamp.path-stat.ms", phase);
 			return lastUpload < lastPackage;
 		}
 
 		async Task CheckAppInstalledAndDebuggable (string packageName)
 		{
-			var phase = Stopwatch.StartNew ();
 			packageInfo.UserId = UserID;
 			packageInfo.PackageName = packageName;
 			packageInfo.ProcessId = 0;
 			await EnsureUserIsRunning ();
-			SetDiagnosticElapsed ("deploy.orchestration.package-check.ensure-user.ms", phase);
-			phase.Restart ();
 			string packageInfoOutput = IsSafePackageNameForShell (packageName) ?
 				await RunAs ("sh", "-c", $"pwd; pidof {packageName} 2>/dev/null || true") :
 				await RunAs ("pwd");
-			SetDiagnosticElapsed ("deploy.orchestration.package-check.run-as-pwd-pidof.ms", phase);
 			ParsePackageInfoOutput (packageInfoOutput);
 			if (string.IsNullOrEmpty (packageInfo.InternalPath)) {
 				packageInfo.InternalPath = packageInfoOutput?.Trim ();
 			}
-			phase.Restart ();
-			SetDiagnosticElapsed ("deploy.orchestration.package-check.run-as-pwd.ms", phase);
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
-				phase.Restart ();
 				packageInfo.InternalPath = await RunAs ("readlink", "-f", ".");
-				SetDiagnosticElapsed ("deploy.orchestration.package-check.readlink.ms", phase);
 			}
-			phase.Restart ();
 			if (packageInfo.InternalPath.IndexOf ("not an application", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} is a system application.");
 				packageInfo.IsSystemApplication = true;
-				diagnosticData.SetProperty ("deploy.systemapp", value: true);
 				string whoami = await Device.RunShellCommand ("whoami");
 				packageInfo.AdbIsRoot = whoami.Trim () == "root";
 				LogDiagnostic ($"using {(packageInfo.AdbIsRoot ? "root" : $"su {packageInfo.UserId}")} to install fast deployment files.");
 				packageInfo.InternalPath = $"/data/user/{(packageInfo.UserId ?? "0")}/{packageInfo.PackageName}";
-				SetDiagnosticElapsed ("deploy.orchestration.package-check.system-app.ms", phase);
 				return;
 			}
 			if (packageInfo.InternalPath.IndexOf ("not debuggable", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} was not debuggable. Forcing ReInstall");
 				ReInstall = true;
-				SetDiagnosticElapsed ("deploy.orchestration.package-check.evaluate.ms", phase);
 				return;
 			}
 			if (packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} was not installed.");
-				SetDiagnosticElapsed ("deploy.orchestration.package-check.evaluate.ms", phase);
 				return;
 			}
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ("run-as not supported on this device.");
-				diagnosticData.SetProperty ("deploy.supports.fastdev", value: false);
 			}
-			SetDiagnosticElapsed ("deploy.orchestration.package-check.evaluate.ms", phase);
 		}
 
 		static bool IsSafePackageNameForShell (string packageName)
@@ -365,7 +326,6 @@ namespace Xamarin.Android.Tasks
 		{
 			LogDebugMessage ($"Installing Package {PackageName}");
 			try {
-				var phase = Stopwatch.StartNew ();
 				await Device.PushAndInstallPackageAsync (new PushAndInstallCommand {
 					ApkFile = PackageFile,
 					PackageName = PackageName,
@@ -373,7 +333,6 @@ namespace Xamarin.Android.Tasks
 					User = UserID,
 					TestOnly = IsTestOnly,
 				}, token: CancellationToken);
-				SetDiagnosticElapsed ("deploy.orchestration.install.push-install.ms", phase);
 				LogDebugMessage ($"Installed Package {PackageName}.");
 			} catch (Exception exception) {
 				var ex = exception;
@@ -400,27 +359,21 @@ namespace Xamarin.Android.Tasks
 				return false;
 
 			LogDebugMessage (string.Format ("Package '{0}' already exists. Retrying...", PackageName));
-			var phase = Stopwatch.StartNew ();
 			try {
 				await Device.DeleteFile (e.PackageFile, true, CancellationToken);
 			} catch {
 			}
-			SetDiagnosticElapsed ("deploy.orchestration.install.retry-delete.ms", phase);
 			bool preserveData = !(e is RequiresUninstallException);
 			LogDebugMessage (string.Format ("Forcing complete uninstall of '{0}'... Preserving Data: {1}", PackageName, preserveData));
 			var uninstallCommand = new PmUninstallCommand () { PackageName = PackageName, User = UserID, PreserveData = preserveData };
-			phase.Restart ();
 			await Device.UninstallPackage (uninstallCommand, cancellationToken: CancellationToken);
-			SetDiagnosticElapsed ("deploy.orchestration.install.retry-uninstall.ms", phase);
 			LogDebugMessage (string.Format ("Installing '{0}'...", PackageName));
-			phase.Restart ();
 			await Device.PushAndInstallPackageAsync (new PushAndInstallCommand {
 				ApkFile = PackageFile,
 				PackageName = PackageName,
 				ReInstall = false,
 				User = UserID
 			}, token: CancellationToken);
-			SetDiagnosticElapsed ("deploy.orchestration.install.retry-reinstall.ms", phase);
 			return false;
 		}
 
@@ -431,75 +384,20 @@ namespace Xamarin.Android.Tasks
 
 		async Task TerminateApp ()
 		{
-			var phase = Stopwatch.StartNew ();
 			var pid = packageInfo.ProcessId;
 			if (pid == 0 && packageInfo.IsSystemApplication) {
 				pid = await Device.GetProcessId (PackageName, CancellationToken);
 			}
-			SetDiagnosticElapsed ("deploy.orchestration.terminate.get-pid.ms", phase);
 			if (pid == 0) {
 				LogDebugMessage ($"{PackageName} was not running, skipping kill");
 				return;
 			}
 			LogDebugMessage ($"Terminating {PackageName}...");
-			phase.Restart ();
 			await Device.KillProcessAndWaitForExit (PackageName, CancellationToken);
-			SetDiagnosticElapsed ("deploy.orchestration.terminate.kill.ms", phase);
 			LogDebugMessage ($"{PackageName} Terminated.");
 		}
 
-		protected virtual async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath)
-		{
-			var phase = Stopwatch.StartNew ();
-			var directPushFiles = PrepareDirectPushFiles ();
-			var stagedFiles = new HashSet<string> (directPushFiles.Select (file => file.RelativePath), StringComparer.Ordinal);
-			SetDiagnosticElapsed ("deploy.fastdeploy2.local.stage.ms", phase);
-			if (stagedFiles.Count == 0) {
-				LogDiagnostic ("No FastDev files were prepared for adb push deployment.");
-				return true;
-			}
-
-			string remoteStagingPath = GetRemoteAdbPushStagingPath ();
-			phase.Restart ();
-			string output = await CreateRemoteStagingDirectories (remoteStagingPath, stagedFiles);
-			SetDiagnosticElapsed ("deploy.fastdeploy2.remote.mkdir.ms", phase);
-			if (!string.IsNullOrEmpty (output) && IsShellError (output, "mkdir")) {
-				LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
-				return false;
-			}
-
-			if (!await RemoveStaleRemoteStagingFiles (remoteStagingPath, stagedFiles)) {
-				return false;
-			}
-
-			phase.Restart ();
-			if (!await UploadFiles (remoteStagingPath, directPushFiles)) {
-				return false;
-			}
-			SetDiagnosticElapsed ("deploy.fastdeploy2.upload.ms", phase);
-
-			phase.Restart ();
-			var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
-			SetDiagnosticElapsed ("deploy.fastdeploy2.staging.stat.ms", phase);
-			if (stagedFileData == null) {
-				return false;
-			}
-
-			phase.Restart ();
-			var overrideFileData = await GetRemoteFileData (overridePath, runAs: true);
-			SetDiagnosticElapsed ("deploy.fastdeploy2.override.stat.ms", phase);
-			if (overrideFileData == null) {
-				return false;
-			}
-
-			if (!await RemoveStaleOverrideFiles (overridePath, stagedFileData, overrideFileData)) {
-				return false;
-			}
-
-			return await CopyChangedFiles (remoteStagingPath, overridePath, stagedFileData, overrideFileData);
-		}
-
-		protected async Task<string> CreateRemoteStagingDirectories (string remoteStagingPath, HashSet<string> stagedFiles)
+		async Task<string> CreateRemoteStagingDirectories (string remoteStagingPath, HashSet<string> stagedFiles)
 		{
 			var directories = new HashSet<string> (StringComparer.Ordinal) { remoteStagingPath };
 			foreach (var file in stagedFiles) {
@@ -516,7 +414,7 @@ namespace Xamarin.Android.Tasks
 			return output.ToString ();
 		}
 
-		protected List<DirectPushFile> PrepareDirectPushFiles ()
+		List<DirectPushFile> PrepareDirectPushFiles ()
 		{
 			var files = new List<DirectPushFile> ();
 			foreach (var file in FastDevFiles ?? []) {
@@ -555,7 +453,7 @@ namespace Xamarin.Android.Tasks
 			return files;
 		}
 
-		protected bool WriteFileIfChanged (string path, byte [] contents, DateTime modifiedDateTime)
+		bool WriteFileIfChanged (string path, byte [] contents, DateTime modifiedDateTime)
 		{
 			if (File.Exists (path) && File.ReadAllBytes (path).SequenceEqual (contents)) {
 				return false;
@@ -628,43 +526,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected async Task<bool> RemoveStaleRemoteStagingFiles (string remoteStagingPath, HashSet<string> stagedFiles)
-		{
-			var phase = Stopwatch.StartNew ();
-			string filelist = await Device.RunShellCommand (CancellationToken, "find", remoteStagingPath, "-type", "f");
-			if (IsShellError (filelist, "find")) {
-				LogFastDeploy2Error ("XA0129", filelist, remoteStagingPath);
-				return false;
-			}
-
-			string prefix = remoteStagingPath.TrimEnd ('/') + "/";
-			var staleFiles = new List<string> ();
-			foreach (string line in filelist.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-				string remoteFile = line.Trim ();
-				if (!remoteFile.StartsWith (prefix, StringComparison.Ordinal)) {
-					continue;
-				}
-				string relativePath = remoteFile.Substring (prefix.Length);
-				if (!stagedFiles.Contains (relativePath)) {
-					staleFiles.Add (remoteFile);
-				}
-			}
-
-			for (int i = 0; i < staleFiles.Count; i += StaleFileRemovalBatchSize) {
-				var args = new List<string> { "rm", "-f" };
-				args.AddRange (staleFiles.Skip (i).Take (StaleFileRemovalBatchSize));
-				string output = await Device.RunShellCommand (CancellationToken, args.ToArray ());
-				if (IsShellError (output, "rm")) {
-					LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
-					return false;
-				}
-			}
-
-			SetDiagnosticElapsed ("deploy.fastdeploy2.remote.staging.cleanup.ms", phase);
-			return true;
-		}
-
-		protected async Task<Dictionary<string, RemoteFileInfo>> GetRemoteFileData (string rootPath, bool runAs)
+		async Task<Dictionary<string, RemoteFileInfo>> GetRemoteFileData (string rootPath, bool runAs)
 		{
 			string output;
 			if (runAs) {
@@ -714,9 +576,8 @@ namespace Xamarin.Android.Tasks
 			return files;
 		}
 
-		protected async Task<bool> RemoveStaleOverrideFiles (string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
+		async Task<bool> RemoveStaleOverrideFiles (string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
 		{
-			var phase = Stopwatch.StartNew ();
 			var staleFiles = new List<string> ();
 			foreach (var file in overrideFiles.Keys) {
 				if (!stagedFiles.ContainsKey (file)) {
@@ -725,7 +586,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LogDiagnostic ($"FastDeploy2 removing {staleFiles.Count} stale override files.");
-			diagnosticData.SetProperty ("deploy.fastdeploy2.stale.files", staleFiles.Count);
 			for (int i = 0; i < staleFiles.Count; i += StaleFileRemovalBatchSize) {
 				var args = new List<string> { "rm", "-f" };
 				args.AddRange (staleFiles.Skip (i).Take (StaleFileRemovalBatchSize));
@@ -735,13 +595,11 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 			}
-			SetDiagnosticElapsed ("deploy.fastdeploy2.stale.remove.ms", phase);
 			return true;
 		}
 
-		protected async Task<bool> CopyChangedFiles (string remoteStagingPath, string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
+		async Task<bool> CopyChangedFiles (string remoteStagingPath, string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
 		{
-			var phase = Stopwatch.StartNew ();
 			var changedFiles = new List<string> ();
 			foreach (var file in stagedFiles) {
 				if (!overrideFiles.TryGetValue (file.Key, out RemoteFileInfo existing) ||
@@ -750,17 +608,13 @@ namespace Xamarin.Android.Tasks
 					changedFiles.Add (file.Key);
 				}
 			}
-			SetDiagnosticElapsed ("deploy.fastdeploy2.compare.ms", phase);
 
 			LogDiagnostic ($"FastDeploy2 copying {changedFiles.Count} changed override files.");
-			diagnosticData.SetProperty ("deploy.fastdeploy2.changed.files", changedFiles.Count);
 			var filesByDirectory = GroupFilesByDirectory (changedFiles);
 
 			foreach (var group in filesByDirectory) {
 				string targetDirectory = CombineRemotePath (overridePath, group.Key);
-				phase.Restart ();
 				string output = await RunAs ("mkdir", "-p", targetDirectory);
-				AddDiagnosticElapsed ("deploy.fastdeploy2.override.mkdir.ms", phase);
 				if (RaiseRunAsError (output) || IsShellError (output, "mkdir")) {
 					LogFastDeploy2Error ("XA0129", output, targetDirectory);
 					return false;
@@ -783,9 +637,7 @@ namespace Xamarin.Android.Tasks
 						args.Add (CombineRemotePath (remoteStagingPath, file));
 					}
 					args.Add (targetDirectory);
-					phase.Restart ();
 					output = await RunAs (args.ToArray ());
-					AddDiagnosticElapsed ("deploy.fastdeploy2.override.copy.ms", phase);
 					if (RaiseRunAsError (output) || IsShellError (output, "cp")) {
 						LogFastDeploy2Error ("XA0129", output, targetDirectory);
 						return false;
@@ -796,7 +648,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		protected IEnumerable<List<string>> BatchArguments (string command, string option, IEnumerable<string> values)
+		IEnumerable<List<string>> BatchArguments (string command, string option, IEnumerable<string> values)
 		{
 			var batch = new List<string> { command, option };
 			int length = command.Length + option.Length + 2;
@@ -811,58 +663,6 @@ namespace Xamarin.Android.Tasks
 				length += itemLength;
 			}
 			if (batch.Count > 2) {
-				yield return batch;
-			}
-		}
-
-		protected async Task<bool> UploadFiles (string remoteStagingPath, List<DirectPushFile> files)
-		{
-			int pushed = 0;
-			int skipped = 0;
-			int batches = 0;
-			foreach (var group in files.GroupBy (file => GetDirectoryName (file.RelativePath), StringComparer.Ordinal)) {
-				string remoteDirectory = CombineRemotePath (remoteStagingPath, group.Key);
-				foreach (var batch in BatchPushFiles (group.ToList (), remoteDirectory)) {
-					var result = await RunAdbCommand (batch.ToArray ());
-					if (result.ExitCode != 0) {
-						LogFastDeploy2Error ("XA0129", result.Output, remoteDirectory);
-						return false;
-					}
-					var counts = TryParsePushSummary (result.Output);
-					pushed += counts.pushed;
-					skipped += counts.skipped;
-					batches++;
-				}
-			}
-			SetDiagnosticProperty ("deploy.fastdeploy2.adb.pushed.files", pushed);
-			SetDiagnosticProperty ("deploy.fastdeploy2.adb.skipped.files", skipped);
-			SetDiagnosticProperty ("deploy.fastdeploy2.bulk.batches", batches);
-			return true;
-		}
-
-		IEnumerable<List<string>> BatchPushFiles (List<DirectPushFile> files, string remoteDirectory)
-		{
-			var batch = CreatePushArgsPrefix ();
-			int prefixCount = batch.Count;
-			int length = EstimateCommandLength (batch) + remoteDirectory.Length + 4;
-			foreach (var file in files) {
-				if (Path.GetFileName (file.LocalPath) != Path.GetFileName (file.RelativePath)) {
-					yield return CreatePushArgs (file.LocalPath, CombineRemotePath (remoteDirectory, Path.GetFileName (file.RelativePath)));
-					continue;
-				}
-
-				int itemLength = file.LocalPath.Length + 3;
-				if (batch.Count > prefixCount && length + itemLength >= MaxAdbCommandLength) {
-					batch.Add (remoteDirectory);
-					yield return batch;
-					batch = CreatePushArgsPrefix ();
-					length = EstimateCommandLength (batch) + remoteDirectory.Length + 4;
-				}
-				batch.Add (file.LocalPath);
-				length += itemLength;
-			}
-			if (batch.Count > prefixCount) {
-				batch.Add (remoteDirectory);
 				yield return batch;
 			}
 		}
@@ -882,7 +682,6 @@ namespace Xamarin.Android.Tasks
 				args.Add ("-z");
 				args.Add (AdbPushCompressionAlgorithm);
 			}
-			args.Add ("--sync");
 			return args;
 		}
 
@@ -895,7 +694,7 @@ namespace Xamarin.Android.Tasks
 			return length;
 		}
 
-		protected (int pushed, int skipped) TryParsePushSummary (string output)
+		(int pushed, int skipped) TryParsePushSummary (string output)
 		{
 			int pushed = 0;
 			int skipped = 0;
@@ -910,12 +709,12 @@ namespace Xamarin.Android.Tasks
 			return (pushed, skipped);
 		}
 
-		protected async Task<AdbCommandResult> RunAdbCommand (params string [] arguments)
+		async Task<AdbCommandResult> RunAdbCommand (params string [] arguments)
 		{
 			return await RunAdbCommand (arguments, environmentVariables: null);
 		}
 
-		protected async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
+		async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
 		{
 			string adb = ResolveAdbPath ();
 			var processArguments = new ProcessArgumentBuilder ();
@@ -1009,7 +808,7 @@ namespace Xamarin.Android.Tasks
 			return args;
 		}
 
-		protected async Task<string> RunAs (params string [] arguments)
+		async Task<string> RunAs (params string [] arguments)
 		{
 			List<string> args = BuildRunAsArgs ();
 			args.AddRange (arguments);
@@ -1018,7 +817,7 @@ namespace Xamarin.Android.Tasks
 			return result;
 		}
 
-		protected async Task<string> RunAsShell (string script)
+		async Task<string> RunAsShell (string script)
 		{
 			List<string> args = BuildRunAsArgs ();
 			args.Add ("sh");
@@ -1030,28 +829,28 @@ namespace Xamarin.Android.Tasks
 			return result;
 		}
 
-		protected static string QuoteShellArgument (string value)
+		static string QuoteShellArgument (string value)
 		{
 			return "'" + value.Replace ("'", "'\"'\"'") + "'";
 		}
 
-		protected string ResolveAdbPath ()
+		string ResolveAdbPath ()
 		{
 			var exe = string.IsNullOrEmpty (AdbToolExe) ? "adb" : AdbToolExe;
 			return string.IsNullOrEmpty (AdbToolPath) ? exe : Path.Combine (AdbToolPath, exe);
 		}
 
-		protected virtual string GetRemoteAdbPushStagingPath ()
+		string GetRemoteAdbPushStagingPath ()
 		{
 			return $"{RemoteStagingRoot}/{PackageName}/{GetUserId ()}";
 		}
 
-		protected string GetUserId ()
+		string GetUserId ()
 		{
 			return string.IsNullOrEmpty (UserID) ? "0" : UserID;
 		}
 
-		protected string GetDeviceId ()
+		string GetDeviceId ()
 		{
 			if (Device != null && !string.IsNullOrEmpty (Device.ID)) {
 				return Device.ID;
@@ -1059,9 +858,13 @@ namespace Xamarin.Android.Tasks
 			return string.IsNullOrEmpty (AdbTarget) ? "any" : AdbTarget;
 		}
 
-		protected void LogFastDeploy2Error (string errorCode, string error, string file = "")
+		void LogFastDeploy2Error (string errorCode, string error, string file = "")
 		{
-			LogDiagnosticDataError (errorCode, error, file);
+			if (!string.IsNullOrEmpty (file)) {
+				LogDiagnostic ($"{errorCode} while deploying '{file}': {error}");
+			} else {
+				LogDiagnostic ($"{errorCode}: {error}");
+			}
 			PrintDiagnostics ();
 			if (errorCode == "XA0129") {
 				LogCodedError (errorCode, Resources.XA0129_ErrorDeployingFile, file);
@@ -1070,19 +873,19 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected string GetFullPath (string dir) => Path.IsPathRooted (dir) ? dir : Path.GetFullPath (Path.Combine (WorkingDirectory, dir));
+		string GetFullPath (string dir) => Path.IsPathRooted (dir) ? dir : Path.GetFullPath (Path.Combine (WorkingDirectory, dir));
 
-		protected static string GetDirectoryName (string file)
+		static string GetDirectoryName (string file)
 		{
 			return Path.GetDirectoryName (file)?.Replace ("\\", "/") ?? "";
 		}
 
-		protected static string CombineRemotePath (string rootPath, string relativePath)
+		static string CombineRemotePath (string rootPath, string relativePath)
 		{
 			return string.IsNullOrEmpty (relativePath) ? rootPath : $"{rootPath}/{relativePath}";
 		}
 
-		protected static Dictionary<string, List<string>> GroupFilesByDirectory (IEnumerable<string> files)
+		static Dictionary<string, List<string>> GroupFilesByDirectory (IEnumerable<string> files)
 		{
 			var filesByDirectory = new Dictionary<string, List<string>> (StringComparer.Ordinal);
 			foreach (string file in files) {
@@ -1096,10 +899,10 @@ namespace Xamarin.Android.Tasks
 			return filesByDirectory;
 		}
 
-		protected bool RaiseRunAsError (string error)
+		bool RaiseRunAsError (string error)
 		{
 			if (TryGetRunAsErrorCode (error, out var err)) {
-				LogDiagnosticDataError (err.code, err.message);
+				LogDiagnostic ($"{err.code}: {err.message}");
 				PrintDiagnostics ();
 				LogCodedError (err.code, err.message, error);
 				return true;
@@ -1141,7 +944,7 @@ namespace Xamarin.Android.Tasks
 			return "ADB1000";
 		}
 
-		protected static bool IsShellError (string output, string command)
+		static bool IsShellError (string output, string command)
 		{
 			if (string.IsNullOrEmpty (output)) {
 				return false;
@@ -1153,13 +956,13 @@ namespace Xamarin.Android.Tasks
 				output.IndexOf ("not found", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
-		protected static bool IsMissingDirectoryError (string output)
+		static bool IsMissingDirectoryError (string output)
 		{
 			return !string.IsNullOrEmpty (output) &&
 				output.IndexOf ("No such file or directory", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
-		protected struct AdbCommandResult
+		struct AdbCommandResult
 		{
 			public int ExitCode;
 			public string Output;
