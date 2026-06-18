@@ -411,7 +411,7 @@ extends:
           - task: AzureCLI@2
             inputs:
               azureSubscription: "Darc: Maestro Production"
-              scriptType: pscore
+              scriptType: ps
               scriptLocation: inlineScript
               inlineScript: |
                 $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
