@@ -76,8 +76,9 @@ variables:
   value: true
 - name: DOTNET_GENERATE_ASPNET_CERTIFICATE
   value: false
-# Temporary workaround: disable the Roslyn compiler server (VBCSCompiler) to avoid
-# Roslyn-server hangs observed on macOS PR builds after the dotnet/dotnet bump.
-# See https://github.com/dotnet/android/pull/11477.
-- name: UseSharedCompilation
-  value: false
+# Temporary workaround: disable the .NET CLI MSBuild server. Observed parent
+# `dotnet build` processes spinning at ~100% CPU for hours on macOS PR builds
+# after the dotnet/dotnet bump (e.g. hangs during NuGet restore of
+# Java.Interop.sln). See https://github.com/dotnet/android/pull/11477.
+- name: DOTNET_CLI_USE_MSBUILD_SERVER
+  value: 0
