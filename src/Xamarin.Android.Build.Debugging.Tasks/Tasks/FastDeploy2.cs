@@ -23,6 +23,7 @@ namespace Xamarin.Android.Tasks
 		const string OverridePath = "files/.__override__";
 		const int StaleFileRemovalBatchSize = 100;
 		const int CopyBatchSize = 25;
+		const int MaxShellCommandLength = 900;
 
 		public override string TaskPrefix => "FD2";
 
@@ -67,6 +68,8 @@ namespace Xamarin.Android.Tasks
 		public string AdbToolExe { get; set; }
 
 		public string AdbPushCompressionAlgorithm { get; set; } = "any";
+
+		public string AppFileTransferMode { get; set; } = "Copy";
 
 		AndroidDevice Device;
 		PackageInfo packageInfo = new PackageInfo ();
@@ -156,6 +159,9 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.orchestration.install.retry-reinstall.ms", "" },
 				{ "deploy.orchestration.terminate.get-pid.ms", "" },
 				{ "deploy.orchestration.terminate.kill.ms", "" },
+				{ "deploy.app.file.transfer.mode", "" },
+				{ "deploy.symlink.created.files", "" },
+				{ "deploy.symlink.removed.files", "" },
 				{ "pii.deploy.error", "" },
 				{ "pii.deploy.file", "" },
 			};
@@ -330,6 +336,7 @@ namespace Xamarin.Android.Tasks
 			}
 			SetDiagnosticElapsed ("deploy.orchestration.empty-check.ms", phase);
 
+			diagnosticData.SetProperty ("deploy.app.file.transfer.mode", AppFileTransferMode);
 			phase.Restart ();
 			await TerminateApp ();
 			SetDiagnosticElapsed ("deploy.orchestration.terminate.ms", phase);
@@ -565,6 +572,10 @@ namespace Xamarin.Android.Tasks
 			}
 			SetDiagnosticElapsed ("deploy.fastdeploy2.upload.ms", phase);
 
+			if (UseSymlinkAppFileTransfer ()) {
+				return await UpdateOverrideSymlinks (remoteStagingPath, overridePath, stagedFiles);
+			}
+
 			phase.Restart ();
 			var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
 			SetDiagnosticElapsed ("deploy.fastdeploy2.staging.stat.ms", phase);
@@ -584,6 +595,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return await CopyChangedFiles (remoteStagingPath, overridePath, stagedFileData, overrideFileData);
+		}
+
+		protected virtual bool UseSymlinkAppFileTransfer ()
+		{
+			return string.Equals (AppFileTransferMode, "Symlink", StringComparison.OrdinalIgnoreCase);
 		}
 
 		protected HashSet<string> PrepareAdbPushStagingDirectory (string stagingDirectory)
@@ -817,6 +833,127 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
+		async Task<bool> UpdateOverrideSymlinks (string remoteStagingPath, string overridePath, HashSet<string> stagedFiles)
+		{
+			var phase = Stopwatch.StartNew ();
+			var overrideEntries = await GetOverrideEntries (overridePath, includeSymlinks: false);
+			if (overrideEntries == null) {
+				return false;
+			}
+			SetDiagnosticElapsed ("deploy.fastdeploy2.override.stat.ms", phase);
+
+			phase.Restart ();
+			var overrideSymlinks = await GetOverrideEntries (overridePath, includeSymlinks: true);
+			if (overrideSymlinks == null) {
+				return false;
+			}
+			AddDiagnosticElapsed ("deploy.fastdeploy2.override.stat.ms", phase);
+
+			phase.Restart ();
+			var staleFiles = new List<string> ();
+			foreach (var entry in overrideEntries) {
+				if (!stagedFiles.Contains (entry)) {
+					staleFiles.Add ($"{overridePath}/{entry}");
+				}
+			}
+
+			var missingSymlinks = new List<string> ();
+			foreach (var entry in stagedFiles) {
+				if (!overrideSymlinks.Contains (entry)) {
+					missingSymlinks.Add (entry);
+				}
+			}
+			SetDiagnosticElapsed ("deploy.fastdeploy2.compare.ms", phase);
+			SetDiagnosticProperty ("deploy.fastdeploy2.changed.files", missingSymlinks.Count);
+			SetDiagnosticProperty ("deploy.symlink.created.files", missingSymlinks.Count);
+			SetDiagnosticProperty ("deploy.symlink.removed.files", staleFiles.Count + missingSymlinks.Count);
+			SetDiagnosticProperty ("deploy.fastdeploy2.stale.files", staleFiles.Count);
+
+			phase.Restart ();
+			if (!await RemoveOverridePaths (staleFiles.Concat (missingSymlinks.Select (entry => $"{overridePath}/{entry}")))) {
+				return false;
+			}
+			SetDiagnosticElapsed ("deploy.fastdeploy2.stale.remove.ms", phase);
+
+			return await CreateOverrideSymlinks (remoteStagingPath, overridePath, missingSymlinks);
+		}
+
+		async Task<HashSet<string>> GetOverrideEntries (string overridePath, bool includeSymlinks)
+		{
+			string findExpression = includeSymlinks ?
+				$"find {overridePath} -type l -print" :
+				$"find {overridePath} \\( -type f -o -type l \\) -print";
+			string output = await RunAs ("sh", "-c", findExpression);
+			if (RaiseRunAsError (output)) {
+				return null;
+			}
+			if (IsMissingDirectoryError (output)) {
+				return new HashSet<string> (StringComparer.Ordinal);
+			}
+			if (IsShellError (output, "find")) {
+				LogFastDeploy2Error ("XA0129", output, overridePath);
+				return null;
+			}
+
+			var entries = new HashSet<string> (StringComparer.Ordinal);
+			string prefix = overridePath.TrimEnd ('/') + "/";
+			foreach (string line in output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+				string remoteFile = line.Trim ();
+				if (remoteFile.StartsWith (prefix, StringComparison.Ordinal)) {
+					entries.Add (remoteFile.Substring (prefix.Length));
+				}
+			}
+			return entries;
+		}
+
+		async Task<bool> RemoveOverridePaths (IEnumerable<string> paths)
+		{
+			foreach (var batch in BatchArguments ("rm", "-f", paths)) {
+				string output = await RunAs (batch.ToArray ());
+				if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
+					LogFastDeploy2Error ("XA0129", output, string.Join (" ", batch));
+					return false;
+				}
+			}
+			return true;
+		}
+
+		async Task<bool> CreateOverrideSymlinks (string remoteStagingPath, string overridePath, List<string> missingSymlinks)
+		{
+			var filesByDirectory = new Dictionary<string, List<string>> (StringComparer.Ordinal);
+			foreach (string file in missingSymlinks) {
+				string directory = Path.GetDirectoryName (file)?.Replace ("\\", "/") ?? "";
+				if (!filesByDirectory.TryGetValue (directory, out List<string> files)) {
+					files = new List<string> ();
+					filesByDirectory.Add (directory, files);
+				}
+				files.Add (file);
+			}
+
+			var phase = Stopwatch.StartNew ();
+			foreach (var group in filesByDirectory) {
+				string targetDirectory = string.IsNullOrEmpty (group.Key) ? overridePath : $"{overridePath}/{group.Key}";
+				string sourcePattern = string.IsNullOrEmpty (group.Key) ? $"{remoteStagingPath}/*" : $"{remoteStagingPath}/{group.Key}/*";
+				phase.Restart ();
+				string output = await RunAs ("mkdir", "-p", targetDirectory);
+				AddDiagnosticElapsed ("deploy.fastdeploy2.override.mkdir.ms", phase);
+				if (RaiseRunAsError (output) || IsShellError (output, "mkdir")) {
+					LogFastDeploy2Error ("XA0129", output, targetDirectory);
+					return false;
+				}
+
+				phase.Restart ();
+				output = await RunAs ("sh", "-c", $"ln -sf {sourcePattern} {targetDirectory}/");
+				AddDiagnosticElapsed ("deploy.fastdeploy2.override.copy.ms", phase);
+				if (RaiseRunAsError (output) || IsShellError (output, "ln")) {
+					LogFastDeploy2Error ("XA0129", output, targetDirectory);
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		async Task<bool> CopyChangedFiles (string remoteStagingPath, string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
 		{
 			var phase = Stopwatch.StartNew ();
@@ -869,6 +1006,25 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return true;
+		}
+
+		IEnumerable<List<string>> BatchArguments (string command, string option, IEnumerable<string> values)
+		{
+			var batch = new List<string> { command, option };
+			int length = command.Length + option.Length + 2;
+			foreach (var value in values) {
+				int itemLength = value.Length + 3;
+				if (batch.Count > 2 && length + itemLength >= MaxShellCommandLength) {
+					yield return batch;
+					batch = new List<string> { command, option };
+					length = command.Length + option.Length + 2;
+				}
+				batch.Add (value);
+				length += itemLength;
+			}
+			if (batch.Count > 2) {
+				yield return batch;
+			}
 		}
 
 		protected void SetDiagnosticElapsed (string key, Stopwatch stopwatch)

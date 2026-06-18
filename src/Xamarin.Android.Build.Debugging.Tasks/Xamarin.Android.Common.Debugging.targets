@@ -326,6 +326,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <_FastDeploymentDiagnosticLogging Condition=" '$(_FastDeploymentDiagnosticLogging)' == '' ">False</_FastDeploymentDiagnosticLogging>
       <_AndroidFastDevStrategy Condition=" '$(_AndroidFastDevStrategy)' == '' ">FastDeploy</_AndroidFastDevStrategy>
       <_AndroidFastDeploy4PushMode Condition=" '$(_AndroidFastDeploy4PushMode)' == '' ">SingleFile</_AndroidFastDeploy4PushMode>
+      <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
       <AndroidFastDeploymentAdbCompressionAlgorithm Condition=" '$(AndroidFastDeploymentAdbCompressionAlgorithm)' == '' ">any</AndroidFastDeploymentAdbCompressionAlgorithm>
     </PropertyGroup>
     <Error
@@ -334,6 +335,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <Error
       Condition=" '$(_AndroidFastDeploy4PushMode)' != 'SingleFile' And '$(_AndroidFastDeploy4PushMode)' != 'Bulk' "
       Text="Invalid _AndroidFastDeploy4PushMode value '$(_AndroidFastDeploy4PushMode)'. Supported values are 'SingleFile' and 'Bulk'." />
+    <Error
+      Condition=" '$(_AndroidFastDeployAppFileTransferMode)' != 'Copy' And '$(_AndroidFastDeployAppFileTransferMode)' != 'Symlink' "
+      Text="Invalid _AndroidFastDeployAppFileTransferMode value '$(_AndroidFastDeployAppFileTransferMode)'. Supported values are 'Copy' and 'Symlink'." />
     <RemoveDuplicates
         Inputs="@(_FastDevFiles)">
       <Output TaskParameter="Filtered" ItemName="_FilteredFastDevFiles"/>
@@ -380,6 +384,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       AdbToolPath="$(AdbToolPath)"
       AdbToolExe="$(AdbToolExe)"
       AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
+      AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
       UploadFlagFile="$(_UploadFlag)"
       UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
       UserID="$(AndroidDeviceUserId)"
@@ -404,6 +409,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       AdbToolPath="$(AdbToolPath)"
       AdbToolExe="$(AdbToolExe)"
       AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
+      AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
       UploadFlagFile="$(_UploadFlag)"
       UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
       UserID="$(AndroidDeviceUserId)"
@@ -429,6 +435,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       AdbToolExe="$(AdbToolExe)"
       AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
       PushMode="$(_AndroidFastDeploy4PushMode)"
+      AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
       UploadFlagFile="$(_UploadFlag)"
       UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
       UserID="$(AndroidDeviceUserId)"
