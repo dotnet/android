@@ -43,5 +43,11 @@
       <OutputPath>$(DebuggingToolsOutputDirectory)\lib\%(FastDevBuildItems.Arch)</OutputPath>
       <CmakeFlags>-DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
     </FastDevBuildItems>
+    <FastDevBuildItems Include="@(FastDevArch->'%(Identity)\maui.link')">
+      <App>maui.link</App>
+      <Source>..\..\..\..\maui.link</Source>
+      <OutputPath>$(DebuggingToolsOutputDirectory)\lib\%(FastDevBuildItems.Arch)</OutputPath>
+      <CmakeFlags>-DANDROID_NATIVE_API_LEVEL=%(FastDevBuildItems.NativeApiLevel) -DANDROID_PLATFORM=android-%(FastDevBuildItems.NativeApiLevel)</CmakeFlags>
+    </FastDevBuildItems>
   </ItemGroup>
 </Project>

@@ -250,10 +250,5 @@ namespace Xamarin.Android.Tasks
 		{
 			return Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy3-product-out");
 		}
-
-		string GetUserId ()
-		{
-			return string.IsNullOrEmpty (UserID) ? "0" : UserID;
-		}
 	}
 }

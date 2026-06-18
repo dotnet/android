@@ -21,6 +21,9 @@ namespace Xamarin.Android.Tasks
 	public class FastDeploy2 : AsyncTask
 	{
 		const string OverridePath = "files/.__override__";
+		const string ToolsPath = "files/.__tools__";
+		const string XAToolsTempPath = "/tmp/fastdeploy-tools";
+		const string LinkTool = "maui.link";
 		const int StaleFileRemovalBatchSize = 100;
 		const int CopyBatchSize = 25;
 		const int MaxShellCommandLength = 900;
@@ -83,6 +86,10 @@ namespace Xamarin.Android.Tasks
 			get { return packageInfo.IsSystemApplication ? $"{packageInfo.InternalPath}/{OverridePath}" : OverridePath; }
 		}
 
+		string ToolsFullPath {
+			get { return packageInfo.IsSystemApplication ? $"{packageInfo.InternalPath}/{ToolsPath}" : ToolsPath; }
+		}
+
 		class PackageInfo {
 			string internalPath = null;
 			public string InternalPath {
@@ -95,6 +102,7 @@ namespace Xamarin.Android.Tasks
 			public string UserId { get; set; } = null;
 			public string PackageName { get; set; } = null;
 			public int ProcessId { get; set; } = 0;
+			public string LinkToolVersion { get; set; } = null;
 		}
 
 		class DiagnosticData {
@@ -162,6 +170,9 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.app.file.transfer.mode", "" },
 				{ "deploy.symlink.created.files", "" },
 				{ "deploy.symlink.removed.files", "" },
+				{ "deploy.symlink.tool.ms", "" },
+				{ "deploy.symlink.tool.result", "" },
+				{ "deploy.symlink.tool.install.ms", "" },
 				{ "pii.deploy.error", "" },
 				{ "pii.deploy.file", "" },
 			};
@@ -670,6 +681,57 @@ namespace Xamarin.Android.Tasks
 			return string.Equals (AppFileTransferMode, "Symlink", StringComparison.OrdinalIgnoreCase);
 		}
 
+		async Task<bool> InstallLinkTool ()
+		{
+			if (string.Equals (packageInfo.LinkToolVersion, ToolVersion, StringComparison.OrdinalIgnoreCase)) {
+				return true;
+			}
+
+			string output = await RunAs ("cat", $"{ToolsFullPath}/{LinkTool}.version");
+			if (string.Equals (output.Trim (), ToolVersion, StringComparison.OrdinalIgnoreCase)) {
+				packageInfo.LinkToolVersion = ToolVersion;
+				return true;
+			}
+
+			string toolAbi = string.IsNullOrEmpty (ToolsAbi) ? PrimaryCpuAbi : ToolsAbi;
+			string localToolPath = Path.Combine (FastDevToolPath, toolAbi, LinkTool);
+			string remoteToolDirectory = $"{XAToolsTempPath}/{PackageName}/{GetUserId ()}";
+			string remoteToolPath = $"{remoteToolDirectory}/{LinkTool}";
+			var result = await RunAdbCommand ("shell", "mkdir", "-p", remoteToolDirectory);
+			if (result.ExitCode != 0 || IsShellError (result.Output, "mkdir")) {
+				LogFastDeploy2Error ("XA0129", result.Output, remoteToolDirectory);
+				return false;
+			}
+
+			result = await RunAdbCommand ("push", localToolPath, remoteToolPath);
+			if (result.ExitCode != 0) {
+				LogFastDeploy2Error ("XA0129", result.Output, localToolPath);
+				return false;
+			}
+
+			output = await RunAs ("mkdir", "-p", ToolsFullPath);
+			if (RaiseRunAsError (output) || IsShellError (output, "mkdir")) {
+				LogFastDeploy2Error ("XA0129", output, ToolsFullPath);
+				return false;
+			}
+			output = await RunAs ("cp", remoteToolPath, $"{ToolsFullPath}/{LinkTool}");
+			if (RaiseRunAsError (output) || IsShellError (output, "cp")) {
+				LogFastDeploy2Error ("XA0129", output, $"{ToolsFullPath}/{LinkTool}");
+				return false;
+			}
+			output = await RunAs ("chmod", "700", $"{ToolsFullPath}/{LinkTool}");
+			if (RaiseRunAsError (output) || IsShellError (output, "chmod")) {
+				LogFastDeploy2Error ("XA0129", output, $"{ToolsFullPath}/{LinkTool}");
+				return false;
+			}
+			output = await RunAs ("sh", "-c", $"printf '%s\\n' '{ToolVersion}' > {ToolsFullPath}/{LinkTool}.version");
+			if (RaiseRunAsError (output)) {
+				return false;
+			}
+			packageInfo.LinkToolVersion = ToolVersion;
+			return true;
+		}
+
 		protected HashSet<string> PrepareAdbPushStagingDirectory (string stagingDirectory)
 		{
 			if (Directory.Exists (stagingDirectory)) {
@@ -903,6 +965,26 @@ namespace Xamarin.Android.Tasks
 
 		async Task<bool> UpdateOverrideSymlinks (string remoteStagingPath, string overridePath, HashSet<string> stagedFiles)
 		{
+			var toolInstallPhase = Stopwatch.StartNew ();
+			bool linkToolInstalled = await InstallLinkTool ();
+			SetDiagnosticElapsed ("deploy.symlink.tool.install.ms", toolInstallPhase);
+			if (linkToolInstalled) {
+				var toolPhase = Stopwatch.StartNew ();
+				string toolOutput = await RunAs ($"{ToolsFullPath}/{LinkTool}", remoteStagingPath, overridePath);
+				SetDiagnosticElapsed ("deploy.symlink.tool.ms", toolPhase);
+				SetDiagnosticProperty ("deploy.symlink.tool.result", toolOutput);
+				if (TryParseLinkToolOutput (toolOutput, out long linked, out long unchanged, out long removed, out long errors) && errors == 0) {
+					SetDiagnosticProperty ("deploy.symlink.created.files", (int) linked);
+					SetDiagnosticProperty ("deploy.symlink.removed.files", (int) removed);
+					SetDiagnosticProperty ("deploy.fastdeploy2.changed.files", (int) linked);
+					SetDiagnosticProperty ("deploy.fastdeploy2.stale.files", (int) removed);
+					return true;
+				}
+				LogDiagnostic ($"{LinkTool} returned '{toolOutput}'. Falling back to managed symlink update.");
+			} else {
+				LogDiagnostic ($"Unable to install {LinkTool}. Falling back to managed symlink update.");
+			}
+
 			var phase = Stopwatch.StartNew ();
 			var overrideEntries = await GetOverrideEntries (overridePath, includeSymlinks: false);
 			if (overrideEntries == null) {
@@ -944,6 +1026,22 @@ namespace Xamarin.Android.Tasks
 			SetDiagnosticElapsed ("deploy.fastdeploy2.stale.remove.ms", phase);
 
 			return await CreateOverrideSymlinks (remoteStagingPath, overridePath, missingSymlinks);
+		}
+
+		bool TryParseLinkToolOutput (string output, out long linked, out long unchanged, out long removed, out long errors)
+		{
+			linked = 0;
+			unchanged = 0;
+			removed = 0;
+			errors = 0;
+			var match = LinkToolSummaryRegex.Match (output ?? "");
+			if (!match.Success) {
+				return false;
+			}
+			return long.TryParse (match.Groups ["linked"].Value, out linked) &&
+				long.TryParse (match.Groups ["unchanged"].Value, out unchanged) &&
+				long.TryParse (match.Groups ["removed"].Value, out removed) &&
+				long.TryParse (match.Groups ["errors"].Value, out errors);
 		}
 
 		async Task<HashSet<string>> GetOverrideEntries (string overridePath, bool includeSymlinks)
@@ -1365,8 +1463,12 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual string GetRemoteAdbPushStagingPath ()
 		{
-			var user = string.IsNullOrEmpty (UserID) ? "0" : UserID;
-			return $"{RemoteStagingRoot}/{PackageName}/{user}";
+			return $"{RemoteStagingRoot}/{PackageName}/{GetUserId ()}";
+		}
+
+		protected string GetUserId ()
+		{
+			return string.IsNullOrEmpty (UserID) ? "0" : UserID;
 		}
 
 		protected void LogFastDeploy2Error (string errorCode, string error, string file = "")
@@ -1718,5 +1820,6 @@ namespace Xamarin.Android.Tasks
 		};
 
 		static readonly Regex AdbPushSummaryRegex = new Regex (@"(?<pushed>\d+) files? pushed, (?<skipped>\d+) skipped", RegexOptions.Compiled);
+		static readonly Regex LinkToolSummaryRegex = new Regex (@"linked \[(?<linked>\d+)\] unchanged \[(?<unchanged>\d+)\] removed \[(?<removed>\d+)\] errors \[(?<errors>\d+)\]", RegexOptions.Compiled);
 	}
 }
