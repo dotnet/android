@@ -65,28 +65,12 @@ namespace Xamarin.Android.Tasks
 			SetDiagnosticElapsed ("deploy.fastdeploy2.upload.ms", phase);
 
 			bool result;
-			if (UseSymlinkAppFileTransfer ()) {
+			if (UseShellSymlinkAppFileTransfer ()) {
+				result = await UpdateOverrideShellSymlinks (remoteStagingPath, overridePath, currentManifest, previousManifest, removedFiles);
+			} else if (UseSymlinkAppFileTransfer ()) {
 				result = await UpdateOverrideSymlinks (remoteStagingPath, overridePath, expectedFiles);
 			} else {
-				phase.Restart ();
-				var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
-				SetDiagnosticElapsed ("deploy.fastdeploy2.staging.stat.ms", phase);
-				if (stagedFileData == null) {
-					return false;
-				}
-
-				phase.Restart ();
-				var overrideFileData = await GetRemoteFileData (overridePath, runAs: true);
-				SetDiagnosticElapsed ("deploy.fastdeploy2.override.stat.ms", phase);
-				if (overrideFileData == null) {
-					return false;
-				}
-
-				if (!await RemoveStaleOverrideFiles (overridePath, stagedFileData, overrideFileData)) {
-					return false;
-				}
-
-				result = await CopyChangedFiles (remoteStagingPath, overridePath, stagedFileData, overrideFileData);
+				result = await UpdateOverrideCopies (remoteStagingPath, overridePath);
 			}
 
 			if (result) {
@@ -94,6 +78,205 @@ namespace Xamarin.Android.Tasks
 				await MarkRemoteReady (remoteStagingPath);
 			}
 			return result;
+		}
+
+		bool UseShellSymlinkAppFileTransfer ()
+		{
+			return string.Equals (AppFileTransferMode, "ShellSymlink", StringComparison.OrdinalIgnoreCase);
+		}
+
+		async Task<bool> UpdateOverrideShellSymlinks (string remoteStagingPath, string overridePath, Dictionary<string, ManifestEntry> currentManifest, Dictionary<string, ManifestEntry> previousManifest, List<string> removedFiles)
+		{
+			var newFiles = previousManifest == null ?
+				new HashSet<string> (currentManifest.Keys, StringComparer.Ordinal) :
+				new HashSet<string> (currentManifest.Keys.Where (file => !previousManifest.ContainsKey (file)), StringComparer.Ordinal);
+			SetDiagnosticProperty ("deploy.fastdeploy2.changed.files", newFiles.Count);
+			SetDiagnosticProperty ("deploy.symlink.created.files", newFiles.Count);
+			SetDiagnosticProperty ("deploy.symlink.removed.files", removedFiles.Count + newFiles.Count);
+			SetDiagnosticProperty ("deploy.fastdeploy2.stale.files", removedFiles.Count);
+			SetDiagnosticProperty ("deploy.symlink.tool.result", "shell");
+
+			var phase = Stopwatch.StartNew ();
+			if (!await RunCombinedShellSymlinkUpdate (remoteStagingPath, overridePath, currentManifest, previousManifest, newFiles, removedFiles)) {
+				SetDiagnosticElapsed ("deploy.symlink.shell.update.ms", phase);
+				return await FallbackToCopy (remoteStagingPath, overridePath);
+			}
+			SetDiagnosticElapsed ("deploy.symlink.shell.update.ms", phase);
+
+			return true;
+		}
+
+		async Task<bool> RunCombinedShellSymlinkUpdate (string remoteStagingPath, string overridePath, Dictionary<string, ManifestEntry> currentManifest, Dictionary<string, ManifestEntry> previousManifest, HashSet<string> newFiles, List<string> removedFiles)
+		{
+			var directories = new HashSet<string> (StringComparer.Ordinal);
+			foreach (string file in currentManifest.Keys.Concat (removedFiles)) {
+				directories.Add (GetDirectoryName (file));
+			}
+
+			foreach (string directory in directories) {
+				var currentInDirectory = currentManifest.Keys.Where (file => GetDirectoryName (file) == directory).ToList ();
+				var newInDirectory = newFiles.Where (file => GetDirectoryName (file) == directory).ToList ();
+				var removedInDirectory = removedFiles.Where (file => GetDirectoryName (file) == directory).ToList ();
+				string targetDirectory = string.IsNullOrEmpty (directory) ? overridePath : $"{overridePath}/{directory}";
+				string sourceDirectory = string.IsNullOrEmpty (directory) ? remoteStagingPath : $"{remoteStagingPath}/{directory}";
+
+				if (previousManifest == null || newInDirectory.Count == currentInDirectory.Count) {
+					string script = $"rm -f {ShellQuote (targetDirectory)}/*; mkdir -p {ShellQuote (targetDirectory)}; ln -sf {ShellQuote (sourceDirectory)}/* {ShellQuote (targetDirectory)}/";
+					string output = await RunAs ("sh", "-c", script);
+					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
+						LogDiagnostic ($"Shell symlink glob update failed with '{output}'.");
+						return false;
+					}
+					continue;
+				}
+
+				foreach (string script in CreateShellSymlinkScripts (remoteStagingPath, overridePath, newInDirectory, removedInDirectory)) {
+					string output = await RunAs ("sh", "-c", script);
+					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
+						LogDiagnostic ($"Shell symlink batch update failed with '{output}'.");
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
+		IEnumerable<string> CreateShellSymlinkScripts (string remoteStagingPath, string overridePath, List<string> newFiles, List<string> removedFiles)
+		{
+			var filesToRemove = removedFiles.Concat (newFiles).Select (file => $"{overridePath}/{file}").ToList ();
+			foreach (var batch in BatchShellArguments ("rm -f", filesToRemove)) {
+				yield return batch;
+			}
+
+			foreach (var group in newFiles.GroupBy (GetDirectoryName, StringComparer.Ordinal)) {
+				string targetDirectory = string.IsNullOrEmpty (group.Key) ? overridePath : $"{overridePath}/{group.Key}";
+				var prefix = $"mkdir -p {ShellQuote (targetDirectory)}; ln -sf";
+				var suffix = ShellQuote (targetDirectory) + "/";
+				var sources = group.Select (file => $"{remoteStagingPath}/{file}");
+				foreach (var batch in BatchShellArguments (prefix, sources, suffix)) {
+					yield return batch;
+				}
+			}
+		}
+
+		IEnumerable<string> BatchShellArguments (string prefix, IEnumerable<string> arguments, string suffix = "")
+		{
+			var builder = new StringBuilder (prefix);
+			int count = 0;
+			foreach (string argument in arguments) {
+				string quoted = " " + ShellQuote (argument);
+				if (count > 0 && builder.Length + quoted.Length + suffix.Length >= MaxAdbCommandLength) {
+					if (!string.IsNullOrEmpty (suffix)) {
+						builder.Append (' ').Append (suffix);
+					}
+					yield return builder.ToString ();
+					builder.Clear ();
+					builder.Append (prefix);
+					count = 0;
+				}
+				builder.Append (quoted);
+				count++;
+			}
+			if (count > 0) {
+				if (!string.IsNullOrEmpty (suffix)) {
+					builder.Append (' ').Append (suffix);
+				}
+				yield return builder.ToString ();
+			}
+		}
+
+		static string GetDirectoryName (string file)
+		{
+			return Path.GetDirectoryName (file)?.Replace ("\\", "/") ?? "";
+		}
+
+		static string ShellQuote (string value)
+		{
+			return "'" + value.Replace ("'", "'\"'\"'") + "'";
+		}
+
+		async Task<bool> RemoveOverridePaths (string overridePath, IEnumerable<string> paths)
+		{
+			foreach (var batch in BatchArguments ("rm", "-f", paths.Select (file => $"{overridePath}/{file}"))) {
+				string output = await RunAs (batch.ToArray ());
+				if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
+					LogDiagnostic ($"Shell symlink remove failed with '{output}'.");
+					return false;
+				}
+			}
+			return true;
+		}
+
+		async Task<bool> CreateOverrideShellSymlinks (string remoteStagingPath, string overridePath, HashSet<string> newFiles)
+		{
+			var filesByDirectory = new Dictionary<string, List<string>> (StringComparer.Ordinal);
+			foreach (string file in newFiles) {
+				string directory = Path.GetDirectoryName (file)?.Replace ("\\", "/") ?? "";
+				if (!filesByDirectory.TryGetValue (directory, out List<string> files)) {
+					files = new List<string> ();
+					filesByDirectory.Add (directory, files);
+				}
+				files.Add (file);
+			}
+
+			var phase = Stopwatch.StartNew ();
+			foreach (var group in filesByDirectory) {
+				string targetDirectory = string.IsNullOrEmpty (group.Key) ? overridePath : $"{overridePath}/{group.Key}";
+				phase.Restart ();
+				string output = await RunAs ("mkdir", "-p", targetDirectory);
+				AddDiagnosticElapsed ("deploy.fastdeploy2.override.mkdir.ms", phase);
+				if (RaiseRunAsError (output) || IsShellError (output, "mkdir")) {
+					LogDiagnostic ($"Shell symlink mkdir failed with '{output}'.");
+					return false;
+				}
+
+				for (int i = 0; i < group.Value.Count; i += 25) {
+					var args = new List<string> { "ln", "-sf" };
+					foreach (string file in group.Value.Skip (i).Take (25)) {
+						args.Add ($"{remoteStagingPath}/{file}");
+					}
+					args.Add (targetDirectory);
+					phase.Restart ();
+					output = await RunAs (args.ToArray ());
+					AddDiagnosticElapsed ("deploy.fastdeploy2.override.copy.ms", phase);
+					if (RaiseRunAsError (output) || IsShellError (output, "ln")) {
+						LogDiagnostic ($"Shell symlink ln failed with '{output}'.");
+						return false;
+					}
+				}
+			}
+
+			return true;
+		}
+
+		async Task<bool> FallbackToCopy (string remoteStagingPath, string overridePath)
+		{
+			SetDiagnosticProperty ("deploy.symlink.tool.result", "shell fallback to copy");
+			return await UpdateOverrideCopies (remoteStagingPath, overridePath);
+		}
+
+		async Task<bool> UpdateOverrideCopies (string remoteStagingPath, string overridePath)
+		{
+			var phase = Stopwatch.StartNew ();
+			var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
+			SetDiagnosticElapsed ("deploy.fastdeploy2.staging.stat.ms", phase);
+			if (stagedFileData == null) {
+				return false;
+			}
+
+			phase.Restart ();
+			var overrideFileData = await GetRemoteFileData (overridePath, runAs: true);
+			SetDiagnosticElapsed ("deploy.fastdeploy2.override.stat.ms", phase);
+			if (overrideFileData == null) {
+				return false;
+			}
+
+			if (!await RemoveStaleOverrideFiles (overridePath, stagedFileData, overrideFileData)) {
+				return false;
+			}
+
+			return await CopyChangedFiles (remoteStagingPath, overridePath, stagedFileData, overrideFileData);
 		}
 
 		Dictionary<string, ManifestEntry> CreateManifest (List<DirectPushFile> files)

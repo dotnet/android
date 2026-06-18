@@ -170,6 +170,7 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.symlink.tool.ms", "" },
 				{ "deploy.symlink.tool.result", "" },
 				{ "deploy.symlink.tool.install.ms", "" },
+				{ "deploy.symlink.shell.update.ms", "" },
 				{ "pii.deploy.error", "" },
 				{ "pii.deploy.file", "" },
 			};

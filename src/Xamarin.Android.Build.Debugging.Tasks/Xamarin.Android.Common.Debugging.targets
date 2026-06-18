@@ -333,8 +333,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       Condition=" '$(_AndroidFastDevStrategy)' != 'FastDeploy' And '$(_AndroidFastDevStrategy)' != 'FastDeploy2' And '$(_AndroidFastDevStrategy)' != 'FastDeploy5' "
       Text="Invalid _AndroidFastDevStrategy value '$(_AndroidFastDevStrategy)'. Supported values are 'FastDeploy', 'FastDeploy2', and 'FastDeploy5'." />
     <Error
-      Condition=" '$(_AndroidFastDeployAppFileTransferMode)' != 'Copy' And '$(_AndroidFastDeployAppFileTransferMode)' != 'Symlink' "
-      Text="Invalid _AndroidFastDeployAppFileTransferMode value '$(_AndroidFastDeployAppFileTransferMode)'. Supported values are 'Copy' and 'Symlink'." />
+      Condition=" '$(_AndroidFastDeployAppFileTransferMode)' != 'Copy' And '$(_AndroidFastDeployAppFileTransferMode)' != 'Symlink' And '$(_AndroidFastDeployAppFileTransferMode)' != 'ShellSymlink' "
+      Text="Invalid _AndroidFastDeployAppFileTransferMode value '$(_AndroidFastDeployAppFileTransferMode)'. Supported values are 'Copy', 'Symlink', and 'ShellSymlink'." />
     <RemoveDuplicates
         Inputs="@(_FastDevFiles)">
       <Output TaskParameter="Filtered" ItemName="_FilteredFastDevFiles"/>
