@@ -567,9 +567,9 @@ namespace Android.Runtime {
 				return JniEnvironment.Strings.NewString (s, length).Handle;
 		}
 
-		static void AssertCompatibleArrayTypes (Type sourceType, IntPtr destArray)
+		static void AssertCompatibleArrayTypes (Type srcElementType, IntPtr destArray)
 		{
-			IntPtr grefSource = FindClass (sourceType);
+			IntPtr grefSource = FindArrayClassByElementType (srcElementType);
 			IntPtr lrefDest   = GetObjectClass (destArray);
 			try {
 				if (!IsAssignableFrom (grefSource, lrefDest)) {
@@ -582,9 +582,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static void AssertCompatibleArrayTypes (IntPtr sourceArray, Type elementType)
+		static void AssertCompatibleArrayTypes (IntPtr sourceArray, Type destElementType)
 		{
-			IntPtr grefDest   = FindArrayClassByElementType (elementType);
+			IntPtr grefDest   = FindArrayClassByElementType (destElementType);
 			IntPtr lrefSource = GetObjectClass (sourceArray);
 			try {
 				if (!IsAssignableFrom (lrefSource, grefDest)) {
@@ -609,7 +609,7 @@ namespace Android.Runtime {
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
 
-			AssertCompatibleArrayTypes (src, elementType: typeof (bool));
+			AssertCompatibleArrayTypes (src, destElementType: typeof (bool));
 
 			_GetBooleanArrayRegion (src, 0, dest.Length, dest);
 		}
@@ -801,7 +801,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("dest");
 
 			if (elementType != null && elementType.IsValueType)
-				AssertCompatibleArrayTypes (src, elementType);
+				AssertCompatibleArrayTypes (src, destElementType: elementType);
 
 			if (elementType != null && elementType.IsArray) {
 				for (int i = 0; i < dest.Length; ++i) {
@@ -837,7 +837,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("dest");
 
 			if (typeof (T).IsValueType)
-				AssertCompatibleArrayTypes (src, elementType: typeof (T));
+				AssertCompatibleArrayTypes (src, destElementType: typeof (T));
 
 			if (typeof (T).IsArray) {
 				CopyArray (src, dest, typeof (T));
@@ -855,7 +855,7 @@ namespace Android.Runtime {
 			if (src == null)
 				throw new ArgumentNullException ("src");
 
-			AssertCompatibleArrayTypes (typeof (bool[]), dest);
+			AssertCompatibleArrayTypes (srcElementType: typeof (bool), dest);
 
 			fixed (bool* p = src)
 				JniEnvironment.Arrays.SetBooleanArrayRegion (new JniObjectReference (dest), 0, src.Length, p);
@@ -944,7 +944,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("elementType");
 
 			if (elementType.IsValueType)
-				AssertCompatibleArrayTypes (elementType.MakeArrayType (), dest);
+				AssertCompatibleArrayTypes (srcElementType: elementType, dest);
 
 			Action<Array, IntPtr> converter = GetConverter (CopyManagedToNativeArray, elementType, dest);
 
@@ -1069,7 +1069,7 @@ namespace Android.Runtime {
 				return null;
 
 			if (element_type != null && element_type.IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, elementType: element_type);
+				AssertCompatibleArrayTypes (array_ptr, destElementType: element_type);
 
 			int cnt = _GetArrayLength (array_ptr);
 
@@ -1116,7 +1116,7 @@ namespace Android.Runtime {
 				return null;
 
 			if (typeof (T).IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, elementType: typeof (T));
+				AssertCompatibleArrayTypes (array_ptr, destElementType: typeof (T));
 
 			int cnt = _GetArrayLength (array_ptr);
 			T[] ret = new T [cnt];
