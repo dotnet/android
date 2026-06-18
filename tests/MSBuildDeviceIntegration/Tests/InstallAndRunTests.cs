@@ -2247,11 +2247,11 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				EnableDefaultItems = true,
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-		Console.WriteLine (""#STACKTRACE-BEGIN#"");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+		Console.WriteLine ("#STACKTRACE-BEGIN#");
 		Console.WriteLine (Environment.StackTrace);
-		Console.WriteLine (""#STACKTRACE-END#"");
-		");
+		Console.WriteLine ("#STACKTRACE-END#");
+		""");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "App should have installed.");
 			RunProjectAndAssert (proj, builder);

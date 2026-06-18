@@ -136,6 +136,11 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	}
 
 	size_t count = 0;
+	// NOTE: The TPA list is sourced from `type_map_unique_assemblies`, which is
+	// only populated when `_AndroidTypeMapImplementation=llvm-ir` (the Debug
+	// default). With `managed` or `trimmable` typemaps the native typemap is
+	// empty, so no TPA paths are added and stack frames won't carry file/line
+	// info even under FastDev.
 	uint64_t expected_count = type_map.unique_assemblies_count;
 	for (uint64_t i = 0; i < expected_count; i++) {
 		TypeMapAssembly const &asm_entry = type_map_unique_assemblies[i];
