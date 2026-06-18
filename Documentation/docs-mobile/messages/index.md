@@ -111,7 +111,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0146](xa0146.md): Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.
 + [XA0147](xa0147.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.
 + [XA0148](xa0148.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.
-+ [XA0149](xa0149.md): Ignoring legacy Xamarin.Android environment file '{0}' embedded in assembly '{1}' (from NuGet package '{2}' version '{3}'). Environment files from Xamarin.Android class libraries are not supported in .NET for Android.
++ [XA0149](xa0149.md): Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android.
 
 ## XA1xxx: Project related
 
