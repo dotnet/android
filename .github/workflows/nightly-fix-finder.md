@@ -34,6 +34,7 @@ network:
   - github
   - dotnet
 safe-outputs:
+  github-token: ${{ secrets.GITHUB_TOKEN }}
   assign-to-agent:
     github-token: ${{ secrets.ANDROID_TEAM_PAT }}
     model: claude-opus-4.8
@@ -99,6 +100,7 @@ tools:
   - xargs:*
   - basename:*
   github:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     min-integrity: none
     toolsets:
     - repos
