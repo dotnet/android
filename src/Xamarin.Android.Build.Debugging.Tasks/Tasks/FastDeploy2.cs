@@ -179,7 +179,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		class RemoteFileInfo {
+		protected class RemoteFileInfo {
 			public long Size { get; set; }
 			public long ModifiedTime { get; set; }
 		}
@@ -691,7 +691,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		async Task<Dictionary<string, RemoteFileInfo>> GetRemoteFileData (string rootPath, bool runAs)
+		protected async Task<Dictionary<string, RemoteFileInfo>> GetRemoteFileData (string rootPath, bool runAs)
 		{
 			string output;
 			if (runAs) {
