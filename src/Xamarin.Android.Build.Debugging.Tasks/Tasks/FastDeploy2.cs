@@ -136,10 +136,6 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.fastdeploy2.stale.remove.ms", "" },
 				{ "deploy.fastdeploy2.override.mkdir.ms", "" },
 				{ "deploy.fastdeploy2.override.copy.ms", "" },
-				{ "deploy.fastdeploy3.sync.list.ms", "" },
-				{ "deploy.fastdeploy3.sync.list.files", "" },
-				{ "deploy.fastdeploy3.override.list.ms", "" },
-				{ "deploy.fastdeploy3.missing.files", "" },
 				{ "deploy.orchestration.ensure-properties.ms", "" },
 				{ "deploy.orchestration.property-checks.ms", "" },
 				{ "deploy.orchestration.package-check.ms", "" },
@@ -168,6 +164,7 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.orchestration.terminate.get-pid.ms", "" },
 				{ "deploy.orchestration.terminate.kill.ms", "" },
 				{ "deploy.app.file.transfer.mode", "" },
+				{ "deploy.fastdeploy2.bulk.batches", "" },
 				{ "deploy.symlink.created.files", "" },
 				{ "deploy.symlink.removed.files", "" },
 				{ "deploy.symlink.tool.ms", "" },
@@ -1264,7 +1261,7 @@ namespace Xamarin.Android.Tasks
 			}
 			SetDiagnosticProperty ("deploy.fastdeploy2.adb.pushed.files", pushed);
 			SetDiagnosticProperty ("deploy.fastdeploy2.adb.skipped.files", skipped);
-			SetDiagnosticProperty ("deploy.fastdeploy4.bulk.batches", batches);
+			SetDiagnosticProperty ("deploy.fastdeploy2.bulk.batches", batches);
 			return true;
 		}
 

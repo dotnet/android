@@ -24,8 +24,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateGdbEnvironment" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy2" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy3" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy4" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MoveSubfolder" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveXamarinAndroidTools" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RunActivity" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
@@ -325,17 +323,13 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <_AndroidIsTestOnlyPackage Condition=" '$(_AndroidIsTestOnlyPackage)' == '' ">False</_AndroidIsTestOnlyPackage>
       <_FastDeploymentDiagnosticLogging Condition=" '$(_FastDeploymentDiagnosticLogging)' == '' ">False</_FastDeploymentDiagnosticLogging>
       <_AndroidFastDevStrategy Condition=" '$(_AndroidFastDevStrategy)' == '' ">FastDeploy</_AndroidFastDevStrategy>
-      <_AndroidFastDeploy4PushMode Condition=" '$(_AndroidFastDeploy4PushMode)' == '' ">SingleFile</_AndroidFastDeploy4PushMode>
       <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' And '$(_AndroidFastDevStrategy)' == 'FastDeploy2' ">Symlink</_AndroidFastDeployAppFileTransferMode>
       <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
       <AndroidFastDeploymentAdbCompressionAlgorithm Condition=" '$(AndroidFastDeploymentAdbCompressionAlgorithm)' == '' ">any</AndroidFastDeploymentAdbCompressionAlgorithm>
     </PropertyGroup>
     <Error
-      Condition=" '$(_AndroidFastDevStrategy)' != 'FastDeploy' And '$(_AndroidFastDevStrategy)' != 'FastDeploy2' And '$(_AndroidFastDevStrategy)' != 'FastDeploy3' And '$(_AndroidFastDevStrategy)' != 'FastDeploy4' "
-      Text="Invalid _AndroidFastDevStrategy value '$(_AndroidFastDevStrategy)'. Supported values are 'FastDeploy', 'FastDeploy2', 'FastDeploy3', and 'FastDeploy4'." />
-    <Error
-      Condition=" '$(_AndroidFastDeploy4PushMode)' != 'SingleFile' And '$(_AndroidFastDeploy4PushMode)' != 'Bulk' "
-      Text="Invalid _AndroidFastDeploy4PushMode value '$(_AndroidFastDeploy4PushMode)'. Supported values are 'SingleFile' and 'Bulk'." />
+      Condition=" '$(_AndroidFastDevStrategy)' != 'FastDeploy' And '$(_AndroidFastDevStrategy)' != 'FastDeploy2' "
+      Text="Invalid _AndroidFastDevStrategy value '$(_AndroidFastDevStrategy)'. Supported values are 'FastDeploy' and 'FastDeploy2'." />
     <Error
       Condition=" '$(_AndroidFastDeployAppFileTransferMode)' != 'Copy' And '$(_AndroidFastDeployAppFileTransferMode)' != 'Symlink' "
       Text="Invalid _AndroidFastDeployAppFileTransferMode value '$(_AndroidFastDeployAppFileTransferMode)'. Supported values are 'Copy' and 'Symlink'." />
@@ -385,57 +379,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       AdbToolPath="$(AdbToolPath)"
       AdbToolExe="$(AdbToolExe)"
       AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
-      AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
-      UploadFlagFile="$(_UploadFlag)"
-      UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
-      UserID="$(AndroidDeviceUserId)"
-      IsTestOnly="$(_AndroidIsTestOnlyPackage)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      EnvironmentFiles="@(_EnvironmentFiles)"
-    />
-    <FastDeploy3
-      Condition=" '$(_AndroidFastDevStrategy)' == 'FastDeploy3' "
-      AdbTarget="$(AdbTarget)"
-      DiagnosticLogging="$(_FastDeploymentDiagnosticLogging)"
-      FastDevFiles="@(_FilteredFastDevFiles);@(_ResolvedConfigFiles)"
-      FastDevToolPath="$(MSBuildThisFileDirectory)\lib"
-      EmbedAssembliesIntoApk="$(EmbedAssembliesIntoApk)"
-      PrimaryCpuAbi="$(_PrimaryCpuAbi)"
-      ToolsAbi="$(_FastDevToolsAbi)"
-      PreserveUserData="$(AndroidPreserveUserData)"
-      PackageName="$(_AndroidPackage)"
-      PackageFile="$(_ApkToInstall)"
-      ReInstall="$(_ReInstall)"
-      ToolVersion="$(AndroidFastDeploymentToolVersion)"
-      AdbToolPath="$(AdbToolPath)"
-      AdbToolExe="$(AdbToolExe)"
-      AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
-      AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
-      UploadFlagFile="$(_UploadFlag)"
-      UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
-      UserID="$(AndroidDeviceUserId)"
-      IsTestOnly="$(_AndroidIsTestOnlyPackage)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
-      EnvironmentFiles="@(_EnvironmentFiles)"
-    />
-    <FastDeploy4
-      Condition=" '$(_AndroidFastDevStrategy)' == 'FastDeploy4' "
-      AdbTarget="$(AdbTarget)"
-      DiagnosticLogging="$(_FastDeploymentDiagnosticLogging)"
-      FastDevFiles="@(_FilteredFastDevFiles);@(_ResolvedConfigFiles)"
-      FastDevToolPath="$(MSBuildThisFileDirectory)\lib"
-      EmbedAssembliesIntoApk="$(EmbedAssembliesIntoApk)"
-      PrimaryCpuAbi="$(_PrimaryCpuAbi)"
-      ToolsAbi="$(_FastDevToolsAbi)"
-      PreserveUserData="$(AndroidPreserveUserData)"
-      PackageName="$(_AndroidPackage)"
-      PackageFile="$(_ApkToInstall)"
-      ReInstall="$(_ReInstall)"
-      ToolVersion="$(AndroidFastDeploymentToolVersion)"
-      AdbToolPath="$(AdbToolPath)"
-      AdbToolExe="$(AdbToolExe)"
-      AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
-      PushMode="$(_AndroidFastDeploy4PushMode)"
       AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
       UploadFlagFile="$(_UploadFlag)"
       UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
