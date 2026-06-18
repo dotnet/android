@@ -460,28 +460,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("TrimmerSingleWarn", "false");
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
-				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Nov 2025) produces 10 `ILC : AOT analysis warning IL3050` warnings for various
-					// bits of code. Even though this test expects no warnings and the above likely make the app not work
-					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
-					// of other warnings.
-					int numberOfExpectedWarnings = 10;
-
-					Assert.IsTrue (
-						StringAssertEx.ContainsText (
-							b.LastBuildOutput,
-							$" {numberOfExpectedWarnings} Warning(s)"
-						),
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
-					);
-
-					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
-					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-					Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
-				} else {
-					b.AssertHasNoWarnings ();
-				}
+				b.AssertHasNoWarnings ();
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
