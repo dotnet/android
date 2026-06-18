@@ -135,6 +135,25 @@ namespace Xamarin.Android.Tasks
 				{ "deploy.orchestration.install.ms", "" },
 				{ "deploy.orchestration.terminate.ms", "" },
 				{ "deploy.orchestration.empty-check.ms", "" },
+				{ "deploy.execute.parse-target.ms", "" },
+				{ "deploy.execute.no-abi-check.ms", "" },
+				{ "deploy.execute.upload-flag-stat.ms", "" },
+				{ "deploy.execute.task-cache.ms", "" },
+				{ "deploy.orchestration.property-capture.ms", "" },
+				{ "deploy.orchestration.redirect-stdio-check.ms", "" },
+				{ "deploy.orchestration.run-as-disabled-check.ms", "" },
+				{ "deploy.orchestration.package-check.ensure-user.ms", "" },
+				{ "deploy.orchestration.package-check.run-as-pwd.ms", "" },
+				{ "deploy.orchestration.package-check.readlink.ms", "" },
+				{ "deploy.orchestration.package-check.system-app.ms", "" },
+				{ "deploy.orchestration.package-check.evaluate.ms", "" },
+				{ "deploy.orchestration.package-timestamp.path-stat.ms", "" },
+				{ "deploy.orchestration.install.push-install.ms", "" },
+				{ "deploy.orchestration.install.retry-delete.ms", "" },
+				{ "deploy.orchestration.install.retry-uninstall.ms", "" },
+				{ "deploy.orchestration.install.retry-reinstall.ms", "" },
+				{ "deploy.orchestration.terminate.get-pid.ms", "" },
+				{ "deploy.orchestration.terminate.kill.ms", "" },
 				{ "pii.deploy.error", "" },
 				{ "pii.deploy.file", "" },
 			};
@@ -172,24 +191,32 @@ namespace Xamarin.Android.Tasks
 
 		public override bool Execute ()
 		{
+			var phase = Stopwatch.StartNew ();
 			Device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4);
+			SetDiagnosticElapsed ("deploy.execute.parse-target.ms", phase);
 			if (Device == null) {
 				PrintDiagnostics ();
 				return false;
 			}
 			LogMessage ($"Found device: {Device.ID}");
 
+			phase.Restart ();
 			if (string.IsNullOrEmpty (PrimaryCpuAbi) && !EmbedAssembliesIntoApk) {
+				SetDiagnosticElapsed ("deploy.execute.no-abi-check.ms", phase);
 				PrintDiagnostics ();
 				LogCodedError ("XA0010", Resources.XA0010_NoAbi, Device.ID);
 				return false;
 			}
+			SetDiagnosticElapsed ("deploy.execute.no-abi-check.ms", phase);
 
+			phase.Restart ();
 			var flagFilePath = GetFullPath (UploadFlagFile);
 			lastUpload = File.GetLastWriteTimeUtc (flagFilePath);
 			LogDiagnostic ($"LastWriteTime of `{flagFilePath}`: {lastUpload}");
 			diagnosticData.Task = GetType ().Name;
+			SetDiagnosticElapsed ("deploy.execute.upload-flag-stat.ms", phase);
 
+			phase.Restart ();
 			var lifetime = RegisteredTaskObjectLifetime.AppDomain;
 			var key = ProjectSpecificTaskObjectKey ($"{Device.ID}_{PackageName}_{GetType ().Name}");
 			if (!File.Exists (UploadFlagFile)) {
@@ -197,6 +224,7 @@ namespace Xamarin.Android.Tasks
 			} else {
 				packageInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<PackageInfo> (key, lifetime) ?? new PackageInfo ();
 			}
+			SetDiagnosticElapsed ("deploy.execute.task-cache.ms", phase);
 
 			AndroidLogger.Debug += DebugHandler;
 			try {
@@ -233,14 +261,19 @@ namespace Xamarin.Android.Tasks
 			diagnosticData.SetProperty ("target.prop.ro.product.cpu.abi", PrimaryCpuAbi);
 			diagnosticData.SetProperty ("target.prop.ro.product.manufacturer", Device.Properties?.ProductManufacturer);
 			diagnosticData.SetProperty ("target.prop.ro.product.model", Device.Properties?.ProductModel);
+			SetDiagnosticElapsed ("deploy.orchestration.property-capture.ms", phase);
 
+			phase.Restart ();
 			string redirectStdio = Device.Properties.Get ("log.redirect-stdio");
+			SetDiagnosticElapsed ("deploy.orchestration.redirect-stdio-check.ms", phase);
 			if (redirectStdio != null && string.Equals ("true", redirectStdio.Trim (), StringComparison.OrdinalIgnoreCase)) {
 				LogFastDeploy2Error ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
 				return;
 			}
 
+			phase.Restart ();
 			string runAsDisabled = Device.Properties.Get ("ro.boot.disable_runas");
+			SetDiagnosticElapsed ("deploy.orchestration.run-as-disabled-check.ms", phase);
 			if (runAsDisabled != null && string.Equals ("true", runAsDisabled.Trim (), StringComparison.OrdinalIgnoreCase)) {
 				LogFastDeploy2Error ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
 				return;
@@ -303,21 +336,30 @@ namespace Xamarin.Android.Tasks
 
 		bool IsPackageFileOutOfDate ()
 		{
+			var phase = Stopwatch.StartNew ();
 			var packageFile = GetFullPath (PackageFile);
 			var lastPackage = File.GetLastWriteTimeUtc (packageFile);
 			LogDiagnostic ($"LastWriteTime of `{packageFile}`: {lastPackage}");
+			SetDiagnosticElapsed ("deploy.orchestration.package-timestamp.path-stat.ms", phase);
 			return lastUpload < lastPackage;
 		}
 
 		async Task CheckAppInstalledAndDebuggable (string packageName)
 		{
+			var phase = Stopwatch.StartNew ();
 			packageInfo.UserId = UserID;
 			packageInfo.PackageName = packageName;
 			await EnsureUserIsRunning ();
+			SetDiagnosticElapsed ("deploy.orchestration.package-check.ensure-user.ms", phase);
+			phase.Restart ();
 			packageInfo.InternalPath = packageInfo.InternalPath ?? await RunAs ("pwd");
+			SetDiagnosticElapsed ("deploy.orchestration.package-check.run-as-pwd.ms", phase);
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
+				phase.Restart ();
 				packageInfo.InternalPath = await RunAs ("readlink", "-f", ".");
+				SetDiagnosticElapsed ("deploy.orchestration.package-check.readlink.ms", phase);
 			}
+			phase.Restart ();
 			if (packageInfo.InternalPath.IndexOf ("not an application", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} is a system application.");
 				packageInfo.IsSystemApplication = true;
@@ -326,21 +368,25 @@ namespace Xamarin.Android.Tasks
 				packageInfo.AdbIsRoot = whoami.Trim () == "root";
 				LogDiagnostic ($"using {(packageInfo.AdbIsRoot ? "root" : $"su {packageInfo.UserId}")} to install fast deployment files.");
 				packageInfo.InternalPath = $"/data/user/{(packageInfo.UserId ?? "0")}/{packageInfo.PackageName}";
+				SetDiagnosticElapsed ("deploy.orchestration.package-check.system-app.ms", phase);
 				return;
 			}
 			if (packageInfo.InternalPath.IndexOf ("not debuggable", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} was not debuggable. Forcing ReInstall");
 				ReInstall = true;
+				SetDiagnosticElapsed ("deploy.orchestration.package-check.evaluate.ms", phase);
 				return;
 			}
 			if (packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} was not installed.");
+				SetDiagnosticElapsed ("deploy.orchestration.package-check.evaluate.ms", phase);
 				return;
 			}
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ("run-as not supported on this device.");
 				diagnosticData.SetProperty ("deploy.supports.fastdev", value: false);
 			}
+			SetDiagnosticElapsed ("deploy.orchestration.package-check.evaluate.ms", phase);
 		}
 
 		async Task EnsureUserIsRunning ()
@@ -358,6 +404,7 @@ namespace Xamarin.Android.Tasks
 		{
 			LogDebugMessage ($"Installing Package {PackageName}");
 			try {
+				var phase = Stopwatch.StartNew ();
 				await Device.PushAndInstallPackageAsync (new PushAndInstallCommand {
 					ApkFile = PackageFile,
 					PackageName = PackageName,
@@ -365,6 +412,7 @@ namespace Xamarin.Android.Tasks
 					User = UserID,
 					TestOnly = IsTestOnly,
 				}, token: CancellationToken);
+				SetDiagnosticElapsed ("deploy.orchestration.install.push-install.ms", phase);
 				LogDebugMessage ($"Installed Package {PackageName}.");
 			} catch (Exception exception) {
 				var ex = exception;
@@ -391,21 +439,27 @@ namespace Xamarin.Android.Tasks
 				return false;
 
 			LogDebugMessage (string.Format ("Package '{0}' already exists. Retrying...", PackageName));
+			var phase = Stopwatch.StartNew ();
 			try {
 				await Device.DeleteFile (e.PackageFile, true, CancellationToken);
 			} catch {
 			}
+			SetDiagnosticElapsed ("deploy.orchestration.install.retry-delete.ms", phase);
 			bool preserveData = !(e is RequiresUninstallException);
 			LogDebugMessage (string.Format ("Forcing complete uninstall of '{0}'... Preserving Data: {1}", PackageName, preserveData));
 			var uninstallCommand = new PmUninstallCommand () { PackageName = PackageName, User = UserID, PreserveData = preserveData };
+			phase.Restart ();
 			await Device.UninstallPackage (uninstallCommand, cancellationToken: CancellationToken);
+			SetDiagnosticElapsed ("deploy.orchestration.install.retry-uninstall.ms", phase);
 			LogDebugMessage (string.Format ("Installing '{0}'...", PackageName));
+			phase.Restart ();
 			await Device.PushAndInstallPackageAsync (new PushAndInstallCommand {
 				ApkFile = PackageFile,
 				PackageName = PackageName,
 				ReInstall = false,
 				User = UserID
 			}, token: CancellationToken);
+			SetDiagnosticElapsed ("deploy.orchestration.install.retry-reinstall.ms", phase);
 			return false;
 		}
 
@@ -416,13 +470,17 @@ namespace Xamarin.Android.Tasks
 
 		async Task TerminateApp ()
 		{
+			var phase = Stopwatch.StartNew ();
 			var pid = await Device.GetProcessId (PackageName, CancellationToken);
+			SetDiagnosticElapsed ("deploy.orchestration.terminate.get-pid.ms", phase);
 			if (pid == 0) {
 				LogDebugMessage ($"{PackageName} was not running, skipping kill");
 				return;
 			}
 			LogDebugMessage ($"Terminating {PackageName}...");
+			phase.Restart ();
 			await Device.KillProcessAndWaitForExit (PackageName, CancellationToken);
+			SetDiagnosticElapsed ("deploy.orchestration.terminate.kill.ms", phase);
 			LogDebugMessage ($"{PackageName} Terminated.");
 		}
 
