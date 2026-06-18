@@ -17,9 +17,6 @@ steps:
   inputs:
     command: custom
     custom: tool
-    # --source clears all default feeds and uses only the dnceng public 'dotnet-public'
-    # mirror, so the install does not depend on nuget.org for network-isolated builds.
-    # See https://devdiv.visualstudio.com/DevDiv/_git/Xamarin.yaml-templates/pullrequest/750402
     arguments: >-
       update ${{ parameters.toolName }} -v:diag
       --tool-path $(Agent.ToolsDirectory)

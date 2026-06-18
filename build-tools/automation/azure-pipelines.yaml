@@ -417,9 +417,6 @@ extends:
                 $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
                 $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
                 $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-                # --source clears all default feeds and uses only the dnceng 'dotnet-eng' feed,
-                # so the install does not depend on nuget.org for network-isolated builds.
-                # See https://devdiv.visualstudio.com/DevDiv/_git/Xamarin.yaml-templates/pullrequest/750402
                 & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
                 & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
             displayName: add build to default darc channel
