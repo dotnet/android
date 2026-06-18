@@ -630,6 +630,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignoring legacy Xamarin.Android environment file &apos;{0}&apos; from NuGet package &apos;{1}&apos; version &apos;{2}&apos; in assembly &apos;{3}&apos;. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author..
+        /// </summary>
+        public static string XA0149 {
+            get {
+                return ResourceManager.GetString("XA0149", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignoring legacy Xamarin.Android environment file &apos;{0}&apos; in assembly &apos;{1}&apos;. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author..
+        /// </summary>
+        public static string XA0149_Assembly {
+            get {
+                return ResourceManager.GetString("XA0149_Assembly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
