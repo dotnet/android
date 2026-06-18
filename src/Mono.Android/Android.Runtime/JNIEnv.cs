@@ -64,13 +64,6 @@ namespace Android.Runtime {
 			return rank;
 		}
 
-		static Type MakeArrayType (Type type) =>
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-			#pragma warning disable IL3050
-			type.MakeArrayType ();
-			#pragma warning restore IL3050
-
 		internal static IntPtr IdentityHash (IntPtr v)
 		{
 			return JniEnvironment.References.GetIdentityHashCode (new JniObjectReference (v));
@@ -309,10 +302,7 @@ namespace Android.Runtime {
 				}
 				sig = sig.AddArrayRank (rank);
 
-				JniObjectReference local_ref = JniEnvironment.Types.FindClass (sig.Name);
-				IntPtr global_ref = local_ref.NewGlobalRef ().Handle;
-				JniObjectReference.Dispose (ref local_ref);
-				return global_ref;
+				return FindClass (sig.Name);
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
@@ -592,9 +582,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		static void AssertCompatibleArrayTypes (IntPtr sourceArray, Type destType)
+		static void AssertCompatibleArrayTypes (IntPtr sourceArray, Type elementType)
 		{
-			IntPtr grefDest   = FindClass (destType);
+			IntPtr grefDest   = FindArrayClassByElementType (elementType);
 			IntPtr lrefSource = GetObjectClass (sourceArray);
 			try {
 				if (!IsAssignableFrom (lrefSource, grefDest)) {
@@ -605,6 +595,13 @@ namespace Android.Runtime {
 				DeleteGlobalRef (grefDest);
 				DeleteLocalRef (lrefSource);
 			}
+
+			static IntPtr FindArrayClassByElementType (Type elementType)
+			{
+				int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
+				var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
+				return FindClass (typeSignature.Name);
+			}
 		}
 
 		public static void CopyArray (IntPtr src, bool[] dest)
@@ -612,7 +609,7 @@ namespace Android.Runtime {
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
 
-			AssertCompatibleArrayTypes (src, typeof (bool[]));
+			AssertCompatibleArrayTypes (src, elementType: typeof (bool));
 
 			_GetBooleanArrayRegion (src, 0, dest.Length, dest);
 		}
@@ -804,7 +801,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("dest");
 
 			if (elementType != null && elementType.IsValueType)
-				AssertCompatibleArrayTypes (src, MakeArrayType (elementType));
+				AssertCompatibleArrayTypes (src, elementType);
 
 			if (elementType != null && elementType.IsArray) {
 				for (int i = 0; i < dest.Length; ++i) {
@@ -840,7 +837,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("dest");
 
 			if (typeof (T).IsValueType)
-				AssertCompatibleArrayTypes (src, typeof (T[]));
+				AssertCompatibleArrayTypes (src, elementType: typeof (T));
 
 			if (typeof (T).IsArray) {
 				CopyArray (src, dest, typeof (T));
@@ -947,7 +944,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("elementType");
 
 			if (elementType.IsValueType)
-				AssertCompatibleArrayTypes (MakeArrayType (elementType), dest);
+				AssertCompatibleArrayTypes (elementType.MakeArrayType (), dest);
 
 			Action<Array, IntPtr> converter = GetConverter (CopyManagedToNativeArray, elementType, dest);
 
@@ -1072,7 +1069,7 @@ namespace Android.Runtime {
 				return null;
 
 			if (element_type != null && element_type.IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, MakeArrayType (element_type));
+				AssertCompatibleArrayTypes (array_ptr, elementType: element_type);
 
 			int cnt = _GetArrayLength (array_ptr);
 
@@ -1119,7 +1116,7 @@ namespace Android.Runtime {
 				return null;
 
 			if (typeof (T).IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, typeof (T[]));
+				AssertCompatibleArrayTypes (array_ptr, elementType: typeof (T));
 
 			int cnt = _GetArrayLength (array_ptr);
 			T[] ret = new T [cnt];
