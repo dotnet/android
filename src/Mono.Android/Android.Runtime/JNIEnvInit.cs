@@ -179,14 +179,22 @@ namespace Android.Runtime
 			}
 
 			if (RuntimeFeature.IsMonoRuntime) {
-				return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+				return CreateAndroidTypeManagerWithSuppressedWarnings (args);
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+				return CreateAndroidTypeManagerWithSuppressedWarnings (args);
 			}
 
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026",
+				Justification = "We choose to ignore the trimming warnings for CoreCLR and Mono " +
+								"when using AndroidTypeManager because even though we use unconstrained reflection " +
+								"we expect the types to be preserved by custom trimmer steps and we don't expect " +
+								"the trimmer (ILLink) to remove any metadata need at runtime.")]
+			AndroidTypeManager CreateAndroidTypeManagerWithSuppressedWarnings (JnienvInitializeArgs args) =>
+				new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
 		}
 
 		internal static JniRuntime.JniValueManager CreateValueManager ()
@@ -200,14 +208,28 @@ namespace Android.Runtime
 			}
 
 			if (RuntimeFeature.IsMonoRuntime) {
-				return new AndroidValueManager ();
+				return CreateAndroidValueManagerWithSuppressedWarnings ();
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				return new CoreClrJavaMarshalValueManager ();
+				return CreateCoreClrValueManagerWithSuppressedWarnings ();
 			}
 
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026",
+				Justification = "We choose to ignore the trimming warnings for Mono when using AndroidValueManager " +
+								"because even though we use unconstrained reflection " +
+								"we expect the types to be preserved by custom trimmer steps and we don't expect " +
+								"the trimmer (ILLink) to remove any metadata need at runtime.")]
+			JniRuntime.JniValueManager CreateAndroidValueManagerWithSuppressedWarnings () => new AndroidValueManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026",
+				Justification = "We choose to ignore the trimming warnings for CoreCLR when using CoreClrJavaMarshalValueManager " +
+								"because even though we use unconstrained reflection " +
+								"we expect the types to be preserved by custom trimmer steps and we don't expect " +
+								"the trimmer (ILLink) to remove any metadata need at runtime.")]
+			JniRuntime.JniValueManager CreateCoreClrValueManagerWithSuppressedWarnings () => new CoreClrJavaMarshalValueManager ();
 		}
 
 		static void InitializeCommonState (JnienvInitializeArgs args)

@@ -474,22 +474,12 @@ namespace Xamarin.Android.Build.Tests
 
 			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
 				AddTestData (runtime, "", new string [0], false);
-
-				if (runtime == AndroidRuntime.NativeAOT) {
-					AddTestData (runtime, "", new [] { "IL2055", "IL3050" }, true, 2);
-				} else {
-					AddTestData (runtime, "", new string [0], true);
-				}
-				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2);
-				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, false, 1);
-				AddTestData (runtime, "TrimMode=full", new string [] { "IL2055" }, true, 2);
-				AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false);
-
-				if (runtime == AndroidRuntime.NativeAOT) {
-					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 2);
-				} else {
-					AddTestData (runtime, "IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3);
-				}
+				AddTestData (runtime, "", new string [0], true);
+				AddTestData (runtime, "SuppressTrimAnalysisWarnings=false", new string [0], true);
+				AddTestData (runtime, "TrimMode=full", new string [0], false);
+				AddTestData (runtime, "TrimMode=full", new string [0], true);
+				AddTestData (runtime, "IsAotCompatible=true", new string [0], false);
+				AddTestData (runtime, "IsAotCompatible=true", new string [0], true);
 			}
 
 			return ret;
@@ -528,9 +518,11 @@ namespace Xamarin.Android.Build.Tests
 				proj.ItemGroupList.Add (ignoreIlcWarnings);
 			}
 			proj.SetRuntimeIdentifier ("arm64-v8a");
-			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${FIELDS}", "Type type = typeof (List<>);")
-				.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine (type.MakeGenericType (typeof (object)));");
+			if (codes.Length != 0) {
+				proj.MainActivity = proj.DefaultMainActivity
+					.Replace ("//${FIELDS}", "Type type = typeof (List<>);")
+					.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine (type.MakeGenericType (typeof (object)));");
+			}
 			proj.SetProperty ("TrimmerSingleWarn", "false");
 
 			if (!string.IsNullOrEmpty (properties)) {

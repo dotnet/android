@@ -595,13 +595,13 @@ namespace Android.Runtime {
 				DeleteGlobalRef (grefDest);
 				DeleteLocalRef (lrefSource);
 			}
+		}
 
-			static IntPtr FindArrayClassByElementType (Type elementType)
-			{
-				int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
-				var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
-				return FindClass (typeSignature.Name);
-			}
+		static IntPtr FindArrayClassByElementType (Type elementType)
+		{
+			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
+			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
+			return FindClass (typeSignature.Name);
 		}
 
 		public static void CopyArray (IntPtr src, bool[] dest)
