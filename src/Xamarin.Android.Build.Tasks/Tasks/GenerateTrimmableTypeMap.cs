@@ -10,6 +10,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -57,7 +58,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string OutputDirectory { get; set; } = "";
 	[Required]
 	public string JavaSourceOutputDirectory { get; set; } = "";
-	public string? JavaSourceInputDirectory { get; set; }
 	[Required]
 	public string TargetFrameworkVersion { get; set; } = "";
 
@@ -93,13 +93,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
-	public bool GenerateTypeMapAssemblies { get; set; } = true;
-	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	[Output]
 	public ITaskItem [] GeneratedAssemblies { get; set; } = [];
 	[Output]
 	public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
+	[Output]
+	public ITaskItem [] DeletedJavaFiles { get; set; } = [];
 	[Output]
 	public string[]? AdditionalProviderSources { get; set; }
 
@@ -119,19 +119,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		foreach (var assemblyName in FrameworkAssemblyNames) {
 			frameworkAssemblyNames.Add (assemblyName);
 		}
-		if (CleanJavaSourceOutputDirectory && !JavaSourceInputDirectory.IsNullOrEmpty ()) {
-			var inputDirectory = Path.GetFullPath (JavaSourceInputDirectory);
-			var outputDirectory = Path.GetFullPath (JavaSourceOutputDirectory);
-			if (string.Equals (inputDirectory, outputDirectory, StringComparison.OrdinalIgnoreCase)) {
-				Log.LogCodedError ("XA4254", Properties.Resources.XA4254, inputDirectory, outputDirectory);
-				return false;
-			}
-		}
 
 		Directory.CreateDirectory (OutputDirectory);
-		if (CleanJavaSourceOutputDirectory && Directory.Exists (JavaSourceOutputDirectory)) {
-			Directory.Delete (JavaSourceOutputDirectory, recursive: true);
-		}
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
 		var peReaders = new List<PEReader> ();
@@ -182,16 +171,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
-				maxArrayRank: MaxArrayRank,
-				generateTypeMapAssemblies: GenerateTypeMapAssemblies);
+				maxArrayRank: MaxArrayRank);
 
-			if (GenerateTypeMapAssemblies) {
-				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
-				WriteGeneratedAssembliesListFile (GeneratedAssemblies);
-			}
-			GeneratedJavaFiles = JavaSourceInputDirectory.IsNullOrEmpty ()
-				? WriteJavaSourcesToDisk (result.GeneratedJavaSources)
-				: CopyJavaSourcesFromInputDirectory (result.GeneratedJavaSources);
+			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
+			WriteGeneratedAssembliesListFile (GeneratedAssemblies);
+			GeneratedJavaFiles = WriteJavaSourcesToDisk (result.GeneratedJavaSources);
+			DeletedJavaFiles = DeleteStaleJavaSources (GeneratedJavaFiles);
 
 			// Write manifest to disk if generated
 			if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
@@ -264,29 +249,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			? ""
 			: string.Join (Environment.NewLine, assemblies.Select (a => a.ItemSpec)) + Environment.NewLine;
 		Files.CopyIfStringChanged (text, GeneratedAssembliesListFile);
-	}
-
-	ITaskItem [] CopyJavaSourcesFromInputDirectory (IReadOnlyList<GeneratedJavaSource> javaSources)
-	{
-		var items = new List<ITaskItem> ();
-		foreach (var source in javaSources) {
-			string inputPath = Path.Combine (JavaSourceInputDirectory ?? "", source.RelativePath);
-			if (!File.Exists (inputPath)) {
-				Log.LogCodedError ("XA4255", Properties.Resources.XA4255, inputPath);
-				continue;
-			}
-
-			string outputPath = Path.Combine (JavaSourceOutputDirectory, source.RelativePath);
-			string? dir = Path.GetDirectoryName (outputPath);
-			if (!string.IsNullOrEmpty (dir)) {
-				Directory.CreateDirectory (dir);
-			}
-			using (var stream = File.OpenRead (inputPath)) {
-				Files.CopyIfStreamChanged (stream, outputPath);
-			}
-			items.Add (new TaskItem (outputPath));
-		}
-		return items.ToArray ();
 	}
 
 	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
@@ -368,6 +330,30 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			items.Add (new TaskItem (outputPath));
 		}
 		return items.ToArray ();
+	}
+
+	ITaskItem [] DeleteStaleJavaSources (IReadOnlyCollection<ITaskItem> generatedJavaFiles)
+	{
+		var expectedFiles = new HashSet<string> (
+			generatedJavaFiles.Select (i => Path.GetFullPath (i.ItemSpec)),
+			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+		var deleted = new List<ITaskItem> ();
+
+		foreach (var path in Directory.EnumerateFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories)) {
+			var fullPath = Path.GetFullPath (path);
+			if (expectedFiles.Contains (fullPath)) {
+				continue;
+			}
+
+			File.Delete (fullPath);
+			Log.LogDebugMessage ($"Deleted stale generated Java source '{fullPath}'.");
+
+			var item = new TaskItem (fullPath);
+			item.SetMetadata ("RelativePath", PathUtil.GetRelativePath (JavaSourceOutputDirectory, fullPath));
+			deleted.Add (item);
+		}
+
+		return deleted.ToArray ();
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)

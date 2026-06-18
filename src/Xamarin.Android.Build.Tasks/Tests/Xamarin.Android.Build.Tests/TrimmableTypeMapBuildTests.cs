@@ -68,6 +68,88 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_WithTrimmableTypeMap_DeletesStaleGeneratedJavaSourcesAndCopies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var staleRelativePath = Path.Combine ("crc64stale", "Old.java");
+			var staleClassPath = Path.Combine ("crc64stale", "Old.class");
+			var staleGeneratedJava = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", staleRelativePath));
+			var staleCopiedJava = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", staleRelativePath));
+			var staleCompiledClass = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", staleClassPath));
+			var staleGeneratedJavaDirectory = Path.GetDirectoryName (staleGeneratedJava);
+			var staleCopiedJavaDirectory = Path.GetDirectoryName (staleCopiedJava);
+			var staleCompiledClassDirectory = Path.GetDirectoryName (staleCompiledClass);
+			if (staleGeneratedJavaDirectory is null || staleCopiedJavaDirectory is null || staleCompiledClassDirectory is null) {
+				throw new InvalidOperationException ("Could not determine stale Java output directories.");
+			}
+			Directory.CreateDirectory (staleGeneratedJavaDirectory);
+			Directory.CreateDirectory (staleCopiedJavaDirectory);
+			Directory.CreateDirectory (staleCompiledClassDirectory);
+			File.WriteAllText (staleGeneratedJava, "package crc64stale; public class Old {}");
+			File.WriteAllText (staleCopiedJava, "package crc64stale; public class Old {}");
+			File.WriteAllBytes (staleCompiledClass, []);
+
+			proj.MainActivity += Environment.NewLine + "// Force trimmable typemap regeneration.";
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
+
+			FileAssert.DoesNotExist (staleGeneratedJava, "Regenerated trimmable typemap should delete stale Java sources.");
+			FileAssert.DoesNotExist (staleCopiedJava, "Regenerated trimmable typemap should delete stale android/src Java copies.");
+			FileAssert.DoesNotExist (staleCompiledClass, "Deleting stale copied Java sources should force Java recompilation and remove stale class outputs.");
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_CopiesUpdatedGeneratedJavaSources ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var generatedJavaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java"));
+			var generatedJavaFiles = Directory.GetFiles (generatedJavaDirectory, "*.java", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (generatedJavaFiles, "Test setup should have generated trimmable typemap Java sources.");
+
+			var generatedJava = generatedJavaFiles [0];
+			var relativePath = Path.GetRelativePath (generatedJavaDirectory, generatedJava);
+			var copiedJava = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", relativePath));
+			var typeMapStamp = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "_GenerateTrimmableTypeMap.stamp"));
+			var javaStubsStamp = builder.Output.GetIntermediaryPath (Path.Combine ("stamp", "_GenerateJavaStubs.stamp"));
+			FileAssert.Exists (copiedJava, "First build should have copied generated Java sources to android/src.");
+			FileAssert.Exists (typeMapStamp, "First build should have written the trimmable typemap output stamp.");
+			FileAssert.Exists (javaStubsStamp, "First build should have written the Java stubs output stamp.");
+
+			var updatedJava = File.ReadAllText (generatedJava) + "\n// Force generated Java copy regression.\n";
+			File.WriteAllText (generatedJava, updatedJava);
+			var stampTime = DateTime.UtcNow;
+			File.SetLastWriteTimeUtc (typeMapStamp, stampTime);
+			File.SetLastWriteTimeUtc (javaStubsStamp, stampTime.AddSeconds (-5));
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateJavaStubs");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
+			Assert.AreEqual (updatedJava, File.ReadAllText (copiedJava), "Updated generated Java sources should be copied to android/src even when typemap assemblies do not change.");
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_ArrayRankChangeRegeneratesTypeMap ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
@@ -86,7 +168,7 @@ namespace Xamarin.Android.Build.Tests {
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
-			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
 
 			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "3");
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Array rank change build should have succeeded.");
@@ -316,11 +398,6 @@ namespace Xamarin.Android.Build.Tests {
 			var typeMapDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap"));
 			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
 			var readyToRunAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "R2R"));
-			var javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "src"));
-			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin", "classes.dex"));
-			var acwMapPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "acw-map.txt"));
-			var proguardPrimaryPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_primary.cfg"));
-
 			DirectoryAssert.Exists (typeMapDirectory, "trimmable build should generate typemap assemblies.");
 			DirectoryAssert.Exists (linkedAssemblyDirectory, "Release trimmable build should run ILLink.");
 
@@ -361,8 +438,6 @@ namespace Xamarin.Android.Build.Tests {
 					expectedHash.SequenceEqual (packagedHash),
 					$"{apkPath} should package post-link typemap assembly {pair.Key} from {pair.Value}, not the generated pre-link copy.");
 			}
-
-			AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (dexFile, javaSourceDirectory, acwMapPath, proguardPrimaryPath);
 		}
 
 		[Test]
@@ -396,7 +471,6 @@ namespace Xamarin.Android.Build.Tests {
 			}) {
 				FileAssert.Exists (Path.Combine (toolsDir, file), $"{file} should exist in the SDK pack.");
 			}
-
 		}
 
 		// T1: end-to-end build coverage for [Export] and [ExportField] under trimmable.
@@ -452,9 +526,10 @@ namespace UnnamedProject {
 			string? exportShapesText = null;
 			foreach (var f in allJavaFiles) {
 				var text = File.ReadAllText (f);
-				if (exportShapesJava == null && text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
+				if (text.Contains ("EchoString") && text.Contains ("InitialFoo")) {
 					exportShapesJava = f;
 					exportShapesText = text;
+					break;
 				}
 			}
 			Assert.IsNotNull (exportShapesJava,
@@ -485,7 +560,6 @@ namespace UnnamedProject {
 			var typemapDir = builder.Output.GetIntermediaryPath ("typemap");
 			var typemapDlls = Directory.GetFiles (typemapDir, "*.TypeMap.dll");
 			Assert.IsNotEmpty (typemapDlls, "Trimmable typemap should produce at least one *.TypeMap.dll.");
-
 		}
 
 		// T6: trim-warning baseline for [Export] under trimmable.
@@ -537,8 +611,8 @@ namespace UnnamedProject {
 			// trimmable typemap assembly or the [Export] source file.
 			// The regex requires ": warning IL" to avoid matching CSC command lines
 			// that mention IL codes in /nowarn switches.
-			// Exclude IL2026 about ExportAttribute constructors themselves — those
-			// are expected (the attribute carries [RequiresUnreferencedCode]).
+			// Exclude IL2026 about ExportAttribute/ExportFieldAttribute constructors
+			// themselves — those are expected (the attributes carry [RequiresUnreferencedCode]).
 			var ilWarningRegex = new Regex (@":\s*warning\s+(IL[23]\d{3})\b", RegexOptions.Compiled);
 			var offending = new List<string> ();
 			foreach (var line in builder.LastBuildOutput) {
@@ -649,16 +723,6 @@ namespace UnnamedProject {
 				.Where (a => !a.Ignore && a.Name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase) && !a.Name.EndsWith (".ni.dll", StringComparison.OrdinalIgnoreCase))
 				.Select (a => a.Name)
 				.ToHashSet (StringComparer.Ordinal);
-		}
-
-		void AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (string dexFile, string javaSourceDirectory, string acwMapPath, string proguardPrimaryPath)
-		{
-			Assert.IsTrue (
-				Directory.EnumerateFiles (javaSourceDirectory, "MainActivity.java", SearchOption.AllDirectories).Any (),
-				"Post-trim Java source generation should keep the app activity JCW.");
-
-			FileAssert.Exists (acwMapPath, "Post-trim scan should rewrite acw-map.txt for R8.");
-			FileAssert.Exists (proguardPrimaryPath, "R8 should generate a primary proguard configuration from the post-trim acw-map.");
 		}
 
 		string FindOutputFile (ProjectBuilder builder, XamarinAndroidApplicationProject proj, string fileName)

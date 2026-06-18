@@ -140,6 +140,32 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Execute_DeletesStaleGeneratedJavaSources ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var staleJavaFile = Path.Combine (javaDir, "stale", "Old.java");
+			var staleJavaDirectory = Path.GetDirectoryName (staleJavaFile);
+
+			if (staleJavaDirectory is null) {
+				throw new InvalidOperationException ("Could not determine stale Java directory.");
+			}
+			Directory.CreateDirectory (staleJavaDirectory);
+			File.WriteAllText (staleJavaFile, "class Old {}");
+
+			var task = CreateTask ([], outputDir, javaDir);
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+			FileAssert.DoesNotExist (staleJavaFile);
+
+			var deletedFile = task.DeletedJavaFiles.SingleOrDefault ();
+			Assert.IsNotNull (deletedFile);
+			Assert.AreEqual (staleJavaFile, deletedFile.ItemSpec);
+			Assert.AreEqual (Path.Combine ("stale", "Old.java"), deletedFile.GetMetadata ("RelativePath"));
+		}
+
+		[Test]
 		public void Execute_GeneratesFrameworkJcws ()
 		{
 			var path = Path.Combine ("temp", TestName);
