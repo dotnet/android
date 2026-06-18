@@ -931,8 +931,19 @@ namespace Xamarin.Android.Tasks
 				}
 
 				for (int i = 0; i < group.Value.Count; i += CopyBatchSize) {
+					var batchFiles = group.Value.Skip (i).Take (CopyBatchSize).ToList ();
+					var removeArgs = new List<string> { "rm", "-f" };
+					foreach (string file in batchFiles) {
+						removeArgs.Add ($"{targetDirectory}/{Path.GetFileName (file)}");
+					}
+					output = await RunAs (removeArgs.ToArray ());
+					if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
+						LogFastDeploy2Error ("XA0129", output, targetDirectory);
+						return false;
+					}
+
 					var args = new List<string> { "cp", "-p" };
-					foreach (string file in group.Value.Skip (i).Take (CopyBatchSize)) {
+					foreach (string file in batchFiles) {
 						args.Add ($"{remoteStagingPath}/{file}");
 					}
 					args.Add (targetDirectory);
