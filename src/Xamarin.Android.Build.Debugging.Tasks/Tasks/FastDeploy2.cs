@@ -623,10 +623,6 @@ namespace Xamarin.Android.Tasks
 		{
 			var files = new List<DirectPushFile> ();
 			foreach (var file in FastDevFiles ?? Array.Empty<ITaskItem> ()) {
-				if (!File.Exists (file.ItemSpec)) {
-					LogDebugMessage ($"File '{file.ItemSpec}' does not exists. Skipping.");
-					continue;
-				}
 				if (Path.GetExtension (file.ItemSpec) == ".so") {
 					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
 					if (abi != PrimaryCpuAbi) {
@@ -646,9 +642,7 @@ namespace Xamarin.Android.Tasks
 				byte [] environmentData = CreateEnvironmentFileData (EnvironmentFiles, out DateTime newestFileDateTime);
 				if (environmentData.Length > 0) {
 					string environmentFile = Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy2-environment", PrimaryCpuAbi, "environment");
-					Directory.CreateDirectory (Path.GetDirectoryName (environmentFile));
-					File.WriteAllBytes (environmentFile, environmentData);
-					File.SetLastWriteTimeUtc (environmentFile, newestFileDateTime);
+					WriteFileIfChanged (environmentFile, environmentData, newestFileDateTime);
 					files.Add (new DirectPushFile {
 						LocalPath = environmentFile,
 						RelativePath = $"{PrimaryCpuAbi}/environment",
@@ -657,6 +651,18 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return files;
+		}
+
+		protected bool WriteFileIfChanged (string path, byte [] contents, DateTime modifiedDateTime)
+		{
+			if (File.Exists (path) && File.ReadAllBytes (path).SequenceEqual (contents)) {
+				return false;
+			}
+
+			Directory.CreateDirectory (Path.GetDirectoryName (path));
+			File.WriteAllBytes (path, contents);
+			File.SetLastWriteTimeUtc (path, modifiedDateTime);
+			return true;
 		}
 
 		protected virtual bool UseSymlinkAppFileTransfer ()

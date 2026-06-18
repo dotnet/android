@@ -114,10 +114,6 @@ namespace Xamarin.Android.Tasks
 		{
 			var files = new List<DirectPushFile> ();
 			foreach (var file in FastDevFiles ?? Array.Empty<Microsoft.Build.Framework.ITaskItem> ()) {
-				if (!File.Exists (file.ItemSpec)) {
-					LogDebugMessage ($"File '{file.ItemSpec}' does not exists. Skipping.");
-					continue;
-				}
 				if (Path.GetExtension (file.ItemSpec) == ".so") {
 					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
 					if (abi != PrimaryCpuAbi) {
@@ -137,9 +133,7 @@ namespace Xamarin.Android.Tasks
 				byte [] environmentData = CreateEnvironmentFileData (EnvironmentFiles, out DateTime newestFileDateTime);
 				if (environmentData.Length > 0) {
 					string environmentFile = Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy4", PrimaryCpuAbi, "environment");
-					Directory.CreateDirectory (Path.GetDirectoryName (environmentFile));
-					File.WriteAllBytes (environmentFile, environmentData);
-					File.SetLastWriteTimeUtc (environmentFile, newestFileDateTime);
+					WriteFileIfChanged (environmentFile, environmentData, newestFileDateTime);
 					files.Add (new DirectPushFile {
 						LocalPath = environmentFile,
 						RelativePath = $"{PrimaryCpuAbi}/environment",
