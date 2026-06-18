@@ -191,6 +191,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("TrimmableTypeMapUnsupported")] // TODO: https://github.com/dotnet/android/issues/11703
 		public void JavaProxyObject_ObjectMethodsUseJavaIdentitySemantics ()
 		{
 			AssumeTrimmableTypeMapEnabled ();

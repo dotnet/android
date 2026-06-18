@@ -529,7 +529,7 @@ public class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
+	/// <summary>Lookup of the closed managed array type for the given element type.</summary>
 	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
 	{
 		arrayType = null;
@@ -553,9 +553,13 @@ public class TrimmableTypeMap
 		bool isPrimitiveLeaf = leaf.IsPrimitive;
 		string? leafJniName = isPrimitiveLeaf
 			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
-			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
+			: TrimmableTypeMapTypeManager.TryGetBuiltInReferenceJniName (leaf, out var b) ? b
+				: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
 
-		if (leafJniName is not null && _typeMap.TryGetArrayType (leafJniName, rankIndex, out arrayType)) {
+		if (leafJniName is not null &&
+				_typeMap.TryGetArrayType (leafJniName, rankIndex, out var mappedArrayType) &&
+				ArrayElementTypeMatches (mappedArrayType, elementType)) {
+			arrayType = mappedArrayType;
 			return true;
 		}
 
@@ -564,7 +568,17 @@ public class TrimmableTypeMap
 			return true;
 		}
 
+		if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+			arrayType = elementType.MakeArrayType ();
+			return true;
+		}
+
 		return false;
+	}
+
+	static bool ArrayElementTypeMatches (Type arrayType, Type elementType)
+	{
+		return arrayType.IsSZArray && arrayType.GetElementType () == elementType;
 	}
 
 	static Type MakePrimitiveArrayType (Type elementType)

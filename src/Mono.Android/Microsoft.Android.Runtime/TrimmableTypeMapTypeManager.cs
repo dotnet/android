@@ -122,41 +122,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 					return true;
 				}
 
-				if (type == typeof (string)) {
-					signature = new JniTypeSignature ("java/lang/String");
-					return true;
-				}
-
-				if (type == typeof (bool?)) {
-					signature = new JniTypeSignature ("java/lang/Boolean");
-					return true;
-				}
-				if (type == typeof (sbyte?)) {
-					signature = new JniTypeSignature ("java/lang/Byte");
-					return true;
-				}
-				if (type == typeof (char?)) {
-					signature = new JniTypeSignature ("java/lang/Character");
-					return true;
-				}
-				if (type == typeof (short?)) {
-					signature = new JniTypeSignature ("java/lang/Short");
-					return true;
-				}
-				if (type == typeof (int?)) {
-					signature = new JniTypeSignature ("java/lang/Integer");
-					return true;
-				}
-				if (type == typeof (long?)) {
-					signature = new JniTypeSignature ("java/lang/Long");
-					return true;
-				}
-				if (type == typeof (float?)) {
-					signature = new JniTypeSignature ("java/lang/Float");
-					return true;
-				}
-				if (type == typeof (double?)) {
-					signature = new JniTypeSignature ("java/lang/Double");
+				if (TryGetBuiltInReferenceJniName (type, out var jniName)) {
+					signature = new JniTypeSignature (jniName);
 					return true;
 				}
 
@@ -167,6 +134,21 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				return false;
 			}
 		}
+	}
+
+	internal static bool TryGetBuiltInReferenceJniName (Type type, [NotNullWhen (true)] out string? jni)
+	{
+		if (type == typeof (string))  { jni = "java/lang/String"; return true; }
+		if (type == typeof (bool?))   { jni = "java/lang/Boolean"; return true; }
+		if (type == typeof (sbyte?))  { jni = "java/lang/Byte"; return true; }
+		if (type == typeof (char?))   { jni = "java/lang/Character"; return true; }
+		if (type == typeof (short?))  { jni = "java/lang/Short"; return true; }
+		if (type == typeof (int?))    { jni = "java/lang/Integer"; return true; }
+		if (type == typeof (long?))   { jni = "java/lang/Long"; return true; }
+		if (type == typeof (float?))  { jni = "java/lang/Float"; return true; }
+		if (type == typeof (double?)) { jni = "java/lang/Double"; return true; }
+		jni = null;
+		return false;
 	}
 
 	static bool TryGetPrimitiveArrayTypeSignature (Type type, out JniTypeSignature signature)
