@@ -76,3 +76,8 @@ variables:
   value: true
 - name: DOTNET_GENERATE_ASPNET_CERTIFICATE
   value: false
+# Temporary workaround: disable the Roslyn compiler server (VBCSCompiler) to avoid
+# Roslyn-server hangs observed on macOS PR builds after the dotnet/dotnet bump.
+# See https://github.com/dotnet/android/pull/11477.
+- name: UseSharedCompilation
+  value: false
