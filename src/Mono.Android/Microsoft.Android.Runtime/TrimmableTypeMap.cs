@@ -534,6 +534,10 @@ public class TrimmableTypeMap
 	{
 		arrayType = null;
 
+		if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+			return TryMakeDynamicArrayType (elementType, out arrayType);
+		}
+
 		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
 		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
 		var leaf = elementType;
@@ -568,12 +572,30 @@ public class TrimmableTypeMap
 			return true;
 		}
 
-		if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-			arrayType = elementType.MakeArrayType ();
-			return true;
+		return false;
+	}
+
+	static bool TryMakeDynamicArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	{
+		arrayType = null;
+		if (elementType == typeof (void)) {
+			return false;
 		}
 
-		return false;
+		var type = elementType;
+		while (type.IsArray) {
+			if (!type.IsSZArray) {
+				return false;
+			}
+			var next = type.GetElementType ();
+			if (next is null) {
+				return false;
+			}
+			type = next;
+		}
+
+		arrayType = elementType.MakeArrayType ();
+		return true;
 	}
 
 	static bool ArrayElementTypeMatches (Type arrayType, Type elementType)
