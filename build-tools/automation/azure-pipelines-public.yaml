@@ -46,7 +46,7 @@ variables:
   value: 21
 # Override pool images for public Microsoft-hosted agents
 - name: HostedMacImage
-  value: macOS-14
+  value: macOS-15
 - name: LinuxPoolImage
   value: ubuntu-22.04
 - name: NetCorePublicPoolName
