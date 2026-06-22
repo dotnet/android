@@ -79,6 +79,36 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Execute_SameInputs_ProducesByteStableAssemblies ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var firstOutputDir = Path.Combine (Root, path, "first", "typemap");
+			var firstJavaDir = Path.Combine (Root, path, "first", "java");
+			var secondOutputDir = Path.Combine (Root, path, "second", "typemap");
+			var secondJavaDir = Path.Combine (Root, path, "second", "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+			var task1 = CreateTask (assemblies, firstOutputDir, firstJavaDir);
+			Assert.IsTrue (task1.Execute (), "First run should succeed.");
+			var task2 = CreateTask (assemblies, secondOutputDir, secondJavaDir);
+			Assert.IsTrue (task2.Execute (), "Second run should succeed.");
+
+			var firstAssemblies = ReadGeneratedAssemblyBytes (task1.GeneratedAssemblies);
+			var secondAssemblies = ReadGeneratedAssemblyBytes (task2.GeneratedAssemblies);
+
+			CollectionAssert.AreEquivalent (firstAssemblies.Keys, secondAssemblies.Keys, "Generated assembly set should be stable.");
+			foreach (var name in firstAssemblies.Keys) {
+				CollectionAssert.AreEqual (firstAssemblies [name], secondAssemblies [name], $"{name} should be byte-stable for identical inputs.");
+			}
+		}
+
+		[Test]
 		public void Execute_SecondRun_OutputsAreUpToDate ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -373,6 +403,14 @@ namespace Xamarin.Android.Build.Tests {
 				}
 			}
 			return false;
+		}
+
+		static Dictionary<string, byte []> ReadGeneratedAssemblyBytes (IEnumerable<ITaskItem> assemblies)
+		{
+			return assemblies.ToDictionary (
+				a => Path.GetFileName (a.ItemSpec),
+				a => File.ReadAllBytes (a.ItemSpec),
+				StringComparer.Ordinal);
 		}
 	}
 }

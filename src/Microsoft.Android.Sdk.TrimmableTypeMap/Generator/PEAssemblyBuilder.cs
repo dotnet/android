@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -106,10 +107,29 @@ sealed class PEAssemblyBuilder
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
 			new MetadataRootBuilder (Metadata),
 			ILBuilder,
-			mappedFieldData: _mappedFieldData.Count > 0 ? _mappedFieldData : null);
+			mappedFieldData: _mappedFieldData.Count > 0 ? _mappedFieldData : null,
+			deterministicIdProvider: CreateDeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
 		peBlob.WriteContentTo (stream);
+	}
+
+	static BlobContentId CreateDeterministicContentId (IEnumerable<Blob> blobs)
+	{
+		using var sha = SHA256.Create ();
+		foreach (var blob in blobs) {
+			var bytes = blob.GetBytes ();
+			if (bytes.Array is null) {
+				continue;
+			}
+			sha.TransformBlock (bytes.Array, bytes.Offset, bytes.Count, null, 0);
+		}
+		sha.TransformFinalBlock ([], 0, 0);
+		var hash = sha.Hash;
+		if (hash is null) {
+			throw new InvalidOperationException ("SHA256 did not produce a hash.");
+		}
+		return BlobContentId.FromHash (hash);
 	}
 
 	/// <summary>

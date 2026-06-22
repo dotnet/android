@@ -329,8 +329,7 @@ public class JavaSourceTest {
 				if (runtime != AndroidRuntime.NativeAOT) {
 					dotnet.AssertHasNoWarnings ();
 				} else {
-					// NativeAOT currently issues 1 warning
-					dotnet.AssertHasSomeWarnings (1);
+					dotnet.AssertHasNoWarnings ();
 				}
 			}
 

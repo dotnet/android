@@ -93,7 +93,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		moduleName ??= assemblyName + ".dll";
 
 		var pe = new PEAssemblyBuilder (_systemRuntimeVersion);
-		pe.EmitPreamble (assemblyName, moduleName);
+		pe.EmitPreamble (assemblyName, moduleName, MetadataHelper.ComputeRootContentFingerprint (perAssemblyTypeMapNames, useSharedTypemapUniverse, maxArrayRank));
 
 		EntityHandle anchorTypeHandle;
 		if (useSharedTypemapUniverse) {

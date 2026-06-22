@@ -18,6 +18,52 @@ namespace Xamarin.Android.Build.Tests {
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
 		[Test]
+		public void NativeAot_DefaultsToTrimmableTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.RunTarget (proj, "_CreatePropertiesCache"), "Property cache target should have succeeded.");
+
+			var buildProps = builder.Output.GetIntermediaryPath ("build.props");
+			FileAssert.Exists (buildProps);
+			StringAssert.Contains (
+				"_androidtypemapimplementation=trimmable",
+				File.ReadAllText (buildProps),
+				"NativeAOT should default to trimmable typemaps.");
+		}
+
+		[Test]
+		public void NativeAot_NonTrimmableTypeMap_FailsValidation ([Values ("managed", "llvm-ir")] string typemapImplementation)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
+
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+
+			Assert.IsFalse (builder.RunTarget (proj, "_ValidateAndroidTypeMapImplementation"),
+				"NativeAOT with a non-trimmable typemap should fail validation.");
+			Assert.IsTrue (
+				StringAssertEx.ContainsText (builder.LastBuildOutput, "NativeAOT requires _AndroidTypeMapImplementation=trimmable."),
+				$"{builder.BuildLogFile} should contain the NativeAOT trimmable typemap validation error.");
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -65,6 +111,44 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var typemapDll in typemapDlls) {
 				FileAssert.Exists (typemapDll, $"No-op builds should preserve generated typemap assembly {typemapDll} when _GenerateTrimmableTypeMap is skipped.");
 			}
+		}
+
+		[Test]
+		public void GenerateJavaStubsTarget_WithTrimmableTypeMap_DoesNotCleanIntermediateAndroidDirectory ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var androidDir = builder.Output.GetIntermediaryPath ("android");
+			DirectoryAssert.Exists (androidDir, "First build should have populated the intermediate android directory.");
+			var sentinel = Path.Combine (androidDir, "no-clean-sentinel.txt");
+			File.WriteAllText (sentinel, "do not clean");
+
+			var cleanStamp = builder.Output.GetIntermediaryPath (Path.Combine ("stamp", "_CleanIntermediateIfNeeded.stamp"));
+			if (File.Exists (cleanStamp)) {
+				File.Delete (cleanStamp);
+			}
+
+			var typeMapStamp = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "_GenerateTrimmableTypeMap.stamp"));
+			var javaStubsStamp = builder.Output.GetIntermediaryPath (Path.Combine ("stamp", "_GenerateJavaStubs.stamp"));
+			FileAssert.Exists (typeMapStamp);
+			FileAssert.Exists (javaStubsStamp);
+			var stampTime = DateTime.UtcNow;
+			File.SetLastWriteTimeUtc (typeMapStamp, stampTime);
+			File.SetLastWriteTimeUtc (javaStubsStamp, stampTime.AddSeconds (-5));
+
+			Assert.IsTrue (builder.RunTarget (proj, "_GenerateJavaStubs", doNotCleanupOnUpdate: true),
+				"_GenerateJavaStubs target should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateJavaStubs");
+			FileAssert.Exists (sentinel, "_GenerateJavaStubs should not run _CleanIntermediateIfNeeded when invoked outside a full Build/DeployToDevice graph.");
 		}
 
 		[Test]
