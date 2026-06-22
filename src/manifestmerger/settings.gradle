@@ -1,12 +1,8 @@
+// See: eng/gradle/repositories.gradle
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/repositories.gradle", to: pluginManagement
 }
 
-// The artifacts-credprovider plugin authenticates the dnceng Azure Artifacts
-// feed when ingesting a new package locally (see repositories.gradle for
-// the full workflow). Outside of that flow it is a no-op: regular CI builds
-// read the feed anonymously, and local builds use only public repos with
-// no AzDO endpoints for the plugin to authenticate.
 plugins {
     id 'com.microsoft.azure.artifacts.credprovider' version '1.1.1'
 }
