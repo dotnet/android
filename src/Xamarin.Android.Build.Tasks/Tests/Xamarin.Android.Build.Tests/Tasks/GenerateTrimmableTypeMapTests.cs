@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -106,6 +107,16 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var name in firstAssemblies.Keys) {
 				CollectionAssert.AreEqual (firstAssemblies [name], secondAssemblies [name], $"{name} should be byte-stable for identical inputs.");
 			}
+		}
+
+		[Test]
+		public void RootTypeMapAssembly_SystemRuntimeVersion_ChangesMvid ()
+		{
+			var first = GenerateRootTypeMapAssembly (new Version (11, 0));
+			var second = GenerateRootTypeMapAssembly (new Version (11, 1));
+
+			Assert.AreNotEqual (ReadMvid (first), ReadMvid (second),
+				"Root typemap assembly MVID should change when emitted System.Runtime references change.");
 		}
 
 		[Test]
@@ -411,6 +422,21 @@ namespace Xamarin.Android.Build.Tests {
 				a => Path.GetFileName (a.ItemSpec),
 				a => File.ReadAllBytes (a.ItemSpec),
 				StringComparer.Ordinal);
+		}
+
+		static byte [] GenerateRootTypeMapAssembly (Version systemRuntimeVersion)
+		{
+			using var stream = new MemoryStream ();
+			var generator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+			generator.Generate (new [] { "_Mono.Android.TypeMap" }, useSharedTypemapUniverse: false, stream, maxArrayRank: 3);
+			return stream.ToArray ();
+		}
+
+		static Guid ReadMvid (byte [] assemblyBytes)
+		{
+			using var stream = new MemoryStream (assemblyBytes);
+			using var assembly = AssemblyDefinition.ReadAssembly (stream);
+			return assembly.MainModule.Mvid;
 		}
 	}
 }

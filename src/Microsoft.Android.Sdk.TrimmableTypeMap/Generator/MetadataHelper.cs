@@ -49,9 +49,10 @@ static class MetadataHelper
 		return FinishHash (sha);
 	}
 
-	public static byte [] ComputeRootContentFingerprint (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, int maxArrayRank)
+	public static byte [] ComputeRootContentFingerprint (Version systemRuntimeVersion, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, int maxArrayRank)
 	{
 		using var sha = SHA256.Create ();
+		AddVersion (sha, systemRuntimeVersion);
 		AddByte (sha, useSharedTypemapUniverse ? (byte) 1 : (byte) 0);
 		AddInt32 (sha, maxArrayRank);
 		foreach (var name in perAssemblyTypeMapNames) {
@@ -65,6 +66,14 @@ static class MetadataHelper
 		var bytes = Encoding.UTF8.GetBytes (value);
 		AddInt32 (hash, bytes.Length);
 		AddBytes (hash, bytes);
+	}
+
+	static void AddVersion (HashAlgorithm hash, Version version)
+	{
+		AddInt32 (hash, version.Major);
+		AddInt32 (hash, version.Minor);
+		AddInt32 (hash, version.Build);
+		AddInt32 (hash, version.Revision);
 	}
 
 	static void AddInt32 (HashAlgorithm hash, int value)
