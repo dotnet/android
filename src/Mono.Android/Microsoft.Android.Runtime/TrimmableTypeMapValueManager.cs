@@ -275,6 +275,16 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		return false;
 	}
 
+	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
+	{
+		if (value is TrimmableJavaProxyObject proxy) {
+			result = proxy.Value;
+			return true;
+		}
+
+		return base.TryUnboxPeerObject (value, out result);
+	}
+
 	protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (
 		[DynamicallyAccessedMembers (Constructors)]
 		Type type,
@@ -283,19 +293,25 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		if (value == null) {
 			return new JniObjectReference ();
 		}
+
 		if (TryCreatePrimitiveArrayObjectReference (value, out var primitiveArrayReference)) {
 			return primitiveArrayReference;
 		}
+
 		if (value is IJavaPeerable peerable) {
 			return peerable.PeerReference.IsValid
 				? peerable.PeerReference.NewLocalRef ()
 				: new JniObjectReference ();
 		}
 
-		var handle = JavaConvert.ToLocalJniHandle (value);
-		return handle == IntPtr.Zero
-			? new JniObjectReference ()
-			: new JniObjectReference (handle, JniObjectReferenceType.Local);
+		if (JavaConvert.TryConvertKnownValueToLocalJniHandle (value, out var handle)) {
+			return handle == IntPtr.Zero
+				? new JniObjectReference ()
+				: new JniObjectReference (handle, JniObjectReferenceType.Local);
+		}
+
+		var proxy = TrimmableJavaProxyObject.GetProxy (value);
+		return proxy.PeerReference.NewLocalRef ();
 	}
 
 	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
@@ -304,4 +320,58 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
+	[JniTypeSignature (JniTypeName)]
+	sealed class TrimmableJavaProxyObject : global::Java.Interop.JavaObject, IEquatable<TrimmableJavaProxyObject>
+	{
+		const string JniTypeName = "net/dot/jni/internal/TrimmableJavaProxyObject";
+
+		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (TrimmableJavaProxyObject));
+		static  readonly    ConditionalWeakTable<object, TrimmableJavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, TrimmableJavaProxyObject> ();
+
+		TrimmableJavaProxyObject (object value)
+		{
+			if (value == null)
+				throw new ArgumentNullException (nameof (value));
+			Value = value;
+		}
+
+		public override JniPeerMembers JniPeerMembers {
+			get { return _members; }
+		}
+
+		public object Value {get; private set;}
+
+		public override int GetHashCode ()
+		{
+			return Value.GetHashCode ();
+		}
+
+		public override bool Equals (object? obj)
+		{
+			if (obj is TrimmableJavaProxyObject other)
+				return object.Equals (Value, other.Value);
+			return object.Equals (Value, obj);
+		}
+
+		public bool Equals (TrimmableJavaProxyObject? other) => object.Equals (Value, other?.Value);
+
+		public override string? ToString ()
+		{
+			return Value.ToString ();
+		}
+
+		public static TrimmableJavaProxyObject GetProxy (object value)
+		{
+			if (value == null)
+				throw new ArgumentNullException (nameof (value));
+
+			lock (CachedValues) {
+				if (CachedValues.TryGetValue (value, out var proxy))
+					return proxy;
+				proxy = new TrimmableJavaProxyObject (value);
+				CachedValues.Add (value, proxy);
+				return proxy;
+			}
+		}
+	}
 }

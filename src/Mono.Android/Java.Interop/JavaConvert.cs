@@ -586,6 +586,32 @@ namespace Java.Interop {
 			return converter (value);
 		}
 
+		internal static bool TryConvertKnownValueToLocalJniHandle (object? value, out IntPtr handle)
+		{
+			if (value == null) {
+				handle = IntPtr.Zero;
+				return true;
+			}
+			if (value is IJavaObject v) {
+				handle = JNIEnv.ToLocalJniHandle (v);
+				return true;
+			}
+
+			Type sourceType = value.GetType ();
+			Func<object, IntPtr>? converter;
+			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter)) {
+				handle = converter (value);
+				return true;
+			}
+			if (sourceType.IsArray) {
+				handle = LocalJniHandleConverters [typeof (Array)] (value);
+				return true;
+			}
+
+			handle = IntPtr.Zero;
+			return false;
+		}
+
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
 		{
 			IntPtr lref = ToLocalJniHandle (value);
