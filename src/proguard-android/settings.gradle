@@ -1,8 +1,26 @@
+// pluginManagement and the credprovider plugins {} block must live in
+// settings.gradle directly — they cannot be moved into a shared applied script
+// (Gradle restriction). Keep the contents here in sync across all settings.gradle
+// files in this repo.
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
+        // Public AzureArtifacts feed hosts the credprovider Gradle plugin
+        // itself. No authentication required.
+        maven {
+            url = 'https://pkgs.dev.azure.com/artifacts-public/PublicTools/_packaging/AzureArtifacts/maven/v1'
+            name = 'AzureArtifacts'
+        }
+        // dnceng public feed proxies upstream Gradle plugins (e.g. AGP).
+        // Authenticated by the credprovider plugin below.
+        maven {
+            url = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+            name = 'dotnet-public-maven'
+        }
     }
 }
+
+plugins {
+    id 'com.microsoft.azure.artifacts.credprovider' version '1.1.1'
+}
+
 rootProject.name = 'proguard-android'

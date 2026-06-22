@@ -10,11 +10,10 @@ java {
     targetCompatibility = ext.javaTargetVer
 }
 
+apply from: "${rootDir}/../../eng/gradle/repositories.gradle"
+
 repositories {
-    maven { url 'https://maven.google.com' }
-    mavenCentral()
-    maven { url 'https://kotlin.bintray.com/kotlinx' }
-    jcenter()
+    gradle.ext.dotnetPublicMaven(delegate)
 }
 
 dependencies {
