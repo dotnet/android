@@ -52,7 +52,10 @@ repositories {
         name = 'AzureArtifacts'
     }
 
-    if (System.getenv('RunningOnCI') == 'true') {
+    // AzDO uppercases pipeline variables when exporting them as env vars on
+    // Linux/macOS agents, so check both spellings.
+    def runningOnCI = System.getenv('RunningOnCI') ?: System.getenv('RUNNINGONCI')
+    if (runningOnCI == 'true') {
         maven {
             url = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
             name = 'dotnet-public-maven'

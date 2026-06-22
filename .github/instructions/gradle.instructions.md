@@ -25,7 +25,7 @@ rootProject.name = '<project>'
 
 ## CI vs local
 
-`repositories.gradle` switches on `System.getenv('RunningOnCI')`:
+`repositories.gradle` switches on `System.getenv('RunningOnCI')` (or `RUNNINGONCI` — AzDO uppercases env vars on Linux/macOS agents):
 
 - **`RunningOnCI=true`** (Azure DevOps, set in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
 - **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()`. No credentials needed.
