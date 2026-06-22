@@ -64,7 +64,7 @@ sealed class PEAssemblyBuilder
 	/// Emits the assembly definition, module definition, common assembly references, and &lt;Module&gt; type.
 	/// Call this first.
 	/// </summary>
-	public void EmitPreamble (string assemblyName, string moduleName, byte []? contentFingerprint = null)
+	public void EmitPreamble (string assemblyName, string moduleName, ReadOnlySpan<byte> contentFingerprint = default)
 	{
 		_asmRefCache.Clear ();
 		_typeRefCache.Clear ();

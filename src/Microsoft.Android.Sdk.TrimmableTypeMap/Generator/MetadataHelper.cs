@@ -9,11 +9,11 @@ static class MetadataHelper
 	/// Produces a deterministic MVID by hashing the module name together with content-dependent data.
 	/// Assemblies with the same name but different content will have different MVIDs.
 	/// </summary>
-	public static Guid DeterministicMvid (string moduleName, byte []? contentBytes = null)
+	public static Guid DeterministicMvid (string moduleName, ReadOnlySpan<byte> contentBytes = default)
 	{
 		using var hashBuilder = new DeterministicHashBuilder ();
 		hashBuilder.AddString (moduleName);
-		if (contentBytes is not null) {
+		if (!contentBytes.IsEmpty) {
 			hashBuilder.AddBytes (contentBytes);
 		}
 		byte [] hash = hashBuilder.ToHash ();
