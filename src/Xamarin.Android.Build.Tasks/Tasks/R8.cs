@@ -182,6 +182,8 @@ namespace Xamarin.Android.Tasks
 		// We skip the whole offending file and emit a warning naming the source library
 		// so the build can still succeed.
 		static readonly string [] DisallowedLibraryProguardOptions = {
+			"-dontobfuscate",
+			"-dontoptimize",
 			"-dump",
 			"-printconfiguration",
 			"-printmapping",
@@ -210,7 +212,12 @@ namespace Xamarin.Android.Tasks
 		{
 			var trimmed = line.TrimStart ();
 			foreach (var candidate in DisallowedLibraryProguardOptions) {
-				if (trimmed.StartsWith (candidate, StringComparison.OrdinalIgnoreCase)) {
+				if (trimmed.Length < candidate.Length)
+					continue;
+				if (!trimmed.StartsWith (candidate, StringComparison.OrdinalIgnoreCase))
+					continue;
+				// Require an end-of-token boundary so "-printmappingFoo" does not match "-printmapping".
+				if (trimmed.Length == candidate.Length || char.IsWhiteSpace (trimmed [candidate.Length])) {
 					option = candidate;
 					return true;
 				}
