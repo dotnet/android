@@ -1,20 +1,20 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="11.0.100-preview.6.26316.101">
+    <Dependency Name="Microsoft.NET.Sdk" Version="11.0.100-preview.6.26319.105">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>994058808dc53f2a521a5e916f70753dd2bce190</Sha>
+      <Sha>b756a8d8a0e64905e16c81911bb09a8110bc3395</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="11.0.0-preview.6.26316.101">
+    <Dependency Name="Microsoft.NET.ILLink" Version="11.0.0-preview.6.26319.105">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>994058808dc53f2a521a5e916f70753dd2bce190</Sha>
+      <Sha>b756a8d8a0e64905e16c81911bb09a8110bc3395</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="11.0.0-preview.6.26316.101">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="11.0.0-preview.6.26319.105">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>994058808dc53f2a521a5e916f70753dd2bce190</Sha>
+      <Sha>b756a8d8a0e64905e16c81911bb09a8110bc3395</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-preview.26316.101">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-preview.26319.105">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>994058808dc53f2a521a5e916f70753dd2bce190</Sha>
+      <Sha>b756a8d8a0e64905e16c81911bb09a8110bc3395</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-11.0.100-preview.4" Version="11.0.100-preview.4.26215.121">
       <Uri>https://github.com/dotnet/dotnet</Uri>
@@ -36,17 +36,17 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26316.101">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26319.105">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>994058808dc53f2a521a5e916f70753dd2bce190</Sha>
+      <Sha>b756a8d8a0e64905e16c81911bb09a8110bc3395</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="11.0.0-beta.26316.101">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="11.0.0-beta.26319.105">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>994058808dc53f2a521a5e916f70753dd2bce190</Sha>
+      <Sha>b756a8d8a0e64905e16c81911bb09a8110bc3395</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="11.0.100-preview.6.26316.101">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="11.0.100-preview.6.26319.105">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>994058808dc53f2a521a5e916f70753dd2bce190</Sha>
+      <Sha>b756a8d8a0e64905e16c81911bb09a8110bc3395</Sha>
     </Dependency>
     <Dependency Name="MSTest" Version="4.3.0-preview.26314.12">
       <Uri>https://github.com/microsoft/testfx</Uri>
