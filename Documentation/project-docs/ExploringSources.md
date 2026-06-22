@@ -15,7 +15,6 @@ is used within many of the output directories which are created.
           * `bin`: Programs that are intended to be installed into `$(prefix)/bin`,
 	    for Unix-style installable files.
           * `packs\Microsoft.Android.Sdk.$(HostOS)\$(AndroidPackVersion)\tools`: MSBuild project integrations.
-            This is where `Xamarin.Android.CSharp.targets` lives.
           * `lib\xamarin.android\xbuild-frameworks\MonoAndroid\v1.0`:
             Xamarin.Android BCL assemblies
           * `lib\xamarin.android\xbuild-frameworks\MonoAndroid\*`: Xamarin.Android

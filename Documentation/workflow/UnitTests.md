@@ -399,8 +399,6 @@ These tests are generally found in:
 
   * [`tests/Mono.Android-Tests`](../../tests/Mono.Android-Tests)
   * [`tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests`](../../tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests)
-  * [`tests/EmbeddedDSOs/EmbeddedDSO`](../../tests/EmbeddedDSOs/EmbeddedDSO)
-  * [`tests/locales/Xamarin.Android.Locale-Tests`](../../tests/locales/Xamarin.Android.Locale-Tests)
 
 The main runtime test project is:
 
