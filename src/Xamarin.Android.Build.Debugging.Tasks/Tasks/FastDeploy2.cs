@@ -173,7 +173,7 @@ namespace Xamarin.Android.Tasks
 
 		async Task RunInstall ()
 		{
-			await Device.EnsureProperties (CancellationToken).ConfigureAwait (false);
+			await RunLoggedDeviceOperation ("EnsureProperties", () => Device.EnsureProperties (CancellationToken));
 
 			string redirectStdio = Device.Properties.Get ("log.redirect-stdio");
 			if (redirectStdio != null && string.Equals ("true", redirectStdio.Trim (), StringComparison.OrdinalIgnoreCase)) {
@@ -194,7 +194,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (ReInstall && !string.IsNullOrEmpty (PackageFile)) {
-				await Device.UninstallPackage (PackageName, PreserveUserData, CancellationToken);
+				var uninstallCommand = new PmUninstallCommand {
+					PackageName = PackageName,
+					PreserveData = PreserveUserData,
+				};
+				await RunLoggedDeviceOperation ($"UninstallPackage {uninstallCommand}", () => Device.UninstallPackage (uninstallCommand, CancellationToken));
 			}
 
 			bool packageFileOutOfDate = !string.IsNullOrEmpty (PackageFile) &&
@@ -254,8 +258,8 @@ namespace Xamarin.Android.Tasks
 			if (packageInfo.InternalPath.IndexOf ("not an application", StringComparison.OrdinalIgnoreCase) >= 0) {
 				LogDiagnostic ($"Package {packageInfo.PackageName} is a system application.");
 				packageInfo.IsSystemApplication = true;
-				string whoami = await Device.RunShellCommand ("whoami");
-				packageInfo.AdbIsRoot = whoami.Trim () == "root";
+				var whoami = await RunAdbShellCommand ("whoami");
+				packageInfo.AdbIsRoot = whoami.Output.Trim () == "root";
 				LogDiagnostic ($"using {(packageInfo.AdbIsRoot ? "root" : $"su {packageInfo.UserId}")} to install fast deployment files.");
 				packageInfo.InternalPath = $"/data/user/{(packageInfo.UserId ?? "0")}/{packageInfo.PackageName}";
 				return;
@@ -318,21 +322,23 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 			LogDiagnostic ($"Ensuring Android user {userId} is in the 'running' state before run-as queries.");
-			string output = await Device.RunShellCommand (CancellationToken, "am", "start-user", "-w", userId);
+			var result = await RunAdbShellCommand ("am", "start-user", "-w", userId);
+			string output = result.Output;
 			LogDiagnostic ($"'am start-user -w {userId}' returned: {(string.IsNullOrWhiteSpace (output) ? "<no output>" : output.Trim ())}");
 		}
 
 		async Task InstallPackage ()
 		{
 			LogDebugMessage ($"Installing Package {PackageName}");
+			var installCommand = new PushAndInstallCommand {
+				ApkFile = PackageFile,
+				PackageName = PackageName,
+				ReInstall = ReInstall,
+				User = UserID,
+				TestOnly = IsTestOnly,
+			};
 			try {
-				await Device.PushAndInstallPackageAsync (new PushAndInstallCommand {
-					ApkFile = PackageFile,
-					PackageName = PackageName,
-					ReInstall = ReInstall,
-					User = UserID,
-					TestOnly = IsTestOnly,
-				}, token: CancellationToken);
+				await RunLoggedDeviceOperation (FormatPushAndInstallOperation (installCommand), () => Device.PushAndInstallPackageAsync (installCommand, token: CancellationToken));
 				LogDebugMessage ($"Installed Package {PackageName}.");
 			} catch (Exception exception) {
 				var ex = exception;
@@ -360,21 +366,27 @@ namespace Xamarin.Android.Tasks
 
 			LogDebugMessage (string.Format ("Package '{0}' already exists. Retrying...", PackageName));
 			try {
-				await Device.DeleteFile (e.PackageFile, true, CancellationToken);
+				await RunLoggedDeviceOperation ($"DeleteFile {e.PackageFile} ignoreError=True", () => Device.DeleteFile (e.PackageFile, true, CancellationToken));
 			} catch {
 			}
 			bool preserveData = !(e is RequiresUninstallException);
 			LogDebugMessage (string.Format ("Forcing complete uninstall of '{0}'... Preserving Data: {1}", PackageName, preserveData));
 			var uninstallCommand = new PmUninstallCommand () { PackageName = PackageName, User = UserID, PreserveData = preserveData };
-			await Device.UninstallPackage (uninstallCommand, cancellationToken: CancellationToken);
+			await RunLoggedDeviceOperation ($"UninstallPackage {uninstallCommand}", () => Device.UninstallPackage (uninstallCommand, cancellationToken: CancellationToken));
 			LogDebugMessage (string.Format ("Installing '{0}'...", PackageName));
-			await Device.PushAndInstallPackageAsync (new PushAndInstallCommand {
+			var installCommand = new PushAndInstallCommand {
 				ApkFile = PackageFile,
 				PackageName = PackageName,
 				ReInstall = false,
 				User = UserID
-			}, token: CancellationToken);
+			};
+			await RunLoggedDeviceOperation (FormatPushAndInstallOperation (installCommand), () => Device.PushAndInstallPackageAsync (installCommand, token: CancellationToken));
 			return false;
+		}
+
+		static string FormatPushAndInstallOperation (PushAndInstallCommand command)
+		{
+			return $"PushAndInstallPackage ApkFile={command.ApkFile}, PackageName={command.PackageName}, ReInstall={command.ReInstall}, User={command.User ?? ""}, TestOnly={command.TestOnly}";
 		}
 
 		async Task RemoveOverrideDirectory ()
@@ -386,14 +398,14 @@ namespace Xamarin.Android.Tasks
 		{
 			var pid = packageInfo.ProcessId;
 			if (pid == 0 && packageInfo.IsSystemApplication) {
-				pid = await Device.GetProcessId (PackageName, CancellationToken);
+				pid = await RunLoggedDeviceOperation ($"GetProcessId {PackageName}", () => Device.GetProcessId (PackageName, CancellationToken));
 			}
 			if (pid == 0) {
 				LogDebugMessage ($"{PackageName} was not running, skipping kill");
 				return;
 			}
 			LogDebugMessage ($"Terminating {PackageName}...");
-			await Device.KillProcessAndWaitForExit (PackageName, CancellationToken);
+			await RunLoggedDeviceOperation ($"KillProcessAndWaitForExit {PackageName}", () => Device.KillProcessAndWaitForExit (PackageName, CancellationToken));
 			LogDebugMessage ($"{PackageName} Terminated.");
 		}
 
@@ -409,7 +421,7 @@ namespace Xamarin.Android.Tasks
 
 			var output = new StringBuilder ();
 			foreach (var batch in BatchArguments ("mkdir", "-p", directories)) {
-				output.Append (await Device.RunShellCommand (CancellationToken, batch.ToArray ()));
+				output.Append ((await RunAdbShellCommand (batch.ToArray ())).Output);
 			}
 			return output.ToString ();
 		}
@@ -535,7 +547,8 @@ namespace Xamarin.Android.Tasks
 					return null;
 				}
 			} else {
-				output = await Device.RunShellCommand (CancellationToken, "find", rootPath, "-type", "f", "-exec", "stat", "-c", "%n|%s|%Y", "{}", "+");
+				var result = await RunAdbShellCommand ("find", rootPath, "-type", "f", "-exec", "stat", "-c", "%n|%s|%Y", "{}", "+");
+				output = result.Output;
 			}
 
 			if (IsMissingDirectoryError (output)) {
@@ -714,6 +727,11 @@ namespace Xamarin.Android.Tasks
 			return await RunAdbCommand (arguments, environmentVariables: null);
 		}
 
+		async Task<AdbCommandResult> RunAdbShellCommand (params string [] arguments)
+		{
+			return await RunAdbCommand (new [] { "shell" }.Concat (arguments).ToArray ());
+		}
+
 		async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
 		{
 			string adb = ResolveAdbPath ();
@@ -743,7 +761,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			LogDiagnostic ($"Running adb: {psi.FileName} {psi.Arguments}");
+			LogDiagnostic ($"adb command: {psi.FileName} {psi.Arguments}");
 			using (var process = new Process ()) {
 				process.StartInfo = psi;
 				process.OutputDataReceived += (sender, e) => {
@@ -751,7 +769,6 @@ namespace Xamarin.Android.Tasks
 						lock (stdout) {
 							stdout.AppendLine (e.Data);
 						}
-						LogDiagnostic (e.Data);
 					} else {
 						stdoutCompleted.Set ();
 					}
@@ -761,7 +778,6 @@ namespace Xamarin.Android.Tasks
 						lock (stderr) {
 							stderr.AppendLine (e.Data);
 						}
-						LogDiagnostic (e.Data);
 					} else {
 						stderrCompleted.Set ();
 					}
@@ -782,11 +798,44 @@ namespace Xamarin.Android.Tasks
 				}
 				stdoutCompleted.WaitOne (TimeSpan.FromSeconds (30));
 				stderrCompleted.WaitOne (TimeSpan.FromSeconds (30));
-				return new AdbCommandResult {
+				var result = new AdbCommandResult {
 					ExitCode = process.ExitCode,
-					Output = $"{stdout}{stderr}".Trim (),
+					StandardOutput = stdout.ToString ().Trim (),
+					StandardError = stderr.ToString ().Trim (),
 				};
+				LogAdbCommandResult (result);
+				return result;
 			}
+		}
+
+		void LogAdbCommandResult (AdbCommandResult result)
+		{
+			LogDiagnostic ($"adb exit code: {result.ExitCode}");
+			LogAdbStream ("stdout", result.StandardOutput);
+			LogAdbStream ("stderr", result.StandardError);
+		}
+
+		void LogAdbStream (string name, string value)
+		{
+			if (string.IsNullOrEmpty (value)) {
+				return;
+			}
+			LogDiagnostic ($"adb {name}:{Environment.NewLine}{value}");
+		}
+
+		async Task RunLoggedDeviceOperation (string operation, Func<Task> action)
+		{
+			LogDiagnostic ($"AndroidDevice operation: {operation}");
+			await action ();
+			LogDiagnostic ($"AndroidDevice operation completed: {operation}");
+		}
+
+		async Task<T> RunLoggedDeviceOperation<T> (string operation, Func<Task<T>> action)
+		{
+			LogDiagnostic ($"AndroidDevice operation: {operation}");
+			T result = await action ();
+			LogDiagnostic ($"AndroidDevice operation completed: {operation} => {result}");
+			return result;
 		}
 
 		List<string> BuildRunAsArgs ()
@@ -812,9 +861,8 @@ namespace Xamarin.Android.Tasks
 		{
 			List<string> args = BuildRunAsArgs ();
 			args.AddRange (arguments);
-			string result = await Device.RunShellCommand (CancellationToken, args.ToArray ());
-			LogCommandOutput (arguments [0], result);
-			return result;
+			var result = await RunAdbShellCommand (args.ToArray ());
+			return result.Output;
 		}
 
 		async Task<string> RunAsShell (string script)
@@ -824,17 +872,8 @@ namespace Xamarin.Android.Tasks
 			args.Add ("-c");
 			args.Add (script);
 			string command = string.Join (" ", args.Select (QuoteShellArgument));
-			string result = await Device.RunShellCommand (command, CancellationToken);
-			LogCommandOutput ("sh", result);
-			return result;
-		}
-
-		void LogCommandOutput (string command, string output)
-		{
-			if (string.IsNullOrWhiteSpace (output)) {
-				return;
-			}
-			LogDebugMessage ($"{command} returned: {output.Trim ()}");
+			var result = await RunAdbShellCommand (command);
+			return result.Output;
 		}
 
 		static string QuoteShellArgument (string value)
@@ -973,7 +1012,20 @@ namespace Xamarin.Android.Tasks
 		struct AdbCommandResult
 		{
 			public int ExitCode;
-			public string Output;
+			public string StandardOutput;
+			public string StandardError;
+
+			public string Output {
+				get {
+					if (string.IsNullOrEmpty (StandardOutput)) {
+						return StandardError ?? "";
+					}
+					if (string.IsNullOrEmpty (StandardError)) {
+						return StandardOutput;
+					}
+					return $"{StandardOutput}{Environment.NewLine}{StandardError}";
+				}
+			}
 		}
 
 		static readonly List<(string error, string code, string message)> runas_codes = new List<(string error, string code, string message)> () {
