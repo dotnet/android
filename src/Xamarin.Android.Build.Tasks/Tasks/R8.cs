@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardGeneratedApplicationConfiguration { get; set; }
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
-		public string []? ProguardConfigurationFiles { get; set; }
+		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
 
 		protected override string MainClass => "com.android.tools.r8.R8";
@@ -155,17 +155,84 @@ namespace Xamarin.Android.Tasks
 				WriteArg (response, temp);
 			}
 			if (ProguardConfigurationFiles != null) {
-				foreach (var file in ProguardConfigurationFiles) {
-					if (File.Exists (file)) {
-						WriteArg (response, "--pg-conf");
-						WriteArg (response, file);
-					} else {
+				foreach (var item in ProguardConfigurationFiles) {
+					var file = item.ItemSpec;
+					if (!File.Exists (file)) {
 						Log.LogCodedWarning ("XA4304", file, 0, Properties.Resources.XA4304, file);
+						continue;
 					}
+					if (HasDisallowedLibraryProguardOption (item, out var option)) {
+						Log.LogCodedWarning ("XA4322", file, 0, Properties.Resources.XA4322,
+							option, file, DescribeProguardSource (item));
+						continue;
+					}
+					WriteArg (response, "--pg-conf");
+					WriteArg (response, file);
 				}
 			}
 
 			return responseFile;
+		}
+
+		// ProGuard "global" options that affect the whole build and are not allowed inside
+		// a library's proguard.txt (the file packaged inside an .aar's root). AGP 9.0
+		// introduced the same restriction — see "Behavior changes" in the AGP 9.0 release
+		// notes:
+		//   https://developer.android.com/build/releases/agp-9-0-0-release-notes#behavior-changes
+		// We skip the whole offending file and emit a warning naming the source library
+		// so the build can still succeed.
+		static readonly string [] DisallowedLibraryProguardOptions = {
+			"-dump",
+			"-printconfiguration",
+			"-printmapping",
+			"-printseeds",
+			"-printusage",
+		};
+
+		bool HasDisallowedLibraryProguardOption (ITaskItem item, out string option)
+		{
+			option = "";
+			// Only library-provided proguard.txt files (extracted from .aar) carry OriginalFile
+			// metadata. Skip files we generate ourselves or that the user added directly.
+			if (item.GetMetadata ("OriginalFile").IsNullOrEmpty ()) {
+				return false;
+			}
+			foreach (var raw in File.ReadLines (item.ItemSpec)) {
+				if (TryGetDisallowedOption (raw, out var found)) {
+					option = found;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		internal static bool TryGetDisallowedOption (string line, out string option)
+		{
+			var trimmed = line.TrimStart ();
+			foreach (var candidate in DisallowedLibraryProguardOptions) {
+				if (trimmed.StartsWith (candidate, StringComparison.OrdinalIgnoreCase)) {
+					option = candidate;
+					return true;
+				}
+			}
+			option = "";
+			return false;
+		}
+
+		static string DescribeProguardSource (ITaskItem item)
+		{
+			var packageId = item.GetMetadata ("NuGetPackageId");
+			if (!packageId.IsNullOrEmpty ()) {
+				var version = item.GetMetadata ("NuGetPackageVersion");
+				return version.IsNullOrEmpty ()
+					? $"NuGet package '{packageId}'"
+					: $"NuGet package '{packageId}' {version}";
+			}
+			var originalFile = item.GetMetadata ("OriginalFile");
+			if (!originalFile.IsNullOrEmpty ()) {
+				return $"'{originalFile}'";
+			}
+			return $"'{item.ItemSpec}'";
 		}
 
 		Stream GetEmbeddedResourceStream (string resourceName)
