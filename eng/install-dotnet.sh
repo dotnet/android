@@ -28,12 +28,15 @@ install_dir="$repo_root/bin/$configuration/dotnet"
 mkdir -p "$install_dir"
 
 # Download Microsoft's official dotnet-install.sh (cached under
-# $install_dir to avoid hitting the CDN on idempotent re-runs). Invoke
-# via `bash` so the executable bit isn't needed (Windows clones often
-# strip it).
+# $install_dir to avoid hitting the CDN on idempotent re-runs). Download
+# to a temp file and atomically `mv` into place so a failed/interrupted
+# download cannot poison the cache. Invoke via `bash` so the executable
+# bit isn't needed (Windows clones often strip it).
 install_script="$install_dir/dotnet-install.sh"
 if [[ ! -f "$install_script" ]]; then
-  curl -fsSL "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh" -o "$install_script"
+  install_script_tmp="$install_script.tmp.$$"
+  curl -fsSL "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh" -o "$install_script_tmp"
+  mv "$install_script_tmp" "$install_script"
 fi
 
 echo "Installing .NET SDK $sdk_version into $install_dir"

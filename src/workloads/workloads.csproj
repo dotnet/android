@@ -70,8 +70,8 @@ inside xaprepare.
     </PropertyGroup>
 
     <Error
-        Text="Expected .NET SDK at '$(_DotNetSdk)' but the directory does not exist. Run eng/install-dotnet.sh (or eng/install-dotnet.ps1) first."
         Condition=" !Exists('$(_DotNetSdk)') "
+        Text="Expected .NET SDK at '$(_DotNetSdk)' but the directory does not exist. Run eng/install-dotnet.sh (or eng/install-dotnet.ps1) first."
     />
 
     <ItemGroup>

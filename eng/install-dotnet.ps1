@@ -30,11 +30,21 @@ $installDir = Join-Path $repoRoot "bin\$configuration\dotnet"
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
 # Download Microsoft's official dotnet-install.ps1 (cached under $installDir
-# to avoid hitting the CDN on idempotent re-runs).
+# to avoid hitting the CDN on idempotent re-runs). Download to a temp file
+# and atomically rename into place so a failed/interrupted download cannot
+# poison the cache.
 $installScript = Join-Path $installDir 'dotnet-install.ps1'
 if (-not (Test-Path $installScript)) {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-  Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1' -OutFile $installScript -UseBasicParsing
+  $installScriptTmp = "$installScript.tmp.$PID"
+  try {
+    Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1' -OutFile $installScriptTmp -UseBasicParsing
+    Move-Item -LiteralPath $installScriptTmp -Destination $installScript
+  } finally {
+    if (Test-Path $installScriptTmp) {
+      Remove-Item -LiteralPath $installScriptTmp -Force
+    }
+  }
 }
 
 Write-Host "Installing .NET SDK $sdkVersion into $installDir"
