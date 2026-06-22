@@ -2,12 +2,6 @@ plugins {
     id 'com.android.application' version '8.7.0'
 }
 
-apply from: "${rootDir}/../../eng/gradle/repositories.gradle"
-
-repositories {
-    gradle.ext.dotnetPublicMaven(delegate)
-}
-
 android {
     namespace 'com.microsoft.proguard.android'
     // Setting the minimum we support at the moment, might not matter

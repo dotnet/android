@@ -1,25 +1,65 @@
-// Repo-wide Maven repository configuration for all Gradle projects in this repo.
+// Shared Maven repository list applied to both pluginManagement and
+// dependencyResolutionManagement in every settings.gradle in this repo.
 //
-// Maven dependencies resolve through the dnceng Azure Artifacts feed
-// (dotnet-public-maven), which proxies Maven Central, Google Maven, and the
-// Gradle Plugin Portal. This keeps CI (CFSClean network isolation, see
-// https://aka.ms/1es/netiso/CFS) and local builds on the same single source
-// of packages.
+// In our Azure DevOps CI pipeline (RunningOnCI=true), Maven dependencies
+// resolve through the dnceng Azure Artifacts feed (dotnet-public-maven) for
+// CFSClean network isolation compliance (https://aka.ms/1es/netiso/CFS).
+// Locally and from GitHub Actions (e.g. Dependabot), the standard public
+// Google Maven, Maven Central, and Gradle Plugin Portal repos are used so
+// contributors don't need any feed credentials.
 //
-// IMPORTANT: New packages must be ingested into the feed before they can be
-// resolved. After adding or updating dependencies, ingest them into the feed.
+// The dnceng feed proxies these public sources. Once any package has been
+// pulled through the feed (an authenticated request), it is cached and
+// anonymous reads work forever after. CI therefore does NOT need credentials
+// — it just reads anonymously from packages already cached in the feed.
 //
-// Usage from any build.gradle:
+// =================== TESTING / INGESTING LOCALLY ===================
 //
-//     apply from: "${rootDir}/../../eng/gradle/repositories.gradle"
+// To exercise the CI code path locally (or to ingest a new package that
+// Dependabot brought in but isn't yet cached in the feed):
 //
-//     repositories {
-//         gradle.ext.dotnetPublicMaven(delegate)
-//     }
+//   1. Install the Azure Artifacts credential provider (one-time):
+//
+//        PowerShell:  iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"
+//        bash:        wget -qO- https://aka.ms/install-artifacts-credprovider.sh | bash
+//
+//   2. Flip the switch and run the gradle build that needs the package:
+//
+//        PowerShell:  $env:RunningOnCI='true';  ./build-tools/gradle/gradlew.bat --project-dir src/r8 build
+//        bash:        RunningOnCI=true          ./build-tools/gradle/gradlew         --project-dir src/r8 build
+//
+//      On first authenticated request, you'll get a device-flow login prompt
+//      pointing at https://aka.ms/devicelogin — sign in with your Microsoft
+//      account. The credprovider caches the token; the feed caches the
+//      package; future CI runs read it anonymously and pass.
+//
+// =================== WORKFLOW FOR DEPENDABOT PRs ===================
+//
+//   1. Dependabot opens a PR bumping a Gradle dep (uses public repos, so it
+//      always sees the latest upstream version).
+//   2. CI runs with RunningOnCI=true, hits the feed, and fails with 401 if
+//      the new package version isn't ingested yet.
+//   3. A maintainer follows the steps above to ingest the package, then
+//      re-runs CI. No PR edit is required.
 
-gradle.ext.dotnetPublicMaven = { handler ->
-    handler.maven {
-        url = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
-        name = 'dotnet-public-maven'
+repositories {
+    // Anonymous public Azure Artifacts feed that hosts the
+    // artifacts-credprovider Gradle plugin (loaded by every settings.gradle).
+    // Required even on the local path so the plugin is resolvable; harmless
+    // in dependencyResolutionManagement (it hosts no project dependencies).
+    maven {
+        url = 'https://pkgs.dev.azure.com/artifacts-public/PublicTools/_packaging/AzureArtifacts/maven/v1'
+        name = 'AzureArtifacts'
+    }
+
+    if (System.getenv('RunningOnCI') == 'true') {
+        maven {
+            url = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+            name = 'dotnet-public-maven'
+        }
+    } else {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
     }
 }

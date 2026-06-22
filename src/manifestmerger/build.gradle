@@ -10,12 +10,6 @@ java {
     targetCompatibility = ext.javaTargetVer
 }
 
-apply from: "${rootDir}/../../eng/gradle/repositories.gradle"
-
-repositories {
-    gradle.ext.dotnetPublicMaven(delegate)
-}
-
 dependencies {
     // https://mvnrepository.com/artifact/com.android.tools.build/manifest-merger
     implementation 'com.android.tools.build:manifest-merger:32.2.1'

@@ -9,12 +9,6 @@ java {
     targetCompatibility = ext.javaTargetVer
 }
 
-apply from: "${rootDir}/../../eng/gradle/repositories.gradle"
-
-repositories {
-    gradle.ext.dotnetPublicMaven(delegate)
-}
-
 dependencies {
     implementation 'com.android.tools:r8:9.1.31'
 }
