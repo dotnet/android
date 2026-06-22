@@ -150,6 +150,7 @@ namespace Java.InteropTests
 	}
 
 	[TestFixture]
+	[Category ("TrimmableTypeMapUnsupported")]
 	public class JavaObjectArray_object_ContractTest : JavaObjectArrayContractTest<object> {
 		static  readonly    object  a   = new object ();
 
@@ -185,4 +186,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-

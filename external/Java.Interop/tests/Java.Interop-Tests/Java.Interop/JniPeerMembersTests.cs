@@ -18,6 +18,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("TrimmableTypeMapUnsupported")]
 		public void VirtualInvokeOnBaseInvokesMostDerivedJavaMethod ()
 		{
 			var registered  = GetInstanceMethods (MyString._members.InstanceMethods);

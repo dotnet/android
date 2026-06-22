@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Java.InteropTests {
 
+	[Category ("TrimmableTypeMapUnsupported")]
 	public abstract class JniValueMarshalerContractTests<
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			T
