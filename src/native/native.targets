@@ -52,6 +52,7 @@
       <_ConfigureRuntimesInputs  Include="mono\shared\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\tracing\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\xamarin-app-stub\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="mono\xamarin-debug-app-helper\CMakeLists.txt" />
 
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Debug\CMakeCache.txt')"    Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Release\CMakeCache.txt')"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
@@ -225,6 +226,7 @@
       <_RuntimeSources Include="mono\shared\*.cc;mono\shared\*.hh" />
       <_RuntimeSources Include="mono\tracing\*.cc;mono\tracing\*.hh" />
       <_RuntimeSources Include="mono\xamarin-app-stub\*.cc;mono\xamarin-app-stub\*.hh" />
+      <_RuntimeSources Include="mono\xamarin-debug-app-helper\*.cc;mono\xamarin-debug-app-helper\*.hh" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
