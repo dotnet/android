@@ -174,8 +174,8 @@ namespace Android.Runtime
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
-				return new ManagedTypeManager ();
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ($"{nameof (RuntimeFeature.IsNativeAotRuntime)} requires {nameof (RuntimeFeature.TrimmableTypeMap)}.");
 			}
 
 			if (RuntimeFeature.IsMonoRuntime) {
@@ -203,11 +203,15 @@ namespace Android.Runtime
 				return new TrimmableTypeMapValueManager ();
 			}
 
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
+			}
+
 			if (RuntimeFeature.IsMonoRuntime) {
 				return CreateAndroidValueManagerWithSuppressedWarnings ();
 			}
 
-			if (RuntimeFeature.IsCoreClrRuntime || RuntimeFeature.IsNativeAotRuntime) {
+			if (RuntimeFeature.IsCoreClrRuntime) {
 				return CreateCoreClrValueManagerWithSuppressedWarnings ();
 			}
 
