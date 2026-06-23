@@ -1,6 +1,6 @@
-// See: eng/gradle/repositories.gradle
+// See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
-    apply from: "${rootDir}/../../eng/gradle/repositories.gradle", to: pluginManagement
+    apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
 
 plugins {
@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencyResolutionManagement {
-    apply from: "${rootDir}/../../eng/gradle/repositories.gradle", to: dependencyResolutionManagement
+    apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
 
 rootProject.name = 'proguard-android'

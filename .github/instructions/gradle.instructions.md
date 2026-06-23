@@ -4,19 +4,19 @@ applyTo: "**/*.gradle"
 
 # Gradle conventions
 
-All `src/*` Gradle projects share one repo config: **`eng/gradle/repositories.gradle`**. Never hard-code Maven URLs (`mavenCentral()`, `google()`, `pkgs.dev.azure.com/...`, etc.) in `build.gradle`/`settings.gradle`.
+All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-repositories.gradle`** (for `pluginManagement.repositories`) and **`eng/gradle/dependency-repositories.gradle`** (for `dependencyResolutionManagement.repositories`). Never hard-code Maven URLs (`mavenCentral()`, `google()`, `pkgs.dev.azure.com/...`, etc.) in `build.gradle`/`settings.gradle`.
 
 ## settings.gradle template
 
 ```groovy
 pluginManagement {
-    apply from: "${rootDir}/../../eng/gradle/repositories.gradle", to: pluginManagement
+    apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
 plugins {
     id 'com.microsoft.azure.artifacts.credprovider' version '1.1.1'
 }
 dependencyResolutionManagement {
-    apply from: "${rootDir}/../../eng/gradle/repositories.gradle", to: dependencyResolutionManagement
+    apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
 rootProject.name = '<project>'
 ```
@@ -25,10 +25,10 @@ rootProject.name = '<project>'
 
 ## CI vs local
 
-`repositories.gradle` switches on `System.getenv('RunningOnCI')` (or `RUNNINGONCI` — AzDO uppercases env vars on Linux/macOS agents):
+Both files switch on `System.getenv('RunningOnCI')` (or `RUNNINGONCI` — AzDO uppercases env vars on Linux/macOS agents):
 
 - **`RunningOnCI=true`** (Azure DevOps, set in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
-- **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()`. No credentials needed.
+- **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()` for plugins, `google()` + `mavenCentral()` for deps. No credentials needed.
 
 Test the CI path locally: `$env:RunningOnCI='true'` (PowerShell) or `RunningOnCI=true ...` (bash).
 
