@@ -14,7 +14,7 @@
     <OutputDex>$(OutputPath)java_runtime_trimmable.dex</OutputDex>
     <IntermediateRuntimeOutputPath>$(IntermediateOutputPath)release-trimmable</IntermediateRuntimeOutputPath>
     <IntermediateRuntimeClassesTxt>$(IntermediateOutputPath)release-trimmable.txt</IntermediateRuntimeClassesTxt>
-    <RemoveItems>java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyObject.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyThrowable.java</RemoveItems>
+    <RemoveItems>java\mono\android\debug-net6\BuildConfig.java;java\mono\android\debug\BuildConfig.java;java\mono\android\release\BuildConfig.java;java\mono\android\MonoPackageManager.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\ManagedPeer.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyObject.java;$(JavaInteropSourceDirectory)\src\Java.Interop\java\net\dot\jni\internal\JavaProxyThrowable.java</RemoveItems>
     <AddItems>java-trimmable\net\dot\jni\internal\JavaProxyObject.java;java-trimmable\net\dot\jni\internal\JavaProxyThrowable.java</AddItems>
   </_RuntimeOutput>
   <_RuntimeOutput Include="$(OutputPath)java_runtime_fastdev.jar">
