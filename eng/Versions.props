@@ -37,7 +37,7 @@
     <!-- Properties shared between dotnet/android and the Java.Interop submodule.
          Imported by Directory.Build.props, Configuration.props, and
          external/Java.Interop.override.props. -->
-    <MonoCecilVersion>0.11.5</MonoCecilVersion>
+    <MonoCecilVersion>0.11.6</MonoCecilVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:
          * Major/Minor match Android stable API level, such as 30.0 for API 30.
