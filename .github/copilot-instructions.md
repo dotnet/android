@@ -206,13 +206,20 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
 - **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does:
   ```bash
   make prepare && make all CONFIGURATION=Release
-  ./dotnet-local.sh build tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
-      -t:RunTestApp -c Release \
+  ./dotnet-local.sh build -t:Install -c Release \
+      tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
       -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
       -p:UseMonoRuntime=<true|false>
+  (
+      cd tests/Mono.Android-Tests/Mono.Android-Tests
+      ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
+          --report-trx --results-directory ../../../bin/TestRelease/TestResults \
+          -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
+          -p:UseMonoRuntime=<true|false>
+  )
   ```
   On Windows, use `build.cmd` and `dotnet-local.cmd` instead of `make`/`dotnet-local.sh`.
-  Results land in `TestResult-Mono.Android.NET_Tests-*.xml` at the repo root.
+  Results land in `.trx` files under `bin/TestRelease/TestResults`.
 
 - **When the build gets into a weird state, delete `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors. See **Troubleshooting → Build** below.
 

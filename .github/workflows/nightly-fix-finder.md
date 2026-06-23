@@ -34,6 +34,7 @@ network:
   - github
   - dotnet
 safe-outputs:
+  github-token: ${{ secrets.GITHUB_TOKEN }}
   assign-to-agent:
     github-token: ${{ secrets.ANDROID_TEAM_PAT }}
     model: claude-opus-4.8
@@ -78,6 +79,8 @@ description: Nightly scan for random code improvement opportunities, files issue
 engine:
   id: copilot
   model: claude-opus-4.8
+max-daily-ai-credits: -1
+max-ai-credits: -1
 strict: true
 timeout-minutes: 30
 tools:
@@ -97,6 +100,7 @@ tools:
   - xargs:*
   - basename:*
   github:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     min-integrity: none
     toolsets:
     - repos
