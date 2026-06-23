@@ -321,7 +321,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
 	[JniTypeSignature (JniTypeName)]
-	sealed class TrimmableJavaProxyObject : global::Java.Interop.JavaObject, IEquatable<TrimmableJavaProxyObject>
+	sealed class TrimmableJavaProxyObject : Java.Lang.Object, IEquatable<TrimmableJavaProxyObject>
 	{
 		const string JniTypeName = "net/dot/jni/internal/TrimmableJavaProxyObject";
 
@@ -346,18 +346,18 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return Value.GetHashCode ();
 		}
 
-		public override bool Equals (object? obj)
+		public override bool Equals (Java.Lang.Object? obj)
 		{
-			if (obj is TrimmableJavaProxyObject other)
-				return object.Equals (Value, other.Value);
-			return object.Equals (Value, obj);
+			var reference = obj?.PeerReference ?? new JniObjectReference ();
+			var value = JniEnvironment.Runtime.ValueManager.GetValue (ref reference, JniObjectReferenceOptions.Copy);
+			return object.Equals (Value, value);
 		}
 
 		public bool Equals (TrimmableJavaProxyObject? other) => object.Equals (Value, other?.Value);
 
-		public override string? ToString ()
+		public override string ToString ()
 		{
-			return Value.ToString ();
+			return Value.ToString () ?? "";
 		}
 
 		public static TrimmableJavaProxyObject GetProxy (object value)
