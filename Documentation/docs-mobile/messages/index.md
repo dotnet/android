@@ -243,6 +243,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4319](xa4319.md): No NativeAOT DGML files were provided.
 + [XA4320](xa4320.md): ACW map file '{file}' was not found.
 + [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
++ [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 
 ## XA5xxx: GCC and toolchain
 

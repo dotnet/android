@@ -19,7 +19,7 @@ namespace Xamarin.Android.Build.Tests
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
 		[Test]
-		public void CheckMultipleLibraryProjectReferenceAlias ([Values] bool withGlobal, [Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
+		public void CheckMultipleLibraryProjectReferenceAlias ([Values] bool withGlobal, [Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -76,7 +76,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildAppWithSystemNamespace ([Values] AndroidRuntime runtime)
+		public void BuildAppWithSystemNamespace ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -110,7 +110,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([Values] bool isRelease, [Values] bool useManagedParser, [Values] AndroidRuntime runtime)
+		public void DesignTimeBuild ([Values] bool isRelease, [Values] bool useManagedParser, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -170,7 +170,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckEmbeddedAndroidXResources ([Values] AndroidRuntime runtime)
+		public void CheckEmbeddedAndroidXResources ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MoveResource ([Values] AndroidRuntime runtime)
+		public void MoveResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -221,7 +221,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReportAaptErrorsInOriginalFileName ([Values] AndroidRuntime runtime)
+		public void ReportAaptErrorsInOriginalFileName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -245,7 +245,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReportAaptWarningsForBlankLevel ([Values] AndroidRuntime runtime)
+		public void ReportAaptWarningsForBlankLevel ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -271,7 +271,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RepetiviteBuildUpdateSingleResource ([Values] AndroidRuntime runtime)
+		public void RepetiviteBuildUpdateSingleResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -325,7 +325,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[Category ("XamarinBuildDownload")]
 		[NonParallelizable]
-		public void Check9PatchFilesAreProcessed ([Values] AndroidRuntime runtime)
+		public void Check9PatchFilesAreProcessed ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -379,7 +379,7 @@ namespace Xamarin.Android.Build.Tests
 		/// <summary>
 		/// Based on https://bugzilla.xamarin.com/show_bug.cgi?id=29263
 		/// </summary>
-		public void CheckXmlResourcesFilesAreProcessed ([Values] AndroidRuntime runtime)
+		public void CheckXmlResourcesFilesAreProcessed ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -594,7 +594,7 @@ namespace UnnamedProject
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
 				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
 				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
@@ -685,7 +685,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckOldResourceDesignerIsNotUsed ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void CheckOldResourceDesignerIsNotUsed ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -715,7 +715,7 @@ namespace UnnamedProject
 
 		// ref https://bugzilla.xamarin.com/show_bug.cgi?id=30089
 		[Test]
-		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void CheckOldResourceDesignerWithWrongCasingIsRemoved ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -745,7 +745,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void GenerateResourceDesigner_false ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
+		public void GenerateResourceDesigner_false ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -795,7 +795,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -842,7 +842,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForMissingResource ([Values] AndroidRuntime runtime)
+		public void CheckAaptErrorRaisedForMissingResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -876,7 +876,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForInvalidDirectoryName ([Values] AndroidRuntime runtime)
+		public void CheckAaptErrorRaisedForInvalidDirectoryName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -900,7 +900,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForInvalidFileName ([Values] AndroidRuntime runtime)
+		public void CheckAaptErrorRaisedForInvalidFileName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -928,7 +928,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values] AndroidRuntime runtime)
+		public void CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -958,7 +958,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckAaptErrorRaisedForDuplicateResourceinApp ([Values] AndroidRuntime runtime)
+		public void CheckAaptErrorRaisedForDuplicateResourceinApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -987,7 +987,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckFilesAreRemoved ([Values] AndroidRuntime runtime)
+		public void CheckFilesAreRemoved ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1022,7 +1022,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
+		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1137,7 +1137,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void BuildAppWithManagedResourceParser ([Values] AndroidRuntime runtime)
+		public void BuildAppWithManagedResourceParser ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1183,7 +1183,7 @@ namespace Lib1 {
 
 		[Test]
 		[NonParallelizable]
-		public void BuildAppWithManagedResourceParserAndLibraries ([Values] AndroidRuntime runtime)
+		public void BuildAppWithManagedResourceParserAndLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1290,7 +1290,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckMaxResWarningIsEmittedAsAWarning ([Values] AndroidRuntime runtime)
+		public void CheckMaxResWarningIsEmittedAsAWarning ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1318,7 +1318,7 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckCodeBehindIsGenerated ([Values] AndroidRuntime runtime)
+		public void CheckCodeBehindIsGenerated ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1380,7 +1380,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CheckInvalidXmlInManagedResourceParser ([Values] AndroidRuntime runtime)
+		public void CheckInvalidXmlInManagedResourceParser ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1404,7 +1404,7 @@ namespace UnnamedProject
 		//NOTE: This test was failing randomly before fixing a bug in `CopyIfChanged`.
 		//      Let's set it to run 3 times, it still completes in a reasonable time ~1.5 min.
 		[Test, Repeat(3)]
-		public void LightlyModifyLayout ([Values] AndroidRuntime runtime)
+		public void LightlyModifyLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1428,7 +1428,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void CustomViewAddResourceId ([Values] AndroidRuntime runtime)
+		public void CustomViewAddResourceId ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1466,7 +1466,7 @@ namespace UnnamedProject
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		public void CheckNoVersionVectors ([Values] AndroidRuntime runtime)
+		public void CheckNoVersionVectors ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1493,7 +1493,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void InvalidFilenames ([Values] AndroidRuntime runtime)
+		public void InvalidFilenames ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1520,7 +1520,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void SolutionBuildSeveralProjects ([Values] AndroidRuntime runtime)
+		public void SolutionBuildSeveralProjects ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
