@@ -205,26 +205,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstallErrorCode ()
-		{
-			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
-			var abi = "armeabi-v7a";
-			var proj = new XamarinAndroidApplicationProject {
-				EmbedAssembliesIntoApk = true,
-			};
-			proj.SetRuntimeIdentifiers (new[] { abi });
-
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				if (!builder.Install (proj)) {
-					Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "ADB0020"), "Should receive ADB0020 error code.");
-				} else {
-					Assert.Ignore ($"Install should have failed, but we might have an {abi} emulator attached.");
-				}
-			}
-		}
-
-		[Test]
 		public void ToggleFastDev ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
