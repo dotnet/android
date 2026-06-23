@@ -341,7 +341,12 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		public override int GetHashCode () => Value.GetHashCode ();
 
 		[Register ("equals", "(Ljava/lang/Object;)Z", "GetEquals_Ljava_lang_Object_Handler")]
-		public override bool Equals (Java.Lang.Object? obj) => Equals (Value, obj);
+		public override bool Equals (Java.Lang.Object? obj)
+		{
+			var reference = obj?.PeerReference ?? new JniObjectReference ();
+			var value = JniEnvironment.Runtime.ValueManager.GetValue (ref reference, JniObjectReferenceOptions.Copy);
+			return Equals (Value, value);
+		}
 
 		[Register ("toString", "()Ljava/lang/String;", "GetToStringHandler")]
 		public override string ToString () => Value.ToString () ?? "";
