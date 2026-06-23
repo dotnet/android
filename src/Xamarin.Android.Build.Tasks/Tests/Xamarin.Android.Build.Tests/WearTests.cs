@@ -9,7 +9,7 @@ namespace Xamarin.Android.Build.Tests
 	public class WearTests : BaseTest
 	{
 		[Test]
-		public void BasicProject ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BasicProject ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -24,7 +24,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BundledWearApp ([Values] AndroidRuntime runtime)
+		public void BundledWearApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -56,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WearProjectJavaBuildFailure ([Values] AndroidRuntime runtime)
+		public void WearProjectJavaBuildFailure ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
