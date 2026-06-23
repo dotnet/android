@@ -137,9 +137,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			// interfaces / boxes (IJavaPeerable, object, Exception) — map these
 			// to a concrete peer type so the proxy lookup can succeed.
 			var resolvedTargetType = JavaMarshalValueManagerHelper.ResolvePeerType (targetType);
-
-			var typeMap = TrimmableTypeMap.Instance;
-			var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
+			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType);
 			if (peer is not null) {
 				return peer;
 			}
@@ -155,7 +153,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			//  (c) classes are compatible but no proxy / activation failed
 			//      → NotSupportedException (genuine generator gap)
 			if (targetType is not null && resolvedTargetType is not null) {
-				if (!typeMap.TryGetJniNameForManagedType (resolvedTargetType, out var targetJniName)) {
+				if (!TrimmableTypeMap.Instance.TryGetJniNameForManagedType (resolvedTargetType, out var targetJniName)) {
 					throw new ArgumentException (
 						$"Could not determine Java type corresponding to '{targetType.AssemblyQualifiedName}'.",
 						nameof (targetType));
