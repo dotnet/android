@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +14,7 @@ namespace Xamarin.Android.Tasks {
 	{
 		public override string TaskPrefix => "WFAD";
 
-		System.Threading.Tasks.Task<List<AndroidInstalledPackage>> getPackagesAsync;
+		System.Threading.Tasks.Task<List<AndroidInstalledPackage>>? getPackagesAsync;
 
 		public override bool Execute ()
 		{
