@@ -544,7 +544,6 @@ namespace Xamarin.Android.Build.Tests
 					// with non-AQN type names; this is expected until those libraries rebuild.
 					noWarn.Add ("IL2122");
 					noWarn.Add ("IL3053");
-					noWarn.Add ("XA1040");
 				}
 			}
 

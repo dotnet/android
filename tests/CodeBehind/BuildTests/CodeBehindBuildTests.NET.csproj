@@ -17,9 +17,9 @@
     <Configuration>@Configuration@</Configuration>
   </PropertyGroup>
 
-  <!-- Disable NativeAOT/ILC warnings when running on CI, since there they are treated as errors there -->
+  <!-- Disable NativeAOT/ILC warnings when running on CI, since they are treated as errors there -->
   <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' And '$(_AndroidRuntime)' == 'NativeAOT' ">
-    <NoWarn>XA1040;IL3053</NoWarn>
+    <NoWarn>IL3053</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>

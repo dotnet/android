@@ -1915,9 +1915,6 @@ namespace UnnamedProject
 			if (runtime == AndroidRuntime.MonoVM) {
 				builder.AssertHasNoWarnings ();
 			} else {
-				// CoreCLR generates:
-				//   warning XA1040: The CoreCLR runtime on Android is an experimental feature and not yet suitable for production use.
-				//
 				// NativeAOT generates (twice, once per arch):
 				//   warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
 				//

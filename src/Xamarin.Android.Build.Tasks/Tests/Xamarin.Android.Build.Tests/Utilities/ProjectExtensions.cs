@@ -9,7 +9,6 @@ public static class ProjectExtensions
 {
 	/// <summary>
 	/// Sets the appropriate MSBuild property to use a specific .NET runtime.
-	/// NOTE: $(EnablePreviewFeatures) ignores warning XA1040: The NativeAOT runtime on Android is an experimental feature and not yet suitable for production use.
 	/// </summary>
 	public static void SetRuntime (this XamarinProject project, AndroidRuntime runtime)
 	{
