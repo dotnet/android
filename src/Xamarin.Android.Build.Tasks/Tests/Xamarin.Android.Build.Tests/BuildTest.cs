@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -208,6 +209,137 @@ namespace Xamarin.Android.Build.Tests
 				builder.Output.AssertTargetIsSkipped ("ILLink", defaultIfNotUsed: true);
 				builder.Output.AssertTargetIsNotSkipped ("_LinkAssembliesNoShrink");
 			}
+		}
+
+		[Test]
+		// target, isRelease, packageFormat, perAbi, withExtensionHook
+		[TestCase ("GetApplicationArtifacts", false, "apk", false, false)]
+		[TestCase ("Publish",                 false, "apk", false, false)]
+		[TestCase ("GetApplicationArtifacts", true,  "aab", false, false)]
+		[TestCase ("GetApplicationArtifacts", false, "apk", true,  false)]
+		[TestCase ("GetApplicationArtifacts", false, "apk", false, true)]
+		public void DotNetBuildReturnsApplicationArtifacts (string target, bool isRelease, string packageFormat, bool perAbi, bool withExtensionHook)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+			};
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			if (packageFormat == "aab") {
+				// Disable fast deployment for AABs to avoid XA0119.
+				proj.EmbedAssembliesIntoApk = true;
+			}
+			if (perAbi) {
+				proj.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
+				proj.SetProperty ("AndroidCreatePackagePerAbi", "true");
+			}
+			if (withExtensionHook) {
+				// Validate that $(GetApplicationArtifactsDependsOn) runs *after* _CreateApplicationArtifacts,
+				// so MAUI-style extension targets can enrich the items the platform already produced.
+				// If the order regresses, `Update` will have nothing to update and the metadata won't appear.
+				proj.Imports.Add (new Import (() => "ApplicationArtifacts.targets") {
+					TextContent = () => """
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <GetApplicationArtifactsDependsOn>$(GetApplicationArtifactsDependsOn);_AddExtensionArtifactMetadata</GetApplicationArtifactsDependsOn>
+  </PropertyGroup>
+  <Target Name="_AddExtensionArtifactMetadata">
+    <Error Condition=" '@(ApplicationArtifact)' == '' " Text="Expected ApplicationArtifact items before extension metadata augmentation." />
+    <ItemGroup>
+      <ApplicationArtifact Update="@(ApplicationArtifact)" MauiArtifact="true" />
+    </ItemGroup>
+  </Target>
+</Project>
+"""
+				});
+			}
+
+			using var builder = CreateDllBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath)) {
+				Verbosity = "minimal",
+			};
+			var msbuildArgs = new List<string> { $"-getTargetResult:{target}" };
+			if (isRelease) {
+				msbuildArgs.Add ("-c:Release");
+			}
+			Assert.IsTrue (
+				dotnet.Build (target: target, msbuildArguments: msbuildArgs.ToArray ()),
+				$"`dotnet build -t:{target} -getTargetResult:{target}` should succeed");
+
+			var items = ReadApplicationArtifactTargetResultItems (dotnet.ProcessLogFile, target);
+			var expectedMauiArtifact = withExtensionHook ? "true" : "";
+
+			if (packageFormat == "aab") {
+				// AAB produces: unsigned aab + signed aab + signed universal APK from the bundle.
+				Assert.AreEqual (3, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.aab", "aab", "false", proj.PackageName, "", expectedMauiArtifact);
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName, "", expectedMauiArtifact);
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "", expectedMauiArtifact);
+			} else if (perAbi) {
+				// Per-ABI: main unsigned + main signed + per-ABI unsigned/signed for each requested ABI.
+				var abis = new [] { "arm64-v8a", "x86_64" };
+				Assert.AreEqual (2 + abis.Length * 2, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.apk", "apk", "false", proj.PackageName, "", expectedMauiArtifact);
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "", expectedMauiArtifact);
+				foreach (var abi in abis) {
+					AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-{abi}.apk", "apk", "false", proj.PackageName, abi, expectedMauiArtifact);
+					AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-{abi}-Signed.apk", "apk", "true", proj.PackageName, abi, expectedMauiArtifact);
+				}
+			} else {
+				Assert.AreEqual (2, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.apk", "apk", "false", proj.PackageName, "", expectedMauiArtifact);
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "", expectedMauiArtifact);
+			}
+		}
+
+		static List<Dictionary<string, string>> ReadApplicationArtifactTargetResultItems (string processLogFile, string target)
+		{
+			var output = File.ReadAllText (processLogFile);
+			var jsonStart = output.IndexOf ('{');
+			var jsonEnd = output.LastIndexOf ('}');
+			Assert.GreaterOrEqual (jsonStart, 0, $"Could not find JSON target result in {processLogFile}.{Environment.NewLine}{output}");
+			Assert.Greater (jsonEnd, jsonStart, $"Could not find complete JSON target result in {processLogFile}.{Environment.NewLine}{output}");
+
+			using var document = JsonDocument.Parse (output.Substring (jsonStart, jsonEnd - jsonStart + 1));
+			var targetResult = document.RootElement
+				.GetProperty ("TargetResults")
+				.GetProperty (target);
+			Assert.AreEqual ("Success", targetResult.GetProperty ("Result").GetString (), $"Target {target} should succeed.");
+
+			var items = new List<Dictionary<string, string>> ();
+			foreach (var item in targetResult.GetProperty ("Items").EnumerateArray ()) {
+				var metadata = new Dictionary<string, string> (StringComparer.Ordinal);
+				foreach (var property in item.EnumerateObject ()) {
+					metadata.Add (property.Name, property.Value.GetString () ?? "");
+				}
+				items.Add (metadata);
+			}
+			return items;
+		}
+
+		static void AssertApplicationArtifactTargetResultItem (List<Dictionary<string, string>> items, string fileName, string packageFormat, string signed, string packageId, string abi, string mauiArtifact)
+		{
+			var matches = items.Where (item =>
+				GetTargetResultMetadata (item, "Filename") + GetTargetResultMetadata (item, "Extension") == fileName &&
+				GetTargetResultMetadata (item, "PackageFormat") == packageFormat &&
+				GetTargetResultMetadata (item, "Signed") == signed &&
+				GetTargetResultMetadata (item, "PackageId") == packageId &&
+				GetTargetResultMetadata (item, "Abi") == abi &&
+				GetTargetResultMetadata (item, "MauiArtifact") == mauiArtifact).ToList ();
+			Assert.AreEqual (1, matches.Count, $"Expected application artifact item '{fileName}|{packageFormat}|{signed}|{packageId}|{abi}|{mauiArtifact}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+		}
+
+		static string GetTargetResultMetadata (Dictionary<string, string> item, string name)
+		{
+			return item.TryGetValue (name, out var value) ? value : "";
+		}
+
+		static string FormatApplicationArtifactTargetResultItems (List<Dictionary<string, string>> items)
+		{
+			return string.Join (Environment.NewLine, items.Select (item =>
+				$"{GetTargetResultMetadata (item, "Identity")}|{GetTargetResultMetadata (item, "Filename")}{GetTargetResultMetadata (item, "Extension")}|{GetTargetResultMetadata (item, "PackageFormat")}|{GetTargetResultMetadata (item, "Signed")}|{GetTargetResultMetadata (item, "PackageId")}|{GetTargetResultMetadata (item, "Abi")}|{GetTargetResultMetadata (item, "MauiArtifact")}"));
 		}
 
 		static object [] MonoComponentMaskChecks () => new object [] {

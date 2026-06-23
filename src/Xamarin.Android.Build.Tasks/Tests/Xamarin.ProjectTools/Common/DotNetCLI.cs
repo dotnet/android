@@ -116,27 +116,27 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Restore (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Restore (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("restore", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("restore", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("publish", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("publish", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
@@ -236,7 +236,7 @@ namespace Xamarin.ProjectTools
 
 		public bool IsTargetSkipped (string target, bool defaultIfNotUsed = false) => BuildOutput.IsTargetSkipped (LastBuildOutput, target, defaultIfNotUsed);
 
-		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
 			string testDir = string.IsNullOrEmpty (ProjectDirectory) ? Path.GetDirectoryName (projectOrSolution) : ProjectDirectory;
 			if (string.IsNullOrEmpty (BuildLogFile))
@@ -268,6 +268,9 @@ namespace Xamarin.ProjectTools
 				foreach (var parameter in parameters) {
 					arguments.Add ($"/p:{parameter}");
 				}
+			}
+			if (msbuildArguments != null) {
+				arguments.AddRange (msbuildArguments);
 			}
 			if (!string.IsNullOrEmpty (runtimeIdentifier)) {
 				// NOTE: that this one has to be -r, /r does not appear to work
