@@ -202,16 +202,16 @@ namespace Xamarin.Android.Net
 					stream.Dispose ();
 			}
 
-			static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
-			{
-				return cancellationToken.IsCancellationRequested &&
-					ex is global::System.IO.IOException
-						or Java.IO.IOException
-						or InvalidDataException
-						or ObjectDisposedException
-						or WebException;
-			}
+		}
 
+		static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
+		{
+			return cancellationToken.IsCancellationRequested &&
+				ex is global::System.IO.IOException
+					or Java.IO.IOException
+					or InvalidDataException
+					or ObjectDisposedException
+					or WebException;
 		}
 
 		internal const string LOG_APP = "monodroid-net";
@@ -795,6 +795,11 @@ namespace Xamarin.Android.Net
 			var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
 			try {
 				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
+			} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+				// When the caller cancels the request while the body is being uploaded, the connection
+				// is disconnected which surfaces as a transport exception (e.g. "Socket closed"). Map it
+				// to an OperationCanceledException so callers observe cancellation instead of a WebException.
+				throw new System.OperationCanceledException ("Request body upload was canceled.", ex, cancellationToken);
 			} finally {
 				//
 				// Rewind the stream to beginning in case the HttpContent implementation
