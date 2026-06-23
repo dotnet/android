@@ -27,16 +27,18 @@ namespace Android.Runtime {
 		static Array ArrayCreateInstance (Type elementType, int length)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
-				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				if (RuntimeFeature.IsCoreClrRuntime) {
 					// CoreCLR runtime type loader can construct any T[] dynamically.
 					// IsDynamicCodeSupported is a [FeatureGuard] so this branch is
 					// dead-coded under PublishAot.
 					return Array.CreateInstance (elementType, length);
 				}
 
-				// NativeAOT: resolve via per-rank typemap + Array.CreateInstanceFromArrayType.
-				if (TrimmableTypeMap.Instance.TryGetArrayType (elementType, out var arrayType)) {
-					return Array.CreateInstanceFromArrayType (arrayType, length);
+				if (RuntimeFeature.IsNativeAotRuntime) {
+					// NativeAOT: resolve via per-rank typemap + Array.CreateInstanceFromArrayType.
+					if (TrimmableTypeMap.Instance.TryGetArrayType (elementType, length, out var arrayType)) {
+						return Array.CreateInstanceFromArrayType (arrayType, length);
+					}
 				}
 
 				throw new NotSupportedException (

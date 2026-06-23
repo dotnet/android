@@ -505,14 +505,10 @@ static class ModelBuilder
 	/// <summary>
 	/// Emits per-rank array TypeMap entries for one peer, anchored to the per-assembly
 	/// <c>__ArrayMapRank{N}</c> sentinels. Keys are bare element JNI names (rank is encoded
-	/// by the sentinel anchor, not by JNI array prefixes). Skips open generics, primitive JNI
-	/// keyword keys (handled by the legacy primitive-array path), and alias groups.
+	/// by the sentinel anchor, not by JNI array prefixes). Skips open generics and alias groups.
 	/// </summary>
 	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName, int maxArrayRank)
 	{
-		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
-			return;
-		}
 		if (peersForName.Count != 1) {
 			return;
 		}
@@ -526,6 +522,9 @@ static class ModelBuilder
 		}
 
 		for (int rank = 1; rank <= maxArrayRank; rank++) {
+			// TODO: we should also map elements to `JavaObjectArray<JavaObjectArray<...<T>...>>`
+			// so we migth want to generate a `ProxyTypeReference` which would return `JavaObjectArray<JavaObjectArray<...<T>...>>` AND `T[]`
+
 			string arrayTypeRef = AssemblyQualify (peer.ManagedTypeName + Brackets (rank), peer.AssemblyName);
 			model.Entries.Add (new TypeMapAttributeData {
 				JniName = jniName,

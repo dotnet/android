@@ -509,99 +509,25 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>Lookup of the closed managed array type for the given element type.</summary>
-	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	internal bool TryGetArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
 	{
-		arrayType = null;
+		var signature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType);
+		signature = signature.AddArrayRank (rank);
+		var elementJniName = signature.SimpleReference ?? throw new InvalidOperationException ();
 
-		if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-			return TryMakeDynamicArrayType (elementType, out arrayType);
-		}
-
-		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
-		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
-		var leaf = elementType;
-		int rankIndex = 0;
-		while (leaf.IsArray) {
-			if (!leaf.IsSZArray) {
-				return false;
-			}
-			var next = leaf.GetElementType ();
-			if (next is null) {
-				return false;
-			}
-			leaf = next;
-			rankIndex++;
-		}
-
-		bool isPrimitiveLeaf = leaf.IsPrimitive;
-		string? leafJniName = isPrimitiveLeaf
-			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
-			: TrimmableTypeMapTypeManager.TryGetBuiltInReferenceJniName (leaf, out var b) ? b
-				: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
-
-		if (leafJniName is not null &&
-				_typeMap.TryGetArrayType (leafJniName, rankIndex, out var mappedArrayType) &&
-				ArrayElementTypeMatches (mappedArrayType, elementType)) {
+		if (_typeMap.TryGetArrayType (elementJniName, signature.ArrayRank, out var mappedArrayType)
+			&& ArrayElementTypeMatches (mappedArrayType, elementType)) {
 			arrayType = mappedArrayType;
 			return true;
 		}
 
-		if (isPrimitiveLeaf) {
-			arrayType = MakePrimitiveArrayType (elementType);
-			return true;
-		}
-
-		return false;
-	}
-
-	static bool TryMakeDynamicArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
-	{
 		arrayType = null;
-		if (elementType == typeof (void)) {
-			return false;
-		}
-
-		var type = elementType;
-		while (type.IsArray) {
-			if (!type.IsSZArray) {
-				return false;
-			}
-			var next = type.GetElementType ();
-			if (next is null) {
-				return false;
-			}
-			type = next;
-		}
-
-		arrayType = elementType.MakeArrayType ();
-		return true;
+		return false;
 	}
 
 	static bool ArrayElementTypeMatches (Type arrayType, Type elementType)
 	{
 		return arrayType.IsSZArray && arrayType.GetElementType () == elementType;
-	}
-
-	static Type MakePrimitiveArrayType (Type elementType)
-	{
-#pragma warning disable IL3050 // Primitive array types are runtime intrinsic; no generated generic code is needed.
-		return elementType.MakeArrayType ();
-#pragma warning restore IL3050
-	}
-
-	/// <summary>JNI single-letter encoding for primitive element types.</summary>
-	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
-	{
-		if (primitive == typeof (bool))   { jni = "Z"; return true; }
-		if (primitive == typeof (byte))   { jni = "B"; return true; }
-		if (primitive == typeof (char))   { jni = "C"; return true; }
-		if (primitive == typeof (short))  { jni = "S"; return true; }
-		if (primitive == typeof (int))    { jni = "I"; return true; }
-		if (primitive == typeof (long))   { jni = "J"; return true; }
-		if (primitive == typeof (float))  { jni = "F"; return true; }
-		if (primitive == typeof (double)) { jni = "D"; return true; }
-		jni = null;
-		return false;
 	}
 
 	[UnmanagedCallersOnly]

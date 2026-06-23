@@ -15,27 +15,185 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 {
-	static readonly Type[] EmptyTypeArray = [];
-	static readonly Dictionary<Type, Type> JavaObjectArrayTypes = [];
-	static readonly Dictionary<Type, Type[]> PrimitiveArrayTypes = [];
 	readonly ConcurrentDictionary<Type, JniTypeSignature> _typeSignatureCache = new ();
 
 	// This type manager has 2 core APIs: GetTypeSignatureCore for managed-to-Java lookups, and GetTypeForSimpleReference for Java-to-managed lookups.
 	// The rest of the APIs are unsupported and will throw if called, as they are not needed internally anywhere.
 
-	static TrimmableTypeMapTypeManager ()
+	public override IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
 	{
-		AddKnownJavaObjectArrayTypes<string> ();
-		AddKnownJavaObjectArrayTypes<JavaObject> ();
+		if (typeSignature.SimpleReference is null) {
+			return [];
+		}
 
-		AddKnownPrimitiveArrayTypes<bool, JavaBooleanArray> ();
-		AddKnownPrimitiveArrayTypes<sbyte, JavaSByteArray> ();
-		AddKnownPrimitiveArrayTypes<char, JavaCharArray> ();
-		AddKnownPrimitiveArrayTypes<short, JavaInt16Array> ();
-		AddKnownPrimitiveArrayTypes<int, JavaInt32Array> ();
-		AddKnownPrimitiveArrayTypes<long, JavaInt64Array> ();
-		AddKnownPrimitiveArrayTypes<float, JavaSingleArray> ();
-		AddKnownPrimitiveArrayTypes<double, JavaDoubleArray> ();
+		var simpleReference = typeSignature.SimpleReference ?? throw new InvalidOperationException ("Should not be reached");
+		var simpleTypes = GetTypesForSimpleReference (simpleReference);
+
+		if (typeSignature.ArrayRank == 0) {
+			return simpleTypes;
+		}
+
+		return GetFlattenedArrayTypes (typeSignature, simpleTypes);
+
+		// Multiple managed types can map to a single JNI type and a single managed type can map to multiple array types.
+		IEnumerable<Type> GetFlattenedArrayTypes (JniTypeSignature typeSignature, IEnumerable<Type> elementTypes)
+		{
+			Debug.Assert (typeSignature.ArrayRank > 0, "Should not be reached");
+
+			foreach (var elementType in elementTypes) {
+				foreach (var arrayType in GetArrayTypes (typeSignature, elementType)) {
+					yield return arrayType;
+				}
+			}
+		}
+
+		// A single managed type can map to multiple array types, e.g., JavaArray<T>, JavaPrimitiveArray<T>, and T[].
+		static IEnumerable<Type> GetArrayTypes (JniTypeSignature typeSignature, Type elementType)
+		{
+			Debug.Assert (elementType != typeof (void), "Cannot create an array of void");
+
+			// We only pre-generate the array types proxy map for Native AOT because we can't manipulate types at runtime.
+			// For CoreCLR, we take advantage of the dynamic runtime and we save app size by not pre-generating the array types proxy map.
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				// TODO we might not be generating `JavaObjectArray<T>` next to `T[]` and maybe we need to
+				if (TrimmableTypeMap.Instance.TryGetArrayType (elementType, typeSignature.ArrayRank, out var arrayType)) {
+					return [arrayType];
+				}
+
+				return [];
+			}
+			
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				if (IsKeyword (typeSignature)) {
+					return GetPrimitiveArrayTypes (elementType, typeSignature.ArrayRank);
+				}
+
+				return MakeArrayTypes (elementType, typeSignature.ArrayRank);
+			}
+			
+			throw new NotSupportedException ("Unsupporte runtime.");
+
+			static bool IsKeyword (JniTypeSignature typeSignature)
+			{
+				// typeSignature.IsKeyword is not public so we're using this workaround
+				var keywordTypeSignature = new JniTypeSignature (typeSignature.SimpleReference, typeSignature.ArrayRank, keyword: true);
+				return typeSignature.Equals (keywordTypeSignature);
+			}
+
+			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
+			[RequiresUnreferencedCode ("This API uses reflection to create array types at runtime, which is not supported in trimming scenarios.")]
+			static IEnumerable<Type> GetPrimitiveArrayTypes (Type elementType, int rank)
+			{
+				Debug.Assert (elementType != typeof (void), "Cannot create an array of void");
+				Debug.Assert (rank > 0, "At least one array rank is expected");
+
+				bool success = TryGetPrimitiveTypeArrayTypes<bool, JavaBooleanArray> (elementType, out Type[]? types)
+					|| TryGetPrimitiveTypeArrayTypes<sbyte, JavaSByteArray> (elementType, out types)
+					|| TryGetPrimitiveTypeArrayTypes<char, JavaCharArray> (elementType, out types)
+					|| TryGetPrimitiveTypeArrayTypes<short, JavaInt16Array> (elementType, out types)
+					|| TryGetPrimitiveTypeArrayTypes<int, JavaInt32Array> (elementType, out types)
+					|| TryGetPrimitiveTypeArrayTypes<long, JavaInt64Array> (elementType, out types)
+					|| TryGetPrimitiveTypeArrayTypes<float, JavaSingleArray> (elementType, out types)
+					|| TryGetPrimitiveTypeArrayTypes<double, JavaDoubleArray> (elementType, out types);
+
+				if (!success || types is null) {
+					throw new InvalidOperationException ($"Cannot create an array of type '{elementType.FullName}'");
+				}
+
+				foreach (var type in types) {
+					if (rank == 1) {
+						yield return type;
+					} else {
+						foreach (var arrayType in MakeArrayTypes (type, rank - 1)) {
+							yield return arrayType;
+						}
+					}
+				}
+			}
+
+			static bool TryGetPrimitiveTypeArrayTypes<T, TArray> (Type elementType, out Type[]? arrayTypes)
+				where T : struct
+				where TArray : JavaArray<T>
+			{
+				if (typeof (T) != elementType) {
+					arrayTypes = null;
+					return false;
+				}
+
+				arrayTypes = [typeof (T[]), typeof (JavaArray<T>), typeof (JavaPrimitiveArray<T>), typeof (TArray)];
+				return true;
+			}
+
+			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
+			[RequiresUnreferencedCode ("This API uses reflection to create array types at runtime, which is not supported in trimming scenarios.")]
+			static IEnumerable<Type> MakeArrayTypes (Type elementType, int rank)
+			{
+				Debug.Assert (rank > 0, "At least one array rank is expected");
+
+				var javaObjectArrayType = elementType;
+				for (int i = 0; i < rank; i++) {
+					javaObjectArrayType = typeof (JavaObjectArray<>).MakeGenericType (javaObjectArrayType);
+				}
+
+				var arrayType = elementType;
+				for (int i = 0; i < rank; i++) {
+					arrayType = arrayType.MakeArrayType ();
+				}
+
+				return [javaObjectArrayType, arrayType];
+			}
+		}
+	}
+
+	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
+	{
+		var builtInType = GetBuiltInTypeForSimpleReference (jniSimpleReference);
+		if (builtInType is not null) {
+			yield return builtInType;
+		}
+
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
+			foreach (var type in types) {
+				yield return type;
+			}
+		}
+
+		/// <summary>
+		/// Lookup of the JNI type signature for a built-in reference type, e.g., string, bool?, int?, etc.
+		/// </summary>
+		/// <param name="jniSimpleReference"></param>
+		/// <returns></returns>
+		static Type? GetBuiltInTypeForSimpleReference (string jniSimpleReference)
+		{
+			return jniSimpleReference switch {
+				"java/lang/String"     => typeof (string),
+				"V"                    => typeof (void),
+				"Z"                    => typeof (bool),
+				"java/lang/Boolean"    => typeof (bool?),
+				"B"                    => typeof (sbyte),
+				"java/lang/Byte"       => typeof (sbyte?),
+				"C"                    => typeof (char),
+				"java/lang/Character"  => typeof (char?),
+				"S"                    => typeof (short),
+				"java/lang/Short"      => typeof (short?),
+				"I"                    => typeof (int),
+				"java/lang/Integer"    => typeof (int?),
+				"J"                    => typeof (long),
+				"java/lang/Long"       => typeof (long?),
+				"F"                    => typeof (float),
+				"java/lang/Float"      => typeof (float?),
+				"D"                    => typeof (double),
+				"java/lang/Double"     => typeof (double?),
+				_                      => null,
+			};
+		}
+	}
+
+	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+	{
+		var types = GetTypesForSimpleReference (jniSimpleReference);
+		using var enumerator = types.GetEnumerator ();
+		return enumerator.MoveNext () ? enumerator.Current : null;
 	}
 
 	protected override JniTypeSignature GetTypeSignatureCore (Type type)
@@ -52,7 +210,9 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 			if (type.IsGenericType) {
 				var genericDefinition = type.GetGenericTypeDefinition ();
-				if (genericDefinition == typeof (JavaArray<>) || genericDefinition == typeof (JavaObjectArray<>)) {
+				if (genericDefinition == typeof (JavaArray<>)
+					|| genericDefinition == typeof (JavaObjectArray<>)
+					|| genericDefinition == typeof (JavaPrimitiveArray<>)) {
 					var elementSignature = GetTypeSignatureUncached (type.GenericTypeArguments [0]);
 					return elementSignature.AddArrayRank (rank + 1);
 				}
@@ -93,13 +253,31 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			{
 				// Keep the hybrid Type.GetTypeCode + explicit nullable checks. Nullable.GetUnderlyingType ()
 				// allocates a Type[] via GetGenericArguments (), and this path is otherwise allocation-free.
-				if (GetKeywordTypeName (type) is string keywordTypeName) {
-					signature = new JniTypeSignature (keywordTypeName, 0, keyword: true);
+				if (GetPrimitiveTypeJniName (type) is string primitiveJniTypeName) {
+					signature = new JniTypeSignature (primitiveJniTypeName, keyword: true);
 					return true;
 				}
 
-				static string? GetKeywordTypeName (Type type)
-					=> Type.GetTypeCode (type) switch {
+				if (type == typeof (void)) {
+					signature = new JniTypeSignature ("V", keyword: true);
+					return true;
+				}
+
+				if (TryGetBuiltInReferenceJniName (type, out var jniName)) {
+					signature = new JniTypeSignature (jniName);
+					return true;
+				}
+
+				if (TryGetPrimitiveArrayTypeSignature (type, out signature)) {
+					return true;
+				}
+
+				signature = default;
+				return false;
+
+				static string? GetPrimitiveTypeJniName (Type type)
+				{
+					return Type.GetTypeCode (type) switch {
 						TypeCode.Boolean => "Z",
 						TypeCode.Byte => "B",
 						TypeCode.SByte => "B",
@@ -114,113 +292,75 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 						TypeCode.Double => "D",
 						_ => null,
 					};
-
-				if (type == typeof (void)) {
-					signature = new JniTypeSignature ("V", 0, keyword: true);
-					return true;
 				}
 
-				if (TryGetBuiltInReferenceJniName (type, out var jniName)) {
-					signature = new JniTypeSignature (jniName);
-					return true;
+				/// <summary>
+				/// Lookup of the JNI type signature for a built-in reference type, e.g., string, bool?, int?, etc.
+				/// </summary>
+				static bool TryGetBuiltInReferenceJniName (Type type, [NotNullWhen (true)] out string? jni)
+				{
+					if (type == typeof (string))  { jni = "java/lang/String"; return true; }
+					if (type == typeof (bool?))   { jni = "java/lang/Boolean"; return true; }
+					if (type == typeof (sbyte?))  { jni = "java/lang/Byte"; return true; }
+					if (type == typeof (char?))   { jni = "java/lang/Character"; return true; }
+					if (type == typeof (short?))  { jni = "java/lang/Short"; return true; }
+					if (type == typeof (int?))    { jni = "java/lang/Integer"; return true; }
+					if (type == typeof (long?))   { jni = "java/lang/Long"; return true; }
+					if (type == typeof (float?))  { jni = "java/lang/Float"; return true; }
+					if (type == typeof (double?)) { jni = "java/lang/Double"; return true; }
+					jni = null;
+					return false;
 				}
 
-				if (TryGetPrimitiveArrayTypeSignature (type, out signature))
-					return true;
+				/// <summary>
+				/// Lookup of the JNI type signature for a primitive array type, e.g., JavaArray<int> or JavaPrimitiveArray<int>.
+				/// There are multiple managed types that map to a single JNI array type, e.g., JavaArray<int>, JavaPrimitiveArray<int>, and int[] all map to [I.
+				/// </summary>
+				/// <param name="type"></param>
+				/// <param name="signature"></param>
+				/// <returns></returns>
+				static bool TryGetPrimitiveArrayTypeSignature (Type type, out JniTypeSignature signature)
+				{
+					signature = default;
+					return IsPrimitiveTypeArray<bool, JavaBooleanArray> (type, "Z", out signature)
+						|| IsPrimitiveTypeArray<sbyte, JavaSByteArray> (type, "B", out signature)
+						|| IsPrimitiveTypeArray<char, JavaCharArray> (type, "C", out signature)
+						|| IsPrimitiveTypeArray<short, JavaInt16Array> (type, "S", out signature)
+						|| IsPrimitiveTypeArray<int, JavaInt32Array> (type, "I", out signature)
+						|| IsPrimitiveTypeArray<long, JavaInt64Array> (type, "J", out signature)
+						|| IsPrimitiveTypeArray<float, JavaSingleArray> (type, "F", out signature)
+						|| IsPrimitiveTypeArray<double, JavaDoubleArray> (type, "D", out signature);
+				}
 
-				signature = default;
-				return false;
+				/// <summary>
+				/// Lookup of the JNI type signature for a primitive array type, e.g., JavaArray<int> or JavaPrimitiveArray<int>.
+				/// There are multiple managed types that map to a single JNI array type, e.g., JavaArray<int>, JavaPrimitiveArray<int>, and int[] all map to [I.
+				/// </summary>
+				/// <typeparam name="T"></typeparam>
+				/// <typeparam name="TArray"></typeparam>
+				/// <param name="type"></param>
+				/// <param name="jniSimpleReference"></param>
+				/// <param name="signature"></param>
+				/// <returns></returns>
+				static bool IsPrimitiveTypeArray<T, TArray> (Type type, string jniSimpleReference, out JniTypeSignature signature)
+					where TArray : JavaArray<T>
+				{
+					if (type == typeof (T[]) || type == typeof (JavaArray<T>) || type == typeof (JavaPrimitiveArray<T>) || type == typeof (TArray)) {
+						signature = new JniTypeSignature (jniSimpleReference, arrayRank: 1, keyword: true);
+						return true;
+					}
+
+					signature = default;
+					return false;
+				}
 			}
 		}
 	}
 
-	internal static bool TryGetBuiltInReferenceJniName (Type type, [NotNullWhen (true)] out string? jni)
+	protected override IEnumerable<JniTypeSignature> GetTypeSignaturesCore (Type type)
 	{
-		if (type == typeof (string))  { jni = "java/lang/String"; return true; }
-		if (type == typeof (bool?))   { jni = "java/lang/Boolean"; return true; }
-		if (type == typeof (sbyte?))  { jni = "java/lang/Byte"; return true; }
-		if (type == typeof (char?))   { jni = "java/lang/Character"; return true; }
-		if (type == typeof (short?))  { jni = "java/lang/Short"; return true; }
-		if (type == typeof (int?))    { jni = "java/lang/Integer"; return true; }
-		if (type == typeof (long?))   { jni = "java/lang/Long"; return true; }
-		if (type == typeof (float?))  { jni = "java/lang/Float"; return true; }
-		if (type == typeof (double?)) { jni = "java/lang/Double"; return true; }
-		jni = null;
-		return false;
-	}
-
-	static bool TryGetPrimitiveArrayTypeSignature (Type type, out JniTypeSignature signature)
-	{
-		if (TryGetPrimitiveArrayTypeSignature<bool, JavaBooleanArray> (type, "Z", out signature))
-			return true;
-		if (TryGetPrimitiveArrayTypeSignature<sbyte, JavaSByteArray> (type, "B", out signature))
-			return true;
-		if (TryGetPrimitiveArrayTypeSignature<char, JavaCharArray> (type, "C", out signature))
-			return true;
-		if (TryGetPrimitiveArrayTypeSignature<short, JavaInt16Array> (type, "S", out signature))
-			return true;
-		if (TryGetPrimitiveArrayTypeSignature<int, JavaInt32Array> (type, "I", out signature))
-			return true;
-		if (TryGetPrimitiveArrayTypeSignature<long, JavaInt64Array> (type, "J", out signature))
-			return true;
-		if (TryGetPrimitiveArrayTypeSignature<float, JavaSingleArray> (type, "F", out signature))
-			return true;
-		if (TryGetPrimitiveArrayTypeSignature<double, JavaDoubleArray> (type, "D", out signature))
-			return true;
-
-		signature = default;
-		return false;
-	}
-
-	static bool TryGetPrimitiveArrayTypeSignature<
-			T,
-			TArray> (Type type, string jniSimpleReference, out JniTypeSignature signature)
-		where TArray : JavaArray<T>
-	{
-		if (type == typeof (JavaArray<T>) || type == typeof (JavaPrimitiveArray<T>) || type == typeof (TArray)) {
-			signature = new JniTypeSignature (jniSimpleReference, arrayRank: 1, keyword: true);
-			return true;
-		}
-
-		signature = default;
-		return false;
-	}
-
-	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
-	{
-		var builtInType = GetBuiltInTypeForSimpleReference (jniSimpleReference);
-		if (builtInType is not null) {
-			return builtInType;
-		}
-
-		return TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types) && types.Length > 0
-			? types [0]
-			: null;
-	}
-
-	static Type? GetBuiltInTypeForSimpleReference (string jniSimpleReference)
-	{
-		return jniSimpleReference switch {
-			"java/lang/String"     => typeof (string),
-			"V"                    => typeof (void),
-			"Z"                    => typeof (bool),
-			"java/lang/Boolean"    => typeof (bool?),
-			"B"                    => typeof (sbyte),
-			"java/lang/Byte"       => typeof (sbyte?),
-			"C"                    => typeof (char),
-			"java/lang/Character"  => typeof (char?),
-			"S"                    => typeof (short),
-			"java/lang/Short"      => typeof (short?),
-			"I"                    => typeof (int),
-			"java/lang/Integer"    => typeof (int?),
-			"J"                    => typeof (long),
-			"java/lang/Long"       => typeof (long?),
-			"F"                    => typeof (float),
-			"java/lang/Float"      => typeof (float?),
-			"D"                    => typeof (double),
-			"java/lang/Double"     => typeof (double?),
-			_                      => null,
-		};
+		var signature = GetTypeSignatureCore (type);
+		return signature.IsValid ? [signature] : [];
 	}
 
 	// Remapping APIs for InTune support
@@ -250,138 +390,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		=> throw new UnreachableException (
 			$"{nameof (GetSimpleReferences)} should not be called in the trimmable typemap path. " +
 			$"Simple reference lookup should use {nameof (GetTypeSignatureCore)} to get the full type signature, including simple reference.");
-
-	public override IEnumerable<Type> GetTypes (JniTypeSignature typeSignature)
-	{
-		if (typeSignature.SimpleReference is null) {
-			return EmptyTypeArray;
-		}
-		return CreateGetTypesEnumerator (typeSignature);
-	}
-
-	protected override IEnumerable<JniTypeSignature> GetTypeSignaturesCore (Type type)
-	{
-		var signature = GetTypeSignatureCore (type);
-		if (signature.IsValid) {
-			yield return signature;
-		}
-	}
-
-	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
-	{
-		var builtInType = GetBuiltInTypeForSimpleReference (jniSimpleReference);
-		if (builtInType is not null) {
-			yield return builtInType;
-		}
-
-		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
-			foreach (var type in types) {
-				yield return type;
-			}
-		}
-	}
-
-	IEnumerable<Type> CreateGetTypesEnumerator (JniTypeSignature typeSignature)
-	{
-		if (!typeSignature.IsValid) {
-			yield break;
-		}
-
-		foreach (var type in GetTypesForSimpleReference (typeSignature.SimpleReference ?? throw new InvalidOperationException ("Should not be reached"))) {
-			if (typeSignature.ArrayRank == 0) {
-				yield return type;
-				continue;
-			}
-
-			if (IsKeywordSignature (typeSignature)) {
-				foreach (var primitiveArrayType in GetPrimitiveArrayTypesForSimpleReference (typeSignature, type)) {
-					yield return primitiveArrayType;
-				}
-				continue;
-			}
-
-			if (TryMakeJavaObjectArrayType (type, typeSignature.ArrayRank, out var javaObjectArrayType)) {
-				yield return javaObjectArrayType;
-			}
-
-			if (TryMakeArrayType (type, typeSignature.ArrayRank, out var arrayType)) {
-				yield return arrayType;
-			}
-		}
-	}
-
-	IEnumerable<Type> GetPrimitiveArrayTypesForSimpleReference (JniTypeSignature typeSignature, Type type)
-	{
-		foreach (var primitiveArrayType in GetPrimitiveArrayTypes (type)) {
-			var rank = typeSignature.ArrayRank - 1;
-			if (TryMakeJavaObjectArrayType (primitiveArrayType, rank, out var javaObjectArrayType)) {
-				yield return javaObjectArrayType;
-			}
-
-			if (TryMakeArrayType (primitiveArrayType, rank, out var arrayType)) {
-				yield return arrayType;
-			}
-		}
-	}
-
-	static bool IsKeywordSignature (JniTypeSignature typeSignature)
-		=> typeSignature.SimpleReference is string simpleReference &&
-			typeSignature.QualifiedReference == new string ('[', typeSignature.ArrayRank) + simpleReference;
-
-	static bool TryMakeArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
-	{
-		arrayType = elementType;
-		for (int i = 0; i < rank; i++) {
-			if (!TryMakeArrayType (arrayType, out arrayType)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	static bool TryMakeArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
-	{
-		return TrimmableTypeMap.Instance.TryGetArrayType (elementType, out arrayType);
-	}
-
-	static bool TryMakeJavaObjectArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
-	{
-		arrayType = elementType;
-		for (int i = 0; i < rank; i++) {
-			if (!TryMakeJavaObjectArrayType (arrayType, out arrayType)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	static bool TryMakeJavaObjectArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
-	{
-		return JavaObjectArrayTypes.TryGetValue (elementType, out arrayType);
-	}
-
-	static Type[] GetPrimitiveArrayTypes (Type primitiveType)
-		=> PrimitiveArrayTypes.TryGetValue (primitiveType, out var types) ? types : EmptyTypeArray;
-
-	static void AddKnownPrimitiveArrayTypes<T, TArray> ()
-	{
-		AddKnownJavaObjectArrayTypes<T> ();
-		AddKnownJavaObjectArrayTypes<JavaArray<T>> ();
-		AddKnownJavaObjectArrayTypes<JavaPrimitiveArray<T>> ();
-		AddKnownJavaObjectArrayTypes<TArray> ();
-		PrimitiveArrayTypes [typeof (T)] = [
-			typeof (T[]),
-			typeof (JavaArray<T>),
-			typeof (JavaPrimitiveArray<T>),
-			typeof (TArray),
-		];
-	}
-
-	static void AddKnownJavaObjectArrayTypes<T> ()
-	{
-		JavaObjectArrayTypes [typeof (T)] = typeof (JavaObjectArray<T>);
-		JavaObjectArrayTypes [typeof (JavaObjectArray<T>)] = typeof (JavaObjectArray<JavaObjectArray<T>>);
-	}
 
 	public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		=> throw new UnreachableException (
