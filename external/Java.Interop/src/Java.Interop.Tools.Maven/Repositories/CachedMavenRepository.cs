@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
@@ -39,8 +40,7 @@ public class CachedMavenRepository : IMavenRepository
 	{
 		path = null;
 
-		var directory = GetArtifactDirectory (artifact);
-		var file = Path.Combine (directory, filename);
+		var file = GetArtifactFilePath (artifact, filename);
 
 		if (File.Exists (file)) {
 			path = file;
@@ -48,7 +48,7 @@ public class CachedMavenRepository : IMavenRepository
 		}
 
 		if (repository.TryGetFile (artifact, filename, out var repo_stream)) {
-			Directory.CreateDirectory (directory);
+			Directory.CreateDirectory (GetArtifactDirectory (artifact));
 
 			using (var sw = File.Create (file))
 			using (repo_stream)
@@ -63,14 +63,13 @@ public class CachedMavenRepository : IMavenRepository
 
 	public async Task<string?> GetFilePathAsync (Artifact artifact, string filename, CancellationToken cancellationToken)
 	{
-		var directory = GetArtifactDirectory (artifact);
-		var file = Path.Combine (directory, filename);
+		var file = GetArtifactFilePath (artifact, filename);
 
 		if (File.Exists (file))
 			return file;
 
 		if (repository.TryGetFile (artifact, filename, out var repo_stream)) {
-			Directory.CreateDirectory (directory);
+			Directory.CreateDirectory (GetArtifactDirectory (artifact));
 
 			using (var sw = File.Create (file))
 			using (repo_stream)
@@ -81,6 +80,25 @@ public class CachedMavenRepository : IMavenRepository
 		}
 
 		return null;
+	}
+
+	/// <summary>
+	/// Returns the on-disk path where the given <paramref name="artifact"/> + <paramref name="filename"/>
+	/// would be cached under <see cref="CacheDirectory"/>. Does not download or check for existence.
+	/// Throws <see cref="InvalidOperationException"/> if the resolved path would not be under
+	/// <see cref="CacheDirectory"/>.
+	/// </summary>
+	public string GetArtifactFilePath (Artifact artifact, string filename)
+	{
+		var directory = GetArtifactDirectory (artifact);
+		var file = Path.Combine (directory, filename);
+		var full_file = Path.GetFullPath (file);
+		var full_cache = Path.GetFullPath (CacheDirectory);
+		if (!full_cache.EndsWith (Path.DirectorySeparatorChar.ToString ()) && !full_cache.EndsWith (Path.AltDirectorySeparatorChar.ToString ()))
+			full_cache += Path.DirectorySeparatorChar;
+		if (!full_file.StartsWith (full_cache, StringComparison.Ordinal))
+			throw new InvalidOperationException ($"Resolved Maven cache path '{full_file}' escapes cache directory '{full_cache}'.");
+		return full_file;
 	}
 
 	string GetArtifactDirectory (Artifact artifact)
