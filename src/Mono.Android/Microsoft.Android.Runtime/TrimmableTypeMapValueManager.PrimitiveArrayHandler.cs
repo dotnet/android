@@ -14,7 +14,6 @@ sealed partial class TrimmableTypeMapValueManager
 		public abstract bool TryCreateWrapper (
 			ref JniObjectReference reference,
 			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
 			Type targetType,
 			[NotNullWhen (true)] out object? value);
 
@@ -38,7 +37,6 @@ sealed partial class TrimmableTypeMapValueManager
 		public override bool TryCreateWrapper (
 			ref JniObjectReference reference,
 			JniObjectReferenceOptions options,
-			[DynamicallyAccessedMembers (Constructors)]
 			Type targetType,
 			[NotNullWhen (true)] out object? value)
 		{
@@ -133,7 +131,6 @@ sealed partial class TrimmableTypeMapValueManager
 	static bool TryCreatePrimitiveArrayWrapper (
 		ref JniObjectReference reference,
 		JniObjectReferenceOptions options,
-		[DynamicallyAccessedMembers (Constructors)]
 		Type targetType,
 		[NotNullWhen (true)] out object? value)
 	{

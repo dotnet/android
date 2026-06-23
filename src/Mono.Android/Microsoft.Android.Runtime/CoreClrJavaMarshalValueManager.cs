@@ -144,12 +144,11 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 
 		return TryCreatePeerInstance (ref reference, transfer, targetType);
 
-		[return: DynamicallyAccessedMembers (Constructors)]
 		Type? GetTypeAssignableTo (JniTypeSignature sig, Type targetType)
 		{
-			foreach (var t in Runtime.TypeManager.GetReflectionConstructibleTypes (sig)) {
-				if (targetType.IsAssignableFrom (t.Type)) {
-					return t.Type;
+			foreach (var t in Runtime.TypeManager.GetTypes (sig)) {
+				if (targetType.IsAssignableFrom (t)) {
+					return t;
 				}
 			}
 			return null;

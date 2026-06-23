@@ -81,7 +81,7 @@ namespace Java.Interop {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			return new ManagedTypeManager ();
+			throw new NotImplementedException ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()

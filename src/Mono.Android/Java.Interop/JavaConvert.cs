@@ -60,21 +60,6 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// Might cause an issue in the future for NativeAOT
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "We don't think the IDictionary, IList, or ICollection code paths occur if JavaDictionary<,>, JavaList<>, and JavaCollection<> do not exist.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			static Type MakeGenericType (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-					Type type,
-					params Type [] typeArguments
-			) =>
-				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-				// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-				#pragma warning disable IL3050
-				type.MakeGenericType (typeArguments);
-				#pragma warning restore IL3050
-
 			if (target == null)
 				return null;
 
@@ -83,28 +68,31 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				var factoryConverter = TryGetFactoryBasedConverter (target);
-				if (factoryConverter != null)
-					return factoryConverter;
+			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
+				if (RuntimeFeature.TrimmableTypeMap) {
+					var factoryConverter = TryGetFactoryBasedConverter (target);
+					if (factoryConverter != null)
+						return factoryConverter;
+				} else if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
+					if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
+						Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+					if (typeof (IDictionary).IsAssignableFrom (target))
+						return (h, t) => JavaDictionary.FromJniHandle (h, t);
+					if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
+						Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+					if (typeof (IList).IsAssignableFrom (target))
+						return (h, t) => JavaList.FromJniHandle (h, t);
+					if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
+						Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+				}
 			}
 
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-				Type t = MakeGenericType (typeof (JavaDictionary<,>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
-			if (typeof (IDictionary).IsAssignableFrom (target))
-				return (h, t) => JavaDictionary.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IList<>)) {
-				Type t = MakeGenericType (typeof (JavaList<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
-			if (typeof (IList).IsAssignableFrom (target))
-				return (h, t) => JavaList.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-				Type t = MakeGenericType (typeof (JavaCollection<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 
@@ -117,9 +105,6 @@ namespace Java.Interop {
 		/// </summary>
 		static Func<IntPtr, JniHandleOwnership, object?>? TryGetFactoryBasedConverter (Type target)
 		{
-			if (!target.IsGenericType)
-				return null;
-
 			var genericDef = target.GetGenericTypeDefinition ();
 			var typeArgs = target.GetGenericArguments ();
 
@@ -143,18 +128,14 @@ namespace Java.Interop {
 			}
 
 			return null;
-		}
 
-		static JavaPeerContainerFactory? TryGetContainerFactory (Type elementType)
-		{
-			if (!typeof (IJavaPeerable).IsAssignableFrom (elementType))
-				return null;
+			static JavaPeerContainerFactory? TryGetContainerFactory (Type elementType)
+			{
+				if (!typeof (IJavaPeerable).IsAssignableFrom (elementType))
+					return null;
 
-			if (RuntimeFeature.TrimmableTypeMap) {
 				return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
 			}
-
-			return null;
 		}
 
 		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)

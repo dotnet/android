@@ -320,8 +320,6 @@ namespace Android.Runtime {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
-		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
@@ -338,7 +336,6 @@ namespace Android.Runtime {
 				yield return t;
 		}
 
-		[return: DynamicallyAccessedMembers (Methods | Constructors | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 		{
 			var type = base.GetTypeForSimpleReference (jniSimpleReference);
@@ -364,7 +361,7 @@ namespace Android.Runtime {
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
-			j   = GetReplacementTypeCore (j) ?? j;
+			j	   = GetReplacementTypeCore (j) ?? j;
 
 			if (j != null) {
 				return [j];
@@ -378,7 +375,7 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
 		}
 
-		protected override string? GetReplacementTypeCore (string jniSimpleReference)
+		protected override string? GetReplacementTypeCore (string? jniSimpleReference)
 		{
 			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
 		}
@@ -388,10 +385,7 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
-		[return: DynamicallyAccessedMembers (Constructors)]
-		protected override Type? GetInvokerTypeCore (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
+		protected override Type? GetInvokerTypeCore (Type type)
 		{
 			if (type.IsInterface || type.IsAbstract) {
 				return JavaObjectExtensions.GetInvokerType (type)
@@ -500,17 +494,10 @@ namespace Android.Runtime {
 		}
 
 		[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>) instead.")]
-		public override void RegisterNativeMembers (
-				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-				Type type,
-				string? methods) =>
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		public override void RegisterNativeMembers (
-				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
-				ReadOnlySpan<char> methods)
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
 			try {
 				if (methods.IsEmpty) {
@@ -593,15 +580,6 @@ namespace Android.Runtime {
 				}
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
-			}
-
-			bool ShouldRegisterDynamically (string callbackTypeName, string callbackString, string typeName, string callbackName)
-			{
-				if (String.Compare (typeName, callbackTypeName, StringComparison.Ordinal) != 0) {
-					return false;
-				}
-
-				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
 			}
 		}
 
@@ -850,11 +828,7 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		public override void ActivatePeer (
-			JniObjectReference reference,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type,
-			ConstructorInfo cinfo,
-			object?[]? argumentValues)
+		public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 		{
 			Java.Interop.TypeManager.Activate (reference.Handle, cinfo, argumentValues);
 		}

@@ -15,8 +15,6 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 {
-	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
-	internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	static readonly Type[] EmptyTypeArray = [];
 	static readonly Dictionary<Type, Type> JavaObjectArrayTypes = [];
 	static readonly Dictionary<Type, Type[]> PrimitiveArrayTypes = [];
@@ -188,7 +186,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		return false;
 	}
 
-	[return: DynamicallyAccessedMembers (Methods | Constructors | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
 		var builtInType = GetBuiltInTypeForSimpleReference (jniSimpleReference);
@@ -197,11 +194,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 
 		return TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types) && types.Length > 0
-			? types [0].Type
+			? types [0]
 			: null;
 	}
 
-	[return: DynamicallyAccessedMembers (Methods | Constructors | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 	static Type? GetBuiltInTypeForSimpleReference (string jniSimpleReference)
 	{
 		return jniSimpleReference switch {
@@ -240,8 +236,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway
 
-	[return: DynamicallyAccessedMembers (Constructors)]
-	protected override Type? GetInvokerTypeCore ([DynamicallyAccessedMembers (Constructors)] Type type)
+	protected override Type? GetInvokerTypeCore (Type type)
 		=> throw new UnreachableException (
 			$"{nameof (GetInvokerTypeCore)} should not be called in the trimmable typemap path. " +
 			$"Invoker types should use generated {nameof (JavaPeerProxy)} instances.");
@@ -264,11 +259,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		return CreateGetTypesEnumerator (typeSignature);
 	}
 
-	public override IEnumerable<ReflectionConstructibleType> GetReflectionConstructibleTypes (JniTypeSignature typeSignature)
-		=> throw new UnreachableException (
-			$"{nameof (GetReflectionConstructibleTypes)} should not be called in the trimmable typemap path. " +
-			$"Managed peer construction should use generated {nameof (JavaPeerProxy)} instances.");
-
 	protected override IEnumerable<JniTypeSignature> GetTypeSignaturesCore (Type type)
 	{
 		var signature = GetTypeSignatureCore (type);
@@ -286,7 +276,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
 			foreach (var type in types) {
-				yield return type.Type;
+				yield return type;
 			}
 		}
 	}
@@ -373,11 +363,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 	static Type[] GetPrimitiveArrayTypes (Type primitiveType)
 		=> PrimitiveArrayTypes.TryGetValue (primitiveType, out var types) ? types : EmptyTypeArray;
 
-	static void AddKnownPrimitiveArrayTypes<
-			[DynamicallyAccessedMembers (Constructors)]
-			T,
-			[DynamicallyAccessedMembers (Constructors)]
-			TArray> ()
+	static void AddKnownPrimitiveArrayTypes<T, TArray> ()
 	{
 		AddKnownJavaObjectArrayTypes<T> ();
 		AddKnownJavaObjectArrayTypes<JavaArray<T>> ();
@@ -391,21 +377,19 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		];
 	}
 
-	static void AddKnownJavaObjectArrayTypes<
-			[DynamicallyAccessedMembers (Constructors)]
-			T> ()
+	static void AddKnownJavaObjectArrayTypes<T> ()
 	{
 		JavaObjectArrayTypes [typeof (T)] = typeof (JavaObjectArray<T>);
 		JavaObjectArrayTypes [typeof (JavaObjectArray<T>)] = typeof (JavaObjectArray<JavaObjectArray<T>>);
 	}
 
-	public override void RegisterNativeMembers (JniType nativeClass, [DynamicallyAccessedMembers (Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] Type type, ReadOnlySpan<char> methods)
+	public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		=> throw new UnreachableException (
 			$"RegisterNativeMembers should not be called in the trimmable typemap path. " +
 			$"Native methods for '{type.FullName}' should be registered by JCW static initializer blocks.");
 
 	[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-	public override void RegisterNativeMembers (JniType nativeClass, [DynamicallyAccessedMembers (Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] Type type, string? methods)
+	public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 		=> throw new UnreachableException (
 			$"RegisterNativeMembers should not be called in the trimmable typemap path. " +
 			$"Native methods for '{type.FullName}' should be registered by JCW static initializer blocks.");

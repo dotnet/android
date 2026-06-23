@@ -63,7 +63,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		return registeredPeers.GetSurfacedPeers ();
 	}
 
-	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
+	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
 		throw new PlatformNotSupportedException ("Activating Java peers through the value manager is not supported when TrimmableTypeMap is enabled.");
 	}
@@ -257,12 +257,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		return JavaConvert.FromObjectReference (ref reference, options, targetType);
 	}
 
-	static bool TryUnwrapNullable (
-		[DynamicallyAccessedMembers (Constructors)]
-		Type? targetType,
-		[NotNullWhen (true)]
-		[DynamicallyAccessedMembers (Constructors)]
-		out Type? innerType)
+	static bool TryUnwrapNullable (Type? targetType, [NotNullWhen (true)] out Type? innerType)
 	{
 		if (targetType is not null
 			&& targetType.IsGenericType
@@ -286,10 +281,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		return base.TryUnboxPeerObject (value, out result);
 	}
 
-	protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (
-		[DynamicallyAccessedMembers (Constructors)]
-		Type type,
-		object? value)
+	protected override JniObjectReference CreateLocalObjectReferenceArgumentCore (Type type, object? value)
 	{
 		if (value == null) {
 			return new JniObjectReference ();
@@ -318,7 +310,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
-	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
+	protected override JniValueMarshaler<T> GetValueMarshalerCore<T> ()
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
 	[Register ("net/dot/jni/internal/TrimmableJavaProxyObject")]

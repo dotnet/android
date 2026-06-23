@@ -16,3 +16,4 @@ T:System.Runtime.CompilerServices.IteratorStateMachineAttribute
 T:System.Runtime.CompilerServices.NullableAttribute
 T:System.Runtime.CompilerServices.NullableContextAttribute
 T:System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute
+T:System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute
