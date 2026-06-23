@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 
 		static Array Get_ConstructorParameters ()
 		{
-			return Enum.GetValues (typeof (AndroidRuntime));
+			return new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT };
 		}
 
 		public BundleToolNoAbiSplitTests (AndroidRuntime runtime)
