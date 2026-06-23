@@ -1842,6 +1842,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skipping library ProGuard configuration file &apos;{1}&apos; (from {2}) because it contains the unsupported global option &apos;{0}&apos;. Global ProGuard options are only allowed in application projects..
+        /// </summary>
+        public static string XA4322 {
+            get {
+                return ResourceManager.GetString("XA4322", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {
