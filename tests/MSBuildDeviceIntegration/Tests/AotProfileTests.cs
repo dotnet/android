@@ -25,6 +25,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
+		[Ignore ("https://github.com/dotnet/android/issues/11718 - aprofutil exits with code 127 on macOS CI")]
 		public void BuildBasicApplicationAndAotProfileIt ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
