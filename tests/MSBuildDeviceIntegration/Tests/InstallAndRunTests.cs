@@ -812,21 +812,12 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
-		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void SubscribeToAppDomainUnhandledException ()
 		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in NativeAOT");
-			}
-
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
-				IsRelease = isRelease,
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
@@ -840,12 +831,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-			string? expectedSender = runtime switch
-			{
-				AndroidRuntime.CoreCLR => null, // CoreCLR explicitly passes a `null` sender
-				_ => throw new NotImplementedException($"Test does not support runtime {runtime}"),
-			};
-			string expectedLogcatOutput = $"# Unhandled Exception: sender={expectedSender}; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+			// CoreCLR explicitly passes a `null` sender, which formats as an empty string
+			string expectedLogcatOutput = "# Unhandled Exception: sender=; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
