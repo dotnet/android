@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -320,58 +321,37 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	protected override JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ()
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
-	[JniTypeSignature (JniTypeName)]
-	sealed class TrimmableJavaProxyObject : global::Java.Interop.JavaObject, IEquatable<TrimmableJavaProxyObject>
+	[Register ("net/dot/jni/internal/TrimmableJavaProxyObject")]
+	private sealed class TrimmableJavaProxyObject : Java.Lang.Object, IEquatable<TrimmableJavaProxyObject>
 	{
-		const string JniTypeName = "net/dot/jni/internal/TrimmableJavaProxyObject";
+		static readonly ConditionalWeakTable<object, TrimmableJavaProxyObject> CachedValues = new ();
 
-		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (TrimmableJavaProxyObject));
-		static  readonly    ConditionalWeakTable<object, TrimmableJavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, TrimmableJavaProxyObject> ();
+		private TrimmableJavaProxyObject (object value) => Value = value;
 
-		TrimmableJavaProxyObject (object value)
-		{
-			if (value == null)
-				throw new ArgumentNullException (nameof (value));
-			Value = value;
-		}
+		// This class is not meant to be instantiated from the Java side, so make the parameterless constructor
+		// private to prevent the generator from generating the default Java ctor.
+		private TrimmableJavaProxyObject () => throw new UnreachableException ();
 
-		public override JniPeerMembers JniPeerMembers {
-			get { return _members; }
-		}
-
-		public object Value {get; private set;}
-
-		public override int GetHashCode ()
-		{
-			return Value.GetHashCode ();
-		}
-
-		public override bool Equals (object? obj)
-		{
-			if (obj is TrimmableJavaProxyObject other)
-				return object.Equals (Value, other.Value);
-			return object.Equals (Value, obj);
-		}
-
-		public bool Equals (TrimmableJavaProxyObject? other) => object.Equals (Value, other?.Value);
-
-		public override string? ToString ()
-		{
-			return Value.ToString ();
-		}
+		public object Value { get; }
 
 		public static TrimmableJavaProxyObject GetProxy (object value)
 		{
-			if (value == null)
-				throw new ArgumentNullException (nameof (value));
+			ArgumentNullException.ThrowIfNull (value);
 
 			lock (CachedValues) {
-				if (CachedValues.TryGetValue (value, out var proxy))
-					return proxy;
-				proxy = new TrimmableJavaProxyObject (value);
-				CachedValues.Add (value, proxy);
-				return proxy;
+				return CachedValues.GetOrAdd (value, static (value) => new TrimmableJavaProxyObject (value));
 			}
 		}
+
+		public bool Equals (TrimmableJavaProxyObject? other) => Equals (Value, other?.Value);
+
+		[Register ("hashCode", "()I", "GetGetHashCodeHandler")]
+		public override int GetHashCode () => Value.GetHashCode ();
+
+		[Register ("equals", "(Ljava/lang/Object;)Z", "GetEquals_Ljava_lang_Object_Handler")]
+		public override bool Equals (Java.Lang.Object? obj) => Equals (Value, obj);
+
+		[Register ("toString", "()Ljava/lang/String;", "GetToStringHandler")]
+		public override string ToString () => Value.ToString () ?? "";
 	}
 }
