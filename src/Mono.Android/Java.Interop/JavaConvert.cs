@@ -15,8 +15,14 @@ namespace Java.Interop {
 		// Mirrors JniObjectReference.DisposeSource; JniObjectReferenceOptions only exposes it through CopyAndDispose.
 		const JniObjectReferenceOptions DisposeSource = (JniObjectReferenceOptions)(1 << 1);
 
-		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>>() {
+		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>>() {
 			{ typeof (bool), (handle, transfer) => {
+				using (var value = new Java.Lang.Boolean (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.BooleanValue ();
+			} },
+			{ typeof (bool?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Boolean (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.BooleanValue ();
 			} },
@@ -24,7 +30,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return (byte) value.ByteValue ();
 			} },
+			{ typeof (byte?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return (byte) value.ByteValue ();
+			} },
 			{ typeof (sbyte), (handle, transfer) => {
+				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.ByteValue ();
+			} },
+			{ typeof (sbyte?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ByteValue ();
 			} },
@@ -32,7 +50,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Character (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.CharValue ();
 			} },
+			{ typeof (char?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Character (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.CharValue ();
+			} },
 			{ typeof (short), (handle, transfer) => {
+				using (var value = new Java.Lang.Short (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.ShortValue ();
+			} },
+			{ typeof (short?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Short (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ShortValue ();
 			} },
@@ -40,7 +70,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Integer (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.IntValue ();
 			} },
+			{ typeof (int?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Integer (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.IntValue ();
+			} },
 			{ typeof (long), (handle, transfer) => {
+				using (var value = new Java.Lang.Long (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.LongValue ();
+			} },
+			{ typeof (long?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Long (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.LongValue ();
 			} },
@@ -48,7 +90,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Float (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.FloatValue ();
 			} },
+			{ typeof (float?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Float (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.FloatValue ();
+			} },
 			{ typeof (double), (handle, transfer) => {
+				using (var value = new Java.Lang.Double (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.DoubleValue ();
+			} },
+			{ typeof (double?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Double (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.DoubleValue ();
 			} },

@@ -248,25 +248,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return CreatePeer (ref reference, options, targetType);
 		}
 
-		if (TryUnwrapNullable (targetType, out var innerType)) {
-			targetType = innerType;
-		}
-
 		return JavaConvert.FromObjectReference (ref reference, options, targetType);
-	}
-
-	static bool TryUnwrapNullable (Type? targetType, [NotNullWhen (true)] out Type? innerType)
-	{
-		if (targetType is not null
-			&& targetType.IsGenericType
-			&& targetType.GetGenericTypeDefinition () == typeof (Nullable<>))
-		{
-			innerType = Nullable.GetUnderlyingType (targetType);
-			return innerType is not null;
-		}
-
-		innerType = null;
-		return false;
 	}
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
