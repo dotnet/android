@@ -859,6 +859,13 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
     <comment>The following are literal names and should not be translated: NativeAOT, DGML
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
+  <data name="XA4322" xml:space="preserve">
+    <value>Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.</value>
+    <comment>The following are literal names and should not be translated: ProGuard
+{0} - The unsupported ProGuard option, such as -printmapping.
+{1} - The path to the proguard.txt file inside the extracted .aar.
+{2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>La directory '{0}' delle toolchain di Android NDK non è presente. Installare Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
