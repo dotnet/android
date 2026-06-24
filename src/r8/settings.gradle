@@ -11,4 +11,4 @@ dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
 
-rootProject.name = 'manifestmerger'
+rootProject.name = 'r8'
