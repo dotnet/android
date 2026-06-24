@@ -23,8 +23,8 @@ variables:
   DotNetTargetFramework: net10.0
   NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)
   HostedPoolName: Azure Pipelines
-  HostedWinImage: windows-2022
-  HostedMacImage: macOS-14
+  HostedWinImage: windows-2025
+  HostedMacImage: macOS-15
 
 jobs:
 - job: windows_dotnet_build
