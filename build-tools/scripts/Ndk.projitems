@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  This file is checked-in. If you change the NDK constants in
-  build-tools/xaprepare/xaprepare/ConfigAndData/BuildAndroidPlatforms.cs
-  (AndroidNdkVersion, AndroidNdkPkgRevision, NdkMinimumAPI,
-  NdkMinimumAPILegacy32), update the matching values here as well.
+  This file is checked-in. The NDK version/revision and minimum API level
+  values are sourced from the matching properties in Configuration.props
+  ($(_XAAndroidNdkRelease), $(_XAAndroidNdkPkgRevision) and
+  $(AndroidMinimumDotNetApiLevel)), which is imported before this file, so
+  there is nothing to keep in sync here.
 -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <AndroidNdkVersion Condition=" '$(AndroidNdkVersion)' == '' ">28c</AndroidNdkVersion>
-    <AndroidNdkPkgRevision Condition=" '$(AndroidNdkPkgRevision)' == '' ">28.2.13676358</AndroidNdkPkgRevision>
-    <AndroidNdkApiLevel_ArmV7a Condition=" '$(AndroidNdkApiLevel_ArmV7a)' == '' ">24</AndroidNdkApiLevel_ArmV7a>
-    <AndroidNdkApiLevel_Arm Condition=" '$(AndroidNdkApiLevel_Arm)' == '' ">24</AndroidNdkApiLevel_Arm>
-    <AndroidNdkApiLevel_ArmV8a Condition=" '$(AndroidNdkApiLevel_ArmV8a)' == '' ">24</AndroidNdkApiLevel_ArmV8a>
-    <AndroidNdkApiLevel_Arm64 Condition=" '$(AndroidNdkApiLevel_Arm64)' == '' ">24</AndroidNdkApiLevel_Arm64>
-    <AndroidNdkApiLevel_X86_Legacy Condition=" '$(AndroidNdkApiLevel_X86_Legacy)' == '' ">24</AndroidNdkApiLevel_X86_Legacy>
-    <AndroidNdkApiLevel_X86 Condition=" '$(AndroidNdkApiLevel_X86)' == '' ">24</AndroidNdkApiLevel_X86>
-    <AndroidNdkApiLevel_X86_64 Condition=" '$(AndroidNdkApiLevel_X86_64)' == '' ">24</AndroidNdkApiLevel_X86_64>
-    <AndroidNdkApiLevel_X64 Condition=" '$(AndroidNdkApiLevel_X64)' == '' ">24</AndroidNdkApiLevel_X64>
+    <AndroidNdkVersion Condition=" '$(AndroidNdkVersion)' == '' ">$(_XAAndroidNdkRelease)</AndroidNdkVersion>
+    <AndroidNdkPkgRevision Condition=" '$(AndroidNdkPkgRevision)' == '' ">$(_XAAndroidNdkPkgRevision)</AndroidNdkPkgRevision>
+    <AndroidNdkApiLevel_ArmV7a Condition=" '$(AndroidNdkApiLevel_ArmV7a)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_ArmV7a>
+    <AndroidNdkApiLevel_Arm Condition=" '$(AndroidNdkApiLevel_Arm)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_Arm>
+    <AndroidNdkApiLevel_ArmV8a Condition=" '$(AndroidNdkApiLevel_ArmV8a)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_ArmV8a>
+    <AndroidNdkApiLevel_Arm64 Condition=" '$(AndroidNdkApiLevel_Arm64)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_Arm64>
+    <AndroidNdkApiLevel_X86_Legacy Condition=" '$(AndroidNdkApiLevel_X86_Legacy)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X86_Legacy>
+    <AndroidNdkApiLevel_X86 Condition=" '$(AndroidNdkApiLevel_X86)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X86>
+    <AndroidNdkApiLevel_X86_64 Condition=" '$(AndroidNdkApiLevel_X86_64)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X86_64>
+    <AndroidNdkApiLevel_X64 Condition=" '$(AndroidNdkApiLevel_X64)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X64>
   </PropertyGroup>
 
   <ItemGroup>
