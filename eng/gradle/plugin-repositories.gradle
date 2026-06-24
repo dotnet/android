@@ -1,0 +1,68 @@
+// Shared Maven repository list for PLUGIN resolution (pluginManagement.repositories)
+// across every settings.gradle in this repo. See plugin-repositories.gradle's
+// sibling, dependency-repositories.gradle, for project dependency resolution.
+//
+// In our Azure DevOps CI pipeline (RunningOnCI=true), plugins resolve through
+// the dnceng Azure Artifacts feed (dotnet-public-maven) for CFSClean network
+// isolation compliance (https://aka.ms/1es/netiso/CFS). Locally and from
+// GitHub Actions (e.g. Dependabot), the standard Gradle Plugin Portal is used.
+//
+// AzureArtifacts (anonymous public feed) is always included because every
+// settings.gradle loads the artifacts-credprovider plugin from there.
+//
+// The dnceng feed proxies public sources. Once any package has been pulled
+// through the feed (an authenticated request), it is cached and anonymous
+// reads work forever after. CI therefore does NOT need credentials — it just
+// reads anonymously from packages already cached in the feed.
+//
+// =================== TESTING / INGESTING LOCALLY ===================
+//
+// To exercise the CI code path locally (or to ingest a new package that
+// Dependabot brought in but isn't yet cached in the feed):
+//
+//   1. Install the Azure Artifacts credential provider (one-time):
+//
+//        PowerShell:  iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"
+//        bash:        wget -qO- https://aka.ms/install-artifacts-credprovider.sh | bash
+//
+//   2. Flip the switch and run the gradle build that needs the package:
+//
+//        PowerShell:  $env:RunningOnCI='true';  ./build-tools/gradle/gradlew.bat --project-dir src/r8 build
+//        bash:        RunningOnCI=true          ./build-tools/gradle/gradlew         --project-dir src/r8 build
+//
+//      On first authenticated request, you'll get a device-flow login prompt
+//      pointing at https://aka.ms/devicelogin — sign in with your Microsoft
+//      account. The credprovider caches the token; the feed caches the
+//      package; future CI runs read it anonymously and pass.
+//
+// =================== WORKFLOW FOR DEPENDABOT PRs ===================
+//
+//   1. Dependabot opens a PR bumping a Gradle dep (uses public repos, so it
+//      always sees the latest upstream version).
+//   2. CI runs with RunningOnCI=true, hits the feed, and fails with 401 if
+//      the new package version isn't ingested yet.
+//   3. A maintainer follows the steps above to ingest the package, then
+//      re-runs CI. No PR edit is required.
+
+repositories {
+    // Anonymous public Azure Artifacts feed that hosts the
+    // artifacts-credprovider Gradle plugin (loaded by every settings.gradle).
+    maven {
+        url = 'https://pkgs.dev.azure.com/artifacts-public/PublicTools/_packaging/AzureArtifacts/maven/v1'
+        name = 'AzureArtifacts'
+    }
+
+    // AzDO uppercases pipeline variables when exporting them as env vars on
+    // Linux/macOS agents, so check both spellings.
+    def runningOnCI = System.getenv('RunningOnCI') ?: System.getenv('RUNNINGONCI')
+    if (runningOnCI == 'true') {
+        maven {
+            url = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+            name = 'dotnet-public-maven'
+        }
+    } else {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
