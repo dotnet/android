@@ -1,8 +1,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.InteropServices;
 
-using K4os.Compression.LZ4;
 using Xamarin.Tools.Zip;
 using Xamarin.Android.AssemblyStore;
 
@@ -10,7 +10,24 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 {
 	class App
 	{
-		const uint CompressedDataMagic = 0x5A4C4158; // 'XALZ', little-endian
+		const uint CompressedDataMagic = 0x535A4158; // 'XAZS', little-endian
+
+		// Zstd decompression entry points exported by libSystem.IO.Compression.Native (from the .NET runtime pack).
+		[DllImport ("System.IO.Compression.Native")]
+		static extern UIntPtr ZSTD_decompress (byte[] dst, UIntPtr dstCapacity, byte[] src, UIntPtr srcSize);
+
+		[DllImport ("System.IO.Compression.Native")]
+		static extern uint ZSTD_isError (UIntPtr code);
+
+		// Decompresses 'srcLength' bytes from 'src' into 'dst' (which must be 'dstLength' bytes long).
+		// Returns the number of bytes written, or -1 on failure.
+		static int ZstdDecompress (byte[] src, int srcLength, byte[] dst, int dstLength)
+		{
+			UIntPtr result = ZSTD_decompress (dst, (UIntPtr) (uint) dstLength, src, (UIntPtr) (uint) srcLength);
+			if (ZSTD_isError (result) != 0)
+				return -1;
+			return (int) (ulong) result;
+		}
 
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
@@ -30,8 +47,8 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 			Console.WriteLine ($"Processing {fileName}");
 			//
-			// LZ4 compressed assembly header format:
-			//   uint magic;                 // 0x5A4C4158; 'XALZ', little-endian
+			// Zstd compressed assembly header format:
+			//   uint magic;                 // 0x535A4158; 'XAZS', little-endian
 			//   uint descriptor_index;      // Index into an internal assembly descriptor table
 			//   uint uncompressed_length;   // Size of assembly, uncompressed
 			//
@@ -46,9 +63,9 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 					reader.Read (sourceBytes, 0, inputLength);
 
 					byte[] assemblyBytes = bytePool.Rent ((int)decompressedLength);
-					int decoded = LZ4Codec.Decode (sourceBytes, 0, inputLength, assemblyBytes, 0, (int)decompressedLength);
+					int decoded = ZstdDecompress (sourceBytes, inputLength, assemblyBytes, (int)decompressedLength);
 					if (decoded != (int)decompressedLength) {
-						Console.Error.WriteLine ($"  Failed to decompress LZ4 data of {fileName} (decoded: {decoded})");
+						Console.Error.WriteLine ($"  Failed to decompress Zstd data of {fileName} (decoded: {decoded})");
 						retVal = false;
 					} else {
 						string? outputDir = Path.GetDirectoryName (outputFile);

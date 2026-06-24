@@ -34,7 +34,7 @@ class AssemblyStoreAssemblyInfo
 			throw new InvalidOperationException ("Internal error: info without assembly name");
 		}
 
-		if (name.EndsWith (".lz4", StringComparison.OrdinalIgnoreCase)) {
+		if (name.EndsWith (".zst", StringComparison.OrdinalIgnoreCase)) {
 			name = Path.GetFileNameWithoutExtension (name);
 		}
 

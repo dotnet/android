@@ -430,7 +430,7 @@ namespace xamarin::android {
 
 			switch (kind) {
 				case TimingEventKind::AssemblyDecompression:
-					append_desc ("LZ4 decompression time for "sv);
+					append_desc ("Zstd decompression time for "sv);
 					return;
 
 				case TimingEventKind::AssemblyLoad:

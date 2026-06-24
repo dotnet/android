@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Buffers;
 using System.IO;
 
-using K4os.Compression.LZ4;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -45,7 +44,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		const uint CompressedDataMagic = 0x5A4C4158; // 'XALZ', little-endian
+		const uint CompressedDataMagic = 0x535A4158; // 'XAZS', little-endian
 
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
@@ -78,8 +77,8 @@ namespace Xamarin.Android.Tasks
 					bytesRead = fs.Read (sourceBytes, 0, fileSize);
 				}
 
-				destBytes = bytePool.Rent (LZ4Codec.MaximumOutputSize (bytesRead));
-				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, bytesRead, destBytes, 0, destBytes.Length, LZ4Level.L12_MAX);
+				destBytes = bytePool.Rent (Zstd.MaximumOutputSize (bytesRead));
+				int encodedLength = Zstd.Compress (sourceBytes, bytesRead, destBytes);
 				if (encodedLength < 0)
 					return CompressionResult.EncodingFailed;
 
@@ -154,7 +153,7 @@ namespace Xamarin.Android.Tasks
 		public static string GetCompressedAssemblyOutputPath (ITaskItem assembly, string compressedOutputDir)
 		{
 			var assemblyOutputDir = GetCompressedAssemblyOutputDirectory (assembly, compressedOutputDir);
-			return Path.Combine (assemblyOutputDir, $"{Path.GetFileName (assembly.ItemSpec)}.lz4");
+			return Path.Combine (assemblyOutputDir, $"{Path.GetFileName (assembly.ItemSpec)}.zst");
 		}
 
 		static string GetCompressedAssemblyOutputDirectory (ITaskItem assembly, string compressedOutputDir)

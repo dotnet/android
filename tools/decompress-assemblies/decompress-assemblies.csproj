@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

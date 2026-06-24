@@ -2150,7 +2150,7 @@ because xbuild doesn't support framework reference assemblies.
        This dependency chain should be addressed in a separate PR. -->
   <CollectAssemblyFilesToCompress
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
-      AssemblyCompressionDirectory="$(IntermediateOutputPath)android\lz4\"
+      AssemblyCompressionDirectory="$(IntermediateOutputPath)android\zstd\"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
@@ -2165,7 +2165,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!--
-  LZ4 compress all compressable assemblies. Note this is an incremental MSBuild target.
+  Zstd compress all compressable assemblies. Note this is an incremental MSBuild target.
   @(AssembliesToCmpress) will only contain assemblies that have changed since the last build.
 -->
 <Target Name="_CompressAssemblies"

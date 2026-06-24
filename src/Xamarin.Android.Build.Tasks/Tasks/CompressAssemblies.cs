@@ -7,9 +7,9 @@ using Microsoft.Build.Framework;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// Compresses assemblies using LZ4 compression before placing them in the APK.
+/// Compresses assemblies using Zstandard compression before placing them in the APK.
 /// Note this is independent of whether they are stored compressed with ZIP in the APK.
-/// Our runtime bits will LZ4 decompress them at assembly load time.
+/// Our runtime bits will Zstd decompress them at assembly load time.
 /// </summary>
 public class CompressAssemblies : AndroidTask
 {
