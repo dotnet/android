@@ -110,7 +110,7 @@ static class ModelBuilder
 			}
 		}
 
-		if (maxArrayRank > 0 && peers.Any (p => string.Equals (p.AssemblyName, "Java.Interop", StringComparison.Ordinal))) {
+		if (maxArrayRank > 0 && string.Equals (assemblyName, "_Java.Interop.TypeMap", StringComparison.Ordinal)) {
 			EmitPrimitiveArrayEntries (model, maxArrayRank);
 		}
 

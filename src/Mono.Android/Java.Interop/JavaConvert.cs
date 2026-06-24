@@ -132,14 +132,10 @@ namespace Java.Interop {
 						Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
 						return GetJniHandleConverterForType (t);
 					}
-					if (typeof (IDictionary).IsAssignableFrom (target))
-						return (h, t) => JavaDictionary.FromJniHandle (h, t);
 					if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
 						Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
 						return GetJniHandleConverterForType (t);
 					}
-					if (typeof (IList).IsAssignableFrom (target))
-						return (h, t) => JavaList.FromJniHandle (h, t);
 					if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
 						Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
 						return GetJniHandleConverterForType (t);
@@ -147,6 +143,10 @@ namespace Java.Interop {
 				}
 			}
 
+			if (typeof (IDictionary).IsAssignableFrom (target))
+				return (h, t) => JavaDictionary.FromJniHandle (h, t);
+			if (typeof (IList).IsAssignableFrom (target))
+				return (h, t) => JavaList.FromJniHandle (h, t);
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 

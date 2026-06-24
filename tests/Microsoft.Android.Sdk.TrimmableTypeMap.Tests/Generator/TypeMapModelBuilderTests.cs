@@ -1144,7 +1144,7 @@ public class ModelBuilderTests : FixtureTestBase
 		public void Build_EmitArrayEntries_PrimitiveEntries_SynthesizedForJavaInteropAssembly ()
 		{
 			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
-			var model = BuildModelWithArrays (new [] { peer });
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Java.Interop.TypeMap");
 
 			var primitiveEntries = model.Entries
 				.Where (e => e.JniName.Length == 1 && e.AnchorRank is not null)
@@ -1152,12 +1152,12 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal (24, primitiveEntries.Count); // 8 primitive keywords × 3 ranks
 
 			var sbyteRank1 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 1);
-			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, TestTypeMap", sbyteRank1.ProxyTypeReference);
-			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, TestTypeMap", sbyteRank1.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.TargetTypeReference);
 			Assert.False (sbyteRank1.IsUnconditional);
 
 			var sbyteRank2 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 2);
-			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy2, TestTypeMap", sbyteRank2.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy2, _Java.Interop.TypeMap", sbyteRank2.TargetTypeReference);
 			Assert.Contains (model.Associations, a =>
 				a.SourceTypeReference == "Java.Interop.JavaArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
 				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
@@ -1167,6 +1167,16 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Contains (model.Associations, a =>
 				a.SourceTypeReference == "Java.Interop.JavaSByteArray, Java.Interop" &&
 				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_PrimitiveEntries_NotDuplicatedInOtherAssemblies ()
+		{
+			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Mono.Android.TypeMap");
+
+			Assert.DoesNotContain (model.Entries, e => e.JniName.Length == 1 && e.AnchorRank is not null);
+			Assert.DoesNotContain (model.Associations, a => a.SourceTypeReference == "System.SByte[], System.Runtime");
 		}
 
 		[Fact]

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -106,6 +107,20 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void NonGenericCollectionTargetsUseSpecificWrappers ()
+		{
+			using (var list = new Java.Util.ArrayList ()) {
+				var converted = Java.Interop.JavaConvert.FromJniHandle (list.Handle, JniHandleOwnership.DoNotTransfer, typeof (IList));
+				Assert.AreEqual (typeof (JavaList), converted.GetType ());
+			}
+
+			using (var map = new Java.Util.HashMap ()) {
+				var converted = Java.Interop.JavaConvert.FromJniHandle (map.Handle, JniHandleOwnership.DoNotTransfer, typeof (IDictionary));
+				Assert.AreEqual (typeof (JavaDictionary), converted.GetType ());
+			}
+		}
+
+		[Test]
 		public void NullStringMarshalsAsIntPtrZero ()
 		{
 			var list = new JavaList<string> ();
@@ -140,4 +155,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-
