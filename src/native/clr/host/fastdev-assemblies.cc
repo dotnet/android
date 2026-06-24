@@ -9,7 +9,6 @@
 #include <string>
 
 #include <constants.hh>
-#include <xamarin-app.hh>
 #include <host/fastdev-assemblies.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/util.hh>
@@ -128,34 +127,13 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 		log_warn (LOG_ASSEMBLY, "FastDev: failed to open override dir '{}'. {}"sv, override_dir_path, std::strerror (errno));
 		return false;
 	}
-	int dir_fd = dirfd (dir);
-	if (dir_fd < 0) {
-		log_warn (LOG_ASSEMBLY, "FastDev: failed to obtain fd for override dir '{}'. {}"sv, override_dir_path, std::strerror (errno));
-		closedir (dir);
-		return false;
-	}
 
+	constexpr std::string_view dll_ext { ".dll" };
 	size_t count = 0;
-	// NOTE: The TPA list is sourced from `type_map_unique_assemblies`, which is
-	// only populated when `_AndroidTypeMapImplementation=llvm-ir` (the Debug
-	// default). With `managed` or `trimmable` typemaps the native typemap is
-	// empty, so no TPA paths are added and stack frames won't carry file/line
-	// info even under FastDev.
-	uint64_t expected_count = type_map.unique_assemblies_count;
-	for (uint64_t i = 0; i < expected_count; i++) {
-		TypeMapAssembly const &asm_entry = type_map_unique_assemblies[i];
-		std::string_view name {
-			&type_map_assembly_names[asm_entry.name_offset],
-			static_cast<size_t>(asm_entry.name_length)
-		};
-
-		// `Name` is the simple assembly name (e.g. "Mono.Android"), no extension.
-		std::string file_name;
-		file_name.reserve (name.size () + 4);
-		file_name.append (name);
-		file_name.append (".dll");
-
-		if (!Util::file_exists (dir_fd, file_name)) {
+	dirent *e;
+	while ((e = readdir (dir)) != nullptr) {
+		std::string_view name { e->d_name };
+		if (name.size () <= dll_ext.size () || !name.ends_with (dll_ext)) {
 			continue;
 		}
 
@@ -164,7 +142,7 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 		}
 		tpa_list.append (override_dir_path);
 		tpa_list.append ("/");
-		tpa_list.append (file_name);
+		tpa_list.append (name);
 		count++;
 	}
 	closedir (dir);
