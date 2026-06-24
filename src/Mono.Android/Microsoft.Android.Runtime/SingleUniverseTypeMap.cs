@@ -16,6 +16,7 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 sealed class SingleUniverseTypeMap : ITypeMap
 {
+	const string ManagedTypeKeyPrefix = "__managed_type:";
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 	readonly IReadOnlyDictionary<string, Type>?[][] _arrayMapsByUniverseAndRank;
@@ -73,7 +74,8 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 	public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
 	{
-		if (!_proxyTypeMap.TryGetValue (managedType, out var mappedProxyType)) {
+		if (!TryGetManagedTypeKey (managedType, out var managedTypeKey) ||
+				!_typeMap.TryGetValue (managedTypeKey, out var mappedProxyType)) {
 			proxyType = null;
 			return false;
 		}
@@ -100,6 +102,17 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 		proxyType = null;
 		return false;
+	}
+
+	static bool TryGetManagedTypeKey (Type managedType, [NotNullWhen (true)] out string? key)
+	{
+		var fullName = managedType.FullName;
+		if (fullName is null) {
+			key = null;
+			return false;
+		}
+		key = ManagedTypeKeyPrefix + fullName + ", " + managedType.Assembly.GetName ().Name;
+		return true;
 	}
 
 	public bool TryGetArrayProxyType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? proxyType)

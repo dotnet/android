@@ -15,6 +15,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
+	const string ManagedTypeKeyPrefix = "__managed_type:";
 
 	static readonly PrimitiveArrayProxyInfo [] PrimitiveArrayProxies = [
 		new ("Z", "Boolean", "System.Boolean", "Java.Interop.JavaBooleanArray"),
@@ -157,13 +158,8 @@ static class ModelBuilder
 			var entry = BuildEntry (peer, proxy, assemblyName, jniName);
 			model.Entries.Add (entry);
 
-			// Emit a TypeMapAssociation for every entry that has a proxy.
-			// The runtime's _proxyTypeMap (GetOrCreateProxyTypeMapping) is populated from
-			// TypeMapAssociationAttribute — NOT from TypeMapAttribute's 3rd arg.
-			// Without this, the proxy type map is empty and CreatePeer fails for
-			// interface types like IIterator where targetType-based lookup is needed.
 			if (proxy != null) {
-				AddProxyAssociation (model, peer, proxy, assemblyName);
+				AddManagedReverseEntries (model, peer, proxy, assemblyName);
 			}
 			return;
 		}
@@ -196,8 +192,9 @@ static class ModelBuilder
 				SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
 				AliasProxyTypeReference = holderRef,
 			});
+			AddManagedReverseEntry (model, peer.ManagedTypeName, peer.AssemblyName, holderRef, IsUnconditionalEntry (peer));
 			if (proxy != null && peer.InvokerTypeName != null) {
-				AddProxyAssociation (model, peer.InvokerTypeName, peer.AssemblyName, proxy, assemblyName);
+				AddManagedReverseEntry (model, peer.InvokerTypeName, peer.AssemblyName, AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName), isUnconditional: false);
 			}
 		}
 
@@ -217,19 +214,22 @@ static class ModelBuilder
 		});
 	}
 
-	static void AddProxyAssociation (TypeMapAssemblyData model, JavaPeerInfo peer, JavaPeerProxyData proxy, string assemblyName)
+	static void AddManagedReverseEntries (TypeMapAssemblyData model, JavaPeerInfo peer, JavaPeerProxyData proxy, string assemblyName)
 	{
-		AddProxyAssociation (model, peer.ManagedTypeName, peer.AssemblyName, proxy, assemblyName);
+		var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName);
+		AddManagedReverseEntry (model, peer.ManagedTypeName, peer.AssemblyName, proxyReference, IsUnconditionalEntry (peer));
 		if (peer.InvokerTypeName != null) {
-			AddProxyAssociation (model, peer.InvokerTypeName, peer.AssemblyName, proxy, assemblyName);
+			AddManagedReverseEntry (model, peer.InvokerTypeName, peer.AssemblyName, proxyReference, isUnconditional: false);
 		}
 	}
 
-	static void AddProxyAssociation (TypeMapAssemblyData model, string managedTypeName, string sourceAssemblyName, JavaPeerProxyData proxy, string outputAssemblyName)
+	static void AddManagedReverseEntry (TypeMapAssemblyData model, string managedTypeName, string assemblyName, string proxyReference, bool isUnconditional)
 	{
-		model.Associations.Add (new TypeMapAssociationData {
-			SourceTypeReference = AssemblyQualify (managedTypeName, sourceAssemblyName),
-			AliasProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", outputAssemblyName),
+		var managedTypeReference = AssemblyQualify (managedTypeName, assemblyName);
+		model.Entries.Add (new TypeMapAttributeData {
+			JniName = ManagedTypeKey (managedTypeReference),
+			ProxyTypeReference = proxyReference,
+			TargetTypeReference = isUnconditional ? null : managedTypeReference,
 		});
 	}
 
@@ -529,6 +529,9 @@ static class ModelBuilder
 
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
+
+	static string ManagedTypeKey (string typeReference)
+		=> ManagedTypeKeyPrefix + typeReference;
 
 	static string AddArrayRank (string typeReference, int rank)
 	{

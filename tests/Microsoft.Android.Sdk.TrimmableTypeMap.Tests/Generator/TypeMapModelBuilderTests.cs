@@ -55,9 +55,10 @@ public class ModelBuilderTests : FixtureTestBase
 			};
 
 			var model = BuildModel (peers);
-			Assert.Equal (2, model.Entries.Count);
-			Assert.Equal ("android/app/Activity", model.Entries [0].JniName);
-			Assert.Equal ("java/lang/Object", model.Entries [1].JniName);
+			var entries = JavaNameEntries (model);
+			Assert.Equal (2, entries.Count);
+			Assert.Equal ("android/app/Activity", entries [0].JniName);
+			Assert.Equal ("java/lang/Object", entries [1].JniName);
 		}
 
 		[Fact]
@@ -70,12 +71,13 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (peers);
 			// Three entries: "test/Dup[0]", "test/Dup[1]", and the base "test/Dup" → alias holder
-			Assert.Equal (3, model.Entries.Count);
-			Assert.Equal ("test/Dup[0]", model.Entries [0].JniName);
-			Assert.Contains ("Test.First", model.Entries [0].ProxyTypeReference);
-			Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
-			Assert.Contains ("Test.Second", model.Entries [1].ProxyTypeReference);
-			Assert.Equal ("test/Dup", model.Entries [2].JniName);
+			var entries = JavaNameEntries (model);
+			Assert.Equal (3, entries.Count);
+			Assert.Equal ("test/Dup[0]", entries [0].JniName);
+			Assert.Contains ("Test.First", entries [0].ProxyTypeReference);
+			Assert.Equal ("test/Dup[1]", entries [1].JniName);
+			Assert.Contains ("Test.Second", entries [1].ProxyTypeReference);
+			Assert.Equal ("test/Dup", entries [2].JniName);
 
 			// Both peers get associations to the alias holder
 			Assert.Equal (2, model.Associations.Count);
@@ -96,11 +98,12 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (peers, "TripleAlias");
 			// 3 indexed entries + 1 base entry → alias holder = 4
-			Assert.Equal (4, model.Entries.Count);
-			Assert.Equal ("test/Triple[0]", model.Entries [0].JniName);
-			Assert.Equal ("test/Triple[1]", model.Entries [1].JniName);
-			Assert.Equal ("test/Triple[2]", model.Entries [2].JniName);
-			Assert.Equal ("test/Triple", model.Entries [3].JniName);
+			var entries = JavaNameEntries (model);
+			Assert.Equal (4, entries.Count);
+			Assert.Equal ("test/Triple[0]", entries [0].JniName);
+			Assert.Equal ("test/Triple[1]", entries [1].JniName);
+			Assert.Equal ("test/Triple[2]", entries [2].JniName);
+			Assert.Equal ("test/Triple", entries [3].JniName);
 
 			// All three peers get associations to the alias holder
 			Assert.Equal (3, model.Associations.Count);
@@ -123,10 +126,11 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (peers, "MixedAlias");
 			// 2 indexed entries + 1 base entry → alias holder = 3
-			Assert.Equal (3, model.Entries.Count);
-			Assert.Equal ("test/Mixed[0]", model.Entries [0].JniName);
-			Assert.Equal ("test/Mixed[1]", model.Entries [1].JniName);
-			Assert.Equal ("test/Mixed", model.Entries [2].JniName);
+			var entries = JavaNameEntries (model);
+			Assert.Equal (3, entries.Count);
+			Assert.Equal ("test/Mixed[0]", entries [0].JniName);
+			Assert.Equal ("test/Mixed[1]", entries [1].JniName);
+			Assert.Equal ("test/Mixed", entries [2].JniName);
 
 			// Only the alias peer with activation gets a proxy
 			Assert.Single (model.ProxyTypes);
@@ -276,10 +280,10 @@ public class ModelBuilderTests : FixtureTestBase
 			var appAcwPeer = MakeAcwPeer ("my/app/MyActivity", "MyApp.MyActivity", "MyApp");
 
 			Assert.False (
-				BuildModel ([frameworkAcwPeer]).Entries.Single ().IsUnconditional,
+				JavaNameEntries (BuildModel ([frameworkAcwPeer])).Single ().IsUnconditional,
 				"Framework ACWs should not unconditionally root their proxy types.");
 			Assert.True (
-				BuildModel ([appAcwPeer]).Entries.Single ().IsUnconditional,
+				JavaNameEntries (BuildModel ([appAcwPeer])).Single ().IsUnconditional,
 				"Application ACWs must remain unconditional because Java can instantiate them.");
 		}
 
@@ -335,14 +339,16 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_SinglePeer_HasAssociation ()
+		public void Build_SinglePeer_HasManagedReverseEntry ()
 		{
-			// Single peers with generated proxies emit associations so the runtime proxy
-			// type map is populated.
 			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
-			Assert.Single (model.Associations);
+			Assert.Empty (model.Associations);
+			var reverseEntry = Assert.Single (ManagedTypeEntries (model));
+			Assert.Equal ("__managed_type:MyApp.MainActivity, App", reverseEntry.JniName);
+			Assert.Contains ("MyApp_MainActivity_Proxy", reverseEntry.ProxyTypeReference);
+			Assert.Null (reverseEntry.TargetTypeReference);
 		}
 
 		[Fact]
@@ -440,6 +446,20 @@ public class ModelBuilderTests : FixtureTestBase
 	static TypeMapAttributeData? FindEntry (TypeMapAssemblyData model, string jniName)
 	{
 		return model.Entries.FirstOrDefault (e => e.JniName == jniName);
+	}
+
+	static List<TypeMapAttributeData> JavaNameEntries (TypeMapAssemblyData model)
+	{
+		return model.Entries
+			.Where (e => !e.JniName.StartsWith ("__managed_type:", StringComparison.Ordinal) && e.AnchorRank is null)
+			.ToList ();
+	}
+
+	static List<TypeMapAttributeData> ManagedTypeEntries (TypeMapAssemblyData model)
+	{
+		return model.Entries
+			.Where (e => e.JniName.StartsWith ("__managed_type:", StringComparison.Ordinal))
+			.ToList ();
 	}
 
 	public class FixtureMcwTypes
@@ -555,15 +575,16 @@ public class ModelBuilderTests : FixtureTestBase
 
 			// Invoker is excluded from TypeMap entries/proxies. It still gets a
 			// managed→proxy association so its JniPeerMembers can resolve the JNI name.
-			Assert.Single (model.Entries);
-			Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].JniName);
+			var entries = JavaNameEntries (model);
+			Assert.Single (entries);
+			Assert.Equal ("android/view/View$OnClickListener", entries [0].JniName);
 
 			// Only the interface proxy exists; the invoker type is also referenced
 			// as a TypeRef in the interface proxy's InvokerType property.
 			Assert.Single (model.ProxyTypes);
 			Assert.NotNull (model.ProxyTypes [0].InvokerType);
 			Assert.Equal ("Android.Views.IOnClickListenerInvoker", model.ProxyTypes [0].InvokerType!.ManagedTypeName);
-			Assert.Contains (model.Associations, a => a.SourceTypeReference == "Android.Views.IOnClickListenerInvoker, TestFixtures");
+			Assert.Contains (ManagedTypeEntries (model), e => e.JniName == "__managed_type:Android.Views.IOnClickListenerInvoker, TestFixtures");
 		}
 
 		[Fact]
@@ -577,8 +598,9 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (new [] { ifacePeer, invokerPeer });
 
 			// Only the interface gets a TypeMap entry — its ProxyTypeReference points to the generated proxy
-			Assert.Single (model.Entries);
-			Assert.Contains ("MyApp_IFoo_Proxy", model.Entries [0].ProxyTypeReference);
+			var entries = JavaNameEntries (model);
+			Assert.Single (entries);
+			Assert.Contains ("MyApp_IFoo_Proxy", entries [0].ProxyTypeReference);
 
 			// Only the interface gets a proxy — the invoker is referenced, not proxied
 			Assert.Single (model.ProxyTypes);
@@ -590,9 +612,10 @@ public class ModelBuilderTests : FixtureTestBase
 			// Interface proxy has activation because it will create the invoker
 			Assert.True (proxy.HasActivation);
 
-			Assert.Equal (2, model.Associations.Count);
-			Assert.Contains (model.Associations, a => a.SourceTypeReference == "MyApp.IFoo, App");
-			Assert.Contains (model.Associations, a => a.SourceTypeReference == "MyApp.FooInvoker, App");
+			var reverseEntries = ManagedTypeEntries (model);
+			Assert.Equal (2, reverseEntries.Count);
+			Assert.Contains (reverseEntries, e => e.JniName == "__managed_type:MyApp.IFoo, App");
+			Assert.Contains (reverseEntries, e => e.JniName == "__managed_type:MyApp.FooInvoker, App");
 		}
 	}
 
@@ -615,11 +638,12 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (aliasPeers, "AliasFixture");
 
 			// 3 indexed entries + 1 base entry → alias holder = 4
-			Assert.Equal (4, model.Entries.Count);
-			Assert.Equal ("test/AliasTarget[0]", model.Entries [0].JniName);
-			Assert.Equal ("test/AliasTarget[1]", model.Entries [1].JniName);
-			Assert.Equal ("test/AliasTarget[2]", model.Entries [2].JniName);
-			Assert.Equal ("test/AliasTarget", model.Entries [3].JniName);
+			var entries = JavaNameEntries (model);
+			Assert.Equal (4, entries.Count);
+			Assert.Equal ("test/AliasTarget[0]", entries [0].JniName);
+			Assert.Equal ("test/AliasTarget[1]", entries [1].JniName);
+			Assert.Equal ("test/AliasTarget[2]", entries [2].JniName);
+			Assert.Equal ("test/AliasTarget", entries [3].JniName);
 		}
 
 		[Fact]
@@ -683,18 +707,14 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Fixture_GenericHolder_HasAssociation ()
+		public void Fixture_GenericHolder_HasManagedReverseEntry ()
 		{
-			// Generic definitions must still get a TypeMapAssociation entry so managed→proxy
-			// lookup works for the open generic definition. Their proxy derives from the
-			// non-generic `JavaPeerProxy` base, so the CLR can load the proxy without
-			// resolving an open generic argument.
 			var peer = FindFixtureByJavaName ("my/app/GenericHolder");
 			Assert.True (peer.IsGenericDefinition);
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
-			Assert.Contains (model.Associations,
-				a => a.SourceTypeReference.StartsWith ("MyApp.Generic.GenericHolder`1", StringComparison.Ordinal));
+			Assert.Contains (ManagedTypeEntries (model),
+				e => e.JniName.StartsWith ("__managed_type:MyApp.Generic.GenericHolder`1", StringComparison.Ordinal));
 		}
 	}
 
@@ -751,15 +771,15 @@ public class ModelBuilderTests : FixtureTestBase
 
 			// Without a referencing peer, it gets a normal entry
 			var model1 = BuildModel (new [] { invokerPeer });
-			Assert.Single (model1.Entries);
+			Assert.Single (JavaNameEntries (model1));
 
 			// When an interface references it as invoker, it is excluded
 			var ifacePeer = MakeInterfacePeer ("my/app/MyInvoker", "MyApp.IMyInterface", "App", "MyApp.MyInvoker");
 			var model2 = BuildModel (new [] { ifacePeer, invokerPeer });
 			// Only the interface gets entries/proxies, the invoker is excluded
-			Assert.Single (model2.Entries);
+			Assert.Single (JavaNameEntries (model2));
 			Assert.Equal ("MyApp.IMyInterface", model2.ProxyTypes [0].TargetType.ManagedTypeName);
-			Assert.Contains (model2.Associations, a => a.SourceTypeReference == "MyApp.MyInvoker, App");
+			Assert.Contains (ManagedTypeEntries (model2), e => e.JniName == "__managed_type:MyApp.MyInvoker, App");
 		}
 	}
 
@@ -869,7 +889,7 @@ public class ModelBuilderTests : FixtureTestBase
 			var activityPeer = FindFixtureByJavaName ("android/app/Activity");
 
 			var model = BuildModel (new [] { objectPeer, activityPeer }, "MixedBlob");
-			Assert.Equal (2, model.Entries.Count);
+			Assert.Equal (2, JavaNameEntries (model).Count);
 
 			EmitAndVerify (model, "MixedBlob", (pe, reader) => {
 				var attrs = ReadAllTypeMapAttributeBlobs (reader);
@@ -892,8 +912,8 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			var model = BuildModel (new [] { peer }, assemblyName);
-			Assert.Single (model.Entries);
-			Assert.True (model.Entries [0].IsUnconditional);
+			var javaEntry = Assert.Single (JavaNameEntries (model));
+			Assert.True (javaEntry.IsUnconditional);
 
 			EmitAndVerify (model, assemblyName, (pe, reader) => {
 				var (jniName2, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
@@ -910,8 +930,8 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = FindFixtureByJavaName ("android/app/Activity");
 			var model = BuildModel (new [] { peer }, "Blob3ArgConditional");
-			Assert.Single (model.Entries);
-			Assert.False (model.Entries [0].IsUnconditional);
+			var javaEntry = Assert.Single (JavaNameEntries (model));
+			Assert.False (javaEntry.IsUnconditional);
 
 			EmitAndVerify (model, "Blob3ArgConditional", (pe, reader) => {
 				var (jniName, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);

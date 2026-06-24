@@ -572,20 +572,23 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		// Build the model — should produce a 3-way alias group
 		string typeMapAssemblyName = $"_{group.AssemblyName}.TypeMap";
 		var model = ModelBuilder.Build (group.Peers, typeMapAssemblyName + ".dll", typeMapAssemblyName);
+		var javaNameEntries = model.Entries
+			.Where (e => !e.JniName.StartsWith ("__managed_type:", StringComparison.Ordinal) && e.AnchorRank is null)
+			.ToList ();
 
 		// 3 indexed entries + 1 base entry = 4
-		Assert.Equal (4, model.Entries.Count);
-		Assert.Equal ("java/lang/Throwable[0]", model.Entries [0].JniName);
-		Assert.Equal ("java/lang/Throwable[1]", model.Entries [1].JniName);
-		Assert.Equal ("java/lang/Throwable[2]", model.Entries [2].JniName);
-		Assert.Equal ("java/lang/Throwable", model.Entries [3].JniName);
+		Assert.Equal (4, javaNameEntries.Count);
+		Assert.Equal ("java/lang/Throwable[0]", javaNameEntries [0].JniName);
+		Assert.Equal ("java/lang/Throwable[1]", javaNameEntries [1].JniName);
+		Assert.Equal ("java/lang/Throwable[2]", javaNameEntries [2].JniName);
+		Assert.Equal ("java/lang/Throwable", javaNameEntries [3].JniName);
 
 		// Exactly 1 alias holder
 		Assert.Single (model.AliasHolders);
 		Assert.Equal (3, model.AliasHolders [0].AliasKeys.Count);
 
 		// The base "java/lang/Throwable" entry points to the alias holder, not a type directly
-		var baseEntry = model.Entries [3];
+		var baseEntry = javaNameEntries [3];
 		Assert.Contains ("_Aliases", baseEntry.ProxyTypeReference);
 
 		// 3 associations (one per peer → alias holder)
