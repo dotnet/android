@@ -38,16 +38,14 @@ namespace Java.Interop
 		/// </summary>
 		internal virtual IDictionary? CreateDictionaryWithValueFactory<[DynamicallyAccessedMembers (Constructors)] TValue> (
 			JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
-			where TValue : class, IJavaPeerable
 			=> null;
 	}
 
 	/// <summary>
 	/// Typed container factory. All creation uses direct <c>new</c> expressions — fully AOT-safe.
 	/// </summary>
-	/// <typeparam name="T">The Java peer element type.</typeparam>
+	/// <typeparam name="T">The container element type.</typeparam>
 	public sealed class JavaPeerContainerFactory<[DynamicallyAccessedMembers (Constructors)] T> : JavaPeerContainerFactory
-		where T : class, IJavaPeerable
 	{
 		internal override IList CreateList (IntPtr handle, JniHandleOwnership transfer)
 			=> new Android.Runtime.JavaList<T> (handle, transfer);
