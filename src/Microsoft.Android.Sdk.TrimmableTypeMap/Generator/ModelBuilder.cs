@@ -597,6 +597,7 @@ static class ModelBuilder
 			model.Associations.Add (new TypeMapAssociationData {
 				SourceTypeReference = typeReference,
 				AliasProxyTypeReference = proxyReference,
+				AnchorRank = proxy.Rank,
 			});
 		}
 	}

@@ -421,7 +421,7 @@ sealed record ActivationCtorData
 
 /// <summary>
 /// One [assembly: TypeMapAssociation(typeof(Source), typeof(AliasProxy))] entry.
-/// Links a managed type to the alias holder that owns the alias group.
+/// Links a managed type to an alias holder, generated proxy, or generated array proxy.
 /// </summary>
 sealed record TypeMapAssociationData
 {
@@ -434,6 +434,12 @@ sealed record TypeMapAssociationData
 	/// Assembly-qualified proxy type reference (the alias holder).
 	/// </summary>
 	public required string AliasProxyTypeReference { get; init; }
+
+	/// <summary>
+	/// 1-based array rank when this association should use a <c>__ArrayMapRank{value}</c>
+	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
+	/// </summary>
+	public int? AnchorRank { get; init; }
 }
 
 /// <summary>

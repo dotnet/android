@@ -1282,9 +1282,11 @@ public class ModelBuilderTests : FixtureTestBase
 
 				var assocAttrs = ReadAllTypeMapAssociationAttributeBlobs (reader);
 				Assert.Contains (assocAttrs, a =>
+					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
 					a.sourceRef == "Java.Interop.JavaArray`1[[Foo.Bar, App]], Java.Interop" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
 				Assert.Contains (assocAttrs, a =>
+					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
 					a.sourceRef == "Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
 			});
@@ -1365,9 +1367,9 @@ public class ModelBuilderTests : FixtureTestBase
 		return result;
 	}
 
-	static List<(string? sourceRef, string? proxyRef)> ReadAllTypeMapAssociationAttributeBlobs (MetadataReader reader)
+	static List<(string groupName, string? sourceRef, string? proxyRef)> ReadAllTypeMapAssociationAttributeBlobs (MetadataReader reader)
 	{
-		var result = new List<(string?, string?)> ();
+		var result = new List<(string, string?, string?)> ();
 		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
 		foreach (var attrHandle in asmAttrs) {
 			var attr = reader.GetCustomAttribute (attrHandle);
@@ -1389,7 +1391,7 @@ public class ModelBuilderTests : FixtureTestBase
 			if (prolog != 1)
 				continue;
 
-			result.Add ((blobReader.ReadSerializedString (), blobReader.ReadSerializedString ()));
+			result.Add ((parentName, blobReader.ReadSerializedString (), blobReader.ReadSerializedString ()));
 		}
 		return result;
 	}

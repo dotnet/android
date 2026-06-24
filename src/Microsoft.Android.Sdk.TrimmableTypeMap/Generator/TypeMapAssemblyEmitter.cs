@@ -121,6 +121,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
 	MemberReferenceHandle _javaArrayProxyCtorRef;
 	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
+	TypeReferenceHandle _typeMapAssociationAttrOpenRef;
 
 	// RegisterNatives with JniNativeMethod
 	TypeReferenceHandle _jniNativeMethodRef;
@@ -153,6 +154,7 @@ sealed class TypeMapAssemblyEmitter
 	// Per-anchor TypeMap<TGroup> ctor refs, lazily built.
 	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr2ArgCtorRefByAnchor = new ();
 	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr3ArgCtorRefByAnchor = new ();
+	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAssociationAttrCtorRefByAnchor = new ();
 
 	// Cached open TypeMapAttribute`1 ref shared across closed TypeSpecs.
 	TypeReferenceHandle _typeMapAttrOpenRef;
@@ -636,10 +638,10 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeMapAssociationAttributeCtorRef ()
 	{
 		var metadata = _pe.Metadata;
-		var typeMapAssociationAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
+		_typeMapAssociationAttrOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeInteropServicesRef,
 			metadata.GetOrAddString ("System.Runtime.InteropServices"),
 			metadata.GetOrAddString ("TypeMapAssociationAttribute`1"));
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (typeMapAssociationAttrOpenRef, _anchorTypeHandle);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAssociationAttrOpenRef, _anchorTypeHandle);
 
 		_typeMapAssociationAttrCtorRef = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
@@ -648,6 +650,24 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
+		_typeMapAssociationAttrCtorRefByAnchor [_anchorTypeHandle] = _typeMapAssociationAttrCtorRef;
+	}
+
+	MemberReferenceHandle GetOrAddTypeMapAssociationAttrCtorRef (EntityHandle anchor)
+	{
+		if (_typeMapAssociationAttrCtorRefByAnchor.TryGetValue (anchor, out var cached)) {
+			return cached;
+		}
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAssociationAttrOpenRef, anchor);
+		var ctorRef = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
+		_typeMapAssociationAttrCtorRefByAnchor [anchor] = ctorRef;
+		return ctorRef;
 	}
 
 	ExportMethodDispatchEmitterContext CreateExportMethodDispatchEmitterContext ()
@@ -1953,11 +1973,22 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAssociationAttribute (TypeMapAssociationData assoc)
 	{
+		var ctorRef = _typeMapAssociationAttrCtorRef;
+		if (assoc.AnchorRank is int rank) {
+			int anchorIndex = rank - 1;
+			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length) {
+				throw new InvalidOperationException (
+					$"No rank-{rank} anchor available for association source '{assoc.SourceTypeReference}'. " +
+					$"Ensure TypeMapAssemblyData.MaxArrayRank was >= {rank} before emit.");
+			}
+			ctorRef = GetOrAddTypeMapAssociationAttrCtorRef (_rankAnchorHandles [anchorIndex]);
+		}
+
 		var blob = _pe.BuildAttributeBlob (b => {
 			b.WriteSerializedString (assoc.SourceTypeReference);
 			b.WriteSerializedString (assoc.AliasProxyTypeReference);
 		});
-		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _typeMapAssociationAttrCtorRef, blob);
+		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);
 	}
 
 	/// <summary>
