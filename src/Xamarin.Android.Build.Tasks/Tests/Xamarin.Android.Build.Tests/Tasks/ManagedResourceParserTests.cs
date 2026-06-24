@@ -487,7 +487,7 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		public void GenerateDesignerFileFromRtxt ([Values] bool withLibraryReference, [Values] AndroidRuntime runtime)
+		public void GenerateDesignerFileFromRtxt ([Values] bool withLibraryReference, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			// TODO: fix NativeAOT, it currently fails with:
 			//

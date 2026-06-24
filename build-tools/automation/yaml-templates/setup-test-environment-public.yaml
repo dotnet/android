@@ -14,7 +14,6 @@ parameters:
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
   commit: ''
-  xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
   use1ESTemplate: false
 
 steps:
@@ -36,5 +35,4 @@ steps:
     installTestSlicer: ${{ parameters.installTestSlicer }}
     installApkDiff: ${{ parameters.installApkDiff }}
     androidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
-    xaprepareScenario: ${{ parameters.xaprepareScenario }}
     use1ESTemplate: false

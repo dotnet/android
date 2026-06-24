@@ -26,7 +26,7 @@
 
   <!--
     These category exclusions used to flow through `am instrument -e` via the
-    custom `RunTestApp` target. With the migration to `dotnet test` + MTP,
+    legacy APK runner. With the migration to `dotnet test` + MTP,
     the on-device instrumentation reads them from runtimeconfig.json via
     `AppContext.GetData` / `AppContext.TryGetSwitch`. See
     `TestInstrumentation.ExcludedCategories` / `TestInstrumentation.IncludedCategories`.

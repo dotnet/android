@@ -7,59 +7,6 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class InvalidConfigTests : BaseTest
 	{
-		static readonly object [] SettingCombinationsSource = new object [] {
-			// Interpreter + AOT
-			new object [] {
-				/* isRelease */      true,
-				/* useInterpreter */ true,
-				/* publishTrimmed */ true,
-				/* aot */            true,
-				/* expected */       true,
-			},
-			// Debug + AOT
-			new object [] {
-				/* isRelease */      false,
-				/* useInterpreter */ false,
-				/* publishTrimmed */ true,
-				/* aot */            true,
-				/* expected */       true,
-			},
-			// Debug + PublishTrimmed
-			new object [] {
-				/* isRelease */      false,
-				/* useInterpreter */ false,
-				/* publishTrimmed */ true,
-				/* aot */            false,
-				/* expected */       true,
-			},
-			// AOT + PublishTrimmed=false
-			new object [] {
-				/* isRelease */      true,
-				/* useInterpreter */ false,
-				/* publishTrimmed */ false,
-				/* aot */            true,
-				/* expected */       false,
-			},
-		};
-
-		[Test]
-		[TestCaseSource (nameof (SettingCombinationsSource))]
-		public void SettingCombinations (bool isRelease, bool useInterpreter, bool publishTrimmed, bool aot, bool expected)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				EnableDefaultItems = true,
-			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
-			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
-			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
-			var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			Assert.AreEqual (expected, builder.Build (proj), $"{proj.ProjectName} should {(expected ? "succeed" : "fail")}");
-		}
-
 		[Test]
 		public void EolFrameworks ([Values ("net6.0-android", "net7.0-android")] string targetFramework)
 		{
@@ -97,21 +44,5 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void XA0119Interpreter ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				AotAssemblies = true,
-			};
-			// Mono-only test
-			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetProperty ("UseInterpreter", "true");
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "XA0119"), "Output should contain XA0119 warnings");
-			}
-		}
 	}
 }

@@ -41,11 +41,10 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "gradle"
-    directory: "/src/r8/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "gradle"
-    directory: "/src/manifestmerger/"
+    directories:
+      - "/src/r8"
+      - "/src/manifestmerger"
+      - "/src/proguard-android"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gitsubmodule"

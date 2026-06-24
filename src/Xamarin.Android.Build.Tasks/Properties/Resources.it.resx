@@ -859,6 +859,13 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
     <comment>The following are literal names and should not be translated: NativeAOT, DGML
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
+  <data name="XA4322" xml:space="preserve">
+    <value>Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.</value>
+    <comment>The following are literal names and should not be translated: ProGuard
+{0} - The unsupported ProGuard option, such as -printmapping.
+{1} - The path to the proguard.txt file inside the extracted .aar.
+{2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>La directory '{0}' delle toolchain di Android NDK non è presente. Installare Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1193,6 +1200,20 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <comment>{0} - The file path.
 {1} - The symbol name.
 {2} - The section name.</comment>
+  </data>
+  <data name="XA0149" xml:space="preserve">
+    <value>Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android, NuGet.
+{0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
+{1} - The NuGet package id.
+{2} - The NuGet package version.
+{3} - The full path to the assembly that contains the environment resource.</comment>
+  </data>
+  <data name="XA0149_Assembly" xml:space="preserve">
+    <value>Ignoring legacy Xamarin.Android environment file '{0}' in assembly '{1}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
+{0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
+{1} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>Il file eseguibile 'gradlew' non è stato trovato nella directory di progetto '{0}'. Assicurarsi che il percorso della cartella di progetto Gradle sia corretto e che contenga script wrapper di Gradle.</value>
