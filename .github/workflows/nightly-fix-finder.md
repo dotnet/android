@@ -27,15 +27,17 @@ on:
 permissions:
   contents: read
   issues: read
+environment: copilot-pr-reviewer
 network:
   allowed:
   - defaults
   - github
   - dotnet
 safe-outputs:
+  github-token: ${{ secrets.GITHUB_TOKEN }}
   assign-to-agent:
     github-token: ${{ secrets.ANDROID_TEAM_PAT }}
-    model: claude-opus-4.6
+    model: claude-opus-4.8
     target: "*"
   create-issue:
     close-older-issues: false
@@ -76,7 +78,9 @@ steps:
 description: Nightly scan for random code improvement opportunities, files issues assigned to Copilot
 engine:
   id: copilot
-  model: claude-opus-4.6
+  model: claude-opus-4.8
+max-daily-ai-credits: -1
+max-ai-credits: -1
 strict: true
 timeout-minutes: 30
 tools:
@@ -96,6 +100,7 @@ tools:
   - xargs:*
   - basename:*
   github:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     min-integrity: none
     toolsets:
     - repos
@@ -209,7 +214,7 @@ Use this structure:
 
 ## Phase 5: Assign to Copilot
 
-After creating the issue, use `assign_to_agent` to assign Copilot to work on it. You **MUST** pass the `issue_number` parameter — use the `temporary_id` from the `create_issue` call (**without** the `#` prefix). The safe-output is configured with `model: "claude-opus-4.6"` so Copilot will use Claude Opus 4.6 to implement the fix.
+After creating the issue, use `assign_to_agent` to assign Copilot to work on it. You **MUST** pass the `issue_number` parameter — use the `temporary_id` from the `create_issue` call (**without** the `#` prefix). The safe-output is configured with `model: "claude-opus-4.8"` so Copilot will use Claude Opus 4.8 to implement the fix.
 
 Example call sequence:
 1. `create_issue` with `temporary_id: "aw_fix123"`, `title`, `body`

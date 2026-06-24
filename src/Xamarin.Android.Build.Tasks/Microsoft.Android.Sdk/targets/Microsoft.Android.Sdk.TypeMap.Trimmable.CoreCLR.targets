@@ -49,14 +49,14 @@
   </Target>
 
   <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and Exists('$(IntermediateOutputPath)linked/Link.semaphore') "
-      AfterTargets="ILLink"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
-      Inputs="$(IntermediateOutputPath)linked/Link.semaphore"
+      Inputs="@(ResolvedFileToPublish)"
       Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
     <ItemGroup>
       <_PostTrimTrimmableTypeMapInputAssemblies Include="@(ResolvedFileToPublish)"
-          Condition=" '%(Extension)' == '.dll' " />
+          Condition=" '%(Extension)' == '.dll' and ('%(RuntimeIdentifier)' == '' or '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' or '%(RuntimeIdentifier)' == '$(_PostTrimTypeMapFirstRuntimeIdentifier)') " />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap

@@ -21,10 +21,6 @@
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
-  </ItemGroup>
-
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   <!-- Copy runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->

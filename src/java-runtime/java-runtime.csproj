@@ -23,7 +23,6 @@
   
   <ItemGroup>
     <AllRuntimeSource Include="java/**/*.java" />
-    <AllRuntimeSource Include="..\..\src-ThirdParty\bazel\java\**\*.java" />
     <AllRuntimeSource Include="$(JavaInteropSourceDirectory)\src\Java.Interop\java\**\*.java" />
   </ItemGroup>
   

@@ -47,13 +47,6 @@ namespace Xamarin.Android.Tasks
 
 		const uint CompressedDataMagic = 0x5A4C4158; // 'XALZ', little-endian
 
-		// TODO: consider making it configurable via an MSBuild property, would be more flexible this way
-		//
-		// Arbitrary limit of the input assembly size, to clamp down on memory allocation. Our unlinked Mono.Android.dll
-		// assembly (the biggest one we have) is currently (May 2020) around 27MB, so let's bump the value to 30MB times
-		// two - it should be more than enough for most needs.
-		//public const ulong InputAssemblySizeLimit = 60 * 1024 * 1024;
-
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
 		static CompressionResult Compress (AssemblyData data, string outputFilePath)
@@ -71,9 +64,6 @@ namespace Xamarin.Android.Tasks
 			var fi = new FileInfo (data.SourcePath);
 			if (!fi.Exists)
 				throw new InvalidOperationException ($"File '{data.SourcePath}' does not exist");
-			// if ((ulong)fi.Length > InputAssemblySizeLimit) {
-			// 	return CompressionResult.InputTooBig;
-			// }
 
 			data.DestinationPath = outputFilePath;
 			data.SourceSize = checked((uint)fi.Length);

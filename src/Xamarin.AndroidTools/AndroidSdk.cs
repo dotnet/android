@@ -555,9 +555,7 @@ namespace Xamarin.AndroidTools
 					return app;
 			}
 
-#pragma warning disable CS0618 // Type or member is obsolete
-			var old = Path.Combine (GetShortPathName (AndroidToolsPath), zipAlign);
-#pragma warning restore CS0618
+			var old = Path.Combine (GetShortPathName (Path.Combine (AndroidSdkPath, "tools")), zipAlign);
 			if (File.Exists (old))
 				return old;
 
@@ -578,9 +576,7 @@ namespace Xamarin.AndroidTools
 					return app;
 			}
 
-#pragma warning disable CS0618 // Type or member is obsolete
-			var old = Path.Combine (GetShortPathName (AndroidToolsPath), apkSigner);
-#pragma warning restore CS0618
+			var old = Path.Combine (GetShortPathName (Path.Combine (AndroidSdkPath, "tools")), apkSigner);
 
 			if (File.Exists (old))
 				return old;
@@ -606,9 +602,7 @@ namespace Xamarin.AndroidTools
 
 		static string GetFallbackApkAnalyzerPath ()
 		{
-#pragma warning disable CS0618 // Type or member is obsolete
-			var apkanalyzerPath = Path.Combine (AndroidSdk.AndroidToolsPath, "bin", apkanalyzer);
-#pragma warning restore CS0618
+			var apkanalyzerPath = Path.Combine (AndroidSdkPath, "tools", "bin", apkanalyzer);
 
 			if (File.Exists (apkanalyzerPath))
 				return apkanalyzerPath;

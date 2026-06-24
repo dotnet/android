@@ -7,6 +7,14 @@
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--
+      We share $(OutputPath) with Xamarin.Android.Build.Tasks.csproj.  Letting NuGet
+      copy this project's transitive runtime assets there (e.g. the Mono.Cecil.dll
+      that ships inside Microsoft.DotNet.Cecil, pulled in by Microsoft.NET.ILLink)
+      would clobber the real DLLs Build.Tasks already deposited.  Only our compiled
+      assembly needs to land in the SDK pack tools folder.
+    -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.ILLink" Version="$(MicrosoftNETILLinkPackageVersion)" />
