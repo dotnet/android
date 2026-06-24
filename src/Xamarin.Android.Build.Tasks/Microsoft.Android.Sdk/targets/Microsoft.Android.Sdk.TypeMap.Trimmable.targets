@@ -128,7 +128,7 @@
     </ItemGroup>
     <Delete Files="@(_DeletedCopiedJavaFiles)" />
     <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedCopiedJavaFiles->Count())' != '0' " />
-    <Touch Files="$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
+    <Touch Files="@(_GeneratedTypeMapAssemblies);$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
 
     <ItemGroup>
       <FileWrites Remove="@(_DeletedJavaFiles)" />
@@ -256,19 +256,24 @@
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
 
     Inputs uses the TypeMap output stamp as a focused sentinel — _GenerateTrimmableTypeMap
-    touches it whenever any of its own inputs (assemblies, manifest, etc.) change. The
-    Copy task below then updates android/src only for Java sources whose content changed.
+    touches it whenever any of its own inputs (assemblies, manifest, etc.) change. Generated
+    Java files are also inputs so modified sources are copied even if the typemap stamp is stable.
+    The Copy task below then updates android/src only for Java sources whose content changed.
     We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
   -->
-  <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TrimmableTypeMapOutputStamp);@(_EnvironmentFiles)"
-      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
-
+  <Target Name="_CollectTrimmableTypeMapJavaFiles"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <ItemGroup>
+      <_TypeMapJavaFiles Remove="@(_TypeMapJavaFiles)" />
       <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateJavaStubs"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources;_CollectTrimmableTypeMapJavaFiles"
+      Inputs="$(_TrimmableTypeMapOutputStamp);@(_TypeMapJavaFiles);@(_EnvironmentFiles)"
+      Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
     <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" SkipUnchangedFiles="true" />
 
     <ItemGroup>
