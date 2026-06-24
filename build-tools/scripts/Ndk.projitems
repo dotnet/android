@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  This file is checked-in. The NDK version/revision and minimum API level
-  values are sourced from the matching properties in Configuration.props
-  ($(_XAAndroidNdkRelease), $(_XAAndroidNdkPkgRevision) and
-  $(AndroidMinimumDotNetApiLevel)), which is imported before this file, so
-  there is nothing to keep in sync here.
-
-  The legacy 32-bit minimum API level used to differ from the .NET minimum
-  API level, but they are the same now, so each ABI uses a single property
-  for both the ApiLevel and ApiLevelNET metadata.
+  Checked-in. NDK version/revision and API level come from Configuration.props
+  ($(_XAAndroidNdkRelease), $(_XAAndroidNdkPkgRevision),
+  $(AndroidMinimumDotNetApiLevel)), so there is nothing to keep in sync here.
 -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
