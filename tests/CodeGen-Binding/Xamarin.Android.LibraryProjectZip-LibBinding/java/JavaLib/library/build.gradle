@@ -1,21 +1,19 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
+    namespace 'com.example.javalib'
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 25
+        minSdk 21
+        targetSdk 35
         versionCode 1
         versionName "1.0"
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
     }
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
