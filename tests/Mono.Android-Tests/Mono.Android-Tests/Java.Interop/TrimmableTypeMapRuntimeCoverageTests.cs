@@ -172,6 +172,25 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void NativeObjectArray_GetArray_UsesRankOneTypeMapEntry ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			using var first = new View (Android.App.Application.Context);
+			using var second = new View (Android.App.Application.Context);
+			var handle = JNIEnv.NewArray (new [] { first, second });
+
+			try {
+				var values = JNIEnv.GetArray<View> (handle);
+				Assert.AreEqual (2, values.Length);
+				Assert.IsTrue (JNIEnv.IsSameObject (first.Handle, values [0].Handle));
+				Assert.IsTrue (JNIEnv.IsSameObject (second.Handle, values [1].Handle));
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[Test]
 		public void NonGenericCollection_CopyTo_StringArray_ConvertsJavaString ()
 		{
 			AssumeTrimmableTypeMapEnabled ();

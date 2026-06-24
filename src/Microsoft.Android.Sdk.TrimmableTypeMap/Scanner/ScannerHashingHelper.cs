@@ -26,15 +26,12 @@ internal static class ScannerHashingHelper
 
 	internal static string ToCrc64 (string ns, string assemblyName)
 	{
-		const int stackallocThresholdBytes = 256;
 		int byteCount = GetNamespaceAssemblyUtf8ByteCount (ns, assemblyName);
-		Span<byte> utf8Buffer = byteCount <= stackallocThresholdBytes
-			? stackalloc byte [stackallocThresholdBytes]
-			: new byte [byteCount];
+		byte[] utf8Buffer = new byte [byteCount];
 
-		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer.Slice (0, byteCount));
-		Span<byte> hash = stackalloc byte [8];
-		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
+		int bytesWritten = GetNamespaceAssemblyUtf8Bytes (ns, assemblyName, utf8Buffer);
+		// Avoid Span overloads here: their assembly identity differs between netstandard and netCore System.IO.Hashing assets.
+		byte[] hash = System.IO.Hashing.Crc64.Hash (utf8Buffer);
 		ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
 		BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
 		return ToHexString (hash);

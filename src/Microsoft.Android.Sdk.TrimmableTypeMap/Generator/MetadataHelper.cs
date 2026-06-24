@@ -40,6 +40,15 @@ static class MetadataHelper
 			hash.AddByte ((byte)(proxy.ActivationCtor?.Style ?? 0));
 			hash.AddByte ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
 		}
+		foreach (var proxy in data.ArrayProxyTypes) {
+			hash.AddString (proxy.TypeName);
+			hash.AddString (proxy.JniName);
+			hash.AddString (proxy.ElementType.ManagedTypeName);
+			hash.AddString (proxy.ElementType.AssemblyName);
+			hash.AddInt32 (proxy.Rank);
+			hash.AddString (proxy.Primitive?.ConcreteArrayType.ManagedTypeName ?? "");
+			hash.AddString (proxy.Primitive?.ConcreteArrayType.AssemblyName ?? "");
+		}
 		foreach (var assoc in data.Associations) {
 			hash.AddString (assoc.SourceTypeReference);
 			hash.AddString (assoc.AliasProxyTypeReference);

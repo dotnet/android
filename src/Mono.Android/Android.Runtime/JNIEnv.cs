@@ -35,14 +35,14 @@ namespace Android.Runtime {
 				}
 
 				if (RuntimeFeature.IsNativeAotRuntime) {
-					// NativeAOT: resolve via per-rank typemap + Array.CreateInstanceFromArrayType.
-					if (TrimmableTypeMap.Instance.TryGetArrayType (elementType, length, out var arrayType)) {
-						return Array.CreateInstanceFromArrayType (arrayType, length);
+					// NativeAOT: resolve via per-rank typemap + generated array proxy.
+					if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, additionalRank: 1, out var arrayProxy)) {
+						return arrayProxy.CreateManagedArray (length);
 					}
 				}
 
 				throw new NotSupportedException (
-					$"No TrimmableTypeMap array entry for element type '{elementType}'. " +
+					$"No TrimmableTypeMap array proxy entry for element type '{elementType}'. " +
 					$"Array lookups use the element type within the per-rank __ArrayMapRank{GetArrayRank (elementType)} typemap group; " +
 					$"ensure the mapping is emitted for that rank (for example by increasing _AndroidTrimmableTypeMapMaxArrayRank) or report an issue.");
 			}

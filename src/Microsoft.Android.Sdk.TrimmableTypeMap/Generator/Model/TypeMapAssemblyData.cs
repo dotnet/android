@@ -41,6 +41,11 @@ sealed class TypeMapAssemblyData
 	public List<AliasHolderData> AliasHolders { get; } = new ();
 
 	/// <summary>
+	/// Array proxy types to emit — one per JNI element name and rank.
+	/// </summary>
+	public List<ArrayProxyData> ArrayProxyTypes { get; } = new ();
+
+	/// <summary>
 	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
 	/// sentinel TypeDefs and <c>TypeMap</c> entries. 0 disables.
 	/// </summary>
@@ -89,6 +94,32 @@ sealed record TypeMapAttributeData
 	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
 	/// </summary>
 	public int? AnchorRank { get; init; }
+}
+
+/// <summary>
+/// A generated array proxy type used by per-rank array TypeMap entries.
+/// </summary>
+sealed record ArrayProxyData
+{
+	public required string TypeName { get; init; }
+
+	public string Namespace { get; init; } = "_TypeMap.ArrayProxies";
+
+	public required string JniName { get; init; }
+
+	public required TypeRefData ElementType { get; init; }
+
+	public required int Rank { get; init; }
+
+	public PrimitiveArrayProxyData? Primitive { get; init; }
+}
+
+/// <summary>
+/// Additional primitive array metadata for <see cref="ArrayProxyData"/>.
+/// </summary>
+sealed record PrimitiveArrayProxyData
+{
+	public required TypeRefData ConcreteArrayType { get; init; }
 }
 
 /// <summary>

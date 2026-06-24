@@ -16,6 +16,17 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
+	static readonly PrimitiveArrayProxyInfo [] PrimitiveArrayProxies = [
+		new ("Z", "Boolean", "System.Boolean", "Java.Interop.JavaBooleanArray"),
+		new ("B", "SByte", "System.SByte", "Java.Interop.JavaSByteArray"),
+		new ("C", "Char", "System.Char", "Java.Interop.JavaCharArray"),
+		new ("S", "Int16", "System.Int16", "Java.Interop.JavaInt16Array"),
+		new ("I", "Int32", "System.Int32", "Java.Interop.JavaInt32Array"),
+		new ("J", "Int64", "System.Int64", "Java.Interop.JavaInt64Array"),
+		new ("F", "Single", "System.Single", "Java.Interop.JavaSingleArray"),
+		new ("D", "Double", "System.Double", "Java.Interop.JavaDoubleArray"),
+	];
+
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -97,6 +108,10 @@ static class ModelBuilder
 			if (maxArrayRank > 0) {
 				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
 			}
+		}
+
+		if (maxArrayRank > 0 && peers.Any (p => string.Equals (p.AssemblyName, "Java.Interop", StringComparison.Ordinal))) {
+			EmitPrimitiveArrayEntries (model, maxArrayRank);
 		}
 
 		BuildNativeRegistrations (model);
@@ -253,13 +268,26 @@ static class ModelBuilder
 	static string ManagedTypeNameToProxyTypeName (string managedTypeName)
 	{
 		var builder = new StringBuilder (managedTypeName.Length + ProxyTypeSuffix.Length);
+		AppendSafeManagedTypeName (builder, managedTypeName);
+		builder.Append (ProxyTypeSuffix);
+		return builder.ToString ();
+	}
+
+	static string ManagedTypeNameToArrayProxyTypeName (string managedTypeName, int rank)
+	{
+		var builder = new StringBuilder (managedTypeName.Length + 20);
+		AppendSafeManagedTypeName (builder, managedTypeName);
+		builder.Append ("_ArrayProxy");
+		builder.Append (rank);
+		return builder.ToString ();
+	}
+
+	static void AppendSafeManagedTypeName (StringBuilder builder, string managedTypeName)
+	{
 		for (int i = 0; i < managedTypeName.Length; i++) {
 			char c = managedTypeName [i];
 			builder.Append (c == '.' || c == '+' || c == '`' ? '_' : c);
 		}
-
-		builder.Append (ProxyTypeSuffix);
-		return builder.ToString ();
 	}
 
 	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, string jniName, HashSet<string> usedProxyNames, bool isAcw)
@@ -520,18 +548,58 @@ static class ModelBuilder
 		if (peer.IsGenericDefinition) {
 			return;
 		}
+		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
+			return;
+		}
 
 		for (int rank = 1; rank <= maxArrayRank; rank++) {
-			// TODO: we should also map elements to `JavaObjectArray<JavaObjectArray<...<T>...>>`
-			// so we migth want to generate a `ProxyTypeReference` which would return `JavaObjectArray<JavaObjectArray<...<T>...>>` AND `T[]`
+			var proxy = new ArrayProxyData {
+				TypeName = ManagedTypeNameToArrayProxyTypeName (peer.ManagedTypeName, rank),
+				JniName = jniName,
+				ElementType = new TypeRefData {
+					ManagedTypeName = peer.ManagedTypeName,
+					AssemblyName = peer.AssemblyName,
+				},
+				Rank = rank,
+			};
+			model.ArrayProxyTypes.Add (proxy);
 
-			string arrayTypeRef = AssemblyQualify (peer.ManagedTypeName + Brackets (rank), peer.AssemblyName);
 			model.Entries.Add (new TypeMapAttributeData {
 				JniName = jniName,
-				ProxyTypeReference = arrayTypeRef,
-				TargetTypeReference = arrayTypeRef,
+				ProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName),
+				TargetTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
 				AnchorRank = rank,
 			});
+		}
+	}
+
+	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank)
+	{
+		foreach (var primitive in PrimitiveArrayProxies) {
+			for (int rank = 1; rank <= maxArrayRank; rank++) {
+				var proxy = new ArrayProxyData {
+					TypeName = $"Primitive_{primitive.Name}_ArrayProxy{rank}",
+					JniName = primitive.JniName,
+					ElementType = new TypeRefData {
+						ManagedTypeName = primitive.ManagedTypeName,
+						AssemblyName = "System.Runtime",
+					},
+					Rank = rank,
+					Primitive = new PrimitiveArrayProxyData {
+						ConcreteArrayType = new TypeRefData {
+							ManagedTypeName = primitive.ConcreteArrayTypeName,
+							AssemblyName = "Java.Interop",
+						},
+					},
+				};
+				model.ArrayProxyTypes.Add (proxy);
+				model.Entries.Add (new TypeMapAttributeData {
+					JniName = primitive.JniName,
+					ProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName),
+					TargetTypeReference = AssemblyQualify (primitive.ManagedTypeName + Brackets (rank), "System.Runtime"),
+					AnchorRank = rank,
+				});
+			}
 		}
 	}
 
@@ -554,4 +622,10 @@ static class ModelBuilder
 	static bool IsJniPrimitiveKeyword (char c)
 		=> c == 'Z' || c == 'B' || c == 'C' || c == 'S' || c == 'I'
 			|| c == 'J' || c == 'F' || c == 'D' || c == 'V';
+
+	readonly record struct PrimitiveArrayProxyInfo (
+		string JniName,
+		string Name,
+		string ManagedTypeName,
+		string ConcreteArrayTypeName);
 }

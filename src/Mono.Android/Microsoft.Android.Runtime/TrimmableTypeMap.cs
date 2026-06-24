@@ -21,6 +21,7 @@ public class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
+	static readonly JavaArrayProxy s_noArrayProxySentinel = new MissingJavaArrayProxy ();
 	static TrimmableTypeMap? s_instance;
 	static bool s_nativeMethodsRegistered;
 	static JniMethodInfo? s_classGetInterfacesMethod;
@@ -31,6 +32,7 @@ public class TrimmableTypeMap
 
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<Type, JavaArrayProxy> _arrayProxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
 
@@ -508,26 +510,24 @@ public class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>Lookup of the closed managed array type for the given element type.</summary>
-	internal bool TryGetArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
+	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>
+	internal bool TryGetArrayProxy (Type elementType, int additionalRank, [NotNullWhen (true)] out JavaArrayProxy? arrayProxy)
 	{
 		var signature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType);
-		signature = signature.AddArrayRank (rank);
+		signature = signature.AddArrayRank (additionalRank);
 		var elementJniName = signature.SimpleReference ?? throw new InvalidOperationException ();
 
-		if (_typeMap.TryGetArrayType (elementJniName, signature.ArrayRank, out var mappedArrayType)
-			&& ArrayElementTypeMatches (mappedArrayType, elementType)) {
-			arrayType = mappedArrayType;
-			return true;
+		if (_typeMap.TryGetArrayProxyType (elementJniName, signature.ArrayRank - 1, out var proxyType)) {
+			var proxy = _arrayProxyCache.GetOrAdd (proxyType, static type =>
+				type.GetCustomAttribute<JavaArrayProxy> (inherit: false) ?? s_noArrayProxySentinel);
+			if (!ReferenceEquals (proxy, s_noArrayProxySentinel)) {
+				arrayProxy = proxy;
+				return true;
+			}
 		}
 
-		arrayType = null;
+		arrayProxy = null;
 		return false;
-	}
-
-	static bool ArrayElementTypeMatches (Type arrayType, Type elementType)
-	{
-		return arrayType.IsSZArray && arrayType.GetElementType () == elementType;
 	}
 
 	[UnmanagedCallersOnly]
@@ -571,6 +571,13 @@ public class TrimmableTypeMap
 		}
 
 		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+	}
+
+	sealed class MissingJavaArrayProxy : JavaArrayProxy
+	{
+		public override Type[] GetArrayTypes () => [];
+
+		public override Array CreateManagedArray (int length) => throw new NotSupportedException ();
 	}
 
 }

@@ -238,15 +238,19 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void TryGetArrayType_PrimitiveLeaf_DoesNotRequireRankMapEntry ()
+		public void TryGetArrayProxy_PrimitiveLeaf_ReturnsAllRankTypes ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayType (typeof (byte), out var byteArrayType));
-			Assert.AreEqual (typeof (byte[]), byteArrayType);
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 1, out var byteArrayProxy));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (sbyte[]));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaArray<sbyte>));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaPrimitiveArray<sbyte>));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaSByteArray));
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayType (typeof (byte[]), out var jaggedByteArrayType));
-			Assert.AreEqual (typeof (byte[][]), jaggedByteArrayType);
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 2, out var jaggedByteArrayProxy));
+			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (sbyte[][]));
+			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
 		}
 
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
