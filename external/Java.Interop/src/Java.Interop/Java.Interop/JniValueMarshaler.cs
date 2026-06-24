@@ -119,8 +119,6 @@ namespace Java.Interop {
 	}
 
 	public abstract class JniValueMarshaler {
-
-		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		internal const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
 		public  virtual     bool                    IsJniValueType {
@@ -135,7 +133,6 @@ namespace Java.Interop {
 		public  abstract    object?                 CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null);
 
 		public  virtual     JniValueMarshalerState  CreateArgumentState (object? value, ParameterAttributes synchronize = 0)
@@ -148,7 +145,6 @@ namespace Java.Interop {
 
 		internal object? CreateValue (
 				IntPtr handle,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			var r = new JniObjectReference (handle);
@@ -233,18 +229,13 @@ namespace Java.Interop {
 		}
 	}
 
-	public abstract class JniValueMarshaler<
-			[DynamicallyAccessedMembers (Constructors)]
-			T
-	>
-		: JniValueMarshaler
+	public abstract class JniValueMarshaler<T> : JniValueMarshaler
 	{
 
 		[return: MaybeNull]
 		public  abstract    T                       CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null);
 
 		public  virtual     JniValueMarshalerState  CreateGenericArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = 0)
@@ -258,7 +249,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 		{
 			return CreateGenericValue (ref reference, options, targetType ?? typeof (T));

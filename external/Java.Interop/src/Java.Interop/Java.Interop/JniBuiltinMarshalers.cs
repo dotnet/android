@@ -153,30 +153,33 @@ namespace Java.Interop {
 				};
 		}
 
-		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniBuiltinMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniBuiltinMarshalers);
-
-		static KeyValuePair<Type, JniValueMarshaler>[] InitJniBuiltinMarshalers ()
+		partial class ReflectionJniValueManager
 		{
-			return new []{
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaProxyObject), ProxyValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean),   JniBooleanValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean?),  JniNullableBooleanValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte),   JniSByteValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte?),  JniNullableSByteValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Char),   JniCharValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Char?),  JniNullableCharValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16),   JniInt16ValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16?),  JniNullableInt16ValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32),   JniInt32ValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32?),  JniNullableInt32ValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64),   JniInt64ValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64?),  JniNullableInt64ValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Single),   JniSingleValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Single?),  JniNullableSingleValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Double),   JniDoubleValueMarshaler.Instance),
-				new KeyValuePair<Type, JniValueMarshaler>(typeof (Double?),  JniNullableDoubleValueMarshaler.Instance),
-			};
+			static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniBuiltinMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniBuiltinMarshalers);
+
+			static KeyValuePair<Type, JniValueMarshaler>[] InitJniBuiltinMarshalers ()
+			{
+				return new []{
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaProxyObject), ProxyValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean),   JniBooleanValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean?),  JniNullableBooleanValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte),   JniSByteValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte?),  JniNullableSByteValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Char),   JniCharValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Char?),  JniNullableCharValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16),   JniInt16ValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Int16?),  JniNullableInt16ValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32),   JniInt32ValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Int32?),  JniNullableInt32ValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64),   JniInt64ValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Int64?),  JniNullableInt64ValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Single),   JniSingleValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Single?),  JniNullableSingleValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Double),   JniDoubleValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Double?),  JniNullableDoubleValueMarshaler.Instance),
+				};
+			}
 		}
 	}
 
@@ -226,7 +229,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -237,7 +239,6 @@ namespace Java.Interop {
 		public override Boolean CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -299,7 +300,6 @@ namespace Java.Interop {
 		public override Boolean? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -370,7 +370,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -381,7 +380,6 @@ namespace Java.Interop {
 		public override SByte CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -443,7 +441,6 @@ namespace Java.Interop {
 		public override SByte? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -514,7 +511,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -525,7 +521,6 @@ namespace Java.Interop {
 		public override Char CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -587,7 +582,6 @@ namespace Java.Interop {
 		public override Char? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -658,7 +652,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -669,7 +662,6 @@ namespace Java.Interop {
 		public override Int16 CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -731,7 +723,6 @@ namespace Java.Interop {
 		public override Int16? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -802,7 +793,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -813,7 +803,6 @@ namespace Java.Interop {
 		public override Int32 CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -875,7 +864,6 @@ namespace Java.Interop {
 		public override Int32? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -946,7 +934,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -957,7 +944,6 @@ namespace Java.Interop {
 		public override Int64 CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -1019,7 +1005,6 @@ namespace Java.Interop {
 		public override Int64? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -1090,7 +1075,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -1101,7 +1085,6 @@ namespace Java.Interop {
 		public override Single CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -1163,7 +1146,6 @@ namespace Java.Interop {
 		public override Single? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -1234,7 +1216,6 @@ namespace Java.Interop {
 		public override object? CreateValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -1245,7 +1226,6 @@ namespace Java.Interop {
 		public override Double CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)
@@ -1307,7 +1287,6 @@ namespace Java.Interop {
 		public override Double? CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			if (!reference.IsValid)

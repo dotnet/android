@@ -80,21 +80,6 @@ namespace Java.InteropTests
 			Assert.IsTrue (types.Contains (typeof (ManagedPeer)));
 		}
 
-#if !__ANDROID__
-		[Test]
-		public void ManagedPeerNativeRegistrationFalse_RemovesManagedPeerBuiltinMapping ()
-		{
-			var c      = JniRuntime.CurrentRuntime;
-			AppContext.SetSwitch ("Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration", false);
-			try {
-				var types = c.TypeManager.GetTypes (new JniTypeSignature (ManagedPeer.JniTypeName));
-				Assert.IsEmpty (types);
-			} finally {
-				AppContext.SetSwitch ("Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration", true);
-			}
-		}
-#endif  // !__ANDROID__
-
 		class JavaVMWithNullBuilder : JniRuntime {
 			public JavaVMWithNullBuilder ()
 				: base ((JniRuntime.CreationOptions) null)

@@ -2,12 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 using System.Threading;
 
 namespace Java.Interop {
@@ -200,7 +197,6 @@ namespace Java.Interop {
 					? arrayType ?? throw new InvalidOperationException ("Should not be reached")
 					: typeof (JavaObjectArray<>).MakeGenericType (type);
 
-			[return: DynamicallyAccessedMembers (MethodsConstructors)]
 			protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 			{
 				AssertValid ();
@@ -238,13 +234,6 @@ namespace Java.Interop {
 				if (typeSignature.SimpleReference == null)
 					return EmptyTypeArray;
 				return CreateGetTypesEnumerator (typeSignature);
-			}
-
-			public override IEnumerable<ReflectionConstructibleType> GetReflectionConstructibleTypes (JniTypeSignature typeSignature)
-			{
-				foreach (var type in GetTypes (typeSignature)) {
-					yield return new ReflectionConstructibleType (type);
-				}
 			}
 
 			IEnumerable<Type> CreateGetTypesEnumerator (JniTypeSignature typeSignature)
@@ -333,10 +322,7 @@ namespace Java.Interop {
 				yield break;
 			}
 
-			[return: DynamicallyAccessedMembers (Constructors)]
-			protected override Type? GetInvokerTypeCore (
-					[DynamicallyAccessedMembers (Constructors)]
-					Type type)
+			protected override Type? GetInvokerTypeCore (Type type)
 			{
 				var signature   = type.GetCustomAttribute<JniTypeSignatureAttribute> ();
 				if (signature == null || signature.InvokerType == null) {
@@ -356,20 +342,12 @@ namespace Java.Interop {
 
 			protected override ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSimpleReference, string jniMethodName, string jniMethodSignature) => null;
 
-			public override void RegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					ReadOnlySpan<char> methods)
+			public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 			{
 				TryRegisterNativeMembers (nativeClass, type, methods);
 			}
 
-			protected bool TryRegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					ReadOnlySpan<char> methods)
+			protected bool TryRegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 			{
 				AssertValid ();
 
@@ -381,21 +359,13 @@ namespace Java.Interop {
 			}
 
 			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-			public override void RegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					string? methods)
+			public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 			{
 				TryRegisterNativeMembers (nativeClass, type, methods);
 			}
 
 			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-			protected bool TryRegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					string? methods)
+			protected bool TryRegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 			{
 				AssertValid ();
 

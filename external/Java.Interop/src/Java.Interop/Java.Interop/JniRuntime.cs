@@ -236,6 +236,13 @@ namespace Java.Interop
 
 #if !XA_JI_EXCLUDE
 			if (RuntimeFeature.ManagedPeerNativeRegistration) {
+				InitManagedPeer ();
+			}
+
+			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode",
+				Justification = "The code is only executed when the feature is explicitly enabled.")]
+			static void InitManagedPeer ()
+			{
 				ManagedPeer.Init ();
 			}
 #endif  // !XA_JI_EXCLUDE

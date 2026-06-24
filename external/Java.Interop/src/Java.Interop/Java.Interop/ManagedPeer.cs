@@ -15,6 +15,7 @@ using System.Text;
 namespace Java.Interop {
 
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
+	[RequiresUnreferencedCode ("Uses reflection to find constructors and invoke them.")]
 	/* static */ sealed class ManagedPeer : JavaObject {
 
 		internal const string JniTypeName = "net/dot/jni/ManagedPeer";
@@ -238,11 +239,6 @@ namespace Java.Interop {
 
 		static object?[]? GetValues (JniRuntime runtime, JniObjectReference values, ConstructorInfo cinfo)
 		{
-			// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/MarkJavaObjects.cs#L51-L132
-			[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Constructors are preserved by the MarkJavaObjects trimmer step.")]
-			static object? ValueManagerGetValue (JniRuntime runtime, ref JniObjectReference value, ParameterInfo parameter) =>
-				runtime.ValueManager.GetValue (ref value, JniObjectReferenceOptions.CopyAndDispose, parameter.ParameterType);
-
 			if (!values.IsValid)
 				return null;
 
@@ -254,7 +250,7 @@ namespace Java.Interop {
 			var pvalues = new object? [len];
 			for (int i = 0; i < len; ++i) {
 				var n_value = JniEnvironment.Arrays.GetObjectArrayElement (values, i);
-				var value   = ValueManagerGetValue (runtime, ref n_value, parameters [i]);
+				var value   = runtime.ValueManager.GetValue (ref n_value, JniObjectReferenceOptions.CopyAndDispose, parameters [i].ParameterType);
 				pvalues [i] = value;
 			}
 
@@ -318,7 +314,6 @@ namespace Java.Interop {
 			}
 		}
 
-		[return: DynamicallyAccessedMembers (ConstructorsMethodsNestedTypes)]
 		static Type GetTypeFromSignature (JniRuntime.JniTypeManager typeManager, JniTypeSignature typeSignature, string? context = null)
 		{
 			return typeManager.GetType (typeSignature) ??

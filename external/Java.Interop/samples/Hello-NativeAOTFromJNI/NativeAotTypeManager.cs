@@ -16,12 +16,7 @@ namespace Hello_NativeAOTFromJNI;
 // moved that responsibility to callers via [RequiresDynamicCode]/[RequiresUnreferencedCode].
 class NativeAotTypeManager : JniRuntime.ReflectionJniTypeManager {
 
-	const DynamicallyAccessedMemberTypes MethodsConstructors =
-		DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods |
-		DynamicallyAccessedMemberTypes.NonPublicNestedTypes |
-		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Sample only (see class comment): this assembly is rooted via TrimmerRootAssembly and the members reflected over during registration are preserved by the [DynamicallyAccessedMembers] annotations on the RegisterNativeMembers(Type) -> FindAndCallRegisterMethod path, so trimming does not remove what reflection needs.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Sample only (see class comment): this assembly is rooted via TrimmerRootAssembly. The reflection-based registration path is not trim-clean, and this sample intentionally suppresses the warning rather than proving each reflected member to the trimmer.")]
 	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Sample only (see class comment): built-in member registration calls CreateDelegate on compile-time-known static methods (no MakeGenericType / expression compilation), so no runtime code generation is required.")]
 	public NativeAotTypeManager ()
 	{
@@ -31,7 +26,6 @@ class NativeAotTypeManager : JniRuntime.ReflectionJniTypeManager {
 	// JavaProxyObject, ...) and handles registration and the reverse Type->JNI mapping (via the
 	// [JniTypeSignature] attribute) for us. We only need to teach it about this sample's own
 	// managed types.
-	[return: DynamicallyAccessedMembers (MethodsConstructors)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
 		if (jniSimpleReference == Example.ManagedType.JniTypeName)

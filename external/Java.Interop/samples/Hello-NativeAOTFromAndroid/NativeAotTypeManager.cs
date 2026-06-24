@@ -15,12 +15,6 @@ namespace Java.Interop.Samples.NativeAotFromAndroid;
 // suppressions lived (buried) inside JniTypeManager itself, justified "NotUsedInAndroid"; #1441 just
 // moved that responsibility to callers via [RequiresDynamicCode]/[RequiresUnreferencedCode].
 partial class NativeAotTypeManager : JniRuntime.ReflectionJniTypeManager {
-
-	const DynamicallyAccessedMemberTypes MethodsConstructors =
-		DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods |
-		DynamicallyAccessedMemberTypes.NonPublicNestedTypes |
-		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 	Dictionary<string, Type> typeMappings = new () {
 		["android/app/Activity"]                = typeof (Android.App.Activity),
 		["android/content/Context"]             = typeof (Android.Content.Context),
@@ -31,7 +25,7 @@ partial class NativeAotTypeManager : JniRuntime.ReflectionJniTypeManager {
 		["my/MainActivity"]                     = typeof (MainActivity),
 	};
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Sample only (see class comment): this assembly is rooted via TrimmerRootAssembly and the members reflected over during registration are preserved by the [DynamicallyAccessedMembers] annotations on the RegisterNativeMembers(Type) -> FindAndCallRegisterMethod path, so trimming does not remove what reflection needs.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Sample only (see class comment): this assembly is rooted via TrimmerRootAssembly. The reflection-based registration path is not trim-clean, and this sample intentionally suppresses the warning rather than proving each reflected member to the trimmer.")]
 	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Sample only (see class comment): built-in member registration calls CreateDelegate on compile-time-known static methods (no MakeGenericType / expression compilation), so no runtime code generation is required.")]
 	public NativeAotTypeManager ()
 	{
@@ -39,7 +33,6 @@ partial class NativeAotTypeManager : JniRuntime.ReflectionJniTypeManager {
 
 	// GetType() dispatches through GetTypeForSimpleReference (singular), so the sample's own type
 	// map has to be applied here; the base ReflectionJniTypeManager only knows the built-in types.
-	[return: DynamicallyAccessedMembers (MethodsConstructors)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
 		if (typeMappings.TryGetValue (jniSimpleReference, out var target))

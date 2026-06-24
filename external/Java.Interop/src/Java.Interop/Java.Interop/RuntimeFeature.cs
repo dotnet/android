@@ -9,9 +9,10 @@ namespace Java.Interop
 		const string FeatureSwitchPrefix = "Java.Interop.RuntimeFeature.";
 
 		[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedPeerNativeRegistration)}")]
-		internal static bool ManagedPeerNativeRegistration =>
+		[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
+		internal static bool ManagedPeerNativeRegistration { get; } =
 			AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedPeerNativeRegistration)}", out bool isEnabled)
-			? isEnabled
-			: ManagedPeerNativeRegistrationEnabledByDefault;
+				? isEnabled
+				: ManagedPeerNativeRegistrationEnabledByDefault;
 	}
 }

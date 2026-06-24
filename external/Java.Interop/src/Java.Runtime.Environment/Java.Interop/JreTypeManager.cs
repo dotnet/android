@@ -63,7 +63,6 @@ namespace Java.Interop {
 
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
 				Type type,
 				ReadOnlySpan<char> methods)
 		{

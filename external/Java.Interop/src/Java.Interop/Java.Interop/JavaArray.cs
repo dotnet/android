@@ -364,11 +364,7 @@ namespace Java.Interop
 	}
 	
 	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
-	public abstract class JavaPrimitiveArray<
-			[DynamicallyAccessedMembers (Constructors)]
-			T
-	>
-		: JavaArray<T>
+	public abstract class JavaPrimitiveArray<T> : JavaArray<T>
 	{
 
 		internal JavaPrimitiveArray (ref JniObjectReference reference, JniObjectReferenceOptions transfer)

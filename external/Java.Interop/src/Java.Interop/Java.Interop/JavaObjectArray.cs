@@ -8,11 +8,7 @@ using System.Reflection;
 namespace Java.Interop
 {
 	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
-	public class JavaObjectArray<
-			[DynamicallyAccessedMembers (Constructors)]
-			T
-	>
-		: JavaArray<T>
+	public class JavaObjectArray<[DynamicallyAccessedMembers (Constructors)] T> : JavaArray<T>
 	{
 		internal    static  readonly    ValueMarshaler   Instance           = new ValueMarshaler ();
 
@@ -171,7 +167,6 @@ namespace Java.Interop
 			public override IList<T> CreateGenericValue (
 					ref JniObjectReference reference,
 					JniObjectReferenceOptions options,
-					[DynamicallyAccessedMembers (Constructors)]
 					Type? targetType)
 			{
 				return JavaArray<T>.CreateValue (ref reference, options, targetType, (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaObjectArray<T> (ref h, t) {

@@ -42,7 +42,6 @@ namespace Java.Interop
 		}
 
 		public abstract partial class JniValueManager : ISetRuntime, IDisposable {
-
 			internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 			JniRuntime?             runtime;
@@ -85,7 +84,7 @@ namespace Java.Interop
 			public abstract List<JniSurfacedPeerInfo> GetSurfacedPeers ();
 			public abstract void ActivatePeer (
 				JniObjectReference reference,
-				[DynamicallyAccessedMembers (Constructors)] Type type,
+				Type type,
 				ConstructorInfo cinfo,
 				object?[]? argumentValues);
 
@@ -191,9 +190,9 @@ namespace Java.Interop
 			}
 
 			public IJavaPeerable? GetPeer (
-					JniObjectReference reference,
-					[DynamicallyAccessedMembers (Constructors)]
-					Type? targetType = null)
+				JniObjectReference reference,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? targetType = null)
 			{
 				EnsureNotDisposed ();
 
@@ -295,7 +294,6 @@ namespace Java.Interop
 				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null);
 
-			[return: DynamicallyAccessedMembers (Constructors)]
 			internal Type? GetRuntimeType (JniObjectReference reference)
 			{
 				if (!reference.IsValid)
@@ -309,13 +307,10 @@ namespace Java.Interop
 			public JniValueMarshaler GetValueMarshaler (Type type) => GetValueMarshalerCore (type);
 			protected abstract JniValueMarshaler GetValueMarshalerCore (Type type);
 
-			public JniValueMarshaler<T> GetValueMarshaler<[DynamicallyAccessedMembers (Constructors)] T> () => GetValueMarshalerCore<T> ();
-			protected abstract JniValueMarshaler<T> GetValueMarshalerCore<[DynamicallyAccessedMembers (Constructors)] T> ();
+			public JniValueMarshaler<T> GetValueMarshaler<T> () => GetValueMarshalerCore<T> ();
+			protected abstract JniValueMarshaler<T> GetValueMarshalerCore<T> ();
 
-			internal JniObjectReference CreateLocalObjectReferenceArgument (
-				[DynamicallyAccessedMembers (Constructors)]
-				Type type,
-				object? value)
+			internal JniObjectReference CreateLocalObjectReferenceArgument (Type type, object? value)
 			{
 				EnsureNotDisposed ();
 
@@ -324,10 +319,7 @@ namespace Java.Interop
 				return CreateLocalObjectReferenceArgumentCore (type, value);
 			}
 
-			protected abstract JniObjectReference CreateLocalObjectReferenceArgumentCore (
-				[DynamicallyAccessedMembers (Constructors)]
-				Type type,
-				object? value);
+			protected abstract JniObjectReference CreateLocalObjectReferenceArgumentCore (Type type, object? value);
 		}
 	}
 }

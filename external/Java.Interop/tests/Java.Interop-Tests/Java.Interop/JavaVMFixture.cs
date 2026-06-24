@@ -68,7 +68,6 @@ namespace Java.InteropTests {
 #pragma warning restore CS8600
 		}
 
-		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes | DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 		{
 			return base.GetTypeForSimpleReference (jniSimpleReference) ??

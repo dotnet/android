@@ -82,8 +82,7 @@ namespace Java.Interop {
 
 			internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 			internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
-			internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-			internal const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+			internal const DynamicallyAccessedMemberTypes MethodsConstructors = Methods | Constructors;
 
 			JniRuntime?             runtime;
 			bool                    disposed;
@@ -167,7 +166,6 @@ namespace Java.Interop {
 
 			protected virtual IEnumerable<JniTypeSignature> GetTypeSignaturesCore (Type type) => [];
 
-			[return: DynamicallyAccessedMembers (MethodsConstructors)]
 			public  Type?    GetType (JniTypeSignature typeSignature)
 			{
 				AssertValid ();
@@ -189,24 +187,8 @@ namespace Java.Interop {
 
 			protected virtual string? GetSimpleReference (Type type) => null;
 			protected virtual IEnumerable<string> GetSimpleReferences (Type type) => [];
-			[return: DynamicallyAccessedMembers (MethodsConstructors)]
 			protected virtual Type? GetTypeForSimpleReference (string jniSimpleReference) => null;
 			public virtual IEnumerable<Type> GetTypes (JniTypeSignature typeSignature) => [];
-
-			public virtual IEnumerable<ReflectionConstructibleType> GetReflectionConstructibleTypes (JniTypeSignature typeSignature) => [];
-
-			public class ReflectionConstructibleType
-			{
-				public ReflectionConstructibleType (
-						[DynamicallyAccessedMembers (Constructors)]
-						Type type)
-				{
-					Type = type;
-				}
-
-				[DynamicallyAccessedMembers (Constructors)]
-				public Type Type { get; }
-			}
 
 			protected virtual IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference) => [];
 
@@ -219,14 +201,6 @@ namespace Java.Interop {
 				return default;
 			}
 
-			// IL2026/IL2111: The MethodsConstructors DAM annotation on the return type causes ILLink to analyze
-			// JavaProxyObject/JavaProxyThrowable/ManagedPeer's delegate-typed nested members, whose base
-			// constructors (Delegate.Delegate(Object,String)) are marked RequiresUnreferencedCode.
-			// These warnings are false positives: the delegate constructors are invoked with
-			// compile-time-known static method references, not via string-based reflection.
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Delegate constructors in JavaProxyObject/JavaProxyThrowable/ManagedPeer are invoked with compile-time-known method references, not via reflection.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL2111", Justification = "Delegate constructors in JavaProxyObject/JavaProxyThrowable/ManagedPeer are invoked with compile-time-known method references, not via reflection.")]
-			[return: DynamicallyAccessedMembers (MethodsConstructors)]
 			static Type? GetBuiltInType (JniTypeSignature typeSignature)
 			{
 				if (typeSignature.ArrayRank != 0)
@@ -254,19 +228,15 @@ namespace Java.Interop {
 			}
 
 			/// <include file="../Documentation/Java.Interop/JniRuntime.JniTypeManager.xml" path="/docs/member[@name='M:GetInvokerType']/*" />
-			[return: DynamicallyAccessedMembers (Constructors)]
-			public Type? GetInvokerType (
-					[DynamicallyAccessedMembers (Constructors)]
-					Type type)
+			public Type? GetInvokerType (Type type)
 			{
 				if (type.IsAbstract || type.IsInterface) {
 					return GetInvokerTypeCore (type);
 				}
 				return null;
 			}
-			
-			[return: DynamicallyAccessedMembers (Constructors)]
-			protected virtual Type? GetInvokerTypeCore ([DynamicallyAccessedMembers (Constructors)] Type type) => null;
+
+			protected virtual Type? GetInvokerTypeCore (Type type) => null;
 
 			protected virtual IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimple) => null;
 
@@ -306,20 +276,12 @@ namespace Java.Interop {
 
 			// Default implementation is a no-op. Derived classes (e.g. `ReflectionJniTypeManager`)
 			// provide reflection-based registration. Override to provide custom registration.
-			public virtual void RegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					ReadOnlySpan<char> methods)
+			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 			{
 			}
 
 			[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>)")]
-			public virtual void RegisterNativeMembers (
-					JniType nativeClass,
-					[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-					Type type,
-					string? methods)
+			public virtual void RegisterNativeMembers (JniType nativeClass, Type type, string? methods)
 			{
 			}
 		}
