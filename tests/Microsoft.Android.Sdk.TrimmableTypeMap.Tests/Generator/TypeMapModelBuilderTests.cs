@@ -996,7 +996,7 @@ public class ModelBuilderTests : FixtureTestBase
 			var rank5Entries = model5.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (5, rank5Entries.Count);
 			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[][][][][], App", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
 
 			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
 			Assert.Equal (1, model1.MaxArrayRank);
@@ -1036,13 +1036,13 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var rank1 = model.Entries.Single (e => e.AnchorRank == 1);
 			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[], App", rank1.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.TargetTypeReference);
 			var rank2 = model.Entries.Single (e => e.AnchorRank == 2);
 			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[][], App", rank2.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.TargetTypeReference);
 			var rank3 = model.Entries.Single (e => e.AnchorRank == 3);
 			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[][][], App", rank3.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.TargetTypeReference);
 
 			Assert.Equal (3, model.ArrayProxyTypes.Count);
 			Assert.Equal ("Foo_Bar_ArrayProxy1", model.ArrayProxyTypes [0].TypeName);
@@ -1173,11 +1173,11 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var sbyteRank1 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 1);
 			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
-			Assert.Equal ("System.SByte[], System.Runtime", sbyteRank1.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.TargetTypeReference);
 			Assert.False (sbyteRank1.IsUnconditional);
 
 			var sbyteRank2 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 2);
-			Assert.Equal ("System.SByte[][], System.Runtime", sbyteRank2.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy2, _Java.Interop.TypeMap", sbyteRank2.TargetTypeReference);
 			Assert.Contains (model.Associations, a =>
 				a.SourceTypeReference == "Java.Interop.JavaArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
 				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
@@ -1292,13 +1292,13 @@ public class ModelBuilderTests : FixtureTestBase
 				// Three array entries should round-trip with the same JNI key + generated array proxy refs.
 				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs" &&
-					a.targetRef == "Foo.Bar[], App");
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
 				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs" &&
-					a.targetRef == "Foo.Bar[][], App");
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs");
 				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs" &&
-					a.targetRef == "Foo.Bar[][][], App");
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs");
 
 				var assocAttrs = ReadAllTypeMapAssociationAttributeBlobs (reader);
 				Assert.Contains (assocAttrs, a =>

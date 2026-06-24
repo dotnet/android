@@ -643,7 +643,7 @@ static class ModelBuilder
 			model.Entries.Add (new TypeMapAttributeData {
 				JniName = jniName,
 				ProxyTypeReference = proxyReference,
-				TargetTypeReference = AssemblyQualify (peer.ManagedTypeName + Brackets (rank), peer.AssemblyName),
+				TargetTypeReference = proxyReference,
 				AnchorRank = rank,
 			});
 			AddArrayProxyAssociations (model, proxy, proxyReference);
@@ -674,7 +674,7 @@ static class ModelBuilder
 				model.Entries.Add (new TypeMapAttributeData {
 					JniName = primitive.JniName,
 					ProxyTypeReference = proxyReference,
-					TargetTypeReference = AssemblyQualify (primitive.ManagedTypeName + Brackets (rank), "System.Runtime"),
+					TargetTypeReference = proxyReference,
 					AnchorRank = rank,
 				});
 				AddArrayProxyAssociations (model, proxy, proxyReference);
