@@ -37,8 +37,18 @@ Test the CI path locally: `$env:RunningOnCI='true'` (PowerShell) or `RunningOnCI
 The new package isn't cached in the feed yet. One-time setup, then ingest:
 
 1. `iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"` (or the `.sh` equivalent)
-2. `$env:RunningOnCI='true'; ./build-tools/gradle/gradlew.bat --project-dir src/<project> build` — sign in via the device-flow prompt; the feed proxies + caches the package.
+2. ```powershell
+   $env:RunningOnCI='true'
+   $env:NUGET_CREDENTIALPROVIDER_VSTS_TOKENTYPE='SelfDescribing'
+   ./build-tools/gradle/gradlew.bat --project-dir src/<project> build
+   ```
+   Sign in via the popup; the feed proxies + caches the package. `SelfDescribing` is required — the default `Compact` token is rejected by the feed when ingesting plugin markers (e.g. AGP plugin from `pluginManagement`).
 3. Re-run CI on the Dependabot PR. No PR edit needed.
+
+If the popup never appears or auth keeps cancelling, clear the cached session token and try again:
+```powershell
+Remove-Item "$env:LOCALAPPDATA\MicrosoftCredentialProvider\SessionTokenCache.dat" -ErrorAction SilentlyContinue
+```
 
 The credprovider plugin is a no-op when no AzDO repos are configured (i.e. local builds without `RunningOnCI`).
 
