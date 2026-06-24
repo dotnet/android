@@ -5,16 +5,18 @@
   ($(_XAAndroidNdkRelease), $(_XAAndroidNdkPkgRevision) and
   $(AndroidMinimumDotNetApiLevel)), which is imported before this file, so
   there is nothing to keep in sync here.
+
+  The legacy 32-bit minimum API level used to differ from the .NET minimum
+  API level, but they are the same now, so each ABI uses a single property
+  for both the ApiLevel and ApiLevelNET metadata.
 -->
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <AndroidNdkVersion Condition=" '$(AndroidNdkVersion)' == '' ">$(_XAAndroidNdkRelease)</AndroidNdkVersion>
     <AndroidNdkPkgRevision Condition=" '$(AndroidNdkPkgRevision)' == '' ">$(_XAAndroidNdkPkgRevision)</AndroidNdkPkgRevision>
     <AndroidNdkApiLevel_ArmV7a Condition=" '$(AndroidNdkApiLevel_ArmV7a)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_ArmV7a>
-    <AndroidNdkApiLevel_Arm Condition=" '$(AndroidNdkApiLevel_Arm)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_Arm>
     <AndroidNdkApiLevel_ArmV8a Condition=" '$(AndroidNdkApiLevel_ArmV8a)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_ArmV8a>
     <AndroidNdkApiLevel_Arm64 Condition=" '$(AndroidNdkApiLevel_Arm64)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_Arm64>
-    <AndroidNdkApiLevel_X86_Legacy Condition=" '$(AndroidNdkApiLevel_X86_Legacy)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X86_Legacy>
     <AndroidNdkApiLevel_X86 Condition=" '$(AndroidNdkApiLevel_X86)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X86>
     <AndroidNdkApiLevel_X86_64 Condition=" '$(AndroidNdkApiLevel_X86_64)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X86_64>
     <AndroidNdkApiLevel_X64 Condition=" '$(AndroidNdkApiLevel_X64)' == '' ">$(AndroidMinimumDotNetApiLevel)</AndroidNdkApiLevel_X64>
@@ -25,7 +27,7 @@
         Include="armeabi-v7a"
         Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) ">
       <ApiLevel>$(AndroidNdkApiLevel_ArmV7a)</ApiLevel>
-      <ApiLevelNET>$(AndroidNdkApiLevel_Arm)</ApiLevelNET>
+      <ApiLevelNET>$(AndroidNdkApiLevel_ArmV7a)</ApiLevelNET>
       <AndroidRID>android-arm</AndroidRID>
       <SupportMonoVM>True</SupportMonoVM>
       <SupportCoreCLR>False</SupportCoreCLR>
@@ -46,7 +48,7 @@
     <AndroidSupportedTargetJitAbi
         Include="x86"
         Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) ">
-      <ApiLevel>$(AndroidNdkApiLevel_X86_Legacy)</ApiLevel>
+      <ApiLevel>$(AndroidNdkApiLevel_X86)</ApiLevel>
       <ApiLevelNET>$(AndroidNdkApiLevel_X86)</ApiLevelNET>
       <AndroidRID>android-x86</AndroidRID>
       <SupportMonoVM>True</SupportMonoVM>
