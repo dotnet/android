@@ -240,7 +240,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return existing;
 		}
 
-		if (targetType != null && TryCreatePrimitiveArrayWrapper (ref reference, options, targetType, out var arrayWrapper)) {
+		if (targetType != null && PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
 			return arrayWrapper;
 		}
 
@@ -267,7 +267,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return new JniObjectReference ();
 		}
 
-		if (TryCreatePrimitiveArrayObjectReference (value, out var primitiveArrayReference)) {
+		if (PrimitiveArrayInfo.TryCreateObjectReference (value, out var primitiveArrayReference)) {
 			return primitiveArrayReference;
 		}
 

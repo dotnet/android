@@ -87,16 +87,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				Debug.Assert (elementType != typeof (void), "Cannot create an array of void");
 				Debug.Assert (rank > 0, "At least one array rank is expected");
 
-				bool success = TryGetPrimitiveTypeArrayTypes<bool, JavaBooleanArray> (elementType, out Type[]? types)
-					|| TryGetPrimitiveTypeArrayTypes<sbyte, JavaSByteArray> (elementType, out types)
-					|| TryGetPrimitiveTypeArrayTypes<char, JavaCharArray> (elementType, out types)
-					|| TryGetPrimitiveTypeArrayTypes<short, JavaInt16Array> (elementType, out types)
-					|| TryGetPrimitiveTypeArrayTypes<int, JavaInt32Array> (elementType, out types)
-					|| TryGetPrimitiveTypeArrayTypes<long, JavaInt64Array> (elementType, out types)
-					|| TryGetPrimitiveTypeArrayTypes<float, JavaSingleArray> (elementType, out types)
-					|| TryGetPrimitiveTypeArrayTypes<double, JavaDoubleArray> (elementType, out types);
-
-				if (!success || types is null) {
+				if (!PrimitiveArrayInfo.TryGetArrayTypes (elementType, out var types)) {
 					throw new InvalidOperationException ($"Cannot create an array of type '{elementType.FullName}'");
 				}
 
@@ -109,19 +100,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 						}
 					}
 				}
-			}
-
-			static bool TryGetPrimitiveTypeArrayTypes<T, TArray> (Type elementType, out Type[]? arrayTypes)
-				where T : struct
-				where TArray : JavaArray<T>
-			{
-				if (typeof (T) != elementType) {
-					arrayTypes = null;
-					return false;
-				}
-
-				arrayTypes = [typeof (T[]), typeof (JavaArray<T>), typeof (JavaPrimitiveArray<T>), typeof (TArray)];
-				return true;
 			}
 
 			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
@@ -268,7 +246,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 					return true;
 				}
 
-				if (TryGetPrimitiveArrayTypeSignature (type, out signature)) {
+				if (PrimitiveArrayInfo.TryGetTypeSignature (type, out signature)) {
 					return true;
 				}
 
@@ -312,47 +290,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 					return false;
 				}
 
-				/// <summary>
-				/// Lookup of the JNI type signature for a primitive array type, e.g., JavaArray<int> or JavaPrimitiveArray<int>.
-				/// There are multiple managed types that map to a single JNI array type, e.g., JavaArray<int>, JavaPrimitiveArray<int>, and int[] all map to [I.
-				/// </summary>
-				/// <param name="type"></param>
-				/// <param name="signature"></param>
-				/// <returns></returns>
-				static bool TryGetPrimitiveArrayTypeSignature (Type type, out JniTypeSignature signature)
-				{
-					signature = default;
-					return IsPrimitiveTypeArray<bool, JavaBooleanArray> (type, "Z", out signature)
-						|| IsPrimitiveTypeArray<sbyte, JavaSByteArray> (type, "B", out signature)
-						|| IsPrimitiveTypeArray<char, JavaCharArray> (type, "C", out signature)
-						|| IsPrimitiveTypeArray<short, JavaInt16Array> (type, "S", out signature)
-						|| IsPrimitiveTypeArray<int, JavaInt32Array> (type, "I", out signature)
-						|| IsPrimitiveTypeArray<long, JavaInt64Array> (type, "J", out signature)
-						|| IsPrimitiveTypeArray<float, JavaSingleArray> (type, "F", out signature)
-						|| IsPrimitiveTypeArray<double, JavaDoubleArray> (type, "D", out signature);
-				}
-
-				/// <summary>
-				/// Lookup of the JNI type signature for a primitive array type, e.g., JavaArray<int> or JavaPrimitiveArray<int>.
-				/// There are multiple managed types that map to a single JNI array type, e.g., JavaArray<int>, JavaPrimitiveArray<int>, and int[] all map to [I.
-				/// </summary>
-				/// <typeparam name="T"></typeparam>
-				/// <typeparam name="TArray"></typeparam>
-				/// <param name="type"></param>
-				/// <param name="jniSimpleReference"></param>
-				/// <param name="signature"></param>
-				/// <returns></returns>
-				static bool IsPrimitiveTypeArray<T, TArray> (Type type, string jniSimpleReference, out JniTypeSignature signature)
-					where TArray : JavaArray<T>
-				{
-					if (type == typeof (T[]) || type == typeof (JavaArray<T>) || type == typeof (JavaPrimitiveArray<T>) || type == typeof (TArray)) {
-						signature = new JniTypeSignature (jniSimpleReference, arrayRank: 1, keyword: true);
-						return true;
-					}
-
-					signature = default;
-					return false;
-				}
 			}
 		}
 	}
