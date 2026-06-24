@@ -1577,10 +1577,12 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var elementType = new NamedRuntimeTypeSpec (proxy.ElementType);
 		if (proxy.Primitive is null) {
-			return [
-				MakeNestedJavaObjectArrayType (elementType, proxy.Rank),
-				AddSzArrayRank (elementType, proxy.Rank),
-			];
+			var rankOneObjectTypes = new RuntimeTypeSpec [] {
+				new GenericRuntimeTypeSpec (_javaObjectArrayOpenRef, elementType),
+				new GenericRuntimeTypeSpec (_javaArrayOpenRef, elementType),
+				AddSzArrayRank (elementType, 1),
+			};
+			return ExpandRankOneTypes (rankOneObjectTypes, proxy.Rank);
 		}
 
 		var rankOneTypes = new RuntimeTypeSpec [] {
@@ -1594,10 +1596,19 @@ sealed class TypeMapAssemblyEmitter
 			return rankOneTypes;
 		}
 
-		var result = new List<RuntimeTypeSpec> (rankOneTypes.Length * 2);
+		return ExpandRankOneTypes (rankOneTypes, proxy.Rank);
+	}
+
+	IReadOnlyList<RuntimeTypeSpec> ExpandRankOneTypes (IReadOnlyList<RuntimeTypeSpec> rankOneTypes, int rank)
+	{
+		if (rank == 1) {
+			return rankOneTypes;
+		}
+
+		var result = new List<RuntimeTypeSpec> (rankOneTypes.Count * 2);
 		foreach (var type in rankOneTypes) {
-			result.Add (MakeNestedJavaObjectArrayType (type, proxy.Rank - 1));
-			result.Add (AddSzArrayRank (type, proxy.Rank - 1));
+			result.Add (MakeNestedJavaObjectArrayType (type, rank - 1));
+			result.Add (AddSzArrayRank (type, rank - 1));
 		}
 		return result;
 	}

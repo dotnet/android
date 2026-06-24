@@ -530,6 +530,77 @@ static class ModelBuilder
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
 
+	static string AddArrayRank (string typeReference, int rank)
+	{
+		if (rank == 0) {
+			return typeReference;
+		}
+
+		int assemblySeparator = typeReference.LastIndexOf (", ", StringComparison.Ordinal);
+		if (assemblySeparator < 0) {
+			throw new InvalidOperationException ($"Assembly-qualified type reference '{typeReference}' does not contain an assembly name.");
+		}
+
+		return typeReference.Substring (0, assemblySeparator) + Brackets (rank) + typeReference.Substring (assemblySeparator);
+	}
+
+	static string MakeGenericTypeReference (string openTypeName, string openTypeAssembly, string argumentTypeReference)
+		=> $"{openTypeName}[[{argumentTypeReference}]], {openTypeAssembly}";
+
+	static string MakeNestedJavaObjectArrayTypeReference (string elementTypeReference, int rank)
+	{
+		var result = elementTypeReference;
+		for (int i = 0; i < rank; i++) {
+			result = MakeGenericTypeReference ("Java.Interop.JavaObjectArray`1", "Java.Interop", result);
+		}
+		return result;
+	}
+
+	static IReadOnlyList<string> GetArrayTypeReferences (ArrayProxyData proxy)
+	{
+		var elementType = AssemblyQualify (proxy.ElementType.ManagedTypeName, proxy.ElementType.AssemblyName);
+		if (proxy.Primitive is null) {
+			var rankOneTypes = new [] {
+				MakeGenericTypeReference ("Java.Interop.JavaObjectArray`1", "Java.Interop", elementType),
+				MakeGenericTypeReference ("Java.Interop.JavaArray`1", "Java.Interop", elementType),
+				AddArrayRank (elementType, 1),
+			};
+			return ExpandRankOneTypes (rankOneTypes, proxy.Rank);
+		}
+
+		var rankOnePrimitiveTypes = new [] {
+			AddArrayRank (elementType, 1),
+			MakeGenericTypeReference ("Java.Interop.JavaArray`1", "Java.Interop", elementType),
+			MakeGenericTypeReference ("Java.Interop.JavaPrimitiveArray`1", "Java.Interop", elementType),
+			AssemblyQualify (proxy.Primitive.ConcreteArrayType.ManagedTypeName, proxy.Primitive.ConcreteArrayType.AssemblyName),
+		};
+		return ExpandRankOneTypes (rankOnePrimitiveTypes, proxy.Rank);
+	}
+
+	static IReadOnlyList<string> ExpandRankOneTypes (IReadOnlyList<string> rankOneTypes, int rank)
+	{
+		if (rank == 1) {
+			return rankOneTypes;
+		}
+
+		var result = new List<string> (rankOneTypes.Count * 2);
+		foreach (var type in rankOneTypes) {
+			result.Add (MakeNestedJavaObjectArrayTypeReference (type, rank - 1));
+			result.Add (AddArrayRank (type, rank - 1));
+		}
+		return result;
+	}
+
+	static void AddArrayProxyAssociations (TypeMapAssemblyData model, ArrayProxyData proxy, string proxyReference)
+	{
+		foreach (var typeReference in GetArrayTypeReferences (proxy)) {
+			model.Associations.Add (new TypeMapAssociationData {
+				SourceTypeReference = typeReference,
+				AliasProxyTypeReference = proxyReference,
+			});
+		}
+	}
+
 	/// <summary>
 	/// Emits per-rank array TypeMap entries for one peer, anchored to the per-assembly
 	/// <c>__ArrayMapRank{N}</c> sentinels. Keys are bare element JNI names (rank is encoded
@@ -564,12 +635,14 @@ static class ModelBuilder
 			};
 			model.ArrayProxyTypes.Add (proxy);
 
+			var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
 			model.Entries.Add (new TypeMapAttributeData {
 				JniName = jniName,
-				ProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName),
-				TargetTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
+				ProxyTypeReference = proxyReference,
+				TargetTypeReference = proxyReference,
 				AnchorRank = rank,
 			});
+			AddArrayProxyAssociations (model, proxy, proxyReference);
 		}
 	}
 
@@ -593,12 +666,14 @@ static class ModelBuilder
 					},
 				};
 				model.ArrayProxyTypes.Add (proxy);
+				var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
 				model.Entries.Add (new TypeMapAttributeData {
 					JniName = primitive.JniName,
-					ProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName),
-					TargetTypeReference = AssemblyQualify (primitive.ManagedTypeName + Brackets (rank), "System.Runtime"),
+					ProxyTypeReference = proxyReference,
+					TargetTypeReference = proxyReference,
 					AnchorRank = rank,
 				});
+				AddArrayProxyAssociations (model, proxy, proxyReference);
 			}
 		}
 	}

@@ -238,18 +238,35 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void TryGetArrayProxy_ObjectLeaf_ReturnsAllRankTypes ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 1, out var objectArrayProxy));
+			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Lang.Object>));
+			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>));
+			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[]));
+
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 2, out var jaggedObjectArrayProxy));
+			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>));
+			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>[]));
+			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[][]));
+		}
+
+		[Test]
 		public void TryGetArrayProxy_PrimitiveLeaf_ReturnsAllRankTypes ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 1, out var byteArrayProxy));
 			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (sbyte[]));
-			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaArray<sbyte>));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<sbyte>));
 			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaPrimitiveArray<sbyte>));
 			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaSByteArray));
 
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 2, out var jaggedByteArrayProxy));
 			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (sbyte[][]));
+			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>));
 			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
 		}
 
