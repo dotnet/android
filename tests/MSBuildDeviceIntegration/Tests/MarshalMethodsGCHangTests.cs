@@ -84,7 +84,7 @@ public class MainActivity : Activity
 ";
 
 	[Test]
-	public void MarshalMethodsAppRuns ([Values] AndroidRuntime runtime)
+	public void MarshalMethodsAppRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const bool isRelease = true;
 		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

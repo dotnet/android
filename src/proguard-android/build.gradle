@@ -2,11 +2,6 @@ plugins {
     id 'com.android.application' version '9.2.1'
 }
 
-repositories {
-    google()
-    mavenCentral()
-}
-
 android {
     namespace 'com.microsoft.proguard.android'
     // Setting the minimum we support at the moment, might not matter

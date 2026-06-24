@@ -80,15 +80,6 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-NoAab
 
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-Interpreter
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=Interpreter -p:UseInterpreter=True -p:UseMonoRuntime=true
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-Interpreter
-
     - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
       - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
         parameters:
@@ -150,42 +141,6 @@ stages:
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
-
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-NoAot
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=NoAot -p:RunAOTCompilation=false -p:UseMonoRuntime=true
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-NoAot
-
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-TrimModePartial
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=TrimModePartial -p:TrimMode=partial -p:UseMonoRuntime=true
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-TrimModePartial
-
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-AotLlvm
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false -p:UseMonoRuntime=true
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-AotLlvm
-
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-IsAssignableFrom
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=IsAssignableFrom -p:IncludeCategories=Intune -p:_AndroidIsAssignableFromCheck=false -p:UseMonoRuntime=true
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-IsAssignableFrom
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:

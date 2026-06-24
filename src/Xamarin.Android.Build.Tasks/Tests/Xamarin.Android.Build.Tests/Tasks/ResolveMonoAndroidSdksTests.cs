@@ -41,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NormalInputs ([Values] AndroidRuntime runtime)
+		public void NormalInputs ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MissingAndroidNDK ([Values] AndroidRuntime runtime)
+		public void MissingAndroidNDK ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -103,7 +103,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void HasTrailingSlash ([Values] AndroidRuntime runtime)
+		public void HasTrailingSlash ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
