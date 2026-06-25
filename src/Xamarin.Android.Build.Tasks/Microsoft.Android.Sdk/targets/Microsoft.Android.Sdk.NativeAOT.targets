@@ -92,7 +92,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64</_NdkAbi>
       <_NdkAbi Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">arm</_NdkAbi>
       <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">$(AndroidNdkApiLevel_Arm64)</_NDKApiLevel>
-      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkAPiLevel_X64)</_NDKApiLevel>
+      <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">$(AndroidNdkApiLevel_X64)</_NDKApiLevel>
       <_NDKApiLevel Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">$(AndroidNdkApiLevel_Arm)</_NDKApiLevel>
       <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'android-arm64' ">aarch64-linux-android</_NdkClangPrefix>
       <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'android-x64' ">x86_64-linux-android</_NdkClangPrefix>
