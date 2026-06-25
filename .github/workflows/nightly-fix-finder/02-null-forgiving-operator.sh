@@ -26,9 +26,11 @@ test fields) by declaring the field as nullable.
 - Generated files (`*.generated.cs`, `*.Designer.cs`, `*.g.cs`)
 - Logical-not operators (`!foo`, `!IsEnabled`, `if (!x)`) — only the
   *postfix* null-forgiving form (`foo!.`, `foo![`, `foo!;`, `foo!,`, `foo!)`)
-- The `!=` operator
 - Strings/comments containing `!` (the scan filters trailing-`!` positions
-  so this is rare, but still verify before filing)
+  so this is rare, but still verify before filing). Note: the regex
+  intentionally does NOT exclude the `!=` operator at the line level --
+  the character class after `!` already excludes `=`, so excluding lines
+  that contain `!=` anywhere would drop legitimate hits.
 - Test code is in scope (the repo rule explicitly covers test code too),
   but prefer the "declare as nullable" refactor noted above.
 GUIDANCE
@@ -43,6 +45,5 @@ grep -rnP '[A-Za-z0-9_\)\]]\!(\.|\[|;|,|\))' \
     --exclude-dir=obj --exclude-dir=bin \
     --exclude='*.generated.cs' --exclude='*.Designer.cs' --exclude='*.g.cs' \
     src/ 2>/dev/null \
-  | grep -vP '!=' \
   | shuf | head -20 \
   || echo "None found"

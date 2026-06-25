@@ -17,13 +17,17 @@ Swap the call to the matching thread-safe helper on `AsyncTask`:
 | Direct (forbidden)              | Thread-safe replacement              |
 |---------------------------------|--------------------------------------|
 | `Log.LogMessage (...)`          | `LogMessage (...)`                   |
-| `Log.LogError (...)`            | `LogCodedError (...)` (with `XA####`)|
-| `Log.LogWarning (...)`          | `LogCodedWarning (...)` (with `XA####`)|
-| `Log.LogErrorFromException (e)` | `LogCodedError ("XAxxxx", e.Message)`|
+| `Log.LogError (...)`            | `LogCodedError ("XA####", Properties.Resources.XA####, ...)` |
+| `Log.LogWarning (...)`          | `LogCodedWarning ("XA####", Properties.Resources.XA####, ...)` |
+| `Log.LogErrorFromException (e)` | `LogCodedError ("XA####", Properties.Resources.XA####, ...)` plus `LogErrorFromException (e)` (or rethrow) |
 | `Log.LogDebugMessage (...)`     | `LogDebugMessage (...)`              |
 
-Error messages must come from `Properties.Resources` (e.g.
-`Properties.Resources.XA0143`) for localization — see repo rules.
+Error / warning messages MUST come from `Properties.Resources` (e.g.
+`Properties.Resources.XA0143`) with a stable `XA####` code — never log a
+raw `ex.Message` as the user-facing string. If no suitable resource
+entry exists yet, that means a new `XA####` code is needed in
+`Resources.resx` and `Resources.Designer.cs`; in that case prefer a
+`noop` over inventing an inline English string.
 
 ### What NOT to flag
 - Classes that derive from `Task` or `AndroidTask` directly (not
