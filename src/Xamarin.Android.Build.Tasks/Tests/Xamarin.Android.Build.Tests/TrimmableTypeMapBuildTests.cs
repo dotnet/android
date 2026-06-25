@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build.Tests {
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
 		[Test]
-		public void NativeAot_DefaultsToTrimmableTypeMap ()
+		public void NativeAot_DefaultsToManagedTypeMap ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
 				return;
@@ -35,32 +35,9 @@ namespace Xamarin.Android.Build.Tests {
 			var buildProps = builder.Output.GetIntermediaryPath ("build.props");
 			FileAssert.Exists (buildProps);
 			StringAssert.Contains (
-				"_androidtypemapimplementation=trimmable",
+				"_androidtypemapimplementation=managed",
 				File.ReadAllText (buildProps),
-				"NativeAOT should default to trimmable typemaps.");
-		}
-
-		[Test]
-		public void NativeAot_NonTrimmableTypeMap_FailsValidation ([Values ("managed", "llvm-ir")] string typemapImplementation)
-		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
-
-			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-
-			Assert.IsFalse (builder.RunTarget (proj, "_ValidateAndroidTypeMapImplementation"),
-				"NativeAOT with a non-trimmable typemap should fail validation.");
-			Assert.IsTrue (
-				StringAssertEx.ContainsText (builder.LastBuildOutput, "NativeAOT requires _AndroidTypeMapImplementation=trimmable."),
-				$"{builder.BuildLogFile} should contain the NativeAOT trimmable typemap validation error.");
+				"NativeAOT should default to managed typemaps.");
 		}
 
 		[Test]
