@@ -1,6 +1,6 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="3.6.0" PrivateAssets="all" />
+    <PackageReference Include="GitInfo" Version="3.6.1" PrivateAssets="all" />
   </ItemGroup>
   <PropertyGroup>
     <GitThisAssembly>false</GitThisAssembly>
