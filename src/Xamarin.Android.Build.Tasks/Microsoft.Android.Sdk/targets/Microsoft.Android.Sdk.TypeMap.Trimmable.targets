@@ -122,11 +122,13 @@
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
         AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
-        ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
+        ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java"
+        AdditionalProviderSourcesOutputDirectory="$(IntermediateOutputPath)android/src">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
       <Output TaskParameter="DeletedJavaFiles" ItemName="_DeletedJavaFiles" />
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
+      <Output TaskParameter="GeneratedAdditionalProviderFiles" ItemName="_GeneratedAdditionalProviderFiles" />
     </GenerateTrimmableTypeMap>
 
     <ItemGroup>
@@ -147,6 +149,7 @@
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
+      <FileWrites Include="@(_GeneratedAdditionalProviderFiles)" />
     </ItemGroup>
   </Target>
 
@@ -197,10 +200,13 @@
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
+      <FileWrites Include="$(_AdditionalPostLinkerStepsFlag)" Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and Exists('$(_AdditionalPostLinkerStepsFlag)')" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/mono/*RuntimeProvider_*.java" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/jni/nativeaot/*RuntimeProvider_*.java" />
     </ItemGroup>
   </Target>
 

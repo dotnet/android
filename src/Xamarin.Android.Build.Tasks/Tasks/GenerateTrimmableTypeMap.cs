@@ -67,6 +67,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	public string? ApplicationRegistrationOutputFile { get; set; }
 
+	public string? AdditionalProviderSourcesOutputDirectory { get; set; }
+
 	public string? GeneratedAssembliesListFile { get; set; }
 
 	public string? ManifestTemplate { get; set; }
@@ -104,6 +106,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public ITaskItem [] DeletedJavaFiles { get; set; } = [];
 	[Output]
 	public string[]? AdditionalProviderSources { get; set; }
+	[Output]
+	public ITaskItem [] GeneratedAdditionalProviderFiles { get; set; } = [];
 
 	public override bool RunTask ()
 	{
@@ -192,6 +196,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					Files.CopyIfStreamChanged (ms, MergedAndroidManifestOutput);
 				}
 				AdditionalProviderSources = result.Manifest.AdditionalProviderSources;
+				GeneratedAdditionalProviderFiles = WriteAdditionalProviderSources (result.Manifest.AdditionalProviderSources);
 			}
 
 			// Write merged acw-map.txt if requested
@@ -230,6 +235,45 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		return !Log.HasLoggedErrors;
+	}
+
+	ITaskItem [] WriteAdditionalProviderSources (IReadOnlyList<string> providerNames)
+	{
+		if (providerNames.Count == 0 || AdditionalProviderSourcesOutputDirectory.IsNullOrEmpty () || RuntimeProviderJavaName.IsNullOrEmpty ()) {
+			return [];
+		}
+
+		var lastDot = RuntimeProviderJavaName.LastIndexOf ('.');
+		if (lastDot < 0 || lastDot == RuntimeProviderJavaName.Length - 1) {
+			throw new InvalidOperationException ($"{nameof (RuntimeProviderJavaName)} must be a fully-qualified Java type name: '{RuntimeProviderJavaName}'.");
+		}
+
+		var providerPackage = RuntimeProviderJavaName.Substring (0, lastDot);
+		var providerClass = RuntimeProviderJavaName.Substring (lastDot + 1);
+		var resourceName = providerClass == "NativeAotRuntimeProvider" ?
+			"NativeAotRuntimeProvider.java" :
+			"MonoRuntimeProvider.Bundled.java";
+		var providerPackageDirectory = Path.Combine (AdditionalProviderSourcesOutputDirectory, providerPackage.Replace ('.', Path.DirectorySeparatorChar));
+		Directory.CreateDirectory (providerPackageDirectory);
+
+		var template = GetResource (resourceName);
+		var generated = new List<ITaskItem> (providerNames.Count);
+		foreach (var providerName in providerNames) {
+			var providerFile = Path.Combine (providerPackageDirectory, providerName + ".java");
+			Files.CopyIfStringChanged (template.Replace (providerClass, providerName), providerFile);
+			generated.Add (new TaskItem (providerFile));
+		}
+		return generated.ToArray ();
+	}
+
+	static string GetResource (string resource)
+	{
+		using var stream = typeof (GenerateTrimmableTypeMap).Assembly.GetManifestResourceStream (resource);
+		if (stream is null) {
+			throw new InvalidOperationException ($"Resource '{resource}' not found.");
+		}
+		using var reader = new StreamReader (stream, Encoding.UTF8);
+		return reader.ReadToEnd ();
 	}
 
 	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
