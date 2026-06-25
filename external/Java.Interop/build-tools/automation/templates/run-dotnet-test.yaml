@@ -14,6 +14,7 @@ steps:
     command: test
     publishTestResults: false
     arguments: --logger "trx;LogFileName=${{ parameters.testAssemblyName }}${{ parameters.trxSuffix }}.trx" --results-directory $(Agent.TempDirectory) ${{ parameters.extraArguments }} bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/${{ parameters.testAssemblyName }}.dll
+    workingDirectory: external/Java.Interop
   continueOnError: true
   retryCountOnTaskFailure: ${{ parameters.retryCount }}
 

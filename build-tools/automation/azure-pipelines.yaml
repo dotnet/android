@@ -99,6 +99,8 @@ extends:
       parameters:
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
+    - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
+
     - stage: maui_tests
       displayName: MAUI Tests
       dependsOn: mac_build

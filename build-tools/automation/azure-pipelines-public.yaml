@@ -412,6 +412,19 @@ stages:
       parameters:
         condition: true
 
+# Java.Interop Tests Stage
+- template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
+  parameters:
+    windowsPool:
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+    macPool:
+      name: AcesShared
+      demands:
+      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      os: macOS
+
 # MAUI Tests Stage
 - stage: maui_tests
   displayName: MAUI Tests
