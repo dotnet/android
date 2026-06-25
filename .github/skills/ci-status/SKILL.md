@@ -159,39 +159,46 @@ If the build already completed, skip the ETA and show the actual duration instea
 
 #### Step 3b — Check for failed tests (always do this, especially when the build is still running)
 
-**This step is critical when the build is in progress.** Test results are published as jobs complete, so failures may already be visible before the build finishes. Surfacing these early lets the user start fixing them immediately.
+**This step is critical** and must run for every build — even when no timeline records are marked `failed`, and even when the build's status is `succeeded` or `succeededWithIssues`. Many failing test runs live under timeline jobs that are themselves `succeededWithIssues` (the wrapper script swallows a non-zero exit), and crashed instrumentations show up as `unanalyzedTests > 0` rather than `Failed`. The previous narrow filter missed both cases.
 
-Query test runs for this build:
+**Always enumerate ALL test runs for the build, not just the ones whose containing job is `failed`.**
 
-```bash
-az devops invoke --area test --resource runs \
-  --route-parameters project=$PROJECT \
-  --org $ORG_URL \
-  --query-parameters "buildUri=vstfs:///Build/Build/$BUILD_ID" \
-  --query "value[?runStatistics[?outcome=='Failed']] | [].{id:id, name:name, totalTests:totalTests, state:state, stats:runStatistics}" \
-  --output json 2>&1
-```
-
-For each test run that has failures, fetch the failed test results:
+> ⚠️ Do **not** use `az devops invoke --area test --resource runs` — on `devdiv` it incorrectly routes to `/test/Runs/Statistics` and returns 404. Use the REST API directly with an AAD bearer token (works on both `devdiv` and `dnceng-public`):
 
 ```bash
-az devops invoke --area test --resource results \
-  --route-parameters project=$PROJECT runId=$RUN_ID \
-  --org $ORG_URL \
-  --query-parameters "outcomes=Failed&\$top=20" \
-  --query "value[].{testName:testCaseTitle, outcome:outcome, errorMessage:errorMessage, durationMs:durationInMs}" \
-  --output json 2>&1
+# 499b84ac-1321-427f-aa17-267ca6975798 is the well-known AAD resource ID for Azure DevOps.
+TOKEN=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken -o tsv)
+
+curl -sL -u ":$TOKEN" \
+  "$ORG_URL/$PROJECT/_apis/test/runs?buildUri=vstfs:///Build/Build/$BUILD_ID&api-version=7.0" \
+  | jq '[.value[] | {id, name, totalTests, passedTests, unanalyzedTests, state}
+                    | select((.totalTests // 0) > (.passedTests // 0))]'
 ```
 
-If the `errorMessage` is truncated or absent, you can fetch a single test result's full details:
+The `select` filter is **`totalTests > passedTests`** on purpose: it catches failed tests, not-executed tests, inconclusive tests, and crashed/unanalyzed tests in one go. Do NOT filter on `runStatistics[?outcome=='Failed']` — that misses `Unanalyzed` (crashes) and several other buckets.
+
+For each failing run, fetch the individual results — first `outcomes=Failed`, then `outcomes=NotExecuted` if the run had `unanalyzedTests > 0`:
 
 ```bash
-az devops invoke --area test --resource results \
-  --route-parameters project=$PROJECT runId=$RUN_ID testId=$TEST_ID \
-  --org $ORG_URL \
-  --query "{testName:testCaseTitle, errorMessage:errorMessage, stackTrace:stackTrace}" \
-  --output json 2>&1
+curl -sL -u ":$TOKEN" \
+  "$ORG_URL/$PROJECT/_apis/test/runs/$RUN_ID/results?outcomes=Failed&\$top=50&api-version=7.0" \
+  | jq '[.value[] | {testName: .testCaseTitle, outcome, error: .errorMessage}]'
+
+# Only run this if the run has unanalyzedTests > 0 (e.g. a crashed instrumentation run).
+curl -sL -u ":$TOKEN" \
+  "$ORG_URL/$PROJECT/_apis/test/runs/$RUN_ID/results?outcomes=NotExecuted&\$top=50&api-version=7.0" \
+  | jq '[.value[] | {testName: .testCaseTitle, outcome, error: .errorMessage}]'
 ```
+
+If `errorMessage` is truncated or missing, fetch the full result (errorMessage + stackTrace) for a specific test:
+
+```bash
+curl -sL -u ":$TOKEN" \
+  "$ORG_URL/$PROJECT/_apis/test/runs/$RUN_ID/results/$TEST_ID?api-version=7.0" \
+  | jq '{name: .testCaseTitle, error: .errorMessage, stack: .stackTrace}'
+```
+
+**Heuristic for diagnosing a crashed instrumentation:** if a run has `totalTests=1, passedTests=0, unanalyzedTests=1` and the lone result's title is "Possible Crash / …", the test APK process crashed before NUnit/xUnit could write results. Download the matching `Test Results - APKs …` build artifact and inspect `logcat-*.txt` for `Fatal signal` / `FATAL` / tombstone.
 
 #### Step 4 — Present summary
 
@@ -257,7 +264,12 @@ Use this format — **one section per AZDO build**, each with its own progress a
 
 > ⚠️ Build still in progress, but **N tests have already failed** — you can start investigating these now.
 
-**If no failures found anywhere**, report CI as green and stop.
+**If no failures found anywhere**, report CI as green and stop. "No failures found anywhere" means **all three** of:
+1. No timeline records with `result == 'failed'`.
+2. For every test run returned by Step 3b, `passedTests == totalTests` (no Failed, NotExecuted, Inconclusive, or unanalyzed buckets).
+3. All required GitHub checks are `SUCCESS`.
+
+If a GitHub check is RED but the timeline shows no failures, **do not** report green — go back to Step 3b and enumerate test runs, since the failure is almost certainly hiding in a `succeededWithIssues` job's test results.
 
 ### Phase 2: Deep Investigation (only if user requests)
 
