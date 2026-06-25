@@ -241,6 +241,7 @@ namespace Java.InteropTests
 		public void TryGetArrayProxy_ObjectLeaf_ReturnsAllRankTypes ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
+			AssumeGeneratedArrayProxiesEnabled ();
 
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 1, out var objectArrayProxy));
 			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Lang.Object>));
@@ -257,6 +258,7 @@ namespace Java.InteropTests
 		public void TryGetArrayProxy_PrimitiveLeaf_ReturnsAllRankTypes ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
+			AssumeGeneratedArrayProxiesEnabled ();
 
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 1, out var byteArrayProxy));
 			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (sbyte[]));
@@ -297,6 +299,13 @@ namespace Java.InteropTests
 		{
 			if (!RuntimeFeature.TrimmableTypeMap) {
 				Assert.Ignore ("TrimmableTypeMap feature switch is off; test only relevant for the trimmable typemap path.");
+			}
+		}
+
+		static void AssumeGeneratedArrayProxiesEnabled ()
+		{
+			if (!RuntimeFeature.IsNativeAotRuntime && System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				Assert.Ignore ("Generated array proxies are only emitted when dynamic code is unavailable.");
 			}
 		}
 
