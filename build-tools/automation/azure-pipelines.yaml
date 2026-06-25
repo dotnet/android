@@ -20,13 +20,9 @@ resources:
   - repository: yaml-templates
     type: git
     name: DevDiv/Xamarin.yaml-templates
-    ref: refs/heads/main
-  # TODO: Temporary feature branch to smoke-test the WiX 6 migration of nuget-msi-convert
-  # (Xamarin.yaml-templates PR #752740). Revert this back to using yaml-templates@main
-  # once that PR merges.
-  - repository: yaml-templates-v5
-    type: git
-    name: DevDiv/Xamarin.yaml-templates
+    # TODO: Temporary feature branch to smoke-test the WiX 6 migration of
+    # nuget-msi-convert (Xamarin.yaml-templates PR #752740).
+    # Revert back to refs/heads/main once that PR merges.
     ref: refs/heads/jonathanpeppers-nuget-msi-convert-v5
   - repository: maui
     type: github
@@ -82,7 +78,6 @@ extends:
       sourceRepositoriesToScan:
         exclude:
         - repository: yaml-templates
-        - repository: yaml-templates-v5
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
@@ -282,9 +277,9 @@ extends:
           timeoutInMinutes: 120
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v5.yml@yaml-templates-v5
+      - template: nuget-msi-convert/job/v5.yml@yaml-templates
         parameters:
-          yamlResourceName: yaml-templates-v5
+          yamlResourceName: yaml-templates
           dependsOn: sign_net_mac_win
           artifactName: nuget-signed
           artifactPatterns: |
