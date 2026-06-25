@@ -12,16 +12,6 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 	{
 		const uint CompressedDataMagic = 0x535A4158; // 'XAZS', little-endian
 
-		// Decompresses 'srcLength' bytes from 'src' into 'dst' (which must be 'dstLength' bytes long).
-		// Returns the number of bytes written, or -1 on failure.
-		static int ZstdDecompress (byte[] src, int srcLength, byte[] dst, int dstLength)
-		{
-			return ZstandardDecoder.TryDecompress (
-				src.AsSpan (0, srcLength),
-				dst.AsSpan (0, dstLength),
-				out int bytesWritten) ? bytesWritten : -1;
-		}
-
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
 		static int Usage ()
@@ -56,7 +46,10 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 					reader.Read (sourceBytes, 0, inputLength);
 
 					byte[] assemblyBytes = bytePool.Rent ((int)decompressedLength);
-					int decoded = ZstdDecompress (sourceBytes, inputLength, assemblyBytes, (int)decompressedLength);
+					int decoded = ZstandardDecoder.TryDecompress (
+						sourceBytes.AsSpan (0, inputLength),
+						assemblyBytes.AsSpan (0, (int)decompressedLength),
+						out int bytesWritten) ? bytesWritten : -1;
 					if (decoded != (int)decompressedLength) {
 						Console.Error.WriteLine ($"  Failed to decompress Zstd data of {fileName} (decoded: {decoded})");
 						retVal = false;
