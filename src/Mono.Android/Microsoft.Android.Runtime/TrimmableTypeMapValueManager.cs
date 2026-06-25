@@ -183,7 +183,40 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType = null)
 	{
-		return GetValueCore<T> (ref reference, options, targetType);
+		EnsureNotDisposed ();
+		if (!reference.IsValid) {
+			return default;
+		}
+
+		if (targetType != null && !typeof (T).IsAssignableFrom (targetType)) {
+			throw new ArgumentException (
+				string.Format (CultureInfo.InvariantCulture, "Requested runtime type '{0}' is not compatible with requested compile-time type T of '{1}'.",
+					targetType,
+					typeof (T)),
+				nameof (targetType));
+		}
+
+		var boxed = PeekBoxedObject (reference);
+		if (boxed != null) {
+			JniObjectReference.Dispose (ref reference, options);
+			return (T) Convert.ChangeType (boxed, targetType ?? typeof (T), CultureInfo.InvariantCulture);
+		}
+
+		targetType ??= typeof (T);
+
+		if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
+			return (T?) CreatePeer (ref reference, options, targetType);
+		}
+
+		if (PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
+			return (T) arrayWrapper;
+		}
+
+		var value = JavaConvert.FromObjectReference (ref reference, options, targetType);
+		if (value is null) {
+			return default;
+		}
+		return (T) value;
 	}
 
 	protected override object? CreateValueCore (
@@ -192,7 +225,29 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType = null)
 	{
-		return GetValueCore (ref reference, options, targetType);
+		EnsureNotDisposed ();
+		if (!reference.IsValid) {
+			return null;
+		}
+
+		if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
+			return CreatePeer (ref reference, options, targetType);
+		}
+
+		var boxed = PeekBoxedObject (reference);
+		if (boxed != null) {
+			JniObjectReference.Dispose (ref reference, options);
+			if (targetType != null) {
+				return Convert.ChangeType (boxed, targetType, CultureInfo.InvariantCulture);
+			}
+			return boxed;
+		}
+
+		if (targetType != null && PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
+			return arrayWrapper;
+		}
+
+		return JavaConvert.FromObjectReference (ref reference, options, targetType);
 	}
 
 	[return: MaybeNull]
@@ -209,18 +264,23 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		if (targetType != null && !typeof (T).IsAssignableFrom (targetType)) {
 			throw new ArgumentException (
-				string.Format (CultureInfo.InvariantCulture, "Requested runtime '{0}' value of '{1}' is not compatible with requested compile-time type T of '{2}'.",
-					nameof (targetType),
-					targetType,
-					typeof (T)),
+				$"Requested runtime type '{targetType}' is not compatible with requested compile-time type T of '{typeof (T)}'.",
 				nameof (targetType));
 		}
 
-		var value = GetValueCore (ref reference, options, targetType ?? typeof (T));
+		targetType ??= typeof (T);
+
+		var existing = PeekValue (reference);
+		if (existing != null && targetType.IsAssignableFrom (existing.GetType ())) {
+			JniObjectReference.Dispose (ref reference, options);
+			return (T) existing;
+		}
+
+		var value = CreateValueCore<T> (ref reference, options, targetType);
 		if (value is null) {
 			return default;
 		}
-		return (T) value;
+		return value;
 	}
 
 	protected override object? GetValueCore (
@@ -240,15 +300,16 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return existing;
 		}
 
-		if (targetType != null && PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
-			return arrayWrapper;
-		}
+		return CreateValueCore (ref reference, options, targetType);
+	}
 
-		if (targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
-			return CreatePeer (ref reference, options, targetType);
+	object? PeekBoxedObject (JniObjectReference reference)
+	{
+		var peer = PeekPeer (reference);
+		if (peer == null) {
+			return null;
 		}
-
-		return JavaConvert.FromObjectReference (ref reference, options, targetType);
+		return TryUnboxPeerObject (peer, out var result) ? result : null;
 	}
 
 	protected override bool TryUnboxPeerObject (IJavaPeerable value, [NotNullWhen (true)] out object? result)
