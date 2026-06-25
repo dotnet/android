@@ -97,7 +97,9 @@ namespace Xamarin.Android.Tasks
 
 			if (EnableShrinking) {
 				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-					File.WriteAllText (ProguardGeneratedApplicationConfiguration, "# ACW keep rules are generated from NativeAOT ILC metadata.\n");
+					if (!File.Exists (ProguardGeneratedApplicationConfiguration)) {
+						File.WriteAllText (ProguardGeneratedApplicationConfiguration, "# ACW keep rules are generated from NativeAOT ILC metadata.\n");
+					}
 				} else if (!AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
