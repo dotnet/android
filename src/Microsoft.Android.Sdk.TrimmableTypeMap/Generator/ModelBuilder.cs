@@ -156,6 +156,15 @@ static class ModelBuilder
 
 			var entry = BuildEntry (peer, proxy, assemblyName, jniName);
 			model.Entries.Add (entry);
+
+			// Emit a TypeMapAssociation for every entry that has a proxy.
+			// The runtime's _proxyTypeMap (GetOrCreateProxyTypeMapping) is populated from
+			// TypeMapAssociationAttribute — NOT from TypeMapAttribute's 3rd arg.
+			// Without this, the proxy type map is empty and CreatePeer fails for
+			// interface types like IIterator where targetType-based lookup is needed.
+			if (proxy != null) {
+				AddProxyAssociation (model, peer, proxy, assemblyName);
+			}
 			return;
 		}
 
@@ -187,6 +196,9 @@ static class ModelBuilder
 				SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
 				AliasProxyTypeReference = holderRef,
 			});
+			if (proxy != null && peer.InvokerTypeName != null) {
+				AddProxyAssociation (model, peer.InvokerTypeName, peer.AssemblyName, proxy, assemblyName);
+			}
 		}
 
 		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
@@ -202,6 +214,22 @@ static class ModelBuilder
 			TypeName = holderTypeName,
 			Namespace = holderNamespace,
 			AliasKeys = aliasKeys,
+		});
+	}
+
+	static void AddProxyAssociation (TypeMapAssemblyData model, JavaPeerInfo peer, JavaPeerProxyData proxy, string assemblyName)
+	{
+		AddProxyAssociation (model, peer.ManagedTypeName, peer.AssemblyName, proxy, assemblyName);
+		if (peer.InvokerTypeName != null) {
+			AddProxyAssociation (model, peer.InvokerTypeName, peer.AssemblyName, proxy, assemblyName);
+		}
+	}
+
+	static void AddProxyAssociation (TypeMapAssemblyData model, string managedTypeName, string sourceAssemblyName, JavaPeerProxyData proxy, string outputAssemblyName)
+	{
+		model.Associations.Add (new TypeMapAssociationData {
+			SourceTypeReference = AssemblyQualify (managedTypeName, sourceAssemblyName),
+			AliasProxyTypeReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", outputAssemblyName),
 		});
 	}
 

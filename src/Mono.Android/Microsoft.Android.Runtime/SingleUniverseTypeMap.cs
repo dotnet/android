@@ -73,7 +73,33 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 	public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
 	{
-		return _proxyTypeMap.TryGetValue (managedType, out proxyType);
+		if (!_proxyTypeMap.TryGetValue (managedType, out var mappedProxyType)) {
+			proxyType = null;
+			return false;
+		}
+
+		// Fast path: direct proxy
+		if (mappedProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
+			proxyType = mappedProxyType;
+			return true;
+		}
+
+		// Slow path: alias holder — find the alias whose target type matches
+		var aliases = mappedProxyType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
+		if (aliases is not null) {
+			foreach (var key in aliases.Aliases) {
+				if (_typeMap.TryGetValue (key, out var aliasProxyType)) {
+					var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+					if (aliasProxy is not null && TrimmableTypeMap.TargetTypeMatches (managedType, aliasProxy.TargetType)) {
+						proxyType = aliasProxyType;
+						return true;
+					}
+				}
+			}
+		}
+
+		proxyType = null;
+		return false;
 	}
 
 	public bool TryGetArrayProxyType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? proxyType)

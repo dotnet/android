@@ -339,15 +339,14 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_SinglePeer_EmitsOnlyJavaNameEntry ()
+		public void Build_SinglePeer_HasAssociation ()
 		{
+			// Single peers with generated proxies emit associations so the runtime proxy
+			// type map is populated.
 			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
-			Assert.Empty (model.Associations);
-			var entry = Assert.Single (JavaNameEntries (model));
-			Assert.Equal ("my/app/MainActivity", entry.JniName);
-			Assert.Contains ("MyApp_MainActivity_Proxy", entry.ProxyTypeReference);
+			Assert.Single (model.Associations);
 		}
 
 		[Fact]
@@ -565,8 +564,8 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (clickPeers, "TypeMap");
 
-			// Invoker is excluded from TypeMap entries/proxies. It is carried through
-			// the interface proxy's InvokerType metadata.
+			// Invoker is excluded from TypeMap entries/proxies. It still gets a
+			// managed→proxy association so its JniPeerMembers can resolve the JNI name.
 			var entries = JavaNameEntries (model);
 			Assert.Single (entries);
 			Assert.Equal ("android/view/View$OnClickListener", entries [0].JniName);
@@ -576,6 +575,7 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.ProxyTypes);
 			Assert.NotNull (model.ProxyTypes [0].InvokerType);
 			Assert.Equal ("Android.Views.IOnClickListenerInvoker", model.ProxyTypes [0].InvokerType!.ManagedTypeName);
+			Assert.Contains (model.Associations, a => a.SourceTypeReference == "Android.Views.IOnClickListenerInvoker, TestFixtures");
 		}
 
 		[Fact]
@@ -602,6 +602,10 @@ public class ModelBuilderTests : FixtureTestBase
 
 			// Interface proxy has activation because it will create the invoker
 			Assert.True (proxy.HasActivation);
+
+			Assert.Equal (2, model.Associations.Count);
+			Assert.Contains (model.Associations, a => a.SourceTypeReference == "MyApp.IFoo, App");
+			Assert.Contains (model.Associations, a => a.SourceTypeReference == "MyApp.FooInvoker, App");
 		}
 	}
 
@@ -692,6 +696,21 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (entry);
 		}
 
+		[Fact]
+		public void Fixture_GenericHolder_HasAssociation ()
+		{
+			// Generic definitions must still get a TypeMapAssociation entry so managed→proxy
+			// lookup works for the open generic definition. Their proxy derives from the
+			// non-generic `JavaPeerProxy` base, so the CLR can load the proxy without
+			// resolving an open generic argument.
+			var peer = FindFixtureByJavaName ("my/app/GenericHolder");
+			Assert.True (peer.IsGenericDefinition);
+
+			var model = BuildModel (new [] { peer }, "TypeMap");
+			Assert.Contains (model.Associations,
+				a => a.SourceTypeReference.StartsWith ("MyApp.Generic.GenericHolder`1", StringComparison.Ordinal));
+		}
+
 	}
 
 	public class FixtureAcwTypeHasProxy
@@ -755,6 +774,7 @@ public class ModelBuilderTests : FixtureTestBase
 			// Only the interface gets entries/proxies, the invoker is excluded
 			Assert.Single (JavaNameEntries (model2));
 			Assert.Equal ("MyApp.IMyInterface", model2.ProxyTypes [0].TargetType.ManagedTypeName);
+			Assert.Contains (model2.Associations, a => a.SourceTypeReference == "MyApp.MyInvoker, App");
 		}
 	}
 
