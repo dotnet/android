@@ -339,16 +339,15 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_SinglePeer_HasManagedReverseEntry ()
+		public void Build_SinglePeer_EmitsOnlyJavaNameEntry ()
 		{
 			var peer = MakePeerWithActivation ("my/app/MainActivity", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
 			Assert.Empty (model.Associations);
-			var reverseEntry = Assert.Single (ManagedTypeEntries (model));
-			Assert.Equal ("__managed_type:MyApp.MainActivity, App", reverseEntry.JniName);
-			Assert.Contains ("MyApp_MainActivity_Proxy", reverseEntry.ProxyTypeReference);
-			Assert.Null (reverseEntry.TargetTypeReference);
+			var entry = Assert.Single (JavaNameEntries (model));
+			Assert.Equal ("my/app/MainActivity", entry.JniName);
+			Assert.Contains ("MyApp_MainActivity_Proxy", entry.ProxyTypeReference);
 		}
 
 		[Fact]
@@ -451,14 +450,7 @@ public class ModelBuilderTests : FixtureTestBase
 	static List<TypeMapAttributeData> JavaNameEntries (TypeMapAssemblyData model)
 	{
 		return model.Entries
-			.Where (e => !e.JniName.StartsWith ("__managed_type:", StringComparison.Ordinal) && e.AnchorRank is null)
-			.ToList ();
-	}
-
-	static List<TypeMapAttributeData> ManagedTypeEntries (TypeMapAssemblyData model)
-	{
-		return model.Entries
-			.Where (e => e.JniName.StartsWith ("__managed_type:", StringComparison.Ordinal))
+			.Where (e => e.AnchorRank is null)
 			.ToList ();
 	}
 
@@ -573,8 +565,8 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (clickPeers, "TypeMap");
 
-			// Invoker is excluded from TypeMap entries/proxies. It still gets a
-			// managed→proxy association so its JniPeerMembers can resolve the JNI name.
+			// Invoker is excluded from TypeMap entries/proxies. It is carried through
+			// the interface proxy's InvokerType metadata.
 			var entries = JavaNameEntries (model);
 			Assert.Single (entries);
 			Assert.Equal ("android/view/View$OnClickListener", entries [0].JniName);
@@ -584,7 +576,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Single (model.ProxyTypes);
 			Assert.NotNull (model.ProxyTypes [0].InvokerType);
 			Assert.Equal ("Android.Views.IOnClickListenerInvoker", model.ProxyTypes [0].InvokerType!.ManagedTypeName);
-			Assert.Contains (ManagedTypeEntries (model), e => e.JniName == "__managed_type:Android.Views.IOnClickListenerInvoker, TestFixtures");
 		}
 
 		[Fact]
@@ -611,11 +602,6 @@ public class ModelBuilderTests : FixtureTestBase
 
 			// Interface proxy has activation because it will create the invoker
 			Assert.True (proxy.HasActivation);
-
-			var reverseEntries = ManagedTypeEntries (model);
-			Assert.Equal (2, reverseEntries.Count);
-			Assert.Contains (reverseEntries, e => e.JniName == "__managed_type:MyApp.IFoo, App");
-			Assert.Contains (reverseEntries, e => e.JniName == "__managed_type:MyApp.FooInvoker, App");
 		}
 	}
 
@@ -706,16 +692,6 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotNull (entry);
 		}
 
-		[Fact]
-		public void Fixture_GenericHolder_HasManagedReverseEntry ()
-		{
-			var peer = FindFixtureByJavaName ("my/app/GenericHolder");
-			Assert.True (peer.IsGenericDefinition);
-
-			var model = BuildModel (new [] { peer }, "TypeMap");
-			Assert.Contains (ManagedTypeEntries (model),
-				e => e.JniName.StartsWith ("__managed_type:MyApp.Generic.GenericHolder`1", StringComparison.Ordinal));
-		}
 	}
 
 	public class FixtureAcwTypeHasProxy
@@ -779,7 +755,6 @@ public class ModelBuilderTests : FixtureTestBase
 			// Only the interface gets entries/proxies, the invoker is excluded
 			Assert.Single (JavaNameEntries (model2));
 			Assert.Equal ("MyApp.IMyInterface", model2.ProxyTypes [0].TargetType.ManagedTypeName);
-			Assert.Contains (ManagedTypeEntries (model2), e => e.JniName == "__managed_type:MyApp.MyInvoker, App");
 		}
 	}
 

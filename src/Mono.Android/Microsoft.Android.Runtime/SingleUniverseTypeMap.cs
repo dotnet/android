@@ -16,7 +16,6 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 sealed class SingleUniverseTypeMap : ITypeMap
 {
-	const string ManagedTypeKeyPrefix = "__managed_type:";
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
 	readonly IReadOnlyDictionary<string, Type>?[][] _arrayMapsByUniverseAndRank;
@@ -74,45 +73,7 @@ sealed class SingleUniverseTypeMap : ITypeMap
 
 	public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
 	{
-		if (!TryGetManagedTypeKey (managedType, out var managedTypeKey) ||
-				!_typeMap.TryGetValue (managedTypeKey, out var mappedProxyType)) {
-			proxyType = null;
-			return false;
-		}
-
-		// Fast path: direct proxy
-		if (mappedProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-			proxyType = mappedProxyType;
-			return true;
-		}
-
-		// Slow path: alias holder — find the alias whose target type matches
-		var aliases = mappedProxyType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
-		if (aliases is not null) {
-			foreach (var key in aliases.Aliases) {
-				if (_typeMap.TryGetValue (key, out var aliasProxyType)) {
-					var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
-					if (aliasProxy is not null && TrimmableTypeMap.TargetTypeMatches (managedType, aliasProxy.TargetType)) {
-						proxyType = aliasProxyType;
-						return true;
-					}
-				}
-			}
-		}
-
-		proxyType = null;
-		return false;
-	}
-
-	static bool TryGetManagedTypeKey (Type managedType, [NotNullWhen (true)] out string? key)
-	{
-		var fullName = managedType.FullName;
-		if (fullName is null) {
-			key = null;
-			return false;
-		}
-		key = ManagedTypeKeyPrefix + fullName + ", " + managedType.Assembly.GetName ().Name;
-		return true;
+		return _proxyTypeMap.TryGetValue (managedType, out proxyType);
 	}
 
 	public bool TryGetArrayProxyType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? proxyType)

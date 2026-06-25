@@ -575,7 +575,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		string typeMapAssemblyName = $"_{group.AssemblyName}.TypeMap";
 		var model = ModelBuilder.Build (group.Peers, typeMapAssemblyName + ".dll", typeMapAssemblyName);
 		var javaNameEntries = model.Entries
-			.Where (e => !e.JniName.StartsWith ("__managed_type:", StringComparison.Ordinal) && e.AnchorRank is null)
+			.Where (e => e.AnchorRank is null)
 			.ToList ();
 
 		// 3 indexed entries + 1 base entry = 4

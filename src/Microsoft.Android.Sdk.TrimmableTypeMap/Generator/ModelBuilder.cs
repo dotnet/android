@@ -15,7 +15,6 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
-	const string ManagedTypeKeyPrefix = "__managed_type:";
 
 	static readonly PrimitiveArrayProxyInfo [] PrimitiveArrayProxies = [
 		new ("Z", "Boolean", "System.Boolean", "Java.Interop.JavaBooleanArray"),
@@ -157,10 +156,6 @@ static class ModelBuilder
 
 			var entry = BuildEntry (peer, proxy, assemblyName, jniName);
 			model.Entries.Add (entry);
-
-			if (proxy != null) {
-				AddManagedReverseEntries (model, peer, proxy, assemblyName);
-			}
 			return;
 		}
 
@@ -192,10 +187,6 @@ static class ModelBuilder
 				SourceTypeReference = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName),
 				AliasProxyTypeReference = holderRef,
 			});
-			AddManagedReverseEntry (model, peer.ManagedTypeName, peer.AssemblyName, holderRef, IsUnconditionalEntry (peer));
-			if (proxy != null && peer.InvokerTypeName != null) {
-				AddManagedReverseEntry (model, peer.InvokerTypeName, peer.AssemblyName, AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName), isUnconditional: false);
-			}
 		}
 
 		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
@@ -211,25 +202,6 @@ static class ModelBuilder
 			TypeName = holderTypeName,
 			Namespace = holderNamespace,
 			AliasKeys = aliasKeys,
-		});
-	}
-
-	static void AddManagedReverseEntries (TypeMapAssemblyData model, JavaPeerInfo peer, JavaPeerProxyData proxy, string assemblyName)
-	{
-		var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", assemblyName);
-		AddManagedReverseEntry (model, peer.ManagedTypeName, peer.AssemblyName, proxyReference, IsUnconditionalEntry (peer));
-		if (peer.InvokerTypeName != null) {
-			AddManagedReverseEntry (model, peer.InvokerTypeName, peer.AssemblyName, proxyReference, isUnconditional: false);
-		}
-	}
-
-	static void AddManagedReverseEntry (TypeMapAssemblyData model, string managedTypeName, string assemblyName, string proxyReference, bool isUnconditional)
-	{
-		var managedTypeReference = AssemblyQualify (managedTypeName, assemblyName);
-		model.Entries.Add (new TypeMapAttributeData {
-			JniName = ManagedTypeKey (managedTypeReference),
-			ProxyTypeReference = proxyReference,
-			TargetTypeReference = isUnconditional ? null : managedTypeReference,
 		});
 	}
 
@@ -529,9 +501,6 @@ static class ModelBuilder
 
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
-
-	static string ManagedTypeKey (string typeReference)
-		=> ManagedTypeKeyPrefix + typeReference;
 
 	static string AddArrayRank (string typeReference, int rank)
 	{
