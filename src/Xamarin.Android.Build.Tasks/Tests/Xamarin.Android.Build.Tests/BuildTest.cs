@@ -271,16 +271,8 @@ namespace Xamarin.Android.Build.Tests
 		// DotNet fails, see https://github.com/dotnet/runtime/issues/65484
 		// Enable the commented out signature (and AOT) once the above is fixed
 		[Test]
-		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (false, true)] bool aot, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, aot: aot, release: true)) {
-				return;
-			} else if (!aot && runtime == AndroidRuntime.NativeAOT) {
-				// Just saving time, aot && !aot would be identical tests with NativeAOT runtime
-				Assert.Ignore ("NativeAOT always uses AOT, obviously");
-				return;
-			}
-
 			var testName = "テスト";
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -290,10 +282,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 			proj.ProjectName = testName;
 			proj.IsRelease = true;
-
-			if (runtime == AndroidRuntime.MonoVM) {
-				proj.AotAssemblies = aot;
-			}
 
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
