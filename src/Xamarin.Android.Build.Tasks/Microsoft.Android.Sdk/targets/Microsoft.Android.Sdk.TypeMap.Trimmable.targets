@@ -80,7 +80,7 @@
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
-      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
@@ -88,8 +88,10 @@
       <_TypeMapInputAssemblies Include="@(ResolvedAssemblies)" />
       <_TypeMapInputAssemblies Include="@(ResolvedFrameworkAssemblies)" />
       <_TypeMapInputAssemblies Include="@(PrivateSdkAssemblies)" />
+      <_TypeMapInputAssemblies Include="@(FrameworkAssemblies)" />
       <_TypeMapFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
       <_TypeMapFrameworkAssemblies Include="@(PrivateSdkAssemblies)" />
+      <_TypeMapFrameworkAssemblies Include="@(FrameworkAssemblies)" />
       <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)"
           Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
     </ItemGroup>

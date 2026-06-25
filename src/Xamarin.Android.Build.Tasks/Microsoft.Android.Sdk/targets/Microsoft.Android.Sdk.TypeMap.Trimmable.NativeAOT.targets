@@ -25,6 +25,7 @@
       <_TrimmableTypeMapIlcAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)" />
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(ResolvedFrameworkAssemblies->'_%(Filename).TypeMap')" />
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(PrivateSdkAssemblies->'_%(Filename).TypeMap')" />
+      <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(FrameworkAssemblies->'_%(Filename).TypeMap')" />
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(ReferencePath->'_%(Filename).TypeMap')"
           Condition=" '%(ReferencePath.FrameworkAssembly)' == 'true' " />
       <!-- The root assembly (_Microsoft.Android.TypeMaps) only contains TypeMapLoader.Initialize()
