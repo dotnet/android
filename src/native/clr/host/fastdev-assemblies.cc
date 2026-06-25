@@ -139,6 +139,8 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	}
 
 	constexpr std::string_view dll_ext { ".dll" };
+	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
+	bool found_corelib = false;
 	size_t count = 0;
 	dirent *e;
 	while ((e = readdir (dir)) != nullptr) {
@@ -153,14 +155,24 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 		tpa_list.append (override_dir_path);
 		tpa_list.append ("/");
 		tpa_list.append (name);
+		if (name == corelib_name) {
+			found_corelib = true;
+		}
 		count++;
 	}
 	closedir (dir);
 
 	log_debug (LOG_ASSEMBLY, "FastDev: built TPA list with {} assemblies from '{}'"sv, count, override_dir_path);
-	if (count > 0) {
+
+	// We can only safely hand a TPA list to CoreCLR when it contains
+	// `System.Private.CoreLib.dll`. Passing TPA without CoreLib changes the
+	// CLR binder mode such that CoreLib is searched via TPA/probe instead of
+	// the built-in bootstrap, which fails on incomplete FastDev deployments
+	// (e.g. tests that only sync a handful of user assemblies).
+	if (count > 0 && found_corelib) {
 		tpa_in_use = true;
 		return true;
 	}
+	tpa_list.clear ();
 	return false;
 }
