@@ -21,6 +21,13 @@ resources:
     type: git
     name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
+  # TODO: Temporary feature branch to smoke-test the WiX 6 migration of nuget-msi-convert
+  # (Xamarin.yaml-templates PR #752740). Revert this back to using yaml-templates@main
+  # once that PR merges.
+  - repository: yaml-templates-v5
+    type: git
+    name: DevDiv/Xamarin.yaml-templates
+    ref: refs/heads/jonathanpeppers-nuget-msi-convert-v5
   - repository: maui
     type: github
     name: dotnet/maui
@@ -75,6 +82,7 @@ extends:
       sourceRepositoriesToScan:
         exclude:
         - repository: yaml-templates
+        - repository: yaml-templates-v5
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
@@ -274,9 +282,9 @@ extends:
           timeoutInMinutes: 120
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v4.yml@yaml-templates
+      - template: nuget-msi-convert/job/v5.yml@yaml-templates-v5
         parameters:
-          yamlResourceName: yaml-templates
+          yamlResourceName: yaml-templates-v5
           dependsOn: sign_net_mac_win
           artifactName: nuget-signed
           artifactPatterns: |
@@ -375,7 +383,7 @@ extends:
             Write-Host "##vso[task.setvariable variable=ReleaseDropPrefix]$dropPrefix"
           displayName: Set variable ReleaseDropPrefix
 
-        # Download nugets drop created by nuget-msi-convert/job/v4.yml and publish to maestro
+        # Download nugets drop created by nuget-msi-convert/job/v5.yml and publish to maestro
         - task: ms-vscs-artifact.build-tasks.artifactDropDownloadTask-1.artifactDropDownloadTask@1
           displayName: Download $(ReleaseDropPrefix)/nugets
           inputs:
