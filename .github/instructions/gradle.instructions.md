@@ -34,40 +34,64 @@ Test the CI path locally: `$env:RunningOnCI='true'` (PowerShell) or `RunningOnCI
 
 ## When CI fails 401 on a Dependabot bump
 
-The new package isn't cached in the feed yet. One-time setup, then ingest:
+The new package isn't cached in the dnceng `dotnet-public-maven` feed yet. The CFSClean-isolated CI agents only do anonymous reads, so someone has to authenticate once locally to make the feed pull the package (and all its transitive deps) from upstream.
 
-1. `iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"` (or the `.sh` equivalent)
-2. ```powershell
-   $env:RunningOnCI='true'
-   $env:NUGET_CREDENTIALPROVIDER_VSTS_TOKENTYPE='SelfDescribing'
-   ./build-tools/gradle/gradlew.bat --project-dir src/<project> build
-   ```
-   Sign in via the popup; the feed proxies + caches the package. `SelfDescribing` is required — the default `Compact` token is rejected by the feed when ingesting plugin markers (e.g. AGP plugin from `pluginManagement`).
-3. Re-run CI on the Dependabot PR. No PR edit needed.
+### Recommended: mirror via `az` bearer token
 
-If the popup never appears or auth keeps cancelling, clear the cached session token and try again:
+This is the most reliable path. It uses your `az login` Azure DevOps OAuth token directly via an HTTP Bearer header, so it bypasses every credprovider/session-token edge case.
+
 ```powershell
+# Make sure you're logged in (corp account, MFA-satisfied)
+az login
+
+cd <repo-root>
+$env:ANDROID_HOME = '<path-to-Android-SDK>'   # e.g. D:\android-toolchain\sdk
+$env:RunningOnCI  = 'true'
+
+# Project that needs the new package — must be the SAME project, not a sibling.
+# (A failing AGP transitive dep in /tests/.../JavaLib cannot be mirrored by
+# running gradle in /src/manifestmerger; the feed wants the request to come
+# from the configuration that actually needs it.)
+cd <path/to/the/gradle/project>
+$projGradle = "..\..\..\..\..\build-tools\gradle\gradlew.bat"   # adjust depth
+
+function Mirror-FailedUrls($logPath) {
+    $urls = Select-String -Path $logPath -Pattern "Could not GET 'https://pkgs\.dev\.azure\.com/dnceng/[^']+'" -AllMatches |
+        % { $_.Matches } | % { $_.Value -replace "^Could not GET '","" -replace "'$","" } | Sort-Object -Unique
+    if ($urls.Count -eq 0) { return 0 }
+    $token = az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken -o tsv
+    $h = @{ Authorization = "Bearer $token" }
+    foreach ($u in $urls) { Invoke-WebRequest -Uri $u -Headers $h -SkipHttpErrorCheck | Out-Null }
+    Write-Host "Mirrored $($urls.Count) packages"
+    return $urls.Count
+}
+
+# Loop: build → mirror everything that 401'd → build again. Maven resolves the
+# graph breadth-first, so each iteration uncovers the next layer of transitive
+# deps. Typically converges in 3-5 iterations.
+for ($i = 1; $i -le 15; $i++) {
+    $log = "build-iter-$i.log"
+    & $projGradle <task-that-resolves-deps> --no-daemon --refresh-dependencies *>&1 | Tee-Object $log | Out-Null
+    if ((Get-Content $log -Tail 5) -match "BUILD SUCCESSFUL") { Write-Host "Done!"; break }
+    if ((Mirror-FailedUrls $log) -eq 0) { Get-Content $log -Tail 30; throw "Failed but no 401s — different problem" }
+}
+```
+
+The resource id `499b84ac-1321-427f-aa17-267ca6975798` is Azure DevOps. After successful ingestion each package is anonymous-readable, so future CI runs pass without any auth.
+
+After mirroring, no PR edit is needed — just re-run the failed CI job.
+
+### Older alternative: the artifacts-credprovider plugin
+
+This sometimes works for simple cases (e.g. a single plugin-marker pull) but has unresolved auth gaps for some packages — observed with `com.android.tools.lint:lint-gradle` and its transitive deps, which 401 even with a properly attached `VssSessionToken`. Prefer the `az` flow above; fall back to credprovider only if you can't get an `az login` working.
+
+```powershell
+iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"   # one-time
 Remove-Item "$env:LOCALAPPDATA\MicrosoftCredentialProvider\SessionTokenCache.dat" -ErrorAction SilentlyContinue
+$env:RunningOnCI = 'true'
+$env:NUGET_CREDENTIALPROVIDER_VSTS_TOKENTYPE = 'SelfDescribing'   # required for plugin markers
+./build-tools/gradle/gradlew.bat --project-dir <project-dir> build --no-daemon
 ```
-
-### Fallback: mirror via `az` bearer token
-
-Some packages (observed with `com.android.tools.lint:lint-gradle` and its transitive deps) get 401-rejected even with a successfully attached credprovider `VssSessionToken`. When that happens, mirror the failing URLs directly using an Azure DevOps OAuth token from `az`:
-
-```powershell
-$token = az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken -o tsv
-$h = @{ Authorization = "Bearer $token" }
-
-# Pull each failing URL from the gradle error output and re-request it with the bearer token:
-$urls = Select-String -Path <gradle.log> -Pattern "Could not GET 'https://pkgs\.dev\.azure\.com/dnceng/[^']+'" -AllMatches |
-    % { $_.Matches } | % { $_.Value -replace "^Could not GET '","" -replace "'$","" } | Sort-Object -Unique
-foreach ($u in $urls) { Invoke-WebRequest -Uri $u -Headers $h -SkipHttpErrorCheck | % StatusCode }
-
-# Repeat the gradle build to discover the next layer of transitive deps; the feed will
-# return 401 for each new uncached package. Loop build → mirror → build until clean.
-```
-
-The resource id `499b84ac-1321-427f-aa17-267ca6975798` is Azure DevOps. After successful ingestion, the package is anonymous-readable, so future CI runs pass without any auth.
 
 The credprovider plugin is a no-op when no AzDO repos are configured (i.e. local builds without `RunningOnCI`).
 
