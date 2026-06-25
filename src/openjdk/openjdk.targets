@@ -1,0 +1,105 @@
+<Project>
+
+  <!-- Determine platform-specific download properties -->
+  <PropertyGroup Condition=" '$(HostOS)' == 'Windows' ">
+    <_OpenJDKPlatform>windows-x64</_OpenJDKPlatform>
+    <_OpenJDKExtension>.zip</_OpenJDKExtension>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(HostOS)' == 'Linux' ">
+    <_OpenJDKPlatform>linux-x64</_OpenJDKPlatform>
+    <_OpenJDKExtension>.tar.gz</_OpenJDKExtension>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(HostOS)' == 'Darwin' And '$(HostOSArchitecture)' != 'Arm64' ">
+    <_OpenJDKPlatform>macos-x64</_OpenJDKPlatform>
+    <_OpenJDKExtension>.tar.gz</_OpenJDKExtension>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(HostOS)' == 'Darwin' And '$(HostOSArchitecture)' == 'Arm64' ">
+    <_OpenJDKPlatform>macos-aarch64</_OpenJDKPlatform>
+    <_OpenJDKExtension>.tar.gz</_OpenJDKExtension>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_OpenJDKFileName>microsoft-jdk-$(MicrosoftOpenJDKVersion)-$(_OpenJDKPlatform)$(_OpenJDKExtension)</_OpenJDKFileName>
+    <_OpenJDKHashFileName>$(_OpenJDKFileName).sha256sum.txt</_OpenJDKHashFileName>
+    <_OpenJDKArchiveUrl>https://aka.ms/download-jdk/$(_OpenJDKFileName)</_OpenJDKArchiveUrl>
+    <_OpenJDKHashUrl>$(_OpenJDKArchiveUrl).sha256sum.txt</_OpenJDKHashUrl>
+    <_OpenJDKArchive>$(AndroidToolchainCacheDirectory)\$(_OpenJDKFileName)</_OpenJDKArchive>
+    <_OpenJDKHashFile>$(AndroidToolchainCacheDirectory)\$(_OpenJDKHashFileName)</_OpenJDKHashFile>
+    <_OpenJDKInstallDir>$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</_OpenJDKInstallDir>
+    <_OpenJDKVersionFile>$(_OpenJDKInstallDir)\xa_jdk_version.txt</_OpenJDKVersionFile>
+    <!-- Strip the archive's root folder(s) so files land directly in the install dir.
+         Windows/Linux archives have: jdk-21.0.8+9/bin/java (1 level)
+         macOS archives have: ./jdk-21.0.8+9/Contents/Home/bin/java (4 levels, ./ counts) -->
+    <_OpenJDKStripComponents Condition=" '$(HostOS)' != 'Darwin' ">1</_OpenJDKStripComponents>
+    <_OpenJDKStripComponents Condition=" '$(HostOS)' == 'Darwin' ">4</_OpenJDKStripComponents>
+  </PropertyGroup>
+
+  <Target Name="_DownloadOpenJDK"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Outputs="$(_OpenJDKArchive)">
+    <DownloadFile
+        SourceUrl="$(_OpenJDKArchiveUrl)"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="$(_OpenJDKFileName)"
+        Retries="3"
+    />
+    <!-- Download the SHA-256 hash file from Microsoft and parse the expected hash.
+         File format: "6ecfa864...  microsoft-jdk-21.0.8-windows-x64.zip" -->
+    <DownloadFile
+        SourceUrl="$(_OpenJDKHashUrl)"
+        DestinationFolder="$(AndroidToolchainCacheDirectory)"
+        DestinationFileName="$(_OpenJDKHashFileName)"
+        Retries="3"
+    />
+    <PropertyGroup>
+      <_OpenJDKExpectedHash>$([System.IO.File]::ReadAllText('$(_OpenJDKHashFile)').Substring(0, 64).ToUpperInvariant())</_OpenJDKExpectedHash>
+    </PropertyGroup>
+    <GetFileHash Files="$(_OpenJDKArchive)" Algorithm="SHA256">
+      <Output TaskParameter="Hash" PropertyName="_OpenJDKActualHash" />
+    </GetFileHash>
+    <Delete
+        Condition=" '$(_OpenJDKActualHash)' != '$(_OpenJDKExpectedHash)' "
+        Files="$(_OpenJDKArchive);$(_OpenJDKHashFile)"
+    />
+    <Error
+        Condition=" '$(_OpenJDKActualHash)' != '$(_OpenJDKExpectedHash)' "
+        Text="SHA256 mismatch for $(_OpenJDKFileName). Expected: $(_OpenJDKExpectedHash) Actual: $(_OpenJDKActualHash)"
+    />
+  </Target>
+
+  <Target Name="_InstallOpenJDK"
+      BeforeTargets="Build"
+      DependsOnTargets="_DownloadOpenJDK"
+      Inputs="$(_OpenJDKArchive)"
+      Outputs="$(_OpenJDKVersionFile)">
+    <!-- Remove old install to avoid stale files from previous versions -->
+    <RemoveDir Directories="$(_OpenJDKInstallDir)" />
+    <MakeDir Directories="$(_OpenJDKInstallDir)" />
+    <!-- Extract directly into install directory, stripping archive root folder(s) -->
+    <Exec Command="tar -xf &quot;$(_OpenJDKArchive)&quot; -C &quot;$(_OpenJDKInstallDir)&quot; --strip-components=$(_OpenJDKStripComponents)" />
+    <!-- Verify key JDK files exist after installation -->
+    <Error
+        Condition=" !Exists('$(_OpenJDKInstallDir)\bin\javac') And !Exists('$(_OpenJDKInstallDir)\bin\javac.exe') "
+        Text="JDK installation is missing bin\javac in $(_OpenJDKInstallDir)"
+    />
+    <Error
+        Condition=" !Exists('$(_OpenJDKInstallDir)\bin\java') And !Exists('$(_OpenJDKInstallDir)\bin\java.exe') "
+        Text="JDK installation is missing bin\java in $(_OpenJDKInstallDir)"
+    />
+    <Error
+        Condition=" !Exists('$(_OpenJDKInstallDir)\include\jni.h') "
+        Text="JDK installation is missing include\jni.h in $(_OpenJDKInstallDir)"
+    />
+    <WriteLinesToFile
+        File="$(_OpenJDKVersionFile)"
+        Lines="$(MicrosoftOpenJDKVersion)"
+        Overwrite="true"
+    />
+  </Target>
+
+  <Target Name="_CleanOpenJDK" BeforeTargets="Clean">
+    <RemoveDir Directories="$(_OpenJDKInstallDir)" />
+    <Delete Files="$(_OpenJDKArchive);$(_OpenJDKHashFile)" />
+  </Target>
+
+</Project>

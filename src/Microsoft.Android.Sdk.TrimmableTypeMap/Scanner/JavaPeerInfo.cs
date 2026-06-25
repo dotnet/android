@@ -44,6 +44,16 @@ public sealed record JavaPeerInfo
 	public required string AssemblyName { get; init; }
 
 	/// <summary>
+	/// True when the type belongs to a framework assembly.
+	/// </summary>
+	public bool IsFrameworkAssembly { get; init; }
+
+	/// <summary>
+	/// True when per-rank array typemap entries should be generated for this peer.
+	/// </summary>
+	public bool GenerateArrayEntries { get; set; } = true;
+
+	/// <summary>
 	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
 	/// that extends Activity. Null for java/lang/Object or types without a Java base.
 	/// Needed by JCW Java source generation ("extends" clause).
@@ -190,7 +200,7 @@ public sealed record MarshalMethodInfo
 
 	/// <summary>
 	/// The native callback method name, e.g., "n_onCreate".
-	/// This is the actual method the UCO wrapper delegates to.
+	/// This is the Java/JNI-visible native method name that the generated JCW calls.
 	/// </summary>
 	public required string NativeCallbackName { get; init; }
 
@@ -225,15 +235,32 @@ public sealed record MarshalMethodInfo
 	public string? SuperArgumentsString { get; init; }
 
 	/// <summary>
-	/// Managed method parameter type names, in declaration order.
+	/// Managed method parameter types, in declaration order.
 	/// </summary>
-	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
+	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
-	/// True when this constructor registration maps to an actual managed constructor on the target type.
-	/// False for constructors inherited from Java base types that only exist to generate Java source.
+	/// Per-parameter [ExportParameter] kinds for legacy callback marshalling.
 	/// </summary>
-	public bool HasManagedConstructor { get; init; }
+	internal IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
+	/// Managed return type, including the defining assembly.
+	/// </summary>
+	internal TypeRefData ManagedReturnType { get; init; } = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
+	/// <summary>
+	/// [ExportParameter] kind applied to the return value, if any.
+	/// </summary>
+	internal ExportParameterKindInfo ManagedReturnExportKind { get; init; }
+
+	/// <summary>
+	/// Whether the managed target method is static.
+	/// </summary>
+	public bool IsStatic { get; init; }
 
 	/// <summary>
 	/// True if this method was collected from an implemented interface
@@ -280,14 +307,14 @@ public sealed record JavaConstructorInfo
 	public string? SuperArgumentsString { get; init; }
 
 	/// <summary>
-	/// Managed constructor parameter type names, in declaration order.
+	/// Managed constructor parameter types, in declaration order.
 	/// </summary>
-	public IReadOnlyList<string> ManagedParameterTypes { get; init; } = [];
+	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
-	/// True when this Java constructor has a matching managed constructor on the target type.
+	/// True when this Java constructor has a matching public managed constructor on the target type.
 	/// </summary>
-	public bool HasManagedConstructor { get; init; }
+	public bool HasMatchingManagedCtor { get; init; }
 }
 
 /// <summary>

@@ -3,7 +3,6 @@
   <assembly fullname="Mono.Android">
     <type fullname="Android.Runtime.JavaProxyThrowable" preserve="all" />
     <type fullname="Android.Runtime.AndroidEnvironment" preserve="all" />
-    <type fullname="Xamarin.Android.Net.AndroidClientHandler" preserve="all" />
     <type fullname="Xamarin.Android.Net.AndroidMessageHandler" preserve="all" />
   </assembly>
   <assembly fullname="System.Private.CoreLib">

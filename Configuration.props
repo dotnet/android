@@ -22,11 +22,9 @@
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
-    <!-- The min API level supported by Microsoft.Android.Sdk. This applies to Mono-based runtimes,
-         both 32-bit and 64-bit. -->
-    <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
-    <!-- The min API level supported by non-Mono runtimes (CoreCLR/NativeAOT) -->
-    <AndroidMinimumNonMonoApiLevel Condition="'$(AndroidMinimumNonMonoApiLevel)' == ''">24</AndroidMinimumNonMonoApiLevel>
+    <!-- The min API level supported by Microsoft.Android.Sdk, for all runtimes (MonoVM, CoreCLR, NativeAOT).
+         Must match $(AndroidApiLevelMin) in dotnet/runtime's Directory.Build.props. -->
+    <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">24</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">37</AndroidLatestStableApiLevel>
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">37.0</AndroidLatestStablePlatformId>
@@ -108,23 +106,22 @@
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
     <AllSupported64BitTargetAndroidAbis>arm64-v8a;x86_64</AllSupported64BitTargetAndroidAbis>
     <AllSupportedTargetAndroidAbis>$(AllSupported32BitTargetAndroidAbis);$(AllSupported64BitTargetAndroidAbis)</AllSupportedTargetAndroidAbis>
-    <!--
-      For some reason, the URL for platform-tools/build-tools 32.0.0 is prefixed with what appears to be a GIT commit hash or some other checksum...
-      Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
-    -->
-    <XABuildToolsPackagePrefixMacOS></XABuildToolsPackagePrefixMacOS>
-    <XABuildToolsPackagePrefixWindows></XABuildToolsPackagePrefixWindows>
-    <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
-    <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
     <XABuildToolsVersion>36</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">36.0.0</XABuildToolsFolder>
+    <XABuildToolsHashMacOS>04E7F3A72044DE4926FA038FA0E251A37BBA1E1C3FB8BEAB6F8401BFD9EB4BF3</XABuildToolsHashMacOS>
+    <XABuildToolsHashLinux>5D9AC77FB6FF43D9DA518A337B4FCF8F9097113DF531D99CCEFE80EF7CE8250B</XABuildToolsHashLinux>
+    <XABuildToolsHashWindows>AA1095CB14D83E483818A748A2C06FAAEB8E601561B06A356A119A1B2CA280D3</XABuildToolsHashWindows>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>36.0.0</XAPlatformToolsVersion>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.18.3</XABundleToolVersion>
     <XABundleToolHash Condition="'$(XABundleToolHash)' == ''">A099CFA1543F55593BC2ED16A70A7C67FE54B1747BB7301F37FDFD6D91028E29</XABundleToolHash>
     <XABinutilsVersion Condition="'$(XABinutilsVersion)' == ''">L_18.1.6-8.0.0-1</XABinutilsVersion>
     <XABinutilsHash Condition="'$(XABinutilsHash)' == ''">5394EA6C411DA3A08BF0E6A87E1DD1B98BD2562B896C0CACD18E29E2FD4C0660</XABinutilsHash>
+    <!-- Microsoft OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download -->
+    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">21.0.8</MicrosoftOpenJDKVersion>
+    <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-21</MicrosoftOpenJDKFolder>
+    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-21.0.8+9</MicrosoftOpenJDKRootDirName>
+    <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>

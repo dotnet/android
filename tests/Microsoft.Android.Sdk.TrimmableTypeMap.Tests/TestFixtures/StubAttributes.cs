@@ -188,6 +188,23 @@ namespace Java.Interop
 		public ExportAttribute (string name) => Name = name;
 	}
 
+	public enum ExportParameterKind
+	{
+		Unspecified = 0,
+		InputStream = 1,
+		OutputStream = 2,
+		XmlPullParser = 3,
+		XmlResourceParser = 4,
+	}
+
+	[AttributeUsage (AttributeTargets.Parameter | AttributeTargets.ReturnValue, AllowMultiple = false)]
+	public sealed class ExportParameterAttribute : Attribute
+	{
+		public ExportParameterKind Kind { get; }
+
+		public ExportParameterAttribute (ExportParameterKind kind) => Kind = kind;
+	}
+
 	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
 	public sealed class ExportFieldAttribute : Attribute
 	{

@@ -98,34 +98,12 @@
         },
 
         {
-            "name": "nonmono-common-armeabi-v7a",
-            "hidden": true,
-            "cacheVariables": {
-                "ANDROID_ABI": "armeabi-v7a",
-                "ANDROID_NATIVE_API_LEVEL": "@NDK_ARMEABI_V7_NONMONO_API_NET@",
-                "ANDROID_PLATFORM": "android-@NDK_ARMEABI_V7_NONMONO_API_NET@",
-                "ANDROID_RID": "android-arm"
-            }
-        },
-
-        {
             "name": "common-arm64-v8a",
             "hidden": true,
             "cacheVariables": {
                 "ANDROID_ABI": "arm64-v8a",
                 "ANDROID_NATIVE_API_LEVEL": "@NDK_ARM64_V8A_API_NET@",
                 "ANDROID_PLATFORM": "android-@NDK_ARM64_V8A_API_NET@",
-                "ANDROID_RID": "android-arm64"
-            }
-        },
-
-        {
-            "name": "nonmono-common-arm64-v8a",
-            "hidden": true,
-            "cacheVariables": {
-                "ANDROID_ABI": "arm64-v8a",
-                "ANDROID_NATIVE_API_LEVEL": "@NDK_ARM64_V8A_NONMONO_API_NET@",
-                "ANDROID_PLATFORM": "android-@NDK_ARM64_V8A_NONMONO_API_NET@",
                 "ANDROID_RID": "android-arm64"
             }
         },
@@ -153,17 +131,6 @@
         },
 
         {
-            "name": "nonmono-common-x86_64",
-            "hidden": true,
-            "cacheVariables": {
-                "ANDROID_ABI": "x86_64",
-                "ANDROID_NATIVE_API_LEVEL": "@NDK_X86_64_NONMONO_API_NET@",
-                "ANDROID_PLATFORM": "android-@NDK_X86_64_NONMONO_API_NET@",
-                "ANDROID_RID": "android-x64"
-            }
-        },
-
-        {
             "name": "asan-common",
             "hidden": true,
             "cacheVariables": {
@@ -186,12 +153,12 @@
 
         {
             "name": "nativeaot-default-debug-armeabi-v7a",
-            "inherits": ["nativeaot-default-common", "common-debug", "nonmono-common-armeabi-v7a"]
+            "inherits": ["nativeaot-default-common", "common-debug", "common-armeabi-v7a"]
         },
 
         {
             "name": "coreclr-default-debug-armeabi-v7a",
-            "inherits": ["default-common", "common-debug", "nonmono-common-armeabi-v7a"]
+            "inherits": ["default-common", "common-debug", "common-armeabi-v7a"]
         },
 
         {
@@ -201,12 +168,12 @@
 
         {
             "name": "nativeaot-default-release-armeabi-v7a",
-            "inherits": ["nativeaot-default-common", "common-release", "nonmono-common-armeabi-v7a"]
+            "inherits": ["nativeaot-default-common", "common-release", "common-armeabi-v7a"]
         },
 
         {
             "name": "coreclr-default-release-armeabi-v7a",
-            "inherits": ["default-common", "common-release", "nonmono-common-armeabi-v7a"]
+            "inherits": ["default-common", "common-release", "common-armeabi-v7a"]
         },
 
         {
@@ -250,12 +217,12 @@
 
         {
             "name": "nativeaot-default-debug-arm64-v8a",
-            "inherits": ["nativeaot-default-common", "common-debug", "nonmono-common-arm64-v8a"]
+            "inherits": ["nativeaot-default-common", "common-debug", "common-arm64-v8a"]
         },
 
         {
             "name": "coreclr-default-debug-arm64-v8a",
-            "inherits": ["default-common", "common-debug", "nonmono-common-arm64-v8a"]
+            "inherits": ["default-common", "common-debug", "common-arm64-v8a"]
         },
 
         {
@@ -265,12 +232,12 @@
 
         {
             "name": "nativeaot-default-release-arm64-v8a",
-            "inherits": ["nativeaot-default-common", "common-release", "nonmono-common-arm64-v8a"]
+            "inherits": ["nativeaot-default-common", "common-release", "common-arm64-v8a"]
         },
 
         {
             "name": "coreclr-default-release-arm64-v8a",
-            "inherits": ["default-common", "common-release", "nonmono-common-arm64-v8a"]
+            "inherits": ["default-common", "common-release", "common-arm64-v8a"]
         },
 
         {
@@ -358,12 +325,12 @@
 
         {
             "name": "nativeaot-default-debug-x86_64",
-            "inherits": ["nativeaot-default-common", "common-debug", "nonmono-common-x86_64"]
+            "inherits": ["nativeaot-default-common", "common-debug", "common-x86_64"]
         },
 
         {
             "name": "coreclr-default-debug-x86_64",
-            "inherits": ["default-common", "common-debug", "nonmono-common-x86_64"]
+            "inherits": ["default-common", "common-debug", "common-x86_64"]
         },
 
         {
@@ -373,12 +340,12 @@
 
         {
             "name": "nativeaot-default-release-x86_64",
-            "inherits": ["nativeaot-default-common", "common-release", "nonmono-common-x86_64"]
+            "inherits": ["nativeaot-default-common", "common-release", "common-x86_64"]
         },
 
         {
             "name": "coreclr-default-release-x86_64",
-            "inherits": ["default-common", "common-release", "nonmono-common-x86_64"]
+            "inherits": ["default-common", "common-release", "common-x86_64"]
         },
 
         {

@@ -125,9 +125,6 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI },
 				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPILegacy32 },
 				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI },
-				{ "@NDK_ARMEABI_V7_NONMONO_API_NET@", BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
-				{ "@NDK_ARM64_V8A_NONMONO_API_NET@",  BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
-				{ "@NDK_X86_64_NONMONO_API_NET@",     BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
 				{ "@XA_BUILD_CONFIGURATION@",    context.Configuration },
 				{ "@XA_TEST_OUTPUT_DIR@", Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.TestOutputDirectory)) },
 			};
@@ -199,15 +196,10 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
 				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ().ToString () },
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ().ToString () },
-				{ "@NDK_ARMEABI_V7_NONMONO_API@", BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
-				{ "@NDK_ARM64_V8A_NONMONO_API@", BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
-				{ "@NDK_X86_64_NONMONO_API@",    BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
 				{ "@XA_SUPPORTED_ABIS@",         context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Replace (':', ';') },
 				{ "@SDK_BUILD_TOOLS_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.XABuildToolsFolder) },
 				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel)) },
 				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel)) },
-				{ "@ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumNonMonoApiLevel)) },
-				{ "@ANDROID_DEFAULT_MINIMUM_NONMONO_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumNonMonoApiLevel)) },
 				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel)) },
 				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel)) },
 				{ "@ANDROID_LATEST_STABLE_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel)) },
@@ -259,9 +251,6 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
 				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_ARM64_V8A_API_NON_MONO@",     BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
-				{ "@NDK_ARMEABI_V7_API_NON_MONO@",    BuildAndroidPlatforms.NdkMinimumNonMonoAPI },
-				{ "@NDK_X86_64_API_NON_MONO@",        BuildAndroidPlatforms.NdkMinimumNonMonoAPI  },
 			};
 
 			return new GeneratedPlaceholdersFile (

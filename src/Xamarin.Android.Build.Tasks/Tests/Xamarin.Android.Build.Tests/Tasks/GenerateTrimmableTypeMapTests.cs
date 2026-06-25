@@ -110,6 +110,71 @@ namespace Xamarin.Android.Build.Tests {
 				"Typemap assembly should NOT be rewritten when content hasn't changed.");
 		}
 
+		[Test]
+		public void Execute_WritesGeneratedAssembliesListFile ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+			var listFile = Path.Combine (outputDir, "typemap-assemblies.txt");
+			var staleAssembly = Path.Combine (outputDir, "_Stale.TypeMap.dll");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			Directory.CreateDirectory (outputDir);
+			File.WriteAllText (staleAssembly, "stale");
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
+			task.GeneratedAssembliesListFile = listFile;
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+
+			var generatedAssemblies = task.GeneratedAssemblies.Select (i => i.ItemSpec).ToArray ();
+			var listedAssemblies = File.ReadAllLines (listFile);
+			CollectionAssert.AreEqual (generatedAssemblies, listedAssemblies);
+			CollectionAssert.DoesNotContain (listedAssemblies, staleAssembly);
+		}
+
+		[Test]
+		public void Execute_GeneratesFrameworkJcws ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var task = CreateTask (new [] { monoAndroidItem }, outputDir, javaDir);
+			task.ResolvedFrameworkAssemblies = new [] { monoAndroidItem };
+
+			Assert.IsTrue (task.Execute (), "Task should succeed.");
+
+			var generatedJavaFiles = task.GeneratedJavaFiles.Select (i => i.ItemSpec).ToArray ();
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "android/runtime/JavaProxyThrowable.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_TrustManager.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_TrustManager_FakeSSLSession.java"));
+			CollectionAssert.Contains (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "xamarin/android/net/ServerCertificateCustomValidator_AlwaysAcceptingHostnameVerifier.java"));
+			CollectionAssert.DoesNotContain (
+				generatedJavaFiles,
+				Path.Combine (javaDir, "android/app/Activity.java"));
+		}
+
 		[TestCase ("v11.0")]
 		[TestCase ("v10.0")]
 		[TestCase ("11.0")]
@@ -159,7 +224,7 @@ namespace Xamarin.Android.Build.Tests {
 			task.ApplicationRegistrationOutputFile = applicationRegistration;
 			task.PackageName = "android.app";
 			task.AndroidApiLevel = "35";
-			task.SupportedOSPlatformVersion = "21";
+			task.SupportedOSPlatformVersion = "24";
 			task.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
 			task.ManifestPlaceholders = "applicationId=android.app";
 

@@ -618,7 +618,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				SupportedOSPlatformVersion = "23",
+				SupportedOSPlatformVersion = "24",
 			};
 			proj.SetRuntime (runtime);
 
@@ -934,9 +934,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				Sources = {
 					new BuildItem.Source ("SomeClass.cs") {
 						TextContent = () => "namespace Library1 { public class SomeClass { } }"
-					},
-					new BuildItem.Source ("NonPreserved.cs") {
-						TextContent = () => "namespace Library1 { public class NonPreserved { } }"
 					},
 					new BuildItem.Source ("LinkerClass.cs") {
 						TextContent = () => @"
@@ -1945,10 +1942,9 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 
-			// Note: To properly test, Desugaring must be *enabled*, which requires that
-			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
-			// but set this explicitly anyway just so that this implicit requirement is explicit.
-			proj.SupportedOSPlatformVersion = "21";
+			// Note: To properly test, static interface default methods (Java 8+) must be compiled correctly.
+			// With $(SupportedOSPlatformVersion) >= 24, D8 handles them natively without desugaring.
+			proj.SupportedOSPlatformVersion = "24";
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine ($""# jonp static interface default method invocation; IStaticMethodsInterface.Value={Example.IStaticMethodsInterface.Value}"");
@@ -2443,10 +2439,13 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.IsTrue (dotnet.Build (target: "Install", parameters: buildParameters.ToArray ()), "`dotnet build -t:Install` should succeed");
 
 			// Run based on mode
-			var runParameters = buildParameters.Select (p => $"/p:{p}").ToArray ();
+			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
+			if (mode == "test")
+				runParameters.Add ("--report-trx");
+
 			using var process = mode == "run"
-				? dotnet.StartRun (waitForExit: true, parameters: runParameters)
-				: dotnet.StartTest (parameters: runParameters);
+				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
+				: dotnet.StartTest (parameters: runParameters.ToArray ());
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
@@ -2499,6 +2498,17 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				StringAssert.Contains ("succeeded: 1", outputText, $"Output should report 1 passed test. See {logPath} for details.");
 				StringAssert.Contains ("failed: 1", outputText, $"Output should report 1 failed test. See {logPath} for details.");
 				StringAssert.Contains ("skipped: 1", outputText, $"Output should report 1 skipped test. See {logPath} for details.");
+
+				// Verify that a TRX file was produced by --report-trx
+				var trxFiles = Directory.GetFiles (projectDirectory, "*.trx", SearchOption.AllDirectories);
+				Assert.IsTrue (trxFiles.Length > 0, $"Expected at least one .trx file in {projectDirectory}. See {logPath} for details.");
+
+				TestContext.AddTestAttachment (trxFiles [0]);
+
+				var trxDoc = XDocument.Load (trxFiles [0]);
+				var trxNs = trxDoc.Root?.Name.Namespace ?? XNamespace.None;
+				var resultSummary = trxDoc.Root?.Element (trxNs + "ResultSummary");
+				Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxFiles [0]}");
 			}
 		}
 

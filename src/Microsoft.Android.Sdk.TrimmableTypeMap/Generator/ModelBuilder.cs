@@ -16,13 +16,6 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
-	// Workaround for https://github.com/dotnet/runtime/issues/127004
-	// When true, all TypeMap entries are emitted as 2-arg (unconditional) to avoid the
-	// trimmer bug that strips TypeMapAssociation attributes when a TypeMap attribute
-	// references the same type. Set to false once the runtime bug is fixed to re-enable
-	// 3-arg conditional entries that allow unused framework bindings to be trimmed away.
-	const bool ForceUnconditionalEntries = true;
-
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -32,6 +25,9 @@ static class ModelBuilder
 		"java/lang/RuntimeException",
 		"java/lang/Error",
 		"java/lang/Thread",
+		// Queried during NativeAOT JavaInteropRuntime.init before user code can
+		// reference the managed interface, so the managed→JNI mapping must survive.
+		"java/lang/Thread$UncaughtExceptionHandler",
 	};
 
 	/// <summary>
@@ -189,13 +185,7 @@ static class ModelBuilder
 		}
 
 		// Base JNI name entry → alias holder (self-referencing trim target, kept alive by associations)
-		// When ForceUnconditionalEntries is true we MUST emit this as 2-arg (unconditional) just
-		// like BuildEntry does: dotnet/runtime#127004 strips the TypeMapAssociation that keeps the
-		// holder alive when a TypeMap entry references the same type, leaving the dictionary key
-		// missing at runtime and breaking hierarchy lookups for essential types like
-		// java/lang/String and java/lang/Object.
-		bool aliasBaseUnconditional = ForceUnconditionalEntries
-			|| EssentialRuntimeTypes.Contains (jniName)
+		bool aliasBaseUnconditional = EssentialRuntimeTypes.Contains (jniName)
 			|| peersForName.Any (IsUnconditionalEntry);
 		model.Entries.Add (new TypeMapAttributeData {
 			JniName = jniName,
@@ -239,7 +229,7 @@ static class ModelBuilder
 
 		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
 		// because Android can instantiate them from Java at any time.
-		if (!peer.DoNotGenerateAcw && !peer.IsInterface) {
+		if (!peer.IsFrameworkAssembly && !peer.DoNotGenerateAcw && !peer.IsInterface) {
 			return true;
 		}
 
@@ -298,6 +288,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 
 		if (peer.InvokerTypeName != null) {
@@ -346,6 +337,14 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				ExportMethodDispatch = mm.IsExport ? new ExportMethodDispatchData {
+					ManagedMethodName = mm.ManagedMethodName,
+					ParameterTypes = mm.ManagedParameterTypes,
+					ParameterKinds = mm.ManagedParameterExportKinds,
+					ReturnType = mm.ManagedReturnType,
+					ReturnKind = mm.ManagedReturnExportKind,
+					IsStatic = mm.IsStatic,
+				} : null,
 			});
 			ucoIndex++;
 		}
@@ -357,7 +356,18 @@ static class ModelBuilder
 			return;
 		}
 
+		// Abstract types are never directly instantiated from Java — the ACW
+		// constructor's getClass() guard prevents activation. Skip generating
+		// UCO constructor wrappers for them.
+		if (peer.IsAbstract) {
+			return;
+		}
+
 		foreach (var ctor in peer.JavaConstructors) {
+			if (ctor.SuperArgumentsString != null && !ctor.HasMatchingManagedCtor) {
+				throw new InvalidOperationException (
+					$"Trimmable typemap cannot generate Java constructor wrapper '{ctor.JniSignature}' for '{peer.ManagedTypeName}' because no matching user-visible managed constructor was found.");
+			}
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
@@ -366,7 +376,7 @@ static class ModelBuilder
 					AssemblyName = peer.AssemblyName,
 				},
 				ManagedParameterTypes = ctor.ManagedParameterTypes,
-				HasManagedConstructor = ctor.HasManagedConstructor,
+				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 			});
 		}
 	}
@@ -406,9 +416,7 @@ static class ModelBuilder
 			proxyRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
 		}
 
-		// When ForceUnconditionalEntries is true, always emit 2-arg (unconditional) TypeMap
-		// attributes to work around https://github.com/dotnet/runtime/issues/127004.
-		bool isUnconditional = ForceUnconditionalEntries || IsUnconditionalEntry (peer);
+		bool isUnconditional = IsUnconditionalEntry (peer);
 		string? targetRef = null;
 		if (!isUnconditional) {
 			targetRef = AssemblyQualify (peer.ManagedTypeName, peer.AssemblyName);
@@ -440,6 +448,9 @@ static class ModelBuilder
 		}
 
 		var peer = peersForName [0];
+		if (!peer.GenerateArrayEntries) {
+			return;
+		}
 		if (peer.IsGenericDefinition) {
 			return;
 		}

@@ -601,58 +601,9 @@ The default value is `true`. When set to `false`, disables the generation of `Re
 
 ## AndroidHttpClientHandlerType
 
-Controls the default
-`System.Net.Http.HttpMessageHandler` implementation which will be used by
-the `System.Net.Http.HttpClient` default constructor. The value is an
-assembly-qualified type name of an `HttpMessageHandler` subclass, suitable
-for use with
-[`System.Type.GetType(string)`](/dotnet/api/system.type.gettype#System_Type_GetType_System_String_).
-
-In .NET 6 and newer, this property has effect only when used together
-with [`$(UseNativeHttpHandler)=true`][feature-switches].
-The most common values for this property are:
-
-- `Xamarin.Android.Net.AndroidMessageHandler`: Use the Android Java APIs
-  to perform HTTP requests. It is similar to the legacy
-  `Xamarin.Android.Net.AndroidClientHandler` with several improvements.
-  It supports HTTP 1.1 and TLS 1.2. It is the default HTTP message handler.
-
-- `System.Net.Http.SocketsHttpHandler, System.Net.Http`: The default message
-  handler in .NET. It supports HTTP/2, TLS 1.2, and it is the recommended
-  HTTP message handler to use with [Grpc.Net.Client](https://www.nuget.org/packages/Grpc.Net.Client).
-  This value is equivalent to `$(UseNativeHttpHandler)=false`.
-
-- Unset/the empty string, which is equivalent to
-  `System.Net.Http.HttpClientHandler, System.Net.Http`
-
-  Corresponds to the **Default** option in the Visual Studio
-  property pages.
-
-  The new project wizard selects this option for new projects when the
-  **Minimum Android Version** is configured to **Android 4.4.87** or
-  lower in Visual Studio or when **Target Platforms** is set to **Modern
-  Development** or **Maximum Compatibility** in Visual Studio for Mac.
-
-- `System.Net.Http.HttpClientHandler, System.Net.Http`: Use the managed
-  `HttpMessageHandler`.
-
-  Corresponds to the **Managed** option in the Visual Studio
-  property pages.
-
 > [!NOTE]
-> In .NET 6, the type you specify must not be
-> `Xamarin.Android.Net.AndroidClientHandler` or `System.Net.Http.HttpClientHandler`
-> or inherit from either of these classes. If you are migrating from
-> "classic" Xamarin.Android, use `AndroidMessageHandler` or derive your
-> custom handler from it instead.
-
-> [!NOTE]
-> Support for the `$(AndroidHttpClientHandlerType)` property works by setting the
-> [`XA_HTTP_CLIENT_HANDLER_TYPE` environment variable](/xamarin/android/deploy-test/environment).
-> A `$XA_HTTP_CLIENT_HANDLER_TYPE` value found in a file
-> with a Build action of
-> [`@(AndroidEnvironment)`](build-items.md#androidenvironment)
-> will take precedence.
+> This property is not supported in .NET 11. Remove it from your project file
+> and use `UseNativeHttpHandler` instead.
 
 ## AndroidIgnoreAllJniPreload
 

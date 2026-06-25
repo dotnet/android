@@ -167,7 +167,7 @@ namespace Java.Interop
 			return GetCallbackPrep (type, parameter_kind, arg);
 		}
 	
-		public CodeExpression CleanupCallback (CodeExpression arg, CodeExpression orgArg)
+		public CodeItem CleanupCallback (CodeExpression arg, CodeExpression orgArg)
 		{
 			return GetCallbackCleanup (type, arg, orgArg);
 		}
@@ -190,7 +190,7 @@ namespace Java.Interop
 			// ArraySymbol:
 			//	return new string[] { String.Format ("{0}[] {1} = ({0}[]) JNIEnv.GetArray ({2}, JniHandleOwnership.DoNotTransfer, typeof ({3}));", ElementType, var_name, SymbolTable.GetNativeName (var_name), sym.FullName) };
 			case SymbolKind.Array:
-				return new CodeMethodCall (jnienv_getarray, arg, do_not_transfer_literal, new CodeLiteral (type)).CastTo (type);
+				return new CodeMethodCall (jnienv_getarray.MakeGenericMethod (type.GetElementType ()), arg).CastTo (type);
 
 			// CharSequenceSymbol:
 			//	return new string[] { String.Format ("Java.Lang.ICharSequence {0} = Java.Lang.Object.GetObject<Java.Lang.ICharSequence> ({1}, JniHandleOwnership.DoNotTransfer);", var_name, SymbolTable.GetNativeName (var_name)) };
@@ -239,7 +239,7 @@ namespace Java.Interop
 			return arg;
 		}
 		
-		public static CodeExpression GetCallbackCleanup (Type type, CodeExpression arg, CodeExpression orgArg)
+		public static CodeItem GetCallbackCleanup (Type type, CodeExpression arg, CodeExpression orgArg)
 		{
 			switch (GetKind (type)) {
 			// ArraySymbol:
@@ -249,13 +249,14 @@ namespace Java.Interop
 			//	return result;
 			case SymbolKind.Array:
 				MethodInfo copyArrayMethod;
-				switch (Type.GetTypeCode (type)) {
+				Type elementType = type.GetElementType ();
+				switch (Type.GetTypeCode (elementType)) {
 				case TypeCode.Empty:
 				case TypeCode.DBNull:
 					throw new NotSupportedException ("Only primitive types and IJavaObject is supported in array type in callback method parameter or return value");
 				case TypeCode.Object:
-					if (typeof (IJavaObject).IsAssignableFrom (type))
-						copyArrayMethod = typeof (JNIEnv).GetMethod ("CopyArray", new Type [] { typeof (IJavaObject), typeof (IntPtr) });
+					if (typeof (IJavaObject).IsAssignableFrom (elementType))
+						copyArrayMethod = typeof (JNIEnv).GetMethod ("CopyArray", new Type [] { typeof (IJavaObject[]), typeof (IntPtr) });
 					else
 						goto case TypeCode.Empty;
 					break;
@@ -263,7 +264,13 @@ namespace Java.Interop
 					copyArrayMethod = typeof (JNIEnv).GetMethod ("CopyArray", new Type [] { type, typeof (IntPtr) });
 					break;
 				}
-				return new CodeWhen (arg.IsNull, arg, new CodeMethodCall (copyArrayMethod, arg, orgArg));
+				if (copyArrayMethod == null)
+					throw new NotSupportedException ($"JNIEnv.CopyArray does not support array type '{type}'.");
+				CodeBlock copyArrayBlock = new CodeBlock ();
+				copyArrayBlock.Add (new CodeMethodCall (copyArrayMethod, arg, orgArg));
+				return new CodeIf (CodeExpression.Not (arg.IsNull)) {
+					TrueBlock = copyArrayBlock,
+				};
 			
 			// CharSequenceSymbol:
 			// 	return new string[] { String.Format ("Java.Lang.ICharSequence {0} = Java.Lang.Object.GetObject<Java.Lang.ICharSequence> ({1}, JniHandleOwnership.DoNotTransfer);", var_name, SymbolTable.GetNativeName (var_name)) };
@@ -711,10 +718,12 @@ namespace Java.Interop
 			//		sw.WriteLine ("{0}\t{1} {2};", indent, Parameters.HasCleanup ? RetVal.NativeType + " __ret =" : "return", RetVal.ToNative (opt, call));
 			var callArgs = new List<CodeExpression> ();
 			for (int i = 0; i < parameter_type_infos.Count; i++) {
-				if (parameter_type_infos [i].NeedsPrep)
-					callArgs.Add (parameter_type_infos [i].PrepareCallback (mgen.GetArg (i + 2)));
-				else
+				if (parameter_type_infos [i].NeedsPrep) {
+					var preparedArg = parameter_type_infos [i].PrepareCallback (mgen.GetArg (i + 2));
+					callArgs.Add (builder.DeclareVariable (method.GetParameters () [i].ParameterType, preparedArg));
+				} else {
 					callArgs.Add (parameter_type_infos [i].FromNative (mgen.GetArg (i + 2)));
+				}
 			}
 			CodeMethodCall call;
 			if (method.IsStatic)
@@ -740,7 +749,7 @@ namespace Java.Interop
 			//	sw.WriteLine ("{0}\t{1}", indent, cleanup);
 			var callbackCleanup = new List<CodeStatement> ();
 			for (int i = 0; i < parameter_type_infos.Count; i++)
-				builder.CurrentBlock.Add (parameter_type_infos [i].CleanupCallback (callArgs [i], mgen.GetArg (i)));
+				builder.CurrentBlock.Add (parameter_type_infos [i].CleanupCallback (callArgs [i], mgen.GetArg (i + 2)));
 
 			//if (!IsVoid && Parameters.HasCleanup)
 			//	sw.WriteLine ("{0}\treturn __ret;", indent);

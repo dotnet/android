@@ -59,6 +59,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 - One issue per inline comment.
 - If the same issue appears many times, flag it once listing all affected files.
 - Don't flag what CI catches (compiler errors, linter issues).
-- Avoid false positives — verify concerns given the full file context.
+- Avoid false positives — verify concerns given the full file context and project configuration (TargetFramework, references, available APIs).
 - **Never submit an APPROVE event.** Use COMMENT for clean PRs and REQUEST_CHANGES when issues are found.
 - Prioritize: bugs > safety > performance > missing tests > duplication > consistency > documentation.
+- **Post suggestions as inline comments, not just in the summary.** If a suggestion can't be posted inline, omit it.

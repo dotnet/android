@@ -69,7 +69,6 @@ namespace Xamarin.Android.Tasks
 		public string? AndroidAotMode { get; set; }
 		public bool AndroidAotEnableLazyLoad { get; set; }
 		public bool EnableLLVM { get; set; }
-		public string? HttpClientHandlerType { get; set; }
 		public string? TlsProvider { get; set; }
 		public string? AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
@@ -85,10 +84,9 @@ namespace Xamarin.Android.Tasks
 
 		AndroidRuntime androidRuntime;
 
-		internal static void AddDefaultEnvironmentVariables (EnvironmentBuilder envBuilder, string? httpClientHandlerType, bool enableSGenConcurrent)
+		internal static void AddDefaultEnvironmentVariables (EnvironmentBuilder envBuilder, bool enableSGenConcurrent)
 		{
 			envBuilder.AddDefaultMonoDebug ();
-			envBuilder.AddHttpClientHandlerType (httpClientHandlerType);
 			envBuilder.AddMonoGcParams (enableSGenConcurrent);
 		}
 
@@ -121,7 +119,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (androidRuntime != Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
-				AddDefaultEnvironmentVariables (envBuilder, HttpClientHandlerType, EnableSGenConcurrent);
+				AddDefaultEnvironmentVariables (envBuilder, EnableSGenConcurrent);
 			} else {
 				// NativeAOT sets all the environment variables from Java, we don't want to repeat that
 				// process in the native code. This is just a precaution, because NativeAOT builds should
@@ -179,8 +177,17 @@ namespace Xamarin.Android.Tasks
 				}
 			};
 
+			static bool ShouldSkipAssembly (ITaskItem assembly)
+			{
+				return assembly.GetMetadataOrDefault ("AndroidSkipAddToPackage", false);
+			}
+
 			if (SatelliteAssemblies != null) {
 				foreach (ITaskItem assembly in SatelliteAssemblies) {
+					if (ShouldSkipAssembly (assembly)) {
+						continue;
+					}
+
 					updateNameWidth (assembly);
 					updateAssemblyCount (assembly);
 				}
@@ -190,6 +197,10 @@ namespace Xamarin.Android.Tasks
 			int jnienv_initialize_method_token = -1;
 			int jnienv_registerjninatives_method_token = -1;
 			foreach (var assembly in ResolvedAssemblies) {
+				if (ShouldSkipAssembly (assembly)) {
+					continue;
+				}
+
 				updateNameWidth (assembly);
 				updateAssemblyCount (assembly);
 

@@ -1,5 +1,5 @@
 //
-// HttpClientHandlerTest.cs
+// HttpClientHandlerTestBase.cs
 //
 // Authors:
 //	Marek Safar  <marek.safar@gmail.com>
@@ -27,25 +27,24 @@
 //
 
 using System;
-using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
+using Android.OS;
+
 using NUnit.Framework;
 
-using Android.OS;
-using Xamarin.Android.Net;
-
 namespace Xamarin.Android.NetTests {
-	[Category("InetAccess")]
+	[Category ("InetAccess")]
 	[Category ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
 	public abstract class HttpClientHandlerTestBase
 	{
@@ -151,10 +150,8 @@ namespace Xamarin.Android.NetTests {
 
 			return false;
 		}
-
 	}
 
-	[Category ("AndroidClientHandler")]
 	public abstract class AndroidHandlerTestBase : HttpClientHandlerTestBase
 	{
 		static IEnumerable<Exception> Exceptions (Exception e)
@@ -173,28 +170,28 @@ namespace Xamarin.Android.NetTests {
 		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Tests private fields are preserved by other means")]
 		static Type GetInnerHandlerType (HttpClient httpClient)
 		{
-			BindingFlags bflasgs = BindingFlags.Instance | BindingFlags.NonPublic;
-			FieldInfo handlerField = typeof (HttpMessageInvoker).GetField("_handler", bflasgs);
+			BindingFlags bflags = BindingFlags.Instance | BindingFlags.NonPublic;
+			FieldInfo handlerField = typeof (HttpMessageInvoker).GetField ("_handler", bflags);
 			Assert.IsNotNull (handlerField);
 			object handler = handlerField.GetValue (httpClient);
-			FieldInfo innerHandlerField = handler.GetType ().GetField ("_delegatingHandler", bflasgs);
+			FieldInfo innerHandlerField = handler.GetType ().GetField ("_delegatingHandler", bflags);
 			Assert.IsNotNull (handlerField);
 			object innerHandler = innerHandlerField.GetValue (handler);
 			return innerHandler.GetType ();
 		}
 
 		[Test]
-		public void Cancel_Client_Works()
+		public void Cancel_Client_Works ()
 		{
 			var cts = new CancellationTokenSource ();
 			cts.Cancel (); //Cancel immediately
-			using (var c = new HttpClient (CreateHandler())) {
+			using (var c = new HttpClient (CreateHandler ())) {
 				var tr = ConnectIgnoreFailure (() => c.GetAsync ("http://10.255.255.1", cts.Token), out bool connectionFailed);
 				if (connectionFailed)
 					return;
 
 				try {
-					RunIgnoringNetworkIssues (() => tr.Wait(), out connectionFailed);
+					RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
 					if (connectionFailed)
 						return;
 
@@ -208,10 +205,10 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		public void Token_Timeout_Works()
+		public void Token_Timeout_Works ()
 		{
 			var cts = new CancellationTokenSource (2000); //Cancel after 2000ms through token
-			using (var c = new HttpClient (CreateHandler())){
+			using (var c = new HttpClient (CreateHandler ())) {
 				var tr = ConnectIgnoreFailure (() => c.GetAsync ("http://10.255.255.1", cts.Token), out bool connectionFailed);
 				if (connectionFailed)
 					return;
@@ -224,14 +221,14 @@ namespace Xamarin.Android.NetTests {
 					Assert.Fail ("SHOULD NOT HAPPEN: Request is expected to cancel");
 				}
 				catch (AggregateException ex) {
-					Assert.IsTrue (ex.InnerExceptions.Any(ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
+					Assert.IsTrue (ex.InnerExceptions.Any (ie => ie is System.OperationCanceledException), "Request did not throw cancellation exception; threw: {0}", ex);
 					Assert.IsTrue (cts.IsCancellationRequested, "The request was canceled before cancellation was requested");
 				}
 			}
 		}
 
 		[Test]
-		public void Property_Timeout_Works()
+		public void Property_Timeout_Works ()
 		{
 			using (var c = new HttpClient (CreateHandler ()))
 			{
@@ -255,7 +252,7 @@ namespace Xamarin.Android.NetTests {
 		}
 
 		[Test]
-		public void Redirect_Without_Protocol_Works()
+		public void Redirect_Without_Protocol_Works ()
 		{
 			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/dotnet/android");
 			var redirectedURI = new Uri ("https://github.com/dotnet/android");
@@ -267,7 +264,7 @@ namespace Xamarin.Android.NetTests {
 				RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
 				if (connectionFailed)
 					return;
-				
+
 				EnsureSuccessStatusCode (tr.Result);
 				Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
 			}
@@ -280,8 +277,8 @@ namespace Xamarin.Android.NetTests {
 			var redirectedURI = new Uri ("https://github.com/dotnet/android");
 			using (var c = new HttpClient (CreateHandler ())) {
 				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
-				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-				var t = ConnectIgnoreFailure (() => c.SendAsync(request), out bool connectionFailed);
+				request.Content = new StringContent ("{}", Encoding.UTF8, "application/json");
+				var t = ConnectIgnoreFailure (() => c.SendAsync (request), out bool connectionFailed);
 				if (connectionFailed)
 					return;
 
@@ -320,70 +317,6 @@ namespace Xamarin.Android.NetTests {
 			}
 
 			return false;
-		}
-	}
-
-	[TestFixture]
-	[Category ("AndroidClientHandler")]
-	public class AndroidClientHandlerTests : AndroidHandlerTestBase
-	{
-		protected override HttpMessageHandler CreateHandler ()
-		{
-			return new AndroidClientHandler ();
-		}
-
-		[Test]
-		public void Properties_Defaults ()
-		{
-			var h = new AndroidClientHandler ();
-
-			Assert.IsTrue (h.AllowAutoRedirect, "#1");
-			Assert.AreEqual (DecompressionMethods.None, h.AutomaticDecompression, "#2");
-			Assert.AreEqual (0, h.CookieContainer.Count, "#3");
-			Assert.AreEqual (4096, h.CookieContainer.MaxCookieSize, "#3b");
-			Assert.AreEqual (null, h.Credentials, "#4");
-			Assert.AreEqual (50, h.MaxAutomaticRedirections, "#5");
-			Assert.IsFalse (h.PreAuthenticate, "#7");
-			Assert.IsNull (h.Proxy, "#8");
-			Assert.IsTrue (h.SupportsAutomaticDecompression, "#9");
-			Assert.IsTrue (h.SupportsProxy, "#10");
-			Assert.IsTrue (h.SupportsRedirectConfiguration, "#11");
-			Assert.IsTrue (h.UseCookies, "#12");
-			Assert.IsFalse (h.UseDefaultCredentials, "#13");
-			Assert.IsTrue (h.UseProxy, "#14");
-			Assert.AreEqual (ClientCertificateOption.Manual, h.ClientCertificateOptions, "#15");
-			Assert.IsNull (h.ServerCertificateCustomValidationCallback, "#16");
-		}
-
-		[Test]
-		public void Properties_Invalid ()
-		{
-			var h = new AndroidClientHandler ();
-
-			try {
-				h.MaxAutomaticRedirections = 0;
-				Assert.Fail ("#1");
-			} catch (ArgumentOutOfRangeException) {
-			}
-
-			try {
-				h.MaxRequestContentBufferSize = -1;
-				Assert.Fail ("#2");
-			} catch (ArgumentOutOfRangeException) {
-			}
-		}
-
-		[Test]
-		public void Properties_AfterClientCreation ()
-		{
-			var h = new AndroidClientHandler ();
-
-			h.AllowAutoRedirect = true;
-
-			// We may modify properties after creating the HttpClient.
-			using (var c = new HttpClient (h, true)) {
-				h.AllowAutoRedirect = false;
-			}
 		}
 	}
 }

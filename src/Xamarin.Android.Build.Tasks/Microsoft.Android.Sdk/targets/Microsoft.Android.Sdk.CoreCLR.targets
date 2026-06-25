@@ -30,6 +30,10 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
         Value="true"
         Trim="true"
     />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime"
+        Value="false"
+        Trim="true"
+    />
   </ItemGroup>
 
   <Target Name="_CLRUseLocalRuntimePacks" AfterTargets="ResolveFrameworkReferences"

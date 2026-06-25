@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 					"https://api.nuget.org/v3/index.json",
 				},
 				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.3.1.1" },
+					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.7.1.3" },
 					// Using * here, so we explicitly get newer packages
 					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
 					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
@@ -165,7 +165,7 @@ namespace Xamarin.Android.Build.Tests
 			var manifest = XDocument.Load (manifestPath);
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
-			Assert.AreEqual ("21", uses_sdk.Attribute (ns + "minSdkVersion").Value);
+			Assert.AreEqual ("24", uses_sdk.Attribute (ns + "minSdkVersion").Value);
 			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
@@ -244,7 +244,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (MonoComponentMaskChecks))]
 		public void CheckMonoComponentsMask (bool enableProfiler, bool useInterpreter, bool debugBuild, uint expectedMask)
 		{
-			var proj = new XamarinFormsAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = !debugBuild,
 			};
 
