@@ -9,16 +9,16 @@ using Xamarin.Tools.Zip;
 
 namespace tmt
 {
-	class ApkManagedTypeResolver : ManagedTypeResolver
+	partial class ApkManagedTypeResolver : ManagedTypeResolver
 	{
 		const uint CompressedDataMagic = 0x535A4158; // 'XAZS', little-endian
 
 		// Zstd decompression entry points exported by libSystem.IO.Compression.Native (from the .NET runtime pack).
-		[DllImport ("System.IO.Compression.Native")]
-		static extern UIntPtr ZSTD_decompress (byte[] dst, UIntPtr dstCapacity, byte[] src, UIntPtr srcSize);
+		[LibraryImport ("System.IO.Compression.Native")]
+		private static unsafe partial UIntPtr ZSTD_decompress (byte* dst, UIntPtr dstCapacity, byte* src, UIntPtr srcSize);
 
-		[DllImport ("System.IO.Compression.Native")]
-		static extern uint ZSTD_isError (UIntPtr code);
+		[LibraryImport ("System.IO.Compression.Native")]
+		private static partial uint ZSTD_isError (UIntPtr code);
 
 		readonly Dictionary<string, ZipEntry>? individualAssemblies;
 		readonly Dictionary<string, AssemblyStoreAssembly>? blobAssemblies;
@@ -156,8 +156,14 @@ namespace tmt
 				reader.Read (sourceBytes, 0, inputLength);
 
 				assemblyBytes = Utilities.BytePool.Rent ((int)decompressedLength);
-				UIntPtr decodedResult = ZSTD_decompress (assemblyBytes, (UIntPtr)decompressedLength, sourceBytes, (UIntPtr)(uint)inputLength);
-				int decoded = ZSTD_isError (decodedResult) != 0 ? -1 : (int)(ulong)decodedResult;
+				int decoded;
+				unsafe {
+					fixed (byte* assemblyPtr = assemblyBytes)
+					fixed (byte* sourcePtr = sourceBytes) {
+						UIntPtr decodedResult = ZSTD_decompress (assemblyPtr, (UIntPtr)decompressedLength, sourcePtr, (UIntPtr)(uint)inputLength);
+						decoded = ZSTD_isError (decodedResult) != 0 ? -1 : (int)(ulong)decodedResult;
+					}
+				}
 				if (decoded != (int)decompressedLength) {
 					throw new InvalidOperationException ($"Failed to decompress Zstd data of {assemblyPath} (decoded: {decoded})");
 				}

@@ -11,6 +11,7 @@
     <OutputPath>../../bin/$(Configuration)/bin</OutputPath>
     <OutputType>Exe</OutputType>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
