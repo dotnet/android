@@ -1,37 +1,25 @@
 using System;
 using System.Buffers;
 using System.IO;
-using System.Runtime.InteropServices;
 
 using Xamarin.Tools.Zip;
 using Xamarin.Android.AssemblyStore;
+using ZstandardDecoder = System.IO.Compression.ZstandardDecoder;
 
 namespace Xamarin.Android.Tools.DecompressAssemblies
 {
-	partial class App
+	class App
 	{
 		const uint CompressedDataMagic = 0x535A4158; // 'XAZS', little-endian
-
-		// Zstd decompression entry points exported by libSystem.IO.Compression.Native (from the .NET runtime pack).
-		[LibraryImport ("System.IO.Compression.Native")]
-		private static unsafe partial UIntPtr ZSTD_decompress (byte* dst, UIntPtr dstCapacity, byte* src, UIntPtr srcSize);
-
-		[LibraryImport ("System.IO.Compression.Native")]
-		private static partial uint ZSTD_isError (UIntPtr code);
 
 		// Decompresses 'srcLength' bytes from 'src' into 'dst' (which must be 'dstLength' bytes long).
 		// Returns the number of bytes written, or -1 on failure.
 		static int ZstdDecompress (byte[] src, int srcLength, byte[] dst, int dstLength)
 		{
-			unsafe {
-				fixed (byte* dstPtr = dst)
-				fixed (byte* srcPtr = src) {
-					UIntPtr result = ZSTD_decompress (dstPtr, (UIntPtr) (uint) dstLength, srcPtr, (UIntPtr) (uint) srcLength);
-					if (ZSTD_isError (result) != 0)
-						return -1;
-					return (int) (ulong) result;
-				}
-			}
+			return ZstandardDecoder.TryDecompress (
+				src.AsSpan (0, srcLength),
+				dst.AsSpan (0, dstLength),
+				out int bytesWritten) ? bytesWritten : -1;
 		}
 
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;

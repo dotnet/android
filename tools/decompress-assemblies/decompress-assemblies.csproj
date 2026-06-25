@@ -4,14 +4,13 @@
     <Company>Microsoft Corporation</Company>
     <Copyright>2021 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>Xamarin.Android.Tools.DecompressAssemblies</RootNamespace>
     <AssemblyName>decompress-assemblies</AssemblyName>
     <OutputPath>../../bin/$(Configuration)/bin</OutputPath>
     <OutputType>Exe</OutputType>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
