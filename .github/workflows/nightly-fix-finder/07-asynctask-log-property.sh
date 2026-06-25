@@ -19,7 +19,7 @@ Swap the call to the matching thread-safe helper on `AsyncTask`:
 | `Log.LogMessage (...)`          | `LogMessage (...)`                   |
 | `Log.LogError (...)`            | `LogCodedError ("XA####", Properties.Resources.XA####, ...)` |
 | `Log.LogWarning (...)`          | `LogCodedWarning ("XA####", Properties.Resources.XA####, ...)` |
-| `Log.LogErrorFromException (e)` | `LogCodedError ("XA####", Properties.Resources.XA####, ...)` plus `LogErrorFromException (e)` (or rethrow) |
+| `Log.LogErrorFromException (e)` | `LogCodedError ("XA####", Properties.Resources.XA####, ..., e.Message)` -- fold the exception detail into the localized error, or `throw;` to propagate
 | `Log.LogDebugMessage (...)`     | `LogDebugMessage (...)`              |
 
 Error / warning messages MUST come from `Properties.Resources` (e.g.
@@ -42,6 +42,11 @@ GUIDANCE
 echo ""
 echo "## Scan Data"
 echo "### Files deriving from AsyncTask"
+echo "(Note: this regex matches DIRECT derivation only. Some tasks reach"
+echo " AsyncTask through an intermediate base -- e.g. Aapt2Compile / Aapt2Link"
+echo " extend \`Aapt2 : AsyncTask\` -- and are not enumerated here. That is"
+echo " acceptable for a one-fix-per-night sampler. The agent MUST still verify"
+echo " transitive AsyncTask derivation when reading the candidate file.)"
 ASYNC_FILES=$(grep -rlP ':\s*AsyncTask\b' \
     --include='*.cs' \
     --exclude-dir=obj --exclude-dir=bin \
