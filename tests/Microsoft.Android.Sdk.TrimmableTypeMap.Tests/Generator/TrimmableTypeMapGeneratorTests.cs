@@ -34,6 +34,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
+		public void LogUnresolvableJavaPeerSkippedWarning (string managedTypeName, string assemblyName, string unresolvedTypeName, string unresolvedAssemblyName, string unresolvedAssemblyPath) =>
+			warnings?.Add ($"Skipping Java peer '{managedTypeName}' from '{assemblyName}' because referenced type '{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 	}

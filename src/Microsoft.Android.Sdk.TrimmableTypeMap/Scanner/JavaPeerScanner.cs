@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -96,9 +97,12 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Phase 2: Scan all types and produce JavaPeerInfo records.
 	/// </summary>
 	public List<JavaPeerInfo> Scan (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
+		=> Scan (assemblies.Select (a => new AssemblyInput (a.Name, "", a.Reader)));
+
+	public List<JavaPeerInfo> Scan (IEnumerable<AssemblyInput> assemblies)
 	{
-		foreach (var (name, reader) in assemblies) {
-			var index = AssemblyIndex.Create (reader, name);
+		foreach (var assembly in assemblies) {
+			var index = AssemblyIndex.Create (assembly.Reader, assembly.Name, assembly.Path);
 			assemblyCache [index.AssemblyName] = index;
 		}
 
@@ -261,9 +265,23 @@ public sealed class JavaPeerScanner : IDisposable
 				}
 			}
 
+			if (!IsResolvableJavaPeerType (typeDef, index, out var unresolvedTypeName, out var unresolvedAssemblyName)) {
+				var unresolvedAssemblyPath = assemblyCache.TryGetValue (unresolvedAssemblyName, out var unresolvedAssemblyIndex)
+					? unresolvedAssemblyIndex.AssemblyPath
+					: "";
+				logger?.LogUnresolvableJavaPeerSkippedWarning (fullName, index.AssemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
+				continue;
+			}
+
+			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
+			if (isGenericDefinition &&
+			    frameworkAssemblyNames.Contains (index.AssemblyName) &&
+			    !IsSupportedFrameworkGenericPeer (fullName, index.AssemblyName)) {
+				continue;
+			}
+
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
-			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
 
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
@@ -325,6 +343,212 @@ public sealed class JavaPeerScanner : IDisposable
 			};
 
 			results [(fullName, index.AssemblyName)] = peer;
+		}
+	}
+
+	static bool IsSupportedFrameworkGenericPeer (string managedTypeName, string assemblyName)
+	{
+		if (!string.Equals (assemblyName, "Mono.Android", StringComparison.Ordinal)) {
+			return false;
+		}
+
+		return managedTypeName is
+			"Android.Runtime.JavaCollection`1" or
+			"Android.Runtime.JavaDictionary`2" or
+			"Android.Runtime.JavaList`1" or
+			"Android.Runtime.JavaSet`1";
+	}
+
+	bool IsResolvableJavaPeerType (
+		TypeDefinition typeDef,
+		AssemblyIndex index,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		var visited = new HashSet<(string AssemblyName, string TypeName)> ();
+		return IsResolvableTypeDefinition (typeDef, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+	}
+
+	bool IsResolvableTypeDefinition (
+		TypeDefinition typeDef,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, string TypeName)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		var typeName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
+		if (!visited.Add ((index.AssemblyName, typeName))) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		if (!IsResolvableTypeHandle (typeDef.BaseType, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+			return false;
+		}
+
+		foreach (var interfaceHandle in typeDef.GetInterfaceImplementations ()) {
+			var interfaceImplementation = index.Reader.GetInterfaceImplementation (interfaceHandle);
+			if (!IsResolvableTypeHandle (interfaceImplementation.Interface, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+				return false;
+			}
+		}
+
+		unresolvedTypeName = null;
+		unresolvedAssemblyName = null;
+		return true;
+	}
+
+	bool IsResolvableTypeHandle (
+		EntityHandle handle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, string TypeName)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		if (handle.IsNil) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		switch (handle.Kind) {
+		case HandleKind.TypeDefinition:
+			return IsResolvableTypeDefinition (index.Reader.GetTypeDefinition ((TypeDefinitionHandle) handle), index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		case HandleKind.TypeReference:
+			return IsResolvableTypeReference ((TypeReferenceHandle) handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		case HandleKind.TypeSpecification:
+			return IsResolvableTypeSpecification ((TypeSpecificationHandle) handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		default:
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+	}
+
+	bool IsResolvableTypeReference (
+		TypeReferenceHandle handle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, string TypeName)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		var (typeName, assemblyName) = ResolveTypeReference (handle, index);
+		if (!assemblyCache.TryGetValue (assemblyName, out var resolvedIndex)) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		if (resolvedIndex.TypesByFullName.TryGetValue (typeName, out var typeHandle)) {
+			return IsResolvableTypeDefinition (resolvedIndex.Reader.GetTypeDefinition (typeHandle), resolvedIndex, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		}
+
+		if (resolvedIndex.ExportedTypeNames.Contains (typeName)) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		unresolvedTypeName = typeName;
+		unresolvedAssemblyName = assemblyName;
+		return false;
+	}
+
+	bool IsResolvableTypeSpecification (
+		TypeSpecificationHandle handle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, string TypeName)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		var reader = index.Reader.GetBlobReader (index.Reader.GetTypeSpecification (handle).Signature);
+		return IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+	}
+
+	bool IsResolvableSignatureType (
+		ref BlobReader reader,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, string TypeName)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		if (reader.RemainingBytes == 0) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		var typeCode = reader.ReadByte ();
+		switch (typeCode) {
+		case 0x11:
+		case 0x12:
+			return IsResolvableTypeDefOrRefEncodedHandle (reader.ReadCompressedInteger (), index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		case 0x13:
+		case 0x1e:
+			reader.ReadCompressedInteger ();
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		case 0x1d:
+			return IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		case 0x14:
+			if (!IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+				return false;
+			}
+			SkipArrayShape (ref reader);
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		case 0x15:
+			reader.ReadByte ();
+			if (!IsResolvableTypeDefOrRefEncodedHandle (reader.ReadCompressedInteger (), index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+				return false;
+			}
+			int genericArgumentCount = reader.ReadCompressedInteger ();
+			for (int i = 0; i < genericArgumentCount; i++) {
+				if (!IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+					return false;
+				}
+			}
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		default:
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+	}
+
+	bool IsResolvableTypeDefOrRefEncodedHandle (
+		int encodedHandle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, string TypeName)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		int tag = encodedHandle & 0x3;
+		int row = encodedHandle >> 2;
+		EntityHandle handle = tag switch {
+			0 => MetadataTokens.TypeDefinitionHandle (row),
+			1 => MetadataTokens.TypeReferenceHandle (row),
+			2 => MetadataTokens.TypeSpecificationHandle (row),
+			_ => default,
+		};
+		return IsResolvableTypeHandle (handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+	}
+
+	static void SkipArrayShape (ref BlobReader reader)
+	{
+		reader.ReadCompressedInteger ();
+		int sizes = reader.ReadCompressedInteger ();
+		for (int i = 0; i < sizes; i++) {
+			reader.ReadCompressedInteger ();
+		}
+		int lowerBounds = reader.ReadCompressedInteger ();
+		for (int i = 0; i < lowerBounds; i++) {
+			reader.ReadCompressedSignedInteger ();
 		}
 	}
 

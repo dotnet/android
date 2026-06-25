@@ -221,6 +221,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4250](xa4250.md): Manifest-referenced type '{type}' was not found in any scanned assembly. It may be a framework type.
 + [XA4252](xa4252.md): Insecure HTTP Maven repository URL '{url}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.
 + [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
++ [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

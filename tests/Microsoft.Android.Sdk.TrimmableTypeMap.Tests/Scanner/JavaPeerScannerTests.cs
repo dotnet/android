@@ -88,6 +88,8 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		public void LogGeneratedJcwFilesInfo (int sourceCount) { }
 		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) { }
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) { }
+		public void LogUnresolvableJavaPeerSkippedWarning (string managedTypeName, string assemblyName, string unresolvedTypeName, string unresolvedAssemblyName, string unresolvedAssemblyPath) =>
+			errors.Add ($"XA4256: {managedTypeName} -> {unresolvedTypeName}, {unresolvedAssemblyName}, {unresolvedAssemblyPath}");
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			errors.Add ($"XA4251: {managedTypeName}");
 	}
