@@ -20,9 +20,14 @@ static class PropertyMapper
 		public string PropertyName { get; }
 		public string XmlAttributeName { get; }
 		public MappingKind Kind { get; }
-		public Func<int, string?>? EnumConverter { get; }
+		public Func<int, int, string?>? EnumConverter { get; }
 
 		public PropertyMapping (string propertyName, string xmlAttributeName, MappingKind kind = MappingKind.String, Func<int, string?>? enumConverter = null)
+			: this (propertyName, xmlAttributeName, kind, enumConverter is null ? null : (value, targetSdkVersion) => enumConverter (value))
+		{
+		}
+
+		public PropertyMapping (string propertyName, string xmlAttributeName, MappingKind kind, Func<int, int, string?>? enumConverter)
 		{
 			PropertyName = propertyName;
 			XmlAttributeName = xmlAttributeName;
@@ -88,11 +93,13 @@ static class PropertyMapper
 		new ("Icon", "icon"),
 		new ("RoundIcon", "roundIcon"),
 		new ("Theme", "theme"),
+		new ("NetworkSecurityConfig", "networkSecurityConfig"),
 		new ("AllowBackup", "allowBackup", MappingKind.Bool),
 		new ("SupportsRtl", "supportsRtl", MappingKind.Bool),
 		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
 		new ("LargeHeap", "largeHeap", MappingKind.Bool),
 		new ("Debuggable", "debuggable", MappingKind.Bool),
+		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
 		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
 	];
 
@@ -120,11 +127,12 @@ static class PropertyMapper
 		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
 		new ("LargeHeap", "largeHeap", MappingKind.Bool),
 		new ("Debuggable", "debuggable", MappingKind.Bool),
+		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
 		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
 		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
 	];
 
-	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false)
+	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false, int targetSdkVersion = 0)
 	{
 		foreach (var m in mappings) {
 			if (!properties.TryGetValue (m.PropertyName, out var value) || value is null) {
@@ -142,7 +150,7 @@ static class PropertyMapper
 				break;
 			case MappingKind.Enum when m.EnumConverter is not null:
 				int intValue = value switch { int i => i, long l => (int)l, short s => s, byte b => b, _ => 0 };
-				var strValue = m.EnumConverter (intValue);
+				var strValue = m.EnumConverter (intValue, targetSdkVersion);
 				if (strValue is not null) {
 					element.SetAttributeValue (AndroidNs + m.XmlAttributeName, strValue);
 				}
@@ -151,9 +159,9 @@ static class PropertyMapper
 		}
 	}
 
-	internal static void MapComponentProperties (XElement element, ComponentInfo component)
+	internal static void MapComponentProperties (XElement element, ComponentInfo component, int targetSdkVersion = 0)
 	{
-		ApplyMappings (element, component.Properties, CommonMappings);
+		ApplyMappings (element, component.Properties, CommonMappings, targetSdkVersion: targetSdkVersion);
 
 		var extra = component.Kind switch {
 			ComponentKind.Activity => ActivityMappings,
@@ -162,7 +170,7 @@ static class PropertyMapper
 			_ => null,
 		};
 		if (extra is not null) {
-			ApplyMappings (element, component.Properties, extra);
+			ApplyMappings (element, component.Properties, extra, targetSdkVersion: targetSdkVersion);
 		}
 
 		// Handle InitOrder for ContentProvider (int, not a standard mapping)

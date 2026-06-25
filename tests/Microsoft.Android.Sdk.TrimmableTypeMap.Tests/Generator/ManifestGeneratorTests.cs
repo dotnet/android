@@ -89,6 +89,7 @@ public class ManifestGeneratorTests
 				["Icon"] = "@drawable/icon",
 				["Theme"] = "@style/MyTheme",
 				["LaunchMode"] = 2, // singleTask
+				["ScreenOrientation"] = 7, // sensorPortrait
 			},
 		});
 
@@ -99,6 +100,7 @@ public class ManifestGeneratorTests
 		Assert.Equal ("@drawable/icon", (string?)activity?.Attribute (AndroidNs + "icon"));
 		Assert.Equal ("@style/MyTheme", (string?)activity?.Attribute (AndroidNs + "theme"));
 		Assert.Equal ("singleTask", (string?)activity?.Attribute (AndroidNs + "launchMode"));
+		Assert.Equal ("sensorPortrait", (string?)activity?.Attribute (AndroidNs + "screenOrientation"));
 	}
 
 	[Fact]
@@ -129,6 +131,35 @@ public class ManifestGeneratorTests
 		var data = filter?.Element ("data");
 		Assert.NotNull (data);
 		Assert.Equal ("text/plain", (string?)data?.Attribute (AndroidNs + "mimeType"));
+	}
+
+	[Fact]
+	public void Activity_IntentFilterPluralDataProperties ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/ShareActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			IntentFilters = [
+				new IntentFilterInfo {
+					Actions = ["action1"],
+					Properties = new Dictionary<string, object?> {
+						["DataPaths"] = new List<string> { "foo", "bar" },
+						["DataPathPatterns"] = new List<string> { "foo*", "bar*" },
+						["DataPathPrefixes"] = new List<string> { "foo", "bar" },
+						["DataHosts"] = new List<string> { "foo.com", "bar.com" },
+						["DataPorts"] = new List<string> { "10000", "20000" },
+						["DataSchemes"] = new List<string> { "http", "ftp" },
+						["DataMimeTypes"] = new List<string> { "text/html", "text/xml" },
+					},
+				},
+			],
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var filter = doc.Root?.Element ("application")?.Element ("activity")?.Element ("intent-filter");
+
+		Assert.NotNull (filter);
+		Assert.Equal (14, filter?.Elements ("data").Count ());
 	}
 
 	[Fact]
@@ -214,6 +245,8 @@ public class ManifestGeneratorTests
 				["Label"] = "Custom App",
 				["AllowBackup"] = false,
 				["LargeHeap"] = true,
+				["DirectBootAware"] = true,
+				["NetworkSecurityConfig"] = "@xml/network_security_config",
 			},
 		});
 
@@ -224,6 +257,13 @@ public class ManifestGeneratorTests
 		Assert.Equal ("com.example.app.MyApp", (string?)app?.Attribute (AttName));
 		Assert.Equal ("false", (string?)app?.Attribute (AndroidNs + "allowBackup"));
 		Assert.Equal ("true", (string?)app?.Attribute (AndroidNs + "largeHeap"));
+		Assert.Equal ("true", (string?)app?.Attribute (AndroidNs + "directBootAware"));
+		Assert.Equal ("@xml/network_security_config", (string?)app?.Attribute (AndroidNs + "networkSecurityConfig"));
+		Assert.Equal ("true", (string?)app?.Attribute (AndroidNs + "extractNativeLibs"));
+
+		var provider = app?.Element ("provider");
+		Assert.NotNull (provider);
+		Assert.Equal ("true", (string?)provider?.Attribute (AndroidNs + "directBootAware"));
 	}
 
 	[Fact]

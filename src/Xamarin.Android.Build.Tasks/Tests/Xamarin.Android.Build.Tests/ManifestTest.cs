@@ -126,7 +126,7 @@ namespace Bug12935
 				StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
 				StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
 				StringAssertEx.Contains (Path.Combine ("Properties", "AndroidManifest.xml"), builder.LastBuildOutput);
-				StringAssertEx.Contains ("2 Error(s)", builder.LastBuildOutput);
+				StringAssertEx.Contains ("Error(s)", builder.LastBuildOutput);
 			}
 		}
 

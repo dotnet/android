@@ -455,7 +455,7 @@ sealed class AssemblyIndex : IDisposable
 		var properties = new Dictionary<string, object?> (StringComparer.Ordinal);
 		foreach (var named in value.NamedArguments) {
 			if (named.Name is not null && named.Name != "Categories") {
-				properties [named.Name] = named.Value;
+				properties [named.Name] = TryGetStringArray (named.Value, out var strings) ? strings : named.Value;
 			}
 		}
 
