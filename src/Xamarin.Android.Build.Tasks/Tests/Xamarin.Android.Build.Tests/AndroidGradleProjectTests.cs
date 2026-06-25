@@ -41,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildApp ([Values] AndroidRuntime runtime)
+		public void BuildApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (
 					bind: true,
 					configuration: "Release",
@@ -162,7 +162,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindPackLibrary ([Values] bool packGradleRef, [Values] AndroidRuntime runtime)
+		public void BindPackLibrary ([Values] bool packGradleRef, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -208,14 +208,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildIncremental ([Values] AndroidRuntime runtime)
+		public void BuildIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var gradleModule = gradleProject.Modules.First ();
 
@@ -262,7 +260,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildCustomOutputPaths ([Values] AndroidRuntime runtime)
+		public void BuildCustomOutputPaths ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -296,7 +294,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildArtifactsOutputPaths ([Values] AndroidRuntime runtime)
+		public void BuildArtifactsOutputPaths ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -346,7 +344,7 @@ $@"<Project>
 		}
 
 		[Test]
-		public void BuildMultipleModules ([Values] AndroidRuntime runtime)
+		public void BuildMultipleModules ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -389,7 +387,7 @@ $@"<Project>
 		}
 
 		[Test]
-		public void BuildMultipleLibraries ([Values] AndroidRuntime runtime)
+		public void BuildMultipleLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -435,7 +433,7 @@ $@"<Project>
 		}
 
 		[Test]
-		public void InvalidItemRefError ([Values] AndroidRuntime runtime)
+		public void InvalidItemRefError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -459,7 +457,7 @@ $@"<Project>
 		}
 
 		[Test]
-		public void InvalidModuleNameError ([Values] AndroidRuntime runtime)
+		public void InvalidModuleNameError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -488,7 +486,7 @@ $@"<Project>
 		}
 
 		[Test]
-		public void BindFacebook ([Values] AndroidRuntime runtime)
+		public void BindFacebook ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

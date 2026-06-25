@@ -42,9 +42,6 @@
       <Replacement Include="@_CLRRuntimeFlavorDirName@=$(_CLRRuntimeFlavorDirName)" />
       <Replacement Include="@_MonoRuntimeFlavorDirName@=$(_MonoRuntimeFlavorDirName)" />
       <Replacement Include="@AndroidLatestStableFrameworkVersion@=$(AndroidLatestStableFrameworkVersion)" />
-      <Replacement Include="@AndroidCmakeUrlPrefix@=$(AndroidCmakeUrlPrefix)" />
-      <Replacement Include="@AndroidCmakeVersion@=$(AndroidCmakeVersion)" />
-      <Replacement Include="@AndroidCmakeVersionPath@=$(AndroidCmakeVersionPath)" />
       <Replacement Include="@AndroidMinimumDotNetApiLevel@=$(AndroidMinimumDotNetApiLevel)" />
       <Replacement Include="@AndroidDefaultTargetDotnetApiLevel@=$(AndroidDefaultTargetDotnetApiLevel)" />
       <Replacement Include="@AndroidLatestStableApiLevel@=$(AndroidLatestStableApiLevel)" />
@@ -94,7 +91,6 @@
       <Replacement Include="@XAInstallPrefix@=$(XAInstallPrefix)" />
       <Replacement Include="@XABinRelativeInstallPrefix@=$(_XABinRelativeInstallPrefix)" />
       <Replacement Include="@XAPackagesDir@=$(XAPackagesDir)" />
-      <Replacement Include="@XAPlatformToolsPackagePrefix@=$(XAPlatformToolsPackagePrefix)" />
     </ItemGroup>
 
     <ReplaceFileContents

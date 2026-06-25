@@ -12,7 +12,7 @@ using Java.Interop;
 using NUnit.Framework;
 
 namespace Java.InteropTests {
-	[TestFixture, Category ("NativeTypeMap")]
+	[TestFixture]
 	public class AndroidValueManagerContractTests : JniRuntimeJniValueManagerContract {
 
 		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]

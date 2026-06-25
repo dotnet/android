@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build.Tests
 	public class BindingBuildTest : BaseTest
 	{
 		[Test]
-		public void DotNetBuildBinding ([Values] AndroidRuntime runtime)
+		public void DotNetBuildBinding ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -74,7 +74,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("class-parse", runtime);
 			}
 
@@ -97,8 +97,6 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			AssertCommercialBuild (); // Incremental build assertions require Fast Deployment
-
 			var targets = new List<string> {
 				"_ExportJarToXml",
 				"GenerateBindings",
@@ -283,7 +281,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("Minor")]
-		public void BindByteArrayInMethodParameter ([Values] AndroidRuntime runtime)
+		public void BindByteArrayInMethodParameter ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -303,7 +301,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void MergeAndroidManifest ([Values] AndroidRuntime runtime)
+		public void MergeAndroidManifest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -339,7 +337,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AnnotationSupport ([Values] AndroidRuntime runtime)
+		public void AnnotationSupport ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -362,7 +360,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindingCustomJavaApplicationClass ([Values] AndroidRuntime runtime)
+		public void BindingCustomJavaApplicationClass ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -392,7 +390,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindngFilterUnsupportedNativeAbiLibraries ([Values] AndroidRuntime runtime)
+		public void BindngFilterUnsupportedNativeAbiLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -423,7 +421,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindingCheckHiddenFiles ([Values] AndroidRuntime runtime)
+		public void BindingCheckHiddenFiles ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -477,7 +475,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BindingDoNotPackage ([Values] AndroidRuntime runtime)
+		public void BindingDoNotPackage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -536,7 +534,7 @@ namespace Foo {
 		}
 
 		[Test]
-		public void AndroidLibraryPackFalseExcludesJarFromAar ([Values] AndroidRuntime runtime)
+		public void AndroidLibraryPackFalseExcludesJarFromAar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -578,7 +576,7 @@ namespace Foo {
 		}
 
 		[Test]
-		public void RemoveEventHandlerResolution ([Values] AndroidRuntime runtime)
+		public void RemoveEventHandlerResolution ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -607,7 +605,7 @@ namespace Foo {
 		}
 
 		[Test]
-		public void JavaSourceJar ([Values] AndroidRuntime runtime)
+		public void JavaSourceJar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -646,7 +644,7 @@ namespace Foo {
 		}
 
 		[Test]
-		public void AppWithSingleJar ([Values] AndroidRuntime runtime)
+		public void AppWithSingleJar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -688,7 +686,7 @@ namespace Foo {
 
 		[Test]
 		[TestCaseSource (nameof (Get_ClassParseOptions))]
-		public void DesignTimeBuild (string classParser, [Values] AndroidRuntime runtime)
+		public void DesignTimeBuild (string classParser, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -720,7 +718,7 @@ namespace Foo {
 
 		[Test]
 		[TestCaseSource (nameof (Get_ClassParseOptions))]
-		public void NullableReferenceTypes (string classParser, [Values] AndroidRuntime runtime)
+		public void NullableReferenceTypes (string classParser, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -749,7 +747,7 @@ namespace Foo {
 
 		[Test]
 		[TestCaseSource (nameof (Get_ClassParseOptions))]
-		public void BindDefaultInterfaceMethods (string classParser, [Values] AndroidRuntime runtime)
+		public void BindDefaultInterfaceMethods (string classParser, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -811,7 +809,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 		[Test]
 		[TestCaseSource (nameof (Get_ClassParseOptions))]
-		public void NothingToBind (string classParser, [Values] AndroidRuntime runtime)
+		public void NothingToBind (string classParser, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -829,7 +827,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void BindingWithAndroidJavaSource ([Values] AndroidRuntime runtime)
+		public void BindingWithAndroidJavaSource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -884,10 +882,8 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					"generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.IJavaSourceTestInterface.cs");
 				StringAssertEx.ContainsText (File.ReadAllLines (generatedIface), "string GreetWithQuestion (string name, global::Java.Util.Date date, string question);");
 				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
-				if (TestEnvironment.CommercialBuildAvailable) {
-					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CompileBindingJava", defaultIfNotUsed: true), $"`_CompileBindingJava` should be skipped on second build!");
-					Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
-				}
+				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CompileBindingJava", defaultIfNotUsed: true), $"`_CompileBindingJava` should be skipped on second build!");
+				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
 				Assert.IsTrue (libBuilder.DesignTimeBuild (lib, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
 				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on DTB build.");
@@ -911,7 +907,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void LibraryProjectZipWithLint ([Values] AndroidRuntime runtime)
+		public void LibraryProjectZipWithLint ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -953,7 +949,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		/// Tests two .aar files with r-classes.jar, repackaged.jar
 		/// </summary>
 		[Test]
-		public void CheckDuplicateJavaLibraries ([Values] AndroidRuntime runtime)
+		public void CheckDuplicateJavaLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1016,7 +1012,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 		[Test]
 		[NonParallelizable] // All tests are accessing the same .pom file
-		public void AndroidMavenLibrary ([Values] AndroidRuntime runtime)
+		public void AndroidMavenLibrary ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1042,7 +1038,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([Values] AndroidRuntime runtime)
+		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1071,7 +1067,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void AndroidMavenLibrary_IgnoreDependencyVerification ([Values] AndroidRuntime runtime)
+		public void AndroidMavenLibrary_IgnoreDependencyVerification ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1098,7 +1094,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
-		public void AndroidMavenLibrary_AllDependenciesAreVerified ([Values] AndroidRuntime runtime)
+		public void AndroidMavenLibrary_AllDependenciesAreVerified ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

@@ -4,12 +4,15 @@ on:
     name: review
     events: [pull_request_comment]
   roles: [admin, maintainer, write]
+environment: copilot-pr-reviewer
 permissions:
   contents: read
   pull-requests: read
 engine:
   id: copilot
-  model: claude-opus-4.6
+  model: claude-opus-4.8
+max-daily-ai-credits: -1
+max-ai-credits: -1
 network:
   allowed:
     - defaults
@@ -25,11 +28,13 @@ network:
     - "vsassets.io"
 tools:
   github:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
     # Allow reading PR content from external/first-time contributors.
     # The /review command is gated to maintainers, so only trusted users can trigger it.
     min-integrity: none
 safe-outputs:
+  github-token: ${{ secrets.GITHUB_TOKEN }}
   create-pull-request-review-comment:
     max: 50
   submit-pull-request-review:

@@ -12,7 +12,6 @@ parameters:
   installTestSlicer: false
   installApkDiff: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
-  xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
   use1ESTemplate: true
 
 steps:
@@ -50,10 +49,31 @@ steps:
     displayName: Install p7zip on macOS
     condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
-- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
-  parameters:
-    arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
-    xaSourcePath: ${{ parameters.xaSourcePath }}
+- pwsh: |
+    & "${{ parameters.xaSourcePath }}/eng/install-dotnet.ps1" -configuration ${{ parameters.configuration }}
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  displayName: install .NET SDK to bin/${{ parameters.configuration }}/dotnet
+  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
+- bash: |
+    set -e
+    bash "${{ parameters.xaSourcePath }}/eng/install-dotnet.sh"
+  displayName: install .NET SDK to bin/${{ parameters.configuration }}/dotnet
+  condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))
+  env:
+    CONFIGURATION: ${{ parameters.configuration }}
+
+- task: DotNetCoreCLI@2
+  displayName: prepare .NET workloads
+  inputs:
+    projects: ${{ parameters.xaSourcePath }}/src/workloads/workloads.csproj
+    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/workloads.binlog
+
+- task: DotNetCoreCLI@2
+  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+  inputs:
+    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
@@ -62,12 +82,8 @@ steps:
     project: ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.csproj
     arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/androidsdk.binlog
     continueOnError: false
-
-- task: DotNetCoreCLI@2
-  displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+    env:
+      AndroidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
 
 # Download and install .NET nupkgs
 - task: DownloadPipelineArtifact@2

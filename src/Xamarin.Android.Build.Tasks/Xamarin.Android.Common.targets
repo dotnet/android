@@ -157,8 +157,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<TargetFrameworkIdentifier Condition="'$(TargetFrameworkIdentifier)' == ''">MonoAndroid</TargetFrameworkIdentifier>
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
-	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_AndroidFastDeploymentSupported)' == 'True' ">False</EmbedAssembliesIntoApk>
-	<EmbedAssembliesIntoApk Condition=" '$(_AndroidFastDeploymentSupported)' == 'False' ">True</EmbedAssembliesIntoApk>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' ">False</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
   <AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
@@ -934,6 +933,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidApkPerAbiFlagFile>$(IntermediateOutputPath)android\bin\apk_per_abi.flag</_AndroidApkPerAbiFlagFile>
 	<_AndroidDebugKeyStoreFlag>$(IntermediateOutputPath)android_debug_keystore.flag</_AndroidDebugKeyStoreFlag>
 	<_AdditionalPostLinkerStepsFlag>$(_AndroidStampDirectory)_AdditionalPostLinkerSteps.stamp</_AdditionalPostLinkerStepsFlag>
+	<_AfterILLinkOutputDir>$(IntermediateOutputPath)afterlink\</_AfterILLinkOutputDir>
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
@@ -1045,6 +1045,7 @@ because xbuild doesn't support framework reference assemblies.
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		RTxtFile="$(IntermediateOutputPath)R.txt"
 		Namespace="$(AndroidResgenNamespace)"
+		AssemblyName="$(AssemblyName)"
 		ProjectDir="$(ProjectDir)"
 		Resources="@(AndroidResource);@(AndroidBoundLayout)"
 		ResourceDirectory="$(MonoAndroidResourcePrefix)"
@@ -1301,6 +1302,7 @@ because xbuild doesn't support framework reference assemblies.
 		JavaResgenInputFile="$(_GeneratedPrimaryJavaResgenFile)"
 		RTxtFile="$(IntermediateOutputPath)R.txt"
 		Namespace="$(AndroidResgenNamespace)"
+		AssemblyName="$(AssemblyName)"
 		ProjectDir="$(ProjectDir)"
 		Resources="@(_AndroidResourceDest)"
 		ResourceDirectory="$(MonoAndroidResDirIntermediate)"
@@ -1464,17 +1466,26 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
 </Target>
 
-<!-- Runs additional steps after ILLink runs (_LinkAssemblies) -->
-<Target Name="_AfterILLinkAdditionalSteps"
+<!-- Runs additional steps after ILLink runs (_LinkAssemblies).
+     When marshal methods are enabled, assemblies must be modified in-place in linked/ so that
+     _RunAotForAllRIDs (which dispatches inner builds that AOT from linked/) sees the updated
+     assemblies and re-AOTs them. When marshal methods are NOT enabled (NativeAOT, CoreCLR, etc.),
+     write to afterlink/ so linked/ stays unchanged and IlcCompile incrementalism is preserved. -->
+<Target Name="_RunAfterILLinkAdditionalSteps"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'"
     Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
+  <MakeDir Directories="$(_AfterILLinkOutputDir)" Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " />
+  <ItemGroup>
+    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(ResolvedAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
+    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(ResolvedAssemblies)" />
+  </ItemGroup>
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
       Debug="$(AndroidIncludeDebugSymbols)"
-      DestinationFiles="@(ResolvedAssemblies)"
+      DestinationFiles="@(_AfterILLinkDestFiles)"
       Deterministic="$(Deterministic)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
@@ -1485,8 +1496,38 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(ResolvedAssemblies)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
-
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
+  <ItemGroup>
+    <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
+    <FileWrites Include="$(_AfterILLinkOutputDir)**" />
+  </ItemGroup>
+</Target>
+
+<!-- Updates assembly itemgroups to point to afterlink/ outputs.
+     When marshal methods are enabled, assemblies were modified in-place in linked/
+     so no redirection is needed, but the target still runs to trigger _RunAfterILLinkAdditionalSteps. -->
+<Target Name="_AfterILLinkAdditionalSteps"
+    DependsOnTargets="_RunAfterILLinkAdditionalSteps"
+    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'">
+  <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
+    <_OrigResolvedAssemblies Include="@(ResolvedAssemblies)" />
+    <ResolvedAssemblies Remove="@(ResolvedAssemblies)" />
+    <ResolvedAssemblies Include="@(_OrigResolvedAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
+
+    <_OrigResolvedUserAssemblies Include="@(ResolvedUserAssemblies)" />
+    <ResolvedUserAssemblies Remove="@(ResolvedUserAssemblies)" />
+    <ResolvedUserAssemblies Include="@(_OrigResolvedUserAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
+
+    <_OrigResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
+    <ResolvedFrameworkAssemblies Remove="@(ResolvedFrameworkAssemblies)" />
+    <ResolvedFrameworkAssemblies Include="@(_OrigResolvedFrameworkAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
+
+    <_OrigResolvedAssemblies Remove="@(_OrigResolvedAssemblies)" />
+    <_OrigResolvedUserAssemblies Remove="@(_OrigResolvedUserAssemblies)" />
+    <_OrigResolvedFrameworkAssemblies Remove="@(_OrigResolvedFrameworkAssemblies)" />
+  </ItemGroup>
 </Target>
 
 <!-- _PrepareAssemblies lives in Microsoft.Android.Sdk.AssemblyResolution.targets -->
@@ -2879,14 +2920,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
-        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') And '$(DesignTimeBuild)' != 'true' "/>
+        Condition=" '$(DesignTimeBuild)' != 'true' "/>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
         Condition=" '$(AndroidApplication)' == 'True' "/>
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
-        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets') And '$(DesignTimeBuild)' != 'true' "/>
+        Condition=" '$(DesignTimeBuild)' != 'true' "/>
   <Target Name="_ValidateAndroidTypeMapImplementation"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(_AndroidTypeMapImplementation)' != '' and '$(_AndroidTypeMapImplementation)' != 'llvm-ir' and '$(_AndroidTypeMapImplementation)' != 'managed' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "

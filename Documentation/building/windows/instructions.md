@@ -30,16 +30,7 @@ be available within the Command-Line environment.
 
         dotnet-local.cmd build Xamarin.Android.sln
 
- 7. (For Microsoft team members only - Optional) In a [Developer Command
-    Prompt][developer-prompt], build external proprietary git
-    dependencies:
-
-        dotnet-local.cmd build Xamarin.Android.sln -t:BuildExternal
-
-    This will clone and build external proprietary components such as
-    the `android-platform-support` repository in Azure DevOps.
-
- 8. Configure local `android` workload:
+ 7. Configure local `android` workload:
 
         dotnet-local.cmd build build-tools/create-packs/Microsoft.Android.Sdk.proj -t:ConfigureLocalWorkload
 
@@ -113,10 +104,6 @@ Once `dotnet msbuild Xamarin.Android.sln -t:Prepare` is complete,
     dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet,PackDotNet
 
 Several `.nupkg` files will be output in `.\bin\Build$(Configuration)\nuget-unsigned`.
-
-Commercial packages will be created by this command if the
-`dotnet-local.cmd build Xamarin.Android.sln -t:BuildExternal`
-command was ran before building.
 
 ## Building Unit Tests
 

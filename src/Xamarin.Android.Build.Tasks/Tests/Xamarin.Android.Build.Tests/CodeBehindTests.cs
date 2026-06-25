@@ -284,25 +284,25 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SuccessfulBuildFew ([Values] AndroidRuntime runtime)
+		public void SuccessfulBuildFew ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void SuccessfulBuildMany ([Values] AndroidRuntime runtime)
+		public void SuccessfulBuildMany ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void SuccessfulBuildFew_DTB ([Values] AndroidRuntime runtime)
+		public void SuccessfulBuildFew_DTB ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: true, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void SuccessfulBuildMany_DTB ([Values] AndroidRuntime runtime)
+		public void SuccessfulBuildMany_DTB ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: true, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
@@ -335,7 +335,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SuccessfulAndroidXApp ([Values] AndroidRuntime runtime)
+		public void SuccessfulAndroidXApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
 		}
@@ -372,13 +372,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingFragment ([Values] AndroidRuntime runtime)
+		public void FailedBuildFew_ConflictingFragment ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingFragment ([Values] AndroidRuntime runtime)
+		public void FailedBuildMany_ConflictingFragment ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest, runtime: runtime);
 		}
@@ -400,13 +400,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingTextView ([Values] AndroidRuntime runtime)
+		public void FailedBuildFew_ConflictingTextView ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingTextView ([Values] AndroidRuntime runtime)
+		public void FailedBuildMany_ConflictingTextView ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest, runtime: runtime);
 		}
@@ -428,13 +428,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingButton ([Values] AndroidRuntime runtime)
+		public void FailedBuildFew_ConflictingButton ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingButton_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingButton ([Values] AndroidRuntime runtime)
+		public void FailedBuildMany_ConflictingButton ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingButton_RunTest, runtime: runtime);
 		}
@@ -456,13 +456,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingLinearLayout ([Values] AndroidRuntime runtime)
+		public void FailedBuildFew_ConflictingLinearLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingLinearLayout ([Values] AndroidRuntime runtime)
+		public void FailedBuildMany_ConflictingLinearLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest, runtime: runtime);
 		}
@@ -484,13 +484,13 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FailedBuildFew_ConflictingRelativeLayout ([Values] AndroidRuntime runtime)
+		public void FailedBuildFew_ConflictingRelativeLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest, runtime: runtime);
 		}
 
 		[Test]
-		public void FailedBuildMany_ConflictingRelativeLayout ([Values] AndroidRuntime runtime)
+		public void FailedBuildMany_ConflictingRelativeLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest, runtime: runtime);
 		}
@@ -540,6 +540,9 @@ namespace Xamarin.Android.Build.Tests
 					Console.WriteLine ("CodeBehindTests: using NativeAOT and running on CI, disabling warnings.");
 					noWarn.Add ("IL2091");
 					noWarn.Add ("IL2104");
+					// Transitive AndroidX bindings can still reference ResourceDesignerAttribute(string)
+					// with non-AQN type names; this is expected until those libraries rebuild.
+					noWarn.Add ("IL2122");
 					noWarn.Add ("IL3053");
 					noWarn.Add ("XA1040");
 				}
@@ -731,6 +734,7 @@ namespace Xamarin.Android.Build.Tests
 			CopyRecursively (TestProjectRootDirectory, temporaryProjectPath, ignore);
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
+			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "eng", "Versions.props"), Path.Combine (tempRoot, "eng", "Versions.props"));
 			var project = new XamarinAndroidApplicationProject ();
 			project.CopyNuGetConfig (Path.Combine (tempRoot, "NuGet.config"));
 

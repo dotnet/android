@@ -15,10 +15,6 @@ resources:
     type: git
     name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
-  - repository: android-platform-support
-    type: git
-    name: DevDiv/android-platform-support
-    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -44,7 +40,7 @@ stages:
       name: $(SharedMacPool)
       demands:
       - macOS.Name -equals $(SharedMacName)
-      - Agent.OSArchitecture -equals $(SharedMacArch)
+      - macOS.Architecture -equals $(SharedMacArch)
     timeoutInMinutes: 420
     workspace:
       clean: all
@@ -122,7 +118,6 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        xaprepareScenario: EmulatorTestDependencies
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -198,7 +193,6 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
-        xaprepareScenario: EmulatorTestDependencies
         useAgentJdkPath: false
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
@@ -251,7 +245,6 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
-        xaprepareScenario: EmulatorTestDependencies
         useAgentJdkPath: false
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 

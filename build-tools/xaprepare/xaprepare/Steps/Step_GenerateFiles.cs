@@ -66,9 +66,7 @@ namespace Xamarin.Android.Prepare
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Cmake_Presets (context),
-						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
-						Get_Omnisharp_Json (context),
 					};
 				}
 			}
@@ -76,17 +74,13 @@ namespace Xamarin.Android.Prepare
 			if (onlyRequired)
 				return null;
 
-			var steps = new List <GeneratedFile> {
-				new GeneratedMonoAndroidProjitemsFile (),
-			};
+			var steps = new List <GeneratedFile> ();
 
 			AddOSSpecificSteps (context, steps);
-			AddUnixPostBuildSteps (context, steps);
 
 			return steps;
 		}
 
-		partial void AddUnixPostBuildSteps (Context context, List<GeneratedFile> steps);
 		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
 
 		GeneratedFile Get_Cmake_XA_Build_Configuration (Context context)
@@ -234,46 +228,6 @@ namespace Xamarin.Android.Prepare
 				}
 				return value.Substring (dot + 1);
 			}
-		}
-
-		GeneratedFile Get_Ndk_projitems (Context context)
-		{
-			const string OutputFileName = "Ndk.projitems";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
-				{ "@NDK_PKG_REVISION@",          BuildAndroidPlatforms.AndroidNdkPkgRevision },
-				{ "@NDK_ARMEABI_V7_API@",        BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString () },
-				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ()  },
-				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
-			);
-		}
-
-		public GeneratedFile Get_Omnisharp_Json (Context context)
-		{
-			const string OutputFileName = "omnisharp.json";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@CONFIGURATION@", context.Configuration },
-				{ "@DOTNET_SDK_PATH@", Path.Combine (Configurables.Paths.DotNetPreviewPath, "sdk", context.Properties.GetRequiredValue (KnownProperties.MicrosoftDotnetSdkInternalPackageVersion)) },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (BuildPaths.XamarinAndroidSourceRoot, OutputFileName)
-			);
 		}
 
 		public GeneratedFile Get_SourceLink_Json (Context context)

@@ -40,7 +40,7 @@ namespace Xamarin.Android.Tasks
 				if (assetPack.IsNullOrEmpty () || string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) == 0)
 					continue;
 				if (!IsAssetPackNameValid (assetPack)) {
-					Log.LogCodedError ("XA0140", $"The AssetPack value defined for {asset.ItemSpec} is invalid. '{assetPack}' should match the following Regex '[A-Za-z0-9_]'.");
+					Log.LogCodedError ("XA0140", string.Format (Properties.Resources.XA0140, asset.ItemSpec, assetPack));
 					continue;
 				}
 				if (!assetPacks.TryGetValue (assetPack, out ITaskItem item)) {

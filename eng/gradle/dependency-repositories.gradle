@@ -1,0 +1,23 @@
+// Shared Maven repository list for project DEPENDENCY resolution
+// (dependencyResolutionManagement.repositories) across every settings.gradle
+// in this repo. See plugin-repositories.gradle for plugin resolution.
+//
+// Switches on RunningOnCI for the same CFSClean reasons described there.
+// AzureArtifacts is intentionally NOT included here — it only hosts the
+// credprovider plugin, so listing it in this scope would add a 404 round-trip
+// to every dependency lookup.
+
+repositories {
+    // AzDO uppercases pipeline variables when exporting them as env vars on
+    // Linux/macOS agents, so check both spellings.
+    def runningOnCI = System.getenv('RunningOnCI') ?: System.getenv('RUNNINGONCI')
+    if (runningOnCI == 'true') {
+        maven {
+            url = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+            name = 'dotnet-public-maven'
+        }
+    } else {
+        google()
+        mavenCentral()
+    }
+}

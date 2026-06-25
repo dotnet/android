@@ -61,42 +61,6 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Scan_JniAddNativeMethodRegistrationAttribute_LogsError ()
-	{
-		// The trimmable typemap refuses to support [JniAddNativeMethodRegistrationAttribute]
-		// by design (XA4251). The scanner reports each offending type via the logger.
-		var errors = new List<string> ();
-		var logger = new RecordingLogger (errors);
-
-		using var scanner = new JavaPeerScanner (logger: logger);
-		using var peReader = new PEReader (File.OpenRead (TestFixtureAssemblyPath));
-		var reader = peReader.GetMetadataReader ();
-		var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
-		_ = scanner.Scan (new List<(string, PEReader)> { (assemblyName, peReader) });
-
-		Assert.Contains (errors, e => e.Contains ("HandWrittenNativeRegistrationPeer"));
-		Assert.Contains (errors, e => e.Contains ("NonPeerNativeRegistration"));
-		Assert.DoesNotContain (errors, e => e.Contains ("OtherNamespaceNativeRegistration"));
-		Assert.DoesNotContain (errors, e => e.Contains ("MyHelper"));
-	}
-
-	sealed class RecordingLogger (List<string> errors) : ITrimmableTypeMapLogger
-	{
-		public void LogNoJavaPeerTypesFound () { }
-		public void LogJavaPeerScanInfo (int assemblyCount, int peerCount) { }
-		public void LogGeneratingJcwFilesInfo (int jcwPeerCount, int totalPeerCount) { }
-		public void LogDeferredRegistrationTypesInfo (int typeCount) { }
-		public void LogGeneratedTypeMapAssemblyInfo (string assemblyName, int typeCount) { }
-		public void LogGeneratedRootTypeMapInfo (int assemblyReferenceCount) { }
-		public void LogGeneratedTypeMapAssembliesInfo (int assemblyCount) { }
-		public void LogGeneratedJcwFilesInfo (int sourceCount) { }
-		public void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName) { }
-		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) { }
-		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
-			errors.Add ($"XA4251: {managedTypeName}");
-	}
-
-	[Fact]
 	public void Scan_TypeMetadata_IsCorrect ()
 	{
 		Assert.True (FindFixtureByJavaName ("my/app/AbstractBase").IsAbstract);

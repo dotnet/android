@@ -873,7 +873,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Regression test: the UCO wrapper must use byte (unsigned, JNI ABI) for boolean,
 		// but the callback MemberRef must use sbyte (signed, MCW convention).
 		// A mismatch caused ILLink to fail resolving the member reference and trim n_* methods.
-		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolReturnTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
@@ -896,7 +896,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesSByte ()
 	{
 		// Regression test: boolean parameters must also use the correct encoding.
-		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolParamTest");
 		using var pe = new PEReader (stream);
 		var reader = pe.GetMetadataReader ();
@@ -966,6 +966,220 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal (new byte [] { 0x01, 0x00, 0x00, 0x00 }, reader.GetBlobBytes (ucoAttr.Value));
 	}
 
+	[Fact]
+	public void Generate_InheritedVirtualOverride_RegisterNativesUsesBaseUcoMethod ()
+	{
+		var basePeer = MakeAcwPeer ("my/app/AbstractBase", "MyApp.AbstractBase", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var derivedPeer = MakeInheritedOverridePeer ("my/app/Concrete", "MyApp.Concrete");
+
+		using var stream = GenerateAssembly ([basePeer, derivedPeer], "InheritedOverrideUco");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var baseProxy = FindProxyType (reader, "MyApp_AbstractBase_Proxy");
+		var derivedProxy = FindProxyType (reader, "MyApp_Concrete_Proxy");
+		var baseUcoHandle = FindMethodDefinition (reader, baseProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, derivedProxy, "n_doWork_uco_0"));
+
+		var derivedRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, derivedProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (derivedRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.Contains (MetadataTokens.GetToken (baseUcoHandle), ReadLdftnTokens (ilBytes));
+	}
+
+	[Fact]
+	public void Generate_InheritedVirtualOverride_BaseProxyLater_RegisterNativesUsesBaseUcoMethod ()
+	{
+		var derivedPeer = MakeInheritedOverridePeer ("aaa/app/Concrete", "MyApp.Concrete");
+		var basePeer = MakeAcwPeer ("zzz/app/AbstractBase", "MyApp.AbstractBase", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+
+		using var stream = GenerateAssembly ([derivedPeer, basePeer], "InheritedOverrideUcoBaseLater");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var baseProxy = FindProxyType (reader, "MyApp_AbstractBase_Proxy");
+		var derivedProxy = FindProxyType (reader, "MyApp_Concrete_Proxy");
+		var baseUcoHandle = FindMethodDefinition (reader, baseProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, derivedProxy, "n_doWork_uco_0"));
+
+		var derivedRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, derivedProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (derivedRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.Contains (MetadataTokens.GetToken (baseUcoHandle), ReadLdftnTokens (ilBytes));
+	}
+
+	[Fact]
+	public void Generate_InheritedVirtualOverride_ThroughIntermediate_RegisterNativesUsesRootBaseUcoMethod ()
+	{
+		var rootBasePeer = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var intermediatePeer = MakeAcwPeer ("my/app/B", "MyApp.B", "App");
+		var leafPeer = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.C");
+
+		using var stream = GenerateAssembly ([leafPeer, intermediatePeer, rootBasePeer], "InheritedOverrideUcoIntermediate");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var rootBaseProxy = FindProxyType (reader, "MyApp_C_Proxy");
+		var intermediateProxy = FindProxyType (reader, "MyApp_B_Proxy");
+		var leafProxy = FindProxyType (reader, "MyApp_A_Proxy");
+		var rootBaseUcoHandle = FindMethodDefinition (reader, rootBaseProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, intermediateProxy, "n_doWork_uco_0"));
+		Assert.Empty (FindMethodDefinitions (reader, leafProxy, "n_doWork_uco_0"));
+
+		var leafRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, leafProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (leafRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		Assert.Contains (MetadataTokens.GetToken (rootBaseUcoHandle), ReadLdftnTokens (ilBytes));
+	}
+
+	[Fact]
+	public void Generate_InheritedVirtualOverride_IntermediateCallbackOwner_RegisterNativesUsesIntermediateUcoMethod ()
+	{
+		var rootBasePeer = MakeAcwPeer ("my/app/C", "MyApp.C", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var intermediatePeer = MakeAcwPeer ("my/app/B", "MyApp.B", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var leafPeer = MakeInheritedOverridePeer ("my/app/A", "MyApp.A", declaringTypeName: "MyApp.B");
+
+		using var stream = GenerateAssembly ([leafPeer, rootBasePeer, intermediatePeer], "InheritedOverrideUcoIntermediateOwner");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var rootBaseProxy = FindProxyType (reader, "MyApp_C_Proxy");
+		var intermediateProxy = FindProxyType (reader, "MyApp_B_Proxy");
+		var leafProxy = FindProxyType (reader, "MyApp_A_Proxy");
+		var rootBaseUcoHandle = FindMethodDefinition (reader, rootBaseProxy, "n_doWork_uco_0");
+		var intermediateUcoHandle = FindMethodDefinition (reader, intermediateProxy, "n_doWork_uco_0");
+		Assert.Empty (FindMethodDefinitions (reader, leafProxy, "n_doWork_uco_0"));
+
+		var leafRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, leafProxy, "RegisterNatives"));
+		var body = pe.GetMethodBody (leafRegisterNatives.RelativeVirtualAddress);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+		var ldftnTokens = ReadLdftnTokens (ilBytes);
+		Assert.DoesNotContain (MetadataTokens.GetToken (rootBaseUcoHandle), ldftnTokens);
+		Assert.Contains (MetadataTokens.GetToken (intermediateUcoHandle), ldftnTokens);
+	}
+
+	[Fact]
+	public void Generate_InheritedVirtualOverride_MissingIntermediateProxy_LocalUcoMethodCallsIntermediateCallback ()
+	{
+		var rootBasePeer = MakeAcwPeer ("my/app/RootBase", "MyApp.RootBase", "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+				},
+			],
+		};
+		var leafPeer = MakeInheritedOverridePeer ("my/app/Leaf", "MyApp.Leaf", declaringTypeName: "MyApp.HiddenIntermediate");
+
+		using var stream = GenerateAssembly ([leafPeer, rootBasePeer], "InheritedOverrideMissingIntermediate");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var rootBaseProxy = FindProxyType (reader, "MyApp_RootBase_Proxy");
+		var leafProxy = FindProxyType (reader, "MyApp_Leaf_Proxy");
+		var rootBaseUcoHandle = FindMethodDefinition (reader, rootBaseProxy, "n_doWork_uco_0");
+		var leafUcoHandle = FindMethodDefinition (reader, leafProxy, "n_doWork_uco_0");
+		var rootBaseCallback = FindCallbackMemberRefHandle (reader, "n_DoWork", "MyApp", "RootBase");
+		var intermediateCallback = FindCallbackMemberRefHandle (reader, "n_DoWork", "MyApp", "HiddenIntermediate");
+
+		var leafUco = reader.GetMethodDefinition (leafUcoHandle);
+		var leafUcoBody = pe.GetMethodBody (leafUco.RelativeVirtualAddress);
+		var leafUcoBytes = leafUcoBody.GetILBytes ();
+		Assert.NotNull (leafUcoBytes);
+		var leafUcoCallTokens = ReadCallTokens (leafUcoBytes);
+		Assert.DoesNotContain (MetadataTokens.GetToken (rootBaseCallback), leafUcoCallTokens);
+		Assert.Contains (MetadataTokens.GetToken (intermediateCallback), leafUcoCallTokens);
+
+		var leafRegisterNatives = reader.GetMethodDefinition (FindMethodDefinition (reader, leafProxy, "RegisterNatives"));
+		var registerBody = pe.GetMethodBody (leafRegisterNatives.RelativeVirtualAddress);
+		var registerBytes = registerBody.GetILBytes ();
+		Assert.NotNull (registerBytes);
+		var ldftnTokens = ReadLdftnTokens (registerBytes);
+		Assert.DoesNotContain (MetadataTokens.GetToken (rootBaseUcoHandle), ldftnTokens);
+		Assert.Contains (MetadataTokens.GetToken (leafUcoHandle), ldftnTokens);
+	}
+
+	JavaPeerInfo MakeTouchHandlerCallbackDispatchPeer ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
+		return peer with {
+			MarshalMethods = peer.MarshalMethods.Select (m => m with {
+				DeclaringTypeName = m.IsConstructor ? "" : "MyApp.TouchHandler",
+				DeclaringAssemblyName = m.IsConstructor ? "" : "TestFixtures",
+				CallManagedMethodDirectly = false,
+			}).ToList (),
+		};
+	}
+
 	static MemberReference FindCallbackMemberRef (MetadataReader reader, string methodName)
 	{
 		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
@@ -974,6 +1188,106 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 		Assert.Single (refs);
 		return refs [0];
+	}
+
+	static MemberReferenceHandle FindCallbackMemberRefHandle (MetadataReader reader, string methodName, string parentNamespace, string parentName)
+	{
+		var refs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
+			.Select (MetadataTokens.MemberReferenceHandle)
+			.Where (h => {
+				var member = reader.GetMemberReference (h);
+				if (reader.GetString (member.Name) != methodName || member.Parent.Kind != HandleKind.TypeReference)
+					return false;
+
+				var parent = reader.GetTypeReference ((TypeReferenceHandle) member.Parent);
+				return reader.GetString (parent.Namespace) == parentNamespace &&
+					reader.GetString (parent.Name) == parentName;
+			})
+			.ToList ();
+		return Assert.Single (refs);
+	}
+
+	static TypeDefinition FindProxyType (MetadataReader reader, string typeName)
+	{
+		return reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Single (t =>
+				reader.GetString (t.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (t.Name) == typeName);
+	}
+
+	static MethodDefinitionHandle FindMethodDefinition (MetadataReader reader, TypeDefinition type, string methodName)
+	{
+		return FindMethodDefinitions (reader, type, methodName).Single ();
+	}
+
+	static List<MethodDefinitionHandle> FindMethodDefinitions (MetadataReader reader, TypeDefinition type, string methodName)
+	{
+		return type.GetMethods ()
+			.Where (h => reader.GetString (reader.GetMethodDefinition (h).Name) == methodName)
+			.ToList ();
+	}
+
+	static List<int> ReadLdftnTokens (byte [] ilBytes)
+	{
+		return ReadInlineMethodTokens (ilBytes, 0xFE, 0x06);
+	}
+
+	static List<int> ReadCallTokens (byte [] ilBytes)
+	{
+		return ReadInlineMethodTokens (ilBytes, 0x28);
+	}
+
+	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcode)
+	{
+		var tokens = new List<int> ();
+		for (int i = 0; i < ilBytes.Length - 4; i++) {
+			if (ilBytes [i] != opcode) {
+				continue;
+			}
+
+			tokens.Add (ilBytes [i + 1] |
+				(ilBytes [i + 2] << 8) |
+				(ilBytes [i + 3] << 16) |
+				(ilBytes [i + 4] << 24));
+		}
+		return tokens;
+	}
+
+	static List<int> ReadInlineMethodTokens (byte [] ilBytes, byte opcodePrefix, byte opcode)
+	{
+		var tokens = new List<int> ();
+		for (int i = 0; i < ilBytes.Length - 5; i++) {
+			if (ilBytes [i] != opcodePrefix || ilBytes [i + 1] != opcode) {
+				continue;
+			}
+
+			tokens.Add (ilBytes [i + 2] |
+				(ilBytes [i + 3] << 8) |
+				(ilBytes [i + 4] << 16) |
+				(ilBytes [i + 5] << 24));
+		}
+		return tokens;
+	}
+
+	static JavaPeerInfo MakeInheritedOverridePeer (string jniName, string managedName,
+		string declaringTypeName = "MyApp.AbstractBase")
+	{
+		return MakeAcwPeer (jniName, managedName, "App") with {
+			MarshalMethods = [
+				new MarshalMethodInfo {
+					JniName = "<init>", NativeCallbackName = "n_ctor",
+					JniSignature = "()V", ManagedMethodName = ".ctor",
+					IsConstructor = true,
+				},
+				new MarshalMethodInfo {
+					JniName = "doWork", NativeCallbackName = "n_DoWork",
+					JniSignature = "()V", ManagedMethodName = "DoWork",
+					DeclaringTypeName = declaringTypeName,
+					DeclaringAssemblyName = "App",
+				},
+			],
+		};
 	}
 
 	[Theory]

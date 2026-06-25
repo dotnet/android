@@ -15,7 +15,6 @@ is used within many of the output directories which are created.
           * `bin`: Programs that are intended to be installed into `$(prefix)/bin`,
 	    for Unix-style installable files.
           * `packs\Microsoft.Android.Sdk.$(HostOS)\$(AndroidPackVersion)\tools`: MSBuild project integrations.
-            This is where `Xamarin.Android.CSharp.targets` lives.
           * `lib\xamarin.android\xbuild-frameworks\MonoAndroid\v1.0`:
             Xamarin.Android BCL assemblies
           * `lib\xamarin.android\xbuild-frameworks\MonoAndroid\*`: Xamarin.Android
@@ -42,7 +41,6 @@ is used within many of the output directories which are created.
       * `Mono.Android.Export`: Builds `Mono.Android.Export.dll`.
       * `Xamarin.Android.Build.Tasks`: MSBuild tasks for Xamarin.Android projects.
       * `Xamarin.Android.Build.Utilities`: MSBuild tasks support sources.
-      * `Xamarin.Android.NUnitLite`: NUnitLite for Android sources.
       * `Xamarin.AndroidTools.Aidl`: AIDL processor, used in MSBuild tasks.
       * `Xamarin.Android.Tools.BootstrapTasks`: supplemental build tasks used by
         some build-tools. (This should be in `build-tools`; oops.)
