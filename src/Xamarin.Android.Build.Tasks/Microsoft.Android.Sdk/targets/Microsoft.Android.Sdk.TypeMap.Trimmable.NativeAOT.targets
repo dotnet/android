@@ -10,9 +10,7 @@
     <AndroidDexTool Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
     <AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
     <AndroidCreateProguardMappingFile Condition=" '$(AndroidCreateProguardMappingFile)' == '' and '$(AndroidLinkTool)' == 'r8' ">True</AndroidCreateProguardMappingFile>
-    <IlcGenerateDgmlFile Condition=" '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
-    <_UseTrimmableNativeAotProguardConfiguration Condition=" '$(_UseTrimmableNativeAotProguardConfiguration)' == '' ">true</_UseTrimmableNativeAotProguardConfiguration>
-    <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateTrimmableTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
+    <_UseTrimmableNativeAotProguardConfiguration Condition=" '$(_UseTrimmableNativeAotProguardConfiguration)' == '' ">false</_UseTrimmableNativeAotProguardConfiguration>
   </PropertyGroup>
 
   <!-- Before ILC input computation, add generated assemblies to ILC inputs.

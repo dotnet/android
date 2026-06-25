@@ -1994,7 +1994,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
     <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android.txt" />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
-    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' and '$(_UseTrimmableNativeAotProguardConfiguration)' != 'true' " />
+    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' and ('$(_AndroidRuntime)' != 'NativeAOT' or '$(_AndroidTypeMapImplementation)' != 'trimmable') " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
     <!-- @(ProguardConfiguration) should be listed last -->
     <_ProguardConfiguration Include="@(ProguardConfiguration)" />
