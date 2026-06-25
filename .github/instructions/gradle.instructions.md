@@ -50,6 +50,25 @@ If the popup never appears or auth keeps cancelling, clear the cached session to
 Remove-Item "$env:LOCALAPPDATA\MicrosoftCredentialProvider\SessionTokenCache.dat" -ErrorAction SilentlyContinue
 ```
 
+### Fallback: mirror via `az` bearer token
+
+Some packages (observed with `com.android.tools.lint:lint-gradle` and its transitive deps) get 401-rejected even with a successfully attached credprovider `VssSessionToken`. When that happens, mirror the failing URLs directly using an Azure DevOps OAuth token from `az`:
+
+```powershell
+$token = az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 --query accessToken -o tsv
+$h = @{ Authorization = "Bearer $token" }
+
+# Pull each failing URL from the gradle error output and re-request it with the bearer token:
+$urls = Select-String -Path <gradle.log> -Pattern "Could not GET 'https://pkgs\.dev\.azure\.com/dnceng/[^']+'" -AllMatches |
+    % { $_.Matches } | % { $_.Value -replace "^Could not GET '","" -replace "'$","" } | Sort-Object -Unique
+foreach ($u in $urls) { Invoke-WebRequest -Uri $u -Headers $h -SkipHttpErrorCheck | % StatusCode }
+
+# Repeat the gradle build to discover the next layer of transitive deps; the feed will
+# return 401 for each new uncached package. Loop build → mirror → build until clean.
+```
+
+The resource id `499b84ac-1321-427f-aa17-267ca6975798` is Azure DevOps. After successful ingestion, the package is anonymous-readable, so future CI runs pass without any auth.
+
 The credprovider plugin is a no-op when no AzDO repos are configured (i.e. local builds without `RunningOnCI`).
 
 ## Don'ts
