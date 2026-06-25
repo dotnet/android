@@ -19,6 +19,16 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 {
 	size = 0;
 
+	// When the override directory was used to build a `TRUSTED_PLATFORM_ASSEMBLIES`
+	// list (see `build_tpa_list`), the external probe must yield to TPA-based
+	// loading so that CoreCLR opens the assembly from disk via `PEImage::OpenImage`
+	// and `Assembly.Location` ends up populated. Otherwise sibling portable PDB
+	// lookup (used by `StackTraceSymbols`) returns an empty path and stack frames
+	// render without file/line info.
+	if (tpa_in_use) [[likely]] {
+		return nullptr;
+	}
+
 	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
 		log_debug (LOG_ASSEMBLY, "Override directory '{}' does not exist"sv, override_dir_path);
@@ -148,5 +158,9 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	closedir (dir);
 
 	log_debug (LOG_ASSEMBLY, "FastDev: built TPA list with {} assemblies from '{}'"sv, count, override_dir_path);
-	return count > 0;
+	if (count > 0) {
+		tpa_in_use = true;
+		return true;
+	}
+	return false;
 }
