@@ -44,6 +44,11 @@ namespace Xamarin.ProjectTools
 			// Don't opt into ImplicitUsings
 			RemoveProperty (KnownProperties.ImplicitUsings);
 			PackageReferences.Add (KnownPackages.XamarinForms);
+			// Xamarin.Forms allows AppCompat 1.6.0, but Material 1.4.0.2 references types from AppCompatResources 1.6.1.6+.
+			PackageReferences.Add (new Package {
+				Id = KnownPackages.AndroidXAppCompat.Id,
+				Version = "1.6.1.5",
+			});
 
 			// Workarounds for Guava.ListenableFuture
 			// See: https://github.com/xamarin/AndroidX/issues/535
