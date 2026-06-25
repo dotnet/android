@@ -35,19 +35,24 @@ static class MetadataHelper
 		}
 		foreach (var proxy in data.ProxyTypes) {
 			hash.AddString (proxy.TypeName);
-			hash.AddString (proxy.TargetType.ManagedTypeName);
-			hash.AddString (proxy.TargetType.AssemblyName);
+			hash.AddTypeRef (proxy.TargetType);
 			hash.AddByte ((byte)(proxy.ActivationCtor?.Style ?? 0));
+			if (proxy.ActivationCtor is not null) {
+				hash.AddTypeRef (proxy.ActivationCtor.DeclaringType);
+			}
 			hash.AddByte ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
 		}
 		foreach (var proxy in data.ArrayProxyTypes) {
 			hash.AddString (proxy.TypeName);
 			hash.AddString (proxy.JniName);
-			hash.AddString (proxy.ElementType.ManagedTypeName);
-			hash.AddString (proxy.ElementType.AssemblyName);
+			hash.AddTypeRef (proxy.ElementType);
 			hash.AddInt32 (proxy.Rank);
-			hash.AddString (proxy.Primitive?.ConcreteArrayType.ManagedTypeName ?? "");
-			hash.AddString (proxy.Primitive?.ConcreteArrayType.AssemblyName ?? "");
+			if (proxy.Primitive is null) {
+				hash.AddByte (0);
+			} else {
+				hash.AddByte (1);
+				hash.AddTypeRef (proxy.Primitive.ConcreteArrayType);
+			}
 		}
 		foreach (var assoc in data.Associations) {
 			hash.AddString (assoc.SourceTypeReference);
@@ -66,5 +71,16 @@ static class MetadataHelper
 			hash.AddString (name);
 		}
 		return hash.ToHash ();
+	}
+
+	static void AddTypeRef (this DeterministicHashBuilder hash, TypeRefData type)
+	{
+		hash.AddString (type.ManagedTypeName);
+		hash.AddString (type.AssemblyName);
+		hash.AddByte (type.IsEnum ? (byte) 1 : (byte) 0);
+		hash.AddInt32 (type.GenericArguments.Count);
+		foreach (var argument in type.GenericArguments) {
+			hash.AddTypeRef (argument);
+		}
 	}
 }

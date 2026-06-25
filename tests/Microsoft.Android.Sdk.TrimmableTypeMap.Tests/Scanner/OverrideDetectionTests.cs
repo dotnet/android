@@ -125,6 +125,23 @@ public class OverrideDetectionTests : FixtureTestBase
 		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
 		Assert.Equal ("(I)V", setSelection.JniSignature);
 		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+		Assert.NotNull (setSelection.DeclaringType);
+		Assert.Equal ("MyApp.GenericSelectionHost`1", setSelection.DeclaringType!.ManagedTypeName);
+		var argument = Assert.Single (setSelection.DeclaringType.GenericArguments);
+		Assert.Equal ("System.String", argument.ManagedTypeName);
+	}
+
+	[Fact]
+	public void OverrideAcrossGenericForwardingIntermediateMcwBase_Detected ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/GenericForwardingSelectableList");
+		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
+		Assert.Equal ("(I)V", setSelection.JniSignature);
+		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+		Assert.NotNull (setSelection.DeclaringType);
+		Assert.Equal ("MyApp.GenericSelectionHost`1", setSelection.DeclaringType!.ManagedTypeName);
+		var argument = Assert.Single (setSelection.DeclaringType.GenericArguments);
+		Assert.Equal ("System.String", argument.ManagedTypeName);
 	}
 
 	[Fact]

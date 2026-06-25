@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -217,11 +217,21 @@ sealed record TypeRefData
 	public required string AssemblyName { get; init; }
 
 	/// <summary>
+	/// Generic arguments for a constructed generic type. Empty for non-generic
+	/// types and open generic definitions.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> GenericArguments { get; init; } = [];
+
+	/// <summary>
 	/// True if this type — or, for array types, the element type — is an enum.
 	/// Used by the IL emitter to encode the type as <c>ELEMENT_TYPE_VALUETYPE</c>
 	/// rather than <c>ELEMENT_TYPE_CLASS</c> in member references and signatures.
 	/// </summary>
 	public bool IsEnum { get; init; }
+
+	public string DisplayName => GenericArguments.Count == 0
+		? ManagedTypeName
+		: $"{ManagedTypeName}<{string.Join (",", GenericArguments.Select (t => t.DisplayName))}>";
 }
 
 /// <summary>

@@ -109,7 +109,7 @@ sealed class TypeRefSignatureTypeProvider : ISignatureTypeProvider<TypeRefData, 
 	public TypeRefData GetGenericInstantiation (TypeRefData genericType, ImmutableArray<TypeRefData> typeArguments)
 	{
 		return genericType with {
-			ManagedTypeName = $"{genericType.ManagedTypeName}<{string.Join (",", typeArguments.Select (t => t.ManagedTypeName))}>",
+			GenericArguments = typeArguments.ToArray (),
 		};
 	}
 

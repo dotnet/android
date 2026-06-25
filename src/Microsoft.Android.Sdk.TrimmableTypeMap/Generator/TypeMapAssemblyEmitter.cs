@@ -1176,7 +1176,7 @@ sealed class TypeMapAssemblyEmitter
 		blob.WriteCompressedInteger (parameterTypes.Count);
 		blob.WriteByte (0x01); // ELEMENT_TYPE_VOID
 		foreach (var parameterType in parameterTypes) {
-			WriteManagedTypeSignature (blob, parameterType.ManagedTypeName, parameterType.AssemblyName);
+			_pe.WriteTypeSignature (blob, parameterType);
 		}
 		return _pe.Metadata.AddMemberReference (declaringTypeRef, _pe.Metadata.GetOrAddString (".ctor"), _pe.Metadata.GetOrAddBlob (blob));
 	}
@@ -1666,7 +1666,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		switch (type) {
 		case NamedRuntimeTypeSpec namedType:
-			WriteManagedTypeSignature (blob, namedType.Type.ManagedTypeName, namedType.Type.AssemblyName);
+			_pe.WriteTypeSignature (blob, namedType.Type);
 			break;
 		case SzArrayRuntimeTypeSpec arrayType:
 			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY

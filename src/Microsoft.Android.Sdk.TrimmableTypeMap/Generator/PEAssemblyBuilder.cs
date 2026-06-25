@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -24,7 +25,7 @@ sealed class PEAssemblyBuilder
 	static readonly byte [] MonoAndroidPublicKeyToken = { 0x84, 0xe0, 0x4f, 0xf9, 0xcf, 0xb7, 0x90, 0x65 };
 
 	readonly Dictionary<string, AssemblyReferenceHandle> _asmRefCache = new (StringComparer.OrdinalIgnoreCase);
-	readonly Dictionary<(string Assembly, string Type), EntityHandle> _typeRefCache = new ();
+	readonly Dictionary<string, EntityHandle> _typeRefCache = new ();
 
 	// Reusable scratch BlobBuilders — avoids allocating a new one per method body / attribute / member ref.
 	// Each is Clear()'d before use. Safe because all emission is single-threaded and non-reentrant.
@@ -168,14 +169,92 @@ sealed class PEAssemblyBuilder
 	/// </summary>
 	public EntityHandle ResolveTypeRef (TypeRefData typeRef)
 	{
-		var cacheKey = (typeRef.AssemblyName, typeRef.ManagedTypeName);
+		var cacheKey = GetTypeRefCacheKey (typeRef);
 		if (_typeRefCache.TryGetValue (cacheKey, out var cached)) {
 			return cached;
 		}
 		var asmRef = FindOrAddAssemblyRef (typeRef.AssemblyName);
-		var result = MakeTypeRefForManagedName (asmRef, typeRef.ManagedTypeName);
+		EntityHandle result;
+		if (typeRef.GenericArguments.Count > 0) {
+			var openType = MakeTypeRefForManagedName (asmRef, typeRef.ManagedTypeName);
+			var blob = new BlobBuilder (64);
+			WriteGenericInstantiationSignature (blob, openType, typeRef);
+			result = Metadata.AddTypeSpecification (Metadata.GetOrAddBlob (blob));
+		} else {
+			result = MakeTypeRefForManagedName (asmRef, typeRef.ManagedTypeName);
+		}
 		_typeRefCache [cacheKey] = result;
 		return result;
+	}
+
+	static string GetTypeRefCacheKey (TypeRefData typeRef)
+	{
+		if (typeRef.GenericArguments.Count == 0) {
+			return $"{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+		}
+		return $"{typeRef.AssemblyName}:{typeRef.ManagedTypeName}<{string.Join (",", typeRef.GenericArguments.Select (GetTypeRefCacheKey))}>";
+	}
+
+	void WriteGenericInstantiationSignature (BlobBuilder blob, EntityHandle openType, TypeRefData typeRef)
+	{
+		blob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
+		blob.WriteByte (typeRef.IsEnum ? (byte) 0x11 : (byte) 0x12); // VALUETYPE or CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
+		blob.WriteCompressedInteger (typeRef.GenericArguments.Count);
+		foreach (var argument in typeRef.GenericArguments) {
+			WriteTypeSignature (blob, argument);
+		}
+	}
+
+	public void WriteTypeSignature (BlobBuilder blob, TypeRefData typeRef)
+	{
+		if (typeRef.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
+			WriteTypeSignature (blob, typeRef with {
+				ManagedTypeName = typeRef.ManagedTypeName.Substring (0, typeRef.ManagedTypeName.Length - 2),
+			});
+			return;
+		}
+
+		switch (typeRef.ManagedTypeName) {
+		case "System.Boolean": blob.WriteByte (0x02); return;
+		case "System.Char":    blob.WriteByte (0x03); return;
+		case "System.SByte":   blob.WriteByte (0x04); return;
+		case "System.Byte":    blob.WriteByte (0x05); return;
+		case "System.Int16":   blob.WriteByte (0x06); return;
+		case "System.UInt16":  blob.WriteByte (0x07); return;
+		case "System.Int32":   blob.WriteByte (0x08); return;
+		case "System.UInt32":  blob.WriteByte (0x09); return;
+		case "System.Int64":   blob.WriteByte (0x0A); return;
+		case "System.UInt64":  blob.WriteByte (0x0B); return;
+		case "System.Single":  blob.WriteByte (0x0C); return;
+		case "System.Double":  blob.WriteByte (0x0D); return;
+		case "System.String":  blob.WriteByte (0x0E); return;
+		case "System.Object":  blob.WriteByte (0x1C); return;
+		case "System.IntPtr":  blob.WriteByte (0x18); return;
+		}
+
+		if (typeRef.GenericArguments.Count > 0) {
+			var asmRef = FindOrAddAssemblyRef (typeRef.AssemblyName);
+			var openType = MakeTypeRefForManagedName (asmRef, typeRef.ManagedTypeName);
+			WriteGenericInstantiationSignature (blob, openType, typeRef);
+			return;
+		}
+
+		if (typeRef.ManagedTypeName.StartsWith ("!!", StringComparison.Ordinal)) {
+			blob.WriteByte (0x1E); // ELEMENT_TYPE_MVAR
+			blob.WriteCompressedInteger (int.Parse (typeRef.ManagedTypeName.Substring (2), System.Globalization.CultureInfo.InvariantCulture));
+			return;
+		}
+		if (typeRef.ManagedTypeName.StartsWith ("!", StringComparison.Ordinal)) {
+			blob.WriteByte (0x13); // ELEMENT_TYPE_VAR
+			blob.WriteCompressedInteger (int.Parse (typeRef.ManagedTypeName.Substring (1), System.Globalization.CultureInfo.InvariantCulture));
+			return;
+		}
+
+		var typeHandle = ResolveTypeRef (typeRef);
+		blob.WriteByte (typeRef.IsEnum ? (byte) 0x11 : (byte) 0x12); // VALUETYPE or CLASS
+		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeHandle));
 	}
 
 	TypeReferenceHandle MakeTypeRefForManagedName (EntityHandle scope, string managedTypeName)

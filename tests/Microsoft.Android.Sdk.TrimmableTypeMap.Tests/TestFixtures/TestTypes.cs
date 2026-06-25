@@ -1014,6 +1014,26 @@ namespace MyApp
 	}
 
 	/// <summary>
+	/// Generic intermediate MCW base that forwards its generic parameter to the
+	/// registered generic base. This mirrors Xamarin.Forms renderer hierarchies
+	/// such as VisualElementRenderer&lt;TElement&gt;.
+	/// </summary>
+	[Register ("my/app/GenericForwardingSelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class GenericForwardingSelectionContainer<T> : GenericSelectionHost<T> where T : class
+	{
+		protected GenericForwardingSelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Non-generic MCW base that closes the generic forwarding base.
+	/// </summary>
+	[Register ("my/app/StringForwardingSelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class StringForwardingSelectionContainer : GenericForwardingSelectionContainer<string>
+	{
+		protected StringForwardingSelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
 	/// Overrides a registered method declared above the first MCW base in the hierarchy.
 	/// </summary>
 	[Register ("my/app/SelectableList")]
@@ -1031,6 +1051,18 @@ namespace MyApp
 	public class GenericSelectableList : GenericSelectionContainer
 	{
 		protected GenericSelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void SetSelection (int position) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method declared above a generic base that forwards
+	/// type parameters through another generic base.
+	/// </summary>
+	[Register ("my/app/GenericForwardingSelectableList")]
+	public class GenericForwardingSelectableList : StringForwardingSelectionContainer
+	{
+		protected GenericForwardingSelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		public override void SetSelection (int position) { }
 	}

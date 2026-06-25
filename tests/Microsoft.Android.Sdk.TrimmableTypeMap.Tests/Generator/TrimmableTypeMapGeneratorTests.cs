@@ -57,7 +57,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var testAssemblyPath = typeof (TrimmableTypeMapGeneratorTests).Assembly.Location;
 		using var peReader = new PEReader (File.OpenRead (testAssemblyPath));
 		var result = CreateGenerator ().Execute (
-			new List<(string, PEReader)> { ("TestAssembly", peReader) },
+			new [] { Input ("TestAssembly", peReader) },
 			new Version (11, 0),
 			new HashSet<string> ());
 		Assert.Empty (result.GeneratedAssemblies);
@@ -69,7 +69,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_WithTestFixtures_ProducesOutputs ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute (new [] { Input ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
 		Assert.NotEmpty (result.GeneratedAssemblies);
 		Assert.NotEmpty (result.GeneratedJavaSources);
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_Microsoft.Android.TypeMaps");
@@ -80,7 +80,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute (new [] { Input ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
 
 		// Abstract Instrumentation/Application subtypes are included too: their native
 		// methods (e.g. n_OnCreate, n_OnStart) are declared on the abstract base class
@@ -141,7 +141,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Execute_NullAssemblyList_Throws ()
 	{
-		IReadOnlyList<(string Name, PEReader Reader)>? n = null;
+		IReadOnlyList<AssemblyInput>? n = null;
 #pragma warning disable CS8604
 		Assert.Throws<ArgumentNullException> (() => CreateGenerator ().Execute (n, new Version (11, 0), new HashSet<string> ()));
 #pragma warning restore CS8604
@@ -151,7 +151,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_GeneratedAssembliesAreValidPE ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute (new [] { Input ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
 		foreach (var assembly in result.GeneratedAssemblies) {
 			assembly.Content.Position = 0;
 			using var vr = new PEReader (assembly.Content, PEStreamOptions.LeaveOpen);
@@ -164,7 +164,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_JavaSourcesHaveCorrectStructure ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute (new [] { Input ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
 		foreach (var source in result.GeneratedJavaSources)
 			Assert.Contains ("class ", source.Content);
 	}
@@ -174,7 +174,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	{
 		using var peReader = CreateTestFixturePEReader ();
 		var result = CreateGenerator ().Execute (
-			new List<(string, PEReader)> { ("Mono.Android", peReader) },
+			new [] { Input ("Mono.Android", peReader) },
 			new Version (11, 0),
 			new HashSet<string> (StringComparer.OrdinalIgnoreCase) { "Mono.Android" });
 
@@ -198,7 +198,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			""");
 
 		var result = CreateGenerator ().Execute (
-			new List<(string, PEReader)> { ("TestFixtures", peReader) },
+			new [] { Input ("TestFixtures", peReader) },
 			new Version (11, 0),
 			new HashSet<string> (),
 			useSharedTypemapUniverse: false,
@@ -218,6 +218,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
 		new (new TestTrimmableTypeMapLogger (logMessages, warnings));
+
+	static AssemblyInput Input (string name, PEReader reader) => new (name, "", reader);
 
 	[Theory]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", "com.example.MyActivity")]
