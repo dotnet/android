@@ -70,7 +70,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				return MakeArrayTypes (elementType, typeSignature.ArrayRank);
 			}
 			
-			throw new NotSupportedException ("Unsupporte runtime.");
+			throw new NotSupportedException ("Unsupported runtime.");
 
 			static bool IsKeyword (JniTypeSignature typeSignature)
 			{
