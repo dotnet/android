@@ -51,20 +51,6 @@ The mirror must run in the project that actually needs the new package — a sib
 
 After it succeeds, just re-run the failed CI job. No PR edits needed — the packages are now anonymous-readable forever.
 
-### Fallback: the artifacts-credprovider plugin
-
-If you can't `az login` (e.g. on a machine without the Azure CLI), the older `artifacts-credprovider` flow sometimes works for simple cases. It has unresolved auth gaps for some packages — observed with `com.android.tools.lint:lint-gradle` and its transitives, which 401 even with a properly attached `VssSessionToken` — so prefer the script above when you can.
-
-```powershell
-iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"   # one-time
-Remove-Item "$env:LOCALAPPDATA\MicrosoftCredentialProvider\SessionTokenCache.dat" -ErrorAction SilentlyContinue
-$env:RunningOnCI = 'true'
-$env:NUGET_CREDENTIALPROVIDER_VSTS_TOKENTYPE = 'SelfDescribing'   # required for plugin markers
-./build-tools/gradle/gradlew.bat --project-dir <project-dir> build --no-daemon
-```
-
-The credprovider plugin is a no-op when no AzDO repos are configured (i.e. local builds without `RunningOnCI`).
-
 ## Don'ts
 
 - Don't hard-code Maven repo URLs in `build.gradle` / `settings.gradle`; use the shared file.
