@@ -60,13 +60,13 @@
       DependsOnTargets="_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
-      Outputs="$(_ProguardProjectConfiguration)">
+      Outputs="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg">
     <GenerateNativeAotProguardConfiguration
         NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
         AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
-        OutputFile="$(_ProguardProjectConfiguration)" />
+        OutputFile="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" />
     <ItemGroup>
-      <FileWrites Include="$(_ProguardProjectConfiguration)" />
+      <FileWrites Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" />
     </ItemGroup>
   </Target>
 
