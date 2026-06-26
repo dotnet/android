@@ -35,6 +35,10 @@
 
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NotNullClass.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifytest\package-info.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifytest\JSpecifyPackageMarked.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifytest\JSpecifyClassMarked.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifyunmarked\JSpecifyUnmarked.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IParameterInterface.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaAnnotation.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaEnum.class" />

@@ -11,19 +11,69 @@ namespace Xamarin.Android.Tools.Bytecode {
 	public class XmlClassDeclarationBuilder {
 
 		ClassFile       classFile;
+		ClassFile?      packageInfo;
 		ClassSignature? signature;
+		bool            isNullMarked;
 
 		bool IsInterface {
 			get {return (classFile.AccessFlags & ClassAccessFlags.Interface) != 0;}
 		}
 
 		public XmlClassDeclarationBuilder (ClassFile classFile)
+			: this (classFile, packageInfo: null)
+		{
+		}
+
+		public XmlClassDeclarationBuilder (ClassFile classFile, ClassFile? packageInfo)
 		{
 			if (classFile == null)
 				throw new ArgumentNullException ("classFile");
 
-			this.classFile  = classFile;
-			signature       = classFile.GetSignature ();
+			this.classFile      = classFile;
+			this.packageInfo    = packageInfo;
+			signature           = classFile.GetSignature ();
+			isNullMarked        = ComputeIsNullMarked ();
+		}
+
+		// Module-level and inner-class scope inheritance are not yet implemented.
+		bool ComputeIsNullMarked ()
+		{
+			var classScope = GetJSpecifyScope (classFile.Attributes);
+			if (classScope.HasValue)
+				return classScope.Value;
+
+			if (packageInfo != null) {
+				var pkgScope = GetJSpecifyScope (packageInfo.Attributes);
+				if (pkgScope.HasValue)
+					return pkgScope.Value;
+			}
+
+			return false;
+		}
+
+		// `@NullMarked` / `@NullUnmarked` are `@Retention(RUNTIME)`, so
+		// check both Visible and Invisible annotation tables.
+		static bool? GetJSpecifyScope (AttributeCollection? attributes)
+		{
+			if (attributes == null)
+				return null;
+			foreach (var a in EnumerateDeclarationAnnotations (attributes)) {
+				if (a.Type == "Lorg/jspecify/annotations/NullUnmarked;")
+					return false;
+				if (a.Type == "Lorg/jspecify/annotations/NullMarked;")
+					return true;
+			}
+			return null;
+		}
+
+		static IEnumerable<Annotation> EnumerateDeclarationAnnotations (AttributeCollection attributes)
+		{
+			foreach (var v in attributes.OfType<RuntimeVisibleAnnotationsAttribute> ())
+				foreach (var a in v.Annotations)
+					yield return a;
+			foreach (var i in attributes.OfType<RuntimeInvisibleAnnotationsAttribute> ())
+				foreach (var a in i.Annotations)
+					yield return a;
 		}
 
 		public XElement ToXElement ()
@@ -425,7 +475,16 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		IEnumerable<XElement> GetMethodParameters (MethodInfo method)
 		{
-			var annotations = method.Attributes?.OfType<RuntimeInvisibleParameterAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
+			var invisible = method.Attributes?.OfType<RuntimeInvisibleParameterAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
+			var visible   = method.Attributes?.OfType<RuntimeVisibleParameterAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
+			IList<ParameterAnnotation>? annotations = invisible;
+			if (annotations == null) {
+				annotations = visible;
+			} else if (visible != null) {
+				var merged = new List<ParameterAnnotation> (annotations);
+				merged.AddRange (visible);
+				annotations = merged;
+			}
 			var varargs     = (method.AccessFlags & MethodAccessFlags.Varargs) != 0;
 			var parameters  = method.GetParameters ();
 			for (int i = 0; i < parameters.Length; ++i) {
@@ -453,7 +512,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 						new XAttribute ("type",     genericType),
 						new XAttribute ("jni-type", p.Type.TypeSignature ?? p.Type.BinaryName),
 						GetKotlinInlineClassJniType (p),
-						GetNotNull (annotations, i));
+						GetNotNull (method, annotations, i));
 			}
 		}
 
@@ -513,34 +572,195 @@ namespace Xamarin.Android.Tools.Bytecode {
 			return null;
 		}
 
-		static XAttribute? GetNotNull (MethodInfo method)
+		XAttribute? GetNotNull (MethodInfo method)
 		{
-			var annotations = method.Attributes?.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
-
-			if (annotations?.Any (a => IsNotNullAnnotation (a)) == true)
+			var nullness = GetMethodReturnNullness (method);
+			if (nullness == true)
 				return new XAttribute ("return-not-null", "true");
-
 			return null;
 		}
 
-		static XAttribute? GetNotNull (IList<ParameterAnnotation>? annotations, int parameterIndex)
+		XAttribute? GetNotNull (MethodInfo method, IList<ParameterAnnotation>? annotations, int parameterIndex)
 		{
-			var ann = annotations?.FirstOrDefault (a => a.ParameterIndex == parameterIndex)?.Annotations;
-
-			if (ann?.Any (a => IsNotNullAnnotation (a)) == true)
+			var nullness = GetParameterNullness (method, annotations, parameterIndex);
+			if (nullness == true)
 				return new XAttribute ("not-null", "true");
-
 			return null;
 		}
 
-		static XAttribute? GetNotNull (FieldInfo field)
+		XAttribute? GetNotNull (FieldInfo field)
 		{
-			var annotations = field.Attributes?.OfType<RuntimeInvisibleAnnotationsAttribute> ().FirstOrDefault ()?.Annotations;
-
-			if (annotations?.Any (a => IsNotNullAnnotation (a)) == true)
+			var nullness = GetFieldNullness (field);
+			if (nullness == true)
 				return new XAttribute ("not-null", "true");
-
 			return null;
+		}
+
+		bool? GetMethodReturnNullness (MethodInfo method)
+		{
+			if (HasDeclarationNotNullAnnotation (method.Attributes))
+				return true;
+			if (HasDeclarationNullableAnnotation (method.Attributes))
+				return null;
+			var typeNullness = GetTypeUseNullness (method.Attributes,
+				ta => ta.TargetType == TypeAnnotationTargetType.MethodReturn);
+			if (typeNullness.HasValue)
+				return typeNullness;
+			if (isNullMarked && IsReferenceTypeDescriptor (GetReturnDescriptor (method.Descriptor))
+					&& !IsTopLevelTypeVariableSignature (method.ReturnType.TypeSignature))
+				return true;
+			return null;
+		}
+
+		bool? GetParameterNullness (MethodInfo method, IList<ParameterAnnotation>? annotations, int parameterIndex)
+		{
+			bool hasDeclarationNullable = false;
+			if (annotations != null) {
+				foreach (var pa in annotations) {
+					if (pa.ParameterIndex != parameterIndex)
+						continue;
+					foreach (var a in pa.Annotations) {
+						if (IsNotNullAnnotation (a))
+							return true;
+						if (IsNullableAnnotation (a))
+							hasDeclarationNullable = true;
+					}
+				}
+			}
+			if (hasDeclarationNullable)
+				return null;
+
+			var typeNullness = GetTypeUseNullness (method.Attributes,
+				ta => ta.TargetType == TypeAnnotationTargetType.MethodFormalParameter
+					&& ta.FormalParameterIndex == parameterIndex);
+			if (typeNullness.HasValue)
+				return typeNullness;
+
+			if (isNullMarked) {
+				var parameters = method.GetParameters ();
+				if (parameterIndex >= 0 && parameterIndex < parameters.Length
+						&& IsReferenceTypeDescriptor (parameters [parameterIndex].Type.BinaryName)
+						&& !IsTopLevelTypeVariableSignature (parameters [parameterIndex].Type.TypeSignature))
+					return true;
+			}
+			return null;
+		}
+
+		bool? GetFieldNullness (FieldInfo field)
+		{
+			if (HasDeclarationNotNullAnnotation (field.Attributes))
+				return true;
+			if (HasDeclarationNullableAnnotation (field.Attributes))
+				return null;
+			var typeNullness = GetTypeUseNullness (field.Attributes,
+				ta => ta.TargetType == TypeAnnotationTargetType.Field);
+			if (typeNullness.HasValue)
+				return typeNullness;
+			if (isNullMarked && IsReferenceTypeDescriptor (field.Descriptor)
+					&& !IsTopLevelTypeVariableSignature (field.GetSignature ()))
+				return true;
+			return null;
+		}
+
+		static bool HasDeclarationNotNullAnnotation (AttributeCollection? attributes)
+		{
+			if (attributes == null)
+				return false;
+			foreach (var a in EnumerateDeclarationAnnotations (attributes)) {
+				if (IsNotNullAnnotation (a))
+					return true;
+			}
+			return false;
+		}
+
+		static bool HasDeclarationNullableAnnotation (AttributeCollection? attributes)
+		{
+			if (attributes == null)
+				return false;
+			foreach (var a in EnumerateDeclarationAnnotations (attributes)) {
+				if (IsNullableAnnotation (a))
+					return true;
+			}
+			return false;
+		}
+
+		// Look in `RuntimeInvisibleTypeAnnotations` and `RuntimeVisibleTypeAnnotations`
+		// for entries matching `predicate` (e.g. METHOD_RETURN, FIELD, or
+		// a specific METHOD_FORMAL_PARAMETER index) at the top of the type
+		// (no `type_path`). Returns true for `@NonNull`, false for
+		// `@Nullable`, null for no match.
+		static bool? GetTypeUseNullness (AttributeCollection? attributes, Func<TypeAnnotation, bool> predicate)
+		{
+			if (attributes == null)
+				return null;
+			bool? result = null;
+			foreach (var ta in EnumerateTypeAnnotations (attributes)) {
+				if (!ta.AppliesToTopLevelType)
+					continue;
+				if (!predicate (ta))
+					continue;
+				if (IsNotNullAnnotation (ta.Annotation))
+					return true;
+				if (IsNullableAnnotation (ta.Annotation))
+					result = false;
+			}
+			return result;
+		}
+
+		static IEnumerable<TypeAnnotation> EnumerateTypeAnnotations (AttributeCollection attributes)
+		{
+			foreach (var v in attributes.OfType<RuntimeVisibleTypeAnnotationsAttribute> ())
+				foreach (var a in v.Annotations)
+					yield return a;
+			foreach (var i in attributes.OfType<RuntimeInvisibleTypeAnnotationsAttribute> ())
+				foreach (var a in i.Annotations)
+					yield return a;
+		}
+
+		static bool IsNullableAnnotation (Annotation annotation)
+		{
+			switch (annotation.Type) {
+			case "Landroid/annotation/Nullable;":
+			case "Landroid/support/annotation/Nullable;":
+			case "Landroidx/annotation/Nullable;":
+			case "Landroidx/annotation/RecentlyNullable;":
+			case "Lcom/android/annotations/Nullable;":
+			case "Ledu/umd/cs/findbugs/annotations/Nullable;":
+			case "Ljakarta/annotation/Nullable;":
+			case "Ljavax/annotation/Nullable;":
+			case "Lorg/checkerframework/checker/nullness/compatqual/NullableDecl;":
+			case "Lorg/checkerframework/checker/nullness/qual/Nullable;":
+			case "Lorg/eclipse/jdt/annotation/Nullable;":
+			case "Lorg/jetbrains/annotations/Nullable;":
+			case "Lorg/jspecify/annotations/Nullable;":
+				return true;
+			}
+			return false;
+		}
+
+		static string GetReturnDescriptor (string descriptor)
+		{
+			var i = descriptor.LastIndexOf (')');
+			return i < 0 ? descriptor : descriptor.Substring (i + 1);
+		}
+
+		static bool IsReferenceTypeDescriptor (string descriptor)
+		{
+			if (string.IsNullOrEmpty (descriptor))
+				return false;
+			var c = descriptor [0];
+			return c == 'L' || c == '[';
+		}
+
+		// JSpecify gives unannotated type-variable *usages* parametric
+		// nullness, so e.g. `<T> T get()` must not gain `not-null="true"`
+		// in a null-marked scope. A JVMS signature for a type-variable
+		// use begins with 'T' (followed by the variable name and ';').
+		// Returns false for `null` so callers can pass the raw signature
+		// when no Signature attribute is present.
+		static bool IsTopLevelTypeVariableSignature (string? signature)
+		{
+			return !string.IsNullOrEmpty (signature) && signature [0] == 'T';
 		}
 
 		static bool IsNotNullAnnotation (Annotation annotation)

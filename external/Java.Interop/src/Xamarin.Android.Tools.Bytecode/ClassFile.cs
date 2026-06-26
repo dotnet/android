@@ -114,6 +114,18 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public string FullJniName => "L" + ThisClass.Name.Value + ";";
 
+		// `package-info.class` is a synthetic class that carries
+		// package-level annotations (e.g. JSpecify's `@NullMarked`).
+		// Its simple name is `package-info`.
+		public bool IsPackageInfo {
+			get {
+				var name = ThisClass.Name.Value;
+				var slash = name.LastIndexOf ('/');
+				var simple = slash < 0 ? name : name.Substring (slash + 1);
+				return simple == "package-info";
+			}
+		}
+
 		public string? SourceFileName {
 			get {
 				var sourceFile  = Attributes.Get<SourceFileAttribute> ();

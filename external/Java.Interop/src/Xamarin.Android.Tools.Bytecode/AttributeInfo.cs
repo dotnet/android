@@ -51,7 +51,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  const   string  StackMapTable           = "StackMapTable";
 		public	const	string	RuntimeVisibleAnnotations	= "RuntimeVisibleAnnotations";
 		public	const	string	RuntimeInvisibleAnnotations	= "RuntimeInvisibleAnnotations";
+		public	const	string	RuntimeVisibleParameterAnnotations   = "RuntimeVisibleParameterAnnotations";
 		public	const	string	RuntimeInvisibleParameterAnnotations = "RuntimeInvisibleParameterAnnotations";
+		public	const	string	RuntimeVisibleTypeAnnotations	= "RuntimeVisibleTypeAnnotations";
+		public	const	string	RuntimeInvisibleTypeAnnotations	= "RuntimeInvisibleTypeAnnotations";
 
 		ushort          nameIndex;
 
@@ -85,6 +88,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 			{ typeof (ModulePackagesAttribute),         ModulePackages },
 			{ typeof (RuntimeVisibleAnnotationsAttribute),		RuntimeVisibleAnnotations },
 			{ typeof (RuntimeInvisibleAnnotationsAttribute),	RuntimeInvisibleAnnotations },
+			{ typeof (RuntimeVisibleParameterAnnotationsAttribute),		RuntimeVisibleParameterAnnotations },
+			{ typeof (RuntimeInvisibleParameterAnnotationsAttribute),	RuntimeInvisibleParameterAnnotations },
+			{ typeof (RuntimeVisibleTypeAnnotationsAttribute),	RuntimeVisibleTypeAnnotations },
+			{ typeof (RuntimeInvisibleTypeAnnotationsAttribute),	RuntimeInvisibleTypeAnnotations },
 			{ typeof (SignatureAttribute),              Signature },
 			{ typeof (SourceFileAttribute),             SourceFile },
 			{ typeof (StackMapTableAttribute),          StackMapTable },
@@ -123,7 +130,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case ModulePackages:        return new ModulePackagesAttribute (constantPool, nameIndex, stream);
 			case RuntimeVisibleAnnotations:		return new RuntimeVisibleAnnotationsAttribute (constantPool, nameIndex, stream);
 			case RuntimeInvisibleAnnotations:	return new RuntimeInvisibleAnnotationsAttribute (constantPool, nameIndex, stream);
+			case RuntimeVisibleParameterAnnotations:	return new RuntimeVisibleParameterAnnotationsAttribute (constantPool, nameIndex, stream);
 			case RuntimeInvisibleParameterAnnotations:	return new RuntimeInvisibleParameterAnnotationsAttribute (constantPool, nameIndex, stream);
+			case RuntimeVisibleTypeAnnotations:	return new RuntimeVisibleTypeAnnotationsAttribute (constantPool, nameIndex, stream);
+			case RuntimeInvisibleTypeAnnotations:	return new RuntimeInvisibleTypeAnnotationsAttribute (constantPool, nameIndex, stream);
 			case Signature:             return new SignatureAttribute (constantPool, nameIndex, stream);
 			case SourceFile:            return new SourceFileAttribute (constantPool, nameIndex, stream);
 			case StackMapTable:         return new StackMapTableAttribute (constantPool, nameIndex, stream);
@@ -671,6 +681,31 @@ namespace Xamarin.Android.Tools.Bytecode {
 	}
 
 
+	// https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.18
+	public sealed class RuntimeVisibleParameterAnnotationsAttribute : AttributeInfo
+	{
+		public IList<ParameterAnnotation> Annotations { get; } = new List<ParameterAnnotation> ();
+
+		public RuntimeVisibleParameterAnnotationsAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var length = stream.ReadNetworkUInt32 ();
+			var param_count = stream.ReadNetworkByte ();
+
+			for (var i = 0; i < param_count; ++i) {
+				var a = new ParameterAnnotation (constantPool, stream, i);
+				Annotations.Add (a);
+			}
+		}
+
+		public override string ToString ()
+		{
+			var annotations = string.Join (", ", Annotations.Select (v => v.ToString ()));
+			return $"RuntimeVisibleParameterAnnotationsAttribute({annotations})";
+		}
+	}
+
+
 	// https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.19
 	public sealed class RuntimeInvisibleParameterAnnotationsAttribute : AttributeInfo
 	{
@@ -692,6 +727,52 @@ namespace Xamarin.Android.Tools.Bytecode {
 		{
 			var annotations = string.Join (", ", Annotations.Select (v => v.ToString ()));
 			return $"RuntimeInvisibleParameterAnnotationsAttribute({annotations})";
+		}
+	}
+
+	// https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.20
+	public sealed class RuntimeVisibleTypeAnnotationsAttribute : AttributeInfo
+	{
+		public IList<TypeAnnotation> Annotations { get; } = new List<TypeAnnotation> ();
+
+		public RuntimeVisibleTypeAnnotationsAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var length = stream.ReadNetworkUInt32 ();
+			var count = stream.ReadNetworkUInt16 ();
+
+			for (int i = 0; i < count; ++i) {
+				Annotations.Add (new TypeAnnotation (constantPool, stream));
+			}
+		}
+
+		public override string ToString ()
+		{
+			var annotations = string.Join (", ", Annotations.Select (v => v.ToString ()));
+			return $"RuntimeVisibleTypeAnnotations({annotations})";
+		}
+	}
+
+	// https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.21
+	public sealed class RuntimeInvisibleTypeAnnotationsAttribute : AttributeInfo
+	{
+		public IList<TypeAnnotation> Annotations { get; } = new List<TypeAnnotation> ();
+
+		public RuntimeInvisibleTypeAnnotationsAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var length = stream.ReadNetworkUInt32 ();
+			var count = stream.ReadNetworkUInt16 ();
+
+			for (int i = 0; i < count; ++i) {
+				Annotations.Add (new TypeAnnotation (constantPool, stream));
+			}
+		}
+
+		public override string ToString ()
+		{
+			var annotations = string.Join (", ", Annotations.Select (v => v.ToString ()));
+			return $"RuntimeInvisibleTypeAnnotations({annotations})";
 		}
 	}
 

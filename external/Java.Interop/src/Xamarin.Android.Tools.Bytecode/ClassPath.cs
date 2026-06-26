@@ -125,6 +125,16 @@ namespace Xamarin.Android.Tools.Bytecode {
 					x => classFiles.Where (p => p.PackageName == x).ToList ()));
 		}
 
+		// Returns the `package-info.class` for the given package, if any.
+		public ClassFile? GetPackageInfo (string packageName)
+		{
+			foreach (var c in classFiles) {
+				if (c.IsPackageInfo && c.PackageName == packageName)
+					return c;
+			}
+			return null;
+		}
+
 		public static bool IsJarFile (string jarFile)
 		{
 			if (jarFile == null)
@@ -368,6 +378,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 			FixupModuleVisibility (removeModules: true);
 
 			var packagesDictionary = GetPackages ();
+			var packageInfos = packagesDictionary.ToDictionary (
+				kv => kv.Key,
+				kv => kv.Value.FirstOrDefault (c => c.IsPackageInfo));
 			var api = new XElement ("api",
 					GetApiSource (),
 					GetPlatform (),
@@ -375,8 +388,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 					.Select (p => new XElement ("package",
 						new XAttribute ("name", p),
 						new XAttribute ("jni-name", p.Replace ('.', '/')),
-						packagesDictionary [p].OrderBy (c => c.ThisClass.Name.Value, StringComparer.OrdinalIgnoreCase)
-						.Select (c => new XmlClassDeclarationBuilder (c).ToXElement ()))));
+						packagesDictionary [p].Where (c => !c.IsPackageInfo)
+						.OrderBy (c => c.ThisClass.Name.Value, StringComparer.OrdinalIgnoreCase)
+						.Select (c => new XmlClassDeclarationBuilder (c, packageInfos [p]).ToXElement ()))));
 			FixupParametersFromDocs (api);
 			return api;
 		}
