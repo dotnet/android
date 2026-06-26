@@ -45,18 +45,6 @@ static class MetadataHelper
 			}
 			writer.Write ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
 		}
-		foreach (var proxy in data.ArrayProxyTypes) {
-			writer.Write (proxy.TypeName);
-			writer.Write (proxy.JniName);
-			writer.WriteTypeRef (proxy.ElementType);
-			writer.Write (proxy.Rank);
-			if (proxy.Primitive is null) {
-				writer.Write ((byte) 0);
-			} else {
-				writer.Write ((byte) 1);
-				writer.WriteTypeRef (proxy.Primitive.ConcreteArrayType);
-			}
-		}
 		foreach (var assoc in data.Associations) {
 			writer.Write (assoc.SourceTypeReference);
 			writer.Write (assoc.AliasProxyTypeReference);
