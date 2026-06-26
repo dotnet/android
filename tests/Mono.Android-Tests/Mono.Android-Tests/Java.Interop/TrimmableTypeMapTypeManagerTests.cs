@@ -258,15 +258,38 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void TryGetArrayType_PrimitiveLeaf_DoesNotRequireRankMapEntry ()
+		public void TryGetArrayProxy_ObjectLeaf_ReturnsAllRankTypes ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
+			AssumeGeneratedArrayProxiesEnabled ();
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayType (typeof (byte), out var byteArrayType));
-			Assert.AreEqual (typeof (byte[]), byteArrayType);
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 1, out var objectArrayProxy));
+			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Lang.Object>));
+			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>));
+			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[]));
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayType (typeof (byte[]), out var jaggedByteArrayType));
-			Assert.AreEqual (typeof (byte[][]), jaggedByteArrayType);
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 2, out var jaggedObjectArrayProxy));
+			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>));
+			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>[]));
+			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[][]));
+		}
+
+		[Test]
+		public void TryGetArrayProxy_PrimitiveLeaf_ReturnsAllRankTypes ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+			AssumeGeneratedArrayProxiesEnabled ();
+
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 1, out var byteArrayProxy));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (sbyte[]));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<sbyte>));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaPrimitiveArray<sbyte>));
+			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaSByteArray));
+
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 2, out var jaggedByteArrayProxy));
+			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (sbyte[][]));
+			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>));
+			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
 		}
 
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
@@ -290,6 +313,13 @@ namespace Java.InteropTests
 			var fallbacks = manager.GetStaticMethodFallbackTypes (jniSimpleReference);
 			Assert.IsNotNull (fallbacks);
 			return fallbacks ?? throw new InvalidOperationException ("Expected fallback types.");
+		}
+
+		static void AssumeGeneratedArrayProxiesEnabled ()
+		{
+			if (!RuntimeFeature.IsNativeAotRuntime && System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				Assert.Ignore ("Generated array proxies are only emitted when dynamic code is unavailable.");
+			}
 		}
 
 		static void AssumeTrimmableTypeMapEnabled ()

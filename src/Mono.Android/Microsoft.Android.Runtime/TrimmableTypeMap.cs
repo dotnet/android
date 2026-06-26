@@ -21,6 +21,7 @@ public class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
+	static readonly JavaArrayProxy s_noArrayProxySentinel = new MissingJavaArrayProxy ();
 	static TrimmableTypeMap? s_instance;
 	static bool s_nativeMethodsRegistered;
 	static JniMethodInfo? s_classGetInterfacesMethod;
@@ -31,6 +32,7 @@ public class TrimmableTypeMap
 
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<Type, JavaArrayProxy> _arrayProxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
 
@@ -509,63 +511,23 @@ public class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
-	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>
+	internal bool TryGetArrayProxy (Type elementType, int additionalRank, [NotNullWhen (true)] out JavaArrayProxy? arrayProxy)
 	{
-		arrayType = null;
+		var signature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType);
+		signature = signature.AddArrayRank (additionalRank);
+		var elementJniName = signature.SimpleReference ?? throw new InvalidOperationException ();
 
-		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
-		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
-		var leaf = elementType;
-		int rankIndex = 0;
-		while (leaf.IsArray) {
-			if (!leaf.IsSZArray) {
-				return false;
+		if (_typeMap.TryGetArrayProxyType (elementJniName, signature.ArrayRank - 1, out var proxyType)) {
+			var proxy = _arrayProxyCache.GetOrAdd (proxyType, static type =>
+				type.GetCustomAttribute<JavaArrayProxy> (inherit: false) ?? s_noArrayProxySentinel);
+			if (!ReferenceEquals (proxy, s_noArrayProxySentinel)) {
+				arrayProxy = proxy;
+				return true;
 			}
-			var next = leaf.GetElementType ();
-			if (next is null) {
-				return false;
-			}
-			leaf = next;
-			rankIndex++;
 		}
 
-		bool isPrimitiveLeaf = leaf.IsPrimitive;
-		string? leafJniName = isPrimitiveLeaf
-			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
-			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
-
-		if (leafJniName is not null && _typeMap.TryGetArrayType (leafJniName, rankIndex, out arrayType)) {
-			return true;
-		}
-
-		if (isPrimitiveLeaf) {
-			arrayType = MakePrimitiveArrayType (elementType);
-			return true;
-		}
-
-		return false;
-	}
-
-	static Type MakePrimitiveArrayType (Type elementType)
-	{
-#pragma warning disable IL3050 // Primitive array types are runtime intrinsic; no generated generic code is needed.
-		return elementType.MakeArrayType ();
-#pragma warning restore IL3050
-	}
-
-	/// <summary>JNI single-letter encoding for primitive element types.</summary>
-	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
-	{
-		if (primitive == typeof (bool))   { jni = "Z"; return true; }
-		if (primitive == typeof (byte))   { jni = "B"; return true; }
-		if (primitive == typeof (char))   { jni = "C"; return true; }
-		if (primitive == typeof (short))  { jni = "S"; return true; }
-		if (primitive == typeof (int))    { jni = "I"; return true; }
-		if (primitive == typeof (long))   { jni = "J"; return true; }
-		if (primitive == typeof (float))  { jni = "F"; return true; }
-		if (primitive == typeof (double)) { jni = "D"; return true; }
-		jni = null;
+		arrayProxy = null;
 		return false;
 	}
 
@@ -610,6 +572,13 @@ public class TrimmableTypeMap
 		}
 
 		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+	}
+
+	sealed class MissingJavaArrayProxy : JavaArrayProxy
+	{
+		public override Type[] GetArrayTypes () => [];
+
+		public override Array CreateManagedArray (int length) => throw new NotSupportedException ();
 	}
 
 }

@@ -56,6 +56,19 @@ namespace Java.Interop {
 			} },
 		};
 
+		static readonly Dictionary<Type, JavaPeerContainerFactory> ScalarContainerFactories = new Dictionary<Type, JavaPeerContainerFactory> {
+			{ typeof (bool), new JavaPeerContainerFactory<bool> () },
+			{ typeof (byte), new JavaPeerContainerFactory<byte> () },
+			{ typeof (sbyte), new JavaPeerContainerFactory<sbyte> () },
+			{ typeof (char), new JavaPeerContainerFactory<char> () },
+			{ typeof (short), new JavaPeerContainerFactory<short> () },
+			{ typeof (int), new JavaPeerContainerFactory<int> () },
+			{ typeof (long), new JavaPeerContainerFactory<long> () },
+			{ typeof (float), new JavaPeerContainerFactory<float> () },
+			{ typeof (double), new JavaPeerContainerFactory<double> () },
+			{ typeof (string), new JavaPeerContainerFactory<string> () },
+		};
+
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
@@ -81,7 +94,7 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			if (RuntimeFeature.TrimmableTypeMap) {
+			if (RuntimeFeature.TrimmableTypeMap && target.IsGenericType && !target.IsGenericTypeDefinition) {
 				var factoryConverter = TryGetFactoryBasedConverter (target);
 				if (factoryConverter != null)
 					return factoryConverter;
@@ -115,25 +128,19 @@ namespace Java.Interop {
 		/// </summary>
 		static Func<IntPtr, JniHandleOwnership, object?>? TryGetFactoryBasedConverter (Type target)
 		{
-			if (!target.IsGenericType)
-				return null;
-
-			var genericDef = target.GetGenericTypeDefinition ();
-			var typeArgs = target.GetGenericArguments ();
-
-			if (genericDef == typeof (IList<>) && typeArgs.Length == 1) {
-				var factory = TryGetContainerFactory (typeArgs [0]);
+			if (TryGetSingleGenericArgument (target, typeof (IList<>), typeof (JavaList<>), out var listElementType)) {
+				var factory = TryGetContainerFactory (listElementType);
 				if (factory != null)
 					return (h, t) => factory.CreateList (h, t);
 			}
 
-			if (genericDef == typeof (ICollection<>) && typeArgs.Length == 1) {
-				var factory = TryGetContainerFactory (typeArgs [0]);
+			if (TryGetSingleGenericArgument (target, typeof (ICollection<>), typeof (JavaCollection<>), out var collectionElementType)) {
+				var factory = TryGetContainerFactory (collectionElementType);
 				if (factory != null)
 					return (h, t) => factory.CreateCollection (h, t);
 			}
 
-			if (genericDef == typeof (IDictionary<,>) && typeArgs.Length == 2) {
+			if (TryGetDictionaryArguments (target, out var typeArgs)) {
 				var keyFactory = TryGetContainerFactory (typeArgs [0]);
 				var valueFactory = TryGetContainerFactory (typeArgs [1]);
 				if (keyFactory != null && valueFactory != null)
@@ -141,18 +148,45 @@ namespace Java.Interop {
 			}
 
 			return null;
-		}
 
-		static JavaPeerContainerFactory? TryGetContainerFactory (Type elementType)
-		{
-			if (!typeof (IJavaPeerable).IsAssignableFrom (elementType))
-				return null;
+			static bool TryGetSingleGenericArgument (Type target, Type interfaceType, Type wrapperType, [NotNullWhen (true)] out Type? argument)
+			{
+				if (target.IsGenericType && !target.IsGenericTypeDefinition) {
+					var genericDef = target.GetGenericTypeDefinition ();
+					if (genericDef == interfaceType || genericDef == wrapperType) {
+						argument = target.GetGenericArguments () [0];
+						return true;
+					}
+				}
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
+				argument = null;
+				return false;
 			}
 
-			return null;
+			static bool TryGetDictionaryArguments (Type target, [NotNullWhen (true)] out Type []? arguments)
+			{
+				if (target.IsGenericType && !target.IsGenericTypeDefinition) {
+					var genericDef = target.GetGenericTypeDefinition ();
+					if (genericDef == typeof (IDictionary<,>) || genericDef == typeof (JavaDictionary<,>)) {
+						arguments = target.GetGenericArguments ();
+						return true;
+					}
+				}
+
+				arguments = null;
+				return false;
+			}
+
+			static JavaPeerContainerFactory? TryGetContainerFactory (Type elementType)
+			{
+				if (ScalarContainerFactories.TryGetValue (elementType, out var scalarFactory))
+					return scalarFactory;
+
+				if (typeof (IJavaPeerable).IsAssignableFrom (elementType))
+					return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
+
+				return null;
+			}
 		}
 
 		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)

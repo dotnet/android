@@ -102,17 +102,17 @@ sealed class SingleUniverseTypeMap : ITypeMap
 		return false;
 	}
 
-	public bool TryGetArrayType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? arrayType)
+	public bool TryGetArrayProxyType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? proxyType)
 	{
 		foreach (var arrayMapsByRank in _arrayMapsByUniverseAndRank) {
 			if ((uint)rankIndex < (uint)arrayMapsByRank.Length &&
 					arrayMapsByRank [rankIndex] is { } dict &&
-					dict.TryGetValue (jniName, out arrayType)) {
+					dict.TryGetValue (jniName, out proxyType)) {
 				return true;
 			}
 		}
 
-		arrayType = null;
+		proxyType = null;
 		return false;
 	}
 }

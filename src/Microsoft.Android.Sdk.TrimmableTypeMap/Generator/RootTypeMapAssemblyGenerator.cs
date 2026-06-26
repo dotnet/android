@@ -305,7 +305,7 @@ public sealed class RootTypeMapAssemblyGenerator
 				// TrimmableTypeMap.Initialize(typeMaps, proxyMaps, arrayMapsByAssemblyAndRank-or-null)
 				encoder.LoadLocal (0);
 				encoder.LoadLocal (1);
-				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
+				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
 				encoder.Call (initializeRef, parameterCount: 3);
 				encoder.Return ();
 			},
@@ -450,7 +450,7 @@ public sealed class RootTypeMapAssemblyGenerator
 				// TrimmableTypeMap.Initialize(GetExternal<JL.Object>(), GetProxy<JL.Object>(), arrayMapsByAssemblyAndRank-or-null)
 				encoder.Call (getExternalSpec, parameterCount: 0, returnsValue: true);
 				encoder.Call (getProxySpec, parameterCount: 0, returnsValue: true);
-				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
+				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
 				encoder.Call (initializeRef, parameterCount: 3);
 				encoder.Return ();
 			});
@@ -534,7 +534,7 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// </summary>
 	static void EmitArrayMapsByAssemblyAndRankOrNull (PEAssemblyBuilder pe, TrackedInstructionEncoder encoder,
 		IReadOnlyList<string> perAssemblyTypeMapNames,
-		MemberReferenceHandle getExternalMemberRef,
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle externalDictArrayTypeSpec,
 		int maxArrayRank)
 	{
@@ -549,14 +549,14 @@ public sealed class RootTypeMapAssemblyGenerator
 			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
 			encoder.OpCode (ILOpCode.Dup);
 			encoder.LoadConstantI4 (i);
-			EmitArrayMapsByRank (pe, encoder, asmRef, getExternalMemberRef, externalDictTypeSpec, maxArrayRank);
+			EmitArrayMapsByRank (pe, encoder, asmRef, getExternalMemberRef, getProxyMemberRef, externalDictTypeSpec, maxArrayRank);
 			encoder.OpCode (ILOpCode.Stelem_ref);
 		}
 	}
 
 	static void EmitArrayMapsByRank (PEAssemblyBuilder pe, TrackedInstructionEncoder encoder,
 		AssemblyReferenceHandle assemblyRef,
-		MemberReferenceHandle getExternalMemberRef, TypeSpecificationHandle externalDictTypeSpec, int maxArrayRank)
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef, TypeSpecificationHandle externalDictTypeSpec, int maxArrayRank)
 	{
 		encoder.LoadConstantI4 (maxArrayRank);
 		encoder.NewArray (externalDictTypeSpec);
@@ -564,10 +564,13 @@ public sealed class RootTypeMapAssemblyGenerator
 			var rankRef = pe.Metadata.AddTypeReference (assemblyRef, default,
 				pe.Metadata.GetOrAddString ($"__ArrayMapRank{r + 1}"));
 			var rankSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, rankRef);
+			var proxyRankSpec = MakeGenericMethodSpec (pe, getProxyMemberRef, rankRef);
 			encoder.OpCode (ILOpCode.Dup);
 			encoder.LoadConstantI4 (r);
 			encoder.Call (rankSpec, parameterCount: 0, returnsValue: true);
 			encoder.OpCode (ILOpCode.Stelem_ref);
+			encoder.Call (proxyRankSpec, parameterCount: 0, returnsValue: true);
+			encoder.OpCode (ILOpCode.Pop);
 		}
 	}
 

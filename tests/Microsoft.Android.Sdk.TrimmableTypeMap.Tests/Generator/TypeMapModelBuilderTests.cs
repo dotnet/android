@@ -975,7 +975,8 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal (5, model5.MaxArrayRank);
 			var rank5Entries = model5.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (5, rank5Entries.Count);
-			Assert.Equal ("Foo.Bar[][][][][], App", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
 
 			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
 			Assert.Equal (1, model1.MaxArrayRank);
@@ -1008,29 +1009,61 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_EmitArrayEntries_TrimTargetIsClosedArrayType ()
+		public void Build_EmitArrayEntries_MapToGeneratedArrayProxy ()
 		{
-			// 3rd ctor arg = the closed array type itself, so ILC's per-shape conditional
-			// drops the entry when the array shape is never constructed.
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var model = BuildModelWithArrays (new [] { peer });
 
 			var rank1 = model.Entries.Single (e => e.AnchorRank == 1);
-			Assert.Equal ("Foo.Bar[], App",     rank1.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[], App",     rank1.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.TargetTypeReference);
 			var rank2 = model.Entries.Single (e => e.AnchorRank == 2);
-			Assert.Equal ("Foo.Bar[][], App",   rank2.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[][], App",   rank2.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.TargetTypeReference);
 			var rank3 = model.Entries.Single (e => e.AnchorRank == 3);
-			Assert.Equal ("Foo.Bar[][][], App", rank3.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[][][], App", rank3.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.TargetTypeReference);
+
+			Assert.Equal (3, model.ArrayProxyTypes.Count);
+			Assert.Equal ("Foo_Bar_ArrayProxy1", model.ArrayProxyTypes [0].TypeName);
+			Assert.Equal ("Foo_Bar_ArrayProxy2", model.ArrayProxyTypes [1].TypeName);
+			Assert.Equal ("Foo_Bar_ArrayProxy3", model.ArrayProxyTypes [2].TypeName);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_AssociationsMatchGetArrayTypes ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			var rank1Proxy = "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap";
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop" &&
+				a.AliasProxyTypeReference == rank1Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaArray`1[[Foo.Bar, App]], Java.Interop" &&
+				a.AliasProxyTypeReference == rank1Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Foo.Bar[], App" &&
+				a.AliasProxyTypeReference == rank1Proxy);
+
+			var rank2Proxy = "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap";
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop]], Java.Interop" &&
+				a.AliasProxyTypeReference == rank2Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaArray`1[[Foo.Bar, App]][], Java.Interop" &&
+				a.AliasProxyTypeReference == rank2Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Foo.Bar[][], App" &&
+				a.AliasProxyTypeReference == rank2Proxy);
 		}
 
 		[Fact]
 		public void Build_EmitArrayEntries_AllConditional ()
 		{
 			// 2-arg unconditional makes no sense for arrays — the trim conditioning on the
-			// array shape is the whole point.
+			// generated array proxy is the whole point.
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var model = BuildModelWithArrays (new [] { peer });
 
@@ -1105,6 +1138,45 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModelWithArrays (new [] { peer });
 
 			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_PrimitiveEntries_SynthesizedForJavaInteropAssembly ()
+		{
+			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Java.Interop.TypeMap");
+
+			var primitiveEntries = model.Entries
+				.Where (e => e.JniName.Length == 1 && e.AnchorRank is not null)
+				.ToList ();
+			Assert.Equal (24, primitiveEntries.Count); // 8 primitive keywords × 3 ranks
+
+			var sbyteRank1 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 1);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.TargetTypeReference);
+			Assert.False (sbyteRank1.IsUnconditional);
+
+			var sbyteRank2 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 2);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy2, _Java.Interop.TypeMap", sbyteRank2.TargetTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaPrimitiveArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaSByteArray, Java.Interop" &&
+				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_PrimitiveEntries_NotDuplicatedInOtherAssemblies ()
+		{
+			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Mono.Android.TypeMap");
+
+			Assert.DoesNotContain (model.Entries, e => e.JniName.Length == 1 && e.AnchorRank is not null);
+			Assert.DoesNotContain (model.Associations, a => a.SourceTypeReference == "System.SByte[], System.Runtime");
 		}
 
 		[Fact]
@@ -1197,10 +1269,26 @@ public class ModelBuilderTests : FixtureTestBase
 			EmitAndVerify (model, "ArrBlobs", (pe, reader) => {
 				var attrs = ReadAllTypeMapAttributeBlobs (reader);
 
-				// Three array entries should round-trip with the same JNI key + array trim targets.
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[], App");
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[][], App");
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[][][], App");
+				// Three array entries should round-trip with the same JNI key + generated array proxy refs.
+				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs" &&
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
+				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs" &&
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs");
+				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs" &&
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs");
+
+				var assocAttrs = ReadAllTypeMapAssociationAttributeBlobs (reader);
+				Assert.Contains (assocAttrs, a =>
+					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
+					a.sourceRef == "Java.Interop.JavaArray`1[[Foo.Bar, App]], Java.Interop" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
+				Assert.Contains (assocAttrs, a =>
+					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
+					a.sourceRef == "Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
 			});
 		}
 	}
@@ -1275,6 +1363,35 @@ public class ModelBuilderTests : FixtureTestBase
 			}
 
 			result.Add ((jniName, proxyRef, targetRef));
+		}
+		return result;
+	}
+
+	static List<(string groupName, string? sourceRef, string? proxyRef)> ReadAllTypeMapAssociationAttributeBlobs (MetadataReader reader)
+	{
+		var result = new List<(string, string?, string?)> ();
+		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+		foreach (var attrHandle in asmAttrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (attr.Constructor.Kind != HandleKind.MemberReference)
+				continue;
+
+			var ctor = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
+			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
+				continue;
+
+			var parent = reader.GetTypeSpecification ((TypeSpecificationHandle) ctor.Parent);
+			var parentName = parent.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+			if (!parentName.StartsWith ("System.Runtime.InteropServices.TypeMapAssociationAttribute`1", StringComparison.Ordinal)) {
+				continue;
+			}
+
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 ();
+			if (prolog != 1)
+				continue;
+
+			result.Add ((parentName, blobReader.ReadSerializedString (), blobReader.ReadSerializedString ()));
 		}
 		return result;
 	}
