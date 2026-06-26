@@ -23,8 +23,11 @@ public sealed class JavaPeerScanner : IDisposable
 		LowercaseCrc64,
 	}
 
+	readonly record struct ResolvabilityResult (bool IsResolvable, string? UnresolvedTypeName, string? UnresolvedAssemblyName);
+
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
+	readonly Dictionary<(string AssemblyName, string TypeName), ResolvabilityResult> resolvabilityCache = new ();
 	readonly ITrimmableTypeMapLogger? logger;
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
 	readonly HashSet<string> frameworkAssemblyNames;
@@ -271,12 +274,6 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
-			if (isGenericDefinition &&
-			    frameworkAssemblyNames.Contains (index.AssemblyName) &&
-			    !IsSupportedFrameworkGenericPeer (fullName, index.AssemblyName)) {
-				continue;
-			}
-
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
 
@@ -343,19 +340,6 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	static bool IsSupportedFrameworkGenericPeer (string managedTypeName, string assemblyName)
-	{
-		if (!string.Equals (assemblyName, "Mono.Android", StringComparison.Ordinal)) {
-			return false;
-		}
-
-		return managedTypeName is
-			"Android.Runtime.JavaCollection`1" or
-			"Android.Runtime.JavaDictionary`2" or
-			"Android.Runtime.JavaList`1" or
-			"Android.Runtime.JavaSet`1";
-	}
-
 	bool IsResolvableJavaPeerType (
 		TypeDefinition typeDef,
 		AssemblyIndex index,
@@ -374,25 +358,36 @@ public sealed class JavaPeerScanner : IDisposable
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
 		var typeName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
-		if (!visited.Add ((index.AssemblyName, typeName))) {
+		var cacheKey = (index.AssemblyName, typeName);
+
+		if (resolvabilityCache.TryGetValue (cacheKey, out var cached)) {
+			unresolvedTypeName = cached.UnresolvedTypeName;
+			unresolvedAssemblyName = cached.UnresolvedAssemblyName;
+			return cached.IsResolvable;
+		}
+
+		if (!visited.Add (cacheKey)) {
 			unresolvedTypeName = null;
 			unresolvedAssemblyName = null;
 			return true;
 		}
 
 		if (!IsResolvableTypeHandle (typeDef.BaseType, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+			resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
 			return false;
 		}
 
 		foreach (var interfaceHandle in typeDef.GetInterfaceImplementations ()) {
 			var interfaceImplementation = index.Reader.GetInterfaceImplementation (interfaceHandle);
 			if (!IsResolvableTypeHandle (interfaceImplementation.Interface, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+				resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
 				return false;
 			}
 		}
 
 		unresolvedTypeName = null;
 		unresolvedAssemblyName = null;
+		resolvabilityCache [cacheKey] = new (true, null, null);
 		return true;
 	}
 
@@ -476,20 +471,22 @@ public sealed class JavaPeerScanner : IDisposable
 			return true;
 		}
 
-		var typeCode = reader.ReadByte ();
-		switch (typeCode) {
-		case 0x11:
-		case 0x12:
+		var rawTypeCode = reader.ReadByte ();
+		if ((SignatureTypeKind) rawTypeCode is SignatureTypeKind.ValueType or SignatureTypeKind.Class) {
 			return IsResolvableTypeDefOrRefEncodedHandle (reader.ReadCompressedInteger (), index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
-		case 0x13:
-		case 0x1e:
+		}
+
+		var typeCode = (SignatureTypeCode) rawTypeCode;
+		switch (typeCode) {
+		case SignatureTypeCode.GenericTypeParameter:
+		case SignatureTypeCode.GenericMethodParameter:
 			reader.ReadCompressedInteger ();
 			unresolvedTypeName = null;
 			unresolvedAssemblyName = null;
 			return true;
-		case 0x1d:
+		case SignatureTypeCode.SZArray:
 			return IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
-		case 0x14:
+		case SignatureTypeCode.Array:
 			if (!IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
 				return false;
 			}
@@ -497,8 +494,12 @@ public sealed class JavaPeerScanner : IDisposable
 			unresolvedTypeName = null;
 			unresolvedAssemblyName = null;
 			return true;
-		case 0x15:
-			reader.ReadByte ();
+		case SignatureTypeCode.GenericTypeInstance:
+			if ((SignatureTypeKind) reader.ReadByte () is not (SignatureTypeKind.ValueType or SignatureTypeKind.Class)) {
+				unresolvedTypeName = null;
+				unresolvedAssemblyName = null;
+				return true;
+			}
 			if (!IsResolvableTypeDefOrRefEncodedHandle (reader.ReadCompressedInteger (), index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
 				return false;
 			}
@@ -1860,13 +1861,13 @@ public sealed class JavaPeerScanner : IDisposable
 		var blobReader = index.Reader.GetBlobReader (typeSpec.Signature);
 
 		// Generic instantiation blob: GENERICINST (CLASS|VALUETYPE) coded-token count args...
-		var elementType = blobReader.ReadByte ();
-		if (elementType != 0x15) { // ELEMENT_TYPE_GENERICINST
+		var elementType = (SignatureTypeCode) blobReader.ReadByte ();
+		if (elementType != SignatureTypeCode.GenericTypeInstance) {
 			return null;
 		}
 
-		var classOrValueType = blobReader.ReadByte ();
-		if (classOrValueType != 0x12 && classOrValueType != 0x11) { // CLASS or VALUETYPE
+		var classOrValueType = (SignatureTypeKind) blobReader.ReadByte ();
+		if (classOrValueType is not (SignatureTypeKind.Class or SignatureTypeKind.ValueType)) {
 			return null;
 		}
 

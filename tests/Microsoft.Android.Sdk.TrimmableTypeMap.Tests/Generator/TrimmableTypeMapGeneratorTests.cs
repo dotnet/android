@@ -36,8 +36,15 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
-		public void LogUnresolvableJavaPeerSkippedWarning (string managedTypeName, string assemblyName, string unresolvedTypeName, string unresolvedAssemblyName, string unresolvedAssemblyPath) =>
-			warnings?.Add ($"Skipping Java peer '{managedTypeName}' from '{assemblyName}' because referenced type '{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
+		public void LogUnresolvableJavaPeerSkippedWarning (
+			string managedTypeName,
+			string assemblyName,
+			string unresolvedTypeName,
+			string unresolvedAssemblyName,
+			string unresolvedAssemblyPath) =>
+			warnings?.Add (
+				$"Skipping Java peer '{managedTypeName}' from '{assemblyName}' because referenced type " +
+				$"'{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 	}
@@ -217,14 +224,15 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData (false, "MissingDependency.MissingBase")]
-	[InlineData (true, "MissingDependency.IMissingInterface")]
-	public void Execute_SkipsJavaPeerWithUnresolvableBaseOrInterfaceTypeRef (bool useMissingInterface, string unresolvedTypeName)
+	[InlineData (StaleReferenceShape.BaseType, "MissingDependency.MissingBase")]
+	[InlineData (StaleReferenceShape.Interface, "MissingDependency.IMissingInterface")]
+	[InlineData (StaleReferenceShape.GenericBaseArgument, "MissingDependency.MissingArgument")]
+	public void Execute_SkipsJavaPeerWithUnresolvableBaseInterfaceOrGenericArgumentTypeRef (StaleReferenceShape shape, string unresolvedTypeName)
 	{
 		var warnings = new List<string> ();
 		var peerPath = Path.Combine (Path.GetTempPath (), "StalePeerAssembly.dll");
 		var missingDependencyPath = Path.Combine (Path.GetTempPath (), "MissingDependency.dll");
-		using var peerStream = CreateStaleJavaPeerAssembly (useMissingInterface);
+		using var peerStream = CreateStaleJavaPeerAssembly (shape);
 		using var missingDependencyStream = CreateEmptyAssembly ("MissingDependency");
 		using var peerReader = new PEReader (peerStream, PEStreamOptions.LeaveOpen);
 		using var missingDependencyReader = new PEReader (missingDependencyStream, PEStreamOptions.LeaveOpen);
@@ -252,6 +260,12 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 	static AssemblyInput Input (string name, PEReader reader) => new (name, "", reader);
 
+	enum StaleReferenceShape {
+		BaseType,
+		Interface,
+		GenericBaseArgument,
+	}
+
 	static MemoryStream CreateEmptyAssembly (string assemblyName)
 	{
 		var stream = new MemoryStream ();
@@ -262,21 +276,31 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		return stream;
 	}
 
-	static MemoryStream CreateStaleJavaPeerAssembly (bool useMissingInterface)
+	static MemoryStream CreateStaleJavaPeerAssembly (StaleReferenceShape shape)
 	{
 		var stream = new MemoryStream ();
 		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
 		pe.EmitPreamble ("StalePeerAssembly", "StalePeerAssembly.dll");
 
+		var missingTypeName = shape switch {
+			StaleReferenceShape.Interface => "IMissingInterface",
+			StaleReferenceShape.GenericBaseArgument => "MissingArgument",
+			_ => "MissingBase",
+		};
 		var missingDependencyRef = pe.FindOrAddAssemblyRef ("MissingDependency");
 		var missingTypeRef = pe.Metadata.AddTypeReference (
 			missingDependencyRef,
 			pe.Metadata.GetOrAddString ("MissingDependency"),
-			pe.Metadata.GetOrAddString (useMissingInterface ? "IMissingInterface" : "MissingBase"));
+			pe.Metadata.GetOrAddString (missingTypeName));
 		var objectRef = pe.Metadata.AddTypeReference (
 			pe.SystemRuntimeRef,
 			pe.Metadata.GetOrAddString ("System"),
 			pe.Metadata.GetOrAddString ("Object"));
+		var peerBaseType = shape switch {
+			StaleReferenceShape.BaseType => missingTypeRef,
+			StaleReferenceShape.GenericBaseArgument => CreateGenericBaseTypeSpec (pe, objectRef, missingTypeRef),
+			_ => objectRef,
+		};
 
 		var registerAttributeRef = pe.Metadata.AddTypeReference (
 			pe.MonoAndroidRef,
@@ -291,7 +315,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.BeforeFieldInit,
 			pe.Metadata.GetOrAddString ("Test"),
 			pe.Metadata.GetOrAddString ("BrokenPeer"),
-			useMissingInterface ? objectRef : missingTypeRef,
+			peerBaseType,
 			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
 		pe.Metadata.AddCustomAttribute (
@@ -299,13 +323,38 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			registerCtorRef,
 			pe.BuildAttributeBlob (b => b.WriteSerializedString ("test/BrokenPeer")));
 
-		if (useMissingInterface) {
+		if (shape == StaleReferenceShape.Interface) {
 			pe.Metadata.AddInterfaceImplementation (peerType, missingTypeRef);
 		}
 
 		pe.WritePE (stream);
 		stream.Position = 0;
 		return stream;
+	}
+
+	static TypeSpecificationHandle CreateGenericBaseTypeSpec (PEAssemblyBuilder pe, EntityHandle objectRef, TypeReferenceHandle missingTypeRef)
+	{
+		var genericBaseType = pe.Metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.BeforeFieldInit,
+			pe.Metadata.GetOrAddString ("Test"),
+			pe.Metadata.GetOrAddString ("GenericBase`1"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		pe.Metadata.AddGenericParameter (
+			genericBaseType,
+			GenericParameterAttributes.None,
+			pe.Metadata.GetOrAddString ("T"),
+			0);
+
+		var signature = new BlobBuilder ();
+		signature.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
+		signature.WriteByte ((byte) SignatureTypeKind.Class);
+		signature.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (genericBaseType));
+		signature.WriteCompressedInteger (1);
+		signature.WriteByte ((byte) SignatureTypeKind.Class);
+		signature.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (missingTypeRef));
+		return pe.Metadata.AddTypeSpecification (pe.Metadata.GetOrAddBlob (signature));
 	}
 
 	[Theory]
