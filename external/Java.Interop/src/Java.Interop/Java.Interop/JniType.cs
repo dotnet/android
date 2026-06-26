@@ -153,6 +153,7 @@ namespace Java.Interop {
 		JniNativeMethodRegistration[]? methods;
 #pragma warning restore 0414
 
+		[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 		public void RegisterNativeMethods (params JniNativeMethodRegistration[] methods)
 		{
 			AssertValid ();

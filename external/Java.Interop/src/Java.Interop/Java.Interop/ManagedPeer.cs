@@ -24,6 +24,7 @@ namespace Java.Interop {
 
 		static  readonly    JniPeerMembers  _members        = new JniPeerMembers (JniTypeName, typeof (ManagedPeer));
 
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "ManagedPeer is not compatible with Native AOT; it's only used by reflection-based JniRuntime.JniValueManager implementations.")]
 		static ManagedPeer ()
 		{
 			_members.JniPeerType.RegisterNativeMethods (

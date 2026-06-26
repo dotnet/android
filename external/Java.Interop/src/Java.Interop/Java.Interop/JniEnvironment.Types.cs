@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -251,12 +252,14 @@ namespace Java.Interop
 				return value.Replace ('.', '/');
 			}
 
+			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
 			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
 			{
 				RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
 			}
 
-			public static void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
+			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
+			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
 			{
 				if ((numMethods < 0) ||
 						(numMethods > (methods?.Length ?? 0))) {
@@ -275,11 +278,45 @@ namespace Java.Interop
 				}
 #endif  // DEBUG
 
-				int r   = _RegisterNatives (type, methods ?? Array.Empty<JniNativeMethodRegistration>(), numMethods);
+				if (numMethods == 0 || methods == null) {
+					return;
+				}
 
-				if (r != 0) {
-					throw new InvalidOperationException (
-							string.Format ("Could not register native methods for class '{0}'; JNIEnv::RegisterNatives() returned {1}.", GetJniTypeNameFromClass (type), r));
+				// Marshal the non-blittable JniNativeMethodRegistration[] into blittable JniNativeMethod
+				// values and dispatch to the blittable overload, instead of invoking the JNI
+				// `RegisterNatives` function pointer with a non-blittable managed-array parameter.
+				// The runtime marshalling stub synthesized for such a `delegate* unmanaged<>` call is
+				// miscompiled by crossgen2 under composite ReadyToRun + PGO: the JniNativeMethod `name`
+				// pointers end up referencing the managed `string` objects instead of marshalled UTF-8
+				// data, which corrupts the registered method names. See https://github.com/dotnet/android/issues/11633.
+				const int MaxStackAllocatedNativeMethods = 32;
+				bool useStackAllocatedBuffers = numMethods <= MaxStackAllocatedNativeMethods;
+				Span<JniNativeMethod> natives = useStackAllocatedBuffers
+					? stackalloc JniNativeMethod [numMethods]
+					: new JniNativeMethod [numMethods];
+				Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
+					? stackalloc IntPtr [numMethods * 2]
+					: new IntPtr [numMethods * 2];
+				unmanagedStrings.Clear ();
+				try {
+					for (int i = 0; i < numMethods; ++i) {
+						var m       = methods [i];
+						if (m.Marshaler == null)
+							throw new ArgumentException ($"JniNativeMethodRegistration[{i}] ({m.Name}{m.Signature}) has a null Marshaler delegate.", nameof (methods));
+						IntPtr name = Marshal.StringToCoTaskMemUTF8 (m.Name);
+						unmanagedStrings [i * 2] = name;
+						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
+						unmanagedStrings [i * 2 + 1] = sig;
+						natives [i] = new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler));
+					}
+					RegisterNatives (type, natives);
+					// Keep the Marshaler delegates alive at least until JNI has consumed the function pointers.
+					GC.KeepAlive (methods);
+				} finally {
+					for (int i = 0; i < unmanagedStrings.Length; ++i) {
+						if (unmanagedStrings [i] != IntPtr.Zero)
+							Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
+					}
 				}
 			}
 
@@ -290,7 +327,11 @@ namespace Java.Interop
 			/// </summary>
 			public static unsafe void RegisterNatives (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
 			{
+				if (!type.IsValid)
+					throw new ArgumentException ("Handle must be valid.", nameof (type));
+
 				IntPtr env = JniEnvironment.EnvironmentPointer;
+				int r;
 				fixed (JniNativeMethod* methodsPtr = methods) {
 #if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
@@ -299,10 +340,19 @@ namespace Java.Interop
 					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
 						JniEnvironment.CurrentInfo.Invoker.env.RegisterNatives;
 #endif
-					int r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
-					if (r != 0) {
-						throw new InvalidOperationException ($"Could not register native methods for class '{GetJniTypeNameFromClass (type)}'; JNIEnv::RegisterNatives() returned {r}.");
-					}
+					r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+				}
+
+				// Surface (and clear) any pending Java exception raised by JNI::RegisterNatives()
+				// — e.g. NoSuchMethodError — before falling back to the return-code check, matching
+				// the behavior of the prior JniNativeMethodRegistration[] registration path. Leaving a pending
+				// exception in the JNIEnv would make subsequent JNI calls fail or abort.
+				var thrown = JniEnvironment.GetExceptionForLastThrowable ();
+				if (thrown != null)
+					ExceptionDispatchInfo.Capture (thrown).Throw ();
+
+				if (r != 0) {
+					throw new InvalidOperationException ($"Could not register native methods for class '{GetJniTypeNameFromClass (type)}'; JNIEnv::RegisterNatives() returned {r}.");
 				}
 			}
 

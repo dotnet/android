@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 using Java.Interop;
@@ -42,6 +43,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniType.RegisterNativeMethods API.")]
 		public unsafe void Dispose_Exceptions ()
 		{
 			var t = new JniType ("java/lang/Object");
@@ -175,6 +177,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniType.RegisterNativeMethods API.")]
 		public void RegisterNativeMethods ()
 		{
 			using (var TestType_class = new JniType ("net/dot/jni/test/CallNonvirtualBase")) {
@@ -214,6 +217,73 @@ namespace Java.InteropTests
 
 		[UnmanagedCallersOnly]
 		static int NativeAdd (IntPtr jnienv, IntPtr self, int a, int b) => a + b;
+
+		[Test]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniNativeMethodRegistration[] registration path.")]
+		public unsafe void RegisterNativeMethods_JniNativeMethodRegistration ()
+		{
+			using (var nativeClass = new JniType ("net/dot/jni/test/RegisterNativesTestType")) {
+				// Test the JniNativeMethodRegistration[] registration path (the one that marshals to blittable)
+				var methods = new JniNativeMethodRegistration [1];
+				methods [0] = new JniNativeMethodRegistration (
+					"add",
+					"(II)I",
+					new AddDelegate (ManagedAdd));
+
+				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, methods, methods.Length);
+
+				// Call the native method from Java to verify registration worked
+				var ctor = JniEnvironment.InstanceMethods.GetMethodID (nativeClass.PeerReference, "<init>", "()V");
+				var obj = JniEnvironment.Object.NewObject (nativeClass.PeerReference, ctor);
+				try {
+					var addMethod = JniEnvironment.InstanceMethods.GetMethodID (nativeClass.PeerReference, "add", "(II)I");
+					var args = stackalloc JniArgumentValue [2];
+					args [0] = new JniArgumentValue (5);
+					args [1] = new JniArgumentValue (6);
+					int result = JniEnvironment.InstanceMethods.CallIntMethod (obj, addMethod, args);
+					Assert.AreEqual (11, result);
+				} finally {
+					JniObjectReference.Dispose (ref obj);
+				}
+			}
+		}
+
+		delegate int AddDelegate (IntPtr jnienv, IntPtr self, int a, int b);
+
+		static int ManagedAdd (IntPtr jnienv, IntPtr self, int a, int b) => a + b;
+
+		[Test]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniNativeMethodRegistration[] registration path with many methods.")]
+		public unsafe void RegisterNativeMethods_JniNativeMethodRegistration_ManyMethods ()
+		{
+			using (var nativeClass = new JniType ("net/dot/jni/test/RegisterNativesTestType")) {
+				// Test the heap allocation path (> 32 methods) to ensure the marshalling loop handles it
+				var methods = new JniNativeMethodRegistration [40];
+				for (int i = 0; i < methods.Length; ++i) {
+					methods [i] = new JniNativeMethodRegistration (
+						"add",
+						"(II)I",
+						new AddDelegate (ManagedAdd));
+				}
+
+				// This should not crash even with > 32 methods
+				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, methods, methods.Length);
+
+				// Verify the registration worked by calling the method
+				var ctor = JniEnvironment.InstanceMethods.GetMethodID (nativeClass.PeerReference, "<init>", "()V");
+				var obj = JniEnvironment.Object.NewObject (nativeClass.PeerReference, ctor);
+				try {
+					var addMethod = JniEnvironment.InstanceMethods.GetMethodID (nativeClass.PeerReference, "add", "(II)I");
+					var args = stackalloc JniArgumentValue [2];
+					args [0] = new JniArgumentValue (10);
+					args [1] = new JniArgumentValue (20);
+					int result = JniEnvironment.InstanceMethods.CallIntMethod (obj, addMethod, args);
+					Assert.AreEqual (30, result);
+				} finally {
+					JniObjectReference.Dispose (ref obj);
+				}
+			}
+		}
 	}
 }
 
