@@ -514,11 +514,32 @@ public class TrimmableTypeMap
 	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>
 	internal bool TryGetArrayProxy (Type elementType, int additionalRank, [NotNullWhen (true)] out JavaArrayProxy? arrayProxy)
 	{
-		var signature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType);
-		signature = signature.AddArrayRank (additionalRank);
-		var elementJniName = signature.SimpleReference ?? throw new InvalidOperationException ();
+		if (additionalRank <= 0) {
+			throw new ArgumentOutOfRangeException (nameof (additionalRank), additionalRank, "Must be >= 1.");
+		}
 
-		if (_typeMap.TryGetArrayProxyType (elementJniName, signature.ArrayRank - 1, out var proxyType)) {
+		var leafType = elementType;
+		int rankIndex = additionalRank - 1;
+		while (leafType.IsArray) {
+			if (!leafType.IsSZArray) {
+				arrayProxy = null;
+				return false;
+			}
+			var next = leafType.GetElementType ();
+			if (next is null) {
+				arrayProxy = null;
+				return false;
+			}
+			leafType = next;
+			rankIndex++;
+		}
+
+		if (!TryGetManagedTypeKey (leafType, out var managedTypeKey)) {
+			arrayProxy = null;
+			return false;
+		}
+
+		if (_typeMap.TryGetArrayProxyType (managedTypeKey, rankIndex, out var proxyType)) {
 			var proxy = _arrayProxyCache.GetOrAdd (proxyType, static type =>
 				type.GetCustomAttribute<JavaArrayProxy> (inherit: false) ?? s_noArrayProxySentinel);
 			if (!ReferenceEquals (proxy, s_noArrayProxySentinel)) {
@@ -529,6 +550,33 @@ public class TrimmableTypeMap
 
 		arrayProxy = null;
 		return false;
+	}
+
+	static bool TryGetManagedTypeKey (Type type, [NotNullWhen (true)] out string? key)
+	{
+		var fullName = type.FullName;
+		if (fullName is null) {
+			key = null;
+			return false;
+		}
+
+		var assemblyName = GetAssemblyNameForManagedTypeKey (type);
+		if (assemblyName is null) {
+			key = null;
+			return false;
+		}
+
+		key = $"{fullName}, {assemblyName}";
+		return true;
+	}
+
+	static string? GetAssemblyNameForManagedTypeKey (Type type)
+	{
+		if (type.IsPrimitive || type == typeof (string)) {
+			return "System.Runtime";
+		}
+
+		return type.Assembly.GetName ().Name;
 	}
 
 	[UnmanagedCallersOnly]

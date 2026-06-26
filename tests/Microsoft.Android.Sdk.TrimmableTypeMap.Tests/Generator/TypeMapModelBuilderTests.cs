@@ -992,19 +992,19 @@ public class ModelBuilderTests : FixtureTestBase
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (3, arrayEntries.Count);
 			Assert.Equal (new int? [] { 1, 2, 3 }, arrayEntries.Select (e => e.AnchorRank).ToArray ());
-			Assert.All (arrayEntries, e => Assert.Equal ("foo/Bar", e.JniName));
+			Assert.All (arrayEntries, e => Assert.Equal ("Foo.Bar, App", e.JniName));
 		}
 
 		[Fact]
-		public void Build_EmitArrayEntries_KeyIsElementJniName ()
+		public void Build_EmitArrayEntries_KeyIsManagedElementTypeName ()
 		{
-			// No "[L...;" prefix at runtime — the key is the bare element JNI name and rank
-			// is encoded by which sentinel anchor (TGroup) the entry uses.
+			// No managed->JNI lookup is needed at runtime — the key is the managed element type name
+			// and rank is encoded by which sentinel anchor (TGroup) the entry uses.
 			var peer = MakeMcwPeer ("java/lang/String", "System.String", "System.Runtime");
 			var model = BuildModelWithArrays (new [] { peer });
 
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
-			Assert.All (arrayEntries, e => Assert.Equal ("java/lang/String", e.JniName));
+			Assert.All (arrayEntries, e => Assert.Equal ("System.String, System.Runtime", e.JniName));
 			Assert.All (arrayEntries, e => Assert.False (e.JniName.StartsWith ("[", StringComparison.Ordinal)));
 		}
 
@@ -1103,7 +1103,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (3, arrayEntries.Count);
-			Assert.All (arrayEntries, e => Assert.Equal ("android/widget/Button", e.JniName));
+			Assert.All (arrayEntries, e => Assert.Equal ("Android.Widget.Button, Mono.Android", e.JniName));
 		}
 
 		[Fact]
@@ -1147,16 +1147,16 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Java.Interop.TypeMap");
 
 			var primitiveEntries = model.Entries
-				.Where (e => e.JniName.Length == 1 && e.AnchorRank is not null)
+				.Where (e => e.JniName.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null)
 				.ToList ();
 			Assert.Equal (24, primitiveEntries.Count); // 8 primitive keywords × 3 ranks
 
-			var sbyteRank1 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 1);
+			var sbyteRank1 = primitiveEntries.Single (e => e.JniName == "System.SByte, System.Runtime" && e.AnchorRank == 1);
 			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
 			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.TargetTypeReference);
 			Assert.False (sbyteRank1.IsUnconditional);
 
-			var sbyteRank2 = primitiveEntries.Single (e => e.JniName == "B" && e.AnchorRank == 2);
+			var sbyteRank2 = primitiveEntries.Single (e => e.JniName == "System.SByte, System.Runtime" && e.AnchorRank == 2);
 			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy2, _Java.Interop.TypeMap", sbyteRank2.TargetTypeReference);
 			Assert.Contains (model.Associations, a =>
 				a.SourceTypeReference == "Java.Interop.JavaArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
@@ -1175,7 +1175,7 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
 			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Mono.Android.TypeMap");
 
-			Assert.DoesNotContain (model.Entries, e => e.JniName.Length == 1 && e.AnchorRank is not null);
+			Assert.DoesNotContain (model.Entries, e => e.JniName.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null);
 			Assert.DoesNotContain (model.Associations, a => a.SourceTypeReference == "System.SByte[], System.Runtime");
 		}
 
@@ -1191,8 +1191,8 @@ public class ModelBuilderTests : FixtureTestBase
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (6, arrayEntries.Count);   // 2 peers × 3 ranks
 
-			foreach (var jni in new [] { "foo/A", "foo/B" }) {
-				var perPeer = arrayEntries.Where (e => e.JniName == jni).OrderBy (e => e.AnchorRank).ToList ();
+			foreach (var managedKey in new [] { "Foo.A, App", "Foo.B, App" }) {
+				var perPeer = arrayEntries.Where (e => e.JniName == managedKey).OrderBy (e => e.AnchorRank).ToList ();
 				Assert.Equal (3, perPeer.Count);
 				Assert.Equal (new int? [] { 1, 2, 3 }, perPeer.Select (e => e.AnchorRank).ToArray ());
 			}
@@ -1270,13 +1270,13 @@ public class ModelBuilderTests : FixtureTestBase
 				var attrs = ReadAllTypeMapAttributeBlobs (reader);
 
 				// Three array entries should round-trip with the same JNI key + generated array proxy refs.
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
+				Assert.Contains (attrs, a => a.jniName == "Foo.Bar, App" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs" &&
 					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
+				Assert.Contains (attrs, a => a.jniName == "Foo.Bar, App" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs" &&
 					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs");
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" &&
+				Assert.Contains (attrs, a => a.jniName == "Foo.Bar, App" &&
 					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs" &&
 					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs");
 
@@ -1344,6 +1344,12 @@ public class ModelBuilderTests : FixtureTestBase
 			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
 				continue;
 
+			var parent = reader.GetTypeSpecification ((TypeSpecificationHandle) ctor.Parent);
+			var parentName = parent.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+			if (!parentName.StartsWith ("System.Runtime.InteropServices.TypeMapAttribute`1", StringComparison.Ordinal)) {
+				continue;
+			}
+
 			var blobReader = reader.GetBlobReader (attr.Value);
 			ushort prolog = blobReader.ReadUInt16 ();
 			if (prolog != 1)
@@ -1358,7 +1364,7 @@ public class ModelBuilderTests : FixtureTestBase
 				targetRef = blobReader.ReadSerializedString ();
 			}
 
-			if (string.IsNullOrEmpty (jniName) || !jniName.Contains ('/')) {
+			if (string.IsNullOrEmpty (jniName)) {
 				continue;
 			}
 

@@ -42,10 +42,10 @@ sealed class AggregateTypeMap : ITypeMap
 		return false;
 	}
 
-	public bool TryGetArrayProxyType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? proxyType)
+	public bool TryGetArrayProxyType (string managedTypeKey, int rankIndex, [NotNullWhen (true)] out Type? proxyType)
 	{
 		foreach (var universe in _universes) {
-			if (universe.TryGetArrayProxyType (jniName, rankIndex, out proxyType)) {
+			if (universe.TryGetArrayProxyType (managedTypeKey, rankIndex, out proxyType)) {
 				return true;
 			}
 		}
