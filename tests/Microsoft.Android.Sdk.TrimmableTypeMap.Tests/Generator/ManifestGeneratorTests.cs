@@ -804,6 +804,27 @@ public class ManifestGeneratorTests
 		Assert.Equal ("34", (string?)usesSdk?.Attribute (AndroidNs + "targetSdkVersion"));
 	}
 
+	[Fact]
+	public void UsesSdk_MissingMinSdkVersion_SetFromConfiguredMinSdk ()
+	{
+		var gen = CreateDefaultGenerator ();
+		gen.MinSdkVersion = "24";
+		var template = ParseTemplate (
+			"""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <uses-sdk />
+			  <application />
+			</manifest>
+			""");
+
+		var doc = GenerateAndLoad (gen, template: template);
+		var usesSdk = doc.Root?.Element ("uses-sdk");
+		Assert.NotNull (usesSdk);
+
+		Assert.Equal ("24", (string?)usesSdk?.Attribute (AndroidNs + "minSdkVersion"));
+	}
+
 	[Theory]
 	[InlineData (true, false, false, "debuggable", "true")]
 	[InlineData (false, true, false, "debuggable", "true")]
