@@ -514,9 +514,7 @@ public class TrimmableTypeMap
 	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>
 	internal bool TryGetArrayProxy (Type elementType, int additionalRank, [NotNullWhen (true)] out JavaArrayProxy? arrayProxy)
 	{
-		if (additionalRank <= 0) {
-			throw new ArgumentOutOfRangeException (nameof (additionalRank), additionalRank, "Must be >= 1.");
-		}
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero (additionalRank);
 
 		var leafType = elementType;
 		int rankIndex = additionalRank - 1;
