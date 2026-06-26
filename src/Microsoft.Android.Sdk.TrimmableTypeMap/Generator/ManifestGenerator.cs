@@ -59,6 +59,7 @@ class ManifestGenerator
 
 		EnsureManifestAttributes (manifest);
 		var app = EnsureApplicationElement (manifest);
+		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
 
 		// Rewrite compat JNI names in the template to CRC names BEFORE collecting
 		// existing types, so the duplicate check works correctly.
@@ -84,7 +85,7 @@ class ManifestGenerator
 
 			// Skip Application types (handled separately via assembly-level attribute)
 			if (peer.ComponentAttribute.Kind == ComponentKind.Application) {
-				ComponentElementBuilder.UpdateApplicationElement (app, peer);
+				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue);
 				continue;
 			}
 
@@ -98,7 +99,7 @@ class ManifestGenerator
 				continue;
 			}
 
-			var element = ComponentElementBuilder.CreateComponentElement (peer, jniName);
+			var element = ComponentElementBuilder.CreateComponentElement (peer, jniName, targetSdkVersionValue);
 			if (element is not null) {
 				app.Add (element);
 			}
@@ -122,7 +123,8 @@ class ManifestGenerator
 		}
 
 		// Handle extractNativeLibs
-		if (ForceExtractNativeLibs) {
+		if (targetSdkVersionValue >= 23 &&
+		    (ForceExtractNativeLibs || app.Attribute (AndroidNs + "extractNativeLibs") is null)) {
 			app.SetAttributeValue (AndroidNs + "extractNativeLibs", "true");
 		}
 
@@ -245,6 +247,18 @@ class ManifestGenerator
 		return app;
 	}
 
+	int GetTargetSdkVersionValue (XElement manifest)
+	{
+		var targetSdk = (string?) manifest.Element ("uses-sdk")?.Attribute (AndroidNs + "targetSdkVersion");
+		if (int.TryParse (targetSdk, out int value)) {
+			return value;
+		}
+		if (int.TryParse (TargetSdkVersion, out value)) {
+			return value;
+		}
+		return 0;
+	}
+
 	IList<string> AddRuntimeProviders (XElement app)
 	{
 		if (RuntimeProviderJavaName.IsNullOrEmpty ()) {
@@ -260,12 +274,13 @@ class ManifestGenerator
 
 		// Check if runtime provider already exists in template
 		string runtimeProviderName = RuntimeProviderJavaName;
+		string? directBootAware = (string?) app.Attribute (AndroidNs + "directBootAware");
 		if (!app.Elements ("provider").Any (p => {
 			var name = (string?)p.Attribute (ManifestConstants.AttName);
 			return name == runtimeProviderName ||
 				((string?)p.Attribute (AndroidNs.GetName ("authorities")))?.EndsWith (".__mono_init__", StringComparison.Ordinal) == true;
 		})) {
-			app.Add (CreateRuntimeProvider (runtimeProviderName, null, --appInitOrder));
+			app.Add (CreateRuntimeProvider (runtimeProviderName, null, --appInitOrder, directBootAware));
 		}
 
 		var providerNames = new List<string> ();
@@ -293,7 +308,7 @@ class ManifestGenerator
 				procs.Add (proc.Value);
 				string providerName = $"{className}_{procs.Count}";
 				providerNames.Add (providerName);
-				app.Add (CreateRuntimeProvider ($"{packageName}.{providerName}", proc.Value, --appInitOrder));
+				app.Add (CreateRuntimeProvider ($"{packageName}.{providerName}", proc.Value, --appInitOrder, directBootAware));
 				break;
 			}
 		}
@@ -301,12 +316,13 @@ class ManifestGenerator
 		return providerNames;
 	}
 
-	XElement CreateRuntimeProvider (string name, string? processName, int initOrder)
+	XElement CreateRuntimeProvider (string name, string? processName, int initOrder, string? directBootAware)
 	{
 		return new XElement ("provider",
 			new XAttribute (AndroidNs + "name", name),
 			new XAttribute (AndroidNs + "exported", "false"),
 			new XAttribute (AndroidNs + "initOrder", initOrder),
+			directBootAware is not null ? new XAttribute (AndroidNs + "directBootAware", directBootAware) : null,
 			processName is not null ? new XAttribute (AndroidNs + "process", processName) : null,
 			new XAttribute (AndroidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
 	}

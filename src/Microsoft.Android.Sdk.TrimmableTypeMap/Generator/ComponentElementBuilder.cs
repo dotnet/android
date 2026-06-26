@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -13,7 +14,7 @@ static class ComponentElementBuilder
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
 
-	internal static XElement? CreateComponentElement (JavaPeerInfo peer, string jniName)
+	internal static XElement? CreateComponentElement (JavaPeerInfo peer, string jniName, int targetSdkVersion = 0)
 	{
 		var component = peer.ComponentAttribute;
 		if (component is null) {
@@ -31,7 +32,7 @@ static class ComponentElementBuilder
 		var element = new XElement (elementName, new XAttribute (AttName, jniName));
 
 		// Map known properties to android: attributes
-		PropertyMapper.MapComponentProperties (element, component);
+		PropertyMapper.MapComponentProperties (element, component, targetSdkVersion);
 
 		// Add intent filters
 		foreach (var intentFilter in component.IntentFilters) {
@@ -96,6 +97,7 @@ static class ComponentElementBuilder
 
 		// Data elements
 		AddIntentFilterDataElement (filter, intentFilter);
+		AddIntentFilterDataElements (filter, intentFilter);
 
 		return filter;
 	}
@@ -139,6 +141,30 @@ static class ComponentElementBuilder
 		}
 	}
 
+	internal static void AddIntentFilterDataElements (XElement filter, IntentFilterInfo intentFilter)
+	{
+		AddDataElements ("DataSchemes", "scheme");
+		AddDataElements ("DataHosts", "host");
+		AddDataElements ("DataPaths", "path");
+		AddDataElements ("DataPathPatterns", "pathPattern");
+		AddDataElements ("DataPathPrefixes", "pathPrefix");
+		AddDataElements ("DataMimeTypes", "mimeType");
+		AddDataElements ("DataPorts", "port");
+
+		void AddDataElements (string propertyName, string attributeName)
+		{
+			if (!intentFilter.Properties.TryGetValue (propertyName, out var value) || value is not IReadOnlyList<string> values) {
+				return;
+			}
+
+			foreach (var item in values) {
+				if (!string.IsNullOrEmpty (item)) {
+					filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
+				}
+			}
+		}
+	}
+
 	internal static XElement CreateMetaDataElement (MetaDataInfo meta)
 	{
 		var element = new XElement ("meta-data",
@@ -153,7 +179,7 @@ static class ComponentElementBuilder
 		return element;
 	}
 
-	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer)
+	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer, int targetSdkVersion = 0)
 	{
 		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 		app.SetAttributeValue (AttName, jniName);
@@ -162,7 +188,7 @@ static class ComponentElementBuilder
 		if (component is null) {
 			return;
 		}
-		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings);
+		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings, targetSdkVersion: targetSdkVersion);
 	}
 
 	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer, string packageName)
