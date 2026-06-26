@@ -10,6 +10,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -100,6 +101,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public ITaskItem [] GeneratedAssemblies { get; set; } = [];
 	[Output]
 	public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
+	[Output]
+	public ITaskItem [] DeletedJavaFiles { get; set; } = [];
 	[Output]
 	public string[]? AdditionalProviderSources { get; set; }
 
@@ -192,6 +195,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			GeneratedJavaFiles = JavaSourceInputDirectory.IsNullOrEmpty ()
 				? WriteJavaSourcesToDisk (result.GeneratedJavaSources)
 				: CopyJavaSourcesFromInputDirectory (result.GeneratedJavaSources);
+			DeletedJavaFiles = DeleteStaleJavaSources (GeneratedJavaFiles);
 
 			// Write manifest to disk if generated
 			if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
@@ -368,6 +372,34 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			items.Add (new TaskItem (outputPath));
 		}
 		return items.ToArray ();
+	}
+
+	// Removes generated Java sources from a previous build that the current generation pass
+	// no longer produces (for example when a managed type is removed). Returns the deleted
+	// files (with a RelativePath metadata) so the targets can mirror the deletion into the
+	// android/src copies and force a Java recompilation.
+	ITaskItem [] DeleteStaleJavaSources (IReadOnlyCollection<ITaskItem> generatedJavaFiles)
+	{
+		var expectedFiles = new HashSet<string> (
+			generatedJavaFiles.Select (i => Path.GetFullPath (i.ItemSpec)),
+			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+		var deleted = new List<ITaskItem> ();
+
+		foreach (var path in Directory.EnumerateFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories)) {
+			var fullPath = Path.GetFullPath (path);
+			if (expectedFiles.Contains (fullPath)) {
+				continue;
+			}
+
+			File.Delete (fullPath);
+			Log.LogDebugMessage ($"Deleted stale generated Java source '{fullPath}'.");
+
+			var item = new TaskItem (fullPath);
+			item.SetMetadata ("RelativePath", PathUtil.GetRelativePath (JavaSourceOutputDirectory, fullPath));
+			deleted.Add (item);
+		}
+
+		return deleted.ToArray ();
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)
