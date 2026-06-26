@@ -189,23 +189,9 @@ extends:
             displayName: Create MAUI template
             continueOnError: false
 
-        - powershell: |
-            $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
-            [xml] $xml = Get-Content $project
-            $nodes = @($xml.SelectNodes('/Project/PropertyGroup/TargetFrameworks'))
-            if ($nodes.Count -eq 0) { throw "No <TargetFrameworks> node found in $project" }
-            # The MAUI template defines additional conditional <TargetFrameworks> nodes
-            # (iOS/maccatalyst on non-Linux, Windows on Windows). NuGet restore evaluates
-            # *all* of these — even when `dotnet build -f net*-android` is used — so any
-            # remaining iOS/maccatalyst TFM fails with NETSDK1242 on .NET 11+.
-            # Remove the extras and pin the first node to Android only.
-            for ($i = $nodes.Count - 1; $i -ge 1; $i--) {
-                $nodes[$i].ParentNode.RemoveChild($nodes[$i]) | Out-Null
-            }
-            if ($nodes[0].HasAttribute('Condition')) { $nodes[0].RemoveAttribute('Condition') }
-            $nodes[0].InnerText = '$(DotNetTargetFramework)-android'
-            $xml.Save($project)
-          displayName: set TargetFrameworks to Android-only
+        - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml@self
+          parameters:
+            project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
