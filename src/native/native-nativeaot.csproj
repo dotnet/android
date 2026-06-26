@@ -21,7 +21,7 @@
   <Import Project="native.targets" />
 
   <ItemGroup>
-    <ProjectReference Include="cmake-config\cmake-config.csproj" ReferenceOutputAssembly="False" SetConfiguration="Configuration=$(Configuration)" />
+    <ProjectReference Include="cmake-config\cmake-config.csproj" ReferenceOutputAssembly="False" Properties="Configuration=$(Configuration)" />
     <ProjectReference Include="..\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
 </Project>
