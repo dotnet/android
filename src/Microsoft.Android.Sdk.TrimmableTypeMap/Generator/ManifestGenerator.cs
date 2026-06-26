@@ -249,6 +249,11 @@ class ManifestGenerator
 
 	int GetTargetSdkVersionValue (XElement manifest)
 	{
+		// Parity note: legacy ManifestDocument resolves the target SDK via VersionResolver.GetApiLevelFromId,
+		// which also maps codename ids (e.g. preview API names) to integers. That resolver lives in
+		// Xamarin.Android.Build.Tasks and isn't referenceable from this netstandard2.0 generator, so we only
+		// handle integer values here. A codename in the user-authored manifest falls through to the MSBuild
+		// TargetSdkVersion property, which is always already resolved to an integer (see TrimmableTypeMapGenerator).
 		var targetSdk = (string?) manifest.Element ("uses-sdk")?.Attribute (AndroidNs + "targetSdkVersion");
 		if (int.TryParse (targetSdk, out int value)) {
 			return value;
@@ -256,7 +261,10 @@ class ManifestGenerator
 		if (int.TryParse (TargetSdkVersion, out value)) {
 			return value;
 		}
-		return 0;
+		// Fail loudly rather than silently using 0 (which would emit a wrong manifest), matching legacy
+		// ManifestDocument, which throws InvalidOperationException on an unrecognized targetSdkVersion.
+		throw new InvalidOperationException (
+			$"The targetSdkVersion ('{targetSdk ?? TargetSdkVersion}') could not be resolved to an integer API level.");
 	}
 
 	IList<string> AddRuntimeProviders (XElement app)

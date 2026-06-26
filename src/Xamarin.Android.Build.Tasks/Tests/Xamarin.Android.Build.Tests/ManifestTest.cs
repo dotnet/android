@@ -126,6 +126,9 @@ namespace Bug12935
 				StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
 				StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
 				StringAssertEx.Contains (Path.Combine ("Properties", "AndroidManifest.xml"), builder.LastBuildOutput);
+				// Intentionally relaxed from an exact "2 Error(s)" count: this test is parameterized over
+				// CoreCLR/NativeAOT and the runtimes may legitimately emit a different number of errors. The
+				// specific aapt2 codes (APT2259, APT2067) are still asserted above, so a real regression is caught.
 				StringAssertEx.Contains ("Error(s)", builder.LastBuildOutput);
 			}
 		}
