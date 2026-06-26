@@ -130,19 +130,15 @@ static class MavenExtensions
 	}
 
 	// Returns artifact output path
-	public static async Task<string?> DownloadPayload (CachedMavenRepository repository, Artifact artifact, string cacheDir, string? mavenOverrideFilename, TaskLoggingHelper log, CancellationToken cancellationToken)
+	public static async Task<string?> DownloadPayload (CachedMavenRepository repository, Artifact artifact, string? mavenOverrideFilename, TaskLoggingHelper log, CancellationToken cancellationToken)
 	{
-		var output_directory = Path.Combine (cacheDir, repository.Name, artifact.GroupId, artifact.Id, artifact.Version);
-
-		Directory.CreateDirectory (output_directory);
-
 		var files_to_check = new List<string> ();
 
 		if (mavenOverrideFilename.HasValue ()) {
-			files_to_check.Add (Path.Combine (output_directory, mavenOverrideFilename));
+			files_to_check.Add (repository.GetArtifactFilePath (artifact, mavenOverrideFilename));
 		} else {
-			files_to_check.Add (Path.Combine (output_directory, $"{artifact.Id}-{artifact.Version}.jar"));
-			files_to_check.Add (Path.Combine (output_directory, $"{artifact.Id}-{artifact.Version}.aar"));
+			files_to_check.Add (repository.GetArtifactFilePath (artifact, $"{artifact.Id}-{artifact.Version}.jar"));
+			files_to_check.Add (repository.GetArtifactFilePath (artifact, $"{artifact.Id}-{artifact.Version}.aar"));
 		}
 
 		// We don't need to redownload if we already have a cached copy

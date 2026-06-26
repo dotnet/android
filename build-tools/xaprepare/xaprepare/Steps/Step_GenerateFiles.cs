@@ -55,7 +55,6 @@ namespace Xamarin.Android.Prepare
 				if (onlyRequired) {
 					return new List<GeneratedFile> {
 						Get_SourceLink_Json (context),
-						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Cmake_Presets (context),
 					};
@@ -63,10 +62,8 @@ namespace Xamarin.Android.Prepare
 					return new List <GeneratedFile> {
 						Get_SourceLink_Json (context),
 						Get_Configuration_OperatingSystem_props (context),
-						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Cmake_Presets (context),
-						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
 					};
 				}
@@ -133,21 +130,6 @@ namespace Xamarin.Android.Prepare
 		GeneratedFile Get_Cmake_Presets (Context context)
 		{
 			return GetCmakePresetsCommon (context, Configurables.Paths.NativeSourcesDir);
-		}
-
-		GeneratedFile Get_Configuration_Generated_Props (Context context)
-		{
-			const string OutputFileName = "Configuration.Generated.props";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@XA_PACKAGES_DIR@",                    Configurables.Paths.XAPackagesDir },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
-				Configurables.Paths.ConfigurationPropsGeneratedPath
-			);
 		}
 
 		GeneratedFile Get_Configuration_OperatingSystem_props (Context context)
@@ -228,30 +210,6 @@ namespace Xamarin.Android.Prepare
 				}
 				return value.Substring (dot + 1);
 			}
-		}
-
-		GeneratedFile Get_Ndk_projitems (Context context)
-		{
-			const string OutputFileName = "Ndk.projitems";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
-				{ "@NDK_PKG_REVISION@",          BuildAndroidPlatforms.AndroidNdkPkgRevision },
-				{ "@NDK_ARMEABI_V7_API@",        BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString () },
-				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ()  },
-				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
-			);
 		}
 
 		public GeneratedFile Get_SourceLink_Json (Context context)

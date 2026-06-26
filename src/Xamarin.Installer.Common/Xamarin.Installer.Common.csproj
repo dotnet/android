@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CA1305</NoWarn>
+    <NoWarn>$(NoWarn);CA1305;CS1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <LangVersion>12</LangVersion>

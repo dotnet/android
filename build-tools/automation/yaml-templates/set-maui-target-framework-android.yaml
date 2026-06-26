@@ -1,0 +1,17 @@
+parameters:
+  project:
+
+steps:
+- powershell: |
+    $project = '${{ parameters.project }}'
+    [xml] $xml = Get-Content $project
+    # The MAUI template has multiple conditional <TargetFrameworks> nodes; keep only one.
+    $nodes = @($xml.SelectNodes('/Project/PropertyGroup/TargetFrameworks'))
+    if ($nodes.Count -eq 0) { throw "No <TargetFrameworks> node found in $project" }
+    for ($i = $nodes.Count - 1; $i -ge 1; $i--) {
+        $nodes[$i].ParentNode.RemoveChild($nodes[$i]) | Out-Null
+    }
+    if ($nodes[0].HasAttribute('Condition')) { $nodes[0].RemoveAttribute('Condition') }
+    $nodes[0].InnerText = '$(DotNetTargetFramework)-android'
+    $xml.Save($project)
+  displayName: set TargetFrameworks to Android-only
