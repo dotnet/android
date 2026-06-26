@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 
 		/// <summary>
 		/// Compresses <paramref name="inputLength"/> bytes from <paramref name="input"/> into
-		/// <paramref name="output"/> using the maximum compression level. Returns the number of
+		/// <paramref name="output"/> using zstd's default compression level. Returns the number of
 		/// bytes written to <paramref name="output"/>, or <c>-1</c> if compression failed.
 		/// </summary>
 		public static int Compress (byte[] input, int inputLength, byte[] output)
