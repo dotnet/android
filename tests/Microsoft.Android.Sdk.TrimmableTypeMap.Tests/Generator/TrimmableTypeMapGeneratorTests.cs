@@ -296,7 +296,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			pe.SystemRuntimeRef,
 			pe.Metadata.GetOrAddString ("System"),
 			pe.Metadata.GetOrAddString ("Object"));
-		var peerBaseType = shape switch {
+		EntityHandle peerBaseType = shape switch {
 			StaleReferenceShape.BaseType => missingTypeRef,
 			StaleReferenceShape.GenericBaseArgument => CreateGenericBaseTypeSpec (pe, objectRef, missingTypeRef),
 			_ => objectRef,
