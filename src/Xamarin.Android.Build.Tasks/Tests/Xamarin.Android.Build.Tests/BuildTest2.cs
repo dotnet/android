@@ -404,19 +404,26 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Nov 2025) produces 10 `ILC : AOT analysis warning IL3050` warnings for various
+					// NativeAOT currently (June 2026) produces 8 `ILC : AOT analysis warning IL3050` warnings for various
 					// bits of code. Even though this test expects no warnings and the above likely make the app not work
 					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
 					// of other warnings.
-					int numberOfExpectedWarnings = 10;
+					int numberOfExpectedWarnings = 8;
 
-					Assert.IsTrue (
-						StringAssertEx.ContainsText (
-							b.LastBuildOutput,
-							$" {numberOfExpectedWarnings} Warning(s)"
-						),
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
-					);
+					// MSBuild prints a "    N Warning(s)" summary line near the end of the build; parse N so the
+					// assertion can report the actual count instead of a bare "Expected: True But was: False".
+					var warningSummaryLine = b.LastBuildOutput.LastOrDefault (x => x.TrimEnd ().EndsWith ("Warning(s)", StringComparison.Ordinal));
+					int actualNumberOfWarnings = -1;
+					if (warningSummaryLine != null) {
+						var summary = warningSummaryLine.Trim ();
+						var firstSpace = summary.IndexOf (' ');
+						if (firstSpace > 0) {
+							int.TryParse (summary.Substring (0, firstSpace), out actualNumberOfWarnings);
+						}
+					}
+
+					Assert.AreEqual (numberOfExpectedWarnings, actualNumberOfWarnings,
+						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT, but found {actualNumberOfWarnings}.");
 
 					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
 					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
