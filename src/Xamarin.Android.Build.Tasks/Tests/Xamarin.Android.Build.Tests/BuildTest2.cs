@@ -284,6 +284,9 @@ namespace Xamarin.Android.Build.Tests
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
+				return;
+			}
 
 			var proj = forms ?
 				new XamarinFormsAndroidApplicationProject () :
@@ -305,12 +308,8 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				if (runtime != AndroidRuntime.NativeAOT) {
-					// NativeAOT trims with ILC and does not emit illink's `linker-dependencies.xml`.
-					// TODO: add a DGML-based counterpart for NativeAOT (follow-up issue).
-					var depsFile = GetLinkedPath (b, true, "linker-dependencies.xml");
-					FileAssert.Exists (depsFile);
-				}
+				var depsFile = GetLinkedPath (b, true, "linker-dependencies.xml");
+				FileAssert.Exists (depsFile);
 
 				const int ApkSizeThreshold = 5 * 1024;
 				const int AssemblySizeThreshold = 5 * 1024;
