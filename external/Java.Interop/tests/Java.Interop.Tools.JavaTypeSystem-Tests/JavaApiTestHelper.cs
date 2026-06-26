@@ -7,7 +7,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 	public class JavaApiTestHelper
 	{
 		static readonly string TopDir = Path.Combine (Path.GetDirectoryName (typeof (JavaApiTestHelper).Assembly.Location), "..", "..");
-		static readonly string ApiPath = Path.Combine (TopDir, "tests", "Java.Interop.Tools.JavaTypeSystem-Tests", "api-24.xml.in");
+		static readonly string ApiPath = Path.Combine (TopDir, "tests", "TestData", "api-24.xml.in");
 
 		public static JavaTypeCollection GetLoadedApi ()
 		{
