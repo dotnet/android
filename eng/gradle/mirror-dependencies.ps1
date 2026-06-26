@@ -121,8 +121,7 @@ try {
         Write-Host "`n=== iteration $i ===" -ForegroundColor Green
         $log = Join-Path ([IO.Path]::GetTempPath()) "gradle-mirror-iter-$i.log"
         & $gradlew $Task --no-daemon --refresh-dependencies *>&1 | Tee-Object -FilePath $log | Out-Null
-        $tail = Get-Content $log -Tail 5
-        if ($tail -match 'BUILD SUCCESSFUL') {
+        if (Select-String -Path $log -Pattern 'BUILD SUCCESSFUL' -SimpleMatch -Quiet) {
             Write-Host "`nBUILD SUCCESSFUL after $i iteration(s). The feed now has the packages CI needs." -ForegroundColor Green
             return
         }
