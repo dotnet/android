@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <Target Name="_PrepareCommonProperties">
     <PropertyGroup>
@@ -10,75 +9,7 @@
   </Target>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-          DependsOnTargets="_PrepareCommonProperties;_GenerateCMakeFiles;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
-  </Target>
-
-  <!--
-    Generates the CMake-input files previously produced by xaprepare's
-    Get_Cmake_XA_Build_Configuration and Get_Cmake_Presets generators.
-    Paths are emitted with forward slashes, which CMake and JSON both
-    accept on all OSes and which avoids backslash-escaping concerns.
-
-    Only runs for native-mono.csproj. native-clr.csproj and
-    native-nativeaot.csproj read the same shared output files
-    (bin/Build$(Configuration)/xa_build_configuration.cmake and
-    src/native/CMakePresets.json), so running this on all three
-    would race under parallel msbuild.
-
-    $(MSBuildAllProjects) is included in Inputs so that any change to
-    an imported .props/.targets file (Configuration.props,
-    eng/Versions.props, Directory.Build.props, ...) invalidates the
-    cached output, since most placeholder values come from those.
-  -->
-  <Target Name="_GenerateCMakeFiles"
-          Condition=" '$(MSBuildProjectName)' == 'native-mono' "
-          Inputs="$(MSBuildAllProjects);..\..\build-tools\scripts\xa_build_configuration.cmake.in;CMakePresets.json.in"
-          Outputs="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa_build_configuration.cmake;CMakePresets.json">
-    <PropertyGroup>
-      <_XAPackagesDirSlashes>$([System.String]::Copy('$(XAPackagesDir)').Replace('\','/').TrimEnd('/'))</_XAPackagesDirSlashes>
-      <_NetCoreRuntimePrefix>$(_XAPackagesDirSlashes)/microsoft.netcore.app.runtime.mono.android-</_NetCoreRuntimePrefix>
-      <_NetCoreRuntimeSuffix>/$(MicrosoftNETCoreAppRefPackageVersion)/runtimes/android-</_NetCoreRuntimeSuffix>
-      <_CoreClrRuntimePrefix>$(_XAPackagesDirSlashes)/microsoft.netcore.app.runtime.android-</_CoreClrRuntimePrefix>
-      <_CoreClrRuntimeSuffix>/$(MicrosoftNETCoreAppRefPackageVersion)/runtimes/android-</_CoreClrRuntimeSuffix>
-
-      <_AndroidNdkDirectorySlashes>$([System.String]::Copy('$(AndroidNdkDirectory)').Replace('\','/'))</_AndroidNdkDirectorySlashes>
-      <_NinjaPathSlashes>$([System.String]::Copy('$(NinjaPath)').Replace('\','/'))</_NinjaPathSlashes>
-      <_MicrosoftAndroidSdkOutDirSlashes>$([System.String]::Copy('$(MicrosoftAndroidSdkOutDir)').Replace('\','/'))</_MicrosoftAndroidSdkOutDirSlashes>
-      <_TestOutputDirectorySlashes>$([System.String]::Copy('$(TestOutputDirectory)').Replace('\','/'))</_TestOutputDirectorySlashes>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_ARM@=$(_NetCoreRuntimePrefix)arm$(_NetCoreRuntimeSuffix)arm" />
-      <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_ARM64@=$(_NetCoreRuntimePrefix)arm64$(_NetCoreRuntimeSuffix)arm64" />
-      <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_X86@=$(_NetCoreRuntimePrefix)x86$(_NetCoreRuntimeSuffix)x86" />
-      <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_X86_64@=$(_NetCoreRuntimePrefix)x64$(_NetCoreRuntimeSuffix)x64" />
-      <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_ARM64@=$(_CoreClrRuntimePrefix)arm64$(_CoreClrRuntimeSuffix)arm64" />
-      <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_X86_64@=$(_CoreClrRuntimePrefix)x64$(_CoreClrRuntimeSuffix)x64" />
-
-      <_CMakePresetsReplacement Include="@AndroidNdkDirectory@=$(_AndroidNdkDirectorySlashes)" />
-      <_CMakePresetsReplacement Include="@NinjaPath@=$(_NinjaPathSlashes)" />
-      <_CMakePresetsReplacement Include="@MicrosoftAndroidSdkOutDir@=$(_MicrosoftAndroidSdkOutDirSlashes)" />
-      <_CMakePresetsReplacement Include="@NDK_ARMEABI_V7_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
-      <_CMakePresetsReplacement Include="@NDK_ARM64_V8A_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
-      <_CMakePresetsReplacement Include="@NDK_X86_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
-      <_CMakePresetsReplacement Include="@NDK_X86_64_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
-      <_CMakePresetsReplacement Include="@XA_BUILD_CONFIGURATION@=$(Configuration)" />
-      <_CMakePresetsReplacement Include="@XA_TEST_OUTPUT_DIR@=$(_TestOutputDirectorySlashes)" />
-    </ItemGroup>
-
-    <MakeDir Directories="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)" />
-
-    <ReplaceFileContents
-        SourceFile="..\..\build-tools\scripts\xa_build_configuration.cmake.in"
-        DestinationFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa_build_configuration.cmake"
-        Replacements="@(_XaBuildConfigurationReplacement)">
-    </ReplaceFileContents>
-
-    <ReplaceFileContents
-        SourceFile="CMakePresets.json.in"
-        DestinationFile="CMakePresets.json"
-        Replacements="@(_CMakePresetsReplacement)">
-    </ReplaceFileContents>
+          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
   </Target>
 
   <!-- The runtime check makes the target run only once, when building the CoreCLR runtime. Otherwise, when building in parallel, we will get
