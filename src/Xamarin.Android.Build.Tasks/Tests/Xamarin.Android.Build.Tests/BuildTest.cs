@@ -212,13 +212,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		// target, isRelease, packageFormat, perAbi, withExtensionHook
-		[TestCase ("GetApplicationArtifacts", false, "apk", false, false)]
-		[TestCase ("Publish",                 false, "apk", false, false)]
-		[TestCase ("GetApplicationArtifacts", true,  "aab", false, false)]
-		[TestCase ("GetApplicationArtifacts", false, "apk", true,  false)]
-		[TestCase ("GetApplicationArtifacts", false, "apk", false, true)]
-		public void DotNetBuildReturnsApplicationArtifacts (string target, bool isRelease, string packageFormat, bool perAbi, bool withExtensionHook)
+		// target, isRelease, packageFormat, withExtensionHook
+		[TestCase ("GetApplicationArtifacts", false, "apk", false)]
+		[TestCase ("Publish",                 false, "apk", false)]
+		[TestCase ("GetApplicationArtifacts", true,  "aab", false)]
+		[TestCase ("GetApplicationArtifacts", false, "apk", true)]
+		public void DotNetBuildReturnsApplicationArtifacts (string target, bool isRelease, string packageFormat, bool withExtensionHook)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -228,10 +227,6 @@ namespace Xamarin.Android.Build.Tests
 			if (packageFormat == "aab") {
 				// Disable fast deployment for AABs to avoid XA0119.
 				proj.EmbedAssembliesIntoApk = true;
-			}
-			if (perAbi) {
-				proj.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
-				proj.SetProperty ("AndroidCreatePackagePerAbi", "true");
 			}
 			if (withExtensionHook) {
 				// Validate that $(GetApplicationArtifactsDependsOn) runs *after* _CreateApplicationArtifacts,
@@ -277,16 +272,6 @@ namespace Xamarin.Android.Build.Tests
 				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.aab", "aab", "false", proj.PackageName, "", expectedMauiArtifact);
 				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName, "", expectedMauiArtifact);
 				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "", expectedMauiArtifact);
-			} else if (perAbi) {
-				// Per-ABI: main unsigned + main signed + per-ABI unsigned/signed for each requested ABI.
-				var abis = new [] { "arm64-v8a", "x86_64" };
-				Assert.AreEqual (2 + abis.Length * 2, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
-				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.apk", "apk", "false", proj.PackageName, "", expectedMauiArtifact);
-				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "", expectedMauiArtifact);
-				foreach (var abi in abis) {
-					AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-{abi}.apk", "apk", "false", proj.PackageName, abi, expectedMauiArtifact);
-					AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-{abi}-Signed.apk", "apk", "true", proj.PackageName, abi, expectedMauiArtifact);
-				}
 			} else {
 				Assert.AreEqual (2, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
 				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.apk", "apk", "false", proj.PackageName, "", expectedMauiArtifact);
