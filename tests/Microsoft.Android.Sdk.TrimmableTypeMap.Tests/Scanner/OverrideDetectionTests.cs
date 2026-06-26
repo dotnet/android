@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Xunit;
 
@@ -125,6 +126,31 @@ public class OverrideDetectionTests : FixtureTestBase
 		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
 		Assert.Equal ("(I)V", setSelection.JniSignature);
 		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+		var declaringType = setSelection.DeclaringType;
+		Assert.NotNull (declaringType);
+		if (declaringType is null) {
+			throw new InvalidOperationException ("Expected override declaring type.");
+		}
+		Assert.Equal ("MyApp.GenericSelectionHost`1", declaringType.ManagedTypeName);
+		var argument = Assert.Single (declaringType.GenericArguments);
+		Assert.Equal ("System.String", argument.ManagedTypeName);
+	}
+
+	[Fact]
+	public void OverrideAcrossGenericForwardingIntermediateMcwBase_Detected ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/GenericForwardingSelectableList");
+		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
+		Assert.Equal ("(I)V", setSelection.JniSignature);
+		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+		var declaringType = setSelection.DeclaringType;
+		Assert.NotNull (declaringType);
+		if (declaringType is null) {
+			throw new InvalidOperationException ("Expected override declaring type.");
+		}
+		Assert.Equal ("MyApp.GenericSelectionHost`1", declaringType.ManagedTypeName);
+		var argument = Assert.Single (declaringType.GenericArguments);
+		Assert.Equal ("System.String", argument.ManagedTypeName);
 	}
 
 	[Fact]

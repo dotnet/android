@@ -38,10 +38,24 @@ static class MetadataHelper
 		}
 		foreach (var proxy in data.ProxyTypes) {
 			writer.Write (proxy.TypeName);
-			writer.Write (proxy.TargetType.ManagedTypeName);
-			writer.Write (proxy.TargetType.AssemblyName);
+			writer.WriteTypeRef (proxy.TargetType);
 			writer.Write ((byte)(proxy.ActivationCtor?.Style ?? 0));
+			if (proxy.ActivationCtor is not null) {
+				writer.WriteTypeRef (proxy.ActivationCtor.DeclaringType);
+			}
 			writer.Write ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
+		}
+		foreach (var proxy in data.ArrayProxyTypes) {
+			writer.Write (proxy.TypeName);
+			writer.Write (proxy.JniName);
+			writer.WriteTypeRef (proxy.ElementType);
+			writer.Write (proxy.Rank);
+			if (proxy.Primitive is null) {
+				writer.Write ((byte) 0);
+			} else {
+				writer.Write ((byte) 1);
+				writer.WriteTypeRef (proxy.Primitive.ConcreteArrayType);
+			}
 		}
 		foreach (var assoc in data.Associations) {
 			writer.Write (assoc.SourceTypeReference);
@@ -49,5 +63,16 @@ static class MetadataHelper
 		}
 		writer.Flush ();
 		return sha.ComputeHash (stream.ToArray ());
+	}
+
+	static void WriteTypeRef (this System.IO.BinaryWriter writer, TypeRefData type)
+	{
+		writer.Write (type.ManagedTypeName);
+		writer.Write (type.AssemblyName);
+		writer.Write (type.IsEnum ? (byte) 1 : (byte) 0);
+		writer.Write (type.GenericArguments.Count);
+		foreach (var argument in type.GenericArguments) {
+			writer.WriteTypeRef (argument);
+		}
 	}
 }
