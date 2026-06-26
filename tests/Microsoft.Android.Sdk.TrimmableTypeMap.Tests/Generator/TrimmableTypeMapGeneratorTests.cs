@@ -222,6 +222,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_SkipsJavaPeerWithUnresolvableBaseOrInterfaceTypeRef (bool useMissingInterface, string unresolvedTypeName)
 	{
 		var warnings = new List<string> ();
+		var peerPath = Path.Combine (Path.GetTempPath (), "StalePeerAssembly.dll");
+		var missingDependencyPath = Path.Combine (Path.GetTempPath (), "MissingDependency.dll");
 		using var peerStream = CreateStaleJavaPeerAssembly (useMissingInterface);
 		using var missingDependencyStream = CreateEmptyAssembly ("MissingDependency");
 		using var peerReader = new PEReader (peerStream, PEStreamOptions.LeaveOpen);
@@ -229,8 +231,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		var result = CreateGenerator (warnings).Execute (
 			new [] {
-				new AssemblyInput ("StalePeerAssembly", "/tmp/StalePeerAssembly.dll", peerReader),
-				new AssemblyInput ("MissingDependency", "/tmp/MissingDependency.dll", missingDependencyReader),
+				new AssemblyInput ("StalePeerAssembly", peerPath, peerReader),
+				new AssemblyInput ("MissingDependency", missingDependencyPath, missingDependencyReader),
 			},
 			new Version (11, 0),
 			new HashSet<string> ());
@@ -240,7 +242,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains ("Test.BrokenPeer", warning);
 		Assert.Contains (unresolvedTypeName, warning);
 		Assert.Contains ("MissingDependency", warning);
-		Assert.Contains ("/tmp/MissingDependency.dll", warning);
+		Assert.Contains (missingDependencyPath, warning);
 	}
 
 	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
