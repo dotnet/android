@@ -14,9 +14,12 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 
 	static readonly Type[] XAConstructorSignature = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	readonly JavaMarshalRegisteredPeers registeredPeers = JavaMarshalRegisteredPeers.Instance;
-
 	bool disposed;
+
+	public JavaMarshalValueManager ()
+	{
+		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
+	}
 
 	protected override void Dispose (bool disposing)
 	{
@@ -42,27 +45,27 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 
 	public override void CollectPeers ()
 	{
-		registeredPeers.CollectPeers ();
+		JavaMarshalRegisteredPeers.CollectPeers ();
 	}
 
 	public override void AddPeer (IJavaPeerable value)
 	{
-		registeredPeers.AddPeer (value);
+		JavaMarshalRegisteredPeers.AddPeer (value);
 	}
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
-		return registeredPeers.PeekPeer (reference);
+		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
-		registeredPeers.RemovePeer (value);
+		JavaMarshalRegisteredPeers.RemovePeer (value);
 	}
 
 	public override void FinalizePeer (IJavaPeerable value)
 	{
-		registeredPeers.FinalizePeer (value);
+		JavaMarshalRegisteredPeers.FinalizePeer (value);
 	}
 
 	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
@@ -75,7 +78,7 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
-		return registeredPeers.GetSurfacedPeers ();
+		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
 	}
 
 	public override IJavaPeerable? CreatePeer (

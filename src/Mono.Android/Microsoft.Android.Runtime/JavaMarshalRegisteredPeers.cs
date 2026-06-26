@@ -17,43 +17,48 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 /// <remarks>
 /// <para>
-/// This type is a process-wide singleton; use <see cref="Instance"/> to access it. The
-/// constructor performs a process-global, one-shot GC-bridge initialization
-/// (<c>clr_initialize_gc_bridge</c>), which spawns a detached bridge-processing thread and
-/// aborts the process if it runs more than once. A private constructor combined with the
-/// <see cref="Instance"/> accessor guarantees that exactly one instance is ever created per
-/// process, even if multiple value managers (e.g. the <c>llvm-ir</c> and
-/// <c>trimmable-typemap</c> implementations) share it.
+/// This is a process-wide, static type. <see cref="InitializeIfNeeded"/> performs a
+/// process-global, one-shot GC-bridge initialization (<c>clr_initialize_gc_bridge</c>),
+/// which spawns a detached bridge-processing thread and aborts the process if it runs more
+/// than once. <see cref="InitializeIfNeeded"/> is idempotent: the first call performs the
+/// initialization and any subsequent call returns immediately, so it is safe to call from
+/// every value manager (e.g. the <c>llvm-ir</c> and <c>trimmable-typemap</c> implementations).
 /// </para>
 /// <para>
-/// The GC bridge holds a native reference (a <see cref="GCHandle{T}"/>) to this instance for
-/// the lifetime of the process. As a result, the singleton is never garbage collected and is
-/// expected to live until the process exits. There is intentionally no way to dispose or
-/// replace it: tearing down the GC-bridge registration is not supported by the runtime.
+/// The GC-bridge registration lives for the entire lifetime of the process and is never torn
+/// down: stopping the detached bridge-processing thread is not supported by the runtime.
 /// </para>
 /// </remarks>
-sealed class JavaMarshalRegisteredPeers
+static class JavaMarshalRegisteredPeers
 {
+	static readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
+	static readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
+
+	static readonly object initializeLock = new ();
+	static bool initialized;
+
 	/// <summary>
-	/// The process-wide singleton instance. Accessing this property the first time performs the
-	/// one-shot GC-bridge initialization described on <see cref="JavaMarshalRegisteredPeers"/>.
+	/// Performs the one-shot, process-global GC-bridge initialization the first time it is
+	/// called; subsequent calls return immediately. See <see cref="JavaMarshalRegisteredPeers"/>
+	/// for details on the process-lifetime semantics.
 	/// </summary>
-	public static JavaMarshalRegisteredPeers Instance { get; } = new JavaMarshalRegisteredPeers ();
-
-	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
-	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
-
-	JavaMarshalRegisteredPeers ()
+	internal static void InitializeIfNeeded ()
 	{
-		unsafe {
-			var registeredPeersHandle = new GCHandle<JavaMarshalRegisteredPeers> (this);
-			var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
-				GCHandle<JavaMarshalRegisteredPeers>.ToIntPtr (registeredPeersHandle), &BridgeProcessingStarted, &BridgeProcessingFinished);
-			JavaMarshal.Initialize (mark_cross_references_ftn);
+		lock (initializeLock) {
+			if (initialized)
+				return;
+
+			unsafe {
+				var mark_cross_references_ftn = RuntimeNativeMethods.clr_initialize_gc_bridge (
+					&BridgeProcessingStarted, &BridgeProcessingFinished);
+				JavaMarshal.Initialize (mark_cross_references_ftn);
+			}
+
+			initialized = true;
 		}
 	}
 
-	public void CollectPeers ()
+	public static void CollectPeers ()
 	{
 		unsafe {
 			while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
@@ -87,7 +92,7 @@ sealed class JavaMarshalRegisteredPeers
 		}
 	}
 
-	public void AddPeer (IJavaPeerable value)
+	public static void AddPeer (IJavaPeerable value)
 	{
 		// Remove any collected contexts before adding a new peer.
 		CollectPeers ();
@@ -129,7 +134,7 @@ sealed class JavaMarshalRegisteredPeers
 		}
 	}
 
-	void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)
+	static void WarnNotReplacing (int key, IJavaPeerable ignoreValue, IJavaPeerable keepValue)
 	{
 		JniEnvironment.Runtime.ObjectReferenceManager.WriteGlobalReferenceLine (
 				"Warning: Not registering PeerReference={0} IdentityHashCode=0x{1} Instance={2} Instance.Type={3} Java.Type={4}; " +
@@ -145,7 +150,7 @@ sealed class JavaMarshalRegisteredPeers
 				JniEnvironment.Types.GetJniTypeNameFromInstance (keepValue.PeerReference));
 	}
 
-	public IJavaPeerable? PeekPeer (JniObjectReference reference)
+	public static IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
 		if (!reference.IsValid)
 			return null;
@@ -170,7 +175,7 @@ sealed class JavaMarshalRegisteredPeers
 		return null;
 	}
 
-	public void RemovePeer (IJavaPeerable value)
+	public static void RemovePeer (IJavaPeerable value)
 	{
 		// Remove any collected contexts before modifying RegisteredInstances
 		CollectPeers ();
@@ -197,7 +202,7 @@ sealed class JavaMarshalRegisteredPeers
 		}
 	}
 
-	public void FinalizePeer (IJavaPeerable value)
+	public static void FinalizePeer (IJavaPeerable value)
 	{
 		var h = value.PeerReference;
 		var o = JniEnvironment.Runtime.ObjectReferenceManager;
@@ -232,7 +237,7 @@ sealed class JavaMarshalRegisteredPeers
 		value.Finalized ();
 	}
 
-	public List<JniSurfacedPeerInfo> GetSurfacedPeers ()
+	public static List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		// Remove any collected contexts before iterating over all the registered instances
 		CollectPeers ();
@@ -403,15 +408,13 @@ sealed class JavaMarshalRegisteredPeers
 	}
 
 	[UnmanagedCallersOnly]
-	static unsafe void BridgeProcessingFinished (IntPtr registeredPeersHandle, MarkCrossReferencesArgs* mcr)
+	static unsafe void BridgeProcessingFinished (MarkCrossReferencesArgs* mcr)
 	{
 		if (mcr == null) {
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		JavaMarshalRegisteredPeers instance = GCHandle<JavaMarshalRegisteredPeers>.FromIntPtr (registeredPeersHandle).Target;
-
-		ReadOnlySpan<GCHandle> handlesToFree = instance.ProcessCollectedContexts (mcr);
+		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
 
 // This call site is reachable on all platforms. 'JavaMarshal.FinishCrossReferenceProcessing(MarkCrossReferencesArgs*, ReadOnlySpan<GCHandle>)' is only supported on: 'android'.
 #pragma warning disable CA1416
@@ -419,7 +422,7 @@ sealed class JavaMarshalRegisteredPeers
 #pragma warning restore CA1416
 	}
 
-	unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
+	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
 	{
 		List<GCHandle> handlesToFree = [];
 
