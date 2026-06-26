@@ -35,7 +35,6 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public string? ManifestTemplate { get; set; }
 	public string? MergedAndroidManifestOutput { get; set; }
 	public string []? MergedManifestDocuments { get; set; }
-	public bool MultiDex { get; set; }
 	public bool NeedsInternet { get; set; }
 	public string? PackageName { get; set; }
 	[Required]
@@ -114,7 +113,6 @@ public class GenerateMainAndroidManifest : AndroidTask
 			TargetSdkVersion = targetSdkVersion,
 			MinSdkVersion = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion).ToString (),
 			Debug = Debug,
-			MultiDex = MultiDex,
 			NeedsInternet = NeedsInternet,
 			AndroidRuntime = androidRuntime,
 		};

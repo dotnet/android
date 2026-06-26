@@ -189,13 +189,9 @@ extends:
             displayName: Create MAUI template
             continueOnError: false
 
-        - powershell: |
-            $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
-            [xml] $xml = Get-Content $project
-            $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
-            $node.InnerText = '$(DotNetTargetFramework)-android'
-            $xml.Save($project)
-          displayName: set TargetFrameworks to Android-only
+        - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml@self
+          parameters:
+            project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
@@ -417,7 +413,7 @@ extends:
                 $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
                 $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
                 $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-                & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+                & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
                 & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
             displayName: add build to default darc channel
             condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))

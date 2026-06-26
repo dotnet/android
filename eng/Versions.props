@@ -1,22 +1,22 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftNETSdkPackageVersion>11.0.100-preview.5.26268.112</MicrosoftNETSdkPackageVersion>
+    <MicrosoftNETSdkPackageVersion>11.0.100-preview.7.26325.102</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>11.0.0-preview.5.26268.112</MicrosoftNETILLinkPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>11.0.0-preview.5.26268.112</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>11.0.0-preview.7.26325.102</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>11.0.0-preview.7.26325.102</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <!-- Last version built for net10.0, needed for CI steps that only have the .NET 10 SDK installed (e.g., BAR manifest publishing) -->
     <MicrosoftDotNetBuildTasksFeedPackageVersionNet10>11.0.0-beta.26060.102</MicrosoftDotNetBuildTasksFeedPackageVersionNet10>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26268.112</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>11.0.0-beta.26325.102</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview4PackageVersion>11.0.100-preview.4.26215.121</MicrosoftNETWorkloadMonoToolchainCurrentManifest110100preview4PackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview4PackageVersion>11.0.100-preview.4.26215.121</MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview4PackageVersion>
     <MicrosoftNETWorkloadMonoToolChainPackageVersion>$(MicrosoftNETWorkloadMonoToolChainCurrentManifest110100preview4PackageVersion)</MicrosoftNETWorkloadMonoToolChainPackageVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview4PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
-    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-preview.5.26268.112</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26268.112</MicrosoftDotNetCecilPackageVersion>
-    <MSTestPackageVersion>4.3.0-preview.26307.5</MSTestPackageVersion>
-    <SystemIOHashingPackageVersion>10.0.8</SystemIOHashingPackageVersion>
+    <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-preview.7.26325.102</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26325.102</MicrosoftDotNetCecilPackageVersion>
+    <MSTestPackageVersion>4.3.0-preview.26321.1</MSTestPackageVersion>
+    <SystemIOHashingPackageVersion>10.0.9</SystemIOHashingPackageVersion>
     <SystemReflectionMetadataPackageVersion>11.0.0-preview.1.26104.118</SystemReflectionMetadataPackageVersion>
     <!-- Previous .NET Android version -->
     <MicrosoftNETSdkAndroidManifest100100PackageVersion>36.1.69</MicrosoftNETSdkAndroidManifest100100PackageVersion>
@@ -37,13 +37,13 @@
     <!-- Properties shared between dotnet/android and the Java.Interop submodule.
          Imported by Directory.Build.props, Configuration.props, and
          external/Java.Interop.override.props. -->
-    <MonoCecilVersion>0.11.5</MonoCecilVersion>
+    <MonoCecilVersion>0.11.6</MonoCecilVersion>
     <!-- NuGet package version numbers. See Documentation/guides/OneDotNet.md.
          Rules:
          * Major/Minor match Android stable API level, such as 30.0 for API 30.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>37.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.6</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.7</AndroidPackVersionSuffix>
   </PropertyGroup>
 </Project>

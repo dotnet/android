@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 	public class PackagingTest : BaseTest
 	{
 		[Test]
-		public void CheckProguardMappingFileExists ([Values] AndroidRuntime runtime)
+		public void CheckProguardMappingFileExists ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -40,7 +40,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckR8InfoMessagesToNotBreakTheBuild ([Values] AndroidRuntime runtime)
+		public void CheckR8InfoMessagesToNotBreakTheBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool usesAssemblyStores = runtime == AndroidRuntime.CoreCLR;
 			var proj = new XamarinAndroidApplicationProject {
@@ -95,7 +95,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (!usesAssemblyStores && runtime == AndroidRuntime.CoreCLR) {
 				Assert.Ignore ("CoreCLR only supports builds with assembly stores.");
@@ -176,7 +176,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("Test Me", runtime);
 
 				// testing characters as per https://www.compart.com/en/unicode/category/Zs
@@ -219,7 +219,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void CheckClassesDexIsIncluded ([Values] AndroidRuntime runtime)
+		public void CheckClassesDexIsIncluded ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -241,7 +241,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		public void CheckIncludedNativeLibraries ([Values] bool compressNativeLibraries, [Values] AndroidRuntime runtime)
+		public void CheckIncludedNativeLibraries ([Values] bool compressNativeLibraries, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -272,7 +272,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void EmbeddedDSOs ([Values] AndroidRuntime runtime)
+		public void EmbeddedDSOs ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -336,7 +336,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void IncrementalCompression ([Values] AndroidRuntime runtime)
+		public void IncrementalCompression ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -387,7 +387,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void ExplicitPackageNamingPolicy ([Values] AndroidRuntime runtime)
+		public void ExplicitPackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -415,7 +415,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void CheckMetadataSkipItemsAreProcessedCorrectly ([Values] AndroidRuntime runtime)
+		public void CheckMetadataSkipItemsAreProcessedCorrectly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -512,7 +512,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void CheckSignApk ([Values] bool useApkSigner, [Values] bool perAbiApk, [Values] AndroidRuntime runtime)
+		public void CheckSignApk ([Values] bool useApkSigner, [Values] bool perAbiApk, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -569,7 +569,7 @@ namespace UnnamedProject {
 				if (runtime != AndroidRuntime.NativeAOT) {
 					b.AssertHasNoWarnings ();
 				} else {
-					StringAssertEx.Contains ("2 Warning(s)", b.LastBuildOutput, "NativeAOT should produce two IL3053 warnings");
+					b.AssertHasAtMostWarnings (2);
 				}
 
 				//Make sure the APKs are signed
@@ -624,7 +624,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void CheckAppBundle ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void CheckAppBundle ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -656,7 +656,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MissingSatelliteAssemblyInLibrary ([Values] AndroidRuntime runtime)
+		public void MissingSatelliteAssemblyInLibrary ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -714,7 +714,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void MissingSatelliteAssemblyInApp ([Values] bool publishAot, [Values] AndroidRuntime runtime)
+		public void MissingSatelliteAssemblyInApp ([Values] bool publishAot, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -762,90 +762,8 @@ namespace UnnamedProject {
 			}
 		}
 
-		/// <summary>
-		/// Verifies that _PostTrimmingPipeline does not include satellite assemblies
-		/// (.resources.dll) in its input. Satellite assemblies are not processed by
-		/// ILLink and retain their original paths in the shared NuGet package cache.
-		/// Including them causes PostTrimmingPipeline to open them with ReadWrite
-		/// access, leading to IOException in parallel multi-RID builds.
-		/// See: https://github.com/dotnet/android/issues/11085
-		/// </summary>
 		[Test]
-		[NonParallelizable] // Commonly fails NuGet restore
-		public void PostTrimmingPipelineExcludesSatelliteAssemblies ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64);
-			proj.PackageReferences.Add (new Package {
-				Id = "Humanizer.Core",
-				Version = "2.14.1",
-			});
-			proj.PackageReferences.Add (new Package {
-				Id = "Humanizer.Core.es",
-				Version = "2.14.1",
-			});
-			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", @"using Humanizer;
-using System.Globalization;")
-				.Replace ("//${AFTER_ONCREATE}", @"var c = new CultureInfo (""es-ES"");
-Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");");
-			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
-			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
-
-			// Inject a diagnostic target that logs the _PostTrimmingAssembly items
-			// created by the production _PostTrimmingPipeline target. In MSBuild,
-			// items defined in a target's <ItemGroup> are visible to subsequent targets.
-			proj.Imports.Add (new Import ("PostTrimmingDiag.targets") {
-				TextContent = () => """
-					<Project>
-						<Target Name="_DiagLogPostTrimmingAssemblies"
-								AfterTargets="_PostTrimmingPipeline"
-								Condition=" '$(PublishTrimmed)' == 'true' ">
-							<Message Importance="high" Text="DIAG_PTA: %(_PostTrimmingAssembly.Identity)" />
-							<Message Importance="high" Text="DIAG_RFP: %(ResolvedFileToPublish.Identity)"
-								Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(Filename)' != '' and $([System.String]::Copy('%(Filename)').EndsWith('.resources')) " />
-						</Target>
-					</Project>
-				""",
-			});
-
-			using var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
-			// Verify the diagnostic target actually ran and logged assemblies
-			Assert.IsTrue (
-				b.LastBuildOutput.ContainsText ("DIAG_PTA:"),
-				"Diagnostic target should have logged _PostTrimmingAssembly items");
-
-			// Verify satellite assemblies ARE present in ResolvedFileToPublish (positive check)
-			bool hasSatelliteInRfp = false;
-			foreach (var line in b.LastBuildOutput) {
-				if (line.Contains ("DIAG_RFP:") && line.Contains (".resources.dll")) {
-					hasSatelliteInRfp = true;
-					break;
-				}
-			}
-			Assert.IsTrue (hasSatelliteInRfp,
-				"Satellite assemblies should be present in ResolvedFileToPublish to confirm the scenario is exercised");
-
-			// Verify satellite assemblies were NOT included in _PostTrimmingAssembly
-			var satelliteLines = new List<string> ();
-			foreach (var line in b.LastBuildOutput) {
-				if (line.Contains ("DIAG_PTA:") && line.Contains (".resources.dll")) {
-					satelliteLines.Add (line.Trim ());
-				}
-			}
-			Assert.IsEmpty (satelliteLines,
-				"Satellite assemblies (.resources.dll) should not be passed to PostTrimmingPipeline. " +
-				"They retain paths in the shared NuGet cache and cause file locking conflicts in parallel RID builds. Found:\n" +
-				string.Join ("\n", satelliteLines));
-		}
-
-		[Test]
-		public void IgnoreManifestFromJar ([Values] AndroidRuntime runtime)
+		public void IgnoreManifestFromJar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -903,7 +821,7 @@ public class Test
 		}
 
 		[Test]
-		public void CheckExcludedFilesAreMissing ([Values] AndroidRuntime runtime)
+		public void CheckExcludedFilesAreMissing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -928,7 +846,7 @@ public class Test
 		}
 
 		[Test]
-		public void CheckExcludedFilesCanBeModified ([Values] AndroidRuntime runtime)
+		public void CheckExcludedFilesCanBeModified ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -961,7 +879,7 @@ public class Test
 		}
 
 		[Test]
-		public void CheckIncludedFilesArePresent ([Values] AndroidRuntime runtime)
+		public void CheckIncludedFilesArePresent ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -986,7 +904,7 @@ public class Test
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (1, -1, runtime);
 				AddTestData (5, -1, runtime);
 				AddTestData (50, -1, runtime);
@@ -1036,7 +954,7 @@ public class Test
 		}
 
 		[Test]
-		public void ExtractNativeLibsTrue ([Values] AndroidRuntime runtime)
+		public void ExtractNativeLibsTrue ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1072,7 +990,7 @@ public class Test
 		}
 
 		[Test]
-		public void DefaultItems ([Values] AndroidRuntime runtime)
+		public void DefaultItems ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

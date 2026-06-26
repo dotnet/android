@@ -272,7 +272,13 @@ class MSBuildLoggingPomResolver : IProjectResolver
 		try {
 			using (var file = File.OpenRead (filename)) {
 				var project = Project.Load (file);
-				var registered_artifact = Artifact.Parse (project.VersionedArtifactString);
+
+				// POMs may inherit GroupId/Version from a <parent> element, so fall back to
+				// the parent's values when the project itself doesn't declare them. (Without
+				// this, building an Artifact would fail validation with an empty coordinate.)
+				var groupId = project.GroupId.HasValue () ? project.GroupId : (project.Parent?.GroupId ?? "");
+				var version = project.Version.HasValue () ? project.Version : (project.Parent?.Version ?? "");
+				var registered_artifact = new Artifact (groupId, project.ArtifactId ?? "", version);
 
 				// Return the registered artifact, preferring any overrides specified in the task item
 				var final_artifact = new Artifact (
