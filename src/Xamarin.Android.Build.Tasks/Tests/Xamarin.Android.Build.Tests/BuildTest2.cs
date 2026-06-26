@@ -103,6 +103,12 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void NativeAOT ()
 		{
+			// This test inspects illink's `linked/Mono.Android.dll` to verify the managed type-map.
+			// NativeAOT trims with ILC and no longer produces that `linked/` output, so the test is
+			// disabled until a DGML-based counterpart exists.
+			// TODO: re-enable via a DGML-based type-map check for NativeAOT (follow-up issue).
+			Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				ProjectName = "Hello",
@@ -299,8 +305,12 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				var depsFile = GetLinkedPath (b, true, "linker-dependencies.xml");
-				FileAssert.Exists (depsFile);
+				if (runtime != AndroidRuntime.NativeAOT) {
+					// NativeAOT trims with ILC and does not emit illink's `linker-dependencies.xml`.
+					// TODO: add a DGML-based counterpart for NativeAOT (follow-up issue).
+					var depsFile = GetLinkedPath (b, true, "linker-dependencies.xml");
+					FileAssert.Exists (depsFile);
+				}
 
 				const int ApkSizeThreshold = 5 * 1024;
 				const int AssemblySizeThreshold = 5 * 1024;

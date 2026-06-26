@@ -395,6 +395,10 @@ $@"			var myButton = new AttributedButtonStub (this);
 				return;
 			}
 
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
+				return;
+			}
+
 			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
 				// This currently fails with the following exception:
 				//
@@ -511,6 +515,9 @@ namespace UnnamedProject {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
+				return;
+			}
 
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
 			proj.SetRuntime (runtime);
@@ -547,6 +554,9 @@ namespace UnnamedProject {
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
@@ -586,6 +596,9 @@ namespace UnnamedProject {
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
 
