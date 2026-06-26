@@ -280,16 +280,16 @@ namespace Java.InteropTests
 			AssumeTrimmableTypeMapEnabled ();
 			AssumeGeneratedArrayProxiesEnabled ();
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 1, out var byteArrayProxy));
-			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (sbyte[]));
-			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<sbyte>));
-			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaPrimitiveArray<sbyte>));
-			CollectionAssert.Contains (byteArrayProxy.GetArrayTypes (), typeof (JavaSByteArray));
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 1, out var sbyteArrayProxy));
+			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (sbyte[]));
+			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<sbyte>));
+			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (JavaPrimitiveArray<sbyte>));
+			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (JavaSByteArray));
 
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 2, out var jaggedByteArrayProxy));
-			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (sbyte[][]));
-			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>));
-			CollectionAssert.Contains (jaggedByteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 2, out var jaggedSbyteArrayProxy));
+			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (sbyte[][]));
+			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>));
+			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
 		}
 
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
