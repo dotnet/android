@@ -309,6 +309,17 @@
         SkipUnchangedFiles="true"
         Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
 
+    <!-- With the legacy manifest merger, the _ManifestMerger target (which produces
+         android/AndroidManifest.xml) does not run — it is gated on manifestmerger.jar.
+         The trimmable generator already produced a merged manifest, so place it at the
+         final android/ location that _ReadAndroidManifest and downstream targets expect,
+         mirroring how _GenerateJavaStubs writes android/AndroidManifest.xml for legacy in
+         the LlvmIr path. -->
+    <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        DestinationFiles="$(IntermediateOutputPath)android/AndroidManifest.xml"
+        SkipUnchangedFiles="true"
+        Condition=" '$(AndroidManifestMerger)' == 'legacy' and Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
+
     <!-- acw-map.txt is populated by _GenerateTrimmableTypeMap with real managed→Java mappings.
          If that target was skipped (e.g., no input assemblies), create an empty placeholder so
          downstream targets (_ConvertCustomView, _UpdateAndroidResgen) can evaluate their Inputs. -->
@@ -318,6 +329,7 @@
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" />
+      <FileWrites Include="$(IntermediateOutputPath)android/AndroidManifest.xml" Condition=" '$(AndroidManifestMerger)' == 'legacy' " />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
     </ItemGroup>
 
