@@ -124,6 +124,7 @@ namespace Xamarin.Android.Build.Tests
 				$"\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
 			File.WriteAllText (logFilePath, logContent);
+			TestContext.AddTestAttachment (logFilePath, Path.GetFileName (logFilePath));
 			return result;
 		}
 
