@@ -102,20 +102,23 @@ static class ComponentElementBuilder
 		return filter;
 	}
 
+	// Ordered to match the legacy IntentFilterAttribute.GetData emission order (singular block first,
+	// then plural block), so trimmable manifest generation stays byte-for-byte compatible with ManifestDocument.
+	static readonly (string SingularProperty, string PluralProperty, string AttributeName) [] IntentFilterDataProperties = [
+		("DataHost",                "DataHosts",                "host"),
+		("DataMimeType",            "DataMimeTypes",            "mimeType"),
+		("DataPath",                "DataPaths",                "path"),
+		("DataPathPattern",         "DataPathPatterns",         "pathPattern"),
+		("DataPathPrefix",          "DataPathPrefixes",         "pathPrefix"),
+		("DataPort",                "DataPorts",                "port"),
+		("DataScheme",              "DataSchemes",              "scheme"),
+		("DataPathSuffix",          "DataPathSuffixes",         "pathSuffix"),
+		("DataPathAdvancedPattern", "DataPathAdvancedPatterns", "pathAdvancedPattern"),
+	];
+
 	internal static void AddIntentFilterDataElement (XElement filter, IntentFilterInfo intentFilter)
 	{
-		AddDataElement ("DataHost", "host");
-		AddDataElement ("DataMimeType", "mimeType");
-		AddDataElement ("DataPath", "path");
-		AddDataElement ("DataPathPattern", "pathPattern");
-		AddDataElement ("DataPathPrefix", "pathPrefix");
-		AddDataElement ("DataPort", "port");
-		AddDataElement ("DataScheme", "scheme");
-		AddDataElement ("DataPathSuffix", "pathSuffix");
-		AddDataElement ("DataPathAdvancedPattern", "pathAdvancedPattern");
-
-		void AddDataElement (string propertyName, string attributeName)
-		{
+		foreach (var (propertyName, _, attributeName) in IntentFilterDataProperties) {
 			if (intentFilter.Properties.TryGetValue (propertyName, out var value) && value is string item && !string.IsNullOrEmpty (item)) {
 				filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
 			}
@@ -124,20 +127,9 @@ static class ComponentElementBuilder
 
 	internal static void AddIntentFilterDataElements (XElement filter, IntentFilterInfo intentFilter)
 	{
-		AddDataElements ("DataSchemes", "scheme");
-		AddDataElements ("DataHosts", "host");
-		AddDataElements ("DataPaths", "path");
-		AddDataElements ("DataPathPatterns", "pathPattern");
-		AddDataElements ("DataPathPrefixes", "pathPrefix");
-		AddDataElements ("DataMimeTypes", "mimeType");
-		AddDataElements ("DataPorts", "port");
-		AddDataElements ("DataPathSuffixes", "pathSuffix");
-		AddDataElements ("DataPathAdvancedPatterns", "pathAdvancedPattern");
-
-		void AddDataElements (string propertyName, string attributeName)
-		{
+		foreach (var (_, propertyName, attributeName) in IntentFilterDataProperties) {
 			if (!intentFilter.Properties.TryGetValue (propertyName, out var value) || value is not IReadOnlyList<string> values) {
-				return;
+				continue;
 			}
 
 			foreach (var item in values) {
