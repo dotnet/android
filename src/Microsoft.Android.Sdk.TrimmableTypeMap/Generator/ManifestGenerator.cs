@@ -274,7 +274,7 @@ class ManifestGenerator
 
 		// Check if runtime provider already exists in template
 		string runtimeProviderName = RuntimeProviderJavaName;
-		string? directBootAware = (string?) app.Attribute (AndroidNs + "directBootAware");
+		bool directBootAware = DirectBootAware (app);
 		if (!app.Elements ("provider").Any (p => {
 			var name = (string?)p.Attribute (ManifestConstants.AttName);
 			return name == runtimeProviderName ||
@@ -316,13 +316,36 @@ class ManifestGenerator
 		return providerNames;
 	}
 
-	XElement CreateRuntimeProvider (string name, string? processName, int initOrder, string? directBootAware)
+	static bool DirectBootAware (XElement app)
+	{
+		var directBootAwareAttrName = AndroidNs.GetName ("directBootAware");
+		if (IsDirectBootAware (app.Attribute (directBootAwareAttrName))) {
+			return true;
+		}
+
+		foreach (var element in app.Elements ()) {
+			if (IsDirectBootAware (element.Attribute (directBootAwareAttrName))) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static bool IsDirectBootAware (XAttribute? attribute)
+	{
+		return attribute is not null &&
+			bool.TryParse (attribute.Value, out bool value) &&
+			value;
+	}
+
+	XElement CreateRuntimeProvider (string name, string? processName, int initOrder, bool directBootAware)
 	{
 		return new XElement ("provider",
 			new XAttribute (AndroidNs + "name", name),
 			new XAttribute (AndroidNs + "exported", "false"),
 			new XAttribute (AndroidNs + "initOrder", initOrder),
-			directBootAware is not null ? new XAttribute (AndroidNs + "directBootAware", directBootAware) : null,
+			directBootAware ? new XAttribute (AndroidNs + "directBootAware", "true") : null,
 			processName is not null ? new XAttribute (AndroidNs + "process", processName) : null,
 			new XAttribute (AndroidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
 	}

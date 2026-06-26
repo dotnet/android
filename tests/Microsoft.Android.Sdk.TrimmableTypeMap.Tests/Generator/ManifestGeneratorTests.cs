@@ -267,6 +267,48 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void RuntimeProvider_DirectBootAware_WhenComponentDirectBootAware ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			Properties = new Dictionary<string, object?> {
+				["DirectBootAware"] = true,
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var app = doc.Root?.Element ("application");
+		var activity = app?.Element ("activity");
+		var provider = app?.Elements ("provider")
+			.FirstOrDefault (p => (string?) p.Attribute (AndroidNs + "name") == "mono.MonoRuntimeProvider");
+
+		Assert.Equal ("true", (string?) activity?.Attribute (AndroidNs + "directBootAware"));
+		Assert.Equal ("true", (string?) provider?.Attribute (AndroidNs + "directBootAware"));
+	}
+
+	[Fact]
+	public void RuntimeProvider_DoesNotEmitDirectBootAwareFalse ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyApp", new ComponentInfo {
+			Kind = ComponentKind.Application,
+			Properties = new Dictionary<string, object?> {
+				["DirectBootAware"] = false,
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var app = doc.Root?.Element ("application");
+		var provider = app?.Elements ("provider")
+			.FirstOrDefault (p => (string?) p.Attribute (AndroidNs + "name") == "mono.MonoRuntimeProvider");
+
+		Assert.Equal ("false", (string?) app?.Attribute (AndroidNs + "directBootAware"));
+		Assert.NotNull (provider);
+		Assert.Null (provider?.Attribute (AndroidNs + "directBootAware"));
+	}
+
+	[Fact]
 	public void Instrumentation_GoesToManifest ()
 	{
 		var gen = CreateDefaultGenerator ();
