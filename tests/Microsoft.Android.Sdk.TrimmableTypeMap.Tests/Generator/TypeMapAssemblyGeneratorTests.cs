@@ -1579,6 +1579,44 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_ExportProxy_StructuredGenericArgumentThrows ()
+	{
+		var peer = MakePeerWithActivation ("my/app/UnsupportedExport", "MyApp.UnsupportedExport", "App") with {
+			DoNotGenerateAcw = false,
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new () {
+					JniName = "badExport",
+					NativeCallbackName = "n_badExport",
+					JniSignature = "(Ljava/lang/Object;)V",
+					ManagedMethodName = "BadExport",
+					ManagedParameterTypes = new [] {
+						new TypeRefData {
+							ManagedTypeName = "System.Collections.Generic.List`1",
+							AssemblyName = "System.Collections",
+							GenericArguments = new [] {
+								new TypeRefData {
+									ManagedTypeName = "System.String",
+									AssemblyName = "System.Runtime",
+								},
+							},
+						},
+					},
+					ManagedReturnType = new TypeRefData {
+						ManagedTypeName = "System.Void",
+						AssemblyName = "System.Runtime",
+					},
+					IsExport = true,
+				},
+			},
+		};
+
+		var ex = Assert.Throws<NotSupportedException> (() => {
+			using var stream = GenerateAssembly (new [] { peer }, "UnsupportedStructuredGenericExport");
+		});
+		Assert.Contains ("generic", ex.Message);
+	}
+
+	[Fact]
 	public void Generate_MultipleAcwProxies_DeduplicatesUtf8Strings ()
 	{
 		var peers = ScanFixtures ();
