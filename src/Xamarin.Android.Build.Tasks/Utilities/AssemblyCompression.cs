@@ -74,10 +74,24 @@ namespace Xamarin.Android.Tasks
 				int fileSize = checked((int)fi.Length);
 				sourceBytes = bytePool.Rent (fileSize);
 				using (var fs = File.Open (data.SourcePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-					bytesRead = fs.Read (sourceBytes, 0, fileSize);
+					bytesRead = 0;
+					while (bytesRead < fileSize) {
+						int read = fs.Read (sourceBytes, bytesRead, fileSize - bytesRead);
+						if (read == 0)
+							break;
+
+						bytesRead += read;
+					}
 				}
 
-				destBytes = bytePool.Rent (Zstd.MaximumOutputSize (bytesRead));
+				if (bytesRead != fileSize)
+					return CompressionResult.EncodingFailed;
+
+				int maxOutputSize = Zstd.MaximumOutputSize (bytesRead);
+				if (maxOutputSize <= 0)
+					return CompressionResult.EncodingFailed;
+
+				destBytes = bytePool.Rent (maxOutputSize);
 				int encodedLength = Zstd.Compress (sourceBytes, bytesRead, destBytes);
 				if (encodedLength < 0)
 					return CompressionResult.EncodingFailed;

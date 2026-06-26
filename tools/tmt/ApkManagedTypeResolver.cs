@@ -130,6 +130,7 @@ namespace tmt
 		protected override AssemblyDefinition ReadAssembly (string assemblyPath)
 		{
 			byte[]? assemblyBytes = null;
+			byte[]? sourceBytes = null;
 			Stream stream = GetAssemblyStream (assemblyPath);
 
 			//
@@ -145,20 +146,31 @@ namespace tmt
 				uint decompressedLength = reader.ReadUInt32 ();
 
 				int inputLength = (int)(stream.Length - 12);
-				byte[] sourceBytes = Utilities.BytePool.Rent (inputLength);
-				reader.Read (sourceBytes, 0, inputLength);
+				try {
+					sourceBytes = Utilities.BytePool.Rent (inputLength);
+					ReadFully (reader, sourceBytes, inputLength);
 
-				assemblyBytes = Utilities.BytePool.Rent ((int)decompressedLength);
-				int decoded = ZstandardDecoder.TryDecompress (
-					sourceBytes.AsSpan (0, inputLength),
-					assemblyBytes.AsSpan (0, (int)decompressedLength),
-					out int bytesWritten) ? bytesWritten : -1;
-				if (decoded != (int)decompressedLength) {
-					throw new InvalidOperationException ($"Failed to decompress Zstd data of {assemblyPath} (decoded: {decoded})");
+					assemblyBytes = Utilities.BytePool.Rent ((int)decompressedLength);
+					int decoded = ZstandardDecoder.TryDecompress (
+						sourceBytes.AsSpan (0, inputLength),
+						assemblyBytes.AsSpan (0, (int)decompressedLength),
+						out int bytesWritten) ? bytesWritten : -1;
+					if (decoded != (int)decompressedLength) {
+						throw new InvalidOperationException ($"Failed to decompress Zstd data of {assemblyPath} (decoded: {decoded})");
+					}
+				} catch {
+					if (assemblyBytes != null) {
+						Utilities.BytePool.Return (assemblyBytes);
+						assemblyBytes = null;
+					}
+					throw;
+				} finally {
+					if (sourceBytes != null) {
+						Utilities.BytePool.Return (sourceBytes);
+						sourceBytes = null;
+					}
 				}
-				Utilities.BytePool.Return (sourceBytes);
 			}
-
 
 			if (assemblyBytes != null) {
 				stream.Close ();
@@ -170,6 +182,18 @@ namespace tmt
 			}
 
 			return AssemblyDefinition.ReadAssembly (stream);
+		}
+
+		static void ReadFully (BinaryReader reader, byte[] destination, int count)
+		{
+			int totalRead = 0;
+			while (totalRead < count) {
+				int read = reader.Read (destination, totalRead, count - totalRead);
+				if (read <= 0)
+					throw new EndOfStreamException ("Unexpected end of stream while reading compressed assembly.");
+
+				totalRead += read;
+			}
 		}
 	}
 }
