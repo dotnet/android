@@ -55,7 +55,6 @@ namespace Xamarin.Android.Prepare
 				if (onlyRequired) {
 					return new List<GeneratedFile> {
 						Get_SourceLink_Json (context),
-						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Cmake_Presets (context),
 					};
@@ -63,7 +62,6 @@ namespace Xamarin.Android.Prepare
 					return new List <GeneratedFile> {
 						Get_SourceLink_Json (context),
 						Get_Configuration_OperatingSystem_props (context),
-						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Cmake_Presets (context),
 						Get_XABuildConfig_cs (context),
@@ -132,21 +130,6 @@ namespace Xamarin.Android.Prepare
 		GeneratedFile Get_Cmake_Presets (Context context)
 		{
 			return GetCmakePresetsCommon (context, Configurables.Paths.NativeSourcesDir);
-		}
-
-		GeneratedFile Get_Configuration_Generated_Props (Context context)
-		{
-			const string OutputFileName = "Configuration.Generated.props";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@XA_PACKAGES_DIR@",                    Configurables.Paths.XAPackagesDir },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
-				Configurables.Paths.ConfigurationPropsGeneratedPath
-			);
 		}
 
 		GeneratedFile Get_Configuration_OperatingSystem_props (Context context)
