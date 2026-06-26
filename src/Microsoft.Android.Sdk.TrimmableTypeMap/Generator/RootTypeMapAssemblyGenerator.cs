@@ -554,6 +554,14 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 	}
 
+	/// <summary>
+	/// Pushes a fresh <c>IReadOnlyDictionary&lt;string, Type&gt;[maxArrayRank]</c> for a single
+	/// assembly, where slot <c>r</c> holds the external (JNI-name -&gt; proxy <see cref="Type"/>)
+	/// array map for the <c>__ArrayMapRank{r + 1}</c> group anchor. At runtime only this external
+	/// map is consulted (see <c>TrimmableTypeMap.TryGetArrayProxy</c>), which resolves a proxy
+	/// <see cref="Type"/> by JNI name and then reads its array-proxy attribute; the proxy typemap
+	/// dictionary itself is never indexed.
+	/// </summary>
 	static void EmitArrayMapsByRank (PEAssemblyBuilder pe, TrackedInstructionEncoder encoder,
 		AssemblyReferenceHandle assemblyRef,
 		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef, TypeSpecificationHandle externalDictTypeSpec, int maxArrayRank)
@@ -565,10 +573,17 @@ public sealed class RootTypeMapAssemblyGenerator
 				pe.Metadata.GetOrAddString ($"__ArrayMapRank{r + 1}"));
 			var rankSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, rankRef);
 			var proxyRankSpec = MakeGenericMethodSpec (pe, getProxyMemberRef, rankRef);
+			// Store the external map for this rank into the array.
 			encoder.OpCode (ILOpCode.Dup);
 			encoder.LoadConstantI4 (r);
 			encoder.Call (rankSpec, parameterCount: 0, returnsValue: true);
 			encoder.OpCode (ILOpCode.Stelem_ref);
+			// Unlike the external map on the line above (stored via Stelem_ref), this
+			// GetOrCreateProxyTypeMapping<__ArrayMapRank{r + 1}> () call has its result
+			// immediately Popped: the proxy map for arrays is never stored or indexed at
+			// runtime. We still emit the call purely for its side effect — requesting the proxy
+			// typemap group roots that group's per-rank [TypeMapAssociation] entries, so the
+			// trimmer/ILC keeps the proxy types that the external map above references by JNI name.
 			encoder.Call (proxyRankSpec, parameterCount: 0, returnsValue: true);
 			encoder.OpCode (ILOpCode.Pop);
 		}
