@@ -57,16 +57,16 @@ namespace Java.Interop {
 		};
 
 		static readonly Dictionary<Type, JavaPeerContainerFactory> ScalarContainerFactories = new Dictionary<Type, JavaPeerContainerFactory> {
-			{ typeof (bool), new JavaPeerContainerFactory<bool> () },
-			{ typeof (byte), new JavaPeerContainerFactory<byte> () },
-			{ typeof (sbyte), new JavaPeerContainerFactory<sbyte> () },
-			{ typeof (char), new JavaPeerContainerFactory<char> () },
-			{ typeof (short), new JavaPeerContainerFactory<short> () },
-			{ typeof (int), new JavaPeerContainerFactory<int> () },
-			{ typeof (long), new JavaPeerContainerFactory<long> () },
-			{ typeof (float), new JavaPeerContainerFactory<float> () },
-			{ typeof (double), new JavaPeerContainerFactory<double> () },
-			{ typeof (string), new JavaPeerContainerFactory<string> () },
+			{ typeof (bool), JavaPeerContainerFactory<bool>.Instance },
+			{ typeof (byte), JavaPeerContainerFactory<byte>.Instance },
+			{ typeof (sbyte), JavaPeerContainerFactory<sbyte>.Instance },
+			{ typeof (char), JavaPeerContainerFactory<char>.Instance },
+			{ typeof (short), JavaPeerContainerFactory<short>.Instance },
+			{ typeof (int), JavaPeerContainerFactory<int>.Instance },
+			{ typeof (long), JavaPeerContainerFactory<long>.Instance },
+			{ typeof (float), JavaPeerContainerFactory<float>.Instance },
+			{ typeof (double), JavaPeerContainerFactory<double>.Instance },
+			{ typeof (string), JavaPeerContainerFactory<string>.Instance },
 		};
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
