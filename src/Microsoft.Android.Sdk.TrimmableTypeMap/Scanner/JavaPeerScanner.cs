@@ -27,7 +27,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
-	readonly Dictionary<(string AssemblyName, string TypeName), ResolvabilityResult> resolvabilityCache = new ();
+	readonly Dictionary<(string AssemblyName, int TypeRow), ResolvabilityResult> resolvabilityCache = new ();
 	readonly ITrimmableTypeMapLogger? logger;
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
 	readonly HashSet<string> frameworkAssemblyNames;
@@ -265,7 +265,7 @@ public sealed class JavaPeerScanner : IDisposable
 				}
 			}
 
-			if (!IsResolvableJavaPeerType (typeDef, index, out var unresolvedTypeName, out var unresolvedAssemblyName)) {
+			if (!IsResolvableJavaPeerType (typeHandle, index, out var unresolvedTypeName, out var unresolvedAssemblyName)) {
 				var unresolvedAssemblyPath = assemblyCache.TryGetValue (unresolvedAssemblyName, out var unresolvedAssemblyIndex)
 					? unresolvedAssemblyIndex.AssemblyPath
 					: "";
@@ -341,24 +341,27 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	bool IsResolvableJavaPeerType (
-		TypeDefinition typeDef,
+		TypeDefinitionHandle typeDefHandle,
 		AssemblyIndex index,
 		[NotNullWhen (false)] out string? unresolvedTypeName,
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
-		var visited = new HashSet<(string AssemblyName, string TypeName)> ();
-		return IsResolvableTypeDefinition (typeDef, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		// The base/interface graph of valid managed metadata is acyclic, so the
+		// per-call visited set only guards against generic self-references (e.g.
+		// class Foo : Bar<Foo>). Keying it (and the cache) by type-definition row
+		// avoids building full type names on the hot path and on cache hits.
+		var visited = new HashSet<(string AssemblyName, int TypeRow)> ();
+		return IsResolvableTypeDefinition (typeDefHandle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
 	}
 
 	bool IsResolvableTypeDefinition (
-		TypeDefinition typeDef,
+		TypeDefinitionHandle typeDefHandle,
 		AssemblyIndex index,
-		HashSet<(string AssemblyName, string TypeName)> visited,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
 		[NotNullWhen (false)] out string? unresolvedTypeName,
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
-		var typeName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
-		var cacheKey = (index.AssemblyName, typeName);
+		var cacheKey = (index.AssemblyName, MetadataTokens.GetRowNumber (typeDefHandle));
 
 		if (resolvabilityCache.TryGetValue (cacheKey, out var cached)) {
 			unresolvedTypeName = cached.UnresolvedTypeName;
@@ -371,6 +374,8 @@ public sealed class JavaPeerScanner : IDisposable
 			unresolvedAssemblyName = null;
 			return true;
 		}
+
+		var typeDef = index.Reader.GetTypeDefinition (typeDefHandle);
 
 		if (!IsResolvableTypeHandle (typeDef.BaseType, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
 			resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
@@ -394,7 +399,7 @@ public sealed class JavaPeerScanner : IDisposable
 	bool IsResolvableTypeHandle (
 		EntityHandle handle,
 		AssemblyIndex index,
-		HashSet<(string AssemblyName, string TypeName)> visited,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
 		[NotNullWhen (false)] out string? unresolvedTypeName,
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
@@ -406,7 +411,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		switch (handle.Kind) {
 		case HandleKind.TypeDefinition:
-			return IsResolvableTypeDefinition (index.Reader.GetTypeDefinition ((TypeDefinitionHandle) handle), index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+			return IsResolvableTypeDefinition ((TypeDefinitionHandle) handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
 		case HandleKind.TypeReference:
 			return IsResolvableTypeReference ((TypeReferenceHandle) handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
 		case HandleKind.TypeSpecification:
@@ -421,7 +426,7 @@ public sealed class JavaPeerScanner : IDisposable
 	bool IsResolvableTypeReference (
 		TypeReferenceHandle handle,
 		AssemblyIndex index,
-		HashSet<(string AssemblyName, string TypeName)> visited,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
 		[NotNullWhen (false)] out string? unresolvedTypeName,
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
@@ -433,7 +438,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		if (resolvedIndex.TypesByFullName.TryGetValue (typeName, out var typeHandle)) {
-			return IsResolvableTypeDefinition (resolvedIndex.Reader.GetTypeDefinition (typeHandle), resolvedIndex, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+			return IsResolvableTypeDefinition (typeHandle, resolvedIndex, visited, out unresolvedTypeName, out unresolvedAssemblyName);
 		}
 
 		if (resolvedIndex.ExportedTypeNames.Contains (typeName)) {
@@ -450,7 +455,7 @@ public sealed class JavaPeerScanner : IDisposable
 	bool IsResolvableTypeSpecification (
 		TypeSpecificationHandle handle,
 		AssemblyIndex index,
-		HashSet<(string AssemblyName, string TypeName)> visited,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
 		[NotNullWhen (false)] out string? unresolvedTypeName,
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
@@ -461,7 +466,7 @@ public sealed class JavaPeerScanner : IDisposable
 	bool IsResolvableSignatureType (
 		ref BlobReader reader,
 		AssemblyIndex index,
-		HashSet<(string AssemblyName, string TypeName)> visited,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
 		[NotNullWhen (false)] out string? unresolvedTypeName,
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
@@ -513,6 +518,9 @@ public sealed class JavaPeerScanner : IDisposable
 			unresolvedAssemblyName = null;
 			return true;
 		default:
+			// Pointers, byrefs, custom modifiers, and any encoding we don't
+			// specifically decode default to resolvable so we never wrongly skip
+			// a Java peer over metadata shapes this scanner doesn't model.
 			unresolvedTypeName = null;
 			unresolvedAssemblyName = null;
 			return true;
@@ -522,7 +530,7 @@ public sealed class JavaPeerScanner : IDisposable
 	bool IsResolvableTypeDefOrRefEncodedHandle (
 		int encodedHandle,
 		AssemblyIndex index,
-		HashSet<(string AssemblyName, string TypeName)> visited,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
 		[NotNullWhen (false)] out string? unresolvedTypeName,
 		[NotNullWhen (false)] out string? unresolvedAssemblyName)
 	{
