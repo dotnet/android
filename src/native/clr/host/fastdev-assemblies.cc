@@ -20,12 +20,19 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	size = 0;
 
 	// When the override directory was used to build a `TRUSTED_PLATFORM_ASSEMBLIES`
-	// list (see `build_tpa_list`), the external probe must yield to TPA-based
+	// list (see `build_tpa_list`), the external probe should yield to TPA-based
 	// loading so that CoreCLR opens the assembly from disk via `PEImage::OpenImage`
 	// and `Assembly.Location` ends up populated. Otherwise sibling portable PDB
 	// lookup (used by `StackTraceSymbols`) returns an empty path and stack frames
 	// render without file/line info.
-	if (tpa_in_use) [[likely]] {
+	//
+	// The CoreLib bootstrap is a special case: CoreCLR loads
+	// `System.Private.CoreLib.dll` via the external probe (not through the
+	// regular TPA-aware binder), so we must keep returning the bytes for it
+	// even when TPA is in use. CoreLib has no user code we'd symbolicate, so
+	// the resulting bare-filename `Assembly.Location` does not matter.
+	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
+	if (tpa_in_use && name != corelib_name) {
 		return nullptr;
 	}
 
