@@ -22,7 +22,7 @@
     <LibraryProjectZip Include="$(OutputPath)JavaLib.aar" />
   </ItemGroup>
   <ItemGroup>
-    <InputJar Include="java\JavaLib\library\build\intermediates\aar_main_jar\debug\syncDebugLibJars\classes.jar">
+    <InputJar Include="java\JavaLib\library\build\libs\classes.jar">
       <Link>Jars\classes.jar</Link>
     </InputJar>
   </ItemGroup>
