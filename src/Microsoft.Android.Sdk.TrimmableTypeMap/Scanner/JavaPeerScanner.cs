@@ -2387,6 +2387,7 @@ public sealed class JavaPeerScanner : IDisposable
 			Properties = attrInfo.Properties,
 			IntentFilters = attrInfo.IntentFilters,
 			MetaData = attrInfo.MetaData,
+			LayoutProperties = attrInfo.LayoutProperties,
 		};
 	}
 }

@@ -39,6 +39,14 @@ static class ComponentElementBuilder
 			element.Add (CreateIntentFilterElement (intentFilter));
 		}
 
+		// Add <layout> element from a [Layout] attribute, if present
+		if (component.LayoutProperties is not null) {
+			var layout = CreateLayoutElement (component.LayoutProperties);
+			if (layout is not null) {
+				element.Add (layout);
+			}
+		}
+
 		// Handle MainLauncher for activities
 		if (component.Kind == ComponentKind.Activity && component.Properties.TryGetValue ("MainLauncher", out var ml) && ml is bool b && b) {
 			AddLauncherIntentFilter (element);
@@ -96,70 +104,54 @@ static class ComponentElementBuilder
 		}
 
 		// Data elements
-		AddIntentFilterDataElement (filter, intentFilter);
 		AddIntentFilterDataElements (filter, intentFilter);
 
 		return filter;
 	}
 
-	internal static void AddIntentFilterDataElement (XElement filter, IntentFilterInfo intentFilter)
-	{
-		var dataElement = new XElement ("data");
-		bool hasData = false;
+	// Each data attribute produces its own <data> element, matching the legacy
+	// IntentFilterAttribute.GetData () behavior. Singular properties are emitted first,
+	// in this order, followed by the plural (array) properties.
+	static readonly (string Property, string Attribute) [] SingularDataMappings = [
+		("DataHost", "host"),
+		("DataMimeType", "mimeType"),
+		("DataPath", "path"),
+		("DataPathPattern", "pathPattern"),
+		("DataPathPrefix", "pathPrefix"),
+		("DataPort", "port"),
+		("DataScheme", "scheme"),
+		("DataPathSuffix", "pathSuffix"),
+		("DataPathAdvancedPattern", "pathAdvancedPattern"),
+	];
 
-		if (intentFilter.Properties.TryGetValue ("DataScheme", out var scheme) && scheme is string schemeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "scheme", schemeStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataHost", out var host) && host is string hostStr) {
-			dataElement.SetAttributeValue (AndroidNs + "host", hostStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPath", out var path) && path is string pathStr) {
-			dataElement.SetAttributeValue (AndroidNs + "path", pathStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPathPattern", out var pattern) && pattern is string patternStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPattern", patternStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPathPrefix", out var prefix) && prefix is string prefixStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPrefix", prefixStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataMimeType", out var mime) && mime is string mimeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "mimeType", mimeStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPort", out var port) && port is string portStr) {
-			dataElement.SetAttributeValue (AndroidNs + "port", portStr);
-			hasData = true;
-		}
-
-		if (hasData) {
-			filter.Add (dataElement);
-		}
-	}
+	static readonly (string Property, string Attribute) [] PluralDataMappings = [
+		("DataHosts", "host"),
+		("DataMimeTypes", "mimeType"),
+		("DataPaths", "path"),
+		("DataPathPatterns", "pathPattern"),
+		("DataPathPrefixes", "pathPrefix"),
+		("DataPorts", "port"),
+		("DataSchemes", "scheme"),
+		("DataPathSuffixes", "pathSuffix"),
+		("DataPathAdvancedPatterns", "pathAdvancedPattern"),
+	];
 
 	internal static void AddIntentFilterDataElements (XElement filter, IntentFilterInfo intentFilter)
 	{
-		AddDataElements ("DataSchemes", "scheme");
-		AddDataElements ("DataHosts", "host");
-		AddDataElements ("DataPaths", "path");
-		AddDataElements ("DataPathPatterns", "pathPattern");
-		AddDataElements ("DataPathPrefixes", "pathPrefix");
-		AddDataElements ("DataMimeTypes", "mimeType");
-		AddDataElements ("DataPorts", "port");
+		foreach (var (property, attribute) in SingularDataMappings) {
+			if (intentFilter.Properties.TryGetValue (property, out var value) && value is string s && !string.IsNullOrEmpty (s)) {
+				filter.Add (new XElement ("data", new XAttribute (AndroidNs + attribute, s)));
+			}
+		}
 
-		void AddDataElements (string propertyName, string attributeName)
-		{
-			if (!intentFilter.Properties.TryGetValue (propertyName, out var value) || value is not IReadOnlyList<string> values) {
-				return;
+		foreach (var (property, attribute) in PluralDataMappings) {
+			if (!intentFilter.Properties.TryGetValue (property, out var value) || value is not IReadOnlyList<string> values) {
+				continue;
 			}
 
 			foreach (var item in values) {
 				if (!string.IsNullOrEmpty (item)) {
-					filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
+					filter.Add (new XElement ("data", new XAttribute (AndroidNs + attribute, item)));
 				}
 			}
 		}
@@ -177,6 +169,30 @@ static class ComponentElementBuilder
 			element.SetAttributeValue (AndroidNs + "resource", meta.Resource);
 		}
 		return element;
+	}
+
+	// Maps [Layout] attribute properties to the <layout> element's android: attributes.
+	static readonly (string Property, string Attribute) [] LayoutMappings = [
+		("DefaultHeight", "defaultHeight"),
+		("DefaultWidth", "defaultWidth"),
+		("Gravity", "gravity"),
+		("MinHeight", "minHeight"),
+		("MinWidth", "minWidth"),
+	];
+
+	internal static XElement? CreateLayoutElement (IReadOnlyDictionary<string, object?> layoutProperties)
+	{
+		var element = new XElement ("layout");
+		bool hasAttribute = false;
+
+		foreach (var (property, attribute) in LayoutMappings) {
+			if (layoutProperties.TryGetValue (property, out var value) && value is string s && !string.IsNullOrEmpty (s)) {
+				element.SetAttributeValue (AndroidNs + attribute, s);
+				hasAttribute = true;
+			}
+		}
+
+		return hasAttribute ? element : null;
 	}
 
 	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer, int targetSdkVersion = 0)

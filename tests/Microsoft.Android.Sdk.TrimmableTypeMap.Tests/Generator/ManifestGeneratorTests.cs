@@ -163,6 +163,35 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Activity_IntentFilterSingularDataPropertiesEachGetOwnElement ()
+	{
+		// Mirrors the IntentFilterData device test: each singular Data* property must
+		// produce its own <data> element (matching legacy IntentFilterAttribute.GetData ()).
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/ShareActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			IntentFilters = [
+				new IntentFilterInfo {
+					Actions = ["action1"],
+					Properties = new Dictionary<string, object?> {
+						["DataPath"] = "foo",
+						["DataPathPattern"] = "foo*",
+						["DataPathPrefix"] = "foo",
+						["Label"] = "testTarget",
+					},
+				},
+			],
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var filter = doc.Root?.Element ("application")?.Element ("activity")?.Element ("intent-filter");
+
+		Assert.NotNull (filter);
+		Assert.Equal ("testTarget", (string?)filter?.Attribute (AndroidNs + "label"));
+		Assert.Equal (3, filter?.Elements ("data").Count ());
+	}
+
+	[Fact]
 	public void Activity_MetaData ()
 	{
 		var gen = CreateDefaultGenerator ();
@@ -187,6 +216,34 @@ public class ManifestGeneratorTests
 		var meta2 = metaElements?.FirstOrDefault (m => (string?)m.Attribute (AndroidNs + "name") == "com.example.res");
 		Assert.NotNull (meta2);
 		Assert.Equal ("@xml/config", (string?)meta2?.Attribute (AndroidNs + "resource"));
+	}
+
+	[Fact]
+	public void Activity_LayoutAttributeElement ()
+	{
+		// Mirrors the LayoutAttributeElement device test: a [Layout] attribute on an activity
+		// must produce a <layout> child element with the mapped android: attributes.
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MainActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			LayoutProperties = new Dictionary<string, object?> {
+				["DefaultWidth"] = "500dp",
+				["DefaultHeight"] = "600dp",
+				["Gravity"] = "center",
+				["MinWidth"] = "300dp",
+				["MinHeight"] = "400dp",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var layout = doc.Root?.Element ("application")?.Element ("activity")?.Element ("layout");
+
+		Assert.NotNull (layout);
+		Assert.Equal ("500dp", (string?)layout?.Attribute (AndroidNs + "defaultWidth"));
+		Assert.Equal ("600dp", (string?)layout?.Attribute (AndroidNs + "defaultHeight"));
+		Assert.Equal ("center", (string?)layout?.Attribute (AndroidNs + "gravity"));
+		Assert.Equal ("300dp", (string?)layout?.Attribute (AndroidNs + "minWidth"));
+		Assert.Equal ("400dp", (string?)layout?.Attribute (AndroidNs + "minHeight"));
 	}
 
 	[Theory]

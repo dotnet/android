@@ -18,4 +18,5 @@ public sealed record ComponentInfo
 	public IReadOnlyDictionary<string, object?> Properties { get; init; } = new Dictionary<string, object?> ();
 	public IReadOnlyList<IntentFilterInfo> IntentFilters { get; init; } = [];
 	public IReadOnlyList<MetaDataInfo> MetaData { get; init; } = [];
+	public IReadOnlyDictionary<string, object?>? LayoutProperties { get; init; }
 }

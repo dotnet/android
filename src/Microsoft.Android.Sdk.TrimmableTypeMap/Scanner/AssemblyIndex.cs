@@ -164,6 +164,7 @@ sealed class AssemblyIndex : IDisposable
 		// with the wrong AttributeName.
 		List<IntentFilterInfo>? intentFilters = null;
 		List<MetaDataInfo>? metaData = null;
+		Dictionary<string, object?>? layoutProperties = null;
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
@@ -210,6 +211,16 @@ sealed class AssemblyIndex : IDisposable
 			} else if (attrName == "IntentFilterAttribute") {
 				intentFilters ??= new List<IntentFilterInfo> ();
 				intentFilters.Add (ParseIntentFilterAttribute (ca));
+			} else if (attrName == "LayoutAttribute") {
+				// [Layout] is a separate attribute on the same type as [Activity]; collect its
+				// named properties so a <layout> child element can be emitted on the activity.
+				layoutProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
+				var layoutValue = DecodeAttribute (ca);
+				foreach (var named in layoutValue.NamedArguments) {
+					if (named.Name is not null) {
+						layoutProperties [named.Name] = named.Value;
+					}
+				}
 			} else if (attrName == "MetaDataAttribute") {
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
@@ -231,6 +242,9 @@ sealed class AssemblyIndex : IDisposable
 			}
 			if (metaData is not null) {
 				attrInfo.MetaData.AddRange (metaData);
+			}
+			if (layoutProperties is not null) {
+				attrInfo.LayoutProperties = layoutProperties;
 			}
 		}
 
@@ -712,6 +726,11 @@ class TypeAttributeInfo (string attributeName)
 	/// Metadata entries declared on this type via [MetaData] attributes.
 	/// </summary>
 	public List<MetaDataInfo> MetaData { get; } = [];
+
+	/// <summary>
+	/// Named property values from a [Layout] attribute declared on this type, if any.
+	/// </summary>
+	public Dictionary<string, object?>? LayoutProperties { get; set; }
 }
 
 sealed class ApplicationAttributeInfo () : TypeAttributeInfo ("ApplicationAttribute")
