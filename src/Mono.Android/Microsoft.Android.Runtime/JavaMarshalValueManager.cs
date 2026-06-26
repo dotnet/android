@@ -16,10 +16,19 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 
 	readonly JavaMarshalRegisteredPeers registeredPeers = new ();
 
+	bool disposed;
+
 	protected override void Dispose (bool disposing)
 	{
+		disposed = true;
 		registeredPeers.Dispose ();
 		base.Dispose (disposing);
+	}
+
+	void ThrowIfDisposed ()
+	{
+		if (disposed)
+			throw new ObjectDisposedException (nameof (JavaMarshalValueManager));
 	}
 
 	public override void WaitForGCBridgeProcessing ()
@@ -76,7 +85,7 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 	{
-		EnsureNotDisposed ();
+		ThrowIfDisposed ();
 
 		if (!reference.IsValid) {
 			return null;
@@ -87,7 +96,7 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 				// Mirror legacy GetPeerType: callers commonly request universal
 				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
 				// to a concrete peer type so the proxy lookup can succeed.
-				var resolvedTargetType = JavaMarshalValueManagerHelper.ResolvePeerType (targetType);
+				var resolvedTargetType = ResolvePeerType (targetType);
 
 				var typeMap = TrimmableTypeMap.Instance;
 				var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
@@ -105,16 +114,9 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 				//      InvalidCastException via its `??` clause)
 				//  (c) classes are compatible but no proxy / activation failed
 				//      → NotSupportedException (genuine generator gap)
-				if (targetType is not null && resolvedTargetType is not null) {
-					if (!typeMap.TryGetJniNameForManagedType (resolvedTargetType, out var targetJniName)) {
-						throw new ArgumentException (
-							$"Could not determine Java type corresponding to '{targetType.AssemblyQualifiedName}'.",
-							nameof (targetType));
-					}
-
-					if (JavaMarshalValueManagerHelper.IsIncompatibleCast (targetJniName, ref reference, resolvedTargetType)) {
-						return null;
-					}
+				if (resolvedTargetType is not null &&
+						IsIncompatibleCast (typeMap, ref reference, resolvedTargetType)) {
+					return null;
 				}
 
 				var targetName = resolvedTargetType?.AssemblyQualifiedName ?? "<null>";
@@ -130,6 +132,60 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 		}
 
 		return base.CreatePeer (ref reference, transfer, targetType);
+	}
+
+	[return: DynamicallyAccessedMembers (Constructors)]
+	static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+	{
+		if (type is null) {
+			return null;
+		}
+		if (type == typeof (object) || type == typeof (IJavaPeerable)) {
+			return typeof (global::Java.Interop.JavaObject);
+		}
+		if (type == typeof (Exception)) {
+			return typeof (JavaException);
+		}
+		return type;
+	}
+
+	/// <summary>
+	/// Returns true when <paramref name="targetType"/>'s Java class is not assignable from
+	/// <paramref name="reference"/>. Throws when <paramref name="targetType"/> has no usable mapping.
+	/// </summary>
+	static bool IsIncompatibleCast (
+			TrimmableTypeMap typeMap,
+			ref JniObjectReference reference,
+			Type targetType)
+	{
+		if (!typeMap.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
+			throw new ArgumentException (
+				$"Could not determine Java type corresponding to '{targetType.AssemblyQualifiedName}'.",
+				nameof (targetType));
+		}
+
+		var instanceClass = JniEnvironment.Types.GetObjectClass (reference);
+		JniObjectReference targetClass = default;
+		try {
+			try {
+				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+			} catch (Java.Lang.ClassNotFoundException e) {
+				throw new ArgumentException (
+					$"Could not find Java class '{targetJniName}'.",
+					nameof (targetType), e);
+			}
+
+			if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
+				// Bad cast: callers translate null to the expected result.
+				return true;
+			}
+		} finally {
+			JniObjectReference.Dispose (ref instanceClass);
+			JniObjectReference.Dispose (ref targetClass);
+		}
+
+		// Compatible classes mean a proxy/activation gap.
+		return false;
 	}
 
 	protected override bool TryConstructPeer (
