@@ -745,6 +745,48 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_DifferentConstructedCallbackTypes_ProducesDifferentMVIDs ()
+	{
+		var peer = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+		var stringPeer = peer with {
+			MarshalMethods = [
+				CreateInheritedGenericCallback (TypeRef ("System.String")),
+			],
+		};
+		var objectPeer = peer with {
+			MarshalMethods = [
+				CreateInheritedGenericCallback (TypeRef ("System.Object")),
+			],
+		};
+
+		using var stream1 = GenerateAssembly (new [] { stringPeer }, "SameName");
+		using var stream2 = GenerateAssembly (new [] { objectPeer }, "SameName");
+
+		using var pe1 = new PEReader (stream1);
+		using var pe2 = new PEReader (stream2);
+		var mvid1 = pe1.GetMetadataReader ().GetGuid (pe1.GetMetadataReader ().GetModuleDefinition ().Mvid);
+		var mvid2 = pe2.GetMetadataReader ().GetGuid (pe2.GetMetadataReader ().GetModuleDefinition ().Mvid);
+
+		Assert.NotEqual (mvid1, mvid2);
+
+		static MarshalMethodInfo CreateInheritedGenericCallback (TypeRefData genericArgument) => new () {
+			JniName = "setValue",
+			NativeCallbackName = "n_SetValue_Ljava_lang_Object",
+			JniSignature = "(Ljava/lang/Object;)V",
+			ManagedMethodName = "SetValue",
+			DeclaringTypeName = "Test.GenericBase`1",
+			DeclaringAssemblyName = "TestAsm",
+			DeclaringType = new TypeRefData {
+				ManagedTypeName = "Test.GenericBase`1",
+				AssemblyName = "TestAsm",
+				GenericArguments = [
+					genericArgument,
+				],
+			},
+		};
+	}
+
+	[Fact]
 	public void Generate_AcwProxy_HasRegisterNativesAndUcoMethods ()
 	{
 		var peers = ScanFixtures ();

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -198,9 +199,16 @@ sealed record TypeRefData
 	/// </summary>
 	public bool IsEnum { get; init; }
 
-	public string DisplayName => GenericArguments.Count == 0
-		? ManagedTypeName
-		: $"{ManagedTypeName}<{string.Join (",", GenericArguments.Select (t => t.DisplayName))}>";
+	public string DisplayName {
+		get {
+			if (ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+				return $"{(this with { ManagedTypeName = ManagedTypeName.Substring (0, ManagedTypeName.Length - 2) }).DisplayName}[]";
+			}
+			return GenericArguments.Count == 0
+				? ManagedTypeName
+				: $"{ManagedTypeName}<{string.Join (",", GenericArguments.Select (t => t.DisplayName))}>";
+		}
+	}
 }
 
 /// <summary>

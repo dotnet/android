@@ -154,6 +154,23 @@ public class OverrideDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void OverrideAcrossGenericBaseWithSubstitutedParameter_Detected ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/StringValueList");
+		var applyValue = Assert.Single (peer.MarshalMethods, m => m.JniName == "applyValue");
+		Assert.Equal ("(Ljava/lang/Object;)V", applyValue.JniSignature);
+		Assert.Equal ("GetApplyValue_Ljava_lang_Object_Handler", applyValue.Connector);
+		var declaringType = applyValue.DeclaringType;
+		Assert.NotNull (declaringType);
+		if (declaringType is null) {
+			throw new InvalidOperationException ("Expected override declaring type.");
+		}
+		Assert.Equal ("MyApp.GenericValueHost`1", declaringType.ManagedTypeName);
+		var argument = Assert.Single (declaringType.GenericArguments);
+		Assert.Equal ("System.String", argument.ManagedTypeName);
+	}
+
+	[Fact]
 	public void EmptyConnector_OverrideStillDetected ()
 	{
 		// Activity.OnStart has [Register("onStart", "()V", "")] — empty connector

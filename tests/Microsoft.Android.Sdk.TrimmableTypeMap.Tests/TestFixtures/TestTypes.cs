@@ -1068,6 +1068,41 @@ namespace MyApp
 	}
 
 	/// <summary>
+	/// Generic base whose registered method uses its type parameter in the managed
+	/// signature. Override detection must compare this as <c>string</c> when the
+	/// base is closed over <c>string</c>.
+	/// </summary>
+	[Register ("my/app/GenericValueHost", DoNotGenerateAcw = true)]
+	public abstract class GenericValueHost<T> : Java.Lang.Object where T : class
+	{
+		protected GenericValueHost (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("applyValue", "(Ljava/lang/Object;)V", "GetApplyValue_Ljava_lang_Object_Handler")]
+		public abstract void ApplyValue (T value);
+	}
+
+	/// <summary>
+	/// Intermediate MCW base that closes a registered generic method parameter.
+	/// </summary>
+	[Register ("my/app/StringValueContainer", DoNotGenerateAcw = true)]
+	public abstract class StringValueContainer : GenericValueHost<string>
+	{
+		protected StringValueContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method whose base managed signature contains a
+	/// substituted generic type parameter.
+	/// </summary>
+	[Register ("my/app/StringValueList")]
+	public class StringValueList : StringValueContainer
+	{
+		protected StringValueList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void ApplyValue (string value) { }
+	}
+
+	/// <summary>
 	/// Has a ctor with unsigned primitive params to test JNI mapping.
 	/// </summary>
 	[Register ("my/app/UnsignedParamActivity")]

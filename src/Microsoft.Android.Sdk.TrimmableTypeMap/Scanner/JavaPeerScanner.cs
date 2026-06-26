@@ -674,7 +674,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// Check if this ctor's params are already covered by a base registered ctor
 			bool alreadyCovered = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
-				if (HaveIdenticalParameterTypes (methodDef, baseCtor.Method)) {
+				if (HaveIdenticalParameterTypes (methodDef, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType)) {
 					alreadyCovered = true;
 					break;
 				}
@@ -920,7 +920,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 				if (TryGetMethodRegisterInfo (methodDef, baseIndex, out var registerInfo, out _) &&
 				    registerInfo is not null && registerInfo.Signature is not null) {
-					result.Add (new BaseCtorInfo (methodDef, baseIndex, registerInfo));
+					result.Add (new BaseCtorInfo (methodDef, baseIndex, registerInfo, baseTypeRef));
 				}
 			}
 
@@ -980,6 +980,15 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static TypeRefData SubstituteGenericArguments (TypeRefData type, TypeRefData context)
 	{
+		if (type.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			var elementType = SubstituteGenericArguments (type with {
+				ManagedTypeName = type.ManagedTypeName.Substring (0, type.ManagedTypeName.Length - 2),
+			}, context);
+			return elementType with {
+				ManagedTypeName = $"{elementType.ManagedTypeName}[]",
+			};
+		}
+
 		if (type.ManagedTypeName.StartsWith ("!", StringComparison.Ordinal) &&
 		    !type.ManagedTypeName.StartsWith ("!!", StringComparison.Ordinal) &&
 		    int.TryParse (type.ManagedTypeName.Substring (1), out int parameterIndex) &&
@@ -1000,7 +1009,7 @@ public sealed class JavaPeerScanner : IDisposable
 		};
 	}
 
-	readonly record struct BaseCtorInfo (MethodDefinition Method, AssemblyIndex Index, RegisterInfo RegisterInfo);
+	readonly record struct BaseCtorInfo (MethodDefinition Method, AssemblyIndex Index, RegisterInfo RegisterInfo, TypeRefData DeclaringType);
 
 	/// <summary>
 	/// Walks the base type hierarchy looking for a method with [Register] that matches
@@ -1029,7 +1038,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			if (!HaveIdenticalParameterTypes (derivedMethod, baseMethodDef)) {
+			if (!HaveIdenticalParameterTypes (derivedMethod, baseMethodDef, baseIndex, baseTypeRef)) {
 				continue;
 			}
 
@@ -1125,17 +1134,18 @@ public sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Checks if two methods have identical parameter types by comparing their decoded signatures.
 	/// </summary>
-	static bool HaveIdenticalParameterTypes (MethodDefinition method1, MethodDefinition method2)
+	static bool HaveIdenticalParameterTypes (MethodDefinition derivedMethod, MethodDefinition baseMethod, AssemblyIndex baseIndex, TypeRefData baseTypeRef)
 	{
-		var sig1 = method1.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		var sig2 = method2.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var derivedSig = derivedMethod.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var baseSig = baseMethod.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: baseIndex);
 
-		if (sig1.ParameterTypes.Length != sig2.ParameterTypes.Length) {
+		if (derivedSig.ParameterTypes.Length != baseSig.ParameterTypes.Length) {
 			return false;
 		}
 
-		for (int i = 0; i < sig1.ParameterTypes.Length; i++) {
-			if (!string.Equals (sig1.ParameterTypes [i], sig2.ParameterTypes [i], StringComparison.Ordinal)) {
+		for (int i = 0; i < derivedSig.ParameterTypes.Length; i++) {
+			var baseParameterType = SubstituteGenericArguments (baseSig.ParameterTypes [i], baseTypeRef);
+			if (!string.Equals (derivedSig.ParameterTypes [i], baseParameterType.DisplayName, StringComparison.Ordinal)) {
 				return false;
 			}
 		}
