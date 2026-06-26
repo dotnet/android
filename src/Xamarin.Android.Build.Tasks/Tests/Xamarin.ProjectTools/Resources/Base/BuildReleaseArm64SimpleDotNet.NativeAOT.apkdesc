@@ -8,7 +8,7 @@
       "Size": 22016
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 4737520
+      "Size": 5207328
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -35,5 +35,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2007835
+  "PackageSize": 2159387
 }

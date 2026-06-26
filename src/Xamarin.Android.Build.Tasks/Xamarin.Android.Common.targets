@@ -2947,6 +2947,8 @@ because xbuild doesn't support framework reference assemblies.
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(_AndroidTypeMapImplementation)' != '' and '$(_AndroidTypeMapImplementation)' != 'llvm-ir' and '$(_AndroidTypeMapImplementation)' != 'managed' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
            Text="Invalid value for _AndroidTypeMapImplementation: '$(_AndroidTypeMapImplementation)'. Valid values are: llvm-ir, managed, trimmable." />
+    <Error Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
+           Text="NativeAOT requires _AndroidTypeMapImplementation=trimmable." />
   </Target>
 
   <Target Name="_LinkAssemblies"

@@ -5,37 +5,10 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9468800
+      "Size": 9452072
     },
     "classes2.dex": {
-      "Size": 262656
-    },
-    "commonMain/default/linkdata/module": {
-      "Size": 70
-    },
-    "commonMain/default/linkdata/package_androidx.annotation/0_annotation.knm": {
-      "Size": 4603
-    },
-    "commonMain/default/linkdata/package_androidx.collection.internal/0_internal.knm": {
-      "Size": 697
-    },
-    "commonMain/default/linkdata/package_androidx.collection.internal/1_internal.knm": {
-      "Size": 766
-    },
-    "commonMain/default/linkdata/package_androidx.collection/0_collection.knm": {
-      "Size": 6131
-    },
-    "commonMain/default/linkdata/package_androidx.collection/1_collection.knm": {
-      "Size": 4985
-    },
-    "commonMain/default/linkdata/package_androidx/0_androidx.knm": {
-      "Size": 20
-    },
-    "commonMain/default/linkdata/root_package/0_.knm": {
-      "Size": 12
-    },
-    "commonMain/default/manifest": {
-      "Size": 98
+      "Size": 108080
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -56,16 +29,16 @@
       "Size": 3399
     },
     "kotlin/reflect/reflect.kotlin_builtins": {
-      "Size": 2426
+      "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 14309640
+      "Size": 14137920
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2824392
+      "Size": 2804464
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4890432
+      "Size": 4872088
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 1325808
@@ -83,7 +56,7 @@
       "Size": 168080
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 149760
+      "Size": 147616
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -113,7 +86,7 @@
       "Size": 6
     },
     "META-INF/androidx.core_core-ktx.version": {
-      "Size": 7
+      "Size": 6
     },
     "META-INF/androidx.core_core.version": {
       "Size": 7
@@ -128,7 +101,7 @@
       "Size": 6
     },
     "META-INF/androidx.drawerlayout_drawerlayout.version": {
-      "Size": 70
+      "Size": 6
     },
     "META-INF/androidx.dynamicanimation_dynamicanimation.version": {
       "Size": 6
@@ -155,22 +128,22 @@
       "Size": 6
     },
     "META-INF/androidx.lifecycle_lifecycle-livedata-core.version": {
-      "Size": 78
+      "Size": 6
     },
     "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
       "Size": 6
     },
     "META-INF/androidx.lifecycle_lifecycle-process.version": {
-      "Size": 72
+      "Size": 6
     },
     "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
       "Size": 72
     },
     "META-INF/androidx.lifecycle_lifecycle-viewmodel-savedstate.version": {
-      "Size": 85
+      "Size": 6
     },
     "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
-      "Size": 74
+      "Size": 6
     },
     "META-INF/androidx.loader_loader.version": {
       "Size": 6
@@ -251,7 +224,7 @@
       "Size": 6
     },
     "META-INF/kotlin-project-structure-metadata.json": {
-      "Size": 1669
+      "Size": 552
     },
     "META-INF/kotlinx_coroutines_android.version": {
       "Size": 5
@@ -276,42 +249,6 @@
     },
     "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory": {
       "Size": 52
-    },
-    "nativeMain/default/linkdata/module": {
-      "Size": 120
-    },
-    "nativeMain/default/linkdata/package_androidx.collection.internal/0_internal.knm": {
-      "Size": 1212
-    },
-    "nativeMain/default/linkdata/package_androidx.collection.internal/1_internal.knm": {
-      "Size": 177
-    },
-    "nativeMain/default/linkdata/package_androidx.collection/0_collection.knm": {
-      "Size": 3102
-    },
-    "nativeMain/default/linkdata/package_androidx/0_androidx.knm": {
-      "Size": 20
-    },
-    "nativeMain/default/linkdata/root_package/0_.knm": {
-      "Size": 12
-    },
-    "nativeMain/default/manifest": {
-      "Size": 193
-    },
-    "nonJvmMain/default/linkdata/module": {
-      "Size": 90
-    },
-    "nonJvmMain/default/linkdata/package_androidx.annotation/0_annotation.knm": {
-      "Size": 991
-    },
-    "nonJvmMain/default/linkdata/package_androidx/0_androidx.knm": {
-      "Size": 20
-    },
-    "nonJvmMain/default/linkdata/root_package/0_.knm": {
-      "Size": 12
-    },
-    "nonJvmMain/default/manifest": {
-      "Size": 193
     },
     "res/anim-v21/design_bottom_sheet_slide_in.xml": {
       "Size": 616
@@ -963,9 +900,6 @@
     },
     "res/drawable-hdpi-v4/notification_bg_normal.9.png": {
       "Size": 212
-    },
-    "res/drawable-hdpi-v4/notification_oversize_large_icon_bg.png": {
-      "Size": 909
     },
     "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png": {
       "Size": 107
@@ -1996,12 +1930,6 @@
     "res/layout/image_frame.xml": {
       "Size": 1088
     },
-    "res/layout/ime_base_split_test_activity.xml": {
-      "Size": 364
-    },
-    "res/layout/ime_secondary_split_test_activity.xml": {
-      "Size": 876
-    },
     "res/layout/main.xml": {
       "Size": 544
     },
@@ -2303,8 +2231,8 @@
       "Size": 268
     },
     "resources.arsc": {
-      "Size": 795280
+      "Size": 794696
     }
   },
-  "PackageSize": 21006285
+  "PackageSize": 20778573
 }
