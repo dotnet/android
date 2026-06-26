@@ -4,7 +4,7 @@
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.Git" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckApiCompatibility" TaskFactory="TaskHostFactory" Runtime="NET" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
-  <Import Project="..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems" Condition="Exists('..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems')"/>
+  <Import Project="Mono.Android.Apis.projitems" />
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
   </ItemGroup>
@@ -169,7 +169,7 @@
   <!-- Generates 'AndroidApiInfo.xml' file -->
   <Target Name="_GenerateAndroidApiInfo"
       BeforeTargets="GetTargetFrameworkProperties;GetReferenceAssemblyPaths;ResolveReferences"
-      Inputs="$(MSBuildProjectFullPath);..\..\bin\Build$(Configuration)\Mono.Android.Apis.projitems"
+      Inputs="$(MSBuildProjectFullPath);Mono.Android.Apis.projitems"
       Outputs="$(OutputPath)AndroidApiInfo.xml">
    <MakeDir Directories="$(OutputPath)" />
    <ItemGroup>

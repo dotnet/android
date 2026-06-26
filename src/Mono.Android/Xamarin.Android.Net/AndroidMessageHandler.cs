@@ -104,6 +104,116 @@ namespace Xamarin.Android.Net
 			}
 		}
 
+		sealed class CancellationAwareResponseStream : Stream
+		{
+			readonly Stream stream;
+			readonly HttpURLConnection httpConnection;
+			int streamDisposed;
+
+			public CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
+			{
+				this.stream = stream ?? throw new ArgumentNullException (nameof (stream));
+				this.httpConnection = httpConnection ?? throw new ArgumentNullException (nameof (httpConnection));
+			}
+
+			public override bool CanRead => stream.CanRead;
+			public override bool CanSeek => stream.CanSeek;
+			public override bool CanWrite => stream.CanWrite;
+			public override long Length => stream.Length;
+
+			public override long Position {
+				get => stream.Position;
+				set => stream.Position = value;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (disposing) {
+					DisposeStream ();
+				}
+
+				base.Dispose (disposing);
+			}
+
+			public override void Flush () => stream.Flush ();
+
+			public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+
+				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+					try {
+						await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
+					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+					}
+				}
+			}
+
+			public override int Read (byte[] buffer, int offset, int count) => stream.Read (buffer, offset, count);
+
+			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+
+			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
+			public override async ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
+			{
+				cancellationToken.ThrowIfCancellationRequested ();
+
+				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+					try {
+						return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
+					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+					}
+				}
+			}
+
+			public override long Seek (long offset, SeekOrigin origin) => stream.Seek (offset, origin);
+
+			public override void SetLength (long value) => stream.SetLength (value);
+
+			public override void Write (byte[] buffer, int offset, int count) => stream.Write (buffer, offset, count);
+
+			void QueueAbortRead () =>
+				Task.Run (AbortRead).ContinueWith (
+					task => Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {task.Exception}"),
+					CancellationToken.None,
+					TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+					TaskScheduler.Default);
+
+			void AbortRead ()
+			{
+				try {
+					httpConnection.Disconnect ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, LOG_APP, $"Disconnection exception: {ex}");
+				}
+
+				try {
+					DisposeStream ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
+				}
+			}
+
+			void DisposeStream ()
+			{
+				if (Interlocked.Exchange (ref streamDisposed, 1) == 0)
+					stream.Dispose ();
+			}
+
+		}
+
+		static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
+		{
+			return cancellationToken.IsCancellationRequested &&
+				ex is global::System.IO.IOException
+					or Java.IO.IOException
+					or InvalidDataException
+					or ObjectDisposedException
+					or WebException;
+		}
+
 		internal const string LOG_APP = "monodroid-net";
 
 		const string GZIP_ENCODING = "gzip";
@@ -466,7 +576,7 @@ namespace Xamarin.Android.Net
 		/// native Java client defaults are used.
 		/// </para>
 		/// <para>
-		/// The default value is <c>120</c> seconds.
+		/// The default value is <c>24</c> hours, same as <see cref="ReadTimeout"/>.
 		/// </para>
 		/// </summary>
 		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromHours (24);
@@ -600,13 +710,13 @@ namespace Xamarin.Android.Net
 					request.Method = redirectState.Method;
 					request.RequestUri = redirectState.NewUrl;
 				} catch (Java.Net.SocketTimeoutException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.Timeout, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.Timeout);
 				} catch (Java.Net.UnknownServiceException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.ProtocolError);
 				} catch (Java.Lang.SecurityException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.SecureChannelFailure, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.SecureChannelFailure);
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-					throw new WebException (ex.Message, ex, WebExceptionStatus.UnknownError, null);
+					throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.UnknownError);
 				}
 			}
 		}
@@ -670,6 +780,13 @@ namespace Xamarin.Android.Net
 			}, ct);
 		}
 
+		// As documented for HttpClient.SendAsync (see https://github.com/dotnet/android/issues/5761), transport
+		// failures must be surfaced as HttpRequestException rather than the legacy WebException. To avoid breaking
+		// existing code that migrated from classic Xamarin.Android and still inspects WebException (and its
+		// WebExceptionStatus), we keep the original WebException as the inner exception.
+		static HttpRequestException CreateHttpRequestException (string message, Exception? innerException, WebExceptionStatus status)
+			=> new HttpRequestException (message, new WebException (message, innerException, status, null));
+
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			if (request.Content is null)
@@ -678,6 +795,11 @@ namespace Xamarin.Android.Net
 			var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
 			try {
 				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
+			} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+				// When the caller cancels the request while the body is being uploaded, the connection
+				// is disconnected which surfaces as a transport exception (e.g. "Socket closed"). Map it
+				// to an OperationCanceledException so callers observe cancellation instead of a WebException.
+				throw new System.OperationCanceledException ("Request body upload was canceled.", ex, cancellationToken);
 			} finally {
 				//
 				// Rewind the stream to beginning in case the HttpContent implementation
@@ -725,11 +847,13 @@ namespace Xamarin.Android.Net
 				await ConnectAsync (httpConnection, cancellationToken).ConfigureAwait (continueOnCapturedContext: false);
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"  connected");
-			} catch (Java.Net.ConnectException ex) {
+			} catch (HttpRequestException ex) when (ex.InnerException is Java.Net.ConnectException connectException) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Connection exception {ex}");
-				// Wrap it nicely in a "standard" exception so that it's compatible with HttpClientHandler
-				throw new WebException (ex.Message, ex, WebExceptionStatus.ConnectFailure, null);
+				// `ConnectAsync` wraps all connection failures in HttpRequestException, so we unwrap the original
+				// `Java.Net.ConnectException` here and re-wrap it to preserve the legacy WebException (with its
+				// WebExceptionStatus) as the inner exception for back-compat with classic Xamarin.Android.
+				throw CreateHttpRequestException (connectException.Message, connectException, WebExceptionStatus.ConnectFailure);
 			}
 
 			if (cancellationToken.IsCancellationRequested) {
@@ -903,10 +1027,10 @@ namespace Xamarin.Android.Net
 			return ret ?? inputStream;
 		}
 
-		HttpContent GetContent (URLConnection httpConnection, Stream contentStream, ContentState contentState)
+		HttpContent GetContent (HttpURLConnection httpConnection, Stream contentStream, ContentState contentState)
 		{
 			Stream inputStream = GetDecompressionWrapper (httpConnection, new BufferedStream (contentStream), contentState);
-			return new StreamContent (inputStream);
+			return new StreamContent (new CancellationAwareResponseStream (inputStream, httpConnection));
 		}
 
 		bool HandleRedirect (HttpStatusCode redirectCode, HttpURLConnection httpConnection, RequestRedirectionState redirectState, out bool disposeRet)
@@ -976,7 +1100,7 @@ namespace Xamarin.Android.Net
 
 			redirectState.RedirectCounter++;
 			if (redirectState.RedirectCounter >= MaxAutomaticRedirections)
-				throw new WebException ($"Maximum automatic redirections exceeded (allowed {MaxAutomaticRedirections}, redirected {redirectState.RedirectCounter} times)");
+				throw CreateHttpRequestException ($"Maximum automatic redirections exceeded (allowed {MaxAutomaticRedirections}, redirected {redirectState.RedirectCounter} times)", null, WebExceptionStatus.UnknownError);
 
 			Uri redirectUrl;
 			try {
@@ -1013,7 +1137,7 @@ namespace Xamarin.Android.Net
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Debug, LOG_APP, $"Cooked redirect location: {redirectUrl}");
 			} catch (Exception ex) {
-				throw new WebException ($"Invalid redirect URI received: {location}", ex);
+				throw CreateHttpRequestException ($"Invalid redirect URI received: {location}", ex, WebExceptionStatus.UnknownError);
 			}
 
 			UriBuilder? builder = null;
@@ -1198,7 +1322,7 @@ namespace Xamarin.Android.Net
 			try {
 				httpConnection.RequestMethod = request.Method.ToString ();
 			} catch (Java.Net.ProtocolException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new WebException (ex.Message, ex, WebExceptionStatus.ProtocolError, null);
+				throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.ProtocolError);
 			}
 
 			// SSL context must be set up as soon as possible, before adding any content or

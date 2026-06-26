@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Linq.Expressions" Version="2.0.0" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,14 +48,6 @@
   <ItemGroup>
     <Compile Remove="Java.InteropTests\AndroidValueManagerContractTests.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
-    <!-- Compile the GenericMarshaler helper against the Android platform Java.Interop instead of referencing the external project, which depends on standalone Java.Interop. -->
-    <Compile Include="$(JavaInteropSourceDirectory)\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler\JniPeerInstanceMethodsExtensions.cs">
-      <Link>Java.Interop.GenericMarshaler\JniPeerInstanceMethodsExtensions.cs</Link>
-    </Compile>
   </ItemGroup>
 
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override build/clean behavior -->

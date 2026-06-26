@@ -32,8 +32,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -60,8 +58,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallAndUnInstall ([Values (false, true)] bool isRelease)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -93,8 +89,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ChangeKeystoreRedeploy ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageName = "com.xamarin.keytest"
 			};
@@ -122,8 +116,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SwitchConfigurationsShouldRedeploy ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
@@ -165,10 +157,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
+		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
@@ -215,34 +205,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstallErrorCode ()
-		{
-			AssertCommercialBuild ();
-
-			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
-			var abi = "armeabi-v7a";
-			var proj = new XamarinAndroidApplicationProject {
-				EmbedAssembliesIntoApk = true,
-			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetRuntimeIdentifiers (new[] { abi });
-
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				if (!builder.Install (proj)) {
-					Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "ADB0020"), "Should receive ADB0020 error code.");
-				} else {
-					Assert.Ignore ($"Install should have failed, but we might have an {abi} emulator attached.");
-				}
-			}
-		}
-
-		[Test]
 		public void ToggleFastDev ()
 		{
-			AssertCommercialBuild ();
-
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 				OtherBuildItems = {
@@ -278,7 +242,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void ToggleDebugReleaseWithSigning ([Values ("aab", "apk")] string packageFormat)
 		{
-			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			string path = Path.Combine ("temp", TestName.Replace ("\"", string.Empty));
@@ -321,37 +284,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LoggingPropsShouldCreateOverrideDirForRelease ()
-		{
-			AssertCommercialBuild ();
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			// Set debuggable=true to allow run-as command usage with a release build
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
-
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				RunAdbCommand ("shell setprop debug.mono.log timing");
-				RunProjectAndAssert (proj, builder);
-				var didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
-				ClearShellProp ("debug.mono.log");
-				Assert.True (didLaunch, "Activity should have started.");
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				builder.Uninstall (proj);
-				StringAssert.Contains ("methods.txt", directorylist, $"methods.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
-			}
-		}
-
-		[Test]
 		public void BlankAdbTarget ()
 		{
-			AssertCommercialBuild ();
-
 			var serial = GetAttachedDeviceSerial ();
 			var proj = new XamarinAndroidApplicationProject () {
 			};
@@ -469,8 +403,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("aab")]
 		public void LocalizedAssemblies_ShouldBeFastDeployed (string packageFormat)
 		{
-			AssertCommercialBuild ();
-
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
@@ -511,8 +443,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("aab")]
 		public void IncrementalFastDeployment (string packageFormat)
 		{
-			AssertCommercialBuild ();
-
 			var class1src = new BuildItem.Source ("Class1.cs") {
 				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 500; } }"
 			};
@@ -638,7 +568,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void AdbTargetArchitecture ()
 		{
-			AssertCommercialBuild ();
 			AssertHasDevices ();
 
 			const string abi = "x86_64";

@@ -16,16 +16,7 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
  4. (Optional) [Configure the build](../configuration.md).
 
- 5. (For Microsoft team members only) (Optional) Prepare external
-    proprietary git dependencies
-
-        make prepare-external-git-dependencies
-
-    This will clone or update a monodroid checkout in `external` and
-    ensure that subsequent `prepare` and `make` invocations will build
-    proprietary components.
-
- 6. Prepare the project:
+ 5. Prepare the project:
 
         make prepare
         # -or-
@@ -108,9 +99,6 @@ Alternatively, .NET for Android workload packs can be built with:
 
 Several `.nupkg` files will be output in `./bin/Build$(Configuration)/nuget-unsigned`.
 
-Commercial installers will be created by this command if the
-`make prepare-external-git-dependencies` command was ran before building.
-
 
 # Running Unit Tests
 
@@ -119,8 +107,8 @@ The `dotnet/android` repo contains several unit tests:
 
   * NUnit-based unit tests, for stand-alone assemblies and utilities.
 
-  * `.apk`-based unit tests, which are NUnitLite-based tests that need to
-    execute on an Android device.
+  * `.apk`/instrumentation-based unit tests, which need to execute on an
+    Android device.
 
 All unit tests can be executed via the `make run-all-tests` target:
 
@@ -349,5 +337,4 @@ For example, to rebuild Mono for armeabi-v7a:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
 	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
-
 

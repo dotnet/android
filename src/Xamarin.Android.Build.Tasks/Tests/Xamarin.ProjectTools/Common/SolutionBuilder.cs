@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Xamarin.ProjectTools
 {
@@ -20,6 +20,7 @@ namespace Xamarin.ProjectTools
 			Projects = new List<XamarinProject> ();
 		}
 
+		[MemberNotNull (nameof (SolutionPath))]
 		public void Save ()
 		{
 			ArgumentNullException.ThrowIfNull (SolutionPath);

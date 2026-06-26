@@ -165,7 +165,7 @@ sealed class JavaPeerProxyData
 	public List<UcoConstructorData> UcoConstructors { get; } = new ();
 
 	/// <summary>
-	/// RegisterNatives registrations (method name, JNI signature, wrapper name).
+	/// RegisterNatives registrations (method name, JNI signature, wrapper target).
 	/// </summary>
 	public List<NativeRegistrationData> NativeRegistrations { get; } = new ();
 }
@@ -196,7 +196,9 @@ sealed record TypeRefData
 /// <summary>
 /// An [UnmanagedCallersOnly] static wrapper for a marshal method.
 /// Body: either forward to an existing n_* callback or dispatch directly to the
-/// managed export target when the trimmable path can avoid dynamic callback generation.
+/// managed target. Direct dispatch avoids inherited n_* callbacks that can route
+/// through the wrong managed virtual slot for hidden/new-slot members sharing the
+/// same JNI method.
 /// </summary>
 sealed record UcoMethodData
 {
@@ -221,15 +223,42 @@ sealed record UcoMethodData
 	public required string JniSignature { get; init; }
 
 	/// <summary>
-	/// Optional [Export]-only metadata for wrappers that dispatch directly to the
-	/// managed export target instead of forwarding to a generated n_* callback.
+	/// Optional metadata for wrappers that dispatch directly to the managed target
+	/// instead of forwarding to a generated n_* callback.
 	/// </summary>
 	public ExportMethodDispatchData? ExportMethodDispatch { get; init; }
 
 	/// <summary>
-	/// True when this wrapper performs the static [Export] direct-dispatch path.
+	/// True when this wrapper performs the managed direct-dispatch path.
 	/// </summary>
 	public bool UsesExportMethodDispatch => ExportMethodDispatch != null;
+}
+
+sealed record UcoWrapperTargetData
+{
+	public static UcoWrapperTargetData From (JavaPeerProxyData proxy, string methodName)
+	{
+		return new UcoWrapperTargetData {
+			TypeNamespace = proxy.Namespace,
+			TypeName = proxy.TypeName,
+			MethodName = methodName,
+		};
+	}
+
+	/// <summary>
+	/// Namespace of the generated proxy type containing the wrapper method.
+	/// </summary>
+	public required string TypeNamespace { get; init; }
+
+	/// <summary>
+	/// Name of the generated proxy type containing the wrapper method.
+	/// </summary>
+	public required string TypeName { get; init; }
+
+	/// <summary>
+	/// Name of the UCO wrapper method whose function pointer to register.
+	/// </summary>
+	public required string MethodName { get; init; }
 }
 
 sealed record ExportMethodDispatchData
@@ -329,6 +358,13 @@ sealed record NativeRegistrationData
 	/// Name of the UCO wrapper method whose function pointer to register.
 	/// </summary>
 	public required string WrapperMethodName { get; init; }
+
+	/// <summary>
+	/// Generated proxy wrapper target to register. This may point at a wrapper
+	/// emitted for a different proxy when inherited virtual overrides share the
+	/// same base callback.
+	/// </summary>
+	public required UcoWrapperTargetData WrapperTarget { get; init; }
 }
 
 /// <summary>

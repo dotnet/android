@@ -290,19 +290,6 @@ namespace Xamarin.Android.Prepare
 			Directory.CreateDirectory (directoryPath);
 		}
 
-		public static void CopyFilesSimple (IEnumerable<string> sourceFiles, string destinationDirectory, bool overwriteDestinationFile = true)
-		{
-			if (sourceFiles == null)
-				throw new ArgumentNullException (nameof (sourceFiles));
-			if (String.IsNullOrEmpty (destinationDirectory))
-				throw new ArgumentException ("must not be null or empty", nameof (destinationDirectory));
-
-			CreateDirectory (destinationDirectory);
-			foreach (string src in sourceFiles) {
-				CopyFileInternal (src, destinationDirectory, destinationFileName: String.Empty, overwriteDestinationFile: overwriteDestinationFile);
-			}
-		}
-
 		public static void CopyFile (string sourceFilePath, string destinationFilePath, bool overwriteDestinationFile = true)
 		{
 			if (String.IsNullOrEmpty (sourceFilePath))

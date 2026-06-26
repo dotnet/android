@@ -15,6 +15,17 @@ namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Children)]
 	public class ManagedResourceParserTests : BaseTest {
+		class ResourceDesignerAttributeLibraryProject : DotNetXamarinProject
+		{
+			public override string ProjectTypeGuid => "";
+
+			public ResourceDesignerAttributeLibraryProject ()
+			{
+				Language = XamarinAndroidProjectLanguage.CSharp;
+				TargetFramework = "net10.0";
+			}
+		}
+
 		const string ValuesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<bool name=""a_bool"">false</bool>
@@ -332,6 +343,49 @@ int xml myxml 0x7f140000
 			}
 		}
 
+		void BuildLibraryWithResourceDesignerAttribute (string path, string resourceDesignerTypeName)
+		{
+			var library = new ResourceDesignerAttributeLibraryProject () {
+				ProjectName = "Library",
+			};
+			library.Sources.Add (new BuildItem.Source ("Resource.cs") {
+				TextContent = () => $$"""
+					[assembly: Android.Runtime.ResourceDesignerAttribute ("{{resourceDesignerTypeName}}", IsApplication=false)]
+
+					namespace Android.Runtime
+					{
+						[System.AttributeUsage (System.AttributeTargets.Assembly)]
+						public class ResourceDesignerAttribute : System.Attribute
+						{
+							public ResourceDesignerAttribute (string fullName)
+							{
+								FullName = fullName;
+							}
+
+							public string FullName { get; set; }
+
+							public bool IsApplication { get; set; }
+						}
+					}
+
+					namespace Library
+					{
+						public partial class Resource
+						{
+							public partial class Animator
+							{
+								public static int slide_in_bottom;
+							}
+						}
+					}
+					"""
+			});
+
+			using (ProjectBuilder builder = CreateDllBuilder (Path.Combine (Root, path))) {
+				Assert.IsTrue (builder.Build (library), "Build should have succeeded");
+			}
+		}
+
 		void CompareFilesIgnoreRuntimeInfoString (string file1, string file2)
 		{
 			FileAssert.Exists (file1);
@@ -384,6 +438,7 @@ int xml myxml 0x7f140000
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
+			task.AssemblyName = "Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.DesignTimeOutputFile = Path.Combine (Root, path, "designtime", "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
@@ -432,7 +487,7 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		public void GenerateDesignerFileFromRtxt ([Values] bool withLibraryReference, [Values] AndroidRuntime runtime)
+		public void GenerateDesignerFileFromRtxt ([Values] bool withLibraryReference, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			// TODO: fix NativeAOT, it currently fails with:
 			//
@@ -457,6 +512,33 @@ int xml myxml 0x7f140000
 			}
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			AssertResourceDesigner (task, withLibraryReference ? "GenerateDesignerFileWithLibraryReferenceExpected.cs" : "GenerateDesignerFileExpected.cs");
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		[TestCase ("Library.Resource, Library")]
+		[TestCase ("Library.Resource")]
+		public void ResourceDesignerImportGeneratorHandlesResourceDesignerAttributeFormats (string resourceDesignerTypeName)
+		{
+			var path = Path.Combine ("temp", TestName + " Some Space");
+			CreateResourceDirectory (path);
+			var mapTask = CreateCaseMapTask (path);
+			Assert.IsTrue (mapTask.Execute (), "Map Task should have executed successfully.");
+
+			var libraryPath = Path.Combine (path, "Library");
+			BuildLibraryWithResourceDesignerAttribute (libraryPath, resourceDesignerTypeName);
+			var libraryAssemblyPath = Path.Combine (Root, libraryPath, "bin", "Debug", "Library.dll");
+
+			var task = CreateTask (path);
+			task.RTxtFile = Path.Combine (Root, path, "R.txt");
+			File.WriteAllText (task.RTxtFile, Rtxt);
+			task.References = new TaskItem [] {
+				new TaskItem (libraryAssemblyPath)
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
+			var designer = File.ReadAllText (task.NetResgenOutputFile);
+			// The import generator can only emit this assignment if it found "Library.Resource".
+			StringAssert.Contains ("global::Library.Resource.Animator.slide_in_bottom = global::Foo.Foo.Resource.Animator.slide_in_bottom;", designer);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
@@ -489,6 +571,7 @@ int xml myxml 0x7f140000
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
+			task.AssemblyName = "Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.ResourceDirectory = Path.Combine (Root, path, "res") + Path.DirectorySeparatorChar;
@@ -607,6 +690,7 @@ int xml myxml 0x7f140000
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = false;
 			task.Namespace = "MonoAndroidApplication4.MonoAndroidApplication4";
+			task.AssemblyName = "MonoAndroidApplication4";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.aapt2.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
@@ -726,6 +810,7 @@ int styleable ElevenAttributes_attr10 10";
 			task.UseManagedResourceGenerator = true;
 			task.DesignTimeBuild = true;
 			task.Namespace = "Foo.Foo";
+			task.AssemblyName = "Foo";
 			task.NetResgenOutputFile = Path.Combine (Root, path, "Resource.designer.cs");
 			task.ProjectDir = Path.Combine (Root, path);
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");

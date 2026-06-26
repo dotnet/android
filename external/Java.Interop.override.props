@@ -1,11 +1,29 @@
 <Project>
 
+  <!-- Pull in dotnet/android's shared versions so Java.Interop sees the same
+       values (MonoCecilVersion, AndroidPackVersion). This file is restricted
+       to collision-free package-version-shaped properties; importing the full
+       Directory.Build.props/Configuration.props chain would overwrite
+       Java.Interop's own DotNetTargetFrameworkVersion. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\eng\Versions.props" />
+
   <PropertyGroup>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
     <Standalone>True</Standalone>
+    <_XamarinAndroidCecilVersion>$(MonoCecilVersion)</_XamarinAndroidCecilVersion>
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-2b2a06c8/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
+  <!-- Mirrors the OS-conditioned $(MicrosoftAndroidSdkPackName) block in
+       dotnet/android's Configuration.props, which we cannot import here
+       without TFM collisions. -->
+  <PropertyGroup>
+    <_MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('windows'))">Microsoft.Android.Sdk.Windows</_MicrosoftAndroidSdkPackName>
+    <_MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('linux'))">Microsoft.Android.Sdk.Linux</_MicrosoftAndroidSdkPackName>
+    <_MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('osx'))">Microsoft.Android.Sdk.Darwin</_MicrosoftAndroidSdkPackName>
+    <UtilityOutputFullPathCoreApps>$(MSBuildThisFileDirectory)..\bin\$(Configuration)\lib\packs\$(_MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\tools\</UtilityOutputFullPathCoreApps>
   </PropertyGroup>
 
 </Project>

@@ -1,5 +1,3 @@
--include bin/configuration.mk
-
 V             ?= 0
 prefix         = /usr/local
 CONFIGURATION ?= Debug
@@ -123,18 +121,19 @@ list-nunit-tests:
 include build-tools/scripts/runtime-helpers.mk
 
 .PHONY: prepare
-prepare:
+prepare: install-dotnet
 	$(call SYSTEM_DOTNET_BINLOG,prepare-run,run) $(PREPARE_MSBUILD_FLAGS) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- $(_PREPARE_ARGS)
 	$(call SYSTEM_DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
+	$(call SYSTEM_DOTNET_BINLOG,prepare-workloads) src/workloads/workloads.csproj
 	$(call DOTNET_BINLOG,prepare-java.interop) $(SOLUTION) -t:PrepareJavaInterop
+
+.PHONY: install-dotnet
+install-dotnet:
+	CONFIGURATION=$(CONFIGURATION) bash ./eng/install-dotnet.sh
 
 .PHONY: prepare-help
 prepare-help:
 	$(call SYSTEM_DOTNET_BINLOG,prepare-help,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- -h
-
-prepare-external-git-dependencies:
-	$(call SYSTEM_DOTNET_BINLOG,prepare-external-git-dependencies,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) \
-		-- -s:PrepareExternalGitDependencies $(_PREPARE_ARGS)
 
 APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
 

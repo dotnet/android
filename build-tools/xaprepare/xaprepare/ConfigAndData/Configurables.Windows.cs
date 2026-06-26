@@ -12,12 +12,6 @@ namespace Xamarin.Android.Prepare
 
 		partial class Paths
 		{
-			public const string NdkToolchainOSTag                                 = "windows-x86_64";
-		}
-
-		partial class Urls
-		{
-			public static readonly Uri DotNetInstallScript = new Uri ("https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1");
 		}
 	}
 }

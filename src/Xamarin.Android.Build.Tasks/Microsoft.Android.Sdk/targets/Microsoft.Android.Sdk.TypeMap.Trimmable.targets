@@ -4,6 +4,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -23,11 +24,25 @@
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
     <_TypeMapAssembliesListFile>$(_TypeMapOutputDirectory)typemap-assemblies.txt</_TypeMapAssembliesListFile>
-    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 for NativeAOT
-         (PublishAot=true, dynamic code is unavailable, so array creation uses the typemap path);
+    <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_OuterIntermediateOutputPath)' != '' ">$(IntermediateOutputPath)</_PostTrimTypeMapJavaBaseOutputDir>
+    <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_PostTrimTypeMapJavaBaseOutputDir)' == '' ">$(_TypeMapBaseOutputDir)</_PostTrimTypeMapJavaBaseOutputDir>
+    <_PostTrimTypeMapJavaOutputDirectory>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
+    <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
+    <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
+    <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
+    <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
+    <_PostTrimTrimmableTypeMapJavaStamp>$(_PostTrimTypeMapJavaBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>
+    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTrimmableTypeMapJavaStamp)</_TrimmableJavaSourceStamp>
+    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' ">$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll</_TrimmableJavaSourceStamp>
+    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
+         dynamic code is unavailable, so array creation uses the typemap path;
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
-    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and '$(PublishAot)' == 'true' ">3</_AndroidTrimmableTypeMapMaxArrayRank>
+    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and ('$(PublishAot)' == 'true' or '$(DynamicCodeSupport)' == 'false') ">3</_AndroidTrimmableTypeMapMaxArrayRank>
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
+    <IncrementalCleanDependsOn>
+      _RecordTrimmableTypeMapFileWrites;
+      $(IncrementalCleanDependsOn);
+    </IncrementalCleanDependsOn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -84,6 +99,7 @@
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         ResolvedFrameworkAssemblies="@(ResolvedFrameworkAssemblies)"
+        FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
@@ -125,6 +141,13 @@
   <Target Name="_ReadGeneratedTrimmableTypeMapAssemblies"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
       DependsOnTargets="_GenerateTrimmableTypeMap">
+    <MakeDir
+        Directories="$(_TypeMapOutputDirectory)"
+        Condition=" '@(ReferencePath->Count())' == '0' and '$(_OuterIntermediateOutputPath)' == '' and !Exists('$(_TypeMapAssembliesListFile)')" />
+    <Touch
+        Files="$(_TypeMapAssembliesListFile)"
+        AlwaysCreate="true"
+        Condition=" '@(ReferencePath->Count())' == '0' and '$(_OuterIntermediateOutputPath)' == '' and !Exists('$(_TypeMapAssembliesListFile)')" />
     <Error
         Condition=" !Exists('$(_TypeMapAssembliesListFile)') "
         Text="Trimmable typemap assembly list '$(_TypeMapAssembliesListFile)' was not found." />
@@ -134,6 +157,38 @@
     <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
       <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesFromList" />
     </ReadLinesFromFile>
+  </Target>
+
+  <!--
+    The TypeMap generator has dynamic outputs: the set of generated assemblies
+    and Java files comes from scanning references.  FileWrites entries in the
+    generating targets are correct for builds that run those targets, but
+    skipped targets do not execute their ItemGroup bodies on no-op builds.
+    Re-emit the previous dynamic outputs before MSBuild's IncrementalClean
+    reads FileWrites, otherwise those outputs look orphaned and can be deleted
+    before packaging target inputs are evaluated.
+  -->
+  <Target Name="_RecordTrimmableTypeMapFileWrites"
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' and Exists('$(_TypeMapAssembliesListFile)') ">
+    <ItemGroup>
+      <_GeneratedTypeMapAssembliesForFileWrites Remove="@(_GeneratedTypeMapAssembliesForFileWrites)" />
+      <_TypeMapJavaFilesForFileWrites Remove="@(_TypeMapJavaFilesForFileWrites)" />
+    </ItemGroup>
+    <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
+      <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesForFileWrites" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_TypeMapJavaFilesForFileWrites Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+
+      <FileWrites Include="@(_GeneratedTypeMapAssembliesForFileWrites)" />
+      <FileWrites Include="@(_TypeMapJavaFilesForFileWrites)" />
+      <FileWrites Include="@(_TypeMapJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
+      <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
+      <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" Condition="Exists('$(IntermediateOutputPath)acw-map.txt')" />
+      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" Condition="Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java')" />
+    </ItemGroup>
   </Target>
 
   <!--
@@ -176,18 +231,15 @@
          included in the assembly store hash table, and keep _RemoveRegisterAttribute
          source/destination counts in sync. -->
     <ItemGroup>
-      <_ResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
+      <_TrimmableTypeMapResolvedAssemblies Remove="@(_TrimmableTypeMapResolvedAssemblies)" />
+      <_TrimmableTypeMapResolvedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
         <Abi>$(_TypeMapFirstAbi)</Abi>
         <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
         <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
         <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
-      </_ResolvedAssemblies>
-      <_ShrunkAssemblies Include="@(_GeneratedTypeMapAssembliesFromList)">
-        <Abi>$(_TypeMapFirstAbi)</Abi>
-        <RuntimeIdentifier>$(_TypeMapFirstRid)</RuntimeIdentifier>
-        <DestinationSubPath>$(_TypeMapFirstAbi)/%(Filename)%(Extension)</DestinationSubPath>
-        <DestinationSubDirectory>$(_TypeMapFirstAbi)/</DestinationSubDirectory>
-      </_ShrunkAssemblies>
+      </_TrimmableTypeMapResolvedAssemblies>
+      <_ResolvedAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
+      <_ShrunkAssemblies Include="@(_TrimmableTypeMapResolvedAssemblies)" />
     </ItemGroup>
   </Target>
 
@@ -204,12 +256,12 @@
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
   -->
   <Target Name="_GenerateJavaStubs"
-      DependsOnTargets="_SetLatestTargetFrameworkVersion;_CleanIntermediateIfNeeded;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
+      DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
       Inputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>
-      <_TypeMapJavaFiles Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+      <_TypeMapJavaFiles Include="$(_TypeMapJavaStubsSourceDirectory)/**/*.java" />
     </ItemGroup>
     <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" />
 

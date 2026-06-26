@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="XA0010_Adb" xml:space="preserve">
+    <value>adb が実行されていません。{0}</value>
+    <comment>The following are literal names and should not be translated: adb
+{0} - further detailed error message</comment>
+  </data>
+  <data name="XA0010_AdbTarget" xml:space="preserve">
+    <value>adb ターゲット名 '{0}' が無効です。ターゲット名は、'-d'、'-e'、または '-s' で始まる必要があります。</value>
+    <comment>The following are literal names and should not be translated: adb, `-d`, `-e`, `-s`
+{0} - the target name the user supplied</comment>
+  </data>
+  <data name="XA0010_NoDevice" xml:space="preserve">
+    <value>使用可能なデバイスがありません。</value>
+  </data>
+  <data name="XA0010_Selected" xml:space="preserve">
+    <value>選択したデバイスは実行されていません。</value>
+  </data>
+  <data name="XA0010_NoAbi" xml:space="preserve">
+    <value>アタッチされたデバイスまたはエミュレーターの Android ABI `{0}` を取得できませんでした。デバイスを再接続するか、エミュレーターを再起動してから、もう一度お試しください。</value>
+    <comment>The following are literal names and should not be translated: ABI
+ABI - is an acronym for Application Binary Interface.
+{0} - the target name the user supplied
+    </comment>
+  </data>
+  <data name="XA0126_UnableToCopyFastDevTools" xml:space="preserve">
+    <value>高速展開ツールをターゲット デバイスの '{0}/{1}' にコピーできません。
+このデバイスは高速展開と互換性がない可能性があります。
+'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A device path
+{1} - A filename</comment>
+  </data>
+  <data name="XA0127_ErrorDeployingFile" xml:space="preserve">
+    <value>'{1}:{2}' を使用して '{0}' を展開中にエラーが発生しました。
+'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="XA0128_RedirectStdioIsEnabled" xml:space="preserve">
+    <value>ターゲット デバイスまたはエミュレーターで、'log.redirect-stdio' Android システム プロパティが 'true' に設定されています。
+高速展開との互換性を有効にするには、プロパティを 'false' に設定するか、デバイスまたはエミュレーターを再起動して値をクリアします。</value>
+  </data>
+  <data name="XA0129_ErrorDeployingFile" xml:space="preserve">
+    <value>'{0}' の展開中にエラーが発生しました。
+'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
+    <comment>The following are literal names and should not be translated:
+{0} - A filename</comment>
+  </data>
+  <data name="XA0130_FastDevNotSupported" xml:space="preserve">
+    <value>申し訳ありません。高速デプロイは、Android 5.0 (API レベル 21) 以上を実行しているデバイスでのみサポートされます。
+'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
+  </data>
+  <data name="XA0131_DeveloperModeNotEnabled" xml:space="preserve">
+    <value>このデバイスで 'run-as' ツールが無効になっています。デバイスの開発者オプションをアクティブ化するか、'ro.boot.disable_runas' を 'false' に設定して有効にします。</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+'ro.boot.disable_runas' - the android property which disables the `run-as` tool.
+    </comment>
+  </data>
+  <data name="XA0132_PackageNotInstalled" xml:space="preserve">
+    <value>パッケージはインストールされませんでした。他のユーザーの下にインストールされていないか確認してください。
+パッケージがデバイスに表示される場合は、手動でアンインストールしてから、もう一度お試しください。
+デバイスの設定アプリを使用してアプリをアンインストールできます。</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0133_RunAsPermissionDenied" xml:space="preserve">
+    <value>高速展開システムに必要な 'run-as' ツールは、製造元によってこのデバイスで無効になっています。
+'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+    </comment>
+  </data>
+  <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
+    <value>アプリケーションの AndroidManifest.xml に 'android:debuggable' 属性が設定されていません。
+これは、高速展開を機能させるために必要です。これは通常、デバッグ ビルドの .NET for Android ビルド 
+システムにより既定で有効化されます。'AndroidManifest.xml' の 'application' 要素に
+この属性が設定されていないことをご確認ください。
+'Android.App.Application' から派生し、'[Application]' を使用しているクラスがある場合は、 
+'Debuggable' プロパティは、デバッグ ビルドの値をオーバーライドするため、まったく設定されていません。
+</value>
+    <comment>The following are literal names and should not be translated:
+AndroidManifest.xml - A xml file
+application - A xml element within a xml file.
+Application - A code attribute.
+Debuggable - A code property
+android:debuggable - An attribute in a xml file.
+    </comment>
+  </data>
+  <data name="XA0135_RunAsPackageNotAndApplication" xml:space="preserve">
+    <value>パッケージは 'system' アプリケーションです。これらは、デバイス上の 'system' ユーザー
+ の下にインストールされるアプリケーションです。これらの種類のアプリケーションでは、'run-as' を使用できません。
+ 高速展開システムは、この特定のエラーを自動的に処理し、
+ バックアップのインストールパスを使用すべきでした。ただし、このエラーが表示される場合は、
+ Visual Studio で [ヘルプ] -&gt; [フィードバックを送信] -&gt; [問題を報告] メニュー項目を使用するか
+ または Visual Studio for Mac で [ヘルプ] -&gt; [問題を報告] を使用して実際のエラー メッセージを付けて問題を申請してください。可能ならば、完全な診断ビルド 
+ ログをフィードバック レポートに添付してください。これにより Microsoft が問題を診断するのに役立ちます。</value>
+    <comment>The following are literal names and should not be translated:
+    </comment>
+  </data>
+  <data name="XA0136_RunAsCorruptInstallation" xml:space="preserve">
+    <value>'run-as' コマンドが '{0}' で失敗しました。
+現在破損しているパッケージのインストール。デバイス上のすべてのユーザーから
+パッケージを手動でパッケージをアンインストールし、もう一度やり直してください。問題が解決しない場合は、高速展開を無効にできます。
+高速配置は、Visual Studio プロジェクトのプロパティ ページで無効にしたり、テキスト エディターでプロジェクト ファイルを編集したり、'EmbedAssembliesIntoのまま' MSBuild プロパティを 'true' に設定したりできます。
+</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0137_RunAsOSCorrupt" xml:space="preserve">
+    <value>'run-as' コマンドが '{0}' で失敗しました。
+このデバイスでは、高速展開は現在サポートされていません。
+Visual Studio で [ヘルプ] -&gt; [フィードバックを送信] -&gt; [問題を報告] メニュー項目を使用するか
+または Visual Studio for Mac で [ヘルプ] -&gt; [問題を報告] を使用して実際のエラー メッセージを付けて問題を申請してください。
+'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
+    <comment>The following are literal names and should not be translated:
+'run-as' - a native android tool
+{0} - The error message raised by the program.
+    </comment>
+  </data>
+  <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
+    <value>'{1}:{2}' を使用して ' {0}' を展開中にエラーが発生しました。
+これは通常、ファイル データがデバイスに送信されるときに 'adb' でエラーが発生したことが原因です。
+この問題の通常の原因は、緩い USB ケーブルまたは低品質の USB ケーブルです。別のケーブルをお試しください。
+または、Wifi デバッグを使用してみてください。これは、特定のデバイスの USB デバッグよりも信頼性が高い可能性があります。
+そのすべてが失敗する場合は、'EmbedAssembliesIntoApk' MSBuild プロパティを 'true' に設定して、Visual Studio プロジェクト プロパティ ページで高速展開を無効にするか、テキスト エディターでプロジェクト ファイルを編集してください。</value>
+<comment>The following are literal names and should not be translated:
+{0} - A filename
+{1} - The tool that was used to deploy the file.
+{2} - The actual error that occured.</comment>
+  </data>
+  <data name="StartDebugger_ipAddress_port" xml:space="preserve">
+    <value>  {0}:{1}
+ でデバッガーを起動しています
+sdb を起動し、次のコマンドを実行し
+  {0} {1} を接続します
+    </value>
+    <comment>The following are literal names and should not be translated:
+{0} - An ip address of  a computer.
+{1} - An interger value describing the port to use.
+    </comment>
+  </data>
+</root>

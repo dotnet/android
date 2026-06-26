@@ -156,7 +156,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void AdaptiveIcon ([Values] AndroidRuntime runtime)
+		public void AdaptiveIcon ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

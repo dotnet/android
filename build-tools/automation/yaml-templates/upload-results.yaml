@@ -7,12 +7,10 @@ parameters:
   use1ESTemplate: true
 
 steps:
-- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
+- template: /build-tools/automation/yaml-templates/copy-extra-result-files.yaml
   parameters:
     configuration: ${{ parameters.configuration }}
-    arguments: --s=CopyExtraResultFilesForCI --verbosity v
     xaSourcePath: ${{ parameters.xaSourcePath }}
-    displayName: Copy extra result files
     condition: ${{ parameters.condition }}
 
 - ${{ if eq(parameters.includeBuildResults, false) }}:

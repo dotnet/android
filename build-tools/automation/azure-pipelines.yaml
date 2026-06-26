@@ -9,6 +9,8 @@ trigger:
   - release/*
   - feature/*
 
+pr: none
+
 # External sources, scripts, tests, and yaml template files.
 resources:
   repositories:
@@ -18,10 +20,6 @@ resources:
   - repository: yaml-templates
     type: git
     name: DevDiv/Xamarin.yaml-templates
-    ref: refs/heads/main
-  - repository: android-platform-support
-    type: git
-    name: DevDiv/android-platform-support
     ref: refs/heads/main
   - repository: maui
     type: github
@@ -75,9 +73,6 @@ extends:
         image: $(WindowsPoolImage1ESPT)
         os: windows
       sourceRepositoriesToScan:
-        include:
-        - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-          - repository: android-platform-support
         exclude:
         - repository: yaml-templates
         - repository: maui
@@ -134,8 +129,8 @@ extends:
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
-            dotnetVersion: $(DotNetPreviewSdkVersion)
-            dotnetQuality: $(DotNetPreviewSdkQuality)
+            dotnetVersion: $(DotNetSdkVersion)
+            dotnetQuality: $(DotNetSdkQuality)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -353,8 +348,8 @@ extends:
 
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
           parameters:
-            version: $(DotNetPreviewSdkVersion)
-            quality: $(DotNetPreviewSdkQuality)
+            version: $(DotNetSdkVersion)
+            quality: $(DotNetSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
@@ -422,7 +417,7 @@ extends:
                 $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
                 $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
                 $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-                & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+                & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
                 & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
             displayName: add build to default darc channel
             condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))

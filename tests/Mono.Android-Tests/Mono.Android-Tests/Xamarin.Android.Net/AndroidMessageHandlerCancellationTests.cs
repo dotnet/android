@@ -1,0 +1,377 @@
+#nullable enable
+
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Xamarin.Android.Net;
+
+using NUnit.Framework;
+
+namespace Xamarin.Android.NetTests
+{
+	[TestFixture]
+	[Category ("AndroidMessageHandlerCancellation")]
+	[Category ("InetAccess")]
+	public class AndroidMessageHandlerCancellationTests
+	{
+		const int StalledResponseContentLength = 1024 * 1024;
+		const int UploadContentLength = 16 * 1024 * 1024;
+		const int BodyReadBlockDelayMilliseconds = 250;
+		const int PromptCancellationTimeoutMilliseconds = 3000;
+
+		static readonly byte[] InitialResponseChunk = [42];
+		StalledResponseServer? stalledResponseServer;
+
+		[SetUp]
+		public void SetUp ()
+		{
+			stalledResponseServer = new StalledResponseServer ();
+		}
+
+		[TearDown]
+		public void TearDown ()
+		{
+			var server = stalledResponseServer;
+			stalledResponseServer = null;
+
+			// NUnitLite used by the on-device tests does not support async TearDown methods.
+			if (server != null)
+				server.Stop ();
+		}
+
+		[Test]
+		public async Task ResponseContentReadBodyReadCancellationIsPrompt ()
+		{
+			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var cts = new CancellationTokenSource ();
+			using var request = new HttpRequestMessage (HttpMethod.Get, $"http://localhost:{server.Port}/");
+
+			Task readTask = client.SendAsync (request, HttpCompletionOption.ResponseContentRead, cts.Token);
+
+			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
+			cts.Cancel ();
+			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
+		}
+
+		[Test]
+		public async Task RequestBodyUploadCancellationIsPrompt ()
+		{
+			using var uploadServer = new StalledRequestServer ();
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var cts = new CancellationTokenSource ();
+			using var request = new HttpRequestMessage (HttpMethod.Put, $"http://localhost:{uploadServer.Port}/upload") {
+				// A large body ensures the socket send buffer fills while the server stalls reading it,
+				// so the upload is still in progress when the caller cancels. The content streams the
+				// bytes in small chunks instead of allocating the whole body up front.
+				Content = new StreamingContent (UploadContentLength),
+			};
+
+			Task sendTask = client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+
+			await WaitForBodyReadToBlock (uploadServer.BodyStartedTask).ConfigureAwait (false);
+			cts.Cancel ();
+			await AssertCanceledPromptly (sendTask, uploadServer.ReleaseRequestBody).ConfigureAwait (false);
+		}
+
+		[Test]
+		public async Task ResponseHeadersReadBodyReadCancellationIsPrompt ()
+		{
+			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var request = new HttpRequestMessage (HttpMethod.Get, $"http://localhost:{server.Port}/");
+			using var response = await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (false);
+			using var readCts = new CancellationTokenSource ();
+
+			Task readContentTask = response.Content.ReadAsByteArrayAsync (readCts.Token);
+
+			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
+			readCts.Cancel ();
+			await AssertCanceledPromptly (readContentTask, server.ReleaseResponseBody).ConfigureAwait (false);
+		}
+
+		static int GetAvailablePort ()
+		{
+			using var tcpListener = new TcpListener (IPAddress.Loopback, 0);
+			tcpListener.Start ();
+			int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
+			tcpListener.Stop ();
+			return port;
+		}
+
+		static async Task WaitForBodyReadToBlock (Task bodyStarted)
+		{
+			var completed = await Task.WhenAny (bodyStarted, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
+			if (completed != bodyStarted)
+				Assert.Fail ($"The test server did not start sending a response body within {PromptCancellationTimeoutMilliseconds}ms.");
+
+			await bodyStarted.ConfigureAwait (false);
+			await Task.Delay (BodyReadBlockDelayMilliseconds).ConfigureAwait (false);
+		}
+
+		static async Task AssertCanceledPromptly (Task readTask, Action releaseBody)
+		{
+			var completed = await Task.WhenAny (readTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
+			if (completed != readTask) {
+				releaseBody ();
+				await ObserveReadTaskAfterRelease (readTask).ConfigureAwait (false);
+				Assert.Fail ($"Response body read did not observe cancellation within {PromptCancellationTimeoutMilliseconds}ms.");
+			}
+
+			try {
+				await readTask.ConfigureAwait (false);
+				Assert.Fail ("Response body read completed successfully after cancellation.");
+			} catch (OperationCanceledException) {
+				return;
+			}
+		}
+
+		static async Task ObserveReadTaskAfterRelease (Task readTask)
+		{
+			var completed = await Task.WhenAny (readTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
+			if (completed != readTask)
+				return;
+
+			try {
+				await readTask.ConfigureAwait (false);
+			} catch (Exception ex) {
+				Console.WriteLine ($"Exception after releasing stalled response body: {ex}");
+			}
+		}
+
+		sealed class StalledResponseServer
+		{
+			readonly HttpListener listener;
+			readonly TaskCompletionSource<bool> bodyStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly TaskCompletionSource<bool> releaseBody = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly Task serverTask;
+
+			public StalledResponseServer ()
+			{
+				Port = GetAvailablePort ();
+				listener = new HttpListener ();
+				listener.Prefixes.Add ($"http://localhost:{Port}/");
+				listener.Start ();
+
+				serverTask = ServeStalledResponseBody ();
+			}
+
+			public int Port { get; }
+
+			public Task BodyStartedTask => bodyStarted.Task;
+
+			public void Stop ()
+			{
+				ReleaseResponseBody ();
+				listener.Close ();
+				ObserveServerTask ().GetAwaiter ().GetResult ();
+			}
+
+			public void ReleaseResponseBody ()
+			{
+				releaseBody.TrySetResult (true);
+			}
+
+			async Task ServeStalledResponseBody ()
+			{
+				try {
+					var context = await listener.GetContextAsync ().ConfigureAwait (false);
+					using var response = context.Response;
+					response.StatusCode = 200;
+					response.ContentLength64 = StalledResponseContentLength;
+					await response.OutputStream.WriteAsync (InitialResponseChunk, 0, InitialResponseChunk.Length).ConfigureAwait (false);
+					await response.OutputStream.FlushAsync ().ConfigureAwait (false);
+					bodyStarted.TrySetResult (true);
+
+					await releaseBody.Task.ConfigureAwait (false);
+					await WriteRemainingResponseBody (response).ConfigureAwait (false);
+				} catch (Exception ex) {
+					if (!BodyStartedTask.IsCompleted) {
+						bodyStarted.TrySetException (ex);
+						return;
+					}
+					Console.WriteLine ($"Exception while serving stalled response body: {ex}");
+				}
+			}
+
+			async Task WriteRemainingResponseBody (HttpListenerResponse response)
+			{
+				var buffer = new byte [4096];
+				int remainingBytes = StalledResponseContentLength - InitialResponseChunk.Length;
+				while (remainingBytes > 0) {
+					int bytesToWrite = Math.Min (remainingBytes, buffer.Length);
+					await response.OutputStream.WriteAsync (buffer, 0, bytesToWrite).ConfigureAwait (false);
+					remainingBytes -= bytesToWrite;
+				}
+			}
+
+			async Task ObserveServerTask ()
+			{
+				var completed = await Task.WhenAny (serverTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
+				if (completed != serverTask)
+					return;
+
+				await serverTask.ConfigureAwait (false);
+			}
+		}
+
+		sealed class StreamingContent : HttpContent
+		{
+			readonly long length;
+
+			public StreamingContent (long length)
+			{
+				this.length = length;
+			}
+
+			protected override Task<Stream> CreateContentReadStreamAsync ()
+			{
+				// AndroidMessageHandler uses ReadAsStreamAsync () before uploading; override this to avoid
+				// HttpContent's default full-buffering behavior for custom content.
+				return Task.FromResult<Stream> (new ZeroStream (length));
+			}
+
+			protected override async Task SerializeToStreamAsync (Stream stream, System.Net.TransportContext? context)
+			{
+				using var source = new ZeroStream (length);
+				await source.CopyToAsync (stream, 4096).ConfigureAwait (false);
+			}
+
+			protected override bool TryComputeLength (out long computedLength)
+			{
+				computedLength = length;
+				return true;
+			}
+
+			sealed class ZeroStream : Stream
+			{
+				readonly long length;
+				long position;
+
+				public ZeroStream (long length)
+				{
+					this.length = length;
+				}
+
+				public override bool CanRead => true;
+				public override bool CanSeek => false;
+				public override bool CanWrite => false;
+				public override long Length => length;
+
+				public override long Position {
+					get => position;
+					set => throw new NotSupportedException ();
+				}
+
+				public override int Read (byte [] buffer, int offset, int count)
+				{
+					if (position >= length)
+						return 0;
+
+					int toRead = (int) Math.Min (count, length - position);
+					Array.Clear (buffer, offset, toRead);
+					position += toRead;
+					return toRead;
+				}
+
+				public override ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
+				{
+					if (position >= length)
+						return new ValueTask<int> (0);
+
+					int toRead = (int) Math.Min (buffer.Length, length - position);
+					buffer.Span.Slice (0, toRead).Clear ();
+					position += toRead;
+					return new ValueTask<int> (toRead);
+				}
+
+				public override void Flush () { }
+				public override long Seek (long offset, SeekOrigin origin) => throw new NotSupportedException ();
+				public override void SetLength (long value) => throw new NotSupportedException ();
+				public override void Write (byte [] buffer, int offset, int count) => throw new NotSupportedException ();
+			}
+		}
+
+		sealed class StalledRequestServer : IDisposable
+		{
+			readonly TcpListener listener;
+			readonly TaskCompletionSource<bool> bodyStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly TaskCompletionSource<bool> releaseBody = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			readonly Task serverTask;
+
+			public StalledRequestServer ()
+			{
+				listener = new TcpListener (IPAddress.Loopback, 0);
+				listener.Start ();
+				Port = ((IPEndPoint) listener.LocalEndpoint).Port;
+
+				serverTask = StallRequestBody ();
+			}
+
+			public int Port { get; }
+
+			public Task BodyStartedTask => bodyStarted.Task;
+
+			public void ReleaseRequestBody ()
+			{
+				releaseBody.TrySetResult (true);
+			}
+
+			public void Dispose ()
+			{
+				ReleaseRequestBody ();
+				try {
+					listener.Stop ();
+				} catch (Exception ex) {
+					Console.WriteLine ($"Exception while stopping the stalled request server: {ex}");
+				}
+			}
+
+			async Task StallRequestBody ()
+			{
+				try {
+					using var client = await listener.AcceptTcpClientAsync ().ConfigureAwait (false);
+					using var stream = client.GetStream ();
+
+					// Read just the request headers so the upload phase begins, then stop reading the body
+					// to keep the socket send buffer full on the client side until released.
+					await ReadRequestHeaders (stream).ConfigureAwait (false);
+					bodyStarted.TrySetResult (true);
+
+					await releaseBody.Task.ConfigureAwait (false);
+				} catch (Exception ex) {
+					if (!BodyStartedTask.IsCompleted) {
+						bodyStarted.TrySetException (ex);
+						return;
+					}
+					Console.WriteLine ($"Exception while stalling the request body: {ex}");
+				}
+			}
+
+			static async Task ReadRequestHeaders (NetworkStream stream)
+			{
+				var buffer = new byte [1];
+				int consecutiveLineEndChars = 0;
+				while (consecutiveLineEndChars < 4) {
+					int read = await stream.ReadAsync (buffer, 0, 1).ConfigureAwait (false);
+					if (read == 0)
+						break;
+
+					byte b = buffer [0];
+					if (b == '\r' || b == '\n')
+						consecutiveLineEndChars++;
+					else
+						consecutiveLineEndChars = 0;
+				}
+			}
+		}
+	}
+}

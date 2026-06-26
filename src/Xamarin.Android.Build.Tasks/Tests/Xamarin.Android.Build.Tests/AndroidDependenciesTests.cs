@@ -19,7 +19,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
-		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType, [Values] AndroidRuntime runtime)
+		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -36,7 +36,6 @@ namespace Xamarin.Android.Build.Tests
 			// been added to the Xamarin manifest yet.
 			var xamarin_manifest_needs_updating = false;
 
-			AssertCommercialBuild ();
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
 			try {
@@ -135,7 +134,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("AotAssemblies", false, runtime);
 				AddTestData ("AndroidEnableProfiledAot", false, runtime);
 				AddTestData ("EnableLLVM", true, runtime);
@@ -221,7 +220,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GetDependencyWhenBuildToolsAreMissingTest ([Values] AndroidRuntime runtime)
+		public void GetDependencyWhenBuildToolsAreMissingTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -261,7 +260,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GetDependencyWhenSDKIsMissingTest ([Values] bool createSdkDirectory, [Values] bool installJavaDeps, [Values] AndroidRuntime runtime)
+		public void GetDependencyWhenSDKIsMissingTest ([Values] bool createSdkDirectory, [Values] bool installJavaDeps, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
