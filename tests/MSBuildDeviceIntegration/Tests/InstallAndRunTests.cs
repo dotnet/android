@@ -89,8 +89,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Ignore ("dotnet run --no-build breaks marshal methods (both managed and llvm-ir) on MonoVM");
 			}
 
-			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation != "trimmable") {
-				Assert.Ignore ("NativeAOT requires trimmable typemaps.");
+			if (runtime == AndroidRuntime.NativeAOT && typemapImplementation == "llvm-ir") {
+				Assert.Ignore ("NativeAOT doesn't work with LLVM-IR typemaps");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {

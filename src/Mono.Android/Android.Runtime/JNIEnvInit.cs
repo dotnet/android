@@ -174,15 +174,11 @@ namespace Android.Runtime
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				throw new NotSupportedException ($"{nameof (RuntimeFeature.IsNativeAotRuntime)} requires {nameof (RuntimeFeature.TrimmableTypeMap)}.");
+			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
+				return CreateManagedTypeManager ();
 			}
 
-			if (RuntimeFeature.IsMonoRuntime) {
-				return CreateAndroidTypeManagerWithSuppressedWarnings (args);
-			}
-
-			if (RuntimeFeature.IsCoreClrRuntime) {
+			if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
 				return CreateAndroidTypeManagerWithSuppressedWarnings (args);
 			}
 
@@ -195,6 +191,11 @@ namespace Android.Runtime
 								"the trimmer (ILLink) to remove any metadata need at runtime.")]
 			AndroidTypeManager CreateAndroidTypeManagerWithSuppressedWarnings (JnienvInitializeArgs args) =>
 				new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026",
+				Justification = "ManagedTypeManager will be replaced by the TrimmableTypeMapTypeManager.")]
+			ManagedTypeManager CreateManagedTypeManager () =>
+				new ManagedTypeManager ();
 		}
 
 		internal static JniRuntime.JniValueManager CreateValueManager ()
@@ -203,15 +204,11 @@ namespace Android.Runtime
 				return new TrimmableTypeMapValueManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
-			}
-
 			if (RuntimeFeature.IsMonoRuntime) {
 				return CreateAndroidValueManagerWithSuppressedWarnings ();
 			}
 
-			if (RuntimeFeature.IsCoreClrRuntime) {
+			if (RuntimeFeature.IsCoreClrRuntime || RuntimeFeature.IsNativeAotRuntime) {
 				return CreateCoreClrValueManagerWithSuppressedWarnings ();
 			}
 
