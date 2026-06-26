@@ -44,17 +44,10 @@ namespace Java.Interop
 		/// <summary>
 		/// Creates a <see cref="JavaPeerContainerFactory{T}"/> singleton for the specified type.
 		/// </summary>
-		/// <remarks>
-		/// The open type <see cref="JavaPeerContainerFactory{T}"/> is intentionally unconstrained so
-		/// internal code can build factories for scalar element types (e.g. <c>int</c>, <c>string</c>)
-		/// directly via its <c>Instance</c> field. This public entry point keeps the
-		/// <c>where T : class, IJavaPeerable</c> constraint so external callers can only create
-		/// factories for Java peer types — don't "fix" the asymmetry by aligning the two.
-		/// </remarks>
 		public static JavaPeerContainerFactory Create<
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			T
-		> () where T : class, IJavaPeerable
+		> ()
 			=> JavaPeerContainerFactory<T>.Instance;
 	}
 
