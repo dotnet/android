@@ -575,10 +575,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		// 3 indexed entries + 1 base entry = 4
 		Assert.Equal (4, model.Entries.Count);
-		Assert.Equal ("java/lang/Throwable[0]", model.Entries [0].JniName);
-		Assert.Equal ("java/lang/Throwable[1]", model.Entries [1].JniName);
-		Assert.Equal ("java/lang/Throwable[2]", model.Entries [2].JniName);
-		Assert.Equal ("java/lang/Throwable", model.Entries [3].JniName);
+		Assert.Equal ("java/lang/Throwable[0]", model.Entries [0].MapKey);
+		Assert.Equal ("java/lang/Throwable[1]", model.Entries [1].MapKey);
+		Assert.Equal ("java/lang/Throwable[2]", model.Entries [2].MapKey);
+		Assert.Equal ("java/lang/Throwable", model.Entries [3].MapKey);
 
 		// Exactly 1 alias holder
 		Assert.Single (model.AliasHolders);
@@ -592,7 +592,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Equal (3, model.Associations.Count);
 
 		// The bare "java/lang/Throwable" key appears exactly once — no duplicates
-		Assert.Single (model.Entries, e => e.JniName == "java/lang/Throwable");
+		Assert.Single (model.Entries, e => e.MapKey == "java/lang/Throwable");
 	}
 
 	[Fact]

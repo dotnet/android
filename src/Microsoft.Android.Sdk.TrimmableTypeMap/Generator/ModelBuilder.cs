@@ -205,7 +205,7 @@ static class ModelBuilder
 		bool aliasBaseUnconditional = EssentialRuntimeTypes.Contains (jniName)
 			|| peersForName.Any (IsUnconditionalEntry);
 		model.Entries.Add (new TypeMapAttributeData {
-			JniName = jniName,
+			MapKey = jniName,
 			ProxyTypeReference = holderRef,
 			TargetTypeReference = aliasBaseUnconditional ? null : holderRef,
 		});
@@ -521,7 +521,7 @@ static class ModelBuilder
 		}
 
 		return new TypeMapAttributeData {
-			JniName = jniName,
+			MapKey = jniName,
 			ProxyTypeReference = proxyRef,
 			TargetTypeReference = targetRef,
 		};
@@ -630,7 +630,6 @@ static class ModelBuilder
 		for (int rank = 1; rank <= maxArrayRank; rank++) {
 			var proxy = new ArrayProxyData {
 				TypeName = ManagedTypeNameToArrayProxyTypeName (peer.ManagedTypeName, rank),
-				JniName = jniName,
 				ElementType = new TypeRefData {
 					ManagedTypeName = peer.ManagedTypeName,
 					AssemblyName = peer.AssemblyName,
@@ -641,7 +640,7 @@ static class ModelBuilder
 
 			var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
 			model.Entries.Add (new TypeMapAttributeData {
-				JniName = GetArrayProxyMapKey (proxy.ElementType),
+				MapKey = GetArrayProxyMapKey (proxy.ElementType),
 				ProxyTypeReference = proxyReference,
 				TargetTypeReference = proxyReference,
 				AnchorRank = rank,
@@ -656,7 +655,6 @@ static class ModelBuilder
 			for (int rank = 1; rank <= maxArrayRank; rank++) {
 				var proxy = new ArrayProxyData {
 					TypeName = $"Primitive_{primitive.Name}_ArrayProxy{rank}",
-					JniName = primitive.JniName,
 					ElementType = new TypeRefData {
 						ManagedTypeName = primitive.ManagedTypeName,
 						AssemblyName = "System.Runtime",
@@ -672,7 +670,7 @@ static class ModelBuilder
 				model.ArrayProxyTypes.Add (proxy);
 				var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
 				model.Entries.Add (new TypeMapAttributeData {
-					JniName = GetArrayProxyMapKey (proxy.ElementType),
+					MapKey = GetArrayProxyMapKey (proxy.ElementType),
 					ProxyTypeReference = proxyReference,
 					TargetTypeReference = proxyReference,
 					AnchorRank = rank,

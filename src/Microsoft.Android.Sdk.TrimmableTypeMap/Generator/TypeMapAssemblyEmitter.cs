@@ -1943,12 +1943,12 @@ sealed class TypeMapAssemblyEmitter
 		if (entry.AnchorRank is int rank) {
 			if (entry.IsUnconditional) {
 				throw new InvalidOperationException (
-					$"Rank-anchored TypeMap entries must be conditional (3-arg). Entry '{entry.JniName}' rank={rank}.");
+					$"Rank-anchored TypeMap entries must be conditional (3-arg). Entry '{entry.MapKey}' rank={rank}.");
 			}
 			int anchorIndex = rank - 1;
 			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length) {
 				throw new InvalidOperationException (
-					$"No rank-{rank} anchor available for entry '{entry.JniName}'. " +
+					$"No rank-{rank} anchor available for entry '{entry.MapKey}'. " +
 					$"Ensure TypeMapAssemblyData.MaxArrayRank was >= {rank} before emit.");
 			}
 			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [anchorIndex]);
@@ -1957,11 +1957,11 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		var blob = _pe.BuildAttributeBlob (b => {
-			b.WriteSerializedString (entry.JniName);
+			b.WriteSerializedString (entry.MapKey);
 			b.WriteSerializedString (entry.ProxyTypeReference);
 			if (!entry.IsUnconditional) {
 				if (entry.TargetTypeReference is null) {
-					throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.JniName}'");
+					throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.MapKey}'");
 				}
 				b.WriteSerializedString (entry.TargetTypeReference);
 			}

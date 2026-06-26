@@ -69,7 +69,7 @@ sealed record TypeMapAttributeData
 	/// Type map key, e.g., "android/app/Activity" for peer entries or
 	/// "Android.App.Activity, Mono.Android" for array proxy entries.
 	/// </summary>
-	public required string JniName { get; init; }
+	public required string MapKey { get; init; }
 
 	/// <summary>
 	/// Assembly-qualified proxy type reference string.
@@ -104,8 +104,6 @@ sealed record ArrayProxyData
 	public required string TypeName { get; init; }
 
 	public string Namespace { get; init; } = "_TypeMap.ArrayProxies";
-
-	public required string JniName { get; init; }
 
 	public required TypeRefData ElementType { get; init; }
 
