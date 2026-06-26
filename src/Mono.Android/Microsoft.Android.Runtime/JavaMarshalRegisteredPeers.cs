@@ -12,14 +12,38 @@ using Java.Interop;
 namespace Microsoft.Android.Runtime;
 
 // Originally from: https://github.com/dotnet/java-interop/blob/9b1d8781e8e322849d05efac32119c913b21c192/src/Java.Runtime.Environment/Java.Interop/ManagedValueManager.cs
-sealed class JavaMarshalRegisteredPeers : IDisposable
+/// <summary>
+/// Tracks the JavaMarshal registered peers and integrates them with the CLR's GC bridge.
+/// </summary>
+/// <remarks>
+/// <para>
+/// This type is a process-wide singleton; use <see cref="Instance"/> to access it. The
+/// constructor performs a process-global, one-shot GC-bridge initialization
+/// (<c>clr_initialize_gc_bridge</c>), which spawns a detached bridge-processing thread and
+/// aborts the process if it runs more than once. A private constructor combined with the
+/// <see cref="Instance"/> accessor guarantees that exactly one instance is ever created per
+/// process, even if multiple value managers (e.g. the <c>llvm-ir</c> and
+/// <c>trimmable-typemap</c> implementations) share it.
+/// </para>
+/// <para>
+/// The GC bridge holds a native reference (a <see cref="GCHandle{T}"/>) to this instance for
+/// the lifetime of the process. As a result, the singleton is never garbage collected and is
+/// expected to live until the process exits. There is intentionally no way to dispose or
+/// replace it: tearing down the GC-bridge registration is not supported by the runtime.
+/// </para>
+/// </remarks>
+sealed class JavaMarshalRegisteredPeers
 {
+	/// <summary>
+	/// The process-wide singleton instance. Accessing this property the first time performs the
+	/// one-shot GC-bridge initialization described on <see cref="JavaMarshalRegisteredPeers"/>.
+	/// </summary>
+	public static JavaMarshalRegisteredPeers Instance { get; } = new JavaMarshalRegisteredPeers ();
+
 	readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
 
-	bool disposed;
-
-	public JavaMarshalRegisteredPeers ()
+	JavaMarshalRegisteredPeers ()
 	{
 		unsafe {
 			var registeredPeersHandle = new GCHandle<JavaMarshalRegisteredPeers> (this);
@@ -29,21 +53,8 @@ sealed class JavaMarshalRegisteredPeers : IDisposable
 		}
 	}
 
-	public void Dispose ()
-	{
-		disposed = true;
-	}
-
-	void ThrowIfDisposed ()
-	{
-		if (disposed)
-			throw new ObjectDisposedException (nameof (JavaMarshalRegisteredPeers));
-	}
-
 	public void CollectPeers ()
 	{
-		ThrowIfDisposed ();
-
 		unsafe {
 			while (CollectedContexts.TryDequeue (out IntPtr contextPtr)) {
 				Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
@@ -78,8 +89,6 @@ sealed class JavaMarshalRegisteredPeers : IDisposable
 
 	public void AddPeer (IJavaPeerable value)
 	{
-		ThrowIfDisposed ();
-
 		// Remove any collected contexts before adding a new peer.
 		CollectPeers ();
 
@@ -138,8 +147,6 @@ sealed class JavaMarshalRegisteredPeers : IDisposable
 
 	public IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
-		ThrowIfDisposed ();
-
 		if (!reference.IsValid)
 			return null;
 
@@ -165,8 +172,6 @@ sealed class JavaMarshalRegisteredPeers : IDisposable
 
 	public void RemovePeer (IJavaPeerable value)
 	{
-		ThrowIfDisposed ();
-
 		// Remove any collected contexts before modifying RegisteredInstances
 		CollectPeers ();
 
@@ -229,8 +234,6 @@ sealed class JavaMarshalRegisteredPeers : IDisposable
 
 	public List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
-		ThrowIfDisposed ();
-
 		// Remove any collected contexts before iterating over all the registered instances
 		CollectPeers ();
 
@@ -409,7 +412,6 @@ sealed class JavaMarshalRegisteredPeers : IDisposable
 		JavaMarshalRegisteredPeers instance = GCHandle<JavaMarshalRegisteredPeers>.FromIntPtr (registeredPeersHandle).Target;
 
 		ReadOnlySpan<GCHandle> handlesToFree = instance.ProcessCollectedContexts (mcr);
-
 
 // This call site is reachable on all platforms. 'JavaMarshal.FinishCrossReferenceProcessing(MarkCrossReferencesArgs*, ReadOnlySpan<GCHandle>)' is only supported on: 'android'.
 #pragma warning disable CA1416

@@ -14,14 +14,13 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 
 	static readonly Type[] XAConstructorSignature = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	readonly JavaMarshalRegisteredPeers registeredPeers = new ();
+	readonly JavaMarshalRegisteredPeers registeredPeers = JavaMarshalRegisteredPeers.Instance;
 
 	bool disposed;
 
 	protected override void Dispose (bool disposing)
 	{
 		disposed = true;
-		registeredPeers.Dispose ();
 		base.Dispose (disposing);
 	}
 
