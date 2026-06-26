@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using Xunit;
 
@@ -214,12 +216,95 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (peer.IsUnconditional, "Relative manifest names should root correctly after placeholder substitution.");
 	}
 
+	[Theory]
+	[InlineData (false, "MissingDependency.MissingBase")]
+	[InlineData (true, "MissingDependency.IMissingInterface")]
+	public void Execute_SkipsJavaPeerWithUnresolvableBaseOrInterfaceTypeRef (bool useMissingInterface, string unresolvedTypeName)
+	{
+		var warnings = new List<string> ();
+		using var peerStream = CreateStaleJavaPeerAssembly (useMissingInterface);
+		using var missingDependencyStream = CreateEmptyAssembly ("MissingDependency");
+		using var peerReader = new PEReader (peerStream, PEStreamOptions.LeaveOpen);
+		using var missingDependencyReader = new PEReader (missingDependencyStream, PEStreamOptions.LeaveOpen);
+
+		var result = CreateGenerator (warnings).Execute (
+			new [] {
+				new AssemblyInput ("StalePeerAssembly", "/tmp/StalePeerAssembly.dll", peerReader),
+				new AssemblyInput ("MissingDependency", "/tmp/MissingDependency.dll", missingDependencyReader),
+			},
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.DoesNotContain (result.AllPeers, p => p.ManagedTypeName == "Test.BrokenPeer");
+		var warning = Assert.Single (warnings);
+		Assert.Contains ("Test.BrokenPeer", warning);
+		Assert.Contains (unresolvedTypeName, warning);
+		Assert.Contains ("MissingDependency", warning);
+		Assert.Contains ("/tmp/MissingDependency.dll", warning);
+	}
+
 	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
 		new (new TestTrimmableTypeMapLogger (logMessages, warnings));
 
 	static AssemblyInput Input (string name, PEReader reader) => new (name, "", reader);
+
+	static MemoryStream CreateEmptyAssembly (string assemblyName)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble (assemblyName, assemblyName + ".dll");
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
+	}
+
+	static MemoryStream CreateStaleJavaPeerAssembly (bool useMissingInterface)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble ("StalePeerAssembly", "StalePeerAssembly.dll");
+
+		var missingDependencyRef = pe.FindOrAddAssemblyRef ("MissingDependency");
+		var missingTypeRef = pe.Metadata.AddTypeReference (
+			missingDependencyRef,
+			pe.Metadata.GetOrAddString ("MissingDependency"),
+			pe.Metadata.GetOrAddString (useMissingInterface ? "IMissingInterface" : "MissingBase"));
+		var objectRef = pe.Metadata.AddTypeReference (
+			pe.SystemRuntimeRef,
+			pe.Metadata.GetOrAddString ("System"),
+			pe.Metadata.GetOrAddString ("Object"));
+
+		var registerAttributeRef = pe.Metadata.AddTypeReference (
+			pe.MonoAndroidRef,
+			pe.Metadata.GetOrAddString ("Android.Runtime"),
+			pe.Metadata.GetOrAddString ("RegisterAttribute"));
+		var registerCtorRef = pe.AddMemberRef (registerAttributeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().String ()));
+
+		var peerType = pe.Metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.BeforeFieldInit,
+			pe.Metadata.GetOrAddString ("Test"),
+			pe.Metadata.GetOrAddString ("BrokenPeer"),
+			useMissingInterface ? objectRef : missingTypeRef,
+			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		pe.Metadata.AddCustomAttribute (
+			peerType,
+			registerCtorRef,
+			pe.BuildAttributeBlob (b => b.WriteSerializedString ("test/BrokenPeer")));
+
+		if (useMissingInterface) {
+			pe.Metadata.AddInterfaceImplementation (peerType, missingTypeRef);
+		}
+
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
+	}
 
 	[Theory]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", "com.example.MyActivity")]
