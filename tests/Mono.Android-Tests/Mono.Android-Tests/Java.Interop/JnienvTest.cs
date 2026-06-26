@@ -520,10 +520,15 @@ namespace Java.InteropTests
 			// `Runtime.GetSurfacedObjects()` is process-global: NUnit/MTP
 			// infrastructure (per-test TestExecutionContext, listeners, Console
 			// capture, etc.) creates and releases transient Java.Lang.Object
-			// peers around every test, so the count drifts by a few entries
-			// between the snapshots below. Allow a small tolerance instead of
-			// requiring an exact count -- a real leak would dwarf this.
-			const int tolerance = 10;
+			// peers around every test, so the count drifts between snapshots.
+			//
+			// NativeAOT currently has a higher transient object count, so allow
+			// a wider tolerance there while keeping stricter checks elsewhere.
+			const int defaultTolerance = 10;
+			const int nativeAotTolerance = 30;
+			int tolerance = AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime", out bool isNativeAotRuntime) && isNativeAotRuntime
+				? nativeAotTolerance
+				: defaultTolerance;
 
 			WeakReference r = null;
 			Exception threadException = null;
