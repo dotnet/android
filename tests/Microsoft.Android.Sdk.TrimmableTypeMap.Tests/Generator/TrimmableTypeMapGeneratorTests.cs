@@ -227,6 +227,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	[InlineData (StaleReferenceShape.BaseType, "MissingDependency.MissingBase")]
 	[InlineData (StaleReferenceShape.Interface, "MissingDependency.IMissingInterface")]
 	[InlineData (StaleReferenceShape.GenericBaseArgument, "MissingDependency.MissingArgument")]
+	[InlineData (StaleReferenceShape.GenericConstraint, "MissingDependency.MissingConstraint")]
 	public void Execute_SkipsJavaPeerWithUnresolvableBaseInterfaceOrGenericArgumentTypeRef (StaleReferenceShape shape, string unresolvedTypeName)
 	{
 		var warnings = new List<string> ();
@@ -310,6 +311,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		BaseType,
 		Interface,
 		GenericBaseArgument,
+		GenericConstraint,
 	}
 
 	static MemoryStream CreateEmptyAssembly (string assemblyName)
@@ -351,6 +353,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var missingTypeName = shape switch {
 			StaleReferenceShape.Interface => "IMissingInterface",
 			StaleReferenceShape.GenericBaseArgument => "MissingArgument",
+			StaleReferenceShape.GenericConstraint => "MissingConstraint",
 			_ => "MissingBase",
 		};
 		var missingDependencyRef = pe.FindOrAddAssemblyRef ("MissingDependency");
@@ -391,6 +394,15 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		if (shape == StaleReferenceShape.Interface) {
 			pe.Metadata.AddInterfaceImplementation (peerType, missingTypeRef);
+		}
+
+		if (shape == StaleReferenceShape.GenericConstraint) {
+			var genericParameter = pe.Metadata.AddGenericParameter (
+				peerType,
+				GenericParameterAttributes.None,
+				pe.Metadata.GetOrAddString ("T"),
+				0);
+			pe.Metadata.AddGenericParameterConstraint (genericParameter, missingTypeRef);
 		}
 
 		pe.WritePE (stream);

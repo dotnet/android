@@ -28,6 +28,7 @@ public sealed class JavaPeerScanner : IDisposable
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
 	readonly Dictionary<(string AssemblyName, int TypeRow), ResolvabilityResult> resolvabilityCache = new ();
+	readonly HashSet<(string AssemblyName, int TypeRow)> resolvabilityVisited = new ();
 	readonly ITrimmableTypeMapLogger? logger;
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
 	readonly HashSet<string> frameworkAssemblyNames;
@@ -348,10 +349,12 @@ public sealed class JavaPeerScanner : IDisposable
 	{
 		// The base/interface graph of valid managed metadata is acyclic, so the
 		// per-call visited set only guards against generic self-references (e.g.
-		// class Foo : Bar<Foo>). Keying it (and the cache) by type-definition row
-		// avoids building full type names on the hot path and on cache hits.
-		var visited = new HashSet<(string AssemblyName, int TypeRow)> ();
-		return IsResolvableTypeDefinition (typeDefHandle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		// class Foo : Bar<Foo>). It is reused across peers and cleared per call to
+		// avoid an allocation for every candidate on large peer graphs. Keying it
+		// (and the cache) by type-definition row avoids building full type names on
+		// the hot path and on cache hits.
+		resolvabilityVisited.Clear ();
+		return IsResolvableTypeDefinition (typeDefHandle, index, resolvabilityVisited, out unresolvedTypeName, out unresolvedAssemblyName);
 	}
 
 	bool IsResolvableTypeDefinition (
@@ -387,6 +390,20 @@ public sealed class JavaPeerScanner : IDisposable
 			if (!IsResolvableTypeHandle (interfaceImplementation.Interface, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
 				resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
 				return false;
+			}
+		}
+
+		// Generic-definition peers are rooted in the type map (the emitter ldtokens
+		// the open-generic target), so a constraint referencing a stale type would
+		// also fail to resolve at NativeAOT time. Walk constraints like base types.
+		foreach (var genericParameterHandle in typeDef.GetGenericParameters ()) {
+			var genericParameter = index.Reader.GetGenericParameter (genericParameterHandle);
+			foreach (var constraintHandle in genericParameter.GetConstraints ()) {
+				var constraint = index.Reader.GetGenericParameterConstraint (constraintHandle);
+				if (!IsResolvableTypeHandle (constraint.Type, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+					resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
+					return false;
+				}
 			}
 		}
 
