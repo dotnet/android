@@ -77,6 +77,15 @@ class ManifestGenerator
 				.OfType<string> (),
 			StringComparer.Ordinal);
 
+		// Map managed type names to their Java/manifest names so component properties that reference
+		// other types (e.g. [Activity (ParentActivity = typeof (...))]) can be resolved.
+		var managedToManifestNames = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
+		foreach (var peer in allPeers) {
+			if (!string.IsNullOrEmpty (peer.ManagedTypeName)) {
+				managedToManifestNames [peer.ManagedTypeName] = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			}
+		}
+
 		// Add components from scanned types
 		foreach (var peer in allPeers) {
 			if (peer.IsAbstract || peer.ComponentAttribute is null) {
@@ -99,7 +108,7 @@ class ManifestGenerator
 				continue;
 			}
 
-			var element = ComponentElementBuilder.CreateComponentElement (peer, jniName, targetSdkVersionValue);
+			var element = ComponentElementBuilder.CreateComponentElement (peer, jniName, targetSdkVersionValue, managedToManifestNames);
 			if (element is not null) {
 				app.Add (element);
 			}

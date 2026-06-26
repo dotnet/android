@@ -298,6 +298,37 @@ public class ManifestGeneratorTests
 		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "visibleToInstantApps"));
 	}
 
+	[Fact]
+	public void Activity_ParentActivityResolvesToManifestName ()
+	{
+		// [Activity (ParentActivity = typeof (Parent))] captures the managed type name; the generator
+		// must resolve it to the parent's Java/manifest name (here the JCW package differs from the
+		// managed namespace).
+		var gen = CreateDefaultGenerator ();
+		var parent = new JavaPeerInfo {
+			JavaName = "com/foo/bar/MainActivity",
+			CompatJniName = "com/foo/bar/MainActivity",
+			ManagedTypeName = "UnnamedProject.MainActivity",
+			ManagedTypeNamespace = "UnnamedProject",
+			ManagedTypeShortName = "MainActivity",
+			AssemblyName = "TestApp",
+			ComponentAttribute = new ComponentInfo { Kind = ComponentKind.Activity },
+		};
+		var child = CreatePeer ("com/example/app/ChildActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			Properties = new Dictionary<string, object?> {
+				["ParentActivity"] = "UnnamedProject.MainActivity",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [parent, child]);
+		var childEl = doc.Root?.Element ("application")?.Elements ("activity")
+			.FirstOrDefault (a => (string?)a.Attribute (AttName) == "com.example.app.ChildActivity");
+
+		Assert.NotNull (childEl);
+		Assert.Equal ("com.foo.bar.MainActivity", (string?)childEl?.Attribute (AndroidNs + "parentActivityName"));
+	}
+
 	[Theory]
 	[InlineData (ComponentKind.Service, "service")]
 	[InlineData (ComponentKind.BroadcastReceiver, "receiver")]

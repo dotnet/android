@@ -14,7 +14,7 @@ static class ComponentElementBuilder
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
 
-	internal static XElement? CreateComponentElement (JavaPeerInfo peer, string jniName, int targetSdkVersion = 0)
+	internal static XElement? CreateComponentElement (JavaPeerInfo peer, string jniName, int targetSdkVersion = 0, IReadOnlyDictionary<string, string>? managedToManifestNames = null)
 	{
 		var component = peer.ComponentAttribute;
 		if (component is null) {
@@ -33,6 +33,11 @@ static class ComponentElementBuilder
 
 		// Map known properties to android: attributes
 		PropertyMapper.MapComponentProperties (element, component, targetSdkVersion);
+
+		// android:parentActivityName comes from a [Activity (ParentActivity = typeof (...))] and is
+		// captured as the managed type name. Resolve it to the parent's Java/manifest name, matching
+		// the legacy ManifestDocument behavior (JavaNativeTypeManager.ToJniName).
+		ResolveParentActivityName (element, managedToManifestNames);
 
 		// Add intent filters
 		foreach (var intentFilter in component.IntentFilters) {
@@ -58,6 +63,27 @@ static class ComponentElementBuilder
 		}
 
 		return element;
+	}
+
+	static void ResolveParentActivityName (XElement element, IReadOnlyDictionary<string, string>? managedToManifestNames)
+	{
+		if (managedToManifestNames is null) {
+			return;
+		}
+
+		var attr = element.Attribute (AndroidNs + "parentActivityName");
+		if (attr is null) {
+			return;
+		}
+
+		// The value may be assembly-qualified ("Foo.Bar, Asm [Version=...]"); use the type name part.
+		var value = attr.Value;
+		int comma = value.IndexOf (',');
+		var typeName = (comma < 0 ? value : value.Substring (0, comma)).Trim ();
+
+		if (managedToManifestNames.TryGetValue (typeName, out var manifestName)) {
+			attr.Value = manifestName;
+		}
 	}
 
 	internal static void AddLauncherIntentFilter (XElement activity)

@@ -134,8 +134,8 @@ static class AndroidEnumConverter
 
 	public static string? ActivityPersistableModeToString (int value) => value switch {
 		0 => "persistRootOnly",
-		1 => "persistAcrossReboots",
-		2 => "persistNever",
+		1 => "persistNever",
+		2 => "persistAcrossReboots",
 		_ => null,
 	};
 }
