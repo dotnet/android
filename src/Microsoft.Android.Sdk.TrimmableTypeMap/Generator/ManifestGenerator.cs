@@ -219,7 +219,8 @@ class ManifestGenerator
 		}
 
 		// Add <uses-sdk>
-		if (!manifest.Elements ("uses-sdk").Any ()) {
+		var usesSdk = manifest.Element ("uses-sdk");
+		if (usesSdk is null) {
 			if (MinSdkVersion.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("MinSdkVersion must be provided by MSBuild.");
 			}
@@ -229,6 +230,11 @@ class ManifestGenerator
 			manifest.AddFirst (new XElement ("uses-sdk",
 				new XAttribute (AndroidNs + "minSdkVersion", MinSdkVersion),
 				new XAttribute (AndroidNs + "targetSdkVersion", TargetSdkVersion)));
+		} else if (usesSdk.Attribute (AndroidNs + "minSdkVersion") is null) {
+			if (MinSdkVersion.IsNullOrEmpty ()) {
+				throw new InvalidOperationException ("MinSdkVersion must be provided by MSBuild.");
+			}
+			usesSdk.SetAttributeValue (AndroidNs + "minSdkVersion", MinSdkVersion);
 		}
 	}
 
