@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -13,7 +14,7 @@ static class ComponentElementBuilder
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
 
-	internal static XElement? CreateComponentElement (JavaPeerInfo peer, string jniName)
+	internal static XElement? CreateComponentElement (JavaPeerInfo peer, string jniName, int targetSdkVersion = 0)
 	{
 		var component = peer.ComponentAttribute;
 		if (component is null) {
@@ -31,7 +32,7 @@ static class ComponentElementBuilder
 		var element = new XElement (elementName, new XAttribute (AttName, jniName));
 
 		// Map known properties to android: attributes
-		PropertyMapper.MapComponentProperties (element, component);
+		PropertyMapper.MapComponentProperties (element, component, targetSdkVersion);
 
 		// Add intent filters
 		foreach (var intentFilter in component.IntentFilters) {
@@ -96,46 +97,46 @@ static class ComponentElementBuilder
 
 		// Data elements
 		AddIntentFilterDataElement (filter, intentFilter);
+		AddIntentFilterDataElements (filter, intentFilter);
 
 		return filter;
 	}
 
+	// Ordered to match the legacy IntentFilterAttribute.GetData emission order (singular block first,
+	// then plural block), so trimmable manifest generation stays byte-for-byte compatible with ManifestDocument.
+	static readonly (string SingularProperty, string PluralProperty, string AttributeName) [] IntentFilterDataProperties = [
+		("DataHost",                "DataHosts",                "host"),
+		("DataMimeType",            "DataMimeTypes",            "mimeType"),
+		("DataPath",                "DataPaths",                "path"),
+		("DataPathPattern",         "DataPathPatterns",         "pathPattern"),
+		("DataPathPrefix",          "DataPathPrefixes",         "pathPrefix"),
+		("DataPort",                "DataPorts",                "port"),
+		("DataScheme",              "DataSchemes",              "scheme"),
+		("DataPathSuffix",          "DataPathSuffixes",         "pathSuffix"),
+		("DataPathAdvancedPattern", "DataPathAdvancedPatterns", "pathAdvancedPattern"),
+	];
+
 	internal static void AddIntentFilterDataElement (XElement filter, IntentFilterInfo intentFilter)
 	{
-		var dataElement = new XElement ("data");
-		bool hasData = false;
+		foreach (var (propertyName, _, attributeName) in IntentFilterDataProperties) {
+			if (intentFilter.Properties.TryGetValue (propertyName, out var value) && value is string item && !string.IsNullOrEmpty (item)) {
+				filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
+			}
+		}
+	}
 
-		if (intentFilter.Properties.TryGetValue ("DataScheme", out var scheme) && scheme is string schemeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "scheme", schemeStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataHost", out var host) && host is string hostStr) {
-			dataElement.SetAttributeValue (AndroidNs + "host", hostStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPath", out var path) && path is string pathStr) {
-			dataElement.SetAttributeValue (AndroidNs + "path", pathStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPathPattern", out var pattern) && pattern is string patternStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPattern", patternStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPathPrefix", out var prefix) && prefix is string prefixStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPrefix", prefixStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataMimeType", out var mime) && mime is string mimeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "mimeType", mimeStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPort", out var port) && port is string portStr) {
-			dataElement.SetAttributeValue (AndroidNs + "port", portStr);
-			hasData = true;
-		}
+	internal static void AddIntentFilterDataElements (XElement filter, IntentFilterInfo intentFilter)
+	{
+		foreach (var (_, propertyName, attributeName) in IntentFilterDataProperties) {
+			if (!intentFilter.Properties.TryGetValue (propertyName, out var value) || value is not IReadOnlyList<string> values) {
+				continue;
+			}
 
-		if (hasData) {
-			filter.Add (dataElement);
+			foreach (var item in values) {
+				if (!string.IsNullOrEmpty (item)) {
+					filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
+				}
+			}
 		}
 	}
 
@@ -153,7 +154,7 @@ static class ComponentElementBuilder
 		return element;
 	}
 
-	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer)
+	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer, int targetSdkVersion = 0)
 	{
 		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
 		app.SetAttributeValue (AttName, jniName);
@@ -162,7 +163,7 @@ static class ComponentElementBuilder
 		if (component is null) {
 			return;
 		}
-		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings);
+		PropertyMapper.ApplyMappings (app, component.Properties, PropertyMapper.ApplicationElementMappings, targetSdkVersion: targetSdkVersion);
 	}
 
 	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer, string packageName)
