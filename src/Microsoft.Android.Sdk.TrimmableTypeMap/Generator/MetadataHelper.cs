@@ -69,6 +69,7 @@ static class MetadataHelper
 	{
 		writer.Write (type.ManagedTypeName);
 		writer.Write (type.AssemblyName);
+		writer.Write (type.IsValueType ? (byte) 1 : (byte) 0);
 		writer.Write (type.IsEnum ? (byte) 1 : (byte) 0);
 		writer.Write (type.GenericArguments.Count);
 		foreach (var argument in type.GenericArguments) {

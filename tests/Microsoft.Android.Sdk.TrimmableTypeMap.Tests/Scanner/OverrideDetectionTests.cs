@@ -171,6 +171,24 @@ public class OverrideDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void OverrideAcrossGenericValueTypeArgument_PreservesValueTypeArgument ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/EnumSelectableList");
+		var setSelection = Assert.Single (peer.MarshalMethods, m => m.JniName == "setSelection");
+		Assert.Equal ("(I)V", setSelection.JniSignature);
+		Assert.Equal ("GetSetSelection_IHandler", setSelection.Connector);
+		var declaringType = setSelection.DeclaringType;
+		Assert.NotNull (declaringType);
+		if (declaringType is null) {
+			throw new InvalidOperationException ("Expected override declaring type.");
+		}
+		Assert.Equal ("MyApp.GenericValueTypeSelectionHost`1", declaringType.ManagedTypeName);
+		var argument = Assert.Single (declaringType.GenericArguments);
+		Assert.Equal ("MyApp.SelectionMode", argument.ManagedTypeName);
+		Assert.True (argument.IsValueType);
+	}
+
+	[Fact]
 	public void EmptyConnector_OverrideStillDetected ()
 	{
 		// Activity.OnStart has [Register("onStart", "()V", "")] — empty connector

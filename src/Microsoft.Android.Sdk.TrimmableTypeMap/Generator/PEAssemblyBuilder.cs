@@ -169,16 +169,17 @@ sealed class PEAssemblyBuilder
 
 	static string GetTypeRefCacheKey (TypeRefData typeRef)
 	{
+		var typeKind = typeRef.EncodeAsValueType ? "valuetype" : "class";
 		if (typeRef.GenericArguments.Count == 0) {
-			return $"{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+			return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
 		}
-		return $"{typeRef.AssemblyName}:{typeRef.ManagedTypeName}<{string.Join (",", typeRef.GenericArguments.Select (GetTypeRefCacheKey))}>";
+		return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}<{string.Join (",", typeRef.GenericArguments.Select (GetTypeRefCacheKey))}>";
 	}
 
 	void WriteGenericInstantiationSignature (BlobBuilder blob, EntityHandle openType, TypeRefData typeRef)
 	{
 		blob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		blob.WriteByte (typeRef.IsEnum ? (byte) 0x11 : (byte) 0x12); // VALUETYPE or CLASS
+		blob.WriteByte (typeRef.EncodeAsValueType ? (byte) 0x11 : (byte) 0x12); // VALUETYPE or CLASS
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
 		blob.WriteCompressedInteger (typeRef.GenericArguments.Count);
 		foreach (var argument in typeRef.GenericArguments) {
@@ -233,7 +234,7 @@ sealed class PEAssemblyBuilder
 		}
 
 		var typeHandle = ResolveTypeRef (typeRef);
-		blob.WriteByte (typeRef.IsEnum ? (byte) 0x11 : (byte) 0x12); // VALUETYPE or CLASS
+		blob.WriteByte (typeRef.EncodeAsValueType ? (byte) 0x11 : (byte) 0x12); // VALUETYPE or CLASS
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeHandle));
 	}
 

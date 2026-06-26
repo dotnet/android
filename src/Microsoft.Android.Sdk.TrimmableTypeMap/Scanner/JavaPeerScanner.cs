@@ -52,35 +52,6 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Resolves a TypeReferenceHandle to (fullName, assemblyName), correctly handling
-	/// nested types whose ResolutionScope is another TypeReference.
-	/// </summary>
-	static (string fullName, string assemblyName) ResolveTypeReference (TypeReferenceHandle handle, AssemblyIndex index)
-	{
-		var typeRef = index.Reader.GetTypeReference (handle);
-		var name = index.Reader.GetString (typeRef.Name);
-		var ns = index.Reader.GetString (typeRef.Namespace);
-
-		var scope = typeRef.ResolutionScope;
-		switch (scope.Kind) {
-		case HandleKind.AssemblyReference: {
-			var asmRef = index.Reader.GetAssemblyReference ((AssemblyReferenceHandle)scope);
-			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-			return (fullName, index.Reader.GetString (asmRef.Name));
-		}
-		case HandleKind.TypeReference: {
-			// Nested type: recurse to get the declaring type's full name and assembly
-			var (parentFullName, assemblyName) = ResolveTypeReference ((TypeReferenceHandle)scope, index);
-			return (MetadataTypeNameResolver.JoinNestedTypeName (parentFullName, name), assemblyName);
-		}
-		default: {
-			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-			return (fullName, index.AssemblyName);
-		}
-		}
-	}
-
-	/// <summary>
 	/// Looks up the [Register] JNI name for a type identified by name + assembly.
 	/// </summary>
 	string? ResolveRegisterJniName (string typeName, string assemblyName)
@@ -864,7 +835,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return type;
 		}
 
-		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName) ? type with { IsEnum = true } : type;
+		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName) ? type with { IsEnum = true, IsValueType = true } : type;
 	}
 
 	static bool IsEnumType (TypeDefinition typeDef, AssemblyIndex index)

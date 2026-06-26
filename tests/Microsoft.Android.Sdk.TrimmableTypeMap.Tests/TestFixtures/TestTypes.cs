@@ -1102,6 +1102,44 @@ namespace MyApp
 		public override void ApplyValue (string value) { }
 	}
 
+	public enum SelectionMode {
+		Single,
+		Multiple,
+	}
+
+	/// <summary>
+	/// Generic base closed over an enum argument so TypeSpec emission must encode
+	/// the argument as ELEMENT_TYPE_VALUETYPE.
+	/// </summary>
+	[Register ("my/app/GenericValueTypeSelectionHost", DoNotGenerateAcw = true)]
+	public abstract class GenericValueTypeSelectionHost<T> : Java.Lang.Object
+	{
+		protected GenericValueTypeSelectionHost (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("setSelection", "(I)V", "GetSetSelection_IHandler")]
+		public abstract void SetSelection (int position);
+	}
+
+	/// <summary>
+	/// Intermediate MCW base that closes a registered generic base over an enum.
+	/// </summary>
+	[Register ("my/app/EnumSelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class EnumSelectionContainer : GenericValueTypeSelectionHost<SelectionMode>
+	{
+		protected EnumSelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method declared on a constructed generic enum base.
+	/// </summary>
+	[Register ("my/app/EnumSelectableList")]
+	public class EnumSelectableList : EnumSelectionContainer
+	{
+		protected EnumSelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void SetSelection (int position) { }
+	}
+
 	/// <summary>
 	/// Has a ctor with unsigned primitive params to test JNI mapping.
 	/// </summary>

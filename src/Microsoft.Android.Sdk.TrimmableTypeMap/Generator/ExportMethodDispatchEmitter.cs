@@ -600,7 +600,7 @@ sealed class ExportMethodDispatchEmitter
 		}
 
 		var typeHandle = ResolveManagedTypeHandle (managedType);
-		encoder.Type (typeHandle, isValueType: managedType.IsEnum);
+		encoder.Type (typeHandle, isValueType: managedType.EncodeAsValueType);
 	}
 
 	void AddUnmanagedCallersOnlyAttribute (MethodDefinitionHandle handle)

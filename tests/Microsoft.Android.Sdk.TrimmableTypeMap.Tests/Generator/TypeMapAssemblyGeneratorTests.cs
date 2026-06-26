@@ -143,6 +143,30 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/EnumSelectableList");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var member = reader.MemberReferences
+			.Select (h => reader.GetMemberReference (h))
+			.Single (m => reader.GetString (m.Name) == "n_SetSelection_I");
+
+		Assert.Equal (HandleKind.TypeSpecification, member.Parent.Kind);
+		var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) member.Parent);
+		var blob = reader.GetBlobReader (typeSpec.Signature);
+
+		Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+		Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+		Assert.Equal ("GenericValueTypeSelectionHost`1", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+		Assert.Equal (1, blob.ReadCompressedInteger ());
+		Assert.Equal (0x11, blob.ReadByte ()); // ELEMENT_TYPE_VALUETYPE
+		Assert.Equal ("SelectionMode", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+	}
+
+	[Fact]
 	public void Generate_ProxyType_HasCtorAndCreateInstance ()
 	{
 		var peers = ScanFixtures ();
@@ -742,6 +766,34 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var mvid2 = pe2.GetMetadataReader ().GetGuid (pe2.GetMetadataReader ().GetModuleDefinition ().Mvid);
 
 		Assert.Equal (mvid1, mvid2);
+	}
+
+	[Fact]
+	public void TypeRefData_Equality_ComparesGenericArgumentsByValue ()
+	{
+		var left = new TypeRefData {
+			ManagedTypeName = "Test.GenericBase`1",
+			AssemblyName = "TestAsm",
+			GenericArguments = [
+				TypeRef ("System.String"),
+			],
+		};
+		var right = new TypeRefData {
+			ManagedTypeName = "Test.GenericBase`1",
+			AssemblyName = "TestAsm",
+			GenericArguments = [
+				TypeRef ("System.String"),
+			],
+		};
+		var different = right with {
+			GenericArguments = [
+				TypeRef ("System.Object"),
+			],
+		};
+
+		Assert.Equal (left, right);
+		Assert.Equal (left.GetHashCode (), right.GetHashCode ());
+		Assert.NotEqual (left, different);
 	}
 
 	[Fact]
