@@ -128,21 +128,6 @@ namespace Xamarin.Android.Prepare
 				"arm64-v8a",
 				"x86_64",
 			};
-
-			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
-				// Tools prefixed with architecture triple
-				new NDKTool (name: "as", prefixed: true),
-				new NDKTool (name: "ld", prefixed: true),
-				new NDKTool (name: "strip", prefixed: true),
-
-				// Unprefixed tools
-				new NDKTool (name: "as"),
-				new NDKTool (name: "ld"),
-				new NDKTool (name: "llc"),
-				new NDKTool (name: "llvm-mc"),
-				new NDKTool (name: "llvm-objcopy"),
-				new NDKTool (name: "llvm-strip"),
-			};
 		}
 
 		public static partial class Paths
