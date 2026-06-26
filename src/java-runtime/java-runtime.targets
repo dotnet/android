@@ -1,6 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+<UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
+
+<!--
+  Generates the CMake-input files previously produced by xaprepare's
+  Get_Cmake_XA_Build_Configuration and Get_Cmake_Presets generators:
+
+    * bin/Build$(Configuration)/xa_build_configuration.cmake — included
+      by src/native/CMakeLists.txt
+    * src/native/CMakePresets.json — read by `cmake` preset calls in
+      src/native/native.targets
+
+  Lives in java-runtime.targets because every native-* csproj
+  (native-mono, native-clr, native-nativeaot) already has a
+  <ProjectReference> on java-runtime.csproj, so project-reference
+  ordering serializes this single generator before any native build
+  starts. That avoids the race that would occur if three parallel
+  native builds wrote the same shared files concurrently.
+
+  No Inputs/Outputs gating: the placeholder values come from MSBuild
+  properties (Configuration, XAPackagesDir, AndroidNdkDirectory,
+  NinjaPath, ...), not just from the `.in` templates. We always
+  re-substitute so switching Debug↔Release or changing a path
+  correctly regenerates the outputs.
+
+  Paths are emitted with forward slashes, which CMake and JSON both
+  accept on all OSes and which avoids backslash-escaping concerns.
+-->
+<Target Name="_GenerateCMakeFiles" BeforeTargets="Build">
+  <PropertyGroup>
+    <_XAPackagesDirSlashes>$([System.String]::Copy('$(XAPackagesDir)').Replace('\','/').TrimEnd('/'))</_XAPackagesDirSlashes>
+    <_NetCoreRuntimePrefix>$(_XAPackagesDirSlashes)/microsoft.netcore.app.runtime.mono.android-</_NetCoreRuntimePrefix>
+    <_NetCoreRuntimeSuffix>/$(MicrosoftNETCoreAppRefPackageVersion)/runtimes/android-</_NetCoreRuntimeSuffix>
+    <_CoreClrRuntimePrefix>$(_XAPackagesDirSlashes)/microsoft.netcore.app.runtime.android-</_CoreClrRuntimePrefix>
+    <_CoreClrRuntimeSuffix>/$(MicrosoftNETCoreAppRefPackageVersion)/runtimes/android-</_CoreClrRuntimeSuffix>
+
+    <_AndroidNdkDirectorySlashes>$([System.String]::Copy('$(AndroidNdkDirectory)').Replace('\','/'))</_AndroidNdkDirectorySlashes>
+    <_NinjaPathSlashes>$([System.String]::Copy('$(NinjaPath)').Replace('\','/'))</_NinjaPathSlashes>
+    <_MicrosoftAndroidSdkOutDirSlashes>$([System.String]::Copy('$(MicrosoftAndroidSdkOutDir)').Replace('\','/'))</_MicrosoftAndroidSdkOutDirSlashes>
+    <_TestOutputDirectorySlashes>$([System.String]::Copy('$(TestOutputDirectory)').Replace('\','/'))</_TestOutputDirectorySlashes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_ARM@=$(_NetCoreRuntimePrefix)arm$(_NetCoreRuntimeSuffix)arm" />
+    <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_ARM64@=$(_NetCoreRuntimePrefix)arm64$(_NetCoreRuntimeSuffix)arm64" />
+    <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_X86@=$(_NetCoreRuntimePrefix)x86$(_NetCoreRuntimeSuffix)x86" />
+    <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_X86_64@=$(_NetCoreRuntimePrefix)x64$(_NetCoreRuntimeSuffix)x64" />
+    <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_ARM64@=$(_CoreClrRuntimePrefix)arm64$(_CoreClrRuntimeSuffix)arm64" />
+    <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_X86_64@=$(_CoreClrRuntimePrefix)x64$(_CoreClrRuntimeSuffix)x64" />
+
+    <_CMakePresetsReplacement Include="@AndroidNdkDirectory@=$(_AndroidNdkDirectorySlashes)" />
+    <_CMakePresetsReplacement Include="@NinjaPath@=$(_NinjaPathSlashes)" />
+    <_CMakePresetsReplacement Include="@MicrosoftAndroidSdkOutDir@=$(_MicrosoftAndroidSdkOutDirSlashes)" />
+    <_CMakePresetsReplacement Include="@NDK_ARMEABI_V7_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
+    <_CMakePresetsReplacement Include="@NDK_ARM64_V8A_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
+    <_CMakePresetsReplacement Include="@NDK_X86_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
+    <_CMakePresetsReplacement Include="@NDK_X86_64_API_NET@=$(AndroidMinimumDotNetApiLevel)" />
+    <_CMakePresetsReplacement Include="@XA_BUILD_CONFIGURATION@=$(Configuration)" />
+    <_CMakePresetsReplacement Include="@XA_TEST_OUTPUT_DIR@=$(_TestOutputDirectorySlashes)" />
+  </ItemGroup>
+
+  <MakeDir Directories="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)" />
+
+  <ReplaceFileContents
+      SourceFile="$(MSBuildThisFileDirectory)..\..\build-tools\scripts\xa_build_configuration.cmake.in"
+      DestinationFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\xa_build_configuration.cmake"
+      Replacements="@(_XaBuildConfigurationReplacement)" />
+
+  <ReplaceFileContents
+      SourceFile="$(MSBuildThisFileDirectory)..\native\CMakePresets.json.in"
+      DestinationFile="$(MSBuildThisFileDirectory)..\native\CMakePresets.json"
+      Replacements="@(_CMakePresetsReplacement)" />
+</Target>
+
 <ItemGroup>
   <_RuntimeOutput Include="$(OutputPath)java_runtime.jar">
     <OutputJar>$(OutputPath)java_runtime.jar</OutputJar>
