@@ -43,6 +43,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
+		public void LogUnresolvableJavaPeerSkippedWarning (string managedTypeName, string assemblyName, string unresolvedTypeName, string unresolvedAssemblyName, string unresolvedAssemblyPath) =>
+			log.LogCodedWarning ("XA4256", Properties.Resources.XA4256, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
 	}
@@ -135,7 +137,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
 		var peReaders = new List<PEReader> ();
-		var assemblies = new List<(string Name, PEReader Reader)> ();
+		var assemblies = new List<AssemblyInput> ();
 		TrimmableTypeMapResult? result = null;
 		try {
 			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
@@ -143,7 +145,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				peReaders.Add (peReader);
 				var mdReader = peReader.GetMetadataReader ();
 				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
-				assemblies.Add ((assemblyName, peReader));
+				assemblies.Add (new AssemblyInput (assemblyName, path, peReader));
 				if (isFrameworkAssembly) {
 					frameworkAssemblyNames.Add (assemblyName);
 				}
