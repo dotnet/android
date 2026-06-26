@@ -104,40 +104,21 @@ static class ComponentElementBuilder
 
 	internal static void AddIntentFilterDataElement (XElement filter, IntentFilterInfo intentFilter)
 	{
-		var dataElement = new XElement ("data");
-		bool hasData = false;
+		AddDataElement ("DataHost", "host");
+		AddDataElement ("DataMimeType", "mimeType");
+		AddDataElement ("DataPath", "path");
+		AddDataElement ("DataPathPattern", "pathPattern");
+		AddDataElement ("DataPathPrefix", "pathPrefix");
+		AddDataElement ("DataPort", "port");
+		AddDataElement ("DataScheme", "scheme");
+		AddDataElement ("DataPathSuffix", "pathSuffix");
+		AddDataElement ("DataPathAdvancedPattern", "pathAdvancedPattern");
 
-		if (intentFilter.Properties.TryGetValue ("DataScheme", out var scheme) && scheme is string schemeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "scheme", schemeStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataHost", out var host) && host is string hostStr) {
-			dataElement.SetAttributeValue (AndroidNs + "host", hostStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPath", out var path) && path is string pathStr) {
-			dataElement.SetAttributeValue (AndroidNs + "path", pathStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPathPattern", out var pattern) && pattern is string patternStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPattern", patternStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPathPrefix", out var prefix) && prefix is string prefixStr) {
-			dataElement.SetAttributeValue (AndroidNs + "pathPrefix", prefixStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataMimeType", out var mime) && mime is string mimeStr) {
-			dataElement.SetAttributeValue (AndroidNs + "mimeType", mimeStr);
-			hasData = true;
-		}
-		if (intentFilter.Properties.TryGetValue ("DataPort", out var port) && port is string portStr) {
-			dataElement.SetAttributeValue (AndroidNs + "port", portStr);
-			hasData = true;
-		}
-
-		if (hasData) {
-			filter.Add (dataElement);
+		void AddDataElement (string propertyName, string attributeName)
+		{
+			if (intentFilter.Properties.TryGetValue (propertyName, out var value) && value is string item && !string.IsNullOrEmpty (item)) {
+				filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
+			}
 		}
 	}
 
@@ -150,6 +131,8 @@ static class ComponentElementBuilder
 		AddDataElements ("DataPathPrefixes", "pathPrefix");
 		AddDataElements ("DataMimeTypes", "mimeType");
 		AddDataElements ("DataPorts", "port");
+		AddDataElements ("DataPathSuffixes", "pathSuffix");
+		AddDataElements ("DataPathAdvancedPatterns", "pathAdvancedPattern");
 
 		void AddDataElements (string propertyName, string attributeName)
 		{

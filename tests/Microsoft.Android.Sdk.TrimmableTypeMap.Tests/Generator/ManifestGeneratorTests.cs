@@ -54,6 +54,18 @@ public class ManifestGeneratorTests
 		return doc;
 	}
 
+	static List<string> GetDataAttributes (XElement? filter)
+	{
+		Assert.NotNull (filter);
+		return (filter ?? throw new System.InvalidOperationException ("Expected intent-filter."))
+			.Elements ("data")
+			.Select (element => {
+				var attr = element.Attributes ().Single (attribute => attribute.Name.Namespace == AndroidNs);
+				return $"{attr.Name.LocalName}={attr.Value}";
+			})
+			.ToList ();
+	}
+
 	[Fact]
 	public void Activity_MainLauncher ()
 	{
@@ -115,6 +127,8 @@ public class ManifestGeneratorTests
 					Categories = ["android.intent.category.DEFAULT"],
 					Properties = new Dictionary<string, object?> {
 						["DataMimeType"] = "text/plain",
+						["DataPathSuffix"] = "suffix",
+						["DataPathAdvancedPattern"] = "advanced*",
 					},
 				},
 			],
@@ -128,9 +142,11 @@ public class ManifestGeneratorTests
 		Assert.True (filter?.Elements ("action").Any (a => (string?)a.Attribute (AttName) == "android.intent.action.SEND"));
 		Assert.True (filter?.Elements ("category").Any (c => (string?)c.Attribute (AttName) == "android.intent.category.DEFAULT"));
 
-		var data = filter?.Element ("data");
-		Assert.NotNull (data);
-		Assert.Equal ("text/plain", (string?)data?.Attribute (AndroidNs + "mimeType"));
+		Assert.Equal ([
+			"mimeType=text/plain",
+			"pathSuffix=suffix",
+			"pathAdvancedPattern=advanced*",
+		], GetDataAttributes (filter));
 	}
 
 	[Fact]
@@ -150,6 +166,8 @@ public class ManifestGeneratorTests
 						["DataPorts"] = new List<string> { "10000", "20000" },
 						["DataSchemes"] = new List<string> { "http", "ftp" },
 						["DataMimeTypes"] = new List<string> { "text/html", "text/xml" },
+						["DataPathSuffixes"] = new List<string> { "suffix1", "suffix2" },
+						["DataPathAdvancedPatterns"] = new List<string> { "advanced1*", "advanced2*" },
 					},
 				},
 			],
@@ -158,8 +176,26 @@ public class ManifestGeneratorTests
 		var doc = GenerateAndLoad (gen, [peer]);
 		var filter = doc.Root?.Element ("application")?.Element ("activity")?.Element ("intent-filter");
 
-		Assert.NotNull (filter);
-		Assert.Equal (14, filter?.Elements ("data").Count ());
+		Assert.Equal ([
+			"scheme=http",
+			"scheme=ftp",
+			"host=foo.com",
+			"host=bar.com",
+			"path=foo",
+			"path=bar",
+			"pathPattern=foo*",
+			"pathPattern=bar*",
+			"pathPrefix=foo",
+			"pathPrefix=bar",
+			"mimeType=text/html",
+			"mimeType=text/xml",
+			"port=10000",
+			"port=20000",
+			"pathSuffix=suffix1",
+			"pathSuffix=suffix2",
+			"pathAdvancedPattern=advanced1*",
+			"pathAdvancedPattern=advanced2*",
+		], GetDataAttributes (filter));
 	}
 
 	[Fact]
