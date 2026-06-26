@@ -260,7 +260,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 	static AssemblyInput Input (string name, PEReader reader) => new (name, "", reader);
 
-	enum StaleReferenceShape {
+	public enum StaleReferenceShape {
 		BaseType,
 		Interface,
 		GenericBaseArgument,
