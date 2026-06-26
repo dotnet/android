@@ -367,11 +367,11 @@
     />
     <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
     <Error
-        Condition=" !Exists('%(_AndroidSdkPackage.Destination)\source.properties') "
-        Text="Expected Android SDK package '%(_AndroidSdkPackage.Identity)' to extract source.properties under '%(_AndroidSdkPackage.Destination)'."
+        Condition=" !Exists('$(_DestDir)\source.properties') "
+        Text="Expected Android SDK package '%(_AndroidSdkPackage.Identity)' to extract source.properties under '$(_DestDir)'."
     />
     <!-- Unzip preserves archive mtimes, so refresh the sentinel used by MSBuild Outputs. -->
-    <Touch Files="%(_AndroidSdkPackage.Destination)\source.properties" />
+    <Touch Files="$(_DestDir)\source.properties" />
   </Target>
 
   <!--
@@ -379,7 +379,7 @@
     Reads `package.xml.in` next to this targets file and replaces the `@PKG_*@`
     placeholders from per-item metadata (PkgPath/PkgDesc/PkgRevision).
   -->
-  <Target Name="_AddGeneratedPackageXmls" BeforeTargets="_GenerateAndroidPackageXmls">
+  <Target Name="_AddGeneratedPackageXmls">
     <ItemGroup>
       <_GeneratedPackageXml Remove="@(_GeneratedPackageXml)" />
       <_GeneratedPackageXml Include="@(_AndroidSdkPackage)"
@@ -388,7 +388,7 @@
   </Target>
 
   <Target Name="_GenerateAndroidPackageXmls"
-      DependsOnTargets="_ExtractAndroidSdkPackages"
+      DependsOnTargets="_ExtractAndroidSdkPackages;_AddGeneratedPackageXmls"
       Inputs="$(MSBuildThisFileDirectory)package.xml.in;@(_GeneratedPackageXml->'%(Destination)\source.properties')"
       Outputs="@(_GeneratedPackageXml->'%(Destination)\package.xml')">
     <WriteLinesToFile
