@@ -348,7 +348,7 @@
         Condition=" '$(HostOS)' != 'Windows' "
         Command="unzip -q -o &quot;$(_ZipPath)&quot; -d &quot;$(_StagingDir)&quot;"
     />
-    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_StripComponents)' == '1' ">
+    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_StripComponents)' == '1' And Exists('$(_StagingDir)') ">
       <_StagedTopDir Remove="@(_StagedTopDir)" />
       <_StagedTopDir Include="$([System.IO.Directory]::GetDirectories('$(_StagingDir)'))" />
     </ItemGroup>
@@ -356,7 +356,7 @@
       <_GlobRoot Condition=" '$(_StripComponents)' == '1' ">@(_StagedTopDir)</_GlobRoot>
       <_GlobRoot Condition=" '$(_StripComponents)' == '0' ">$(_StagingDir)</_GlobRoot>
     </PropertyGroup>
-    <ItemGroup Condition=" '$(HostOS)' != 'Windows' ">
+    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_GlobRoot)' != '' ">
       <_StagedFile Remove="@(_StagedFile)" />
       <_StagedFile Include="$(_GlobRoot)\**\*" />
     </ItemGroup>
@@ -366,6 +366,12 @@
         DestinationFiles="@(_StagedFile->'$(_DestDir)\%(RecursiveDir)%(Filename)%(Extension)')"
     />
     <RemoveDir Condition=" '$(HostOS)' != 'Windows' " Directories="$(_StagingDir)" />
+    <Error
+        Condition=" !Exists('%(_AndroidSdkPackage.Destination)\source.properties') "
+        Text="Expected Android SDK package '%(_AndroidSdkPackage.Identity)' to extract source.properties under '%(_AndroidSdkPackage.Destination)'."
+    />
+    <!-- Unzip preserves archive mtimes, so refresh the sentinel used by MSBuild Outputs. -->
+    <Touch Files="%(_AndroidSdkPackage.Destination)\source.properties" />
   </Target>
 
   <!--
@@ -373,17 +379,21 @@
     Reads `package.xml.in` next to this targets file and replaces the `@PKG_*@`
     placeholders from per-item metadata (PkgPath/PkgDesc/PkgRevision).
   -->
-  <Target Name="_GenerateAndroidPackageXmls"
-      DependsOnTargets="_ExtractAndroidSdkPackages"
-      Inputs="$(MSBuildThisFileDirectory)package.xml.in;@(_AndroidSdkPackage->'%(Destination)\source.properties')"
-      Outputs="@(_AndroidSdkPackage->'%(Destination)\package.xml')">
+  <Target Name="_AddGeneratedPackageXmls" BeforeTargets="_GenerateAndroidPackageXmls">
     <ItemGroup>
-      <_PkgXmlItem Include="@(_AndroidSdkPackage)"
+      <_GeneratedPackageXml Remove="@(_GeneratedPackageXml)" />
+      <_GeneratedPackageXml Include="@(_AndroidSdkPackage)"
           Condition=" '%(_AndroidSdkPackage.GeneratePackageXml)' == 'true' " />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateAndroidPackageXmls"
+      DependsOnTargets="_ExtractAndroidSdkPackages"
+      Inputs="$(MSBuildThisFileDirectory)package.xml.in;@(_GeneratedPackageXml->'%(Destination)\source.properties')"
+      Outputs="@(_GeneratedPackageXml->'%(Destination)\package.xml')">
     <WriteLinesToFile
-        File="%(_PkgXmlItem.Destination)\package.xml"
-        Lines="$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)package.xml.in').Replace('@PKG_PATH@', '%(_PkgXmlItem.PkgPath)').Replace('@PKG_DESC@', '%(_PkgXmlItem.PkgDesc)').Replace('@PKG_REVISION_MAJOR@', $([System.Version]::Parse('%(_PkgXmlItem.PkgRevision)').Major.ToString())).Replace('@PKG_REVISION_MINOR@', $([System.Version]::Parse('%(_PkgXmlItem.PkgRevision)').Minor.ToString())).Replace('@PKG_REVISION_MICRO@', $([System.Version]::Parse('%(_PkgXmlItem.PkgRevision)').Build.ToString())))"
+        File="%(_GeneratedPackageXml.Destination)\package.xml"
+        Lines="$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)package.xml.in').Replace('@PKG_PATH@', '%(_GeneratedPackageXml.PkgPath)').Replace('@PKG_DESC@', '%(_GeneratedPackageXml.PkgDesc)').Replace('@PKG_REVISION_MAJOR@', $([System.Version]::Parse('%(_GeneratedPackageXml.PkgRevision)').Major.ToString())).Replace('@PKG_REVISION_MINOR@', $([System.Version]::Parse('%(_GeneratedPackageXml.PkgRevision)').Minor.ToString())).Replace('@PKG_REVISION_MICRO@', $([System.Version]::Parse('%(_GeneratedPackageXml.PkgRevision)').Build.ToString())))"
         Overwrite="true"
     />
   </Target>
