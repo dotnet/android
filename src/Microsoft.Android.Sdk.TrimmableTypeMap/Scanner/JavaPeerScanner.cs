@@ -96,9 +96,12 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Phase 2: Scan all types and produce JavaPeerInfo records.
 	/// </summary>
 	public List<JavaPeerInfo> Scan (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
+		=> Scan (assemblies.Select (a => new AssemblyInput (a.Name, "", a.Reader)));
+
+	public List<JavaPeerInfo> Scan (IEnumerable<AssemblyInput> assemblies)
 	{
-		foreach (var (name, reader) in assemblies) {
-			var index = AssemblyIndex.Create (reader, name);
+		foreach (var assembly in assemblies) {
+			var index = AssemblyIndex.Create (assembly.Reader, assembly.Name, assembly.Path);
 			assemblyCache [index.AssemblyName] = index;
 		}
 
