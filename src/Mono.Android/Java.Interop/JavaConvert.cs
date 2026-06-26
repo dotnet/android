@@ -94,7 +94,7 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			if (RuntimeFeature.TrimmableTypeMap && target.IsGenericType && !target.IsGenericTypeDefinition) {
+			if (RuntimeFeature.TrimmableTypeMap) {
 				var factoryConverter = TryGetFactoryBasedConverter (target);
 				if (factoryConverter != null)
 					return factoryConverter;
