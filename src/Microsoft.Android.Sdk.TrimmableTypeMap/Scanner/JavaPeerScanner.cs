@@ -645,7 +645,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// Check if this ctor's params are already covered by a base registered ctor
 			bool alreadyCovered = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
-				if (HaveIdenticalParameterTypes (methodDef, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType)) {
+				if (HaveIdenticalParameterTypes (methodDef, index, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType)) {
 					alreadyCovered = true;
 					break;
 				}
@@ -989,7 +989,7 @@ public sealed class JavaPeerScanner : IDisposable
 	/// UCO wrappers call n_* on the correct base type).
 	/// </summary>
 	(RegisterInfo Info, TypeRefData DeclaringType)? FindBaseRegisteredMethodInfo (
-		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod, TypeRefData? currentTypeRef = null)
+		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod, AssemblyIndex derivedIndex, TypeRefData? currentTypeRef = null)
 	{
 		if (!TryResolveBaseType (typeDef, index, currentTypeRef, out var baseTypeDef, out _, out var baseIndex, out _, out _, out var baseTypeRef)) {
 			return null;
@@ -1009,7 +1009,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			if (!HaveIdenticalParameterTypes (derivedMethod, baseMethodDef, baseIndex, baseTypeRef)) {
+			if (!HaveIdenticalParameterTypes (derivedMethod, derivedIndex, baseMethodDef, baseIndex, baseTypeRef)) {
 				continue;
 			}
 
@@ -1024,13 +1024,13 @@ public sealed class JavaPeerScanner : IDisposable
 
 		// Keep walking the full base hierarchy so overrides can inherit [Register]
 		// metadata declared above an intermediate MCW base type.
-		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod, baseTypeRef);
+		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod, derivedIndex, baseTypeRef);
 	}
 
 	MarshalMethodInfo? FindBaseRegisteredMethod (TypeDefinition typeDef, AssemblyIndex index,
 		string methodName, MethodDefinition derivedMethod)
 	{
-		var result = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod);
+		var result = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod, index);
 		if (result is null || result.Value.Info.Signature is null) {
 			return null;
 		}
@@ -1105,9 +1105,9 @@ public sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Checks if two methods have identical parameter types by comparing their decoded signatures.
 	/// </summary>
-	static bool HaveIdenticalParameterTypes (MethodDefinition derivedMethod, MethodDefinition baseMethod, AssemblyIndex baseIndex, TypeRefData baseTypeRef)
+	static bool HaveIdenticalParameterTypes (MethodDefinition derivedMethod, AssemblyIndex derivedIndex, MethodDefinition baseMethod, AssemblyIndex baseIndex, TypeRefData baseTypeRef)
 	{
-		var derivedSig = derivedMethod.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var derivedSig = derivedMethod.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: derivedIndex);
 		var baseSig = baseMethod.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: baseIndex);
 
 		if (derivedSig.ParameterTypes.Length != baseSig.ParameterTypes.Length) {
@@ -1116,7 +1116,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 		for (int i = 0; i < derivedSig.ParameterTypes.Length; i++) {
 			var baseParameterType = SubstituteGenericArguments (baseSig.ParameterTypes [i], baseTypeRef);
-			if (!string.Equals (derivedSig.ParameterTypes [i], baseParameterType.DisplayName, StringComparison.Ordinal)) {
+			if (!derivedSig.ParameterTypes [i].Equals (baseParameterType)) {
 				return false;
 			}
 		}
