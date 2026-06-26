@@ -59,6 +59,7 @@ class ManifestGenerator
 
 		EnsureManifestAttributes (manifest);
 		var app = EnsureApplicationElement (manifest);
+		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
 
 		// Rewrite compat JNI names in the template to CRC names BEFORE collecting
 		// existing types, so the duplicate check works correctly.
@@ -84,7 +85,7 @@ class ManifestGenerator
 
 			// Skip Application types (handled separately via assembly-level attribute)
 			if (peer.ComponentAttribute.Kind == ComponentKind.Application) {
-				ComponentElementBuilder.UpdateApplicationElement (app, peer);
+				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue);
 				continue;
 			}
 
@@ -98,7 +99,7 @@ class ManifestGenerator
 				continue;
 			}
 
-			var element = ComponentElementBuilder.CreateComponentElement (peer, jniName);
+			var element = ComponentElementBuilder.CreateComponentElement (peer, jniName, targetSdkVersionValue);
 			if (element is not null) {
 				app.Add (element);
 			}
@@ -122,7 +123,8 @@ class ManifestGenerator
 		}
 
 		// Handle extractNativeLibs
-		if (ForceExtractNativeLibs) {
+		if (targetSdkVersionValue >= 23 &&
+		    (ForceExtractNativeLibs || app.Attribute (AndroidNs + "extractNativeLibs") is null)) {
 			app.SetAttributeValue (AndroidNs + "extractNativeLibs", "true");
 		}
 
@@ -217,7 +219,8 @@ class ManifestGenerator
 		}
 
 		// Add <uses-sdk>
-		if (!manifest.Elements ("uses-sdk").Any ()) {
+		var usesSdk = manifest.Element ("uses-sdk");
+		if (usesSdk is null) {
 			if (MinSdkVersion.IsNullOrEmpty ()) {
 				throw new InvalidOperationException ("MinSdkVersion must be provided by MSBuild.");
 			}
@@ -227,6 +230,11 @@ class ManifestGenerator
 			manifest.AddFirst (new XElement ("uses-sdk",
 				new XAttribute (AndroidNs + "minSdkVersion", MinSdkVersion),
 				new XAttribute (AndroidNs + "targetSdkVersion", TargetSdkVersion)));
+		} else if (usesSdk.Attribute (AndroidNs + "minSdkVersion") is null) {
+			if (MinSdkVersion.IsNullOrEmpty ()) {
+				throw new InvalidOperationException ("MinSdkVersion must be provided by MSBuild.");
+			}
+			usesSdk.SetAttributeValue (AndroidNs + "minSdkVersion", MinSdkVersion);
 		}
 	}
 
@@ -245,6 +253,26 @@ class ManifestGenerator
 		return app;
 	}
 
+	int GetTargetSdkVersionValue (XElement manifest)
+	{
+		// Parity note: legacy ManifestDocument resolves the target SDK via VersionResolver.GetApiLevelFromId,
+		// which also maps codename ids (e.g. preview API names) to integers. That resolver lives in
+		// Xamarin.Android.Build.Tasks and isn't referenceable from this netstandard2.0 generator, so we only
+		// handle integer values here. A codename in the user-authored manifest falls through to the MSBuild
+		// TargetSdkVersion property, which is always already resolved to an integer (see TrimmableTypeMapGenerator).
+		var targetSdk = (string?) manifest.Element ("uses-sdk")?.Attribute (AndroidNs + "targetSdkVersion");
+		if (int.TryParse (targetSdk, out int value)) {
+			return value;
+		}
+		if (int.TryParse (TargetSdkVersion, out value)) {
+			return value;
+		}
+		// Fail loudly rather than silently using 0 (which would emit a wrong manifest), matching legacy
+		// ManifestDocument, which throws InvalidOperationException on an unrecognized targetSdkVersion.
+		throw new InvalidOperationException (
+			$"The targetSdkVersion ('{targetSdk ?? TargetSdkVersion}') could not be resolved to an integer API level.");
+	}
+
 	IList<string> AddRuntimeProviders (XElement app)
 	{
 		if (RuntimeProviderJavaName.IsNullOrEmpty ()) {
@@ -260,12 +288,13 @@ class ManifestGenerator
 
 		// Check if runtime provider already exists in template
 		string runtimeProviderName = RuntimeProviderJavaName;
+		bool directBootAware = DirectBootAware (app);
 		if (!app.Elements ("provider").Any (p => {
 			var name = (string?)p.Attribute (ManifestConstants.AttName);
 			return name == runtimeProviderName ||
 				((string?)p.Attribute (AndroidNs.GetName ("authorities")))?.EndsWith (".__mono_init__", StringComparison.Ordinal) == true;
 		})) {
-			app.Add (CreateRuntimeProvider (runtimeProviderName, null, --appInitOrder));
+			app.Add (CreateRuntimeProvider (runtimeProviderName, null, --appInitOrder, directBootAware));
 		}
 
 		var providerNames = new List<string> ();
@@ -293,7 +322,7 @@ class ManifestGenerator
 				procs.Add (proc.Value);
 				string providerName = $"{className}_{procs.Count}";
 				providerNames.Add (providerName);
-				app.Add (CreateRuntimeProvider ($"{packageName}.{providerName}", proc.Value, --appInitOrder));
+				app.Add (CreateRuntimeProvider ($"{packageName}.{providerName}", proc.Value, --appInitOrder, directBootAware));
 				break;
 			}
 		}
@@ -301,12 +330,36 @@ class ManifestGenerator
 		return providerNames;
 	}
 
-	XElement CreateRuntimeProvider (string name, string? processName, int initOrder)
+	static bool DirectBootAware (XElement app)
+	{
+		var directBootAwareAttrName = AndroidNs.GetName ("directBootAware");
+		if (IsDirectBootAware (app.Attribute (directBootAwareAttrName))) {
+			return true;
+		}
+
+		foreach (var element in app.Elements ()) {
+			if (IsDirectBootAware (element.Attribute (directBootAwareAttrName))) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static bool IsDirectBootAware (XAttribute? attribute)
+	{
+		return attribute is not null &&
+			bool.TryParse (attribute.Value, out bool value) &&
+			value;
+	}
+
+	XElement CreateRuntimeProvider (string name, string? processName, int initOrder, bool directBootAware)
 	{
 		return new XElement ("provider",
 			new XAttribute (AndroidNs + "name", name),
 			new XAttribute (AndroidNs + "exported", "false"),
 			new XAttribute (AndroidNs + "initOrder", initOrder),
+			directBootAware ? new XAttribute (AndroidNs + "directBootAware", "true") : null,
 			processName is not null ? new XAttribute (AndroidNs + "process", processName) : null,
 			new XAttribute (AndroidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
 	}

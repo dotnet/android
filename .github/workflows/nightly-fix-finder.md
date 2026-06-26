@@ -15,12 +15,12 @@ on:
         - ""
         - "00-todo-fixme-hack"
         - "01-nullable-reference-types"
-        - "02-obsolete-api-usage"
-        - "03-performance-antipatterns"
+        - "02-null-forgiving-operator"
+        - "03-region-directives"
         - "04-missing-xml-docs"
         - "05-general-mistakes"
         - "06-unused-using-directives"
-        - "07-error-handling"
+        - "07-asynctask-log-property"
         - "08-string-literal-error-messages"
         required: false
         type: choice
