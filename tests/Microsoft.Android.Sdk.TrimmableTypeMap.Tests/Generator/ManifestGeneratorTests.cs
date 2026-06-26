@@ -246,13 +246,65 @@ public class ManifestGeneratorTests
 		Assert.Equal ("400dp", (string?)layout?.Attribute (AndroidNs + "minHeight"));
 	}
 
+	[Fact]
+	public void Activity_AllExtendedProperties ()
+	{
+		// Covers the activity attributes added for AllActivityAttributeProperties: each must be
+		// emitted on the <activity> element (the manifestmerger.jar then sorts them alphabetically).
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/TestActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			Properties = new Dictionary<string, object?> {
+				["AllowEmbedded"] = true,
+				["AutoRemoveFromRecents"] = true,
+				["Banner"] = "@drawable/icon",
+				["ColorMode"] = "hdr",
+				["EnableVrMode"] = "foo",
+				["LockTaskMode"] = "normal",
+				["Logo"] = "@drawable/icon",
+				["MaxAspectRatio"] = 1.2f,
+				["MaxRecents"] = 1,
+				["RecreateOnConfigChanges"] = 0x0001, // ConfigChanges.Mcc
+				["RelinquishTaskIdentity"] = true,
+				["ResumeWhilePausing"] = true,
+				["RotationAnimation"] = 1, // WindowRotationAnimation.Crossfade
+				["ShowOnLockScreen"] = true,
+				["ShowWhenLocked"] = true,
+				["SingleUser"] = true,
+				["VisibleToInstantApps"] = true,
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var activity = doc.Root?.Element ("application")?.Element ("activity");
+		Assert.NotNull (activity);
+
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "allowEmbedded"));
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "autoRemoveFromRecents"));
+		Assert.Equal ("@drawable/icon", (string?)activity?.Attribute (AndroidNs + "banner"));
+		Assert.Equal ("hdr", (string?)activity?.Attribute (AndroidNs + "colorMode"));
+		Assert.Equal ("foo", (string?)activity?.Attribute (AndroidNs + "enableVrMode"));
+		Assert.Equal ("normal", (string?)activity?.Attribute (AndroidNs + "lockTaskMode"));
+		Assert.Equal ("@drawable/icon", (string?)activity?.Attribute (AndroidNs + "logo"));
+		Assert.Equal ("1.2", (string?)activity?.Attribute (AndroidNs + "maxAspectRatio"));
+		Assert.Equal ("1", (string?)activity?.Attribute (AndroidNs + "maxRecents"));
+		Assert.Equal ("mcc", (string?)activity?.Attribute (AndroidNs + "recreateOnConfigChanges"));
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "relinquishTaskIdentity"));
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "resumeWhilePausing"));
+		Assert.Equal ("crossfade", (string?)activity?.Attribute (AndroidNs + "rotationAnimation"));
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "showOnLockScreen"));
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "showWhenLocked"));
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "singleUser"));
+		Assert.Equal ("true", (string?)activity?.Attribute (AndroidNs + "visibleToInstantApps"));
+	}
+
 	[Theory]
 	[InlineData (ComponentKind.Service, "service")]
 	[InlineData (ComponentKind.BroadcastReceiver, "receiver")]
 	public void Component_BasicProperties (ComponentKind kind, string elementName)
 	{
 		var gen = CreateDefaultGenerator ();
-		var peer = CreatePeer ("com/example/app/MyComponent", new ComponentInfo { 
+		var peer = CreatePeer ("com/example/app/MyComponent", new ComponentInfo {
 			Kind = kind,
 			Properties = new Dictionary<string, object?> {
 				["Exported"] = true,

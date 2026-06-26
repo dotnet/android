@@ -17,6 +17,14 @@ static class AndroidEnumConverter
 		_ => null,
 	};
 
+	public static string? RotationAnimationToString (int value) => value switch {
+		0 => "rotate",
+		1 => "crossfade",
+		2 => "jumpcut",
+		3 => "seamless",
+		_ => null,
+	};
+
 	public static string? ScreenOrientationToString (int value, int targetSdkVersion = 0) => value switch {
 		-1 => "unspecified",
 		0 => "landscape",
