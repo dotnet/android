@@ -62,13 +62,6 @@ steps:
     condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
     retryCount: 1
 
-- template: run-dotnet-test.yaml
-  parameters:
-    testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    testAssemblyName: Java.Base-Tests
-    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
-    retryCount: 1
-
 - task: DotNetCoreCLI@2
   displayName: 'Tests: java-source-utils'
   inputs:

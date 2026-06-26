@@ -28,10 +28,10 @@
     <EmbeddedResource Include="kotlin\**\*.class" />
     <EmbeddedResource Include="kotlin-ThirdParty\**\*.class" />
 
-    <EmbeddedResource Include="kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.Widgets.class" />
-    <EmbeddedResource Include="kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyColor.class" />
-    <EmbeddedResource Include="kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyAlpha.class" />
-    <EmbeddedResource Include="kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyDp.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.Widgets.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyColor.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyAlpha.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyDp.class" />
 
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NotNullClass.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />

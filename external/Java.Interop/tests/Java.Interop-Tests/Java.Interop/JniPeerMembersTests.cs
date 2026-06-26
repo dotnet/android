@@ -128,7 +128,7 @@ namespace Java.InteropTests
 		//  Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
 		//  V  [libjvm.dylib+0x4f718c]  jniCheck::validate_call(JavaThread*, _jclass*, _jmethodID*, _jobject*)+0x98
 		//  V  [libjvm.dylib+0x506474]  checked_jni_CallStaticObjectMethodA+0x150
-		//  C  [libjava-interop.dylib+0x5b18]  java_interop_jnienv_call_static_object_method_a+0x48
+		//  C  [native JNI wrapper]  java_interop_jnienv_call_static_object_method_a+0x48
 		//  C  0x000000010798a8d8
 		//  C  0x000000010798a540
 		//  C  0x000000010798fa94

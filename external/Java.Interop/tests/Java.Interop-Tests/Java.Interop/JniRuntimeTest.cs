@@ -32,9 +32,9 @@ namespace Java.InteropTests
 		public void JDK_OnlySupportsOneVM ()
 		{
 			try {
-				var second = new JreRuntimeOptions () {
+				var second = new TestJVM (new TestJVMOptions () {
 					JvmLibraryPath  = TestJVM.GetJvmLibraryPath (),
-				}.CreateJreVM ();
+				});
 				// If we reach here, we're in a JVM that supports > 1 VM
 				second.Dispose ();
 				Assert.Ignore ();
@@ -53,9 +53,9 @@ namespace Java.InteropTests
 
 			var t = new Thread (() => {
 				try {
-					var second = new JreRuntimeOptions () {
+					var second = new TestJVM (new TestJVMOptions () {
 						InvocationPointer   = InvocationPointer,
-					}.CreateJreVM ();
+					});
 				}
 				catch (Exception e) {
 					Assert.Fail ("Expected no exception, got: {0}", e);

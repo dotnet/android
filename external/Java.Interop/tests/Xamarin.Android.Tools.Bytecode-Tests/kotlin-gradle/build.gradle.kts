@@ -17,5 +17,5 @@ repositories {
 // .NET test harness can load them via ClassFileFixture without needing
 // to know the Gradle build directory layout.
 tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
-    destinationDirectory.set(file("$rootDir/classes"))
+    destinationDirectory.set(file((findProperty("kotlinClassesDir") as String?) ?: "$rootDir/classes"))
 }

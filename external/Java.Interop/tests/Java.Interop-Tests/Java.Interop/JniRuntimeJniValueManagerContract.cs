@@ -409,14 +409,8 @@ namespace Java.InteropTests {
 	}
 
 #if !__ANDROID__
-
 	[TestFixture]
-	public class JniRuntimeJniValueManagerContract_NoGCIntegration : JniRuntimeJniValueManagerContract {
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
-		static Type ManagedValueManagerType = Type.GetType ("Java.Interop.ManagedValueManager, Java.Runtime.Environment", throwOnError:true)!;
-
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
-		protected override Type ValueManagerType => ManagedValueManagerType;
+	public class JniRuntimeJniValueManagerContract_NoGCIntegration : JniRuntimeJniValueManagerContract<ManagedValueManager> {
 	}
 #endif  // !__ANDROID__
 

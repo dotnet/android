@@ -150,10 +150,6 @@
       <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
       <_RefAsmDir Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
       <_Lib Include="@(_RefAsmDir->'-L &quot;%(Identity)&quot;')" />
-      <_JavaBaseRef Include="@(ReferencePathWithRefAssemblies)"
-          Condition=" '%(FileName)' == 'Java.Base' "
-      />
-      <_Ref Include="@(_JavaBaseRef->'-r &quot;%(FullPath)&quot;')" />
     </ItemGroup>
     <Exec
         Command="$(DotnetToolPath) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) @(_Lib, ' ') @(_Ref, ' ') $(_Codegen) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"

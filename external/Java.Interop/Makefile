@@ -15,33 +15,29 @@ endif
 PREPARE_EXTERNAL_FILES  = \
 	external/xamarin-android-tools/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
 
-DEPENDENCIES = \
-	bin/Test$(CONFIGURATION)/libNativeTiming$(NATIVE_EXT)
+DEPENDENCIES =
 
-NET_SUFFIX = -net7.0
+NET_SUFFIX = -net10.0
+TEST_OUTPUT = bin/Test$(CONFIGURATION)$(NET_SUFFIX)
 
-TESTS = \
-	bin/Test$(CONFIGURATION)/Java.Interop-Tests.dll \
-	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll \
-	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaSource-Tests.dll \
-	bin/Test$(CONFIGURATION)/logcat-parse-Tests.dll \
-	bin/Test$(CONFIGURATION)/generator-Tests.dll \
-	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll \
-	bin/Test$(CONFIGURATION)/Java.Interop.Tools.JavaTypeSystem-Tests.dll \
-	bin/Test$(CONFIGURATION)/Xamarin.Android.Tools.Bytecode-Tests.dll \
-	bin/Test$(CONFIGURATION)/Java.Interop.Tools.Generator-Tests.dll \
-	bin/Test$(CONFIGURATION)/Xamarin.SourceWriter-Tests.dll
+TESTS =
 
 NET_TESTS = \
-	bin/Test$(CONFIGURATION)$(NET_SUFFIX)/Java.Base-Tests.dll
+	$(TEST_OUTPUT)/Java.Interop-Tests.dll \
+	$(TEST_OUTPUT)/Java.Interop.Tools.JavaCallableWrappers-Tests.dll \
+	$(TEST_OUTPUT)/Java.Interop.Tools.JavaSource-Tests.dll \
+	$(TEST_OUTPUT)/Java.Interop.Tools.Maven-Tests.dll \
+	$(TEST_OUTPUT)/Java.Interop.Tools.JavaTypeSystem-Tests.dll \
+	$(TEST_OUTPUT)/Java.Interop.Tools.Generator-Tests.dll \
+	$(TEST_OUTPUT)/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll \
+	$(TEST_OUTPUT)/Xamarin.Android.Tools.Bytecode-Tests.dll \
+	$(TEST_OUTPUT)/Xamarin.SourceWriter-Tests.dll \
+	$(TEST_OUTPUT)/generator-Tests.dll \
+	$(TEST_OUTPUT)/logcat-parse-Tests.dll
 
-PTESTS = \
-	bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll
+PTESTS =
 
-ATESTS = \
-	bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll
-
-all: $(DEPENDENCIES) $(TESTS)
+all: $(DEPENDENCIES) $(TESTS) $(NET_TESTS)
 
 bin/ilverify:
 	-mkdir bin
@@ -50,7 +46,6 @@ bin/ilverify:
 run-all-tests:
 	r=0; \
 	$(MAKE) run-tests                 || r=1 ; \
-	$(MAKE) run-test-jnimarshal       || r=1 ; \
 	$(MAKE) run-net-tests             || r=1 ; \
 	$(MAKE) run-ptests                || r=1 ; \
 	$(MAKE) run-java-source-utils-tests     || r=1 ; \
@@ -72,38 +67,29 @@ include build-tools/scripts/mono.mk
 -include bin/Build$(CONFIGURATION)/mono.mk
 -include bin/Build$(CONFIGURATION)/JdkInfo.mk
 
-JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE = Java.Runtime.Environment.Override.dllmap
-ifeq ($(wildcard $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)),)
-	JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD = '/@JAVA_RUNTIME_ENVIRONMENT_DLLMAP@/d'
-else
-	JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE_CMD = '/@JAVA_RUNTIME_ENVIRONMENT_DLLMAP@/ {' -e 'r $(JAVA_RUNTIME_ENVIRONMENT_DLLMAP_OVERRIDE)' -e 'd' -e '}'
-endif
-
-JAVA_INTEROP_LIB    = libjava-interop$(NATIVE_EXT)
 NATIVE_TIMING_LIB   = libNativeTiming$(NATIVE_EXT)
 
 bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB): tests/NativeTiming/timing.c $(wildcard $(JI_JDK_INCLUDE_PATHS)/jni.h)
 	mkdir -p `dirname "$@"`
 	gcc -g -shared -m64 -fPIC -o $@ $< $(JI_JDK_INCLUDE_PATHS:%=-I%)
 
-# Usage: $(call TestAssemblyTemplate,assembly-basename)
 define TestAssemblyTemplate
-bin/Test$$(CONFIGURATION)/$(1)-Tests.dll: $(wildcard src/$(1)/*/*.cs src/$(1)/Test*/*/*.cs)
+$(TEST_OUTPUT)/$(1)-Tests.dll: tests/$(1)-Tests/$(1)-Tests.csproj
 	$$(MSBUILD) $$(MSBUILD_FLAGS)
 	touch $$@
-endef # TestAssemblyTemplate
+endef
 
 $(eval $(call TestAssemblyTemplate,Java.Interop))
-$(eval $(call TestAssemblyTemplate,Java.Interop.Export))
 $(eval $(call TestAssemblyTemplate,Java.Interop.Tools.JavaCallableWrappers))
-
-bin/Test$(CONFIGURATION)/Java.Interop-PerformanceTests.dll: $(wildcard tests/Java.Interop-PerformanceTests/*.cs) bin/Test$(CONFIGURATION)/$(NATIVE_TIMING_LIB)
-	$(MSBUILD) $(MSBUILD_FLAGS)
-	touch $@
-
-bin/Test$(CONFIGURATION)/Android.Interop-Tests.dll: $(wildcard src/Android.Interop/*/*.cs src/Android.Interop/Tests/*/*.cs)
-	$(MSBUILD) $(MSBUILD_FLAGS)
-	touch $@
+$(eval $(call TestAssemblyTemplate,Java.Interop.Tools.JavaSource))
+$(eval $(call TestAssemblyTemplate,Java.Interop.Tools.Maven))
+$(eval $(call TestAssemblyTemplate,Java.Interop.Tools.JavaTypeSystem))
+$(eval $(call TestAssemblyTemplate,Java.Interop.Tools.Generator))
+$(eval $(call TestAssemblyTemplate,Xamarin.Android.Tools.ApiXmlAdjuster))
+$(eval $(call TestAssemblyTemplate,Xamarin.Android.Tools.Bytecode))
+$(eval $(call TestAssemblyTemplate,Xamarin.SourceWriter))
+$(eval $(call TestAssemblyTemplate,generator))
+$(eval $(call TestAssemblyTemplate,logcat-parse))
 
 bin/$(CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/Java.Interop/Java.Interop.csproj
 	$(MSBUILD) $(if $(V),/v:diag,) /p:Configuration=$(CONFIGURATION) $(if $(SNK),"/p:AssemblyOriginatorKeyFile=$(SNK)",)
@@ -111,8 +97,6 @@ bin/$(CONFIGURATION)/Java.Interop.dll: $(wildcard src/Java.Interop/*/*.cs) src/J
 CSHARP_REFS = \
 	bin/$(CONFIGURATION)/Java.Interop.dll               \
 	bin/$(CONFIGURATION)/Java.Interop.Export.dll        \
-	bin/$(CONFIGURATION)/Java.Runtime.Environment.dll   \
-	bin/Test$(CONFIGURATION)/TestJVM.dll                    \
 	$(PTESTS)                                           \
 	$(TESTS)
 
@@ -125,31 +109,23 @@ define RUN_TEST
 	$(MSBUILD) $(MSBUILD_FLAGS) build-tools/scripts/RunNUnitTests.targets /p:TestAssembly=$(1) || r=1;
 endef
 
-run-tests: $(TESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
+run-tests: $(TESTS)
 	r=0; \
 	$(foreach t,$(TESTS), $(call RUN_TEST,$(t),1)) \
 	exit $$r;
 
-run-net-tests: $(NET_TESTS) bin/Test$(CONFIGURATION)$(NET_SUFFIX)/$(JAVA_INTEROP_LIB)
+run-net-tests: $(NET_TESTS)
 	r=0; \
-	$(foreach t,$(NET_TESTS), dotnet test $(t) || r=1) \
+	$(foreach t,$(NET_TESTS), dotnet test $(t) || r=1;) \
 	exit $$r;
 
-run-ptests: $(PTESTS) bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
+run-ptests: $(PTESTS)
 	r=0; \
 	$(foreach t,$(PTESTS), $(call RUN_TEST,$(t))) \
 	exit $$r;
 
 run-java-source-utils-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) tools/java-source-utils/java-source-utils.csproj /t:RunTests
-
-bin/Test$(CONFIGURATION)/$(JAVA_INTEROP_LIB): bin/$(CONFIGURATION)/$(JAVA_INTEROP_LIB)
-	cp $< $@
-
-JRE_DLL_CONFIG=bin/$(CONFIGURATION)/Java.Runtime.Environment.dll.config
-
-$(JRE_DLL_CONFIG): src/Java.Runtime.Environment/Java.Runtime.Environment.csproj
-	$(MSBUILD) $(MSBUILD_FLAGS) $<
 
 bin/Test$(CONFIGURATION)/generator.exe: bin/$(CONFIGURATION)/generator.exe
 	cp $<* `dirname "$@"`

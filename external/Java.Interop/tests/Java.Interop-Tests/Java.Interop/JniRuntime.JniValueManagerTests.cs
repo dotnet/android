@@ -63,6 +63,7 @@ namespace Java.InteropTests {
 			{
 				return null;
 			}
+
 		}
 
 		[Test]
@@ -146,4 +147,3 @@ namespace Java.InteropTests {
 #endif  // !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
 	}
 }
-

@@ -100,9 +100,6 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			//    at Java.Lang.Object..ctor() in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Base/obj/Debug/mcw/Java.Lang.Object.cs:line 32
-			//    at Java.BaseTests.MyIntConsumer..ctor(Action`1 action) in /Users/jon/Developer/src/xamarin/java.interop/tests/Java.Base-Tests/Java.Base/JavaToManagedTests.cs:line 77
-			//    at Java.BaseTests.JavaToManagedTests.InterfaceInvokerMethod() in /Users/jon/Developer/src/xamarin/java.interop/tests/Java.Base-Tests/Java.Base/JavaToManagedTests.cs:line 26
 			methods = new JniInstanceMethods (declaringType);
 			lock (SubclassConstructors) {
 				if (SubclassConstructors.TryGetValue (declaringType, out var m))

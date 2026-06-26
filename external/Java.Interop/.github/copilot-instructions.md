@@ -35,8 +35,6 @@
 ### Core Libraries (`src/`)
 - **`Java.Interop/`**: Main JNI binding library with core types and runtime
 - **`Java.Interop.Export/`**: `[Export]` attribute support for exposing managed methods to Java
-- **`Java.Runtime.Environment/`**: JVM loading and lifecycle management
-- **`Java.Base/`**: Bindings for core Java types (`java.lang.*`, etc.)
 
 ### Code Generation Tools (`tools/`)
 - **`generator/`**: Primary tool for generating C# bindings from Java API descriptions
@@ -52,13 +50,11 @@
 - **`Xamarin.SourceWriter/`**: Code generation utilities
 
 ### Testing (`tests/`)
-- Unit tests for all major components
-- Integration tests with real JVM instances
+- Unit tests for the core JNI binding and code-generation components
+- Integration tests with real JVM instances where needed
 - Generator tests with sample API descriptions
 
 ### Samples (`samples/`)
-- **`Hello-Core/`**: Minimal JNI usage without object mapping
-- **`Hello-Java.Base/`**: Using core Java type bindings
 - **`Hello-NativeAOT*/`**: Ahead-of-time compilation scenarios
 
 ## Development Patterns & Conventions
@@ -133,7 +129,7 @@ dotnet build -t:Prepare
 dotnet build
 
 # Run specific tests
-dotnet test tests/Java.Interop-Tests/Java.Interop-Tests.csproj
+dotnet test tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj
 
 # Build with specific configuration
 dotnet build -c Release

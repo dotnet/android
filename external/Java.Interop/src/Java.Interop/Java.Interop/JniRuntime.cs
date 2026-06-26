@@ -120,8 +120,7 @@ namespace Java.Interop
 		}
 
 		[Obsolete ("Not sensible/usable at this level, and cannot work on e.g. Android.  " +
-				"Try Java.Interop.JreRuntime.GetAvailableInvocationPointers() in Java.Runtime.Environment.dll, " +
-				"or rethink your structure.", error: true)]
+				"Please rethink your structure instead of relying on desktop/JRE-specific runtime helpers.", error: true)]
 		[SuppressMessage ("Design", "CA1024:Use properties where appropriate",
 				Justification = "ABI compatibility")]
 		public static IEnumerable<IntPtr> GetAvailableInvocationPointers ()

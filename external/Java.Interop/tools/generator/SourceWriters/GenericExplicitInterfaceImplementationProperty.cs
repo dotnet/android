@@ -37,7 +37,7 @@ namespace generator.SourceWriters
 
 				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
 						mappings.Values.Any (v => v == "string")) {
-					// Hackity Hack; `Java.Lang.Object, Java.Base` doesn't (currently) provide an
+					// Hackity Hack; `Java.Lang.Object` doesn't (currently) provide an
 					// implicit conversion from `string`, meaning that given
 					// `tests/generator-Tests/Integration-Tests/Interfaces.cs` output:
 					//

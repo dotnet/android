@@ -1,40 +1,11 @@
 <Project>
 
-  <PropertyGroup>
-    <DotnetToolPath>"$(DOTNET_HOST_PATH)"</DotnetToolPath>
-  </PropertyGroup>
-
-  <Target Name="_CreateJavaCallableWrappers"
-      Condition=" '$(TargetPath)' != '' "
-      BeforeTargets="BuildNativeAOTFromJNIJar"
-      Inputs="$(TargetPath)"
-      Outputs="$(IntermediateOutputPath)java\.stamp">
-    <RemoveDir Directories="$(IntermediateOutputPath)java" />
-    <MakeDir Directories="$(IntermediateOutputPath)java" />
-    <ItemGroup>
-      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
-      <_JcwGenRefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
-    </ItemGroup>
-    <PropertyGroup>
-      <_JcwGen>"$(UtilityOutputFullPath)/jcw-gen.dll"</_JcwGen>
-      <_Target>--codegen-target JavaInterop1</_Target>
-      <_Output>-o "$(IntermediateOutputPath)/java"</_Output>
-      <_Libpath>@(_JcwGenRefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
-    </PropertyGroup>
-    <Exec Command="$(DotnetToolPath) $(_JcwGen) &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
-    <Touch Files="$(IntermediateOutputPath)java\.stamp" AlwaysCreate="True" />
-  </Target>
-
   <Target Name="BuildNativeAOTFromJNIJar"
       AfterTargets="Build"
-      Inputs="@(HelloNativeAOTFromJNIJar)"
+      Inputs="@(HelloNativeAOTFromJNIJar);$(OutputPath)java-interop.jar"
       Outputs="$(OutputPath)hello-from-java.jar">
     <MakeDir Directories="$(IntermediateOutputPath)h-classes" />
     <ItemGroup>
-      <_JcwSource Include="$(IntermediateOutputPath)java\**\*.java" />
-    </ItemGroup>
-    <ItemGroup>
-      <_Source Include="@(_JcwSource->Replace('%5c', '/'))" />
       <_Source Include="@(HelloNativeAOTFromJNIJar->Replace('%5c', '/'))" />
     </ItemGroup>
     <WriteLinesToFile
@@ -62,6 +33,7 @@
         DestinationFiles="$(PublishDir)lib$(AssemblyName).dylib"
     />
     <Copy SourceFiles="$(OutputPath)hello-from-java.jar" DestinationFolder="$(PublishDir)" />
+    <Copy SourceFiles="$(OutputPath)java-interop.jar" DestinationFolder="$(PublishDir)" />
   </Target>
 
   <Target Name="RunJavaSample">
@@ -79,4 +51,5 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)$(PublishDir)"
     />
   </Target>
+
 </Project>

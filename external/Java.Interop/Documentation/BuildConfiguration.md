@@ -17,10 +17,9 @@ Overridable MSBuild properties include:
 * `$(CecilSourceDirectory)`: If the empty string, Cecil will be obtained from
     NuGet packages.  Otherwise, `$(UtilityOutputFullPath)Xamarin.Android.Cecil.dll`
     will be used to reference Cecil.
-* `$(JdkJvmPath)`: Full path name to the JVM native library to link
-    [`java-interop`](src/java-interop) against. By default this is
-    probed for from numerous locations within
-    [`build-tools/scripts/jdk.mk`](build-tools/scripts/jdk.mk).
+* `$(JdkJvmPath)`: Full path name to the JVM native library to use for
+    tests which require a desktop JVM. By default this is probed from the
+    configured JDK.
 * `$(JavaCPath)`: Path to the `javac` command-line tool, by default set to `javac`.
 * `$(JarPath)`: Path to the `jar` command-line tool, by default set to `jar`.
   * It may be desirable to override these on Windows, depending on your `PATH`.
