@@ -333,7 +333,14 @@ namespace Xamarin.Android.Build.Tests
 					message.AppendLine ("== .apkdesc diff (reference -> current) ==");
 					message.AppendLine (GetApkDescDiff (apkDescReferencePath, apkDescPath));
 					message.AppendLine ();
-					message.AppendLine ($"If this change is intended, update the reference '{apkDescFilename}' with the current '.apkdesc' attached to this test (or run build-tools/scripts/UpdateApkSizeReference.sh).");
+					message.AppendLine ($"== current '{apkDescFilename}' (copy/paste to update the reference) ==");
+					if (File.Exists (apkDescPath)) {
+						message.AppendLine (File.ReadAllText (apkDescPath));
+					} else {
+						message.AppendLine ($"(current apkdesc not found: {apkDescPath})");
+					}
+					message.AppendLine ();
+					message.AppendLine ($"If this change is intended, update the reference '{apkDescFilename}' with the current '.apkdesc' above (or attached to this test), or run build-tools/scripts/UpdateApkSizeReference.sh.");
 					Assert.Fail (message.ToString ());
 				}
 			}
