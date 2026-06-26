@@ -32,7 +32,7 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 9622600
+      "Size": 11658648
     },
     "lib/arm64-v8a/libclrjit.so": {
       "Size": 2824392
@@ -56,7 +56,7 @@
       "Size": 168080
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 147616
+      "Size": 147824
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -2234,5 +2234,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 18730573
+  "PackageSize": 20786765
 }
