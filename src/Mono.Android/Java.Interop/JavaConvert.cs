@@ -242,16 +242,26 @@ namespace Java.Interop {
 
 		internal readonly struct ArrayElementConverter
 		{
+			[DynamicallyAccessedMembers (Constructors)]
 			readonly Type? elementType;
 			readonly Func<IntPtr, JniHandleOwnership, object>? converter;
 			readonly bool useRuntimeTypeMapping;
 
 			public ArrayElementConverter (Array array)
 			{
-				elementType = array.GetType ().GetElementType ();
+				elementType = GetArrayElementType (array);
 				converter = elementType != null ? GetJniHandleConverter (elementType) : null;
 				useRuntimeTypeMapping = elementType is null || elementType == typeof (object);
 			}
+
+			// Array.GetType ().GetElementType () cannot statically carry the constructor annotations that
+			// peer construction (Java.Lang.Object.GetObject) requires. The element types of arrays that are
+			// marshaled back to managed peers are preserved by the Android linker steps, so isolate the
+			// unprovable flow here rather than suppressing the whole conversion path.
+			[UnconditionalSuppressMessage ("Trimming", "IL2073",
+				Justification = "Array element types marshaled to managed peers are preserved by the Android linker steps.")]
+			[return: DynamicallyAccessedMembers (Constructors)]
+			static Type? GetArrayElementType (Array array) => array.GetType ().GetElementType ();
 
 			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 			{
