@@ -37,6 +37,10 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
 		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
 
+		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
+		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
+		public ITaskItem []? JavaSourceFiles { get; set; }
+
 		protected override string MainClass => "com.android.tools.r8.R8";
 
 		readonly List<string> tempFiles = new List<string> ();
@@ -50,6 +54,52 @@ namespace Xamarin.Android.Tasks
 					File.Delete (temp);
 				}
 			}
+		}
+
+		// Derive the fully-qualified Java type name from each user .java source file. Java requires the
+		// public top-level type name to match the file name, so '<package>.<FileNameWithoutExtension>' is
+		// the type to keep. Files that no longer exist are skipped.
+		IEnumerable<string> GetUserJavaTypes ()
+		{
+			if (JavaSourceFiles == null) {
+				yield break;
+			}
+			var seen = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var item in JavaSourceFiles) {
+				var path = item.ItemSpec;
+				if (path.IsNullOrEmpty () || !File.Exists (path)) {
+					continue;
+				}
+				var typeName = Path.GetFileNameWithoutExtension (path);
+				var package = ReadJavaPackage (path);
+				if (!package.IsNullOrEmpty ()) {
+					typeName = $"{package}.{typeName}";
+				}
+				if (seen.Add (typeName)) {
+					yield return typeName;
+				}
+			}
+		}
+
+		static string? ReadJavaPackage (string path)
+		{
+			foreach (var raw in File.ReadLines (path)) {
+				var line = raw.Trim ();
+				if (line.Length == 0 || line.StartsWith ("//", StringComparison.Ordinal) || line.StartsWith ("*", StringComparison.Ordinal) || line.StartsWith ("/*", StringComparison.Ordinal)) {
+					continue;
+				}
+				if (line.StartsWith ("package ", StringComparison.Ordinal)) {
+					var end = line.IndexOf (';');
+					if (end > "package ".Length) {
+						return line.Substring ("package ".Length, end - "package ".Length).Trim ();
+					}
+				}
+				// The package declaration, if present, must precede any type declaration.
+				if (line.StartsWith ("import ", StringComparison.Ordinal) || line.Contains ("class ") || line.Contains ("interface ") || line.Contains ("enum ")) {
+					break;
+				}
+			}
+			return null;
 		}
 
 		/// <summary>
@@ -107,6 +157,11 @@ namespace Xamarin.Android.Tasks
 					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
+							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+						}
+						// User-authored AndroidJavaSource (Bind != true) has no managed peer and is absent
+						// from the acw-map, so keep it explicitly; otherwise shrinking removes it.
+						foreach (var java in GetUserJavaTypes ()) {
 							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
 						}
 					}
