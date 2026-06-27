@@ -32,14 +32,18 @@
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_PostTrimTrimmableTypeMapJavaStamp>$(_PostTrimTypeMapJavaBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>
-    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTrimmableTypeMapJavaStamp)</_TrimmableJavaSourceStamp>
-    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' ">$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll</_TrimmableJavaSourceStamp>
     <!-- Stamp file touched on every _GenerateTrimmableTypeMap run. It is a stable
          incremental sentinel: the generated TypeMap DLLs are only rewritten when their
          content changes (CopyIfStreamChanged), so their timestamps cannot be used as
          Outputs without making the target run on every build. The stamp is always
          touched, so the target is correctly skipped when none of its Inputs changed. -->
     <_TrimmableTypeMapOutputStamp>$(_TypeMapOutputDirectory)_GenerateTrimmableTypeMap.stamp</_TrimmableTypeMapOutputStamp>
+    <!-- Sentinel for _GenerateJavaStubs: the post-trim Java stamp when JCWs are regenerated
+         from the linked assemblies (CoreCLR + PublishTrimmed), otherwise the generator stamp.
+         Both are touched only when their producing target actually runs, so _GenerateJavaStubs
+         stays incremental while still reacting to post-trim JCW regeneration. -->
+    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTrimmableTypeMapJavaStamp)</_TrimmableJavaSourceStamp>
+    <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' ">$(_TrimmableTypeMapOutputStamp)</_TrimmableJavaSourceStamp>
     <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
          dynamic code is unavailable, so array creation uses the typemap path;
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
@@ -95,7 +99,7 @@
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
-      Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)">
+      Outputs="$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
@@ -153,10 +157,11 @@
     <Delete Files="@(_DeletedCopiedJavaFiles)" />
     <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedCopiedJavaFiles->Count())' != '0' " />
 
-    <!-- Touch the generated assemblies, the list file, and the stamp so the target's
-         Outputs are always newer than its Inputs even when CopyIfStreamChanged left an
-         unchanged DLL untouched. This is what makes the target skip on no-op builds. -->
-    <Touch Files="@(_GeneratedTypeMapAssemblies);$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
+    <!-- Touch only the stamp: it is the target's sole Output and incremental sentinel.
+         The generated TypeMap DLLs and the assemblies list are written via CopyIfStreamChanged
+         (so unchanged content keeps a stable timestamp) and are not consumed as timestamp
+         Inputs by any other target, so they do not need to be touched here. -->
+    <Touch Files="$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
 
     <ItemGroup>
       <FileWrites Remove="@(_DeletedJavaFiles)" />
@@ -206,16 +211,26 @@
     <ItemGroup>
       <_GeneratedTypeMapAssembliesForFileWrites Remove="@(_GeneratedTypeMapAssembliesForFileWrites)" />
       <_TypeMapJavaFilesForFileWrites Remove="@(_TypeMapJavaFilesForFileWrites)" />
+      <_TypeMapPostTrimJavaFilesForFileWrites Remove="@(_TypeMapPostTrimJavaFilesForFileWrites)" />
     </ItemGroup>
     <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
       <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesForFileWrites" />
     </ReadLinesFromFile>
     <ItemGroup>
       <_TypeMapJavaFilesForFileWrites Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
+      <!-- For CoreCLR + PublishTrimmed the JCWs copied into android/src come from the post-trim
+           `linked-java` directory. _GeneratePostTrimTrimmableTypeMapJavaSources is now incremental,
+           so re-emit its outputs here too; otherwise IncrementalClean deletes linked-java (and its
+           android/src copies) on builds where post-trim is skipped. The glob is empty for
+           configurations that have no post-trim pass. -->
+      <_TypeMapPostTrimJavaFilesForFileWrites Include="$(_PostTrimTypeMapJavaOutputDirectory)/**/*.java" />
 
       <FileWrites Include="@(_GeneratedTypeMapAssembliesForFileWrites)" />
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites)" />
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <FileWrites Include="@(_TypeMapPostTrimJavaFilesForFileWrites)" />
+      <FileWrites Include="@(_TypeMapPostTrimJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
+      <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" Condition="Exists('$(_PostTrimTrimmableTypeMapJavaStamp)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
@@ -292,7 +307,7 @@
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TrimmableTypeMapOutputStamp);@(_EnvironmentFiles)"
+      Inputs="$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <ItemGroup>

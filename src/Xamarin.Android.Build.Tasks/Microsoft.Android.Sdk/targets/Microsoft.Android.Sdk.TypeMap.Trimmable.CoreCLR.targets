@@ -48,16 +48,29 @@
         OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 
-  <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
+  <Target Name="_ComputePostTrimTrimmableTypeMapInputs"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       AfterTargets="_ResolveAssemblies"
-      BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
-      Inputs="@(ResolvedFileToPublish)"
-      Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
+      BeforeTargets="_GeneratePostTrimTrimmableTypeMapJavaSources">
     <ItemGroup>
+      <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
+      <!-- Only the linked .dll assemblies that already exist on disk are valid inputs.
+           @(ResolvedFileToPublish) also contains non-assembly publish outputs (e.g.
+           runtimeconfig.json) whose paths do not exist when this target runs; declaring a
+           non-existent file as an Input would make MSBuild consider the target perpetually
+           out-of-date and run it on every build. -->
       <_PostTrimTrimmableTypeMapInputAssemblies Include="@(ResolvedFileToPublish)"
-          Condition=" '%(Extension)' == '.dll' and ('%(RuntimeIdentifier)' == '' or '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' or '%(RuntimeIdentifier)' == '$(_PostTrimTypeMapFirstRuntimeIdentifier)') " />
+          Condition=" '%(Extension)' == '.dll' and Exists('%(FullPath)') and ('%(RuntimeIdentifier)' == '' or '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' or '%(RuntimeIdentifier)' == '$(_PostTrimTypeMapFirstRuntimeIdentifier)') " />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs"
+      AfterTargets="_ResolveAssemblies"
+      BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
+      Inputs="@(_PostTrimTrimmableTypeMapInputAssemblies)"
+      Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
 
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_PostTrimTrimmableTypeMapInputAssemblies)"

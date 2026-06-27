@@ -202,7 +202,6 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		[Ignore ("Documents a known incrementality gap: _GeneratePostTrimTrimmableTypeMapJavaSources currently runs on every Release CoreCLR build. Re-enable once post-trim Java generation is made incremental and _GenerateJavaStubs keys off _TrimmableJavaSourceStamp.")]
 		public void Build_WithTrimmableTypeMap_PublishTrimmed_PostTrimJavaGenerationIsIncremental ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
