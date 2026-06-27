@@ -102,13 +102,13 @@ compilation. For `CoreCLR` + `PublishTrimmed`, the JCWs are sourced from the
 which is itself incremental; the stamp remains the sentinel so a no-op build
 still skips `_GenerateJavaStubs`.
 
-### 3. Stale generated Java sources are pruned
+### 3. Stale generated Java sources are pruned (both passes)
 
-When a managed type is removed, its JCW must not linger. The task's
-`DeleteStaleJavaSources` enumerates the JCW output directory and deletes any
-`*.java` the current pass did not produce, returning them as `DeletedJavaFiles`
-(with `RelativePath` metadata). The target mirrors each deletion into the
-`android/src` copy and, if anything was deleted, deletes
+When a managed type is removed — or trimmed away on the `PublishTrimmed` path —
+its JCW must not linger in `android/src`, where it would otherwise be compiled
+and packaged. Both generator passes report the JCWs they no longer produce as
+`DeletedJavaFiles` (with `RelativePath` metadata), and the owning target mirrors
+each deletion into the `android/src` copy and, if anything was deleted, deletes
 `$(_AndroidCompileJavaStampFile)` so `_CompileJava` re-runs and drops the stale
 `.class` outputs:
 
@@ -116,6 +116,24 @@ When a managed type is removed, its JCW must not linger. The task's
 <Delete Files="@(_DeletedCopiedJavaFiles)" />
 <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedCopiedJavaFiles->Count())' != '0' " />
 ```
+
+The two passes compute the deleted set differently because of how each manages
+its output directory:
+
+- **Pre-trim** (`_GenerateTrimmableTypeMap`, writing `typemap/java`): the task
+  scans the output directory and deletes any `*.java` the current pass did not
+  produce.
+- **Post-trim** (`_GeneratePostTrimTrimmableTypeMapJavaSources`, writing
+  `typemap/linked-java` with `CleanJavaSourceOutputDirectory=true`): the
+  directory is wiped before regeneration, so the task snapshots the previous
+  `*.java` set *before* the wipe and reports `previous − regenerated`. This keeps
+  the deletion precise — only files the generator itself previously produced are
+  ever removed from `android/src`, never unrelated sources such as
+  `ApplicationRegistration.java`.
+
+The invariant is two-directional: **`android/src` contains exactly the JCWs the
+active pass produces** — no missing files (copied via `_GenerateJavaStubs`) and
+no stale files (pruned via `DeletedJavaFiles`).
 
 ### 4. Dynamic `FileWrites` are re-emitted on no-op builds
 
