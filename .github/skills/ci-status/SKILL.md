@@ -127,11 +127,13 @@ jq -r --slurpfile failed /tmp/failed.json --slurpfile tl /tmp/tl.json '
 
 `ResultsByBuild` returns every failed test across runs (only `Failed`/`Aborted` are queryable). Matrix lanes that share one phase (e.g. `MSBuild+Emulator`) aggregate in the breakdown — use the Step 3b timing table to pinpoint the numbered job that died. For per-test error/stack, the ETA query, and the run→job mapping, see [references/azdo-queries.md](references/azdo-queries.md).
 
-**Step 3d — Deep failure analysis (run whenever the build is red).** From the repo root, run the bundled script — it turns raw failures into the **per-test cross-config matrix**, **crash detection**, and **branch cross-reference** the report needs (makes its own `az`/`gh` calls, needs `az login`, ~15–45 s — scales with the affected test family + retries):
+**Step 3d — Deep failure analysis (run whenever the build is red).** From the repo root, run the bundled C# file-based app — it turns raw failures into the **per-test cross-config matrix**, **crash detection**, and **branch cross-reference** the report needs (makes its own `az`/`gh` calls, needs `az login` and the .NET SDK, ~15–45 s — scales with the affected test family + retries):
 
 ```bash
-python3 .github/skills/ci-status/scripts/ci_failures.py --build-id $BUILD_ID --pr $PR
+dotnet run .github/skills/ci-status/scripts/ci_failures.cs -- --build-id $BUILD_ID --pr $PR
 ```
+
+(First run restores/builds the app, so allow a few extra seconds. Omit `--pr $PR` to skip the branch cross-reference.)
 
 It prints three report-ready sections:
 - **Cross-config matrix** — per failed test: the flavors/OSes where it **failed** vs **passed**, with same-build retries shown as `Failed→Passed (retry)` (a retry that passes ⇒ flaky), plus the assembly and the assert/stack. Failing in one flavor/OS only localizes the cause; failing across many is systemic.

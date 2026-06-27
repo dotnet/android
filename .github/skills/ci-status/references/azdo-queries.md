@@ -68,7 +68,7 @@ The per-flavor `run <flavor>` task log holds the MTP summary (`Test run summary:
 
 ## Crash culprit from logcat
 
-`scripts/ci_failures.py` flags crashed/incomplete/timed-out lanes, but the culprit test is only in the device **logcat**, published inside that lane's `Test Results - ...` build artifact (100 MB–2 GB — prefer the smaller `Debug` lane). Download it, then scan `logcat-<flavor>.txt`:
+`scripts/ci_failures.cs` flags crashed/incomplete/timed-out lanes, but the culprit test is only in the device **logcat**, published inside that lane's `Test Results - ...` build artifact (100 MB–2 GB — prefer the smaller `Debug` lane). Download it, then scan `logcat-<flavor>.txt`:
 
 ```bash
 # list artifacts + sizes to pick the failing lane:
