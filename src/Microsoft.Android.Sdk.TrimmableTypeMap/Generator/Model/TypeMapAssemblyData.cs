@@ -174,6 +174,16 @@ sealed class JavaPeerProxyData
 	public bool IsGenericDefinition { get; init; }
 
 	/// <summary>
+	/// True if the proxied peer type is a Java interface. Interfaces have no constructors, so
+	/// the proxy must derive from the non-generic <c>JavaPeerProxy</c> base instead of
+	/// <c>JavaPeerProxy&lt;T&gt;</c>: closing the generic (whose <c>T</c> is annotated with
+	/// <c>[DynamicallyAccessedMembers(PublicConstructors|NonPublicConstructors)]</c>) over an
+	/// interface makes ILC fail to load the type (TypeLoadException). Instances are still created
+	/// from <see cref="InvokerType"/> in CreateInstance.
+	/// </summary>
+	public bool IsInterface { get; init; }
+
+	/// <summary>
 	/// True when the Java stub must not call RegisterNatives from a static initializer because
 	/// the type can be instantiated before the runtime is fully ready (for example Application
 	/// or Instrumentation subclasses).
