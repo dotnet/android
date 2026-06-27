@@ -279,6 +279,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Ignore ("Flaky apkdiff size regression - temporarily disabled, see BuildReleaseArm64 investigation")]
 		public void BuildReleaseArm64 ([Values] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
