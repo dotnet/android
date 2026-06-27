@@ -41,6 +41,7 @@ class ManifestGenerator
 	public string? ManifestPlaceholders { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public Action<string>? Warn { get; set; }
+	public Action<string>? WarnInvalidPlaceholder { get; set; }
 
 	/// <summary>
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
@@ -143,7 +144,7 @@ class ManifestGenerator
 		}
 
 		// Apply manifest placeholders
-		ApplyPlaceholders (doc, ManifestPlaceholders);
+		ApplyPlaceholders (doc, ManifestPlaceholders, WarnInvalidPlaceholder);
 
 		return (doc, providerNames);
 	}
@@ -346,7 +347,7 @@ class ManifestGenerator
 	/// Replaces ${key} placeholders in all attribute values throughout the document.
 	/// Placeholder format: "key1=value1;key2=value2"
 	/// </summary>
-	internal static void ApplyPlaceholders (XDocument doc, string? placeholders)
+	internal static void ApplyPlaceholders (XDocument doc, string? placeholders, Action<string>? warnInvalidPlaceholder = null)
 	{
 		if (placeholders.IsNullOrEmpty ()) {
 			return;
@@ -359,6 +360,10 @@ class ManifestGenerator
 				var key = entry.Substring (0, eqIndex).Trim ();
 				var value = entry.Substring (eqIndex + 1).Trim ();
 				replacements ["${" + key + "}"] = value;
+			} else if (eqIndex < 0) {
+				// An entry without '=' is not a valid key=value pair. Mirror the legacy
+				// ManifestDocument.ReplacePlaceholders behavior and warn (XA1010).
+				warnInvalidPlaceholder?.Invoke (placeholders);
 			}
 		}
 

@@ -55,6 +55,44 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Placeholders_InvalidEntryWithoutValue_WarnsXA1010 ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var warnings = new List<string> ();
+		gen.WarnInvalidPlaceholder = warnings.Add;
+		gen.ManifestPlaceholders = "ph2=a=b;ph1";
+		var template = ParseTemplate ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <uses-sdk />
+			  <application android:label="${ph1}" />
+			</manifest>
+			""");
+		GenerateAndLoad (gen, template: template);
+		Assert.Single (warnings);
+		Assert.Contains ("ph1", warnings [0]);
+	}
+
+	[Fact]
+	public void Placeholders_AllValid_DoesNotWarn ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var warnings = new List<string> ();
+		gen.WarnInvalidPlaceholder = warnings.Add;
+		gen.ManifestPlaceholders = "ph1=val1;ph2=val2";
+		var template = ParseTemplate ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <uses-sdk />
+			  <application android:label="${ph1}" />
+			</manifest>
+			""");
+		var doc = GenerateAndLoad (gen, template: template);
+		Assert.Empty (warnings);
+		Assert.Equal ("val1", (string?) doc.Root?.Element ("application")?.Attribute (AndroidNs + "label"));
+	}
+
+	[Fact]
 	public void Activity_MainLauncher ()
 	{
 		var gen = CreateDefaultGenerator ();

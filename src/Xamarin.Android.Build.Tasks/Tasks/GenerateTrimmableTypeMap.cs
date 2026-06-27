@@ -44,6 +44,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
+		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
+			log.LogCodedWarning ("XA1010", Properties.Resources.XA1010, placeholders);
 		public void LogUnresolvableJavaPeerSkippedWarning (string managedTypeName, string assemblyName, string unresolvedTypeName, string unresolvedAssemblyName, string unresolvedAssemblyPath) =>
 			log.LogCodedWarning ("XA4256", Properties.Resources.XA4256, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
