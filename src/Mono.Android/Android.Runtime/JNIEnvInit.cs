@@ -58,16 +58,11 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
+		[RequiresUnreferencedCode ("Uses reflection to access System.StartupHookProvider.")]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
-			static Type TypeGetType (string typeName) =>
-				Type.GetType (typeName, throwOnError: false);
-
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
-			var type = TypeGetType (typeName);
+			var type = Type.GetType (typeName, throwOnError: false);
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
@@ -158,10 +153,14 @@ namespace Android.Runtime
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
 			if (!RuntimeFeature.TrimmableTypeMap) {
-				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
+				args->registerJniNativesFn = GetRegisterJniNativesFnPtr ();
 			}
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This method is never used with the trimmable type map.")]
+			IntPtr GetRegisterJniNativesFnPtr () =>
+				(IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 		}
 
 		[LibraryImport (RuntimeConstants.InternalDllName)]
