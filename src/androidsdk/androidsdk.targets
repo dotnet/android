@@ -350,13 +350,13 @@
     />
     <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_StripComponents)' == '1' ">
       <_StagedTopDir Remove="@(_StagedTopDir)" />
-      <_StagedTopDir Include="$([System.IO.Directory]::GetDirectories('$(_StagingDir)'))" />
+      <_StagedTopDir Condition=" Exists('$(_StagingDir)') " Include="$([System.IO.Directory]::GetDirectories('$(_StagingDir)'))" />
     </ItemGroup>
     <PropertyGroup Condition=" '$(HostOS)' != 'Windows' ">
       <_GlobRoot Condition=" '$(_StripComponents)' == '1' ">@(_StagedTopDir)</_GlobRoot>
       <_GlobRoot Condition=" '$(_StripComponents)' == '0' ">$(_StagingDir)</_GlobRoot>
     </PropertyGroup>
-    <ItemGroup Condition=" '$(HostOS)' != 'Windows' ">
+    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And Exists('$(_StagingDir)') ">
       <_StagedFile Remove="@(_StagedFile)" />
       <_StagedFile Include="$(_GlobRoot)\**\*" />
     </ItemGroup>
