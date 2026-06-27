@@ -132,7 +132,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		Directory.CreateDirectory (OutputDirectory);
+		string[]? priorJavaSnapshot = null;
 		if (CleanJavaSourceOutputDirectory && Directory.Exists (JavaSourceOutputDirectory)) {
+			// Capture the previously generated set before wiping it, so DeleteStaleJavaSources can
+			// report which Java sources are no longer produced (e.g. a type that was trimmed away).
+			priorJavaSnapshot = Directory.GetFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories);
 			Directory.Delete (JavaSourceOutputDirectory, recursive: true);
 		}
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
@@ -195,7 +199,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			GeneratedJavaFiles = JavaSourceInputDirectory.IsNullOrEmpty ()
 				? WriteJavaSourcesToDisk (result.GeneratedJavaSources)
 				: CopyJavaSourcesFromInputDirectory (result.GeneratedJavaSources);
-			DeletedJavaFiles = DeleteStaleJavaSources (GeneratedJavaFiles);
+			DeletedJavaFiles = DeleteStaleJavaSources (GeneratedJavaFiles, priorJavaSnapshot);
 
 			// Write manifest to disk if generated
 			if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
@@ -375,15 +379,35 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	}
 
 	// Removes generated Java sources from a previous build that the current generation pass
-	// no longer produces (for example when a managed type is removed). Returns the deleted
-	// files (with a RelativePath metadata) so the targets can mirror the deletion into the
-	// android/src copies and force a Java recompilation.
-	ITaskItem [] DeleteStaleJavaSources (IReadOnlyCollection<ITaskItem> generatedJavaFiles)
+	// no longer produces (for example when a managed type is removed or trimmed away). Returns
+	// the deleted files (with a RelativePath metadata) so the targets can mirror the deletion
+	// into the android/src copies and force a Java recompilation.
+	//
+	// When the output directory was wiped before generation (CleanJavaSourceOutputDirectory, used
+	// by the post-trim pass), the stale files are already gone from disk; the previous contents
+	// are supplied via priorJavaSnapshot and the difference against the freshly generated set is
+	// reported. Otherwise the directory is scanned and any file the current pass did not produce
+	// is deleted.
+	ITaskItem [] DeleteStaleJavaSources (IReadOnlyCollection<ITaskItem> generatedJavaFiles, string[]? priorJavaSnapshot)
 	{
 		var expectedFiles = new HashSet<string> (
 			generatedJavaFiles.Select (i => Path.GetFullPath (i.ItemSpec)),
 			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 		var deleted = new List<ITaskItem> ();
+
+		if (priorJavaSnapshot is not null) {
+			foreach (var path in priorJavaSnapshot) {
+				var fullPath = Path.GetFullPath (path);
+				if (expectedFiles.Contains (fullPath)) {
+					continue;
+				}
+
+				Log.LogDebugMessage ($"Post-trim regeneration no longer produces generated Java source '{fullPath}'.");
+				deleted.Add (CreateDeletedJavaItem (fullPath));
+			}
+
+			return deleted.ToArray ();
+		}
 
 		foreach (var path in Directory.EnumerateFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories)) {
 			var fullPath = Path.GetFullPath (path);
@@ -393,13 +417,17 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 			File.Delete (fullPath);
 			Log.LogDebugMessage ($"Deleted stale generated Java source '{fullPath}'.");
-
-			var item = new TaskItem (fullPath);
-			item.SetMetadata ("RelativePath", PathUtil.GetRelativePath (JavaSourceOutputDirectory, fullPath));
-			deleted.Add (item);
+			deleted.Add (CreateDeletedJavaItem (fullPath));
 		}
 
 		return deleted.ToArray ();
+	}
+
+	TaskItem CreateDeletedJavaItem (string fullPath)
+	{
+		var item = new TaskItem (fullPath);
+		item.SetMetadata ("RelativePath", PathUtil.GetRelativePath (JavaSourceOutputDirectory, fullPath));
+		return item;
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)
