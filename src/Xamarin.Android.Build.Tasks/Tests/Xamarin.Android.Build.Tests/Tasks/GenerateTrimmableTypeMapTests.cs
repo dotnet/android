@@ -322,7 +322,7 @@ namespace Xamarin.Android.Build.Tests {
 			task.AndroidApiLevel = "35";
 			task.SupportedOSPlatformVersion = "24";
 			task.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
-			task.ManifestPlaceholders = "applicationId=android.app";
+			task.ManifestPlaceholders = new [] { "applicationId=android.app" };
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 			FileAssert.Exists (applicationRegistration);
