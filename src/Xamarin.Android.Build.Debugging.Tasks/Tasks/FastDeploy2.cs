@@ -438,7 +438,7 @@ namespace Xamarin.Android.Tasks
 				if (Path.GetExtension (file.ItemSpec) == ".so") {
 					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
 					if (abi != PrimaryCpuAbi) {
-						LogDebugMessage ($"NotifySync SkipCopyFile {file.ItemSpec} abi not suitable for this device.");
+						LogDebugMessage ($"NotifySync SkipCopyFile {GetAdbPushTargetPath (file)} abi not suitable for this device.");
 						continue;
 					}
 				}
