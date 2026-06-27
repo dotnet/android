@@ -405,10 +405,16 @@ namespace Xamarin.Android.Build.Tests
 
 			// NOTE: the crc hashes here might change one day, but if we used [Android.Runtime.Register("")]
 			// LibraryB.dll would have a reference to Mono.Android.dll, which invalidates the test.
-			string className = "Lcrc6414a4b78410c343a2/Bar;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-			className = "Lcrc646d2d82b4d8b39bd8/Foo;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			// The trimmable typemap (NativeAOT) hashes package names with System.IO.Hashing CRC64 and an
+			// "scrc64" prefix, which differs by design from the legacy "crc64" naming.
+			string barClass = runtime == AndroidRuntime.NativeAOT
+				? "Lscrc6415a9a023299e1b31/Bar;"
+				: "Lcrc6414a4b78410c343a2/Bar;";
+			Assert.IsTrue (DexUtils.ContainsClass (barClass, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{barClass}`!");
+			string fooClass = runtime == AndroidRuntime.NativeAOT
+				? "Lscrc64575941c880742da2/Foo;"
+				: "Lcrc646d2d82b4d8b39bd8/Foo;";
+			Assert.IsTrue (DexUtils.ContainsClass (fooClass, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{fooClass}`!");
 		}
 
 		[Test]
