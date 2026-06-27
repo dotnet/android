@@ -217,19 +217,24 @@ namespace Xamarin.Android.Build.Tests {
 
 			// Simulate a JCW the post-trim pass produced on a previous build but no longer
 			// produces (e.g. its type was trimmed away). It lives in both the post-trim
-			// `linked-java` source directory and its android/src copy.
+			// `linked-java` source directory and its android/src copy, with a compiled .class.
 			var staleRelativePath = Path.Combine ("crc64stale", "Old.java");
+			var staleClassPath = Path.Combine ("crc64stale", "Old.class");
 			var staleLinkedJava = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java", staleRelativePath));
 			var staleCopiedJava = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", staleRelativePath));
+			var staleCompiledClass = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", staleClassPath));
 			var staleLinkedJavaDirectory = Path.GetDirectoryName (staleLinkedJava);
 			var staleCopiedJavaDirectory = Path.GetDirectoryName (staleCopiedJava);
-			if (staleLinkedJavaDirectory is null || staleCopiedJavaDirectory is null) {
+			var staleCompiledClassDirectory = Path.GetDirectoryName (staleCompiledClass);
+			if (staleLinkedJavaDirectory is null || staleCopiedJavaDirectory is null || staleCompiledClassDirectory is null) {
 				throw new InvalidOperationException ("Could not determine stale Java output directories.");
 			}
 			Directory.CreateDirectory (staleLinkedJavaDirectory);
 			Directory.CreateDirectory (staleCopiedJavaDirectory);
+			Directory.CreateDirectory (staleCompiledClassDirectory);
 			File.WriteAllText (staleLinkedJava, "package crc64stale; public class Old {}");
 			File.WriteAllText (staleCopiedJava, "package crc64stale; public class Old {}");
+			File.WriteAllBytes (staleCompiledClass, []);
 
 			// Force the post-trim Java generation to re-run by removing its stamp (without a source
 			// change, which would trigger an unrelated incremental CrossGen rebuild). It wipes and
@@ -241,9 +246,11 @@ namespace Xamarin.Android.Build.Tests {
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
 			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
 
 			FileAssert.DoesNotExist (staleLinkedJava, "Post-trim regeneration should drop the stale linked-java JCW.");
 			FileAssert.DoesNotExist (staleCopiedJava, "Regenerated post-trim JCWs should delete the stale android/src copy that is no longer produced.");
+			FileAssert.DoesNotExist (staleCompiledClass, "Deleting the stale android/src copy should force Java recompilation and remove the stale class output.");
 		}
 
 		[Test]

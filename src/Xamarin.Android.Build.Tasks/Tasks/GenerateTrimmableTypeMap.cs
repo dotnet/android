@@ -133,11 +133,17 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 		Directory.CreateDirectory (OutputDirectory);
 		string[]? priorJavaSnapshot = null;
-		if (CleanJavaSourceOutputDirectory && Directory.Exists (JavaSourceOutputDirectory)) {
+		if (CleanJavaSourceOutputDirectory) {
 			// Capture the previously generated set before wiping it, so DeleteStaleJavaSources can
 			// report which Java sources are no longer produced (e.g. a type that was trimmed away).
-			priorJavaSnapshot = Directory.GetFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories);
-			Directory.Delete (JavaSourceOutputDirectory, recursive: true);
+			// An empty snapshot (first run, nothing to wipe) still routes through the snapshot-diff
+			// path so clean mode is handled consistently.
+			if (Directory.Exists (JavaSourceOutputDirectory)) {
+				priorJavaSnapshot = Directory.GetFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories);
+				Directory.Delete (JavaSourceOutputDirectory, recursive: true);
+			} else {
+				priorJavaSnapshot = [];
+			}
 		}
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
@@ -396,6 +402,14 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var deleted = new List<ITaskItem> ();
 
 		if (priorJavaSnapshot is not null) {
+			// If generation logged errors (e.g. a generated source was missing from the input
+			// directory, XA4255), GeneratedJavaFiles may be incomplete, so the prior-minus-current
+			// diff could wrongly flag a still-valid source as deleted. The build fails on logged
+			// errors anyway; skip pruning to avoid removing a file that should remain.
+			if (Log.HasLoggedErrors) {
+				return [];
+			}
+
 			foreach (var path in priorJavaSnapshot) {
 				var fullPath = Path.GetFullPath (path);
 				if (expectedFiles.Contains (fullPath)) {
