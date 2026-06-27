@@ -96,7 +96,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	/// </summary>
 	public int MaxArrayRank { get; set; }
 
-	public string? ManifestPlaceholders { get; set; }
+	// Use string[] (not string) so MSBuild applies the same value normalization the legacy
+	// ManifestMerger/ManifestDocument tasks get when binding $(AndroidManifestPlaceholders)
+	// (e.g. directory-separator normalization of backslashes in values on non-Windows).
+	public string []? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 
@@ -159,7 +162,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					Debug: Debug,
 					NeedsInternet: NeedsInternet,
 					EmbedAssemblies: EmbedAssemblies,
-					ManifestPlaceholders: ManifestPlaceholders,
+					ManifestPlaceholders: ManifestPlaceholders is { Length: > 0 } ph ? string.Join (";", ph) : null,
 					CheckedBuild: CheckedBuild,
 					ApplicationJavaClass: ApplicationJavaClass);
 			}
