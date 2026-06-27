@@ -146,6 +146,7 @@ public class TrimmableTypeMapGenerator
 			ForceExtractNativeLibs = forceDebuggable,
 			ManifestPlaceholders = config.ManifestPlaceholders,
 			ApplicationJavaClass = config.ApplicationJavaClass,
+			LibraryManifests = config.MergedManifestDocuments ?? [],
 			WarnInvalidPlaceholder = logger.LogInvalidManifestPlaceholderWarning,
 		};
 
@@ -474,7 +475,7 @@ public class TrimmableTypeMapGenerator
 			root.SetAttributeValue ("package", manifestConfig.PackageName);
 		}
 
-		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders);
+		ManifestGenerator.ApplyPlaceholders (doc, manifestConfig.ManifestPlaceholders, manifestConfig.PackageName);
 
 		if (!manifestConfig.ApplicationJavaClass.IsNullOrEmpty ()) {
 			var app = root.Element ("application");

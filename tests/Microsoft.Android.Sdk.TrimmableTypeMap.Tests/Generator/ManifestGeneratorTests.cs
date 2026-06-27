@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
@@ -980,6 +981,71 @@ public class ManifestGeneratorTests
 		var meta = doc.Root?.Element ("application")?.Elements ("meta-data")
 			.FirstOrDefault (m => (string?)m.Attribute (AndroidNs + "name") == "api_key");
 		Assert.Equal ("12345", (string?)meta?.Attribute (AndroidNs + "value"));
+	}
+
+	[Fact]
+	public void ApplicationIdPlaceholder_ReplacedWithPackageName ()
+	{
+		// ${applicationId} is a built-in placeholder (not a user key=value entry) that resolves
+		// to the application package name. It appears in merged library-manifest content such as
+		// a <permission> name or a <provider> authority (see MergeLibraryManifest).
+		var gen = CreateDefaultGenerator ();
+
+		var template = ParseTemplate (
+			"""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+			  <application android:label="Test">
+			    <provider android:name="com.example.FacebookInitProvider" android:authorities="${applicationId}.FacebookInitProvider" android:exported="false" />
+			  </application>
+			</manifest>
+			""");
+
+		var doc = GenerateAndLoad (gen, template: template);
+
+		var permission = doc.Root?.Elements ("permission").FirstOrDefault ();
+		Assert.Equal ("com.example.app.permission.C2D_MESSAGE", (string?)permission?.Attribute (AndroidNs + "name"));
+
+		var provider = doc.Root?.Element ("application")?.Elements ("provider")
+			.FirstOrDefault (p => (string?)p.Attribute (AndroidNs + "name") == "com.example.FacebookInitProvider");
+		Assert.Equal ("com.example.app.FacebookInitProvider", (string?)provider?.Attribute (AndroidNs + "authorities"));
+	}
+
+	[Fact]
+	public void LibraryManifest_MergedAndRelativeNamesQualified ()
+	{
+		// Mirrors MergeLibraryManifest: a library (.aar) manifest's top-level elements are merged
+		// into the app manifest, relative component names ('.Foo') are qualified with the library's
+		// own package, and ${applicationId} resolves to the application package.
+		var gen = CreateDefaultGenerator ();
+		var libManifest = Path.GetTempFileName ();
+		try {
+			File.WriteAllText (libManifest,
+				"""
+				<?xml version="1.0"?>
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lib.test">
+				  <permission android:name="${applicationId}.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+				  <application>
+				    <provider android:name=".internal.LibProvider" android:authorities="${applicationId}.LibProvider" android:exported="false" />
+				  </application>
+				</manifest>
+				""");
+			gen.LibraryManifests = [libManifest];
+
+			var doc = GenerateAndLoad (gen);
+
+			var permission = doc.Root?.Elements ("permission").FirstOrDefault ();
+			Assert.Equal ("com.example.app.permission.C2D_MESSAGE", (string?)permission?.Attribute (AndroidNs + "name"));
+
+			var provider = doc.Root?.Element ("application")?.Elements ("provider")
+				.FirstOrDefault (p => (string?)p.Attribute (AndroidNs + "authorities") == "com.example.app.LibProvider");
+			Assert.NotNull (provider);
+			// Relative name qualified with the library's own package, not the app package.
+			Assert.Equal ("com.lib.test.internal.LibProvider", (string?)provider!.Attribute (AndroidNs + "name"));
+		} finally {
+			File.Delete (libManifest);
+		}
 	}
 
 	[Fact]

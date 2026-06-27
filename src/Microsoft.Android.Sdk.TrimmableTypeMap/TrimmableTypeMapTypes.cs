@@ -46,4 +46,5 @@ public record ManifestConfig (
 	bool EmbedAssemblies = false,
 	string? ManifestPlaceholders = null,
 	string? CheckedBuild = null,
-	string? ApplicationJavaClass = null);
+	string? ApplicationJavaClass = null,
+	IReadOnlyList<string>? MergedManifestDocuments = null);

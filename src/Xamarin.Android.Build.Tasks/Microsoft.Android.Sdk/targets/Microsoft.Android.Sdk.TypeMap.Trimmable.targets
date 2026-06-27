@@ -82,7 +82,7 @@
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
-      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);@(ExtractedManifestDocuments);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
@@ -96,6 +96,10 @@
       <_TypeMapFrameworkAssemblies Include="@(FrameworkAssemblies)" />
       <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)"
           Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
+      <!-- Library (.aar) manifests are merged by the generator only for the legacy merger;
+           manifestmerger.jar performs the merge downstream in _ManifestMerger. -->
+      <_TrimmableLibraryManifests Include="@(ExtractedManifestDocuments)"
+          Condition="'$(AndroidManifestMerger)' == 'legacy'" />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
@@ -120,6 +124,7 @@
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
+        MergedManifestDocuments="@(_TrimmableLibraryManifests)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"

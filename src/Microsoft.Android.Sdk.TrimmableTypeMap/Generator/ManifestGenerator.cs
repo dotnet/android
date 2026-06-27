@@ -44,6 +44,26 @@ class ManifestGenerator
 	public Action<string>? WarnInvalidPlaceholder { get; set; }
 
 	/// <summary>
+	/// Absolute paths to extracted library (.aar) manifests that must be merged into the
+	/// application manifest. Only used by the legacy manifest merger; manifestmerger.jar handles
+	/// this downstream in the _ManifestMerger target. Mirrors the legacy ManifestDocument merge.
+	/// </summary>
+	public IReadOnlyList<string> LibraryManifests { get; set; } = [];
+
+	static readonly XNamespace ToolsNs = "http://schemas.android.com/tools";
+
+	// Attributes whose values are component names that must be qualified with the library's
+	// own package when they are relative (start with '.'). Mirrors ManifestDocument.ManifestAttributeFixups.
+	static readonly Dictionary<string, string []> ManifestAttributeFixups = new (StringComparer.Ordinal) {
+		{ "activity", ["name"] },
+		{ "application", ["backupAgent"] },
+		{ "instrumentation", ["name"] },
+		{ "provider", ["name"] },
+		{ "receiver", ["name"] },
+		{ "service", ["name"] },
+	};
+
+	/// <summary>
 	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
 	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
 	/// </summary>
@@ -143,10 +163,112 @@ class ManifestGenerator
 			AssemblyLevelElementBuilder.AddInternetPermission (manifest);
 		}
 
+		// Merge extracted library (.aar) manifests (legacy merger only — manifestmerger.jar does
+		// this downstream). Mirrors ManifestDocument: merge, then dedup, then strip node="remove",
+		// all before placeholder substitution so ${applicationId} resolves in merged content.
+		MergeLibraryManifests (manifest);
+		RemoveDuplicateElements (doc);
+		RemoveNodes (doc);
+
 		// Apply manifest placeholders
-		ApplyPlaceholders (doc, ManifestPlaceholders, WarnInvalidPlaceholder);
+		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
 
 		return (doc, providerNames);
+	}
+
+	/// <summary>
+	/// Merges each library manifest's top-level elements into the application manifest, mirroring
+	/// ManifestDocument.MergeLibraryManifest: elements with a matching android:name append their
+	/// children to the existing element, otherwise the element is added; relative component names
+	/// are qualified with the library's own package.
+	/// </summary>
+	void MergeLibraryManifests (XElement manifest)
+	{
+		foreach (var path in LibraryManifests) {
+			if (path.IsNullOrEmpty () || !System.IO.File.Exists (path)) {
+				continue;
+			}
+
+			XDocument libDoc;
+			try {
+				libDoc = XDocument.Load (path);
+			} catch (Exception ex) {
+				Warn?.Invoke ($"Unable to merge library manifest '{path}': {ex.Message}");
+				continue;
+			}
+
+			if (libDoc.Root is not { } libRoot) {
+				continue;
+			}
+
+			var package = (string?) libRoot.Attribute ("package") ?? "";
+			foreach (var top in libRoot.Elements ().ToList ()) {
+				var name = (string?) top.Attribute (AndroidNs + "name");
+				XElement? existing = name is not null
+					? manifest.Elements (top.Name).FirstOrDefault (e => (string?) e.Attribute (AndroidNs + "name") == name)
+					: manifest.Elements (top.Name).FirstOrDefault ();
+
+				if (existing is not null) {
+					// Append the library element's children to the matching element.
+					existing.Add (FixupNameElements (package, top.Nodes ()));
+				} else {
+					manifest.Add (FixupNameElements (package, [top]));
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Qualifies relative component names (those starting with '.') with the supplied package,
+	/// mirroring ManifestDocument.FixupNameElements.
+	/// </summary>
+	static IEnumerable<XNode> FixupNameElements (string packageName, IEnumerable<XNode> nodes)
+	{
+		var nodeList = nodes.ToList ();
+		foreach (var element in nodeList.OfType<XElement> ().Where (x => ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
+			var attributes = ManifestAttributeFixups [element.Name.LocalName];
+			foreach (var attr in element.Attributes ().Where (x => attributes.Contains (x.Name.LocalName))) {
+				if (attr.Value.StartsWith (".", StringComparison.Ordinal)) {
+					attr.Value = packageName + attr.Value;
+				}
+			}
+		}
+		return nodeList;
+	}
+
+	/// <summary>
+	/// Removes structurally-identical duplicate elements, mirroring ManifestDocument.RemoveDuplicateElements.
+	/// </summary>
+	static void RemoveDuplicateElements (XDocument doc)
+	{
+		foreach (var duplicate in ResolveDuplicates (doc.Elements ()).ToList ()) {
+			duplicate.Remove ();
+		}
+	}
+
+	static IEnumerable<XElement> ResolveDuplicates (IEnumerable<XElement> elements)
+	{
+		var elementList = elements.ToList ();
+		foreach (var e in elementList) {
+			foreach (var d in ResolveDuplicates (e.Elements ())) {
+				yield return d;
+			}
+		}
+		foreach (var d in elementList.GroupBy (x => x.ToString ()).SelectMany (x => x.Skip (1))) {
+			yield return d;
+		}
+	}
+
+	/// <summary>
+	/// Removes elements marked with tools:node="remove", mirroring ManifestDocument.RemoveNodes.
+	/// </summary>
+	static void RemoveNodes (XDocument doc)
+	{
+		foreach (var node in doc.Descendants ().ToList ()) {
+			if (node.Attribute (ToolsNs + "node")?.Value == "remove") {
+				node.Remove ();
+			}
+		}
 	}
 
 	XDocument CreateDefaultManifest ()
@@ -353,24 +475,32 @@ class ManifestGenerator
 	/// Replaces ${key} placeholders in all attribute values throughout the document.
 	/// Placeholder format: "key1=value1;key2=value2"
 	/// </summary>
-	internal static void ApplyPlaceholders (XDocument doc, string? placeholders, Action<string>? warnInvalidPlaceholder = null)
+	internal static void ApplyPlaceholders (XDocument doc, string? placeholders, string? packageName = null, Action<string>? warnInvalidPlaceholder = null)
 	{
-		if (placeholders.IsNullOrEmpty ()) {
-			return;
+		var replacements = new Dictionary<string, string> (StringComparer.Ordinal);
+		if (!placeholders.IsNullOrEmpty ()) {
+			foreach (var entry in placeholders.Split (PlaceholderSeparators, StringSplitOptions.RemoveEmptyEntries)) {
+				var eqIndex = entry.IndexOf ('=');
+				if (eqIndex > 0) {
+					var key = entry.Substring (0, eqIndex).Trim ();
+					var value = entry.Substring (eqIndex + 1).Trim ();
+					replacements ["${" + key + "}"] = value;
+				} else if (eqIndex < 0) {
+					// An entry without '=' is not a valid key=value pair. Mirror the legacy
+					// ManifestDocument.ReplacePlaceholders behavior and warn (XA1010).
+					warnInvalidPlaceholder?.Invoke (placeholders);
+				}
+			}
 		}
 
-		var replacements = new Dictionary<string, string> (StringComparer.Ordinal);
-		foreach (var entry in placeholders.Split (PlaceholderSeparators, StringSplitOptions.RemoveEmptyEntries)) {
-			var eqIndex = entry.IndexOf ('=');
-			if (eqIndex > 0) {
-				var key = entry.Substring (0, eqIndex).Trim ();
-				var value = entry.Substring (eqIndex + 1).Trim ();
-				replacements ["${" + key + "}"] = value;
-			} else if (eqIndex < 0) {
-				// An entry without '=' is not a valid key=value pair. Mirror the legacy
-				// ManifestDocument.ReplacePlaceholders behavior and warn (XA1010).
-				warnInvalidPlaceholder?.Invoke (placeholders);
-			}
+		// ${applicationId} is a built-in placeholder that always resolves to the application
+		// package name (mirrors ManifestDocument.Save, which does
+		// s.Replace ("${applicationId}", PackageName) before applying the user placeholders).
+		// It is set last so it wins over any user-supplied "applicationId" entry, matching the
+		// legacy ordering, and is what substitutes merged library-manifest values such as
+		// "${applicationId}.permission.C2D_MESSAGE".
+		if (!packageName.IsNullOrEmpty ()) {
+			replacements ["${applicationId}"] = packageName;
 		}
 
 		if (replacements.Count == 0) {

@@ -103,6 +103,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 
+	/// <summary>
+	/// Extracted library (.aar) manifest paths to merge into the application manifest. Bound from
+	/// <c>@(ExtractedManifestDocuments)</c> for the legacy manifest merger; manifestmerger.jar does
+	/// this merge downstream in the _ManifestMerger target.
+	/// </summary>
+	public string []? MergedManifestDocuments { get; set; }
+
 	[Output]
 	public ITaskItem [] GeneratedAssemblies { get; set; } = [];
 	[Output]
@@ -164,7 +171,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					EmbedAssemblies: EmbedAssemblies,
 					ManifestPlaceholders: ManifestPlaceholders is { Length: > 0 } ph ? string.Join (";", ph) : null,
 					CheckedBuild: CheckedBuild,
-					ApplicationJavaClass: ApplicationJavaClass);
+					ApplicationJavaClass: ApplicationJavaClass,
+					MergedManifestDocuments: MergedManifestDocuments is { Length: > 0 } mmd ? mmd : null);
 			}
 
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
