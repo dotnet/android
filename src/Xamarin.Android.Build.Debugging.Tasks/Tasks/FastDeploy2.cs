@@ -540,14 +540,19 @@ namespace Xamarin.Android.Tasks
 
 		async Task<Dictionary<string, RemoteFileInfo>> GetRemoteFileData (string rootPath, bool runAs)
 		{
+			// The stat format must be quoted so that the `|` separators survive to the device
+			// shell. `adb shell` re-parses its arguments, so passing the format as an argv element
+			// (e.g. via RunAdbShellCommand (params string [])) would let the device shell treat the
+			// `|` characters as pipes. Building a single, explicitly quoted command string avoids it.
+			string findCommand = $"find {QuoteShellArgument (rootPath)} -type f -exec stat -c '%n|%s|%Y' {{}} +";
 			string output;
 			if (runAs) {
-				output = await RunAs ("find", rootPath, "-type", "f", "-exec", "stat", "-c", "%n|%s|%Y", "{}", "+");
+				output = await RunAsShell (findCommand);
 				if (RaiseRunAsError (output)) {
 					return null;
 				}
 			} else {
-				var result = await RunAdbShellCommand ("find", rootPath, "-type", "f", "-exec", "stat", "-c", "%n|%s|%Y", "{}", "+");
+				var result = await RunAdbShellCommand (findCommand);
 				output = result.Output;
 			}
 

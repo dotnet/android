@@ -45,6 +45,14 @@ namespace Xamarin.Android.Tasks
 			var removedFiles = GetRemovedFiles (currentManifest, previousManifest);
 			LogDiagnostic ($"FastDeploy2 manifest changed files: {changedFiles.Count}; removed files: {removedFiles.Count}.");
 
+			foreach (var file in files) {
+				if (changedFiles.Contains (file.RelativePath)) {
+					LogDebugMessage ($"NotifySync CopyFile {file.RelativePath}.");
+				} else {
+					LogDebugMessage ($"NotifySync SkipCopyFile {file.RelativePath} file is up to date.");
+				}
+			}
+
 			string output = await CreateRemoteStagingDirectories (remoteStagingPath, expectedFiles);
 			if (!string.IsNullOrEmpty (output) && IsShellError (output, "mkdir")) {
 				LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
@@ -107,7 +115,7 @@ namespace Xamarin.Android.Tasks
 			var directories = new HashSet<string> (currentByDirectory.Keys, StringComparer.Ordinal);
 			directories.UnionWith (removedByDirectory.Keys);
 
-			foreach (string directory in directories) {
+			foreach (string directory in OrderDirectoriesParentsFirst (directories)) {
 				var currentInDirectory = GetFilesInDirectory (currentByDirectory, directory);
 				var newInDirectory = GetFilesInDirectory (newByDirectory, directory);
 				var removedInDirectory = GetFilesInDirectory (removedByDirectory, directory);
@@ -115,7 +123,11 @@ namespace Xamarin.Android.Tasks
 				string sourceDirectory = CombineRemotePath (remoteStagingPath, directory);
 
 				if (currentInDirectory.Count > 0 && (previousManifest == null || newInDirectory.Count == currentInDirectory.Count)) {
-					string script = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&rm -rf ./*&&ln -sf \"$s\"/* .";
+					// Only symlink the files that live directly in this directory. A plain
+					// `ln -sf "$s"/* .` would also create symlinks for staging subdirectories;
+					// processing those child directories would then follow the symlink back into
+					// the shell-owned staging area and fail with "Permission denied" under run-as.
+					string script = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&rm -rf ./*&&for f in \"$s\"/*;do [ -d \"$f\" ]||ln -sf \"$f\" .;done";
 					string output = await RunAsShell (script);
 					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
 						LogDiagnostic ($"Shell symlink glob update failed with '{output}'.");
@@ -139,6 +151,30 @@ namespace Xamarin.Android.Tasks
 		static List<string> GetFilesInDirectory (Dictionary<string, List<string>> filesByDirectory, string directory)
 		{
 			return filesByDirectory.TryGetValue (directory, out List<string> files) ? files : [];
+		}
+
+		// Order directories so that parents are always processed before their children. The full
+		// rewrite path runs `rm -rf ./*` in each directory, so a parent must be cleared before any
+		// child directory is (re)created inside it; otherwise the parent would delete the child.
+		static IEnumerable<string> OrderDirectoriesParentsFirst (IEnumerable<string> directories)
+		{
+			return directories
+				.OrderBy (directory => DirectoryDepth (directory))
+				.ThenBy (directory => directory, StringComparer.Ordinal);
+		}
+
+		static int DirectoryDepth (string directory)
+		{
+			if (string.IsNullOrEmpty (directory)) {
+				return 0;
+			}
+			int depth = 1;
+			foreach (char c in directory) {
+				if (c == '/') {
+					depth++;
+				}
+			}
+			return depth;
 		}
 
 		IEnumerable<string> CreateShellSymlinkScripts (string remoteStagingPath, string overridePath, List<string> newFiles, List<string> removedFiles)
