@@ -149,6 +149,84 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (updatedJava, File.ReadAllText (copiedJava), "Updated generated Java sources should be copied to android/src even when typemap assemblies do not change.");
 		}
 
+		// The JCWs that actually get compiled and packaged are the ones copied into
+		// $(IntermediateOutputPath)android/src. For CoreCLR + PublishTrimmed those come from
+		// the post-trim `typemap/linked-java` directory, which `_GeneratePostTrimTrimmableTypeMapJavaSources`
+		// (re)generates from the linked assemblies. The incrementality contract is that
+		// android/src must always stay consistent with linked-java; if `_GenerateJavaStubs` is
+		// skipped while linked-java changed, android/src would be left stale.
+		static void AssertAndroidSrcMatchesLinkedJava (ProjectBuilder builder, string message)
+		{
+			var intermediate = builder.Output.GetIntermediaryPath ("");
+			var linkedJavaDirectory = Directory.GetDirectories (intermediate, "linked-java", SearchOption.AllDirectories).FirstOrDefault ();
+			Assert.IsNotNull (linkedJavaDirectory, $"{message}: post-trim linked-java directory should exist under '{intermediate}'.");
+			// The JCWs that get compiled live in the same intermediate tree under android/src.
+			var androidSrcDirectory = Path.Combine (Path.GetDirectoryName (Path.GetDirectoryName (linkedJavaDirectory)), "android", "src");
+			DirectoryAssert.Exists (androidSrcDirectory, $"{message}: android/src directory should exist.");
+
+			var linkedJavaFiles = Directory.GetFiles (linkedJavaDirectory, "*.java", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (linkedJavaFiles, $"{message}: post-trim build should have generated linked-java JCWs.");
+
+			foreach (var linkedJava in linkedJavaFiles) {
+				var relativePath = Path.GetRelativePath (linkedJavaDirectory, linkedJava);
+				var copiedJava = Path.Combine (androidSrcDirectory, relativePath);
+				FileAssert.Exists (copiedJava, $"{message}: linked-java JCW '{relativePath}' should be copied to android/src.");
+				Assert.AreEqual (
+					File.ReadAllText (linkedJava),
+					File.ReadAllText (copiedJava),
+					$"{message}: android/src copy of '{relativePath}' should match the post-trim linked-java source.");
+			}
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_PublishTrimmed_KeepsAndroidSrcConsistentWithLinkedJava ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			AssertAndroidSrcMatchesLinkedJava (builder, "After first build");
+
+			// A no-op rebuild must not leave android/src out of sync with linked-java, even though
+			// the post-trim Java generation may run again.
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op rebuild should have succeeded.");
+			AssertAndroidSrcMatchesLinkedJava (builder, "After no-op rebuild");
+		}
+
+		[Test]
+		[Ignore ("Documents a known incrementality gap: _GeneratePostTrimTrimmableTypeMapJavaSources currently runs on every Release CoreCLR build. Re-enable once post-trim Java generation is made incremental and _GenerateJavaStubs keys off _TrimmableJavaSourceStamp.")]
+		public void Build_WithTrimmableTypeMap_PublishTrimmed_PostTrimJavaGenerationIsIncremental ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			// A no-op rebuild should not regenerate the post-trim JCWs or recopy them. If
+			// _GeneratePostTrimTrimmableTypeMapJavaSources runs on every build, the JCWs that feed
+			// _GenerateJavaStubs are rewritten each time, which both wastes work and means
+			// _GenerateJavaStubs must re-run to stay consistent (otherwise android/src goes stale).
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op rebuild should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+		}
+
 		[Test]
 		public void Build_WithTrimmableTypeMap_ArrayRankChangeRegeneratesTypeMap ()
 		{
