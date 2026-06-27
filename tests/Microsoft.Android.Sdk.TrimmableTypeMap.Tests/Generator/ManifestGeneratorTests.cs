@@ -93,6 +93,40 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Package_PlaceholderToken_ReplacedWithResolvedPackageName ()
+	{
+		// A template package that is a placeholder token (e.g. "${PACKAGENAME}") must be replaced
+		// with the resolved $(_AndroidPackage); otherwise manifest validation fails (AllResourcesInClassLibrary).
+		var gen = CreateDefaultGenerator ();
+		gen.PackageName = "x__PACKAGENAME_.x__PACKAGENAME_";
+		var template = ParseTemplate ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${PACKAGENAME}">
+			  <uses-sdk />
+			  <application android:label="App" />
+			</manifest>
+			""");
+		var doc = GenerateAndLoad (gen, template: template);
+		Assert.Equal ("x__PACKAGENAME_.x__PACKAGENAME_", (string?) doc.Root?.Attribute ("package"));
+	}
+
+	[Fact]
+	public void Package_ValidExplicitPackage_Preserved ()
+	{
+		var gen = CreateDefaultGenerator ();
+		gen.PackageName = "com.other.app";
+		var template = ParseTemplate ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <uses-sdk />
+			  <application android:label="App" />
+			</manifest>
+			""");
+		var doc = GenerateAndLoad (gen, template: template);
+		Assert.Equal ("com.example.app", (string?) doc.Root?.Attribute ("package"));
+	}
+
+	[Fact]
 	public void Activity_MainLauncher ()
 	{
 		var gen = CreateDefaultGenerator ();

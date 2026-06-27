@@ -214,7 +214,13 @@ class ManifestGenerator
 	{
 		manifest.SetAttributeValue (XNamespace.Xmlns + "android", AndroidNs.NamespaceName);
 
-		if (string.IsNullOrEmpty ((string?)manifest.Attribute ("package"))) {
+		// Resolve the package: when the template uses a placeholder token such as "${PACKAGENAME}"
+		// (or has no package), write the resolved value provided by MSBuild ($(_AndroidPackage),
+		// produced by GetAndroidPackageName, which substitutes placeholders and canonicalizes the
+		// package). This matches the legacy GenerateMainAndroidManifest; a valid explicit package is
+		// preserved so compat-name resolution keeps using it.
+		var packageAttr = (string?) manifest.Attribute ("package") ?? "";
+		if ((packageAttr.Length == 0 || packageAttr.Contains ("${")) && !PackageName.IsNullOrEmpty ()) {
 			manifest.SetAttributeValue ("package", PackageName);
 		}
 
