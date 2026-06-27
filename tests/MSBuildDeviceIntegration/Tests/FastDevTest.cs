@@ -9,10 +9,10 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
 	[Category ("UsesDevice")]
-	public class InstantRunTest : DeviceTest
+	public class FastDevTest : DeviceTest
 	{
 		[Test]
-		public void InstantRunSimpleBuild ()
+		public void FastDevSimpleBuild ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
 			};
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
-			var b = CreateApkBuilder ($"temp/InstantRunTargetsSkipped_{useManagedResourceGenerator}", cleanupOnDispose: false);
+			var b = CreateApkBuilder ($"temp/FastDevTargetsSkipped_{useManagedResourceGenerator}", cleanupOnDispose: false);
 			Assert.IsTrue (b.Build (proj), "1 build should have succeeded.");
 
 			// unchanged build
@@ -193,36 +193,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunResourceChange ()
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-			};
-			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = LoggerVerbosity.Detailed;
-				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
-				var logLines = b.LastBuildOutput;
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
-					l.Contains ("Target _BuildApkFastDev needs to be built")),
-					"Apk should have been built");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (b.Output.IsApkInstalled, "app apk was installed");
-
-
-				proj.LayoutMain = proj.LayoutMain.Replace ("LinearLayout", "RelativeLayout");
-				proj.Touch ("Resources\\Layout\\Main.axml");
-				Assert.IsTrue (b.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "install should have succeeded. 1");
-				logLines = b.LastBuildOutput;
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
-					l.Contains ("Target _BuildApkFastDev needs to be built")),
-					"Apk should not have been built");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (b.Output.IsApkInstalled, "app apk was installed");
-			}
-		}
-
-		[Test]
-		public void InstantRunFastDevDexes ([Values (false, true)] bool useEmbeddedDex)
+		public void FastDevWithEmbeddedDex ([Values (false, true)] bool useEmbeddedDex)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 			};

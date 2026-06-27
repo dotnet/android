@@ -154,54 +154,45 @@ static class ComponentElementBuilder
 		}
 
 		// Data elements
+		AddIntentFilterDataElement (filter, intentFilter);
 		AddIntentFilterDataElements (filter, intentFilter);
 
 		return filter;
 	}
 
-	// Each data attribute produces its own <data> element, matching the legacy
-	// IntentFilterAttribute.GetData () behavior. Singular properties are emitted first,
-	// in this order, followed by the plural (array) properties.
-	static readonly (string Property, string Attribute) [] SingularDataMappings = [
-		("DataHost", "host"),
-		("DataMimeType", "mimeType"),
-		("DataPath", "path"),
-		("DataPathPattern", "pathPattern"),
-		("DataPathPrefix", "pathPrefix"),
-		("DataPort", "port"),
-		("DataScheme", "scheme"),
-		("DataPathSuffix", "pathSuffix"),
-		("DataPathAdvancedPattern", "pathAdvancedPattern"),
+	// Ordered to match the legacy IntentFilterAttribute.GetData emission order (singular block first,
+	// then plural block), so trimmable manifest generation stays byte-for-byte compatible with ManifestDocument.
+	static readonly (string SingularProperty, string PluralProperty, string AttributeName) [] IntentFilterDataProperties = [
+		("DataHost",                "DataHosts",                "host"),
+		("DataMimeType",            "DataMimeTypes",            "mimeType"),
+		("DataPath",                "DataPaths",                "path"),
+		("DataPathPattern",         "DataPathPatterns",         "pathPattern"),
+		("DataPathPrefix",          "DataPathPrefixes",         "pathPrefix"),
+		("DataPort",                "DataPorts",                "port"),
+		("DataScheme",              "DataSchemes",              "scheme"),
+		("DataPathSuffix",          "DataPathSuffixes",         "pathSuffix"),
+		("DataPathAdvancedPattern", "DataPathAdvancedPatterns", "pathAdvancedPattern"),
 	];
 
-	static readonly (string Property, string Attribute) [] PluralDataMappings = [
-		("DataHosts", "host"),
-		("DataMimeTypes", "mimeType"),
-		("DataPaths", "path"),
-		("DataPathPatterns", "pathPattern"),
-		("DataPathPrefixes", "pathPrefix"),
-		("DataPorts", "port"),
-		("DataSchemes", "scheme"),
-		("DataPathSuffixes", "pathSuffix"),
-		("DataPathAdvancedPatterns", "pathAdvancedPattern"),
-	];
+	internal static void AddIntentFilterDataElement (XElement filter, IntentFilterInfo intentFilter)
+	{
+		foreach (var (propertyName, _, attributeName) in IntentFilterDataProperties) {
+			if (intentFilter.Properties.TryGetValue (propertyName, out var value) && value is string item && !string.IsNullOrEmpty (item)) {
+				filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
+			}
+		}
+	}
 
 	internal static void AddIntentFilterDataElements (XElement filter, IntentFilterInfo intentFilter)
 	{
-		foreach (var (property, attribute) in SingularDataMappings) {
-			if (intentFilter.Properties.TryGetValue (property, out var value) && value is string s && !string.IsNullOrEmpty (s)) {
-				filter.Add (new XElement ("data", new XAttribute (AndroidNs + attribute, s)));
-			}
-		}
-
-		foreach (var (property, attribute) in PluralDataMappings) {
-			if (!intentFilter.Properties.TryGetValue (property, out var value) || value is not IReadOnlyList<string> values) {
+		foreach (var (_, propertyName, attributeName) in IntentFilterDataProperties) {
+			if (!intentFilter.Properties.TryGetValue (propertyName, out var value) || value is not IReadOnlyList<string> values) {
 				continue;
 			}
 
 			foreach (var item in values) {
 				if (!string.IsNullOrEmpty (item)) {
-					filter.Add (new XElement ("data", new XAttribute (AndroidNs + attribute, item)));
+					filter.Add (new XElement ("data", new XAttribute (AndroidNs + attributeName, item)));
 				}
 			}
 		}

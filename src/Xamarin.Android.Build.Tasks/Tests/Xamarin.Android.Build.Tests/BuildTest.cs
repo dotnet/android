@@ -753,7 +753,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		public void BuildInDesignTimeMode (
 				[Values (false, true)]
 				bool useManagedParser,
-				[Values]
+				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)]
 				AndroidRuntime runtime
 			)
 		{

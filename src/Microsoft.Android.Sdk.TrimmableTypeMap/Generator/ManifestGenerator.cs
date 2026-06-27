@@ -393,6 +393,11 @@ class ManifestGenerator
 
 	int GetTargetSdkVersionValue (XElement manifest)
 	{
+		// Parity note: legacy ManifestDocument resolves the target SDK via VersionResolver.GetApiLevelFromId,
+		// which also maps codename ids (e.g. preview API names) to integers. That resolver lives in
+		// Xamarin.Android.Build.Tasks and isn't referenceable from this netstandard2.0 generator, so we only
+		// handle integer values here. A codename in the user-authored manifest falls through to the MSBuild
+		// TargetSdkVersion property, which is always already resolved to an integer (see TrimmableTypeMapGenerator).
 		var targetSdk = (string?) manifest.Element ("uses-sdk")?.Attribute (AndroidNs + "targetSdkVersion");
 		if (int.TryParse (targetSdk, out int value)) {
 			return value;
@@ -400,7 +405,10 @@ class ManifestGenerator
 		if (int.TryParse (TargetSdkVersion, out value)) {
 			return value;
 		}
-		return 0;
+		// Fail loudly rather than silently using 0 (which would emit a wrong manifest), matching legacy
+		// ManifestDocument, which throws InvalidOperationException on an unrecognized targetSdkVersion.
+		throw new InvalidOperationException (
+			$"The targetSdkVersion ('{targetSdk ?? TargetSdkVersion}') could not be resolved to an integer API level.");
 	}
 
 	IList<string> AddRuntimeProviders (XElement app)
@@ -418,7 +426,7 @@ class ManifestGenerator
 
 		// Check if runtime provider already exists in template
 		string runtimeProviderName = RuntimeProviderJavaName;
-		string? directBootAware = (string?) app.Attribute (AndroidNs + "directBootAware");
+		bool directBootAware = DirectBootAware (app);
 		if (!app.Elements ("provider").Any (p => {
 			var name = (string?)p.Attribute (ManifestConstants.AttName);
 			return name == runtimeProviderName ||
@@ -460,13 +468,36 @@ class ManifestGenerator
 		return providerNames;
 	}
 
-	XElement CreateRuntimeProvider (string name, string? processName, int initOrder, string? directBootAware)
+	static bool DirectBootAware (XElement app)
+	{
+		var directBootAwareAttrName = AndroidNs.GetName ("directBootAware");
+		if (IsDirectBootAware (app.Attribute (directBootAwareAttrName))) {
+			return true;
+		}
+
+		foreach (var element in app.Elements ()) {
+			if (IsDirectBootAware (element.Attribute (directBootAwareAttrName))) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static bool IsDirectBootAware (XAttribute? attribute)
+	{
+		return attribute is not null &&
+			bool.TryParse (attribute.Value, out bool value) &&
+			value;
+	}
+
+	XElement CreateRuntimeProvider (string name, string? processName, int initOrder, bool directBootAware)
 	{
 		return new XElement ("provider",
 			new XAttribute (AndroidNs + "name", name),
 			new XAttribute (AndroidNs + "exported", "false"),
 			new XAttribute (AndroidNs + "initOrder", initOrder),
-			directBootAware is not null ? new XAttribute (AndroidNs + "directBootAware", directBootAware) : null,
+			directBootAware ? new XAttribute (AndroidNs + "directBootAware", "true") : null,
 			processName is not null ? new XAttribute (AndroidNs + "process", processName) : null,
 			new XAttribute (AndroidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
 	}

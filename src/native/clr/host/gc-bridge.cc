@@ -74,7 +74,7 @@ void GCBridge::bridge_processing () noexcept
 		BridgeProcessing bridge_processing {args};
 		bridge_processing.process ();
 
-		bridge_processing_finished_callback (java_marshal_value_manager_handle, args);
+		bridge_processing_finished_callback (args);
 	}
 }
 

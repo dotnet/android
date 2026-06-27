@@ -15,11 +15,13 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniObjectReferenceOptions DoNotRegisterTarget = (JniObjectReferenceOptions)(1 << 2);
 
-	readonly JavaMarshalRegisteredPeers registeredPeers = new ();
+	public TrimmableTypeMapValueManager ()
+	{
+		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
+	}
 
 	protected override void Dispose (bool disposing)
 	{
-		registeredPeers.Dispose ();
 		base.Dispose (disposing);
 	}
 
@@ -35,32 +37,32 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 	public override void CollectPeers ()
 	{
-		registeredPeers.CollectPeers ();
+		JavaMarshalRegisteredPeers.CollectPeers ();
 	}
 
 	public override void AddPeer (IJavaPeerable value)
 	{
-		registeredPeers.AddPeer (value);
+		JavaMarshalRegisteredPeers.AddPeer (value);
 	}
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
-		return registeredPeers.PeekPeer (reference);
+		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
-		registeredPeers.RemovePeer (value);
+		JavaMarshalRegisteredPeers.RemovePeer (value);
 	}
 
 	public override void FinalizePeer (IJavaPeerable value)
 	{
-		registeredPeers.FinalizePeer (value);
+		JavaMarshalRegisteredPeers.FinalizePeer (value);
 	}
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
-		return registeredPeers.GetSurfacedPeers ();
+		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
 	}
 
 	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)

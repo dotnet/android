@@ -19,11 +19,13 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 	static readonly Type[] JIConstructorSignature  = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
 	static readonly Type[] XAConstructorSignature  = [typeof (IntPtr), typeof (JniHandleOwnership)];
 
-	readonly JavaMarshalRegisteredPeers registeredPeers = new ();
+	public CoreClrJavaMarshalValueManager ()
+	{
+		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
+	}
 
 	protected override void Dispose (bool disposing)
 	{
-		registeredPeers.Dispose ();
 		base.Dispose (disposing);
 	}
 
@@ -39,32 +41,32 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 
 	public override void CollectPeers ()
 	{
-		registeredPeers.CollectPeers ();
+		JavaMarshalRegisteredPeers.CollectPeers ();
 	}
 
 	public override void AddPeer (IJavaPeerable value)
 	{
-		registeredPeers.AddPeer (value);
+		JavaMarshalRegisteredPeers.AddPeer (value);
 	}
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
-		return registeredPeers.PeekPeer (reference);
+		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
-		registeredPeers.RemovePeer (value);
+		JavaMarshalRegisteredPeers.RemovePeer (value);
 	}
 
 	public override void FinalizePeer (IJavaPeerable value)
 	{
-		registeredPeers.FinalizePeer (value);
+		JavaMarshalRegisteredPeers.FinalizePeer (value);
 	}
 
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
-		return registeredPeers.GetSurfacedPeers ();
+		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
 	}
 
 	public override IJavaPeerable? CreatePeer (
