@@ -62,7 +62,31 @@ static class ComponentElementBuilder
 			element.Add (CreateMetaDataElement (meta));
 		}
 
+		// The legacy ManifestDocumentElement.ToElement sorts attributes alphabetically
+		// (specified.OrderBy (e => e)). Match that ordering so the generated manifest is
+		// byte-compatible with the legacy path when AndroidManifestMerger='legacy' (the
+		// manifestmerger.jar path re-sorts attributes itself, so this is also safe there).
+		SortAttributesAlphabetically (element);
+
 		return element;
+	}
+
+	// Reorders an element's attributes alphabetically by local name (case-insensitive),
+	// matching the legacy manifest generator's attribute ordering.
+	static void SortAttributesAlphabetically (XElement element)
+	{
+		var sorted = element.Attributes ()
+			.OrderBy (a => a.Name.LocalName, StringComparer.OrdinalIgnoreCase)
+			.ToList ();
+		if (sorted.Count < 2) {
+			return;
+		}
+		foreach (var attr in element.Attributes ().ToList ()) {
+			attr.Remove ();
+		}
+		foreach (var attr in sorted) {
+			element.Add (attr);
+		}
 	}
 
 	static void ResolveParentActivityName (XElement element, IReadOnlyDictionary<string, string>? managedToManifestNames)

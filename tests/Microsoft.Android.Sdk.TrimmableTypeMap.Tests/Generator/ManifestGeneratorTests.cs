@@ -104,6 +104,36 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Activity_AttributesAreSortedAlphabetically ()
+	{
+		// The legacy ManifestDocumentElement sorts attributes alphabetically; the trimmable
+		// generator must match so the 'legacy' AndroidManifestMerger path is byte-compatible.
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			Properties = new Dictionary<string, object?> {
+				["Theme"] = "@style/MyTheme",
+				["Label"] = "My Activity",
+				["Exported"] = true,
+				["Enabled"] = true,
+				["Icon"] = "@drawable/icon",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var activity = doc.Root?.Element ("application")?.Element ("activity");
+		Assert.NotNull (activity);
+		var localNames = activity!.Attributes ().Select (a => a.Name.LocalName).ToList ();
+		var expected = localNames.OrderBy (n => n, System.StringComparer.OrdinalIgnoreCase).ToList ();
+		Assert.Equal (expected, localNames);
+		// android:name must appear in its alphabetical position (not forced first).
+		Assert.Contains ("enabled", localNames);
+		Assert.True (localNames.IndexOf ("enabled") < localNames.IndexOf ("exported"));
+		Assert.True (localNames.IndexOf ("label") < localNames.IndexOf ("name"));
+		Assert.True (localNames.IndexOf ("name") < localNames.IndexOf ("theme"));
+	}
+
+	[Fact]
 	public void Activity_IntentFilter ()
 	{
 		var gen = CreateDefaultGenerator ();
