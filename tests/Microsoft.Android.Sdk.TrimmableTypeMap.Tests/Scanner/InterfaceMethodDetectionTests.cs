@@ -22,17 +22,17 @@ public class InterfaceMethodDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void ImplicitInterfaceImpl_UsesDirectManagedDispatch ()
+	public void ImplicitInterfaceImpl_DoesNotUseDirectManagedDispatch ()
 	{
-		// Interface-implementation marshal methods must dispatch directly to the managed
-		// method rather than forwarding through the interface's private static n_* callback.
-		// That callback lives in the (separately ILC-trimmed) binding assembly and is trimmed
-		// away in the trimmable path, which otherwise makes the generated proxy forwarder
-		// "will always throw" (or fail to load). See JavaPeerScanner.ShouldCallManagedMethodDirectly.
+		// Interface-implementation marshal methods must NOT dispatch directly to the managed
+		// method: doing so resolved the peer as the *Invoker* at runtime (which forwards back to
+		// Java), causing infinite recursion / stack overflow for listener callbacks such as
+		// ViewTreeObserver.GlobalLayout. They forward through the existing static n_* callback
+		// instead, matching the legacy runtime behavior. See JavaPeerScanner.ShouldCallManagedMethodDirectly.
 		var peer = FindFixtureByJavaName ("my/app/ImplicitClickListener");
 		var onClick = peer.MarshalMethods.First (m => m.JniName == "onClick");
 		Assert.True (onClick.IsInterfaceImplementation);
-		Assert.True (onClick.CallManagedMethodDirectly);
+		Assert.False (onClick.CallManagedMethodDirectly);
 	}
 
 	[Fact]

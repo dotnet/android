@@ -1430,16 +1430,12 @@ public sealed class JavaPeerScanner : IDisposable
 			return false;
 		}
 
-		// Methods collected from an implemented Java interface (e.g. a listener Implementor)
-		// declare their n_* callback as a *private static* method on the interface type, which
-		// lives in the (separately ILC-trimmed) binding assembly. Nothing in the trimmable path
-		// references that callback within its own assembly, so ILC trims it and the generated
-		// proxy's forwarder "will always throw" (or fails to load). Dispatch directly to the
-		// managed method instead — this mirrors exactly what the static n_* callback does
-		// (GetObject<TInterface> + callvirt the interface method) but keeps the proxy self-contained.
-		if (isInterfaceImplementation) {
-			return true;
-		}
+		// NOTE: interface-implementation methods intentionally do NOT use direct managed dispatch.
+		// Doing so caused infinite recursion / stack overflow at runtime for listener callbacks
+		// (e.g. ViewTreeObserver.GlobalLayout): the generated UCO resolved the peer as the *Invoker*
+		// (which forwards back to Java) instead of the user's Implementor, so Java -> native -> Invoker
+		// -> Java recursed until the stack overflowed. Forwarding through the existing static n_*
+		// callback (the default below) matches the legacy runtime behavior and dispatches correctly.
 
 		// Direct [Register] methods have no connector-declared callback owner, so forwarding
 		// through n_* may bind to an inherited callback. If the type hides a base virtual
