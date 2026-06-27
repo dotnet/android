@@ -1377,7 +1377,7 @@ public sealed class JavaPeerScanner : IDisposable
 		string declaringAssemblyName = "";
 		ParseConnectorDeclaringType (registerInfo.Connector, out declaringTypeName, out declaringAssemblyName);
 
-		bool mayCallManagedMethodDirectly = ShouldCallManagedMethodDirectly (isConstructor, isExport, declaringTypeName);
+		bool mayCallManagedMethodDirectly = ShouldCallManagedMethodDirectly (isConstructor, isExport, declaringTypeName, isInterfaceImplementation);
 
 		// Only decode TypeRefData signatures for methods that need direct dispatch IL
 		// generation; static n_* callback forwarders already encode from the JNI signature.
@@ -1420,7 +1420,7 @@ public sealed class JavaPeerScanner : IDisposable
 		});
 	}
 
-	static bool ShouldCallManagedMethodDirectly (bool isConstructor, bool isExport, string declaringTypeName)
+	static bool ShouldCallManagedMethodDirectly (bool isConstructor, bool isExport, string declaringTypeName, bool isInterfaceImplementation)
 	{
 		if (isExport) {
 			return true;
@@ -1428,6 +1428,17 @@ public sealed class JavaPeerScanner : IDisposable
 
 		if (isConstructor) {
 			return false;
+		}
+
+		// Methods collected from an implemented Java interface (e.g. a listener Implementor)
+		// declare their n_* callback as a *private static* method on the interface type, which
+		// lives in the (separately ILC-trimmed) binding assembly. Nothing in the trimmable path
+		// references that callback within its own assembly, so ILC trims it and the generated
+		// proxy's forwarder "will always throw" (or fails to load). Dispatch directly to the
+		// managed method instead — this mirrors exactly what the static n_* callback does
+		// (GetObject<TInterface> + callvirt the interface method) but keeps the proxy self-contained.
+		if (isInterfaceImplementation) {
+			return true;
 		}
 
 		// Direct [Register] methods have no connector-declared callback owner, so forwarding

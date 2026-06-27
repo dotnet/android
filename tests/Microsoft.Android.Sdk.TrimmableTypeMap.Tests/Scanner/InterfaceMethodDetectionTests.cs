@@ -22,6 +22,20 @@ public class InterfaceMethodDetectionTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void ImplicitInterfaceImpl_UsesDirectManagedDispatch ()
+	{
+		// Interface-implementation marshal methods must dispatch directly to the managed
+		// method rather than forwarding through the interface's private static n_* callback.
+		// That callback lives in the (separately ILC-trimmed) binding assembly and is trimmed
+		// away in the trimmable path, which otherwise makes the generated proxy forwarder
+		// "will always throw" (or fail to load). See JavaPeerScanner.ShouldCallManagedMethodDirectly.
+		var peer = FindFixtureByJavaName ("my/app/ImplicitClickListener");
+		var onClick = peer.MarshalMethods.First (m => m.JniName == "onClick");
+		Assert.True (onClick.IsInterfaceImplementation);
+		Assert.True (onClick.CallManagedMethodDirectly);
+	}
+
+	[Fact]
 	public void ImplicitMultiInterface_BothMethodsDetected ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/ImplicitMultiListener");
