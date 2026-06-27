@@ -143,7 +143,7 @@ Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidMa
     <value>Nieprawidłowa nazwa pliku: nazwy plików nie mogą używać słów zastrzeżonych języka Java.</value>
   </data>
   <data name="IL6001" xml:space="preserve">
-    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+    <value>Zestaw „{0}” zawiera odwołanie do przestarzałego atrybutu „Android.Runtime.PreserveAttribute”. Elementy członkowskie z tym atrybutem mogą zostać przycięte. Zamiast tego użyj elementu System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
@@ -225,7 +225,7 @@ Uwaga: Android Designer jest niezgodny z zestawem Java SDK 11.0: https://aka.ms/
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Nieznany tryb „{0}”.</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
