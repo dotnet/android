@@ -1889,6 +1889,13 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 
+			// https://github.com/dotnet/android/issues/11719 - PublishReadyToRun
+			// fails on Release+CoreCLR because crossgen2 does not yet accept
+			// `--targetos android`. Skip R2R so the rest of the test runs.
+			if (runtime == AndroidRuntime.CoreCLR) {
+				proj.SetProperty ("PublishReadyToRun", "false");
+			}
+
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${USINGS}", "using Android.Telecom;\nusing Android.Graphics.Pdf.Component;")

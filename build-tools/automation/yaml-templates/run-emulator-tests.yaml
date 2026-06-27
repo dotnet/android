@@ -26,7 +26,6 @@ jobs:
 
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        xaprepareScenario: EmulatorTestDependencies
         jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
         useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
