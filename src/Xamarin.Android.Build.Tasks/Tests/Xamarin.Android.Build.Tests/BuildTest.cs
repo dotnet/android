@@ -1840,7 +1840,14 @@ namespace UnnamedProject
 				proj.SupportedOSPlatformVersion = "24";
 				proj.TargetSdkVersion = apiLevel;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput, "Output should not contain any XA0102 warnings");
+				if (runtime != AndroidRuntime.NativeAOT) {
+					StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput, "Output should not contain any XA0102 warnings");
+				} else {
+					// NativeAOT JCW generation is not yet trimming-aware, so it emits JCWs (and their
+					// lint warnings, e.g. XA0102 CustomX509TrustManager) for framework types that illink
+					// trims on CoreCLR. Skip the XA0102 assertion on NativeAOT until that is addressed.
+					// https://github.com/dotnet/android/issues/11767
+				}
 				StringAssertEx.DoesNotContain ("XA0103", b.LastBuildOutput, "Output should not contain any XA0103 errors");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}

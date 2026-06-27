@@ -640,6 +640,20 @@ namespace Xamarin.Android.Build.Tests
 			return false;
 		}
 
+		// Some behaviors differ fundamentally between NativeAOT (ILC) and CoreCLR/MonoVM
+		// (e.g. ILC does not run illink, and the trimmable typemap uses CRC-only package naming),
+		// so certain test cases cannot apply as-is on NativeAOT. Use this to skip such a case
+		// with an explicit reason.
+		protected bool IgnoreOnNativeAot (AndroidRuntime runtime, string reason)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ($"NativeAOT: {reason}");
+				return true;
+			}
+
+			return false;
+		}
+
 		[SetUp]
 		public void TestSetup ()
 		{

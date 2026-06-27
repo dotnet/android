@@ -747,6 +747,9 @@ public abstract class MyRunner {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			if (IgnoreOnNativeAot (runtime, "ILC does not run illink, so the obsolete-PreserveAttribute IL6001 warning is not emitted.")) {
+				return;
+			}
 
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
 			proj.SetRuntime (runtime);

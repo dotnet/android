@@ -1539,6 +1539,9 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			if (IgnoreOnNativeAot (runtime, "the 'Lowercase' $(AndroidPackageNamingPolicy) is intentionally unsupported with the trimmable typemap (only Crc64 and LowercaseCrc64 are supported).")) {
+				return;
+			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
