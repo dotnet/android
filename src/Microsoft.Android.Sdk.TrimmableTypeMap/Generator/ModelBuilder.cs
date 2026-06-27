@@ -290,6 +290,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			IsInterface = peer.IsInterface,
 			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 

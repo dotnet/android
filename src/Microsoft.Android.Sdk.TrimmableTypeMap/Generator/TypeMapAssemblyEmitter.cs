@@ -665,9 +665,16 @@ sealed class TypeMapAssemblyEmitter
 		// placeholder like `Java.Lang.Object` leaks an incorrect TargetType into the typemap.
 		// The non-generic base takes `targetType` as a ctor parameter, so we can pass the real
 		// open-generic type token (a TypeRef, not a closed TypeSpec) and keep TargetType correct.
+		//
+		// Interface peers also use the non-generic base: `JavaPeerProxy<T>` annotates T with
+		// [DynamicallyAccessedMembers(PublicConstructors|NonPublicConstructors)], and closing it
+		// over an interface (which has no constructors) makes ILC fail to load the type
+		// (TypeLoadException: "Failed to load type 'JavaPeerProxy`1<ISomeInterface>'"). The peer is
+		// still activated from its InvokerType in CreateInstance, so behaviour is unchanged.
+		bool useNonGenericBase = proxy.IsGenericDefinition || proxy.IsInterface;
 		EntityHandle proxyBaseType;
 		MemberReferenceHandle baseCtorRef;
-		if (proxy.IsGenericDefinition) {
+		if (useNonGenericBase) {
 			proxyBaseType = _javaPeerProxyNonGenericRef;
 			baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
 				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
@@ -709,9 +716,9 @@ sealed class TypeMapAssemblyEmitter
 			encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_0);
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
-				if (proxy.IsGenericDefinition) {
-					// Non-generic base ctor signature: (string, Type, Type?). Push the open-generic
-					// target type as the second argument.
+				if (useNonGenericBase) {
+					// Non-generic base ctor signature: (string, Type, Type?). Push the
+					// target type (open-generic definition or interface) as the second argument.
 					encoder.LoadToken (targetTypeRef);
 					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
 				}
@@ -721,7 +728,7 @@ sealed class TypeMapAssemblyEmitter
 				} else {
 					encoder.OpCode (ILOpCode.Ldnull);
 				}
-				encoder.Call (baseCtorRef, parameterCount: proxy.IsGenericDefinition ? 3 : 2, isInstance: true);
+				encoder.Call (baseCtorRef, parameterCount: useNonGenericBase ? 3 : 2, isInstance: true);
 				encoder.Return ();
 			});
 
