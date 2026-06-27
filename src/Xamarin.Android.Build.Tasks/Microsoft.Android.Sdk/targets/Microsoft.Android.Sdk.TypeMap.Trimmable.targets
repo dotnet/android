@@ -83,7 +83,7 @@
       AfterTargets="CoreCompile"
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
-      Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)">
+      Outputs="$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
       <_TypeMapInputAssemblies Include="@(ReferencePath)" />
@@ -139,7 +139,13 @@
     </ItemGroup>
     <Delete Files="@(_DeletedCopiedJavaFiles)" />
     <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedCopiedJavaFiles->Count())' != '0' " />
-    <Touch Files="@(_GeneratedTypeMapAssemblies);$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
+    <!-- Touch only the stamp and the assemblies-list file as the incremental sentinel.
+         The generated typemap assemblies are written via CopyIfStreamChanged, so their
+         timestamps already reflect real content changes. Touching them unconditionally would
+         make them newer on every re-run (e.g. after an unrelated recompile triggered by a
+         .csproj.user change), cascading into _BuildApkEmbed -> bundle -> _Sign and defeating
+         incremental builds (CSProjUserFileChanges). -->
+    <Touch Files="$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
 
     <ItemGroup>
       <FileWrites Remove="@(_DeletedJavaFiles)" />
