@@ -249,7 +249,6 @@ namespace Xamarin.Android.Tasks
 				var info = new FileInfo (file.LocalPath);
 				manifest.Files [file.RelativePath] = new ManifestEntry {
 					RelativePath = file.RelativePath,
-					LocalPath = file.LocalPath,
 					Size = info.Length,
 					LastWriteTimeUtcTicks = info.LastWriteTimeUtc.Ticks,
 				};
@@ -479,7 +478,6 @@ namespace Xamarin.Android.Tasks
 			builder.AppendLine (manifest.PrimaryCpuAbi ?? "");
 			foreach (var entry in manifest.Files.OrderBy (entry => entry.Key, StringComparer.Ordinal)) {
 				builder.Append (entry.Key).Append ('\t')
-					.Append (entry.Value.LocalPath).Append ('\t')
 					.Append (entry.Value.RelativePath).Append ('\t')
 					.Append (entry.Value.Size).Append ('\t')
 					.AppendLine (entry.Value.LastWriteTimeUtcTicks.ToString ());
@@ -529,9 +527,6 @@ namespace Xamarin.Android.Tasks
 		internal class ManifestEntry {
 			[JsonPropertyName ("relativePath")]
 			public string RelativePath { get; set; }
-
-			[JsonPropertyName ("localPath")]
-			public string LocalPath { get; set; }
 
 			[JsonPropertyName ("size")]
 			public long Size { get; set; }
