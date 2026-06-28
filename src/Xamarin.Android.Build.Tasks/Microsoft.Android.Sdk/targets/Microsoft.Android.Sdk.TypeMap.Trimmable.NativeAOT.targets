@@ -42,9 +42,10 @@
   </Target>
 
   <!--
-    Force the typemap to be generated in the OUTER build (RuntimeIdentifier == '') before
-    _ResolveAssemblies spawns the inner per-RID ILC build. The inner build consumes the typemap
-    assembly list (via _AddTrimmableTypeMapAssembliesToIlc -> _ReadGeneratedTrimmableTypeMapAssemblies)
+    Force the typemap to be generated in the OUTER build (the build that is not an inner
+    per-RID build, i.e. '$(_OuterIntermediateOutputPath)' == '') before _ResolveAssemblies
+    spawns the inner per-RID ILC build. The inner build consumes the typemap assembly list
+    (via _AddTrimmableTypeMapAssembliesToIlc -> _ReadGeneratedTrimmableTypeMapAssemblies)
     but cannot generate it: _GenerateTrimmableTypeMap is gated to the outer build (it requires
     '$(_OuterIntermediateOutputPath)' == ''). _GenerateTrimmableTypeMap's own AfterTargets="CoreCompile"
     trigger does not fire when compilation is up-to-date - e.g. the IDE's separate "Compile" then
@@ -53,9 +54,15 @@
     This mirrors the CoreCLR _AddTrimmableTypeMapToLinker target, which forces generation before the
     (outer) ILLink. _ResolveAssemblies runs after compilation (it consumes @(IntermediateAssembly)), so
     the generator still observes the compiled app assembly.
+
+    The condition matches on '$(_OuterIntermediateOutputPath)' == '' (the same discriminator
+    _GenerateTrimmableTypeMap uses) rather than 'RuntimeIdentifier == ''' so that single-RID outer
+    builds (e.g. -p:RuntimeIdentifier=android-arm64) are covered too; the inner build sets
+    _OuterIntermediateOutputPath via _ResolveAssemblies AdditionalProperties, so this target is
+    correctly skipped there.
   -->
   <Target Name="_EnsureTrimmableTypeMapGeneratedForNativeAotInnerBuild"
-      Condition=" '$(RuntimeIdentifier)' == '' "
+      Condition=" '$(_OuterIntermediateOutputPath)' == '' "
       BeforeTargets="_ResolveAssemblies"
       DependsOnTargets="_GenerateTrimmableTypeMap" />
 
