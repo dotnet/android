@@ -364,7 +364,12 @@ namespace Xamarin.Android.Tasks
 				"-c",
 				$"cat {QuoteShellArgument (overrideMarkerPath)} 2>/dev/null || true"
 			}).Select (QuoteShellArgument));
-			string script = $"printf 'remote='; cat {QuoteShellArgument (remoteMarkerPath)} 2>/dev/null || true; printf '\\noverride='; {runAsCommand} 2>/dev/null || true; printf '\\n'";
+			// Use `echo` (which emits a real newline) with command substitution rather than
+			// `printf '\n'`: the backslash escape does not reliably survive the adb/shell quoting
+			// layers and can arrive at the device as a literal "\n", which merges both values onto
+			// a single line so ParseDeviceManifestState can never read the override hash and the
+			// readiness check always fails (forcing a full redeploy on every incremental install).
+			string script = $"echo \"remote=$(cat {QuoteShellArgument (remoteMarkerPath)} 2>/dev/null)\"; echo \"override=$({runAsCommand} 2>/dev/null)\"";
 			var result = await RunAdbShellCommand (script);
 			return ParseDeviceManifestState (result.Output);
 		}
