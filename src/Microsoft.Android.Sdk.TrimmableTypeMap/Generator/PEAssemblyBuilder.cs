@@ -416,11 +416,11 @@ sealed class PEAssemblyBuilder
 	public TypeSpecificationHandle MakeGenericTypeSpec (EntityHandle openType, EntityHandle typeArg)
 	{
 		_sigBlob.Clear ();
-		_sigBlob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		_sigBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		_sigBlob.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
+		_sigBlob.WriteByte ((byte) SignatureTypeKind.Class);
 		_sigBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
 		_sigBlob.WriteCompressedInteger (1); // generic arity = 1
-		_sigBlob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		_sigBlob.WriteByte ((byte) SignatureTypeKind.Class);
 		_sigBlob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeArg));
 		return Metadata.AddTypeSpecification (Metadata.GetOrAddBlob (_sigBlob));
 	}

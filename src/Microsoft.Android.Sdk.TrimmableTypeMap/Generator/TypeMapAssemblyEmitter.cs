@@ -1100,9 +1100,9 @@ sealed class TypeMapAssemblyEmitter
 	void EncodeJniObjectReferenceLocal (BlobBuilder blob)
 	{
 		// LOCAL_SIG header (0x07), count = 1, ELEMENT_TYPE_VALUETYPE + compressed token
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (1); // 1 local variable
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 	}
 
@@ -1111,11 +1111,11 @@ sealed class TypeMapAssemblyEmitter
 		// LOCAL_SIG header (0x07), count = 2:
 		//   local 0: JniObjectReference (valuetype)
 		//   local 1: object (for storing the newobj result across the DeleteRef call)
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (2); // 2 local variables
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
-		blob.WriteByte (0x1c); // ELEMENT_TYPE_OBJECT
+		blob.WriteByte ((byte) SignatureTypeCode.Object);
 	}
 
 	MemberReferenceHandle AddJavaInteropActivationCtorRef (EntityHandle declaringTypeRef)
@@ -1172,9 +1172,9 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle AddManagedCtorRef (EntityHandle declaringTypeRef, IReadOnlyList<TypeRefData> parameterTypes)
 	{
 		var blob = new BlobBuilder (32);
-		blob.WriteByte (0x20); // HASTHIS
+		blob.WriteByte ((byte) SignatureAttributes.Instance);
 		blob.WriteCompressedInteger (parameterTypes.Count);
-		blob.WriteByte (0x01); // ELEMENT_TYPE_VOID
+		blob.WriteByte ((byte) SignatureTypeCode.Void);
 		foreach (var parameterType in parameterTypes) {
 			WriteManagedTypeSignature (blob, parameterType.ManagedTypeName, parameterType.AssemblyName);
 		}
@@ -1258,12 +1258,12 @@ sealed class TypeMapAssemblyEmitter
 	void EncodeUcoForwarderLegacyLocals (BlobBuilder blob, JniParamKind returnKind)
 	{
 		bool isVoid = returnKind == JniParamKind.Void;
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (isVoid ? 1 : 2);
 		if (!isVoid) {
 			JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (blob), returnKind);
 		}
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
 	}
 
@@ -1665,12 +1665,12 @@ sealed class TypeMapAssemblyEmitter
 			_pe.WriteTypeSignature (blob, namedType.Type);
 			break;
 		case SzArrayRuntimeTypeSpec arrayType:
-			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
+			blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 			EncodeRuntimeTypeSpec (blob, arrayType.ElementType);
 			break;
 		case GenericRuntimeTypeSpec genericType:
-			blob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-			blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+			blob.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
+			blob.WriteByte ((byte) SignatureTypeKind.Class);
 			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (genericType.OpenType));
 			blob.WriteCompressedInteger (1); // generic arity = 1
 			EncodeRuntimeTypeSpec (blob, genericType.Argument);
@@ -1692,7 +1692,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		if (TryGetSzArrayElementType (managedType, out var elementType)) {
 			var blob = new BlobBuilder (32);
-			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
+			blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 			WriteManagedTypeSignature (blob, elementType, defaultAssemblyName);
 			return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (blob));
 		}
@@ -1717,30 +1717,30 @@ sealed class TypeMapAssemblyEmitter
 	void WriteManagedTypeSignature (BlobBuilder blob, string managedType, string defaultAssemblyName)
 	{
 		if (TryGetSzArrayElementType (managedType, out var elementType)) {
-			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
+			blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 			WriteManagedTypeSignature (blob, elementType, defaultAssemblyName);
 			return;
 		}
 
 		switch (managedType) {
-		case "System.Boolean": blob.WriteByte (0x02); return;
-		case "System.Char":    blob.WriteByte (0x03); return;
-		case "System.SByte":   blob.WriteByte (0x04); return;
-		case "System.Byte":    blob.WriteByte (0x05); return;
-		case "System.Int16":   blob.WriteByte (0x06); return;
-		case "System.UInt16":  blob.WriteByte (0x07); return;
-		case "System.Int32":   blob.WriteByte (0x08); return;
-		case "System.UInt32":  blob.WriteByte (0x09); return;
-		case "System.Int64":   blob.WriteByte (0x0A); return;
-		case "System.UInt64":  blob.WriteByte (0x0B); return;
-		case "System.Single":  blob.WriteByte (0x0C); return;
-		case "System.Double":  blob.WriteByte (0x0D); return;
-		case "System.String":  blob.WriteByte (0x0E); return;
-		case "System.Object":  blob.WriteByte (0x1C); return;
+		case "System.Boolean": blob.WriteByte ((byte) SignatureTypeCode.Boolean); return;
+		case "System.Char":    blob.WriteByte ((byte) SignatureTypeCode.Char); return;
+		case "System.SByte":   blob.WriteByte ((byte) SignatureTypeCode.SByte); return;
+		case "System.Byte":    blob.WriteByte ((byte) SignatureTypeCode.Byte); return;
+		case "System.Int16":   blob.WriteByte ((byte) SignatureTypeCode.Int16); return;
+		case "System.UInt16":  blob.WriteByte ((byte) SignatureTypeCode.UInt16); return;
+		case "System.Int32":   blob.WriteByte ((byte) SignatureTypeCode.Int32); return;
+		case "System.UInt32":  blob.WriteByte ((byte) SignatureTypeCode.UInt32); return;
+		case "System.Int64":   blob.WriteByte ((byte) SignatureTypeCode.Int64); return;
+		case "System.UInt64":  blob.WriteByte ((byte) SignatureTypeCode.UInt64); return;
+		case "System.Single":  blob.WriteByte ((byte) SignatureTypeCode.Single); return;
+		case "System.Double":  blob.WriteByte ((byte) SignatureTypeCode.Double); return;
+		case "System.String":  blob.WriteByte ((byte) SignatureTypeCode.String); return;
+		case "System.Object":  blob.WriteByte ((byte) SignatureTypeCode.Object); return;
 		}
 
 		var typeHandle = ResolveManagedTypeHandle (managedType, defaultAssemblyName);
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeHandle));
 	}
 
@@ -1763,16 +1763,16 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	void EncodeUcoConstructorLocals_Standard (BlobBuilder blob)
 	{
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (3);
 		// local 0: JniTransition (valuetype)
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniTransitionRef));
 		// local 1: JniRuntime (class)
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniRuntimeRef));
 		// local 2: Exception (class)
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
 	}
 
@@ -1782,19 +1782,19 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	void EncodeUcoConstructorLocals_JavaInterop (BlobBuilder blob)
 	{
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (4);
 		// local 0: JniTransition (valuetype)
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniTransitionRef));
 		// local 1: JniRuntime (class)
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniRuntimeRef));
 		// local 2: Exception (class)
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
 		// local 3: JniObjectReference (valuetype)
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 	}
 
@@ -1804,22 +1804,22 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	void EncodeUcoConstructorLocals_DefaultConstructor (BlobBuilder blob, EntityHandle targetTypeRef)
 	{
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (5);
 		// local 0: JniTransition (valuetype)
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniTransitionRef));
 		// local 1: JniRuntime (class)
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniRuntimeRef));
 		// local 2: Exception (class)
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_exceptionRef));
 		// local 3: JniObjectReference (valuetype)
-		blob.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 		// local 4: target type (class)
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (targetTypeRef));
 	}
 
@@ -1917,14 +1917,14 @@ sealed class TypeMapAssemblyEmitter
 				encoder.Return ();
 			},
 			encodeLocals: localSig => {
-				localSig.WriteByte (0x07); // IMAGE_CEE_CS_CALLCONV_LOCAL_SIG
+				localSig.WriteByte ((byte) SignatureKind.LocalVariables);
 				localSig.WriteCompressedInteger (3);
 
 				// local 0: native int (stackalloc pointer)
-				localSig.WriteByte (0x18); // ELEMENT_TYPE_I
+				localSig.WriteByte ((byte) SignatureTypeCode.IntPtr);
 
 				// local 1: JniObjectReference
-				localSig.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+				localSig.WriteByte ((byte) SignatureTypeKind.ValueType);
 				localSig.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
 
 				// local 2: ReadOnlySpan<JniNativeMethod>
@@ -1995,11 +1995,11 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	static void EncodeGenericValueTypeInst (BlobBuilder builder, EntityHandle openType, EntityHandle valueTypeArg)
 	{
-		builder.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		builder.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
+		builder.WriteByte ((byte) SignatureTypeKind.ValueType);
 		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (openType));
 		builder.WriteCompressedInteger (1); // generic arity = 1
-		builder.WriteByte (0x11); // ELEMENT_TYPE_VALUETYPE
+		builder.WriteByte ((byte) SignatureTypeKind.ValueType);
 		builder.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (valueTypeArg));
 	}
 
