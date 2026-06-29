@@ -86,9 +86,8 @@ static class MavenExtensions
 			return false;
 		}
 
-		// TODO: Need a new message saying that only one JavaArtifact is allowed
 		if (artifacts.Count > 1) {
-			log.LogCodedError ("XA4243", Properties.Resources.XA4243, "JavaArtifact", type, task.ItemSpec);
+			log.LogCodedError ("XA4256", Properties.Resources.XA4256, "JavaArtifact", type, task.ItemSpec);
 			artifact = null;
 			return false;
 		}
