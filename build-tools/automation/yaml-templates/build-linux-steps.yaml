@@ -15,8 +15,8 @@ steps:
   - bash: |
       set -e
       sudo apt-get update
-      sudo apt-get install -y p7zip-full
-    displayName: Install p7zip on Linux
+      sudo apt-get install -y p7zip-full cmake ninja-build ccache
+    displayName: Install build dependencies on Linux
 
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
