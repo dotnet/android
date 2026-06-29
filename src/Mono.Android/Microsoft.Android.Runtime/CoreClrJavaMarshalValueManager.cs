@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
@@ -19,8 +18,6 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 
 	static readonly Type[] JIConstructorSignature  = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
 	static readonly Type[] XAConstructorSignature  = [typeof (IntPtr), typeof (JniHandleOwnership)];
-
-	static JniMethodInfo? s_classGetInterfacesMethod;
 
 	public CoreClrJavaMarshalValueManager ()
 	{
@@ -135,7 +132,7 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 			// interface signature) may only advertise a more-derived interface, so we
 			// must enumerate the class's interfaces to find the most-derived peer.
 			if (type == null && targetType.IsInterface) {
-				type = GetInterfaceTypeAssignableTo (klass, targetType);
+				type = JavaInterfaceHierarchy.FindFirst (klass, ResolveInterfaceType);
 			}
 
 			if (type != null) {
@@ -169,65 +166,15 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 			return null;
 		}
 
-		// Recursively walks the Java interfaces declared on `klass` (and their
-		// super-interfaces) looking for a registered .NET type assignable to
-		// `targetType`. `Class.getInterfaces ()` only returns directly declared
-		// interfaces, so we must recurse to cover transitive ones. Directly
-		// declared interfaces are checked before their super-interfaces, so the
-		// most-derived match is preferred. The `klass` reference is owned by the
-		// caller and is not disposed here.
-		Type? GetInterfaceTypeAssignableTo (JniObjectReference klass, Type targetType)
+		// Resolves a Java interface (by its JNI type name) to the registered .NET
+		// type assignable to targetType, used while walking the class's interfaces.
+		Type? ResolveInterfaceType (string? ifaceName)
 		{
-			var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (klass, GetClassGetInterfacesMethod ());
-			try {
-				if (!interfaces.IsValid) {
-					return null;
-				}
-
-				int count = JniEnvironment.Arrays.GetArrayLength (interfaces);
-				for (int i = 0; i < count; i++) {
-					var iface = JniEnvironment.Arrays.GetObjectArrayElement (interfaces, i);
-					try {
-						var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
-						if (ifaceName != null && JniTypeSignature.TryParse (ifaceName, out var ifaceSig)) {
-							var type = GetTypeAssignableTo (ifaceSig, targetType);
-							if (type != null) {
-								return type;
-							}
-						}
-
-						var result = GetInterfaceTypeAssignableTo (iface, targetType);
-						if (result != null) {
-							return result;
-						}
-					} finally {
-						JniObjectReference.Dispose (ref iface);
-					}
-				}
-			} finally {
-				JniObjectReference.Dispose (ref interfaces);
+			if (ifaceName != null && JniTypeSignature.TryParse (ifaceName, out var ifaceSig)) {
+				return GetTypeAssignableTo (ifaceSig, targetType);
 			}
-
 			return null;
 		}
-	}
-
-	static JniMethodInfo GetClassGetInterfacesMethod ()
-	{
-		var method = s_classGetInterfacesMethod;
-		if (method != null) {
-			return method;
-		}
-
-		var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
-		try {
-			method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
-		} finally {
-			JniObjectReference.Dispose (ref classClass);
-		}
-
-		var previous = Interlocked.CompareExchange (ref s_classGetInterfacesMethod, method, null);
-		return previous ?? method;
 	}
 
 	IJavaPeerable? TryCreatePeerInstance (
