@@ -208,7 +208,7 @@ public class ManifestGeneratorTests
 		var doc = GenerateAndLoad (gen, [peer]);
 		var activity = doc.Root?.Element ("application")?.Element ("activity");
 		Assert.NotNull (activity);
-		var localNames = activity!.Attributes ().Select (a => a.Name.LocalName).ToList ();
+		var localNames = activity.Attributes ().Select (a => a.Name.LocalName).ToList ();
 		var expected = localNames.OrderBy (n => n, System.StringComparer.OrdinalIgnoreCase).ToList ();
 		Assert.Equal (expected, localNames);
 		// android:name must appear in its alphabetical position (not forced first).
@@ -1120,7 +1120,7 @@ public class ManifestGeneratorTests
 				.FirstOrDefault (p => (string?)p.Attribute (AndroidNs + "authorities") == "com.example.app.LibProvider");
 			Assert.NotNull (provider);
 			// Relative name qualified with the library's own package, not the app package.
-			Assert.Equal ("com.lib.test.internal.LibProvider", (string?)provider!.Attribute (AndroidNs + "name"));
+			Assert.Equal ("com.lib.test.internal.LibProvider", (string?)provider.Attribute (AndroidNs + "name"));
 		} finally {
 			File.Delete (libManifest);
 		}

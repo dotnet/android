@@ -227,7 +227,7 @@ static class ComponentElementBuilder
 		bool hasAttribute = false;
 
 		foreach (var (property, attribute) in LayoutMappings) {
-			if (layoutProperties.TryGetValue (property, out var value) && value is string s && !string.IsNullOrEmpty (s)) {
+			if (layoutProperties.TryGetValue (property, out var value) && value is string s && !s.IsNullOrEmpty ()) {
 				element.SetAttributeValue (AndroidNs + attribute, s);
 				hasAttribute = true;
 			}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -185,7 +186,7 @@ class ManifestGenerator
 	void MergeLibraryManifests (XElement manifest)
 	{
 		foreach (var path in LibraryManifests) {
-			if (path.IsNullOrEmpty () || !System.IO.File.Exists (path)) {
+			if (path.IsNullOrEmpty () || !File.Exists (path)) {
 				continue;
 			}
 
@@ -254,7 +255,7 @@ class ManifestGenerator
 				yield return d;
 			}
 		}
-		foreach (var d in elementList.GroupBy (x => x.ToString ()).SelectMany (x => x.Skip (1))) {
+		foreach (var d in elementList.GroupBy (x => x.ToString (SaveOptions.DisableFormatting)).SelectMany (x => x.Skip (1))) {
 			yield return d;
 		}
 	}
