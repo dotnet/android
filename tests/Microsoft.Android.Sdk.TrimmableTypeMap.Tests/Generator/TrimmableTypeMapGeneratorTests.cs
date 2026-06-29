@@ -367,6 +367,34 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void RootManifestReferencedTypes_DoesNotWarnForApplicationJavaClass ()
+	{
+		// android.support.multidex.MultiDexApplication (injected via $(AndroidApplicationJavaClass)
+		// when $(AndroidEnableMultiDex) is true) is a Java framework type with no managed peer,
+		// so it must not produce an XA4250 "not found in any scanned assembly" warning.
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
+				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp",
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application android:name="android.support.multidex.MultiDexApplication" />
+			</manifest>
+			""");
+
+		var warnings = new List<string> ();
+		var generator = CreateGenerator (warnings);
+		generator.RootManifestReferencedTypes (peers, doc, "android.support.multidex.MultiDexApplication");
+
+		Assert.DoesNotContain (warnings, w => w.Contains ("MultiDexApplication"));
+	}
+
+	[Fact]
 	public void RootManifestReferencedTypes_SkipsAlreadyUnconditional ()
 	{
 		var peers = new List<JavaPeerInfo> {
