@@ -244,6 +244,51 @@
   </Target>
 
   <!--
+    Override _RemoveRegisterAttribute for the trimmable typemap path.
+
+    The base target (Xamarin.Android.Common.targets) copies every @(_ResolvedAssemblies)
+    into its @(_ShrunkAssemblies) location. For PublishTrimmed builds the framework/user
+    @(_ShrunkAssemblies) destinations live inside the shared NuGet runtime pack
+    (e.g. .../runtimes/<rid>/lib/net11.0/shrunk/<assembly>.dll).
+
+    On NativeAOT the managed framework/user assemblies are compiled to a native shared
+    library by ILC and are never packaged, so these shrunk copies are not consumed:
+    CollectAssemblyFilesToCompress (the only task that reads their content) is gated to
+    '$(_AndroidRuntime)' != 'NativeAOT'. Staging them into the shared runtime pack is
+    therefore unsafe: concurrent builds (multiple projects and the parallel per-RID inner
+    builds) target the same shared files, so they race and fail intermittently with
+    XACIC7028 (FileNotFoundException) on a clean pack cache.
+
+    For NativeAOT, redirect the shrunk copies to a project-local intermediate directory
+    instead of the shared runtime pack. They are still produced with CopyIfChanged so the
+    copies keep stable timestamps (only rewritten when content actually changes), which
+    preserves the incremental up-to-date checks that consume @(_ShrunkAssemblies) /
+    @(_ShrunkFrameworkAssemblies) as inputs — while never writing into the shared pack.
+
+    CoreCLR (and any other trimmable runtime) keeps the base behavior because it still
+    packages the managed assemblies and therefore needs the shrunk copies in place.
+  -->
+  <Target Name="_RemoveRegisterAttribute"
+      DependsOnTargets="_PrepareAssemblies"
+      Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'">
+    <ItemGroup Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">
+      <_ShrunkAssemblies Remove="@(_ShrunkAssemblies)" />
+      <_ShrunkAssemblies Include="@(_ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(DestinationSubPath)')" />
+      <_ShrunkFrameworkAssemblies Remove="@(_ShrunkFrameworkAssemblies)" />
+      <_ShrunkFrameworkAssemblies Include="@(_ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(DestinationSubPath)')" />
+      <_ShrunkUserAssemblies Remove="@(_ShrunkUserAssemblies)" />
+      <_ShrunkUserAssemblies Include="@(_ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(DestinationSubPath)')" />
+    </ItemGroup>
+    <CopyIfChanged
+      SourceFiles="@(_ResolvedAssemblies)"
+      DestinationFiles="@(_ShrunkAssemblies)" />
+    <CopyIfChanged
+      SourceFiles="@(_ResolvedAssemblies->'%(Identity).config')"
+      DestinationFiles="@(_ShrunkAssemblies->'%(Identity).config')" />
+    <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
+  </Target>
+
+  <!--
     _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
     In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
     so this target only handles JCW file copying, manifest, assembly store setup, and native config.
