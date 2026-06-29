@@ -310,7 +310,6 @@ namespace Android.Runtime {
 		}
 	}
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
 	[RequiresUnreferencedCode ("AndroidTypeManager is reflection-backed (it loads Mono.Android.Export for [Export] members) and is not trimming-compatible.")]
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
