@@ -482,15 +482,14 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Jun 2026) produces 4 `ILC : AOT analysis warning IL3050`
-					// warnings: two distinct warnings (the reflection-backed ManagedTypeManager
-					// generic ctor and JNINativeWrapper.CreateDelegate), each surfaced twice in the
-					// MSBuild summary (once per publish target context). #11753 replaced the JNIEnv
-					// array path with JavaArrayProxy, removing the previous JNIEnv.MakeArrayType
-					// warning. Even though this test expects no warnings and the above likely make
-					// the app not work correctly at run time, it is still worth running this test
-					// under NativeAOT to test for the absence of other warnings.
-					int numberOfExpectedWarnings = 4;
+					// NativeAOT currently (Jun 2026) produces 6 `ILC : AOT analysis warning IL3050`
+					// warnings: three distinct warnings (the reflection-backed ManagedTypeManager
+					// ctor, JNIEnv.MakeArrayType, and JNINativeWrapper.CreateDelegate), each surfaced
+					// twice in the MSBuild summary (once per publish target context). Even though this
+					// test expects no warnings and the above likely make the app not work correctly at
+					// run time, it is still worth running this test under NativeAOT to test for the
+					// absence of other warnings.
+					int numberOfExpectedWarnings = 6;
 
 					// MSBuild prints a "    N Warning(s)" summary line near the end of the build; parse N so the
 					// assertion can report the actual count instead of a bare "Expected: True But was: False".
