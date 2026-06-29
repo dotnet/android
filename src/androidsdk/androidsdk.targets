@@ -356,11 +356,7 @@
       <_GlobRoot Condition=" '$(_StripComponents)' == '1' ">@(_StagedTopDir)</_GlobRoot>
       <_GlobRoot Condition=" '$(_StripComponents)' == '0' ">$(_StagingDir)</_GlobRoot>
     </PropertyGroup>
-<<<<<<< dev/simonrozsival/java-interop-1441-android
-    <ItemGroup Condition=" '$(HostOS)' != 'Windows' And Exists('$(_StagingDir)') ">
-=======
     <ItemGroup Condition=" '$(HostOS)' != 'Windows' And '$(_GlobRoot)' != '' ">
->>>>>>> main
       <_StagedFile Remove="@(_StagedFile)" />
       <_StagedFile Include="$(_GlobRoot)\**\*" />
     </ItemGroup>
