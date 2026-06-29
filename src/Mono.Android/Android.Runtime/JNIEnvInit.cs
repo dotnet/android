@@ -198,6 +198,7 @@ namespace Android.Runtime
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 			JniRuntime.JniValueManager CreateCoreClrJavaMarshalValueManager ()
 			{
 				return new CoreClrJavaMarshalValueManager ();
