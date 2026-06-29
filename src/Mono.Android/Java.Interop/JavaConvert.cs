@@ -141,18 +141,9 @@ namespace Java.Interop {
 					if (factoryConverter != null)
 						return factoryConverter;
 				} else if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
-					if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-						Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
-						return GetJniHandleConverterForType (t);
-					}
-					if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
-						Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
-						return GetJniHandleConverterForType (t);
-					}
-					if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-						Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
-						return GetJniHandleConverterForType (t);
-					}
+					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
+					if (factoryConverter != null)
+						return factoryConverter;
 				}
 			}
 
@@ -164,6 +155,26 @@ namespace Java.Interop {
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 
 			return null;
+
+			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
+				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
+			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
+			{
+				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
+					Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+					return GetJniHandleConverterForType (t);
+				}
+				if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
+					Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+					return GetJniHandleConverterForType (t);
+				}
+				if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
+					Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+					return GetJniHandleConverterForType (t);
+				}
+
+				return null;
+			}
 		}
 
 		/// <summary>
@@ -242,26 +253,16 @@ namespace Java.Interop {
 
 		internal readonly struct ArrayElementConverter
 		{
-			[DynamicallyAccessedMembers (Constructors)]
 			readonly Type? elementType;
-			readonly Func<IntPtr, JniHandleOwnership, object>? converter;
+			readonly Func<IntPtr, JniHandleOwnership, object?>? converter;
 			readonly bool useRuntimeTypeMapping;
 
 			public ArrayElementConverter (Array array)
 			{
-				elementType = GetArrayElementType (array);
+				elementType = array.GetType ().GetElementType ();
 				converter = elementType != null ? GetJniHandleConverter (elementType) : null;
 				useRuntimeTypeMapping = elementType is null || elementType == typeof (object);
 			}
-
-			// Array.GetType ().GetElementType () cannot statically carry the constructor annotations that
-			// peer construction (Java.Lang.Object.GetObject) requires. The element types of arrays that are
-			// marshaled back to managed peers are preserved by the Android linker steps, so isolate the
-			// unprovable flow here rather than suppressing the whole conversion path.
-			[UnconditionalSuppressMessage ("Trimming", "IL2073",
-				Justification = "Array element types marshaled to managed peers are preserved by the Android linker steps.")]
-			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type? GetArrayElementType (Array array) => array.GetType ().GetElementType ();
 
 			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 			{
@@ -461,7 +462,9 @@ namespace Java.Interop {
 		{
 			var lref = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 			try {
-				string className = JniEnvironment.Types.GetJniTypeNameFromClass (lref);
+				string? className = JniEnvironment.Types.GetJniTypeNameFromClass (lref);
+				if (className is null)
+					return null;
 				if (TypeMappings.TryGetValue (className, out var match))
 					return match;
 				if (JniEnvironment.Types.IsAssignableFrom (lref, new JniObjectReference (JavaDictionary.map_class)))
