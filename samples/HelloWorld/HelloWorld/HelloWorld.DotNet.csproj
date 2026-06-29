@@ -3,7 +3,6 @@
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>HelloWorld</RootNamespace>
-    <PublishAot>true</PublishAot>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HelloLibrary\HelloLibrary.DotNet.csproj" />
