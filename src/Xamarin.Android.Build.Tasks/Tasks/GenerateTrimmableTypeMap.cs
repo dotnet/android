@@ -148,7 +148,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
 		var peReaders = new List<PEReader> ();
-		var assemblies = new List<(string Name, PEReader Reader)> ();
+		var assemblies = new List<AssemblyInput> ();
 		TrimmableTypeMapResult? result = null;
 		try {
 			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
@@ -156,7 +156,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				peReaders.Add (peReader);
 				var mdReader = peReader.GetMetadataReader ();
 				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
-				assemblies.Add ((assemblyName, peReader));
+				assemblies.Add (new AssemblyInput (assemblyName, path, peReader));
 				if (isFrameworkAssembly) {
 					frameworkAssemblyNames.Add (assemblyName);
 				}
