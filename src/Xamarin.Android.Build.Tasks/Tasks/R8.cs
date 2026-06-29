@@ -58,7 +58,8 @@ namespace Xamarin.Android.Tasks
 
 		// Derive the fully-qualified Java type name from each user .java source file. Java requires the
 		// public top-level type name to match the file name, so '<package>.<FileNameWithoutExtension>' is
-		// the type to keep. Files that no longer exist are skipped.
+		// the type to keep. Files that no longer exist are skipped. Only the public top-level type is kept;
+		// secondary/non-public types in the same file rely on the public type's '{ *; }' or being unused.
 		IEnumerable<string> GetUserJavaTypes ()
 		{
 			if (JavaSourceFiles == null) {
@@ -94,7 +95,9 @@ namespace Xamarin.Android.Tasks
 						return line.Substring ("package ".Length, end - "package ".Length).Trim ();
 					}
 				}
-				// The package declaration, if present, must precede any type declaration.
+				// The package declaration, if present, must precede any type declaration. This is a
+				// lightweight scan (not a full Java parser): the first 'import'/type keyword ends the
+				// search, and earlier comment lines are skipped, so package always wins in practice.
 				if (line.StartsWith ("import ", StringComparison.Ordinal) || line.Contains ("class ") || line.Contains ("interface ") || line.Contains ("enum ")) {
 					break;
 				}

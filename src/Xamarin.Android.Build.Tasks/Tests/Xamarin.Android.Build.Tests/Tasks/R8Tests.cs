@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("public class Foo {}",                                     null)] // no package
 		[TestCase ("import java.util.List;\npackage com.late;\nclass Foo {}", null)] // package after import is ignored
 		[TestCase ("class Foo {\npackage com.late;\n}",                       null)] // package after type is ignored
-		public void ReadJavaPackage (string content, string expected)
+		public void ReadJavaPackage (string content, string? expected)
 		{
 			var path = Path.GetTempFileName ();
 			try {
