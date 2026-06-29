@@ -24,7 +24,6 @@ public class TrimmableTypeMap
 	static readonly JavaArrayProxy s_noArrayProxySentinel = new MissingJavaArrayProxy ();
 	static TrimmableTypeMap? s_instance;
 	static bool s_nativeMethodsRegistered;
-	static JniMethodInfo? s_classGetInterfacesMethod;
 
 	internal static TrimmableTypeMap Instance =>
 		s_instance ?? throw new InvalidOperationException (
@@ -295,56 +294,15 @@ public class TrimmableTypeMap
 		// so we recurse into super-interfaces to find the matching TypeMap entry.
 		static JavaPeerProxy? TryMatchInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, Type targetType)
 		{
-			var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
-			try {
-				if (!interfaces.IsValid) {
-					return null;
-				}
-
-				int count = JniEnvironment.Arrays.GetArrayLength (interfaces);
-				for (int i = 0; i < count; i++) {
-					var iface = JniEnvironment.Arrays.GetObjectArrayElement (interfaces, i);
-					try {
-						var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
-						if (ifaceName != null) {
-							var proxy = self.GetProxyForJniClass (ifaceName, targetType);
-							if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
-								return proxy;
-							}
-						}
-
-						// Recurse into super-interfaces
-						var result = TryMatchInterfaces (self, iface, targetType);
-						if (result != null) {
-							return result;
-						}
-					} finally {
-						JniObjectReference.Dispose (ref iface);
+			return JavaInterfaceHierarchy.FindFirst (jniClass, ifaceName => {
+				if (ifaceName != null) {
+					var proxy = self.GetProxyForJniClass (ifaceName, targetType);
+					if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
+						return proxy;
 					}
 				}
-			} finally {
-				JniObjectReference.Dispose (ref interfaces);
-			}
-
-			return null;
-		}
-
-		static JniMethodInfo GetClassGetInterfacesMethod ()
-		{
-			var method = s_classGetInterfacesMethod;
-			if (method != null) {
-				return method;
-			}
-
-			var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
-			try {
-				method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
-			} finally {
-				JniObjectReference.Dispose (ref classClass);
-			}
-
-			var previous = Interlocked.CompareExchange (ref s_classGetInterfacesMethod, method, null);
-			return previous ?? method;
+				return null;
+			});
 		}
 
 		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
