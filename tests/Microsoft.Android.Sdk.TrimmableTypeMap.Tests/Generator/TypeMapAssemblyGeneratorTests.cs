@@ -798,7 +798,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData (1, 0x04)]  // Boolean → sbyte — matches MCW n_* callbacks
+	[InlineData (1, 0x02)]  // Boolean → bool (System.Boolean) — matches MCW n_* callbacks
 	[InlineData (2, 0x04)]  // Byte → sbyte
 	[InlineData (3, 0x03)]  // Char → char
 	[InlineData (4, 0x06)]  // Short → int16
@@ -827,8 +827,8 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var ucoBytes = ucoBlob.ToArray ();
 		var cbBytes = cbBlob.ToArray ();
 		Assert.NotEqual (ucoBytes, cbBytes);
-		Assert.Equal (0x05, ucoBytes [0]);  // byte (unsigned)
-		Assert.Equal (0x04, cbBytes [0]);    // sbyte (signed)
+		Assert.Equal (0x05, ucoBytes [0]);  // byte (unsigned, blittable JNI ABI)
+		Assert.Equal (0x02, cbBytes [0]);    // bool (System.Boolean, matches MCW n_* callback)
 	}
 
 	[Fact]
@@ -868,11 +868,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UcoMethod_BooleanReturn_WrapperUsesByte_CallbackUsesSByte ()
+	public void Generate_UcoMethod_BooleanReturn_WrapperUsesByte_CallbackUsesBoolean ()
 	{
-		// Regression test: the UCO wrapper must use byte (unsigned, JNI ABI) for boolean,
-		// but the callback MemberRef must use sbyte (signed, MCW convention).
-		// A mismatch caused ILLink to fail resolving the member reference and trim n_* methods.
+		// Regression test: the UCO wrapper must use byte (unsigned, blittable JNI ABI) for
+		// boolean, but the callback MemberRef must use System.Boolean to match the MCW-generated
+		// n_* callback signature. Encoding the callback boolean as sbyte produced a MemberRef
+		// that could not be resolved to the real n_* method (SByte != Boolean), causing ILC to
+		// report "will always throw because: Missing method" for every boolean-bearing callback.
 		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolReturnTest");
 		using var pe = new PEReader (stream);
@@ -889,13 +891,14 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Find the callback MemberRef that the UCO wrapper calls (n_OnTouch on the TouchHandler type)
 		var callbackRef = FindCallbackMemberRef (reader, "n_OnTouch");
 		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.SByte", callbackSig.ReturnType);
+		Assert.Equal ("System.Boolean", callbackSig.ReturnType);
 	}
 
 	[Fact]
-	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesSByte ()
+	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesBoolean ()
 	{
-		// Regression test: boolean parameters must also use the correct encoding.
+		// Regression test: boolean parameters must also use the correct encoding — byte for the
+		// blittable UCO ABI, System.Boolean for the n_* callback MemberRef.
 		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolParamTest");
 		using var pe = new PEReader (stream);
@@ -913,7 +916,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Find the callback MemberRef
 		var callbackRef = FindCallbackMemberRef (reader, "n_OnFocusChange");
 		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.SByte", callbackSig.ParameterTypes.Last ());
+		Assert.Equal ("System.Boolean", callbackSig.ParameterTypes.Last ());
 	}
 
 	[Fact]
