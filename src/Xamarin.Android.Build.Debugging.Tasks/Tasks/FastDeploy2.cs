@@ -735,8 +735,8 @@ namespace Xamarin.Android.Tasks
 
 			var stdout = new StringBuilder ();
 			var stderr = new StringBuilder ();
-			var stdoutCompleted = new ManualResetEvent (false);
-			var stderrCompleted = new ManualResetEvent (false);
+			using var stdoutCompleted = new ManualResetEvent (false);
+			using var stderrCompleted = new ManualResetEvent (false);
 			var psi = new ProcessStartInfo {
 				FileName = adb,
 				Arguments = processArguments.ToString (),
