@@ -1176,7 +1176,7 @@ sealed class TypeMapAssemblyEmitter
 		blob.WriteCompressedInteger (parameterTypes.Count);
 		blob.WriteByte ((byte) SignatureTypeCode.Void);
 		foreach (var parameterType in parameterTypes) {
-			WriteManagedTypeSignature (blob, parameterType.ManagedTypeName, parameterType.AssemblyName);
+			_pe.WriteTypeSignature (blob, parameterType);
 		}
 		return _pe.Metadata.AddMemberReference (declaringTypeRef, _pe.Metadata.GetOrAddString (".ctor"), _pe.Metadata.GetOrAddBlob (blob));
 	}

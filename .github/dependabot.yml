@@ -45,6 +45,7 @@ updates:
       - "/src/r8"
       - "/src/manifestmerger"
       - "/src/proguard-android"
+      - "/tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gitsubmodule"

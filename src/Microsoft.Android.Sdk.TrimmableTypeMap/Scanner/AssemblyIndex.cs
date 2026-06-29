@@ -17,6 +17,7 @@ sealed class AssemblyIndex : IDisposable
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
+	public string AssemblyPath { get; }
 
 	/// <summary>
 	/// Maps full managed type name (e.g., "Android.App.Activity") to its TypeDefinitionHandle.
@@ -48,18 +49,19 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public bool MayUseJniAddNativeMethodRegistrationAttribute { get; private set; }
 
-	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName)
+	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string assemblyPath)
 	{
 		this.peReader = peReader;
 		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
 		Reader = reader;
 		AssemblyName = assemblyName;
+		AssemblyPath = assemblyPath;
 	}
 
-	public static AssemblyIndex Create (PEReader peReader, string assemblyName)
+	public static AssemblyIndex Create (PEReader peReader, string assemblyName, string assemblyPath = "")
 	{
 		var reader = peReader.GetMetadataReader ();
-		var index = new AssemblyIndex (peReader, reader, assemblyName);
+		var index = new AssemblyIndex (peReader, reader, assemblyName, assemblyPath);
 		index.Build ();
 		return index;
 	}
@@ -432,7 +434,7 @@ sealed class AssemblyIndex : IDisposable
 		var properties = new Dictionary<string, object?> (StringComparer.Ordinal);
 		foreach (var named in value.NamedArguments) {
 			if (named.Name is not null && named.Name != "Categories") {
-				properties [named.Name] = named.Value;
+				properties [named.Name] = TryGetStringArray (named.Value, out var strings) ? strings : named.Value;
 			}
 		}
 

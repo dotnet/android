@@ -332,10 +332,7 @@ static class ModelBuilder
 		if (peer.ActivationCtor != null) {
 			bool isOnLeaf = string.Equals (peer.ActivationCtor.DeclaringTypeName, peer.ManagedTypeName, StringComparison.Ordinal);
 			proxy.ActivationCtor = new ActivationCtorData {
-				DeclaringType = new TypeRefData {
-					ManagedTypeName = peer.ActivationCtor.DeclaringTypeName,
-					AssemblyName = peer.ActivationCtor.DeclaringAssemblyName,
-				},
+				DeclaringType = peer.ActivationCtor.DeclaringType,
 				IsOnLeafType = isOnLeaf,
 				Style = peer.ActivationCtor.Style,
 			};
@@ -361,7 +358,7 @@ static class ModelBuilder
 			proxy.UcoMethods.Add (new UcoMethodData {
 				WrapperName = $"n_{mm.JniName}_uco_{ucoIndex}",
 				CallbackMethodName = mm.NativeCallbackName,
-				CallbackType = new TypeRefData {
+				CallbackType = mm.DeclaringType ?? new TypeRefData {
 					ManagedTypeName = !mm.DeclaringTypeName.IsNullOrEmpty () ? mm.DeclaringTypeName : peer.ManagedTypeName,
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},

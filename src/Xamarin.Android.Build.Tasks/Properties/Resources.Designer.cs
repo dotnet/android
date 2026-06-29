@@ -1606,6 +1606,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Only one &apos;{0}&apos; is allowed for &apos;{1}&apos; item &apos;{2}&apos;..
+        /// </summary>
+        public static string XA4256 {
+            get {
+                return ResourceManager.GetString("XA4256", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {

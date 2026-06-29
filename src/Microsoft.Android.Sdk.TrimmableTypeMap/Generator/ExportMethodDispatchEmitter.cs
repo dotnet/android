@@ -323,7 +323,7 @@ sealed class ExportMethodDispatchEmitter
 	{
 		string managedTypeName = managedType.ManagedTypeName;
 
-		ThrowIfUnsupportedManagedType (managedTypeName);
+		ThrowIfUnsupportedManagedType (managedType);
 
 		if (TryEmitExportParameterArgument (encoder, exportKind, argumentIndex)) {
 			return;
@@ -410,8 +410,10 @@ sealed class ExportMethodDispatchEmitter
 		encoder.Call (_context.JniEnvToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 	}
 
-	void ThrowIfUnsupportedManagedType (string managedTypeName)
+	void ThrowIfUnsupportedManagedType (TypeRefData managedType)
 	{
+		string managedTypeName = managedType.ManagedTypeName;
+
 		if (managedTypeName.EndsWith ("&", StringComparison.Ordinal) || managedTypeName.EndsWith ("*", StringComparison.Ordinal)) {
 			throw new NotSupportedException ($"[Export] methods with by-ref or pointer signature types are not supported: '{managedTypeName}'.");
 		}
@@ -421,8 +423,8 @@ sealed class ExportMethodDispatchEmitter
 			nonArrayTypeName = nonArrayTypeName.Substring (0, nonArrayTypeName.Length - 2);
 		}
 
-		if (nonArrayTypeName.StartsWith ("!", StringComparison.Ordinal) || nonArrayTypeName.IndexOf ('<') >= 0) {
-			throw new NotSupportedException ($"[Export] methods with generic signature types are not supported: '{managedTypeName}'.");
+		if (nonArrayTypeName.StartsWith ("!", StringComparison.Ordinal) || managedType.GenericArguments.Count > 0 || nonArrayTypeName.IndexOf ('<') >= 0) {
+			throw new NotSupportedException ($"[Export] methods with generic signature types are not supported: '{managedType.DisplayName}'.");
 		}
 	}
 
@@ -571,7 +573,7 @@ sealed class ExportMethodDispatchEmitter
 	{
 		string managedTypeName = managedType.ManagedTypeName;
 
-		ThrowIfUnsupportedManagedType (managedTypeName);
+		ThrowIfUnsupportedManagedType (managedType);
 		if (managedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
 			EncodeManagedType (encoder.SZArray (), managedType with {
 				ManagedTypeName = managedTypeName.Substring (0, managedTypeName.Length - 2),
@@ -598,7 +600,7 @@ sealed class ExportMethodDispatchEmitter
 		}
 
 		var typeHandle = ResolveManagedTypeHandle (managedType);
-		encoder.Type (typeHandle, isValueType: managedType.IsEnum);
+		encoder.Type (typeHandle, isValueType: managedType.EncodeAsValueType);
 	}
 
 	void AddUnmanagedCallersOnlyAttribute (MethodDefinitionHandle handle)
