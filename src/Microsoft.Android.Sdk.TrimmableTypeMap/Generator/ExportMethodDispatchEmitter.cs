@@ -191,17 +191,17 @@ sealed class ExportMethodDispatchEmitter
 	{
 		int total = 3 + arrayLocalTypes.Count + (managedReturnType is not null ? 1 : 0) + (isVoid ? 0 : 1);
 
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (total);
 
 		// 0: JniTransition (valuetype)
-		blob.WriteByte (0x11);
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.JniTransitionRef));
 		// 1: JniRuntime (class)
-		blob.WriteByte (0x12);
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.JniRuntimeRef));
 		// 2: Exception (class)
-		blob.WriteByte (0x12);
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.ExceptionRef));
 
 		// 3..N: managed array-parameter copy-back locals

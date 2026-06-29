@@ -32,7 +32,7 @@ static class MetadataHelper
 		using var stream = new System.IO.MemoryStream ();
 		using var writer = new System.IO.BinaryWriter (stream, Encoding.UTF8);
 		foreach (var entry in data.Entries) {
-			writer.Write (entry.JniName);
+			writer.Write (entry.MapKey);
 			writer.Write (entry.ProxyTypeReference);
 			writer.Write (entry.TargetTypeReference ?? "");
 		}
