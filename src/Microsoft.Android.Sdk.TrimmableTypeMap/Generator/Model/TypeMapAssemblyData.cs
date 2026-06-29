@@ -244,17 +244,15 @@ sealed record TypeRefData
 
 	public override int GetHashCode ()
 	{
-		unchecked {
-			int hash = 17;
-			hash = hash * 31 + StringComparer.Ordinal.GetHashCode (ManagedTypeName);
-			hash = hash * 31 + StringComparer.Ordinal.GetHashCode (AssemblyName);
-			hash = hash * 31 + IsValueType.GetHashCode ();
-			hash = hash * 31 + IsEnum.GetHashCode ();
-			foreach (var argument in GenericArguments) {
-				hash = hash * 31 + argument.GetHashCode ();
-			}
-			return hash;
+		var hash = new HashCode ();
+		hash.Add (ManagedTypeName, StringComparer.Ordinal);
+		hash.Add (AssemblyName, StringComparer.Ordinal);
+		hash.Add (IsValueType);
+		hash.Add (IsEnum);
+		foreach (var argument in GenericArguments) {
+			hash.Add (argument);
 		}
+		return hash.ToHashCode ();
 	}
 }
 
