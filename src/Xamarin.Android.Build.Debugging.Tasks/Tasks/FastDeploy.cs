@@ -362,7 +362,7 @@ namespace Xamarin.Android.Tasks
 			packageInfo.UserId = UserID;
 			packageInfo.PackageName = packageName;
 			await EnsureUserIsRunning ();
-			packageInfo.InternalPath = packageInfo.InternalPath ?? await Device.RunAs (packageInfo, "pwd");
+			packageInfo.InternalPath = packageInfo.InternalPath ?? await QueryInternalPathWithRetry ();
 			if (packageInfo.InternalPath.IndexOf ("Permission denied", StringComparison.OrdinalIgnoreCase) >= 0) {
 				packageInfo.InternalPath = await Device.RunAs (packageInfo, "readlink", "-f", ".");
 			}
@@ -393,6 +393,48 @@ namespace Xamarin.Android.Tasks
 				diagnosticData.SetProperty ("deploy.supports.fastdev", value: false);
 			}
 			return;
+		}
+
+		/// <summary>
+		/// Issues the first <c>run-as &lt;pkg&gt; pwd</c> query, retrying briefly while the
+		/// per-user data directory is not yet stat-able through <c>run-as</c>.
+		/// </summary>
+		/// <remarks>
+		/// <para>Immediately after <c>pm install</c>, the per-user data directory
+		/// <c>/data/user/N/&lt;pkg&gt;</c> may not yet be stat-able through <c>run-as</c>,
+		/// even for the primary user (id 0). During that window <c>run-as</c> returns
+		/// <c>run-as: couldn't stat /data/user/N/&lt;pkg&gt;: No such file or directory</c>,
+		/// which otherwise raises <c>XA0137</c> and disables Fast Deployment. This races
+		/// install on the primary user ~daily in CI. Poll for a bounded period to let the
+		/// directory materialize before giving up. See
+		/// https://github.com/dotnet/android/issues/7821 and
+		/// https://github.com/dotnet/android/issues/11808.</para>
+		/// </remarks>
+		async Task<string> QueryInternalPathWithRetry ()
+		{
+			const int maxAttempts = 10;
+			var delay = TimeSpan.FromMilliseconds (500);
+			string result = await Device.RunAs (packageInfo, "pwd");
+			for (int attempt = 1; attempt < maxAttempts && IsTransientRunAsStatRace (result); attempt++) {
+				LogDiagnostic ($"run-as could not stat the data directory for {packageInfo.PackageName} yet (attempt {attempt}/{maxAttempts}); retrying in {delay.TotalMilliseconds:0} ms. Output: {result?.Trim ()}");
+				await Task.Delay (delay, CancellationToken);
+				result = await Device.RunAs (packageInfo, "pwd");
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when a <c>run-as</c> result matches the transient
+		/// install-vs-run-as race signature (<c>couldn't stat … No such file or directory</c>),
+		/// i.e. the per-user data directory has not yet materialized after <c>pm install</c>.
+		/// </summary>
+		static bool IsTransientRunAsStatRace (string result)
+		{
+			if (string.IsNullOrEmpty (result)) {
+				return false;
+			}
+			return result.IndexOf ("couldn't stat", StringComparison.OrdinalIgnoreCase) >= 0 &&
+				result.IndexOf ("No such file or directory", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		/// <summary>
