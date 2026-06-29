@@ -161,7 +161,7 @@ sealed class PEAssemblyBuilder
 	public void WriteTypeSignature (BlobBuilder blob, TypeRefData typeRef)
 	{
 		if (typeRef.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
-			blob.WriteByte (0x1D); // ELEMENT_TYPE_SZARRAY
+			blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 			WriteTypeSignature (blob, typeRef with {
 				ManagedTypeName = typeRef.ManagedTypeName.Substring (0, typeRef.ManagedTypeName.Length - 2),
 			});
@@ -169,36 +169,36 @@ sealed class PEAssemblyBuilder
 		}
 
 		switch (typeRef.ManagedTypeName) {
-		case "System.Boolean": blob.WriteByte (0x02); return;
-		case "System.Char":    blob.WriteByte (0x03); return;
-		case "System.SByte":   blob.WriteByte (0x04); return;
-		case "System.Byte":    blob.WriteByte (0x05); return;
-		case "System.Int16":   blob.WriteByte (0x06); return;
-		case "System.UInt16":  blob.WriteByte (0x07); return;
-		case "System.Int32":   blob.WriteByte (0x08); return;
-		case "System.UInt32":  blob.WriteByte (0x09); return;
-		case "System.Int64":   blob.WriteByte (0x0A); return;
-		case "System.UInt64":  blob.WriteByte (0x0B); return;
-		case "System.Single":  blob.WriteByte (0x0C); return;
-		case "System.Double":  blob.WriteByte (0x0D); return;
-		case "System.String":  blob.WriteByte (0x0E); return;
-		case "System.Object":  blob.WriteByte (0x1C); return;
-		case "System.IntPtr":  blob.WriteByte (0x18); return;
+		case "System.Boolean": blob.WriteByte ((byte) SignatureTypeCode.Boolean); return;
+		case "System.Char":    blob.WriteByte ((byte) SignatureTypeCode.Char);    return;
+		case "System.SByte":   blob.WriteByte ((byte) SignatureTypeCode.SByte);   return;
+		case "System.Byte":    blob.WriteByte ((byte) SignatureTypeCode.Byte);    return;
+		case "System.Int16":   blob.WriteByte ((byte) SignatureTypeCode.Int16);   return;
+		case "System.UInt16":  blob.WriteByte ((byte) SignatureTypeCode.UInt16);  return;
+		case "System.Int32":   blob.WriteByte ((byte) SignatureTypeCode.Int32);   return;
+		case "System.UInt32":  blob.WriteByte ((byte) SignatureTypeCode.UInt32);  return;
+		case "System.Int64":   blob.WriteByte ((byte) SignatureTypeCode.Int64);   return;
+		case "System.UInt64":  blob.WriteByte ((byte) SignatureTypeCode.UInt64);  return;
+		case "System.Single":  blob.WriteByte ((byte) SignatureTypeCode.Single);  return;
+		case "System.Double":  blob.WriteByte ((byte) SignatureTypeCode.Double);  return;
+		case "System.String":  blob.WriteByte ((byte) SignatureTypeCode.String);  return;
+		case "System.Object":  blob.WriteByte ((byte) SignatureTypeCode.Object);  return;
+		case "System.IntPtr":  blob.WriteByte ((byte) SignatureTypeCode.IntPtr);  return;
 		}
 
 		if (typeRef.ManagedTypeName.StartsWith ("!!", StringComparison.Ordinal)) {
-			blob.WriteByte (0x1E); // ELEMENT_TYPE_MVAR
+			blob.WriteByte ((byte) SignatureTypeCode.GenericMethodParameter);
 			blob.WriteCompressedInteger (int.Parse (typeRef.ManagedTypeName.Substring (2), System.Globalization.CultureInfo.InvariantCulture));
 			return;
 		}
 		if (typeRef.ManagedTypeName.StartsWith ("!", StringComparison.Ordinal)) {
-			blob.WriteByte (0x13); // ELEMENT_TYPE_VAR
+			blob.WriteByte ((byte) SignatureTypeCode.GenericTypeParameter);
 			blob.WriteCompressedInteger (int.Parse (typeRef.ManagedTypeName.Substring (1), System.Globalization.CultureInfo.InvariantCulture));
 			return;
 		}
 
 		var typeHandle = ResolveTypeRef (typeRef);
-		blob.WriteByte (typeRef.IsEnum ? (byte) 0x11 : (byte) 0x12); // VALUETYPE or CLASS
+		blob.WriteByte ((byte) (typeRef.IsEnum ? SignatureTypeKind.ValueType : SignatureTypeKind.Class));
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeHandle));
 	}
 
