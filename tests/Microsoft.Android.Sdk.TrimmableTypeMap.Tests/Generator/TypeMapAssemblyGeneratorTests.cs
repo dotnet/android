@@ -202,13 +202,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.All (proxyTypes, proxyType => {
 			switch (proxyType.BaseType.Kind) {
 			case HandleKind.TypeSpecification:
-				// Non-generic target types derive from the closed `JavaPeerProxy<T>`.
+				// Concrete (constructible) target types derive from the closed `JavaPeerProxy<T>`.
 				var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
 				var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
 				Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
 				break;
 			case HandleKind.TypeReference:
-				// Open generic target types derive from the non-generic `JavaPeerProxy`.
+				// Open generic definitions and interfaces derive from the non-generic `JavaPeerProxy`.
 				var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
 				Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
 				Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
@@ -223,6 +223,29 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
 		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
 			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
+	}
+
+	[Fact]
+	public void Generate_InterfaceProxyType_UsesNonGenericJavaPeerProxyBase ()
+	{
+		// JavaPeerProxy<T> annotates T with [DynamicallyAccessedMembers(Constructors)]. Closing it
+		// over an interface (which has no constructors) makes ILC fail to load the closed generic
+		// type ("Failed to load type 'JavaPeerProxy`1<ISomeInterface>'"). Interface proxies must
+		// therefore derive from the non-generic JavaPeerProxy base (a plain TypeReference).
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var interfaceProxy = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.First (t => reader.GetString (t.Name) == "Android_Views_IOnClickListener_Proxy");
+
+		Assert.Equal (HandleKind.TypeReference, interfaceProxy.BaseType.Kind);
+		var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) interfaceProxy.BaseType);
+		Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
+		Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
 	}
 
 	// Regression test: every generated proxy type must carry a custom attribute whose
