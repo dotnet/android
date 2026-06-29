@@ -55,22 +55,29 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			// We only pre-generate the array types proxy map for Native AOT because we can't manipulate types at runtime.
 			// For CoreCLR, we take advantage of the dynamic runtime and we save app size by not pre-generating the array types proxy map.
 			if (RuntimeFeature.IsNativeAotRuntime) {
-				if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)) {
-					return arrayProxy.GetArrayTypes ();
-				}
-
-				return [];
+				return TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)
+					? arrayProxy.GetArrayTypes ()
+					: [];
 			}
 			
 			if (RuntimeFeature.IsCoreClrRuntime) {
+				return GetArrayTypesForCoreClr (typeSignature, elementType);
+			}
+			
+			throw new NotSupportedException ("Unsupported runtime.");
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026:RequiresUnreferencedCode",
+				Justification = "This API is called as part of Java to .NET type marshalling when the target type is expected as the input " +
+					"parameter of the target method, so it must be seen by the IL trimmer. This justification would not hold for Native AOT " +
+					"but this codepath is only reachable on CoreCLR.")]
+			static IEnumerable<Type> GetArrayTypesForCoreClr (JniTypeSignature typeSignature, Type elementType)
+			{
 				if (IsKeyword (typeSignature)) {
 					return GetPrimitiveArrayTypes (elementType, typeSignature.ArrayRank);
 				}
 
 				return MakeArrayTypes (elementType, typeSignature.ArrayRank);
 			}
-			
-			throw new NotSupportedException ("Unsupported runtime.");
 
 			static bool IsKeyword (JniTypeSignature typeSignature)
 			{
