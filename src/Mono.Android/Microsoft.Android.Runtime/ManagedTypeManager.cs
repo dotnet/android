@@ -22,7 +22,6 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
-	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Generic 'Invoker' types may not be available in AOT scenarios.")]
 	protected override Type? GetInvokerTypeCore (Type type)
 	{
 		const string suffix = "Invoker";

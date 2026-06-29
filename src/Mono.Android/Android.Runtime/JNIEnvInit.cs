@@ -188,20 +188,19 @@ namespace Android.Runtime
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				return new CoreClrJavaMarshalValueManager ();
+				return CreateCoreClrJavaMarshalValueManager ();
 			}
 
 			if (RuntimeFeature.IsNativeAotRuntime) {
-				return new CoreClrJavaMarshalValueManager ();
+				return CreateCoreClrJavaMarshalValueManager ();
 			}
 
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
-			JniRuntime.JniValueManager CreateJavaMarshalValueManager ()
+			JniRuntime.JniValueManager CreateCoreClrJavaMarshalValueManager ()
 			{
-				return new JavaMarshalValueManager ();
+				return new CoreClrJavaMarshalValueManager ();
 			}
 		}
 
