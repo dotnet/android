@@ -311,6 +311,7 @@ namespace Android.Runtime {
 	}
 
 	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+	[RequiresUnreferencedCode ("AndroidTypeManager is reflection-backed (it loads Mono.Android.Export for [Export] members) and is not trimming-compatible.")]
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
@@ -401,9 +402,10 @@ namespace Android.Runtime {
 
 		static MethodInfo? dynamic_callback_gen;
 
-		// See ExportAttribute.cs
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
+		// See ExportAttribute.cs. The [DynamicDependency] roots Mono.Android.Export only when this
+		// loader is kept by the linker (the managed/reflection [Export] path). The trimmable type map
+		// generates JavaPeerProxy code instead and never calls this, so it does not pull in the assembly.
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
