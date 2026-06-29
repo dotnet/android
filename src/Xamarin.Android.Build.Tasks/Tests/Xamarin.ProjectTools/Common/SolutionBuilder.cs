@@ -99,7 +99,7 @@ namespace Xamarin.ProjectTools
 			if (disposing)
 				if (BuildSucceeded && !string.IsNullOrEmpty (SolutionPath))
 					try {
-						Directory.Delete (SolutionPath, recursive: true);
+						FileSystemUtils.DeleteDirectoryWithRetry (SolutionPath);
 					} catch (Exception) {
 						// This happens on CI occasionally, let's not fail the test
 					}

@@ -104,10 +104,7 @@ namespace Xamarin.ProjectTools
 
 			if (!BuiltBefore) {
 				if (project.ShouldPopulate) {
-					if (Directory.Exists (ProjectDirectory)) {
-						FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
-						Directory.Delete (ProjectDirectory, true);
-					}
+					FileSystemUtils.DeleteDirectoryWithRetry (ProjectDirectory);
 					project.Populate (ProjectDirectory, files);
 				}
 
@@ -202,10 +199,7 @@ namespace Xamarin.ProjectTools
 			BuiltBefore = false;
 
 			var projectDirectory = Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory);
-			if (Directory.Exists (projectDirectory)) {
-				FileSystemUtils.SetDirectoryWriteable (projectDirectory);
-				Directory.Delete (projectDirectory, true);
-			}
+			FileSystemUtils.DeleteDirectoryWithRetry (projectDirectory);
 		}
 
 		public struct RuntimeInfo
