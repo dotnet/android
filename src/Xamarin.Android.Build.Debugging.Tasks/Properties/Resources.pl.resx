@@ -195,9 +195,9 @@ Wyłącz szybkie wdrażanie na stronach właściwości projektu programu Visual 
     <value>Aplikacja nie ma atrybutu „android:debuggable” ustawionego w AndroidManifest.xml.
 Jest to wymagane, aby szybkie wdrażanie działało. Ta opcja jest domyślnie włączona przez 
 platformę .NET dla systemu Android na potrzeby kompilacji debugowania. Sprawdź, czy nie masz tego atrybutu
-ustawionego w elemencie „application" w elemencie „AndroidManifest.xml”.
+ustawionego w elemencie „application" w pliku „AndroidManifest.xml”.
 Jeśli masz klasę pochodzącą od elementu „Android.App.Application” i używasz „[Application]”, upewnij się, że 
-Właściwość „Debuggable” nie jest w ogóle ustawiona, ponieważ zastąpi wartość kompilacji debugowania.
+właściwość „Debuggable” nie jest w ogóle ustawiona, ponieważ zastąpi wartość kompilacji debugowania.
 </value>
     <comment>The following are literal names and should not be translated:
 AndroidManifest.xml - A xml file
@@ -242,9 +242,9 @@ Ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true�
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
     <value>Błąd podczas wdrażania elementu „{0}” przy użyciu elementu „{1}: {2}”. 
-Zwykle jest to spowodowane błędem w pliku „adb”, gdy dane pliku są wysyłane do urządzenia. 
+Zwykle jest to spowodowane błędem w pliku `adb`, gdy dane pliku są wysyłane do urządzenia. 
 Normalną przyczyną takiego działania jest luźny lub niskiej jakości kabel USB. Spróbuj użyć innego kabla.
-Możesz też spróbować użyć debugowania sieci Wi-Fi, ponieważ może to być bardziej niezawodne niż debugowanie USB dla niektórych urządzeń. 
+Możesz też spróbować użyć debugowania sieci Wi-Fi, ponieważ może to być bardziej niezawodne niż debugowanie USB w przypadku określonych urządzeń. 
 Jeśli to wszystko się nie powiedzie, ustaw właściwość MSBuild „EmbedAssembliesIntoApk” na wartość „true”, aby wyłączyć szybkie wdrażanie na stronach właściwości projektu programu Visual Studio lub edytować plik projektu w edytorze tekstów.</value>
 <comment>The following are literal names and should not be translated:
 {0} - A filename

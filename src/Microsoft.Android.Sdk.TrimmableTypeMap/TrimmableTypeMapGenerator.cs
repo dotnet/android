@@ -51,7 +51,7 @@ public class TrimmableTypeMapGenerator
 		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
-		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig));
+		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
@@ -60,7 +60,7 @@ public class TrimmableTypeMapGenerator
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
-		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers);
+		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers, manifestConfig?.ApplicationJavaClass);
 
 		var appRegTypes = CollectApplicationRegistrationTypes (allPeers);
 		if (appRegTypes.Count > 0) {
@@ -292,15 +292,15 @@ public class TrimmableTypeMapGenerator
 		return result;
 	}
 
-	List<GeneratedJavaSource> GenerateJcwJavaSources (List<JavaPeerInfo> allPeers)
+	List<GeneratedJavaSource> GenerateJcwJavaSources (List<JavaPeerInfo> allPeers, string? applicationJavaClass)
 	{
 		var jcwGenerator = new JcwJavaSourceGenerator ();
-		var sources = jcwGenerator.GenerateContent (allPeers);
+		var sources = jcwGenerator.GenerateContent (allPeers, applicationJavaClass);
 		logger.LogGeneratedJcwFilesInfo (sources.Count);
 		return sources.ToList ();
 	}
 
-	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc)
+	internal void RootManifestReferencedTypes (List<JavaPeerInfo> allPeers, XDocument? doc, string? applicationJavaClass = null)
 	{
 		if (doc?.Root is not { } root) {
 			return;
@@ -360,6 +360,13 @@ public class TrimmableTypeMapGenerator
 					}
 				}
 			} else {
+				// $(AndroidApplicationJavaClass) (e.g. android.support.multidex.MultiDexApplication
+				// when $(AndroidEnableMultiDex) is true) is a Java framework type with no managed
+				// peer, so it is expected to be absent from the scanned assemblies — don't warn.
+				if (!applicationJavaClass.IsNullOrEmpty () &&
+				    string.Equals (name, ManifestNameResolver.Resolve (applicationJavaClass, packageName), StringComparison.Ordinal)) {
+					continue;
+				}
 				logger.LogManifestReferencedTypeNotFoundWarning (name);
 			}
 		}

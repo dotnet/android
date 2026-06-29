@@ -1167,6 +1167,12 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA4256" xml:space="preserve">
+    <value>Only one '{0}' is allowed for '{1}' item '{2}'.</value>
+    <comment>{0} - MSBuild XML element name
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4257" xml:space="preserve">
     <value>Skipping Java peer type '{0}' from assembly '{1}' because referenced type '{2}' from assembly '{3}' could not be resolved in '{4}'. This type will not be included in the trimmable type map.</value>
     <comment>The following are literal names and should not be translated: Java, trimmable type map.
 {0} - Fully-qualified managed Java peer type name

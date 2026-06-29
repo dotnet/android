@@ -1606,11 +1606,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Skipping Java peer type &apos;{0}&apos; from assembly &apos;{1}&apos; because referenced type &apos;{2}&apos; from assembly &apos;{3}&apos; could not be resolved in &apos;{4}&apos;. This type will not be included in the trimmable type map..
+        ///   Looks up a localized string similar to Only one &apos;{0}&apos; is allowed for &apos;{1}&apos; item &apos;{2}&apos;..
         /// </summary>
         public static string XA4256 {
             get {
                 return ResourceManager.GetString("XA4256", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Skipping Java peer type &apos;{0}&apos; from assembly &apos;{1}&apos; because referenced type &apos;{2}&apos; from assembly &apos;{3}&apos; could not be resolved in &apos;{4}&apos;. This type will not be included in the trimmable type map..
+        /// </summary>
+        public static string XA4257 {
+            get {
+                return ResourceManager.GetString("XA4257", resourceCulture);
             }
         }
 
