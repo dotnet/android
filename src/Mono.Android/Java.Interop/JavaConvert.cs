@@ -289,13 +289,20 @@ namespace Java.Interop {
 				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
 					if (RuntimeFeature.TrimmableTypeMap)
 						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
-					return Java.Lang.Object.GetObject (handle, transfer, elementType);
+					return GetObjectWithSuppression (handle, transfer, elementType);
 				}
 
 				var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 				if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
 					return value;
 				return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
+			}
+
+			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2067:RequiresUnreferencedCode",
+				Justification = "Custom trimmer steps marks the activation constructors on IJavaPeerable types.")]
+			static object? GetObjectWithSuppression (IntPtr handle, JniHandleOwnership transfer, Type? elementType)
+			{
+				return Java.Lang.Object.GetObject (handle, transfer, elementType);
 			}
 		}
 
