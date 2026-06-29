@@ -1,1 +1,15 @@
+// See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
+pluginManagement {
+    apply from: "${rootDir}/../../../../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
+}
+
+plugins {
+    id 'com.microsoft.azure.artifacts.credprovider' version '1.1.1'
+}
+
+dependencyResolutionManagement {
+    apply from: "${rootDir}/../../../../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
+}
+
+rootProject.name = 'JavaLib'
 include ':library'
