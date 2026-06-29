@@ -401,9 +401,11 @@ namespace Android.Runtime {
 
 		static MethodInfo? dynamic_callback_gen;
 
-		// See ExportAttribute.cs. The [DynamicDependency] roots Mono.Android.Export only when this
-		// loader is kept by the linker (the managed/reflection [Export] path). The trimmable type map
-		// generates JavaPeerProxy code instead and never calls this, so it does not pull in the assembly.
+		// Roots Mono.Android.Export (and DynamicCallbackCodeGenerator) for the managed/reflection
+		// [Export] and [ExportField] path. This loader is the single runtime entry point for both
+		// attributes (their generated members register with the "__export__" connector). It is only
+		// kept by the linker when that path is reachable; the trimmable type map generates JavaPeerProxy
+		// and .java code instead and trims this method, so it never pulls in the assembly.
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
@@ -418,7 +420,9 @@ namespace Android.Runtime {
 				if (dynamic_callback_gen == null)
 					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
 			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
+			if (dynamic_callback_gen.Invoke (null, new object [] { method }) is not Delegate callback)
+				throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. DynamicCallbackCodeGenerator.Create did not return a delegate.");
+			return callback;
 		}
 
 		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not

@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop {
 
@@ -12,7 +11,6 @@ namespace Java.Interop {
 #endif  // !JCW_ONLY_TYPE_NAMES
 	partial class ExportFieldAttribute : Attribute {
 
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		public ExportFieldAttribute (string name)
 		{
 			Name = name;
