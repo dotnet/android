@@ -1,3 +1,4 @@
+using System.IO;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -29,6 +30,23 @@ namespace Xamarin.Android.Build.Tests
 			var actual = R8.TryGetDisallowedOption (line, out var option);
 			Assert.AreEqual (expected, actual);
 			Assert.AreEqual (expectedOption, option);
+		}
+
+		[TestCase ("package com.example.app;\npublic class Foo {}",            "com.example.app")]
+		[TestCase ("package com.example.app ;\npublic class Foo {}",           "com.example.app")] // space before ';'
+		[TestCase ("// header\n/* license */\npackage com.example.app;\nclass Foo {}", "com.example.app")] // skip comments
+		[TestCase ("public class Foo {}",                                     null)] // no package
+		[TestCase ("import java.util.List;\npackage com.late;\nclass Foo {}", null)] // package after import is ignored
+		[TestCase ("class Foo {\npackage com.late;\n}",                       null)] // package after type is ignored
+		public void ReadJavaPackage (string content, string expected)
+		{
+			var path = Path.GetTempFileName ();
+			try {
+				File.WriteAllText (path, content);
+				Assert.AreEqual (expected, R8.ReadJavaPackage (path));
+			} finally {
+				File.Delete (path);
+			}
 		}
 	}
 }

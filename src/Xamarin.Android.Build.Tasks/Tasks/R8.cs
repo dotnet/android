@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static string? ReadJavaPackage (string path)
+		internal static string? ReadJavaPackage (string path)
 		{
 			foreach (var raw in File.ReadLines (path)) {
 				var line = raw.Trim ();
