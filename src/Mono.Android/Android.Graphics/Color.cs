@@ -440,7 +440,10 @@ namespace Android.Graphics
 			get { return typeof (int); }
 		}
 
-		public override Color CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Color CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				Type targetType)
 		{
 			throw new NotImplementedException ();
 		}

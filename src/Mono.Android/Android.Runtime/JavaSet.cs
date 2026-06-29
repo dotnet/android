@@ -243,7 +243,7 @@ namespace Android.Runtime {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (ICollection));
 			if (inst == null)
 				inst = new JavaSet (handle, transfer);
 			else
@@ -431,7 +431,7 @@ namespace Android.Runtime {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (ICollection<T>));
 			if (inst == null)
 				inst = new JavaSet<T> (handle, transfer);
 			else

@@ -372,7 +372,7 @@ public class TrimmableTypeMap
 					// FindClass throws for managed types whose Java peer class is
 					// not present in the APK (e.g. test types annotated with
 					// [JniTypeSignature("__missing__")]). Treat as "no match" so
-					// JavaMarshalValueManager.CreatePeer can surface the correct
+					// TrimmableTypeMapValueManager.CreatePeer can surface the correct
 					// ArgumentException instead of leaking ClassNotFoundException.
 					return null;
 				}
@@ -386,9 +386,9 @@ public class TrimmableTypeMap
 	}
 
 	internal IJavaPeerable? CreateInstance (
-			IntPtr handle,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType = null)
+		IntPtr handle,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType = null)
 	{
 		var proxy = GetProxyForJavaObject (handle, targetType);
 
@@ -496,7 +496,6 @@ public class TrimmableTypeMap
 	/// <summary>
 	/// Gets the invoker type for an interface or abstract class from the proxy attribute.
 	/// </summary>
-	[return: DynamicallyAccessedMembers (Constructors)]
 	internal Type? GetInvokerType (Type type)
 	{
 		return GetProxyForManagedType (type)?.InvokerType;

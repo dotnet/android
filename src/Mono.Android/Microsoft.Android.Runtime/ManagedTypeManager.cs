@@ -7,22 +7,18 @@ using Java.Interop.Tools.TypeNameMappings;
 
 namespace Microsoft.Android.Runtime;
 
-[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
-class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
+[RequiresUnreferencedCode ("The 'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
+[RequiresDynamicCode ("The 'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
+class ManagedTypeManager : JniRuntime.JniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-	internal const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 
 	public ManagedTypeManager ()
 	{
 	}
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Generic 'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
-	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Generic 'Invoker' types may not be available in AOT scenarios.")]
 	protected override Type? GetInvokerTypeCore (Type type)
 	{
 		const string suffix = "Invoker";
@@ -41,14 +37,7 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 		return suffixDefinition.MakeGenericType (arguments);
 	}
 
-	// NOTE: suppressions below also in `src/Mono.Android/Android.Runtime/AndroidRuntime.cs`
-	[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-	public override void RegisterNativeMembers (
-			JniType nativeClass,
-			Type type,
-			ReadOnlySpan<char> methods)
+	public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 	{
 		if (methods.IsEmpty) {
 			base.RegisterNativeMembers (nativeClass, type, methods);
@@ -120,17 +109,6 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 		if (ManagedTypeMapping.TryGetType (jniSimpleReference, out var target)) {
 			yield return target;
 		}
-	}
-
-	[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = "Temporary suppression until ManagedTypeMapping type entries carry DAM annotations.")]
-	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
-	{
-		var type = base.GetTypeForSimpleReference (jniSimpleReference);
-		if (type != null) {
-			return type;
-		}
-
-		return ManagedTypeMapping.TryGetType (jniSimpleReference, out var target) ? target : null;
 	}
 
 	protected override IEnumerable<string> GetSimpleReferences (Type type)

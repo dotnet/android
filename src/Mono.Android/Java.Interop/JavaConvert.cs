@@ -12,9 +12,17 @@ namespace Java.Interop {
 
 	static class JavaConvert {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+		// Mirrors JniObjectReference.DisposeSource; JniObjectReferenceOptions only exposes it through CopyAndDispose.
+		const JniObjectReferenceOptions DisposeSource = (JniObjectReferenceOptions)(1 << 1);
 
-		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>>() {
+		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>>() {
 			{ typeof (bool), (handle, transfer) => {
+				using (var value = new Java.Lang.Boolean (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.BooleanValue ();
+			} },
+			{ typeof (bool?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Boolean (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.BooleanValue ();
 			} },
@@ -22,7 +30,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return (byte) value.ByteValue ();
 			} },
+			{ typeof (byte?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return (byte) value.ByteValue ();
+			} },
 			{ typeof (sbyte), (handle, transfer) => {
+				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.ByteValue ();
+			} },
+			{ typeof (sbyte?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ByteValue ();
 			} },
@@ -30,7 +50,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Character (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.CharValue ();
 			} },
+			{ typeof (char?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Character (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.CharValue ();
+			} },
 			{ typeof (short), (handle, transfer) => {
+				using (var value = new Java.Lang.Short (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.ShortValue ();
+			} },
+			{ typeof (short?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Short (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ShortValue ();
 			} },
@@ -38,7 +70,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Integer (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.IntValue ();
 			} },
+			{ typeof (int?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Integer (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.IntValue ();
+			} },
 			{ typeof (long), (handle, transfer) => {
+				using (var value = new Java.Lang.Long (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.LongValue ();
+			} },
+			{ typeof (long?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Long (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.LongValue ();
 			} },
@@ -46,7 +90,19 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Float (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.FloatValue ();
 			} },
+			{ typeof (float?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
+				using (var value = new Java.Lang.Float (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.FloatValue ();
+			} },
 			{ typeof (double), (handle, transfer) => {
+				using (var value = new Java.Lang.Double (handle, transfer | JniHandleOwnership.DoNotRegister))
+					return value.DoubleValue ();
+			} },
+			{ typeof (double?), (handle, transfer) => {
+				if (handle == IntPtr.Zero)
+					return null;
 				using (var value = new Java.Lang.Double (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.DoubleValue ();
 			} },
@@ -71,21 +127,6 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// Might cause an issue in the future for NativeAOT
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "We don't think the IDictionary, IList, or ICollection code paths occur if JavaDictionary<,>, JavaList<>, and JavaCollection<> do not exist.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			static Type MakeGenericType (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-					Type type,
-					params Type [] typeArguments
-			) =>
-				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-				// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-				#pragma warning disable IL3050
-				type.MakeGenericType (typeArguments);
-				#pragma warning restore IL3050
-
 			if (target == null)
 				return null;
 
@@ -94,28 +135,31 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				var factoryConverter = TryGetFactoryBasedConverter (target);
-				if (factoryConverter != null)
-					return factoryConverter;
+			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
+				if (RuntimeFeature.TrimmableTypeMap) {
+					var factoryConverter = TryGetFactoryBasedConverter (target);
+					if (factoryConverter != null)
+						return factoryConverter;
+				} else if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
+					if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
+						Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+					if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
+						Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+					if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
+						Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+						return GetJniHandleConverterForType (t);
+					}
+				}
 			}
 
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-				Type t = MakeGenericType (typeof (JavaDictionary<,>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
 			if (typeof (IDictionary).IsAssignableFrom (target))
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IList<>)) {
-				Type t = MakeGenericType (typeof (JavaList<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
 			if (typeof (IList).IsAssignableFrom (target))
 				return (h, t) => JavaList.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-				Type t = MakeGenericType (typeof (JavaCollection<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 
@@ -198,16 +242,26 @@ namespace Java.Interop {
 
 		internal readonly struct ArrayElementConverter
 		{
+			[DynamicallyAccessedMembers (Constructors)]
 			readonly Type? elementType;
 			readonly Func<IntPtr, JniHandleOwnership, object>? converter;
 			readonly bool useRuntimeTypeMapping;
 
 			public ArrayElementConverter (Array array)
 			{
-				elementType = array.GetType ().GetElementType ();
+				elementType = GetArrayElementType (array);
 				converter = elementType != null ? GetJniHandleConverter (elementType) : null;
 				useRuntimeTypeMapping = elementType is null || elementType == typeof (object);
 			}
+
+			// Array.GetType ().GetElementType () cannot statically carry the constructor annotations that
+			// peer construction (Java.Lang.Object.GetObject) requires. The element types of arrays that are
+			// marshaled back to managed peers are preserved by the Android linker steps, so isolate the
+			// unprovable flow here rather than suppressing the whole conversion path.
+			[UnconditionalSuppressMessage ("Trimming", "IL2073",
+				Justification = "Array element types marshaled to managed peers are preserved by the Android linker steps.")]
+			[return: DynamicallyAccessedMembers (Constructors)]
+			static Type? GetArrayElementType (Array array) => array.GetType ().GetElementType ();
 
 			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 			{
@@ -327,6 +381,31 @@ namespace Java.Interop {
 			// hail mary pass; perhaps there's a MCW which participates in normal
 			// .NET type conversion?
 			return (T?) Convert.ChangeType (v, typeof (T), CultureInfo.InvariantCulture);
+		}
+
+		internal static object? FromObjectReference (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+		{
+			JniHandleOwnership transfer;
+			if ((options & DisposeSource) != DisposeSource) {
+				transfer = JniHandleOwnership.DoNotTransfer;
+			} else {
+				transfer = reference.Type switch {
+					JniObjectReferenceType.Local => JniHandleOwnership.TransferLocalRef,
+					JniObjectReferenceType.Global => JniHandleOwnership.TransferGlobalRef,
+					_ => JniHandleOwnership.DoNotTransfer,
+				};
+			}
+
+			var value = FromJniHandle (reference.Handle, transfer, targetType);
+			if (transfer != JniHandleOwnership.DoNotTransfer) {
+				reference = default;
+			}
+
+			return value;
 		}
 
 		public static object? FromJniHandle (
@@ -591,6 +670,32 @@ namespace Java.Interop {
 			}
 			Func<object, IntPtr> converter = GetLocalJniHandleConverter (value);
 			return converter (value);
+		}
+
+		internal static bool TryConvertKnownValueToLocalJniHandle (object? value, out IntPtr handle)
+		{
+			if (value == null) {
+				handle = IntPtr.Zero;
+				return true;
+			}
+			if (value is IJavaObject v) {
+				handle = JNIEnv.ToLocalJniHandle (v);
+				return true;
+			}
+
+			Type sourceType = value.GetType ();
+			Func<object, IntPtr>? converter;
+			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter)) {
+				handle = converter (value);
+				return true;
+			}
+			if (sourceType.IsArray) {
+				handle = LocalJniHandleConverters [typeof (Array)] (value);
+				return true;
+			}
+
+			handle = IntPtr.Zero;
+			return false;
 		}
 
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)

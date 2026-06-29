@@ -1,0 +1,2 @@
+CannotRemoveAttribute : Attribute 'System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute' exists on 'Java.Interop.ExportAttribute' in the contract but not the implementation.
+Total Issues: 1
