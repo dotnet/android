@@ -50,7 +50,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			string unresolvedTypeName,
 			string unresolvedAssemblyName,
 			string unresolvedAssemblyPath) =>
-			log.LogCodedWarning ("XA4256", Properties.Resources.XA4256, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
+			log.LogCodedWarning ("XA4257", Properties.Resources.XA4257, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
 	}
