@@ -183,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
 			RunProjectAndAssert (app, appBuilder);
 			Assert.True (
-				WaitForActivityToStart (app.PackageName, "MainActivity", Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), 30),
+				WaitForActivityToStart (app.PackageName, "MainActivity", Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds),
 				"Activity should have started."
 			);
 		}

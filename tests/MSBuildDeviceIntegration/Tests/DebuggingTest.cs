@@ -92,7 +92,7 @@ namespace Xamarin.Android.Build.Tests
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
 				RunProjectAndAssert (proj, b);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 				b.BuildLogFile = "uninstall.log";
 				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
 			}
@@ -173,7 +173,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.True (appBuilder.Install (app), "app should have installed.");
 				RunProjectAndAssert (app, appBuilder);
 				Assert.True (WaitForActivityToStart (app.PackageName, "MainActivity",
-					Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
+					Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 			}
 		}
 
