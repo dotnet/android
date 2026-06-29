@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Mono.AndroidTools;
-using Mono.AndroidTools.Util;
 using Xamarin.Android.Build.Debugging.Tasks.Properties;
 
 namespace Xamarin.Android.Tasks
@@ -18,12 +16,32 @@ namespace Xamarin.Android.Tasks
 	public partial class FastDeploy2 : AsyncTask
 	{
 		const string OverridePath = "files/.__override__";
-		const int StaleFileRemovalBatchSize = 100;
-		const int CopyBatchSize = 25;
-		const int MaxShellCommandLength = 900;
-		const int MaxAdbCommandLength = 4096;
 
 		public override string TaskPrefix => "FD2";
+
+		/// <summary>
+		/// Number of stale override files to delete per <c>rm</c> invocation. Exposed as an
+		/// internal MSBuild property primarily so it can be lowered when testing batching behavior.
+		/// </summary>
+		public int StaleFileRemovalBatchSize { get; set; } = 100;
+
+		/// <summary>
+		/// Number of files to copy per batch when staging fast-deployment files on the device.
+		/// Exposed as an internal MSBuild property primarily so it can be lowered when testing.
+		/// </summary>
+		public int CopyBatchSize { get; set; } = 25;
+
+		/// <summary>
+		/// Maximum length (in characters) of a single <c>adb shell</c> command line before it is
+		/// split into multiple invocations.
+		/// </summary>
+		public int MaxShellCommandLength { get; set; } = 900;
+
+		/// <summary>
+		/// Maximum length (in characters) of a single <c>adb</c> command line before it is split
+		/// into multiple invocations.
+		/// </summary>
+		public int MaxAdbCommandLength { get; set; } = 4096;
 
 		public string AdbTarget { get; set; }
 		public string UploadFlagFile { get; set; }
@@ -60,7 +78,7 @@ namespace Xamarin.Android.Tasks
 
 		public string AppFileTransferMode { get; set; } = "Copy";
 
-		AndroidDevice Device;
+		string DeviceId = "";
 		PackageInfo packageInfo = new PackageInfo ();
 		DateTime lastUpload = DateTime.MinValue;
 		Queue<string> diagnosticLogs = new Queue<string> ();
@@ -119,23 +137,19 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void DebugHandler (string task, string message)
-		{
-			LogDiagnostic ($"DEBUG {task} {message}");
-		}
-
 		public override bool Execute ()
 		{
-			Device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4);
-			if (Device == null) {
+			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4);
+			if (device == null) {
 				PrintDiagnostics ();
 				return false;
 			}
-			LogMessage ($"Found device: {Device.ID}");
+			DeviceId = device.ID ?? "";
+			LogMessage ($"Found device: {DeviceId}");
 
 			if (string.IsNullOrEmpty (PrimaryCpuAbi) && !EmbedAssembliesIntoApk) {
 				PrintDiagnostics ();
-				LogCodedError ("XA0010", Resources.XA0010_NoAbi, Device.ID);
+				LogCodedError ("XA0010", Resources.XA0010_NoAbi, DeviceId);
 				return false;
 			}
 
@@ -144,19 +158,17 @@ namespace Xamarin.Android.Tasks
 			LogDiagnostic ($"LastWriteTime of `{flagFilePath}`: {lastUpload}");
 
 			var lifetime = RegisteredTaskObjectLifetime.AppDomain;
-			var key = ProjectSpecificTaskObjectKey ($"{Device.ID}_{PackageName}_{GetType ().Name}");
+			var key = ProjectSpecificTaskObjectKey ($"{DeviceId}_{PackageName}_{GetType ().Name}");
 			if (!File.Exists (UploadFlagFile)) {
 				packageInfo = new PackageInfo ();
 			} else {
 				packageInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<PackageInfo> (key, lifetime) ?? new PackageInfo ();
 			}
 
-			AndroidLogger.Debug += DebugHandler;
 			try {
 				return base.Execute ();
 			} finally {
 				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, packageInfo, lifetime, allowEarlyCollection: false);
-				AndroidLogger.Debug -= DebugHandler;
 			}
 		}
 
@@ -172,16 +184,14 @@ namespace Xamarin.Android.Tasks
 
 		async Task RunInstall ()
 		{
-			await RunLoggedDeviceOperation ("EnsureProperties", () => Device.EnsureProperties (CancellationToken));
-
-			string redirectStdio = Device.Properties.Get ("log.redirect-stdio");
-			if (redirectStdio != null && string.Equals ("true", redirectStdio.Trim (), StringComparison.OrdinalIgnoreCase)) {
+			string redirectStdio = await GetDeviceProperty ("log.redirect-stdio");
+			if (string.Equals ("true", redirectStdio, StringComparison.OrdinalIgnoreCase)) {
 				LogFastDeploy2Error ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
 				return;
 			}
 
-			string runAsDisabled = Device.Properties.Get ("ro.boot.disable_runas");
-			if (runAsDisabled != null && string.Equals ("true", runAsDisabled.Trim (), StringComparison.OrdinalIgnoreCase)) {
+			string runAsDisabled = await GetDeviceProperty ("ro.boot.disable_runas");
+			if (string.Equals ("true", runAsDisabled, StringComparison.OrdinalIgnoreCase)) {
 				LogFastDeploy2Error ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
 				return;
 			}
@@ -193,11 +203,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (ReInstall && !string.IsNullOrEmpty (PackageFile)) {
-				var uninstallCommand = new PmUninstallCommand {
-					PackageName = PackageName,
-					PreserveData = PreserveUserData,
-				};
-				await RunLoggedDeviceOperation ($"UninstallPackage {uninstallCommand}", () => Device.UninstallPackage (uninstallCommand, CancellationToken));
+				await UninstallPackage (PackageName, preserveData: PreserveUserData, user: UserID);
 			}
 
 			bool packageFileOutOfDate = !string.IsNullOrEmpty (PackageFile) &&
@@ -331,63 +337,8 @@ namespace Xamarin.Android.Tasks
 		async Task InstallPackage ()
 		{
 			LogDebugMessage ($"Installing Package {PackageName}");
-			var installCommand = new PushAndInstallCommand {
-				ApkFile = PackageFile,
-				PackageName = PackageName,
-				ReInstall = ReInstall,
-				User = UserID,
-				TestOnly = IsTestOnly,
-			};
-			try {
-				await RunLoggedDeviceOperation (FormatPushAndInstallOperation (installCommand), () => Device.PushAndInstallPackageAsync (installCommand, token: CancellationToken));
-				LogDebugMessage ($"Installed Package {PackageName}.");
-			} catch (Exception exception) {
-				var ex = exception;
-				if (exception is AggregateException aex) {
-					ex = aex.Flatten ().InnerException;
-				}
-				if (!await ShouldThrowIfPackageInstallFailed (ex as PackageAlreadyExistsException)) {
-					LogDebugMessage ($"Installed Package {PackageName}.");
-					return;
-				}
-				throw;
-			}
-		}
-
-		async Task<bool> ShouldThrowIfPackageInstallFailed (PackageAlreadyExistsException e)
-		{
-			if (e == null)
-				return true;
-
-			int s = (e.PackageFile ?? "").LastIndexOf ('/');
-			string apkBasename = s >= 0 ? e.PackageFile.Substring (s + 1) : e.PackageFile;
-
-			if (apkBasename != Path.GetFileName (PackageFile))
-				return false;
-
-			LogDebugMessage (string.Format ("Package '{0}' already exists. Retrying...", PackageName));
-			try {
-				await RunLoggedDeviceOperation ($"DeleteFile {e.PackageFile} ignoreError=True", () => Device.DeleteFile (e.PackageFile, true, CancellationToken));
-			} catch {
-			}
-			bool preserveData = !(e is RequiresUninstallException);
-			LogDebugMessage (string.Format ("Forcing complete uninstall of '{0}'... Preserving Data: {1}", PackageName, preserveData));
-			var uninstallCommand = new PmUninstallCommand () { PackageName = PackageName, User = UserID, PreserveData = preserveData };
-			await RunLoggedDeviceOperation ($"UninstallPackage {uninstallCommand}", () => Device.UninstallPackage (uninstallCommand, cancellationToken: CancellationToken));
-			LogDebugMessage (string.Format ("Installing '{0}'...", PackageName));
-			var installCommand = new PushAndInstallCommand {
-				ApkFile = PackageFile,
-				PackageName = PackageName,
-				ReInstall = false,
-				User = UserID
-			};
-			await RunLoggedDeviceOperation (FormatPushAndInstallOperation (installCommand), () => Device.PushAndInstallPackageAsync (installCommand, token: CancellationToken));
-			return false;
-		}
-
-		static string FormatPushAndInstallOperation (PushAndInstallCommand command)
-		{
-			return $"PushAndInstallPackage ApkFile={command.ApkFile}, PackageName={command.PackageName}, ReInstall={command.ReInstall}, User={command.User ?? ""}, TestOnly={command.TestOnly}";
+			await InstallApkWithRetry (PackageFile, reinstall: ReInstall, testOnly: IsTestOnly, user: UserID);
+			LogDebugMessage ($"Installed Package {PackageName}.");
 		}
 
 		async Task RemoveOverrideDirectory ()
@@ -399,14 +350,14 @@ namespace Xamarin.Android.Tasks
 		{
 			var pid = packageInfo.ProcessId;
 			if (pid == 0 && packageInfo.IsSystemApplication) {
-				pid = await RunLoggedDeviceOperation ($"GetProcessId {PackageName}", () => Device.GetProcessId (PackageName, CancellationToken));
+				pid = await RunLoggedDeviceOperation ($"GetProcessId {PackageName}", () => GetProcessId (PackageName));
 			}
 			if (pid == 0) {
 				LogDebugMessage ($"{PackageName} was not running, skipping kill");
 				return;
 			}
 			LogDebugMessage ($"Terminating {PackageName}...");
-			await RunLoggedDeviceOperation ($"KillProcessAndWaitForExit {PackageName}", () => Device.KillProcessAndWaitForExit (PackageName, CancellationToken));
+			await RunLoggedDeviceOperation ($"ForceStop {PackageName}", () => ForceStopPackage (PackageName));
 			LogDebugMessage ($"{PackageName} Terminated.");
 		}
 
@@ -726,12 +677,12 @@ namespace Xamarin.Android.Tasks
 		async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
 		{
 			string adb = ResolveAdbPath ();
-			var processArguments = new ProcessArgumentBuilder ();
-			if (Device != null && !string.IsNullOrEmpty (Device.ID) && !string.Equals (Device.ID, "any", StringComparison.OrdinalIgnoreCase)) {
-				processArguments.AddQuoted ("-s");
-				processArguments.AddQuoted (Device.ID);
+			var adbArguments = new List<string> ();
+			if (!string.IsNullOrEmpty (DeviceId) && !string.Equals (DeviceId, "any", StringComparison.OrdinalIgnoreCase)) {
+				adbArguments.Add ("-s");
+				adbArguments.Add (DeviceId);
 			}
-			processArguments.AddQuoted (arguments);
+			adbArguments.AddRange (arguments);
 
 			var stdout = new StringBuilder ();
 			var stderr = new StringBuilder ();
@@ -739,7 +690,7 @@ namespace Xamarin.Android.Tasks
 			using var stderrCompleted = new ManualResetEvent (false);
 			var psi = new ProcessStartInfo {
 				FileName = adb,
-				Arguments = processArguments.ToString (),
+				Arguments = string.Join (" ", adbArguments.Select (QuoteProcessArgument)),
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
@@ -816,16 +767,16 @@ namespace Xamarin.Android.Tasks
 
 		async Task RunLoggedDeviceOperation (string operation, Func<Task> action)
 		{
-			LogDiagnostic ($"AndroidDevice operation: {operation}");
+			LogDiagnostic ($"Device operation: {operation}");
 			await action ();
-			LogDiagnostic ($"AndroidDevice operation completed: {operation}");
+			LogDiagnostic ($"Device operation completed: {operation}");
 		}
 
 		async Task<T> RunLoggedDeviceOperation<T> (string operation, Func<Task<T>> action)
 		{
-			LogDiagnostic ($"AndroidDevice operation: {operation}");
+			LogDiagnostic ($"Device operation: {operation}");
 			T result = await action ();
-			LogDiagnostic ($"AndroidDevice operation completed: {operation} => {result}");
+			LogDiagnostic ($"Device operation completed: {operation} => {result}");
 			return result;
 		}
 
@@ -890,8 +841,8 @@ namespace Xamarin.Android.Tasks
 
 		string GetDeviceId ()
 		{
-			if (Device != null && !string.IsNullOrEmpty (Device.ID)) {
-				return Device.ID;
+			if (!string.IsNullOrEmpty (DeviceId)) {
+				return DeviceId;
 			}
 			return string.IsNullOrEmpty (AdbTarget) ? "any" : AdbTarget;
 		}
@@ -962,15 +913,10 @@ namespace Xamarin.Android.Tasks
 
 		string GetErrorCode (Exception ex)
 		{
-			return ex switch {
-				IncompatibleCpuAbiException => "ADB0020",
-				RequiresUninstallException => "ADB0030",
-				SdkNotSupportedException => "ADB0040",
-				PackageAlreadyExistsException => "ADB0050",
-				InsufficientSpaceException => "ADB0060",
-				InstallFailedException => "ADB0010",
-				_ => GetErrorCode (ex.Message),
-			};
+			if (ex is FastDeployInstallException installException) {
+				return installException.ErrorCode;
+			}
+			return GetErrorCode (ex.Message);
 		}
 
 		static string GetErrorCode (string message)
@@ -1038,12 +984,6 @@ namespace Xamarin.Android.Tasks
 		};
 
 		static readonly List<(string code, string message)> error_codes = new List<(string code, string message)> () {
-			{ (code: "ADB0010", message: nameof (InstallFailedException)) },
-			{ (code: "ADB0020", message: nameof (IncompatibleCpuAbiException)) },
-			{ (code: "ADB0030", message: nameof (RequiresUninstallException)) },
-			{ (code: "ADB0040", message: nameof (SdkNotSupportedException)) },
-			{ (code: "ADB0050", message: nameof (PackageAlreadyExistsException)) },
-			{ (code: "ADB0060", message: nameof (InsufficientSpaceException)) },
 			{ (code: "ADB1001", message: "failed to create session") },
 			{ (code: "ADB1002", message: "failed to finalize session") },
 			{ (code: "ADB1003", message: "product directory not specified; set $ANDROID_PRODUCT_OUT") },

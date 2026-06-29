@@ -326,6 +326,15 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' And '$(_AndroidFastDevStrategy)' == 'FastDeploy2' ">Symlink</_AndroidFastDeployAppFileTransferMode>
       <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
       <AndroidFastDeploymentAdbCompressionAlgorithm Condition=" '$(AndroidFastDeploymentAdbCompressionAlgorithm)' == '' ">any</AndroidFastDeploymentAdbCompressionAlgorithm>
+      <!--
+        Internal/unsupported knobs for FastDeploy2 batching. The defaults below match the
+        defaults of the matching FastDeploy2 task properties; override them (for example, to
+        exercise batching with smaller batches when testing) by setting the property.
+      -->
+      <_AndroidFastDeployStaleFileRemovalBatchSize Condition=" '$(_AndroidFastDeployStaleFileRemovalBatchSize)' == '' ">100</_AndroidFastDeployStaleFileRemovalBatchSize>
+      <_AndroidFastDeployCopyBatchSize Condition=" '$(_AndroidFastDeployCopyBatchSize)' == '' ">25</_AndroidFastDeployCopyBatchSize>
+      <_AndroidFastDeployMaxShellCommandLength Condition=" '$(_AndroidFastDeployMaxShellCommandLength)' == '' ">900</_AndroidFastDeployMaxShellCommandLength>
+      <_AndroidFastDeployMaxAdbCommandLength Condition=" '$(_AndroidFastDeployMaxAdbCommandLength)' == '' ">4096</_AndroidFastDeployMaxAdbCommandLength>
     </PropertyGroup>
     <Error
       Condition=" '$(_AndroidFastDevStrategy)' != 'FastDeploy' And '$(_AndroidFastDevStrategy)' != 'FastDeploy2' "
@@ -382,6 +391,10 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       IsTestOnly="$(_AndroidIsTestOnlyPackage)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       EnvironmentFiles="@(_EnvironmentFiles)"
+      StaleFileRemovalBatchSize="$(_AndroidFastDeployStaleFileRemovalBatchSize)"
+      CopyBatchSize="$(_AndroidFastDeployCopyBatchSize)"
+      MaxShellCommandLength="$(_AndroidFastDeployMaxShellCommandLength)"
+      MaxAdbCommandLength="$(_AndroidFastDeployMaxAdbCommandLength)"
     />
     <Touch Files="$(_UploadFlag)" AlwaysCreate="True" />
     <MakeDir Directories="$(_ConfigurationCacheDirectory)" Condition="!Exists('$(_ConfigurationCacheDirectory)')" />
