@@ -18,14 +18,20 @@ static class RuntimeFeature
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}")]
+	[FeatureGuard (typeof (RequiresDynamicCodeAttribute))]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool ManagedTypeMap { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedTypeMap)}", out bool isEnabled) ? isEnabled : ManagedTypeMapEnabledByDefault;
 
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}")]
+	[FeatureGuard (typeof (RequiresDynamicCodeAttribute))]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool IsMonoRuntime { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsMonoRuntime)}", out bool isEnabled) ? isEnabled : IsMonoRuntimeEnabledByDefault;
 		
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}")]
+	[FeatureGuard (typeof (RequiresDynamicCodeAttribute))]
+	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]
 	internal static bool IsCoreClrRuntime { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (IsCoreClrRuntime)}", out bool isEnabled) ? isEnabled : IsCoreClrRuntimeEnabledByDefault;
 
