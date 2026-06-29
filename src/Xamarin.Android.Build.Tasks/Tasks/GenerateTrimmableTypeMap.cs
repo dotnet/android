@@ -10,6 +10,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -101,6 +102,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	[Output]
 	public ITaskItem [] GeneratedJavaFiles { get; set; } = [];
 	[Output]
+	public ITaskItem [] DeletedJavaFiles { get; set; } = [];
+	[Output]
 	public string[]? AdditionalProviderSources { get; set; }
 
 	public override bool RunTask ()
@@ -129,8 +132,18 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		Directory.CreateDirectory (OutputDirectory);
-		if (CleanJavaSourceOutputDirectory && Directory.Exists (JavaSourceOutputDirectory)) {
-			Directory.Delete (JavaSourceOutputDirectory, recursive: true);
+		string[]? priorJavaSnapshot = null;
+		if (CleanJavaSourceOutputDirectory) {
+			// Capture the previously generated set before wiping it, so DeleteStaleJavaSources can
+			// report which Java sources are no longer produced (e.g. a type that was trimmed away).
+			// An empty snapshot (first run, nothing to wipe) still routes through the snapshot-diff
+			// path so clean mode is handled consistently.
+			if (Directory.Exists (JavaSourceOutputDirectory)) {
+				priorJavaSnapshot = Directory.GetFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories);
+				Directory.Delete (JavaSourceOutputDirectory, recursive: true);
+			} else {
+				priorJavaSnapshot = [];
+			}
 		}
 		Directory.CreateDirectory (JavaSourceOutputDirectory);
 
@@ -192,6 +205,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			GeneratedJavaFiles = JavaSourceInputDirectory.IsNullOrEmpty ()
 				? WriteJavaSourcesToDisk (result.GeneratedJavaSources)
 				: CopyJavaSourcesFromInputDirectory (result.GeneratedJavaSources);
+			DeletedJavaFiles = DeleteStaleJavaSources (GeneratedJavaFiles, priorJavaSnapshot);
 
 			// Write manifest to disk if generated
 			if (result.Manifest is not null && !MergedAndroidManifestOutput.IsNullOrEmpty ()) {
@@ -368,6 +382,66 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			items.Add (new TaskItem (outputPath));
 		}
 		return items.ToArray ();
+	}
+
+	// Removes generated Java sources from a previous build that the current generation pass
+	// no longer produces (for example when a managed type is removed or trimmed away). Returns
+	// the deleted files (with a RelativePath metadata) so the targets can mirror the deletion
+	// into the android/src copies and force a Java recompilation.
+	//
+	// When the output directory was wiped before generation (CleanJavaSourceOutputDirectory, used
+	// by the post-trim pass), the stale files are already gone from disk; the previous contents
+	// are supplied via priorJavaSnapshot and the difference against the freshly generated set is
+	// reported. Otherwise the directory is scanned and any file the current pass did not produce
+	// is deleted.
+	ITaskItem [] DeleteStaleJavaSources (IReadOnlyCollection<ITaskItem> generatedJavaFiles, string[]? priorJavaSnapshot)
+	{
+		var expectedFiles = new HashSet<string> (
+			generatedJavaFiles.Select (i => Path.GetFullPath (i.ItemSpec)),
+			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+		var deleted = new List<ITaskItem> ();
+
+		if (priorJavaSnapshot is not null) {
+			// If generation logged errors (e.g. a generated source was missing from the input
+			// directory, XA4255), GeneratedJavaFiles may be incomplete, so the prior-minus-current
+			// diff could wrongly flag a still-valid source as deleted. The build fails on logged
+			// errors anyway; skip pruning to avoid removing a file that should remain.
+			if (Log.HasLoggedErrors) {
+				return [];
+			}
+
+			foreach (var path in priorJavaSnapshot) {
+				var fullPath = Path.GetFullPath (path);
+				if (expectedFiles.Contains (fullPath)) {
+					continue;
+				}
+
+				Log.LogDebugMessage ($"Post-trim regeneration no longer produces generated Java source '{fullPath}'.");
+				deleted.Add (CreateDeletedJavaItem (fullPath));
+			}
+
+			return deleted.ToArray ();
+		}
+
+		foreach (var path in Directory.EnumerateFiles (JavaSourceOutputDirectory, "*.java", SearchOption.AllDirectories)) {
+			var fullPath = Path.GetFullPath (path);
+			if (expectedFiles.Contains (fullPath)) {
+				continue;
+			}
+
+			File.Delete (fullPath);
+			Log.LogDebugMessage ($"Deleted stale generated Java source '{fullPath}'.");
+			deleted.Add (CreateDeletedJavaItem (fullPath));
+		}
+
+		return deleted.ToArray ();
+	}
+
+	TaskItem CreateDeletedJavaItem (string fullPath)
+	{
+		var item = new TaskItem (fullPath);
+		item.SetMetadata ("RelativePath", PathUtil.GetRelativePath (JavaSourceOutputDirectory, fullPath));
+		return item;
 	}
 
 	static Version ParseTargetFrameworkVersion (string tfv)
