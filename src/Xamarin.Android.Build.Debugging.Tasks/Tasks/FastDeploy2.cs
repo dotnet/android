@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -228,7 +227,9 @@ namespace Xamarin.Android.Tasks
 			}
 
 			await TerminateApp ();
-			await DeployFastDevFilesWithAdbPush (OverrideFullPath);
+			if (!await DeployFastDevFilesWithAdbPush (OverrideFullPath)) {
+				LogDiagnostic ("FastDeploy2 deployment did not complete successfully.");
+			}
 		}
 
 		bool IsPackageFileOutOfDate ()
@@ -710,21 +711,6 @@ namespace Xamarin.Android.Tasks
 				length += arg.Length + 3;
 			}
 			return length;
-		}
-
-		(int pushed, int skipped) TryParsePushSummary (string output)
-		{
-			int pushed = 0;
-			int skipped = 0;
-			foreach (var line in output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-				var match = AdbPushSummaryRegex.Match (line);
-				if (!match.Success) {
-					continue;
-				}
-				pushed = int.Parse (match.Groups ["pushed"].Value);
-				skipped = int.Parse (match.Groups ["skipped"].Value);
-			}
-			return (pushed, skipped);
 		}
 
 		async Task<AdbCommandResult> RunAdbCommand (params string [] arguments)
@@ -1252,7 +1238,5 @@ namespace Xamarin.Android.Tasks
 			{ (code: "ADB1192", message: "Failed to open") },
 			{ (code: "ADB1193", message: "failed to write") },
 		};
-
-		static readonly Regex AdbPushSummaryRegex = new Regex (@"(?<pushed>\d+) files? pushed, (?<skipped>\d+) skipped", RegexOptions.Compiled);
 	}
 }
