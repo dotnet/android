@@ -9,6 +9,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 static class AndroidEnumConverter
 {
 	public static string? LaunchModeToString (int value) => value switch {
+		0 => "standard",
 		1 => "singleTop",
 		2 => "singleTask",
 		3 => "singleInstance",
@@ -16,23 +17,23 @@ static class AndroidEnumConverter
 		_ => null,
 	};
 
-	public static string? ScreenOrientationToString (int value) => value switch {
+	public static string? ScreenOrientationToString (int value, int targetSdkVersion = 0) => value switch {
+		-1 => "unspecified",
 		0 => "landscape",
 		1 => "portrait",
-		3 => "sensor",
-		4 => "nosensor",
-		5 => "user",
-		6 => "behind",
-		7 => "reverseLandscape",
-		8 => "reversePortrait",
-		9 => "sensorLandscape",
-		10 => "sensorPortrait",
-		11 => "fullSensor",
-		12 => "userLandscape",
-		13 => "userPortrait",
-		14 => "fullUser",
-		15 => "locked",
-		-1 => "unspecified",
+		2 => "user",
+		3 => "behind",
+		4 => "sensor",
+		5 => "nosensor",
+		6 => "sensorLandscape",
+		7 => targetSdkVersion < 16 ? "sensorPortait" : "sensorPortrait",
+		8 => "reverseLandscape",
+		9 => "reversePortrait",
+		10 => "fullSensor",
+		11 => "userLandscape",
+		12 => "userPortrait",
+		13 => "fullUser",
+		14 => "locked",
 		_ => null,
 	};
 
@@ -65,18 +66,21 @@ static class AndroidEnumConverter
 		var parts = new List<string> ();
 		int state = value & 0x0f;
 		int adjust = value & 0xf0;
-		if (state == 1) parts.Add ("stateUnchanged");
+		if (state == 0) parts.Add ("stateUnspecified");
+		else if (state == 1) parts.Add ("stateUnchanged");
 		else if (state == 2) parts.Add ("stateHidden");
 		else if (state == 3) parts.Add ("stateAlwaysHidden");
 		else if (state == 4) parts.Add ("stateVisible");
 		else if (state == 5) parts.Add ("stateAlwaysVisible");
-		if (adjust == 0x10) parts.Add ("adjustResize");
+		if (adjust == 0) parts.Add ("adjustUnspecified");
+		else if (adjust == 0x10) parts.Add ("adjustResize");
 		else if (adjust == 0x20) parts.Add ("adjustPan");
 		else if (adjust == 0x30) parts.Add ("adjustNothing");
 		return parts.Count > 0 ? string.Join ("|", parts) : null;
 	}
 
 	public static string? DocumentLaunchModeToString (int value) => value switch {
+		0 => "none",
 		1 => "intoExisting",
 		2 => "always",
 		3 => "never",
@@ -84,6 +88,7 @@ static class AndroidEnumConverter
 	};
 
 	public static string? UiOptionsToString (int value) => value switch {
+		0 => "none",
 		1 => "splitActionBarWhenNarrow",
 		_ => null,
 	};

@@ -54,6 +54,18 @@ public class ManifestGeneratorTests
 		return doc;
 	}
 
+	static List<string> GetDataAttributes (XElement? filter)
+	{
+		Assert.NotNull (filter);
+		return (filter ?? throw new System.InvalidOperationException ("Expected intent-filter."))
+			.Elements ("data")
+			.Select (element => {
+				var attr = element.Attributes ().Single (attribute => attribute.Name.Namespace == AndroidNs);
+				return $"{attr.Name.LocalName}={attr.Value}";
+			})
+			.ToList ();
+	}
+
 	[Fact]
 	public void Activity_MainLauncher ()
 	{
@@ -89,6 +101,7 @@ public class ManifestGeneratorTests
 				["Icon"] = "@drawable/icon",
 				["Theme"] = "@style/MyTheme",
 				["LaunchMode"] = 2, // singleTask
+				["ScreenOrientation"] = 7, // sensorPortrait
 			},
 		});
 
@@ -99,6 +112,7 @@ public class ManifestGeneratorTests
 		Assert.Equal ("@drawable/icon", (string?)activity?.Attribute (AndroidNs + "icon"));
 		Assert.Equal ("@style/MyTheme", (string?)activity?.Attribute (AndroidNs + "theme"));
 		Assert.Equal ("singleTask", (string?)activity?.Attribute (AndroidNs + "launchMode"));
+		Assert.Equal ("sensorPortrait", (string?)activity?.Attribute (AndroidNs + "screenOrientation"));
 	}
 
 	[Fact]
@@ -113,6 +127,8 @@ public class ManifestGeneratorTests
 					Categories = ["android.intent.category.DEFAULT"],
 					Properties = new Dictionary<string, object?> {
 						["DataMimeType"] = "text/plain",
+						["DataPathSuffix"] = "suffix",
+						["DataPathAdvancedPattern"] = "advanced*",
 					},
 				},
 			],
@@ -126,9 +142,60 @@ public class ManifestGeneratorTests
 		Assert.True (filter?.Elements ("action").Any (a => (string?)a.Attribute (AttName) == "android.intent.action.SEND"));
 		Assert.True (filter?.Elements ("category").Any (c => (string?)c.Attribute (AttName) == "android.intent.category.DEFAULT"));
 
-		var data = filter?.Element ("data");
-		Assert.NotNull (data);
-		Assert.Equal ("text/plain", (string?)data?.Attribute (AndroidNs + "mimeType"));
+		Assert.Equal ([
+			"mimeType=text/plain",
+			"pathSuffix=suffix",
+			"pathAdvancedPattern=advanced*",
+		], GetDataAttributes (filter));
+	}
+
+	[Fact]
+	public void Activity_IntentFilterPluralDataProperties ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/ShareActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			IntentFilters = [
+				new IntentFilterInfo {
+					Actions = ["action1"],
+					Properties = new Dictionary<string, object?> {
+						["DataPaths"] = new List<string> { "foo", "bar" },
+						["DataPathPatterns"] = new List<string> { "foo*", "bar*" },
+						["DataPathPrefixes"] = new List<string> { "foo", "bar" },
+						["DataHosts"] = new List<string> { "foo.com", "bar.com" },
+						["DataPorts"] = new List<string> { "10000", "20000" },
+						["DataSchemes"] = new List<string> { "http", "ftp" },
+						["DataMimeTypes"] = new List<string> { "text/html", "text/xml" },
+						["DataPathSuffixes"] = new List<string> { "suffix1", "suffix2" },
+						["DataPathAdvancedPatterns"] = new List<string> { "advanced1*", "advanced2*" },
+					},
+				},
+			],
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var filter = doc.Root?.Element ("application")?.Element ("activity")?.Element ("intent-filter");
+
+		Assert.Equal ([
+			"host=foo.com",
+			"host=bar.com",
+			"mimeType=text/html",
+			"mimeType=text/xml",
+			"path=foo",
+			"path=bar",
+			"pathPattern=foo*",
+			"pathPattern=bar*",
+			"pathPrefix=foo",
+			"pathPrefix=bar",
+			"port=10000",
+			"port=20000",
+			"scheme=http",
+			"scheme=ftp",
+			"pathSuffix=suffix1",
+			"pathSuffix=suffix2",
+			"pathAdvancedPattern=advanced1*",
+			"pathAdvancedPattern=advanced2*",
+		], GetDataAttributes (filter));
 	}
 
 	[Fact]
@@ -214,6 +281,8 @@ public class ManifestGeneratorTests
 				["Label"] = "Custom App",
 				["AllowBackup"] = false,
 				["LargeHeap"] = true,
+				["DirectBootAware"] = true,
+				["NetworkSecurityConfig"] = "@xml/network_security_config",
 			},
 		});
 
@@ -224,6 +293,55 @@ public class ManifestGeneratorTests
 		Assert.Equal ("com.example.app.MyApp", (string?)app?.Attribute (AttName));
 		Assert.Equal ("false", (string?)app?.Attribute (AndroidNs + "allowBackup"));
 		Assert.Equal ("true", (string?)app?.Attribute (AndroidNs + "largeHeap"));
+		Assert.Equal ("true", (string?)app?.Attribute (AndroidNs + "directBootAware"));
+		Assert.Equal ("@xml/network_security_config", (string?)app?.Attribute (AndroidNs + "networkSecurityConfig"));
+		Assert.Equal ("true", (string?)app?.Attribute (AndroidNs + "extractNativeLibs"));
+
+		var provider = app?.Element ("provider");
+		Assert.NotNull (provider);
+		Assert.Equal ("true", (string?)provider?.Attribute (AndroidNs + "directBootAware"));
+	}
+
+	[Fact]
+	public void RuntimeProvider_DirectBootAware_WhenComponentDirectBootAware ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+			Properties = new Dictionary<string, object?> {
+				["DirectBootAware"] = true,
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var app = doc.Root?.Element ("application");
+		var activity = app?.Element ("activity");
+		var provider = app?.Elements ("provider")
+			.FirstOrDefault (p => (string?) p.Attribute (AndroidNs + "name") == "mono.MonoRuntimeProvider");
+
+		Assert.Equal ("true", (string?) activity?.Attribute (AndroidNs + "directBootAware"));
+		Assert.Equal ("true", (string?) provider?.Attribute (AndroidNs + "directBootAware"));
+	}
+
+	[Fact]
+	public void RuntimeProvider_DoesNotEmitDirectBootAwareFalse ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyApp", new ComponentInfo {
+			Kind = ComponentKind.Application,
+			Properties = new Dictionary<string, object?> {
+				["DirectBootAware"] = false,
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var app = doc.Root?.Element ("application");
+		var provider = app?.Elements ("provider")
+			.FirstOrDefault (p => (string?) p.Attribute (AndroidNs + "name") == "mono.MonoRuntimeProvider");
+
+		Assert.Equal ("false", (string?) app?.Attribute (AndroidNs + "directBootAware"));
+		Assert.NotNull (provider);
+		Assert.Null (provider?.Attribute (AndroidNs + "directBootAware"));
 	}
 
 	[Fact]
@@ -622,6 +740,27 @@ public class ManifestGeneratorTests
 
 		Assert.Equal ("24", (string?)usesSdk?.Attribute (AndroidNs + "minSdkVersion"));
 		Assert.Equal ("34", (string?)usesSdk?.Attribute (AndroidNs + "targetSdkVersion"));
+	}
+
+	[Fact]
+	public void UsesSdk_MissingMinSdkVersion_SetFromConfiguredMinSdk ()
+	{
+		var gen = CreateDefaultGenerator ();
+		gen.MinSdkVersion = "24";
+		var template = ParseTemplate (
+			"""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <uses-sdk />
+			  <application />
+			</manifest>
+			""");
+
+		var doc = GenerateAndLoad (gen, template: template);
+		var usesSdk = doc.Root?.Element ("uses-sdk");
+		Assert.NotNull (usesSdk);
+
+		Assert.Equal ("24", (string?)usesSdk?.Attribute (AndroidNs + "minSdkVersion"));
 	}
 
 	[Theory]
