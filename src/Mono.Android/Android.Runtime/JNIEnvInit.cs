@@ -188,11 +188,11 @@ namespace Android.Runtime
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
-				return new JavaMarshalValueManager ();
+				return new CoreClrJavaMarshalValueManager ();
 			}
 
 			if (RuntimeFeature.IsNativeAotRuntime) {
-				return new JavaMarshalValueManager ();
+				return new CoreClrJavaMarshalValueManager ();
 			}
 
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");
