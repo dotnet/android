@@ -11,7 +11,6 @@ namespace Xamarin.Android.Prepare
 		public string? LogFilePath { get; protected set; }
 		public List<Step> Steps   { get; } = new List<Step> ();
 		public bool NeedsGitSubmodules { get; protected set; }
-		public bool NeedsGitBuildInfo { get; protected set; }
 		public bool NeedsCompilers { get; protected set; }
 
 		protected Scenario (string name, string description)

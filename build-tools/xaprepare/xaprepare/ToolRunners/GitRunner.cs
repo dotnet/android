@@ -135,61 +135,6 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, "submodule-update");
 		}
 
-		public string GetBranchName (string? workingDirectory = null)
-		{
-			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-			var runner = CreateGitRunner (runnerWorkingDirectory);
-			runner
-				.AddArgument ("name-rev")
-				.AddArgument ("--name-only")
-				.AddArgument ("--exclude=tags/*")
-				.AddArgument ("HEAD");
-
-			string branchName = String.Empty;
-			using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-				outputSink.LineCallback = (string? line) => {
-					if (!String.IsNullOrEmpty (branchName)) {
-						return;
-					}
-					branchName = line?.Trim () ?? String.Empty;
-				};
-
-				if (!runner.Run ()) {
-					return String.Empty;
-				}
-
-				return branchName;
-			}
-		}
-
-		public string GetTopCommitHash (string? workingDirectory = null, bool shortHash = true)
-		{
-			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-
-			var runner = CreateGitRunner (runnerWorkingDirectory);
-			runner.AddArgument ("rev-parse");
-			runner.AddArgument ("HEAD");
-
-			Log.StatusLine (GetLogMessage (runner), CommandMessageColor);
-
-			string hash = String.Empty;
-			using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-				outputSink.LineCallback = (string? line) => {
-					if (!String.IsNullOrEmpty (hash))
-						return;
-					hash = line?.Trim () ?? String.Empty;
-				};
-
-				if (!runner.Run ())
-					return String.Empty;
-
-				if (shortHash)
-					return Utilities.ShortenGitHash (hash);
-
-				return hash;
-			}
-		}
-
 		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath)
 		{
 			return await Blame (filePath, gitArguments: null, blameArguments: null, workingDirectory: null);

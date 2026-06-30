@@ -11,47 +11,7 @@ namespace Xamarin.Android.Prepare
 	{
 		public string CommitOfLastVersionChange { get; private set; } = String.Empty;
 
-		// NDK version info is now derived directly from BuildAndroidPlatforms.AndroidNdkPkgRevision
-		// (single source of truth shared with src/androidsdk/androidsdk.targets via Configuration.props).
-		public string NDKRevision => BuildAndroidPlatforms.AndroidNdkPkgRevision;
-		public string NDKVersionMajor => NDKVersion.Major.ToString ();
-		public string NDKVersionMinor => NDKVersion.Minor.ToString ();
-		public string NDKVersionMicro => NDKVersion.Build.ToString ();
-
-		Version? cachedNdkVersion;
-		Version NDKVersion {
-			get {
-				if (cachedNdkVersion != null)
-					return cachedNdkVersion;
-				if (!Utilities.ParseAndroidPkgRevision (BuildAndroidPlatforms.AndroidNdkPkgRevision, out Version? ver, out _) || ver == null)
-					throw new InvalidOperationException ($"Unable to parse NDK revision '{BuildAndroidPlatforms.AndroidNdkPkgRevision}' as a valid version string");
-				cachedNdkVersion = ver;
-				return ver;
-			}
-		}
-
 		public string VersionHash            { get; private set; } = String.Empty;
-		public string XACommitHash           { get; private set; } = String.Empty;
-		public string XABranch               { get; private set; } = String.Empty;
-
-		public async Task GatherGitInfo (Context context)
-		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
-			Log.StatusLine ();
-			Log.StatusLine ("Determining basic build information", ConsoleColor.DarkGreen);
-			await DetermineLastVersionChangeCommit (context);
-			Log.StatusLine ();
-			DetermineXACommitInfo (context);
-		}
-
-		void DetermineXACommitInfo (Context context)
-		{
-			GitRunner git = CreateGitRunner (context);
-			XACommitHash = git.GetTopCommitHash (shortHash: false);
-			XABranch = git.GetBranchName ();
-		}
 
 		async Task DetermineLastVersionChangeCommit (Context context)
 		{

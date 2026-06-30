@@ -431,9 +431,6 @@ namespace Xamarin.Android.Prepare
 			}
 
 			BuildInfo = new BuildInfo ();
-			if (SelectedScenario.NeedsGitBuildInfo) {
-				await BuildInfo.GatherGitInfo (this);
-			}
 
 			if (MakeConcurrency == 0)
 				MakeConcurrency = OS.CPUCount + 1;

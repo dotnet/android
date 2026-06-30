@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Generates the C# constants file previously produced by xaprepare's
+  Step_GenerateFiles.Get_XABuildConfig_cs:
+
+    bin/Build$(Configuration)/XABuildConfig.cs
+      (consumed via <Compile Include> by:
+         src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
+         src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj
+         src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj)
+
+  This is its own project so that each consumer can ProjectReference it.
+  That gives us:
+
+    * A single producer for the shared output file (no parallel-write race).
+    * MSBuild project-reference ordering so every consumer's build sees the
+      generated file (works for isolated builds of any one consumer, not just
+      full-tree builds).
+
+  Follows the same pattern established by src/native/cmake-config/cmake-config.csproj.
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\Configuration.props" />
+
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash"      TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch"          TaskFactory="TaskHostFactory" Runtime="NET" />
+
+  <PropertyGroup>
+    <_XABuildConfigTemplate>$(MSBuildThisFileDirectory)..\XABuildConfig.cs.in</_XABuildConfigTemplate>
+    <_XABuildConfigOutput>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs</_XABuildConfigOutput>
+  </PropertyGroup>
+
+  <Target Name="_GenerateXABuildConfig"
+          BeforeTargets="Build"
+          Inputs="$(MSBuildThisFileFullPath);$(_XABuildConfigTemplate);$(XamarinAndroidSourcePath)Configuration.props;$(XamarinAndroidSourcePath)Directory.Build.props"
+          Outputs="$(_XABuildConfigOutput)">
+    <!--
+      Substitution values must match Step_GenerateFiles.Get_XABuildConfig_cs exactly.
+
+      `AndroidSupportedTargetJitAbis` (e.g. "armeabi-v7a:arm64-v8a:x86:x86_64") becomes a
+      semicolon-separated string in the generated file. Use %3B (the MSBuild escape for ';')
+      so that the resulting Include attribute is not split into multiple items.
+    -->
+    <PropertyGroup>
+      <_XASupportedAbis>$(AndroidSupportedTargetJitAbis.Replace(':', '%3B'))</_XASupportedAbis>
+
+      <_NdkVersionMajor>$(_XAAndroidNdkPkgRevision.Split('.')[0])</_NdkVersionMajor>
+      <_NdkVersionMinor>$(_XAAndroidNdkPkgRevision.Split('.')[1])</_NdkVersionMinor>
+      <_NdkVersionMicro>$(_XAAndroidNdkPkgRevision.Split('.')[2])</_NdkVersionMicro>
+
+      <_MinApiMajor>$(AndroidMinimumDotNetApiLevel.Split('.')[0])</_MinApiMajor>
+      <_MinApiMinor>0</_MinApiMinor>
+      <_MinApiMinor Condition=" $(AndroidMinimumDotNetApiLevel.Contains('.')) ">$(AndroidMinimumDotNetApiLevel.Split('.')[1])</_MinApiMinor>
+
+      <_TargetApiMajor>$(AndroidDefaultTargetDotnetApiLevel.Split('.')[0])</_TargetApiMajor>
+      <_TargetApiMinor>0</_TargetApiMinor>
+      <_TargetApiMinor Condition=" $(AndroidDefaultTargetDotnetApiLevel.Contains('.')) ">$(AndroidDefaultTargetDotnetApiLevel.Split('.')[1])</_TargetApiMinor>
+
+      <_StableApiMajor>$(AndroidLatestStableApiLevel.Split('.')[0])</_StableApiMajor>
+      <_StableApiMinor>0</_StableApiMinor>
+      <_StableApiMinor Condition=" $(AndroidLatestStableApiLevel.Contains('.')) ">$(AndroidLatestStableApiLevel.Split('.')[1])</_StableApiMinor>
+
+      <_UnstableApiMajor>$(AndroidLatestUnstableApiLevel.Split('.')[0])</_UnstableApiMajor>
+      <_UnstableApiMinor>0</_UnstableApiMinor>
+      <_UnstableApiMinor Condition=" $(AndroidLatestUnstableApiLevel.Contains('.')) ">$(AndroidLatestUnstableApiLevel.Split('.')[1])</_UnstableApiMinor>
+    </PropertyGroup>
+
+    <GitCommitHash WorkingDirectory="$(XamarinAndroidSourcePath)">
+      <Output TaskParameter="CommitHash" PropertyName="_XACommitHash" />
+    </GitCommitHash>
+
+    <GitBranch WorkingDirectory="$(XamarinAndroidSourcePath)">
+      <Output TaskParameter="Branch" PropertyName="_XABranch" />
+    </GitBranch>
+
+    <ItemGroup>
+      <_XABuildConfigReplacement Include="@NDK_REVISION@=$(_XAAndroidNdkPkgRevision)" />
+      <_XABuildConfigReplacement Include="@NDK_RELEASE@=$(_XAAndroidNdkRelease)" />
+      <_XABuildConfigReplacement Include="@NDK_VERSION_MAJOR@=$(_NdkVersionMajor)" />
+      <_XABuildConfigReplacement Include="@NDK_VERSION_MINOR@=$(_NdkVersionMinor)" />
+      <_XABuildConfigReplacement Include="@NDK_VERSION_MICRO@=$(_NdkVersionMicro)" />
+      <_XABuildConfigReplacement Include="@NDK_ARMEABI_V7_API@=$(_MinApiMajor)" />
+      <_XABuildConfigReplacement Include="@NDK_ARM64_V8A_API@=$(_MinApiMajor)" />
+      <_XABuildConfigReplacement Include="@NDK_X86_API@=$(_MinApiMajor)" />
+      <_XABuildConfigReplacement Include="@NDK_X86_64_API@=$(_MinApiMajor)" />
+      <_XABuildConfigReplacement Include="@XA_SUPPORTED_ABIS@=$(_XASupportedAbis)" />
+      <_XABuildConfigReplacement Include="@SDK_BUILD_TOOLS_VERSION@=$(XABuildToolsFolder)" />
+      <_XABuildConfigReplacement Include="@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@=$(_MinApiMajor)" />
+      <_XABuildConfigReplacement Include="@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL_MINOR@=$(_MinApiMinor)" />
+      <_XABuildConfigReplacement Include="@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@=$(_TargetApiMajor)" />
+      <_XABuildConfigReplacement Include="@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL_MINOR@=$(_TargetApiMinor)" />
+      <_XABuildConfigReplacement Include="@ANDROID_LATEST_STABLE_API_LEVEL@=$(_StableApiMajor)" />
+      <_XABuildConfigReplacement Include="@ANDROID_LATEST_STABLE_API_LEVEL_MINOR@=$(_StableApiMinor)" />
+      <_XABuildConfigReplacement Include="@ANDROID_LATEST_UNSTABLE_API_LEVEL@=$(_UnstableApiMajor)" />
+      <_XABuildConfigReplacement Include="@ANDROID_LATEST_UNSTABLE_API_LEVEL_MINOR@=$(_UnstableApiMinor)" />
+      <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_VERSION@=$(ProductVersion)" />
+      <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_COMMIT_HASH@=$(_XACommitHash)" />
+      <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_BRANCH@=$(_XABranch)" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)" />
+
+    <ReplaceFileContents
+        SourceFile="$(_XABuildConfigTemplate)"
+        DestinationFile="$(_XABuildConfigOutput)"
+        Replacements="@(_XABuildConfigReplacement)" />
+  </Target>
+</Project>
