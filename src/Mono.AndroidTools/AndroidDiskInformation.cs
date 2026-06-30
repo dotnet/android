@@ -26,6 +26,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#nullable enable
 using System;
 using System.IO;
 
@@ -67,7 +68,7 @@ namespace Mono.AndroidTools
 
 		void ParseNewFormat (string output)
 		{
-			string s;
+			string? s;
 			var reader = new StringReader (output);
 
 			reader.ReadLine (); //  header line
@@ -95,7 +96,7 @@ namespace Mono.AndroidTools
 
 		void ParseOldFormat (string output)
 		{
-			string s;
+			string? s;
 			var reader = new StringReader (output);
 			while ((s = reader.ReadLine ()) != null) {
 				int idx = s.IndexOf (':');
