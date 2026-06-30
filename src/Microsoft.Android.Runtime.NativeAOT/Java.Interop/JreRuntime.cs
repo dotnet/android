@@ -81,14 +81,16 @@ namespace Java.Interop {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			return new ManagedTypeManager ();
+			throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 		static JniRuntime.JniValueManager CreateDefaultValueManager ()
 		{
-			return new JavaMarshalValueManager ();
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return new TrimmableTypeMapValueManager ();
+			}
+
+			throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
 		}
 
 		public override string? GetCurrentManagedThreadName ()

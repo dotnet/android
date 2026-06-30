@@ -30,6 +30,7 @@ namespace Xamarin.Android.RuntimeTests
 				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					categories.Add ("NativeTypeMap");
 					categories.Add ("Export");
+					categories.Add ("TrimmableTypeMapUnsupported");
 				}
 
 				// Build-time flags flow in via runtimeconfig.json properties

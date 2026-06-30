@@ -173,11 +173,21 @@ namespace Android.Runtime
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
-				return new ManagedTypeManager ();
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ($"{nameof (RuntimeFeature.IsNativeAotRuntime)} requires {nameof (RuntimeFeature.TrimmableTypeMap)}.");
 			}
 
-			return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+			if (RuntimeFeature.ManagedTypeMap) {
+				return CreateManagedTypeManager ();
+			}
+
+			return CreateAndroidTypeManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The managed type map is only used on non-NativeAOT runtimes; the 'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
+			static JniRuntime.JniTypeManager CreateManagedTypeManager () => new ManagedTypeManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "AndroidTypeManager is reflection-backed and only used on non-NativeAOT runtimes where the required metadata is preserved by custom trimmer steps.")]
+			JniRuntime.JniTypeManager CreateAndroidTypeManager () => new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
 		}
 
 		internal static JniRuntime.JniValueManager CreateValueManager ()
@@ -186,22 +196,25 @@ namespace Android.Runtime
 				return new TrimmableTypeMapValueManager ();
 			}
 
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
+			}
+
 			if (RuntimeFeature.IsMonoRuntime) {
-				return new AndroidValueManager ();
+				return CreateAndroidValueManager ();
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
 				return CreateJavaMarshalValueManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				return CreateJavaMarshalValueManager ();
-			}
-
 			throw new NotSupportedException ("Internal error: unknown runtime not supported");
 
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "AndroidValueManager is reflection-backed and only used on the MonoVM runtime where the required metadata is preserved by custom trimmer steps.")]
+			JniRuntime.JniValueManager CreateAndroidValueManager () => new AndroidValueManager ();
+
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager is not used in Native AOT builds; NativeAOT requires the trimmable type map.")]
 			JniRuntime.JniValueManager CreateJavaMarshalValueManager ()
 			{
 				return new JavaMarshalValueManager ();
