@@ -138,6 +138,9 @@ namespace Xamarin.Android.Build.Tests
 			if (isRelease) {
 				expectedFiles.Add ($"{proj.PackageName}.aab");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.aab");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					expectedFiles.Add ("mapping.txt");
+				}
 			} else {
 				expectedFiles.Add ($"{proj.PackageName}.apk");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.apk.idsig");
