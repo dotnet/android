@@ -2,10 +2,14 @@
 
   <!-- NuGet Package Versions -->
   <ItemGroup>
-    <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="8.0.0" />
     <PackageReference Update="Microsoft.Win32.Registry"                     Version="5.0.0" />
     <PackageReference Update="System.CodeDom"                               Version="10.0.8" />
     <PackageReference Update="Irony"                                        Version="1.5.3" />
+  </ItemGroup>
+
+  <!-- Embed Source Link information in PDBs for every project in the repo. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Automatically add NRT attribute support for netstandard2.0 projects using NRT -->

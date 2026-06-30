@@ -10,10 +10,6 @@ namespace Xamarin.Android.Prepare
 		bool atBuildStart;
 		bool onlyRequired;
 
-		IEnumerable<GitSubmoduleInfo>?  gitSubmodules;
-		string?                         xaCommit;
-
-
 		public Step_GenerateFiles (bool atBuildStart, bool onlyRequired = false)
 			: base ("Generating files required by the build")
 		{
@@ -21,14 +17,8 @@ namespace Xamarin.Android.Prepare
 			this.onlyRequired = onlyRequired;
 		}
 
-		protected override async Task<bool> Execute (Context context)
+		protected override Task<bool> Execute (Context context)
 		{
-			var git                 = new GitRunner (context);
-			xaCommit                = git.GetTopCommitHash (workingDirectory: BuildPaths.XamarinAndroidSourceRoot, shortHash: false);
-			var gitSubmoduleInfo    = await git.ConfigList (new[]{"--blob", "HEAD:.gitmodules"});
-			var gitSubmoduleStatus  = await git.SubmoduleStatus ();
-			gitSubmodules           = GitSubmoduleInfo.GetGitSubmodules (gitSubmoduleInfo, gitSubmoduleStatus);
-
 			List<GeneratedFile>? filesToGenerate = GetFilesToGenerate (context);
 			if (filesToGenerate != null && filesToGenerate.Count > 0) {
 				foreach (GeneratedFile gf in filesToGenerate) {
@@ -46,19 +36,16 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			return true;
+			return Task.FromResult (true);
 		}
 
 		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {
-					return new List<GeneratedFile> {
-						Get_SourceLink_Json (context),
-					};
+					return null;
 				} else {
 					return new List <GeneratedFile> {
-						Get_SourceLink_Json (context),
 						Get_Configuration_OperatingSystem_props (context),
 						Get_XABuildConfig_cs (context),
 					};
@@ -155,18 +142,6 @@ namespace Xamarin.Android.Prepare
 				}
 				return value.Substring (dot + 1);
 			}
-		}
-
-		public GeneratedFile Get_SourceLink_Json (Context context)
-		{
-			if (gitSubmodules == null || xaCommit == null) {
-				return new SkipGeneratedFile ();
-			}
-			return new GeneratedSourceLinkJsonFile (
-					gitSubmodules!,
-					xaCommit!,
-					Path.Combine (Configurables.Paths.BuildBinDir, "SourceLink.json")
-			);
 		}
 	}
 }
