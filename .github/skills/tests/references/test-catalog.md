@@ -108,7 +108,7 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
-| **instant run** | `--filter "FullyQualifiedName~InstantRunTest"` | Hot reload / instant run |
+| **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
 
 ---
 

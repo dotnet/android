@@ -8,6 +8,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 static class MetadataTypeNameResolver
 {
+	const byte ElementTypeValueType = 0x11;
+
 	internal static string JoinNamespaceAndName (string ns, string name)
 	{
 		return ns.Length > 0 ? $"{ns}.{name}" : name;
@@ -40,6 +42,7 @@ static class MetadataTypeNameResolver
 		return new TypeRefData {
 			ManagedTypeName = GetTypeFromDefinition (reader, handle, rawTypeKind),
 			AssemblyName = assemblyName,
+			IsValueType = rawTypeKind == ElementTypeValueType,
 		};
 	}
 
@@ -64,6 +67,7 @@ static class MetadataTypeNameResolver
 		return new TypeRefData {
 			ManagedTypeName = managedTypeName,
 			AssemblyName = assemblyName,
+			IsValueType = rawTypeKind == ElementTypeValueType,
 		};
 	}
 

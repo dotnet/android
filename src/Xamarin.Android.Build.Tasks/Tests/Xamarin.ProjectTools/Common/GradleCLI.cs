@@ -19,7 +19,7 @@ namespace Xamarin.ProjectTools
 		public bool Execute (params string [] args)
 		{
 			if (!File.Exists (GradlePath)) {
-				throw new FileNotFoundException ($"Gradle tool was found at {GradlePath}, please run the xaprepare 'AndroidTestDependencies' scenario.");
+				throw new FileNotFoundException ($"Gradle tool was not found at {GradlePath}.");
 			}
 
 			if (string.IsNullOrEmpty (ProcessLogFile)) {

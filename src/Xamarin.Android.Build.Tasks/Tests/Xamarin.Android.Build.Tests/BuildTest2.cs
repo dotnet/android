@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -313,8 +314,85 @@ namespace Xamarin.Android.Build.Tests
 				var apkDescPath = Path.Combine (Root, apkDescFilename);
 				var apkDescReferencePath = Path.Combine (Root, b.ProjectDirectory, apkDescReference);
 				var (code, stdOut, stdErr) = RunApkDiffCommand ($"-s --save-description-2={apkDescPath} --descrease-is-regression {regressionCheckArgs} {apkDescReferencePath} {apkFile}", Path.Combine (Root, b.ProjectDirectory, "apkdiff.log"));
-				Assert.IsTrue (code == 0, $"apkdiff regression test failed with exit code: {code}. See test attachments.");
+				if (code != 0) {
+					if (File.Exists (apkDescPath)) {
+						TestContext.AddTestAttachment (apkDescPath, apkDescFilename);
+					}
+
+					var message = new StringBuilder ();
+					message.AppendLine ($"apkdiff regression test failed with exit code: {code}.");
+					message.AppendLine ();
+					message.AppendLine ("== apkdiff output ==");
+					if (!stdOut.IsNullOrEmpty ()) {
+						message.AppendLine (stdOut);
+					}
+					if (!stdErr.IsNullOrEmpty ()) {
+						message.AppendLine (stdErr);
+					}
+					message.AppendLine ();
+					message.AppendLine ("== .apkdesc diff (reference -> current) ==");
+					message.AppendLine (GetApkDescDiff (apkDescReferencePath, apkDescPath));
+					message.AppendLine ();
+					message.AppendLine ($"== current '{apkDescFilename}' (copy/paste to update the reference) ==");
+					if (File.Exists (apkDescPath)) {
+						message.AppendLine (File.ReadAllText (apkDescPath));
+					} else {
+						message.AppendLine ($"(current apkdesc not found: {apkDescPath})");
+					}
+					message.AppendLine ();
+					message.AppendLine ($"If this change is intended, update the reference '{apkDescFilename}' with the current '.apkdesc' above (or attached to this test), or run build-tools/scripts/UpdateApkSizeReference.sh.");
+					Assert.Fail (message.ToString ());
+				}
 			}
+		}
+
+		static string GetApkDescDiff (string referencePath, string currentPath)
+		{
+			if (!File.Exists (referencePath)) {
+				return $"(reference apkdesc not found: {referencePath})";
+			}
+			if (!File.Exists (currentPath)) {
+				return $"(current apkdesc not found: {currentPath})";
+			}
+
+			var reference = ReadApkDescEntries (referencePath);
+			var current = ReadApkDescEntries (currentPath);
+
+			var sb = new StringBuilder ();
+			foreach (var key in reference.Keys.Union (current.Keys).OrderBy (k => k, StringComparer.Ordinal)) {
+				bool inReference = reference.TryGetValue (key, out long oldSize);
+				bool inCurrent = current.TryGetValue (key, out long newSize);
+				if (inReference && inCurrent) {
+					if (oldSize != newSize) {
+						sb.AppendLine ($"  {key}");
+						sb.AppendLine ($"-     \"Size\": {oldSize}");
+						sb.AppendLine ($"+     \"Size\": {newSize}   ({(newSize - oldSize):+#,0;-#,0;0} bytes)");
+					}
+				} else if (inReference) {
+					sb.AppendLine ($"- {key} (\"Size\": {oldSize}) [removed]");
+				} else {
+					sb.AppendLine ($"+ {key} (\"Size\": {newSize}) [added]");
+				}
+			}
+
+			if (sb.Length == 0) {
+				return "(no per-entry size differences)";
+			}
+			return sb.ToString ();
+		}
+
+		static Dictionary<string, long> ReadApkDescEntries (string path)
+		{
+			var result = new Dictionary<string, long> (StringComparer.Ordinal);
+			using var doc = JsonDocument.Parse (File.ReadAllText (path));
+			if (doc.RootElement.TryGetProperty ("Entries", out var entries)) {
+				foreach (var entry in entries.EnumerateObject ()) {
+					if (entry.Value.TryGetProperty ("Size", out var size)) {
+						result [entry.Name] = size.GetInt64 ();
+					}
+				}
+			}
+			return result;
 		}
 
 		static IEnumerable<object[]> Get_BuildHasNoWarningsData ()
@@ -404,19 +482,30 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Nov 2025) produces 10 `ILC : AOT analysis warning IL3050` warnings for various
-					// bits of code. Even though this test expects no warnings and the above likely make the app not work
-					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
-					// of other warnings.
-					int numberOfExpectedWarnings = 10;
+					// NativeAOT currently (Jun 2026) produces 4 `ILC : AOT analysis warning IL3050`
+					// warnings: two distinct warnings (the reflection-backed ManagedTypeManager
+					// generic ctor and JNINativeWrapper.CreateDelegate), each surfaced twice in the
+					// MSBuild summary (once per publish target context). #11753 replaced the JNIEnv
+					// array path with JavaArrayProxy, removing the previous JNIEnv.MakeArrayType
+					// warning. Even though this test expects no warnings and the above likely make
+					// the app not work correctly at run time, it is still worth running this test
+					// under NativeAOT to test for the absence of other warnings.
+					int numberOfExpectedWarnings = 4;
 
-					Assert.IsTrue (
-						StringAssertEx.ContainsText (
-							b.LastBuildOutput,
-							$" {numberOfExpectedWarnings} Warning(s)"
-						),
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
-					);
+					// MSBuild prints a "    N Warning(s)" summary line near the end of the build; parse N so the
+					// assertion can report the actual count instead of a bare "Expected: True But was: False".
+					var warningSummaryLine = b.LastBuildOutput.LastOrDefault (x => x.TrimEnd ().EndsWith ("Warning(s)", StringComparison.Ordinal));
+					int actualNumberOfWarnings = -1;
+					if (warningSummaryLine != null) {
+						var summary = warningSummaryLine.Trim ();
+						var firstSpace = summary.IndexOf (' ');
+						if (firstSpace > 0) {
+							int.TryParse (summary.Substring (0, firstSpace), out actualNumberOfWarnings);
+						}
+					}
+
+					Assert.AreEqual (numberOfExpectedWarnings, actualNumberOfWarnings,
+						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT, but found {actualNumberOfWarnings}.");
 
 					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
 					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));

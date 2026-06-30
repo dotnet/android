@@ -26,7 +26,7 @@ interface ITypeMap
 	bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType);
 
 	/// <summary>
-	/// Resolves a JNI leaf name and 0-based array rank index to a managed array type.
+	/// Resolves a managed element type key and 0-based array rank index to a generated array proxy type.
 	/// </summary>
-	bool TryGetArrayType (string jniName, int rankIndex, [NotNullWhen (true)] out Type? arrayType);
+	bool TryGetArrayProxyType (string managedTypeKey, int rankIndex, [NotNullWhen (true)] out Type? proxyType);
 }

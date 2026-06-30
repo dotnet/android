@@ -32,16 +32,30 @@ static class MetadataHelper
 		using var stream = new System.IO.MemoryStream ();
 		using var writer = new System.IO.BinaryWriter (stream, Encoding.UTF8);
 		foreach (var entry in data.Entries) {
-			writer.Write (entry.JniName);
+			writer.Write (entry.MapKey);
 			writer.Write (entry.ProxyTypeReference);
 			writer.Write (entry.TargetTypeReference ?? "");
 		}
 		foreach (var proxy in data.ProxyTypes) {
 			writer.Write (proxy.TypeName);
-			writer.Write (proxy.TargetType.ManagedTypeName);
-			writer.Write (proxy.TargetType.AssemblyName);
+			writer.WriteTypeRef (proxy.TargetType);
 			writer.Write ((byte)(proxy.ActivationCtor?.Style ?? 0));
+			if (proxy.ActivationCtor is not null) {
+				writer.WriteTypeRef (proxy.ActivationCtor.DeclaringType);
+			}
 			writer.Write ((byte)(proxy.InvokerActivationCtorStyle ?? 0));
+			writer.Write (proxy.UcoMethods.Count);
+			foreach (var method in proxy.UcoMethods) {
+				writer.WriteUcoMethod (method);
+			}
+			writer.Write (proxy.UcoConstructors.Count);
+			foreach (var constructor in proxy.UcoConstructors) {
+				writer.WriteUcoConstructor (constructor);
+			}
+			writer.Write (proxy.NativeRegistrations.Count);
+			foreach (var registration in proxy.NativeRegistrations) {
+				writer.WriteNativeRegistration (registration);
+			}
 		}
 		foreach (var assoc in data.Associations) {
 			writer.Write (assoc.SourceTypeReference);
@@ -49,5 +63,69 @@ static class MetadataHelper
 		}
 		writer.Flush ();
 		return sha.ComputeHash (stream.ToArray ());
+	}
+
+	static void WriteTypeRef (this System.IO.BinaryWriter writer, TypeRefData type)
+	{
+		writer.Write (type.ManagedTypeName);
+		writer.Write (type.AssemblyName);
+		writer.Write (type.IsValueType ? (byte) 1 : (byte) 0);
+		writer.Write (type.IsEnum ? (byte) 1 : (byte) 0);
+		writer.Write (type.GenericArguments.Count);
+		foreach (var argument in type.GenericArguments) {
+			writer.WriteTypeRef (argument);
+		}
+	}
+
+	static void WriteUcoMethod (this System.IO.BinaryWriter writer, UcoMethodData method)
+	{
+		writer.Write (method.WrapperName);
+		writer.Write (method.CallbackMethodName);
+		writer.WriteTypeRef (method.CallbackType);
+		writer.Write (method.JniSignature);
+		writer.WriteExportMethodDispatch (method.ExportMethodDispatch);
+	}
+
+	static void WriteExportMethodDispatch (this System.IO.BinaryWriter writer, ExportMethodDispatchData? dispatch)
+	{
+		writer.Write (dispatch is not null);
+		if (dispatch is null) {
+			return;
+		}
+
+		writer.Write (dispatch.ManagedMethodName);
+		writer.Write (dispatch.ParameterTypes.Count);
+		foreach (var parameterType in dispatch.ParameterTypes) {
+			writer.WriteTypeRef (parameterType);
+		}
+		writer.Write (dispatch.ParameterKinds.Count);
+		foreach (var parameterKind in dispatch.ParameterKinds) {
+			writer.Write ((int) parameterKind);
+		}
+		writer.WriteTypeRef (dispatch.ReturnType);
+		writer.Write ((int) dispatch.ReturnKind);
+		writer.Write (dispatch.IsStatic);
+	}
+
+	static void WriteUcoConstructor (this System.IO.BinaryWriter writer, UcoConstructorData constructor)
+	{
+		writer.Write (constructor.WrapperName);
+		writer.WriteTypeRef (constructor.TargetType);
+		writer.Write (constructor.JniSignature);
+		writer.Write (constructor.HasMatchingManagedCtor);
+		writer.Write (constructor.ManagedParameterTypes.Count);
+		foreach (var parameterType in constructor.ManagedParameterTypes) {
+			writer.WriteTypeRef (parameterType);
+		}
+	}
+
+	static void WriteNativeRegistration (this System.IO.BinaryWriter writer, NativeRegistrationData registration)
+	{
+		writer.Write (registration.JniMethodName);
+		writer.Write (registration.JniSignature);
+		writer.Write (registration.WrapperMethodName);
+		writer.Write (registration.WrapperTarget.TypeNamespace);
+		writer.Write (registration.WrapperTarget.TypeName);
+		writer.Write (registration.WrapperTarget.MethodName);
 	}
 }

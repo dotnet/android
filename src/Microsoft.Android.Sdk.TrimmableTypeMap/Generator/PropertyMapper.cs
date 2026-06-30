@@ -13,16 +13,21 @@ static class PropertyMapper
 {
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 
-	internal enum MappingKind { String, Bool, Enum }
+	internal enum MappingKind { String, Bool, Enum, Number }
 
 	internal readonly struct PropertyMapping
 	{
 		public string PropertyName { get; }
 		public string XmlAttributeName { get; }
 		public MappingKind Kind { get; }
-		public Func<int, string?>? EnumConverter { get; }
+		public Func<int, int, string?>? EnumConverter { get; }
 
 		public PropertyMapping (string propertyName, string xmlAttributeName, MappingKind kind = MappingKind.String, Func<int, string?>? enumConverter = null)
+			: this (propertyName, xmlAttributeName, kind, enumConverter is null ? null : (value, targetSdkVersion) => enumConverter (value))
+		{
+		}
+
+		public PropertyMapping (string propertyName, string xmlAttributeName, MappingKind kind, Func<int, int, string?>? enumConverter)
 		{
 			PropertyName = propertyName;
 			XmlAttributeName = xmlAttributeName;
@@ -47,8 +52,17 @@ static class PropertyMapper
 		new ("Theme", "theme"),
 		new ("ParentActivity", "parentActivityName"),
 		new ("TaskAffinity", "taskAffinity"),
+		new ("Banner", "banner"),
+		new ("ColorMode", "colorMode"),
+		new ("EnableVrMode", "enableVrMode"),
+		new ("LockTaskMode", "lockTaskMode"),
+		new ("Logo", "logo"),
+		new ("MaxAspectRatio", "maxAspectRatio", MappingKind.Number),
+		new ("MaxRecents", "maxRecents", MappingKind.Number),
+		new ("AllowEmbedded", "allowEmbedded", MappingKind.Bool),
 		new ("AllowTaskReparenting", "allowTaskReparenting", MappingKind.Bool),
 		new ("AlwaysRetainTaskState", "alwaysRetainTaskState", MappingKind.Bool),
+		new ("AutoRemoveFromRecents", "autoRemoveFromRecents", MappingKind.Bool),
 		new ("ClearTaskOnLaunch", "clearTaskOnLaunch", MappingKind.Bool),
 		new ("ExcludeFromRecents", "excludeFromRecents", MappingKind.Bool),
 		new ("FinishOnCloseSystemDialogs", "finishOnCloseSystemDialogs", MappingKind.Bool),
@@ -56,19 +70,27 @@ static class PropertyMapper
 		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
 		new ("NoHistory", "noHistory", MappingKind.Bool),
 		new ("MultiProcess", "multiprocess", MappingKind.Bool),
+		new ("RelinquishTaskIdentity", "relinquishTaskIdentity", MappingKind.Bool),
+		new ("ResizeableActivity", "resizeableActivity", MappingKind.Bool),
+		new ("ResumeWhilePausing", "resumeWhilePausing", MappingKind.Bool),
+		new ("ShowForAllUsers", "showForAllUsers", MappingKind.Bool),
+		new ("ShowOnLockScreen", "showOnLockScreen", MappingKind.Bool),
+		new ("ShowWhenLocked", "showWhenLocked", MappingKind.Bool),
+		new ("SingleUser", "singleUser", MappingKind.Bool),
 		new ("StateNotNeeded", "stateNotNeeded", MappingKind.Bool),
 		new ("Immersive", "immersive", MappingKind.Bool),
-		new ("ResizeableActivity", "resizeableActivity", MappingKind.Bool),
 		new ("SupportsPictureInPicture", "supportsPictureInPicture", MappingKind.Bool),
-		new ("ShowForAllUsers", "showForAllUsers", MappingKind.Bool),
 		new ("TurnScreenOn", "turnScreenOn", MappingKind.Bool),
+		new ("VisibleToInstantApps", "visibleToInstantApps", MappingKind.Bool),
 		new ("LaunchMode", "launchMode", MappingKind.Enum, AndroidEnumConverter.LaunchModeToString),
 		new ("ScreenOrientation", "screenOrientation", MappingKind.Enum, AndroidEnumConverter.ScreenOrientationToString),
 		new ("ConfigurationChanges", "configChanges", MappingKind.Enum, AndroidEnumConverter.ConfigChangesToString),
+		new ("RecreateOnConfigChanges", "recreateOnConfigChanges", MappingKind.Enum, AndroidEnumConverter.ConfigChangesToString),
 		new ("WindowSoftInputMode", "windowSoftInputMode", MappingKind.Enum, AndroidEnumConverter.SoftInputToString),
 		new ("DocumentLaunchMode", "documentLaunchMode", MappingKind.Enum, AndroidEnumConverter.DocumentLaunchModeToString),
 		new ("UiOptions", "uiOptions", MappingKind.Enum, AndroidEnumConverter.UiOptionsToString),
 		new ("PersistableMode", "persistableMode", MappingKind.Enum, AndroidEnumConverter.ActivityPersistableModeToString),
+		new ("RotationAnimation", "rotationAnimation", MappingKind.Enum, AndroidEnumConverter.RotationAnimationToString),
 	];
 
 	internal static readonly PropertyMapping[] ServiceMappings = [
@@ -88,11 +110,13 @@ static class PropertyMapper
 		new ("Icon", "icon"),
 		new ("RoundIcon", "roundIcon"),
 		new ("Theme", "theme"),
+		new ("NetworkSecurityConfig", "networkSecurityConfig"),
 		new ("AllowBackup", "allowBackup", MappingKind.Bool),
 		new ("SupportsRtl", "supportsRtl", MappingKind.Bool),
 		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
 		new ("LargeHeap", "largeHeap", MappingKind.Bool),
 		new ("Debuggable", "debuggable", MappingKind.Bool),
+		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
 		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
 	];
 
@@ -120,11 +144,12 @@ static class PropertyMapper
 		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
 		new ("LargeHeap", "largeHeap", MappingKind.Bool),
 		new ("Debuggable", "debuggable", MappingKind.Bool),
+		new ("DirectBootAware", "directBootAware", MappingKind.Bool),
 		new ("UsesCleartextTraffic", "usesCleartextTraffic", MappingKind.Bool),
 		new ("RestoreAnyVersion", "restoreAnyVersion", MappingKind.Bool),
 	];
 
-	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false)
+	internal static void ApplyMappings (XElement element, IReadOnlyDictionary<string, object?> properties, PropertyMapping[] mappings, bool skipExisting = false, int targetSdkVersion = 0)
 	{
 		foreach (var m in mappings) {
 			if (!properties.TryGetValue (m.PropertyName, out var value) || value is null) {
@@ -140,9 +165,12 @@ static class PropertyMapper
 			case MappingKind.Bool when value is bool b:
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, b ? "true" : "false");
 				break;
+			case MappingKind.Number:
+				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, FormatNumber (value));
+				break;
 			case MappingKind.Enum when m.EnumConverter is not null:
 				int intValue = value switch { int i => i, long l => (int)l, short s => s, byte b => b, _ => 0 };
-				var strValue = m.EnumConverter (intValue);
+				var strValue = m.EnumConverter (intValue, targetSdkVersion);
 				if (strValue is not null) {
 					element.SetAttributeValue (AndroidNs + m.XmlAttributeName, strValue);
 				}
@@ -151,9 +179,17 @@ static class PropertyMapper
 		}
 	}
 
-	internal static void MapComponentProperties (XElement element, ComponentInfo component)
+	static string FormatNumber (object? value) => value switch {
+		float f => f.ToString (CultureInfo.InvariantCulture),
+		double d => d.ToString (CultureInfo.InvariantCulture),
+		int i => i.ToString (CultureInfo.InvariantCulture),
+		long l => l.ToString (CultureInfo.InvariantCulture),
+		_ => value?.ToString () ?? "",
+	};
+
+	internal static void MapComponentProperties (XElement element, ComponentInfo component, int targetSdkVersion = 0)
 	{
-		ApplyMappings (element, component.Properties, CommonMappings);
+		ApplyMappings (element, component.Properties, CommonMappings, targetSdkVersion: targetSdkVersion);
 
 		var extra = component.Kind switch {
 			ComponentKind.Activity => ActivityMappings,
@@ -162,7 +198,7 @@ static class PropertyMapper
 			_ => null,
 		};
 		if (extra is not null) {
-			ApplyMappings (element, component.Properties, extra);
+			ApplyMappings (element, component.Properties, extra, targetSdkVersion: targetSdkVersion);
 		}
 
 		// Handle InitOrder for ContentProvider (int, not a standard mapping)
