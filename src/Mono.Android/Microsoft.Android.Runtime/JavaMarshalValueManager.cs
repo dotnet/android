@@ -11,7 +11,7 @@ namespace Microsoft.Android.Runtime;
 
 [RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
 [RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
-sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
+sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
@@ -19,7 +19,7 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 	static readonly Type[] JIConstructorSignature  = [typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions)];
 	static readonly Type[] XAConstructorSignature  = [typeof (IntPtr), typeof (JniHandleOwnership)];
 
-	public CoreClrJavaMarshalValueManager ()
+	public JavaMarshalValueManager ()
 	{
 		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
 	}
@@ -125,16 +125,6 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 				return null;
 
 			Type? type = GetTypeAssignableTo (sig, targetType);
-
-			// The superclass walk above never inspects the Java interfaces a class
-			// implements. When the requested targetType is itself an interface, the
-			// concrete Java class (e.g. an anonymous class returned through a base
-			// interface signature) may only advertise a more-derived interface, so we
-			// must enumerate the class's interfaces to find the most-derived peer.
-			if (type == null && targetType.IsInterface) {
-				type = JavaInterfaceHierarchy.FindFirst (klass, ResolveInterfaceType);
-			}
-
 			if (type != null) {
 				var peer = TryCreatePeerInstance (ref reference, transfer, type);
 
@@ -162,16 +152,6 @@ sealed class CoreClrJavaMarshalValueManager : JniRuntime.ReflectionJniValueManag
 				if (targetType.IsAssignableFrom (t)) {
 					return t;
 				}
-			}
-			return null;
-		}
-
-		// Resolves a Java interface (by its JNI type name) to the registered .NET
-		// type assignable to targetType, used while walking the class's interfaces.
-		Type? ResolveInterfaceType (string? ifaceName)
-		{
-			if (ifaceName != null && JniTypeSignature.TryParse (ifaceName, out var ifaceSig)) {
-				return GetTypeAssignableTo (ifaceSig, targetType);
 			}
 			return null;
 		}
