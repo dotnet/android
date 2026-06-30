@@ -305,18 +305,18 @@ public sealed class RootTypeMapAssemblyGenerator
 				// TrimmableTypeMap.Initialize(typeMaps, proxyMaps, arrayMapsByAssemblyAndRank-or-null)
 				encoder.LoadLocal (0);
 				encoder.LoadLocal (1);
-				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
+				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
 				encoder.Call (initializeRef, parameterCount: 3);
 				encoder.Return ();
 			},
 			encodeLocals: localsSig => {
-				localsSig.WriteByte (0x07); // LOCAL_SIG
+				localsSig.WriteByte ((byte) SignatureKind.LocalVariables);
 				localsSig.WriteCompressedInteger (2); // count
 				// loc 0: IReadOnlyDictionary<string, Type>[]
-				localsSig.WriteByte (0x1D);
+				localsSig.WriteByte ((byte) SignatureTypeCode.SZArray);
 				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 				// loc 1: IReadOnlyDictionary<Type, Type>[]
-				localsSig.WriteByte (0x1D);
+				localsSig.WriteByte ((byte) SignatureTypeCode.SZArray);
 				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 			});
 	}
@@ -379,11 +379,11 @@ public sealed class RootTypeMapAssemblyGenerator
 				encoder.Return ();
 			},
 			encodeLocals: localsSig => {
-				localsSig.WriteByte (0x07); // LOCAL_SIG
+				localsSig.WriteByte ((byte) SignatureKind.LocalVariables);
 				localsSig.WriteCompressedInteger (2);
-				localsSig.WriteByte (0x1D);
+				localsSig.WriteByte ((byte) SignatureTypeCode.SZArray);
 				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
-				localsSig.WriteByte (0x1D);
+				localsSig.WriteByte ((byte) SignatureTypeCode.SZArray);
 				EncodeIReadOnlyDictType (localsSig, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 			});
 	}
@@ -393,12 +393,12 @@ public sealed class RootTypeMapAssemblyGenerator
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{
 		var blob = new BlobBuilder (64);
-		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteByte ((byte) SignatureCallingConvention.Default);
 		blob.WriteCompressedInteger (2); // parameter count
-		blob.WriteByte (0x01); // return type: void
-		blob.WriteByte (0x1D);
+		blob.WriteByte ((byte) SignatureTypeCode.Void);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
-		blob.WriteByte (0x1D);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
 			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
@@ -409,18 +409,18 @@ public sealed class RootTypeMapAssemblyGenerator
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{
 		var blob = new BlobBuilder (96);
-		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteByte ((byte) SignatureCallingConvention.Default);
 		blob.WriteCompressedInteger (3); // parameter count
-		blob.WriteByte (0x01); // return type: void
+		blob.WriteByte ((byte) SignatureTypeCode.Void);
 		// Param 1: IReadOnlyDictionary<string, Type>[]
-		blob.WriteByte (0x1D);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 		// Param 2: IReadOnlyDictionary<Type, Type>[]
-		blob.WriteByte (0x1D);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 		// Param 3: IReadOnlyDictionary<string, Type>?[][]
-		blob.WriteByte (0x1D);
-		blob.WriteByte (0x1D);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
 			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
@@ -450,7 +450,7 @@ public sealed class RootTypeMapAssemblyGenerator
 				// TrimmableTypeMap.Initialize(GetExternal<JL.Object>(), GetProxy<JL.Object>(), arrayMapsByAssemblyAndRank-or-null)
 				encoder.Call (getExternalSpec, parameterCount: 0, returnsValue: true);
 				encoder.Call (getProxySpec, parameterCount: 0, returnsValue: true);
-				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
+				EmitArrayMapsByAssemblyAndRankOrNull (pe, encoder, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef, externalDictTypeSpec, externalDictArrayTypeSpec, maxArrayRank);
 				encoder.Call (initializeRef, parameterCount: 3);
 				encoder.Return ();
 			});
@@ -485,9 +485,9 @@ public sealed class RootTypeMapAssemblyGenerator
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{
 		var blob = new BlobBuilder (64);
-		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteByte ((byte) SignatureCallingConvention.Default);
 		blob.WriteCompressedInteger (2); // parameter count
-		blob.WriteByte (0x01); // return type: void
+		blob.WriteByte ((byte) SignatureTypeCode.Void);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
@@ -515,13 +515,13 @@ public sealed class RootTypeMapAssemblyGenerator
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef)
 	{
 		var blob = new BlobBuilder (96);
-		blob.WriteByte (0x00); // DEFAULT (static)
+		blob.WriteByte ((byte) SignatureCallingConvention.Default);
 		blob.WriteCompressedInteger (3); // parameter count
-		blob.WriteByte (0x01); // return type: void
+		blob.WriteByte ((byte) SignatureTypeCode.Void);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
-		blob.WriteByte (0x1D);
-		blob.WriteByte (0x1D);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 		return pe.Metadata.AddMemberReference (trimmableTypeMapRef,
 			pe.Metadata.GetOrAddString ("Initialize"), pe.Metadata.GetOrAddBlob (blob));
@@ -534,7 +534,7 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// </summary>
 	static void EmitArrayMapsByAssemblyAndRankOrNull (PEAssemblyBuilder pe, TrackedInstructionEncoder encoder,
 		IReadOnlyList<string> perAssemblyTypeMapNames,
-		MemberReferenceHandle getExternalMemberRef,
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle externalDictArrayTypeSpec,
 		int maxArrayRank)
 	{
@@ -549,14 +549,22 @@ public sealed class RootTypeMapAssemblyGenerator
 			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
 			encoder.OpCode (ILOpCode.Dup);
 			encoder.LoadConstantI4 (i);
-			EmitArrayMapsByRank (pe, encoder, asmRef, getExternalMemberRef, externalDictTypeSpec, maxArrayRank);
+			EmitArrayMapsByRank (pe, encoder, asmRef, getExternalMemberRef, getProxyMemberRef, externalDictTypeSpec, maxArrayRank);
 			encoder.OpCode (ILOpCode.Stelem_ref);
 		}
 	}
 
+	/// <summary>
+	/// Pushes a fresh <c>IReadOnlyDictionary&lt;string, Type&gt;[maxArrayRank]</c> for a single
+	/// assembly, where slot <c>r</c> holds the external (JNI-name -&gt; proxy <see cref="Type"/>)
+	/// array map for the <c>__ArrayMapRank{r + 1}</c> group anchor. At runtime only this external
+	/// map is consulted (see <c>TrimmableTypeMap.TryGetArrayProxy</c>), which resolves a proxy
+	/// <see cref="Type"/> by JNI name and then reads its array-proxy attribute; the proxy typemap
+	/// dictionary itself is never indexed.
+	/// </summary>
 	static void EmitArrayMapsByRank (PEAssemblyBuilder pe, TrackedInstructionEncoder encoder,
 		AssemblyReferenceHandle assemblyRef,
-		MemberReferenceHandle getExternalMemberRef, TypeSpecificationHandle externalDictTypeSpec, int maxArrayRank)
+		MemberReferenceHandle getExternalMemberRef, MemberReferenceHandle getProxyMemberRef, TypeSpecificationHandle externalDictTypeSpec, int maxArrayRank)
 	{
 		encoder.LoadConstantI4 (maxArrayRank);
 		encoder.NewArray (externalDictTypeSpec);
@@ -564,10 +572,20 @@ public sealed class RootTypeMapAssemblyGenerator
 			var rankRef = pe.Metadata.AddTypeReference (assemblyRef, default,
 				pe.Metadata.GetOrAddString ($"__ArrayMapRank{r + 1}"));
 			var rankSpec = MakeGenericMethodSpec (pe, getExternalMemberRef, rankRef);
+			var proxyRankSpec = MakeGenericMethodSpec (pe, getProxyMemberRef, rankRef);
+			// Store the external map for this rank into the array.
 			encoder.OpCode (ILOpCode.Dup);
 			encoder.LoadConstantI4 (r);
 			encoder.Call (rankSpec, parameterCount: 0, returnsValue: true);
 			encoder.OpCode (ILOpCode.Stelem_ref);
+			// Unlike the external map on the line above (stored via Stelem_ref), this
+			// GetOrCreateProxyTypeMapping<__ArrayMapRank{r + 1}> () call has its result
+			// immediately Popped: the proxy map for arrays is never stored or indexed at
+			// runtime. We still emit the call purely for its side effect — requesting the proxy
+			// typemap group roots that group's per-rank [TypeMapAssociation] entries, so the
+			// trimmer/ILC keeps the proxy types that the external map above references by JNI name.
+			encoder.Call (proxyRankSpec, parameterCount: 0, returnsValue: true);
+			encoder.OpCode (ILOpCode.Pop);
 		}
 	}
 
@@ -577,9 +595,9 @@ public sealed class RootTypeMapAssemblyGenerator
 	static MethodSpecificationHandle MakeGenericMethodSpec (PEAssemblyBuilder pe, MemberReferenceHandle openMethodRef, EntityHandle typeArg)
 	{
 		var blob = new BlobBuilder (16);
-		blob.WriteByte (0x0A); // GENMETHOD_INST
+		blob.WriteByte ((byte) SignatureKind.MethodSpecification);
 		blob.WriteCompressedInteger (1); // generic arity
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (typeArg));
 		return pe.Metadata.AddMethodSpecification (openMethodRef, pe.Metadata.GetOrAddBlob (blob));
 	}
@@ -593,7 +611,7 @@ public sealed class RootTypeMapAssemblyGenerator
 	{
 		var blob = new BlobBuilder (64);
 		// Method signature: GENERIC, arity=1, param count=0, return type
-		blob.WriteByte (0x10); // IMAGE_CEE_CS_CALLCONV_GENERIC
+		blob.WriteByte ((byte) SignatureAttributes.Generic);
 		blob.WriteCompressedInteger (1); // generic parameter count
 		blob.WriteCompressedInteger (0); // parameter count
 		// Return type: IReadOnlyDictionary<K, Type>
@@ -620,24 +638,24 @@ public sealed class RootTypeMapAssemblyGenerator
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef, bool keyIsString)
 	{
 		var blob = new BlobBuilder (32);
-		blob.WriteByte (0x1D);
+		blob.WriteByte ((byte) SignatureTypeCode.SZArray);
 		EncodeIReadOnlyDictType (blob, iReadOnlyDictOpenRef, systemTypeRef, keyIsString);
 		return pe.Metadata.AddTypeSpecification (pe.Metadata.GetOrAddBlob (blob));
 	}
 
 	static void EncodeIReadOnlyDictType (BlobBuilder blob, TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef, bool keyIsString)
 	{
-		blob.WriteByte (0x15); // ELEMENT_TYPE_GENERICINST
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (iReadOnlyDictOpenRef));
 		blob.WriteCompressedInteger (2); // generic arity = 2
 		if (keyIsString) {
-			blob.WriteByte (0x0E); // ELEMENT_TYPE_STRING
+			blob.WriteByte ((byte) SignatureTypeCode.String);
 		} else {
-			blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+			blob.WriteByte ((byte) SignatureTypeKind.Class);
 			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (systemTypeRef));
 		}
-		blob.WriteByte (0x12); // ELEMENT_TYPE_CLASS
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (systemTypeRef));
 	}
 }

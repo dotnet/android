@@ -34,13 +34,22 @@ Test the CI path locally: `$env:RunningOnCI='true'` (PowerShell) or `RunningOnCI
 
 ## When CI fails 401 on a Dependabot bump
 
-The new package isn't cached in the feed yet. One-time setup, then ingest:
+The new package isn't cached in the dnceng `dotnet-public-maven` feed yet. CI agents only do anonymous reads, so someone has to authenticate once locally to make the feed pull the package (and its transitive deps) from upstream.
 
-1. `iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"` (or the `.sh` equivalent)
-2. `$env:RunningOnCI='true'; ./build-tools/gradle/gradlew.bat --project-dir src/<project> build` — sign in via the device-flow prompt; the feed proxies + caches the package.
-3. Re-run CI on the Dependabot PR. No PR edit needed.
+Use the helper script — it runs the build, parses any 401 URLs out of the log, re-fetches each one with an Azure DevOps bearer token (so the feed mirrors it), and loops until the build succeeds:
 
-The credprovider plugin is a no-op when no AzDO repos are configured (i.e. local builds without `RunningOnCI`).
+```powershell
+az login   # one-time, corp account with MFA satisfied
+
+pwsh ./eng/gradle/mirror-dependencies.ps1 `
+    -ProjectDir <path-to-failing-gradle-project> `
+    -Task <gradle-task-CI-runs> `
+    -AndroidHome <path-to-Android-SDK>   # required for any com.android.* project
+```
+
+The mirror must run in the project that actually needs the new package — a sibling project's build won't trigger a mirror for someone else's deps. Typical convergence is 2-5 iterations as the resolver walks the dep graph breadth-first.
+
+After it succeeds, just re-run the failed CI job. No PR edits needed — the packages are now anonymous-readable forever.
 
 ## Don'ts
 
