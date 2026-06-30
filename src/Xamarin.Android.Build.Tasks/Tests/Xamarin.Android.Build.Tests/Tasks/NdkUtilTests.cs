@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 		}
 
 		[Test]
-		public void TestNdkUtil ([Values] AndroidRuntime runtime)
+		public void TestNdkUtil ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			var log = new TaskLoggingHelper (engine, TestName);
 			using (var builder = new Builder ()) {

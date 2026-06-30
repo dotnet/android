@@ -61,7 +61,6 @@ namespace Xamarin.Android.Prepare
 		protected override void PopulateEnvironmentVariables ()
 		{
 			base.PopulateEnvironmentVariables ();
-			EnvironmentVariables ["NO_SUDO"] = Context.AutoProvisionUsesSudo ? "false" : "true";
 
 			List<string> monoOptions = Context.MonoOptions;
 			if (monoOptions != null && monoOptions.Count > 0)

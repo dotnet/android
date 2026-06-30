@@ -127,16 +127,6 @@ namespace Xamarin.Android.Prepare
 		public bool NoEmoji                            { get; set; } = !Configurables.Defaults.UseEmoji;
 
 		/// <summary>
-		///   Automatically provision all the missing programs
-		/// </summary>
-		public bool AutoProvision                      { get; set; }
-
-		/// <summary>
-		///   If a program being provisioned automatically requires administrative rights to install, use sudo
-		/// </summary>
-		public bool AutoProvisionUsesSudo              { get; set; }
-
-		/// <summary>
 		///   Current session execution mode. See <see cref="t:ExecutionMode" />
 		/// </summary>
 		public ExecutionMode ExecutionMode             { get; set; } = Configurables.Defaults.ExecutionMode;
@@ -276,11 +266,6 @@ namespace Xamarin.Android.Prepare
 					debugFileExtension = value;
 			}
 		}
-
-		/// <summary>
-		///   Path to a local .NET SDK archive to use instead of downloading.
-		/// </summary>
-		public string? LocalDotNetSdkArchive { get; set; }
 
 		/// <summary>
 		///   Determines whether or not we are running on a hosted azure pipelines agent.

@@ -87,6 +87,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";IL6001" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zestaw „{0}” zawiera odwołanie do przestarzałego atrybutu „Android.Runtime.PreserveAttribute”. Elementy członkowskie z tym atrybutem mogą zostać przycięte. Zamiast tego użyj elementu System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA0000_API_for_TargetFrameworkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not determine API level for $(TargetFrameworkVersion) of '{0}'.]]></Val>
@@ -227,6 +236,15 @@
           <Val><![CDATA[The 'AndroidSupportedAbis' MSBuild property is no longer supported. Edit the project file in a text editor, remove any uses of 'AndroidSupportedAbis', and use the 'RuntimeIdentifiers' MSBuild property instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Właściwość „AndroidSupportedAbis” programu MSBuild nie jest już obsługiwana. Edytuj plik projektu w edytorze tekstu, usuń wszystkie wystąpienia właściwości „AndroidSupportedAbis” i użyj zamiast niej właściwości „RuntimeIdentifiers” programu MSBuild.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unknown mode: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieznany tryb „{0}”.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -539,6 +557,24 @@
           <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Sprawdzenie, czy „{0}” jest prawidłowym plikiem ELF, nie powiodła się z powodu wyjątku, ignorując symbol sprawdzania „{1}@{2}” dla pliku.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0149" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ignorowanie starszego pliku środowiska Xamarin.Android „{0}” z pakietu NuGet „{1}” w wersji „{2}” w zestawie „{3}”. Pliki środowiska z bibliotek klas Xamarin.Android nie są obsługiwane na platformie .NET dla systemu Android. Użyj nowszej wersji tego pakietu NuGet lub powiadom autora biblioteki.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0149_Assembly" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Ignoring legacy Xamarin.Android environment file '{0}' in assembly '{1}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ignorowanie starszego pliku środowiska Xamarin.Android „{0}” w zestawie „{1}”. Pliki środowiska z bibliotek klas Xamarin.Android nie są obsługiwane na platformie .NET dla systemu Android. Użyj nowszej wersji tego zestawu lub powiadom autora biblioteki.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1751,6 +1787,15 @@
           <Val><![CDATA[NativeAOT DGML file '{0}' was not found.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Nie znaleziono pliku DGML NativeAOT „{0}”.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4322" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pomijanie pliku konfiguracji ProGuard biblioteki „{1}” (z {2}) ponieważ zawiera nieobsługiwaną opcję globalną „{0}”. Globalne opcje narzędzia ProGuard są dozwolone tylko w projektach aplikacji.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

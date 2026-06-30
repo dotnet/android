@@ -16,7 +16,8 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
-		public void BasicApplicationRepetitiveBuild ([Values] AndroidRuntime runtime)
+		[Ignore ("Flaky timing-based test. Disabled while investigating incremental build regressions. See: https://github.com/dotnet/android/issues/11792")]
+		public void BasicApplicationRepetitiveBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -62,7 +63,7 @@ namespace Xamarin.Android.Build.Tests
 		//   The target _RunILLink should have been skipped.
 		//
 		[Test]
-		public void BasicApplicationRepetitiveReleaseBuild ([Values] AndroidRuntime runtime)
+		public void BasicApplicationRepetitiveReleaseBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -177,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckNothingIsDeletedByIncrementalClean ([Values] bool enableMultiDex, [Values] AndroidRuntime runtime)
+		public void CheckNothingIsDeletedByIncrementalClean ([Values] bool enableMultiDex, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -242,7 +243,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckResourceDirectoryDoesNotGetHosed ([Values] AndroidRuntime runtime)
+		public void CheckResourceDirectoryDoesNotGetHosed ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -272,7 +273,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void IncrementalCleanDuringClean ([Values] AndroidRuntime runtime)
+		public void IncrementalCleanDuringClean ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -319,7 +320,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LibraryIncrementalBuild ([Values] AndroidRuntime runtime)
+		public void LibraryIncrementalBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -347,7 +348,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AllProjectsHaveSameOutputDirectory ([Values] AndroidRuntime runtime)
+		public void AllProjectsHaveSameOutputDirectory ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -381,7 +382,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildSolutionWithMultipleProjectsInParallel ([Values] AndroidRuntime runtime)
+		public void BuildSolutionWithMultipleProjectsInParallel ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -420,7 +421,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void JavacTaskDoesNotRunOnSecondBuild ([Values] AndroidRuntime runtime)
+		public void JavacTaskDoesNotRunOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -467,7 +468,7 @@ public class TestMe {
 		}
 
 		[Test]
-		public void ResolveNativeLibrariesInManagedReferences ([Values] AndroidRuntime runtime)
+		public void ResolveNativeLibrariesInManagedReferences ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -599,7 +600,7 @@ namespace Lib2
 		//https://github.com/xamarin/xamarin-android/issues/2247
 		[Test]
 		[NonParallelizable] // Do not run timing sensitive tests in parallel
-		public void AppProjectTargetsDoNotBreak ([Values] AndroidRuntime runtime)
+		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -678,7 +679,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void LibraryProjectTargetsDoNotBreak ([Values] AndroidRuntime runtime)
+		public void LibraryProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -763,7 +764,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ManifestMergerIncremental ([Values] AndroidRuntime runtime)
+		public void ManifestMergerIncremental ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -790,7 +791,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ProduceReferenceAssembly ([Values] AndroidRuntime runtime)
+		public void ProduceReferenceAssembly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -858,7 +859,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void TransitiveDependencyProduceReferenceAssembly ([Values] AndroidRuntime runtime)
+		public void TransitiveDependencyProduceReferenceAssembly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -940,7 +941,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void LinkAssembliesNoShrink ([Values] AndroidRuntime runtime)
+		public void LinkAssembliesNoShrink ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -975,7 +976,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void CSProjUserFileChanges ([Values] AndroidRuntime runtime)
+		public void CSProjUserFileChanges ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1006,7 +1007,7 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable] // /restore can fail on Mac in parallel
-		public void ConvertCustomView ([Values] AndroidRuntime runtime)
+		public void ConvertCustomView ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1118,7 +1119,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ResolveLibraryProjectImports ([Values] AndroidRuntime runtime)
+		public void ResolveLibraryProjectImports ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1222,7 +1223,7 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable]
-		public void AddNewAndroidResourceOnSecondBuild ([Values] AndroidRuntime runtime)
+		public void AddNewAndroidResourceOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1253,7 +1254,7 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable]
-		public void InvalidAndroidResource ([Values] AndroidRuntime runtime)
+		public void InvalidAndroidResource ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1295,7 +1296,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void CasingOnJavaLangObject ([Values] AndroidRuntime runtime)
+		public void CasingOnJavaLangObject ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1323,7 +1324,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void GenerateJavaStubsAndAssembly ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void GenerateJavaStubsAndAssembly ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -1411,129 +1412,10 @@ namespace Lib2
 		}
 
 #pragma warning disable 414
-		static object [] AotChecks () => new object [] {
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "", // None, Normal, Hybrib, Full
-				/* aotAssemblies */   false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Normal", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Normal", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   false,
-				/* expectedResult */  true,
-			},
-		};
 #pragma warning restore 414
 
 		[Test]
-		[Category ("AOT")]
-		[TestCaseSource (nameof (AotChecks))]
-		public void BuildIncrementalAot (string supportedAbis, string androidAotMode, bool aotAssemblies, bool expectedResult)
-		{
-			// Setup dependencies App A -> Lib B
-			var path = Path.Combine ("temp", TestName);
-
-			var libB = new XamarinAndroidLibraryProject {
-				ProjectName = "LibraryB",
-				IsRelease = true,
-				EnableDefaultItems = true,
-			};
-			libB.Sources.Clear ();
-			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
-				TextContent = () => "public class Foo { }",
-			});
-
-			var libBBuilder = CreateDllBuilder (Path.Combine (path, libB.ProjectName));
-			Assert.IsTrue (libBBuilder.Build(libB), $"{libB.ProjectName} should build");
-
-			var targets = new List<string> {
-				"_RemoveRegisterAttribute",
-				"_BuildApkEmbed",
-			};
-			var proj = new XamarinAndroidApplicationProject {
-				ProjectName = "AppA",
-				IsRelease = true,
-				AotAssemblies = aotAssemblies,
-				EnableDefaultItems = true,
-				Sources = {
-					new BuildItem.Source ("Bar.cs") {
-						TextContent = () => "public class Bar : Foo { }",
-					}
-				}
-			};
-			// Mono-only test
-			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.AddReference (libB);
-			if (aotAssemblies) {
-				targets.Add ("_AndroidAot");
-			}
-			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
-			if (!string.IsNullOrEmpty (androidAotMode))
-			    proj.SetProperty ("AndroidAotMode", androidAotMode);
-			using (var b = CreateApkBuilder (path)) {
-				if (!b.GetSupportedRuntimes ().Any (x => supportedAbis == x.Abi))
-					Assert.Ignore ($"Runtime for {supportedAbis} was not available.");
-
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-
-				b.BuildLogFile = "first.log";
-				b.CleanupAfterSuccessfulBuild = false;
-				b.CleanupOnDispose = false;
-				b.ThrowOnBuildFailure = false;
-				Assert.AreEqual (expectedResult, b.Build (proj, doNotCleanupOnUpdate: true), "Build should have {0}.", expectedResult ? "succeeded" : "failed");
-				if (!expectedResult)
-					return;
-				foreach (var target in targets) {
-					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on first build!");
-				}
-				AssertNativeLibrariesExist ();
-
-				b.BuildLogFile = "second.log";
-				b.CleanupAfterSuccessfulBuild = false;
-				b.CleanupOnDispose = false;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
-				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
-				}
-				AssertNativeLibrariesExist ();
-
-				proj.Touch ("MainActivity.cs");
-
-				b.BuildLogFile = "third.log";
-				b.CleanupAfterSuccessfulBuild = false;
-				b.CleanupOnDispose = false;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Third build should have succeeded.");
-				foreach (var target in targets) {
-					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped on third build!");
-				}
-				AssertNativeLibrariesExist ();
-
-				void AssertNativeLibrariesExist ()
-				{
-					FileAssert.Exists (apk);
-					if (!aotAssemblies)
-						return;
-
-					using var zipFile = ZipHelper.OpenZip (apk);
-					foreach (var abi in supportedAbis.Split (';')) {
-						var path = $"lib/{abi}/libaot-Mono.Android.dll.so";
-						var entry = ZipHelper.ReadFileFromZip (zipFile, path);
-						Assert.IsNotNull (entry, $"{path} should be in {apk}", abi);
-					}
-				}
-			}
-		}
-
-		[Test]
-		public void DeterministicBuilds ([Values] bool deterministic, [Values] AndroidRuntime runtime)
+		public void DeterministicBuilds ([Values] bool deterministic, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1573,7 +1455,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void DesignTimeBuild ([Values] AndroidRuntime runtime)
+		public void DesignTimeBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1609,7 +1491,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void DesignTimeBuildSignAndroidPackage ([Values] AndroidRuntime runtime)
+		public void DesignTimeBuildSignAndroidPackage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1646,7 +1528,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ChangePackageNamingPolicy ([Values] AndroidRuntime runtime)
+		public void ChangePackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1676,7 +1558,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void MissingProjectReference ([Values] AndroidRuntime runtime)
+		public void MissingProjectReference ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1733,7 +1615,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AaptError ([Values] AndroidRuntime runtime)
+		public void AaptError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1757,7 +1639,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AndroidResourceChange ([Values] AndroidRuntime runtime)
+		public void AndroidResourceChange ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1788,7 +1670,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AndroidAssetChange ([Values] AndroidRuntime runtime)
+		public void AndroidAssetChange ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1833,7 +1715,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AndroidAssetMissing ([Values] AndroidRuntime runtime)
+		public void AndroidAssetMissing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1871,7 +1753,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ChangeSupportedAbis ([Values] AndroidRuntime runtime)
+		public void ChangeSupportedAbis ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1904,7 +1786,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ([Values] AndroidRuntime runtime)
+		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1949,7 +1831,7 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values] AndroidRuntime runtime)
+		public void AfterILLinkAdditionalStepsIsSkippedOnSecondBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

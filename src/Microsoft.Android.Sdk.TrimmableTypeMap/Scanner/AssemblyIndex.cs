@@ -17,6 +17,7 @@ sealed class AssemblyIndex : IDisposable
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
+	public string AssemblyPath { get; }
 
 	/// <summary>
 	/// Maps full managed type name (e.g., "Android.App.Activity") to its TypeDefinitionHandle.
@@ -39,6 +40,11 @@ sealed class AssemblyIndex : IDisposable
 	public Dictionary<string, HashSet<string>> ReferencedTypeNamesByAssembly { get; } = new (StringComparer.OrdinalIgnoreCase);
 
 	/// <summary>
+	/// Type-forwarded or otherwise exported types declared by this assembly.
+	/// </summary>
+	public HashSet<string> ExportedTypeNames { get; } = new (StringComparer.Ordinal);
+
+	/// <summary>
 	/// True iff the assembly's metadata mentions
 	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
 	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
@@ -48,18 +54,19 @@ sealed class AssemblyIndex : IDisposable
 	/// </summary>
 	public bool MayUseJniAddNativeMethodRegistrationAttribute { get; private set; }
 
-	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName)
+	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string assemblyPath)
 	{
 		this.peReader = peReader;
 		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
 		Reader = reader;
 		AssemblyName = assemblyName;
+		AssemblyPath = assemblyPath;
 	}
 
-	public static AssemblyIndex Create (PEReader peReader, string assemblyName)
+	public static AssemblyIndex Create (PEReader peReader, string assemblyName, string assemblyPath = "")
 	{
 		var reader = peReader.GetMetadataReader ();
-		var index = new AssemblyIndex (peReader, reader, assemblyName);
+		var index = new AssemblyIndex (peReader, reader, assemblyName, assemblyPath);
 		index.Build ();
 		return index;
 	}
@@ -88,6 +95,11 @@ sealed class AssemblyIndex : IDisposable
 			}
 		}
 
+		foreach (var exportedTypeHandle in Reader.ExportedTypes) {
+			var exportedType = Reader.GetExportedType (exportedTypeHandle);
+			ExportedTypeNames.Add (GetExportedTypeFullName (exportedType));
+		}
+
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
 
@@ -112,6 +124,17 @@ sealed class AssemblyIndex : IDisposable
 			if (registerInfo is not null) {
 				RegisterInfoByType [typeHandle] = registerInfo;
 			}
+		}
+
+		string GetExportedTypeFullName (ExportedType exportedType)
+		{
+			var name = Reader.GetString (exportedType.Name);
+			if (exportedType.Implementation.Kind == HandleKind.ExportedType) {
+				var declaringType = Reader.GetExportedType ((ExportedTypeHandle) exportedType.Implementation);
+				return MetadataTypeNameResolver.JoinNestedTypeName (GetExportedTypeFullName (declaringType), name);
+			}
+			var ns = Reader.GetString (exportedType.Namespace);
+			return MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 		}
 	}
 
@@ -432,7 +455,7 @@ sealed class AssemblyIndex : IDisposable
 		var properties = new Dictionary<string, object?> (StringComparer.Ordinal);
 		foreach (var named in value.NamedArguments) {
 			if (named.Name is not null && named.Name != "Categories") {
-				properties [named.Name] = named.Value;
+				properties [named.Name] = TryGetStringArray (named.Value, out var strings) ? strings : named.Value;
 			}
 		}
 

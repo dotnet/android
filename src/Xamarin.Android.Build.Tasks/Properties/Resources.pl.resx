@@ -143,7 +143,7 @@ Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidMa
     <value>Nieprawidłowa nazwa pliku: nazwy plików nie mogą używać słów zastrzeżonych języka Java.</value>
   </data>
   <data name="IL6001" xml:space="preserve">
-    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+    <value>Zestaw „{0}” zawiera odwołanie do przestarzałego atrybutu „Android.Runtime.PreserveAttribute”. Elementy członkowskie z tym atrybutem mogą zostać przycięte. Zamiast tego użyj elementu System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
@@ -225,7 +225,7 @@ Uwaga: Android Designer jest niezgodny z zestawem Java SDK 11.0: https://aka.ms/
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Nieznany tryb „{0}”.</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
@@ -859,6 +859,13 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
     <comment>The following are literal names and should not be translated: NativeAOT, DGML
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
+  <data name="XA4322" xml:space="preserve">
+    <value>Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.</value>
+    <comment>The following are literal names and should not be translated: ProGuard
+{0} - The unsupported ProGuard option, such as -printmapping.
+{1} - The path to the proguard.txt file inside the extracted .aar.
+{2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Brak katalogu łańcuchów narzędzi zestawu Android NDK „{0}”. Zainstaluj zestaw Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1193,6 +1200,20 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>{0} - The file path.
 {1} - The symbol name.
 {2} - The section name.</comment>
+  </data>
+  <data name="XA0149" xml:space="preserve">
+    <value>Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android, NuGet.
+{0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
+{1} - The NuGet package id.
+{2} - The NuGet package version.
+{3} - The full path to the assembly that contains the environment resource.</comment>
+  </data>
+  <data name="XA0149_Assembly" xml:space="preserve">
+    <value>Ignoring legacy Xamarin.Android environment file '{0}' in assembly '{1}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
+{0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
+{1} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>Nie znaleziono pliku wykonywalnego „gradlew” w katalogu projektu „{0}”. Upewnij się, że ścieżka do folderu projektu Gradle jest poprawna i że zawiera skrypty Gradle Wrapper.</value>

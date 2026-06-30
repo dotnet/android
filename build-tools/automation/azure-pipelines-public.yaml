@@ -46,7 +46,7 @@ variables:
   value: 21
 # Override pool images for public Microsoft-hosted agents
 - name: HostedMacImage
-  value: macOS-14
+  value: macOS-15
 - name: LinuxPoolImage
   value: ubuntu-22.04
 - name: NetCorePublicPoolName
@@ -379,7 +379,6 @@ stages:
       parameters:
         installTestSlicer: true
         installApkDiff: false
-        xaprepareScenario: EmulatorTestDependencies
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2
@@ -553,13 +552,9 @@ stages:
         displayName: Create MAUI template
         continueOnError: false
 
-    - powershell: |
-        $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
-        [xml] $xml = Get-Content $project
-        $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
-        $node.InnerText = '$(DotNetTargetFramework)-android'
-        $xml.Save($project)
-      displayName: set TargetFrameworks to Android-only
+    - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
