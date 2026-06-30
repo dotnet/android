@@ -20,11 +20,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
 	}
 
-	protected override void Dispose (bool disposing)
-	{
-		base.Dispose (disposing);
-	}
-
 	public override void WaitForGCBridgeProcessing ()
 	{
 		// Intentionally empty. The Mono runtime's own implementation acknowledges this
@@ -75,8 +70,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		ref JniObjectReference reference,
 		JniObjectReferenceOptions options)
 	{
-		if (peer == null)
-			throw new ArgumentNullException (nameof (peer));
+		ArgumentNullException.ThrowIfNull (peer);
 
 		var newRef = peer.PeerReference;
 		if (newRef.IsValid) {

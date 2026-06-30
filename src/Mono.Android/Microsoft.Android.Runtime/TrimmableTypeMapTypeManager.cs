@@ -141,43 +141,49 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				yield return type;
 			}
 		}
-
-		/// <summary>
-		/// Lookup of the JNI type signature for a built-in reference type, e.g., string, bool?, int?, etc.
-		/// </summary>
-		/// <param name="jniSimpleReference"></param>
-		/// <returns></returns>
-		static Type? GetBuiltInTypeForSimpleReference (string jniSimpleReference)
-		{
-			return jniSimpleReference switch {
-				"java/lang/String"     => typeof (string),
-				"V"                    => typeof (void),
-				"Z"                    => typeof (bool),
-				"java/lang/Boolean"    => typeof (bool?),
-				"B"                    => typeof (sbyte),
-				"java/lang/Byte"       => typeof (sbyte?),
-				"C"                    => typeof (char),
-				"java/lang/Character"  => typeof (char?),
-				"S"                    => typeof (short),
-				"java/lang/Short"      => typeof (short?),
-				"I"                    => typeof (int),
-				"java/lang/Integer"    => typeof (int?),
-				"J"                    => typeof (long),
-				"java/lang/Long"       => typeof (long?),
-				"F"                    => typeof (float),
-				"java/lang/Float"      => typeof (float?),
-				"D"                    => typeof (double),
-				"java/lang/Double"     => typeof (double?),
-				_                      => null,
-			};
-		}
 	}
 
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
-		var types = GetTypesForSimpleReference (jniSimpleReference);
-		using var enumerator = types.GetEnumerator ();
-		return enumerator.MoveNext () ? enumerator.Current : null;
+		// Return the first match without allocating the GetTypesForSimpleReference iterator;
+		// this is a hot Java-to-managed lookup path. Keep the lookup order in sync with it.
+		var builtInType = GetBuiltInTypeForSimpleReference (jniSimpleReference);
+		if (builtInType is not null) {
+			return builtInType;
+		}
+
+		// TryGetTargetTypes returns a non-empty array when it succeeds.
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
+			return types [0];
+		}
+
+		return null;
+	}
+
+	// Lookup of the built-in managed type for a JNI simple reference, e.g., string, bool?, int?, etc.
+	static Type? GetBuiltInTypeForSimpleReference (string jniSimpleReference)
+	{
+		return jniSimpleReference switch {
+			"java/lang/String"     => typeof (string),
+			"V"                    => typeof (void),
+			"Z"                    => typeof (bool),
+			"java/lang/Boolean"    => typeof (bool?),
+			"B"                    => typeof (sbyte),
+			"java/lang/Byte"       => typeof (sbyte?),
+			"C"                    => typeof (char),
+			"java/lang/Character"  => typeof (char?),
+			"S"                    => typeof (short),
+			"java/lang/Short"      => typeof (short?),
+			"I"                    => typeof (int),
+			"java/lang/Integer"    => typeof (int?),
+			"J"                    => typeof (long),
+			"java/lang/Long"       => typeof (long?),
+			"F"                    => typeof (float),
+			"java/lang/Float"      => typeof (float?),
+			"D"                    => typeof (double),
+			"java/lang/Double"     => typeof (double?),
+			_                      => null,
+		};
 	}
 
 	protected override JniTypeSignature GetTypeSignatureCore (Type type)
