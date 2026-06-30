@@ -15,7 +15,6 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
-    <Compile Include="..\..\..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
     <Compile Include="..\..\Utilities\MonoAndroidHelper.Basic.cs" />
     <EmbeddedResource Include="Resources\**\*" />
     <EmbeddedResource Include="..\..\..\Microsoft.Android.Templates\android\Resources\**\appicon.png">
@@ -37,7 +36,6 @@
       <Project>{dbdc804f-8406-4f5e-83c6-720cb0cb6c6f}</Project>
       <Name>vswhere</Name>
     </ProjectReference>
-    <!-- Generates bin/Build$(Configuration)/XABuildConfig.cs, which is <Compile Include>'d above. -->
-    <ProjectReference Include="..\..\..\..\build-tools\scripts\xabuildconfig\xabuildconfig.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\..\..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
   </ItemGroup>
 </Project>

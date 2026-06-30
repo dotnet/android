@@ -1,55 +1,55 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  Generates the C# constants file previously produced by xaprepare's
-  Step_GenerateFiles.Get_XABuildConfig_cs:
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Generates and compiles XABuildConfig.cs (the public class
+    Xamarin.Android.Tools.XABuildConfig) into AndroidBuildConfig.dll.
 
-    bin/Build$(Configuration)/XABuildConfig.cs
-      (consumed via <Compile Include> by:
-         src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.csproj
-         src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj
-         src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests.csproj)
+    Previously this file was written by xaprepare's
+    Step_GenerateFiles.Get_XABuildConfig_cs into bin/Build$(Configuration)/
+    and then <Compile Include>'d into Xamarin.Android.Build.Tasks.dll,
+    Xamarin.ProjectTools.dll, and Xamarin.Android.Build.Tests.dll. Having
+    the same type compiled into three assemblies caused CS0436 warnings
+    in the test build (because Xamarin.Android.Build.Tests references
+    Xamarin.Android.Build.Tasks AND also re-compiled XABuildConfig.cs).
 
-  This is its own project so that each consumer can ProjectReference it.
-  That gives us:
+    Wrapping it in its own assembly collapses to a single definition that
+    every consumer references normally.
+  -->
+  <Import Project="..\..\Configuration.props" />
 
-    * A single producer for the shared output file (no parallel-write race).
-    * MSBuild project-reference ordering so every consumer's build sees the
-      generated file (works for isolated builds of any one consumer, not just
-      full-tree builds).
-
-  Follows the same pattern established by src/native/cmake-config/cmake-config.csproj.
--->
-<Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
+    <RootNamespace>Xamarin.Android.Tools</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\..\..\Configuration.props" />
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+  </ItemGroup>
 
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash"      TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch"          TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
-    <_XABuildConfigTemplate>$(MSBuildThisFileDirectory)..\XABuildConfig.cs.in</_XABuildConfigTemplate>
-    <_XABuildConfigOutput>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\XABuildConfig.cs</_XABuildConfigOutput>
+    <_XABuildConfigTemplate>$(MSBuildThisFileDirectory)XABuildConfig.cs.in</_XABuildConfigTemplate>
   </PropertyGroup>
 
   <Target Name="_GenerateXABuildConfig"
-          BeforeTargets="Build"
+          BeforeTargets="BeforeCompile;CoreCompile"
           Inputs="$(MSBuildThisFileFullPath);$(_XABuildConfigTemplate);$(XamarinAndroidSourcePath)Configuration.props;$(XamarinAndroidSourcePath)Directory.Build.props"
-          Outputs="$(_XABuildConfigOutput)">
+          Outputs="$(IntermediateOutputPath)XABuildConfig.cs">
     <!--
-      Substitution values must match Step_GenerateFiles.Get_XABuildConfig_cs exactly.
+      Substitution values must match the previous xaprepare implementation
+      (Step_GenerateFiles.Get_XABuildConfig_cs).
 
-      `AndroidSupportedTargetJitAbis` (e.g. "armeabi-v7a:arm64-v8a:x86:x86_64") becomes a
-      semicolon-separated string in the generated file. Use %3B (the MSBuild escape for ';')
-      so that the resulting Include attribute is not split into multiple items.
+      `AndroidSupportedTargetJitAbis` (e.g. "armeabi-v7a:arm64-v8a:x86:x86_64")
+      is embedded into the generated file as a semicolon-separated string.
+      Use %3B (the MSBuild escape for ';') so MSBuild does not split the
+      Include attribute into multiple items.
     -->
     <PropertyGroup>
+      <_XABuildConfigOutput>$(IntermediateOutputPath)XABuildConfig.cs</_XABuildConfigOutput>
       <_XASupportedAbis>$(AndroidSupportedTargetJitAbis.Replace(':', '%3B'))</_XASupportedAbis>
 
       <_NdkVersionMajor>$(_XAAndroidNdkPkgRevision.Split('.')[0])</_NdkVersionMajor>
@@ -106,11 +106,16 @@
       <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_BRANCH@=$(_XABranch)" />
     </ItemGroup>
 
-    <MakeDir Directories="$(XamarinAndroidSourcePath)bin\Build$(Configuration)" />
+    <MakeDir Directories="$(IntermediateOutputPath)" />
 
     <ReplaceFileContents
         SourceFile="$(_XABuildConfigTemplate)"
         DestinationFile="$(_XABuildConfigOutput)"
         Replacements="@(_XABuildConfigReplacement)" />
+
+    <ItemGroup>
+      <Compile Include="$(_XABuildConfigOutput)" />
+      <FileWrites Include="$(_XABuildConfigOutput)" />
+    </ItemGroup>
   </Target>
 </Project>

@@ -27,15 +27,13 @@
     <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
-    <!-- Generates $(BootstrapOutputDirectory)XABuildConfig.cs, which is <Compile Include>'d below. -->
-    <ProjectReference Include="..\..\..\..\build-tools\scripts\xabuildconfig\xabuildconfig.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\..\..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="DebuggingTasksTests.cs" Condition="!Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')" />
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
-    <Compile Include="$(BootstrapOutputDirectory)\XABuildConfig.cs" />
     <Compile Include="..\..\..\..\tools\assembly-store-reader-mk2\AssemblyStore\*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>

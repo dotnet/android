@@ -5,7 +5,7 @@ using Xamarin.Android.Tools.AndroidSdk;
 
 namespace Xamarin.Android.Tools
 {
-	static class XABuildConfig
+	public static class XABuildConfig
 	{
 		public const string SupportedABIs = "@XA_SUPPORTED_ABIS@";
 		public const string NDKRevision = "@NDK_REVISION@";

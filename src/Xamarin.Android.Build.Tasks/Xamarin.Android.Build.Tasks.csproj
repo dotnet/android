@@ -42,7 +42,6 @@
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
-    <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
 
     <!-- Include only the linker sources required for the build tasks (LinkAssembliesNoShrink and PostTrimmingPipeline) -->
     <!-- These include: AddKeepAlivesStep, AddKeepAlivesHelper, CheckForObsoletePreserveAttributeStep, StripEmbeddedLibrariesStep, PostTrimmingAddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep, LinkDesignerBase -->
@@ -265,8 +264,7 @@
     </ProjectReference>
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
-    <!-- Generates bin/Build$(Configuration)/XABuildConfig.cs, which is <Compile Include>'d above. -->
-    <ProjectReference Include="..\..\build-tools\scripts\xabuildconfig\xabuildconfig.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
   </ItemGroup>
 
   <!-- Import Microsoft.NET.Sdk targets before our targets so we can override behavior -->

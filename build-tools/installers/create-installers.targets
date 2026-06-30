@@ -148,6 +148,8 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Bindings.JavaDependencyVerification.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Bindings.Maven.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.Bindings.Gradle.targets" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)AndroidBuildConfig.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)AndroidBuildConfig.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Sdk.TrimmableTypeMap.dll" />
