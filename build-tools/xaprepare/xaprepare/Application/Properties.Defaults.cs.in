@@ -17,8 +17,6 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.AndroidSupportedTargetJitAbis,       StripQuotes ("@AndroidSupportedTargetJitAbis@"));
 			properties.Add (KnownProperties.AndroidToolchainCacheDirectory,      StripQuotes (@"@AndroidToolchainCacheDirectory@"));
 			properties.Add (KnownProperties.AndroidToolchainDirectory,           StripQuotes (@"@AndroidToolchainDirectory@"));
-			properties.Add (KnownProperties.AutoProvision,                       StripQuotes ("@AutoProvision@"));
-			properties.Add (KnownProperties.AutoProvisionUsesSudo,               StripQuotes ("@AutoProvisionUsesSudo@"));
 			properties.Add (KnownProperties.CLRRuntimeFlavorDirName,             StripQuotes ("@_CLRRuntimeFlavorDirName@"));
 			properties.Add (KnownProperties.CMakePath,                           StripQuotes (@"@CmakePath@"));
 			properties.Add (KnownProperties.Configuration,                       StripQuotes ("@Configuration@"));

@@ -368,6 +368,7 @@
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManagerHelper.cs" />
+    <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\CoreClrJavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />

@@ -482,22 +482,30 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Jun 2026) produces 6 `ILC : AOT analysis warning IL3050`
-					// warnings: three distinct warnings (the reflection-backed ManagedTypeManager
-					// ctor, JNIEnv.MakeArrayType, and JNINativeWrapper.CreateDelegate), each surfaced
-					// twice in the MSBuild summary (once per publish target context). Even though this
-					// test expects no warnings and the above likely make the app not work correctly at
-					// run time, it is still worth running this test under NativeAOT to test for the
-					// absence of other warnings.
-					int numberOfExpectedWarnings = 6;
+					// NativeAOT currently (Jun 2026) produces 4 `ILC : AOT analysis warning IL3050`
+					// warnings: two distinct warnings (the reflection-backed ManagedTypeManager
+					// generic ctor and JNINativeWrapper.CreateDelegate), each surfaced twice in the
+					// MSBuild summary (once per publish target context). #11753 replaced the JNIEnv
+					// array path with JavaArrayProxy, removing the previous JNIEnv.MakeArrayType
+					// warning. Even though this test expects no warnings and the above likely make
+					// the app not work correctly at run time, it is still worth running this test
+					// under NativeAOT to test for the absence of other warnings.
+					int numberOfExpectedWarnings = 4;
 
-					Assert.IsTrue (
-						StringAssertEx.ContainsText (
-							b.LastBuildOutput,
-							$" {numberOfExpectedWarnings} Warning(s)"
-						),
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
-					);
+					// MSBuild prints a "    N Warning(s)" summary line near the end of the build; parse N so the
+					// assertion can report the actual count instead of a bare "Expected: True But was: False".
+					var warningSummaryLine = b.LastBuildOutput.LastOrDefault (x => x.TrimEnd ().EndsWith ("Warning(s)", StringComparison.Ordinal));
+					int actualNumberOfWarnings = -1;
+					if (warningSummaryLine != null) {
+						var summary = warningSummaryLine.Trim ();
+						var firstSpace = summary.IndexOf (' ');
+						if (firstSpace > 0) {
+							int.TryParse (summary.Substring (0, firstSpace), out actualNumberOfWarnings);
+						}
+					}
+
+					Assert.AreEqual (numberOfExpectedWarnings, actualNumberOfWarnings,
+						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT, but found {actualNumberOfWarnings}.");
 
 					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
 					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));

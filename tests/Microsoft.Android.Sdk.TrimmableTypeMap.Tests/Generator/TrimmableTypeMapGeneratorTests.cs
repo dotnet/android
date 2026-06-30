@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using Xunit;
 
@@ -34,6 +36,15 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
+		public void LogUnresolvableJavaPeerSkippedWarning (
+			string managedTypeName,
+			string assemblyName,
+			string unresolvedTypeName,
+			string unresolvedAssemblyName,
+			string unresolvedAssemblyPath) =>
+			warnings?.Add (
+				$"Skipping Java peer '{managedTypeName}' from '{assemblyName}' because referenced type " +
+				$"'{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 	}
@@ -55,7 +66,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		var testAssemblyPath = typeof (TrimmableTypeMapGeneratorTests).Assembly.Location;
 		using var peReader = new PEReader (File.OpenRead (testAssemblyPath));
 		var result = CreateGenerator ().Execute (
-			new List<(string, PEReader)> { ("TestAssembly", peReader) },
+			[Input ("TestAssembly", peReader)],
 			new Version (11, 0),
 			new HashSet<string> ());
 		Assert.Empty (result.GeneratedAssemblies);
@@ -67,7 +78,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_WithTestFixtures_ProducesOutputs ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
 		Assert.NotEmpty (result.GeneratedAssemblies);
 		Assert.NotEmpty (result.GeneratedJavaSources);
 		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_Microsoft.Android.TypeMaps");
@@ -78,7 +89,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
 
 		// Abstract Instrumentation/Application subtypes are included too: their native
 		// methods (e.g. n_OnCreate, n_OnStart) are declared on the abstract base class
@@ -139,7 +150,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	[Fact]
 	public void Execute_NullAssemblyList_Throws ()
 	{
-		IReadOnlyList<(string Name, PEReader Reader)>? n = null;
+		IReadOnlyList<AssemblyInput>? n = null;
 #pragma warning disable CS8604
 		Assert.Throws<ArgumentNullException> (() => CreateGenerator ().Execute (n, new Version (11, 0), new HashSet<string> ()));
 #pragma warning restore CS8604
@@ -149,7 +160,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_GeneratedAssembliesAreValidPE ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
 		foreach (var assembly in result.GeneratedAssemblies) {
 			assembly.Content.Position = 0;
 			using var vr = new PEReader (assembly.Content, PEStreamOptions.LeaveOpen);
@@ -162,7 +173,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	public void Execute_JavaSourcesHaveCorrectStructure ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
-		var result = CreateGenerator ().Execute (new List<(string, PEReader)> { ("TestFixtures", peReader) }, new Version (11, 0), new HashSet<string> ());
+		var result = CreateGenerator ().Execute ([Input ("TestFixtures", peReader)], new Version (11, 0), new HashSet<string> ());
 		foreach (var source in result.GeneratedJavaSources)
 			Assert.Contains ("class ", source.Content);
 	}
@@ -172,7 +183,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	{
 		using var peReader = CreateTestFixturePEReader ();
 		var result = CreateGenerator ().Execute (
-			new List<(string, PEReader)> { ("Mono.Android", peReader) },
+			[Input ("Mono.Android", peReader)],
 			new Version (11, 0),
 			new HashSet<string> (StringComparer.OrdinalIgnoreCase) { "Mono.Android" });
 
@@ -196,7 +207,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			""");
 
 		var result = CreateGenerator ().Execute (
-			new List<(string, PEReader)> { ("TestFixtures", peReader) },
+			[Input ("TestFixtures", peReader)],
 			new Version (11, 0),
 			new HashSet<string> (),
 			useSharedTypemapUniverse: false,
@@ -212,10 +223,217 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.True (peer.IsUnconditional, "Relative manifest names should root correctly after placeholder substitution.");
 	}
 
+	[Theory]
+	[InlineData (StaleReferenceShape.BaseType, "MissingDependency.MissingBase")]
+	[InlineData (StaleReferenceShape.Interface, "MissingDependency.IMissingInterface")]
+	[InlineData (StaleReferenceShape.GenericBaseArgument, "MissingDependency.MissingArgument")]
+	[InlineData (StaleReferenceShape.GenericConstraint, "MissingDependency.MissingConstraint")]
+	public void Execute_SkipsJavaPeerWithUnresolvableBaseInterfaceOrGenericArgumentTypeRef (StaleReferenceShape shape, string unresolvedTypeName)
+	{
+		var warnings = new List<string> ();
+		var peerPath = Path.Combine (Path.GetTempPath (), "StalePeerAssembly.dll");
+		var missingDependencyPath = Path.Combine (Path.GetTempPath (), "MissingDependency.dll");
+		using var peerStream = CreateStaleJavaPeerAssembly (shape);
+		using var missingDependencyStream = CreateEmptyAssembly ("MissingDependency");
+		using var peerReader = new PEReader (peerStream, PEStreamOptions.LeaveOpen);
+		using var missingDependencyReader = new PEReader (missingDependencyStream, PEStreamOptions.LeaveOpen);
+
+		var result = CreateGenerator (warnings).Execute (
+			[
+				new AssemblyInput ("StalePeerAssembly", peerPath, peerReader),
+				new AssemblyInput ("MissingDependency", missingDependencyPath, missingDependencyReader),
+			],
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.DoesNotContain (result.AllPeers, p => p.ManagedTypeName == "Test.BrokenPeer");
+		var warning = Assert.Single (warnings);
+		Assert.Contains ("Test.BrokenPeer", warning);
+		Assert.Contains (unresolvedTypeName, warning);
+		Assert.Contains ("MissingDependency", warning);
+		Assert.Contains (missingDependencyPath, warning);
+	}
+
+	[Fact]
+	public void Execute_DoesNotSkipJavaPeer_WhenReferencedAssemblyIsNotScanned ()
+	{
+		// The base type's assembly ('MissingDependency') is not part of the scanned
+		// set, so the scanner cannot prove the reference is stale. Existing behavior
+		// must be preserved: the peer is kept and no XA4257 is emitted.
+		var warnings = new List<string> ();
+		var peerPath = Path.Combine (Path.GetTempPath (), "StalePeerAssembly.dll");
+		using var peerStream = CreateStaleJavaPeerAssembly (StaleReferenceShape.BaseType);
+		using var peerReader = new PEReader (peerStream, PEStreamOptions.LeaveOpen);
+
+		var result = CreateGenerator (warnings).Execute (
+			[new AssemblyInput ("StalePeerAssembly", peerPath, peerReader)],
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.Contains (result.AllPeers, p => p.ManagedTypeName == "Test.BrokenPeer");
+		Assert.Empty (warnings);
+	}
+
+	[Fact]
+	public void Execute_DoesNotSkipJavaPeer_WhenBaseTypeIsTypeForwarded ()
+	{
+		// 'MissingDependency' is scanned but does not define 'MissingBase' — it only
+		// re-exports it via a type-forward row. The scanner must treat the reference
+		// as resolvable through AssemblyIndex.ExportedTypeNames and keep the peer.
+		var warnings = new List<string> ();
+		var peerPath = Path.Combine (Path.GetTempPath (), "StalePeerAssembly.dll");
+		var forwardingPath = Path.Combine (Path.GetTempPath (), "MissingDependency.dll");
+		using var peerStream = CreateStaleJavaPeerAssembly (StaleReferenceShape.BaseType);
+		using var forwardingStream = CreateAssemblyForwardingType ("MissingDependency", "MissingDependency", "MissingBase");
+		using var peerReader = new PEReader (peerStream, PEStreamOptions.LeaveOpen);
+		using var forwardingReader = new PEReader (forwardingStream, PEStreamOptions.LeaveOpen);
+
+		var result = CreateGenerator (warnings).Execute (
+			[
+				new AssemblyInput ("StalePeerAssembly", peerPath, peerReader),
+				new AssemblyInput ("MissingDependency", forwardingPath, forwardingReader),
+			],
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.Contains (result.AllPeers, p => p.ManagedTypeName == "Test.BrokenPeer");
+		Assert.Empty (warnings);
+	}
+
 	TrimmableTypeMapGenerator CreateGenerator () => new (new TestTrimmableTypeMapLogger (logMessages));
 
 	TrimmableTypeMapGenerator CreateGenerator (List<string> warnings) =>
 		new (new TestTrimmableTypeMapLogger (logMessages, warnings));
+
+	static AssemblyInput Input (string name, PEReader reader) => new (name, "", reader);
+
+	public enum StaleReferenceShape {
+		BaseType,
+		Interface,
+		GenericBaseArgument,
+		GenericConstraint,
+	}
+
+	static MemoryStream CreateEmptyAssembly (string assemblyName)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble (assemblyName, assemblyName + ".dll");
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
+	}
+
+	static MemoryStream CreateAssemblyForwardingType (string assemblyName, string ns, string typeName)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble (assemblyName, assemblyName + ".dll");
+
+		var forwardTargetRef = pe.FindOrAddAssemblyRef ("ForwardTarget");
+		// 0x00200000 is the type-forwarder flag (TypeAttributes has no named constant for it).
+		pe.Metadata.AddExportedType (
+			(TypeAttributes) 0x00200000,
+			pe.Metadata.GetOrAddString (ns),
+			pe.Metadata.GetOrAddString (typeName),
+			forwardTargetRef,
+			typeDefinitionId: 0);
+
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
+	}
+
+	static MemoryStream CreateStaleJavaPeerAssembly (StaleReferenceShape shape)
+	{
+		var stream = new MemoryStream ();
+		var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+		pe.EmitPreamble ("StalePeerAssembly", "StalePeerAssembly.dll");
+
+		var missingTypeName = shape switch {
+			StaleReferenceShape.Interface => "IMissingInterface",
+			StaleReferenceShape.GenericBaseArgument => "MissingArgument",
+			StaleReferenceShape.GenericConstraint => "MissingConstraint",
+			_ => "MissingBase",
+		};
+		var missingDependencyRef = pe.FindOrAddAssemblyRef ("MissingDependency");
+		var missingTypeRef = pe.Metadata.AddTypeReference (
+			missingDependencyRef,
+			pe.Metadata.GetOrAddString ("MissingDependency"),
+			pe.Metadata.GetOrAddString (missingTypeName));
+		var objectRef = pe.Metadata.AddTypeReference (
+			pe.SystemRuntimeRef,
+			pe.Metadata.GetOrAddString ("System"),
+			pe.Metadata.GetOrAddString ("Object"));
+		EntityHandle peerBaseType = shape switch {
+			StaleReferenceShape.BaseType => missingTypeRef,
+			StaleReferenceShape.GenericBaseArgument => CreateGenericBaseTypeSpec (pe, objectRef, missingTypeRef),
+			_ => objectRef,
+		};
+
+		var registerAttributeRef = pe.Metadata.AddTypeReference (
+			pe.MonoAndroidRef,
+			pe.Metadata.GetOrAddString ("Android.Runtime"),
+			pe.Metadata.GetOrAddString ("RegisterAttribute"));
+		var registerCtorRef = pe.AddMemberRef (registerAttributeRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().String ()));
+
+		var peerType = pe.Metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.BeforeFieldInit,
+			pe.Metadata.GetOrAddString ("Test"),
+			pe.Metadata.GetOrAddString ("BrokenPeer"),
+			peerBaseType,
+			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		pe.Metadata.AddCustomAttribute (
+			peerType,
+			registerCtorRef,
+			pe.BuildAttributeBlob (b => b.WriteSerializedString ("test/BrokenPeer")));
+
+		if (shape == StaleReferenceShape.Interface) {
+			pe.Metadata.AddInterfaceImplementation (peerType, missingTypeRef);
+		}
+
+		if (shape == StaleReferenceShape.GenericConstraint) {
+			var genericParameter = pe.Metadata.AddGenericParameter (
+				peerType,
+				GenericParameterAttributes.None,
+				pe.Metadata.GetOrAddString ("T"),
+				0);
+			pe.Metadata.AddGenericParameterConstraint (genericParameter, missingTypeRef);
+		}
+
+		pe.WritePE (stream);
+		stream.Position = 0;
+		return stream;
+	}
+
+	static TypeSpecificationHandle CreateGenericBaseTypeSpec (PEAssemblyBuilder pe, EntityHandle objectRef, TypeReferenceHandle missingTypeRef)
+	{
+		var genericBaseType = pe.Metadata.AddTypeDefinition (
+			TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.BeforeFieldInit,
+			pe.Metadata.GetOrAddString ("Test"),
+			pe.Metadata.GetOrAddString ("GenericBase`1"),
+			objectRef,
+			MetadataTokens.FieldDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.Field) + 1),
+			MetadataTokens.MethodDefinitionHandle (pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
+		pe.Metadata.AddGenericParameter (
+			genericBaseType,
+			GenericParameterAttributes.None,
+			pe.Metadata.GetOrAddString ("T"),
+			0);
+
+		var signature = new BlobBuilder ();
+		signature.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
+		signature.WriteByte ((byte) SignatureTypeKind.Class);
+		signature.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (genericBaseType));
+		signature.WriteCompressedInteger (1);
+		signature.WriteByte ((byte) SignatureTypeKind.Class);
+		signature.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (missingTypeRef));
+		return pe.Metadata.AddTypeSpecification (pe.Metadata.GetOrAddBlob (signature));
+	}
 
 	[Theory]
 	[InlineData ("com/example/MyActivity", "com.example.MyActivity", "com.example", "activity", "com.example.MyActivity")]
@@ -364,6 +582,34 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		generator.RootManifestReferencedTypes (peers, doc);
 
 		Assert.Contains (warnings, w => w.Contains ("com.example.NonExistentService"));
+	}
+
+	[Fact]
+	public void RootManifestReferencedTypes_DoesNotWarnForApplicationJavaClass ()
+	{
+		// android.support.multidex.MultiDexApplication (injected via $(AndroidApplicationJavaClass)
+		// when $(AndroidEnableMultiDex) is true) is a Java framework type with no managed peer,
+		// so it must not produce an XA4250 "not found in any scanned assembly" warning.
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/MyActivity", CompatJniName = "com.example.MyActivity",
+				ManagedTypeName = "MyApp.MyActivity", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "MyActivity",
+				AssemblyName = "MyApp",
+			},
+		};
+
+		var doc = System.Xml.Linq.XDocument.Parse ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example">
+			  <application android:name="android.support.multidex.MultiDexApplication" />
+			</manifest>
+			""");
+
+		var warnings = new List<string> ();
+		var generator = CreateGenerator (warnings);
+		generator.RootManifestReferencedTypes (peers, doc, "android.support.multidex.MultiDexApplication");
+
+		Assert.DoesNotContain (warnings, w => w.Contains ("MultiDexApplication"));
 	}
 
 	[Fact]
@@ -575,10 +821,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 
 		// 3 indexed entries + 1 base entry = 4
 		Assert.Equal (4, model.Entries.Count);
-		Assert.Equal ("java/lang/Throwable[0]", model.Entries [0].JniName);
-		Assert.Equal ("java/lang/Throwable[1]", model.Entries [1].JniName);
-		Assert.Equal ("java/lang/Throwable[2]", model.Entries [2].JniName);
-		Assert.Equal ("java/lang/Throwable", model.Entries [3].JniName);
+		Assert.Equal ("java/lang/Throwable[0]", model.Entries [0].MapKey);
+		Assert.Equal ("java/lang/Throwable[1]", model.Entries [1].MapKey);
+		Assert.Equal ("java/lang/Throwable[2]", model.Entries [2].MapKey);
+		Assert.Equal ("java/lang/Throwable", model.Entries [3].MapKey);
 
 		// Exactly 1 alias holder
 		Assert.Single (model.AliasHolders);
@@ -592,7 +838,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Equal (3, model.Associations.Count);
 
 		// The bare "java/lang/Throwable" key appears exactly once — no duplicates
-		Assert.Single (model.Entries, e => e.JniName == "java/lang/Throwable");
+		Assert.Single (model.Entries, e => e.MapKey == "java/lang/Throwable");
 	}
 
 	[Fact]

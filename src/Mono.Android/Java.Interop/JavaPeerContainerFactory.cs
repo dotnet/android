@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -15,6 +14,8 @@ namespace Java.Interop
 	/// </summary>
 	public abstract class JavaPeerContainerFactory
 	{
+		private protected const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		/// <summary>
 		/// Creates a typed <c>JavaList&lt;T&gt;</c> from a JNI handle.
 		/// </summary>
@@ -36,9 +37,8 @@ namespace Java.Interop
 		/// Visitor callback invoked by the value factory's <see cref="CreateDictionary"/>.
 		/// Override in <see cref="JavaPeerContainerFactory{T}"/> to provide both type parameters.
 		/// </summary>
-		internal virtual IDictionary? CreateDictionaryWithValueFactory<TValue> (
+		internal virtual IDictionary? CreateDictionaryWithValueFactory<[DynamicallyAccessedMembers (Constructors)] TValue> (
 			JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
-			where TValue : class, IJavaPeerable
 			=> null;
 
 		/// <summary>
@@ -47,20 +47,15 @@ namespace Java.Interop
 		public static JavaPeerContainerFactory Create<
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			T
-		> () where T : class, IJavaPeerable
+		> ()
 			=> JavaPeerContainerFactory<T>.Instance;
 	}
 
 	/// <summary>
 	/// Typed container factory. All creation uses direct <c>new</c> expressions — fully AOT-safe.
 	/// </summary>
-	/// <typeparam name="T">The Java peer element type.</typeparam>
-	public sealed class JavaPeerContainerFactory<
-	 	// TODO (https://github.com/dotnet/android/issues/10794): Remove this DAM annotation — it preserves too much reflection metadata on all types in the typemap.
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		T
-	> : JavaPeerContainerFactory
-		where T : class, IJavaPeerable
+	/// <typeparam name="T">The container element type.</typeparam>
+	public sealed class JavaPeerContainerFactory<[DynamicallyAccessedMembers (Constructors)] T> : JavaPeerContainerFactory
 	{
 		internal static readonly JavaPeerContainerFactory<T> Instance = new ();
 
@@ -75,10 +70,8 @@ namespace Java.Interop
 		internal override IDictionary? CreateDictionary (JavaPeerContainerFactory keyFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> keyFactory.CreateDictionaryWithValueFactory (this, handle, transfer);
 
-		#pragma warning disable IL2091 // DynamicallyAccessedMembers on base method type parameter cannot be repeated on override in C#
-		internal override IDictionary? CreateDictionaryWithValueFactory<TValue> (
+		internal override IDictionary? CreateDictionaryWithValueFactory<[DynamicallyAccessedMembers (Constructors)] TValue> (
 			JavaPeerContainerFactory<TValue> valueFactory, IntPtr handle, JniHandleOwnership transfer)
 			=> new Android.Runtime.JavaDictionary<T, TValue> (handle, transfer);
-		#pragma warning restore IL2091
 	}
 }

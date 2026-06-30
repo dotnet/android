@@ -21,6 +21,7 @@ public class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
+	static readonly JavaArrayProxy s_noArrayProxySentinel = new MissingJavaArrayProxy ();
 	static TrimmableTypeMap? s_instance;
 	static bool s_nativeMethodsRegistered;
 
@@ -30,6 +31,7 @@ public class TrimmableTypeMap
 
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<Type, JavaArrayProxy> _arrayProxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
 
@@ -467,64 +469,70 @@ public class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
-	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>
+	internal bool TryGetArrayProxy (Type elementType, int additionalRank, [NotNullWhen (true)] out JavaArrayProxy? arrayProxy)
 	{
-		arrayType = null;
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero (additionalRank);
 
-		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
-		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
-		var leaf = elementType;
-		int rankIndex = 0;
-		while (leaf.IsArray) {
-			if (!leaf.IsSZArray) {
+		var leafType = elementType;
+		int rankIndex = additionalRank - 1;
+		while (leafType.IsArray) {
+			if (!leafType.IsSZArray) {
+				arrayProxy = null;
 				return false;
 			}
-			var next = leaf.GetElementType ();
+			var next = leafType.GetElementType ();
 			if (next is null) {
+				arrayProxy = null;
 				return false;
 			}
-			leaf = next;
+			leafType = next;
 			rankIndex++;
 		}
 
-		bool isPrimitiveLeaf = leaf.IsPrimitive;
-		string? leafJniName = isPrimitiveLeaf
-			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
-			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
-
-		if (leafJniName is not null && _typeMap.TryGetArrayType (leafJniName, rankIndex, out arrayType)) {
-			return true;
+		if (!TryGetManagedTypeKey (leafType, out var managedTypeKey)) {
+			arrayProxy = null;
+			return false;
 		}
 
-		if (isPrimitiveLeaf) {
-			arrayType = MakePrimitiveArrayType (elementType);
-			return true;
+		if (_typeMap.TryGetArrayProxyType (managedTypeKey, rankIndex, out var proxyType)) {
+			var proxy = _arrayProxyCache.GetOrAdd (proxyType, static type =>
+				type.GetCustomAttribute<JavaArrayProxy> (inherit: false) ?? s_noArrayProxySentinel);
+			if (!ReferenceEquals (proxy, s_noArrayProxySentinel)) {
+				arrayProxy = proxy;
+				return true;
+			}
 		}
 
+		arrayProxy = null;
 		return false;
 	}
 
-	static Type MakePrimitiveArrayType (Type elementType)
+	static bool TryGetManagedTypeKey (Type type, [NotNullWhen (true)] out string? key)
 	{
-#pragma warning disable IL3050 // Primitive array types are runtime intrinsic; no generated generic code is needed.
-		return elementType.MakeArrayType ();
-#pragma warning restore IL3050
+		var fullName = type.FullName;
+		if (fullName is null) {
+			key = null;
+			return false;
+		}
+
+		var assemblyName = GetAssemblyNameForManagedTypeKey (type);
+		if (assemblyName is null) {
+			key = null;
+			return false;
+		}
+
+		key = $"{fullName}, {assemblyName}";
+		return true;
 	}
 
-	/// <summary>JNI single-letter encoding for primitive element types.</summary>
-	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
+	static string? GetAssemblyNameForManagedTypeKey (Type type)
 	{
-		if (primitive == typeof (bool))   { jni = "Z"; return true; }
-		if (primitive == typeof (byte))   { jni = "B"; return true; }
-		if (primitive == typeof (char))   { jni = "C"; return true; }
-		if (primitive == typeof (short))  { jni = "S"; return true; }
-		if (primitive == typeof (int))    { jni = "I"; return true; }
-		if (primitive == typeof (long))   { jni = "J"; return true; }
-		if (primitive == typeof (float))  { jni = "F"; return true; }
-		if (primitive == typeof (double)) { jni = "D"; return true; }
-		jni = null;
-		return false;
+		if (type.IsPrimitive || type == typeof (string)) {
+			return "System.Runtime";
+		}
+
+		return type.Assembly.GetName ().Name;
 	}
 
 	[UnmanagedCallersOnly]
@@ -568,6 +576,13 @@ public class TrimmableTypeMap
 		}
 
 		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+	}
+
+	sealed class MissingJavaArrayProxy : JavaArrayProxy
+	{
+		public override Type[] GetArrayTypes () => [];
+
+		public override Array CreateManagedArray (int length) => throw new NotSupportedException ();
 	}
 
 }
