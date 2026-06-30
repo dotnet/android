@@ -29,11 +29,6 @@ and will override any default values specified in `Configuration.props`.
 
 Overridable MSBuild properties include:
 
-  * `$(AutoProvision)`: Automatically install required dependencies, if possible.
-    Only supported on macOS and certain Linux distros.
-
-  * `$(AutoProvisionUsesSudo)`: Use `sudo` when installing dependencies.
-
   * `$(AndroidApiLevel)`: The Android API level to bind in `src/Mono.Android`.
     This is an integer value, e.g. `15` for
     [API-15 (Android 4.0.3)](http://developer.android.com/about/versions/android-4.0.3.html).

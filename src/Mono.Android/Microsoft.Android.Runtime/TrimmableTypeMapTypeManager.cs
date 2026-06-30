@@ -18,10 +18,6 @@ namespace Microsoft.Android.Runtime;
 class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 {
 	const string NoSimpleReference = "\0";
-	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-	const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
-	const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-	const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 	readonly ConcurrentDictionary<Type, string> _simpleReferenceCache = new ();
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
@@ -37,8 +33,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 		}
 	}
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2063", Justification = "Temporary suppression until trimmable typemap type entries carry DAM annotations.")]
-	[return: DynamicallyAccessedMembers (MethodsConstructors)]
 	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 	{
 		var type = base.GetTypeForSimpleReference (jniSimpleReference);
@@ -100,10 +94,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 		}
 	}
 
-	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-	protected override Type? GetInvokerTypeCore (
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type type)
+	protected override Type? GetInvokerTypeCore (Type type)
 	{
 		var invokerType = TrimmableTypeMap.Instance.GetInvokerType (type);
 		if (invokerType != null) {
@@ -130,7 +121,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 			Type type,
 			ReadOnlySpan<char> methods)
 	{

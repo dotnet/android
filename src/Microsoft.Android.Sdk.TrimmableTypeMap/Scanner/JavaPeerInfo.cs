@@ -201,6 +201,12 @@ public sealed record MarshalMethodInfo
 	public string DeclaringAssemblyName { get; init; } = "";
 
 	/// <summary>
+	/// Exact type that declares the managed method. This can be a constructed
+	/// generic base type, e.g. <c>BaseAdapter&lt;object&gt;</c>.
+	/// </summary>
+	internal TypeRefData? DeclaringType { get; init; }
+
+	/// <summary>
 	/// The native callback method name, e.g., "n_onCreate".
 	/// This is the Java/JNI-visible native method name that the generated JCW calls.
 	/// </summary>
@@ -375,6 +381,15 @@ public sealed record ActivationCtorInfo
 	/// The assembly containing the declaring type.
 	/// </summary>
 	public required string DeclaringAssemblyName { get; init; }
+
+	/// <summary>
+	/// Exact type that declares the activation constructor. This can be a
+	/// constructed generic base type.
+	/// </summary>
+	internal TypeRefData DeclaringType { get; init; } = new () {
+		ManagedTypeName = "",
+		AssemblyName = "",
+	};
 
 	/// <summary>
 	/// The style of activation constructor found.

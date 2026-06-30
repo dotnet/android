@@ -27,7 +27,7 @@ public class TrimmableTypeMapGenerator
 	/// No file IO is performed — all results are returned in memory.
 	/// </summary>
 	public TrimmableTypeMapResult Execute (
-		IReadOnlyList<(string Name, PEReader Reader)> assemblies,
+		IReadOnlyList<AssemblyInput> assemblies,
 		Version systemRuntimeVersion,
 		HashSet<string> frameworkAssemblyNames,
 		bool useSharedTypemapUniverse = false,
@@ -155,7 +155,10 @@ public class TrimmableTypeMapGenerator
 		return new GeneratedManifest (doc, providerNames.Count > 0 ? providerNames.ToArray () : []);
 	}
 
-	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (IReadOnlyList<(string Name, PEReader Reader)> assemblies, string? packageNamingPolicy, HashSet<string> frameworkAssemblyNames)
+	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (
+		IReadOnlyList<AssemblyInput> assemblies,
+		string? packageNamingPolicy,
+		HashSet<string> frameworkAssemblyNames)
 	{
 		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger, frameworkAssemblyNames);
 		var peers = scanner.Scan (assemblies);

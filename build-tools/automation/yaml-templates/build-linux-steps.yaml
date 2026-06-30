@@ -11,6 +11,13 @@ parameters:
 steps:
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - bash: |
+      set -e
+      sudo apt-get update
+      sudo apt-get install -y p7zip-full cmake ninja-build ccache
+    displayName: Install build dependencies on Linux
+
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
     useAgentJdkPath: false
@@ -35,7 +42,7 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
-- script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make jenkins PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1

@@ -56,8 +56,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <MicrosoftAndroidPacksRootDir>$(BuildOutputDirectory)lib\packs\</MicrosoftAndroidPacksRootDir>
-    <AutoProvision Condition=" '$(AutoProvision)' == '' ">False</AutoProvision>
-    <AutoProvisionUsesSudo Condition=" '$(AutoProvisionUsesSudo)' == '' ">False</AutoProvisionUsesSudo>
     <_XABinRelativeInstallPrefix>lib\xamarin.android</_XABinRelativeInstallPrefix>
     <XAInstallPrefix Condition=" '$(XAInstallPrefix)' == '' ">$(MSBuildThisFileDirectory)bin\$(Configuration)\$(_XABinRelativeInstallPrefix)\</XAInstallPrefix>
     <_MonoAndroidNETOutputRoot>$(XAInstallPrefix)xbuild-frameworks\Microsoft.Android\</_MonoAndroidNETOutputRoot>

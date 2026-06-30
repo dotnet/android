@@ -223,6 +223,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
 + [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
++ [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
