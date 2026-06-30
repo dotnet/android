@@ -1,5 +1,12 @@
 ---
 on:
+  pull_request:
+    paths:
+    # Sentinel path that never matches. Keeping a pull_request trigger here is
+    # required so gh-aw emits a pre_activation job (which shared/pat_pool.md's
+    # pat_pool job depends on), but actually running on PRs would fail because
+    # the copilot-pat-pool environment rejects PR refs via protection rules.
+    - .github/workflows/nightly-fix-finder.__never_matches__
   schedule:
   - cron: daily around 02:00
   workflow_dispatch:
