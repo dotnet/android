@@ -19,7 +19,6 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentNullException (nameof (context));
 
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true));
-			Steps.Add (new Step_GenerateCGManifest ());
 		}
 
 		protected override void AddEndSteps (Context context)

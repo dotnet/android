@@ -95,31 +95,6 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, $"clone-{dirName}");
 		}
 
-		public async Task<List<string>?> SubmoduleStatus (string? workingDirectory = null)
-		{
-			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-
-			var runner = CreateGitRunner (runnerWorkingDirectory);;
-			runner.AddArgument ("submodule");
-			runner.AddArgument ("status");
-
-			var lines = new List<string> ();
-
-			bool success = await RunTool (
-				() => {
-					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string? line) => lines.Add (line ?? String.Empty);
-						return runner.Run ();
-					}
-				}
-			);
-
-			if (!success)
-				return null;
-
-			return lines;
-		}
-
 		public async Task<bool> SubmoduleUpdate (string? workingDirectory = null, bool init = true, bool recursive = true)
 		{
 			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
@@ -227,31 +202,6 @@ namespace Xamarin.Android.Prepare
 				return null;
 
 			return parserState.Entries;
-		}
-
-		public async Task<List<string>?> ConfigList (string[] fileOptions, string? workingDirectory = null)
-		{
-			var runner = CreateGitRunner (workingDirectory);
-			runner.AddArgument ("config");
-			foreach (var opt in fileOptions)
-				runner.AddArgument (opt);
-			runner.AddArgument ("--list");
-
-			var lines = new List<string> ();
-
-			bool success = await RunTool (
-				() => {
-					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string? line) => lines.Add (line ?? String.Empty);
-						return runner.Run ();
-					}
-				}
-			);
-
-			if (!success)
-				return null;
-
-			return lines;
 		}
 
 		public async Task<bool> IsRepoUrlHttps (string workingDirectory)

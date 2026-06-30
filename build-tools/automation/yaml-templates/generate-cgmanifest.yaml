@@ -1,0 +1,124 @@
+# Generates bin/Build$(Configuration)/cgmanifest.json from the repository's
+# git submodules. The file is consumed by the Azure DevOps Component
+# Governance Detection task (auto-injected on internal pipelines by
+# eng/common/core-templates/job/job.yml). This replaces the previous
+# xaprepare Step_GenerateCGManifest step.
+
+parameters:
+  configuration: $(XA.Build.Configuration)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+
+steps:
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    Set-Location -LiteralPath '${{ parameters.xaSourcePath }}'
+
+    # Parse .gitmodules entries that live under external/ (matches the
+    # previous C# behavior which filtered on "submodule.external/").
+    $configLines = & git config --blob HEAD:.gitmodules --list
+    if ($LASTEXITCODE -ne 0) {
+        throw "git config --list failed with exit code $LASTEXITCODE"
+    }
+
+    $statusLines = & git submodule status
+    if ($LASTEXITCODE -ne 0) {
+        throw "git submodule status failed with exit code $LASTEXITCODE"
+    }
+
+    # Build a map of submodule id -> @{ Path; Url }
+    $prefix = 'submodule.external/'
+    $entries = [ordered]@{}
+    foreach ($line in $configLines) {
+        if (-not $line.StartsWith($prefix)) { continue }
+        $eq = $line.IndexOf('=')
+        if ($eq -lt 0) { continue }
+        $lastDot = $line.LastIndexOf('.', $eq)
+        if ($lastDot -lt 0) { continue }
+        $id = $line.Substring($prefix.Length, $lastDot - $prefix.Length)
+        $key = $line.Substring($lastDot, $eq - $lastDot)
+        $value = $line.Substring($eq + 1)
+        if (-not $entries.Contains($id)) {
+            $entries[$id] = @{ Path = $null; Url = $null }
+        }
+        if ($key -eq '.path') {
+            $entries[$id].Path = $value
+        } elseif ($key -eq '.url') {
+            # Strip trailing ".git" to match the previous C# behavior.
+            if ($value.EndsWith('.git')) {
+                $value = $value.Substring(0, $value.Length - 4)
+            }
+            $entries[$id].Url = $value
+        }
+    }
+
+    # Map submodule path -> commit hash via `git submodule status` output.
+    # Status lines are "<flag><sha> <path>[ (...)]", where <flag> is
+    # ' ', '-', or '+'. The previous C# matched the path inside the
+    # status line and extracted SHA between index 1 and the path; we do
+    # the same with a regex to match byte-for-byte.
+    $hashByPath = @{}
+    foreach ($line in $statusLines) {
+        if ([string]::IsNullOrEmpty($line)) { continue }
+        if ($line -match '^.([0-9a-fA-F]{40})\s+(\S+)') {
+            $hashByPath[$matches[2]] = $matches[1]
+        }
+    }
+
+    # Build registration objects, then sort by repositoryUrl
+    # (ordinal, case-insensitive) to match Step_GenerateCGManifest.
+    $registrations = @()
+    foreach ($id in $entries.Keys) {
+        $path = $entries[$id].Path
+        $url  = $entries[$id].Url
+        if ($null -eq $path -or $null -eq $url) { continue }
+        $hash = ''
+        if ($hashByPath.ContainsKey($path)) {
+            $hash = $hashByPath[$path]
+        }
+        $registrations += [pscustomobject]@{ Url = $url; Hash = $hash }
+    }
+    $registrations = $registrations |
+        Sort-Object -Property @{ Expression = { $_.Url.ToLowerInvariant() } }
+
+    # Hand-write the JSON to byte-match Step_GenerateCGManifest.Execute
+    # (4-space indent, trailing newline after the closing brace).
+    $nl = [Environment]::NewLine
+    $sb = [System.Text.StringBuilder]::new()
+    [void]$sb.Append('{').Append($nl)
+    [void]$sb.Append('    "$schema": "https://json.schemastore.org/component-detection-manifest.json",').Append($nl)
+    [void]$sb.Append('    "version": 1,').Append($nl)
+    [void]$sb.Append('    "registrations": [').Append($nl)
+
+    $first = $true
+    foreach ($entry in $registrations) {
+        if ($first) {
+            $first = $false
+        } else {
+            [void]$sb.Append(',').Append($nl)
+        }
+        [void]$sb.Append('        {').Append($nl)
+        [void]$sb.Append('            "component": {').Append($nl)
+        [void]$sb.Append('                "type": "git",').Append($nl)
+        [void]$sb.Append('                "git": {').Append($nl)
+        [void]$sb.Append('                    "commitHash": "').Append($entry.Hash).Append('",').Append($nl)
+        [void]$sb.Append('                    "repositoryUrl": "').Append($entry.Url).Append('"').Append($nl)
+        [void]$sb.Append('                }').Append($nl)
+        [void]$sb.Append('            }').Append($nl)
+        [void]$sb.Append('        }')
+    }
+
+    [void]$sb.Append($nl)
+    [void]$sb.Append('    ]').Append($nl)
+    [void]$sb.Append('}').Append($nl)
+
+    $outDir = Join-Path '${{ parameters.xaSourcePath }}' "bin/Build${{ parameters.configuration }}"
+    New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+    $outPath = Join-Path $outDir 'cgmanifest.json'
+
+    # Write UTF-8 without BOM to match the previous File.CreateText output.
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllText($outPath, $sb.ToString(), $utf8NoBom)
+
+    Write-Host "Wrote $outPath with $($registrations.Count) registration(s)."
+  displayName: Generate cgmanifest.json
+  continueOnError: false
