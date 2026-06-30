@@ -377,16 +377,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return primitiveArrayReference;
 		}
 
-		if (value is IJavaPeerable peerable) {
-			return peerable.PeerReference.IsValid
-				? peerable.PeerReference.NewLocalRef ()
-				: new JniObjectReference ();
-		}
-
-		if (JavaConvert.TryConvertKnownValueToLocalJniHandle (value, out var handle)) {
-			return handle == IntPtr.Zero
-				? new JniObjectReference ()
-				: new JniObjectReference (handle, JniObjectReferenceType.Local);
+		var handle = JavaConvert.ToLocalJniHandle (value);
+		if (handle != IntPtr.Zero) {
+			return new JniObjectReference (handle, JniObjectReferenceType.Local);
 		}
 
 		var proxy = TrimmableJavaProxyObject.GetProxy (value);

@@ -19,19 +19,7 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Boolean (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.BooleanValue ();
 			} },
-			{ typeof (bool?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
-				using (var value = new Java.Lang.Boolean (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.BooleanValue ();
-			} },
 			{ typeof (byte), (handle, transfer) => {
-				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return (byte) value.ByteValue ();
-			} },
-			{ typeof (byte?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
 				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return (byte) value.ByteValue ();
 			} },
@@ -39,19 +27,7 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ByteValue ();
 			} },
-			{ typeof (sbyte?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
-				using (var value = new Java.Lang.Byte (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.ByteValue ();
-			} },
 			{ typeof (char), (handle, transfer) => {
-				using (var value = new Java.Lang.Character (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.CharValue ();
-			} },
-			{ typeof (char?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
 				using (var value = new Java.Lang.Character (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.CharValue ();
 			} },
@@ -59,19 +35,7 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Short (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.ShortValue ();
 			} },
-			{ typeof (short?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
-				using (var value = new Java.Lang.Short (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.ShortValue ();
-			} },
 			{ typeof (int), (handle, transfer) => {
-				using (var value = new Java.Lang.Integer (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.IntValue ();
-			} },
-			{ typeof (int?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
 				using (var value = new Java.Lang.Integer (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.IntValue ();
 			} },
@@ -79,29 +43,11 @@ namespace Java.Interop {
 				using (var value = new Java.Lang.Long (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.LongValue ();
 			} },
-			{ typeof (long?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
-				using (var value = new Java.Lang.Long (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.LongValue ();
-			} },
 			{ typeof (float), (handle, transfer) => {
 				using (var value = new Java.Lang.Float (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.FloatValue ();
 			} },
-			{ typeof (float?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
-				using (var value = new Java.Lang.Float (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.FloatValue ();
-			} },
 			{ typeof (double), (handle, transfer) => {
-				using (var value = new Java.Lang.Double (handle, transfer | JniHandleOwnership.DoNotRegister))
-					return value.DoubleValue ();
-			} },
-			{ typeof (double?), (handle, transfer) => {
-				if (handle == IntPtr.Zero)
-					return null;
 				using (var value = new Java.Lang.Double (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.DoubleValue ();
 			} },
@@ -131,6 +77,13 @@ namespace Java.Interop {
 
 			if (JniHandleConverters.TryGetValue (target, out var converter))
 				return converter;
+
+			// For Nullable<T>, look up the converter for the underlying element type and
+			// wrap it so that a null Java reference maps to a null value.
+			var underlyingType = Nullable.GetUnderlyingType (target);
+			if (underlyingType != null && JniHandleConverters.TryGetValue (underlyingType, out var underlyingConverter))
+				return (h, t) => h == IntPtr.Zero ? null : underlyingConverter (h, t);
+
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
@@ -659,6 +612,10 @@ namespace Java.Interop {
 		static Func<object, IntPtr> GetLocalJniHandleConverter (object value)
 		{
 			Type sourceType = value.GetType ();
+			Type? underlyingType = Nullable.GetUnderlyingType (sourceType);
+			if (underlyingType != null)
+				sourceType = underlyingType;
+
 			Func<object, IntPtr>? converter;
 			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter))
 				return converter;
@@ -679,32 +636,6 @@ namespace Java.Interop {
 			}
 			Func<object, IntPtr> converter = GetLocalJniHandleConverter (value);
 			return converter (value);
-		}
-
-		internal static bool TryConvertKnownValueToLocalJniHandle (object? value, out IntPtr handle)
-		{
-			if (value == null) {
-				handle = IntPtr.Zero;
-				return true;
-			}
-			if (value is IJavaObject v) {
-				handle = JNIEnv.ToLocalJniHandle (v);
-				return true;
-			}
-
-			Type sourceType = value.GetType ();
-			Func<object, IntPtr>? converter;
-			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter)) {
-				handle = converter (value);
-				return true;
-			}
-			if (sourceType.IsArray) {
-				handle = LocalJniHandleConverters [typeof (Array)] (value);
-				return true;
-			}
-
-			handle = IntPtr.Zero;
-			return false;
 		}
 
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
