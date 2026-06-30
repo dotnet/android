@@ -174,10 +174,18 @@ namespace Android.Runtime
 			}
 
 			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
-				return new ManagedTypeManager ();
+				return CreateManagedTypeManager ();
 			}
 
-			return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+			return CreateAndroidTypeManager (args);
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Managed type manager is preserved by the MarkJavaObjects trimmer step.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This type manager won't be used in Native AOT builds in the future.")]
+			static JniRuntime.JniTypeManager CreateManagedTypeManager () => new ManagedTypeManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This type manager won't be used in Native AOT builds.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This type manager won't be used in Native AOT builds.")]
+			static JniRuntime.JniTypeManager CreateAndroidTypeManager (JnienvInitializeArgs args) => new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
 		}
 
 		internal static JniRuntime.JniValueManager CreateValueManager ()
@@ -187,7 +195,7 @@ namespace Android.Runtime
 			}
 
 			if (RuntimeFeature.IsMonoRuntime) {
-				return new AndroidValueManager ();
+				return CreateAndroidValueManager ();
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
@@ -202,10 +210,11 @@ namespace Android.Runtime
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
 			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
-			JniRuntime.JniValueManager CreateJavaMarshalValueManager ()
-			{
-				return new JavaMarshalValueManager ();
-			}
+			JniRuntime.JniValueManager CreateJavaMarshalValueManager () => new JavaMarshalValueManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono value manager is preserved by the MarkJavaObjects trimmer step.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
+			JniRuntime.JniValueManager CreateAndroidValueManager () => new AndroidValueManager ();
 		}
 
 		static void InitializeCommonState (JnienvInitializeArgs args)
