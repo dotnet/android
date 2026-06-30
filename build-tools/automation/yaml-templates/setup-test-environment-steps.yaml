@@ -103,6 +103,8 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
     project: ${{ parameters.xaSourcePath }}/build-tools/create-packs/Microsoft.Android.Sdk.proj
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
+    continueOnError: false
+    retryCountOnTaskFailure: 2
 
 - ${{ if eq(parameters.installApkDiff, true) }}:
   - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
