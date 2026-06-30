@@ -13,7 +13,7 @@ static class PropertyMapper
 {
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 
-	internal enum MappingKind { String, Bool, Enum }
+	internal enum MappingKind { String, Bool, Enum, Number }
 
 	internal readonly struct PropertyMapping
 	{
@@ -52,8 +52,17 @@ static class PropertyMapper
 		new ("Theme", "theme"),
 		new ("ParentActivity", "parentActivityName"),
 		new ("TaskAffinity", "taskAffinity"),
+		new ("Banner", "banner"),
+		new ("ColorMode", "colorMode"),
+		new ("EnableVrMode", "enableVrMode"),
+		new ("LockTaskMode", "lockTaskMode"),
+		new ("Logo", "logo"),
+		new ("MaxAspectRatio", "maxAspectRatio", MappingKind.Number),
+		new ("MaxRecents", "maxRecents", MappingKind.Number),
+		new ("AllowEmbedded", "allowEmbedded", MappingKind.Bool),
 		new ("AllowTaskReparenting", "allowTaskReparenting", MappingKind.Bool),
 		new ("AlwaysRetainTaskState", "alwaysRetainTaskState", MappingKind.Bool),
+		new ("AutoRemoveFromRecents", "autoRemoveFromRecents", MappingKind.Bool),
 		new ("ClearTaskOnLaunch", "clearTaskOnLaunch", MappingKind.Bool),
 		new ("ExcludeFromRecents", "excludeFromRecents", MappingKind.Bool),
 		new ("FinishOnCloseSystemDialogs", "finishOnCloseSystemDialogs", MappingKind.Bool),
@@ -61,19 +70,27 @@ static class PropertyMapper
 		new ("HardwareAccelerated", "hardwareAccelerated", MappingKind.Bool),
 		new ("NoHistory", "noHistory", MappingKind.Bool),
 		new ("MultiProcess", "multiprocess", MappingKind.Bool),
+		new ("RelinquishTaskIdentity", "relinquishTaskIdentity", MappingKind.Bool),
+		new ("ResizeableActivity", "resizeableActivity", MappingKind.Bool),
+		new ("ResumeWhilePausing", "resumeWhilePausing", MappingKind.Bool),
+		new ("ShowForAllUsers", "showForAllUsers", MappingKind.Bool),
+		new ("ShowOnLockScreen", "showOnLockScreen", MappingKind.Bool),
+		new ("ShowWhenLocked", "showWhenLocked", MappingKind.Bool),
+		new ("SingleUser", "singleUser", MappingKind.Bool),
 		new ("StateNotNeeded", "stateNotNeeded", MappingKind.Bool),
 		new ("Immersive", "immersive", MappingKind.Bool),
-		new ("ResizeableActivity", "resizeableActivity", MappingKind.Bool),
 		new ("SupportsPictureInPicture", "supportsPictureInPicture", MappingKind.Bool),
-		new ("ShowForAllUsers", "showForAllUsers", MappingKind.Bool),
 		new ("TurnScreenOn", "turnScreenOn", MappingKind.Bool),
+		new ("VisibleToInstantApps", "visibleToInstantApps", MappingKind.Bool),
 		new ("LaunchMode", "launchMode", MappingKind.Enum, AndroidEnumConverter.LaunchModeToString),
 		new ("ScreenOrientation", "screenOrientation", MappingKind.Enum, AndroidEnumConverter.ScreenOrientationToString),
 		new ("ConfigurationChanges", "configChanges", MappingKind.Enum, AndroidEnumConverter.ConfigChangesToString),
+		new ("RecreateOnConfigChanges", "recreateOnConfigChanges", MappingKind.Enum, AndroidEnumConverter.ConfigChangesToString),
 		new ("WindowSoftInputMode", "windowSoftInputMode", MappingKind.Enum, AndroidEnumConverter.SoftInputToString),
 		new ("DocumentLaunchMode", "documentLaunchMode", MappingKind.Enum, AndroidEnumConverter.DocumentLaunchModeToString),
 		new ("UiOptions", "uiOptions", MappingKind.Enum, AndroidEnumConverter.UiOptionsToString),
 		new ("PersistableMode", "persistableMode", MappingKind.Enum, AndroidEnumConverter.ActivityPersistableModeToString),
+		new ("RotationAnimation", "rotationAnimation", MappingKind.Enum, AndroidEnumConverter.RotationAnimationToString),
 	];
 
 	internal static readonly PropertyMapping[] ServiceMappings = [
@@ -148,6 +165,9 @@ static class PropertyMapper
 			case MappingKind.Bool when value is bool b:
 				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, b ? "true" : "false");
 				break;
+			case MappingKind.Number:
+				element.SetAttributeValue (AndroidNs + m.XmlAttributeName, FormatNumber (value));
+				break;
 			case MappingKind.Enum when m.EnumConverter is not null:
 				int intValue = value switch { int i => i, long l => (int)l, short s => s, byte b => b, _ => 0 };
 				var strValue = m.EnumConverter (intValue, targetSdkVersion);
@@ -158,6 +178,14 @@ static class PropertyMapper
 			}
 		}
 	}
+
+	static string FormatNumber (object? value) => value switch {
+		float f => f.ToString (CultureInfo.InvariantCulture),
+		double d => d.ToString (CultureInfo.InvariantCulture),
+		int i => i.ToString (CultureInfo.InvariantCulture),
+		long l => l.ToString (CultureInfo.InvariantCulture),
+		_ => value?.ToString () ?? "",
+	};
 
 	internal static void MapComponentProperties (XElement element, ComponentInfo component, int targetSdkVersion = 0)
 	{

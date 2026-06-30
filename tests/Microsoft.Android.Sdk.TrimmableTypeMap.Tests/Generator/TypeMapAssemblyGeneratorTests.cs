@@ -45,6 +45,17 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	static MemberReferenceHandle FindCtorMemberRef (MetadataReader reader, string parentNamespace, string parentName, params string [] parameterTypes) =>
 		FindCtorMemberRefs (reader, parentNamespace, parentName, parameterTypes).First ();
 
+	static string GetTypeDefOrRefName (MetadataReader reader, int codedToken)
+	{
+		int tag = codedToken & 0x3;
+		int row = codedToken >> 2;
+		return tag switch {
+			0 => reader.GetString (reader.GetTypeDefinition (MetadataTokens.TypeDefinitionHandle (row)).Name),
+			1 => reader.GetString (reader.GetTypeReference (MetadataTokens.TypeReferenceHandle (row)).Name),
+			_ => throw new InvalidOperationException ($"Unexpected TypeDefOrRefOrSpec tag {tag}."),
+		};
+	}
+
 	static TypeRefData TypeRef (string managedTypeName) => new () {
 		ManagedTypeName = managedTypeName,
 		AssemblyName = GetAssemblyNameForManagedType (managedTypeName),
@@ -106,6 +117,55 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 	}
 
+	[Theory]
+	[InlineData ("my/app/GenericSelectableList")]
+	[InlineData ("my/app/GenericForwardingSelectableList")]
+	public void Generate_InheritedGenericBaseCallback_UsesConstructedBaseMemberRef (string javaName)
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == javaName);
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var member = reader.MemberReferences
+			.Select (h => reader.GetMemberReference (h))
+			.Single (m => reader.GetString (m.Name) == "n_SetSelection_I");
+
+		Assert.Equal (HandleKind.TypeSpecification, member.Parent.Kind);
+		var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) member.Parent);
+		var blob = reader.GetBlobReader (typeSpec.Signature);
+
+		Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+		Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+		Assert.Equal ("GenericSelectionHost`1", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+		Assert.Equal (1, blob.ReadCompressedInteger ());
+		Assert.Equal (0x0E, blob.ReadByte ()); // ELEMENT_TYPE_STRING
+	}
+
+	[Fact]
+	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/EnumSelectableList");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var member = reader.MemberReferences
+			.Select (h => reader.GetMemberReference (h))
+			.Single (m => reader.GetString (m.Name) == "n_SetSelection_I");
+
+		Assert.Equal (HandleKind.TypeSpecification, member.Parent.Kind);
+		var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) member.Parent);
+		var blob = reader.GetBlobReader (typeSpec.Signature);
+
+		Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+		Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+		Assert.Equal ("GenericValueTypeSelectionHost`1", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+		Assert.Equal (1, blob.ReadCompressedInteger ());
+		Assert.Equal (0x11, blob.ReadByte ()); // ELEMENT_TYPE_VALUETYPE
+		Assert.Equal ("SelectionMode", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+	}
+
 	[Fact]
 	public void Generate_ProxyType_HasCtorAndCreateInstance ()
 	{
@@ -142,13 +202,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.All (proxyTypes, proxyType => {
 			switch (proxyType.BaseType.Kind) {
 			case HandleKind.TypeSpecification:
-				// Non-generic target types derive from the closed `JavaPeerProxy<T>`.
+				// Concrete (constructible) target types derive from the closed `JavaPeerProxy<T>`.
 				var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
 				var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
 				Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
 				break;
 			case HandleKind.TypeReference:
-				// Open generic target types derive from the non-generic `JavaPeerProxy`.
+				// Open generic definitions and interfaces derive from the non-generic `JavaPeerProxy`.
 				var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
 				Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
 				Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
@@ -163,6 +223,29 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
 		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
 			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
+	}
+
+	[Fact]
+	public void Generate_InterfaceProxyType_UsesNonGenericJavaPeerProxyBase ()
+	{
+		// JavaPeerProxy<T> annotates T with [DynamicallyAccessedMembers(Constructors)]. Closing it
+		// over an interface (which has no constructors) makes ILC fail to load the closed generic
+		// type ("Failed to load type 'JavaPeerProxy`1<ISomeInterface>'"). Interface proxies must
+		// therefore derive from the non-generic JavaPeerProxy base (a plain TypeReference).
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var interfaceProxy = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.First (t => reader.GetString (t.Name) == "Android_Views_IOnClickListener_Proxy");
+
+		Assert.Equal (HandleKind.TypeReference, interfaceProxy.BaseType.Kind);
+		var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) interfaceProxy.BaseType);
+		Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
+		Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
 	}
 
 	// Regression test: every generated proxy type must carry a custom attribute whose
@@ -706,6 +789,76 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var mvid2 = pe2.GetMetadataReader ().GetGuid (pe2.GetMetadataReader ().GetModuleDefinition ().Mvid);
 
 		Assert.Equal (mvid1, mvid2);
+	}
+
+	[Fact]
+	public void TypeRefData_Equality_ComparesGenericArgumentsByValue ()
+	{
+		var left = new TypeRefData {
+			ManagedTypeName = "Test.GenericBase`1",
+			AssemblyName = "TestAsm",
+			GenericArguments = [
+				TypeRef ("System.String"),
+			],
+		};
+		var right = new TypeRefData {
+			ManagedTypeName = "Test.GenericBase`1",
+			AssemblyName = "TestAsm",
+			GenericArguments = [
+				TypeRef ("System.String"),
+			],
+		};
+		var different = right with {
+			GenericArguments = [
+				TypeRef ("System.Object"),
+			],
+		};
+
+		Assert.Equal (left, right);
+		Assert.Equal (left.GetHashCode (), right.GetHashCode ());
+		Assert.NotEqual (left, different);
+	}
+
+	[Fact]
+	public void Generate_DifferentConstructedCallbackTypes_ProducesDifferentMVIDs ()
+	{
+		var peer = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+		var stringPeer = peer with {
+			MarshalMethods = [
+				CreateInheritedGenericCallback (TypeRef ("System.String")),
+			],
+		};
+		var objectPeer = peer with {
+			MarshalMethods = [
+				CreateInheritedGenericCallback (TypeRef ("System.Object")),
+			],
+		};
+
+		using var stream1 = GenerateAssembly (new [] { stringPeer }, "SameName");
+		using var stream2 = GenerateAssembly (new [] { objectPeer }, "SameName");
+
+		using var pe1 = new PEReader (stream1);
+		using var pe2 = new PEReader (stream2);
+		var mvid1 = pe1.GetMetadataReader ().GetGuid (pe1.GetMetadataReader ().GetModuleDefinition ().Mvid);
+		var mvid2 = pe2.GetMetadataReader ().GetGuid (pe2.GetMetadataReader ().GetModuleDefinition ().Mvid);
+
+		Assert.NotEqual (mvid1, mvid2);
+
+		static MarshalMethodInfo CreateInheritedGenericCallback (TypeRefData genericArgument) => new () {
+			JniName = "setValue",
+			NativeCallbackName = "n_SetValue_Ljava_lang_Object",
+			JniSignature = "(Ljava/lang/Object;)V",
+			ManagedMethodName = "SetValue",
+			DeclaringTypeName = "Test.GenericBase`1",
+			DeclaringAssemblyName = "TestAsm",
+			DeclaringType = new TypeRefData {
+				ManagedTypeName = "Test.GenericBase`1",
+				AssemblyName = "TestAsm",
+				GenericArguments = [
+					genericArgument,
+				],
+			},
+		};
 	}
 
 	[Fact]
@@ -1543,6 +1696,44 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			using var stream = GenerateAssembly (new [] { peer }, "UnsupportedExport");
 		});
 		Assert.Contains (expectedMessage, ex.Message);
+	}
+
+	[Fact]
+	public void Generate_ExportProxy_StructuredGenericArgumentThrows ()
+	{
+		var peer = MakePeerWithActivation ("my/app/UnsupportedExport", "MyApp.UnsupportedExport", "App") with {
+			DoNotGenerateAcw = false,
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new () {
+					JniName = "badExport",
+					NativeCallbackName = "n_badExport",
+					JniSignature = "(Ljava/lang/Object;)V",
+					ManagedMethodName = "BadExport",
+					ManagedParameterTypes = new [] {
+						new TypeRefData {
+							ManagedTypeName = "System.Collections.Generic.List`1",
+							AssemblyName = "System.Collections",
+							GenericArguments = new [] {
+								new TypeRefData {
+									ManagedTypeName = "System.String",
+									AssemblyName = "System.Runtime",
+								},
+							},
+						},
+					},
+					ManagedReturnType = new TypeRefData {
+						ManagedTypeName = "System.Void",
+						AssemblyName = "System.Runtime",
+					},
+					IsExport = true,
+				},
+			},
+		};
+
+		var ex = Assert.Throws<NotSupportedException> (() => {
+			using var stream = GenerateAssembly (new [] { peer }, "UnsupportedStructuredGenericExport");
+		});
+		Assert.Contains ("generic", ex.Message);
 	}
 
 	[Fact]
