@@ -15,7 +15,6 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 	internal const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 
-	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "ManagedTypeManager is the non-NativeAOT JniTypeManager; NativeAOT uses a separate implementation. Will be removed in a future change.")]
 	public ManagedTypeManager ()
 	{
 	}
