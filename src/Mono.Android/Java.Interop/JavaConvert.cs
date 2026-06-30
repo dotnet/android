@@ -12,8 +12,7 @@ namespace Java.Interop {
 
 	static class JavaConvert {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-		// Mirrors JniObjectReference.DisposeSource; JniObjectReferenceOptions only exposes it through CopyAndDispose.
-		const JniObjectReferenceOptions DisposeSource = (JniObjectReferenceOptions)(1 << 1);
+		const JniObjectReferenceOptions DisposeSource = JniObjectReferenceOptions.CopyAndDispose & ~JniObjectReferenceOptions.Copy;
 
 		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>>() {
 			{ typeof (bool), (handle, transfer) => {

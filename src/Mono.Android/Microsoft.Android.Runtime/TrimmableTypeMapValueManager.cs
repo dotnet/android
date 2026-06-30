@@ -13,7 +13,7 @@ namespace Microsoft.Android.Runtime;
 sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-	const JniObjectReferenceOptions DoNotRegisterTarget = (JniObjectReferenceOptions)(1 << 2);
+	const JniObjectReferenceOptions DoNotRegisterTarget = JniObjectReferenceOptions.CopyAndDoNotRegister & ~JniObjectReferenceOptions.Copy;
 
 	public TrimmableTypeMapValueManager ()
 	{
