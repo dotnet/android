@@ -175,12 +175,10 @@ namespace Xamarin.Android.Prepare
 		/// <para>
 		///   Initialize OS support. Initializes basic OS properties (by calling <see cref="InitOS"/>), dependencies (by
 		///   calling <see cref="InitializeDependencies"/>) as well as makes sure that all the dependencies are
-		///   installed and initializes the environment.
+		///   present and initializes the environment.
 		/// </para>
 		/// <para>
-		///   Missing dependencies are installed only if <see cref="KnownConditions.AllowProgramInstallation"/>
-		///   condition is set and and <see cref="Context.AutoProvision"/> is <c>true</c>. If the two conditions aren't
-		///   met and missing programs are found, the initialization fails unless the <see
+		///   If missing programs are found, the initialization fails unless the <see
 		///   cref="KnownConditions.IgnoreMissingPrograms"/> is set to <c>true</c> in which case only a warning is
 		///   printed regarding the missing dependencies.
 		/// </para>
@@ -205,8 +203,6 @@ namespace Xamarin.Android.Prepare
 		{
 			if (Dependencies == null)
 				throw new InvalidOperationException ("Dependencies not set");
-
-			Log.Todo ("Implement 'package refresh' mode where we reinstall packages/programs forcibly");
 
 			int maxNameLength = GetMaxNameLength (Dependencies);
 			var missing = new List <Program> ();
@@ -236,53 +232,14 @@ namespace Xamarin.Android.Prepare
 				return true;
 
 			bool ignoreMissing = Context.Instance.CheckCondition (KnownConditions.IgnoreMissingPrograms);
-			if (!Context.Instance.AutoProvision) {
-				string message = "Some programs are missing or have invalid versions, but automatic provisioning is disabled";
-				if (ignoreMissing) {
-					Log.WarningLine ($"{message}. Ignoring missing programs.");
-					return true;
-				}
-
-				Log.ErrorLine (message);
-				return false;
+			string message = "Some programs are missing or have invalid versions";
+			if (ignoreMissing) {
+				Log.WarningLine ($"{message}. Ignoring missing programs.");
+				return true;
 			}
 
-			maxNameLength = GetMaxNameLength (missing);
-			Context.Banner ("Installing programs");
-			if (missing.Any (p => p.NeedsSudoToInstall))
-				Log.StatusLine ("You might be prompted for your sudo password");
-
-			bool someFailed = false;
-			foreach (Program p in missing) {
-				if (p.NeedsSudoToInstall && !Context.AutoProvisionUsesSudo) {
-					Log.ErrorLine ($"Program '{p.Name}' requires sudo to install but sudo is disabled");
-					someFailed = true;
-					continue;
-				}
-
-				if (!p.CanInstall ()) {
-					if (!ignoreMissing)
-						someFailed = true;
-					Log.Status ("Installation disabled for ");
-					Log.StatusLine (p.Name.PadRight (maxNameLength), ConsoleColor.Cyan);
-					continue;
-				}
-
-				Log.Status ("Installing ");
-				Log.StatusLine (p.Name.PadRight (maxNameLength), ConsoleColor.White);
-				bool success = await p.Install ();
-				Log.StatusLine ();
-				if (success)
-					continue;
-
-				someFailed = true;
-				Log.ErrorLine ($"Installation of {p.Name} failed");
-			}
-
-			if (someFailed)
-				throw new InvalidOperationException ("Failed to install some required programs.");
-
-			return true;
+			Log.ErrorLine (message);
+			return false;
 
 			int GetMaxNameLength (List<Program> list)
 			{
