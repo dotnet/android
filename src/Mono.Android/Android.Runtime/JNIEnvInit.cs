@@ -173,11 +173,7 @@ namespace Android.Runtime
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				throw new NotSupportedException ($"{nameof (RuntimeFeature.IsNativeAotRuntime)} requires {nameof (RuntimeFeature.TrimmableTypeMap)}.");
-			}
-
-			if (RuntimeFeature.ManagedTypeMap) {
+			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
 				return CreateManagedTypeManager ();
 			}
 
@@ -196,15 +192,15 @@ namespace Android.Runtime
 				return new TrimmableTypeMapValueManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
-			}
-
 			if (RuntimeFeature.IsMonoRuntime) {
 				return CreateAndroidValueManager ();
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
+				return CreateJavaMarshalValueManager ();
+			}
+
+			if (RuntimeFeature.IsNativeAotRuntime) {
 				return CreateJavaMarshalValueManager ();
 			}
 
@@ -214,7 +210,7 @@ namespace Android.Runtime
 			JniRuntime.JniValueManager CreateAndroidValueManager () => new AndroidValueManager ();
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager is not used in Native AOT builds; NativeAOT requires the trimmable type map.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "On NativeAOT this is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable value manager is used otherwise.")]
 			JniRuntime.JniValueManager CreateJavaMarshalValueManager ()
 			{
 				return new JavaMarshalValueManager ();

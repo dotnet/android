@@ -81,7 +81,11 @@ namespace Java.Interop {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
+			return CreateManagedTypeManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "On NativeAOT the managed type manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable type manager is used otherwise.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "On NativeAOT the managed type manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable type manager is used otherwise.")]
+			static JniRuntime.JniTypeManager CreateManagedTypeManager () => new ManagedTypeManager ();
 		}
 
 		static JniRuntime.JniValueManager CreateDefaultValueManager ()
@@ -90,7 +94,11 @@ namespace Java.Interop {
 				return new TrimmableTypeMapValueManager ();
 			}
 
-			throw new NotSupportedException ($"Native AOT builds require using {nameof (RuntimeFeature.TrimmableTypeMap)}.");
+			return CreateJavaMarshalValueManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "On NativeAOT the JavaMarshal value manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable value manager is used otherwise.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "On NativeAOT the JavaMarshal value manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable value manager is used otherwise.")]
+			static JniRuntime.JniValueManager CreateJavaMarshalValueManager () => new JavaMarshalValueManager ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()
