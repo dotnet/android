@@ -56,6 +56,14 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 		JavaMarshalRegisteredPeers.FinalizePeer (value);
 	}
 
+	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
+	{
+		if (RuntimeFeature.TrimmableTypeMap)
+			throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
+
+		base.ActivatePeer (reference, type, cinfo, argumentValues);
+	}
+
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
