@@ -392,22 +392,13 @@ namespace Android.Runtime {
 
 		static MethodInfo? dynamic_callback_gen;
 
-		// Roots Mono.Android.Export (and DynamicCallbackCodeGenerator.Create) for the managed/reflection
-		// [Export] and [ExportField] path. This loader is the single runtime entry point for both
-		// attributes (their generated members register with the "__export__" connector). The assembly-
-		// qualified Type.GetType + constant GetMethod ("Create") is statically analyzable by the trimmer,
-		// so it keeps Mono.Android.Export and DynamicCallbackCodeGenerator.Create only when this path is
-		// reachable; the trimmable type map generates JavaPeerProxy and .java code instead and trims this
-		// method, so it never pulls in the assembly.
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
-			if (dynamic_callback_gen == null) {
-				dynamic_callback_gen = Type.GetType ("Java.Interop.DynamicCallbackCodeGenerator, Mono.Android.Export")?.GetMethod ("Create")
-					?? throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-			}
-			if (dynamic_callback_gen.Invoke (null, new object [] { method }) is not Delegate callback)
-				throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. DynamicCallbackCodeGenerator.Create did not return a delegate.");
-			return callback;
+			dynamic_callback_gen ??= Type.GetType ("Java.Interop.DynamicCallbackCodeGenerator, Mono.Android.Export")?.GetMethod ("Create")
+				?? throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
+
+			return dynamic_callback_gen.Invoke (null, [method]) as Delegate
+				?? throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. DynamicCallbackCodeGenerator.Create did not return a delegate.");
 		}
 
 		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
