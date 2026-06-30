@@ -2,7 +2,6 @@
 on:
   schedule:
   - cron: daily around 02:00
-  stop-after: "+365d"
   workflow_dispatch:
     inputs:
       script:
