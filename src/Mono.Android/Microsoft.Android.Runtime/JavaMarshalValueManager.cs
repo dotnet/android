@@ -14,7 +14,7 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-	static readonly Type[] XAConstructorSignature = [typeof (IntPtr), typeof (JniHandleOwnership)];
+	static readonly Type[] XAConstructorSignature = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
 	public JavaMarshalValueManager ()
 	{
@@ -187,7 +187,6 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 			JniObjectReference.Dispose (ref reference, options);
 			return true;
 		}
-
 		return base.TryConstructPeer (self, ref reference, options, type);
 	}
 
