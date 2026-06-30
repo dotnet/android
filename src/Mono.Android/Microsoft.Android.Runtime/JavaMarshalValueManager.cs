@@ -81,6 +81,52 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 			return null;
 		}
 
+		if (RuntimeFeature.TrimmableTypeMap) {
+			try {
+				// Mirror legacy GetPeerType: callers commonly request universal
+				// interfaces / boxes (IJavaPeerable, object, Exception) — map these
+				// to a concrete peer type so the proxy lookup can succeed.
+				var resolvedTargetType = JavaMarshalValueManagerHelper.ResolvePeerType (targetType);
+
+				var typeMap = TrimmableTypeMap.Instance;
+				var peer = typeMap.CreateInstance (reference.Handle, resolvedTargetType);
+				if (peer is not null) {
+					return peer;
+				}
+
+				// Disambiguate the failure — match the contract of the base
+				// JniRuntime.JniValueManager.CreatePeer so JavaCast / JavaAs
+				// surface the right exception (or null) to callers:
+				//
+				//  (a) target type has no Java mapping at all → ArgumentException
+				//  (b) Java instance is not assignable to the target's Java class
+				//      → return null (JavaAs returns null; JavaCast wraps to
+				//      InvalidCastException via its `??` clause)
+				//  (c) classes are compatible but no proxy / activation failed
+				//      → NotSupportedException (genuine generator gap)
+				if (resolvedTargetType is not null) {
+					if (!typeMap.TryGetJniNameForManagedType (resolvedTargetType, out var targetJniName)) {
+						throw new ArgumentException (
+							$"Could not determine Java type corresponding to '{resolvedTargetType.AssemblyQualifiedName}'.",
+							nameof (targetType));
+					}
+					if (JavaMarshalValueManagerHelper.IsIncompatibleCast (targetJniName, ref reference, resolvedTargetType)) {
+						return null;
+					}
+				}
+
+				var targetName = resolvedTargetType?.AssemblyQualifiedName ?? "<null>";
+				var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+
+				throw new NotSupportedException (
+					$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
+					$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+					$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
+			} finally {
+				JniObjectReference.Dispose (ref reference, transfer);
+			}
+		}
+
 		targetType = JavaMarshalValueManagerHelper.ResolvePeerType (targetType) ?? typeof (global::Java.Interop.JavaObject);
 
 		if (!typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
