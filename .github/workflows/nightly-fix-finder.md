@@ -1,12 +1,8 @@
 ---
 on:
-  pull_request:
-    paths:
-    - .github/workflows/nightly-fix-finder.md
-    - .github/workflows/nightly-fix-finder.lock.yml
-    - .github/workflows/nightly-fix-finder/**
   schedule:
   - cron: daily around 02:00
+  stop-after: "+365d"
   workflow_dispatch:
     inputs:
       script:
