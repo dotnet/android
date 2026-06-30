@@ -1,3 +1,4 @@
+#nullable enable
 // 
 // AdbSyncNotification.cs
 //  
@@ -33,7 +34,7 @@ namespace Mono.AndroidTools.Adb
 	/// </summary>
 	public class AdbSyncNotification
 	{
-		public AdbSyncNotification (AdbSyncKind kind, string remotePath, string localPath, long size)
+		public AdbSyncNotification (AdbSyncKind kind, string remotePath, string? localPath, long size)
 		{
 			this.Kind = kind;
 			this.RemotePath = remotePath;
@@ -43,7 +44,7 @@ namespace Mono.AndroidTools.Adb
 		
 		public AdbSyncKind Kind { get; private set; }
 		public string RemotePath { get; private set; }
-		public string LocalPath { get; private set; }
+		public string? LocalPath { get; private set; }
 		public long Size { get; private set; }
 		
 		public string GetMessage ()
