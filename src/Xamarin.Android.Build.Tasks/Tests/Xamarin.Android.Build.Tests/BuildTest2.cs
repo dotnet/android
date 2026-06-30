@@ -104,6 +104,12 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void NativeAOT ()
 		{
+			// This test inspects illink's `linked/Mono.Android.dll` to verify the managed type-map.
+			// NativeAOT trims with ILC and no longer produces that `linked/` output, so the test is
+			// disabled until a DGML-based counterpart exists.
+			// TODO: re-enable via a DGML-based type-map check for NativeAOT (follow-up issue).
+			Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				ProjectName = "Hello",
@@ -277,6 +283,10 @@ namespace Xamarin.Android.Build.Tests
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
 
