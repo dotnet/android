@@ -361,12 +361,13 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
     <Compile Include="Microsoft.Android.Runtime\AggregateTypeMap.cs" />
+    <Compile Include="Microsoft.Android.Runtime\AndroidReflectionJniValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ITypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\JniRemappingLookup.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
-    <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManagerHelper.cs" />
+    <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
