@@ -392,21 +392,19 @@ namespace Android.Runtime {
 
 		static MethodInfo? dynamic_callback_gen;
 
-		// Roots Mono.Android.Export (and DynamicCallbackCodeGenerator) for the managed/reflection
+		// Roots Mono.Android.Export (and DynamicCallbackCodeGenerator.Create) for the managed/reflection
 		// [Export] and [ExportField] path. This loader is the single runtime entry point for both
-		// attributes (their generated members register with the "__export__" connector). It is only
-		// kept by the linker when that path is reachable; the trimmable type map generates JavaPeerProxy
-		// and .java code instead and trims this method, so it never pulls in the assembly.
-		[DynamicDependency ("Create", "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
+		// attributes (their generated members register with the "__export__" connector). The assembly-
+		// qualified Type.GetType + constant GetMethod ("Create") is statically analyzable by the trimmer,
+		// so it keeps Mono.Android.Export and DynamicCallbackCodeGenerator.Create only when this path is
+		// reachable; the trimmable type map generates JavaPeerProxy and .java code instead and trims this
+		// method, so it never pulls in the assembly.
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
-				var assembly = Assembly.Load ("Mono.Android.Export");
-				if (assembly == null)
-					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
+				var type = Type.GetType ("Java.Interop.DynamicCallbackCodeGenerator, Mono.Android.Export");
 				if (type == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
+					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
 				dynamic_callback_gen = type.GetMethod ("Create");
 				if (dynamic_callback_gen == null)
 					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
