@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
@@ -16,6 +15,7 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 	internal const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 	internal const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 
+	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "ManagedTypeManager is the non-NativeAOT JniTypeManager; NativeAOT uses a separate implementation. Will be removed in a future change.")]
 	public ManagedTypeManager ()
 	{
 	}
@@ -46,7 +46,8 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 	[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-	public override unsafe void RegisterNativeMembers (
+	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "JniNativeMethodRegistration[] registration path will be migrated to the blittable RegisterNatives overload in a future change.")]
+	public override void RegisterNativeMembers (
 			JniType nativeClass,
 			Type type,
 			ReadOnlySpan<char> methods)
@@ -62,76 +63,51 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 			return;
 		}
 
-		// Marshal directly into blittable JniNativeMethod values and dispatch to the blittable
-		// RegisterNatives overload, instead of the JniNativeMethodRegistration[] overload (which
-		// is annotated [RequiresDynamicCode] and works around a crossgen2 miscompilation by
-		// performing the same marshaling internally). See dotnet/java-interop#1474.
-		const int MaxStackAllocatedNativeMethods = 32;
-		bool useStackAllocatedBuffers = methodCount <= MaxStackAllocatedNativeMethods;
-		Span<JniNativeMethod> natives = useStackAllocatedBuffers
-			? stackalloc JniNativeMethod [methodCount]
-			: new JniNativeMethod [methodCount];
-		Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
-			? stackalloc IntPtr [methodCount * 2]
-			: new IntPtr [methodCount * 2];
-		unmanagedStrings.Clear ();
-		// Keep marshaler delegates alive at least until JNI has consumed the function pointers.
-		Delegate? [] callbacks = new Delegate? [methodCount];
+		JniNativeMethodRegistration [] natives = new JniNativeMethodRegistration [methodCount];
 		int nativesIndex = 0;
 
-		try {
-			ReadOnlySpan<char> methodsSpan = methods;
-			while (!methodsSpan.IsEmpty) {
-				int newLineIndex = methodsSpan.IndexOf ('\n');
+		ReadOnlySpan<char> methodsSpan = methods;
+		bool needToRegisterNatives = false;
 
-				ReadOnlySpan<char> methodLine = methodsSpan.Slice (0, newLineIndex != -1 ? newLineIndex : methodsSpan.Length);
-				if (!methodLine.IsEmpty) {
-					SplitMethodLine (methodLine,
-						out ReadOnlySpan<char> name,
-						out ReadOnlySpan<char> signature,
-						out ReadOnlySpan<char> callbackString,
-						out ReadOnlySpan<char> callbackDeclaringTypeString);
+		while (!methodsSpan.IsEmpty) {
+			int newLineIndex = methodsSpan.IndexOf ('\n');
 
-					Delegate? callback = null;
-					if (callbackString.SequenceEqual ("__export__")) {
-						throw new InvalidOperationException (FormattableString.Invariant ($"Methods such as {callbackString.ToString ()} are not implemented!"));
-					} else {
-						Type callbackDeclaringType = type;
-						if (!callbackDeclaringTypeString.IsEmpty) {
-							callbackDeclaringType = Type.GetType (callbackDeclaringTypeString.ToString (), throwOnError: true)!;
-						}
-						while (callbackDeclaringType.ContainsGenericParameters) {
-							callbackDeclaringType = callbackDeclaringType.BaseType!;
-						}
+			ReadOnlySpan<char> methodLine = methodsSpan.Slice (0, newLineIndex != -1 ? newLineIndex : methodsSpan.Length);
+			if (!methodLine.IsEmpty) {
+				SplitMethodLine (methodLine,
+					out ReadOnlySpan<char> name,
+					out ReadOnlySpan<char> signature,
+					out ReadOnlySpan<char> callbackString,
+					out ReadOnlySpan<char> callbackDeclaringTypeString);
 
-						GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
-							callbackDeclaringType, callbackString.ToString ());
-						callback = connector ();
+				Delegate? callback = null;
+				if (callbackString.SequenceEqual ("__export__")) {
+					throw new InvalidOperationException (FormattableString.Invariant ($"Methods such as {callbackString.ToString ()} are not implemented!"));
+				} else {
+					Type callbackDeclaringType = type;
+					if (!callbackDeclaringTypeString.IsEmpty) {
+						callbackDeclaringType = Type.GetType (callbackDeclaringTypeString.ToString (), throwOnError: true)!;
+					}
+					while (callbackDeclaringType.ContainsGenericParameters) {
+						callbackDeclaringType = callbackDeclaringType.BaseType!;
 					}
 
-					if (callback != null) {
-						IntPtr namePtr = Marshal.StringToCoTaskMemUTF8 (name.ToString ());
-						unmanagedStrings [nativesIndex * 2] = namePtr;
-						IntPtr sigPtr = Marshal.StringToCoTaskMemUTF8 (signature.ToString ());
-						unmanagedStrings [nativesIndex * 2 + 1] = sigPtr;
-						callbacks [nativesIndex] = callback;
-						natives [nativesIndex] = new JniNativeMethod ((byte*) namePtr, (byte*) sigPtr, Marshal.GetFunctionPointerForDelegate (callback));
-						nativesIndex++;
-					}
+					GetCallbackHandler connector = (GetCallbackHandler) Delegate.CreateDelegate (typeof (GetCallbackHandler),
+						callbackDeclaringType, callbackString.ToString ());
+					callback = connector ();
 				}
 
-				methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
+				if (callback != null) {
+					needToRegisterNatives = true;
+					natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
+				}
 			}
 
-			if (nativesIndex > 0) {
-				JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives.Slice (0, nativesIndex));
-				GC.KeepAlive (callbacks);
-			}
-		} finally {
-			for (int i = 0; i < unmanagedStrings.Length; ++i) {
-				if (unmanagedStrings [i] != IntPtr.Zero)
-					Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
-			}
+			methodsSpan = newLineIndex != -1 ? methodsSpan.Slice (newLineIndex + 1) : default;
+		}
+
+		if (needToRegisterNatives) {
+			JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 		}
 	}
 
