@@ -146,14 +146,25 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	}
 
 	constexpr std::string_view dll_ext { ".dll" };
+	constexpr std::string_view r2r_ext { ".r2r.dll" };
 	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
 	bool found_corelib = false;
+	bool found_r2r = false;
 	size_t count = 0;
 	dirent *e;
 	while ((e = readdir (dir)) != nullptr) {
 		std::string_view name { e->d_name };
 		if (name.size () <= dll_ext.size () || !name.ends_with (dll_ext)) {
 			continue;
+		}
+		if (name.ends_with (r2r_ext)) {
+			// Release+EmbedAssembliesIntoApk=false deploys ReadyToRun
+			// composites named `Foo.r2r.dll`. CoreCLR's binder probes for
+			// these by filename and we don't have a clean way to satisfy
+			// those probes via TPA, so we leave Release-style deployments
+			// on the legacy probe-only path.
+			found_r2r = true;
+			break;
 		}
 
 		if (!tpa_list.empty ()) {
@@ -169,14 +180,23 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	}
 	closedir (dir);
 
-	log_debug (LOG_ASSEMBLY, "FastDev: built TPA list with {} assemblies from '{}'"sv, count, override_dir_path);
+	log_debug (
+		LOG_ASSEMBLY,
+		"FastDev: built TPA list with {} assemblies from '{}' (corelib={}, r2r={})"sv,
+		count,
+		override_dir_path,
+		found_corelib,
+		found_r2r
+	);
 
 	// We can only safely hand a TPA list to CoreCLR when it contains
 	// `System.Private.CoreLib.dll`. Passing TPA without CoreLib changes the
 	// CLR binder mode such that CoreLib is searched via TPA/probe instead of
 	// the built-in bootstrap, which fails on incomplete FastDev deployments
-	// (e.g. tests that only sync a handful of user assemblies).
-	if (count > 0 && found_corelib) {
+	// (e.g. tests that only sync a handful of user assemblies). We also skip
+	// TPA when ReadyToRun variants are present (Release+nonembed), since
+	// CoreCLR's `.r2r.dll` probes aren't compatible with our TPA path.
+	if (count > 0 && found_corelib && !found_r2r) {
 		tpa_in_use = true;
 		return true;
 	}
