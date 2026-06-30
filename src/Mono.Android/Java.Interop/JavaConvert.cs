@@ -612,6 +612,10 @@ namespace Java.Interop {
 		static Func<object, IntPtr> GetLocalJniHandleConverter (object value)
 		{
 			Type sourceType = value.GetType ();
+			Type? underlyingType = Nullable.GetUnderlyingType (sourceType);
+			if (underlyingType != null)
+				sourceType = underlyingType;
+
 			Func<object, IntPtr>? converter;
 			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter))
 				return converter;
@@ -632,32 +636,6 @@ namespace Java.Interop {
 			}
 			Func<object, IntPtr> converter = GetLocalJniHandleConverter (value);
 			return converter (value);
-		}
-
-		internal static bool TryConvertKnownValueToLocalJniHandle (object? value, out IntPtr handle)
-		{
-			if (value == null) {
-				handle = IntPtr.Zero;
-				return true;
-			}
-			if (value is IJavaObject v) {
-				handle = JNIEnv.ToLocalJniHandle (v);
-				return true;
-			}
-
-			Type sourceType = value.GetType ();
-			Func<object, IntPtr>? converter;
-			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter)) {
-				handle = converter (value);
-				return true;
-			}
-			if (sourceType.IsArray) {
-				handle = LocalJniHandleConverters [typeof (Array)] (value);
-				return true;
-			}
-
-			handle = IntPtr.Zero;
-			return false;
 		}
 
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
