@@ -40,6 +40,11 @@ sealed class AssemblyIndex : IDisposable
 	public Dictionary<string, HashSet<string>> ReferencedTypeNamesByAssembly { get; } = new (StringComparer.OrdinalIgnoreCase);
 
 	/// <summary>
+	/// Type-forwarded or otherwise exported types declared by this assembly.
+	/// </summary>
+	public HashSet<string> ExportedTypeNames { get; } = new (StringComparer.Ordinal);
+
+	/// <summary>
 	/// True iff the assembly's metadata mentions
 	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
 	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
@@ -90,6 +95,11 @@ sealed class AssemblyIndex : IDisposable
 			}
 		}
 
+		foreach (var exportedTypeHandle in Reader.ExportedTypes) {
+			var exportedType = Reader.GetExportedType (exportedTypeHandle);
+			ExportedTypeNames.Add (GetExportedTypeFullName (exportedType));
+		}
+
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
 
@@ -114,6 +124,17 @@ sealed class AssemblyIndex : IDisposable
 			if (registerInfo is not null) {
 				RegisterInfoByType [typeHandle] = registerInfo;
 			}
+		}
+
+		string GetExportedTypeFullName (ExportedType exportedType)
+		{
+			var name = Reader.GetString (exportedType.Name);
+			if (exportedType.Implementation.Kind == HandleKind.ExportedType) {
+				var declaringType = Reader.GetExportedType ((ExportedTypeHandle) exportedType.Implementation);
+				return MetadataTypeNameResolver.JoinNestedTypeName (GetExportedTypeFullName (declaringType), name);
+			}
+			var ns = Reader.GetString (exportedType.Namespace);
+			return MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 		}
 	}
 
