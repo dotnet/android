@@ -150,15 +150,7 @@ namespace Java.Interop
 		}
 
 		public override JavaPeerContainerFactory? GetContainerFactory ()
-			=> new JavaPeerContainerFactory<T> ();
-	}
-
-	[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-	public abstract class JavaArrayProxy : Attribute
-	{
-		public abstract Type[] GetArrayTypes ();
-
-		public abstract Array CreateManagedArray (int length);
+			=> JavaPeerContainerFactory<T>.Instance;
 	}
 
 	/// <summary>
