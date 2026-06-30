@@ -88,7 +88,7 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 		static JniRuntime.JniValueManager CreateDefaultValueManager ()
 		{
-			return new CoreClrJavaMarshalValueManager ();
+			return new JavaMarshalValueManager ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()
