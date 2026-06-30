@@ -135,15 +135,30 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 
 		try {
-			// Mirror legacy GetPeerType: callers commonly request universal
-			// interfaces / boxes (IJavaPeerable, object, Exception) — map these
-			// to a concrete peer type so the proxy lookup can succeed.
-			var resolvedTargetType = JavaMarshalValueManagerHelper.ResolvePeerType (targetType);
-			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType);
-			if (peer is not null) {
-				return peer;
-			}
+			var resolvedTargetType = ResolvePeerType (targetType);
+			return TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
+				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
+		} finally {
+			JniObjectReference.Dispose (ref reference, transfer);
+		}
 
+		[return: DynamicallyAccessedMembers (Constructors)]
+		static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+		{
+			if (type is null) {
+				return null;
+			}
+			if (type == typeof (object) || type == typeof (IJavaPeerable)) {
+				return typeof (global::Java.Interop.JavaObject);
+			}
+			if (type == typeof (Exception)) {
+				return typeof (JavaException);
+			}
+			return type;
+		}
+
+		static IJavaPeerable? NotFoundFallback (ref JniObjectReference reference, Type? targetType, Type? resolvedTargetType)
+		{
 			// Disambiguate the failure — match the contract of the base
 			// JniRuntime.JniValueManager.CreatePeer so JavaCast / JavaAs
 			// surface the right exception (or null) to callers:
@@ -161,7 +176,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 						nameof (targetType));
 				}
 
-				if (JavaMarshalValueManagerHelper.IsIncompatibleCast (targetJniName, ref reference, resolvedTargetType)) {
+				if (IsIncompatibleCast (targetJniName, ref reference, resolvedTargetType)) {
 					return null;
 				}
 			}
@@ -173,9 +188,43 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 				$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
 				$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
 				$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
-		} finally {
-			JniObjectReference.Dispose (ref reference, transfer);
 		}
+
+		static bool IsIncompatibleCast (
+			string targetJniName,
+			ref JniObjectReference reference,
+			Type targetType)
+		{
+			var instanceClass = JniEnvironment.Types.GetObjectClass (reference);
+			JniObjectReference targetClass = default;
+			try {
+				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+
+				if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
+					// Match the legacy cast diagnostic when assembly logging is enabled.
+					if (Logger.LogAssembly) {
+						var targetSig = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (targetType);
+						var message = $"Handle 0x{reference.Handle:x} is of type '{JNIEnv.GetClassNameFromInstance (reference.Handle)}' which is not assignable to '{targetSig.SimpleReference}'";
+						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+					}
+
+					if (RuntimeFeature.IsAssignableFromCheck) {
+						return true;
+					}
+				}
+			} catch (Java.Lang.ClassNotFoundException e) {
+				throw new ArgumentException (
+					$"Could not find Java class '{targetJniName}'.",
+					nameof (targetType), e);
+			} finally {
+				JniObjectReference.Dispose (ref instanceClass);
+				JniObjectReference.Dispose (ref targetClass);
+			}
+
+			// Compatible classes mean a proxy/activation gap.
+			return false;
+		}
+
 	}
 
 	[return: MaybeNull]
