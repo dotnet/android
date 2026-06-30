@@ -180,7 +180,7 @@ namespace Android.Runtime
 			return CreateAndroidTypeManager (args);
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Managed type manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This type manager won't be used in Native AOT builds in the future.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This type manager won't be used in Native AOT builds in the future.")]
 			static JniRuntime.JniTypeManager CreateManagedTypeManager () => new ManagedTypeManager ();
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This type manager won't be used in Native AOT builds.")]
