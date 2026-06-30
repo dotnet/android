@@ -1987,7 +1987,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
     <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android.txt" />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
-    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' and ('$(_AndroidRuntime)' != 'NativeAOT' or '$(_AndroidTypeMapImplementation)' != 'trimmable') " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
     <!-- @(ProguardConfiguration) should be listed last -->
     <_ProguardConfiguration Include="@(ProguardConfiguration)" />
@@ -3002,6 +3002,8 @@ because xbuild doesn't support framework reference assemblies.
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(_AndroidTypeMapImplementation)' != '' and '$(_AndroidTypeMapImplementation)' != 'llvm-ir' and '$(_AndroidTypeMapImplementation)' != 'managed' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
            Text="Invalid value for _AndroidTypeMapImplementation: '$(_AndroidTypeMapImplementation)'. Valid values are: llvm-ir, managed, trimmable." />
+    <Error Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and '$(_AndroidTypeMapImplementation)' != 'trimmable' "
+           Text="NativeAOT requires _AndroidTypeMapImplementation=trimmable." />
   </Target>
 
   <Target Name="_LinkAssemblies"
