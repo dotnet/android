@@ -58,14 +58,15 @@ namespace Xamarin.ProjectTools
 			if (!Directory.Exists (directory))
 				return;
 
-			SetDirectoryWriteable (directory);
 			for (int i = 0; ; i++) {
 				try {
+					SetDirectoryWriteable (directory);
 					Directory.Delete (directory, true);
+					return;
+				} catch (DirectoryNotFoundException) {
 					return;
 				} catch (Exception e) when ((e is UnauthorizedAccessException || e is IOException) && i < retries) {
 					Thread.Sleep (200 * (i + 1)); // back off; let AV/Roslyn release the handle
-					SetDirectoryWriteable (directory);
 				}
 			}
 		}
