@@ -41,6 +41,37 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
+		/// Recursively deletes a directory, retrying on transient failures.
+		/// </summary>
+		/// <param name="directory">The directory path to delete.</param>
+		/// <param name="retries">The maximum number of retries before giving up.</param>
+		/// <remarks>
+		/// On Windows, a handle to a just-written file can still be held by another process
+		/// (e.g. the Roslyn shared-compilation server, an anti-virus scanner, or the search
+		/// indexer), causing <see cref="Directory.Delete(string, bool)"/> to throw
+		/// <see cref="UnauthorizedAccessException"/> or <see cref="IOException"/>. This method
+		/// backs off and retries to let the other process release the handle.
+		/// </remarks>
+		/// <seealso cref="SetDirectoryWriteable(string)"/>
+		public static void DeleteDirectoryWithRetry (string directory, int retries = 10)
+		{
+			if (!Directory.Exists (directory))
+				return;
+
+			for (int i = 0; ; i++) {
+				try {
+					SetDirectoryWriteable (directory);
+					Directory.Delete (directory, true);
+					return;
+				} catch (DirectoryNotFoundException) {
+					return;
+				} catch (Exception e) when ((e is UnauthorizedAccessException || e is IOException) && i < retries) {
+					Thread.Sleep (200 * (i + 1)); // back off; let AV/Roslyn release the handle
+				}
+			}
+		}
+
+		/// <summary>
 		/// Sets a single file to be writable by removing the read-only attribute if present.
 		/// </summary>
 		/// <param name="source">The file path to make writable.</param>
