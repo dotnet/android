@@ -397,7 +397,7 @@ namespace Android.Runtime {
 		// attributes (their generated members register with the "__export__" connector). It is only
 		// kept by the linker when that path is reachable; the trimmable type map generates JavaPeerProxy
 		// and .java code instead and trims this method, so it never pulls in the assembly.
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
+		[DynamicDependency ("Create", "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
