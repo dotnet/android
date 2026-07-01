@@ -409,6 +409,11 @@ namespace Xamarin.Android.Tasks
 		/// directory materialize before giving up. See
 		/// https://github.com/dotnet/android/issues/7821 and
 		/// https://github.com/dotnet/android/issues/11808.</para>
+		/// <para>Retry policy: up to 10 attempts with a 500 ms delay between each, giving
+		/// a maximum wait of 4.5 seconds before the error is surfaced as <c>XA0137</c>.
+		/// Only the transient <c>couldn't stat … No such file or directory</c> signature
+		/// (detected by <see cref="IsTransientRunAsStatRace"/>) triggers a retry; all other
+		/// <c>run-as</c> failures are surfaced immediately.</para>
 		/// </remarks>
 		async Task<string> QueryInternalPathWithRetry ()
 		{
@@ -428,7 +433,7 @@ namespace Xamarin.Android.Tasks
 		/// install-vs-run-as race signature (<c>couldn't stat … No such file or directory</c>),
 		/// i.e. the per-user data directory has not yet materialized after <c>pm install</c>.
 		/// </summary>
-		static bool IsTransientRunAsStatRace (string result)
+		internal static bool IsTransientRunAsStatRace (string result)
 		{
 			if (string.IsNullOrEmpty (result)) {
 				return false;

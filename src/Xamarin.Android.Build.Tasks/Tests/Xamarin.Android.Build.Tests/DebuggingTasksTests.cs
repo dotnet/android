@@ -74,4 +74,54 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 	}
+
+	/// <summary>
+	/// Unit tests for <see cref="FastDeploy"/> helper methods that do not require a device.
+	/// </summary>
+	[TestFixture]
+	public class FastDeployTests
+	{
+		// Canonical transient race output produced by the Android run-as tool when
+		// the per-user data directory has not yet materialized after pm install.
+		static readonly string [] TransientRaceOutputs = {
+			"run-as: couldn't stat /data/user/0/com.example.app: No such file or directory",
+			"run-as: couldn't stat /data/user/10/com.example.app: No such file or directory",
+			// Verify case-insensitivity of the detection.
+			"run-as: Couldn't Stat /data/user/0/com.example.app: No Such File Or Directory",
+			// Extra surrounding whitespace / newlines as they may appear in raw adb output.
+			"  run-as: couldn't stat /data/user/0/com.example.app: No such file or directory\n",
+		};
+
+		// Genuine run-as failures that must NOT be swallowed by the retry loop.
+		static readonly string [] NonTransientOutputs = {
+			// Null / empty — first guard in the implementation.
+			null,
+			"",
+			// Successful pwd output — the data directory already exists.
+			"/data/user/0/com.example.app",
+			// Package not debuggable.
+			"run-as: package 'com.example.app' is not debuggable",
+			// Package not installed.
+			"run-as: package 'com.example.app' is unknown",
+			// Permission denied (SELinux / policy).
+			"run-as: couldn't stat /data/user/0/com.example.app: Permission denied",
+			// Only one of the two required substrings — must not match.
+			"run-as: couldn't stat /data/user/0/com.example.app",
+			"No such file or directory",
+		};
+
+		[TestCaseSource (nameof (TransientRaceOutputs))]
+		public void IsTransientRunAsStatRace_ReturnsTrueForRaceSignature (string output)
+		{
+			Assert.IsTrue (FastDeploy.IsTransientRunAsStatRace (output),
+				$"Expected transient-race detection for: {output}");
+		}
+
+		[TestCaseSource (nameof (NonTransientOutputs))]
+		public void IsTransientRunAsStatRace_ReturnsFalseForNonTransientOutput (string output)
+		{
+			Assert.IsFalse (FastDeploy.IsTransientRunAsStatRace (output),
+				$"Expected no transient-race detection for: {output}");
+		}
+	}
 }
