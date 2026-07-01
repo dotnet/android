@@ -4,6 +4,8 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <vector>
 #include <unistd.h>
 
 #include <android/looper.h>
@@ -450,12 +452,41 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
 	// of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+
+	const char **prop_names = init_runtime_property_names;
+	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
+	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+
+	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
+	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
+	// opens those files from disk so `Assembly.Location` is populated and
+	// `StackTraceSymbols` can find sibling `.pdb` files for runtime-rendered
+	// managed stack traces (file/line).
+	if constexpr (Constants::is_debug_build) {
+		// Storage must outlive `coreclr_initialize`; function-local statics
+		// give us process lifetime without polluting global namespace.
+		static std::string fastdev_tpa_list;
+		static std::vector<const char*> fastdev_prop_names;
+		static std::vector<const char*> fastdev_prop_values;
+
+		if (FastDevAssemblies::build_tpa_list (fastdev_tpa_list)) {
+			fastdev_prop_names.assign (prop_names, prop_names + prop_count);
+			fastdev_prop_values.assign (prop_values, prop_values + prop_count);
+			fastdev_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
+			fastdev_prop_values.push_back (fastdev_tpa_list.c_str ());
+
+			prop_names = fastdev_prop_names.data ();
+			prop_values = fastdev_prop_values.data ();
+			prop_count = static_cast<int>(fastdev_prop_names.size ());
+		}
+	}
+
 	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
-		(int)application_config.number_of_runtime_properties,
-		init_runtime_property_names,
-		const_cast<const char**>(init_runtime_property_values),
+		prop_count,
+		prop_names,
+		prop_values,
 		&clr_host,
 		&domain_id
 	);

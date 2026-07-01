@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -2126,6 +2127,55 @@ MONO_GC_PARAMS=bridge-implementation=new",
 						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
 				);
 			}
+		}
+
+		[Test]
+		public void StackTraceContainsLineNumbers ()
+		{
+			// FastDev (Debug + assemblies on disk in .__override__) wires up
+			// portable PDB lookup for runtime-rendered stack traces on CoreCLR
+			// via the TPA list passed to coreclr_initialize.
+			AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				ProjectName = nameof (StackTraceContainsLineNumbers),
+				RootNamespace = nameof (StackTraceContainsLineNumbers),
+				IsRelease = false,
+				EmbedAssembliesIntoApk = false,
+				EnableDefaultItems = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+		Console.WriteLine ("#STACKTRACE-BEGIN#");
+		Console.WriteLine (Environment.StackTrace);
+		Console.WriteLine ("#STACKTRACE-END#");
+		""");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "App should have installed.");
+			RunProjectAndAssert (proj, builder);
+
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
+			Assert.IsTrue (
+				MonitorAdbLogcat (line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60),
+				"Stack trace end marker not found in logcat (output may be missing or truncated)."
+			);
+
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
+
+			// Expect a frame in MainActivity.OnCreate to include
+			// "in <path>MainActivity.cs:line <N>" on a single line.
+			var match = Regex.Match (
+				logcatOutput,
+				@"at\s+\S*MainActivity\.OnCreate.*\sin\s+\S+MainActivity\.cs:line\s+\d+"
+			);
+			Assert.IsTrue (
+				match.Success,
+				$"Expected MainActivity.OnCreate frame to include file/line info. Logcat:\n{logcatOutput}"
+			);
 		}
 
 		[Test]
