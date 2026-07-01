@@ -18,6 +18,7 @@
 
   <!-- FIXME: hack to workaround api-merge bug that brings two identical methods (it doesn't care generic type params) -->
   <remove-node path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate' and @merge.SourceFile]" />
+  <remove-node path="/api/package[@name='android.view']/class[@name='LayoutInflater']/method[@name='from' and parameter[1][@type='android.content.Context']]" />
 
   <!-- FIXME: this should NOT be exposed as public, but needs to exist. -->
   <attr api-since="5" api-until="8" path="/api/package[@name='java.util.concurrent.locks']/class[@name='AbstractOwnableSynchronizer']" name="visibility">public</attr>
