@@ -153,14 +153,23 @@ class AndroidTestAdapter(
 	/// <summary>
 	/// Publishes a single streamed instrumentation status block to MTP: a "start"
 	/// event becomes an in-progress node; a "finish" event becomes the final
-	/// pass/fail/skip node.
+	/// pass/fail/skip node. Blocks that aren't part of this streaming protocol
+	/// (no recognized "event", or a "finish" without an "outcome") are ignored so
+	/// they neither mis-report a test nor suppress the TRX fallback.
 	/// </summary>
 	async Task PublishStatusAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationStatus status, HashSet<string> reportedFinal)
 	{
+		// Only handle our explicit streaming protocol. Other instrumentation
+		// (e.g. AndroidJUnitRunner) emits status blocks with a "test" key but no
+		// "event"/"outcome"; treating those as results would report them as
+		// passed and, worse, mark reportedFinal non-empty so the TRX fallback
+		// never runs. Skip them and let ReportFromTrxAsync handle the run.
+		if (!status.Values.TryGetValue ("event", out var eventKind) || (eventKind != "start" && eventKind != "finish"))
+			return;
+
 		if (!status.Values.TryGetValue ("test", out var fullyQualifiedName) || string.IsNullOrEmpty (fullyQualifiedName))
 			return;
 
-		status.Values.TryGetValue ("event", out var eventKind);
 		status.Values.TryGetValue ("name", out var displayName);
 		status.Values.TryGetValue ("class", out var className);
 
@@ -174,7 +183,10 @@ class AndroidTestAdapter(
 			return;
 		}
 
-		status.Values.TryGetValue ("outcome", out var outcome);
+		// eventKind == "finish": a valid completion must carry an outcome.
+		if (!status.Values.TryGetValue ("outcome", out var outcome) || string.IsNullOrEmpty (outcome))
+			return;
+
 		var errorMessage = DecodeOrNull (status.Values, "message-b64");
 		var stackTrace = DecodeOrNull (status.Values, "stack-b64");
 
