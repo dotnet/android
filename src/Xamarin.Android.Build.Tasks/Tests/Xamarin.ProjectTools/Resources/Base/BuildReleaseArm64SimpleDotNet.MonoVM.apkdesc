@@ -44,7 +44,7 @@
       "Size": 36416
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1387064
+      "Size": 1274176
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3111632
@@ -62,7 +62,7 @@
       "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 19680
+      "Size": 19648
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -89,5 +89,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 3320142
+  "PackageSize": 3207222
 }

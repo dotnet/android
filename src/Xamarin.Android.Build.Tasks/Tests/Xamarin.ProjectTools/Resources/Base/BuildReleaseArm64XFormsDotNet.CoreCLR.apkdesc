@@ -32,31 +32,31 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 14137920
+      "Size": 14107192
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2804464
+      "Size": 3222704
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4872088
+      "Size": 5757272
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1325808
+      "Size": 1257880
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
-      "Size": 72112
+      "Size": 72344
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 1262888
+      "Size": 1280336
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 101888
+      "Size": 101872
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 168080
+      "Size": 162000
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 147616
+      "Size": 147584
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -2234,5 +2234,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 20778573
+  "PackageSize": 21112005
 }

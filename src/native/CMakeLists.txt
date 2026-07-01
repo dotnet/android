@@ -463,8 +463,8 @@ set(POTENTIAL_COMMON_COMPILER_ARGS
   -fstack-protector-strong
   -fstrict-return
   -fno-strict-aliasing
-  -fno-function-sections
-  -fno-data-sections
+  -ffunction-sections
+  -fdata-sections
   -fno-dwarf-exceptions
   -fno-asynchronous-unwind-tables
   -funswitch-loops
@@ -494,6 +494,12 @@ set(POTENTIAL_COMMON_LINKER_ARGS
   LINKER:--export-dynamic
   LINKER:--no-eh-frame-hdr
 )
+
+if(NOT DEBUG_BUILD AND NOT ENABLE_CLANG_ASAN AND NOT ENABLE_CLANG_UBSAN)
+  list(APPEND POTENTIAL_COMMON_LINKER_ARGS
+    LINKER:--gc-sections
+  )
+endif()
 
 # Add some options to increase security. They may mildly affect performance but they won't be big, because the features are
 # assisted by the hardware.
