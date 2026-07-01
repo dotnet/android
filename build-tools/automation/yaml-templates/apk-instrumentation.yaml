@@ -24,7 +24,11 @@ steps:
       -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/build-${{ parameters.testName }}.binlog
       -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
-    continueOnError: true
+    # Fail the lane immediately if the app cannot be installed (e.g. the emulator
+    # went offline: XAGCPU7000 "device offline"). There is no point running the
+    # tests against a device where the app was never installed - that only wastes
+    # CI time and produces a misleading INSTRUMENTATION_FAILED. See dotnet/android#11830.
+    continueOnError: false
 
   # Run dotnet test from the project directory so it finds the project-local
   # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
