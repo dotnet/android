@@ -29,7 +29,6 @@ namespace Xamarin.Android.RuntimeTests
 
 				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
 					categories.Add ("NativeTypeMap");
-					// categories.Add ("Export");
 					categories.Add ("TrimmableTypeMapUnsupported");
 				}
 
@@ -40,7 +39,10 @@ namespace Xamarin.Android.RuntimeTests
 					categories.Add ("NativeAOTIgnore");
 					categories.Add ("SSL");
 					categories.Add ("NTLM");
-					// categories.Add ("Export");
+
+					if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+						categories.Add ("Export");
+					}
 				}
 
 				if (HasAppContextSwitch ("EnableLLVM")) {
