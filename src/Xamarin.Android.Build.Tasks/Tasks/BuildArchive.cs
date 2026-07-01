@@ -158,15 +158,34 @@ public class BuildArchive : AndroidTask
 				// ItemSpec for these will be "<jarfile>#<entrypath>
 				// eg: "obj/myjar.jar#myfile.txt"
 				var jar_file_path = disk_path.Substring (0, disk_path.Length - (jar_entry_name.Length + 1));
+				var wasExistingOutputEntry = existingEntries.Remove (apk_path);
+				var hasApkEntry = apk.ContainsEntry (apk_path);
 
-				if (apk.ContainsEntry (apk_path)) {
+				if (hasApkEntry && !wasExistingOutputEntry) {
 					Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", jar_entry_name, Path.GetFileName (jar_file_path));
 					continue;
 				}
 
 				using (var stream = File.OpenRead (jar_file_path))
 				using (var jar = ZipArchive.Open (stream)) {
+					if (!jar.ContainsEntry (jar_entry_name)) {
+						Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jar_entry_name, jar_file_path);
+						if (wasExistingOutputEntry)
+							existingEntries.Add (apk_path);
+						continue;
+					}
+
 					var jar_item = jar.ReadEntry (jar_entry_name);
+
+					if (hasApkEntry) {
+						// CRC is computed on uncompressed data — matching CRC means identical content regardless of compression settings.
+						if (apk.GetEntry (apk_path).CRC == jar_item.CRC) {
+							Log.LogDebugMessage ("Skipping {0} from {1} as it is up to date.", jar_entry_name, jar_file_path);
+							continue;
+						}
+
+						apk.DeleteEntry (apk_path);
+					}
 
 					byte [] data;
 					var d = MemoryStreamPool.Shared.Rent ();
