@@ -23,6 +23,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetGdbSymbols" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateGdbEnvironment" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.FastDeploy2" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MoveSubfolder" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ResolveXamarinAndroidTools" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.RunActivity" AssemblyFile="Xamarin.Android.Build.Debugging.Tasks.dll" />
@@ -321,7 +322,26 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <_ReInstall Condition=" '$(_ReInstall)' == '' ">False</_ReInstall>
       <_AndroidIsTestOnlyPackage Condition=" '$(_AndroidIsTestOnlyPackage)' == '' ">False</_AndroidIsTestOnlyPackage>
       <_FastDeploymentDiagnosticLogging Condition=" '$(_FastDeploymentDiagnosticLogging)' == '' ">False</_FastDeploymentDiagnosticLogging>
+      <_AndroidFastDevStrategy Condition=" '$(_AndroidFastDevStrategy)' == '' ">FastDeploy2</_AndroidFastDevStrategy>
+      <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' And '$(_AndroidFastDevStrategy)' == 'FastDeploy2' ">Symlink</_AndroidFastDeployAppFileTransferMode>
+      <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
+      <AndroidFastDeploymentAdbCompressionAlgorithm Condition=" '$(AndroidFastDeploymentAdbCompressionAlgorithm)' == '' ">any</AndroidFastDeploymentAdbCompressionAlgorithm>
+      <!--
+        Internal/unsupported knobs for FastDeploy2 batching. The defaults below match the
+        defaults of the matching FastDeploy2 task properties; override them (for example, to
+        exercise batching with smaller batches when testing) by setting the property.
+      -->
+      <_AndroidFastDeployStaleFileRemovalBatchSize Condition=" '$(_AndroidFastDeployStaleFileRemovalBatchSize)' == '' ">100</_AndroidFastDeployStaleFileRemovalBatchSize>
+      <_AndroidFastDeployCopyBatchSize Condition=" '$(_AndroidFastDeployCopyBatchSize)' == '' ">25</_AndroidFastDeployCopyBatchSize>
+      <_AndroidFastDeployMaxShellCommandLength Condition=" '$(_AndroidFastDeployMaxShellCommandLength)' == '' ">900</_AndroidFastDeployMaxShellCommandLength>
+      <_AndroidFastDeployMaxAdbCommandLength Condition=" '$(_AndroidFastDeployMaxAdbCommandLength)' == '' ">4096</_AndroidFastDeployMaxAdbCommandLength>
     </PropertyGroup>
+    <Error
+      Condition=" '$(_AndroidFastDevStrategy)' != 'FastDeploy' And '$(_AndroidFastDevStrategy)' != 'FastDeploy2' "
+      Text="Invalid _AndroidFastDevStrategy value '$(_AndroidFastDevStrategy)'. Supported values are 'FastDeploy' and 'FastDeploy2'." />
+    <Error
+      Condition=" '$(_AndroidFastDeployAppFileTransferMode)' != 'Copy' And '$(_AndroidFastDeployAppFileTransferMode)' != 'Symlink' "
+      Text="Invalid _AndroidFastDeployAppFileTransferMode value '$(_AndroidFastDeployAppFileTransferMode)'. Supported values are 'Copy' and 'Symlink'." />
     <RemoveDuplicates
         Inputs="@(_FastDevFiles)">
       <Output TaskParameter="Filtered" ItemName="_FilteredFastDevFiles"/>
@@ -331,6 +351,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
         <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" />
     </ItemGroup>
     <FastDeploy
+      Condition=" '$(_AndroidFastDevStrategy)' == 'FastDeploy' "
       AdbTarget="$(AdbTarget)"
       DiagnosticLogging="$(_FastDeploymentDiagnosticLogging)"
       FastDevFiles="@(_FilteredFastDevFiles);@(_ResolvedConfigFiles)"
@@ -349,6 +370,31 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       IsTestOnly="$(_AndroidIsTestOnlyPackage)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       EnvironmentFiles="@(_EnvironmentFiles)"
+    />
+    <FastDeploy2
+      Condition=" '$(_AndroidFastDevStrategy)' == 'FastDeploy2' "
+      AdbTarget="$(AdbTarget)"
+      DiagnosticLogging="$(_FastDeploymentDiagnosticLogging)"
+      FastDevFiles="@(_FilteredFastDevFiles);@(_ResolvedConfigFiles)"
+      EmbedAssembliesIntoApk="$(EmbedAssembliesIntoApk)"
+      PrimaryCpuAbi="$(_PrimaryCpuAbi)"
+      PreserveUserData="$(AndroidPreserveUserData)"
+      PackageName="$(_AndroidPackage)"
+      PackageFile="$(_ApkToInstall)"
+      ReInstall="$(_ReInstall)"
+      AdbToolPath="$(AdbToolPath)"
+      AdbToolExe="$(AdbToolExe)"
+      AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
+      AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
+      UploadFlagFile="$(_UploadFlag)"
+      UserID="$(AndroidDeviceUserId)"
+      IsTestOnly="$(_AndroidIsTestOnlyPackage)"
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      EnvironmentFiles="@(_EnvironmentFiles)"
+      StaleFileRemovalBatchSize="$(_AndroidFastDeployStaleFileRemovalBatchSize)"
+      CopyBatchSize="$(_AndroidFastDeployCopyBatchSize)"
+      MaxShellCommandLength="$(_AndroidFastDeployMaxShellCommandLength)"
+      MaxAdbCommandLength="$(_AndroidFastDeployMaxAdbCommandLength)"
     />
     <Touch Files="$(_UploadFlag)" AlwaysCreate="True" />
     <MakeDir Directories="$(_ConfigurationCacheDirectory)" Condition="!Exists('$(_ConfigurationCacheDirectory)')" />
