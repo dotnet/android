@@ -1811,6 +1811,9 @@ namespace UnnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			if (IgnoreOnNativeAot (runtime, "the trimmable typemap generates additional Java Callable Wrappers that trip XA0102 lint warnings (e.g. CustomX509TrustManager, MissingApplicationIcon). Tracked by https://github.com/dotnet/android/issues/11774.")) {
+				return;
+			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
