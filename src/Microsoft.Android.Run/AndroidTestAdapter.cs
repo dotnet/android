@@ -53,33 +53,35 @@ class AndroidTestAdapter(
 
 	async Task RunAndReportAsync (ExecuteRequestContext context, SessionUid sessionUid)
 	{
-		// Track tests we've already reported (by their final outcome) as they
-		// stream in, so we don't double-report them from the pulled TRX.
-		var reportedFinal = new HashSet<string> (StringComparer.Ordinal);
+		// Shared state for the streamed run: which tests we've already reported a
+		// final outcome for (so we don't double-report them from the pulled TRX),
+		// and which test — if any — is currently executing (so a crash can resolve
+		// it to a terminal state instead of leaving it "in progress").
+		var state = new StreamingState ();
 
 		// 1. Run instrumentation on device, publishing each test to MTP live as
 		//    its INSTRUMENTATION_STATUS block arrives.
-		var bundleResults = await RunInstrumentationOnDeviceAsync (context, sessionUid, reportedFinal, context.CancellationToken);
+		var bundleResults = await RunInstrumentationOnDeviceAsync (context, sessionUid, state, context.CancellationToken);
 
 		if (verbose) {
-			Console.WriteLine ($"[AndroidTestAdapter] Instrumentation results: passed={bundleResults.Passed}, failed={bundleResults.Failed}, skipped={bundleResults.Skipped}, streamed={reportedFinal.Count}");
+			Console.WriteLine ($"[AndroidTestAdapter] Instrumentation results: passed={bundleResults.Passed}, failed={bundleResults.Failed}, skipped={bundleResults.Skipped}, streamed={state.ReportedFinal.Count}");
 			if (bundleResults.ResultsPath != null)
 				Console.WriteLine ($"[AndroidTestAdapter] TRX path on device: {bundleResults.ResultsPath}");
 		}
 
 		// 2. If we streamed at least one completed test, streaming is authoritative
 		//    (it's resilient to a mid-run crash). Otherwise fall back to the TRX.
-		if (reportedFinal.Count == 0) {
+		if (state.ReportedFinal.Count == 0) {
 			await ReportFromTrxAsync (context, sessionUid, bundleResults);
 			return;
 		}
 
 		// 3. We streamed live results. If the run did not finish cleanly (the app
-		//    process crashed before writing the final results bundle), surface a
-		//    synthetic failed test so the run is clearly marked failed rather than
-		//    silently dropping the in-flight/never-run tests.
+		//    process crashed before writing the final results bundle), surface the
+		//    crash so the run is clearly marked failed rather than silently dropping
+		//    the in-flight/never-run tests.
 		if (bundleResults.Crashed)
-			await PublishCrashNodeAsync (context, sessionUid, bundleResults);
+			await PublishCrashAsync (context, sessionUid, bundleResults, state);
 	}
 
 	/// <summary>
@@ -87,7 +89,7 @@ class AndroidTestAdapter(
 	/// the streamed 'am instrument -w -r' output, and returns the parsed final
 	/// results bundle (summary counts, resultsPath, error, crash state).
 	/// </summary>
-	async Task<InstrumentationBundleResult> RunInstrumentationOnDeviceAsync (ExecuteRequestContext context, SessionUid sessionUid, HashSet<string> reportedFinal, CancellationToken cancellationToken)
+	async Task<InstrumentationBundleResult> RunInstrumentationOnDeviceAsync (ExecuteRequestContext context, SessionUid sessionUid, StreamingState state, CancellationToken cancellationToken)
 	{
 		// '-r' prints raw INSTRUMENTATION_STATUS results (so we can stream them);
 		// '-w' waits for the run to complete.
@@ -110,22 +112,33 @@ class AndroidTestAdapter(
 
 		var consumer = Task.Run (async () => {
 			await foreach (var status in channel.Reader.ReadAllAsync ()) {
-				await PublishStatusAsync (context, sessionUid, status, reportedFinal);
+				try {
+					await PublishStatusAsync (context, sessionUid, status, state);
+				} catch (OperationCanceledException) {
+					throw;
+				} catch (Exception ex) {
+					// One malformed/unreportable status block must not abort
+					// reporting for the rest of the run.
+					Console.Error.WriteLine ($"[AndroidTestAdapter] Failed to report a streamed test result: {ex}");
+				}
 			}
 		});
 
 		var parser = new StatusStreamParser (channel.Writer, fullOutput, verbose);
 		using var stdout = new LineWriter (parser.OnLine);
 
-		int exitCode;
+		int exitCode = 0;
 		try {
 			exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken);
 		} finally {
+			// Flush the trailing partial line, discard any unterminated status
+			// block, then complete the channel and always observe the consumer —
+			// even if StartProcess threw or was cancelled.
 			stdout.Flush ();
 			parser.Complete ();
 			channel.Writer.Complete ();
+			await consumer;
 		}
-		await consumer;
 
 		var output = fullOutput.ToString ();
 		if (verbose) {
@@ -142,7 +155,7 @@ class AndroidTestAdapter(
 			exitCode != 0 ||
 			output.Contains ("INSTRUMENTATION_FAILED", StringComparison.Ordinal) ||
 			output.Contains ("Process crashed", StringComparison.Ordinal) ||
-			(reportedFinal.Count > 0 && result.ResultsPath == null);
+			(state.ReportedFinal.Count > 0 && result.ResultsPath == null);
 
 		if (result.Crashed && result.Error == null)
 			result.Error = ExtractCrashMessage (output) ?? (exitCode != 0 ? $"Instrumentation exited with code {exitCode}." : "The test process terminated before reporting a result (likely a native crash).");
@@ -157,12 +170,12 @@ class AndroidTestAdapter(
 	/// (no recognized "event", or a "finish" without an "outcome") are ignored so
 	/// they neither mis-report a test nor suppress the TRX fallback.
 	/// </summary>
-	async Task PublishStatusAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationStatus status, HashSet<string> reportedFinal)
+	async Task PublishStatusAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationStatus status, StreamingState state)
 	{
 		// Only handle our explicit streaming protocol. Other instrumentation
 		// (e.g. AndroidJUnitRunner) emits status blocks with a "test" key but no
 		// "event"/"outcome"; treating those as results would report them as
-		// passed and, worse, mark reportedFinal non-empty so the TRX fallback
+		// passed and, worse, mark ReportedFinal non-empty so the TRX fallback
 		// never runs. Skip them and let ReportFromTrxAsync handle the run.
 		if (!status.Values.TryGetValue ("event", out var eventKind) || (eventKind != "start" && eventKind != "finish"))
 			return;
@@ -174,6 +187,10 @@ class AndroidTestAdapter(
 		status.Values.TryGetValue ("class", out var className);
 
 		if (eventKind == "start") {
+			// Remember the running test so a crash can resolve it to a terminal
+			// state instead of leaving a dangling "in progress" node.
+			state.InFlightUid = fullyQualifiedName;
+			state.InFlightName = displayName;
 			var startNode = new TestNode {
 				Uid = new TestNodeUid (fullyQualifiedName),
 				DisplayName = displayName ?? fullyQualifiedName,
@@ -187,6 +204,12 @@ class AndroidTestAdapter(
 		if (!status.Values.TryGetValue ("outcome", out var outcome) || string.IsNullOrEmpty (outcome))
 			return;
 
+		// The test completed, so it's no longer in flight.
+		if (state.InFlightUid == fullyQualifiedName) {
+			state.InFlightUid = null;
+			state.InFlightName = null;
+		}
+
 		var errorMessage = DecodeOrNull (status.Values, "message-b64");
 		var stackTrace = DecodeOrNull (status.Values, "stack-b64");
 
@@ -194,11 +217,13 @@ class AndroidTestAdapter(
 		if (!string.IsNullOrEmpty (stackTrace))
 			failureMessage += "\n" + stackTrace;
 
+		// An unrecognized outcome is reported as an error rather than silently
+		// counted as a pass.
 		var stateProperty = outcome switch {
 			"passed" => (IProperty) new PassedTestNodeStateProperty (),
 			"failed" => new FailedTestNodeStateProperty (failureMessage),
 			"skipped" => new SkippedTestNodeStateProperty (errorMessage),
-			_ => new PassedTestNodeStateProperty (),
+			_ => new ErrorTestNodeStateProperty ($"Unrecognized test outcome '{outcome}'."),
 		};
 
 		var properties = new List<IProperty> { stateProperty };
@@ -214,27 +239,43 @@ class AndroidTestAdapter(
 		};
 
 		await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, testNode));
-		reportedFinal.Add (fullyQualifiedName);
+		state.ReportedFinal.Add (fullyQualifiedName);
 	}
 
 	/// <summary>
-	/// Publishes a synthetic failed test node representing a mid-run process crash,
-	/// so the overall run is reported as failed and the crash is visible in results.
+	/// Reports a mid-run process crash. If a test was executing when the process
+	/// died, that test is resolved from "in progress" to an <see cref="ErrorTestNodeStateProperty"/>
+	/// (an infrastructure error, not an assertion failure) so it isn't left
+	/// dangling and the crash is attributed to it. Otherwise a synthetic error
+	/// node is published so the overall run is still clearly marked failed.
 	/// </summary>
-	async Task PublishCrashNodeAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationBundleResult bundleResults)
+	async Task PublishCrashAsync (ExecuteRequestContext context, SessionUid sessionUid, InstrumentationBundleResult bundleResults, StreamingState state)
 	{
 		var message = bundleResults.Error ?? "The test process terminated before all tests completed (likely a native crash).";
 		Console.Error.WriteLine ($"[AndroidTestAdapter] {message}");
 
-		var crashUid = $"{instrumentation}.ProcessCrashed";
-		var crashNode = new TestNode {
-			Uid = new TestNodeUid (crashUid),
-			DisplayName = "Test process crashed before completion",
-			Properties = new PropertyBag (
-				new FailedTestNodeStateProperty (message),
-				new TrxFullyQualifiedTypeNameProperty (instrumentation),
-				new TrxExceptionProperty (message, null)),
-		};
+		TestNode crashNode;
+		if (state.InFlightUid != null) {
+			crashNode = new TestNode {
+				Uid = new TestNodeUid (state.InFlightUid),
+				DisplayName = state.InFlightName ?? state.InFlightUid,
+				Properties = new PropertyBag (
+					new ErrorTestNodeStateProperty ($"The test process crashed while running this test.\n{message}"),
+					new TrxExceptionProperty (message, null)),
+			};
+			state.ReportedFinal.Add (state.InFlightUid);
+			state.InFlightUid = null;
+			state.InFlightName = null;
+		} else {
+			crashNode = new TestNode {
+				Uid = new TestNodeUid ($"{instrumentation}.ProcessCrashed"),
+				DisplayName = "Test process crashed before completion",
+				Properties = new PropertyBag (
+					new ErrorTestNodeStateProperty (message),
+					new TrxFullyQualifiedTypeNameProperty (instrumentation),
+					new TrxExceptionProperty (message, null)),
+			};
+		}
 
 		await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, crashNode));
 	}
@@ -475,6 +516,17 @@ class InstrumentationBundleResult
 	public string? Error { get; set; }
 	public int? InstrumentationCode { get; set; }
 	public bool Crashed { get; set; }
+}
+
+/// <summary>
+/// Mutable state shared across a streamed run: the tests already reported with a
+/// final outcome, and the test currently executing (if any).
+/// </summary>
+sealed class StreamingState
+{
+	public HashSet<string> ReportedFinal { get; } = new (StringComparer.Ordinal);
+	public string? InFlightUid { get; set; }
+	public string? InFlightName { get; set; }
 }
 
 /// <summary>
