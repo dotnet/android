@@ -175,6 +175,14 @@ namespace Xamarin.Android.Build.Tests
 		// See dotnet/android#11830.
 		static void CaptureDeviceState (string outputDir)
 		{
+			// Re-check attachment (the cached value can be stale if the device
+			// disconnected mid-test); otherwise each adb command below would wait
+			// the full timeout against an unresponsive device.
+			if (!IsDeviceAttached (refreshCachedValue: true)) {
+				TestContext.WriteLine ("No device attached; skipping device-state capture.");
+				return;
+			}
+
 			var sb = new StringBuilder ();
 			foreach (var (title, command) in new [] {
 					("adb devices -l", "devices -l"),
