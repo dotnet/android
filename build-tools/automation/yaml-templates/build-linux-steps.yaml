@@ -99,3 +99,21 @@ steps:
 - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
+
+# Public dnceng-public agents are sometimes provisioned with very small (~29 GB) OS
+# disks. The build fills the disk to ~94% and the post-job 'cache Android toolchain
+# archives' step then fails writing its tar archive with "No space left". Every build
+# artifact has already been uploaded by this point, so reclaim disk by deleting the
+# build intermediates before the implicit post-job Cache@2 save runs.
+# Public-only: the 1ES pipeline uploads 'bin/Build*/nuget-linux*' at post-job via
+# template 'outputs', so its 'bin' must NOT be deleted here.
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - bash: |
+      echo "Disk usage before freeing build intermediates:"
+      df -h /
+      rm -rf "${{ parameters.xaSourcePath }}/bin"
+      find "${{ parameters.xaSourcePath }}" -type d -name obj -prune -exec rm -rf {} +
+      echo "Disk usage after freeing build intermediates:"
+      df -h /
+    displayName: Free disk space before post-job cache save
+    condition: always()
