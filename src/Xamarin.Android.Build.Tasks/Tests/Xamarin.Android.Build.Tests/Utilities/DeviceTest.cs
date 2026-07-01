@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -159,9 +160,45 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					TestContext.WriteLine ($"{localUi} did not exist!");
 				}
+
+				CaptureDeviceState (outputDir);
 			}
 
 			base.CleanupTest ();
+		}
+
+		// Best-effort device-state snapshot captured on test failure so that on-device
+		// install/deploy failures can be classified from CI artifacts instead of guessed:
+		// connectivity (adb devices/get-state), disk pressure (df, dumpsys diskstats),
+		// storage-service readiness (dumpsys storaged - the StorageStatsManager NPE seen
+		// during install-create), boot completion, and how many test apps have piled up.
+		// See dotnet/android#11830.
+		static void CaptureDeviceState (string outputDir)
+		{
+			var sb = new StringBuilder ();
+			foreach (var (title, command) in new [] {
+					("adb devices -l", "devices -l"),
+					("adb get-state", "get-state"),
+					("getprop sys.boot_completed", "shell getprop sys.boot_completed"),
+					("getprop dev.bootcomplete", "shell getprop dev.bootcomplete"),
+					("df /data", "shell df /data"),
+					("df /storage/emulated/0", "shell df /storage/emulated/0"),
+					("dumpsys diskstats", "shell dumpsys diskstats"),
+					("dumpsys storaged", "shell dumpsys storaged"),
+					("pm list packages -3", "shell pm list packages -3"),
+				}) {
+				sb.AppendLine ($"===== {title} =====");
+				sb.AppendLine (RunAdbCommand (command));
+				sb.AppendLine ();
+			}
+
+			string localState = Path.Combine (outputDir, "device-state-failed.log");
+			File.WriteAllText (localState, sb.ToString ());
+			if (File.Exists (localState)) {
+				TestContext.AddTestAttachment (localState);
+			} else {
+				TestContext.WriteLine ($"{localState} did not exist!");
+			}
 		}
 
 		protected int GetSdkVersion ()
