@@ -35,7 +35,6 @@
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\java-interop\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="common\libstub\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\libunwind\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\lz4\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="common\runtime-base\CMakeLists.txt" />
@@ -51,10 +50,9 @@
       <_ConfigureRuntimesInputs  Include="mono\monodroid\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\runtime-base\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\shared\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="mono\shared\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\tracing\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="mono\xamarin-app-debug-helper\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="mono\xamarin-app-stub\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="mono\xamarin-debug-app-helper\CMakeLists.txt" />
 
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Debug\CMakeCache.txt')"    Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Release\CMakeCache.txt')"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
@@ -218,7 +216,6 @@
       <_RuntimeSources Include="$(JavaInteropFullPath)\src\java-interop\*.cc;$(JavaInteropFullPath)\src\java-interop\*.h" />
       <_RuntimeSources Include="common\archive-dso-stub\*.cc" />
       <_RuntimeSources Include="common\include\**\*.hh" />
-      <_RuntimeSources Include="common\libstub\*.cc;common\libstub\*.hh" />
       <_RuntimeSources Include="common\runtime-base\*.cc" />
       <_RuntimeSources Include="$(LZ4SourceFullPath)\lib\lz4.c;$(LZ4SourceFullPath)\lib\lz4.h" />
     </ItemGroup>

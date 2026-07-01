@@ -111,6 +111,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0146](xa0146.md): Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.
 + [XA0147](xa0147.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.
 + [XA0148](xa0148.md): Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring symbol '{1}@{2}' check for the file.
++ [XA0149](xa0149.md): Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android.
 
 ## XA1xxx: Project related
 
@@ -222,6 +223,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4253](xa4253.md): Generated Java callable wrapper code changed: '{path}'
 + [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
++ [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -244,6 +246,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4319](xa4319.md): No NativeAOT DGML files were provided.
 + [XA4320](xa4320.md): ACW map file '{file}' was not found.
 + [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
++ [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 
 ## XA5xxx: GCC and toolchain
 

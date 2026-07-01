@@ -236,7 +236,6 @@ namespace Xamarin.Installer.AndroidSDK
         /// If it fails, tries to load local cached manifest;
         /// If local manifest is loaded, sets <c>IsOffline</c> to <c>true</c> and returns it.
         /// </summary>
-        /// <param name="useManifestCaching"></param>
         /// <returns></returns>
         protected string LoadManifest()
         {

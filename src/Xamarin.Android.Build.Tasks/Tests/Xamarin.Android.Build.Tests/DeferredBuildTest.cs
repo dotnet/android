@@ -10,7 +10,7 @@ namespace Xamarin.Android.Build.Tests
 	public class DeferredBuildTest : BaseTest
 	{
 		[Test]
-		public void SelectivelyRunUpdateAndroidResources ([Values] AndroidRuntime runtime)
+		public void SelectivelyRunUpdateAndroidResources ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RunUpdateAndroidResourcesIfBackgroundBuildNotSupported ([Values] AndroidRuntime runtime)
+		public void RunUpdateAndroidResourcesIfBackgroundBuildNotSupported ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

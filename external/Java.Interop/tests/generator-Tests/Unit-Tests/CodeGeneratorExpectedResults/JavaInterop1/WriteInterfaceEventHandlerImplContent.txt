@@ -1,0 +1,9 @@
+#pragma warning disable 0649
+	public MyIGetCountForKeyHandler? GetCountForKeyHandler;
+#pragma warning restore 0649
+
+	public int GetCountForKey (string? key)
+	{
+		var __h = GetCountForKeyHandler;
+		return __h != null ? __h (key) : default (int);
+	}

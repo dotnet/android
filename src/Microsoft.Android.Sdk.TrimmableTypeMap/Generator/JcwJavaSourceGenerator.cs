@@ -45,14 +45,14 @@ public sealed class JcwJavaSourceGenerator
 	/// Generates .java source content for all ACW types and returns them as in-memory
 	/// (relativePath, content) pairs. No filesystem IO is performed.
 	/// </summary>
-	public IReadOnlyList<GeneratedJavaSource> GenerateContent (IReadOnlyList<JavaPeerInfo> types)
+	public IReadOnlyList<GeneratedJavaSource> GenerateContent (IReadOnlyList<JavaPeerInfo> types, string? applicationJavaClass = null)
 	{
 		if (types is null) throw new ArgumentNullException (nameof (types));
 		var results = new List<GeneratedJavaSource> ();
 		foreach (var type in types) {
 			if (type.DoNotGenerateAcw || type.IsInterface) continue;
 			using var writer = new StringWriter ();
-			Generate (type, writer);
+			Generate (type, writer, applicationJavaClass);
 			results.Add (new GeneratedJavaSource (GetRelativePath (type), writer.ToString ()));
 		}
 		return results;
@@ -61,11 +61,11 @@ public sealed class JcwJavaSourceGenerator
 	/// <summary>
 	/// Generates a single .java source file for the given type.
 	/// </summary>
-	public void Generate (JavaPeerInfo type, TextWriter writer)
+	public void Generate (JavaPeerInfo type, TextWriter writer, string? applicationJavaClass = null)
 	{
 		writer.NewLine = "\n";
 		WritePackageDeclaration (type, writer);
-		WriteClassDeclaration (type, writer);
+		WriteClassDeclaration (type, writer, applicationJavaClass);
 		WriteStaticInitializer (type, writer);
 		WriteConstructors (type, writer);
 		WriteFields (type, writer);
@@ -97,7 +97,7 @@ public sealed class JcwJavaSourceGenerator
 		}
 	}
 
-	static void WriteClassDeclaration (JavaPeerInfo type, TextWriter writer)
+	static void WriteClassDeclaration (JavaPeerInfo type, TextWriter writer, string? applicationJavaClass)
 	{
 		string abstractModifier = type.IsAbstract && !type.IsInterface ? "abstract " : "";
 		string className = JniSignatureHelper.GetJavaSimpleName (type.JavaName);
@@ -106,7 +106,14 @@ public sealed class JcwJavaSourceGenerator
 
 		// extends clause
 		if (type.BaseJavaName != null) {
-			writer.WriteLine ($"\textends {JniSignatureHelper.JniNameToJavaName (type.BaseJavaName)}");
+			string baseName = JniSignatureHelper.JniNameToJavaName (type.BaseJavaName);
+			// A user Application subclass normally extends android.app.Application, but when
+			// $(AndroidApplicationJavaClass) is set (e.g. android.support.multidex.MultiDexApplication
+			// when $(AndroidEnableMultiDex) is true) it must extend that class instead.
+			if (!applicationJavaClass.IsNullOrEmpty () && baseName == "android.app.Application") {
+				baseName = applicationJavaClass;
+			}
+			writer.WriteLine ($"\textends {baseName}");
 		}
 
 		// implements clause — always includes IGCUserPeer, plus any implemented interfaces

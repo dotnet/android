@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ListAndMap ([Values] AndroidRuntime runtime)
+		public void ListAndMap ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -46,7 +46,7 @@ interface Test {
 		}
 
 		[Test]
-		public void NamespaceResolution ([Values] AndroidRuntime runtime)
+		public void NamespaceResolution ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -64,7 +64,7 @@ interface Test {
 		}
 
 		[Test]
-		public void PrimitiveTypes ([Values] AndroidRuntime runtime)
+		public void PrimitiveTypes ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;

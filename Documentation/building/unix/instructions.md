@@ -107,8 +107,8 @@ The `dotnet/android` repo contains several unit tests:
 
   * NUnit-based unit tests, for stand-alone assemblies and utilities.
 
-  * `.apk`-based unit tests, which are NUnitLite-based tests that need to
-    execute on an Android device.
+  * `.apk`/instrumentation-based unit tests, which need to execute on an
+    Android device.
 
 All unit tests can be executed via the `make run-all-tests` target:
 
@@ -337,5 +337,4 @@ For example, to rebuild Mono for armeabi-v7a:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
 	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
-
 

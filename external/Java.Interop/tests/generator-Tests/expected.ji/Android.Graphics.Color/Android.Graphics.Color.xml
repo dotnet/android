@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+	    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+	    </class>
+	  </package>
+	<package name="xamarin.test">
+	  <class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
+	  		final="false" name="SomeObject" static="false" visibility="public">
+	  		<field abstract="true" deprecated="not deprecated" final="false" name="backColor" static="false" transient="false" type="Android.Graphics.Color" type-generic-aware="int" visibility="public" volatile="false">
+	        </field>
+			<method abstract="true" deprecated="not deprecated" final="false" name="getSomeColor" native="false" return="Android.Graphics.Color" static="false" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="true" deprecated="not deprecated" final="false" name="setSomeColor" native="false" return="void" static="false" synchronized="false" visibility="public">
+	  		   <parameter name="newvalue" type="Android.Graphics.Color">
+        	   </parameter>
+      		</method>
+	    </class>
+	</package>
+</api>
+

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(BuildToolOutputFullPathNoTF)</OutputPath>
+    <GitDefaultBranch>main</GitDefaultBranch>
+    <GitThisAssembly>false</GitThisAssembly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitInfo" />
+    <PackageReference Include="Microsoft.Build.Framework" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="NUnit.ConsoleRunner" GeneratePathProperty="True" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(XamarinAndroidToolsFullPath)\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
+      <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
+      <Name>Xamarin.Android.Tools.AndroidSdk</Name>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Import Project="Java.Interop.BootstrapTasks.targets" />
+
+</Project>

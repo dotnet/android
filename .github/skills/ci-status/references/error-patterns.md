@@ -36,7 +36,7 @@ These are CI environment issues, not code problems.
 | Network | `Unable to load the service index`, `Connection refused` |
 | NuGet feed | `NU1301` (feed connectivity) |
 | Agent issues | `The agent did not connect`, `##[error] The job was canceled` |
-| Timeout (job-level) | Job canceled after 55+ minutes |
+| Timeout (job-level) | `result: canceled` + `issues[]` says *"ran longer than the maximum time of N minutes"* |
 
 ## Decision Tree
 

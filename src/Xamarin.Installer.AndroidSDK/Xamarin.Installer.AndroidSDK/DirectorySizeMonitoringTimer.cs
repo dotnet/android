@@ -133,7 +133,7 @@ namespace Xamarin.Installer.AndroidSDK
 		/// Move operation will take different time depending on number of files in an archive
 		/// so we split the 100% installation progress according these values (unzip + move = 100%)
 		/// </summary>
-		/// <param name="zipFile"></param>
+		/// <param name="archivePath">The path to the archive file.</param>
 		/// <returns>Amount of percents for the Move part of the installation</returns>
 		public static int CalculateMoveProgressSplit (string archivePath)
 		{

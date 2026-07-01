@@ -305,10 +305,6 @@ namespace Xamarin.Android.NetTests
 				await makeRequest();
 				Assert.Fail ("The request wasn't rejected");
 			}
-			// While technically we should be throwing only HttpRequestException (as per HttpClient.SendAsync docs), in reality
-			// we need to consider legacy code that migrated to .NET and may still expect WebException.  Thus, we throw both
-			// of these and we need to catch both here
-			catch (System.Net.WebException) {}
 			catch (System.Net.Http.HttpRequestException) {}
 		}
 
@@ -422,6 +418,52 @@ namespace Xamarin.Android.NetTests
 			}
 
 			listener.Close ();
+		}
+
+		[Test]
+		public void ConnectionFailureThrowsHttpRequestException ()
+		{
+			// https://github.com/dotnet/android/issues/5761
+			// HttpClient.SendAsync is documented to throw HttpRequestException when there is a problem
+			// connecting to the server. It must not surface the legacy WebException as the primary exception.
+			int unusedPort = GetAvailablePort ();
+			using var client = new HttpClient (new AndroidMessageHandler ());
+
+			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{unusedPort}/"));
+			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
+			var inner = ex?.InnerException as WebException;
+			Assert.IsNotNull (inner, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
+			Assert.AreEqual (WebExceptionStatus.ConnectFailure, inner.Status, "Inner WebException should preserve ConnectFailure status");
+		}
+
+		[Test]
+		public void ExceedingMaxAutomaticRedirectionsThrowsHttpRequestException ()
+		{
+			// https://github.com/dotnet/android/issues/5761
+			// Failures in the request path must be surfaced as HttpRequestException (per the HttpClient.SendAsync
+			// contract). For back-compat with code migrated from classic Xamarin.Android, the legacy WebException
+			// (and its WebExceptionStatus) is preserved as the inner exception.
+			int port = GetAvailablePort ();
+			using var listener = new HttpListener ();
+			listener.Prefixes.Add ($"http://+:{port}/");
+			listener.Start ();
+			listener.BeginGetContext (ar => {
+				var ctx = listener.EndGetContext (ar);
+				ctx.Response.StatusCode = 302;
+				ctx.Response.RedirectLocation = $"http://localhost:{port}/";
+				ctx.Response.Close ();
+			}, null);
+
+			var handler = new AndroidMessageHandler { MaxAutomaticRedirections = 1 };
+			using var client = new HttpClient (handler);
+
+			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{port}/"));
+			listener.Close ();
+
+			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
+			var inner = ex?.InnerException as WebException;
+			Assert.IsNotNull (inner, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
+			Assert.AreEqual (WebExceptionStatus.UnknownError, inner.Status, "Inner WebException should preserve UnknownError status");
 		}
 	}
 }

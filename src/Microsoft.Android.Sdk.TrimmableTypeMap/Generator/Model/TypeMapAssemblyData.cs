@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -41,6 +42,11 @@ sealed class TypeMapAssemblyData
 	public List<AliasHolderData> AliasHolders { get; } = new ();
 
 	/// <summary>
+	/// Array proxy types to emit — one per JNI element name and rank.
+	/// </summary>
+	public List<ArrayProxyData> ArrayProxyTypes { get; } = new ();
+
+	/// <summary>
 	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
 	/// sentinel TypeDefs and <c>TypeMap</c> entries. 0 disables.
 	/// </summary>
@@ -62,9 +68,10 @@ sealed class TypeMapAssemblyData
 sealed record TypeMapAttributeData
 {
 	/// <summary>
-	/// JNI type name, e.g., "android/app/Activity".
+	/// Type map key, e.g., "android/app/Activity" for peer entries or
+	/// "Android.App.Activity, Mono.Android" for array proxy entries.
 	/// </summary>
-	public required string JniName { get; init; }
+	public required string MapKey { get; init; }
 
 	/// <summary>
 	/// Assembly-qualified proxy type reference string.
@@ -89,6 +96,30 @@ sealed record TypeMapAttributeData
 	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
 	/// </summary>
 	public int? AnchorRank { get; init; }
+}
+
+/// <summary>
+/// A generated array proxy type used by per-rank array TypeMap entries.
+/// </summary>
+sealed record ArrayProxyData
+{
+	public required string TypeName { get; init; }
+
+	public string Namespace { get; init; } = "_TypeMap.ArrayProxies";
+
+	public required TypeRefData ElementType { get; init; }
+
+	public required int Rank { get; init; }
+
+	public PrimitiveArrayProxyData? Primitive { get; init; }
+}
+
+/// <summary>
+/// Additional primitive array metadata for <see cref="ArrayProxyData"/>.
+/// </summary>
+sealed record PrimitiveArrayProxyData
+{
+	public required TypeRefData ConcreteArrayType { get; init; }
 }
 
 /// <summary>
@@ -143,6 +174,16 @@ sealed class JavaPeerProxyData
 	public bool IsGenericDefinition { get; init; }
 
 	/// <summary>
+	/// True if the proxied peer type is a Java interface. Interfaces have no constructors, so
+	/// the proxy must derive from the non-generic <c>JavaPeerProxy</c> base instead of
+	/// <c>JavaPeerProxy&lt;T&gt;</c>: closing the generic (whose <c>T</c> is annotated with
+	/// <c>[DynamicallyAccessedMembers(PublicConstructors|NonPublicConstructors)]</c>) over an
+	/// interface makes ILC fail to load the type (TypeLoadException). Instances are still created
+	/// from <see cref="InvokerType"/> in CreateInstance.
+	/// </summary>
+	public bool IsInterface { get; init; }
+
+	/// <summary>
 	/// True when the Java stub must not call RegisterNatives from a static initializer because
 	/// the type can be instantiated before the runtime is fully ready (for example Application
 	/// or Instrumentation subclasses).
@@ -186,11 +227,75 @@ sealed record TypeRefData
 	public required string AssemblyName { get; init; }
 
 	/// <summary>
-	/// True if this type — or, for array types, the element type — is an enum.
+	/// Generic arguments for a constructed generic type. Empty for non-generic
+	/// types and open generic definitions.
+	/// </summary>
+	public IReadOnlyList<TypeRefData> GenericArguments { get; init; } = [];
+
+	/// <summary>
+	/// True if this type — or, for array types, the element type — is a value type.
 	/// Used by the IL emitter to encode the type as <c>ELEMENT_TYPE_VALUETYPE</c>
 	/// rather than <c>ELEMENT_TYPE_CLASS</c> in member references and signatures.
 	/// </summary>
+	public bool IsValueType { get; init; }
+
+	/// <summary>
+	/// True if this type — or, for array types, the element type — is an enum.
+	/// Used by JNI signature generation to map enum values to their underlying
+	/// primitive ABI type.
+	/// </summary>
 	public bool IsEnum { get; init; }
+
+	public bool EncodeAsValueType => IsValueType || IsEnum;
+
+	public string DisplayName {
+		get {
+			if (ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+				return $"{(this with { ManagedTypeName = ManagedTypeName.Substring (0, ManagedTypeName.Length - 2) }).DisplayName}[]";
+			}
+			return GenericArguments.Count == 0
+				? ManagedTypeName
+				: $"{ManagedTypeName}<{string.Join (",", GenericArguments.Select (t => t.DisplayName))}>";
+		}
+	}
+
+	public bool Equals (TypeRefData? other)
+	{
+		if (ReferenceEquals (this, other)) {
+			return true;
+		}
+		if (other is null) {
+			return false;
+		}
+		if (!string.Equals (ManagedTypeName, other.ManagedTypeName, StringComparison.Ordinal) ||
+		    !string.Equals (AssemblyName, other.AssemblyName, StringComparison.Ordinal) ||
+		    IsValueType != other.IsValueType ||
+		    IsEnum != other.IsEnum ||
+		    GenericArguments.Count != other.GenericArguments.Count) {
+			return false;
+		}
+		for (int i = 0; i < GenericArguments.Count; i++) {
+			if (!GenericArguments [i].Equals (other.GenericArguments [i])) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public override int GetHashCode ()
+	{
+		unchecked {
+			int hash = 17;
+			hash = hash * 31 + StringComparer.Ordinal.GetHashCode (ManagedTypeName);
+			hash = hash * 31 + StringComparer.Ordinal.GetHashCode (AssemblyName);
+			hash = hash * 31 + IsValueType.GetHashCode ();
+			hash = hash * 31 + IsEnum.GetHashCode ();
+			foreach (var argument in GenericArguments) {
+				hash = hash * 31 + argument.GetHashCode ();
+			}
+			return hash;
+		}
+	}
 }
 
 /// <summary>
@@ -390,7 +495,7 @@ sealed record ActivationCtorData
 
 /// <summary>
 /// One [assembly: TypeMapAssociation(typeof(Source), typeof(AliasProxy))] entry.
-/// Links a managed type to the alias holder that owns the alias group.
+/// Links a managed type to an alias holder, generated proxy, or generated array proxy.
 /// </summary>
 sealed record TypeMapAssociationData
 {
@@ -403,6 +508,12 @@ sealed record TypeMapAssociationData
 	/// Assembly-qualified proxy type reference (the alias holder).
 	/// </summary>
 	public required string AliasProxyTypeReference { get; init; }
+
+	/// <summary>
+	/// 1-based array rank when this association should use a <c>__ArrayMapRank{value}</c>
+	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
+	/// </summary>
+	public int? AnchorRank { get; init; }
 }
 
 /// <summary>

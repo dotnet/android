@@ -16,7 +16,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable]
-		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode, [Values] AndroidRuntime runtime)
+		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -93,72 +93,5 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
-		{
-			const string supportedAbis = "armeabi-v7a;x86";
-
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-
-			// Mono-only test
-			proj.SetRuntime (AndroidRuntime.MonoVM);
-			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
-			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
-				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
-				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
-
-				string monoDebugVar;
-				bool monoDebugVarFound = envvars.TryGetValue ("MONO_DEBUG", out monoDebugVar);
-				if (String.IsNullOrEmpty (sequencePointsMode))
-					Assert.IsFalse (monoDebugVarFound, $"environment should not contain MONO_DEBUG={monoDebugVar}");
-				else {
-					Assert.IsTrue (monoDebugVarFound, "environment should contain MONO_DEBUG");
-					Assert.AreEqual ("gen-compact-seq-points", monoDebugVar, "environment should contain MONO_DEBUG=gen-compact-seq-points");
-				}
-
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis, AndroidRuntime.MonoVM);
-			}
-		}
-
-		[Test]
-		public void CheckConcurrentGC ()
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-
-			var gcVarName = "MONO_GC_PARAMS";
-			var expectedDefaultValue = "major=marksweep";
-			var expectedUpdatedValue = "major=marksweep-conc";
-			var supportedAbis = "armeabi-v7a;arm64-v8a";
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
-
-			using (var b = CreateApkBuilder ()) {
-				proj.SetProperty ("AndroidEnableSGenConcurrent", "False");
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				// AndroidEnableSGenConcurrent=False by default
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
-				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
-				Assert.AreEqual (expectedDefaultValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedDefaultValue}' when concurrent GC is disabled.");
-
-				proj.SetProperty ("AndroidEnableSGenConcurrent", "True");
-				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
-				envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true, AndroidRuntime.MonoVM);
-				envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles, AndroidRuntime.MonoVM);
-				Assert.IsTrue (envvars.ContainsKey (gcVarName), $"Environment should contain '{gcVarName}'.");
-				Assert.AreEqual (expectedUpdatedValue, envvars[gcVarName], $"'{gcVarName}' should have been '{expectedUpdatedValue}' when concurrent GC is enabled.");
-			}
-		}
 	}
 }

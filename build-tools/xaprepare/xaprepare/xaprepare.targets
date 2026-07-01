@@ -53,8 +53,6 @@
       <Replacement Include="@AndroidSupportedTargetJitAbis@=$(AndroidSupportedTargetJitAbis)" />
       <Replacement Include="@AndroidToolchainCacheDirectory@=$(AndroidToolchainCacheDirectory)" />
       <Replacement Include="@AndroidToolchainDirectory@=$(AndroidToolchainDirectory)" />
-      <Replacement Include="@AutoProvision@=$(AutoProvision)" />
-      <Replacement Include="@AutoProvisionUsesSudo@=$(AutoProvisionUsesSudo)" />
       <Replacement Include="@CmakePath@=$(CmakePath)" />
       <Replacement Include="@Configuration@=$(Configuration)" />
       <Replacement Include="@CommandLineToolsFolder@=$(CommandLineToolsFolder)" />

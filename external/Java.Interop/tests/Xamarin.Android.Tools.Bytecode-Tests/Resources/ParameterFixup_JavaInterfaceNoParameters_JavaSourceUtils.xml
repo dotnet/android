@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<api api-source="java-source-utils">
+  <package jni-name="com/xamarin" name="com.xamarin">
+    <interface jni-signature="Lcom/xamarin/JavaInterfaceNoParameters;" name="JavaInterfaceNoParameters">
+      <method jni-return="L.*List;" jni-signature="([L.*Object;)L.*List;" name="asList" return=".*List&lt;T&gt;">
+        <parameter jni-type="[L.*Object;" name="a" type="T..."/>
+        <javadoc>
+          <![CDATA[JNI sig: (Lcom/xamarin/JavaTypeNoParameters;)V]]>
+        </javadoc>
+      </method>
+      <method jni-return="I" jni-signature="([L.*Object;IIL.*Object;)I" name="binarySearch" return="int">
+        <parameter jni-type="[L.*Object;" name="a" type=".*Object[]"/>
+        <parameter jni-type="I" name="fromIndex" type="int"/>
+        <parameter jni-type="I" name="toIndex" type="int"/>
+        <parameter jni-type="L.*Object;" name="key" type=".*Object"/>
+      </method>
+    </interface>
+  </package>
+</api>

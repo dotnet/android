@@ -22,7 +22,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
     {
         /// <summary>
         /// Gets the collection of patches for this archive. This library currently does not support applying these
-        /// patches, instead it always downloads the full archive from the specified <see cref="Url"/>
+        /// patches, instead it always downloads the full archive from the specified URL
         /// </summary>
         /// <value>The list of patches (if any)</value>
         public IList<ArchivePatch> Patches { get; set; }
@@ -49,6 +49,10 @@ namespace Xamarin.Installer.AndroidSDK.Common
         /// <value>The owner component.</value>
         public IAndroidComponent Owner { get; internal set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:Xamarin.Installer.AndroidSDK.Common.Archive"/> class.
+        /// </summary>
+        /// <param name="hostOS">The host operating system.</param>
         public Archive(string hostOS) : base(hostOS)
         {
         }

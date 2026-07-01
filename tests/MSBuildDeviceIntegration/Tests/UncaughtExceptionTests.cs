@@ -21,7 +21,7 @@ namespace Xamarin.Android.Build.Tests
 		};
 
 		[Test]
-		public void EnsureUncaughtExceptionWorks ([Values] AndroidRuntime runtime)
+		public void EnsureUncaughtExceptionWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

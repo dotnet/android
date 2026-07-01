@@ -42,8 +42,10 @@ core workload SDK packs imported by WorkloadManifest.targets.
       DependsOnTargets="ConstructInstallerItems;_GetLicense"
       BeforeTargets="GetFilesToPackage" >
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  TargetPath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))"  Condition=" '$(HostOS)' == 'Windows' " />
-      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" TargetPath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' " />
+      <!-- Use Path.Combine so files at the root of MSBuildItems* (RelativePath has no directory)
+           produce 'tools' rather than 'tools\', which would otherwise be packed as 'tools//<file>'. -->
+      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  TargetPath="$([System.IO.Path]::Combine('tools', $([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))))"  Condition=" '$(HostOS)' == 'Windows' " />
+      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" TargetPath="$([System.IO.Path]::Combine('tools', $([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))))" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' " />
     </ItemGroup>
 
     <GenerateUnixFilePermissions

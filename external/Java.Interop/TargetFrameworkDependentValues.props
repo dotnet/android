@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' != '' And !$(TargetFramework.StartsWith('nets')) ">
+    <JIBuildingForNetCoreApp>True</JIBuildingForNetCoreApp>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)-$(DotNetTargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
+    <BuildToolOutputFullPathNoTF>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPathNoTF>
+    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)-$(DotNetTargetFramework.ToLowerInvariant())\</BuildToolOutputFullPath>
+    <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)-$(DotNetTargetFramework.ToLowerInvariant())\</ToolOutputFullPath>
+    <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)-$(DotNetTargetFramework.ToLowerInvariant())\</TestOutputFullPath>
+    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' != '' ">$(UtilityOutputFullPathCoreApps)</UtilityOutputFullPath>
+    <UtilityOutputFullPath Condition=" '$(UtilityOutputFullPathCoreApps)' == '' ">$(ToolOutputFullPath)</UtilityOutputFullPath>
+    <_XamarinAndroidCecilPath Condition=" '$(CecilSourceDirectory)' != '' And Exists('$(UtilityOutputFullPathCoreApps)Xamarin.Android.Cecil.dll') ">$(UtilityOutputFullPathCoreApps)Xamarin.Android.Cecil.dll</_XamarinAndroidCecilPath>
+    <RollForward>Major</RollForward>
+    <JIUtilityVersion>$(JINetToolVersion)</JIUtilityVersion>
+    <JICoreLibVersion>$(JINetCoreLibVersion)</JICoreLibVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Runtime Condition="'$(OS)' != 'Windows_NT'">mono</Runtime>
+    <_JNIEnvGenPath>$(BuildToolOutputFullPath)jnienv-gen.dll</_JNIEnvGenPath>
+    <_RunJNIEnvGen>$(DotnetToolPath) "$(_JNIEnvGenPath)"</_RunJNIEnvGen>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <WarningsAsErrors>$(WarningsAsErrors);CA1307;CA1309;CA1310</WarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1307;CA1309;CA1310</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>$(JIUtilityVersion)</Version>
+  </PropertyGroup>
+
+</Project>

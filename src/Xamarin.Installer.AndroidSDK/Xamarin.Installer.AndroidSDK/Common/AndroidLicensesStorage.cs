@@ -84,6 +84,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 		/// <param name="licenses">list of licenses to accept</param>
 		/// <param name="token">cancellation token</param>
 		/// <param name="logPath">log file path</param>
+		/// <param name="throwsErrorIfValidationFailed">if true, throws an exception if license validation fails</param>
 		public Task AcceptLicensesAsync(
 			string androidSdkPath,
 			string javaSdkPath,

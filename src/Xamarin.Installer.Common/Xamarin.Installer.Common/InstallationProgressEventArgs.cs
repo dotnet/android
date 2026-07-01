@@ -3,7 +3,7 @@
 namespace Xamarin.Installer.Common
 {
 	/// <summary>
-	/// Passed as the argument to the the <see cref="AndroidSDKInstaller.InstallationProgress"/> event
+	/// Passed as the argument to the the <c>AndroidSDKInstaller.InstallationProgress</c> event
 	/// handler.
 	/// </summary>
 	public class InstallationProgressEventArgs : EventArgs
@@ -30,4 +30,3 @@ namespace Xamarin.Installer.Common
 		public delegate void InstallationProgressActionDelegate (float progress);
 	}
 }
-

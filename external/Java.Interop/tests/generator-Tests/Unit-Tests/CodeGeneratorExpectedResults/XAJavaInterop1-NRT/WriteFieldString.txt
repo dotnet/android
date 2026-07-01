@@ -1,0 +1,21 @@
+
+// Metadata.xml XPath field reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/field[@name='bar']"
+[Register ("bar")]
+public string? bar {
+	get {
+		const string __id = "bar.Ljava/lang/String;";
+
+		var __v = _members.InstanceFields.GetObjectValue (__id, this);
+		return JNIEnv.GetString (__v.Handle, JniHandleOwnership.TransferLocalRef);
+	}
+	set {
+		const string __id = "bar.Ljava/lang/String;";
+
+		IntPtr native_value = JNIEnv.NewString (value);
+		try {
+			_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+		} finally {
+			JNIEnv.DeleteLocalRef (native_value);
+		}
+	}
+}

@@ -243,13 +243,6 @@ namespace Xamarin.Android.Tasks
 							[NuGetPackageId] = nuGetPackageId,
 							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
-					foreach (var env in Directory.EnumerateFiles (outDirForDll, "__AndroidEnvironment__*", SearchOption.TopDirectoryOnly)) {
-						resolvedEnvironments.Add (new TaskItem (env, new Dictionary<string, string> {
-							[OriginalFile] = assemblyPath,
-							[NuGetPackageId] = nuGetPackageId,
-							[NuGetPackageVersion] = nuGetPackageVersion,
-						}));
-					}
 					continue;
 				}
 
@@ -267,15 +260,11 @@ namespace Xamarin.Android.Tasks
 
 						// android environment files
 						if (name.StartsWith ("__AndroidEnvironment__", StringComparison.OrdinalIgnoreCase)) {
-							var outFile = Path.Combine (outDirForDll, name);
-							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
-								updated |= Files.CopyIfStreamChanged (stream, outFile);
+							if (nuGetPackageId.IsNullOrEmpty ()) {
+								Log.LogCodedWarning ("XA0149", Properties.Resources.XA0149_Assembly, name, assemblyPath);
+							} else {
+								Log.LogCodedWarning ("XA0149", Properties.Resources.XA0149, name, nuGetPackageId, nuGetPackageVersion, assemblyPath);
 							}
-							resolvedEnvironments.Add (new TaskItem (Path.GetFullPath (outFile), new Dictionary<string, string> {
-								[OriginalFile] = assemblyPath,
-								[NuGetPackageId] = nuGetPackageId,
-								[NuGetPackageVersion] = nuGetPackageVersion,
-							}));
 						}
 						// embedded jars (EmbeddedJar, EmbeddedReferenceJar)
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {

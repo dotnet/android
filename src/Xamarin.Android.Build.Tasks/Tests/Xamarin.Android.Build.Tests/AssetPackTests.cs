@@ -14,7 +14,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildLibraryWithAssetPack ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BuildLibraryWithAssetPack ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackThatHasInvalidName ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackThatHasInvalidName ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -69,7 +69,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -118,7 +118,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOverrides ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPackOverrides ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -160,7 +160,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPack ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BuildApplicationWithAssetPack ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;

@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		// All Tests here require the emulator to be started with -writable-system
 		[Test, Category ("SystemApplication")]
-		public void SystemApplicationCanInstall ([Values] AndroidRuntime runtime)
+		public void SystemApplicationCanInstall ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = false;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

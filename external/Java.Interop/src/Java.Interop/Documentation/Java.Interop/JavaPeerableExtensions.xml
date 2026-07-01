@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<docs>
+  <member name="T:JavaPeerableExtensions">
+    <summary>
+      Extension methods on <see cref="T:Java.Interop.IJavaPeerable" />.
+    </summary>
+    <remarks />
+  </member>
+  <member name="M:GetJniTypeName">
+    <summary>Gets the JNI name of the type of the instance <paramref name="self" />.</summary>
+    <param name="self">
+      The <see cref="T:Java.Interop.IJavaPeerable" /> instance
+      to get the JNI type name of.
+    </param>
+    <remarks>
+      <para>
+        The JNI type name is the name of the Java type, as it would be
+        used in Java Native Interface (JNI) API calls.  For example,
+        instead of the Java name <c>java.lang.Object</c>, the JNI name
+        is <c>java/lang/Object</c>.
+      </para>
+    </remarks>
+  </member>
+  <member name="M:TryJavaCast">
+    <typeparam name="TResult">
+      The type to coerce <paramref name="self" /> to.
+    </typeparam>
+    <param name="self">
+      A <see cref="T:Java.Interop.IJavaPeerable" /> instance
+      to coerce to type <typeparamref name="TResult" />.
+    </param>
+    <param name="result">
+      When this method returns, contains a value of type
+      <typeparamref name="TResult" /> if <paramref name="self" /> can be
+      coerced to the Java type corresponding to <typeparamref name="TResult" />,
+      or <c>null</c> if the coercion is not valid.
+    </param>
+    <summary>
+      Try to coerce <paramref name="self" /> to type <typeparamref name="TResult" />,
+      checking that the coercion is valid on the Java side.
+    </summary>
+    <returns>
+      <see langword="true" /> if <pramref name="self" /> was converted successfully;
+      otherwise, <see langword="false" />.
+    </returns>
+    <remarks>
+      <block subset="none" type="note">
+        Implementations of <see cref="T:Java.Interop.IJavaPeerable" /> consist
+        of two halves: a <i>Java peer</i> and a <i>managed peer</i>.
+        The <see cref="P:Java.Interop.IJavaPeerable.PeerReference" /> property
+        associates the managed peer to the Java peer.
+      </block>
+      <block subset="none" type="note">
+        The <see cref="T:Java.Interop.JniTypeSignatureAttribute" /> or
+        <see cref="T:Android.Runtime.RegisterAttribute" /> custom attributes are
+        used to associated a managed type to a Java type.
+      </block>
+    </remarks>
+    <exception cref="T:System.ArgumentException">
+      <para>
+        The Java peer type for <typeparamref name="TResult" /> could not be found.
+      </para>
+    </exception>
+    <exception cref="T:System.NotSupportedException">
+      <para>
+        The type <typeparamref name="TResult" /> or a <i>Invoker type</i> for
+        <typeparamref name="TResult" /> does not provide an
+        <i>activation constructor</i>, a constructor with a singature of
+        <c>(ref JniObjectReference, JniObjectReferenceOptions)</c> or
+        <c>(IntPtr, JniHandleOwnership)</c>.
+      </para>
+    </exception>
+    <seealso cref="M:Java.Interop.JavaPeerableExtensions.JavaAs``1(Java.Interop.IJavaPeerable)" />
+  </member>
+  <member name="M:JavaAs">
+    <typeparam name="TResult">
+      The type to coerce <paramref name="self" /> to.
+    </typeparam>
+    <param name="self">
+      A <see cref="T:Java.Interop.IJavaPeerable" /> instance
+      to coerce to type <typeparamref name="TResult" />.
+    </param>
+    <summary>
+      Try to coerce <paramref name="self" /> to type <typeparamref name="TResult" />,
+      checking that the coercion is valid on the Java side.
+    </summary>
+    <returns>
+      A value of type <typeparamref name="TResult" /> if the Java peer to
+      <paramref name="self" /> can be coerced to the Java type corresponding
+      to <typeparamref name="TResult" />; otherwise, <c>null</c>.
+    </returns>
+    <remarks>
+      <block subset="none" type="note">
+        Implementations of <see cref="T:Java.Interop.IJavaPeerable" /> consist
+        of two halves: a <i>Java peer</i> and a <i>managed peer</i>.
+        The <see cref="P:Java.Interop.IJavaPeerable.PeerReference" /> property
+        associates the managed peer to the Java peer.
+      </block>
+      <block subset="none" type="note">
+        The <see cref="T:Java.Interop.JniTypeSignatureAttribute" /> or
+        <see cref="T:Android.Runtime.RegisterAttribute" /> custom attributes are
+        used to associated a managed type to a Java type.
+      </block>
+    </remarks>
+    <exception cref="T:System.ArgumentException">
+      <para>
+        The Java peer type for <typeparamref name="TResult" /> could not be found.
+      </para>
+    </exception>
+    <exception cref="T:System.NotSupportedException">
+      <para>
+        The type <typeparamref name="TResult" /> or a <i>Invoker type</i> for
+        <typeparamref name="TResult" /> does not provide an
+        <i>activation constructor</i>, a constructor with a singature of
+        <c>(ref JniObjectReference, JniObjectReferenceOptions)</c> or
+        <c>(IntPtr, JniHandleOwnership)</c>.
+      </para>
+    </exception>
+    <seealso cref="P:Java.Interop.JavaPeerableExtensions.TryJavaCast``1(Java.Interop.IJavaPeerable)" />
+  </member>
+</docs>

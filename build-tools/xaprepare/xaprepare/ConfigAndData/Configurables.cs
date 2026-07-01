@@ -122,26 +122,11 @@ namespace Xamarin.Android.Prepare
 			/// ABIs that support the NativeAOT runtime.  Used to determine which ABIs
 			/// need the higher API-level CRT/sysroot files in the NativeAOT runtime pack.
 			/// When adding a new ABI here, also update <c>SupportNativeAOT</c> in
-			/// <c>build-tools/scripts/Ndk.projitems.in</c>.
+			/// <c>build-tools/scripts/Ndk.projitems</c>.
 			/// </summary>
 			public static readonly HashSet<string> NativeAotSupportedAbis = new (StringComparer.Ordinal) {
 				"arm64-v8a",
 				"x86_64",
-			};
-
-			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
-				// Tools prefixed with architecture triple
-				new NDKTool (name: "as", prefixed: true),
-				new NDKTool (name: "ld", prefixed: true),
-				new NDKTool (name: "strip", prefixed: true),
-
-				// Unprefixed tools
-				new NDKTool (name: "as"),
-				new NDKTool (name: "ld"),
-				new NDKTool (name: "llc"),
-				new NDKTool (name: "llvm-mc"),
-				new NDKTool (name: "llvm-objcopy"),
-				new NDKTool (name: "llvm-strip"),
 			};
 		}
 
@@ -155,44 +140,14 @@ namespace Xamarin.Android.Prepare
 			public static readonly string BinDirRoot                       = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin");
 			public static readonly string ExternalDir                      = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "external");
 			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
-			public static readonly string NativeSourcesDir                 = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "native");
 
 			// Dynamic locations used throughout the code
 			public static string ExternalJavaInteropDir              => GetCachedPath (ref externalJavaInteropDir, ()              => ctx.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath));
 			public static string TestBinDir                          => GetCachedPath (ref testBinDir, ()                          => Path.Combine (Configurables.Paths.BinDirRoot, $"Test{ctx.Configuration}"));
 			public static string BinDir                              => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, ctx.Configuration));
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
-			public static string ConfigurationPropsGeneratedPath     => GetCachedPath (ref configurationPropsGeneratedPath, ()     => Path.Combine (BuildBinDir, "Configuration.Generated.props"));
 			public static string MonoAndroidFrameworksSubDir         = Path.Combine ("xbuild-frameworks", "MonoAndroid");
 			public static string MonoAndroidFrameworksRootDir        => GetCachedPath (ref monoAndroidFrameworksRootDir, ()        => Path.Combine (XAInstallPrefix, MonoAndroidFrameworksSubDir));
-
-			// .NET 6+
-			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
-			public static string NetcoreAppRuntimeAndroidARM64       => GetCachedPath (ref netcoreAppRuntimeAndroidARM64, () => GetNetcoreAppRuntimePath (ctx, "arm64"));
-			public static string NetcoreAppRuntimeAndroidX86         => GetCachedPath (ref netcoreAppRuntimeAndroidX86, () => GetNetcoreAppRuntimePath (ctx, "x86"));
-			public static string NetcoreAppRuntimeAndroidX86_64      => GetCachedPath (ref netcoreAppRuntimeAndroidX86_64, () => GetNetcoreAppRuntimePath (ctx, "x64"));
-
-			// CoreCLR
-			public static string CoreClrAppRuntimeAndroidARM         => GetCachedPath (ref coreclrAppRuntimeAndroidARM, () => GetCoreClrAppRuntimePath (ctx, "arm"));
-			public static string CoreClrAppRuntimeAndroidARM64       => GetCachedPath (ref coreclrAppRuntimeAndroidARM64, () => GetCoreClrAppRuntimePath (ctx, "arm64"));
-			public static string CoreClrAppRuntimeAndroidX86         => GetCachedPath (ref coreclrAppRuntimeAndroidX86, () => GetCoreClrAppRuntimePath (ctx, "x86"));
-			public static string CoreClrAppRuntimeAndroidX86_64      => GetCachedPath (ref coreclrAppRuntimeAndroidX86_64, () => GetCoreClrAppRuntimePath (ctx, "x64"));
-
-			public static string MicrosoftNETWorkloadMonoPackageDir => Path.Combine (
-				XAPackagesDir,
-				$"microsoft.net.workload.mono.toolchain.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand)}",
-				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadMonoToolChainPackageVersion)
-			);
-
-			public static string MicrosoftNETWorkloadMonoToolChainDir => Path.Combine (MicrosoftNETWorkloadMonoPackageDir, "data");
-
-			public static string MicrosoftNETWorkloadEmscriptenPackageDir => Path.Combine (
-				XAPackagesDir,
-				$"microsoft.net.workload.emscripten.{{0}}.manifest-{ctx.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand)}",
-				ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion)
-			);
-
-			public static string MicrosoftNETWorkloadEmscriptenDir => Path.Combine (MicrosoftNETWorkloadEmscriptenPackageDir, "data");
 
 			public static string DotNetPreviewPath => ctx.Properties.GetRequiredValue (KnownProperties.DotNetPreviewPath);
 
@@ -205,28 +160,6 @@ namespace Xamarin.Android.Prepare
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
 			public static string XAPackagesDir                  => ctx.Properties.GetRequiredValue (KnownProperties.XAPackagesDir);
-
-			static string GetNetcoreAppRuntimePath (Context ctx, string androidTarget)
-			{
-				return Path.Combine (
-					XAPackagesDir,
-					$"microsoft.netcore.app.runtime.mono.android-{androidTarget}",
-					ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion),
-					"runtimes",
-					$"android-{androidTarget}"
-				);
-			}
-
-			static string GetCoreClrAppRuntimePath (Context ctx, string androidTarget)
-			{
-				return Path.Combine (
-					XAPackagesDir,
-					$"microsoft.netcore.app.runtime.android-{androidTarget}",
-					ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion),
-					"runtimes",
-					$"android-{androidTarget}"
-				);
-			}
 
 			static string GetCachedPath (ref string? variable, Func<string> creator)
 			{
@@ -242,15 +175,6 @@ namespace Xamarin.Android.Prepare
 			static string? binDir;
 			static string? monoAndroidFrameworksRootDir;
 			static string? externalJavaInteropDir;
-			static string? configurationPropsGeneratedPath;
-			static string? netcoreAppRuntimeAndroidARM;
-			static string? netcoreAppRuntimeAndroidARM64;
-			static string? netcoreAppRuntimeAndroidX86;
-			static string? netcoreAppRuntimeAndroidX86_64;
-			static string? coreclrAppRuntimeAndroidARM;
-			static string? coreclrAppRuntimeAndroidARM64;
-			static string? coreclrAppRuntimeAndroidX86;
-			static string? coreclrAppRuntimeAndroidX86_64;
 		}
 	}
 }

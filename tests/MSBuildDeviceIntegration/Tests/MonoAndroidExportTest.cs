@@ -20,7 +20,7 @@ namespace Xamarin.Android.Build.Tests
 		public void MonoAndroidExportReferencedAppStarts (
 			[Values] bool embedAssemblies,
 			[Values] bool isRelease,
-			[Values] AndroidRuntime runtime)
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");
@@ -109,7 +109,7 @@ namespace UnnamedProject
 		[Test]
 		public void ExportedMembersSurviveGarbageCollection (
 			[Values] bool isRelease,
-			[Values] AndroidRuntime runtime)
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (runtime == AndroidRuntime.NativeAOT) {
 				Assert.Ignore ("NativeAOT does not support Mono.Android.Export");

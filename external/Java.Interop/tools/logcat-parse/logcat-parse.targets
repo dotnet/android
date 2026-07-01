@@ -1,0 +1,13 @@
+<Project>
+
+  <Target Name="_CopyDebugSymbols"
+      Condition=" '$(TargetFramework)' != '' "
+      AfterTargets="Build">
+    <Copy
+        SourceFiles="$(PkgMono_Terminal)\lib\netstandard2.0\LineEditor.pdb"
+        DestinationFolder="$(OutputPath)"
+        SkipUnchangedFiles="True"
+    />
+  </Target>
+
+</Project>

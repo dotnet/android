@@ -630,6 +630,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignoring legacy Xamarin.Android environment file &apos;{0}&apos; from NuGet package &apos;{1}&apos; version &apos;{2}&apos; in assembly &apos;{3}&apos;. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author..
+        /// </summary>
+        public static string XA0149 {
+            get {
+                return ResourceManager.GetString("XA0149", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignoring legacy Xamarin.Android environment file &apos;{0}&apos; in assembly &apos;{1}&apos;. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author..
+        /// </summary>
+        public static string XA0149_Assembly {
+            get {
+                return ResourceManager.GetString("XA0149_Assembly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
@@ -1588,6 +1606,24 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Only one &apos;{0}&apos; is allowed for &apos;{1}&apos; item &apos;{2}&apos;..
+        /// </summary>
+        public static string XA4256 {
+            get {
+                return ResourceManager.GetString("XA4256", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Skipping Java peer type &apos;{0}&apos; from assembly &apos;{1}&apos; because referenced type &apos;{2}&apos; from assembly &apos;{3}&apos; could not be resolved in &apos;{4}&apos;. This type will not be included in the trimmable type map..
+        /// </summary>
+        public static string XA4257 {
+            get {
+                return ResourceManager.GetString("XA4257", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {
@@ -1820,6 +1856,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4321 {
             get {
                 return ResourceManager.GetString("XA4321", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skipping library ProGuard configuration file &apos;{1}&apos; (from {2}) because it contains the unsupported global option &apos;{0}&apos;. Global ProGuard options are only allowed in application projects..
+        /// </summary>
+        public static string XA4322 {
+            get {
+                return ResourceManager.GetString("XA4322", resourceCulture);
             }
         }
         

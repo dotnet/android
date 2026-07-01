@@ -121,6 +121,46 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			Assert.DoesNotContain ("View$OnClickListener", java);
 		}
 
+		[Fact]
+		public void Generate_ApplicationSubclass_WithApplicationJavaClass_ExtendsThatClass ()
+		{
+			// When $(AndroidApplicationJavaClass) is set (e.g. android.support.multidex.MultiDexApplication
+			// under $(AndroidEnableMultiDex)), an android.app.Application subclass must extend it.
+			var type = new JavaPeerInfo {
+				JavaName = "com/foxsports/test/CustomApp",
+				CompatJniName = "com/foxsports/test/CustomApp",
+				ManagedTypeName = "UnnamedProject.CustomApp",
+				ManagedTypeNamespace = "UnnamedProject",
+				ManagedTypeShortName = "CustomApp",
+				AssemblyName = "App",
+				BaseJavaName = "android/app/Application",
+				CannotRegisterInStaticConstructor = true,
+			};
+			var generator = new JcwJavaSourceGenerator ();
+			using var writer = new StringWriter ();
+			generator.Generate (type, writer, "android.support.multidex.MultiDexApplication");
+			var java = writer.ToString ();
+			Assert.Contains ("extends android.support.multidex.MultiDexApplication", java);
+			Assert.DoesNotContain ("extends android.app.Application", java);
+		}
+
+		[Fact]
+		public void Generate_ApplicationSubclass_WithoutApplicationJavaClass_ExtendsApplication ()
+		{
+			var type = new JavaPeerInfo {
+				JavaName = "com/foxsports/test/CustomApp",
+				CompatJniName = "com/foxsports/test/CustomApp",
+				ManagedTypeName = "UnnamedProject.CustomApp",
+				ManagedTypeNamespace = "UnnamedProject",
+				ManagedTypeShortName = "CustomApp",
+				AssemblyName = "App",
+				BaseJavaName = "android/app/Application",
+				CannotRegisterInStaticConstructor = true,
+			};
+			var java = GenerateToString (type);
+			Assert.Contains ("extends android.app.Application", java);
+		}
+
 	}
 
 	public class StaticInitializer

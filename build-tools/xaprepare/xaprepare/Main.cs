@@ -25,9 +25,6 @@ namespace Xamarin.Android.Prepare
 			public bool ListScenarios          { get; set; } = false;
 			public string CompressionFormat    { get; set; } = Configurables.Defaults.DefaultCompressionFormat.Name;
 			public string? Configuration       { get; set; }
-			public bool AutoProvision          { get; set; }
-			public bool AutoProvisionUsesSudo  { get; set; }
-			public string? LocalDotNetSdkArchive { get; set; }
 		}
 
 		public static int Main (string[] args)
@@ -74,10 +71,7 @@ namespace Xamarin.Android.Prepare
 			Encoding.RegisterProvider (CodePagesEncodingProvider.Instance);
 
 			var optionErrors = new List <string> ();
-			ParsedOptions parsedOptions = new ParsedOptions {
-				AutoProvision         = ParseBoolean (Context.Instance.Properties.GetValue (KnownProperties.AutoProvision)),
-				AutoProvisionUsesSudo = ParseBoolean (Context.Instance.Properties.GetValue (KnownProperties.AutoProvisionUsesSudo)),
-			};
+			ParsedOptions parsedOptions = new ParsedOptions ();
 
 			var opts = new OptionSet {
 				"Usage: xaprepare [OPTIONS]",
@@ -95,10 +89,6 @@ namespace Xamarin.Android.Prepare
 				{"ls", "List names of all known scenarios", v => parsedOptions.ListScenarios = true },
 				{"cf=", $"{{NAME}} of the compression format to use for some archives (e.g. the XA bundle). One of: {GetCompressionFormatNames ()}; Default: {parsedOptions.CompressionFormat}", v => parsedOptions.CompressionFormat = v?.Trim () ?? String.Empty},
 				{"c|configuration=", $"Build {{CONFIGURATION}}. Default: {Context.Instance.Configuration}", v => parsedOptions.Configuration = v?.Trim ()},
-				"",
-				{"auto-provision=", $"Automatically install software required by .NET for Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
-				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
-				{"dotnet-sdk-archive=", "Path to a local .NET SDK archive (zip or tar.gz) to use instead of downloading from the internet.", v => parsedOptions.LocalDotNetSdkArchive = v?.Trim () },
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
 			};
@@ -126,9 +116,6 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.ExecutionMode         = parsedOptions.ExecutionMode;
 			Context.Instance.LoggingVerbosity      = parsedOptions.Verbosity;
 			Context.Instance.DebugFileExtension    = parsedOptions.DebugFileExtension;
-			Context.Instance.AutoProvision         = parsedOptions.AutoProvision;
-			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
-			Context.Instance.LocalDotNetSdkArchive = parsedOptions.LocalDotNetSdkArchive;
 
 			if (!String.IsNullOrEmpty (parsedOptions.Configuration))
 				Context.Instance.Configuration = parsedOptions.Configuration!;
