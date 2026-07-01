@@ -41,27 +41,16 @@ namespace Xamarin.Android.Prepare
 
 		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
-			if (atBuildStart) {
-				if (onlyRequired) {
-					return null;
-				} else {
-					return new List <GeneratedFile> {
-						Get_Configuration_OperatingSystem_props (context),
-					};
-				}
-			}
+			if (!atBuildStart)
+				return null;
 
 			if (onlyRequired)
 				return null;
 
-			var steps = new List <GeneratedFile> ();
-
-			AddOSSpecificSteps (context, steps);
-
-			return steps;
+			return new List <GeneratedFile> {
+				Get_Configuration_OperatingSystem_props (context),
+			};
 		}
-
-		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
 
 		GeneratedFile Get_Configuration_OperatingSystem_props (Context context)
 		{
