@@ -833,6 +833,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+
+			if (IgnoreOnNativeAot (runtime, "R8 shrinks bound library Java types out of classes.dex on the trimmable typemap path (missing proguard keeps). Tracked by https://github.com/dotnet/android/issues/11774.")) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
 				IsRelease = isRelease,
