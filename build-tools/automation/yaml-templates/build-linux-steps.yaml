@@ -100,20 +100,27 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
-# Public dnceng-public agents are sometimes provisioned with very small (~29 GB) OS
-# disks. The build fills the disk to ~94% and the post-job 'cache Android toolchain
-# archives' step then fails writing its tar archive with "No space left". Every build
-# artifact has already been uploaded by this point, so reclaim disk by deleting the
-# build intermediates before the implicit post-job Cache@2 save runs.
-# Public-only: the 1ES pipeline uploads 'bin/Build*/nuget-linux*' at post-job via
-# template 'outputs', so its 'bin' must NOT be deleted here.
+# Public dnceng-public agents are sometimes provisioned with a very small (~29 GB) OS
+# disk mounted at '/'. The build fills '/' to ~94% via caches under $HOME, and the
+# implicit post-job 'cache Android toolchain archives' step then fails writing its tar
+# archive to '/' with a "No space left on device" error, failing the whole job. Note the
+# repo working tree (bin/obj) lives on the large /mnt volume, NOT on '/', so deleting it
+# does not help. Every pipeline artifact has already been uploaded by this point, so
+# reclaim space on '/' by deleting caches that are not needed post-build. We must keep
+# $HOME/android-archives and $HOME/.gradle: those are the sources saved by the post-job
+# 'cache Android toolchain archives' and 'cache Gradle downloads' steps.
+# Public-only: the 1ES pipeline runs on agents that do not have this small-disk problem.
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - bash: |
-      echo "Disk usage before freeing build intermediates:"
-      df -h /
-      rm -rf "${{ parameters.xaSourcePath }}/bin"
-      find "${{ parameters.xaSourcePath }}" -type d -name obj -prune -exec rm -rf {} +
-      echo "Disk usage after freeing build intermediates:"
-      df -h /
+      echo "=== Disk usage (all mounts) before freeing space ==="
+      df -h
+      echo "=== Largest entries under HOME ($HOME) on the small '/' disk ==="
+      du -xhd1 "$HOME" 2>/dev/null | sort -h | tail -20 || true
+      for d in "${NUGET_PACKAGES:-$HOME/.nuget/packages}" "$HOME/.dotnet" "$HOME/.local/share/NuGet" "$HOME/.cache"; do
+        echo "Removing $d"
+        rm -rf "$d" || true
+      done
+      echo "=== Disk usage (all mounts) after freeing space ==="
+      df -h
     displayName: Free disk space before post-job cache save
     condition: always()
