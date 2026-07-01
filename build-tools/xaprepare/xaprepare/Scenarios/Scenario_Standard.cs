@@ -10,7 +10,6 @@ namespace Xamarin.Android.Prepare
 		{
 			NeedsGitSubmodules = true;
 			NeedsCompilers = true;
-			NeedsGitBuildInfo = true;
 		}
 
 		protected override void AddSteps (Context context)
