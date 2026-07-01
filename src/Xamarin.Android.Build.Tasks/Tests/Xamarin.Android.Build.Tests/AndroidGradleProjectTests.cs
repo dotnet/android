@@ -316,21 +316,23 @@ namespace Xamarin.Android.Build.Tests
 						},
 					},
 				},
-				Imports = {
-					new Import ("Directory.Build.props") {
-						TextContent = () =>
-$@"<Project>
-	<PropertyGroup>
-		<UseArtifactsOutput>true</UseArtifactsOutput>
-		<ArtifactsPath>{customOutputPathsRoot}</ArtifactsPath>
-	</PropertyGroup>
-</Project>"
-					},
-				},
 				OutputPath = "",
 				IntermediateOutputPath = "",
 			};
 			proj.SetRuntime (runtime);
+
+			// Augment the base `Directory.Build.props` import instead of adding a second one for
+			// the same file. Two imports writing the same path overwrite each other on save, which
+			// intermittently dropped these properties and left the build using the default output
+			// paths (observed as a Windows-only flake in this test).
+			var directoryBuildProps = proj.GetImport ("Directory.Build.props");
+			var baseContent = directoryBuildProps.TextContent;
+			directoryBuildProps.TextContent = () => baseContent ().Replace ("</Project>",
+$@"	<PropertyGroup>
+		<UseArtifactsOutput>true</UseArtifactsOutput>
+		<ArtifactsPath>{customOutputPathsRoot}</ArtifactsPath>
+	</PropertyGroup>
+</Project>");
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
