@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(TestOutputFullPath)</OutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\build-tools\scripts\cecil.projitems" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+  
+</Project>

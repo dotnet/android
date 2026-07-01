@@ -1,0 +1,118 @@
+// Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
+[global::Java.Interop.JniTypeSignature ("java/code/MyClass", GenerateJavaPeer=false)]
+public partial class MyClass {
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
+
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+	{
+	}
+
+	public unsafe Java.Interop.JavaInt32Array? UIntProp {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UIntProp' and count(parameter)=0]"
+		get {
+			const string __id = "get_UIntProp.()[I";
+			try {
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt32Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UIntProp' and count(parameter)=1 and parameter[1][@type='uint[]']]"
+		set {
+			const string __id = "set_UIntProp.([I)V";
+			var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt32Array (value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				if (native_value != null) {
+					native_value.DisposeUnlessReferenced ();
+				}
+				global::System.GC.KeepAlive (value);
+			}
+		}
+	}
+
+	public unsafe Java.Interop.JavaInt16Array? UShortProp {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UShortProp' and count(parameter)=0]"
+		get {
+			const string __id = "get_UShortProp.()[S";
+			try {
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt16Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UShortProp' and count(parameter)=1 and parameter[1][@type='ushort[]']]"
+		set {
+			const string __id = "set_UShortProp.([S)V";
+			var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt16Array (value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				if (native_value != null) {
+					native_value.DisposeUnlessReferenced ();
+				}
+				global::System.GC.KeepAlive (value);
+			}
+		}
+	}
+
+	public unsafe Java.Interop.JavaInt64Array? ULongProp {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_ULongProp' and count(parameter)=0]"
+		get {
+			const string __id = "get_ULongProp.()[J";
+			try {
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt64Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_ULongProp' and count(parameter)=1 and parameter[1][@type='ulong[]']]"
+		set {
+			const string __id = "set_ULongProp.([J)V";
+			var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt64Array (value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				if (native_value != null) {
+					native_value.DisposeUnlessReferenced ();
+				}
+				global::System.GC.KeepAlive (value);
+			}
+		}
+	}
+
+	public unsafe Java.Interop.JavaSByteArray? UByteProp {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_UByteProp' and count(parameter)=0]"
+		get {
+			const string __id = "get_UByteProp.()[B";
+			try {
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaSByteArray>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_UByteProp' and count(parameter)=1 and parameter[1][@type='ubyte[]']]"
+		set {
+			const string __id = "set_UByteProp.([B)V";
+			var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				if (native_value != null) {
+					native_value.DisposeUnlessReferenced ();
+				}
+				global::System.GC.KeepAlive (value);
+			}
+		}
+	}
+
+}

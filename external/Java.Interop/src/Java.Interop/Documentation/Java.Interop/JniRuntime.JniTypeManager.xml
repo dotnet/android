@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<docs>
+  <member name="T:JniTypeManager">
+    <summary>
+      Manages bound Java types.
+    </summary>
+    <remarks>
+    </remarks>
+  </member>
+  <member name="M:GetInvokerType">
+    <summary>Gets the <i>Invoker</i> type for <paramref name="type" /></summary>
+    <remarks>
+      <para>
+        An <i>Invoker type</i> is a concrete type which can be constructed,
+        which is used to invoke instances of abstract type that cannot be constructed.
+        For example, the interface type <c>Java.Lang.IRunnable</c> cannot be constructed,
+        but if a <c>java.lang.Runnable</c> instance enters managed code,
+        a Invoker must be constructed around the instance so that it may be used.
+      </para>
+    </remarks>
+    <returns>
+      If <paramref name="type" /> is an interface or abstract class, returns the
+      type which should be constructed around instances of <paramref name="type" />.
+      If no such type exists, or if <paramref name="type" /> is a concrete type,
+      then <see langword="null" /> is returned.
+    </returns>
+  </member>
+</docs>

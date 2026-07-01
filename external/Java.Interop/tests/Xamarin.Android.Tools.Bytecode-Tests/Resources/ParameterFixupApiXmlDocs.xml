@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<api>
+  <package name="android.animation">
+    <class name="TypeEvaluator">
+      <method name="evaluate">
+        <parameter name="fraction"    type="float" />
+        <parameter name="startValue"  type="T" />
+        <parameter name="endValue"    type="T" />
+      </method>
+    </class>
+  </package>
+</api>

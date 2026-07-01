@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  
+  <PropertyGroup>
+    <OutputPath>$(UtilityOutputFullPath)</OutputPath>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- This package erroneously contains executable assets we do not use.
+         We are going to use a package reference to download the nuget, and a regular reference to actually
+         reference the correct assembly. -->
+    <PackageReference Include="Microsoft.Xml.SgmlReader" ExcludeAssets="Compile" GeneratePathProperty="true" />
+    <Reference Include="SgmlReader">
+      <HintPath>$(PkgMicrosoft_Xml_SgmlReader)\lib\netstandard2.0\SgmlReaderDll.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Mono.Options" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
+  </ItemGroup>
+  
+</Project>
