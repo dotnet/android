@@ -47,6 +47,11 @@ steps:
   displayName: make jenkins
   retryCountOnTaskFailure: 1
 
+- template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
+  parameters:
+    configuration: $(XA.Build.Configuration)
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-nupkgs
