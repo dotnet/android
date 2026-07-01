@@ -861,7 +861,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
   <data name="XA4322" xml:space="preserve">
-    <value>Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.</value>
+    <value>サポートされていないグローバル オプション '{0}' が含まれているため、ライブラリ ProGuard 構成ファイル '{1}' ({2} から) をスキップしています。グローバル ProGuard オプションは、アプリケーション プロジェクトでのみ使用できます。</value>
     <comment>The following are literal names and should not be translated: ProGuard
 {0} - The unsupported ProGuard option, such as -printmapping.
 {1} - The path to the proguard.txt file inside the extracted .aar.
@@ -1167,6 +1167,21 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>
+  <data name="XA4256" xml:space="preserve">
+    <value>Only one '{0}' is allowed for '{1}' item '{2}'.</value>
+    <comment>{0} - MSBuild XML element name
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4257" xml:space="preserve">
+    <value>Skipping Java peer type '{0}' from assembly '{1}' because referenced type '{2}' from assembly '{3}' could not be resolved in '{4}'. This type will not be included in the trimmable type map.</value>
+    <comment>The following are literal names and should not be translated: Java, trimmable type map.
+{0} - Fully-qualified managed Java peer type name
+{1} - Assembly containing the skipped Java peer type
+{2} - Fully-qualified managed referenced type name that could not be resolved
+{3} - Assembly expected to contain the unresolved type
+{4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>コマンド '{0}' が失敗しました。\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1203,7 +1218,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {2} - The section name.</comment>
   </data>
   <data name="XA0149" xml:space="preserve">
-    <value>Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author.</value>
+    <value>アセンブリ '{3}' 内の NuGet パッケージ '{1}' バージョン '{2}' に含まれるレガシ Xamarin.Android 環境ファイル '{0}' を無視しています。Xamarin.Android クラス ライブラリの環境ファイルは .NET for Android ではサポートされていません。この NuGet パッケージの新しいバージョンを使用するか、ライブラリの作成者に通知してください。</value>
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android, NuGet.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The NuGet package id.
@@ -1211,7 +1226,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XA0149_Assembly" xml:space="preserve">
-    <value>Ignoring legacy Xamarin.Android environment file '{0}' in assembly '{1}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author.</value>
+    <value>アセンブリ '{1}' のレガシ Xamarin.Android 環境ファイル '{0}' を無視しています。Xamarin.Android クラス ライブラリの環境ファイルは .NET for Android ではサポートされていません。このアセンブリの新しいバージョンを使用するか、ライブラリの作成者に通知してください。</value>
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>

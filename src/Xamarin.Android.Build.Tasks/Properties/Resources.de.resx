@@ -860,7 +860,7 @@ Entfernen Sie den '{0}' Verweis aus Ihrem Projekt, und fügen Sie stattdessen da
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
   <data name="XA4322" xml:space="preserve">
-    <value>Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.</value>
+    <value>Das Konfigurationsfile für ProGuard der Bibliothek „{1}“ (aus {2}) wird übersprungen, weil es die nicht unterstützte globale Option „{0}“ enthält. Globale ProGuard-Optionen sind nur in Anwendungsprojekten zulässig.</value>
     <comment>The following are literal names and should not be translated: ProGuard
 {0} - The unsupported ProGuard option, such as -printmapping.
 {1} - The path to the proguard.txt file inside the extracted .aar.
@@ -1166,6 +1166,21 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>
+  <data name="XA4256" xml:space="preserve">
+    <value>Only one '{0}' is allowed for '{1}' item '{2}'.</value>
+    <comment>{0} - MSBuild XML element name
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4257" xml:space="preserve">
+    <value>Skipping Java peer type '{0}' from assembly '{1}' because referenced type '{2}' from assembly '{3}' could not be resolved in '{4}'. This type will not be included in the trimmable type map.</value>
+    <comment>The following are literal names and should not be translated: Java, trimmable type map.
+{0} - Fully-qualified managed Java peer type name
+{1} - Assembly containing the skipped Java peer type
+{2} - Fully-qualified managed referenced type name that could not be resolved
+{3} - Assembly expected to contain the unresolved type
+{4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Befehl „{0}“ fehlgeschlagen.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1202,7 +1217,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {2} - The section name.</comment>
   </data>
   <data name="XA0149" xml:space="preserve">
-    <value>Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author.</value>
+    <value>Die Legacyumgebungsdatei für Xamarin.Android „{0}“ aus dem NuGet-Paket „{1}“ in Version „{2}“ in der Assembly „{3}“ wird ignoriert. Umgebungsdateien aus Xamarin.Android-Klassenbibliotheken werden in .NET for Android nicht unterstützt. Verwenden Sie eine neuere Version dieses NuGet-Pakets, oder benachrichtigen Sie den Bibliotheksautor.</value>
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android, NuGet.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The NuGet package id.
@@ -1210,7 +1225,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {3} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XA0149_Assembly" xml:space="preserve">
-    <value>Ignoring legacy Xamarin.Android environment file '{0}' in assembly '{1}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author.</value>
+    <value>Die Legacyumgebungsdatei „{0}“ für Xamarin.Android in der Assembly „{1}“ wird ignoriert. Umgebungsdateien aus Xamarin.Android-Klassenbibliotheken werden in .NET for Android nicht unterstützt. Verwenden Sie eine neuere Version dieser Assembly, oder benachrichtigen Sie den Bibliotheksautor.</value>
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>
