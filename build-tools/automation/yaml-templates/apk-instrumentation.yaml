@@ -72,17 +72,18 @@ steps:
   # instrumentation output (Log.Info/Log.Error from TestInstrumentation) and
   # any UnsatisfiedLinkError / dlopen messages only appear in logcat.
   #
-  # Use succeededOrFailed() (not the default succeeded()) so we still capture
-  # logcat when an earlier step failed - in particular a failed -t:Install, which
-  # now fails the lane fast. Losing logcat in exactly that "device offline" case
-  # would defeat the diagnostics this template exists for. See dotnet/android#11830.
+  # Use always() (not the default succeeded()) so we still capture logcat when an
+  # earlier step failed or the job was canceled - in particular a failed -t:Install
+  # (which now fails the lane fast) or a hung/timed-out test run. Losing logcat in
+  # exactly those cases would defeat the diagnostics this template exists for; the
+  # capture is best-effort (continueOnError + '|| echo'). See dotnet/android#11830.
 - script: >
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
     mkdir -p "$DEST" &&
     adb logcat -d > "$DEST/logcat-${{ parameters.testName }}.txt" ||
     echo "logcat capture failed"
   displayName: capture logcat ${{ parameters.testName }}
-  condition: succeededOrFailed()
+  condition: always()
   continueOnError: true
 
 - task: PublishTestResults@2
