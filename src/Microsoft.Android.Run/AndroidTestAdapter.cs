@@ -241,6 +241,14 @@ class AndroidTestAdapter(
 
 		await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, testNode));
 		state.ReportedFinal.Add (fullyQualifiedName);
+
+		// Echo every finished test — including passes — to the console so the log
+		// grows steadily and progress stays visible while monitoring a long device
+		// run (MTP's default output only surfaces failures). MTP captures the test
+		// host's console output by default, so this stays silent locally; CI opts
+		// in by passing -p:TestingPlatformCaptureOutput=false, which lets these
+		// lines stream live into the build log.
+		Console.WriteLine ($"[{outcome.ToUpperInvariant ()}] ({state.ReportedFinal.Count}) {fullyQualifiedName}");
 	}
 
 	/// <summary>
