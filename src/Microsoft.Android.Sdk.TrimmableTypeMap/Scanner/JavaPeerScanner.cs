@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -22,8 +23,12 @@ public sealed class JavaPeerScanner : IDisposable
 		LowercaseCrc64,
 	}
 
+	readonly record struct ResolvabilityResult (bool IsResolvable, string? UnresolvedTypeName, string? UnresolvedAssemblyName);
+
 	readonly Dictionary<string, AssemblyIndex> assemblyCache = new (StringComparer.Ordinal);
 	readonly Dictionary<(string typeName, string assemblyName), ActivationCtorInfo> activationCtorCache = new ();
+	readonly Dictionary<(string AssemblyName, int TypeRow), ResolvabilityResult> resolvabilityCache = new ();
+	readonly HashSet<(string AssemblyName, int TypeRow)> resolvabilityVisited = new ();
 	readonly ITrimmableTypeMapLogger? logger;
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
 	readonly HashSet<string> frameworkAssemblyNames;
@@ -51,35 +56,6 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Resolves a TypeReferenceHandle to (fullName, assemblyName), correctly handling
-	/// nested types whose ResolutionScope is another TypeReference.
-	/// </summary>
-	static (string fullName, string assemblyName) ResolveTypeReference (TypeReferenceHandle handle, AssemblyIndex index)
-	{
-		var typeRef = index.Reader.GetTypeReference (handle);
-		var name = index.Reader.GetString (typeRef.Name);
-		var ns = index.Reader.GetString (typeRef.Namespace);
-
-		var scope = typeRef.ResolutionScope;
-		switch (scope.Kind) {
-		case HandleKind.AssemblyReference: {
-			var asmRef = index.Reader.GetAssemblyReference ((AssemblyReferenceHandle)scope);
-			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-			return (fullName, index.Reader.GetString (asmRef.Name));
-		}
-		case HandleKind.TypeReference: {
-			// Nested type: recurse to get the declaring type's full name and assembly
-			var (parentFullName, assemblyName) = ResolveTypeReference ((TypeReferenceHandle)scope, index);
-			return (MetadataTypeNameResolver.JoinNestedTypeName (parentFullName, name), assemblyName);
-		}
-		default: {
-			var fullName = MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
-			return (fullName, index.AssemblyName);
-		}
-		}
-	}
-
-	/// <summary>
 	/// Looks up the [Register] JNI name for a type identified by name + assembly.
 	/// </summary>
 	string? ResolveRegisterJniName (string typeName, string assemblyName)
@@ -96,9 +72,12 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Phase 2: Scan all types and produce JavaPeerInfo records.
 	/// </summary>
 	public List<JavaPeerInfo> Scan (IReadOnlyList<(string Name, PEReader Reader)> assemblies)
+		=> Scan (assemblies.Select (a => new AssemblyInput (a.Name, "", a.Reader)));
+
+	public List<JavaPeerInfo> Scan (IEnumerable<AssemblyInput> assemblies)
 	{
-		foreach (var (name, reader) in assemblies) {
-			var index = AssemblyIndex.Create (reader, name);
+		foreach (var assembly in assemblies) {
+			var index = AssemblyIndex.Create (assembly.Reader, assembly.Name, assembly.Path);
 			assemblyCache [index.AssemblyName] = index;
 		}
 
@@ -258,9 +237,17 @@ public sealed class JavaPeerScanner : IDisposable
 				}
 			}
 
+			if (!IsResolvableJavaPeerType (typeHandle, index, out var unresolvedTypeName, out var unresolvedAssemblyName)) {
+				var unresolvedAssemblyPath = assemblyCache.TryGetValue (unresolvedAssemblyName, out var unresolvedAssemblyIndex)
+					? unresolvedAssemblyIndex.AssemblyPath
+					: "";
+				logger?.LogUnresolvableJavaPeerSkippedWarning (fullName, index.AssemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
+				continue;
+			}
+
+			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
-			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
 
 			var isUnconditional = attrInfo is not null;
 			var cannotRegisterInStaticConstructor = attrInfo is ApplicationAttributeInfo or InstrumentationAttributeInfo;
@@ -322,6 +309,242 @@ public sealed class JavaPeerScanner : IDisposable
 			};
 
 			results [(fullName, index.AssemblyName)] = peer;
+		}
+	}
+
+	bool IsResolvableJavaPeerType (
+		TypeDefinitionHandle typeDefHandle,
+		AssemblyIndex index,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		// The base/interface graph of valid managed metadata is acyclic, so the
+		// per-call visited set only guards against generic self-references (e.g.
+		// class Foo : Bar<Foo>). It is reused across peers and cleared per call to
+		// avoid an allocation for every candidate on large peer graphs. Keying it
+		// (and the cache) by type-definition row avoids building full type names on
+		// the hot path and on cache hits.
+		resolvabilityVisited.Clear ();
+		return IsResolvableTypeDefinition (typeDefHandle, index, resolvabilityVisited, out unresolvedTypeName, out unresolvedAssemblyName);
+	}
+
+	bool IsResolvableTypeDefinition (
+		TypeDefinitionHandle typeDefHandle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		var cacheKey = (index.AssemblyName, MetadataTokens.GetRowNumber (typeDefHandle));
+
+		if (resolvabilityCache.TryGetValue (cacheKey, out var cached)) {
+			unresolvedTypeName = cached.UnresolvedTypeName;
+			unresolvedAssemblyName = cached.UnresolvedAssemblyName;
+			return cached.IsResolvable;
+		}
+
+		if (!visited.Add (cacheKey)) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		var typeDef = index.Reader.GetTypeDefinition (typeDefHandle);
+
+		if (!IsResolvableTypeHandle (typeDef.BaseType, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+			resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
+			return false;
+		}
+
+		foreach (var interfaceHandle in typeDef.GetInterfaceImplementations ()) {
+			var interfaceImplementation = index.Reader.GetInterfaceImplementation (interfaceHandle);
+			if (!IsResolvableTypeHandle (interfaceImplementation.Interface, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+				resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
+				return false;
+			}
+		}
+
+		// Generic-definition peers are rooted in the type map (the emitter ldtokens
+		// the open-generic target), so a constraint referencing a stale type would
+		// also fail to resolve at NativeAOT time. Walk constraints like base types.
+		foreach (var genericParameterHandle in typeDef.GetGenericParameters ()) {
+			var genericParameter = index.Reader.GetGenericParameter (genericParameterHandle);
+			foreach (var constraintHandle in genericParameter.GetConstraints ()) {
+				var constraint = index.Reader.GetGenericParameterConstraint (constraintHandle);
+				if (!IsResolvableTypeHandle (constraint.Type, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+					resolvabilityCache [cacheKey] = new (false, unresolvedTypeName, unresolvedAssemblyName);
+					return false;
+				}
+			}
+		}
+
+		unresolvedTypeName = null;
+		unresolvedAssemblyName = null;
+		resolvabilityCache [cacheKey] = new (true, null, null);
+		return true;
+	}
+
+	bool IsResolvableTypeHandle (
+		EntityHandle handle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		if (handle.IsNil) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		switch (handle.Kind) {
+		case HandleKind.TypeDefinition:
+			return IsResolvableTypeDefinition ((TypeDefinitionHandle) handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		case HandleKind.TypeReference:
+			return IsResolvableTypeReference ((TypeReferenceHandle) handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		case HandleKind.TypeSpecification:
+			return IsResolvableTypeSpecification ((TypeSpecificationHandle) handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		default:
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+	}
+
+	bool IsResolvableTypeReference (
+		TypeReferenceHandle handle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		var typeRef = MetadataTypeNameResolver.GetTypeRefFromReference (index.Reader, handle, index.AssemblyName, rawTypeKind: 0);
+		var typeName = typeRef.ManagedTypeName;
+		var assemblyName = typeRef.AssemblyName;
+		if (!assemblyCache.TryGetValue (assemblyName, out var resolvedIndex)) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		if (resolvedIndex.TypesByFullName.TryGetValue (typeName, out var typeHandle)) {
+			return IsResolvableTypeDefinition (typeHandle, resolvedIndex, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		}
+
+		if (resolvedIndex.ExportedTypeNames.Contains (typeName)) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		unresolvedTypeName = typeName;
+		unresolvedAssemblyName = assemblyName;
+		return false;
+	}
+
+	bool IsResolvableTypeSpecification (
+		TypeSpecificationHandle handle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		var reader = index.Reader.GetBlobReader (index.Reader.GetTypeSpecification (handle).Signature);
+		return IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+	}
+
+	bool IsResolvableSignatureType (
+		ref BlobReader reader,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		if (reader.RemainingBytes == 0) {
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+
+		var rawTypeCode = reader.ReadByte ();
+		if ((SignatureTypeKind) rawTypeCode is SignatureTypeKind.ValueType or SignatureTypeKind.Class) {
+			return IsResolvableTypeDefOrRefEncodedHandle (reader.ReadCompressedInteger (), index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		}
+
+		var typeCode = (SignatureTypeCode) rawTypeCode;
+		switch (typeCode) {
+		case SignatureTypeCode.GenericTypeParameter:
+		case SignatureTypeCode.GenericMethodParameter:
+			reader.ReadCompressedInteger ();
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		case SignatureTypeCode.SZArray:
+			return IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+		case SignatureTypeCode.Array:
+			if (!IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+				return false;
+			}
+			SkipArrayShape (ref reader);
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		case SignatureTypeCode.GenericTypeInstance:
+			if ((SignatureTypeKind) reader.ReadByte () is not (SignatureTypeKind.ValueType or SignatureTypeKind.Class)) {
+				unresolvedTypeName = null;
+				unresolvedAssemblyName = null;
+				return true;
+			}
+			if (!IsResolvableTypeDefOrRefEncodedHandle (reader.ReadCompressedInteger (), index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+				return false;
+			}
+			int genericArgumentCount = reader.ReadCompressedInteger ();
+			for (int i = 0; i < genericArgumentCount; i++) {
+				if (!IsResolvableSignatureType (ref reader, index, visited, out unresolvedTypeName, out unresolvedAssemblyName)) {
+					return false;
+				}
+			}
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		default:
+			// Pointers, byrefs, custom modifiers, and any encoding we don't
+			// specifically decode default to resolvable so we never wrongly skip
+			// a Java peer over metadata shapes this scanner doesn't model.
+			unresolvedTypeName = null;
+			unresolvedAssemblyName = null;
+			return true;
+		}
+	}
+
+	bool IsResolvableTypeDefOrRefEncodedHandle (
+		int encodedHandle,
+		AssemblyIndex index,
+		HashSet<(string AssemblyName, int TypeRow)> visited,
+		[NotNullWhen (false)] out string? unresolvedTypeName,
+		[NotNullWhen (false)] out string? unresolvedAssemblyName)
+	{
+		int tag = encodedHandle & 0x3;
+		int row = encodedHandle >> 2;
+		EntityHandle handle = tag switch {
+			0 => MetadataTokens.TypeDefinitionHandle (row),
+			1 => MetadataTokens.TypeReferenceHandle (row),
+			2 => MetadataTokens.TypeSpecificationHandle (row),
+			_ => default,
+		};
+		return IsResolvableTypeHandle (handle, index, visited, out unresolvedTypeName, out unresolvedAssemblyName);
+	}
+
+	static void SkipArrayShape (ref BlobReader reader)
+	{
+		reader.ReadCompressedInteger ();
+		int sizes = reader.ReadCompressedInteger ();
+		for (int i = 0; i < sizes; i++) {
+			reader.ReadCompressedInteger ();
+		}
+		int lowerBounds = reader.ReadCompressedInteger ();
+		for (int i = 0; i < lowerBounds; i++) {
+			reader.ReadCompressedSignedInteger ();
 		}
 	}
 
@@ -525,7 +748,8 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			var (ifaceTypeName, ifaceAssemblyName) = resolved.Value;
+			var ifaceTypeName = resolved.ManagedTypeName;
+			var ifaceAssemblyName = resolved.AssemblyName;
 			if (!TryResolveType (ifaceTypeName, ifaceAssemblyName, out var ifaceHandle, out var ifaceIndex)) {
 				continue;
 			}
@@ -669,7 +893,7 @@ public sealed class JavaPeerScanner : IDisposable
 			// Check if this ctor's params are already covered by a base registered ctor
 			bool alreadyCovered = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
-				if (HaveIdenticalParameterTypes (methodDef, baseCtor.Method)) {
+				if (HaveIdenticalParameterTypes (methodDef, index, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType)) {
 					alreadyCovered = true;
 					break;
 				}
@@ -859,7 +1083,7 @@ public sealed class JavaPeerScanner : IDisposable
 			return type;
 		}
 
-		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName) ? type with { IsEnum = true } : type;
+		return IsEnumOrEnumArray (type.ManagedTypeName, type.AssemblyName) ? type with { IsEnum = true, IsValueType = true } : type;
 	}
 
 	static bool IsEnumType (TypeDefinition typeDef, AssemblyIndex index)
@@ -904,7 +1128,8 @@ public sealed class JavaPeerScanner : IDisposable
 		var currentTypeDef = typeDef;
 		var currentIndex = index;
 
-		while (TryResolveBaseType (currentTypeDef, currentIndex, out var baseTypeDef, out var baseHandle, out var baseIndex, out _, out _)) {
+		TypeRefData? currentTypeRef = null;
+		while (TryResolveBaseType (currentTypeDef, currentIndex, currentTypeRef, out var baseTypeDef, out var baseHandle, out var baseIndex, out _, out _, out var baseTypeRef)) {
 			foreach (var methodHandle in baseTypeDef.GetMethods ()) {
 				var methodDef = baseIndex.Reader.GetMethodDefinition (methodHandle);
 				var name = baseIndex.Reader.GetString (methodDef.Name);
@@ -914,7 +1139,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 				if (TryGetMethodRegisterInfo (methodDef, baseIndex, out var registerInfo, out _) &&
 				    registerInfo is not null && registerInfo.Signature is not null) {
-					result.Add (new BaseCtorInfo (methodDef, baseIndex, registerInfo));
+					result.Add (new BaseCtorInfo (methodDef, baseIndex, registerInfo, baseTypeRef));
 				}
 			}
 
@@ -926,6 +1151,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 			currentTypeDef = baseTypeDef;
 			currentIndex = baseIndex;
+			currentTypeRef = baseTypeRef;
 		}
 
 		return result;
@@ -937,20 +1163,32 @@ public sealed class JavaPeerScanner : IDisposable
 	/// </summary>
 	bool TryResolveBaseType (TypeDefinition typeDef, AssemblyIndex index,
 		out TypeDefinition baseTypeDef, out TypeDefinitionHandle baseHandle, [NotNullWhen (true)] out AssemblyIndex? baseIndex,
-		out string baseTypeName, out string baseAssemblyName)
+		out string baseTypeName, out string baseAssemblyName, out TypeRefData baseTypeRef)
+		=> TryResolveBaseType (typeDef, index, currentTypeRef: null, out baseTypeDef, out baseHandle, out baseIndex, out baseTypeName, out baseAssemblyName, out baseTypeRef);
+
+	bool TryResolveBaseType (TypeDefinition typeDef, AssemblyIndex index, TypeRefData? currentTypeRef,
+		out TypeDefinition baseTypeDef, out TypeDefinitionHandle baseHandle, [NotNullWhen (true)] out AssemblyIndex? baseIndex,
+		out string baseTypeName, out string baseAssemblyName, out TypeRefData baseTypeRef)
 	{
 		baseTypeDef = default;
 		baseHandle = default;
 		baseIndex = null;
 		baseTypeName = "";
 		baseAssemblyName = "";
+		baseTypeRef = new TypeRefData {
+			ManagedTypeName = "",
+			AssemblyName = "",
+		};
 
 		var baseInfo = GetBaseTypeInfo (typeDef, index);
 		if (baseInfo is null) {
 			return false;
 		}
 
-		(baseTypeName, baseAssemblyName) = baseInfo.Value;
+		baseTypeRef = currentTypeRef is null ? baseInfo : SubstituteGenericArguments (baseInfo, currentTypeRef);
+		baseTypeName = baseTypeRef.ManagedTypeName;
+		baseAssemblyName = baseTypeRef.AssemblyName;
+
 		if (!TryResolveType (baseTypeName, baseAssemblyName, out baseHandle, out baseIndex)) {
 			return false;
 		}
@@ -959,7 +1197,38 @@ public sealed class JavaPeerScanner : IDisposable
 		return true;
 	}
 
-	readonly record struct BaseCtorInfo (MethodDefinition Method, AssemblyIndex Index, RegisterInfo RegisterInfo);
+	static TypeRefData SubstituteGenericArguments (TypeRefData type, TypeRefData context)
+	{
+		if (type.ManagedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			var elementType = SubstituteGenericArguments (type with {
+				ManagedTypeName = type.ManagedTypeName.Substring (0, type.ManagedTypeName.Length - 2),
+			}, context);
+			return elementType with {
+				ManagedTypeName = $"{elementType.ManagedTypeName}[]",
+			};
+		}
+
+		if (type.ManagedTypeName.StartsWith ("!", StringComparison.Ordinal) &&
+		    !type.ManagedTypeName.StartsWith ("!!", StringComparison.Ordinal) &&
+		    int.TryParse (type.ManagedTypeName.Substring (1), out int parameterIndex) &&
+		    (uint) parameterIndex < (uint) context.GenericArguments.Count) {
+			return context.GenericArguments [parameterIndex];
+		}
+
+		if (type.GenericArguments.Count == 0) {
+			return type;
+		}
+
+		var arguments = new TypeRefData [type.GenericArguments.Count];
+		for (int i = 0; i < arguments.Length; i++) {
+			arguments [i] = SubstituteGenericArguments (type.GenericArguments [i], context);
+		}
+		return type with {
+			GenericArguments = arguments,
+		};
+	}
+
+	readonly record struct BaseCtorInfo (MethodDefinition Method, AssemblyIndex Index, RegisterInfo RegisterInfo, TypeRefData DeclaringType);
 
 	/// <summary>
 	/// Walks the base type hierarchy looking for a method with [Register] that matches
@@ -967,10 +1236,10 @@ public sealed class JavaPeerScanner : IDisposable
 	/// info along with the declaring type's full name and assembly name (needed so
 	/// UCO wrappers call n_* on the correct base type).
 	/// </summary>
-	(RegisterInfo Info, string DeclaringTypeName, string DeclaringAssemblyName)? FindBaseRegisteredMethodInfo (
-		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod)
+	(RegisterInfo Info, TypeRefData DeclaringType)? FindBaseRegisteredMethodInfo (
+		TypeDefinition typeDef, AssemblyIndex index, string methodName, MethodDefinition derivedMethod, AssemblyIndex derivedIndex, TypeRefData? currentTypeRef = null)
 	{
-		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
+		if (!TryResolveBaseType (typeDef, index, currentTypeRef, out var baseTypeDef, out _, out var baseIndex, out _, out _, out var baseTypeRef)) {
 			return null;
 		}
 
@@ -988,7 +1257,7 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
-			if (!HaveIdenticalParameterTypes (derivedMethod, baseMethodDef)) {
+			if (!HaveIdenticalParameterTypes (derivedMethod, derivedIndex, baseMethodDef, baseIndex, baseTypeRef)) {
 				continue;
 			}
 
@@ -997,19 +1266,19 @@ public sealed class JavaPeerScanner : IDisposable
 			// derived override must NOT inherit a base [Export] registration —
 			// only [Register]-driven entries propagate through inheritance.
 			if (TryGetMethodRegisterInfo (baseMethodDef, baseIndex, out var registerInfo, out var exportInfo) && registerInfo is not null && exportInfo is null) {
-				return (registerInfo, baseTypeName, baseAssemblyName);
+				return (registerInfo, baseTypeRef);
 			}
 		}
 
 		// Keep walking the full base hierarchy so overrides can inherit [Register]
 		// metadata declared above an intermediate MCW base type.
-		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod);
+		return FindBaseRegisteredMethodInfo (baseTypeDef, baseIndex, methodName, derivedMethod, derivedIndex, baseTypeRef);
 	}
 
 	MarshalMethodInfo? FindBaseRegisteredMethod (TypeDefinition typeDef, AssemblyIndex index,
 		string methodName, MethodDefinition derivedMethod)
 	{
-		var result = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod);
+		var result = FindBaseRegisteredMethodInfo (typeDef, index, methodName, derivedMethod, index);
 		if (result is null || result.Value.Info.Signature is null) {
 			return null;
 		}
@@ -1023,8 +1292,9 @@ public sealed class JavaPeerScanner : IDisposable
 			ManagedMethodName = methodName,
 			NativeCallbackName = GetNativeCallbackName (registerInfo.Connector, methodName, isConstructor),
 			IsConstructor = isConstructor,
-			DeclaringTypeName = result.Value.DeclaringTypeName,
-			DeclaringAssemblyName = result.Value.DeclaringAssemblyName,
+			DeclaringTypeName = result.Value.DeclaringType.ManagedTypeName,
+			DeclaringAssemblyName = result.Value.DeclaringType.AssemblyName,
+			DeclaringType = result.Value.DeclaringType,
 		};
 	}
 
@@ -1033,9 +1303,9 @@ public sealed class JavaPeerScanner : IDisposable
 	/// matches the given getter name and has a compatible signature.
 	/// </summary>
 	MarshalMethodInfo? FindBaseRegisteredProperty (TypeDefinition typeDef, AssemblyIndex index,
-		string getterName, MethodDefinition derivedGetter)
+		string getterName, MethodDefinition derivedGetter, TypeRefData? currentTypeRef = null)
 	{
-		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out var baseAssemblyName)) {
+		if (!TryResolveBaseType (typeDef, index, currentTypeRef, out var baseTypeDef, out _, out var baseIndex, out _, out _, out var baseTypeRef)) {
 			return null;
 		}
 
@@ -1068,31 +1338,33 @@ public sealed class JavaPeerScanner : IDisposable
 					ManagedMethodName = getterName,
 					NativeCallbackName = GetNativeCallbackName (propRegister.Connector, getterName, false),
 					IsConstructor = false,
-					DeclaringTypeName = baseTypeName,
-					DeclaringAssemblyName = baseAssemblyName,
+					DeclaringTypeName = baseTypeRef.ManagedTypeName,
+					DeclaringAssemblyName = baseTypeRef.AssemblyName,
+					DeclaringType = baseTypeRef,
 				};
 			}
 		}
 
 		// Keep walking the full base hierarchy so property overrides can inherit
 		// [Register] metadata declared above an intermediate MCW base type.
-		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter);
+		return FindBaseRegisteredProperty (baseTypeDef, baseIndex, getterName, derivedGetter, baseTypeRef);
 	}
 
 	/// <summary>
 	/// Checks if two methods have identical parameter types by comparing their decoded signatures.
 	/// </summary>
-	static bool HaveIdenticalParameterTypes (MethodDefinition method1, MethodDefinition method2)
+	static bool HaveIdenticalParameterTypes (MethodDefinition derivedMethod, AssemblyIndex derivedIndex, MethodDefinition baseMethod, AssemblyIndex baseIndex, TypeRefData baseTypeRef)
 	{
-		var sig1 = method1.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
-		var sig2 = method2.DecodeSignature (SignatureTypeProvider.Instance, genericContext: default);
+		var derivedSig = derivedMethod.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: derivedIndex);
+		var baseSig = baseMethod.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: baseIndex);
 
-		if (sig1.ParameterTypes.Length != sig2.ParameterTypes.Length) {
+		if (derivedSig.ParameterTypes.Length != baseSig.ParameterTypes.Length) {
 			return false;
 		}
 
-		for (int i = 0; i < sig1.ParameterTypes.Length; i++) {
-			if (!string.Equals (sig1.ParameterTypes [i], sig2.ParameterTypes [i], StringComparison.Ordinal)) {
+		for (int i = 0; i < derivedSig.ParameterTypes.Length; i++) {
+			var baseParameterType = SubstituteGenericArguments (baseSig.ParameterTypes [i], baseTypeRef);
+			if (!derivedSig.ParameterTypes [i].Equals (baseParameterType)) {
 				return false;
 			}
 		}
@@ -1195,6 +1467,10 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static bool SupportsDirectManagedMethodCall (TypeRefData type)
 	{
+		if (type.GenericArguments.Count > 0) {
+			return false;
+		}
+
 		var typeName = type.ManagedTypeName;
 		if (typeName.EndsWith ("&", StringComparison.Ordinal) || typeName.EndsWith ("*", StringComparison.Ordinal)) {
 			return false;
@@ -1204,7 +1480,7 @@ public sealed class JavaPeerScanner : IDisposable
 			typeName = typeName.Substring (0, typeName.Length - 2);
 		}
 
-		return !typeName.StartsWith ("!", StringComparison.Ordinal) && typeName.IndexOf ('<') < 0;
+		return !typeName.StartsWith ("!", StringComparison.Ordinal);
 	}
 
 	static string GetJavaAccess (MethodAttributes access)
@@ -1219,7 +1495,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	string? ResolveBaseJavaName (TypeDefinition typeDef, AssemblyIndex index, Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results)
 	{
-		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out _)) {
+		if (!TryResolveBaseType (typeDef, index, out var baseTypeDef, out _, out var baseIndex, out var baseTypeName, out _, out _)) {
 			return null;
 		}
 
@@ -1264,7 +1540,7 @@ public sealed class JavaPeerScanner : IDisposable
 	string? ResolveInterfaceJniName (EntityHandle interfaceHandle, AssemblyIndex index)
 	{
 		var resolved = ResolveEntityHandle (interfaceHandle, index);
-		return resolved is not null ? ResolveRegisterJniName (resolved.Value.typeName, resolved.Value.assemblyName) : null;
+		return resolved is not null ? ResolveRegisterJniName (resolved.ManagedTypeName, resolved.AssemblyName) : null;
 	}
 
 	bool TryGetMethodRegisterInfo (MethodDefinition methodDef, AssemblyIndex index, out RegisterInfo? registerInfo, out ExportInfo? exportInfo)
@@ -1564,9 +1840,9 @@ public sealed class JavaPeerScanner : IDisposable
 		};
 	}
 
-	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index)
+	ActivationCtorInfo? ResolveActivationCtor (string typeName, TypeDefinition typeDef, AssemblyIndex index, TypeRefData? currentTypeRef = null)
 	{
-		var cacheKey = (typeName, index.AssemblyName);
+		var cacheKey = (currentTypeRef?.DisplayName ?? typeName, index.AssemblyName);
 		if (activationCtorCache.TryGetValue (cacheKey, out var cached)) {
 			return cached;
 		}
@@ -1574,7 +1850,20 @@ public sealed class JavaPeerScanner : IDisposable
 		// Check this type's constructors
 		var ownCtor = FindActivationCtorOnType (typeDef, index);
 		if (ownCtor is not null) {
-			var info = new ActivationCtorInfo { DeclaringTypeName = typeName, DeclaringAssemblyName = index.AssemblyName, Style = ownCtor.Value };
+			var info = new ActivationCtorInfo {
+				DeclaringTypeName = typeName,
+				DeclaringAssemblyName = index.AssemblyName,
+				DeclaringType = new TypeRefData {
+					ManagedTypeName = typeName,
+					AssemblyName = index.AssemblyName,
+				},
+				Style = ownCtor.Value,
+			};
+			if (currentTypeRef is not null) {
+				info = info with {
+					DeclaringType = currentTypeRef,
+				};
+			}
 			activationCtorCache [cacheKey] = info;
 			return info;
 		}
@@ -1582,10 +1871,12 @@ public sealed class JavaPeerScanner : IDisposable
 		// Walk base type hierarchy
 		var baseInfo = GetBaseTypeInfo (typeDef, index);
 		if (baseInfo is not null) {
-			var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+			baseInfo = currentTypeRef is null ? baseInfo : SubstituteGenericArguments (baseInfo, currentTypeRef);
+			var baseTypeName = baseInfo.ManagedTypeName;
+			var baseAssemblyName = baseInfo.AssemblyName;
 			if (TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
 				var baseTypeDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
-				var result = ResolveActivationCtor (baseTypeName, baseTypeDef, baseIndex);
+				var result = ResolveActivationCtor (baseTypeName, baseTypeDef, baseIndex, baseInfo);
 				if (result is not null) {
 					activationCtorCache [cacheKey] = result;
 				}
@@ -1630,53 +1921,28 @@ public sealed class JavaPeerScanner : IDisposable
 	/// Resolves a TypeSpecificationHandle (generic instantiation) to the underlying
 	/// type's (fullName, assemblyName) by reading the raw signature blob.
 	/// </summary>
-	static (string fullName, string assemblyName)? ResolveTypeSpecification (TypeSpecificationHandle specHandle, AssemblyIndex index)
+	TypeRefData? ResolveTypeSpecification (TypeSpecificationHandle specHandle, AssemblyIndex index)
 	{
 		var typeSpec = index.Reader.GetTypeSpecification (specHandle);
-		var blobReader = index.Reader.GetBlobReader (typeSpec.Signature);
-
-		// Generic instantiation blob: GENERICINST (CLASS|VALUETYPE) coded-token count args...
-		var elementType = blobReader.ReadByte ();
-		if (elementType != 0x15) { // ELEMENT_TYPE_GENERICINST
-			return null;
-		}
-
-		var classOrValueType = blobReader.ReadByte ();
-		if (classOrValueType != 0x12 && classOrValueType != 0x11) { // CLASS or VALUETYPE
-			return null;
-		}
-
-		// TypeDefOrRefOrSpec coded index: 2 tag bits (0=TypeDef, 1=TypeRef, 2=TypeSpec)
-		var codedToken = blobReader.ReadCompressedInteger ();
-		var tag = codedToken & 0x3;
-		var row = codedToken >> 2;
-
-		switch (tag) {
-		case 0: { // TypeDef
-			var handle = MetadataTokens.TypeDefinitionHandle (row);
-			var baseDef = index.Reader.GetTypeDefinition (handle);
-			return (MetadataTypeNameResolver.GetFullName (baseDef, index.Reader), index.AssemblyName);
-		}
-		case 1: // TypeRef
-			return ResolveTypeReference (MetadataTokens.TypeReferenceHandle (row), index);
-		default:
-			return null;
-		}
+		return typeSpec.DecodeSignature (TypeRefSignatureTypeProvider.Instance, index);
 	}
 
 	/// <summary>
 	/// Resolves an EntityHandle (TypeDef, TypeRef, or TypeSpec) to (typeName, assemblyName).
 	/// Shared by base type resolution, interface resolution, and any handle-to-name lookup.
 	/// </summary>
-	(string typeName, string assemblyName)? ResolveEntityHandle (EntityHandle handle, AssemblyIndex index)
+	TypeRefData? ResolveEntityHandle (EntityHandle handle, AssemblyIndex index)
 	{
 		switch (handle.Kind) {
 		case HandleKind.TypeDefinition: {
 			var td = index.Reader.GetTypeDefinition ((TypeDefinitionHandle)handle);
-			return (MetadataTypeNameResolver.GetFullName (td, index.Reader), index.AssemblyName);
+			return new TypeRefData {
+				ManagedTypeName = MetadataTypeNameResolver.GetFullName (td, index.Reader),
+				AssemblyName = index.AssemblyName,
+			};
 		}
 		case HandleKind.TypeReference:
-			return ResolveTypeReference ((TypeReferenceHandle)handle, index);
+			return MetadataTypeNameResolver.GetTypeRefFromReference (index.Reader, (TypeReferenceHandle)handle, index.AssemblyName, rawTypeKind: 0);
 		case HandleKind.TypeSpecification:
 			return ResolveTypeSpecification ((TypeSpecificationHandle)handle, index);
 		default:
@@ -1684,7 +1950,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
-	(string typeName, string assemblyName)? GetBaseTypeInfo (TypeDefinition typeDef, AssemblyIndex index)
+	TypeRefData? GetBaseTypeInfo (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		return typeDef.BaseType.IsNil ? null : ResolveEntityHandle (typeDef.BaseType, index);
 	}
@@ -1769,7 +2035,8 @@ public sealed class JavaPeerScanner : IDisposable
 			return false;
 		}
 
-		var (baseTypeName, baseAssemblyName) = baseInfo.Value;
+		var baseTypeName = baseInfo.ManagedTypeName;
+		var baseAssemblyName = baseInfo.AssemblyName;
 
 		if (!TryResolveType (baseTypeName, baseAssemblyName, out var baseHandle, out var baseIndex)) {
 			return false;
@@ -2031,7 +2298,7 @@ public sealed class JavaPeerScanner : IDisposable
 			bool unsupportedParam = false;
 			foreach (var p in sig.ParameterTypes) {
 				var paramTypeName = p.ManagedTypeName;
-				if (paramTypeName.IndexOf ('<') >= 0 || paramTypeName.EndsWith ("&", StringComparison.Ordinal) || paramTypeName.EndsWith ("*", StringComparison.Ordinal)) {
+				if (p.GenericArguments.Count > 0 || paramTypeName.EndsWith ("&", StringComparison.Ordinal) || paramTypeName.EndsWith ("*", StringComparison.Ordinal)) {
 					unsupportedParam = true;
 					break;
 				}

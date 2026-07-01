@@ -434,18 +434,13 @@ namespace Android.Graphics
 
 	public class ColorValueMarshaler : JniValueMarshaler<Color>
 	{
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
 		public override Type MarshalType {
 			get { return typeof (int); }
 		}
 
-		public override Color CreateGenericValue (
-				ref JniObjectReference reference,
-				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
-				Type targetType)
+		public override Color CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			throw new NotImplementedException ();
 		}

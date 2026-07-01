@@ -25,3 +25,6 @@ REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.SetupRequest(System.Net
 REMOVED virtual Xamarin.Android.Net.AndroidClientHandler.WriteRequestContentToOutput(System.Net.Http.HttpRequestMessage! request, Java.Net.HttpURLConnection! httpConnection, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.get -> bool
 Android.App.ApplicationAttribute.EnableOnBackInvokedCallback.set -> void
+Java.Interop.JavaArrayProxy
+abstract Java.Interop.JavaArrayProxy.CreateManagedArray(int length) -> System.Array!
+abstract Java.Interop.JavaArrayProxy.GetArrayTypes() -> System.Type![]!

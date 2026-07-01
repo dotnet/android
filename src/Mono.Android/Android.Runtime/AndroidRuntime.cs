@@ -314,11 +314,6 @@ namespace Android.Runtime {
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
-		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-		const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
-
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
@@ -335,7 +330,6 @@ namespace Android.Runtime {
 		}
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Temporary suppression until legacy typemap entries carry DAM annotations.")]
-		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 		{
 			var type = base.GetTypeForSimpleReference (jniSimpleReference);
@@ -384,10 +378,7 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
-		[return: DynamicallyAccessedMembers (Constructors)]
-		protected override Type? GetInvokerTypeCore (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
+		protected override Type? GetInvokerTypeCore (Type type)
 		{
 			if (type.IsInterface || type.IsAbstract) {
 				return JavaObjectExtensions.GetInvokerType (type)
@@ -500,17 +491,17 @@ namespace Android.Runtime {
 		[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>) instead.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
 				Type type,
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2070", Justification = "GetMethods can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
+				Type type,
 				ReadOnlySpan<char> methods)
 		{
 			try {
@@ -852,7 +843,7 @@ namespace Android.Runtime {
 
 		public override void ActivatePeer (
 			JniObjectReference reference,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type,
+			Type type,
 			ConstructorInfo cinfo,
 			object?[]? argumentValues)
 		{

@@ -45,11 +45,10 @@ void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadN
 }
 
 BridgeProcessingFtn clr_initialize_gc_bridge (
-	intptr_t java_marshal_value_manager_handle,
 	BridgeProcessingStartedFtn bridge_processing_started_callback,
 	BridgeProcessingFinishedFtn bridge_processing_finished_callback) noexcept
 {
-	return GCBridge::initialize_callback (java_marshal_value_manager_handle, bridge_processing_started_callback, bridge_processing_finished_callback);
+	return GCBridge::initialize_callback (bridge_processing_started_callback, bridge_processing_finished_callback);
 }
 
 void monodroid_log (LogLevel level, LogCategories category, const char *message) noexcept

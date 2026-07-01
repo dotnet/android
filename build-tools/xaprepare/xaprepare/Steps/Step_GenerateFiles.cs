@@ -10,10 +10,6 @@ namespace Xamarin.Android.Prepare
 		bool atBuildStart;
 		bool onlyRequired;
 
-		IEnumerable<GitSubmoduleInfo>?  gitSubmodules;
-		string?                         xaCommit;
-
-
 		public Step_GenerateFiles (bool atBuildStart, bool onlyRequired = false)
 			: base ("Generating files required by the build")
 		{
@@ -21,14 +17,8 @@ namespace Xamarin.Android.Prepare
 			this.onlyRequired = onlyRequired;
 		}
 
-		protected override async Task<bool> Execute (Context context)
+		protected override Task<bool> Execute (Context context)
 		{
-			var git                 = new GitRunner (context);
-			xaCommit                = git.GetTopCommitHash (workingDirectory: BuildPaths.XamarinAndroidSourceRoot, shortHash: false);
-			var gitSubmoduleInfo    = await git.ConfigList (new[]{"--blob", "HEAD:.gitmodules"});
-			var gitSubmoduleStatus  = await git.SubmoduleStatus ();
-			gitSubmodules           = GitSubmoduleInfo.GetGitSubmodules (gitSubmoduleInfo, gitSubmoduleStatus);
-
 			List<GeneratedFile>? filesToGenerate = GetFilesToGenerate (context);
 			if (filesToGenerate != null && filesToGenerate.Count > 0) {
 				foreach (GeneratedFile gf in filesToGenerate) {
@@ -46,27 +36,17 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			return true;
+			return Task.FromResult (true);
 		}
 
 		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {
-					return new List<GeneratedFile> {
-						Get_SourceLink_Json (context),
-						Get_Configuration_Generated_Props (context),
-						Get_Cmake_XA_Build_Configuration (context),
-						Get_Cmake_Presets (context),
-					};
+					return null;
 				} else {
 					return new List <GeneratedFile> {
-						Get_SourceLink_Json (context),
 						Get_Configuration_OperatingSystem_props (context),
-						Get_Configuration_Generated_Props (context),
-						Get_Cmake_XA_Build_Configuration (context),
-						Get_Cmake_Presets (context),
-						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
 					};
 				}
@@ -83,72 +63,6 @@ namespace Xamarin.Android.Prepare
 		}
 
 		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
-
-		GeneratedFile Get_Cmake_XA_Build_Configuration (Context context)
-		{
-			const string OutputFileName = "xa_build_configuration.cmake";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM@",    Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidARM) },
-				{ "@NETCORE_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidARM64) },
-				{ "@NETCORE_APP_RUNTIME_ANDROID_X86@",    Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86) },
-				{ "@NETCORE_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.NetcoreAppRuntimeAndroidX86_64) },
-
-				{ "@CORECLR_APP_RUNTIME_ANDROID_ARM64@",  Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidARM64) },
-				{ "@CORECLR_APP_RUNTIME_ANDROID_X86_64@", Utilities.EscapePathSeparators (Configurables.Paths.CoreClrAppRuntimeAndroidX86_64) },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
-			);
-		}
-
-		GeneratedFile GetCmakePresetsCommon (Context context, string sourcesDir)
-		{
-			const string OutputFileName = "CMakePresets.json";
-
-			Properties props = context.Properties;
-			var replacements = new Dictionary <string, string> (StringComparer.Ordinal) {
-				{ "@AndroidNdkDirectory@",       Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.AndroidNdkDirectory)) },
-				{ "@NinjaPath@",                 Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.NinjaPath)) },
-				{ "@MicrosoftAndroidSdkOutDir@", Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir)) },
-				{ "@OutputPath@",                Utilities.EscapePathSeparators (Path.Combine (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir), "lib")) },
-				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPILegacy32 },
-				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI },
-				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPILegacy32 },
-				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI },
-				{ "@XA_BUILD_CONFIGURATION@",    context.Configuration },
-				{ "@XA_TEST_OUTPUT_DIR@", Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.TestOutputDirectory)) },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (sourcesDir, $"{OutputFileName}.in"),
-				Path.Combine (sourcesDir, OutputFileName)
-			);
-		}
-
-		GeneratedFile Get_Cmake_Presets (Context context)
-		{
-			return GetCmakePresetsCommon (context, Configurables.Paths.NativeSourcesDir);
-		}
-
-		GeneratedFile Get_Configuration_Generated_Props (Context context)
-		{
-			const string OutputFileName = "Configuration.Generated.props";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@XA_PACKAGES_DIR@",                    Configurables.Paths.XAPackagesDir },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
-				Configurables.Paths.ConfigurationPropsGeneratedPath
-			);
-		}
 
 		GeneratedFile Get_Configuration_OperatingSystem_props (Context context)
 		{
@@ -228,42 +142,6 @@ namespace Xamarin.Android.Prepare
 				}
 				return value.Substring (dot + 1);
 			}
-		}
-
-		GeneratedFile Get_Ndk_projitems (Context context)
-		{
-			const string OutputFileName = "Ndk.projitems";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
-				{ "@NDK_PKG_REVISION@",          BuildAndroidPlatforms.AndroidNdkPkgRevision },
-				{ "@NDK_ARMEABI_V7_API@",        BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString () },
-				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ()  },
-				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
-			);
-		}
-
-		public GeneratedFile Get_SourceLink_Json (Context context)
-		{
-			if (gitSubmodules == null || xaCommit == null) {
-				return new SkipGeneratedFile ();
-			}
-			return new GeneratedSourceLinkJsonFile (
-					gitSubmodules!,
-					xaCommit!,
-					Path.Combine (Configurables.Paths.BuildBinDir, "SourceLink.json")
-			);
 		}
 	}
 }

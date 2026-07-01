@@ -12,7 +12,6 @@
     <_SkipJniAddNativeMethodRegistrationAttributeScan>True</_SkipJniAddNativeMethodRegistrationAttributeScan>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(XamarinAndroidSourcePath)bin\Test$(Configuration)</OutputPath>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultAndroidResourceItems>false</EnableDefaultAndroidResourceItems>
     <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
@@ -31,10 +30,9 @@
     `AppContext.GetData` / `AppContext.TryGetSwitch`. See
     `TestInstrumentation.ExcludedCategories` / `TestInstrumentation.IncludedCategories`.
 
-    `<RuntimeHostConfigurationOption>` is preferred over `<AssemblyAttribute>` here
-    because `<GenerateAssemblyInfo>false</GenerateAssemblyInfo>` (set above to avoid
-    clashing with `Properties/AssemblyInfo.cs`) silently suppresses
-    `<AssemblyAttribute>` items.
+    `<RuntimeHostConfigurationOption>` is used (rather than `<AssemblyAttribute>`)
+    because these values must be emitted into runtimeconfig.json so the on-device
+    instrumentation can read them at runtime via `AppContext`.
   -->
   <ItemGroup>
     <!-- TODO: https://github.com/dotnet/android/issues/10079 -->
@@ -123,7 +121,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Android.App\ApplicationTest.cs" />
     <Compile Include="Android.Content.Res\AssetManagerTest.cs" />
     <Compile Include="Android.Content\IntentTest.cs" />

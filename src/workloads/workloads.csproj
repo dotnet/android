@@ -1,0 +1,131 @@
+<!--
+***********************************************************************************************
+workloads.csproj
+
+Provisions the Android-specific .NET workloads against the .NET SDK that
+`eng/install-dotnet.{sh,ps1}` has already installed at
+`bin/$(Configuration)/dotnet/`:
+
+  * Restores the Mono Android runtime packs (Microsoft.NETCore.App.Runtime.*).
+  * Restores the Mono and Emscripten workload manifest packages
+    (Microsoft.NET.Workload.{Mono,Emscripten}.*.Manifest-*).
+  * Copies the workload manifests from the NuGet package cache into the
+    local SDK's `sdk-manifests/` folder so the SDK can resolve the
+    workloads against the locally installed runtime packs.
+
+Run via:
+
+  dotnet build src/workloads/workloads.csproj -c $(Configuration)
+
+This replaces the work that `Step_PrepareDotNetWorkloads` used to do
+inside xaprepare.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <DotNetRuntimePacksVersion Condition=" '$(DotNetRuntimePacksVersion)' == '' ">$(MicrosoftNETCoreAppRefPackageVersion)</DotNetRuntimePacksVersion>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
+
+  <ItemGroup>
+    <!-- Mono Android runtime packs -->
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-arm"   Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x86"   Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x64"   Version="[$(DotNetRuntimePacksVersion)]" />
+    <!-- CoreCLR Android runtime packs -->
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-x64"   Version="[$(DotNetRuntimePacksVersion)]" />
+
+    <!-- Mono workload manifests, one per supported version band -->
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-$(DotNetMonoManifestVersionBand)" Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net6.Manifest-$(DotNetMonoManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net7.Manifest-$(DotNetMonoManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net8.Manifest-$(DotNetMonoManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net9.Manifest-$(DotNetMonoManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.net10.Manifest-$(DotNetMonoManifestVersionBand)"   Version="[$(MicrosoftNETWorkloadMonoToolChainPackageVersion)]" />
+
+    <!-- Emscripten workload manifests, one per supported version band -->
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Current.Manifest-$(DotNetEmscriptenManifestVersionBand)" Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net6.Manifest-$(DotNetEmscriptenManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net7.Manifest-$(DotNetEmscriptenManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net8.Manifest-$(DotNetEmscriptenManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net9.Manifest-$(DotNetEmscriptenManifestVersionBand)"    Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net10.Manifest-$(DotNetEmscriptenManifestVersionBand)"   Version="[$(MicrosoftNETWorkloadEmscriptenPackageVersion)]" />
+  </ItemGroup>
+
+  <!--
+    After Restore has populated $(XAPackagesDir) with the workload manifest
+    packages, copy each manifest's `data/` directory into the local SDK's
+    `sdk-manifests/<band>/microsoft.net.workload.<flavor>.<dotnet>/<ver>/`
+    so the SDK can resolve the Android workloads.
+  -->
+  <Target Name="_CopyWorkloadManifests" AfterTargets="Build">
+    <PropertyGroup>
+      <_DotNetSdk>$(DotNetPreviewPath.TrimEnd('\').TrimEnd('/'))</_DotNetSdk>
+      <_SdkManifests>$(_DotNetSdk)\sdk-manifests</_SdkManifests>
+    </PropertyGroup>
+
+    <Error
+        Condition=" !Exists('$(_DotNetSdk)') "
+        Text="Expected .NET SDK at '$(_DotNetSdk)' but the directory does not exist. Run eng/install-dotnet.sh (or eng/install-dotnet.ps1) first."
+    />
+
+    <ItemGroup>
+      <!-- Mono manifest sources, batched by destination -->
+      <_MonoManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.mono.toolchain.net6.manifest-$(DotNetMonoManifestVersionBand)\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetMonoManifestVersionBand)\microsoft.net.workload.mono.toolchain.net6\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)</Dest>
+      </_MonoManifestSource>
+      <_MonoManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.mono.toolchain.net7.manifest-$(DotNetMonoManifestVersionBand)\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetMonoManifestVersionBand)\microsoft.net.workload.mono.toolchain.net7\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)</Dest>
+      </_MonoManifestSource>
+      <_MonoManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.mono.toolchain.net8.manifest-$(DotNetMonoManifestVersionBand)\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetMonoManifestVersionBand)\microsoft.net.workload.mono.toolchain.net8\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)</Dest>
+      </_MonoManifestSource>
+      <_MonoManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.mono.toolchain.net9.manifest-$(DotNetMonoManifestVersionBand)\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetMonoManifestVersionBand)\microsoft.net.workload.mono.toolchain.net9\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)</Dest>
+      </_MonoManifestSource>
+      <_MonoManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.mono.toolchain.net10.manifest-$(DotNetMonoManifestVersionBand)\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetMonoManifestVersionBand)\microsoft.net.workload.mono.toolchain.net10\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)</Dest>
+      </_MonoManifestSource>
+      <_MonoManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.mono.toolchain.current.manifest-$(DotNetMonoManifestVersionBand)\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetMonoManifestVersionBand)\microsoft.net.workload.mono.toolchain.current\$(MicrosoftNETWorkloadMonoToolChainPackageVersion)</Dest>
+      </_MonoManifestSource>
+
+      <!-- Emscripten manifest sources, batched by destination -->
+      <_EmscriptenManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.emscripten.net6.manifest-$(DotNetEmscriptenManifestVersionBand)\$(MicrosoftNETWorkloadEmscriptenPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetEmscriptenManifestVersionBand)\microsoft.net.workload.emscripten.net6\$(MicrosoftNETWorkloadEmscriptenPackageVersion)</Dest>
+      </_EmscriptenManifestSource>
+      <_EmscriptenManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.emscripten.net7.manifest-$(DotNetEmscriptenManifestVersionBand)\$(MicrosoftNETWorkloadEmscriptenPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetEmscriptenManifestVersionBand)\microsoft.net.workload.emscripten.net7\$(MicrosoftNETWorkloadEmscriptenPackageVersion)</Dest>
+      </_EmscriptenManifestSource>
+      <_EmscriptenManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.emscripten.net8.manifest-$(DotNetEmscriptenManifestVersionBand)\$(MicrosoftNETWorkloadEmscriptenPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetEmscriptenManifestVersionBand)\microsoft.net.workload.emscripten.net8\$(MicrosoftNETWorkloadEmscriptenPackageVersion)</Dest>
+      </_EmscriptenManifestSource>
+      <_EmscriptenManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.emscripten.net9.manifest-$(DotNetEmscriptenManifestVersionBand)\$(MicrosoftNETWorkloadEmscriptenPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetEmscriptenManifestVersionBand)\microsoft.net.workload.emscripten.net9\$(MicrosoftNETWorkloadEmscriptenPackageVersion)</Dest>
+      </_EmscriptenManifestSource>
+      <_EmscriptenManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.emscripten.net10.manifest-$(DotNetEmscriptenManifestVersionBand)\$(MicrosoftNETWorkloadEmscriptenPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetEmscriptenManifestVersionBand)\microsoft.net.workload.emscripten.net10\$(MicrosoftNETWorkloadEmscriptenPackageVersion)</Dest>
+      </_EmscriptenManifestSource>
+      <_EmscriptenManifestSource Include="$(XAPackagesDir)\microsoft.net.workload.emscripten.current.manifest-$(DotNetEmscriptenManifestVersionBand)\$(MicrosoftNETWorkloadEmscriptenPackageVersion)\data\*">
+        <Dest>$(_SdkManifests)\$(DotNetEmscriptenManifestVersionBand)\microsoft.net.workload.emscripten.current\$(MicrosoftNETWorkloadEmscriptenPackageVersion)</Dest>
+      </_EmscriptenManifestSource>
+    </ItemGroup>
+
+    <Copy
+        SourceFiles="@(_MonoManifestSource)"
+        DestinationFolder="%(_MonoManifestSource.Dest)"
+        SkipUnchangedFiles="true"
+    />
+    <Copy
+        SourceFiles="@(_EmscriptenManifestSource)"
+        DestinationFolder="%(_EmscriptenManifestSource.Dest)"
+        SkipUnchangedFiles="true"
+    />
+  </Target>
+
+</Project>

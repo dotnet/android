@@ -17,8 +17,8 @@ steps:
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - bash: |
       set -e
-      brew install p7zip
-    displayName: Install p7zip on macOS
+      brew install p7zip cmake ninja ccache
+    displayName: Install build dependencies on macOS
 
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
   parameters:
@@ -45,7 +45,7 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1

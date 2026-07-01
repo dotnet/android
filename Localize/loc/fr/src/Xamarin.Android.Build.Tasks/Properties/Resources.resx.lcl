@@ -561,6 +561,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA0149" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Le fichier d’environnement Xamarin.Android hérité «{0}» du package NuGet «{1}» version «{2}» dans l’assembly «{3}». Les fichiers d’environnement des bibliothèques de classes Xamarin.Android ne sont pas pris en charge dans .NET pour Android. Utilisez une version plus récente de ce package NuGet ou informez l'auteur de la bibliothèque.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0149_Assembly" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Ignoring legacy Xamarin.Android environment file '{0}' in assembly '{1}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ignorer le fichier d'environnement Xamarin.Android hérité '{0}' dans l'assembly '{1}'. Les fichiers d’environnement des bibliothèques de classes Xamarin.Android ne sont pas pris en charge dans .NET pour Android. Utilisez une version plus récente de cet assembly ou informez l’auteur de la bibliothèque.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}]]></Val>
@@ -1769,6 +1787,15 @@
           <Val><![CDATA[NativeAOT DGML file '{0}' was not found.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Le fichier DGML NativeAOT « {0} » n’a pas été trouvé.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4322" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Le fichier de configuration ProGuard de la bibliothèque «{1}» (à partir de {2}) est ignoré, car il contient l’option globale non prise en charge «{0}». Les options ProGuard globales sont autorisées uniquement dans les projets d’application.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

@@ -15,18 +15,16 @@ Building .NET for Android requires:
 [dotnetsdk]: https://docs.microsoft.com/de-de/dotnet/core/install/sdk
 
 The `make prepare` build step (or `/t:Prepare` on Windows) will
-check that all required dependencies are present.
-If you would like `make prepare` to automatically install
-required dependencies, set the `$(AutoProvision)` MSBuild property to True
-and (if necessary) set the `$(AutoProvisionUsesSudo)` property to True.
-(This is not supported on all operating systems;
-see [configuration.md](../configuration.md) for details.)
-
-If `$(AutoProvision)` is False (the default) and a dependency is missing,
-then the build will fail and an error message will be displayed attempting
-to provide install instructions to obtain the missing dependency, e.g.:
+check that all required dependencies are present. If a dependency is
+missing, the build will fail and an error message will be displayed
+attempting to provide install instructions to obtain the missing
+dependency, e.g.:
 
     error : Could not find required program '7za'. Please run: brew install 'p7zip'.
+
+Install any missing dependencies using your platform's package manager
+(e.g. `brew install p7zip` on macOS, `sudo apt-get install p7zip-full`
+on Debian/Ubuntu).
 
 <a name="homebrew" />
 

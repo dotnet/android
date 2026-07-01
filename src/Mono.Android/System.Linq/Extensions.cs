@@ -7,6 +7,10 @@ using Java.Interop;
 
 namespace System.Linq {
 
+	/// <summary>
+	/// Provides LINQ-friendly extension methods for converting Java collection types
+	/// into managed <see cref="System.Collections.IEnumerable" /> sequences.
+	/// </summary>
 	public static class Extensions {
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -20,6 +24,15 @@ namespace System.Linq {
 			JNIEnv.DeleteGlobalRef (grefIterable);
 		}
 
+		/// <summary>
+		/// Returns an <see cref="System.Collections.IEnumerable" /> that iterates over a Java
+		/// <see cref="Java.Lang.IIterable" />, allowing <c>foreach</c> and LINQ to be used with Java
+		/// collection types. Each element is marshaled from its Java instance to the corresponding
+		/// managed type.
+		/// </summary>
+		/// <param name="source">The Java <see cref="Java.Lang.IIterable" /> to enumerate.</param>
+		/// <returns>An <see cref="System.Collections.IEnumerable" /> over the elements of <paramref name="source" />.</returns>
+		/// <exception cref="System.ArgumentNullException"><paramref name="source" /> is <see langword="null" />.</exception>
 		public static IEnumerable ToEnumerable (this Java.Lang.IIterable source)
 		{
 			if (source == null)
@@ -42,6 +55,15 @@ namespace System.Linq {
 				}
 		}
 
+		/// <summary>
+		/// Returns an <see cref="System.Collections.Generic.IEnumerable{T}" /> that iterates over a Java
+		/// <see cref="Java.Lang.IIterable" />, marshaling each element to <typeparamref name="T" />. This
+		/// allows <c>foreach</c> and LINQ to be used with Java collection types.
+		/// </summary>
+		/// <typeparam name="T">The managed type to marshal each Java element to.</typeparam>
+		/// <param name="source">The Java <see cref="Java.Lang.IIterable" /> to enumerate.</param>
+		/// <returns>An <see cref="System.Collections.Generic.IEnumerable{T}" /> over the elements of <paramref name="source" />.</returns>
+		/// <exception cref="System.ArgumentNullException"><paramref name="source" /> is <see langword="null" />.</exception>
 		public static IEnumerable<T?> ToEnumerable<
 				[DynamicallyAccessedMembers (Constructors)] 
 				T

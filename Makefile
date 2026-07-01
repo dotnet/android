@@ -11,7 +11,6 @@ PREPARE_MSBUILD_FLAGS = $(PREPARE_MSBUILD_ARGS) $(MSBUILD_ARGS)
 PREPARE_SCENARIO =
 PREPARE_CI_PR ?= 0
 PREPARE_CI ?= 0
-PREPARE_AUTOPROVISION ?= 0
 LOCALIZE_TEMPLATES ?= 0
 
 _PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
@@ -31,12 +30,6 @@ ifeq ($(OS_ARCH),)
 export OS_ARCH       := $(shell uname -m)
 endif
 
-export NO_SUDO       ?= false
-
-ifneq ($(NO_SUDO),false)
-_PREPARE_ARGS += --auto-provisioning-uses-sudo=false
-endif
-
 ifneq ($(V),0)
 MONO_OPTIONS   += --debug
 NUGET_VERBOSITY = -Verbosity Detailed
@@ -49,10 +42,6 @@ endif
 
 ifneq ($(PREPARE_CI),0)
 _PREPARE_ARGS += $(_PREPARE_CI_MODE_ARGS)
-endif
-
-ifneq ($(PREPARE_AUTOPROVISION),0)
-_PREPARE_ARGS += --auto-provision=yes --auto-provision-uses-sudo=yes
 endif
 
 ifneq ($(PREPARE_SCENARIO),)
@@ -121,10 +110,15 @@ list-nunit-tests:
 include build-tools/scripts/runtime-helpers.mk
 
 .PHONY: prepare
-prepare:
+prepare: install-dotnet
 	$(call SYSTEM_DOTNET_BINLOG,prepare-run,run) $(PREPARE_MSBUILD_FLAGS) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- $(_PREPARE_ARGS)
 	$(call SYSTEM_DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
+	$(call SYSTEM_DOTNET_BINLOG,prepare-workloads) src/workloads/workloads.csproj
 	$(call DOTNET_BINLOG,prepare-java.interop) $(SOLUTION) -t:PrepareJavaInterop
+
+.PHONY: install-dotnet
+install-dotnet:
+	CONFIGURATION=$(CONFIGURATION) bash ./eng/install-dotnet.sh
 
 .PHONY: prepare-help
 prepare-help:

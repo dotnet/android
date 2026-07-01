@@ -7,10 +7,16 @@
     <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.UnitTests</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Needed to read the device serial number. Value is Android.Manifest.Permission.ReadPhoneState. -->
+    <AssemblyAttribute Include="Android.App.UsesPermissionAttribute">
+      <Name>android.permission.READ_PHONE_STATE</Name>
+    </AssemblyAttribute>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />

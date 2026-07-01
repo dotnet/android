@@ -13,8 +13,6 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidSupportedTargetJitAbis       = "AndroidSupportedTargetJitAbis";
 		public const string AndroidToolchainCacheDirectory      = "AndroidToolchainCacheDirectory";
 		public const string AndroidToolchainDirectory           = "AndroidToolchainDirectory";
-		public const string AutoProvision                       = "AutoProvision";
-		public const string AutoProvisionUsesSudo               = "AutoProvisionUsesSudo";
 		public const string CLRRuntimeFlavorDirName             = "_CLRRuntimeFlavorDirName";
 		public const string CMakePath                           = "CmakePath";
 		public const string Configuration                       = "Configuration";

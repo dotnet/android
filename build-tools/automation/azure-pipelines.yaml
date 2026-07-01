@@ -189,13 +189,9 @@ extends:
             displayName: Create MAUI template
             continueOnError: false
 
-        - powershell: |
-            $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
-            [xml] $xml = Get-Content $project
-            $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
-            $node.InnerText = '$(DotNetTargetFramework)-android'
-            $xml.Save($project)
-          displayName: set TargetFrameworks to Android-only
+        - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml@self
+          parameters:
+            project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
@@ -278,7 +274,7 @@ extends:
           timeoutInMinutes: 120
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v4.yml@yaml-templates
+      - template: nuget-msi-convert/job/v5.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
           dependsOn: sign_net_mac_win
@@ -379,7 +375,7 @@ extends:
             Write-Host "##vso[task.setvariable variable=ReleaseDropPrefix]$dropPrefix"
           displayName: Set variable ReleaseDropPrefix
 
-        # Download nugets drop created by nuget-msi-convert/job/v4.yml and publish to maestro
+        # Download nugets drop created by nuget-msi-convert/job/v5.yml and publish to maestro
         - task: ms-vscs-artifact.build-tasks.artifactDropDownloadTask-1.artifactDropDownloadTask@1
           displayName: Download $(ReleaseDropPrefix)/nugets
           inputs:
