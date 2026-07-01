@@ -34,6 +34,28 @@ steps:
     retryCountOnTaskFailure: 3
     continueOnError: false
 
+  # If the install above failed, snapshot device state so we can classify WHY on
+  # the next iteration instead of guessing: connectivity (adb devices/get-state),
+  # disk pressure (df), storage-service readiness (the StorageStatsManager NPE
+  # from install-create), boot completion, and how many test apps have piled up.
+  # Best-effort and time-bounded so it never hangs or fails the lane itself.
+- script: |
+    set +e
+    echo "===== adb devices -l ====="; adb devices -l
+    echo "===== adb get-state ====="; adb get-state
+    echo "===== boot completion ====="; adb shell getprop sys.boot_completed; adb shell getprop dev.bootcomplete
+    echo "===== df /data ====="; adb shell df /data
+    echo "===== df /storage/emulated/0 ====="; adb shell df /storage/emulated/0
+    echo "===== dumpsys diskstats ====="; adb shell dumpsys diskstats
+    echo "===== storaged (storage stats service) ====="; adb shell dumpsys storaged
+    echo "===== installed 3rd-party packages ====="; adb shell pm list packages -3
+    echo "===== end device state ====="
+    exit 0
+  displayName: diagnose install failure ${{ parameters.testName }}
+  condition: failed()
+  continueOnError: true
+  timeoutInMinutes: 3
+
   # Run dotnet test from the project directory so it finds the project-local
   # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
   # This enables MTP mode, which uses RunCommand/RunArguments to invoke
