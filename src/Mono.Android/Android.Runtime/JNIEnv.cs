@@ -14,6 +14,7 @@ using System.Text;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime {
 	public static partial class JNIEnv {
