@@ -53,10 +53,11 @@ class AndroidTestAdapter(
 
 	async Task RunAndReportAsync (ExecuteRequestContext context, SessionUid sessionUid)
 	{
-		// Shared state for the streamed run: which tests we've already reported a
-		// final outcome for (so we don't double-report them from the pulled TRX),
-		// and which test — if any — is currently executing (so a crash can resolve
-		// it to a terminal state instead of leaving it "in progress").
+		// Shared state for the streamed run: the set of tests we've streamed a
+		// final outcome for (a non-empty set means streaming was authoritative, so
+		// we skip the TRX fallback), and which test — if any — is currently
+		// executing (so a crash can resolve it to a terminal state instead of
+		// leaving it "in progress").
 		var state = new StreamingState ();
 
 		// 1. Run instrumentation on device, publishing each test to MTP live as
@@ -519,8 +520,9 @@ class InstrumentationBundleResult
 }
 
 /// <summary>
-/// Mutable state shared across a streamed run: the tests already reported with a
-/// final outcome, and the test currently executing (if any).
+/// Mutable state shared across a streamed run: the tests streamed with a final
+/// outcome (a non-empty set means streaming was authoritative, so the TRX
+/// fallback is skipped), and the test currently executing (if any).
 /// </summary>
 sealed class StreamingState
 {
@@ -639,7 +641,6 @@ sealed class StatusStreamParser (ChannelWriter<InstrumentationStatus> writer, St
 		lastKey = null;
 	}
 }
-
 
 enum TrxOutcome
 {
