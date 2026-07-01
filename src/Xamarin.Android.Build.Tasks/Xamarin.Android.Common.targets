@@ -44,7 +44,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CompressAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2150,7 +2151,7 @@ because xbuild doesn't support framework reference assemblies.
        This dependency chain should be addressed in a separate PR. -->
   <CollectAssemblyFilesToCompress
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
-      AssemblyCompressionDirectory="$(IntermediateOutputPath)android\lz4\"
+      AssemblyCompressionDirectory="$(IntermediateOutputPath)android\zstd\"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
@@ -2165,8 +2166,8 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!--
-  LZ4 compress all compressable assemblies. Note this is an incremental MSBuild target.
-  @(AssembliesToCmpress) will only contain assemblies that have changed since the last build.
+  Zstd compresses all compressible assemblies. Note this is an incremental MSBuild target.
+  @(_AssembliesToCompress) will only contain assemblies that have changed since the last build.
 -->
 <Target Name="_CompressAssemblies"
     DependsOnTargets="_CollectAssembliesToCompress"

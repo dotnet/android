@@ -125,7 +125,6 @@ class NativeRuntimeComponents
 			new AndroidArchive ("libruntime-base-common-release.a"),
 			new AndroidArchive ("libruntime-base-release.a"),
 			new AndroidArchive ("libxa-java-interop-release.a"),
-			new AndroidArchive ("libxa-lz4-release.a"),
 			new AndroidArchive ("libxa-shared-bits-release.a"),
 			new AndroidArchive ("libxamarin-startup-release.a"),
 

@@ -1,15 +1,12 @@
 #include <string>
 
-#if defined (HAVE_LZ4)
-#include <lz4.h>
-#endif
-
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
 #include <runtime-base/util.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/timing-internal.hh>
+#include <runtime-base/zstd.hh>
 
 using namespace xamarin::android;
 
@@ -26,7 +23,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	uint8_t *assembly_data = nullptr;
 	uint32_t assembly_data_size = 0;
 
-#if defined (HAVE_LZ4) && defined (RELEASE)
+#if defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store"sv, name);
@@ -114,20 +111,20 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			}
 
 			const char *data_start = pointer_add<const char*>(e.image_data, sizeof(CompressedAssemblyHeader));
-			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(data_buffer), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
+			size_t ret = ZSTD_decompress (data_buffer, cad.uncompressed_file_size, data_start, assembly_data_size);
 
-			if (ret < 0) {
+			if (ZSTD_isError (ret)) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Decompression of assembly {} failed with code {}"sv,
+						"Decompression of assembly {} failed: {}"sv,
 						name,
-						ret
+						ZSTD_getErrorName (ret)
 					)
 				);
 			}
 
-			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
+			if (ret != cad.uncompressed_file_size) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
@@ -147,7 +144,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 		set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
 	} else
-#endif // def HAVE_LZ4 && def RELEASE
+#endif // def RELEASE
 	{
 		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store"sv, name);
 

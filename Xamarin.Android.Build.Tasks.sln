@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.29920.165
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Build.Tasks", "src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj", "{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Build.Tasks", "src\Microsoft.Android.Build.Tasks\Microsoft.Android.Build.Tasks.csproj", "{5DB5BB32-F094-46C8-9C81-4FFEC0BAF5D2}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Build.Tests", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Xamarin.Android.Build.Tests.csproj", "{53E4ABF0-1085-45F9-B964-DCAE4B819998}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
@@ -44,6 +46,10 @@ Global
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F1F2F50-AF1A-4A5A-BEDB-193372F068D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DB5BB32-F094-46C8-9C81-4FFEC0BAF5D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DB5BB32-F094-46C8-9C81-4FFEC0BAF5D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DB5BB32-F094-46C8-9C81-4FFEC0BAF5D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DB5BB32-F094-46C8-9C81-4FFEC0BAF5D2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{53E4ABF0-1085-45F9-B964-DCAE4B819998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{53E4ABF0-1085-45F9-B964-DCAE4B819998}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53E4ABF0-1085-45F9-B964-DCAE4B819998}.Release|Any CPU.ActiveCfg = Release|Any CPU
