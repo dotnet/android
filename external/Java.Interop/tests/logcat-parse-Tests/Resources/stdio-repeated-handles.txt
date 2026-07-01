@@ -1,0 +1,9 @@
+﻿+g+ grefc 1 gwrefc 0 obj-handle 0x4a00009/L -> new-handle 0x19004aa/G from thread '(null)'(3)
+  at Doesn't Matter
+handle 0x19004aa; key_handle 0x41e29778: Java Type: `java/lang/String`; MCW type: `Java.Lang.String`
+Disposing handle 0x19004aa
+-g- grefc 0 gwrefc 0 handle 0x19004aa/G from thread '(null)'(3)
+  at Doesn't Matter
++g+ grefc 1 gwrefc 0 obj-handle 0x4a00009/L -> new-handle 0x19004aa/G from thread '(null)'(3)
+  at Doesn't Matter
+handle 0x19004aa; key_handle 0x41e29778: Java Type: `java/lang/String`; MCW type: `Java.Lang.String`

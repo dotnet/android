@@ -1,0 +1,37 @@
+<Project>
+
+  <!--
+      Shared MSBuild target for compiling the real Kotlin/Gradle fixture in
+      tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/ using the shared
+      Gradle wrapper from build-tools/gradle. The wrapper downloads Gradle +
+      Kotlin on first run, so the resulting .class files do not need to be
+      committed to source control.
+
+      This file is imported by any test project that embeds the resulting
+      .class files as resources (Bytecode-Tests and generator-Tests). Each
+      project writes to its own obj/ directory so parallel solution builds
+      don't race over the same Gradle output directory.
+  -->
+
+  <ItemGroup>
+    <TestKotlinGradleSource Include="$(MSBuildThisFileDirectory)kotlin-gradle\src\**\*.kt;$(MSBuildThisFileDirectory)kotlin-gradle\*.gradle.kts" />
+    <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" />
+    <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" />
+    <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" />
+    <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_KotlinGradleProjectDir>$(MSBuildThisFileDirectory)kotlin-gradle</_KotlinGradleProjectDir>
+    <_TestKotlinGradleOutputDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\classes'))</_TestKotlinGradleOutputDir>
+  </PropertyGroup>
+
+  <Target Name="BuildKotlinGradleProject"
+        BeforeTargets="BeforeCompile"
+        Inputs="@(TestKotlinGradleSource)"
+        Outputs="@(TestKotlinGradleOutput)">
+    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
+          EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)" />
+  </Target>
+
+</Project>

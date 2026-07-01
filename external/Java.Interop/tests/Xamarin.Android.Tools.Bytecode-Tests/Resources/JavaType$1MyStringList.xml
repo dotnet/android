@@ -1,0 +1,177 @@
+<api
+  api-source="class-parse">
+  <package
+    name="com.xamarin"
+    jni-name="com/xamarin">
+    <class
+      abstract="false"
+      deprecated="not deprecated"
+      enclosing-method-jni-type="Lcom/xamarin/JavaType;"
+      enclosing-method-name="staticActionWithGenerics"
+      enclosing-method-signature="(Ljava/lang/Object;Ljava/lang/Number;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V"
+      jni-extends="Ljava/util/ArrayList;"
+      extends="java.util.ArrayList"
+      extends-generic-aware="java.util.ArrayList&lt;java.lang.String&gt;"
+      final="false"
+      name="JavaType.1MyStringList"
+      jni-signature="Lcom/xamarin/JavaType$1MyStringList;"
+      source-file-name="JavaType.java"
+      static="false"
+      visibility="">
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.1MyStringList"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/Object;Ljava/lang/String;ILjava/util/List;Ljava/lang/Object;)V">
+        <parameter
+          name="value1"
+          type="T"
+          jni-type="TT;" />
+        <parameter
+          name="a"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+        <parameter
+          name="b"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="val$unboundedList"
+          type="java.util.List"
+          jni-type="Ljava/util/List;" />
+        <parameter
+          name="val$value1"
+          type="java.lang.Object"
+          jni-type="Ljava/lang/Object;" />
+      </constructor>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.1MyStringList"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/String;ILjava/util/List;Ljava/lang/Object;)V">
+        <parameter
+          name="a"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+        <parameter
+          name="b"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="val$unboundedList"
+          type="java.util.List"
+          jni-type="Ljava/util/List;" />
+        <parameter
+          name="val$value1"
+          type="java.lang.Object"
+          jni-type="Ljava/lang/Object;" />
+      </constructor>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.1MyStringList"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/String;ILjava/util/List;Ljava/util/List;Ljava/lang/Object;)V">
+        <parameter
+          name="a"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+        <parameter
+          name="b"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="unboundedList"
+          type="java.util.List&lt;?&gt;"
+          jni-type="Ljava/util/List&lt;*&gt;;" />
+        <parameter
+          name="val$unboundedList"
+          type="java.util.List"
+          jni-type="Ljava/util/List;" />
+        <parameter
+          name="val$value1"
+          type="java.lang.Object"
+          jni-type="Ljava/lang/Object;" />
+      </constructor>
+      <constructor
+        deprecated="not deprecated"
+        final="false"
+        name="JavaType.1MyStringList"
+        static="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(Ljava/lang/String;Ljava/lang/Number;ILjava/util/List;Ljava/lang/Object;)V">
+        <parameter
+          name="a"
+          type="java.lang.String"
+          jni-type="Ljava/lang/String;" />
+        <parameter
+          name="value2"
+          type="TExtendsNumber"
+          jni-type="TTExtendsNumber;" />
+        <parameter
+          name="b"
+          type="int"
+          jni-type="I" />
+        <parameter
+          name="val$unboundedList"
+          type="java.util.List"
+          jni-type="Ljava/util/List;" />
+        <parameter
+          name="val$value1"
+          type="java.lang.Object"
+          jni-type="Ljava/lang/Object;" />
+      </constructor>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="get"
+        native="false"
+        return="java.lang.Object"
+        jni-return="Ljava/lang/Object;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="true"
+        synthetic="true"
+        jni-signature="(I)Ljava/lang/Object;">
+        <parameter
+          name="index"
+          type="int"
+          jni-type="I" />
+      </method>
+      <method
+        abstract="false"
+        deprecated="not deprecated"
+        final="false"
+        name="get"
+        native="false"
+        return="java.lang.String"
+        jni-return="Ljava/lang/String;"
+        static="false"
+        synchronized="false"
+        visibility="public"
+        bridge="false"
+        synthetic="false"
+        jni-signature="(I)Ljava/lang/String;">
+        <parameter
+          name="index"
+          type="int"
+          jni-type="I" />
+      </method>
+    </class>
+  </package>
+</api>

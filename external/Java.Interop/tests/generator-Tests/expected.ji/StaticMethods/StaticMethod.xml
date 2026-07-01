@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+	    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+	    </class>
+	  </package>
+	<package name="xamarin.test">
+	  <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" 
+	  		final="false" name="SomeObject" static="false" visibility="public">
+	  		<method abstract="false" deprecated="not deprecated" final="false" name="methodAsInt" native="false" return="int" static="true" synchronized="false" visibility="public">
+	  		</method>
+	  		<method abstract="false" deprecated="not deprecated" final="false" name="methodAsString" native="false" return="java.lang.String" static="true" synchronized="false" visibility="public">
+      		</method>
+      		<method abstract="false" deprecated="Deprecated please use methodAsString" final="false" name="Obsoletemethod" native="false" return="java.lang.String" static="true" synchronized="false" visibility="public">
+      		</method>
+	    </class>
+	</package>
+</api>
+

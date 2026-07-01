@@ -1,0 +1,356 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
+using Java.Interop.Tools.Generator;
+using Mono.Cecil;
+
+using Xamarin.Android.Binder;
+using Xamarin.Android.Tools;
+
+namespace MonoDroid.Generation {
+
+	public class Parameter : ISourceLineInfo
+	{
+		bool is_sender;
+		string name;
+		string type, managed_type, rawtype;
+		ISymbol sym;
+		bool is_enumified;
+
+		public int LineNumber { get; set; } = -1;
+		public int LinePosition { get; set; } = -1;
+		public string SourceFile { get; set; }
+
+		internal Parameter (string name, string type, string managedType, bool isEnumified, string rawtype = null, bool notNull = false)
+		{
+			this.name = name;
+			this.type = type;
+			this.rawtype = rawtype ?? type;
+			this.managed_type = managedType;
+			this.is_enumified = isEnumified;
+			NotNull = notNull;
+		}
+
+		// Kotlin @JvmInline value class JNI signature (e.g. "Lcom/example/MyColor;")
+		// for inline-class projection. When set, Validate replaces the managed type
+		// with the wrapper struct's full name so the C# parameter signature uses the
+		// struct, while JNI marshaling stays on the underlying primitive (the `type`).
+		public string KotlinInlineClassJniType { get; set; }
+
+		public Parameter Clone ()
+		{
+			return new Parameter (name, type, managed_type, is_enumified, rawtype, NotNull) {
+				KotlinInlineClassJniType = KotlinInlineClassJniType,
+			};
+		}
+
+		public string GetCall (CodeGenerationOptions opt)
+		{
+			var rgm = sym as IRequireGenericMarshal;
+			var c   = rgm != null
+				? opt.GetSafeIdentifier (rgm.ToInteroperableJavaObject (Name))
+				: ToNative (opt);
+			if (sym.NativeType != "IntPtr")
+				return c;
+			if (!NeedsPrep)
+				return c;
+			var h = sym.GetObjectHandleProperty (opt, c);
+			if (sym.PreCall (opt, Name).Length == 0) {
+				if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+					return c;
+				}
+				return string.Format ("({0} == null) ? IntPtr.Zero : {1}", c, h);
+			}
+			return c;
+		}
+
+		public string ToNative (CodeGenerationOptions opt)
+		{
+			return NeedsPrep ? sym.Call (opt, Name) : sym.ToNative (opt, opt.GetSafeIdentifier (Name), null);
+		}
+
+		public string GenericType {
+			get { return sym.GetGenericType (null) ?? Type; }
+		}
+
+		public string GetGenericType (Dictionary<string, string> mappings)
+		{
+			return sym.GetGenericType (mappings) ?? Type;
+		}
+
+		public bool IsArray {
+			get { return sym.IsArray; }
+		}
+
+		public bool IsGeneric {
+			get { return !string.IsNullOrEmpty (sym.GetGenericType (null)); }
+		}
+
+		public bool IsListener {
+			get { return sym is InterfaceGen && (sym as InterfaceGen).IsListener; }
+		}
+
+		public bool IsSender {
+			get { return is_sender; }
+			set { is_sender = value; }
+		}
+		
+		public bool IsEnumified {
+			get { return is_enumified; }
+		}
+
+		public string JavaType { 
+			get { return sym.JavaName; }
+		}
+
+		public string JniType { 
+			get { return sym.JniName; }
+		}
+
+		public InterfaceGen ListenerType {
+			get { return IsListener ? sym as InterfaceGen : null; }
+		}
+
+		public string Name {
+			get { return name; }
+			set { name = value; }
+		}
+
+		public bool NotNull { get; set; }
+
+		public string PropertyName {
+			get {
+				if (Name == "e")
+					return "Event";
+				string name = Name;
+				return (name [0] == '@')
+					? char.ToUpper (name [1]) + name.Substring (2)
+					: char.ToUpper (name [0]) + name.Substring (1);
+			}
+		}
+
+		public string UnsafeNativeName {
+			get {
+				if (Type == NativeType)
+					return Name;
+				return TypeNameUtilities.GetNativeName (Name);
+			}
+		}
+
+		public string JavaName {
+			get {
+				if (Name.StartsWith ("@", StringComparison.Ordinal))
+					return Name.Substring (1);
+				return Name;
+			}
+		}
+
+		public string NativeType { 
+			get { return sym.NativeType; }
+		}
+
+		public string RawNativeType {
+			get { return rawtype; }
+		}
+
+		public bool NeedsPrep {
+			get { return sym.NeedsPrep; }
+		}
+
+		public string[] GetPostCall (CodeGenerationOptions opt)
+		{
+			return !NeedsPrep ? new string [0] : sym.PostCall (opt, Name);
+		}
+
+		public string[] GetPostCallback (CodeGenerationOptions opt)
+		{
+			return !NeedsPrep ? new string [0] : sym.PostCallback (opt, Name);
+		}
+
+		public string GetName (string prefix = null)
+		{
+			if (string.IsNullOrEmpty (prefix))
+				return Name;
+			return prefix + JavaName;
+		}
+
+		public string[] GetPreCall (CodeGenerationOptions opt)
+		{
+			return !NeedsPrep ? new string [0] : sym.PreCall (opt, Name);
+		}
+		
+		public bool Equals (Parameter other)
+		{
+			if (this.IsGeneric == other.IsGeneric) {
+				if (this.GenericType != other.GenericType)
+					return false;
+				if (sym is GenericSymbol && other.sym is GenericSymbol)
+					if (!Equals ((GenericSymbol) sym, (GenericSymbol) other.sym))
+						return false;
+			}
+			return this.IsArray == other.IsArray &&
+				FilterCSharpType (this.Type) == FilterCSharpType (other.Type);
+		}
+		
+		static bool Equals (GenericSymbol g1, GenericSymbol g2)
+		{
+			if (g1.IsConcrete != g2.IsConcrete)
+				return false;
+			if (g1.FullName != g2.FullName)
+				return false;
+			return true;
+		}
+		
+		static string FilterCSharpType (string s)
+		{
+			switch (s) {
+			case "bool":
+				return "System.Boolean";
+			case "char":
+				return "System.Char";
+			case "byte":
+				return "System.Byte";
+			case "short":
+				return "System.Int16";
+			case "int":
+				return "System.Int32";
+			case "long":
+				return "System.Int64";
+			case "float":
+				return "System.Single";
+			case "double":
+				return "System.Double";
+			case "string":
+				return "System.String";
+			default:
+				return s;
+			}
+		}
+
+		public string[] GetPreCallback (CodeGenerationOptions opt)
+		{
+			if (Type == NativeType)
+				return new string [0];
+			else if (NeedsPrep)
+				return sym.PreCallback (opt, Name, false);
+			else
+				return new string[] { "var " + opt.GetSafeIdentifier (Name) + " = " + FromNative (opt, false) + ";" };
+		}
+
+		public string Type {
+			//get { return sym is GenBase && !String.IsNullOrEmpty ((sym as GenBase).Marshaler) ? (sym as GenBase).Marshaler : sym.FullName; }
+			get { return managed_type ?? sym.FullName; }
+		}
+
+		public string InternalType => managed_type ?? sym?.FullName ?? type;
+
+		public string Annotation { get; internal set; }
+
+		public void SetGeneratedEnumType (string enumType)
+		{
+			sym = new GeneratedEnumSymbol (enumType);
+			managed_type = null;
+			type = sym.JavaName;
+			is_enumified = true;
+		}
+
+		public string FromNative (CodeGenerationOptions opt, bool owned)
+		{
+			return sym.FromNative (opt, UnsafeNativeName, owned);
+		}
+
+		public string GetGenericCall (CodeGenerationOptions opt, Dictionary<string, string> mappings)
+		{
+			string targetType = sym.GetGenericType (mappings);
+			if (string.IsNullOrEmpty (targetType))
+				return name;
+			if (targetType == "string")
+				return string.Format ("{0}?.ToString ()", name);
+			if (targetType.EndsWith ("[]", StringComparison.Ordinal)) {
+				return string.Format ("{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
+			}
+			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				return "global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<" +
+					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType) +
+					$">(({name}?.PeerReference ?? default).Handle)";
+			}
+			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
+					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType),
+					name,
+					opt.NullForgivingOperator); 
+		}
+
+		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
+		{
+			sym = opt.SymbolTable.Lookup (type, type_params);
+			if (sym == null) {
+				Report.LogCodedWarning (0, Report.WarningUnknownParameterType, this, type, context.GetContextTypeMember ());
+				return false;
+			}
+			if (!sym.Validate (opt, type_params, context)) {
+				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, type, context.GetContextTypeMember ());
+				return false;
+			}
+			ApplyKotlinInlineClassProjection (opt, type_params);
+			return true;
+		}
+
+		// If KotlinInlineClassJniType is set, look up the wrapper ClassGen and
+		// override managed_type so the C# parameter type is the struct (e.g.
+		// "Com.Example.MyColor") while sym remains the underlying primitive
+		// for JNI marshaling.
+		void ApplyKotlinInlineClassProjection (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
+		{
+			if (string.IsNullOrEmpty (KotlinInlineClassJniType))
+				return;
+			var javaName = TypeNameUtilities.JniSignatureToJavaTypeName (KotlinInlineClassJniType);
+			if (javaName == null)
+				return;
+			var wrapper = opt.SymbolTable.Lookup (javaName, type_params) as ClassGen;
+			if (wrapper == null || !wrapper.IsKotlinInlineClass)
+				return;
+			managed_type = wrapper.FullName;
+			NotNull = true;
+		}
+
+		public bool ShouldGenerateKeepAlive ()
+		{
+			if (Symbol.IsEnum)
+				return false;
+
+			// dotnet/java-interop#1431 (Phase 2): a Kotlin @JvmInline value
+			// class is projected as a `readonly struct` wrapping a primitive.
+			// The projection rewrites Type to the wrapper struct's FullName,
+			// which wouldn't match any case below and would fall through to
+			// `true`, generating an unnecessary GC.KeepAlive call for what is
+			// ultimately a value-type holding a primitive.
+			if (!string.IsNullOrEmpty (KotlinInlineClassJniType))
+				return false;
+
+			return Type switch {
+				"bool" => false,
+				"sbyte" => false,
+				"char" => false,
+				"double" => false,
+				"float" => false,
+				"int" => false,
+				"long" => false,
+				"short" => false,
+				"uint" => false,
+				"ushort" => false,
+				"ulong" => false,
+				"byte" => false,
+				"ubyte" => false,       // Not a C# type, but we will see it from Kotlin unsigned types support
+				"string" => false,
+				"java.lang.String" => false,
+				"Android.Graphics.Color" => false,
+				_ => true
+			};
+		}
+
+		public ISymbol Symbol => sym;
+	}
+}
