@@ -114,13 +114,20 @@ steps:
 # Public-only: the 1ES pipeline runs on agents that do not have this small-disk problem.
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - bash: |
+      set -euo pipefail
       echo "=== Disk usage (all mounts) before freeing space ==="
       df -h
+      # Guard against an unset/empty/root $HOME so the 'rm -rf' below can never target
+      # a system directory (e.g. "/android-toolchain" or "/.dotnet").
+      if [ -z "${HOME:-}" ] || [ "$HOME" = "/" ] || [ ! -d "$HOME" ]; then
+        echo "##vso[task.logissue type=warning]HOME ('${HOME:-}') is not a valid directory; skipping cleanup."
+        exit 0
+      fi
       echo "=== Largest entries under HOME ($HOME) on the small '/' disk ==="
       du -xhd1 "$HOME" 2>/dev/null | sort -h | tail -20 || true
       for d in "$HOME/android-toolchain" "${NUGET_PACKAGES:-$HOME/.nuget/packages}" "$HOME/.dotnet" "$HOME/.local/share/NuGet" "$HOME/.cache"; do
         echo "Removing $d"
-        rm -rf "$d" || true
+        rm -rf -- "$d" || true
       done
       echo "=== Disk usage (all mounts) after freeing space ==="
       df -h
