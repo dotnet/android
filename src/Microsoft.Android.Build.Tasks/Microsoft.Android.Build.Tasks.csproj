@@ -10,10 +10,9 @@
   -->
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
-    <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
+    <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <SignAssembly>true</SignAssembly>
@@ -25,10 +24,16 @@
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>
 
-  <!-- Minimal helpers linked from Xamarin.Android.Build.Tasks to keep XA#### messages localized. -->
+  <!--
+    Link the shared Resources so the XA#### messages stay localized. The linked Resources.Designer.cs
+    resolves strings via ResourceManager ("Xamarin.Android.Tasks.Properties.Resources"), so pin the
+    embedded resource's name to match even though RootNamespace differs.
+  -->
   <ItemGroup>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
-    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.resx" Link="Properties\Resources.resx" />
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.resx" Link="Properties\Resources.resx">
+      <ManifestResourceName>Xamarin.Android.Tasks.Properties.Resources</ManifestResourceName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
