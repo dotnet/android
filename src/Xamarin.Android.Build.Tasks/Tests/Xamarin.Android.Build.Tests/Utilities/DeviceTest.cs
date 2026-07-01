@@ -195,7 +195,7 @@ namespace Xamarin.Android.Build.Tests
 					("dumpsys storaged", "shell dumpsys storaged"),
 					("pm list packages -3", "shell pm list packages -3"),
 				}) {
-				sb.AppendLine ($"===== {title} =====");
+				sb.AppendLine (CultureInfo.InvariantCulture, $"===== {title} =====");
 				sb.AppendLine (RunAdbCommand (command));
 				sb.AppendLine ();
 			}
