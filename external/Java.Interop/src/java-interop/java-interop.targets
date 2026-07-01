@@ -1,0 +1,67 @@
+<Project>
+
+  <Import Project="..\..\build-tools\scripts\NativeToolchain.targets" />
+
+  <PropertyGroup>
+    <_JavaInteropValidationLibName Condition=" $([MSBuild]::IsOSPlatform ('windows')) ">java-interop-validation.lib</_JavaInteropValidationLibName>
+    <_JavaInteropValidationLibName Condition=" '$(_JavaInteropValidationLibName)' == '' ">libjava-interop-validation.a</_JavaInteropValidationLibName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <_JavaInteropValidationSource Include="*.cc" />
+    <_JavaInteropValidationHeader Include="*.h" />
+  </ItemGroup>
+
+  <Target Name="_GetJavaInteropBuildInfo">
+    <PropertyGroup Condition=" $([MSBuild]::IsOSPlatform ('windows')) ">
+      <_PrepareArch   Condition=" '$(NETCoreSdkRuntimeIdentifier)' == 'win-x64' ">x86_amd64</_PrepareArch>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" $([MSBuild]::IsOSPlatform ('osx')) ">
+      <_CmakeOsxArch  Condition=" '$(NETCoreSdkRuntimeIdentifier)' == 'osx-x64'  ">x86_64</_CmakeOsxArch>
+      <_CmakeOsxArch  Condition=" '$(NETCoreSdkRuntimeIdentifier)' == 'osx-arm64'  ">arm64</_CmakeOsxArch>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <_MonoNativePath>$(NuGetPackageRoot)microsoft.netcore.app.runtime.mono.$(NETCoreSdkRuntimeIdentifier)/$(DotNetRuntimePacksVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native/</_MonoNativePath>
+      <_MonoIncludePath>$(_MonoNativePath)include/mono-2.0</_MonoIncludePath>
+      <_DEnableOsxArchitectures Condition=" $([MSBuild]::IsOSPlatform ('osx')) ">"-DENABLE_OSX_ARCHITECTURES=$(_CmakeOsxArch)"</_DEnableOsxArchitectures>
+      <_DMonoDirs>"-DMONO_INCLUDE_LIST=$(_MonoIncludePath)"</_DMonoDirs>
+      <_DOutputDir>"-DOUTPUT_DIR=$(MSBuildThisFileDirectory)$(IntermediateOutputPath)"</_DOutputDir>
+      <_ExtraArgs>$([MSBuild]::Escape('$(_DMonoDirs) $(_DEnableOsxArchitectures) $(_DOutputDir)'))</_ExtraArgs>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_BuildLibs"
+      Condition=" '$(NativeToolchainSupported)' == 'True' "
+      DependsOnTargets="GetNativeBuildCommands;_GetJavaInteropBuildInfo"
+      BeforeTargets="Build"
+      Inputs="CMakeLists.txt;$(MSBuildThisFileFullPath);java-interop.csproj;@(_JavaInteropValidationSource);@(_JavaInteropValidationHeader)"
+      Outputs="$(IntermediateOutputPath)$(_JavaInteropValidationLibName)">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <ItemGroup>
+      <_Cmake
+          Condition=" '$(PrepareNativeToolchain)' != '' "
+          Include="PrepareNativeToolchain=$(PrepareNativeToolchain) $(_PrepareArch)"
+      />
+      <_Cmake Include="CmakePath=$(CmakePath)" />
+      <_Cmake Include="CmakeGenerator=$(CmakeGenerator)" />
+      <_Cmake Include="CmakeSourceDir=$(MSBuildThisFileDirectory)" />
+      <_Cmake Include="CmakeBuildDir=$(MSBuildThisFileDirectory)$(IntermediateOutputPath)" />
+      <_Cmake Include="CmakeExtraArgs=$(_ExtraArgs)" />
+    </ItemGroup>
+    <MSBuild
+        Projects="..\..\build-tools\scripts\RunCmake.proj"
+        Properties="@(_Cmake)"
+        Targets="Cmake"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)$(_JavaInteropValidationLibName)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_Clean"
+      AfterTargets="Clean">
+    <Delete Files="$(IntermediateOutputPath)$(_JavaInteropValidationLibName)" />
+  </Target>
+</Project>

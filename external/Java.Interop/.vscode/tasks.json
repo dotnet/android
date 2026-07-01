@@ -1,0 +1,67 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Java.Interop",
+            "type": "shell",
+            "command": "msbuild Java.Interop.sln /restore /t:Build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Clean Java.Interop",
+            "type": "shell",
+            "command": "msbuild Java.Interop.sln /restore /t:Clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Build Generator",
+            "type": "shell",
+            "command": "msbuild tools/generator/generator.sln /restore /t:Build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Clean Generator",
+            "type": "shell",
+            "command": "msbuild tools/generator/generator.sln /restore /t:Clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "label": "Run Generator Unit Tests",
+            "type": "shell",
+            "command": "msbuild tools/generator/generator.sln /restore /t:RunNunitTests",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        }
+    ]
+}

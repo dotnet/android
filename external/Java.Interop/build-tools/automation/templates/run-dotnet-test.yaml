@@ -1,0 +1,27 @@
+parameters:
+  testRunTitle:
+  testAssemblyName:
+  trxSuffix: ''
+  condition: succeededOrFailed()
+  retryCount: 0
+  extraArguments: ''
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: ${{ parameters.testRunTitle }}'
+  condition: ${{ parameters.condition }}
+  inputs:
+    command: test
+    publishTestResults: false
+    arguments: --logger "trx;LogFileName=${{ parameters.testAssemblyName }}${{ parameters.trxSuffix }}.trx" --results-directory $(Agent.TempDirectory) ${{ parameters.extraArguments }} bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/${{ parameters.testAssemblyName }}.dll
+  continueOnError: true
+  retryCountOnTaskFailure: ${{ parameters.retryCount }}
+
+- task: PublishTestResults@2
+  displayName: 'Publish: ${{ parameters.testRunTitle }}'
+  condition: ${{ parameters.condition }}
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '$(Agent.TempDirectory)/${{ parameters.testAssemblyName }}${{ parameters.trxSuffix }}.trx'
+    testRunTitle: ${{ parameters.testRunTitle }}
+  continueOnError: true
