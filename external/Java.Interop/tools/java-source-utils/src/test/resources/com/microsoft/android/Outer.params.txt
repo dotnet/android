@@ -1,0 +1,12 @@
+package example
+;---------------------------------------
+  class Outer<T,U>
+    #ctor(T value)
+    isU(java.util.List<? super U> list)
+    main(java.lang.String[] args)
+    <T> method(java.lang.CharSequence a, short[] b, T[] values)
+  interface Outer.Inner<T,U,V>
+    m(V[][] values)
+  class Outer.Inner.NestedInner<T,U,V>
+    map(java.util.Map<T, java.lang.String> m)
+  interface Outer.MyAnnotation<T,U>

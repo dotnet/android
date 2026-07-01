@@ -1,0 +1,34 @@
+﻿<?xml version="1.0"?>
+<docs>
+  <member name="T:JniManagedPeerStates">
+    <summary>
+      Managed peer states.
+    </summary>
+  </member>
+  <member name="F:Activatable">
+    <summary>
+      Managed peer is eligeable for activation.
+    </summary>
+    <remarks>
+      <para>
+        A managed peer is <i>activatable</i> if it the native peer was
+        constructed first and a forthcoming constructor invocation is
+        assumed to be forthcoming.
+      </para>
+    </remarks>
+  </member>
+  <member name="F:Replaceable">
+    <summary>
+      Managed peer is replaceable.
+    </summary>
+    <remarks>
+      <para>
+        A managed peer is <i>replaceable</i> if it was created through
+        <see cref="M:Java.Interop.JniRuntime+JniValueManager.CreatePeer" />.
+        Being "replaceable" means that if another peer instance is created
+        around the same Java instance, the newly created instance will replace
+        the replaceable peer in the Java-to-managed instance mapping.
+      </para>
+    </remarks>
+  </member>
+</docs>

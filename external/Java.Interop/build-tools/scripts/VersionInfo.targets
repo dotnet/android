@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <Target Name="_SetInformationalVersion"
+      BeforeTargets="GetAssemblyVersion;GetPackageVersion">
+    <PropertyGroup>
+      <InformationalVersion>$(Version) git-rev-head:$(JIBuildCommit) git-branch:$(JIBuildBranch)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+</Project>

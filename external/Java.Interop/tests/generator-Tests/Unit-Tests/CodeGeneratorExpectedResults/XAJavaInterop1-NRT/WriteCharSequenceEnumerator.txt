@@ -1,0 +1,11 @@
+System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
+{
+	return GetEnumerator ();
+}
+
+public System.Collections.Generic.IEnumerator<char> GetEnumerator ()
+{
+	for (int i = 0; i < Length(); i++)
+		yield return CharAt (i);
+}
+

@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <RootNamespace>Hello_NativeAOTFromJNI</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishAot>true</PublishAot>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NativeLib>Shared</NativeLib>
+    <!-- Needed for cross-compilation, e.g. build osx-x64 from osx-arm64 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Hello-NativeAOTFromJNI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <HelloNativeAOTFromJNIJar Include="$(MSBuildThisFileDirectory)java\**\*.java" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(OutputPath)hello-from-java.jar" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(OutputPath)java-interop.jar" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" $([MSBuild]::IsOSPlatform('linux')) Or $([MSBuild]::IsOSPlatform('FreeBSD')) Or $([MSBuild]::IsOSPlatform('Android')) ">
+    <CustomLinkerArg Include="-Wl,-soname,lib$(NativeBinary)$(NativeBinaryExt)" />
+  </ItemGroup>
+
+  <!--
+    Resolve the macOS SDK dynamically via `xcrun` so we don't pin to a specific SDK version
+    (e.g. MacOSX15.sdk) that would silently stop applying on newer CI/dev images.
+  -->
+  <Target Name="_DetectMacOSXSdk"
+          BeforeTargets="LinkNative"
+          Condition=" $([MSBuild]::IsOSPlatform('osx')) ">
+    <Exec Command="xcrun --show-sdk-path"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          EchoOff="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_MacOSXSdkPath" />
+      <Output TaskParameter="ExitCode" PropertyName="_MacOSXSdkExitCode" />
+    </Exec>
+    <ItemGroup Condition=" '$(_MacOSXSdkExitCode)' == '0' And '$(_MacOSXSdkPath)' != '' ">
+      <CustomLinkerArg Include="-isysroot" />
+      <CustomLinkerArg Include="$(_MacOSXSdkPath)" />
+    </ItemGroup>
+  </Target>
+
+  <Import Project="Hello-NativeAOTFromJNI.targets" />
+
+</Project>

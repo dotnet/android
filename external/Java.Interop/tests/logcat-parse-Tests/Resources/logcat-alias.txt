@@ -1,0 +1,22 @@
+﻿I/monodroid-gref(19858): +g+ grefc 1 gwrefc 0 obj-handle 0xbecdf114/L -> new-handle 0x100456/G from    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+I/monodroid-gref(19858):    at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer, IntPtr ByRef handle)
+I/monodroid-gref(19858):    at Java.Lang.Object.SetHandle(IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Java.Lang.Object..ctor(IntPtr handle, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Android.Views.View..ctor(IntPtr javaReference, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Android.Widget.TextView..ctor(IntPtr javaReference, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Android.Widget.Button..ctor(IntPtr javaReference, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Android.Widget.NewButton..ctor(IntPtr jr, JniHandleOwnership tr)
+I/monodroid-gref(19858):    at System.Reflection.MonoCMethod.InternalInvoke(System.Reflection.MonoCMethod , System.Object , System.Object[] , System.Exception ByRef )
+I/monodroid-gref(19858):    at System.Reflection.MonoCMethod.InternalInvoke(System.Object obj, System.Object[] parameters)
+I/monodroid-gref(19858):    at System.Reflection.MonoCMethod.DoInvoke(Syste
+I/monodroid-gref(19858): handle 0x100456; key_handle 0x655615a0: Java Type: `android/widget/NewButton`; MCW type: `Android.Widget.NewButton`
+I/monodroid-gref(19858): +g+ grefc 2 gwrefc 0 obj-handle 0x100456/G -> new-handle 0x100472/G from    at Android.Runtime.JNIEnv.NewGlobalRef(IntPtr jobject)
+I/monodroid-gref(19858):    at Java.Lang.Object.RegisterInstance(IJavaObject instance, IntPtr value, JniHandleOwnership transfer, IntPtr ByRef handle)
+I/monodroid-gref(19858):    at Java.Lang.Object.SetHandle(IntPtr value, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Java.Lang.Object..ctor(IntPtr handle, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Android.Views.View..ctor(IntPtr javaReference, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Android.Widget.TextView..ctor(IntPtr javaReference, JniHandleOwnership transfer)
+I/monodroid-gref(19858):    at Android.Widget.Button..ctor(Android.Content.Context context, IAttributeSet attrs)
+I/monodroid-gref(19858):    at Android.Widget.NewButton..ctor(Android.Content.Context context, IAttributeSet attrs) in /Users/jon/Downloads/bxc-18641/MemoryLeakTest/MemoryLeakTest/NewButton.cs:line 19
+I/monodroid-gref(19858):    at System.Reflection.MonoCMethod.InternalInvoke(System.Reflection.MonoCMethod , System.Object , System.Object[] , System.Exception ByRef )
+I/monodroid-gref(19858):    at System.Reflection.MonoCMethod.Inter
