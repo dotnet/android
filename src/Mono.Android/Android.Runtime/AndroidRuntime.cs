@@ -310,7 +310,7 @@ namespace Android.Runtime {
 		}
 	}
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+	[RequiresUnreferencedCode ("AndroidTypeManager is reflection-backed (it loads Mono.Android.Export for [Export] members) and is not trimming-compatible.")]
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
@@ -392,23 +392,14 @@ namespace Android.Runtime {
 
 		static MethodInfo? dynamic_callback_gen;
 
-		// See ExportAttribute.cs
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
-			if (dynamic_callback_gen == null) {
-				var assembly = Assembly.Load ("Mono.Android.Export");
-				if (assembly == null)
-					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
-				if (type == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
-				dynamic_callback_gen = type.GetMethod ("Create");
-				if (dynamic_callback_gen == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
-			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
+			// We're loading the Mono.Android.Export assembly dynamically to avoid problems with circular dependencies.
+			dynamic_callback_gen ??= Type.GetType ("Java.Interop.DynamicCallbackCodeGenerator, Mono.Android.Export")?.GetMethod ("Create")
+				?? throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
+
+			return dynamic_callback_gen.Invoke (null, [method]) as Delegate
+				?? throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. DynamicCallbackCodeGenerator.Create did not return a delegate.");
 		}
 
 		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
@@ -544,14 +535,20 @@ namespace Android.Runtime {
 							var mname = name.Slice (2);
 							MethodInfo? minfo = null;
 							typeMethods ??= type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-							foreach (var mi in typeMethods)
+							foreach (var mi in typeMethods) {
 								if (mname.SequenceEqual (mi.Name) && signature.SequenceEqual (JavaNativeTypeManager.GetJniSignature (mi))) {
 									minfo = mi;
 									break;
 								}
-
+							}
 							if (minfo == null)
 								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
+
+							// This check is for trimming purposes: if `ExportAttribute` is trimmed from the app, so should be `CreateDynamicCallback`
+							// and with it the implicit dependency on `Mono.Android.Export.dll`.
+							if (minfo.GetCustomAttribute<ExportAttribute> () is not ExportAttribute)
+								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{minfo.Name}' was not marked with [Export] attribute. Signature: {signature.ToString ()}"));
+
 							callback = CreateDynamicCallback (minfo);
 							lock (prevent_delegate_gc_lock) {
 								prevent_delegate_gc.Add (callback);

@@ -168,6 +168,7 @@ namespace Android.Runtime
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The AndroidTypeManager branch is only reached when RuntimeFeature.TrimmableTypeMap is false; the linker substitutes the feature switch and trims this branch in trimmable apps.")]
 		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
