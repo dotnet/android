@@ -78,7 +78,7 @@ Java-specific configuration:
 
 ## Reference material
 
-- [JNI Specification](http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
+- [JNI Specification](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
 - [Android JNI Performance Guide](https://developer.android.com/training/articles/perf-jni)
 - `external/Java.Interop/Documentation/Architecture.md`
 - `external/Java.Interop/Documentation/BuildConfiguration.md`

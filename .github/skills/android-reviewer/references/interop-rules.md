@@ -21,7 +21,7 @@ when the diff contains interop markers (`JniObjectReference`, `JniPeerMembers`,
 
 ---
 
-## P/Invoke & Marshalling Checks
+## P/Invoke & Marshaling Checks
 
 | Check | What to look for |
 |-------|-----------------|
