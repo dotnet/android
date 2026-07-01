@@ -92,7 +92,7 @@ namespace Java.Interop {
 					var factoryConverter = TryGetFactoryBasedConverter (target);
 					if (factoryConverter != null)
 						return factoryConverter;
-				} else if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
+				} else {
 					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
 					if (factoryConverter != null)
 						return factoryConverter;
