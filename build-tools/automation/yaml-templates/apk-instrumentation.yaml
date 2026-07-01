@@ -14,39 +14,25 @@ steps:
   # Build and install the APK to the device first, so that ComputeRunArguments
   # can resolve the package name from AndroidManifest.xml.
   #
-  # Retry the install up to 3 times with a delay between attempts: the emulator/ADB
-  # connection occasionally drops mid-install (XAGCPU7000 "device offline"), and a
-  # short delay usually lets it recover. If all attempts fail we exit non-zero and,
-  # with continueOnError: false below, fail the lane immediately - there is no point
-  # running the tests against a device where the app was never installed (that only
-  # wastes CI time and produces a misleading INSTRUMENTATION_FAILED). See dotnet/android#11830.
-- powershell: |
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
-        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}/dotnet"
-    } else {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.buildConfiguration }}\dotnet"
-        $env:PATH = "${DOTNET_ROOT};$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
-    }
-    $maxAttempts = 3
-    $delaySeconds = 15
-    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-        Write-Host "Install attempt $attempt of $maxAttempts..."
-        & $dotnetPath build ${{ parameters.project }} -t:Install -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/build-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
-        if ($LASTEXITCODE -eq 0) { break }
-        if ($attempt -lt $maxAttempts) {
-            Write-Host "Install attempt $attempt failed (exit code $LASTEXITCODE); retrying in $delaySeconds seconds to let the device/ADB connection recover..."
-            Start-Sleep -Seconds $delaySeconds
-        } else {
-            Write-Host "##vso[task.logissue type=error]App install failed after $maxAttempts attempts."
-            exit $LASTEXITCODE
-        }
-    }
-  displayName: build ${{ parameters.testName }}
-  condition: ${{ parameters.condition }}
-  continueOnError: false
+  # Retry the install up to 3 times: the emulator/ADB connection occasionally
+  # drops mid-install (XAGCPU7000 "device offline") and a retry usually recovers.
+  # If every attempt fails, continueOnError: false fails the lane immediately -
+  # there is no point running the tests against a device where the app was never
+  # installed (that only wastes CI time and produces a misleading
+  # INSTRUMENTATION_FAILED). See dotnet/android#11830.
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    configuration: ${{ parameters.buildConfiguration }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    displayName: build ${{ parameters.testName }}
+    project: ${{ parameters.project }}
+    arguments: >-
+      -t:Install
+      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/build-${{ parameters.testName }}.binlog
+      -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+    condition: ${{ parameters.condition }}
+    retryCountOnTaskFailure: 3
+    continueOnError: false
 
   # Run dotnet test from the project directory so it finds the project-local
   # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
