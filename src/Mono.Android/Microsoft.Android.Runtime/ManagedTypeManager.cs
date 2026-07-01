@@ -9,7 +9,7 @@ namespace Microsoft.Android.Runtime;
 
 [RequiresUnreferencedCode ("The 'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
 [RequiresDynamicCode ("The 'Invoker' types are preserved by the MarkJavaObjects trimmer step.")]
-class ManagedTypeManager : JniRuntime.JniTypeManager {
+class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	internal const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
@@ -98,6 +98,17 @@ class ManagedTypeManager : JniRuntime.JniTypeManager {
 		}
 	}
 
+
+	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+	{
+		// Base class contains built-in mappings (e.g. java/lang/String → System.String)
+		// which must take priority over ManagedTypeMapping (which would return Java.Lang.String).
+		var type = base.GetTypeForSimpleReference (jniSimpleReference);
+		if (type is not null) {
+			return type;
+		}
+		return ManagedTypeMapping.TryGetType (jniSimpleReference, out var target) ? target : null;
+	}
 
 	protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
 	{
