@@ -69,7 +69,6 @@ struct TypeMap
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 struct TypeMapAssembly
 {
-	xamarin::android::hash_t mvid_hash;
 	uint64_t name_length;
 	uint64_t name_offset; // into the assembly names blob
 };
