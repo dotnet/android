@@ -10,7 +10,8 @@ parameters:
 steps:
 - script: |
     git submodule status --cached external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
-    echo "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$HOME/.gradle/caches"
+    # Honor a relocated GRADLE_USER_HOME; default to the usual $HOME/.gradle otherwise.
+    echo "##vso[task.setvariable variable=GRADLE_CACHE_DIR]${GRADLE_USER_HOME:-$HOME/.gradle}/caches"
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: prepare Gradle cache variables
   condition: ne(variables['Agent.OS'], 'Windows_NT')

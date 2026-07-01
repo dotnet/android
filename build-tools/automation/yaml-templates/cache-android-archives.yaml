@@ -20,7 +20,9 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
 
 steps:
-- script: echo "##vso[task.setvariable variable=ANDROID_ARCHIVES_DIR]$HOME/android-archives"
+# Honor a relocated AndroidToolchainCacheDirectory (set as a job variable -> env var
+# ANDROIDTOOLCHAINCACHEDIRECTORY); default to the usual $HOME location otherwise.
+- script: echo "##vso[task.setvariable variable=ANDROID_ARCHIVES_DIR]${ANDROIDTOOLCHAINCACHEDIRECTORY:-$HOME/android-archives}"
   displayName: prepare android-archives cache variables
   condition: ne(variables['Agent.OS'], 'Windows_NT')
 

@@ -11,6 +11,27 @@ parameters:
 steps:
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
+# Public dnceng-public agents have a tiny (~29 GB) OS disk mounted at '/', but the work
+# volume /mnt (~69 GB) has plenty of room. Point every large cache/tooling directory at a
+# folder on /mnt next to the checked-out repo so '/' never fills up (which otherwise makes
+# the post-job cache-save 'tar' fail with "No space left on device"). This must run before
+# 'setup-jdk-variables' (JAVA_HOME lives inside the toolchain dir) and 'make prepare'.
+# The overrides are honored downstream: NuGet via NUGET_PACKAGES, Gradle via
+# GRADLE_USER_HOME, and the Android toolchain via the AndroidToolchain*Directory MSBuild
+# properties (Configuration.props only defaults them when empty, and MSBuild reads env
+# vars as properties). Job-scoped, so the separate test-stage agents are unaffected.
+# Public-only: the 1ES pipeline runs on agents that do not have this small-disk problem.
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - bash: |
+      set -euo pipefail
+      root="$(Pipeline.Workspace)/xa-caches"
+      echo "Relocating caches and toolchain under $root (on the large /mnt work volume)"
+      echo "##vso[task.setvariable variable=NUGET_PACKAGES]$root/nuget"
+      echo "##vso[task.setvariable variable=GRADLE_USER_HOME]$root/gradle"
+      echo "##vso[task.setvariable variable=AndroidToolchainDirectory]$root/android-toolchain"
+      echo "##vso[task.setvariable variable=AndroidToolchainCacheDirectory]$root/android-archives"
+    displayName: Relocate caches to the large /mnt volume
+
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - bash: |
       set -e

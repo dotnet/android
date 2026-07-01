@@ -7,9 +7,13 @@ steps:
     $agentOS="$(Agent.OS)"
     $agentArch="$(Agent.OSArchitecture)" -eq "ARM64" ? "arm64" : "$(Agent.OSArchitecture)"
     $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
-    $xaPrepareJdkPath="$env:HOME/android-toolchain/jdk-$jdkMajorVersion"
+    # Honor a relocated AndroidToolchainDirectory (set as a job variable -> env var
+    # ANDROIDTOOLCHAINDIRECTORY); the JDK is unpacked under it. Default to the usual $HOME.
+    $toolchainDir = if ($env:ANDROIDTOOLCHAINDIRECTORY) { $env:ANDROIDTOOLCHAINDIRECTORY } else { "$env:HOME/android-toolchain" }
+    $xaPrepareJdkPath="$toolchainDir/jdk-$jdkMajorVersion"
     if ("$agentOS" -eq "Windows_NT") {
-      $xaPrepareJdkPath="$env:USERPROFILE\android-toolchain\jdk-$jdkMajorVersion"
+      $toolchainDirWin = if ($env:ANDROIDTOOLCHAINDIRECTORY) { $env:ANDROIDTOOLCHAINDIRECTORY } else { "$env:USERPROFILE\android-toolchain" }
+      $xaPrepareJdkPath="$toolchainDirWin\jdk-$jdkMajorVersion"
     }
     $jdkHomePath=$xaPrepareJdkPath
     if ("${{ parameters.useAgentJdkPath }}" -eq "true") {
