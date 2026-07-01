@@ -9,8 +9,6 @@ using Java.Interop.Expressions;
 namespace Android.Runtime
 {
 	sealed class IJavaObjectValueMarshaler : JniValueMarshaler<IJavaObject> {
-
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
 		internal    static  IJavaObjectValueMarshaler              Instance    = new IJavaObjectValueMarshaler ();
@@ -18,7 +16,6 @@ namespace Android.Runtime
 		public override IJavaObject CreateGenericValue (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType)
 		{
 			throw new NotImplementedException ();

@@ -7,30 +7,18 @@ using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 
-class JavaMarshalValueManager : AndroidReflectionJniValueManager
+[RequiresDynamicCode ("This value manager is reflection-backed and can break in AOT scenarios.")]
+[RequiresUnreferencedCode ("This value manager is reflection-backed and relies on custom trimming rules.")]
+sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
 	static readonly Type[] XAConstructorSignature = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
-	bool disposed;
-
 	public JavaMarshalValueManager ()
 	{
 		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
-	}
-
-	protected override void Dispose (bool disposing)
-	{
-		disposed = true;
-		base.Dispose (disposing);
-	}
-
-	void ThrowIfDisposed ()
-	{
-		if (disposed)
-			throw new ObjectDisposedException (nameof (JavaMarshalValueManager));
 	}
 
 	public override void WaitForGCBridgeProcessing ()
@@ -68,7 +56,7 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 		JavaMarshalRegisteredPeers.FinalizePeer (value);
 	}
 
-	public override void ActivatePeer (JniObjectReference reference, [DynamicallyAccessedMembers (Constructors)] Type type, ConstructorInfo cinfo, object?[]? argumentValues)
+	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 	{
 		if (RuntimeFeature.TrimmableTypeMap)
 			throw new PlatformNotSupportedException ("Activating Java peers is not supported when TrimmableTypeMap is enabled.");
@@ -87,7 +75,7 @@ class JavaMarshalValueManager : AndroidReflectionJniValueManager
 			[DynamicallyAccessedMembers (Constructors)]
 			Type? targetType)
 	{
-		ThrowIfDisposed ();
+		EnsureNotDisposed ();
 
 		if (!reference.IsValid) {
 			return null;

@@ -11,9 +11,18 @@
       The `ResponseEnded` failure that flaky CDNs produce is thrown as a
       top-level `HttpIOException`, so `Retries` does NOT cover it - the task
       errors out on the first mid-stream disconnect. This file's
-      `DownloadOneFileWithRetry` target wraps `<DownloadFile>` in three
+      `DownloadOneFileWithRetry` target wraps `<DownloadFile>` in five
       outer attempts using `ContinueOnError="WarnAndContinue"`, so transient
-      stream failures get up to 3 retries before failing the build.
+      stream failures get retried before failing the build.
+
+      Crucially, the outer loop sleeps between attempts with an *escalating*
+      backoff (`$(_DownloadBackoffBaseMs)` * attempt-number), via the inline
+      `Sleep` task below. Without that delay the attempts fire back-to-back
+      within milliseconds, so a short CDN outage (a `ResponseEnded` hiccup
+      typically lasts tens of seconds) blows through every attempt instantly
+      and fails the build. The `RetryDelayMilliseconds` on `<DownloadFile>`
+      does NOT help here because, as noted above, the inner retry never
+      engages for `ResponseEnded`.
 
     Why callers dispatch via `<MSBuild>` (and not `<CallTarget>`):
       Two MSBuild semantics force this:
@@ -94,10 +103,29 @@
           BuildInParallel="true" />
   -->
 
+  <!-- Cross-platform sleep used to back off between outer download attempts.
+       MSBuild has no built-in Sleep task; RoslynCodeTaskFactory works on the
+       .NET MSBuild used to build this repo. -->
+  <UsingTask TaskName="Sleep" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Milliseconds ParameterType="System.Int32" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        Log.LogMessage (Microsoft.Build.Framework.MessageImportance.High, "Download failed; waiting {0} ms before retrying...", Milliseconds);
+        System.Threading.Thread.Sleep (Milliseconds);
+      </Code>
+    </Task>
+  </UsingTask>
+
   <PropertyGroup>
     <DownloadFileWithRetryFile>$(MSBuildThisFileFullPath)</DownloadFileWithRetryFile>
     <_DownloadRetries>5</_DownloadRetries>
     <_DownloadRetryDelayMilliseconds>5000</_DownloadRetryDelayMilliseconds>
+    <!-- Base delay for the escalating backoff between the five outer attempts
+         that wrap `<DownloadFile>` (see header comment). Attempt N waits
+         `_DownloadBackoffBaseMs` * (N-1) before retrying: 30s, 60s, 90s, 120s. -->
+    <_DownloadBackoffBaseMs>30000</_DownloadBackoffBaseMs>
     <!-- Computed up-front (vs inside the target body) so the per-file
          destination and stamp paths are visible to the target's
          Inputs/Outputs incremental gate below. Each `<MSBuild>` build
@@ -129,9 +157,11 @@
     />
 
     <!-- Outer retry loop. Each `<DownloadFile>` is gated by `!Exists()`, so
-         once a download succeeds the remaining attempts no-op. The first
-         two use `WarnAndContinue` so transient failures don't fail the
-         build; the third lets the error propagate. -->
+         once a download succeeds the remaining attempts (and their preceding
+         sleeps) no-op. Every attempt but the last uses `WarnAndContinue` so
+         transient failures don't fail the build; the last lets the error
+         propagate. A `Sleep` with escalating backoff precedes each retry so a
+         short CDN outage has time to clear before the next attempt. -->
     <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
         SourceUrl="$(_DownloadUrl)"
         DestinationFolder="$(_DownloadFolder)"
@@ -140,6 +170,8 @@
         RetryDelayMilliseconds="$(_DownloadRetryDelayMilliseconds)"
         ContinueOnError="WarnAndContinue"
     />
+
+    <Sleep Condition=" !Exists('$(_DownloadPath)') " Milliseconds="$([MSBuild]::Multiply($(_DownloadBackoffBaseMs), 1))" />
     <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
         SourceUrl="$(_DownloadUrl)"
         DestinationFolder="$(_DownloadFolder)"
@@ -148,6 +180,28 @@
         RetryDelayMilliseconds="$(_DownloadRetryDelayMilliseconds)"
         ContinueOnError="WarnAndContinue"
     />
+
+    <Sleep Condition=" !Exists('$(_DownloadPath)') " Milliseconds="$([MSBuild]::Multiply($(_DownloadBackoffBaseMs), 2))" />
+    <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
+        SourceUrl="$(_DownloadUrl)"
+        DestinationFolder="$(_DownloadFolder)"
+        DestinationFileName="$(_DownloadFileName)"
+        Retries="$(_DownloadRetries)"
+        RetryDelayMilliseconds="$(_DownloadRetryDelayMilliseconds)"
+        ContinueOnError="WarnAndContinue"
+    />
+
+    <Sleep Condition=" !Exists('$(_DownloadPath)') " Milliseconds="$([MSBuild]::Multiply($(_DownloadBackoffBaseMs), 3))" />
+    <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
+        SourceUrl="$(_DownloadUrl)"
+        DestinationFolder="$(_DownloadFolder)"
+        DestinationFileName="$(_DownloadFileName)"
+        Retries="$(_DownloadRetries)"
+        RetryDelayMilliseconds="$(_DownloadRetryDelayMilliseconds)"
+        ContinueOnError="WarnAndContinue"
+    />
+
+    <Sleep Condition=" !Exists('$(_DownloadPath)') " Milliseconds="$([MSBuild]::Multiply($(_DownloadBackoffBaseMs), 4))" />
     <DownloadFile Condition=" !Exists('$(_DownloadPath)') "
         SourceUrl="$(_DownloadUrl)"
         DestinationFolder="$(_DownloadFolder)"
