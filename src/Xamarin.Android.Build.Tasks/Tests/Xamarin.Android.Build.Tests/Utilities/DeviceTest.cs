@@ -20,6 +20,20 @@ namespace Xamarin.Android.Build.Tests
 	{
 		public const string GuestUserName = "guest1";
 
+		// When running on CI we often see failures where the test fails to spot the "Displayed:" line
+		// because time between when we start logging and when the application actually is launched
+		// by the emulator is longer than the timeout we specify (usually 30s). Use this constant as the
+		// default timeout for all the activity start monitoring calls, adjust per-test as necessary.
+		//
+		// Sometimes emulators, for whatever reason, launch the app after a delay of up to 100s and the
+		// logcat is filled with time-consuming Java exceptions unrelated to our test. We need to account
+		// for that. Most of the tests used 30s as the activity start timeout, so let's give the emulator
+		// up to 2 minutes to gather all its ducks in the row + 30 "standard" seconds for our test app
+		// to start.
+		//
+		// It is recommended that no test waiting for the "Displayed:" message waits shorter than this
+		public const int ActivityStartTimeoutInSeconds = 150;
+
 		protected string DeviceAbi { get; private set; }
 
 		protected int DeviceSdkVersion { get; private set;}

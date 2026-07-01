@@ -99,3 +99,37 @@ steps:
 - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
+
+# Public dnceng-public agents are sometimes provisioned with a very small (~29 GB) OS
+# disk mounted at '/'. The build fills '/' to ~94% via caches under $HOME, and the
+# implicit post-job 'cache Android toolchain archives' step then fails writing its tar
+# archive to '/' with a "No space left on device" error, failing the whole job. Note the
+# repo working tree (bin/obj) lives on the large /mnt volume, NOT on '/', so deleting it
+# does not help. Every pipeline artifact has already been uploaded by this point, so
+# reclaim space on '/' by deleting everything under $HOME that the build no longer needs.
+# The only things we must keep are the two post-job cache sources: $HOME/android-archives
+# (saved by 'cache Android toolchain archives') and $HOME/.gradle (saved by 'cache Gradle
+# downloads'). Everything else is disposable here, most importantly $HOME/android-toolchain
+# (the extracted SDK/NDK/JDK, ~9 GB) and the NuGet global packages cache.
+# Public-only: the 1ES pipeline runs on agents that do not have this small-disk problem.
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - bash: |
+      set -euo pipefail
+      echo "=== Disk usage (all mounts) before freeing space ==="
+      df -h
+      # Guard against an unset/empty/root $HOME so the 'rm -rf' below can never target
+      # a system directory (e.g. "/android-toolchain" or "/.dotnet").
+      if [ -z "${HOME:-}" ] || [ "$HOME" = "/" ] || [ ! -d "$HOME" ]; then
+        echo "##vso[task.logissue type=warning]HOME ('${HOME:-}') is not a valid directory; skipping cleanup."
+        exit 0
+      fi
+      echo "=== Largest entries under HOME ($HOME) on the small '/' disk ==="
+      du -xhd1 "$HOME" 2>/dev/null | sort -h | tail -20 || true
+      for d in "$HOME/android-toolchain" "${NUGET_PACKAGES:-$HOME/.nuget/packages}" "$HOME/.dotnet" "$HOME/.local/share/NuGet" "$HOME/.cache"; do
+        echo "Removing $d"
+        rm -rf -- "$d" || true
+      done
+      echo "=== Disk usage (all mounts) after freeing space ==="
+      df -h
+    displayName: Free disk space before post-job cache save
+    condition: always()
