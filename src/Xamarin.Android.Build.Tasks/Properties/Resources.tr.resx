@@ -860,7 +860,7 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
   <data name="XA4322" xml:space="preserve">
-    <value>Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.</value>
+    <value>Desteklenmeyen '{0}' genel seçeneğini içerdiğinden, kitaplık ProGuard '{1}' yapılandırma dosyası ({2} kaynağından) atlanıyor. Genel ProGuard seçeneklerine yalnızca uygulama projelerinde izin verilir.</value>
     <comment>The following are literal names and should not be translated: ProGuard
 {0} - The unsupported ProGuard option, such as -printmapping.
 {1} - The path to the proguard.txt file inside the extracted .aar.
@@ -1166,6 +1166,21 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>
+  <data name="XA4256" xml:space="preserve">
+    <value>Only one '{0}' is allowed for '{1}' item '{2}'.</value>
+    <comment>{0} - MSBuild XML element name
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4257" xml:space="preserve">
+    <value>Skipping Java peer type '{0}' from assembly '{1}' because referenced type '{2}' from assembly '{3}' could not be resolved in '{4}'. This type will not be included in the trimmable type map.</value>
+    <comment>The following are literal names and should not be translated: Java, trimmable type map.
+{0} - Fully-qualified managed Java peer type name
+{1} - Assembly containing the skipped Java peer type
+{2} - Fully-qualified managed referenced type name that could not be resolved
+{3} - Assembly expected to contain the unresolved type
+{4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' komutu başarısız oldu.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1202,7 +1217,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {2} - The section name.</comment>
   </data>
   <data name="XA0149" xml:space="preserve">
-    <value>Ignoring legacy Xamarin.Android environment file '{0}' from NuGet package '{1}' version '{2}' in assembly '{3}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this NuGet package or notify the library author.</value>
+    <value>'{3}' derlemesinde yer alan '{1}' NuGet paketi '{2}' sürümündeki eski '{0}' Xamarin.Android ortam dosyası yoksayılıyor. Xamarin.Android sınıf kitaplıklarındaki ortam dosyaları Android için .NET'te desteklenmiyor. Bu NuGet paketinin daha yeni bir sürümünü kullanın veya bu durumu kitaplık yazarına bildirin.</value>
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android, NuGet.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The NuGet package id.
@@ -1210,7 +1225,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {3} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XA0149_Assembly" xml:space="preserve">
-    <value>Ignoring legacy Xamarin.Android environment file '{0}' in assembly '{1}'. Environment files from Xamarin.Android class libraries are not supported in .NET for Android. Use a newer version of this assembly or notify the library author.</value>
+    <value>'{1}' derlemesindeki eski '{0}' Xamarin.Android ortam dosyası yoksayılıyor. Xamarin.Android sınıf kitaplıklarındaki ortam dosyaları Android için .NET'te desteklenmiyor. Bu derlemenin daha yeni bir sürümünü kullanın veya bu durumu kitaplık yazarına bildirin.</value>
     <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>
