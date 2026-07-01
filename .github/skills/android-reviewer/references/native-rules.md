@@ -35,6 +35,7 @@ remotely.
 | **Don't use compiler-reserved identifiers** | Double-underscore `__` prefixed names are reserved by the C/C++ standard. Use `_monodroid_` or similar instead. (Postmortem `#3`) |
 | **Prefer `nothrow new` + null check where appropriate** | Have `operator new(size_t)` abort on OOM, but `operator new(size_t, nothrow_t)` return `nullptr` for callers that want to handle failure gracefully. |
 | **Avoid merging lines for no reason** | Don't combine two 80-char lines into one 160-char line. Keep code readable. (Postmortem `#36`) |
+| **Use C++ standard headers** | Prefer `<cstdlib>` over `<stdlib.h>`, `<cstring>` over `<string.h>`, etc. The C++ headers place names in `std::` and give better type checking. |
 
 ---
 

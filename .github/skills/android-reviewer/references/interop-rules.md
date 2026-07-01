@@ -2,12 +2,26 @@
 
 Rules for the boundary between C# and C/C++ code — P/Invoke declarations, JNI
 bindings, and shared structs. Load when both managed and native files change, or
-when the diff contains interop markers (`DllImport`, `[Register]`, `JNIEnv`,
-`[MarshalAs]`, `[StructLayout]`).
+when the diff contains interop markers (`JniObjectReference`, `JniPeerMembers`,
+`DllImport`, `[Register]`, `JNIEnv`, `[MarshalAs]`, `[StructLayout]`).
 
 ---
 
-## Interop Checks
+## JNI Interop Checks (`external/Java.Interop/`, `src/Mono.Android/`)
+
+| Check | What to look for |
+|-------|-----------------|
+| **`JniObjectReference` lifecycle** | Every `JniObjectReference` obtained from JNI calls must be disposed in a `try`/`finally` block. Local references that escape their JNI frame exhaust the local reference table (default 512 entries). Global references that aren't freed are permanent leaks. |
+| **`JniPeerMembers` for method/field IDs** | Method and field IDs should be cached via `JniPeerMembers.InstanceMethods`, `JniPeerMembers.StaticMethods`, or `JniPeerMembers.InstanceFields`. Looking up IDs on every call is expensive. |
+| **Virtual vs non-virtual dispatch** | Default interface method implementations should use `InvokeNonvirtualVoidMethod()` (non-virtual). Class method overrides should use `InvokeVirtualVoidMethod()` (virtual). Getting this wrong changes dispatch semantics. |
+| **`[Register]` attribute accuracy** | `[Register]` attributes must exactly match the Java method name and JNI signature. Mismatches cause `NoSuchMethodError` at runtime. Verify against the Java API description. |
+| **`JniTransition` for native callbacks** | Entry points from Java into managed code should use `JniTransition` to properly handle exception marshaling. Without it, managed exceptions propagate into the JVM as undefined behavior. |
+| **Exception checking after JNI calls** | After JNI calls that can throw (most of them), check for pending Java exceptions via `JniEnvironment.Errors.ExceptionOccurred()` or rely on the built-in checking in `JniPeerMembers` wrappers. Don't ignore JNI error return codes. |
+| **Thread-local JNI environments** | JNI environments are thread-local. Use `JniEnvironment.Current` to access the current thread's environment. Never cache a `JNIEnv*` across threads. |
+
+---
+
+## P/Invoke & Marshalling Checks
 
 | Check | What to look for |
 |-------|-----------------|
