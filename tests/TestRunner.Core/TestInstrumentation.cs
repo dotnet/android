@@ -311,15 +311,38 @@ public abstract class TestInstrumentation : Instrumentation
 	}
 
 	/// <summary>
-	/// Sends test status updates through the instrumentation protocol.
+	/// Streams per-test status updates through the instrumentation protocol
+	/// (<c>am instrument -r</c>) so the host adapter can report each test to MTP
+	/// as it finishes. This makes results resilient to a mid-run process crash:
+	/// every test completed before the crash has already been reported, instead
+	/// of the whole run being lost because the final TRX was never written.
+	///
+	/// Each <c>SendStatus</c> emits an <c>INSTRUMENTATION_STATUS</c> block that
+	/// the host parses line-by-line. Because that protocol is line-based, the
+	/// (potentially multi-line) failure message and stack trace are Base64-encoded
+	/// so every value stays on a single line.
 	/// </summary>
 	class TestListener (Instrumentation instrumentation) : ITestListener
 	{
+		// Status codes mirror AndroidJUnitRunner conventions so the values are
+		// familiar, but the host relies on the explicit "event"/"outcome" keys.
+		const int StatusStart = 1;
+		const int StatusPassed = 0;
+		const int StatusFailed = -2;
+		const int StatusSkipped = -3;
+
 		public void TestStarted (ITest test)
 		{
 			if (test.IsSuite)
 				return;
 			Log.Info (LogTag, $"[START] {test.FullName}");
+
+			var b = new Bundle ();
+			b.PutString ("event", "start");
+			b.PutString ("test", test.FullName);
+			b.PutString ("name", test.Name);
+			b.PutString ("class", test.ClassName ?? "");
+			instrumentation.SendStatus (StatusStart, b);
 		}
 
 		public void TestFinished (ITestResult result)
@@ -327,19 +350,29 @@ public abstract class TestInstrumentation : Instrumentation
 			if (result.Test.IsSuite)
 				return;
 
-			var outcome = result.ResultState.Status switch {
-				TestStatus.Passed => "passed",
-				TestStatus.Failed => "failed",
-				_ => "skipped",
+			var (outcome, statusCode) = result.ResultState.Status switch {
+				TestStatus.Passed => ("passed", StatusPassed),
+				TestStatus.Failed => ("failed", StatusFailed),
+				_ => ("skipped", StatusSkipped),
 			};
 
 			Log.Info (LogTag, $"[{outcome.ToUpperInvariant ()}] {result.FullName}");
 
 			var b = new Bundle ();
+			b.PutString ("event", "finish");
 			b.PutString ("test", result.FullName);
+			b.PutString ("name", result.Test.Name);
+			b.PutString ("class", result.Test.ClassName ?? "");
 			b.PutString ("outcome", outcome);
-			instrumentation.SendStatus (0, b);
+			if (result.Message is not null)
+				b.PutString ("message-b64", Encode (result.Message));
+			if (result.StackTrace is not null)
+				b.PutString ("stack-b64", Encode (result.StackTrace));
+			instrumentation.SendStatus (statusCode, b);
 		}
+
+		static string Encode (string value)
+			=> Convert.ToBase64String (System.Text.Encoding.UTF8.GetBytes (value));
 
 		public void TestOutput (TestOutput output) { }
 		public void SendMessage (TestMessage message) { }
