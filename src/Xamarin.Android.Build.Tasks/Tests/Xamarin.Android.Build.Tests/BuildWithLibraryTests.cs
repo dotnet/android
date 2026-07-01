@@ -321,6 +321,10 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
+			if (IgnoreOnNativeAot (runtime, "the trimmable typemap trims Java Callable Wrappers for library types that are never instantiated, so the unused LibraryB JCWs are intentionally absent from classes.dex.")) {
+				return;
+			}
+
 			// Setup dependencies App A -> Lib B -> Lib C
 			var path = Path.Combine ("temp", TestName);
 

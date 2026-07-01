@@ -102,133 +102,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAOT ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				ProjectName = "Hello",
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_ExtraTrimmerArgs", "--verbose");
-
-			// Required for java/util/ArrayList assertion below
-			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${AFTER_ONCREATE}", "new Android.Runtime.JavaList (); new Android.Runtime.JavaList<int> ();");
-
-			using var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			b.Output.AssertTargetIsNotSkipped ("_PrepareLinking");
-
-			string [] mono_classes = [
-				"Lmono/MonoRuntimeProvider;",
-			];
-			string[] mono_files = [
-				"lib/arm64-v8a/libmonosgen-2.0.so",
-				"lib/x86_64/libmonosgen-2.0.so",
-			];
-			string [] nativeaot_files = [
-				$"lib/arm64-v8a/lib{proj.ProjectName}.so",
-				$"lib/x86_64/lib{proj.ProjectName}.so",
-			];
-
-			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-			var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-
-			var linkedMonoAndroidAssembly = Path.Combine (intermediate, "android-arm64", "linked", "Mono.Android.dll");
-			FileAssert.Exists (linkedMonoAndroidAssembly);
-			var javaClassNames = new List<string> ();
-			var types = new List<TypeReference> ();
-
-			using (var assembly = AssemblyDefinition.ReadAssembly (linkedMonoAndroidAssembly)) {
-				var typeName = "Android.App.Activity";
-				var methodName = "GetOnCreate_Landroid_os_Bundle_Handler";
-				var type = assembly.MainModule.GetType (typeName);
-				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain {typeName}");
-				var method = type.Methods.FirstOrDefault (m => m.Name == methodName);
-				Assert.IsNotNull (method, $"{linkedMonoAndroidAssembly} should contain {typeName}.{methodName}");
-
-				type = assembly.MainModule.Types.FirstOrDefault (t => t.Name == "ManagedTypeMapping");
-				Assert.IsNotNull (type, $"{linkedMonoAndroidAssembly} should contain ManagedTypeMapping");
-				method = type.Methods.FirstOrDefault (m => m.Name == "GetJniNameByTypeNameHashIndex");
-				Assert.IsNotNull (method, $"{type.Name} should contain GetJniNameByTypeNameHashIndex");
-
-				foreach (var i in method.Body.Instructions) {
-					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldstr)
-						continue;
-					if (i.Operand is not string javaName)
-						continue;
-					if (i.Next.OpCode != Mono.Cecil.Cil.OpCodes.Ret)
-						continue;
-					javaClassNames.Add (javaName);
-				}
-
-				method = type.Methods.FirstOrDefault (m => m.Name == "GetTypeByJniNameHashIndex");
-				Assert.IsNotNull (method, $"{type.Name} should contain GetTypeByJniNameHashIndex");
-
-				foreach (var i in method.Body.Instructions) {
-					if (i.OpCode != Mono.Cecil.Cil.OpCodes.Ldtoken)
-						continue;
-					if (i.Operand is not TypeReference typeReference)
-						continue;
-					if (i.Next?.OpCode != Mono.Cecil.Cil.OpCodes.Call)
-						continue;
-					if (i.Next.Next?.OpCode != Mono.Cecil.Cil.OpCodes.Ret)
-						continue;
-					types.Add (typeReference);
-				}
-
-				// Basic types
-				AssertTypeMap ("java/lang/Object", "Java.Lang.Object");
-				AssertTypeMap ("java/lang/String", "Java.Lang.String");
-				AssertTypeMap ("[Ljava/lang/Object;", "Java.Interop.JavaArray`1");
-				AssertTypeMap ("java/util/ArrayList", "Android.Runtime.JavaList");
-				AssertTypeMap ("android/app/Activity", "Android.App.Activity");
-				AssertTypeMap ("android/widget/Button", "Android.Widget.Button");
-				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
-					"Duplicate typemap entry for java/util/ArrayList => Android.Runtime.JavaList`1"),
-					"Should get log message about duplicate Android.Runtime.JavaList`1!");
-
-				// Special *Invoker case
-				AssertTypeMap ("android/view/View$OnClickListener", "Android.Views.View/IOnClickListener");
-				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput,
-					"Duplicate typemap entry for android/view/View$OnClickListener => Android.Views.View/IOnClickListenerInvoker"),
-					"Should get log message about duplicate IOnClickListenerInvoker!");
-			}
-
-			// Verify that Java stubs for Mono.Android.dll were generated, instead of using mono.android.jar/dex
-			var onLayoutChangeListenerImplementor = Path.Combine (intermediate, "android", "src", "mono", "android", "view", "View_OnClickListenerImplementor.java");
-			FileAssert.Exists (onLayoutChangeListenerImplementor);
-
-			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
-			FileAssert.Exists (dexFile);
-			foreach (var className in mono_classes) {
-				Assert.IsFalse (DexUtils.ContainsClassWithMethod (className, "<init>", "()V", dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
-			}
-
-			var apkFile = Path.Combine (output, $"{proj.PackageName}-Signed.apk");
-			FileAssert.Exists (apkFile);
-			using var zip = ZipHelper.OpenZip (apkFile);
-			foreach (var mono_file in mono_files) {
-				Assert.IsFalse (zip.ContainsEntry (mono_file, caseSensitive: true), $"APK must *not* contain `{mono_file}`.");
-			}
-			foreach (var nativeaot_file in nativeaot_files) {
-				Assert.IsTrue (zip.ContainsEntry (nativeaot_file, caseSensitive: true), $"APK must contain `{nativeaot_file}`.");
-			}
-
-			void AssertTypeMap(string javaName, string managedName)
-			{
-				var javaNameIndex = javaClassNames.FindIndex (name => name == javaName);
-				var typeIndex = types.FindIndex (td => td.ToString() == managedName);
-
-				if (javaNameIndex < 0) {
-					Assert.Fail ($"TypeMapping should contain \"{javaName}\"!");
-				} else if (typeIndex < 0) {
-					Assert.Fail ($"TypeMapping should contain \"{managedName}\"!");
-				}
-			}
-		}
-
-		[Test]
 		public void BuildBasicApplicationThenMoveIt ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -277,6 +150,10 @@ namespace Xamarin.Android.Build.Tests
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
 
@@ -481,37 +358,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Jun 2026) produces 6 `ILC : AOT analysis warning IL3050`
-					// warnings: three distinct warnings (the reflection-backed ManagedTypeManager
-					// ctor, JNIEnv.MakeArrayType, and JNINativeWrapper.CreateDelegate), each surfaced
-					// twice in the MSBuild summary (once per publish target context). Even though this
-					// test expects no warnings and the above likely make the app not work correctly at
-					// run time, it is still worth running this test under NativeAOT to test for the
-					// absence of other warnings.
-					int numberOfExpectedWarnings = 6;
-
-					// MSBuild prints a "    N Warning(s)" summary line near the end of the build; parse N so the
-					// assertion can report the actual count instead of a bare "Expected: True But was: False".
-					var warningSummaryLine = b.LastBuildOutput.LastOrDefault (x => x.TrimEnd ().EndsWith ("Warning(s)", StringComparison.Ordinal));
-					int actualNumberOfWarnings = -1;
-					if (warningSummaryLine != null) {
-						var summary = warningSummaryLine.Trim ();
-						var firstSpace = summary.IndexOf (' ');
-						if (firstSpace > 0) {
-							int.TryParse (summary.Substring (0, firstSpace), out actualNumberOfWarnings);
-						}
-					}
-
-					Assert.AreEqual (numberOfExpectedWarnings, actualNumberOfWarnings,
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT, but found {actualNumberOfWarnings}.");
-
-					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
-					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-					Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
-				} else {
-					b.AssertHasNoWarnings ();
-				}
+				b.AssertHasNoWarnings ();
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");

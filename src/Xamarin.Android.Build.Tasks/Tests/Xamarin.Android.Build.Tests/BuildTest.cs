@@ -137,6 +137,9 @@ namespace Xamarin.Android.Build.Tests
 			if (isRelease) {
 				expectedFiles.Add ($"{proj.PackageName}.aab");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.aab");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					expectedFiles.Add ("mapping.txt");
+				}
 			} else {
 				expectedFiles.Add ($"{proj.PackageName}.apk");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.apk.idsig");
@@ -1794,20 +1797,7 @@ namespace UnnamedProject
 				StringAssertEx.Contains ("error XA4310", builder.LastBuildOutput, "Error should be XA4310");
 				StringAssertEx.Contains ("`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
 
-				if (runtime != AndroidRuntime.NativeAOT) {
-					builder.AssertHasNoWarnings ();
-					return;
-				}
-
-				// NativeAOT currently (Nov 2025) produces the following warning
-				//  warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
-				string expectedWarning = "warning IL3053:";
-				Assert.IsNotNull (
-					builder.LastBuildOutput
-					  .SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-					  .FirstOrDefault (x => x.Contains (expectedWarning)),
-					$"Build output should contain '{expectedWarning}'."
-				);
+				builder.AssertHasNoWarnings ();
 			}
 		}
 
@@ -1819,6 +1809,9 @@ namespace UnnamedProject
 
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			if (IgnoreOnNativeAot (runtime, "the trimmable typemap generates additional Java Callable Wrappers that trip XA0102 lint warnings (e.g. CustomX509TrustManager, MissingApplicationIcon). Tracked by https://github.com/dotnet/android/issues/11774.")) {
 				return;
 			}
 

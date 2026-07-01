@@ -83,16 +83,22 @@ namespace Java.Interop {
 
 			return CreateManagedTypeManager ();
 
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Managed type manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This type manager won't be used in Native AOT builds in the future.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "On NativeAOT the managed type manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable type manager is used otherwise.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "On NativeAOT the managed type manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable type manager is used otherwise.")]
 			static JniRuntime.JniTypeManager CreateManagedTypeManager () => new ManagedTypeManager ();
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
 		static JniRuntime.JniValueManager CreateDefaultValueManager ()
 		{
-			return new JavaMarshalValueManager ();
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return new TrimmableTypeMapValueManager ();
+			}
+
+			return CreateJavaMarshalValueManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "On NativeAOT the JavaMarshal value manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable value manager is used otherwise.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "On NativeAOT the JavaMarshal value manager is only reached as a fallback when the trimmable type map is disabled, which is rejected at build time; the trimmable value manager is used otherwise.")]
+			static JniRuntime.JniValueManager CreateJavaMarshalValueManager () => new JavaMarshalValueManager ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()

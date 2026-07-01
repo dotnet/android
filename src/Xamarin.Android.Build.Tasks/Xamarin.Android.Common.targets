@@ -1471,10 +1471,22 @@ because xbuild doesn't support framework reference assemblies.
      _RunAotForAllRIDs (which dispatches inner builds that AOT from linked/) sees the updated
      assemblies and re-AOTs them. When marshal methods are NOT enabled (NativeAOT, CoreCLR, etc.),
      write to afterlink/ so linked/ stays unchanged and IlcCompile incrementalism is preserved. -->
-<Target Name="_RunAfterILLinkAdditionalSteps"
+<Target Name="_GetAfterILLinkAdditionalStepsInputs"
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'"
-    Inputs="$(_AndroidLinkFlag)"
+    Condition="'$(PublishTrimmed)' == 'true' and ('$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' == 'NativeAOT')">
+  <ItemGroup>
+    <_AfterILLinkAdditionalStepsInputs Remove="@(_AfterILLinkAdditionalStepsInputs)" />
+    <_AfterILLinkAdditionalStepsInputs Include="$(_AndroidLinkFlag)"
+        Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' != 'NativeAOT' " />
+    <_AfterILLinkAdditionalStepsInputs Include="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
+        Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidRuntime)' == 'NativeAOT' " />
+  </ItemGroup>
+</Target>
+
+<Target Name="_RunAfterILLinkAdditionalSteps"
+    DependsOnTargets="_GetAfterILLinkAdditionalStepsInputs"
+    Condition="'$(PublishTrimmed)' == 'true' and ('$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' == 'NativeAOT')"
+    Inputs="@(_AfterILLinkAdditionalStepsInputs)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <MakeDir Directories="$(_AfterILLinkOutputDir)" Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " />
   <ItemGroup>
@@ -1498,6 +1510,9 @@ because xbuild doesn't support framework reference assemblies.
   </AssemblyModifierPipeline>
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
   <ItemGroup>
+    <FileWrites Include="$(_AdditionalPostLinkerStepsFlag)" />
+  </ItemGroup>
+  <ItemGroup>
     <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
@@ -1510,7 +1525,7 @@ because xbuild doesn't support framework reference assemblies.
      so no redirection is needed, but the target still runs to trigger _RunAfterILLinkAdditionalSteps. -->
 <Target Name="_AfterILLinkAdditionalSteps"
     DependsOnTargets="_RunAfterILLinkAdditionalSteps"
-    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'">
+    Condition="'$(PublishTrimmed)' == 'true' and ('$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' == 'NativeAOT')">
   <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
     <_OrigResolvedAssemblies Include="@(ResolvedAssemblies)" />
     <ResolvedAssemblies Remove="@(ResolvedAssemblies)" />
@@ -1979,7 +1994,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
     <_ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard-android.txt" />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
-    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
+    <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' and ('$(_AndroidRuntime)' != 'NativeAOT' or '$(_AndroidTypeMapImplementation)' != 'trimmable') " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
     <!-- @(ProguardConfiguration) should be listed last -->
     <_ProguardConfiguration Include="@(ProguardConfiguration)" />

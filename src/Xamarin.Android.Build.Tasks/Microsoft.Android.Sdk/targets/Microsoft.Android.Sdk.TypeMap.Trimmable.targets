@@ -44,6 +44,9 @@
          stays incremental while still reacting to post-trim JCW regeneration. -->
     <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTrimmableTypeMapJavaStamp)</_TrimmableJavaSourceStamp>
     <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' ">$(_TrimmableTypeMapOutputStamp)</_TrimmableJavaSourceStamp>
+    <!-- On NativeAOT, ensure ILC's dynamic build properties (e.g. RuntimeIdentifier-derived
+         paths) are computed before the typemap is generated. -->
+    <_GenerateTrimmableTypeMapDependsOn Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(IlcDynamicBuildPropertyDependencies)</_GenerateTrimmableTypeMapDependsOn>
     <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
          dynamic code is unavailable, so array creation uses the typemap path;
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
@@ -58,6 +61,8 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
         Value="true" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration"
+        Value="false" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
     <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper
@@ -98,6 +103,7 @@
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
+      DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 

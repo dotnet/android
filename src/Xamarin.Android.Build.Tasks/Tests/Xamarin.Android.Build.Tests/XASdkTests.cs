@@ -326,12 +326,7 @@ public class JavaSourceTest {
 
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
-				if (runtime != AndroidRuntime.NativeAOT) {
-					dotnet.AssertHasNoWarnings ();
-				} else {
-					// NativeAOT currently issues 1 warning
-					dotnet.AssertHasSomeWarnings (1);
-				}
+				dotnet.AssertHasNoWarnings ();
 			}
 
 			// Only check latest TFM, as previous or preview TFMs will come from NuGet
