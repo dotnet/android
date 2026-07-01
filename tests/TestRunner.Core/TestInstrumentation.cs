@@ -342,7 +342,7 @@ public abstract class TestInstrumentation : Instrumentation
 			b.PutString ("test", test.FullName);
 			b.PutString ("name", test.Name);
 			b.PutString ("class", test.ClassName ?? "");
-			instrumentation.SendStatus (StatusStart, b);
+			instrumentation.SendStatus ((Result) StatusStart, b);
 		}
 
 		public void TestFinished (ITestResult result)
@@ -368,7 +368,7 @@ public abstract class TestInstrumentation : Instrumentation
 				b.PutString ("message-b64", Encode (result.Message));
 			if (result.StackTrace is not null)
 				b.PutString ("stack-b64", Encode (result.StackTrace));
-			instrumentation.SendStatus (statusCode, b);
+			instrumentation.SendStatus ((Result) statusCode, b);
 		}
 
 		static string Encode (string value)
