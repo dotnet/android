@@ -52,6 +52,8 @@
 
   <PropertyGroup>
     <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)external\xamarin-android-tools</XamarinAndroidToolsDirectory>
+    <!-- Points at the top-level dotnet/android product.snk after the Java.Interop merge. -->
+    <ProductSnkPath                 Condition=" '$(ProductSnkPath)' == '' ">$(MSBuildThisFileDirectory)..\..\product.snk</ProductSnkPath>
   </PropertyGroup>
   <PropertyGroup>
     <DotnetToolPath Condition=" '$(DotnetToolPath)' == '' ">dotnet</DotnetToolPath>
