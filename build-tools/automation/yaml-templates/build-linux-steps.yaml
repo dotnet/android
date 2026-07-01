@@ -106,9 +106,11 @@ steps:
 # archive to '/' with a "No space left on device" error, failing the whole job. Note the
 # repo working tree (bin/obj) lives on the large /mnt volume, NOT on '/', so deleting it
 # does not help. Every pipeline artifact has already been uploaded by this point, so
-# reclaim space on '/' by deleting caches that are not needed post-build. We must keep
-# $HOME/android-archives and $HOME/.gradle: those are the sources saved by the post-job
-# 'cache Android toolchain archives' and 'cache Gradle downloads' steps.
+# reclaim space on '/' by deleting everything under $HOME that the build no longer needs.
+# The only things we must keep are the two post-job cache sources: $HOME/android-archives
+# (saved by 'cache Android toolchain archives') and $HOME/.gradle (saved by 'cache Gradle
+# downloads'). Everything else is disposable here, most importantly $HOME/android-toolchain
+# (the extracted SDK/NDK/JDK, ~9 GB) and the NuGet global packages cache.
 # Public-only: the 1ES pipeline runs on agents that do not have this small-disk problem.
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
   - bash: |
@@ -116,7 +118,7 @@ steps:
       df -h
       echo "=== Largest entries under HOME ($HOME) on the small '/' disk ==="
       du -xhd1 "$HOME" 2>/dev/null | sort -h | tail -20 || true
-      for d in "${NUGET_PACKAGES:-$HOME/.nuget/packages}" "$HOME/.dotnet" "$HOME/.local/share/NuGet" "$HOME/.cache"; do
+      for d in "$HOME/android-toolchain" "${NUGET_PACKAGES:-$HOME/.nuget/packages}" "$HOME/.dotnet" "$HOME/.local/share/NuGet" "$HOME/.cache"; do
         echo "Removing $d"
         rm -rf "$d" || true
       done
