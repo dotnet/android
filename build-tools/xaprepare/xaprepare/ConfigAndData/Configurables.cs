@@ -109,11 +109,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly LoggingVerbosity LoggingVerbosity = LoggingVerbosity.Normal;
 
 			/// <summary>
-			///   Length to truncate the git commit hash to.
-			/// </summary>
-			public const uint AbbreviatedHashLength = 7;
-
-			/// <summary>
 			///   Default hash algorithm to compute file hashes
 			/// </summary>
 			public const string HashAlgorithm = "SHA1";
