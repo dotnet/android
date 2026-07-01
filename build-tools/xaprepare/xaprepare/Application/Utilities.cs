@@ -121,17 +121,6 @@ namespace Xamarin.Android.Prepare
 			return await sevenZip.Extract (fullArchivePath, destinationDirectory);
 		}
 
-		public static string ShortenGitHash (string fullHash)
-		{
-			if (String.IsNullOrEmpty (fullHash))
-				return String.Empty;
-
-			if (fullHash.Length <= Configurables.Defaults.AbbreviatedHashLength)
-				return fullHash;
-
-			return fullHash.Substring (0, (int)Configurables.Defaults.AbbreviatedHashLength);
-		}
-
 		public static string GetDebugSymbolsPath (string executablePath)
 		{
 			if (String.IsNullOrEmpty (executablePath))
