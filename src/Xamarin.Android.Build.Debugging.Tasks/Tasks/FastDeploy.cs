@@ -322,6 +322,7 @@ namespace Xamarin.Android.Tasks
 				if (!await IsPackageInstalled (PackageName)) {
 					LogDiagnostic ($"`pm path {PackageName}` reported no package after a successful-looking install; forcing a reinstall.");
 					diagnosticData.SetProperty ("deploy.reinstall.after.missing.package", value: true);
+					await LogAvailableDiskSpace ();
 					ReInstall = true;
 					try {
 						await InstallPackage (installed: false);
@@ -573,6 +574,23 @@ namespace Xamarin.Android.Tasks
 			LogDiagnostic ($"`pm path {packageName}` returned: {(string.IsNullOrWhiteSpace (output) ? "<no output>" : output.Trim ())}");
 			return !string.IsNullOrWhiteSpace (output) &&
 				output.IndexOf ("package:", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		/// <summary>
+		/// Logs the device's free space on the internal (<c>/data</c>) partition. A package that
+		/// vanishes right after a "successful" install is often a symptom of a full data partition
+		/// (test APKs accumulate on CI emulators), which <c>pm install</c> does not always surface
+		/// as <c>INSTALL_FAILED_INSUFFICIENT_STORAGE</c>. Best-effort: never throws.
+		/// </summary>
+		async Task LogAvailableDiskSpace ()
+		{
+			try {
+				var disk = await Device.GetAvailableSpace (CancellationToken);
+				LogDiagnostic ($"Free space on /data: {disk.InternalSpace / (1024 * 1024)} MiB ({disk.InternalSpace} bytes).");
+				diagnosticData.SetProperty ("deploy.data.free.bytes", disk.InternalSpace);
+			} catch (Exception ex) {
+				LogDiagnostic ($"Could not query device disk space: {ex.Message}");
+			}
 		}
 
 		async Task<bool> ShouldThrowIfPackageInstallFailed (PackageAlreadyExistsException e)
