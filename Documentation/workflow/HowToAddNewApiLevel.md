@@ -157,8 +157,8 @@ in the next steps.
 
 ### Download the new API Levels
 
-If preparing the repo did not download the new API level, you may explicitly do so via
-`androidsdk.targets` with `AndroidSdkPlatforms=all`:
+If preparing the repo did not download the new API level, you may explicitly do so by
+building `src/androidsdk/androidsdk.csproj` with `AndroidSdkPlatforms=all`:
 
 ```dotnetcli
 ./dotnet-local.sh build src/androidsdk/androidsdk.csproj -p:AndroidSdkPlatforms=all
