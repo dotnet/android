@@ -8,6 +8,10 @@
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <Import
+      Project="$(MSBuildThisFileDirectory)external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props"
+      Condition=" Exists('$(MSBuildThisFileDirectory)external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props') And '$(DoNotLoadOSProperties)' != 'True' "
+  />
+  <Import
       Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
   />
@@ -93,7 +97,6 @@
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <LibUnwindSourceDirectory Condition=" '$(LibUnwindSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libunwind</LibUnwindSourceDirectory>
     <LibUnwindGeneratedHeadersDirectory Condition=" '$(LibUnwindGeneratedHeadersDirectory)' == '' ">$(BootstrapOutputDirectory)\libunwind</LibUnwindGeneratedHeadersDirectory>
-    <LZ4SourceDirectory Condition=" '$(LZ4SourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\lz4</LZ4SourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <ThirdPartySourcePath>$(MSBuildThisFileDirectory)src-ThirdParty\</ThirdPartySourcePath>
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
@@ -143,7 +146,13 @@
     <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">21.0.8</MicrosoftOpenJDKVersion>
     <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-21</MicrosoftOpenJDKFolder>
     <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-21.0.8+9</MicrosoftOpenJDKRootDirName>
+    <JavaSdkVersion Condition=" '$(JavaSdkVersion)' == '' ">$(MicrosoftOpenJDKVersion)</JavaSdkVersion>
+    <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">17.0</MinimumSupportedJavaSdkVersion>
     <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>
+    <_JdkExeExtension Condition=" '$(_JdkExeExtension)' == '' And '$(HostOS)' == 'Windows' ">.exe</_JdkExeExtension>
+    <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java$(_JdkExeExtension)</JavaPath>
+    <JavaCPath Condition=" '$(JavaCPath)' == '' ">$(JavaSdkDirectory)\bin\javac$(_JdkExeExtension)</JavaCPath>
+    <JarPath Condition=" '$(JarPath)' == '' ">$(JavaSdkDirectory)\bin\jar$(_JdkExeExtension)</JarPath>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
@@ -165,7 +174,6 @@
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
     <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
     <LibUnwindGeneratedHeadersFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindGeneratedHeadersDirectory)'))</LibUnwindGeneratedHeadersFullPath>
-    <LZ4SourceFullPath>$([System.IO.Path]::GetFullPath ('$(LZ4SourceDirectory)'))</LZ4SourceFullPath>
     <JavaInteropTargetFrameworkVersion>net10.0</JavaInteropTargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>

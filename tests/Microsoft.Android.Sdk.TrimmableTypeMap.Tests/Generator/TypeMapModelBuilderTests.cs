@@ -346,6 +346,27 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_ConcreteSelfPeerWithoutActivation_CreatesProxyAndAssociation ()
+		{
+			// A concrete type that supplies its own Java peer ([JniTypeSignature(GenerateJavaPeer=false)],
+			// modeled here as DoNotGenerateAcw=true with no activation ctor / invoker) is constructed
+			// managed-side via `new`. Its managed→Java JNI name must be resolvable, otherwise the runtime
+			// falls back to the generic mono.android.runtime.JavaObject peer and throws ArrayStoreException
+			// when the instance is stored into a typed Java array (e.g. CrossReferenceBridge[]).
+			var peer = MakeMcwPeer ("net/dot/jni/test/CrossReferenceBridge", "Java.InteropTests.CrossReferenceBridge", "Java.Interop-Tests")
+				with { DoNotGenerateAcw = true };
+			var model = BuildModel (new [] { peer }, "MyTypeMap");
+
+			var proxy = Assert.Single (model.ProxyTypes);
+			Assert.Equal ("net/dot/jni/test/CrossReferenceBridge", proxy.JniName);
+			Assert.Equal ("Java.InteropTests.CrossReferenceBridge", proxy.TargetType.ManagedTypeName);
+			Assert.False (proxy.HasActivation);
+
+			var association = Assert.Single (model.Associations);
+			Assert.Contains ("Java.InteropTests.CrossReferenceBridge, Java.Interop-Tests", association.SourceTypeReference);
+		}
+
+		[Fact]
 		public void Build_PeerWithInvoker_CreatesProxy ()
 		{
 			var peer = MakeInterfacePeer ("android/view/View$OnClickListener", "Android.Views.View+IOnClickListener", "Mono.Android", "Android.Views.View+IOnClickListenerInvoker");

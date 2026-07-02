@@ -19,11 +19,5 @@ namespace Xamarin.Android.Prepare
 
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true));
 		}
-
-		protected override void AddEndSteps (Context context)
-		{
-			Steps.Add (new Step_GenerateFiles (atBuildStart: false));
-		}
-
 	}
 }

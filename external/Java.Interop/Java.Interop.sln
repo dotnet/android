@@ -57,7 +57,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "jcw-gen", "tools\jcw-gen\jc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaCallableWrappers-Tests", "tests\Java.Interop.Tools.JavaCallableWrappers-Tests\Java.Interop.Tools.JavaCallableWrappers-Tests.csproj", "{58B564A1-570D-4DA2-B02D-25BDDB1A9F4F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "..\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.Tools.JavaSource-Tests", "tests\Java.Interop.Tools.JavaSource-Tests\Java.Interop.Tools.JavaSource-Tests.csproj", "{093B5E94-7FB7-499F-9C11-30944BAFEE25}"
 EndProject

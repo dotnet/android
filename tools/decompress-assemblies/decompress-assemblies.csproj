@@ -4,7 +4,7 @@
     <Company>Microsoft Corporation</Company>
     <Copyright>2021 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>Xamarin.Android.Tools.DecompressAssemblies</RootNamespace>
     <AssemblyName>decompress-assemblies</AssemblyName>
@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

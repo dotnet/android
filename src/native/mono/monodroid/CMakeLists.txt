@@ -152,7 +152,6 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     PRIVATE
     HAVE_CONFIG_H
-    HAVE_LZ4
     JI_DLL_EXPORT
     JI_NO_VISIBILITY
     MONO_DLL_EXPORT
@@ -231,7 +230,7 @@ macro(lib_target_options TARGET_NAME)
     xa::runtime-base
     xa::java-interop
     xa::pinvoke-override-precompiled
-    xa::lz4
+    -lSystem.IO.Compression.Native
     -lmonosgen-2.0
     -landroid
     -llog

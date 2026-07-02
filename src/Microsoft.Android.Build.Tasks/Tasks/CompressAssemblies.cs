@@ -1,15 +1,19 @@
 #nullable enable
-using System;
 using System.Collections.Generic;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
-/// Compresses assemblies using LZ4 compression before placing them in the APK.
+/// Compresses assemblies using Zstandard compression before placing them in the APK.
 /// Note this is independent of whether they are stored compressed with ZIP in the APK.
-/// Our runtime bits will LZ4 decompress them at assembly load time.
+/// Our runtime bits will Zstd decompress them at assembly load time.
+///
+/// This task lives in Microsoft.Android.Build.Tasks.dll (net11.0) because it uses
+/// System.IO.Compression.ZstandardEncoder, which is not available in netstandard2.0.
+/// It is imported with &lt;UsingTask ... Runtime="NET" TaskFactory="TaskHostFactory" /&gt;.
 /// </summary>
 public class CompressAssemblies : AndroidTask
 {
@@ -26,7 +30,7 @@ public class CompressAssemblies : AndroidTask
 		var failed_assemblies = new List<ITaskItem> ();
 
 		foreach (var assembly in AssembliesToCompress) {
-			MonoAndroidHelper.LogIfReferenceAssembly (assembly, Log);
+			ReferenceAssemblyChecker.LogIfReferenceAssembly (assembly, Log);
 
 			if (!assembly.TryGetRequiredMetadata ("AssembliesToCompress", "DestinationPath", Log, out var destination_path))
 				break;
@@ -38,8 +42,8 @@ public class CompressAssemblies : AndroidTask
 				Log.LogCodedError ("XA5303", Properties.Resources.XA5303, descriptor_index_string, assembly.ItemSpec);
 				break;
 			}
-			
-			if (!AssemblyCompression.TryCompress (Log, assembly.ItemSpec, destination_path, descriptor_index)) {
+
+			if (!AssemblyCompressor.TryCompress (Log, assembly.ItemSpec, destination_path, descriptor_index)) {
 				failed_assemblies.Add (assembly);
 				continue;
 			}

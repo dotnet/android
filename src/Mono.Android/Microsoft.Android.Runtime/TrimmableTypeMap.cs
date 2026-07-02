@@ -203,7 +203,7 @@ public class TrimmableTypeMap
 		if (proxies.Length == 0) {
 			return null;
 		}
-		if (proxies.Length == 1 || targetType is null) {
+		if (targetType is null) {
 			return proxies [0];
 		}
 		foreach (var proxy in proxies) {
@@ -241,154 +241,154 @@ public class TrimmableTypeMap
 			return null;
 		}
 
-		return TryGetProxyFromHierarchy (this, handle, targetType) ??
-			TryGetProxyFromTargetType (this, handle, targetType);
+		return TryGetProxyFromHierarchy (handle, targetType) ??
+			TryGetProxyFromTargetType (handle, targetType);
+	}
 
-		static JavaPeerProxy? TryGetProxyFromHierarchy (TrimmableTypeMap self, IntPtr handle, Type? targetType)
-		{
-			var selfRef = new JniObjectReference (handle);
-			var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+	JavaPeerProxy? TryGetProxyFromHierarchy (IntPtr handle, Type? targetType)
+	{
+		var selfRef = new JniObjectReference (handle);
+		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
 
-			try {
-				while (jniClass.IsValid) {
-					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
-					if (className != null) {
-						var proxy = self.GetProxyForJniClass (className, targetType);
-						if (proxy != null && (targetType is null || TargetTypeMatches (targetType, proxy.TargetType))) {
+		try {
+			while (jniClass.IsValid) {
+				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
+				if (className is not null) {
+					var proxy = GetProxyForJniClass (className, targetType);
+					if (proxy is not null) {
+						return proxy;
+					}
+				}
+
+				// When targetType is an interface, also check the Java interfaces
+				// at each level. getInterfaces() only returns directly declared
+				// interfaces so we must call it at each class in the hierarchy.
+				// This handles the case where an intermediate class entry (e.g.,
+				// X509ExtendedTrustManager) was trimmed but the Java interface
+				// entry (e.g., X509TrustManager) survives.
+				if (targetType is { IsInterface: true } && className != null) {
+					var result = GetProxyForJavaInterfaces (jniClass, className, targetType);
+					if (result != null) {
+						return result;
+					}
+				}
+
+				var super = JniEnvironment.Types.GetSuperclass (jniClass);
+				JniObjectReference.Dispose (ref jniClass);
+				jniClass = super;
+			}
+		} finally {
+			JniObjectReference.Dispose (ref jniClass);
+		}
+
+		return null;
+	}
+
+	JavaPeerProxy? GetProxyForJavaInterfaces (JniObjectReference jniClass, string className, Type targetType)
+	{
+		var proxy = _interfaceProxyCache.GetOrAdd (
+			(className, targetType),
+			_ => TryMatchInterfaces (jniClass, targetType) ?? s_noPeerSentinel);
+		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+	}
+
+	// getInterfaces() returns only directly declared interfaces (not transitive),
+	// so we recurse into super-interfaces to find the matching TypeMap entry.
+	JavaPeerProxy? TryMatchInterfaces (JniObjectReference jniClass, Type targetType)
+	{
+		var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
+		try {
+			if (!interfaces.IsValid) {
+				return null;
+			}
+
+			int count = JniEnvironment.Arrays.GetArrayLength (interfaces);
+			for (int i = 0; i < count; i++) {
+				var iface = JniEnvironment.Arrays.GetObjectArrayElement (interfaces, i);
+				try {
+					var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
+					if (ifaceName is not null) {
+						var proxy = GetProxyForJniClass (ifaceName, targetType);
+						if (proxy is not null) {
 							return proxy;
 						}
 					}
 
-					// When targetType is an interface, also check the Java interfaces
-					// at each level. getInterfaces() only returns directly declared
-					// interfaces so we must call it at each class in the hierarchy.
-					// This handles the case where an intermediate class entry (e.g.,
-					// X509ExtendedTrustManager) was trimmed but the Java interface
-					// entry (e.g., X509TrustManager) survives.
-					if (targetType is { IsInterface: true } && className != null) {
-						var result = GetProxyForJavaInterfaces (self, jniClass, className, targetType);
-						if (result != null) {
-							return result;
-						}
+					// Recurse into super-interfaces
+					var result = TryMatchInterfaces (iface, targetType);
+					if (result is not null) {
+						return result;
 					}
-
-					var super = JniEnvironment.Types.GetSuperclass (jniClass);
-					JniObjectReference.Dispose (ref jniClass);
-					jniClass = super;
+				} finally {
+					JniObjectReference.Dispose (ref iface);
 				}
-			} finally {
-				JniObjectReference.Dispose (ref jniClass);
 			}
+		} finally {
+			JniObjectReference.Dispose (ref interfaces);
+		}
 
+		return null;
+	}
+
+	static JniMethodInfo GetClassGetInterfacesMethod ()
+	{
+		var method = s_classGetInterfacesMethod;
+		if (method != null) {
+			return method;
+		}
+
+		var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
+		try {
+			method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
+		} finally {
+			JniObjectReference.Dispose (ref classClass);
+		}
+
+		var previous = Interlocked.CompareExchange (ref s_classGetInterfacesMethod, method, null);
+		return previous ?? method;
+	}
+
+	JavaPeerProxy? TryGetProxyFromTargetType (IntPtr handle, Type? targetType)
+	{
+		if (targetType is null) {
 			return null;
 		}
 
-		static JavaPeerProxy? GetProxyForJavaInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, string className, Type targetType)
-		{
-			var proxy = self._interfaceProxyCache.GetOrAdd (
-				(className, targetType),
-				_ => TryMatchInterfaces (self, jniClass, targetType) ?? s_noPeerSentinel);
-			return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
-		}
-
-		// getInterfaces() returns only directly declared interfaces (not transitive),
-		// so we recurse into super-interfaces to find the matching TypeMap entry.
-		static JavaPeerProxy? TryMatchInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, Type targetType)
-		{
-			var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
-			try {
-				if (!interfaces.IsValid) {
-					return null;
-				}
-
-				int count = JniEnvironment.Arrays.GetArrayLength (interfaces);
-				for (int i = 0; i < count; i++) {
-					var iface = JniEnvironment.Arrays.GetObjectArrayElement (interfaces, i);
-					try {
-						var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
-						if (ifaceName != null) {
-							var proxy = self.GetProxyForJniClass (ifaceName, targetType);
-							if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
-								return proxy;
-							}
-						}
-
-						// Recurse into super-interfaces
-						var result = TryMatchInterfaces (self, iface, targetType);
-						if (result != null) {
-							return result;
-						}
-					} finally {
-						JniObjectReference.Dispose (ref iface);
-					}
-				}
-			} finally {
-				JniObjectReference.Dispose (ref interfaces);
-			}
-
+		var proxy = GetProxyForManagedType (targetType);
+		// Verify the Java object is actually assignable to the target Java type
+		// before returning the fallback proxy. Without this, we'd create invalid peers
+		// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
+		if (proxy is null || !TryGetJniNameForManagedType (targetType, out var targetJniName)) {
 			return null;
 		}
 
-		static JniMethodInfo GetClassGetInterfacesMethod ()
-		{
-			var method = s_classGetInterfacesMethod;
-			if (method != null) {
-				return method;
-			}
-
-			var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
+		var selfRef = new JniObjectReference (handle);
+		var objClass = default (JniObjectReference);
+		var targetClass = default (JniObjectReference);
+		try {
+			objClass = JniEnvironment.Types.GetObjectClass (selfRef);
 			try {
-				method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
-			} finally {
-				JniObjectReference.Dispose (ref classClass);
-			}
-
-			var previous = Interlocked.CompareExchange (ref s_classGetInterfacesMethod, method, null);
-			return previous ?? method;
-		}
-
-		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
-		{
-			if (targetType is null) {
+				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+			} catch (Java.Lang.ClassNotFoundException) {
+				// FindClass throws for managed types whose Java peer class is
+				// not present in the APK (e.g. test types annotated with
+				// [JniTypeSignature("__missing__")]). Treat as "no match" so
+				// TrimmableTypeMapValueManager.CreatePeer can surface the correct
+				// ArgumentException instead of leaking ClassNotFoundException.
 				return null;
 			}
-
-			var proxy = self.GetProxyForManagedType (targetType);
-			// Verify the Java object is actually assignable to the target Java type
-			// before returning the fallback proxy. Without this, we'd create invalid peers
-			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
-			if (proxy is null || !self.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
-				return null;
-			}
-
-			var selfRef = new JniObjectReference (handle);
-			var objClass = default (JniObjectReference);
-			var targetClass = default (JniObjectReference);
-			try {
-				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
-				try {
-					targetClass = JniEnvironment.Types.FindClass (targetJniName);
-				} catch (Java.Lang.ClassNotFoundException) {
-					// FindClass throws for managed types whose Java peer class is
-					// not present in the APK (e.g. test types annotated with
-					// [JniTypeSignature("__missing__")]). Treat as "no match" so
-					// JavaMarshalValueManager.CreatePeer can surface the correct
-					// ArgumentException instead of leaking ClassNotFoundException.
-					return null;
-				}
-				var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
-				return isAssignable ? proxy : null;
-			} finally {
-				JniObjectReference.Dispose (ref objClass);
-				JniObjectReference.Dispose (ref targetClass);
-			}
+			var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
+			return isAssignable ? proxy : null;
+		} finally {
+			JniObjectReference.Dispose (ref objClass);
+			JniObjectReference.Dispose (ref targetClass);
 		}
 	}
 
 	internal IJavaPeerable? CreateInstance (
-			IntPtr handle,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType = null)
+		IntPtr handle,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType = null)
 	{
 		var proxy = GetProxyForJavaObject (handle, targetType);
 
@@ -496,7 +496,6 @@ public class TrimmableTypeMap
 	/// <summary>
 	/// Gets the invoker type for an interface or abstract class from the proxy attribute.
 	/// </summary>
-	[return: DynamicallyAccessedMembers (Constructors)]
 	internal Type? GetInvokerType (Type type)
 	{
 		return GetProxyForManagedType (type)?.InvokerType;

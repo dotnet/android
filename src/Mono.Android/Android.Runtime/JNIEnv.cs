@@ -304,10 +304,7 @@ namespace Android.Runtime {
 				}
 				sig = sig.AddArrayRank (rank);
 
-				JniObjectReference local_ref = JniEnvironment.Types.FindClass (sig.Name);
-				IntPtr global_ref = local_ref.NewGlobalRef ().Handle;
-				JniObjectReference.Dispose (ref local_ref);
-				return global_ref;
+				return FindClass (sig.Name);
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;

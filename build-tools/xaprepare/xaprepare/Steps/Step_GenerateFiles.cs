@@ -41,27 +41,16 @@ namespace Xamarin.Android.Prepare
 
 		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
-			if (atBuildStart) {
-				if (onlyRequired) {
-					return null;
-				} else {
-					return new List <GeneratedFile> {
-						Get_Configuration_OperatingSystem_props (context),
-					};
-				}
-			}
+			if (!atBuildStart)
+				return null;
 
 			if (onlyRequired)
 				return null;
 
-			var steps = new List <GeneratedFile> ();
-
-			AddOSSpecificSteps (context, steps);
-
-			return steps;
+			return new List <GeneratedFile> {
+				Get_Configuration_OperatingSystem_props (context),
+			};
 		}
-
-		partial void AddOSSpecificSteps (Context context, List<GeneratedFile> steps);
 
 		GeneratedFile Get_Configuration_OperatingSystem_props (Context context)
 		{
@@ -73,13 +62,7 @@ namespace Xamarin.Android.Prepare
 				{ "@OS_RELEASE@",           context.OS.Release ?? String.Empty },
 				{ "@HOST_CPUS@",            context.OS.CPUCount.ToString () },
 				{ "@ARCHITECTURE_BITS@",    context.OS.Is64Bit ? "64" : "32" },
-				{ "@JAVA_SDK_VERSION@",     Configurables.Defaults.MicrosoftOpenJDKVersion.ToString () },
-				{ "@JavaSdkDirectory@",     context.OS.JavaHome },
-				{ "@javac@",                context.OS.JavaCPath },
-				{ "@java@",                 context.OS.JavaPath },
-				{ "@jar@",                  context.OS.JarPath },
 				{ "@NDK_LLVM_TAG@",         $"{context.OS.Type.ToLowerInvariant ()}-x86_64" },
-				{ "@MIN_SUPPORTED_JDK_VERSION@",    $"{Configurables.Defaults.MicrosoftMinOpenJDKVersion.Major}.0" },
 			};
 
 			return new GeneratedPlaceholdersFile (

@@ -110,45 +110,6 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, "submodule-update");
 		}
 
-		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath)
-		{
-			return await Blame (filePath, gitArguments: null, blameArguments: null, workingDirectory: null);
-		}
-
-		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath, List <string> blameArguments)
-		{
-			return await Blame (filePath, gitArguments: null, blameArguments: blameArguments, workingDirectory: null);
-		}
-
-		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath, List<string>? gitArguments, List <string>? blameArguments, string? workingDirectory = null)
-		{
-			if (String.IsNullOrEmpty(filePath))
-				throw new ArgumentException ("must not be null or empty", nameof (filePath));
-
-			var runner = CreateGitRunner (workingDirectory, gitArguments);
-			SetCommandArguments (runner, "blame", blameArguments);
-			runner.AddArgument ("-p");
-			runner.AddQuotedArgument (filePath);
-
-			var parserState = new BlameParserState ();
-
-			Log.StatusLine (GetLogMessage (runner), CommandMessageColor);
-			bool success = await RunTool (
-				() => {
-					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string? line) => ParseBlameLine (line, parserState);
-						runner.WorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-						return runner.Run ();
-					}
-				}
-			);
-
-			if (!success)
-				return null;
-
-			return parserState.Entries;
-		}
-
 		public async Task<bool> IsRepoUrlHttps (string workingDirectory)
 		{
 			if (!Directory.Exists (workingDirectory))
@@ -244,29 +205,9 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void ParseBlameLine (string? line, BlameParserState state)
-		{
-			if (state.CurrentEntry == null)
-				state.CurrentEntry = new BlamePorcelainEntry ();
-
-			if (!state.CurrentEntry.ProcessLine (line))
-				return;
-
-			state.Entries.Add (state.CurrentEntry);
-			state.CurrentEntry = null;
-		}
-
 		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
-		}
-
-		void SetCommandArguments (ProcessRunner runner, string command, List<string>? commandArguments)
-		{
-			runner.AddArgument (command);
-			if (commandArguments == null || commandArguments.Count == 0)
-				return;
-			AddArguments (runner, commandArguments);
 		}
 
 		string DetermineRunnerWorkingDirectory (string? workingDirectory)

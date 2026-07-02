@@ -292,13 +292,15 @@ namespace Java.Interop {
 			return null;
 		}
 
+		[RequiresDynamicCode ("Legacy type manager peer creation can construct generic invoker types.")]
+		[RequiresUnreferencedCode ("Legacy type manager peer creation uses reflection over preserved Java peer types.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return CreateInstance (handle, transfer, null);
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
+		[RequiresDynamicCode ("Legacy type manager peer creation can construct generic invoker types.")]
+		[RequiresUnreferencedCode ("Legacy type manager peer creation uses reflection over preserved Java peer types.")]
 		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			Type? type = null;
