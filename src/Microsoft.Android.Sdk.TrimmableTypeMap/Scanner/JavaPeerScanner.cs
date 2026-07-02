@@ -115,7 +115,12 @@ public sealed class JavaPeerScanner : IDisposable
 
 			var signature = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
 			// n_* callbacks take (IntPtr jnienv, IntPtr native__this) before the native parameters.
+			// Verify both the arity and that leading pair so a same-named static method with a
+			// coincidentally-matching arity can never feed the wrong native param types into the ref.
 			if (signature.ParameterTypes.Length != jniParameterCount + 2) {
+				continue;
+			}
+			if (signature.ParameterTypes [0] != "System.IntPtr" || signature.ParameterTypes [1] != "System.IntPtr") {
 				continue;
 			}
 
