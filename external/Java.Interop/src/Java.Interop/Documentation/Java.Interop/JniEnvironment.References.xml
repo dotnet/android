@@ -1,0 +1,62 @@
+﻿<?xml version="1.0"?>
+<docs>
+  <member name="T:JniEnvironment.References">
+    <summary>
+      JNI Reference-related functionality.
+    </summary>
+    <remarks>
+      <para>
+        The <c>JniEnvironment.References</c> class exposes JNI Global, Local,
+        Weak-Global-related functionality which is not exposed by the
+        <see cref="T:Java.Interop.JniObjectReference" /> class, particularly
+        JNI reference creation and destruction.
+      </para>
+    </remarks>
+  </member>
+  <member name="M:CreatedReference">
+    <summary>Account for the creation of a JNI Reference.</summary>
+    <param name="value">
+      A <see cref="T:Java.Interop.JniObjectReference" /> value containing
+      a JNI Reference that was created.
+    </param>
+    <exception cref="T:System.ArgumentException">
+      <paramref name="value" /> is not a JNI Local Reference.
+    </exception>
+    <remarks>
+      <para>
+        The <see cref="P:Java.Interop.JniEnvironment.LocalReferenceCount" />
+        property provides an advisory value of the number of
+        JNI Local References which Java.Interop has created. The
+        <see cref="P:Java.Interop.JniRuntime.JniObjectReferenceManager.GlobalReferenceCount" />
+        property provides an advisory value of the number of
+        JNI Global References which Java.Interop has created. The
+        <see cref="P:Java.Interop.JniRuntime.JniObjectReferenceManager.WeakGlobalReferenceCount" />
+        property contains an advisory value of the number of
+        JNI Weak Global References which Java.Interop has created.
+        These counts are incremented whenever a JNI reference is created,
+        e.g. from <see cref="M:Java.Interop.JniObjectReference.NewLocalRef" />
+        or <see cref="M:Java.Interop.JniObjectReference.NewGlobalRef" />,
+        and this count is decremented whenever a JNI Local Reference is
+        destroyed, e.g. from
+        <see cref="M:Java.Interop.JniObjectReference.Dispose" />.
+      </para>
+      <para>
+        This accounting assumes a worldview in which Java.Interop can intervene
+        wherever a JNI Local Reference can be created. This is not the case,
+        as there are some scenarios where JNI Local References can be created
+        without Java.Interop knowing about it. One such notable example is when
+        using Platform Invoke to invoke a native <c>Java_</c> C function
+        which returns a JNI Local Reference (<see cref="T:System.IntPtr" />).
+        When such untrackable JNI Local References are created, this may result
+        in future assertions failing within
+        <see cref="M:Java.Interop.JniRuntime.JniObjectReferenceManager.DeleteLocalReference" />
+        when the tracked JNI Local Reference count becomes negative.
+      </para>
+      <para>
+        Use the <c>CreatedLocalReference</c> to notify Java.Interop that a
+        JNI Local Reference has been created externally, so that the
+        JNI Local Reference accounting doesn't generate future assertions.
+      </para>
+    </remarks>
+  </member>
+</docs>

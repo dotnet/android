@@ -1,0 +1,107 @@
+# Java.Interop tests stage
+#
+# Mirrors the two jobs from
+# external/Java.Interop/build-tools/automation/azure-pipelines.yaml
+# (windows_dotnet_build, mac_dotnet_build) so that the Java.Interop
+# build + tests continue to run as part of dotnet/android CI now that
+# Java.Interop has been merged in-tree.
+#
+# Referenced from both:
+#   - build-tools/automation/azure-pipelines.yaml         (official / 1ES)
+#   - build-tools/automation/azure-pipelines-public.yaml  (public PR validation)
+
+parameters:
+- name: stageName
+  type: string
+  default: java_interop_tests
+- name: dependsOn
+  type: object
+  default: []
+- name: condition
+  type: string
+  default: succeeded()
+- name: windowsPool
+  type: object
+  default:
+    name: Azure Pipelines
+    vmImage: $(HostedWinImage)
+- name: macPool
+  type: object
+  default:
+    name: Azure Pipelines
+    vmImage: $(HostedMacImage)
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: Java.Interop Tests
+  dependsOn: ${{ parameters.dependsOn }}
+  condition: ${{ parameters.condition }}
+  variables:
+    # Variables consumed by external/Java.Interop/build-tools/automation/templates/*.yaml.
+    # Defined at stage scope so they don't conflict with dotnet/android-wide
+    # variables (e.g. DotNetTargetFramework=net11.0).
+    DotNetCoreVersion: $(DotNetSdkVersion).x
+    DotNetTargetFramework: $(DotNetStableTargetFramework)
+    NetCoreTargetFrameworkPathSuffix: -$(DotNetStableTargetFramework)
+    Build.Configuration: Release
+    RunningOnCI: true
+  jobs:
+
+  # Check - "Xamarin.Android (Java.Interop Tests Windows - .NET)"
+  - job: java_interop_windows_dotnet_build
+    displayName: Windows - .NET
+    pool: ${{ parameters.windowsPool }}
+    timeoutInMinutes: 60
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+      clean: true
+
+    - template: /external/Java.Interop/build-tools/automation/templates/install-dependencies.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-build.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-tests.yaml@self
+      parameters:
+        runNativeDotnetTests: true
+        nativeAotRid: win-x64
+        platformName: .NET - Windows
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-dirty-tree.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-issue.yaml@self
+
+  # Check - "Xamarin.Android (Java.Interop Tests Mac - .NET)"
+  - job: java_interop_mac_dotnet_build
+    displayName: Mac - .NET
+    pool: ${{ parameters.macPool }}
+    timeoutInMinutes: 20
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+      clean: true
+
+    - bash: |
+        set -e
+        if ! command -v cmake >/dev/null 2>&1 ; then
+          brew install cmake
+        fi
+      displayName: Ensure cmake is installed
+
+    - template: /external/Java.Interop/build-tools/automation/templates/install-dependencies.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-build.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-tests.yaml@self
+      parameters:
+        runNativeTests: true
+        nativeAotRid: osx-arm64
+        platformName: .NET - MacOS
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-dirty-tree.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-issue.yaml@self

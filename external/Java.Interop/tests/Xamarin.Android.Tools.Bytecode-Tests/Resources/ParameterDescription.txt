@@ -1,0 +1,9 @@
+﻿
+; This is a comment line.
+package android.animation ; Anything after semicolon is comment.
+  class TypeEvaluator<T>
+    evaluate(float fraction, T startValue, T endValue)
+
+package com.xamarin
+  interface NestedInterface.DnsSdTxtRecordListener
+    onDnsSdTxtRecordAvailable(java.lang.String fullDomainName, java.util.Map<java.lang.String,java.lang.String> txtRecordMap, java.lang.String srcDevice)

@@ -10,10 +10,6 @@
     path = external/debugger-libs
     url = https://github.com/mono/debugger-libs
     branch = main
-[submodule "external/Java.Interop"]
-    path = external/Java.Interop
-    url = https://github.com/dotnet/java-interop
-    branch = main
 [submodule "external/libunwind"]
     path = external/libunwind
     url = https://github.com/libunwind/libunwind.git
@@ -37,3 +33,7 @@
 [submodule "external/termux-elf-cleaner"]
 	path = external/termux-elf-cleaner
 	url = https://github.com/termux/termux-elf-cleaner
+[submodule "external/Java.Interop/external/xamarin-android-tools"]
+	path = external/Java.Interop/external/xamarin-android-tools
+	url = https://github.com/xamarin/xamarin-android-tools.git
+	branch = main

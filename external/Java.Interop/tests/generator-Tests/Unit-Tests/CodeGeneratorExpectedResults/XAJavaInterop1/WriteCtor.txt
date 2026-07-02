@@ -1,0 +1,18 @@
+// Metadata.xml XPath constructor reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/constructor[@name='foo' and count(parameter)=0]"
+[Register (".ctor", "", "")]
+ unsafe Object ()
+	: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+{
+	const string __id = "";
+
+	if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+		return;
+
+	try {
+		var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+		SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+		_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+	} finally {
+	}
+}
+

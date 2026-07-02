@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(TestOutputFullPath)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="nunit" />
+    <PackageReference Include="NUnit.ConsoleRunner" />
+    <PackageReference Include="NUnit3TestAdapter" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
+    <ProjectReference Include="$(XamarinAndroidToolsFullPath)\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\*" />
+    <EmbeddedResource Include="kotlin\**\*.class" />
+    <EmbeddedResource Include="kotlin-ThirdParty\**\*.class" />
+
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.Widgets.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyColor.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyAlpha.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyDp.class" />
+
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NotNullClass.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifytest\package-info.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifytest\JSpecifyPackageMarked.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifytest\JSpecifyClassMarked.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\jspecifyunmarked\JSpecifyUnmarked.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IParameterInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaAnnotation.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaEnum.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaInterfaceNoParameters.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%241MyStringList.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24ASC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24PSC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC%24RPNC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType%24RNC.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaType.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\JavaTypeNoParameters.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NestedInterface%24DnsSdTxtRecordListener.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NestedInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterAbstractClass.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass2.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\android\animation\TypeEvaluator.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\module-info.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\NonGenericGlobalType.class" />
+  </ItemGroup>
+
+  <Import Project="Xamarin.Android.Tools.Bytecode-Tests.targets" />
+  <Import Project="kotlin-gradle.targets" />
+
+</Project>

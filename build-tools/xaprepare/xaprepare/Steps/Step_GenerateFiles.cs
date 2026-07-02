@@ -10,10 +10,6 @@ namespace Xamarin.Android.Prepare
 		bool atBuildStart;
 		bool onlyRequired;
 
-		IEnumerable<GitSubmoduleInfo>?  gitSubmodules;
-		string?                         xaCommit;
-
-
 		public Step_GenerateFiles (bool atBuildStart, bool onlyRequired = false)
 			: base ("Generating files required by the build")
 		{
@@ -21,14 +17,8 @@ namespace Xamarin.Android.Prepare
 			this.onlyRequired = onlyRequired;
 		}
 
-		protected override async Task<bool> Execute (Context context)
+		protected override Task<bool> Execute (Context context)
 		{
-			var git                 = new GitRunner (context);
-			xaCommit                = git.GetTopCommitHash (workingDirectory: BuildPaths.XamarinAndroidSourceRoot, shortHash: false);
-			var gitSubmoduleInfo    = await git.ConfigList (new[]{"--blob", "HEAD:.gitmodules"});
-			var gitSubmoduleStatus  = await git.SubmoduleStatus ();
-			gitSubmodules           = GitSubmoduleInfo.GetGitSubmodules (gitSubmoduleInfo, gitSubmoduleStatus);
-
 			List<GeneratedFile>? filesToGenerate = GetFilesToGenerate (context);
 			if (filesToGenerate != null && filesToGenerate.Count > 0) {
 				foreach (GeneratedFile gf in filesToGenerate) {
@@ -46,21 +36,17 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 
-			return true;
+			return Task.FromResult (true);
 		}
 
 		List<GeneratedFile>? GetFilesToGenerate (Context context)
 		{
 			if (atBuildStart) {
 				if (onlyRequired) {
-					return new List<GeneratedFile> {
-						Get_SourceLink_Json (context),
-					};
+					return null;
 				} else {
 					return new List <GeneratedFile> {
-						Get_SourceLink_Json (context),
 						Get_Configuration_OperatingSystem_props (context),
-						Get_XABuildConfig_cs (context),
 					};
 				}
 			}
@@ -100,72 +86,6 @@ namespace Xamarin.Android.Prepare
 				replacements,
 				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
 				Path.Combine (BuildPaths.XamarinAndroidSourceRoot, OutputFileName)
-			);
-		}
-
-		GeneratedFile Get_XABuildConfig_cs (Context context)
-		{
-			const string OutputFileName = "XABuildConfig.cs";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@NDK_REVISION@",              context.BuildInfo.NDKRevision },
-				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
-				{ "@NDK_VERSION_MAJOR@",         context.BuildInfo.NDKVersionMajor },
-				{ "@NDK_VERSION_MINOR@",         context.BuildInfo.NDKVersionMinor },
-				{ "@NDK_VERSION_MICRO@",         context.BuildInfo.NDKVersionMicro },
-				{ "@NDK_ARMEABI_V7_API@",        BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString () },
-				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
-				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ().ToString () },
-				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ().ToString () },
-				{ "@XA_SUPPORTED_ABIS@",         context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Replace (':', ';') },
-				{ "@SDK_BUILD_TOOLS_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.XABuildToolsFolder) },
-				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel)) },
-				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel)) },
-				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel)) },
-				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel)) },
-				{ "@ANDROID_LATEST_STABLE_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel)) },
-				{ "@ANDROID_LATEST_STABLE_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel)) },
-				{ "@ANDROID_LATEST_UNSTABLE_API_LEVEL@", GetMajor (context.Properties.GetRequiredValue (KnownProperties.AndroidLatestUnstableApiLevel)) },
-				{ "@ANDROID_LATEST_UNSTABLE_API_LEVEL_MINOR@", GetMinor (context.Properties.GetRequiredValue (KnownProperties.AndroidLatestUnstableApiLevel)) },
-				{ "@XAMARIN_ANDROID_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.ProductVersion) },
-				{ "@XAMARIN_ANDROID_COMMIT_HASH@", context.BuildInfo.XACommitHash },
-				{ "@XAMARIN_ANDROID_BRANCH@", context.BuildInfo.XABranch },
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
-			);
-
-			static string GetMajor (string value)
-			{
-				var dot = value.IndexOf ('.');
-				if (dot < 0) {
-					return value;
-				}
-				return value.Substring (0, dot);
-			}
-
-			static string GetMinor (string value)
-			{
-				var dot = value.IndexOf ('.');
-				if (dot < 0) {
-					return "0";
-				}
-				return value.Substring (dot + 1);
-			}
-		}
-
-		public GeneratedFile Get_SourceLink_Json (Context context)
-		{
-			if (gitSubmodules == null || xaCommit == null) {
-				return new SkipGeneratedFile ();
-			}
-			return new GeneratedSourceLinkJsonFile (
-					gitSubmodules!,
-					xaCommit!,
-					Path.Combine (Configurables.Paths.BuildBinDir, "SourceLink.json")
 			);
 		}
 	}
