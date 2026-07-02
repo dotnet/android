@@ -9,6 +9,33 @@ parameters:
   use1ESTemplate: true
 
 steps:
+# Detect whether a previous attempt of this job already built and published the
+# Linux SDK artifact. Pipeline artifact names are immutable per build, so if an
+# earlier attempt succeeded far enough to publish `nuget-linux-unsigned` but then
+# failed in a later (often post-job) step, blindly rebuilding and republishing on
+# a rerun always fails with "Artifact nuget-linux-unsigned already exists for
+# build". When the artifact is already present we skip the ~20+ minute rebuild and
+# the colliding republish so the rerun can go green, reusing the artifact the
+# earlier attempt produced. Any failure to query the API falls back to building
+# normally (safe default).
+- bash: |
+    set -eo pipefail
+    artifact_name='${{ parameters.nugetArtifactName }}'
+    url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?api-version=7.1"
+    echo "Checking whether artifact '$artifact_name' already exists for build $(Build.BuildId)..."
+    response="$(curl -sS -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" "$url" || true)"
+    if echo "$response" | tr -d '[:space:]' | grep -qF "\"name\":\"$artifact_name\""; then
+      echo "Found existing '$artifact_name'; a previous attempt already built and published the Linux SDK."
+      echo "Skipping the rebuild and republish so this rerun can succeed and reuse that artifact."
+      echo "##vso[task.setvariable variable=AlreadyBuiltLinuxSdk]true"
+    else
+      echo "No existing '$artifact_name' artifact; building the Linux SDK normally."
+      echo "##vso[task.setvariable variable=AlreadyBuiltLinuxSdk]false"
+    fi
+  displayName: check for existing linux sdk artifact
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
@@ -46,6 +73,7 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1
+  condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
   parameters:
@@ -55,10 +83,12 @@ steps:
 - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-nupkgs
+  condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - task: CopyFiles@2
+  condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
     Contents: |
@@ -67,6 +97,7 @@ steps:
     TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
 
 - task: DeleteFiles@1
+  condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
     Contents: '*.symbols.nupkg'
@@ -80,16 +111,33 @@ steps:
     ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: copy linux sdk
+  condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
 
-- ${{ if ne(parameters.use1ESTemplate, true) }}:
+- ${{ if eq(parameters.use1ESTemplate, true) }}:
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: upload linux sdk
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
+
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: upload linux sdk symbols
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}-symbols
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
+- ${{ else }}:
   - task: PublishPipelineArtifact@1
     displayName: upload linux sdk
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
     inputs:
       artifactName: ${{ parameters.nugetArtifactName }}
       targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
 
   - task: PublishPipelineArtifact@1
     displayName: upload linux sdk symbols
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
     inputs:
       artifactName: ${{ parameters.nugetArtifactName }}-symbols
       targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
