@@ -1209,8 +1209,10 @@ sealed class TypeMapAssemblyEmitter
 		// char are ambiguous (bool/sbyte, char/ushort) across generator versions, so for those we use
 		// the signature captured from the actual n_* method; the unambiguous kinds fall back to the JNI
 		// descriptor. If an ambiguous kind can't be resolved from metadata we fail rather than guess.
-		bool hasCapturedCallbackSignature = uco.CallbackParameterTypeNames is { } capturedParams &&
-			uco.CallbackReturnTypeName is not null && capturedParams.Count == jniParams.Count;
+		var capturedParameterTypeNames = uco.CallbackParameterTypeNames;
+		var capturedReturnTypeName = uco.CallbackReturnTypeName;
+		bool hasCapturedCallbackSignature = capturedParameterTypeNames is not null &&
+			capturedReturnTypeName is not null && capturedParameterTypeNames.Count == jniParams.Count;
 		if (!hasCapturedCallbackSignature) {
 			if (JniSignatureHelper.IsAmbiguousCallbackKind (returnKind)) {
 				throw NativeCallbackSignatureUnresolved (uco);
@@ -1226,8 +1228,8 @@ sealed class TypeMapAssemblyEmitter
 			rt => {
 				if (isVoid) {
 					rt.Void ();
-				} else if (hasCapturedCallbackSignature) {
-					JniSignatureHelper.EncodeClrTypeName (rt.Type (), uco.CallbackReturnTypeName!);
+				} else if (hasCapturedCallbackSignature && capturedReturnTypeName is not null) {
+					JniSignatureHelper.EncodeClrTypeName (rt.Type (), capturedReturnTypeName);
 				} else {
 					JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind);
 				}
@@ -1236,8 +1238,8 @@ sealed class TypeMapAssemblyEmitter
 				p.AddParameter ().Type ().IntPtr ();
 				p.AddParameter ().Type ().IntPtr ();
 				for (int j = 0; j < jniParams.Count; j++) {
-					if (hasCapturedCallbackSignature) {
-						JniSignatureHelper.EncodeClrTypeName (p.AddParameter ().Type (), uco.CallbackParameterTypeNames! [j]);
+					if (hasCapturedCallbackSignature && capturedParameterTypeNames is not null) {
+						JniSignatureHelper.EncodeClrTypeName (p.AddParameter ().Type (), capturedParameterTypeNames [j]);
 					} else {
 						JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
 					}

@@ -1378,9 +1378,9 @@ public sealed class JavaPeerScanner : IDisposable
 		var registerInfo = result.Value.Info;
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
 		string nativeCallbackName = GetNativeCallbackName (registerInfo.Connector, methodName, isConstructor);
-		var (callbackParameterTypeNames, callbackReturnTypeName) = isConstructor
-			? (null, null)
-			: CaptureNativeCallbackSignature (result.Value.DeclaringType, nativeCallbackName, registerInfo.Signature);
+		var (callbackParameterTypeNames, callbackReturnTypeName) = !isConstructor && JniSignatureHelper.HasAmbiguousCallbackType (registerInfo.Signature)
+			? CaptureNativeCallbackSignature (result.Value.DeclaringType, nativeCallbackName, registerInfo.Signature)
+			: (null, null);
 		return new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = registerInfo.Signature,
@@ -1430,8 +1430,9 @@ public sealed class JavaPeerScanner : IDisposable
 			var propRegister = TryGetPropertyRegisterInfo (basePropDef, baseIndex);
 			if (propRegister is not null && propRegister.Signature is not null) {
 				string nativeCallbackName = GetNativeCallbackName (propRegister.Connector, getterName, false);
-				var (callbackParameterTypeNames, callbackReturnTypeName) =
-					CaptureNativeCallbackSignature (baseTypeRef, nativeCallbackName, propRegister.Signature);
+				var (callbackParameterTypeNames, callbackReturnTypeName) = JniSignatureHelper.HasAmbiguousCallbackType (propRegister.Signature)
+					? CaptureNativeCallbackSignature (baseTypeRef, nativeCallbackName, propRegister.Signature)
+					: (null, null);
 				return new MarshalMethodInfo {
 					JniName = propRegister.JniName,
 					JniSignature = propRegister.Signature,
