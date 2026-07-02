@@ -106,14 +106,14 @@ public abstract class TestInstrumentation : Instrumentation
 			Log.Info (LogTag, $"TRX written to: {trxPath}");
 			Log.Info (LogTag, $"Results: passed={passed}, failed={failed}, skipped={skipped}");
 
-			bundle.PutInt ("passed", passed);
-			bundle.PutInt ("failed", failed);
-			bundle.PutInt ("skipped", skipped);
-			bundle.PutString ("resultsPath", trxPath);
+			bundle.PutInt (InstrumentationProtocol.KeyPassedCount, passed);
+			bundle.PutInt (InstrumentationProtocol.KeyFailedCount, failed);
+			bundle.PutInt (InstrumentationProtocol.KeySkippedCount, skipped);
+			bundle.PutString (InstrumentationProtocol.KeyResultsPath, trxPath);
 			Finish (Result.Ok, bundle);
 		} catch (Exception ex) {
 			Log.Error (LogTag, $"Test run failed: {ex}");
-			bundle.PutString ("error", ex.ToString ());
+			bundle.PutString (InstrumentationProtocol.KeyError, ex.ToString ());
 			Finish (Result.Canceled, bundle);
 		}
 	}
@@ -311,8 +311,32 @@ public abstract class TestInstrumentation : Instrumentation
 	}
 
 	/// <summary>
-	/// Sends test status updates through the instrumentation protocol.
+	/// Streams per-test status updates through the instrumentation protocol
+	/// (<c>am instrument -r</c>) so the host adapter can report each test to MTP
+	/// as it finishes. This makes results resilient to a mid-run process crash:
+	/// every test completed before the crash has already been reported, instead
+	/// of the whole run being lost because the final TRX was never written.
+	///
+	/// Each <c>SendStatus</c> emits an <c>INSTRUMENTATION_STATUS</c> block that
+	/// the host parses line-by-line. Because that protocol is line-based, the
+	/// (potentially multi-line) failure message and stack trace are Base64-encoded
+	/// so every value stays on a single line.
 	/// </summary>
+	/// <summary>
+	/// Android <c>am instrument</c> status codes emitted on the
+	/// <c>INSTRUMENTATION_STATUS_CODE</c> line. The values mirror
+	/// AndroidJUnitRunner's conventions so tools scraping the raw output see
+	/// familiar codes; the host keys off the explicit <c>event</c>/<c>outcome</c>
+	/// bundle values rather than these numbers.
+	/// </summary>
+	enum InstrumentationStatusCode
+	{
+		Passed = 0,
+		Start = 1,
+		Failed = -2,
+		Skipped = -3,
+	}
+
 	class TestListener (Instrumentation instrumentation) : ITestListener
 	{
 		public void TestStarted (ITest test)
@@ -320,6 +344,13 @@ public abstract class TestInstrumentation : Instrumentation
 			if (test.IsSuite)
 				return;
 			Log.Info (LogTag, $"[START] {test.FullName}");
+
+			var b = new Bundle ();
+			b.PutString (InstrumentationProtocol.KeyEvent, InstrumentationProtocol.EventStart);
+			b.PutString (InstrumentationProtocol.KeyTest, test.FullName);
+			b.PutString (InstrumentationProtocol.KeyName, test.Name);
+			b.PutString (InstrumentationProtocol.KeyClass, test.ClassName ?? "");
+			instrumentation.SendStatus ((Result) (int) InstrumentationStatusCode.Start, b);
 		}
 
 		public void TestFinished (ITestResult result)
@@ -327,19 +358,29 @@ public abstract class TestInstrumentation : Instrumentation
 			if (result.Test.IsSuite)
 				return;
 
-			var outcome = result.ResultState.Status switch {
-				TestStatus.Passed => "passed",
-				TestStatus.Failed => "failed",
-				_ => "skipped",
+			var (outcome, statusCode) = result.ResultState.Status switch {
+				TestStatus.Passed => (InstrumentationProtocol.OutcomePassed, InstrumentationStatusCode.Passed),
+				TestStatus.Failed => (InstrumentationProtocol.OutcomeFailed, InstrumentationStatusCode.Failed),
+				_ => (InstrumentationProtocol.OutcomeSkipped, InstrumentationStatusCode.Skipped),
 			};
 
 			Log.Info (LogTag, $"[{outcome.ToUpperInvariant ()}] {result.FullName}");
 
 			var b = new Bundle ();
-			b.PutString ("test", result.FullName);
-			b.PutString ("outcome", outcome);
-			instrumentation.SendStatus (0, b);
+			b.PutString (InstrumentationProtocol.KeyEvent, InstrumentationProtocol.EventFinish);
+			b.PutString (InstrumentationProtocol.KeyTest, result.FullName);
+			b.PutString (InstrumentationProtocol.KeyName, result.Test.Name);
+			b.PutString (InstrumentationProtocol.KeyClass, result.Test.ClassName ?? "");
+			b.PutString (InstrumentationProtocol.KeyOutcome, outcome);
+			if (result.Message is not null)
+				b.PutString (InstrumentationProtocol.KeyMessageBase64, Encode (result.Message));
+			if (result.StackTrace is not null)
+				b.PutString (InstrumentationProtocol.KeyStackBase64, Encode (result.StackTrace));
+			instrumentation.SendStatus ((Result) (int) statusCode, b);
 		}
+
+		static string Encode (string value)
+			=> Convert.ToBase64String (System.Text.Encoding.UTF8.GetBytes (value));
 
 		public void TestOutput (TestOutput output) { }
 		public void SendMessage (TestMessage message) { }
