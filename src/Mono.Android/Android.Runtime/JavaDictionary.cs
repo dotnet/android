@@ -361,7 +361,7 @@ namespace Android.Runtime {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IDictionary));
 			if (inst == null)
 				inst = new JavaDictionary (handle, transfer);
 			else
@@ -645,7 +645,7 @@ namespace Android.Runtime {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IDictionary<K, V>));
 			if (inst == null)
 				inst = new JavaDictionary<K, V> (handle, transfer);
 			else
