@@ -217,10 +217,10 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
 		var bootOptions = task.LastBootOptions;
 		Assert.IsNotNull (bootOptions, "Boot options should be captured");
-		Assert.IsNotNull (bootOptions.AdditionalArgs, "AdditionalArgs should not be null");
+		Assert.IsNotNull (bootOptions?.AdditionalArgs, "AdditionalArgs should not be null");
 		CollectionAssert.AreEqual (
 			new[] { "-no-snapshot-load", "-gpu", "auto" },
-			bootOptions.AdditionalArgs,
+			bootOptions?.AdditionalArgs,
 			"Extra arguments should be parsed and passed to options");
 	}
 
@@ -291,8 +291,8 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.IsFalse (task.Execute (), "Task should fail");
 		var error = errors.FirstOrDefault (e => e.Code == "XA0144");
 		Assert.IsNotNull (error, "Unknown errors should map to XA0144");
-		StringAssert.Contains ("Unknown", error.Message, "Error kind should be included in the message");
-		StringAssert.Contains ("Some unexpected error occurred", error.Message, "Error message should be included");
+		StringAssert.Contains ("Unknown", error?.Message, "Error kind should be included in the message");
+		StringAssert.Contains ("Some unexpected error occurred", error?.Message, "Error message should be included");
 	}
 
 	[Test]
