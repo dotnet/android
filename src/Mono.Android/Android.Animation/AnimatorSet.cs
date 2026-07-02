@@ -16,7 +16,7 @@ namespace Android.Animation
 				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
 				__args [0] = new JniArgumentValue (duration);
 				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-				return global::Java.Lang.Object.GetObject<Android.Animation.Animator> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
+				return global::Java.Lang.Object.GetObject<Android.Animation.Animator> (__rm.Handle, JniHandleOwnership.TransferLocalRef) ?? throw new InvalidOperationException ("Android.Animation.AnimatorSet.SetDuration returned null.");
 			} finally {
 			}
 		}

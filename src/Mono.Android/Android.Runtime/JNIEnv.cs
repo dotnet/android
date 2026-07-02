@@ -435,9 +435,9 @@ namespace Android.Runtime {
 				return NewObject (jclass, jmethod, p);
 		}
 
-		public static string? GetClassNameFromInstance (IntPtr jobject)
+		public static string GetClassNameFromInstance (IntPtr jobject)
 		{
-			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
+			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject)) ?? throw new InvalidOperationException ("Unable to get JNI type name from instance.");
 		}
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
