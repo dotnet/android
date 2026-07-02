@@ -1205,24 +1205,17 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
-		// Callback member reference: must mirror the real MCW n_* method's signature. JNI boolean and
-		// char are ambiguous (bool/sbyte, char/ushort) across generator versions, so for those we use
-		// the signature captured from the actual n_* method; the unambiguous kinds fall back to the JNI
-		// descriptor. If an ambiguous kind can't be resolved from metadata we fail rather than guess.
+		// Callback member reference: mirror the real MCW n_* method's signature. JNI boolean and char
+		// are ambiguous (bool/sbyte, char/ushort) across generator versions, so when we could read the
+		// real n_* method's signature (NuGet binding implementation assemblies, e.g. AndroidX) we use it
+		// exactly. When we couldn't — framework callbacks, because the generator scans the compile-time
+		// *reference* assemblies (Microsoft.Android.Ref) which strip the private static n_* methods — we
+		// fall back to the blittable encoding (sbyte/ushort). That is correct for those callbacks because
+		// framework bindings are always produced by the current (post-#1296) generator.
 		var capturedParameterTypeNames = uco.CallbackParameterTypeNames;
 		var capturedReturnTypeName = uco.CallbackReturnTypeName;
 		bool hasCapturedCallbackSignature = capturedParameterTypeNames is not null &&
 			capturedReturnTypeName is not null && capturedParameterTypeNames.Count == jniParams.Count;
-		if (!hasCapturedCallbackSignature) {
-			if (JniSignatureHelper.IsAmbiguousCallbackKind (returnKind)) {
-				throw NativeCallbackSignatureUnresolved (uco);
-			}
-			foreach (var kind in jniParams) {
-				if (JniSignatureHelper.IsAmbiguousCallbackKind (kind)) {
-					throw NativeCallbackSignatureUnresolved (uco);
-				}
-			}
-		}
 
 		Action<BlobEncoder> encodeCallbackSig = sig => sig.MethodSignature ().Parameters (paramCount,
 			rt => {
@@ -1262,13 +1255,6 @@ sealed class TypeMapAssemblyEmitter
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
 	}
-
-	static InvalidOperationException NativeCallbackSignatureUnresolved (UcoMethodData uco)
-		=> new InvalidOperationException (
-			$"Trimmable typemap cannot emit the native callback reference '{uco.CallbackType.ManagedTypeName}.{uco.CallbackMethodName}' " +
-			$"(JNI signature '{uco.JniSignature}') because its JNI boolean/char parameter or return type is ambiguous " +
-			$"(bool vs sbyte, char vs ushort) and the real 'n_*' method's signature could not be resolved from metadata. " +
-			$"The referenced binding assembly must be available so the exact callback signature can be matched.");
 
 	void EmitUcoForwarderBody (TrackedInstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<TrackedInstructionEncoder> emitCallback)
 	{

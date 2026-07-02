@@ -129,22 +129,22 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
-	/// Encodes a JNI type as its CLR equivalent for a <c>n_*</c> callback MemberRef. This is used only
-	/// for kinds that are <b>unambiguous</b> across generator versions; the ambiguous kinds — JNI
-	/// boolean and char (see <see cref="IsAmbiguousCallbackKind"/>) — are instead emitted from the real
-	/// <c>n_*</c> method's captured signature via <see cref="EncodeClrTypeName"/>, because a binding may
-	/// declare them as either their managed (<c>bool</c>/<c>char</c>) or blittable (<c>sbyte</c>/<c>ushort</c>)
-	/// form depending on which generator compiled it (java-interop #1296).
+	/// Encodes a JNI type as its CLR equivalent for a <c>n_*</c> callback MemberRef, used as the
+	/// <b>fallback</b> when the real <c>n_*</c> method's signature cannot be read from metadata — which
+	/// happens for framework callbacks, because the generator scans the compile-time <i>reference</i>
+	/// assemblies (e.g. <c>Microsoft.Android.Ref</c>) and those strip the <c>private static n_*</c>
+	/// methods. Framework bindings are always produced by the current (post-#1296) generator, so the
+	/// blittable encoding is correct for them: JNI boolean → <c>sbyte</c>, JNI char → <c>ushort</c>.
+	/// When the <c>n_*</c> <i>can</i> be read (NuGet binding implementation assemblies such as AndroidX,
+	/// which may be pre-#1296 and declare <c>bool</c>/<c>char</c>), the captured signature is emitted via
+	/// <see cref="EncodeClrTypeName"/> instead of this fallback.
 	/// </summary>
 	public static void EncodeClrTypeForCallback (SignatureTypeEncoder encoder, JniParamKind kind)
 	{
 		switch (kind) {
-		// Boolean and Char are ambiguous across generator versions (bool/sbyte, char/ushort) and must
-		// be emitted from the real n_* method's captured signature via EncodeClrTypeName — never guessed.
-		case JniParamKind.Boolean:
-		case JniParamKind.Char:
-			throw new ArgumentException ($"JNI {kind} maps to an ambiguous CLR callback type; emit it from the resolved n_* signature instead of the JNI descriptor.");
+		case JniParamKind.Boolean: encoder.SByte (); break;  // blittable modern n_* encoding (post-#1296)
 		case JniParamKind.Byte:    encoder.SByte (); break;
+		case JniParamKind.Char:    encoder.UInt16 (); break; // blittable modern n_* encoding (post-#1296)
 		case JniParamKind.Short:   encoder.Int16 (); break;
 		case JniParamKind.Int:     encoder.Int32 (); break;
 		case JniParamKind.Long:    encoder.Int64 (); break;

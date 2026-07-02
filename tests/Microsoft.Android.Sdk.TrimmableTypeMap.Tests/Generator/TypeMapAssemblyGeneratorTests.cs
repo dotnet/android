@@ -951,7 +951,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
+	[InlineData (1, 0x04)]  // Boolean → sbyte (blittable modern n_* fallback)
 	[InlineData (2, 0x04)]  // Byte → sbyte
+	[InlineData (3, 0x07)]  // Char → uint16 (blittable modern n_* fallback)
 	[InlineData (4, 0x06)]  // Short → int16
 	[InlineData (5, 0x08)]  // Int → int32
 	[InlineData (6, 0x0A)]  // Long → int64
@@ -960,24 +962,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	[InlineData (9, 0x18)]  // Object → IntPtr
 	public void EncodeClrTypeForCallback_ProducesCorrectPrimitiveTypeCode (int kindValue, byte expectedCode)
 	{
+		// This is the fallback used when the real n_* method's signature can't be read from metadata
+		// (framework callbacks, whose reference assemblies strip the private static n_*). Framework
+		// bindings are always post-#1296, so boolean → sbyte and char → ushort here.
 		var kind = (JniParamKind) kindValue;
 		var blob = new BlobBuilder ();
 		JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (blob), kind);
 		Assert.Equal (expectedCode, blob.ToArray () [0]);
-	}
-
-	[Theory]
-	[InlineData (1)]  // Boolean → bool or sbyte
-	[InlineData (3)]  // Char → char or ushort
-	public void EncodeClrTypeForCallback_AmbiguousKinds_Throw (int kindValue)
-	{
-		// Boolean and Char cannot be encoded from the JNI descriptor because a binding may declare
-		// them as either their managed form (bool/char, pre-#1296) or blittable form (sbyte/ushort,
-		// post-#1296). They must be emitted from the real n_* method's captured signature.
-		var kind = (JniParamKind) kindValue;
-		var blob = new BlobBuilder ();
-		Assert.ThrowsAny<ArgumentException> (() =>
-			JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (blob), kind));
 	}
 
 	[Fact]
@@ -1130,24 +1121,29 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UnresolvedBooleanCallback_ThrowsRatherThanGuessing ()
+	public void Generate_UnresolvedBooleanCallback_FallsBackToBlittable ()
 	{
-		// When a boolean/char callback's real n_* signature cannot be resolved from metadata, the
-		// generator must fail loudly instead of guessing bool-vs-sbyte (which would emit a MemberRef
-		// that silently fails to bind under ILC). Here we clear the captured signature to simulate an
-		// unavailable binding assembly.
+		// When a boolean/char callback's real n_* signature can't be read from metadata — which is the
+		// case for framework callbacks, because the generator scans the compile-time *reference*
+		// assemblies (Microsoft.Android.Ref) that strip the private static n_* methods — the emitter
+		// must fall back to the blittable sbyte/ushort encoding rather than fail the build (see #11802
+		// CI regression: XAGTT7009 on Org.XmlPull.V1.IXmlPullParserInvoker.n_IsEmptyElementTag). That
+		// fallback is correct because framework bindings are always produced by the post-#1296 generator.
 		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/ImplicitMultiListener");
-		var brokenPeer = peer with {
+		var unresolvedPeer = peer with {
 			MarshalMethods = peer.MarshalMethods.Select (m =>
 				m.JniSignature == "(Landroid/view/View;)Z"
 					? m with { NativeCallbackParameterTypeNames = null, NativeCallbackReturnTypeName = null }
 					: m).ToList (),
 		};
 
-		var ex = Assert.Throws<InvalidOperationException> (() => {
-			using var stream = GenerateAssembly (new [] { brokenPeer }, "UnresolvedBoolTest");
-		});
-		Assert.Contains ("n_*", ex.Message);
+		using var stream = GenerateAssembly (new [] { unresolvedPeer }, "UnresolvedBoolTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnLongClick_Landroid_view_View_", "Android.Views", "IOnLongClickListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", callbackSig.ReturnType);
 	}
 
 	[Fact]
