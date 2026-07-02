@@ -4,8 +4,7 @@ parameters:
   condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
 
 # Copies extra build and test result files into $(Build.StagingDirectory) so
-# they can be uploaded as pipeline artifacts. This template replaces the old
-# `Step_CopyExtraResultFilesForCI` xaprepare step.
+# they can be uploaded as pipeline artifacts.
 steps:
 # Build-side files: configuration files scattered across the source tree.
 # Preserve the relative paths so e.g. external/.../config.log lands at
@@ -17,7 +16,6 @@ steps:
   inputs:
     sourceFolder: ${{ parameters.xaSourcePath }}
     contents: |
-      **/Configuration.OperatingSystem.props
       **/Configuration.Override.props
       **/config.log
       **/config.status
