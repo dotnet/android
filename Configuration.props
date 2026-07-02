@@ -8,6 +8,10 @@
       Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
   <Import
+      Project="$(MSBuildThisFileDirectory)external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props"
+      Condition=" Exists('$(MSBuildThisFileDirectory)external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props') And '$(DoNotLoadOSProperties)' != 'True' "
+  />
+  <Import
       Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
       Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
   />
@@ -143,7 +147,13 @@
     <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">21.0.8</MicrosoftOpenJDKVersion>
     <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-21</MicrosoftOpenJDKFolder>
     <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-21.0.8+9</MicrosoftOpenJDKRootDirName>
+    <JavaSdkVersion Condition=" '$(JavaSdkVersion)' == '' ">$(MicrosoftOpenJDKVersion)</JavaSdkVersion>
+    <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">17.0</MinimumSupportedJavaSdkVersion>
     <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>
+    <_JdkExeExtension Condition=" '$(_JdkExeExtension)' == '' And '$(HostOS)' == 'Windows' ">.exe</_JdkExeExtension>
+    <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java$(_JdkExeExtension)</JavaPath>
+    <JavaCPath Condition=" '$(JavaCPath)' == '' ">$(JavaSdkDirectory)\bin\javac$(_JdkExeExtension)</JavaCPath>
+    <JarPath Condition=" '$(JarPath)' == '' ">$(JavaSdkDirectory)\bin\jar$(_JdkExeExtension)</JarPath>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
