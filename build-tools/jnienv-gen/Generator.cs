@@ -520,8 +520,10 @@ namespace Xamarin.Android.JniEnv
 		public TypeInfo ReturnType;
 		public ParamInfo [] Parameters;
 
+#pragma warning disable CS0649 // Field 'JniFunction.Prebind' is never assigned to, and will always have its default value false
 		// If true, then we initialize the binding on the static ctor, we dont lazy-define it
 		public bool Prebind;
+#pragma warning restore CS0649
 
 		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
 		public bool CustomWrapper;

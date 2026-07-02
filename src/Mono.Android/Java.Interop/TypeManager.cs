@@ -238,7 +238,10 @@ namespace Java.Interop {
 				return null;
 			}
 
-			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			if (string.IsNullOrEmpty (managedAssemblyName))
+				return null;
+
 			Assembly assembly = Assembly.Load (managedAssemblyName);
 			Type? ret = null;
 			foreach (Module module in assembly.Modules) {
@@ -262,8 +265,11 @@ namespace Java.Interop {
 			}
 		}
 
-		static Type? GetJavaToManagedTypeCore (string class_name)
+		static Type? GetJavaToManagedTypeCore (string? class_name)
 		{
+			if (string.IsNullOrEmpty (class_name))
+				return null;
+
 			if (TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out Type? type)) {
 				return type;
 			}

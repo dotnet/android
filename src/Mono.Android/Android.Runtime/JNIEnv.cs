@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -433,7 +435,7 @@ namespace Android.Runtime {
 				return NewObject (jclass, jmethod, p);
 		}
 
-		public static string GetClassNameFromInstance (IntPtr jobject)
+		public static string? GetClassNameFromInstance (IntPtr jobject)
 		{
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
@@ -486,7 +488,11 @@ namespace Android.Runtime {
 				if (RuntimeFeature.IsMonoRuntime) {
 					ret = monovm_typemap_managed_to_java (type, mvidptr);
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
-					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
+					var fullName = type.FullName;
+					if (fullName == null)
+						throw new ArgumentException ("Type must have a full name", nameof (type));
+
+					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (fullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}
@@ -695,7 +701,7 @@ namespace Android.Runtime {
 					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
 					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
 					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type t) =>
+					static object? GetObject (IntPtr e, Type? t) =>
 						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
@@ -717,7 +723,7 @@ namespace Android.Runtime {
 			}
 
 			if (array != IntPtr.Zero) {
-				string type = GetClassNameFromInstance (array);
+				string? type = GetClassNameFromInstance (array);
 				if (type == null || type.Length < 1 || type [0] != '[')
 					throw new InvalidOperationException ("Unsupported java array type: " + type);
 

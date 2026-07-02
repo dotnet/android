@@ -312,6 +312,7 @@ static class JavaMarshalRegisteredPeers
 			}
 		}
 
+#pragma warning disable CS0649 // Field 'JavaMarshalRegisteredPeers.HandleContext.JniObjectReferenceControlBlock.handle_type' is never assigned to, and will always have its default value 0
 		// This is an internal mirror of the Java.Interop.JniObjectReferenceControlBlock
 		private struct JniObjectReferenceControlBlock
 		{
@@ -320,6 +321,7 @@ static class JavaMarshalRegisteredPeers
 			public IntPtr weak_handle;
 			public int refs_added;
 		}
+#pragma warning restore CS0649
 
 		public static GCHandle GetAssociatedGCHandle (HandleContext* context)
 		{
