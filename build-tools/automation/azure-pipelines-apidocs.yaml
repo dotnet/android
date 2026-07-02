@@ -140,6 +140,11 @@ extends:
           workingDirectory: $(Build.SourcesDirectory)
           displayName: make prepare
 
+        - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml@self
+          parameters:
+            configuration: $(XA.Build.Configuration)
+            xaSourcePath: $(Build.SourcesDirectory)
+
         - script: >-
             make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
             MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity)'
