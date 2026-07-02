@@ -70,19 +70,21 @@ class AndroidTestAdapter(
 				Console.WriteLine ($"[AndroidTestAdapter] TRX path on device: {bundleResults.ResultsPath}");
 		}
 
-		// 2. If we streamed at least one completed test, streaming is authoritative
-		//    (it's resilient to a mid-run crash). Otherwise fall back to the TRX.
-		if (state.ReportedFinal.Count == 0) {
-			await ReportFromTrxAsync (context, sessionUid, bundleResults);
+		// 2. If the run did not finish cleanly (the app process crashed before
+		//    writing the final results bundle), surface the crash. This resolves an
+		//    in-flight streamed test to a terminal state, or publishes a synthetic
+		//    crash node when nothing streamed, instead of falling through to the TRX
+		//    path — which has no results file to read after a crash and would throw.
+		if (bundleResults.Crashed) {
+			await PublishCrashAsync (context, sessionUid, bundleResults, state);
 			return;
 		}
 
-		// 3. We streamed live results. If the run did not finish cleanly (the app
-		//    process crashed before writing the final results bundle), surface the
-		//    crash so the run is clearly marked failed rather than silently dropping
-		//    the in-flight/never-run tests.
-		if (bundleResults.Crashed)
-			await PublishCrashAsync (context, sessionUid, bundleResults, state);
+		// 3. No crash: if we streamed at least one completed test, streaming is
+		//    authoritative and we're done. Otherwise fall back to the TRX (e.g. an
+		//    older on-device instrumentation that didn't stream results).
+		if (state.ReportedFinal.Count == 0)
+			await ReportFromTrxAsync (context, sessionUid, bundleResults);
 	}
 
 	/// <summary>

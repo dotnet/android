@@ -311,18 +311,6 @@ public abstract class TestInstrumentation : Instrumentation
 	}
 
 	/// <summary>
-	/// Streams per-test status updates through the instrumentation protocol
-	/// (<c>am instrument -r</c>) so the host adapter can report each test to MTP
-	/// as it finishes. This makes results resilient to a mid-run process crash:
-	/// every test completed before the crash has already been reported, instead
-	/// of the whole run being lost because the final TRX was never written.
-	///
-	/// Each <c>SendStatus</c> emits an <c>INSTRUMENTATION_STATUS</c> block that
-	/// the host parses line-by-line. Because that protocol is line-based, the
-	/// (potentially multi-line) failure message and stack trace are Base64-encoded
-	/// so every value stays on a single line.
-	/// </summary>
-	/// <summary>
 	/// Android <c>am instrument</c> status codes emitted on the
 	/// <c>INSTRUMENTATION_STATUS_CODE</c> line. The values mirror
 	/// AndroidJUnitRunner's conventions so tools scraping the raw output see
@@ -337,6 +325,18 @@ public abstract class TestInstrumentation : Instrumentation
 		Skipped = -3,
 	}
 
+	/// <summary>
+	/// Streams per-test status updates through the instrumentation protocol
+	/// (<c>am instrument -r</c>) so the host adapter can report each test to MTP
+	/// as it finishes. This makes results resilient to a mid-run process crash:
+	/// every test completed before the crash has already been reported, instead
+	/// of the whole run being lost because the final TRX was never written.
+	///
+	/// Each <c>SendStatus</c> emits an <c>INSTRUMENTATION_STATUS</c> block that
+	/// the host parses line-by-line. Because that protocol is line-based, the
+	/// (potentially multi-line) failure message and stack trace are Base64-encoded
+	/// so every value stays on a single line.
+	/// </summary>
 	class TestListener (Instrumentation instrumentation) : ITestListener
 	{
 		public void TestStarted (ITest test)
