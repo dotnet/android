@@ -51,6 +51,12 @@ stages:
     NetCoreTargetFrameworkPathSuffix: -$(DotNetStableTargetFramework)
     Build.Configuration: Release
     RunningOnCI: true
+    # Cap the JDK that external/Java.Interop's Prepare.targets picks when it
+    # calls the JdkInfo bootstrap task. Recent hosted agent images ship Java 25
+    # as the default JDK, and Gradle 8.12 (used by java-source-utils and the
+    # Bytecode-Tests kotlin-gradle project) crashes with "Unsupported class
+    # file major version 69" on it. JdkInfo reads JI_MAX_JDK from the env.
+    JI_MAX_JDK: 21
   jobs:
 
   # Check - "Xamarin.Android (Java.Interop Tests Windows - .NET)"
@@ -66,15 +72,6 @@ stages:
       clean: true
 
     - template: /external/Java.Interop/build-tools/automation/templates/install-dependencies.yaml@self
-
-    # Point JAVA_HOME at the agent's preinstalled JDK $(LatestJavaSdkMajorVersion).
-    # Otherwise Gradle 8.12 (used by java-source-utils and the Bytecode-Tests
-    # kotlin-gradle project) runs on the agent's default JDK, which on the
-    # macOS-15-arm64 and other newer hosted images is Java 25 - unsupported by
-    # Gradle 8.12 ("Unsupported class file major version 69").
-    - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml@self
-      parameters:
-        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - template: /external/Java.Interop/build-tools/automation/templates/core-build.yaml@self
 
@@ -108,12 +105,6 @@ stages:
       displayName: Ensure cmake is installed
 
     - template: /external/Java.Interop/build-tools/automation/templates/install-dependencies.yaml@self
-
-    # Point JAVA_HOME at the agent's preinstalled JDK $(LatestJavaSdkMajorVersion) -
-    # see the equivalent comment on the Windows job above.
-    - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml@self
-      parameters:
-        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
     - template: /external/Java.Interop/build-tools/automation/templates/core-build.yaml@self
 
