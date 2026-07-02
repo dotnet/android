@@ -8,6 +8,7 @@ virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeForSimpleReference(string!
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeSignatureCore(System.Type! type) -> Java.Interop.JniTypeSignature
 virtual Java.Interop.JniRuntime.JniTypeManager.GetTypeSignaturesCore(System.Type! type) -> System.Collections.Generic.IEnumerable<Java.Interop.JniTypeSignature>!
 abstract Java.Interop.JniRuntime.JniValueManager.CreateLocalObjectReferenceArgumentCore(System.Type! type, object? value) -> Java.Interop.JniObjectReference
+Java.Interop.JniRuntime.JniValueManager.CreateLocalObjectReferenceArgument(System.Type! type, object? value) -> Java.Interop.JniObjectReference
 Java.Interop.JavaException.JavaException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions transfer, Java.Interop.JniObjectReference throwableOverride) -> void
 Java.Interop.JavaException.SetJavaStackTrace(Java.Interop.JniObjectReference peerReferenceOverride = default(Java.Interop.JniObjectReference)) -> void
 Java.Interop.JniRuntime.ReflectionJniTypeManager
