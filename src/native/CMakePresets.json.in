@@ -152,7 +152,17 @@
         },
 
         {
+            "name": "coreclr-default-debug-armeabi-v7a",
+            "inherits": ["default-common", "common-debug", "common-armeabi-v7a"]
+        },
+
+        {
             "name": "default-release-armeabi-v7a",
+            "inherits": ["default-common", "common-release", "common-armeabi-v7a"]
+        },
+
+        {
+            "name": "coreclr-default-release-armeabi-v7a",
             "inherits": ["default-common", "common-release", "common-armeabi-v7a"]
         },
 

@@ -37,6 +37,7 @@ inside xaprepare.
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x86"   Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x64"   Version="[$(DotNetRuntimePacksVersion)]" />
     <!-- CoreCLR Android runtime packs -->
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm"   Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-x64"   Version="[$(DotNetRuntimePacksVersion)]" />
 
