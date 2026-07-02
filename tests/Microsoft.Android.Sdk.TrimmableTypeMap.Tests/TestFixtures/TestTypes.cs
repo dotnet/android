@@ -134,6 +134,18 @@ namespace Android.Views
 		bool OnLongClick (View v);
 	}
 
+	[Register ("android/view/View$OnLongClickListener", DoNotGenerateAcw = true)]
+	internal sealed class IOnLongClickListenerInvoker : Java.Lang.Object, IOnLongClickListener
+	{
+		public IOnLongClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		public bool OnLongClick (View v) => false;
+
+		// Real MCW-style n_* callback. This invoker models the *post-#1296* generator, where JNI
+		// boolean is declared as the blittable System.SByte. The emitted callback MemberRef must
+		// mirror this (sbyte), even though the pre-#1296 TouchHandler above uses bool.
+		static sbyte n_OnLongClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr v) => 0;
+	}
+
 	/// <summary>
 	/// Interface with a registered property (for testing interface property implementation detection).
 	/// </summary>
@@ -362,6 +374,11 @@ namespace MyApp
 
 		[Register ("setItems", "([Ljava/lang/String;)V", "GetSetItemsHandler")]
 		public virtual void SetItems (string[]? items) { }
+
+		// Real MCW-style n_* callbacks. This binding models the *pre-#1296* generator, where JNI
+		// boolean is declared as System.Boolean (bool). The emitted callback MemberRef must mirror this.
+		static bool n_OnTouch (IntPtr jnienv, IntPtr native__this, IntPtr v, int action) => false;
+		static void n_OnFocusChange (IntPtr jnienv, IntPtr native__this, IntPtr v, bool hasFocus) { }
 	}
 
 	// --- Covariant return test types ---
