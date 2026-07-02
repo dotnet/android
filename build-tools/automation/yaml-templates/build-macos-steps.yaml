@@ -45,7 +45,7 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:ArchiveWindowsToolchainPdbFiles=true'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1
