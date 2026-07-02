@@ -33,7 +33,3 @@
 [submodule "external/termux-elf-cleaner"]
 	path = external/termux-elf-cleaner
 	url = https://github.com/termux/termux-elf-cleaner
-[submodule "external/Java.Interop/external/xamarin-android-tools"]
-	path = external/Java.Interop/external/xamarin-android-tools
-	url = https://github.com/xamarin/xamarin-android-tools.git
-	branch = main
