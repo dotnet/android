@@ -115,8 +115,10 @@ adb shell am force-stop <package>
 
 This is the incremental core (`DeployFastDevFilesWithAdbPush`):
 
-1. **Build the current manifest.** Each file to deploy is hashed; the set of
-   `{ relative-path → hash }` forms the manifest.
+1. **Build the current manifest.** Each file to deploy is recorded with its
+   size and last-write time; the set of
+   `{ relative-path → (size, mtime) }` forms the manifest. A single SHA256 hash
+   over the whole manifest is used as the device readiness marker (see below).
 2. **Compare against the device.** The previous manifest is read from `obj`, and
    the on-device `.fastdeploy2-manifest-hash` markers are read to confirm the
    device still matches it. If the staging directory is not in the expected
@@ -132,7 +134,8 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
    ```
    adb shell rm -f <file> [<file> …]    # batched up to StaleFileRemovalBatchSize / MaxAdbCommandLength
    ```
-5. **Upload changed files** (only files whose hash changed), grouped by
+5. **Upload changed files** (only files whose size or last-write time changed),
+   grouped by
    directory and batched up to `MaxAdbCommandLength`:
    ```
    adb push -z <algorithm> <local-file> [<local-file> …] <remote-dir>

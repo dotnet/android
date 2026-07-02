@@ -419,7 +419,7 @@ namespace Xamarin.Android.Tasks
 
 		bool WriteFileIfChanged (string path, byte [] contents, DateTime modifiedDateTime)
 		{
-			if (File.Exists (path) && File.ReadAllBytes (path).SequenceEqual (contents)) {
+			if (!Files.HasBytesChanged (contents, path)) {
 				return false;
 			}
 
@@ -556,10 +556,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LogDiagnostic ($"FastDeploy2 removing {staleFiles.Count} stale override files.");
-			for (int i = 0; i < staleFiles.Count; i += StaleFileRemovalBatchSize) {
-				var args = new List<string> { "rm", "-f" };
-				args.AddRange (staleFiles.Skip (i).Take (StaleFileRemovalBatchSize));
-				string output = await RunAs (args.ToArray ());
+			foreach (var batch in BatchShellArguments (new [] { "rm", "-f" }, staleFiles, StaleFileRemovalBatchSize)) {
+				string output = await RunAs (batch.ToArray ());
 				if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
 					LogFastDeploy2Error ("XA0129", output, overridePath);
 					return false;
@@ -590,24 +588,21 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 
-				for (int i = 0; i < group.Value.Count; i += CopyBatchSize) {
-					var batchFiles = group.Value.Skip (i).Take (CopyBatchSize).ToList ();
-					var removeArgs = new List<string> { "rm", "-f" };
-					foreach (string file in batchFiles) {
-						removeArgs.Add (CombineRemotePath (targetDirectory, Path.GetFileName (file)));
-					}
-					output = await RunAs (removeArgs.ToArray ());
+				// Remove the current destination files, then copy the freshly staged files in.
+				// `cp` overwrites anyway, so removing first (rather than interleaving per batch)
+				// is equivalent and lets each command batch independently by length.
+				var destinationFiles = group.Value.Select (file => CombineRemotePath (targetDirectory, Path.GetFileName (file)));
+				foreach (var batch in BatchShellArguments (new [] { "rm", "-f" }, destinationFiles, CopyBatchSize)) {
+					output = await RunAs (batch.ToArray ());
 					if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
 						LogFastDeploy2Error ("XA0129", output, targetDirectory);
 						return false;
 					}
+				}
 
-					var args = new List<string> { "cp", "-p" };
-					foreach (string file in batchFiles) {
-						args.Add (CombineRemotePath (remoteStagingPath, file));
-					}
-					args.Add (targetDirectory);
-					output = await RunAs (args.ToArray ());
+				var sourceFiles = group.Value.Select (file => CombineRemotePath (remoteStagingPath, file));
+				foreach (var batch in BatchShellArguments (new [] { "cp", "-p" }, sourceFiles, CopyBatchSize, trailing: targetDirectory)) {
+					output = await RunAs (batch.ToArray ());
 					if (RaiseRunAsError (output) || IsShellError (output, "cp")) {
 						LogFastDeploy2Error ("XA0129", output, targetDirectory);
 						return false;
@@ -633,6 +628,50 @@ namespace Xamarin.Android.Tasks
 				length += itemLength;
 			}
 			if (batch.Count > 2) {
+				yield return batch;
+			}
+		}
+
+		/// <summary>
+		/// Splits <paramref name="values"/> into <c>run-as</c> shell command batches, capping each
+		/// batch by both <paramref name="maxCount"/> items and <see cref="MaxShellCommandLength"/>
+		/// characters. Each batch starts with <paramref name="prefix"/> (e.g. <c>rm -f</c>) and,
+		/// when <paramref name="trailing"/> is set, ends with it (e.g. the destination directory of
+		/// a <c>cp</c>). Length is estimated the same way as <see cref="BatchArguments"/> (prefix,
+		/// trailing, and per-value quoting overhead) so a single command never overflows the device
+		/// shell's command-line limit even when a count-only cap would keep the batch too large.
+		/// </summary>
+		IEnumerable<List<string>> BatchShellArguments (IReadOnlyList<string> prefix, IEnumerable<string> values, int maxCount, string trailing = null)
+		{
+			int prefixLength = 0;
+			foreach (var arg in prefix) {
+				prefixLength += arg.Length + 3;
+			}
+			bool hasTrailing = !string.IsNullOrEmpty (trailing);
+			int trailingLength = hasTrailing ? trailing.Length + 3 : 0;
+
+			var batch = new List<string> (prefix);
+			int count = 0;
+			int length = prefixLength + trailingLength;
+			foreach (var value in values) {
+				int itemLength = value.Length + 3;
+				if (count > 0 && (count >= maxCount || length + itemLength >= MaxShellCommandLength)) {
+					if (hasTrailing) {
+						batch.Add (trailing);
+					}
+					yield return batch;
+					batch = new List<string> (prefix);
+					count = 0;
+					length = prefixLength + trailingLength;
+				}
+				batch.Add (value);
+				length += itemLength;
+				count++;
+			}
+			if (count > 0) {
+				if (hasTrailing) {
+					batch.Add (trailing);
+				}
 				yield return batch;
 			}
 		}
