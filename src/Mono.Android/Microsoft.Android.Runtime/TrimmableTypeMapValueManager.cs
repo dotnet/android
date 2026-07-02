@@ -377,9 +377,16 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return primitiveArrayReference;
 		}
 
-		var handle = JavaConvert.ToLocalJniHandle (value);
-		if (handle != IntPtr.Zero) {
-			return new JniObjectReference (handle, JniObjectReferenceType.Local);
+		if (value is IJavaPeerable peerable) {
+			return peerable.PeerReference.IsValid
+				? peerable.PeerReference.NewLocalRef ()
+				: new JniObjectReference ();
+		}
+
+		if (JavaConvert.TryConvertKnownValueToLocalJniHandle (value, out var handle)) {
+			return handle == IntPtr.Zero
+				? new JniObjectReference ()
+				: new JniObjectReference (handle, JniObjectReferenceType.Local);
 		}
 
 		var proxy = TrimmableJavaProxyObject.GetProxy (value);
@@ -392,8 +399,12 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	protected override JniValueMarshaler<T> GetValueMarshalerCore<T> ()
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
+	// Trimmable proxies use Java identity semantics: equals/hashCode/toString are NOT overridden
+	// and therefore do not delegate to the wrapped .NET object. This matches the trimmable Java
+	// runtime copy of JavaProxyObject and avoids the reflection-based native method registration
+	// that is unsupported in the trimmable typemap path.
 	[Register ("net/dot/jni/internal/TrimmableJavaProxyObject")]
-	private sealed class TrimmableJavaProxyObject : Java.Lang.Object, IEquatable<TrimmableJavaProxyObject>
+	private sealed class TrimmableJavaProxyObject : Java.Lang.Object
 	{
 		static readonly ConditionalWeakTable<object, TrimmableJavaProxyObject> CachedValues = new ();
 
@@ -413,21 +424,5 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 				return CachedValues.GetOrAdd (value, static (value) => new TrimmableJavaProxyObject (value));
 			}
 		}
-
-		public bool Equals (TrimmableJavaProxyObject? other) => Equals (Value, other?.Value);
-
-		[Register ("hashCode", "()I", "GetGetHashCodeHandler")]
-		public override int GetHashCode () => Value.GetHashCode ();
-
-		[Register ("equals", "(Ljava/lang/Object;)Z", "GetEquals_Ljava_lang_Object_Handler")]
-		public override bool Equals (Java.Lang.Object? obj)
-		{
-			var reference = obj?.PeerReference ?? new JniObjectReference ();
-			var value = JniEnvironment.Runtime.ValueManager.GetValue (ref reference, JniObjectReferenceOptions.Copy);
-			return Equals (Value, value);
-		}
-
-		[Register ("toString", "()Ljava/lang/String;", "GetToStringHandler")]
-		public override string ToString () => Value.ToString () ?? "";
 	}
 }

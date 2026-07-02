@@ -638,6 +638,37 @@ namespace Java.Interop {
 			return converter (value);
 		}
 
+		// Converts values that map to a well-known Java peer (IJavaObject instances, boxed
+		// primitives/strings, and arrays) to a local JNI handle. Unlike ToLocalJniHandle, this
+		// does NOT fall back to wrapping unknown objects in Android.Runtime.JavaObject; instead it
+		// returns false so callers (e.g. the trimmable typemap value manager) can provide their own
+		// proxy for arbitrary .NET objects.
+		internal static bool TryConvertKnownValueToLocalJniHandle (object? value, out IntPtr handle)
+		{
+			if (value == null) {
+				handle = IntPtr.Zero;
+				return true;
+			}
+			if (value is IJavaObject v) {
+				handle = JNIEnv.ToLocalJniHandle (v);
+				return true;
+			}
+
+			Type sourceType = value.GetType ();
+			Func<object, IntPtr>? converter;
+			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter)) {
+				handle = converter (value);
+				return true;
+			}
+			if (sourceType.IsArray) {
+				handle = LocalJniHandleConverters [typeof (Array)] (value);
+				return true;
+			}
+
+			handle = IntPtr.Zero;
+			return false;
+		}
+
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
 		{
 			IntPtr lref = ToLocalJniHandle (value);
