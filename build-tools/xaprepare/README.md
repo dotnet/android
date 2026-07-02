@@ -100,9 +100,6 @@ The files mentioned above are found in the [ConfigAndData](xaprepare/ConfigAndDa
    Rarely modified, contains all the target ABI names as used throughout the .NET for Android source as well as a number of
    helper methods used throughout the preparation utility code. **Be very careful** when modifying the names there as it may
    break the build!
- - [BuildAndroidPlatforms.cs](xaprepare/ConfigAndData/BuildAndroidPlatforms.cs)
-   Contains the NDK release/revision constants and the minimum NDK API levels used for all the Android device targets.
-   The Android API level list itself lives in [`/src/Mono.Android/Mono.Android.Apis.projitems`](../../src/Mono.Android/Mono.Android.Apis.projitems).
  - [CommonLicenses.cs](xaprepare/ConfigAndData/CommonLicenses.cs)
    A file with constants containing paths to licenses commonly used by software .NET for Android uses. The licenses are used
    when generating Third Party Notices.

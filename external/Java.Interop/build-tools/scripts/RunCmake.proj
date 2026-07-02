@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Prepare" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="Cmake"
+      DependsOnTargets="_ValidateCmake;_RunCmake"
+  />
+  <Target Name="_ValidateCmake">
+    <Error
+        Condition=" '$(CmakePath)' == '' "
+        Text="Set the `%24(CmakePath)` property."
+    />
+    <Error
+        Condition=" '$(CmakeGenerator)' == '' "
+        Text="Set the `%24(CmakeGenerator)` property."
+    />
+    <Error
+        Condition=" '$(CmakeSourceDir)' == '' "
+        Text="Set the `%24(CmakeSourceDir)` property."
+    />
+    <Error
+        Condition=" '$(CmakeBuildDir)' == '' "
+        Text="Set the `%24(CmakeBuildDir)` property."
+    />
+  </Target>
+
+  <Target Name="_RunCmake">
+    <PropertyGroup>
+      <_Prepare>$(PrepareNativeToolchain)</_Prepare>
+      <_Prepare Condition=" '$(_Prepare)' != '' And !$(_Prepare.Trim().EndsWith('&amp;&amp;')) ">$(_Prepare) &amp;&amp;</_Prepare>
+      <_SourceDir>$(CmakeSourceDir.Replace('%5c', '/'))</_SourceDir>
+      <_BuildDir>$(CmakeBuildDir.Replace('%5c', '/'))</_BuildDir>
+      <_ExtraArgs>$(CmakeExtraArgs.Replace('%5c', '/'))</_ExtraArgs>
+    </PropertyGroup>
+    <Exec
+        ContinueOnError="WarnAndContinue"
+        Command="$(_Prepare) $(CmakePath) $(CmakeGenerator) -S &quot;$(_SourceDir)&quot; -B &quot;$(_BuildDir)&quot; $(_ExtraArgs) &amp;&amp; $(CmakePath) --build &quot;$(_BuildDir)&quot; -v"
+    />
+    <PropertyGroup>
+      <_CmakeStatus>$(MSBuildLastTaskResult)</_CmakeStatus>
+    </PropertyGroup>
+    <ReadLinesFromFile
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        File="$(CmakeBuildDir)CMakeFiles/CMakeOutput.log">
+      <Output TaskParameter="Lines" ItemName="_CmakeLog" />
+    </ReadLinesFromFile>
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="CMakeOutput.log"
+    />
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="@(_CmakeLog, '
+')"
+    />
+    <ReadLinesFromFile
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        File="$(CmakeBuildDir)CMakeFiles/CMakeError.log">
+      <Output TaskParameter="Lines" ItemName="_CmakeErrorLog" />
+    </ReadLinesFromFile>
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="CMakeError.log"
+    />
+    <Message
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="@(_CmakeErrorLog, '
+')"
+    />
+    <Error
+        Condition=" '$(_CmakeStatus)' == 'false' "
+        Text="`cmake` failed.  See previous messages."
+    />
+  </Target>
+</Project>

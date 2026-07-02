@@ -19,3 +19,4 @@ I/O, archives, or process execution.
 | Check | What to look for |
 |-------|-----------------|
 | **Command injection** | Arguments passed to `Process.Start` must be sanitized. Use `ArgumentList` (not string interpolation into command strings). Never interpolate user/external input into command strings. |
+| **Don't auto-elevate** | Don't include `IsElevated()`-style helpers that silently re-launch the current process with elevated privileges. The calling tool should handle elevation prompts. The library should error out with a clear message if it lacks permissions. |

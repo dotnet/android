@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(UtilityOutputFullPath)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Options" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
+  </ItemGroup>
+
+</Project>

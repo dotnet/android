@@ -70,11 +70,6 @@ namespace Xamarin.Android.Prepare
 		public EssentialTools Tools                    { get; private set; } = new EssentialTools ();
 
 		/// <summary>
-		///   Information about the current build. <see cref="BuildInfo" />
-		/// </summary>
-		public BuildInfo BuildInfo                     { get; private set; } = new BuildInfo ();
-
-		/// <summary>
 		///   All the scenarios known to the bootstrapper
 		/// </summary>
 		public IDictionary<string, Scenario> Scenarios { get; } = new SortedDictionary<string, Scenario> (StringComparer.OrdinalIgnoreCase);
@@ -428,11 +423,6 @@ namespace Xamarin.Android.Prepare
 					Log.ErrorLine ("Failed to update Git submodules");
 					return false;
 				}
-			}
-
-			BuildInfo = new BuildInfo ();
-			if (SelectedScenario.NeedsGitBuildInfo) {
-				await BuildInfo.GatherGitInfo (this);
 			}
 
 			if (MakeConcurrency == 0)

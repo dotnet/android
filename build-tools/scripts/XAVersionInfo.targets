@@ -16,9 +16,8 @@
       <!-- If anything changes in this list, make sure to update:
            src/Xamarin.Android.Build.Tasks/Xamarin.Android.Build.Tasks.targets (the _GenerateXACommonProps target)
       -->
-      <_SubmoduleBranchInfo Include="external/Java.Interop">
-        <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
-      </_SubmoduleBranchInfo>
+      <!-- Java.Interop is no longer a submodule; it lives in-tree under
+           external/Java.Interop/. Its commit is the dotnet/android commit. -->
       <_SubmoduleBranchInfo Include="external/xamarin-android-tools">
         <OutputPropertyName>_BuildInfo_XamarinAndroidToolsCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>

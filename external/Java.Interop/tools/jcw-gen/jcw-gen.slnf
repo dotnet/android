@@ -1,0 +1,13 @@
+{
+  "solution": {
+    "path": "..\\..\\Java.Interop.sln",
+    "projects": [
+      "src\\Java.Interop.Localization\\Java.Interop.Localization.csproj",
+      "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",
+      "src\\Java.Interop.Tools.Diagnostics\\Java.Interop.Tools.Diagnostics.csproj",
+      "src\\Java.Interop.Tools.JavaCallableWrappers\\Java.Interop.Tools.JavaCallableWrappers.csproj",
+      "tests\\Java.Interop.Tools.JavaCallableWrappers-Tests\\Java.Interop.Tools.JavaCallableWrappers-Tests.csproj",
+      "tools\\jcw-gen\\jcw-gen.csproj"
+    ]
+  }
+}

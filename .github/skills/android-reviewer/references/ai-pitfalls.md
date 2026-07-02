@@ -26,3 +26,4 @@ reviews.
 | **Commit messages omit non-obvious choices** | Behavioral decisions ("styleable arrays are cached, not copied per-access") and known limitations ("this leaks N bytes on Android 9") belong in the commit message. (Postmortem `#13`, `#69`) |
 | **Typos in user-visible strings** | Users copy-paste error messages into bug reports. Get them right. (Postmortem `#61`) |
 | **Filler words in docs** | "So" at the start of a sentence adds nothing. Be direct. (Postmortem `#71`) |
+| **Ignoring trimmer/AOT** | AI uses `Type.GetType()`, `Activator.CreateInstance()`, or reflection APIs without `[DynamicallyAccessedMembers]` annotations. These break silently under trimming and NativeAOT. Prefer direct type references or typemap lookups; use `[UnconditionalSuppressMessage]` (not `#pragma`) when a suppression is genuinely required. |

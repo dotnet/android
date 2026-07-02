@@ -1,0 +1,12 @@
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+[Register ("GetCountForKey", "(Ljava/lang/String;)I", "GetGetCountForKey_Ljava_lang_String_Handler:java.code.IMyInterfaceInvoker, ")]
+int GetCountForKey (string? key);
+
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='Key' and count(parameter)=0]"
+[Register ("Key", "()Ljava/lang/String;", "GetKeyHandler:java.code.IMyInterfaceInvoker, ")]
+string? Key ();
+
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='AbstractMethod' and count(parameter)=0]"
+[Register ("AbstractMethod", "()V", "GetAbstractMethodHandler:java.code.IMyInterfaceInvoker, ")]
+void AbstractMethod ();
+

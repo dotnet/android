@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Java.Interop.Tools.JavaTypeSystem.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <OutputPath>$(TestOutputFullPath)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nunit" />
+    <PackageReference Include="NUnit.ConsoleRunner" />
+    <PackageReference Include="NUnit3TestAdapter">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaTypeSystem\Java.Interop.Tools.JavaTypeSystem.csproj" />
+  </ItemGroup>
+
+</Project>
