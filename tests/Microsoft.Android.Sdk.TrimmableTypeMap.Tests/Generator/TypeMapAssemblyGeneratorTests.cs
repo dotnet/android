@@ -1151,6 +1151,76 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_UcoMethod_CharReturn_LegacyBinding_CallbackUsesChar ()
+	{
+		// JNI char is ambiguous exactly like boolean: the pre-#1296 TouchHandler declares its
+		// n_GetKeyChar return as System.Char, so the callback MemberRef must be Char while the UCO
+		// entry keeps the blittable ushort JNI ABI.
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
+		using var stream = GenerateAssembly (new [] { peer }, "CharReturnLegacyTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("getKeyChar") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ReturnType);
+
+		var callbackSig = FindCallbackMemberRef (reader, "n_GetKeyChar").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Char", callbackSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_CharParam_LegacyBinding_CallbackUsesChar ()
+	{
+		// Char parameters follow the same rule: ushort for the blittable UCO ABI, and — because
+		// TouchHandler models a pre-#1296 binding — System.Char for the n_SetKeyChar callback ref.
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
+		using var stream = GenerateAssembly (new [] { peer }, "CharParamLegacyTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("setKeyChar") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ParameterTypes.Last ());
+
+		var callbackSig = FindCallbackMemberRef (reader, "n_SetKeyChar").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Char", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_Char_ModernBinding_CallbackUsesUInt16 ()
+	{
+		// Counterpart to the char TouchHandler tests: the IOnKeyListenerInvoker fixture models a
+		// *post-#1296* binding whose n_OnKey_C declares JNI char as the blittable ushort.
+		// KeyListenerImpl inherits that interface callback (no own [Register]) and forwards to the
+		// invoker's n_*, so both the char return and char parameter of the emitted MemberRef must be
+		// UInt16 — proving char, like boolean, is taken from each real n_* method rather than hardcoded.
+		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/KeyListenerImpl");
+		using var stream = GenerateAssembly (new [] { peer }, "CharModernTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("onKey") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ReturnType);
+		Assert.Equal ("System.UInt16", ucoSig.ParameterTypes.Last ());
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnKey_C", "Android.Views", "IOnKeyListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", callbackSig.ReturnType);
+		Assert.Equal ("System.UInt16", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
 	public void Generate_ExportUcoMethod_HasCatchAndFinallyRegions ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/ExportExample");

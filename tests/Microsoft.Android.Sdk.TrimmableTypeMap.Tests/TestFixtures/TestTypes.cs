@@ -146,6 +146,25 @@ namespace Android.Views
 		static sbyte n_OnLongClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr v) => 0;
 	}
 
+	[Register ("android/view/View$OnKeyListener", "", "Android.Views.IOnKeyListenerInvoker")]
+	public interface IOnKeyListener
+	{
+		[Register ("onKey", "(C)C", "GetOnKey_CHandler:Android.Views.IOnKeyListenerInvoker")]
+		char OnKey (char c);
+	}
+
+	[Register ("android/view/View$OnKeyListener", DoNotGenerateAcw = true)]
+	internal sealed class IOnKeyListenerInvoker : Java.Lang.Object, IOnKeyListener
+	{
+		public IOnKeyListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		public char OnKey (char c) => c;
+
+		// Real MCW-style n_* callback. This invoker models the *post-#1296* generator, where JNI char
+		// is declared as the blittable System.UInt16 (ushort). The emitted callback MemberRef must
+		// mirror this (ushort), unlike the pre-#1296 TouchHandler above which uses char.
+		static ushort n_OnKey_C (IntPtr jnienv, IntPtr native__this, ushort c) => c;
+	}
+
 	/// <summary>
 	/// Interface with a registered property (for testing interface property implementation detection).
 	/// </summary>
@@ -375,10 +394,19 @@ namespace MyApp
 		[Register ("setItems", "([Ljava/lang/String;)V", "GetSetItemsHandler")]
 		public virtual void SetItems (string[]? items) { }
 
+		[Register ("getKeyChar", "()C", "GetGetKeyCharHandler")]
+		public virtual char GetKeyChar () => '\0';
+
+		[Register ("setKeyChar", "(C)V", "GetSetKeyCharHandler")]
+		public virtual void SetKeyChar (char c) { }
+
 		// Real MCW-style n_* callbacks. This binding models the *pre-#1296* generator, where JNI
-		// boolean is declared as System.Boolean (bool). The emitted callback MemberRef must mirror this.
+		// boolean is declared as System.Boolean (bool) and JNI char as System.Char (char). The
+		// emitted callback MemberRefs must mirror this.
 		static bool n_OnTouch (IntPtr jnienv, IntPtr native__this, IntPtr v, int action) => false;
 		static void n_OnFocusChange (IntPtr jnienv, IntPtr native__this, IntPtr v, bool hasFocus) { }
+		static char n_GetKeyChar (IntPtr jnienv, IntPtr native__this) => '\0';
+		static void n_SetKeyChar (IntPtr jnienv, IntPtr native__this, char c) { }
 	}
 
 	// --- Covariant return test types ---
@@ -691,6 +719,18 @@ namespace MyApp
 
 		public void OnClick (Android.Views.View v) { }
 		public bool OnLongClick (Android.Views.View v) => false;
+	}
+
+	/// <summary>
+	/// Implements a char-bearing interface without [Register], so its onKey marshal method forwards
+	/// to the post-#1296 invoker's ushort n_* callback (the modern char encoding).
+	/// </summary>
+	[Register ("my/app/KeyListenerImpl")]
+	public class KeyListenerImpl : Java.Lang.Object, Android.Views.IOnKeyListener
+	{
+		protected KeyListenerImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public char OnKey (char c) => c;
 	}
 
 	/// <summary>
