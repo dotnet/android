@@ -1167,13 +1167,13 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA4256" xml:space="preserve">
-    <value>Only one '{0}' is allowed for '{1}' item '{2}'.</value>
+    <value>Nur ein „{0}“ ist für „{1}“ Element „{2}“ zulässig.</value>
     <comment>{0} - MSBuild XML element name
 {1} - MSBuild XML element name
 {2} - MSBuild ItemSpec value</comment>
   </data>
   <data name="XA4257" xml:space="preserve">
-    <value>Skipping Java peer type '{0}' from assembly '{1}' because referenced type '{2}' from assembly '{3}' could not be resolved in '{4}'. This type will not be included in the trimmable type map.</value>
+    <value>Der Java-Peertyp „{0}“ wird aus der Assembly „{1}“ übersprungen, da der Referenztyp „{2}“ aus der Assembly „{3}“ in „{4}“ nicht aufgelöst werden konnte. Dieser Typ wird nicht in der zuschneidbaren Typzuordnung enthalten sein.</value>
     <comment>The following are literal names and should not be translated: Java, trimmable type map.
 {0} - Fully-qualified managed Java peer type name
 {1} - Assembly containing the skipped Java peer type
