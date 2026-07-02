@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+
+  <!--
+    This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
+    netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
+    netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here are imported with
+    <UsingTask ... Runtime="NET" TaskFactory="TaskHostFactory" /> so they run out-of-process on .NET.
+    Keep this assembly small and self-contained: link only the minimal helpers it needs.
+  -->
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
+    <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+  </ItemGroup>
+
+  <!--
+    Link the shared Resources so the XA#### messages stay localized. The linked Resources.Designer.cs
+    resolves strings via ResourceManager ("Xamarin.Android.Tasks.Properties.Resources"), so pin the
+    embedded resource's name to match even though RootNamespace differs.
+  -->
+  <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.resx" Link="Properties\Resources.resx">
+      <ManifestResourceName>Xamarin.Android.Tasks.Properties.Resources</ManifestResourceName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

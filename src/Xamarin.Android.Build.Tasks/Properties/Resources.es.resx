@@ -1167,13 +1167,13 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {0} - Full path to the generated Java source file</comment>
   </data>
   <data name="XA4256" xml:space="preserve">
-    <value>Only one '{0}' is allowed for '{1}' item '{2}'.</value>
+    <value>Solo se permite un "{0}" para "{1}" elemento "{2}".</value>
     <comment>{0} - MSBuild XML element name
 {1} - MSBuild XML element name
 {2} - MSBuild ItemSpec value</comment>
   </data>
   <data name="XA4257" xml:space="preserve">
-    <value>Skipping Java peer type '{0}' from assembly '{1}' because referenced type '{2}' from assembly '{3}' could not be resolved in '{4}'. This type will not be included in the trimmable type map.</value>
+    <value>Omitiendo el tipo de nodo del mismo nivel de Java "{0}" del ensamblado "{1}" porque el tipo al que se hace referencia "{2}" del ensamblado "{3}" no se pudo resolver en "{4}". Este tipo no se incluirá en la asignación de tipos recortables.</value>
     <comment>The following are literal names and should not be translated: Java, trimmable type map.
 {0} - Fully-qualified managed Java peer type name
 {1} - Assembly containing the skipped Java peer type
