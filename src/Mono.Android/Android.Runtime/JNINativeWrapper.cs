@@ -26,6 +26,7 @@ namespace Android.Runtime {
 				AndroidEnvironment.FailFast ("Cannot find AndroidRuntimeInternal.WaitForBridgeProcessing");
 		}
 
+		[RequiresDynamicCode ("This method uses System.Reflection.Emit to create a delegate at runtime.")]
 		public static Delegate CreateDelegate (Delegate dlg)
 		{
 			if (dlg == null)

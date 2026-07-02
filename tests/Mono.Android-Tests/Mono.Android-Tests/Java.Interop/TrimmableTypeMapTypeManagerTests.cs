@@ -180,23 +180,22 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void JavaProxyObject_ValueMarshalerUsesProxyType ()
+		public void TrimmableJavaProxyObject_CreateLocalObjectReferenceArgumentUsesProxyType ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
 			var value = new object ();
-			var marshaler = JniEnvironment.Runtime.ValueManager.GetValueMarshaler (typeof (object));
-			var state = marshaler.CreateObjectReferenceArgumentState (value);
+			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
 
 			try {
-				Assert.AreEqual ("net/dot/jni/internal/JavaProxyObject", JNIEnv.GetClassNameFromInstance (state.ReferenceValue.Handle));
+				Assert.AreEqual ("net/dot/jni/internal/TrimmableJavaProxyObject", JNIEnv.GetClassNameFromInstance (reference.Handle));
 			} finally {
-				marshaler.DestroyArgumentState (value, ref state);
+				JniObjectReference.Dispose (ref reference);
 			}
 		}
 
 		[Test]
-		public void JavaProxyObject_CanBeUsedInObjectArray ()
+		public void TrimmableJavaProxyObject_CanBeUsedInObjectArray ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
@@ -207,19 +206,18 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void JavaProxyObject_ObjectMethodsUseJavaIdentitySemantics ()
+		public void TrimmableJavaProxyObject_ObjectMethodsUseJavaIdentitySemantics ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
 
 			var value = new object ();
 			var other = new object ();
-			var marshaler = JniEnvironment.Runtime.ValueManager.GetValueMarshaler (typeof (object));
-			var state = marshaler.CreateObjectReferenceArgumentState (value);
-			var otherState = marshaler.CreateObjectReferenceArgumentState (other);
+			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
+			var otherReference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), other);
 
 			try {
-				var localProxy = state.ReferenceValue.NewLocalRef ();
-				var localOtherProxy = otherState.ReferenceValue.NewLocalRef ();
+				var localProxy = reference.NewLocalRef ();
+				var localOtherProxy = otherReference.NewLocalRef ();
 
 				try {
 					IntPtr proxyClass = JNIEnv.GetObjectClass (localProxy.Handle);
@@ -239,7 +237,7 @@ namespace Java.InteropTests
 								JNIEnv.CallIntMethod (localProxy.Handle, hashCode));
 							var proxyString = JNIEnv.GetString (JNIEnv.CallObjectMethod (localProxy.Handle, toString), JniHandleOwnership.TransferLocalRef);
 							Assert.IsTrue (
-								proxyString.StartsWith ("net.dot.jni.internal.JavaProxyObject@", StringComparison.Ordinal),
+								proxyString.StartsWith ("net.dot.jni.internal.TrimmableJavaProxyObject@", StringComparison.Ordinal),
 								proxyString);
 						} finally {
 							JniObjectReference.Dispose (ref systemClass);
@@ -252,8 +250,8 @@ namespace Java.InteropTests
 					JniObjectReference.Dispose (ref localOtherProxy);
 				}
 			} finally {
-				marshaler.DestroyArgumentState (other, ref otherState);
-				marshaler.DestroyArgumentState (value, ref state);
+				JniObjectReference.Dispose (ref otherReference);
+				JniObjectReference.Dispose (ref reference);
 			}
 		}
 

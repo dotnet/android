@@ -12,8 +12,9 @@ namespace Java.Interop {
 
 	static class JavaConvert {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+		const JniObjectReferenceOptions DisposeSource = JniObjectReferenceOptions.CopyAndDispose & ~JniObjectReferenceOptions.Copy;
 
-		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>>() {
+		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object?>>() {
 			{ typeof (bool), (handle, transfer) => {
 				using (var value = new Java.Lang.Boolean (handle, transfer | JniHandleOwnership.DoNotRegister))
 					return value.BooleanValue ();
@@ -71,55 +72,61 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			// Might cause an issue in the future for NativeAOT
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "We don't think the IDictionary, IList, or ICollection code paths occur if JavaDictionary<,>, JavaList<>, and JavaCollection<> do not exist.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			static Type MakeGenericType (
-					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-					Type type,
-					params Type [] typeArguments
-			) =>
-				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-				// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
-				#pragma warning disable IL3050
-				type.MakeGenericType (typeArguments);
-				#pragma warning restore IL3050
-
 			if (target == null)
 				return null;
 
 			if (JniHandleConverters.TryGetValue (target, out var converter))
 				return converter;
+
+			// For Nullable<T>, look up the converter for the underlying element type and
+			// wrap it so that a null Java reference maps to a null value.
+			var underlyingType = Nullable.GetUnderlyingType (target);
+			if (underlyingType != null && JniHandleConverters.TryGetValue (underlyingType, out var underlyingConverter))
+				return (h, t) => h == IntPtr.Zero ? null : underlyingConverter (h, t);
+
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				var factoryConverter = TryGetFactoryBasedConverter (target);
-				if (factoryConverter != null)
-					return factoryConverter;
+			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
+				if (RuntimeFeature.TrimmableTypeMap) {
+					var factoryConverter = TryGetFactoryBasedConverter (target);
+					if (factoryConverter != null)
+						return factoryConverter;
+				} else {
+					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
+					if (factoryConverter != null)
+						return factoryConverter;
+				}
 			}
 
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-				Type t = MakeGenericType (typeof (JavaDictionary<,>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
 			if (typeof (IDictionary).IsAssignableFrom (target))
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IList<>)) {
-				Type t = MakeGenericType (typeof (JavaList<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
 			if (typeof (IList).IsAssignableFrom (target))
 				return (h, t) => JavaList.FromJniHandle (h, t);
-			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-				Type t = MakeGenericType (typeof (JavaCollection<>), target.GetGenericArguments ());
-				return GetJniHandleConverterForType (t);
-			}
 			if (typeof (ICollection).IsAssignableFrom (target))
 				return (h, t) => JavaCollection.FromJniHandle (h, t);
 
 			return null;
+
+			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
+				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
+			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
+			{
+				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
+					Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+					return GetJniHandleConverterForType (t);
+				}
+				if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
+					Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+					return GetJniHandleConverterForType (t);
+				}
+				if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
+					Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+					return GetJniHandleConverterForType (t);
+				}
+
+				return null;
+			}
 		}
 
 		/// <summary>
@@ -199,7 +206,7 @@ namespace Java.Interop {
 		internal readonly struct ArrayElementConverter
 		{
 			readonly Type? elementType;
-			readonly Func<IntPtr, JniHandleOwnership, object>? converter;
+			readonly Func<IntPtr, JniHandleOwnership, object?>? converter;
 			readonly bool useRuntimeTypeMapping;
 
 			public ArrayElementConverter (Array array)
@@ -234,13 +241,20 @@ namespace Java.Interop {
 				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
 					if (RuntimeFeature.TrimmableTypeMap)
 						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
-					return Java.Lang.Object.GetObject (handle, transfer, elementType);
+					return GetObjectWithSuppression (handle, transfer, elementType);
 				}
 
 				var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 				if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
 					return value;
 				return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
+			}
+
+			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2067:RequiresUnreferencedCode",
+				Justification = "Custom trimmer steps marks the activation constructors on IJavaPeerable types.")]
+			static object? GetObjectWithSuppression (IntPtr handle, JniHandleOwnership transfer, Type? elementType)
+			{
+				return Java.Lang.Object.GetObject (handle, transfer, elementType);
 			}
 		}
 
@@ -329,6 +343,31 @@ namespace Java.Interop {
 			return (T?) Convert.ChangeType (v, typeof (T), CultureInfo.InvariantCulture);
 		}
 
+		internal static object? FromObjectReference (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			[DynamicallyAccessedMembers (Constructors)]
+			Type? targetType = null)
+		{
+			JniHandleOwnership transfer;
+			if ((options & DisposeSource) != DisposeSource) {
+				transfer = JniHandleOwnership.DoNotTransfer;
+			} else {
+				transfer = reference.Type switch {
+					JniObjectReferenceType.Local => JniHandleOwnership.TransferLocalRef,
+					JniObjectReferenceType.Global => JniHandleOwnership.TransferGlobalRef,
+					_ => JniHandleOwnership.DoNotTransfer,
+				};
+			}
+
+			var value = FromJniHandle (reference.Handle, transfer, targetType);
+			if (transfer != JniHandleOwnership.DoNotTransfer) {
+				reference = default;
+			}
+
+			return value;
+		}
+
 		public static object? FromJniHandle (
 				IntPtr handle,
 				JniHandleOwnership transfer,
@@ -382,7 +421,9 @@ namespace Java.Interop {
 		{
 			var lref = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 			try {
-				string className = JniEnvironment.Types.GetJniTypeNameFromClass (lref);
+				string? className = JniEnvironment.Types.GetJniTypeNameFromClass (lref);
+				if (className is null)
+					return null;
 				if (TypeMappings.TryGetValue (className, out var match))
 					return match;
 				if (JniEnvironment.Types.IsAssignableFrom (lref, new JniObjectReference (JavaDictionary.map_class)))
@@ -571,6 +612,10 @@ namespace Java.Interop {
 		static Func<object, IntPtr> GetLocalJniHandleConverter (object value)
 		{
 			Type sourceType = value.GetType ();
+			Type? underlyingType = Nullable.GetUnderlyingType (sourceType);
+			if (underlyingType != null)
+				sourceType = underlyingType;
+
 			Func<object, IntPtr>? converter;
 			if (LocalJniHandleConverters.TryGetValue (sourceType, out converter))
 				return converter;
