@@ -178,16 +178,16 @@ class AndroidTestAdapter(
 		// "event"/"outcome"; treating those as results would report them as
 		// passed and, worse, mark ReportedFinal non-empty so the TRX fallback
 		// never runs. Skip them and let ReportFromTrxAsync handle the run.
-		if (!status.Values.TryGetValue ("event", out var eventKind) || (eventKind != "start" && eventKind != "finish"))
+		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind) || (eventKind != InstrumentationProtocol.EventStart && eventKind != InstrumentationProtocol.EventFinish))
 			return;
 
-		if (!status.Values.TryGetValue ("test", out var fullyQualifiedName) || string.IsNullOrEmpty (fullyQualifiedName))
+		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyTest, out var fullyQualifiedName) || string.IsNullOrEmpty (fullyQualifiedName))
 			return;
 
-		status.Values.TryGetValue ("name", out var displayName);
-		status.Values.TryGetValue ("class", out var className);
+		status.Values.TryGetValue (InstrumentationProtocol.KeyName, out var displayName);
+		status.Values.TryGetValue (InstrumentationProtocol.KeyClass, out var className);
 
-		if (eventKind == "start") {
+		if (eventKind == InstrumentationProtocol.EventStart) {
 			// Remember the running test so a crash can resolve it to a terminal
 			// state instead of leaving a dangling "in progress" node.
 			state.InFlightUid = fullyQualifiedName;
@@ -202,7 +202,7 @@ class AndroidTestAdapter(
 		}
 
 		// eventKind == "finish": a valid completion must carry an outcome.
-		if (!status.Values.TryGetValue ("outcome", out var outcome) || string.IsNullOrEmpty (outcome))
+		if (!status.Values.TryGetValue (InstrumentationProtocol.KeyOutcome, out var outcome) || string.IsNullOrEmpty (outcome))
 			return;
 
 		// The test completed, so it's no longer in flight.
@@ -211,8 +211,8 @@ class AndroidTestAdapter(
 			state.InFlightName = null;
 		}
 
-		var errorMessage = DecodeOrNull (status.Values, "message-b64");
-		var stackTrace = DecodeOrNull (status.Values, "stack-b64");
+		var errorMessage = DecodeOrNull (status.Values, InstrumentationProtocol.KeyMessageBase64);
+		var stackTrace = DecodeOrNull (status.Values, InstrumentationProtocol.KeyStackBase64);
 
 		var failureMessage = errorMessage ?? "Test failed";
 		if (!string.IsNullOrEmpty (stackTrace))
@@ -221,16 +221,16 @@ class AndroidTestAdapter(
 		// An unrecognized outcome is reported as an error rather than silently
 		// counted as a pass.
 		var stateProperty = outcome switch {
-			"passed" => (IProperty) new PassedTestNodeStateProperty (),
-			"failed" => new FailedTestNodeStateProperty (failureMessage),
-			"skipped" => new SkippedTestNodeStateProperty (errorMessage),
+			InstrumentationProtocol.OutcomePassed => (IProperty) new PassedTestNodeStateProperty (),
+			InstrumentationProtocol.OutcomeFailed => new FailedTestNodeStateProperty (failureMessage),
+			InstrumentationProtocol.OutcomeSkipped => new SkippedTestNodeStateProperty (errorMessage),
 			_ => new ErrorTestNodeStateProperty ($"Unrecognized test outcome '{outcome}'."),
 		};
 
 		var properties = new List<IProperty> { stateProperty };
 		if (!string.IsNullOrEmpty (className))
 			properties.Add (new TrxFullyQualifiedTypeNameProperty (className));
-		if (outcome == "failed" && (!string.IsNullOrEmpty (errorMessage) || !string.IsNullOrEmpty (stackTrace)))
+		if (outcome == InstrumentationProtocol.OutcomeFailed && (!string.IsNullOrEmpty (errorMessage) || !string.IsNullOrEmpty (stackTrace)))
 			properties.Add (new TrxExceptionProperty (errorMessage, stackTrace));
 
 		var testNode = new TestNode {
@@ -425,15 +425,15 @@ class AndroidTestAdapter(
 			}
 		}
 
-		if (bundleValues.TryGetValue ("passed", out var passedStr) && int.TryParse (passedStr, out int passed))
+		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyPassedCount, out var passedStr) && int.TryParse (passedStr, out int passed))
 			result.Passed = passed;
-		if (bundleValues.TryGetValue ("failed", out var failedStr) && int.TryParse (failedStr, out int failed))
+		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyFailedCount, out var failedStr) && int.TryParse (failedStr, out int failed))
 			result.Failed = failed;
-		if (bundleValues.TryGetValue ("skipped", out var skippedStr) && int.TryParse (skippedStr, out int skipped))
+		if (bundleValues.TryGetValue (InstrumentationProtocol.KeySkippedCount, out var skippedStr) && int.TryParse (skippedStr, out int skipped))
 			result.Skipped = skipped;
-		if (bundleValues.TryGetValue ("resultsPath", out var resultsPath))
+		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyResultsPath, out var resultsPath))
 			result.ResultsPath = resultsPath;
-		if (bundleValues.TryGetValue ("error", out var bundleError))
+		if (bundleValues.TryGetValue (InstrumentationProtocol.KeyError, out var bundleError))
 			result.Error = bundleError;
 
 		// Surface adb stderr if no results were parsed
