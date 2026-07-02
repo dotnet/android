@@ -419,6 +419,7 @@ stages:
       name: $(NetCorePublicPoolName)
       demands:
       - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      os: windows
     macPool:
       name: AcesShared
       demands:

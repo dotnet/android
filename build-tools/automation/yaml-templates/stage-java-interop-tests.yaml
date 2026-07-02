@@ -25,11 +25,13 @@ parameters:
   default:
     name: Azure Pipelines
     vmImage: $(HostedWinImage)
+    os: windows
 - name: macPool
   type: object
   default:
     name: Azure Pipelines
     vmImage: $(HostedMacImage)
+    os: macOS
 
 stages:
 - stage: ${{ parameters.stageName }}
