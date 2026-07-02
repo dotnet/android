@@ -159,8 +159,10 @@ static class JniSignatureHelper
 	/// True when a JNI kind maps to a CLR type that the MCW <c>n_*</c> callback may declare as either
 	/// its managed form or a blittable form depending on the generator version that compiled the
 	/// binding: JNI boolean is <c>bool</c> (pre-#1296) or <c>sbyte</c> (post-#1296), and JNI char is
-	/// <c>char</c> or <c>ushort</c>. For these, the callback MemberRef must be built from the real
-	/// <c>n_*</c> method's captured signature rather than guessed from the JNI descriptor.
+	/// <c>char</c> or <c>ushort</c>. For these, the callback MemberRef is captured from the real
+	/// <c>n_*</c> method's metadata when available; if it can't be read (framework callbacks live in
+	/// reference assemblies that strip the private static <c>n_*</c>), it falls back to the blittable
+	/// encoding via <see cref="EncodeClrTypeForCallback"/>.
 	/// </summary>
 	public static bool IsAmbiguousCallbackKind (JniParamKind kind)
 		=> kind == JniParamKind.Boolean || kind == JniParamKind.Char;

@@ -1147,6 +1147,30 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_UnresolvedCharCallback_FallsBackToUInt16 ()
+	{
+		// Char shares the same ambiguity as boolean, so the unresolved fallback must apply to it too:
+		// when the real n_* signature can't be read (framework reference assemblies strip the private
+		// static n_*), the callback MemberRef falls back to the blittable ushort encoding.
+		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/KeyListenerImpl");
+		var unresolvedPeer = peer with {
+			MarshalMethods = peer.MarshalMethods.Select (m =>
+				m.JniSignature == "(C)C"
+					? m with { NativeCallbackParameterTypeNames = null, NativeCallbackReturnTypeName = null }
+					: m).ToList (),
+		};
+
+		using var stream = GenerateAssembly (new [] { unresolvedPeer }, "UnresolvedCharTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnKey_C", "Android.Views", "IOnKeyListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", callbackSig.ReturnType);
+		Assert.Equal ("System.UInt16", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
 	public void Generate_UcoMethod_CharReturn_LegacyBinding_CallbackUsesChar ()
 	{
 		// JNI char is ambiguous exactly like boolean: the pre-#1296 TouchHandler declares its
