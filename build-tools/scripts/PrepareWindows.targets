@@ -21,5 +21,6 @@
     <MSBuild Projects="$(_TopDir)\Xamarin.Android.BootstrapTasks.sln" Targets="Restore;Build" />
     <MSBuild Projects="$(_TopDir)\src\workloads\workloads.csproj" Targets="Restore;Build" Properties="Configuration=$(Configuration)" />
     <CallTarget Targets="PrepareJavaInterop" />
+    <MSBuild Projects="$(_TopDir)\build-tools\build-tools-inventory\build-tools-inventory.proj" Properties="Configuration=$(Configuration)" />
   </Target>
 </Project>
