@@ -45,6 +45,17 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	static MemberReferenceHandle FindCtorMemberRef (MetadataReader reader, string parentNamespace, string parentName, params string [] parameterTypes) =>
 		FindCtorMemberRefs (reader, parentNamespace, parentName, parameterTypes).First ();
 
+	static string GetTypeDefOrRefName (MetadataReader reader, int codedToken)
+	{
+		int tag = codedToken & 0x3;
+		int row = codedToken >> 2;
+		return tag switch {
+			0 => reader.GetString (reader.GetTypeDefinition (MetadataTokens.TypeDefinitionHandle (row)).Name),
+			1 => reader.GetString (reader.GetTypeReference (MetadataTokens.TypeReferenceHandle (row)).Name),
+			_ => throw new InvalidOperationException ($"Unexpected TypeDefOrRefOrSpec tag {tag}."),
+		};
+	}
+
 	static TypeRefData TypeRef (string managedTypeName) => new () {
 		ManagedTypeName = managedTypeName,
 		AssemblyName = GetAssemblyNameForManagedType (managedTypeName),
@@ -106,6 +117,55 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 	}
 
+	[Theory]
+	[InlineData ("my/app/GenericSelectableList")]
+	[InlineData ("my/app/GenericForwardingSelectableList")]
+	public void Generate_InheritedGenericBaseCallback_UsesConstructedBaseMemberRef (string javaName)
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == javaName);
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var member = reader.MemberReferences
+			.Select (h => reader.GetMemberReference (h))
+			.Single (m => reader.GetString (m.Name) == "n_SetSelection_I");
+
+		Assert.Equal (HandleKind.TypeSpecification, member.Parent.Kind);
+		var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) member.Parent);
+		var blob = reader.GetBlobReader (typeSpec.Signature);
+
+		Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+		Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+		Assert.Equal ("GenericSelectionHost`1", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+		Assert.Equal (1, blob.ReadCompressedInteger ());
+		Assert.Equal (0x0E, blob.ReadByte ()); // ELEMENT_TYPE_STRING
+	}
+
+	[Fact]
+	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/EnumSelectableList");
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var member = reader.MemberReferences
+			.Select (h => reader.GetMemberReference (h))
+			.Single (m => reader.GetString (m.Name) == "n_SetSelection_I");
+
+		Assert.Equal (HandleKind.TypeSpecification, member.Parent.Kind);
+		var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) member.Parent);
+		var blob = reader.GetBlobReader (typeSpec.Signature);
+
+		Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+		Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+		Assert.Equal ("GenericValueTypeSelectionHost`1", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+		Assert.Equal (1, blob.ReadCompressedInteger ());
+		Assert.Equal (0x11, blob.ReadByte ()); // ELEMENT_TYPE_VALUETYPE
+		Assert.Equal ("SelectionMode", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+	}
+
 	[Fact]
 	public void Generate_ProxyType_HasCtorAndCreateInstance ()
 	{
@@ -142,13 +202,13 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.All (proxyTypes, proxyType => {
 			switch (proxyType.BaseType.Kind) {
 			case HandleKind.TypeSpecification:
-				// Non-generic target types derive from the closed `JavaPeerProxy<T>`.
+				// Concrete (constructible) target types derive from the closed `JavaPeerProxy<T>`.
 				var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
 				var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
 				Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
 				break;
 			case HandleKind.TypeReference:
-				// Open generic target types derive from the non-generic `JavaPeerProxy`.
+				// Open generic definitions and interfaces derive from the non-generic `JavaPeerProxy`.
 				var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
 				Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
 				Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
@@ -163,6 +223,29 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
 		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
 			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
+	}
+
+	[Fact]
+	public void Generate_InterfaceProxyType_UsesNonGenericJavaPeerProxyBase ()
+	{
+		// JavaPeerProxy<T> annotates T with [DynamicallyAccessedMembers(Constructors)]. Closing it
+		// over an interface (which has no constructors) makes ILC fail to load the closed generic
+		// type ("Failed to load type 'JavaPeerProxy`1<ISomeInterface>'"). Interface proxies must
+		// therefore derive from the non-generic JavaPeerProxy base (a plain TypeReference).
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var interfaceProxy = reader.TypeDefinitions
+			.Select (h => reader.GetTypeDefinition (h))
+			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
+			.First (t => reader.GetString (t.Name) == "Android_Views_IOnClickListener_Proxy");
+
+		Assert.Equal (HandleKind.TypeReference, interfaceProxy.BaseType.Kind);
+		var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) interfaceProxy.BaseType);
+		Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
+		Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
 	}
 
 	// Regression test: every generated proxy type must carry a custom attribute whose
@@ -709,6 +792,76 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void TypeRefData_Equality_ComparesGenericArgumentsByValue ()
+	{
+		var left = new TypeRefData {
+			ManagedTypeName = "Test.GenericBase`1",
+			AssemblyName = "TestAsm",
+			GenericArguments = [
+				TypeRef ("System.String"),
+			],
+		};
+		var right = new TypeRefData {
+			ManagedTypeName = "Test.GenericBase`1",
+			AssemblyName = "TestAsm",
+			GenericArguments = [
+				TypeRef ("System.String"),
+			],
+		};
+		var different = right with {
+			GenericArguments = [
+				TypeRef ("System.Object"),
+			],
+		};
+
+		Assert.Equal (left, right);
+		Assert.Equal (left.GetHashCode (), right.GetHashCode ());
+		Assert.NotEqual (left, different);
+	}
+
+	[Fact]
+	public void Generate_DifferentConstructedCallbackTypes_ProducesDifferentMVIDs ()
+	{
+		var peer = MakePeerWithActivation ("test/TypeA", "Test.TypeA", "TestAsm");
+		var stringPeer = peer with {
+			MarshalMethods = [
+				CreateInheritedGenericCallback (TypeRef ("System.String")),
+			],
+		};
+		var objectPeer = peer with {
+			MarshalMethods = [
+				CreateInheritedGenericCallback (TypeRef ("System.Object")),
+			],
+		};
+
+		using var stream1 = GenerateAssembly (new [] { stringPeer }, "SameName");
+		using var stream2 = GenerateAssembly (new [] { objectPeer }, "SameName");
+
+		using var pe1 = new PEReader (stream1);
+		using var pe2 = new PEReader (stream2);
+		var mvid1 = pe1.GetMetadataReader ().GetGuid (pe1.GetMetadataReader ().GetModuleDefinition ().Mvid);
+		var mvid2 = pe2.GetMetadataReader ().GetGuid (pe2.GetMetadataReader ().GetModuleDefinition ().Mvid);
+
+		Assert.NotEqual (mvid1, mvid2);
+
+		static MarshalMethodInfo CreateInheritedGenericCallback (TypeRefData genericArgument) => new () {
+			JniName = "setValue",
+			NativeCallbackName = "n_SetValue_Ljava_lang_Object",
+			JniSignature = "(Ljava/lang/Object;)V",
+			ManagedMethodName = "SetValue",
+			DeclaringTypeName = "Test.GenericBase`1",
+			DeclaringAssemblyName = "TestAsm",
+			DeclaringType = new TypeRefData {
+				ManagedTypeName = "Test.GenericBase`1",
+				AssemblyName = "TestAsm",
+				GenericArguments = [
+					genericArgument,
+				],
+			},
+		};
+	}
+
+	[Fact]
 	public void Generate_AcwProxy_HasRegisterNativesAndUcoMethods ()
 	{
 		var peers = ScanFixtures ();
@@ -798,9 +951,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData (1, 0x04)]  // Boolean → sbyte — matches MCW n_* callbacks
+	[InlineData (1, 0x04)]  // Boolean → sbyte (blittable modern n_* fallback)
 	[InlineData (2, 0x04)]  // Byte → sbyte
-	[InlineData (3, 0x03)]  // Char → char
+	[InlineData (3, 0x07)]  // Char → uint16 (blittable modern n_* fallback)
 	[InlineData (4, 0x06)]  // Short → int16
 	[InlineData (5, 0x08)]  // Int → int32
 	[InlineData (6, 0x0A)]  // Long → int64
@@ -809,6 +962,9 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	[InlineData (9, 0x18)]  // Object → IntPtr
 	public void EncodeClrTypeForCallback_ProducesCorrectPrimitiveTypeCode (int kindValue, byte expectedCode)
 	{
+		// This is the fallback used when the real n_* method's signature can't be read from metadata
+		// (framework callbacks, whose reference assemblies strip the private static n_*). Framework
+		// bindings are always post-#1296, so boolean → sbyte and char → ushort here.
 		var kind = (JniParamKind) kindValue;
 		var blob = new BlobBuilder ();
 		JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (blob), kind);
@@ -816,19 +972,17 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void EncodeClrType_Boolean_DiffersFromCallback ()
+	public void EncodeClrTypeName_EncodesBooleanAndSByteDistinctly ()
 	{
-		var ucoBlob = new BlobBuilder ();
-		JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (ucoBlob), JniParamKind.Boolean);
+		// The two boolean encodings a real n_* callback can use must map to distinct metadata codes,
+		// so a captured signature is emitted faithfully (0x02 = ELEMENT_TYPE_BOOLEAN, 0x04 = I1/sbyte).
+		var boolBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrTypeName (new SignatureTypeEncoder (boolBlob), "System.Boolean");
+		Assert.Equal (0x02, boolBlob.ToArray () [0]);
 
-		var cbBlob = new BlobBuilder ();
-		JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (cbBlob), JniParamKind.Boolean);
-
-		var ucoBytes = ucoBlob.ToArray ();
-		var cbBytes = cbBlob.ToArray ();
-		Assert.NotEqual (ucoBytes, cbBytes);
-		Assert.Equal (0x05, ucoBytes [0]);  // byte (unsigned)
-		Assert.Equal (0x04, cbBytes [0]);    // sbyte (signed)
+		var sbyteBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrTypeName (new SignatureTypeEncoder (sbyteBlob), "System.SByte");
+		Assert.Equal (0x04, sbyteBlob.ToArray () [0]);
 	}
 
 	[Fact]
@@ -868,11 +1022,12 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UcoMethod_BooleanReturn_WrapperUsesByte_CallbackUsesSByte ()
+	public void Generate_UcoMethod_BooleanReturn_WrapperUsesByte_CallbackUsesBoolean ()
 	{
-		// Regression test: the UCO wrapper must use byte (unsigned, JNI ABI) for boolean,
-		// but the callback MemberRef must use sbyte (signed, MCW convention).
-		// A mismatch caused ILLink to fail resolving the member reference and trim n_* methods.
+		// The callback MemberRef must mirror the real n_* method's signature. The TouchHandler fixture
+		// models a *pre-#1296* binding whose n_OnTouch declares JNI boolean as System.Boolean, so the
+		// emitted ref must be Boolean — while the UCO entry keeps the blittable byte for the JNI ABI.
+		// (The modern sbyte counterpart is covered by Generate_UcoMethod_BooleanReturn_ModernBinding_*.)
 		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolReturnTest");
 		using var pe = new PEReader (stream);
@@ -889,13 +1044,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Find the callback MemberRef that the UCO wrapper calls (n_OnTouch on the TouchHandler type)
 		var callbackRef = FindCallbackMemberRef (reader, "n_OnTouch");
 		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.SByte", callbackSig.ReturnType);
+		Assert.Equal ("System.Boolean", callbackSig.ReturnType);
 	}
 
 	[Fact]
-	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesSByte ()
+	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesBoolean ()
 	{
-		// Regression test: boolean parameters must also use the correct encoding.
+		// Boolean parameters follow the same rule: byte for the blittable UCO ABI, and — because the
+		// TouchHandler fixture models a pre-#1296 binding — System.Boolean for the n_* callback ref
+		// (matched from the real n_OnFocusChange method, not hardcoded).
 		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolParamTest");
 		using var pe = new PEReader (stream);
@@ -913,7 +1070,174 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Find the callback MemberRef
 		var callbackRef = FindCallbackMemberRef (reader, "n_OnFocusChange");
 		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.SByte", callbackSig.ParameterTypes.Last ());
+		Assert.Equal ("System.Boolean", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_BooleanReturn_ModernBinding_CallbackUsesSByte ()
+	{
+		// Counterpart to the pre-#1296 TouchHandler tests: the IOnLongClickListenerInvoker fixture
+		// models a *post-#1296* binding whose n_OnLongClick declares JNI boolean as the blittable
+		// sbyte. ImplicitMultiListener inherits that interface callback (no own [Register]) and thus
+		// forwards to the invoker's n_*, so the emitted callback MemberRef must be SByte — proving the
+		// boolean encoding is taken from each real n_* method rather than hardcoded to one form.
+		var peers = ScanFixtures ();
+		var peer = peers.First (p => p.JavaName == "my/app/ImplicitMultiListener");
+		using var stream = GenerateAssembly (new [] { peer }, "ModernBoolReturnTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("onLongClick") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Byte", ucoSig.ReturnType);
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnLongClick_Landroid_view_View_", "Android.Views", "IOnLongClickListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", callbackSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_MixedBindings_EachCallbackMirrorsItsOwnNativeSignature ()
+	{
+		// A single generated assembly may reference n_* callbacks from bindings compiled by different
+		// generator versions. Here the pre-#1296 TouchHandler (bool) and the post-#1296
+		// IOnLongClickListenerInvoker (sbyte) coexist; each callback MemberRef must independently match
+		// its own real method — bool for one, sbyte for the other.
+		var touchPeer = MakeTouchHandlerCallbackDispatchPeer ();
+		var longClickPeer = ScanFixtures ().First (p => p.JavaName == "my/app/ImplicitMultiListener");
+		using var stream = GenerateAssembly (new [] { touchPeer, longClickPeer }, "MixedBindingsTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var touchSig = FindCallbackMemberRef (reader, "n_OnTouch").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Boolean", touchSig.ReturnType);
+
+		var longClickRef = FindCallbackMemberRefHandle (reader, "n_OnLongClick_Landroid_view_View_", "Android.Views", "IOnLongClickListenerInvoker");
+		var longClickSig = reader.GetMemberReference (longClickRef).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", longClickSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_UnresolvedBooleanCallback_FallsBackToBlittable ()
+	{
+		// When a boolean/char callback's real n_* signature can't be read from metadata — which is the
+		// case for framework callbacks, because the generator scans the compile-time *reference*
+		// assemblies (Microsoft.Android.Ref) that strip the private static n_* methods — the emitter
+		// must fall back to the blittable sbyte/ushort encoding rather than fail the build (see #11802
+		// CI regression: XAGTT7009 on Org.XmlPull.V1.IXmlPullParserInvoker.n_IsEmptyElementTag). That
+		// fallback is correct because framework bindings are always produced by the post-#1296 generator.
+		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/ImplicitMultiListener");
+		var unresolvedPeer = peer with {
+			MarshalMethods = peer.MarshalMethods.Select (m =>
+				m.JniSignature == "(Landroid/view/View;)Z"
+					? m with { NativeCallbackParameterTypeNames = null, NativeCallbackReturnTypeName = null }
+					: m).ToList (),
+		};
+
+		using var stream = GenerateAssembly (new [] { unresolvedPeer }, "UnresolvedBoolTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnLongClick_Landroid_view_View_", "Android.Views", "IOnLongClickListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", callbackSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_UnresolvedCharCallback_FallsBackToUInt16 ()
+	{
+		// Char shares the same ambiguity as boolean, so the unresolved fallback must apply to it too:
+		// when the real n_* signature can't be read (framework reference assemblies strip the private
+		// static n_*), the callback MemberRef falls back to the blittable ushort encoding.
+		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/KeyListenerImpl");
+		var unresolvedPeer = peer with {
+			MarshalMethods = peer.MarshalMethods.Select (m =>
+				m.JniSignature == "(C)C"
+					? m with { NativeCallbackParameterTypeNames = null, NativeCallbackReturnTypeName = null }
+					: m).ToList (),
+		};
+
+		using var stream = GenerateAssembly (new [] { unresolvedPeer }, "UnresolvedCharTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnKey_C", "Android.Views", "IOnKeyListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", callbackSig.ReturnType);
+		Assert.Equal ("System.UInt16", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_CharReturn_LegacyBinding_CallbackUsesChar ()
+	{
+		// JNI char is ambiguous exactly like boolean: the pre-#1296 TouchHandler declares its
+		// n_GetKeyChar return as System.Char, so the callback MemberRef must be Char while the UCO
+		// entry keeps the blittable ushort JNI ABI.
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
+		using var stream = GenerateAssembly (new [] { peer }, "CharReturnLegacyTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("getKeyChar") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ReturnType);
+
+		var callbackSig = FindCallbackMemberRef (reader, "n_GetKeyChar").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Char", callbackSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_CharParam_LegacyBinding_CallbackUsesChar ()
+	{
+		// Char parameters follow the same rule: ushort for the blittable UCO ABI, and — because
+		// TouchHandler models a pre-#1296 binding — System.Char for the n_SetKeyChar callback ref.
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
+		using var stream = GenerateAssembly (new [] { peer }, "CharParamLegacyTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("setKeyChar") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ParameterTypes.Last ());
+
+		var callbackSig = FindCallbackMemberRef (reader, "n_SetKeyChar").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Char", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_Char_ModernBinding_CallbackUsesUInt16 ()
+	{
+		// Counterpart to the char TouchHandler tests: the IOnKeyListenerInvoker fixture models a
+		// *post-#1296* binding whose n_OnKey_C declares JNI char as the blittable ushort.
+		// KeyListenerImpl inherits that interface callback (no own [Register]) and forwards to the
+		// invoker's n_*, so both the char return and char parameter of the emitted MemberRef must be
+		// UInt16 — proving char, like boolean, is taken from each real n_* method rather than hardcoded.
+		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/KeyListenerImpl");
+		using var stream = GenerateAssembly (new [] { peer }, "CharModernTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("onKey") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ReturnType);
+		Assert.Equal ("System.UInt16", ucoSig.ParameterTypes.Last ());
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnKey_C", "Android.Views", "IOnKeyListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", callbackSig.ReturnType);
+		Assert.Equal ("System.UInt16", callbackSig.ParameterTypes.Last ());
 	}
 
 	[Fact]
@@ -1540,6 +1864,44 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			using var stream = GenerateAssembly (new [] { peer }, "UnsupportedExport");
 		});
 		Assert.Contains (expectedMessage, ex.Message);
+	}
+
+	[Fact]
+	public void Generate_ExportProxy_StructuredGenericArgumentThrows ()
+	{
+		var peer = MakePeerWithActivation ("my/app/UnsupportedExport", "MyApp.UnsupportedExport", "App") with {
+			DoNotGenerateAcw = false,
+			MarshalMethods = new List<MarshalMethodInfo> {
+				new () {
+					JniName = "badExport",
+					NativeCallbackName = "n_badExport",
+					JniSignature = "(Ljava/lang/Object;)V",
+					ManagedMethodName = "BadExport",
+					ManagedParameterTypes = new [] {
+						new TypeRefData {
+							ManagedTypeName = "System.Collections.Generic.List`1",
+							AssemblyName = "System.Collections",
+							GenericArguments = new [] {
+								new TypeRefData {
+									ManagedTypeName = "System.String",
+									AssemblyName = "System.Runtime",
+								},
+							},
+						},
+					},
+					ManagedReturnType = new TypeRefData {
+						ManagedTypeName = "System.Void",
+						AssemblyName = "System.Runtime",
+					},
+					IsExport = true,
+				},
+			},
+		};
+
+		var ex = Assert.Throws<NotSupportedException> (() => {
+			using var stream = GenerateAssembly (new [] { peer }, "UnsupportedStructuredGenericExport");
+		});
+		Assert.Contains ("generic", ex.Message);
 	}
 
 	[Fact]

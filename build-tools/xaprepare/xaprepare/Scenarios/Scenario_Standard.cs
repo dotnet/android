@@ -10,7 +10,6 @@ namespace Xamarin.Android.Prepare
 		{
 			NeedsGitSubmodules = true;
 			NeedsCompilers = true;
-			NeedsGitBuildInfo = true;
 		}
 
 		protected override void AddSteps (Context context)
@@ -18,15 +17,7 @@ namespace Xamarin.Android.Prepare
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
 
-			Steps.Add (new Step_InstallDotNetPreview ());
 			Steps.Add (new Step_GenerateFiles (atBuildStart: true));
-			Steps.Add (new Step_GenerateCGManifest ());
 		}
-
-		protected override void AddEndSteps (Context context)
-		{
-			Steps.Add (new Step_GenerateFiles (atBuildStart: false));
-		}
-
 	}
 }

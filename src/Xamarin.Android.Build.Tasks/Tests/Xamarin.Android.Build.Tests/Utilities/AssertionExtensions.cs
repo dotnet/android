@@ -141,12 +141,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[DebuggerHidden]
-		public static void AssertHasAtMostWarnings (this ProjectBuilder builder, uint maxExpectedWarnings)
-		{
-			AssertHasAtMostWarnings (builder.LastBuildOutput, maxExpectedWarnings, builder.BuildLogFile);
-		}
-
-		[DebuggerHidden]
 		public static void AssertHasNoWarnings (this DotNetCLI dotnet)
 		{
 			AssertHasSomeWarnings (dotnet.LastBuildOutput, 0, dotnet.BuildLogFile);
@@ -158,19 +152,31 @@ namespace Xamarin.Android.Build.Tests
 			AssertHasSomeWarnings (dotnet.LastBuildOutput, numOfExpectedWarnings, dotnet.BuildLogFile);
 		}
 
+		[DebuggerHidden]
+		public static void AssertHasAtMostWarnings (this ProjectBuilder builder, uint maxWarnings)
+		{
+			AssertHasAtMostWarnings (builder.LastBuildOutput, maxWarnings, builder.BuildLogFile);
+		}
+
+		[DebuggerHidden]
+		public static void AssertHasAtMostWarnings (this DotNetCLI dotnet, uint maxWarnings)
+		{
+			AssertHasAtMostWarnings (dotnet.LastBuildOutput, maxWarnings, dotnet.BuildLogFile);
+		}
+
 		static void AssertHasSomeWarnings (IEnumerable<string> lastBuildOutput, uint numOfExpectedWarnings, string logFile)
 		{
 			Assert.IsTrue (StringAssertEx.ContainsText (lastBuildOutput, $" {numOfExpectedWarnings} Warning(s)"), $"{logFile} should have {numOfExpectedWarnings} MSBuild warnings.");
 		}
 
-		static void AssertHasAtMostWarnings (IEnumerable<string> lastBuildOutput, uint maxExpectedWarnings, string logFile)
+		static void AssertHasAtMostWarnings (IEnumerable<string> lastBuildOutput, uint maxWarnings, string logFile)
 		{
-			for (uint warnings = 0; warnings <= maxExpectedWarnings; warnings++) {
-				if (StringAssertEx.ContainsText (lastBuildOutput, $" {warnings} Warning(s)")) {
-					return;
-				}
-			}
-			Assert.Fail ($"{logFile} should have at most {maxExpectedWarnings} MSBuild warnings.");
+			var match = lastBuildOutput
+				.Select (line => System.Text.RegularExpressions.Regex.Match (line, @"^\s*(\d+) Warning\(s\)\s*$"))
+				.FirstOrDefault (m => m.Success);
+			Assert.IsNotNull (match, $"{logFile} did not contain an MSBuild 'N Warning(s)' summary line.");
+			var actual = uint.Parse (match.Groups [1].Value, System.Globalization.CultureInfo.InvariantCulture);
+			Assert.IsTrue (actual <= maxWarnings, $"{logFile} should have at most {maxWarnings} MSBuild warnings, but had {actual}.");
 		}
 	}
 }

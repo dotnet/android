@@ -50,7 +50,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
@@ -91,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (Get_DotNetPack_Data))]
-		public void DotNetPack (string dotnetVersion, string platform, Version apiLevel, [Values] AndroidRuntime runtime)
+		public void DotNetPack (string dotnetVersion, string platform, Version apiLevel, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -197,7 +197,7 @@ public class JavaSourceTest {
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
@@ -254,7 +254,7 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void DotNetPublishDefaultValues ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void DotNetPublishDefaultValues ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;

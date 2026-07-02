@@ -4,10 +4,10 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 
 **Legend:**
 - **Assembly**: The test DLL to pass to `dotnet test` (relative to repo root). `${TFM}` = current `DotNetStableTargetFramework` from `Directory.Build.props`.
-- **Filter**: The `--filter` argument for `dotnet test`, or special instructions for non-`dotnet test` runs.
+- **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make`.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
@@ -33,15 +33,15 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **generator tools** | `external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
 | **generator** | `external/Java.Interop/tests/generator-Tests/` | `dotnet test external/Java.Interop/tests/generator-Tests/generator-Tests.csproj -v minimal` |
 | **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
-| **base tasks** | `external/.../tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test external/Java.Interop/external/xamarin-android-tools/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
-| **android sdk tools** | `external/.../tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test external/Java.Interop/external/xamarin-android-tools/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal` |
+| **base tasks** | `external/.../tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test external/xamarin-android-tools/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
+| **android sdk tools** | `external/.../tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test external/xamarin-android-tools/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal` |
 
 ---
 
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make`
+Build: Full-build — `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make prepare && make all`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |
@@ -108,13 +108,15 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
 | **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
-| **instant run** | `--filter "FullyQualifiedName~InstantRunTest"` | Hot reload / instant run |
+| **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
 
 ---
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-These use NUnitLite and run directly on the device via `-t:RunTestApp`. They do NOT use `dotnet test`.
+Mono.Android device tests use stock NUnit through Microsoft Testing Platform (MTP), not NUnitLite. This changed in dotnet/android#11224.
+
+Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
 Build: Full-build + the test project itself
 Device: **Yes**
@@ -131,8 +133,7 @@ Device: **Yes**
 | **system.xml** | Same project — tests in `System.Xml/` | XML processing tests |
 | **threading** | Same project — tests in `System.Threading/` | Threading and async tests |
 | **drawing** | Same project — tests in `System.Drawing/` | System.Drawing tests |
-| **locales (on-device)** | `tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj` | Locale/culture/globalization |
-| **embedded DSOs** | `tests/EmbeddedDSOs/EmbeddedDSO/EmbeddedDSO.csproj` | Native library loading |
+| **jcwgen (on-device)** | `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj` | Java callable wrapper generation tests; same MTP command shape |
 
 ### On-device test categories
 
@@ -145,12 +146,23 @@ Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `N
 
 Command:
 ```bash
-./dotnet-local.sh build -t:RunTestApp tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+./dotnet-local.sh build -t:Install -c Debug tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+(
+  cd tests/Mono.Android-Tests/Mono.Android-Tests
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
+)
 ```
 
-Results appear in `TestResult-*.xml` in the repo root.
+Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:UseMonoRuntime=false`).
 
----
+For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
+```bash
+./dotnet-local.sh build -t:Install -c Debug tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+(
+  cd tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests
+  ../../../dotnet-local.sh test Xamarin.Android.JcwGen-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
+)
+```
 
 ## Java.Interop Tests — Mixed Tiers
 
@@ -196,4 +208,4 @@ Run these tests with `dotnet test` from each test project directory listed above
 |-----------|------|--------------------|-------|
 | **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
 | **api compatibility** | N/A | `tests/api-compatibility/` | Not a test runner — reference data for API surface checks |
-| **android sdk tools** | **Standalone** | `external/Java.Interop/external/xamarin-android-tools/tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |
+| **android sdk tools** | **Standalone** | `external/xamarin-android-tools/tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |

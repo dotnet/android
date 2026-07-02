@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Note: MUST be imported *after* $(Configuration) is set! -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
+    <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
+    <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+    <DotNetTargetFrameworkVersion>10.0</DotNetTargetFrameworkVersion>
+    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
+  </PropertyGroup>
+
+  <Import
+      Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
+      Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
+  />
+  <Import
+      Project="$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.props"
+      Condition=" Exists('$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.props') "
+  />
+  <Import
+      Project="$(MSBuildThisFileDirectory)bin\Build$(Configuration)\Version.props"
+      Condition=" Exists('$(MSBuildThisFileDirectory)bin\Build$(Configuration)\Version.props') "
+  />
+  <Import
+      Project="$(_OutputPath)JdkInfo.props"
+      Condition="Exists('$(_OutputPath)JdkInfo.props')"
+  />
+  <Import
+      Project="$(_OutputPath)JdkInfo-11.props"
+      Condition="Exists('$(_OutputPath)JdkInfo-11.props')"
+  />
+  <Import
+      Project="$(_OutputPath)MonoInfo.props"
+      Condition="Exists('$(_OutputPath)MonoInfo.props')"
+  />
+  <Import
+      Project="$(_OutputPath)PackagePaths.props"
+      Condition="Exists('$(_OutputPath)PackagePaths.props')"
+  />
+  <PropertyGroup>
+    <!-- Workaround: https://github.com/dotnet/sdk/issues/19050 -->
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
+    <!-- Workaround: https://github.com/dotnet/runtime/issues/55992 -->
+    <UseAppHost>False</UseAppHost>
+    <AppendTargetFrameworkToOutputPath Condition=" '$(AppendTargetFrameworkToOutputPath)' == '' ">False</AppendTargetFrameworkToOutputPath>
+    <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <XamarinAndroidToolsDirectory   Condition=" '$(XamarinAndroidToolsDirectory)' == '' ">$(MSBuildThisFileDirectory)..\xamarin-android-tools</XamarinAndroidToolsDirectory>
+    <!-- Points at the top-level dotnet/android product.snk after the Java.Interop merge. -->
+    <ProductSnkPath                 Condition=" '$(ProductSnkPath)' == '' ">$(MSBuildThisFileDirectory)..\..\product.snk</ProductSnkPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DotnetToolPath Condition=" '$(DotnetToolPath)' == '' ">dotnet</DotnetToolPath>
+    <CmakePath Condition=" '$(CmakePath)' == '' ">cmake</CmakePath>
+    <GradleHome Condition=" '$(GradleHome)' == '' ">$(MSBuildThisFileDirectory)build-tools\gradle</GradleHome>
+    <GradleWPath Condition=" '$(GradleWPath)' == '' ">$(GradleHome)\gradlew</GradleWPath>
+    <GradleArgs Condition=" '$(GradleArgs)' == '' ">--stacktrace --no-daemon</GradleArgs>
+    <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">11</JavacSourceVersion>
+    <JavacTargetVersion Condition=" '$(JavacTargetVersion)' == '' ">11</JavacTargetVersion>
+    <_BootClassPath Condition=" '$(JreRtJarPath)' != '' ">-bootclasspath "$(JreRtJarPath)"</_BootClassPath>
+    <_JavacSourceOptions>--release $(JavacTargetVersion) $(_BootClassPath)</_JavacSourceOptions>
+  </PropertyGroup>
+  <PropertyGroup>
+    <XamarinAndroidToolsFullPath>$([System.IO.Path]::GetFullPath ('$(XamarinAndroidToolsDirectory)'))</XamarinAndroidToolsFullPath>
+  </PropertyGroup>
+
+  <!--
+    JniEnvironment.g.cs(34,8): error CS8981: The type name 'jobject' only contains lower-cased ascii characters. Such names may become reserved for the language.
+    -->
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
+  </PropertyGroup>
+
+</Project>

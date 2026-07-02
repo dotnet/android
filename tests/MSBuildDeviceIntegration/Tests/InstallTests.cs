@@ -157,7 +157,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
+		public void InstallWithoutSharedRuntime ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtimeType)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -201,28 +201,6 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__/{DeviceAbi} directory.");
 				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__/{DeviceAbi} directory.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
-			}
-		}
-
-		[Test]
-		public void InstallErrorCode ()
-		{
-			//Setup a situation where we get INSTALL_FAILED_NO_MATCHING_ABIS
-			var abi = "armeabi-v7a";
-			var proj = new XamarinAndroidApplicationProject {
-				EmbedAssembliesIntoApk = true,
-			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			proj.SetRuntimeIdentifiers (new[] { abi });
-
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				if (!builder.Install (proj)) {
-					Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "ADB0020"), "Should receive ADB0020 error code.");
-				} else {
-					Assert.Ignore ($"Install should have failed, but we might have an {abi} emulator attached.");
-				}
 			}
 		}
 
@@ -302,31 +280,6 @@ namespace Xamarin.Android.Build.Tests
 				proj.IsRelease = false;
 				Assert.IsTrue (builder.Install (proj), "Third install should have succeeded.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
-			}
-		}
-
-		[Test]
-		public void LoggingPropsShouldCreateOverrideDirForRelease ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			// MonoVM-only test
-			proj.SetRuntime (Android.Tasks.AndroidRuntime.MonoVM);
-			// Set debuggable=true to allow run-as command usage with a release build
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
-			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
-
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				RunAdbCommand ("shell setprop debug.mono.log timing");
-				RunProjectAndAssert (proj, builder);
-				var didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
-				ClearShellProp ("debug.mono.log");
-				Assert.True (didLaunch, "Activity should have started.");
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
-				builder.Uninstall (proj);
-				StringAssert.Contains ("methods.txt", directorylist, $"methods.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
 			}
 		}
 

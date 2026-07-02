@@ -125,9 +125,8 @@ namespace Android.Runtime
 		[LibraryImport (RuntimeConstants.InternalDllName)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
 		internal static partial delegate* unmanaged<MarkCrossReferencesArgs*, void> clr_initialize_gc_bridge (
-			IntPtr java_marshal_value_manager_handle,
 			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_started_callback,
-			delegate* unmanaged<IntPtr, MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
+			delegate* unmanaged<MarkCrossReferencesArgs*, void> bridge_processing_finished_callback);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);

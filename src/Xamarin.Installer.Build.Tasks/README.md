@@ -15,7 +15,9 @@ _without_ building dotnet/android, though it does require a dotnet/android check
 
 * Clone or navigate to your `dotnet/android` checkout, and install the sandboxed .NET preview:
     ```
-    dotnet run --project build-tools/xaprepare/xaprepare/xaprepare.csproj -- -s AndroidTestDependencies
+    bash ./eng/install-dotnet.sh                                    # macOS / Linux
+    pwsh ./eng/install-dotnet.ps1                                   # Windows
+    dotnet build src/workloads/workloads.csproj
     ```
 
 * Download the `nuget-unsigned` build artifact from the [latest build][0] from the branch you want to test, and move it to the `bin/BuildDebug` folder.

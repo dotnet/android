@@ -81,7 +81,7 @@ jobs:
       id: android-build
       continue-on-error: true
       run: |
-        make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=Debug
+        make jenkins PREPARE_CI=1 CONFIGURATION=Debug
       timeout-minutes: 60
 
     - name: Log disk space (after android build)

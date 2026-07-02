@@ -136,7 +136,7 @@ extends:
         - script: boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.188.macos10.xamarin.universal.pkg
           displayName: Install Mono
 
-        - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
+        - script: make prepare CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1
           workingDirectory: $(Build.SourcesDirectory)
           displayName: make prepare
 

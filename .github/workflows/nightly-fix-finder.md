@@ -2,9 +2,11 @@
 on:
   pull_request:
     paths:
-    - .github/workflows/nightly-fix-finder.md
-    - .github/workflows/nightly-fix-finder.lock.yml
-    - .github/workflows/nightly-fix-finder/**
+    # Sentinel path that never matches. Keeping a pull_request trigger here is
+    # required so gh-aw emits a pre_activation job (which shared/pat_pool.md's
+    # pat_pool job depends on), but actually running on PRs would fail because
+    # the copilot-pat-pool environment rejects PR refs via protection rules.
+    - .github/workflows/nightly-fix-finder.__never_matches__
   schedule:
   - cron: daily around 02:00
   workflow_dispatch:
@@ -15,25 +17,38 @@ on:
         - ""
         - "00-todo-fixme-hack"
         - "01-nullable-reference-types"
-        - "02-obsolete-api-usage"
-        - "03-performance-antipatterns"
+        - "02-null-forgiving-operator"
+        - "03-region-directives"
         - "04-missing-xml-docs"
         - "05-general-mistakes"
         - "06-unused-using-directives"
-        - "07-error-handling"
+        - "07-asynctask-log-property"
         - "08-string-literal-error-messages"
         required: false
         type: choice
 permissions:
   contents: read
   issues: read
-environment: copilot-pr-reviewer
+# ###############################################################
+# Select a PAT from the pool and override COPILOT_GITHUB_TOKEN.
+# Run agentic jobs in an isolated `copilot-pat-pool` environment.
+#
+# When org-level billing is available, this will be removed.
+# See `shared/pat_pool.README.md` for more information.
+# ###############################################################
+imports:
+  - uses: shared/pat_pool.md
+    with:
+      environment: copilot-pat-pool
+
+environment: copilot-pat-pool
 network:
   allowed:
   - defaults
   - github
   - dotnet
 safe-outputs:
+  github-token: ${{ secrets.GITHUB_TOKEN }}
   assign-to-agent:
     github-token: ${{ secrets.ANDROID_TEAM_PAT }}
     model: claude-opus-4.8
@@ -78,6 +93,23 @@ description: Nightly scan for random code improvement opportunities, files issue
 engine:
   id: copilot
   model: claude-opus-4.8
+  env:
+    COPILOT_GITHUB_TOKEN: |
+      ${{ case(
+        needs.pat_pool.outputs.pat_number == '0', secrets.COPILOT_PAT_0,
+        needs.pat_pool.outputs.pat_number == '1', secrets.COPILOT_PAT_1,
+        needs.pat_pool.outputs.pat_number == '2', secrets.COPILOT_PAT_2,
+        needs.pat_pool.outputs.pat_number == '3', secrets.COPILOT_PAT_3,
+        needs.pat_pool.outputs.pat_number == '4', secrets.COPILOT_PAT_4,
+        needs.pat_pool.outputs.pat_number == '5', secrets.COPILOT_PAT_5,
+        needs.pat_pool.outputs.pat_number == '6', secrets.COPILOT_PAT_6,
+        needs.pat_pool.outputs.pat_number == '7', secrets.COPILOT_PAT_7,
+        needs.pat_pool.outputs.pat_number == '8', secrets.COPILOT_PAT_8,
+        needs.pat_pool.outputs.pat_number == '9', secrets.COPILOT_PAT_9,
+        'NO COPILOT PAT AVAILABLE')
+      }}
+max-daily-ai-credits: -1
+max-ai-credits: -1
 strict: true
 timeout-minutes: 30
 tools:
@@ -97,6 +129,7 @@ tools:
   - xargs:*
   - basename:*
   github:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     min-integrity: none
     toolsets:
     - repos

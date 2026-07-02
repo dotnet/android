@@ -162,7 +162,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void WarnAboutAppDomains ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void WarnAboutAppDomains ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -205,7 +205,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void RemoveDesigner ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
 				Assert.Ignore ("CoreCLR supports only assembly stores");
@@ -247,7 +247,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LinkDescription ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		public void LinkDescription ([Values (true, false)] bool useAssemblyStore, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (!useAssemblyStore && runtime == AndroidRuntime.CoreCLR) {
 				Assert.Ignore ("CoreCLR doesn't support builds without assembly stores.");
@@ -304,7 +304,7 @@ $@"<linker>
 		}
 
 		[Test]
-		public void LinkWithNullAttribute ([Values] AndroidRuntime runtime)
+		public void LinkWithNullAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -359,7 +359,7 @@ $@"			var myButton = new AttributedButtonStub (this);
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				// Debug configuration
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
@@ -505,7 +505,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication, [Values] AndroidRuntime runtime)
+		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -543,7 +543,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveIX509TrustManagerSubclasses ([Values] bool hasServerCertificateCustomValidationCallback, [Values] AndroidRuntime runtime)
+		public void PreserveIX509TrustManagerSubclasses ([Values] bool hasServerCertificateCustomValidationCallback, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -582,7 +582,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void PreserveServices ([Values] AndroidRuntime runtime)
+		public void PreserveServices ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -625,7 +625,7 @@ namespace UnnamedProject {
 		[Test]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates (
 			[Values(true, false)] bool enableMarshalMethods,
-			[Values(AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (enableMarshalMethods == true && runtime == AndroidRuntime.CoreCLR) {
 				// This currently fails with the following exception:
@@ -728,7 +728,7 @@ public abstract class MyRunner {
 		}
 
 		[Test]
-		public void WarnWithReferenceToPreserveAttribute ([Values] AndroidRuntime runtime)
+		public void WarnWithReferenceToPreserveAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

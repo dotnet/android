@@ -20,7 +20,11 @@ az pipelines runs artifact list --run-id $BUILD_ID --org $ORG_URL --project $PRO
 az pipelines runs artifact list --run-id $BUILD_ID --org $ORG_URL --project $PROJECT --output json
 ```
 
-Look for artifact names containing `binlog`, `msbuild`, or `build-log`.
+Look for artifact names that contain build logs. On the `dotnet-android` (dnceng-public) pipeline the relevant ones are:
+- `Build Results - macOS` / `Build Results - Windows` / `Build Results - Linux` — contain the `.binlog` files (published mainly when a build stage fails or when `XA.PublishAllLogs` is set).
+- `Test Results - ...` — per-test-stage logs and artifacts. For the on-device `Package Tests` (APKs) stage these also include each device test's `build-<testName>.binlog`, `run-<testName>.binlog`, the `.trx`, and `logcat-<testName>.txt` (essential for native/JNI crash diagnosis).
+
+If a green build has no `Build Results - *` artifact, the binlogs weren't published; re-run with `XA.PublishAllLogs` or rely on the timeline/test queries instead.
 
 ### Download
 

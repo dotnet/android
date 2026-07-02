@@ -4,304 +4,199 @@ description: >
   Check CI build status and investigate failures for dotnet/android PRs. ALWAYS use this skill when
   the user asks "check CI", "CI status", "why is CI failing", "is CI green", "why is my PR blocked",
   or anything about build status on a PR. Auto-detects the current PR from the git branch when no
-  PR number is given. Covers both GitHub checks and internal Azure DevOps builds.
+  PR number is given. Covers GitHub checks and the public Azure DevOps pipeline (dnceng-public).
   DO NOT USE FOR: GitHub Actions workflow authoring, non-dotnet/android repos.
 ---
 
 # CI Status
 
-Check CI status and investigate build failures for dotnet/android PRs.
+Triage CI for a `dotnet/android` PR in two phases: **Phase 1** (always) gathers status and renders the report; **Phase 2** (only when asked) drills in via the references. Run the commands verbatim — the `jq`/`az` queries are exact and fragile.
 
-**Key fact:** dotnet/android's primary CI runs on Azure DevOps (internal). GitHub checks alone are insufficient — they may all show ✅ while the internal build is failing.
+Every PR runs **one** public Azure DevOps build: pipeline **`dotnet-android`** on `dev.azure.com/dnceng-public` (project `public`, definition `333`), full test matrix. It surfaces on GitHub as ~39 `dotnet-android (...)` checks plus `license/cla`, all backed by that single build.
 
-## Prerequisites
+## Pipeline facts (apply throughout)
 
-| Tool | Check | Setup |
-|------|-------|-------|
-| `gh` | `gh --version` | https://cli.github.com/ |
-| `az` + devops ext | `az version` | `az extension add --name azure-devops` then `az login` |
+Everything else is standard `gh`/`az` plus the **azure-devops** CLI extension (`az extension add --name azure-devops`); only these are non-obvious:
 
-If `az` is not authenticated, stop and tell the user to run `az login`.
+- **Judge pass/fail by the build `result` + GitHub check states — never by the test API.** Device-test lanes run with `continueOnError`, so flaky failures (notably `System.NetTests.SslTest.*`, or failures only in flavor lanes like `-TrimModePartial`/`-NoAab`) show as failed tests on otherwise-green builds.
+- **Expect a fork PR to await `/azp run` approval** (re-approved per push); direct PRs auto-start on push. Forks change only triggering, not which pipeline runs.
+- **Query test results with `az rest`** — `az devops invoke --area test --resource runs` 404s on dnceng-public, so use `az rest` for the `runs` and `ResultsByBuild` endpoints. Other `--area test` resources (e.g. `--resource results`, see references/azdo-queries.md) work fine. The `build` area works unauthenticated; `az rest` and log/artifact downloads need `az login` (else 401).
 
-## Workflow
+## Phase 1 — Status (always)
 
-### Phase 1: Quick Status (always do this first)
+Run the steps in order; each `jq` reuses a file an earlier fetch saved:
 
-#### Step 1 — Resolve the PR and detect fork status
-
-**No PR specified** — detect from current branch:
-
-```bash
-gh pr view --json number,title,url,headRefName,isCrossRepository --jq '{number,title,url,headRefName,isCrossRepository}'
-```
-
-**PR number given** — use it directly:
+1. **Resolve the PR** and its build id — stop if none or not yet built.
+2. **Fetch the build result** and save the timeline.
+3. **Derive** job status (3a), per-job timing (3b), and the failing-job test breakdown (3c).
+4. **Decide the verdict**, then **write the report**.
 
 ```bash
-gh pr view $PR --repo dotnet/android --json number,title,url,headRefName,isCrossRepository --jq '{number,title,url,headRefName,isCrossRepository}'
+ORG=https://dev.azure.com/dnceng-public; PROJECT=public
 ```
 
-If no PR exists for the current branch, tell the user and stop.
-
-**`isCrossRepository`** tells you whether the PR is from a fork:
-- `true` → **fork PR** (external contributor)
-- `false` → **direct PR** (team member, branch in dotnet/android)
-
-This matters for CI behavior:
-- **Fork PRs:** `Xamarin.Android-PR` does NOT run. `dotnet-android` runs the full pipeline including tests.
-- **Direct PRs:** `Xamarin.Android-PR` runs the full test suite. `dotnet-android` skips test stages (build-only) since tests run on DevDiv instead.
-
-Highlight the fork status in the output so the user understands which checks to expect.
-
-#### Step 2 — Get GitHub check status
+**Step 1 — Resolve the PR.** Drop `--repo`/`$PR` to auto-detect from the current branch:
 
 ```bash
-gh pr checks $PR --repo dotnet/android --json "name,state,link,bucket" 2>&1 \
-  | jq '[.[] | {name, state, bucket, link}]'
+gh pr view $PR --repo dotnet/android --json number,title,isCrossRepository
+gh pr checks $PR --repo dotnet/android --json name,state,link
+BUILD_ID=$(gh pr checks $PR --repo dotnet/android --json name,link \
+  --jq '[.[]|select(.name|startswith("dotnet-android")).link][0]' | grep -oE 'buildId=[0-9]+' | cut -d= -f2 | head -1)
 ```
 
-```powershell
-gh pr checks $PR --repo dotnet/android --json "name,state,link,bucket" | ConvertFrom-Json
-```
+If `BUILD_ID` is empty (checks "Expected", no build URL), the pipeline hasn't started — report "awaiting `/azp run` approval" (fork) or "not triggered yet" (direct), then stop.
 
-Note which checks passed/failed/pending. The `link` field contains the AZDO build URL for internal checks.
-
-#### Step 3 — Get Azure DevOps build status (repeat for EACH build)
-
-There are typically **two separate AZDO builds** for a dotnet/android PR. They run **independently** — neither waits for the other:
-- **`dotnet-android`** on `dev.azure.com/dnceng-public` — Defined in `azure-pipelines-public.yaml` with an explicit `pr:` trigger.
-  - **Fork PRs:** runs the full pipeline including build + tests (since `Xamarin.Android-PR` won't run for forks).
-  - **Direct PRs:** runs **build-only** — test stages are auto-skipped because those run on DevDiv instead. This means the `dotnet-android` build will be significantly shorter for direct PRs.
-- **`Xamarin.Android-PR`** on `devdiv.visualstudio.com` — full test suite, MAUI integration, compliance. Defined in `azure-pipelines.yaml` but its PR trigger is configured in the AZDO UI, not in YAML.
-  - **Fork PRs:** does NOT run at all (no access to internal resources).
-  - **Direct PRs:** runs the full test matrix. May take a few minutes to start after a push.
-
-Use the **pipeline definition name** (from the `definitionName` field) as the label in output — do NOT label them "Public" or "Internal".
-
-When a check shows **"Expected — Waiting for status to be reported"** on GitHub (typically `Xamarin.Android-PR`):
-- **For direct PRs:** the pipeline hasn't been triggered yet — this is normal, it's not waiting for the other build, just for AZDO to pick it up. Report it as: "⏳ Not triggered yet — typically starts within a few minutes of a push."
-- **For fork PRs:** `Xamarin.Android-PR` will NOT run. Report: "⏳ Will not run — fork PRs don't trigger the internal pipeline."
-
-Extract AZDO build URLs from the check `link` fields. Parse `{orgUrl}`, `{project}`, and `{buildId}` from patterns:
-- `https://dev.azure.com/{org}/{project}/_build/results?buildId={id}`
-- `https://{org}.visualstudio.com/{project}/_build/results?buildId={id}`
-
-**Run Steps 3, 3a, and 3b for each AZDO build independently.** The builds have different pipelines, different job counts, and different typical durations — each gets its own progress and ETA.
-
-For each build, first get the overall status including start time and definition ID:
+**Step 2 — Fetch the build result and save the timeline** (both valid mid-build; `/tmp/tl.json` is reused by Steps 3–4):
 
 ```bash
-az devops invoke --area build --resource builds \
+az devops invoke --area build --resource builds --org $ORG \
   --route-parameters project=$PROJECT buildId=$BUILD_ID \
-  --org $ORG_URL \
-  --query "{status:status, result:result, startTime:startTime, finishTime:finishTime, definitionId:definition.id, definitionName:definition.name}" \
-  --output json 2>&1
+  --query "{status:status, result:result, startTime:startTime, finishTime:finishTime}" -o json
+
+az devops invoke --area build --resource timeline --org $ORG \
+  --route-parameters project=$PROJECT buildId=$BUILD_ID --query "records[]" -o json > /tmp/tl.json
 ```
 
-**Compute elapsed time:** Subtract `startTime` from the current time (or from `finishTime` if the build is complete). Present as e.g. "Ran for 42 min" or "Running for 42 min".
-
-Then fetch the build timeline for **all jobs** (to get progress counts) and **any failures so far** — even when the build is still in progress:
+**Step 3a — List job status, then failing records.** `state` is `completed`/`inProgress`/`pending` (pending is often 0 — stages start in parallel). Trust failing `issues[]` for the root cause; check names (e.g. `dotnet-android (Linux Tests Linux > Tests > MSBuild 2)`) already name the lane:
 
 ```bash
-az devops invoke --area build --resource timeline \
-  --route-parameters project=$PROJECT buildId=$BUILD_ID \
-  --org $ORG_URL \
-  --query "records[?type=='Job'] | [].{name:name, state:state, result:result}" \
-  --output json 2>&1
+jq -r '.[]|select(.type=="Job")|[(.result // .state), .name]|@tsv' /tmp/tl.json | sort
+jq -r '.[]|select(.result=="failed" or .result=="canceled")|[.type,.name,((.issues//[])|map(.message)|join(" | "))]|@tsv' /tmp/tl.json
 ```
 
-**Compute job progress counters** from the timeline response:
-- Count jobs where `state == 'completed'` → **finished**
-- Count jobs where `state == 'inProgress'` → **running**
-- Count jobs where `state == 'pending'` → **waiting**
-- Total = finished + running + waiting
+**Step 3b — Time every job and spell out its status.** Emit one row per job: `Status` · `Wait` (build start → job start: upstream builds + agent queue) · `Run` (execution) · `Finished` (… ago, or `running`). Always spell `Status` out — never a bare icon (this vocabulary is reused in the report):
 
-Then fetch failures:
+- `✅ Passed` · `❌ Failed` · `⏹️ Canceled`
+- `⏱️ Timed out (N-min cap)` — a `canceled` job whose `issues[]` says *"ran longer than the maximum time"* (read N from the message)
+- `🟡 Running` · `⏳ Queued`
 
 ```bash
-az devops invoke --area build --resource timeline \
-  --route-parameters project=$PROJECT buildId=$BUILD_ID \
-  --org $ORG_URL \
-  --query "records[?result=='failed'] | [].{name:name, type:type, result:result, issues:issues, errorCount:errorCount, log:log}" \
-  --output json 2>&1
+jq -r '
+  def secs: sub("\\.[0-9]+";"")|fromdateiso8601;
+  def hms: if .==null then "—" else (./1|floor) as $s|($s/3600|floor) as $h|(($s%3600)/60|floor) as $m|($s%60) as $x|
+    if $h>0 then "\($h)h\(if $m<10 then "0" else "" end)\($m)m" elif $m>0 then "\($m)m\(if $x<10 then "0" else "" end)\($x)s" else "\($x)s" end end;
+  def reason:
+    ((.issues//[])|map(.message)|join("  ")) as $msg
+    | if .result=="succeeded" then "✅ Passed"
+      elif .result=="canceled" or .result=="failed" then
+        (if ($msg|test("maximum time of")) then ($msg|capture("maximum time of (?<m>[0-9]+) minutes")|"⏱️ Timed out (\(.m)-min cap)")
+         elif .result=="canceled" then "⏹️ Canceled" else "❌ Failed" end)
+      elif .state=="inProgress" then "🟡 Running"
+      elif .state=="pending" then "⏳ Queued"
+      else "· \(.result // .state)" end;
+  (now) as $now | ([.[]|select(.startTime!=null)|(.startTime|secs)]|min) as $t0
+  | .[]|select(.type=="Job")
+  | [ reason, .name,
+      (if .startTime then ((.startTime|secs)-$t0|hms) else "—" end),
+      (if .startTime then (((.finishTime|if .==null then $now else secs end))-(.startTime|secs)|hms) else "—" end),
+      (if .finishTime then (($now-(.finishTime|secs))|hms)+" ago" elif .state=="inProgress" then "running" else "—" end) ]
+  | @tsv' /tmp/tl.json | sort -t$'\t' -k2 | column -t -s$'\t'
 ```
 
-Check `issues` arrays first — they often contain the root cause directly.
+The `reason` function detects timeout from each job's own `issues[]`. Refine a bare `❌ Failed` with the Step 3c count: **0 failed tests ⇒ a canceled `Run tests` task or the `fail if any issues occurred` gate, not a real failure** — say so.
 
-#### Step 3a — Estimate completion time per build (when build is in progress)
-
-Use the `definitionId` from the build to query recent successful builds of the **same pipeline definition** and compute the median duration. **Do this separately for each build** — the pipelines have very different durations.
-
-**Important:** The `dotnet-android` pipeline duration varies significantly based on whether the PR is from a fork:
-- **Direct PRs:** `dotnet-android` runs build-only (tests skipped) — typically much shorter (~1h 45min)
-- **Fork PRs:** `dotnet-android` runs the full pipeline with tests — typically much longer
-
-To get accurate ETAs, filter historical builds to match the current PR type. You can approximate this by looking at the **job count** of the current build vs historical builds — build-only runs have ~3 jobs while full runs have many more. Alternatively, compare the historical durations and pick the ones that are similar in magnitude to what you'd expect for the current build type.
+**Step 3c — Fetch failed tests + per-flavor counts** (two `az rest` calls; `--area test --resource runs` 404s here, so we use `az rest` directly): **(a)** failed test names + their `runId`; **(b)** every run's per-flavor counts + its phase (`unanalyzedTests`=failed, `notApplicableTests`=skipped):
 
 ```bash
-az devops invoke --area build --resource builds \
-  --route-parameters project=$PROJECT \
-  --org $ORG_URL \
-  --query-parameters "definitions=$DEF_ID&statusFilter=completed&resultFilter=succeeded&\$top=10" \
-  --query "value[].{startTime:startTime, finishTime:finishTime}" \
-  --output json 2>&1
+RES=499b84ac-1321-427f-aa17-267ca6975798   # Azure DevOps app id
+az rest --method get --resource $RES \
+  --url "$ORG/$PROJECT/_apis/test/ResultsByBuild?buildId=$BUILD_ID&outcomes=Failed&api-version=7.1-preview" \
+  --query "value[].{test:automatedTestName, runId:runId}" -o json > /tmp/failed.json
+
+az rest --method get --resource $RES \
+  --url "$ORG/$PROJECT/_apis/test/runs?buildUri=vstfs:///Build/Build/$BUILD_ID&api-version=7.1&includeRunDetails=true" \
+  --query "value[].{id:id, name:name, total:totalTests, passed:passedTests, failed:unanalyzedTests, skipped:notApplicableTests, phase:pipelineReference.phaseReference.phaseName}" -o json > /tmp/runs.json
 ```
 
-**Compute ETA:**
-1. For each recent build, calculate `duration = finishTime - startTime`
-2. Filter to builds with similar duration profile (short ~1-2h for build-only, long ~3h+ for full runs) matching the current PR type
-3. Compute the **median** duration of the filtered set (more robust than average against outliers)
-4. `ETA = startTime + medianDuration`
-5. Present as: "ETA: ~14:30 UTC (typical for direct PRs: ~1h 45min)"
-
-If `startTime` is null (build hasn't started yet), skip the ETA and say "Build queued, not started yet".
-If the build already completed, skip the ETA and show the actual duration instead.
-
-#### Step 3b — Check for failed tests (always do this, especially when the build is still running)
-
-**This step is critical when the build is in progress.** Test results are published as jobs complete, so failures may already be visible before the build finishes. Surfacing these early lets the user start fixing them immediately.
-
-Query test runs for this build:
+Then build the breakdown — for each failed/canceled job, list its flavors (test runs) with `passed/total · fail · skip`, failed test names nested beneath:
 
 ```bash
-az devops invoke --area test --resource runs \
-  --route-parameters project=$PROJECT \
-  --org $ORG_URL \
-  --query-parameters "buildUri=vstfs:///Build/Build/$BUILD_ID" \
-  --query "value[?runStatistics[?outcome=='Failed']] | [].{id:id, name:name, totalTests:totalTests, state:state, stats:runStatistics}" \
-  --output json 2>&1
+jq -r --slurpfile failed /tmp/failed.json --slurpfile tl /tmp/tl.json '
+  [$tl[0][]|select(.type=="Phase")] as $ph
+  | ($ph|map(select(.result=="failed" or .result=="canceled"))|map(.refName)) as $bad
+  | $failed[0] as $ft
+  | group_by(.phase)[] | select(.[0].phase as $p|$bad|index($p))
+  | .[0].phase as $p | ($ph[]|select(.refName==$p)|.name) as $job
+  | "### \($job) — \(map(.total)|add) tests: \(map(.passed)|add) passed, \(map(.failed)|add) failed, \(map(.skipped)|add) skipped",
+    (sort_by(-.failed,.name)[]
+      | (if .failed>0 then "❌" else "✅" end) as $m
+      | "  \($m) \(.name)  (\(.passed)/\(.total) pass, \(.failed) fail, \(.skipped) skip)",
+        (.id as $rid|$ft[]|select(.runId==$rid)|"       ↳ \(.test)"))
+' /tmp/runs.json
 ```
 
-For each test run that has failures, fetch the failed test results:
+`ResultsByBuild` returns every failed test across runs (only `Failed`/`Aborted` are queryable). Matrix lanes that share one phase (e.g. `MSBuild+Emulator`) aggregate in the breakdown — use the Step 3b timing table to pinpoint the numbered job that died. For per-test error/stack, the ETA query, and the run→job mapping, see [references/azdo-queries.md](references/azdo-queries.md).
+
+**Step 3d — Deep failure analysis (run whenever the build is red).** From the repo root, run the bundled C# file-based app — it turns raw failures into the **per-test cross-config matrix**, **crash detection**, and **branch cross-reference** the report needs (makes its own `az`/`gh` calls, needs `az login` and the .NET SDK, ~15–45 s — scales with the affected test family + retries):
 
 ```bash
-az devops invoke --area test --resource results \
-  --route-parameters project=$PROJECT runId=$RUN_ID \
-  --org $ORG_URL \
-  --query-parameters "outcomes=Failed&\$top=20" \
-  --query "value[].{testName:testCaseTitle, outcome:outcome, errorMessage:errorMessage, durationMs:durationInMs}" \
-  --output json 2>&1
+dotnet run .github/skills/ci-status/scripts/ci_failures.cs -- --build-id $BUILD_ID --pr $PR
 ```
 
-If the `errorMessage` is truncated or absent, you can fetch a single test result's full details:
+(First run restores/builds the app, so allow a few extra seconds. Omit `--pr $PR` to skip the branch cross-reference.)
 
-```bash
-az devops invoke --area test --resource results \
-  --route-parameters project=$PROJECT runId=$RUN_ID testId=$TEST_ID \
-  --org $ORG_URL \
-  --query "{testName:testCaseTitle, errorMessage:errorMessage, stackTrace:stackTrace}" \
-  --output json 2>&1
+It prints three report-ready sections:
+- **Cross-config matrix** — per failed test: the flavors/OSes where it **failed** vs **passed**, with same-build retries shown as `Failed→Passed (retry)` (a retry that passes ⇒ flaky), plus the assembly and the assert/stack. Failing in one flavor/OS only localizes the cause; failing across many is systemic.
+- **Crashed / incomplete lanes** — lanes that went red with *no* usable failed-test list (`Zero tests ran`, an incomplete run, or a timeout/hang). The culprit (a test that **started but never finished**, or a native crash) lives only in the device **logcat**; the script prints the download+grep command (also in [references/azdo-queries.md](references/azdo-queries.md)).
+- **Branch cross-reference** — PR-changed files whose name matches a failing test's class/namespace/assembly: a lead for an obvious cause. Confirm against the diff before asserting causation.
+
+
+### Step 4 — Verdict (decide before writing). Judge by build `result` + checks, NOT the failed-test count:
+
+- **`result: failed`, or any ❌ check → red.** Lead with the gating failures (their jobs + tests). If the build is still running with a job already failed, surface it so the user can start fixing now.
+- **`result: succeeded` and all checks green → green** — even if `ResultsByBuild` lists failures, those are flaky `continueOnError` lanes. Note them in one line; don't block.
+
+### Report format
+
+Emit this structure (omit sections that don't apply). Spell out every `Status` per the Step 3b vocabulary, refining `❌ Failed` with the Step 3c count:
+
 ```
+# CI Status — PR #NNNN "<title>"
+🔀 Direct PR   (or 🍴 Fork PR — may await `/azp run` approval)
 
-#### Step 4 — Present summary
-
-Use this format — **one section per AZDO build**, each with its own progress and ETA:
-
-```
-# CI Status for PR #NNNN — "PR Title"
-🔀 **Direct PR** (branch in dotnet/android) — or 🍴 **Fork PR** (external contributor)
-
-## GitHub Checks
-| Check | Status |
-|-------|--------|
-| check-name | ✅ / ❌ / 🟡 |
-
-## dotnet-android [#BuildId](link)
+## dotnet-android [#<buildId>](<link>)
 **Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
-ℹ️ Build-only (tests run on Xamarin.Android-PR for direct PRs) — or ℹ️ Full pipeline with tests (fork PR)
-⏱️ Running for **12 min** · ETA: ~15:15 UTC (typical for direct PRs: ~1h 45min)
-📊 Jobs: **0/3 completed** · 1 running · 2 waiting
+⏱️ <elapsed>  ·  ETA ~HH:MM UTC (rough — recent runs ≈50 min–3 h)   ← only while in progress
+📊 Jobs: <done>/<total> done · <running> running · <waiting> waiting
 
-| Job | Status |
-|-----|--------|
-| macOS > Build | 🟡 In Progress |
-| Linux > Build | ⏳ Waiting |
-| Windows > Build & Smoke Test | ⏳ Waiting |
+| Stage > Job | Status | Wait | Run | Finished |
+|-------------|--------|------|-----|----------|
+| Mac > macOS > Build | ✅ Passed | 12m | 23m | 8h28m ago |
+| Package Tests > macOS > Tests > APKs 2 | ❌ Failed — 1 test (flaky GC) | 1h42m | 1h13m | 6h12m ago |
+| Package Tests > macOS > Tests > APKs 1 | ❌ Failed — 0 tests (canceled run / gate) | 1h41m | 26m31s | 7h02m ago |
+| MSBuild Emulator Tests > … > MSBuild+Emulator 6 | ⏱️ Timed out (180-min cap) | 1h44m | 3h00m | 4h21m ago |
+(List every job, or — for a large matrix — the failed/canceled/timed-out lanes plus the slowest few.)
 
-## Xamarin.Android-PR [#BuildId](link)
-**Result:** ✅ Succeeded / ❌ Failed / 🟡 In Progress
-— or for fork PRs: ⏳ **Will not run** — fork PRs don't trigger this pipeline
-⏱️ Running for **42 min** · ETA: ~15:45 UTC (typical: ~2h 30min)
-📊 Jobs: **18/56 completed** · 6 running · 32 waiting
+### Failures                ← if any
+❌ <Stage> > <Job> — <first error from issues[]>
 
-### Failures (if any)
-❌ Stage > Job > Task
-   Error: <first error message>
+### Failed tests — cross-config (Step 3d)   ← one block per failed test
+**`SslWithinTasksShouldWork`** (`System.NetTests.SslTest` · `microsoft.android.run.dll`)
+- ❌ failed: `NoAab` (Failed→Passed on retry), `TrimModePartial` (Failed→Passed on retry)
+- ✅ passed: `Release`, `CoreCLR`, `Debug`, +4 more
+- `System.Net.WebException : 503 Service Unavailable` ⇒ flaky network, non-gating
+      at System.NetTests.SslTest.SslWithinTasksShouldWork()
 
-### Failed Tests (if any — even while build is still running)
-| Test Run | Failed | Total |
-|----------|--------|-------|
-| run-name | N | M |
+### Crashed / incomplete lanes (Step 3d)   ← if any
+⚠️ **Mono.Android.NET_Tests-Debug** — `run` task succeededWithIssues, no results published ("Zero tests ran" / native crash). Name the culprit from logcat (Step 3d command).
 
-**Failed test names:**
-- `Namespace.TestClass.TestMethod` — brief error message
-- ...
+### Branch cross-reference (Step 3d)   ← if --pr and a name overlaps
+🔍 `SomeType.SomeTest` ⟵ `src/.../SomeType.cs` changed in this PR — likely cause; confirm in the diff.
+
+## Verdict: ✅ green  /  ❌ red — <one-line reason>
 
 ## What next?
-1. View full logs / stack traces for a test failure
-2. Download and analyze .binlog artifacts
-3. Retry failed stages
+1. Logs / stack trace for a failure
+2. `.binlog` (+ `logcat-*.txt` for device-test crashes)
+3. Re-run a flaky/failed stage with `/azp run`
 ```
 
-**Progress section guidelines:**
-- Always show fork status (🔀 Direct PR / 🍴 Fork PR) at the top — it determines which builds run and their expected durations
-- For `dotnet-android`, note whether it's build-only (direct PR) or full pipeline (fork PR)
-- For `Xamarin.Android-PR` on fork PRs, don't try to query it — just report "Will not run"
-- Always show elapsed time when `startTime` is available
-- Show ETA when the build is in progress and historical data is available. If the build has been running longer than the median, say "overdue by ~X min"
-- Show job counters as "N/Total completed · M running · P waiting"
-- If the build hasn't started yet, show "⏳ Not triggered yet — typically starts within a few minutes of a push"
-- If a check is in "Expected" state with no build URL on a direct PR, the AZDO pipeline hasn't picked it up yet — this is normal and not gated on other builds
+Notes: every `dotnet-android (...)` check is one job, so the Stage > Job table *is* the check list (the only non-`dotnet-android` check is `license/cla`). Step 3d's cross-config matrix is the fastest way to tell a real failure (fails across flavors/OSes, never passes on retry) from a flake (single flavor, or `Failed→Passed` on retry). For a crashed lane with no failed-test list, name the culprit from the device `logcat-<flavor>.txt` (Step 3d's command; recipe in [references/azdo-queries.md](references/azdo-queries.md)) — not the test message.
 
-**If the build is still running but tests have already failed**, highlight these prominently so the user can start fixing them immediately. Use a note like:
+## Phase 2 — Deep dive (only when asked)
 
-> ⚠️ Build still in progress, but **N tests have already failed** — you can start investigating these now.
+Read the matching reference, then act on it:
 
-**If no failures found anywhere**, report CI as green and stop.
-
-### Phase 2: Deep Investigation (only if user requests)
-
-Only proceed here if the user asks to investigate a specific failure, view logs, or analyze binlogs.
-
-#### Fetch logs
-
-Get the `log.id` from failed timeline records, then:
-
-```bash
-az devops invoke --area build --resource logs \
-  --route-parameters project=$PROJECT buildId=$BUILD_ID logId=$LOG_ID \
-  --org $ORG_URL --project $PROJECT \
-  --out-file "/tmp/azdo-log-$LOG_ID.log" 2>&1
-tail -40 "/tmp/azdo-log-$LOG_ID.log"
-```
-
-```powershell
-$logFile = Join-Path $env:TEMP "azdo-log-$LOG_ID.log"
-az devops invoke --area build --resource logs `
-  --route-parameters project=$PROJECT buildId=$BUILD_ID logId=$LOG_ID `
-  --org $ORG_URL --project $PROJECT `
-  --out-file $logFile
-Get-Content $logFile -Tail 40
-```
-
-#### Analyze .binlog artifacts
-
-See [references/binlog-analysis.md](references/binlog-analysis.md) for binlog download and analysis commands.
-
-#### Categorize failures
-
-See [references/error-patterns.md](references/error-patterns.md) for dotnet/android-specific error patterns and categorization.
-
-## Error Handling
-
-- **Build in progress:** Still query for failed timeline records AND test runs. Report any early failures alongside the in-progress status. Only offer `gh pr checks --watch` if there are no failures yet.
-- **Check in "Expected" state (no build URL):** The AZDO pipeline hasn't been triggered yet. This is normal — the two pipelines (`dotnet-android` and `Xamarin.Android-PR`) run independently, not sequentially. Report: "⏳ Not triggered yet — typically starts within a few minutes of a push." Do NOT say it's waiting for the other build.
-- **Auth expired:** Tell user to run `az login` and retry.
-- **Build not found:** Verify the PR number/build ID is correct.
-- **No test runs yet:** The build may not have reached the test phase. Report what's available and note that tests haven't started.
-
-## Tips
-
-- Focus on the **first** error chronologically — later errors often cascade
-- `.binlog` has richer detail than text logs when logs show only "Build FAILED"
-- `issues` in timeline records often contain the root cause without needing to download logs
+- Logs, per-test error/stack, ETA, per-flavor breakdown fields + run→job mapping, **crash-culprit from logcat** → [references/azdo-queries.md](references/azdo-queries.md)
+- `.binlog` download + analysis → [references/binlog-analysis.md](references/binlog-analysis.md)
+- Categorize a failure (real / flaky / infra) → [references/error-patterns.md](references/error-patterns.md)

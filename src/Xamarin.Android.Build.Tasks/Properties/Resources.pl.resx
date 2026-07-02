@@ -143,7 +143,7 @@ Ten błąd jest prawdopodobnie spowodowany problemem dotyczącym pliku AndroidMa
     <value>Nieprawidłowa nazwa pliku: nazwy plików nie mogą używać słów zastrzeżonych języka Java.</value>
   </data>
   <data name="IL6001" xml:space="preserve">
-    <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
+    <value>Zestaw „{0}” zawiera odwołanie do przestarzałego atrybutu „Android.Runtime.PreserveAttribute”. Elementy członkowskie z tym atrybutem mogą zostać przycięte. Zamiast tego użyj elementu System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute</value>
   </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Nie można określić poziomu interfejsu API dla parametru $(TargetFrameworkVersion) elementu „{0}”.</value>
@@ -225,7 +225,7 @@ Uwaga: Android Designer jest niezgodny z zestawem Java SDK 11.0: https://aka.ms/
     <comment>The following are literal names and should not be translated: AndroidSupportedAbis, MSBuild, RuntimeIdentifiers</comment>
   </data>
   <data name="XA0037" xml:space="preserve">
-    <value>Unknown mode: {0}</value>
+    <value>Nieznany tryb „{0}”.</value>
     <comment>{0} - The unknown mode string value</comment>
   </data>
   <data name="XA0100" xml:space="preserve">
@@ -859,6 +859,13 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
     <comment>The following are literal names and should not be translated: NativeAOT, DGML
 {0} - The path to the NativeAOT DGML file.</comment>
   </data>
+  <data name="XA4322" xml:space="preserve">
+    <value>Pomijanie pliku konfiguracji ProGuard biblioteki „{1}” (z {2}) ponieważ zawiera nieobsługiwaną opcję globalną „{0}”. Globalne opcje narzędzia ProGuard są dozwolone tylko w projektach aplikacji.</value>
+    <comment>The following are literal names and should not be translated: ProGuard
+{0} - The unsupported ProGuard option, such as -printmapping.
+{1} - The path to the proguard.txt file inside the extracted .aar.
+{2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Brak katalogu łańcuchów narzędzi zestawu Android NDK „{0}”. Zainstaluj zestaw Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1159,6 +1166,21 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: trimmable type map, Java.
 {0} - Full path to the generated Java source file</comment>
   </data>
+  <data name="XA4256" xml:space="preserve">
+    <value>Tylko jeden element „{0}” jest dozwolony dla „{1}” elementu „{2}”.</value>
+    <comment>{0} - MSBuild XML element name
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4257" xml:space="preserve">
+    <value>Pomijanie typu węzła równorzędnego Java „{0}” z zestawu „{1}”, ponieważ nie można rozpoznać typu „{2}” z zestawu „{3}” „{4}”. Ten typ nie zostanie uwzględniony w mapie typów z możliwością przycinania.</value>
+    <comment>The following are literal names and should not be translated: Java, trimmable type map.
+{0} - Fully-qualified managed Java peer type name
+{1} - Assembly containing the skipped Java peer type
+{2} - Fully-qualified managed referenced type name that could not be resolved
+{3} - Assembly expected to contain the unresolved type
+{4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
   <data name="XA0142" xml:space="preserve">
     <value>Wykonanie polecenia „{0}” nie powiodło się.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
@@ -1193,6 +1215,20 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>{0} - The file path.
 {1} - The symbol name.
 {2} - The section name.</comment>
+  </data>
+  <data name="XA0149" xml:space="preserve">
+    <value>Ignorowanie starszego pliku środowiska Xamarin.Android „{0}” z pakietu NuGet „{1}” w wersji „{2}” w zestawie „{3}”. Pliki środowiska z bibliotek klas Xamarin.Android nie są obsługiwane na platformie .NET dla systemu Android. Użyj nowszej wersji tego pakietu NuGet lub powiadom autora biblioteki.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android, NuGet.
+{0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
+{1} - The NuGet package id.
+{2} - The NuGet package version.
+{3} - The full path to the assembly that contains the environment resource.</comment>
+  </data>
+  <data name="XA0149_Assembly" xml:space="preserve">
+    <value>Ignorowanie starszego pliku środowiska Xamarin.Android „{0}” w zestawie „{1}”. Pliki środowiska z bibliotek klas Xamarin.Android nie są obsługiwane na platformie .NET dla systemu Android. Użyj nowszej wersji tego zestawu lub powiadom autora biblioteki.</value>
+    <comment>The following are literal names and should not be translated: Xamarin.Android, .NET for Android.
+{0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
+{1} - The full path to the assembly that contains the environment resource.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
     <value>Nie znaleziono pliku wykonywalnego „gradlew” w katalogu projektu „{0}”. Upewnij się, że ścieżka do folderu projektu Gradle jest poprawna i że zawiera skrypty Gradle Wrapper.</value>

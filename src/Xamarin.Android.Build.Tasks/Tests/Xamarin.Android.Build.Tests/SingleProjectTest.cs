@@ -18,7 +18,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (
 					// TODO: this has changed across all the runtimes from the previous "2.1" to its current value.
 					//       Check if it's a valid change.
@@ -151,7 +151,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidManifestValuesWin ([Values] AndroidRuntime runtime)
+		public void AndroidManifestValuesWin ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

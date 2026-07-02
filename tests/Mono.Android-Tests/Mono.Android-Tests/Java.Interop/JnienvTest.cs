@@ -507,6 +507,7 @@ namespace Java.InteropTests
 		}
 
 		[Test, Category ("GCBridge")]
+		[Ignore ("Failing in NativeAOT: https://github.com/dotnet/android/issues/11690")]
 		public void DoNotLeakWeakReferences ()
 		{
 			GC.Collect ();

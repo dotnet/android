@@ -1,34 +1,12 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Xamarin.Android.Prepare
 {
 	class LinuxDebian : LinuxDebianCommon
 	{
 		const string DebianVersionPath = "/etc/debian_version";
-
-		static readonly List<DebianLinuxProgram> packages = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("libtool-bin", "libtool"),
-		};
-
-		static readonly List<DebianLinuxProgram> packagesPre10 = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("openjdk-8-jdk"),
-		};
-
-		static readonly List<DebianLinuxProgram> packagesPreTrixie = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("libncurses5-dev"),
-		};
-
-		static readonly List<DebianLinuxProgram> packagesTrixieAndLater = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("libncurses-dev"),
-		};
-
-		// zulu-8 does NOT exist as official Debian package! We need it for our bots, but we have to figure out what to
-		// do with Debian 10+ in general, as it does not contain OpenJDK 8 anymore and we require it to work.
-		static readonly List<DebianLinuxProgram> packages10AndNewerBuildBots = new List<DebianLinuxProgram> {
-			new DebianLinuxProgram ("zulu-8"),
-		};
 
 		static readonly Dictionary<string, string> DebianUnstableVersionMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
 			{ "bookworm", "12" },
@@ -43,38 +21,7 @@ namespace Xamarin.Android.Prepare
 
 		public LinuxDebian (Context context)
 			: base (context)
-		{
-			Dependencies.AddRange (packages);
-		}
-
-		protected override void InitializeDependencies ()
-		{
-			base.InitializeDependencies ();
-
-			if (DebianRelease.Major >= 10 || (IsTesting && String.Compare ("buster", CodeName, StringComparison.OrdinalIgnoreCase) == 0)) {
-				if (Context.IsRunningOnHostedAzureAgent)
-					Dependencies.AddRange (packages10AndNewerBuildBots);
-				if (DebianRelease.Major >= 13 || (String.Compare ("SparkyLinux", Name, StringComparison.OrdinalIgnoreCase) == 0 && DebianRelease.Major >= 7)) {
-					Dependencies.AddRange (packagesTrixieAndLater);
-				} else {
-					Dependencies.AddRange (packagesPreTrixie);
-				}
-			} else {
-				Dependencies.AddRange (packagesPre10);
-				Dependencies.AddRange (packagesPreTrixie);
-			}
-		}
-
-		static bool IsDebian13OrNewer (string? version)
-		{
-			if (String.IsNullOrEmpty (version)) {
-				return false;
-			}
-
-			return
-				version.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0 ||
-				version.IndexOf ("sid", StringComparison.OrdinalIgnoreCase) >= 0;
-		}
+		{}
 
 		static bool IsDebian10OrNewer (string? version)
 		{

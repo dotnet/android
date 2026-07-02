@@ -14,7 +14,8 @@ namespace Microsoft.Android.Runtime;
 /// Type manager for the trimmable typemap path. Delegates type lookups
 /// to <see cref="TrimmableTypeMap"/>.
 /// </summary>
-class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
+[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 {
 	const string NoSimpleReference = "\0";
 	readonly ConcurrentDictionary<Type, string> _simpleReferenceCache = new ();
@@ -30,6 +31,19 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				yield return type;
 			}
 		}
+	}
+
+	protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
+	{
+		var type = base.GetTypeForSimpleReference (jniSimpleReference);
+		if (type != null) {
+			return type;
+		}
+
+		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
+			return types [0];
+		}
+		return null;
 	}
 
 	protected override string? GetSimpleReference (Type type)
@@ -80,10 +94,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 	}
 
-	[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-	protected override Type? GetInvokerTypeCore (
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type type)
+	protected override Type? GetInvokerTypeCore (Type type)
 	{
 		var invokerType = TrimmableTypeMap.Instance.GetInvokerType (type);
 		if (invokerType != null) {
@@ -110,7 +121,6 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 			Type type,
 			ReadOnlySpan<char> methods)
 	{

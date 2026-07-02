@@ -43,6 +43,7 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <param name="googleAddonsListURL">Google repository only: URL of the addon manifest (optional)</param>
 		/// <param name="googleRepositoryBaseURL">Google repository only: base URL of the repository</param>
 		/// <param name="useManifestCaching">If <c>true</c>, load local manifest when offline</param>
+		/// <param name="licensesStorage">Instance of a class implementing the <see cref="ILicensesStorage"/> interface (optional)</param>
 		public AndroidSDKInstaller (IHelpers helpers, AndroidManifestType manifestType = AndroidManifestType.Xamarin, Uri manifestURL = null, Uri googleAddonsListURL = null, Uri googleRepositoryBaseURL = null, bool useManifestCaching = false, ILicensesStorage licensesStorage = null)
 		{
 			CommonUtilities.Helpers = helpers ?? new Helper();
@@ -163,7 +164,7 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <seealso cref="IAndroidComponent.StatusChanged"/>
 		/// </para>
 		/// <para>
-		/// If <paramref name="performFullDetection"/> is <c>true</> then the method will start a full detection cycle. This means that the
+		/// If <paramref name="performFullDetection"/> is <c>true</c> then the method will start a full detection cycle. This means that the
 		/// <paramref name="instance"/> will be modified - all of its components will be replaced with fresh instances. This is to ensure that
 		/// the metadata in the components is 100% accurate. By default full detection is not performed.
 		/// </para>
@@ -454,6 +455,7 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <param name="instance">Android SDK instance.</param>
 		/// <param name="componentsToInstall">Components to install</param>
 		/// <param name="throwIfInvalidComponentsFound">Throw an exception if any component with invalid archives is found, if set to <c>true</c></param>
+		/// <param name="monitor">Progress monitor (optional)</param>
 		public void Install (AndroidSdkInstance instance, IList<IAndroidComponent> componentsToInstall, bool throwIfInvalidComponentsFound = true,
 			IProgressMonitor monitor = null)
 		{
@@ -746,6 +748,8 @@ namespace Xamarin.Installer.AndroidSDK
 		/// <param name="licenses">list of licenses to accept</param>
 		/// <param name="token">cancellation token</param>
 		/// <param name="logPath">log file path</param>
+		/// <param name="javaSdkPath">path to java sdk</param>
+		/// <param name="throwsErrorIfValidationFailed">if true, throws an exception if license validation fails</param>
 		public Task AcceptLicensesAsync(AndroidSdkInstance instance, IEnumerable<License> licenses, CancellationToken token, string javaSdkPath = null, string logPath = null, bool throwsErrorIfValidationFailed = false)
 		{
 			if (instance != null) {

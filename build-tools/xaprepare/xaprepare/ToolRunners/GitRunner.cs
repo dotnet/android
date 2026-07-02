@@ -95,31 +95,6 @@ namespace Xamarin.Android.Prepare
 			return await RunGit (runner, $"clone-{dirName}");
 		}
 
-		public async Task<List<string>?> SubmoduleStatus (string? workingDirectory = null)
-		{
-			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-
-			var runner = CreateGitRunner (runnerWorkingDirectory);;
-			runner.AddArgument ("submodule");
-			runner.AddArgument ("status");
-
-			var lines = new List<string> ();
-
-			bool success = await RunTool (
-				() => {
-					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string? line) => lines.Add (line ?? String.Empty);
-						return runner.Run ();
-					}
-				}
-			);
-
-			if (!success)
-				return null;
-
-			return lines;
-		}
-
 		public async Task<bool> SubmoduleUpdate (string? workingDirectory = null, bool init = true, bool recursive = true)
 		{
 			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
@@ -133,125 +108,6 @@ namespace Xamarin.Android.Prepare
 				runner.AddArgument ("--recursive");
 
 			return await RunGit (runner, "submodule-update");
-		}
-
-		public string GetBranchName (string? workingDirectory = null)
-		{
-			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-			var runner = CreateGitRunner (runnerWorkingDirectory);
-			runner
-				.AddArgument ("name-rev")
-				.AddArgument ("--name-only")
-				.AddArgument ("--exclude=tags/*")
-				.AddArgument ("HEAD");
-
-			string branchName = String.Empty;
-			using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-				outputSink.LineCallback = (string? line) => {
-					if (!String.IsNullOrEmpty (branchName)) {
-						return;
-					}
-					branchName = line?.Trim () ?? String.Empty;
-				};
-
-				if (!runner.Run ()) {
-					return String.Empty;
-				}
-
-				return branchName;
-			}
-		}
-
-		public string GetTopCommitHash (string? workingDirectory = null, bool shortHash = true)
-		{
-			string runnerWorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-
-			var runner = CreateGitRunner (runnerWorkingDirectory);
-			runner.AddArgument ("rev-parse");
-			runner.AddArgument ("HEAD");
-
-			Log.StatusLine (GetLogMessage (runner), CommandMessageColor);
-
-			string hash = String.Empty;
-			using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-				outputSink.LineCallback = (string? line) => {
-					if (!String.IsNullOrEmpty (hash))
-						return;
-					hash = line?.Trim () ?? String.Empty;
-				};
-
-				if (!runner.Run ())
-					return String.Empty;
-
-				if (shortHash)
-					return Utilities.ShortenGitHash (hash);
-
-				return hash;
-			}
-		}
-
-		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath)
-		{
-			return await Blame (filePath, gitArguments: null, blameArguments: null, workingDirectory: null);
-		}
-
-		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath, List <string> blameArguments)
-		{
-			return await Blame (filePath, gitArguments: null, blameArguments: blameArguments, workingDirectory: null);
-		}
-
-		public async Task<IList<BlamePorcelainEntry>?> Blame (string filePath, List<string>? gitArguments, List <string>? blameArguments, string? workingDirectory = null)
-		{
-			if (String.IsNullOrEmpty(filePath))
-				throw new ArgumentException ("must not be null or empty", nameof (filePath));
-
-			var runner = CreateGitRunner (workingDirectory, gitArguments);
-			SetCommandArguments (runner, "blame", blameArguments);
-			runner.AddArgument ("-p");
-			runner.AddQuotedArgument (filePath);
-
-			var parserState = new BlameParserState ();
-
-			Log.StatusLine (GetLogMessage (runner), CommandMessageColor);
-			bool success = await RunTool (
-				() => {
-					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string? line) => ParseBlameLine (line, parserState);
-						runner.WorkingDirectory = DetermineRunnerWorkingDirectory (workingDirectory);
-						return runner.Run ();
-					}
-				}
-			);
-
-			if (!success)
-				return null;
-
-			return parserState.Entries;
-		}
-
-		public async Task<List<string>?> ConfigList (string[] fileOptions, string? workingDirectory = null)
-		{
-			var runner = CreateGitRunner (workingDirectory);
-			runner.AddArgument ("config");
-			foreach (var opt in fileOptions)
-				runner.AddArgument (opt);
-			runner.AddArgument ("--list");
-
-			var lines = new List<string> ();
-
-			bool success = await RunTool (
-				() => {
-					using (var outputSink = (OutputSink)SetupOutputSink (runner)) {
-						outputSink.LineCallback = (string? line) => lines.Add (line ?? String.Empty);
-						return runner.Run ();
-					}
-				}
-			);
-
-			if (!success)
-				return null;
-
-			return lines;
 		}
 
 		public async Task<bool> IsRepoUrlHttps (string workingDirectory)
@@ -349,29 +205,9 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		void ParseBlameLine (string? line, BlameParserState state)
-		{
-			if (state.CurrentEntry == null)
-				state.CurrentEntry = new BlamePorcelainEntry ();
-
-			if (!state.CurrentEntry.ProcessLine (line))
-				return;
-
-			state.Entries.Add (state.CurrentEntry);
-			state.CurrentEntry = null;
-		}
-
 		protected override TextWriter CreateLogSink (string? logFilePath)
 		{
 			return new OutputSink (Log, logFilePath);
-		}
-
-		void SetCommandArguments (ProcessRunner runner, string command, List<string>? commandArguments)
-		{
-			runner.AddArgument (command);
-			if (commandArguments == null || commandArguments.Count == 0)
-				return;
-			AddArguments (runner, commandArguments);
 		}
 
 		string DetermineRunnerWorkingDirectory (string? workingDirectory)

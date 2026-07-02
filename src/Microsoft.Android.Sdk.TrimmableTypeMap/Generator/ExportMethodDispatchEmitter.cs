@@ -191,17 +191,17 @@ sealed class ExportMethodDispatchEmitter
 	{
 		int total = 3 + arrayLocalTypes.Count + (managedReturnType is not null ? 1 : 0) + (isVoid ? 0 : 1);
 
-		blob.WriteByte (0x07); // LOCAL_SIG
+		blob.WriteByte ((byte) SignatureKind.LocalVariables);
 		blob.WriteCompressedInteger (total);
 
 		// 0: JniTransition (valuetype)
-		blob.WriteByte (0x11);
+		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.JniTransitionRef));
 		// 1: JniRuntime (class)
-		blob.WriteByte (0x12);
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.JniRuntimeRef));
 		// 2: Exception (class)
-		blob.WriteByte (0x12);
+		blob.WriteByte ((byte) SignatureTypeKind.Class);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_context.ExceptionRef));
 
 		// 3..N: managed array-parameter copy-back locals
@@ -323,7 +323,7 @@ sealed class ExportMethodDispatchEmitter
 	{
 		string managedTypeName = managedType.ManagedTypeName;
 
-		ThrowIfUnsupportedManagedType (managedTypeName);
+		ThrowIfUnsupportedManagedType (managedType);
 
 		if (TryEmitExportParameterArgument (encoder, exportKind, argumentIndex)) {
 			return;
@@ -410,8 +410,10 @@ sealed class ExportMethodDispatchEmitter
 		encoder.Call (_context.JniEnvToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 	}
 
-	void ThrowIfUnsupportedManagedType (string managedTypeName)
+	void ThrowIfUnsupportedManagedType (TypeRefData managedType)
 	{
+		string managedTypeName = managedType.ManagedTypeName;
+
 		if (managedTypeName.EndsWith ("&", StringComparison.Ordinal) || managedTypeName.EndsWith ("*", StringComparison.Ordinal)) {
 			throw new NotSupportedException ($"[Export] methods with by-ref or pointer signature types are not supported: '{managedTypeName}'.");
 		}
@@ -421,8 +423,8 @@ sealed class ExportMethodDispatchEmitter
 			nonArrayTypeName = nonArrayTypeName.Substring (0, nonArrayTypeName.Length - 2);
 		}
 
-		if (nonArrayTypeName.StartsWith ("!", StringComparison.Ordinal) || nonArrayTypeName.IndexOf ('<') >= 0) {
-			throw new NotSupportedException ($"[Export] methods with generic signature types are not supported: '{managedTypeName}'.");
+		if (nonArrayTypeName.StartsWith ("!", StringComparison.Ordinal) || managedType.GenericArguments.Count > 0 || nonArrayTypeName.IndexOf ('<') >= 0) {
+			throw new NotSupportedException ($"[Export] methods with generic signature types are not supported: '{managedType.DisplayName}'.");
 		}
 	}
 
@@ -571,7 +573,7 @@ sealed class ExportMethodDispatchEmitter
 	{
 		string managedTypeName = managedType.ManagedTypeName;
 
-		ThrowIfUnsupportedManagedType (managedTypeName);
+		ThrowIfUnsupportedManagedType (managedType);
 		if (managedTypeName.EndsWith ("[]", StringComparison.Ordinal)) {
 			EncodeManagedType (encoder.SZArray (), managedType with {
 				ManagedTypeName = managedTypeName.Substring (0, managedTypeName.Length - 2),
@@ -598,7 +600,7 @@ sealed class ExportMethodDispatchEmitter
 		}
 
 		var typeHandle = ResolveManagedTypeHandle (managedType);
-		encoder.Type (typeHandle, isValueType: managedType.IsEnum);
+		encoder.Type (typeHandle, isValueType: managedType.EncodeAsValueType);
 	}
 
 	void AddUnmanagedCallersOnlyAttribute (MethodDefinitionHandle handle)

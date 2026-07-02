@@ -51,6 +51,9 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <ItemGroup>
       <_AndroidD8MapDiagnostics Condition=" '$(AndroidD8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
       <_AndroidR8MapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
+      <!-- User-authored AndroidJavaSource (Bind != True) is not in the acw-map; pass it to R8 so it
+           is kept when shrinking is enabled rather than silently removed. -->
+      <_R8KeepJavaSource Include="@(AndroidJavaSource)" Condition=" '%(AndroidJavaSource.Bind)' != 'True' " />
     </ItemGroup>
 
     <R8
@@ -69,6 +72,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         EnableDesugar="$(AndroidEnableDesugar)"
         AndroidSdkBuildToolsPath="$(AndroidSdkBuildToolsPath)"
         AcwMapFile="$(_AcwMapFile)"
+        JavaSourceFiles="@(_R8KeepJavaSource)"
         ProguardCommonXamarinConfiguration="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"
         ProguardGeneratedReferenceConfiguration="$(_ProguardProjectConfiguration)"
         ProguardGeneratedApplicationConfiguration="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg"

@@ -56,8 +56,8 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var model = BuildModel (peers);
 			Assert.Equal (2, model.Entries.Count);
-			Assert.Equal ("android/app/Activity", model.Entries [0].JniName);
-			Assert.Equal ("java/lang/Object", model.Entries [1].JniName);
+			Assert.Equal ("android/app/Activity", model.Entries [0].MapKey);
+			Assert.Equal ("java/lang/Object", model.Entries [1].MapKey);
 		}
 
 		[Fact]
@@ -71,11 +71,11 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (peers);
 			// Three entries: "test/Dup[0]", "test/Dup[1]", and the base "test/Dup" → alias holder
 			Assert.Equal (3, model.Entries.Count);
-			Assert.Equal ("test/Dup[0]", model.Entries [0].JniName);
+			Assert.Equal ("test/Dup[0]", model.Entries [0].MapKey);
 			Assert.Contains ("Test.First", model.Entries [0].ProxyTypeReference);
-			Assert.Equal ("test/Dup[1]", model.Entries [1].JniName);
+			Assert.Equal ("test/Dup[1]", model.Entries [1].MapKey);
 			Assert.Contains ("Test.Second", model.Entries [1].ProxyTypeReference);
-			Assert.Equal ("test/Dup", model.Entries [2].JniName);
+			Assert.Equal ("test/Dup", model.Entries [2].MapKey);
 
 			// Both peers get associations to the alias holder
 			Assert.Equal (2, model.Associations.Count);
@@ -97,10 +97,10 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (peers, "TripleAlias");
 			// 3 indexed entries + 1 base entry → alias holder = 4
 			Assert.Equal (4, model.Entries.Count);
-			Assert.Equal ("test/Triple[0]", model.Entries [0].JniName);
-			Assert.Equal ("test/Triple[1]", model.Entries [1].JniName);
-			Assert.Equal ("test/Triple[2]", model.Entries [2].JniName);
-			Assert.Equal ("test/Triple", model.Entries [3].JniName);
+			Assert.Equal ("test/Triple[0]", model.Entries [0].MapKey);
+			Assert.Equal ("test/Triple[1]", model.Entries [1].MapKey);
+			Assert.Equal ("test/Triple[2]", model.Entries [2].MapKey);
+			Assert.Equal ("test/Triple", model.Entries [3].MapKey);
 
 			// All three peers get associations to the alias holder
 			Assert.Equal (3, model.Associations.Count);
@@ -124,9 +124,9 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (peers, "MixedAlias");
 			// 2 indexed entries + 1 base entry → alias holder = 3
 			Assert.Equal (3, model.Entries.Count);
-			Assert.Equal ("test/Mixed[0]", model.Entries [0].JniName);
-			Assert.Equal ("test/Mixed[1]", model.Entries [1].JniName);
-			Assert.Equal ("test/Mixed", model.Entries [2].JniName);
+			Assert.Equal ("test/Mixed[0]", model.Entries [0].MapKey);
+			Assert.Equal ("test/Mixed[1]", model.Entries [1].MapKey);
+			Assert.Equal ("test/Mixed", model.Entries [2].MapKey);
 
 			// Only the alias peer with activation gets a proxy
 			Assert.Single (model.ProxyTypes);
@@ -147,7 +147,7 @@ public class ModelBuilderTests : FixtureTestBase
 			};
 
 			var model = BuildModel (peers);
-			var baseEntry = model.Entries.Single (e => e.JniName == "test/AllMcw");
+			var baseEntry = model.Entries.Single (e => e.MapKey == "test/AllMcw");
 			Assert.False (baseEntry.IsUnconditional, "All-MCW alias group base entry should be conditional");
 			Assert.NotNull (baseEntry.TargetTypeReference);
 		}
@@ -163,7 +163,7 @@ public class ModelBuilderTests : FixtureTestBase
 			};
 
 			var model = BuildModel (peers);
-			var baseEntry = model.Entries.Single (e => e.JniName == "test/Mixed");
+			var baseEntry = model.Entries.Single (e => e.MapKey == "test/Mixed");
 			Assert.True (baseEntry.IsUnconditional, "Mixed alias group with ACW should have unconditional base entry");
 			Assert.Null (baseEntry.TargetTypeReference);
 		}
@@ -179,7 +179,7 @@ public class ModelBuilderTests : FixtureTestBase
 			};
 
 			var model = BuildModel (peers);
-			var baseEntry = model.Entries.Single (e => e.JniName == "java/lang/Object");
+			var baseEntry = model.Entries.Single (e => e.MapKey == "java/lang/Object");
 			Assert.True (baseEntry.IsUnconditional, "Essential type alias group should have unconditional base entry");
 			Assert.Null (baseEntry.TargetTypeReference);
 		}
@@ -211,7 +211,7 @@ public class ModelBuilderTests : FixtureTestBase
 			var peer = MakeAcwPeer ("my/app/Main", "MyApp.MainActivity", "App");
 			var model = BuildModel (new [] { peer });
 
-			var mainEntry = model.Entries.First (e => e.JniName == "my/app/Main");
+			var mainEntry = model.Entries.First (e => e.MapKey == "my/app/Main");
 			Assert.True (mainEntry.IsUnconditional);
 			Assert.Null (mainEntry.TargetTypeReference);
 		}
@@ -224,7 +224,7 @@ public class ModelBuilderTests : FixtureTestBase
 			};
 			var model = BuildModel (new [] { peer });
 
-			var entry = model.Entries.First (e => e.JniName == "mono/android/view/View_OnClickListenerImplementor");
+			var entry = model.Entries.First (e => e.MapKey == "mono/android/view/View_OnClickListenerImplementor");
 			Assert.False (entry.IsUnconditional);
 			Assert.Equal ("Android.Views.View+IOnClickListenerImplementor, Mono.Android", entry.TargetTypeReference);
 		}
@@ -389,7 +389,7 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.NotEmpty (model.Entries);
 			Assert.NotEmpty (model.ProxyTypes);
 
-			Assert.All (model.Entries, e => Assert.False (string.IsNullOrEmpty (e.JniName)));
+			Assert.All (model.Entries, e => Assert.False (string.IsNullOrEmpty (e.MapKey)));
 			Assert.All (model.Entries, e => Assert.False (string.IsNullOrEmpty (e.ProxyTypeReference)));
 		}
 
@@ -437,9 +437,9 @@ public class ModelBuilderTests : FixtureTestBase
 		return model.ProxyTypes.FirstOrDefault (p => p.TypeName == proxyTypeName);
 	}
 
-	static TypeMapAttributeData? FindEntry (TypeMapAssemblyData model, string jniName)
+	static TypeMapAttributeData? FindEntry (TypeMapAssemblyData model, string mapKey)
 	{
-		return model.Entries.FirstOrDefault (e => e.JniName == jniName);
+		return model.Entries.FirstOrDefault (e => e.MapKey == mapKey);
 	}
 
 	public class FixtureMcwTypes
@@ -556,7 +556,7 @@ public class ModelBuilderTests : FixtureTestBase
 			// Invoker is excluded from TypeMap entries/proxies. It still gets a
 			// managed→proxy association so its JniPeerMembers can resolve the JNI name.
 			Assert.Single (model.Entries);
-			Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].JniName);
+			Assert.Equal ("android/view/View$OnClickListener", model.Entries [0].MapKey);
 
 			// Only the interface proxy exists; the invoker type is also referenced
 			// as a TypeRef in the interface proxy's InvokerType property.
@@ -616,10 +616,10 @@ public class ModelBuilderTests : FixtureTestBase
 
 			// 3 indexed entries + 1 base entry → alias holder = 4
 			Assert.Equal (4, model.Entries.Count);
-			Assert.Equal ("test/AliasTarget[0]", model.Entries [0].JniName);
-			Assert.Equal ("test/AliasTarget[1]", model.Entries [1].JniName);
-			Assert.Equal ("test/AliasTarget[2]", model.Entries [2].JniName);
-			Assert.Equal ("test/AliasTarget", model.Entries [3].JniName);
+			Assert.Equal ("test/AliasTarget[0]", model.Entries [0].MapKey);
+			Assert.Equal ("test/AliasTarget[1]", model.Entries [1].MapKey);
+			Assert.Equal ("test/AliasTarget[2]", model.Entries [2].MapKey);
+			Assert.Equal ("test/AliasTarget", model.Entries [3].MapKey);
 		}
 
 		[Fact]
@@ -875,12 +875,12 @@ public class ModelBuilderTests : FixtureTestBase
 				var attrs = ReadAllTypeMapAttributeBlobs (reader);
 				Assert.Equal (2, attrs.Count);
 
-				var objectEntry = attrs.FirstOrDefault (a => a.jniName == "java/lang/Object");
-				Assert.NotNull (objectEntry.jniName);
+				var objectEntry = attrs.FirstOrDefault (a => a.mapKey == "java/lang/Object");
+				Assert.NotNull (objectEntry.mapKey);
 				Assert.Null (objectEntry.targetRef);
 
-				var activityEntry = attrs.FirstOrDefault (a => a.jniName == "android/app/Activity");
-				Assert.NotNull (activityEntry.jniName);
+				var activityEntry = attrs.FirstOrDefault (a => a.mapKey == "android/app/Activity");
+				Assert.NotNull (activityEntry.mapKey);
 				Assert.Equal ("Android.App.Activity, TestFixtures", activityEntry.targetRef);
 			});
 		}
@@ -896,9 +896,9 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.True (model.Entries [0].IsUnconditional);
 
 			EmitAndVerify (model, assemblyName, (pe, reader) => {
-				var (jniName2, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
+				var (mapKey2, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
 
-				Assert.Equal (javaName, jniName2);
+				Assert.Equal (javaName, mapKey2);
 				Assert.NotNull (proxyRef);
 				Assert.Contains (expectedProxyName, proxyRef!);
 				Assert.Null (targetRef);
@@ -914,9 +914,9 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.False (model.Entries [0].IsUnconditional);
 
 			EmitAndVerify (model, "Blob3ArgConditional", (pe, reader) => {
-				var (jniName, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
+				var (mapKey, proxyRef, targetRef) = ReadFirstTypeMapAttributeBlob (reader);
 
-				Assert.Equal ("android/app/Activity", jniName);
+				Assert.Equal ("android/app/Activity", mapKey);
 				Assert.NotNull (proxyRef);
 				Assert.Contains ("Android_App_Activity_Proxy", proxyRef!);
 				Assert.Equal ("Android.App.Activity, TestFixtures", targetRef);
@@ -936,7 +936,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 			Assert.Equal (model1.Entries.Count, model2.Entries.Count);
 			for (int i = 0; i < model1.Entries.Count; i++) {
-				Assert.Equal (model1.Entries [i].JniName, model2.Entries [i].JniName);
+				Assert.Equal (model1.Entries [i].MapKey, model2.Entries [i].MapKey);
 				Assert.Equal (model1.Entries [i].ProxyTypeReference, model2.Entries [i].ProxyTypeReference);
 				Assert.Equal (model1.Entries [i].TargetTypeReference, model2.Entries [i].TargetTypeReference);
 			}
@@ -975,7 +975,8 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Equal (5, model5.MaxArrayRank);
 			var rank5Entries = model5.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (5, rank5Entries.Count);
-			Assert.Equal ("Foo.Bar[][][][][], App", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
 
 			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
 			Assert.Equal (1, model1.MaxArrayRank);
@@ -991,46 +992,78 @@ public class ModelBuilderTests : FixtureTestBase
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (3, arrayEntries.Count);
 			Assert.Equal (new int? [] { 1, 2, 3 }, arrayEntries.Select (e => e.AnchorRank).ToArray ());
-			Assert.All (arrayEntries, e => Assert.Equal ("foo/Bar", e.JniName));
+			Assert.All (arrayEntries, e => Assert.Equal ("Foo.Bar, App", e.MapKey));
 		}
 
 		[Fact]
-		public void Build_EmitArrayEntries_KeyIsElementJniName ()
+		public void Build_EmitArrayEntries_KeyIsManagedElementTypeName ()
 		{
-			// No "[L...;" prefix at runtime — the key is the bare element JNI name and rank
-			// is encoded by which sentinel anchor (TGroup) the entry uses.
+			// No managed->JNI lookup is needed at runtime — the key is the managed element type name
+			// and rank is encoded by which sentinel anchor (TGroup) the entry uses.
 			var peer = MakeMcwPeer ("java/lang/String", "System.String", "System.Runtime");
 			var model = BuildModelWithArrays (new [] { peer });
 
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
-			Assert.All (arrayEntries, e => Assert.Equal ("java/lang/String", e.JniName));
-			Assert.All (arrayEntries, e => Assert.False (e.JniName.StartsWith ("[", StringComparison.Ordinal)));
+			Assert.All (arrayEntries, e => Assert.Equal ("System.String, System.Runtime", e.MapKey));
+			Assert.All (arrayEntries, e => Assert.False (e.MapKey.StartsWith ("[", StringComparison.Ordinal)));
 		}
 
 		[Fact]
-		public void Build_EmitArrayEntries_TrimTargetIsClosedArrayType ()
+		public void Build_EmitArrayEntries_MapToGeneratedArrayProxy ()
 		{
-			// 3rd ctor arg = the closed array type itself, so ILC's per-shape conditional
-			// drops the entry when the array shape is never constructed.
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var model = BuildModelWithArrays (new [] { peer });
 
 			var rank1 = model.Entries.Single (e => e.AnchorRank == 1);
-			Assert.Equal ("Foo.Bar[], App",     rank1.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[], App",     rank1.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.TargetTypeReference);
 			var rank2 = model.Entries.Single (e => e.AnchorRank == 2);
-			Assert.Equal ("Foo.Bar[][], App",   rank2.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[][], App",   rank2.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.TargetTypeReference);
 			var rank3 = model.Entries.Single (e => e.AnchorRank == 3);
-			Assert.Equal ("Foo.Bar[][][], App", rank3.ProxyTypeReference);
-			Assert.Equal ("Foo.Bar[][][], App", rank3.TargetTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.TargetTypeReference);
+
+			Assert.Equal (3, model.ArrayProxyTypes.Count);
+			Assert.Equal ("Foo_Bar_ArrayProxy1", model.ArrayProxyTypes [0].TypeName);
+			Assert.Equal ("Foo_Bar_ArrayProxy2", model.ArrayProxyTypes [1].TypeName);
+			Assert.Equal ("Foo_Bar_ArrayProxy3", model.ArrayProxyTypes [2].TypeName);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_AssociationsMatchGetArrayTypes ()
+		{
+			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
+			var model = BuildModelWithArrays (new [] { peer });
+
+			var rank1Proxy = "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap";
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop" &&
+				a.AliasProxyTypeReference == rank1Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaArray`1[[Foo.Bar, App]], Java.Interop" &&
+				a.AliasProxyTypeReference == rank1Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Foo.Bar[], App" &&
+				a.AliasProxyTypeReference == rank1Proxy);
+
+			var rank2Proxy = "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap";
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop]], Java.Interop" &&
+				a.AliasProxyTypeReference == rank2Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaArray`1[[Foo.Bar, App]][], Java.Interop" &&
+				a.AliasProxyTypeReference == rank2Proxy);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Foo.Bar[][], App" &&
+				a.AliasProxyTypeReference == rank2Proxy);
 		}
 
 		[Fact]
 		public void Build_EmitArrayEntries_AllConditional ()
 		{
 			// 2-arg unconditional makes no sense for arrays — the trim conditioning on the
-			// array shape is the whole point.
+			// generated array proxy is the whole point.
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var model = BuildModelWithArrays (new [] { peer });
 
@@ -1070,7 +1103,7 @@ public class ModelBuilderTests : FixtureTestBase
 
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (3, arrayEntries.Count);
-			Assert.All (arrayEntries, e => Assert.Equal ("android/widget/Button", e.JniName));
+			Assert.All (arrayEntries, e => Assert.Equal ("Android.Widget.Button, Mono.Android", e.MapKey));
 		}
 
 		[Fact]
@@ -1108,6 +1141,45 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_EmitArrayEntries_PrimitiveEntries_SynthesizedForJavaInteropAssembly ()
+		{
+			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Java.Interop.TypeMap");
+
+			var primitiveEntries = model.Entries
+				.Where (e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null)
+				.ToList ();
+			Assert.Equal (24, primitiveEntries.Count); // 8 primitive keywords × 3 ranks
+
+			var sbyteRank1 = primitiveEntries.Single (e => e.MapKey == "System.SByte, System.Runtime" && e.AnchorRank == 1);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.TargetTypeReference);
+			Assert.False (sbyteRank1.IsUnconditional);
+
+			var sbyteRank2 = primitiveEntries.Single (e => e.MapKey == "System.SByte, System.Runtime" && e.AnchorRank == 2);
+			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy2, _Java.Interop.TypeMap", sbyteRank2.TargetTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaPrimitiveArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaSByteArray, Java.Interop" &&
+				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+		}
+
+		[Fact]
+		public void Build_EmitArrayEntries_PrimitiveEntries_NotDuplicatedInOtherAssemblies ()
+		{
+			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Mono.Android.TypeMap");
+
+			Assert.DoesNotContain (model.Entries, e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null);
+			Assert.DoesNotContain (model.Associations, a => a.SourceTypeReference == "System.SByte[], System.Runtime");
+		}
+
+		[Fact]
 		public void Build_EmitArrayEntries_MultiplePeers_GetIndependentTrios ()
 		{
 			var peers = new List<JavaPeerInfo> {
@@ -1119,8 +1191,8 @@ public class ModelBuilderTests : FixtureTestBase
 			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
 			Assert.Equal (6, arrayEntries.Count);   // 2 peers × 3 ranks
 
-			foreach (var jni in new [] { "foo/A", "foo/B" }) {
-				var perPeer = arrayEntries.Where (e => e.JniName == jni).OrderBy (e => e.AnchorRank).ToList ();
+			foreach (var managedKey in new [] { "Foo.A, App", "Foo.B, App" }) {
+				var perPeer = arrayEntries.Where (e => e.MapKey == managedKey).OrderBy (e => e.AnchorRank).ToList ();
 				Assert.Equal (3, perPeer.Count);
 				Assert.Equal (new int? [] { 1, 2, 3 }, perPeer.Select (e => e.AnchorRank).ToArray ());
 			}
@@ -1195,12 +1267,30 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrBlobs", maxArrayRank: 3);
 
 			EmitAndVerify (model, "ArrBlobs", (pe, reader) => {
-				var attrs = ReadAllTypeMapAttributeBlobs (reader);
+				var arrayAttrs = ReadAllTypeMapAttributeBlobs (reader)
+					.Select (a => (managedName: a.mapKey, a.proxyRef, a.targetRef))
+					.ToList ();
 
-				// Three array entries should round-trip with the same JNI key + array trim targets.
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[], App");
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[][], App");
-				Assert.Contains (attrs, a => a.jniName == "foo/Bar" && a.targetRef == "Foo.Bar[][][], App");
+				// Three array entries should round-trip with the same managed key + generated array proxy refs.
+				Assert.Contains (arrayAttrs, a => a.managedName == "Foo.Bar, App" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs" &&
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
+				Assert.Contains (arrayAttrs, a => a.managedName == "Foo.Bar, App" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs" &&
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs");
+				Assert.Contains (arrayAttrs, a => a.managedName == "Foo.Bar, App" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs" &&
+					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs");
+
+				var assocAttrs = ReadAllTypeMapAssociationAttributeBlobs (reader);
+				Assert.Contains (assocAttrs, a =>
+					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
+					a.sourceRef == "Java.Interop.JavaArray`1[[Foo.Bar, App]], Java.Interop" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
+				Assert.Contains (assocAttrs, a =>
+					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
+					a.sourceRef == "Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
 			});
 		}
 	}
@@ -1216,10 +1306,10 @@ public class ModelBuilderTests : FixtureTestBase
 	}
 
 	/// <summary>
-	/// Reads the first TypeMap assembly-level attribute blob and returns (jniName, proxyRef, targetRef).
+	/// Reads the first TypeMap assembly-level attribute blob and returns (mapKey, proxyRef, targetRef).
 	/// targetRef is null for 2-arg attributes.
 	/// </summary>
-	static (string? jniName, string? proxyRef, string? targetRef) ReadFirstTypeMapAttributeBlob (MetadataReader reader)
+	static (string? mapKey, string? proxyRef, string? targetRef) ReadFirstTypeMapAttributeBlob (MetadataReader reader)
 	{
 		var all = ReadAllTypeMapAttributeBlobs (reader);
 		if (all.Count == 0) {
@@ -1243,7 +1333,7 @@ public class ModelBuilderTests : FixtureTestBase
 	/// If this logic breaks, the test will either fail to find TypeMap attributes or
 	/// misidentify IgnoresAccessChecksTo as TypeMap — both cause obvious assertion failures.
 	/// </summary>
-	static List<(string? jniName, string? proxyRef, string? targetRef)> ReadAllTypeMapAttributeBlobs (MetadataReader reader)
+	static List<(string? mapKey, string? proxyRef, string? targetRef)> ReadAllTypeMapAttributeBlobs (MetadataReader reader)
 	{
 		var result = new List<(string?, string?, string?)> ();
 		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
@@ -1256,12 +1346,18 @@ public class ModelBuilderTests : FixtureTestBase
 			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
 				continue;
 
+			var parent = reader.GetTypeSpecification ((TypeSpecificationHandle) ctor.Parent);
+			var parentName = parent.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+			if (!parentName.StartsWith ("System.Runtime.InteropServices.TypeMapAttribute`1", StringComparison.Ordinal)) {
+				continue;
+			}
+
 			var blobReader = reader.GetBlobReader (attr.Value);
 			ushort prolog = blobReader.ReadUInt16 ();
 			if (prolog != 1)
 				continue;
 
-			string? jniName = blobReader.ReadSerializedString ();
+			string? mapKey = blobReader.ReadSerializedString ();
 			string? proxyRef = blobReader.ReadSerializedString ();
 
 			// Try to read third arg (target type) — if remaining bytes are just NumNamed (2 bytes), it's 2-arg
@@ -1270,11 +1366,40 @@ public class ModelBuilderTests : FixtureTestBase
 				targetRef = blobReader.ReadSerializedString ();
 			}
 
-			if (string.IsNullOrEmpty (jniName) || !jniName.Contains ('/')) {
+			if (string.IsNullOrEmpty (mapKey)) {
 				continue;
 			}
 
-			result.Add ((jniName, proxyRef, targetRef));
+			result.Add ((mapKey, proxyRef, targetRef));
+		}
+		return result;
+	}
+
+	static List<(string groupName, string? sourceRef, string? proxyRef)> ReadAllTypeMapAssociationAttributeBlobs (MetadataReader reader)
+	{
+		var result = new List<(string, string?, string?)> ();
+		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
+		foreach (var attrHandle in asmAttrs) {
+			var attr = reader.GetCustomAttribute (attrHandle);
+			if (attr.Constructor.Kind != HandleKind.MemberReference)
+				continue;
+
+			var ctor = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
+			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
+				continue;
+
+			var parent = reader.GetTypeSpecification ((TypeSpecificationHandle) ctor.Parent);
+			var parentName = parent.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+			if (!parentName.StartsWith ("System.Runtime.InteropServices.TypeMapAssociationAttribute`1", StringComparison.Ordinal)) {
+				continue;
+			}
+
+			var blobReader = reader.GetBlobReader (attr.Value);
+			ushort prolog = blobReader.ReadUInt16 ();
+			if (prolog != 1)
+				continue;
+
+			result.Add ((parentName, blobReader.ReadSerializedString (), blobReader.ReadSerializedString ()));
 		}
 		return result;
 	}

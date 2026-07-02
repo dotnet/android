@@ -20,9 +20,9 @@
 
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
-        Value="false"
-        Trim="true"
-    />
+        Value="false" Trim="true" />
+    <RuntimeHostConfigurationOption Include="Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration"
+        Value="true" Trim="true" />
   </ItemGroup>
 
   <PropertyGroup>

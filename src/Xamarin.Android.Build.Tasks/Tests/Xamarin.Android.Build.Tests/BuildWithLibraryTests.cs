@@ -53,7 +53,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var source = new List<object[]> ();
 			foreach (object[] args in DotNetBuildLibrarySource) {
-				foreach (AndroidRuntime runtime in Enum.GetValues (typeof (AndroidRuntime))) {
+				foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 					source.Add (new object[] {
 						args[0],
 						args[1],
@@ -314,7 +314,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ProjectDependencies ([Values] bool projectReference, [Values] AndroidRuntime runtime)
+		public void ProjectDependencies ([Values] bool projectReference, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -413,7 +413,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[NonParallelizable]
-		public void BuildWithNativeLibraries ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BuildWithNativeLibraries ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -512,7 +512,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildWithNativeLibraryUnknownAbi ([Values] AndroidRuntime runtime)
+		public void BuildWithNativeLibraryUnknownAbi ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -546,7 +546,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildWithExternalJavaLibrary ([Values] AndroidRuntime runtime)
+		public void BuildWithExternalJavaLibrary ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -583,7 +583,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidLibraryProjectsZipWithOddPaths ([Values] AndroidRuntime runtime)
+		public void AndroidLibraryProjectsZipWithOddPaths ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -616,7 +616,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DuplicateJCWNames ([Values] AndroidRuntime runtime)
+		public void DuplicateJCWNames ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -676,7 +676,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DuplicateManagedNames ([Values] AndroidRuntime runtime)
+		public void DuplicateManagedNames ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -736,7 +736,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ([Values] AndroidRuntime runtime)
+		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -751,7 +751,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AllResourcesInClassLibrary ([Values] bool useDesignerAssembly, [Values] AndroidRuntime runtime)
+		public void AllResourcesInClassLibrary ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -816,7 +816,7 @@ namespace Xamarin.Android.Build.Tests
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
-		public void BuildLibraryWhichUsesResources ([Values] bool isRelease, [Values] AndroidRuntime runtime)
+		public void BuildLibraryWhichUsesResources ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -838,7 +838,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AndroidXClassLibraryNoResources ([Values] AndroidRuntime runtime)
+		public void AndroidXClassLibraryNoResources ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -856,7 +856,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckContentBuildAction ([Values] AndroidRuntime runtime)
+		public void CheckContentBuildAction ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -926,7 +926,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ContentBuildActionForRazor ([Values] AndroidRuntime runtime)
+		public void ContentBuildActionForRazor ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -983,7 +983,7 @@ namespace Xamarin.Android.Build.Tests
 		// Combination of class libraries that triggered the problem:
 		// error APT2144: invalid file path 'obj/Release/net8.0-android/lp/86.stamp'.
 		[Test]
-		public void ClassLibraryAarDependencies ([Values] AndroidRuntime runtime)
+		public void ClassLibraryAarDependencies ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1024,7 +1024,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetLibraryAarChanges ([Values] AndroidRuntime runtime)
+		public void DotNetLibraryAarChanges ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1087,7 +1087,7 @@ namespace Xamarin.Android.Build.Tests
 		/// and producing empty .jlo.xml files.
 		/// </summary>
 		[Test]
-		public void MultiTfmTransitiveReference ([Values] AndroidRuntime runtime)
+		public void MultiTfmTransitiveReference ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
 				return;

@@ -10,13 +10,6 @@ java {
     targetCompatibility = ext.javaTargetVer
 }
 
-repositories {
-    maven { url 'https://maven.google.com' }
-    mavenCentral()
-    maven { url 'https://kotlin.bintray.com/kotlinx' }
-    jcenter()
-}
-
 dependencies {
     // https://mvnrepository.com/artifact/com.android.tools.build/manifest-merger
     implementation 'com.android.tools.build:manifest-merger:32.2.1'

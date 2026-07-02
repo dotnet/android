@@ -16,7 +16,7 @@ public partial class BuildTest3 : BaseTest
 	const string JniPreloadSourceLibraryName = "libtest-jni-library.so";
 
 	[Test]
-	public void NativeLibraryJniPreload_NoDuplicates ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_NoDuplicates ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const string MyLibKeep1 = "libMyStuffKeep.so";
 		const string MyLibKeep2 = "libMyStuffKeep.so";
@@ -35,7 +35,7 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_IncludeCustomLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const string MyLib = "libMyStuff.so";
 
@@ -53,7 +53,7 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_ExcludeSomeCustomLibraries ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_ExcludeSomeCustomLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const string MyLibKeep = "libMyStuffKeep.so";
 		const string MyLibExempt = "libMyStuffExempt.so";
@@ -75,7 +75,7 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_ExcludeAllCustomLibraries ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_ExcludeAllCustomLibraries ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const string MyLibExempt1 = "libMyStuffExempt1.so";
 		const string MyLibExempt2 = "libMyStuffExempt2.so";
@@ -100,7 +100,7 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAll ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAll ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
@@ -118,7 +118,7 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAllByName ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_AddSomeCustomLibrariesAndIgnoreAllByName ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const string MyLibExemptOne = "libMyStuffExemptOne.so";
 		const string MyLibExemptTwo = "libMyStuffExemptTwo.so";
@@ -169,7 +169,7 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_IgnoreAll_PreservesRequired ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (
 			runtime,
@@ -183,7 +183,7 @@ public partial class BuildTest3 : BaseTest
 	}
 
 	[Test]
-	public void NativeLibraryJniPreload_DefaultsWork ([Values] AndroidRuntime runtime)
+	public void NativeLibraryJniPreload_DefaultsWork ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		List<EnvironmentHelper.JniPreloads>? allPreloads = NativeLibraryJniPreload_CommonInitAndGetPreloads (runtime);
 		NativeLibraryJniPreload_VerifyDefaults (allPreloads);

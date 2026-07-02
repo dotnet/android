@@ -70,11 +70,6 @@ namespace Xamarin.Android.Prepare
 		public EssentialTools Tools                    { get; private set; } = new EssentialTools ();
 
 		/// <summary>
-		///   Information about the current build. <see cref="BuildInfo" />
-		/// </summary>
-		public BuildInfo BuildInfo                     { get; private set; } = new BuildInfo ();
-
-		/// <summary>
 		///   All the scenarios known to the bootstrapper
 		/// </summary>
 		public IDictionary<string, Scenario> Scenarios { get; } = new SortedDictionary<string, Scenario> (StringComparer.OrdinalIgnoreCase);
@@ -125,16 +120,6 @@ namespace Xamarin.Android.Prepare
 		///   Do not use emoji characters
 		/// </summary>
 		public bool NoEmoji                            { get; set; } = !Configurables.Defaults.UseEmoji;
-
-		/// <summary>
-		///   Automatically provision all the missing programs
-		/// </summary>
-		public bool AutoProvision                      { get; set; }
-
-		/// <summary>
-		///   If a program being provisioned automatically requires administrative rights to install, use sudo
-		/// </summary>
-		public bool AutoProvisionUsesSudo              { get; set; }
 
 		/// <summary>
 		///   Current session execution mode. See <see cref="t:ExecutionMode" />
@@ -276,11 +261,6 @@ namespace Xamarin.Android.Prepare
 					debugFileExtension = value;
 			}
 		}
-
-		/// <summary>
-		///   Path to a local .NET SDK archive to use instead of downloading.
-		/// </summary>
-		public string? LocalDotNetSdkArchive { get; set; }
 
 		/// <summary>
 		///   Determines whether or not we are running on a hosted azure pipelines agent.
@@ -443,11 +423,6 @@ namespace Xamarin.Android.Prepare
 					Log.ErrorLine ("Failed to update Git submodules");
 					return false;
 				}
-			}
-
-			BuildInfo = new BuildInfo ();
-			if (SelectedScenario.NeedsGitBuildInfo) {
-				await BuildInfo.GatherGitInfo (this);
 			}
 
 			if (MakeConcurrency == 0)

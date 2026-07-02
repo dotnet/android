@@ -1,0 +1,8 @@
+const string __id = "bar.Ljava/lang/String;";
+
+IntPtr native_value = JNIEnv.NewString (value);
+try {
+	_members.InstanceFields.SetValue (__id, this, new JniObjectReference (native_value));
+} finally {
+	JNIEnv.DeleteLocalRef (native_value);
+}
