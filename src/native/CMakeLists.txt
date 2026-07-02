@@ -649,7 +649,6 @@ else()
 
   if (IS_MONO_RUNTIME OR IS_CLR_RUNTIME)
     add_subdirectory(common/libunwind)
-    add_subdirectory(common/lz4)
     add_subdirectory(common/runtime-base)
 
     add_subdirectory(${SOURCES_PREFIX}/runtime-base)
