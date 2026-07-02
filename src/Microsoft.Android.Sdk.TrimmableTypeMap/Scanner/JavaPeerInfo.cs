@@ -213,6 +213,23 @@ public sealed record MarshalMethodInfo
 	public required string NativeCallbackName { get; init; }
 
 	/// <summary>
+	/// CLR type-name strings (e.g. "System.Boolean", "System.SByte", "System.IntPtr") for the
+	/// real native <c>n_*</c> callback's JNI parameters, in order, excluding the leading
+	/// <c>jnienv</c>/<c>native__this</c> IntPtr pair. Captured from the actual <c>n_*</c> method's
+	/// metadata signature so the emitted callback MemberRef matches it exactly — importantly, JNI
+	/// boolean is <c>bool</c> or <c>sbyte</c> and JNI char is <c>char</c> or <c>ushort</c> depending
+	/// on which generator version compiled the binding (see java-interop #1296). Null when the
+	/// <c>n_*</c> method's signature could not be resolved.
+	/// </summary>
+	internal IReadOnlyList<string>? NativeCallbackParameterTypeNames { get; init; }
+
+	/// <summary>
+	/// CLR return type-name string for the real native <c>n_*</c> callback, captured from metadata.
+	/// Null when the <c>n_*</c> method's signature could not be resolved.
+	/// </summary>
+	internal string? NativeCallbackReturnTypeName { get; init; }
+
+	/// <summary>
 	/// True if this is a constructor registration.
 	/// </summary>
 	public bool IsConstructor { get; init; }

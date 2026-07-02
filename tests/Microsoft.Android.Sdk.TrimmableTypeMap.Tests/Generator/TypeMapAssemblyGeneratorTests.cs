@@ -951,9 +951,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Theory]
-	[InlineData (1, 0x04)]  // Boolean → sbyte — matches MCW n_* callbacks
 	[InlineData (2, 0x04)]  // Byte → sbyte
-	[InlineData (3, 0x03)]  // Char → char
 	[InlineData (4, 0x06)]  // Short → int16
 	[InlineData (5, 0x08)]  // Int → int32
 	[InlineData (6, 0x0A)]  // Long → int64
@@ -968,20 +966,32 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal (expectedCode, blob.ToArray () [0]);
 	}
 
-	[Fact]
-	public void EncodeClrType_Boolean_DiffersFromCallback ()
+	[Theory]
+	[InlineData (1)]  // Boolean → bool or sbyte
+	[InlineData (3)]  // Char → char or ushort
+	public void EncodeClrTypeForCallback_AmbiguousKinds_Throw (int kindValue)
 	{
-		var ucoBlob = new BlobBuilder ();
-		JniSignatureHelper.EncodeClrType (new SignatureTypeEncoder (ucoBlob), JniParamKind.Boolean);
+		// Boolean and Char cannot be encoded from the JNI descriptor because a binding may declare
+		// them as either their managed form (bool/char, pre-#1296) or blittable form (sbyte/ushort,
+		// post-#1296). They must be emitted from the real n_* method's captured signature.
+		var kind = (JniParamKind) kindValue;
+		var blob = new BlobBuilder ();
+		Assert.ThrowsAny<ArgumentException> (() =>
+			JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (blob), kind));
+	}
 
-		var cbBlob = new BlobBuilder ();
-		JniSignatureHelper.EncodeClrTypeForCallback (new SignatureTypeEncoder (cbBlob), JniParamKind.Boolean);
+	[Fact]
+	public void EncodeClrTypeName_EncodesBooleanAndSByteDistinctly ()
+	{
+		// The two boolean encodings a real n_* callback can use must map to distinct metadata codes,
+		// so a captured signature is emitted faithfully (0x02 = ELEMENT_TYPE_BOOLEAN, 0x04 = I1/sbyte).
+		var boolBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrTypeName (new SignatureTypeEncoder (boolBlob), "System.Boolean");
+		Assert.Equal (0x02, boolBlob.ToArray () [0]);
 
-		var ucoBytes = ucoBlob.ToArray ();
-		var cbBytes = cbBlob.ToArray ();
-		Assert.NotEqual (ucoBytes, cbBytes);
-		Assert.Equal (0x05, ucoBytes [0]);  // byte (unsigned)
-		Assert.Equal (0x04, cbBytes [0]);    // sbyte (signed)
+		var sbyteBlob = new BlobBuilder ();
+		JniSignatureHelper.EncodeClrTypeName (new SignatureTypeEncoder (sbyteBlob), "System.SByte");
+		Assert.Equal (0x04, sbyteBlob.ToArray () [0]);
 	}
 
 	[Fact]
@@ -1021,11 +1031,12 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_UcoMethod_BooleanReturn_WrapperUsesByte_CallbackUsesSByte ()
+	public void Generate_UcoMethod_BooleanReturn_WrapperUsesByte_CallbackUsesBoolean ()
 	{
-		// Regression test: the UCO wrapper must use byte (unsigned, JNI ABI) for boolean,
-		// but the callback MemberRef must use sbyte (signed, MCW convention).
-		// A mismatch caused ILLink to fail resolving the member reference and trim n_* methods.
+		// The callback MemberRef must mirror the real n_* method's signature. The TouchHandler fixture
+		// models a *pre-#1296* binding whose n_OnTouch declares JNI boolean as System.Boolean, so the
+		// emitted ref must be Boolean — while the UCO entry keeps the blittable byte for the JNI ABI.
+		// (The modern sbyte counterpart is covered by Generate_UcoMethod_BooleanReturn_ModernBinding_*.)
 		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolReturnTest");
 		using var pe = new PEReader (stream);
@@ -1042,13 +1053,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Find the callback MemberRef that the UCO wrapper calls (n_OnTouch on the TouchHandler type)
 		var callbackRef = FindCallbackMemberRef (reader, "n_OnTouch");
 		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.SByte", callbackSig.ReturnType);
+		Assert.Equal ("System.Boolean", callbackSig.ReturnType);
 	}
 
 	[Fact]
-	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesSByte ()
+	public void Generate_UcoMethod_BooleanParam_WrapperUsesByte_CallbackUsesBoolean ()
 	{
-		// Regression test: boolean parameters must also use the correct encoding.
+		// Boolean parameters follow the same rule: byte for the blittable UCO ABI, and — because the
+		// TouchHandler fixture models a pre-#1296 binding — System.Boolean for the n_* callback ref
+		// (matched from the real n_OnFocusChange method, not hardcoded).
 		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolParamTest");
 		using var pe = new PEReader (stream);
@@ -1066,7 +1079,145 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// Find the callback MemberRef
 		var callbackRef = FindCallbackMemberRef (reader, "n_OnFocusChange");
 		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.SByte", callbackSig.ParameterTypes.Last ());
+		Assert.Equal ("System.Boolean", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_BooleanReturn_ModernBinding_CallbackUsesSByte ()
+	{
+		// Counterpart to the pre-#1296 TouchHandler tests: the IOnLongClickListenerInvoker fixture
+		// models a *post-#1296* binding whose n_OnLongClick declares JNI boolean as the blittable
+		// sbyte. ImplicitMultiListener inherits that interface callback (no own [Register]) and thus
+		// forwards to the invoker's n_*, so the emitted callback MemberRef must be SByte — proving the
+		// boolean encoding is taken from each real n_* method rather than hardcoded to one form.
+		var peers = ScanFixtures ();
+		var peer = peers.First (p => p.JavaName == "my/app/ImplicitMultiListener");
+		using var stream = GenerateAssembly (new [] { peer }, "ModernBoolReturnTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("onLongClick") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Byte", ucoSig.ReturnType);
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnLongClick_Landroid_view_View_", "Android.Views", "IOnLongClickListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", callbackSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_MixedBindings_EachCallbackMirrorsItsOwnNativeSignature ()
+	{
+		// A single generated assembly may reference n_* callbacks from bindings compiled by different
+		// generator versions. Here the pre-#1296 TouchHandler (bool) and the post-#1296
+		// IOnLongClickListenerInvoker (sbyte) coexist; each callback MemberRef must independently match
+		// its own real method — bool for one, sbyte for the other.
+		var touchPeer = MakeTouchHandlerCallbackDispatchPeer ();
+		var longClickPeer = ScanFixtures ().First (p => p.JavaName == "my/app/ImplicitMultiListener");
+		using var stream = GenerateAssembly (new [] { touchPeer, longClickPeer }, "MixedBindingsTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var touchSig = FindCallbackMemberRef (reader, "n_OnTouch").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Boolean", touchSig.ReturnType);
+
+		var longClickRef = FindCallbackMemberRefHandle (reader, "n_OnLongClick_Landroid_view_View_", "Android.Views", "IOnLongClickListenerInvoker");
+		var longClickSig = reader.GetMemberReference (longClickRef).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.SByte", longClickSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_UnresolvedBooleanCallback_ThrowsRatherThanGuessing ()
+	{
+		// When a boolean/char callback's real n_* signature cannot be resolved from metadata, the
+		// generator must fail loudly instead of guessing bool-vs-sbyte (which would emit a MemberRef
+		// that silently fails to bind under ILC). Here we clear the captured signature to simulate an
+		// unavailable binding assembly.
+		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/ImplicitMultiListener");
+		var brokenPeer = peer with {
+			MarshalMethods = peer.MarshalMethods.Select (m =>
+				m.JniSignature == "(Landroid/view/View;)Z"
+					? m with { NativeCallbackParameterTypeNames = null, NativeCallbackReturnTypeName = null }
+					: m).ToList (),
+		};
+
+		var ex = Assert.Throws<InvalidOperationException> (() => {
+			using var stream = GenerateAssembly (new [] { brokenPeer }, "UnresolvedBoolTest");
+		});
+		Assert.Contains ("n_*", ex.Message);
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_CharReturn_LegacyBinding_CallbackUsesChar ()
+	{
+		// JNI char is ambiguous exactly like boolean: the pre-#1296 TouchHandler declares its
+		// n_GetKeyChar return as System.Char, so the callback MemberRef must be Char while the UCO
+		// entry keeps the blittable ushort JNI ABI.
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
+		using var stream = GenerateAssembly (new [] { peer }, "CharReturnLegacyTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("getKeyChar") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ReturnType);
+
+		var callbackSig = FindCallbackMemberRef (reader, "n_GetKeyChar").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Char", callbackSig.ReturnType);
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_CharParam_LegacyBinding_CallbackUsesChar ()
+	{
+		// Char parameters follow the same rule: ushort for the blittable UCO ABI, and — because
+		// TouchHandler models a pre-#1296 binding — System.Char for the n_SetKeyChar callback ref.
+		var peer = MakeTouchHandlerCallbackDispatchPeer ();
+		using var stream = GenerateAssembly (new [] { peer }, "CharParamLegacyTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("setKeyChar") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ParameterTypes.Last ());
+
+		var callbackSig = FindCallbackMemberRef (reader, "n_SetKeyChar").DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.Char", callbackSig.ParameterTypes.Last ());
+	}
+
+	[Fact]
+	public void Generate_UcoMethod_Char_ModernBinding_CallbackUsesUInt16 ()
+	{
+		// Counterpart to the char TouchHandler tests: the IOnKeyListenerInvoker fixture models a
+		// *post-#1296* binding whose n_OnKey_C declares JNI char as the blittable ushort.
+		// KeyListenerImpl inherits that interface callback (no own [Register]) and forwards to the
+		// invoker's n_*, so both the char return and char parameter of the emitted MemberRef must be
+		// UInt16 — proving char, like boolean, is taken from each real n_* method rather than hardcoded.
+		var peer = ScanFixtures ().First (p => p.JavaName == "my/app/KeyListenerImpl");
+		using var stream = GenerateAssembly (new [] { peer }, "CharModernTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var ucoMethod = reader.MethodDefinitions
+			.Select (h => reader.GetMethodDefinition (h))
+			.First (m => reader.GetString (m.Name).Contains ("onKey") &&
+			             reader.GetString (m.Name).Contains ("_uco_"));
+		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", ucoSig.ReturnType);
+		Assert.Equal ("System.UInt16", ucoSig.ParameterTypes.Last ());
+
+		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnKey_C", "Android.Views", "IOnKeyListenerInvoker");
+		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
+		Assert.Equal ("System.UInt16", callbackSig.ReturnType);
+		Assert.Equal ("System.UInt16", callbackSig.ParameterTypes.Last ());
 	}
 
 	[Fact]

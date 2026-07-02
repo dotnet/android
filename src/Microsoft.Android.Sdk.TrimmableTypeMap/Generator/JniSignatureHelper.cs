@@ -129,16 +129,22 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
-	/// Encodes a JNI type as its CLR equivalent matching the MCW-generated <c>n_*</c> callback
-	/// signatures. JNI boolean (Z) maps to <c>sbyte</c> (matching <c>_JniMarshal_*_B</c> delegates).
-	/// Use this when constructing member references to <c>n_*</c> methods.
+	/// Encodes a JNI type as its CLR equivalent for a <c>n_*</c> callback MemberRef. This is used only
+	/// for kinds that are <b>unambiguous</b> across generator versions; the ambiguous kinds — JNI
+	/// boolean and char (see <see cref="IsAmbiguousCallbackKind"/>) — are instead emitted from the real
+	/// <c>n_*</c> method's captured signature via <see cref="EncodeClrTypeName"/>, because a binding may
+	/// declare them as either their managed (<c>bool</c>/<c>char</c>) or blittable (<c>sbyte</c>/<c>ushort</c>)
+	/// form depending on which generator compiled it (java-interop #1296).
 	/// </summary>
 	public static void EncodeClrTypeForCallback (SignatureTypeEncoder encoder, JniParamKind kind)
 	{
 		switch (kind) {
-		case JniParamKind.Boolean: encoder.SByte (); break;  // MCW n_* callbacks use sbyte for JNI boolean
+		// Boolean and Char are ambiguous across generator versions (bool/sbyte, char/ushort) and must
+		// be emitted from the real n_* method's captured signature via EncodeClrTypeName — never guessed.
+		case JniParamKind.Boolean:
+		case JniParamKind.Char:
+			throw new ArgumentException ($"JNI {kind} maps to an ambiguous CLR callback type; emit it from the resolved n_* signature instead of the JNI descriptor.");
 		case JniParamKind.Byte:    encoder.SByte (); break;
-		case JniParamKind.Char:    encoder.Char (); break;
 		case JniParamKind.Short:   encoder.Int16 (); break;
 		case JniParamKind.Int:     encoder.Int32 (); break;
 		case JniParamKind.Long:    encoder.Int64 (); break;
@@ -146,6 +152,58 @@ static class JniSignatureHelper
 		case JniParamKind.Double:  encoder.Double (); break;
 		case JniParamKind.Object:  encoder.IntPtr (); break;
 		default: throw new ArgumentException ($"Cannot encode JNI param kind {kind} as CLR type");
+		}
+	}
+
+	/// <summary>
+	/// True when a JNI kind maps to a CLR type that the MCW <c>n_*</c> callback may declare as either
+	/// its managed form or a blittable form depending on the generator version that compiled the
+	/// binding: JNI boolean is <c>bool</c> (pre-#1296) or <c>sbyte</c> (post-#1296), and JNI char is
+	/// <c>char</c> or <c>ushort</c>. For these, the callback MemberRef must be built from the real
+	/// <c>n_*</c> method's captured signature rather than guessed from the JNI descriptor.
+	/// </summary>
+	public static bool IsAmbiguousCallbackKind (JniParamKind kind)
+		=> kind == JniParamKind.Boolean || kind == JniParamKind.Char;
+
+	/// <summary>
+	/// True when a JNI method signature contains a boolean or char parameter/return — the kinds whose
+	/// <c>n_*</c> callback CLR type is ambiguous across generator versions and must therefore be
+	/// captured from the real method's metadata (see <see cref="IsAmbiguousCallbackKind"/>).
+	/// </summary>
+	public static bool HasAmbiguousCallbackType (string jniSignature)
+	{
+		if (IsAmbiguousCallbackKind (ParseReturnType (jniSignature))) {
+			return true;
+		}
+		foreach (var kind in ParseParameterTypes (jniSignature)) {
+			if (IsAmbiguousCallbackKind (kind)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Encodes a captured CLR type-name string (e.g. "System.Boolean", "System.SByte", "System.IntPtr")
+	/// onto a signature, used to emit a callback MemberRef that mirrors the real <c>n_*</c> method.
+	/// </summary>
+	public static void EncodeClrTypeName (SignatureTypeEncoder encoder, string clrTypeName)
+	{
+		switch (clrTypeName) {
+		case "System.Boolean": encoder.Boolean (); break;
+		case "System.SByte":   encoder.SByte (); break;
+		case "System.Byte":    encoder.Byte (); break;
+		case "System.Char":    encoder.Char (); break;
+		case "System.UInt16":  encoder.UInt16 (); break;
+		case "System.Int16":   encoder.Int16 (); break;
+		case "System.Int32":   encoder.Int32 (); break;
+		case "System.UInt32":  encoder.UInt32 (); break;
+		case "System.Int64":   encoder.Int64 (); break;
+		case "System.UInt64":  encoder.UInt64 (); break;
+		case "System.Single":  encoder.Single (); break;
+		case "System.Double":  encoder.Double (); break;
+		case "System.IntPtr":  encoder.IntPtr (); break;
+		default: throw new ArgumentException ($"Cannot encode CLR type '{clrTypeName}' in a native callback MemberRef");
 		}
 	}
 

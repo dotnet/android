@@ -1205,14 +1205,45 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
-		// Callback member reference: uses MCW n_* types (sbyte for boolean)
+		// Callback member reference: must mirror the real MCW n_* method's signature. JNI boolean and
+		// char are ambiguous (bool/sbyte, char/ushort) across generator versions, so for those we use
+		// the signature captured from the actual n_* method; the unambiguous kinds fall back to the JNI
+		// descriptor. If an ambiguous kind can't be resolved from metadata we fail rather than guess.
+		var capturedParameterTypeNames = uco.CallbackParameterTypeNames;
+		var capturedReturnTypeName = uco.CallbackReturnTypeName;
+		bool hasCapturedCallbackSignature = capturedParameterTypeNames is not null &&
+			capturedReturnTypeName is not null && capturedParameterTypeNames.Count == jniParams.Count;
+		if (!hasCapturedCallbackSignature) {
+			if (JniSignatureHelper.IsAmbiguousCallbackKind (returnKind)) {
+				throw NativeCallbackSignatureUnresolved (uco);
+			}
+			foreach (var kind in jniParams) {
+				if (JniSignatureHelper.IsAmbiguousCallbackKind (kind)) {
+					throw NativeCallbackSignatureUnresolved (uco);
+				}
+			}
+		}
+
 		Action<BlobEncoder> encodeCallbackSig = sig => sig.MethodSignature ().Parameters (paramCount,
-			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind); },
+			rt => {
+				if (isVoid) {
+					rt.Void ();
+				} else if (hasCapturedCallbackSignature && capturedReturnTypeName is not null) {
+					JniSignatureHelper.EncodeClrTypeName (rt.Type (), capturedReturnTypeName);
+				} else {
+					JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind);
+				}
+			},
 			p => {
 				p.AddParameter ().Type ().IntPtr ();
 				p.AddParameter ().Type ().IntPtr ();
-				for (int j = 0; j < jniParams.Count; j++)
-					JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+				for (int j = 0; j < jniParams.Count; j++) {
+					if (hasCapturedCallbackSignature && capturedParameterTypeNames is not null) {
+						JniSignatureHelper.EncodeClrTypeName (p.AddParameter ().Type (), capturedParameterTypeNames [j]);
+					} else {
+						JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+					}
+				}
 			});
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
@@ -1231,6 +1262,13 @@ sealed class TypeMapAssemblyEmitter
 		AddUnmanagedCallersOnlyAttribute (handle);
 		return handle;
 	}
+
+	static InvalidOperationException NativeCallbackSignatureUnresolved (UcoMethodData uco)
+		=> new InvalidOperationException (
+			$"Trimmable typemap cannot emit the native callback reference '{uco.CallbackType.ManagedTypeName}.{uco.CallbackMethodName}' " +
+			$"(JNI signature '{uco.JniSignature}') because its JNI boolean/char parameter or return type is ambiguous " +
+			$"(bool vs sbyte, char vs ushort) and the real 'n_*' method's signature could not be resolved from metadata. " +
+			$"The referenced binding assembly must be available so the exact callback signature can be matched.");
 
 	void EmitUcoForwarderBody (TrackedInstructionEncoder encoder, ControlFlowBuilder cfb, JniParamKind returnKind, Action<TrackedInstructionEncoder> emitCallback)
 	{
