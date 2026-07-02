@@ -31,7 +31,7 @@ steps:
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
 # Prepare and Build everything
-- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }} /p:ArchiveWindowsToolchainPdbFiles=true'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
 

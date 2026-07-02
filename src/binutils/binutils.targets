@@ -10,6 +10,12 @@
     <_WindowsBinutilsInstallDir>$(MicrosoftAndroidSdkOutDir)binutils</_WindowsBinutilsInstallDir>
     <_7zaPath Condition=" '$(HostOS)' == 'Windows' ">$(Pkg7-Zip_CommandLine)\tools\x64\7za.exe</_7zaPath>
     <_7zaPath Condition=" '$(_7zaPath)' == '' ">7za</_7zaPath>
+    <!--
+      The Windows toolchain PDBs (and their matching EXEs) are only needed by CI to publish a
+      symbol archive; they are never consumed by a local build and are not shipped in any NuGet.
+      They add ~1.4 GB to the SDK pack, so only install them when a symbol archive is requested.
+    -->
+    <ArchiveWindowsToolchainPdbFiles Condition=" '$(ArchiveWindowsToolchainPdbFiles)' == '' ">false</ArchiveWindowsToolchainPdbFiles>
   </PropertyGroup>
 
   <Target Name="_DownloadBinutils"
@@ -59,27 +65,34 @@
         SkipUnchangedFiles="true"
         Condition=" '@(_HostBinutilsLibFiles)' != '' "
     />
-    <!-- Install Windows binutils -->
-    <MakeDir Directories="$(_WindowsBinutilsInstallDir)\bin" />
+    <!-- Install Windows binutils: only needed on a Windows host, where the SDK's linker path is
+         tools\binutils\bin. On macOS/Linux the SDK uses tools\<HostOS>\binutils\bin instead, so
+         these Windows binaries are never used and would only waste ~105 MB in the pack. -->
+    <MakeDir Directories="$(_WindowsBinutilsInstallDir)\bin" Condition=" '$(HostOS)' == 'Windows' " />
     <Copy
         SourceFiles="@(_WindowsBinutilsBinFiles)"
         DestinationFolder="$(_WindowsBinutilsInstallDir)\bin"
         SkipUnchangedFiles="true"
+        Condition=" '$(HostOS)' == 'Windows' "
     />
-    <!-- Copy PDBs and their corresponding EXEs for symbol archiving -->
-    <MakeDir Directories="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb" Condition=" '@(_WindowsBinutilsPdbFiles)' != '' " />
+    <!-- Copy PDBs and their corresponding EXEs for symbol archiving (CI only, opt-in) -->
+    <MakeDir Directories="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb" Condition=" '@(_WindowsBinutilsPdbFiles)' != '' and '$(ArchiveWindowsToolchainPdbFiles)' == 'true' " />
     <Copy
         SourceFiles="@(_WindowsBinutilsPdbFiles)"
         DestinationFolder="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb"
         SkipUnchangedFiles="true"
-        Condition=" '@(_WindowsBinutilsPdbFiles)' != '' "
+        Condition=" '@(_WindowsBinutilsPdbFiles)' != '' and '$(ArchiveWindowsToolchainPdbFiles)' == 'true' "
     />
     <Copy
         SourceFiles="@(_WindowsBinutilsExeForPdb)"
         DestinationFolder="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb"
         SkipUnchangedFiles="true"
-        Condition=" '@(_WindowsBinutilsExeForPdb)' != '' "
+        Condition=" '@(_WindowsBinutilsExeForPdb)' != '' and '$(ArchiveWindowsToolchainPdbFiles)' == 'true' "
     />
+    <!-- Remove any Windows binutils left over from a previous build that no longer apply, so
+         incremental builds reclaim the space without requiring a full Clean. -->
+    <RemoveDir Directories="$(_WindowsBinutilsInstallDir)\bin" Condition=" '$(HostOS)' != 'Windows' " />
+    <RemoveDir Directories="$(_WindowsBinutilsInstallDir)\windows-toolchain-pdb" Condition=" '$(ArchiveWindowsToolchainPdbFiles)' != 'true' " />
   </Target>
 
   <Target Name="_CleanBinutils" BeforeTargets="Clean">
