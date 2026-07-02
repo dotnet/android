@@ -1,6 +1,7 @@
 parameters:
   condition: succeeded()
   runNativeTests: false
+  runNativeDotnetTests: false
   platformName:
   nativeAotRid:
 
