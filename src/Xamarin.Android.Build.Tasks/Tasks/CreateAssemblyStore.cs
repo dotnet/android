@@ -38,7 +38,17 @@ public class CreateAssemblyStore : AndroidTask
 	[Output]
 	public ITaskItem [] AssembliesToAddToArchive { get; set; } = [];
 
+	// EXPERIMENT (assemblystore-mmap hybrid): ReadyToRun composite native images (*.r2r.dll) are
+	// architecture-specific, so they must NOT go into the shared (architecture-independent) assembly
+	// store asset. They are emitted here separately (tagged with their ABI) so they can be packaged
+	// per-ABI under lib/<abi>/ where an AAB can split them by architecture.
+	[Output]
+	public ITaskItem [] R2RCompositeAssemblies { get; set; } = [];
+
 	AndroidRuntime targetRuntime;
+
+	static bool IsR2RComposite (ITaskItem asm) =>
+		System.IO.Path.GetFileName (asm.ItemSpec).EndsWith (".r2r.dll", StringComparison.OrdinalIgnoreCase);
 
 	public override bool RunTask ()
 	{
@@ -54,17 +64,27 @@ public class CreateAssemblyStore : AndroidTask
 
 		var store_builder = new AssemblyStoreBuilder (Log, targetRuntime);
 		var per_arch_assemblies = MonoAndroidHelper.GetPerArchAssemblies (assemblies, SupportedAbis, true);
+		var composites = new List<ITaskItem> ();
 
 		foreach (var kvp in per_arch_assemblies) {
+			string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 			Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");
 
 			foreach (var assembly in kvp.Value.Values) {
+				if (IsR2RComposite (assembly)) {
+					composites.Add (new TaskItem (assembly.ItemSpec, new Dictionary<string, string> { { "Abi", abi } }));
+					Log.LogDebugMessage ($"Routing R2R composite '{assembly.ItemSpec}' to lib/{abi}/ instead of the shared assembly store.");
+					continue;
+				}
+
 				var sourcePath = assembly.GetMetadataOrDefault ("CompressedAssembly", assembly.ItemSpec);
 				store_builder.AddAssembly (sourcePath, assembly, includeDebugSymbols: IncludeDebugSymbols);
 
 				Log.LogDebugMessage ($"Added '{sourcePath}' to assembly store.");
 			}
 		}
+
+		R2RCompositeAssemblies = composites.ToArray ();
 
 		var assembly_store_paths = store_builder.Generate (AppSharedLibrariesDir);
 

@@ -148,6 +148,21 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 		}
 	}
 
+	// EXPERIMENT (assemblystore-mmap hybrid): a per-ABI ReadyToRun composite image, shipped as a
+	// DSO-wrapped `lib/<abi>/lib<Name>.so`, is served from memory by AssemblyStore (it lives outside
+	// the shared, architecture-independent assembly store).
+	if (entry_name.ends_with (".r2r.dll.so"sv)) {
+		std::string_view full { entry_name.get (), entry_name.length () };
+		auto slash = full.rfind ('/');
+		std::string_view base = (slash == std::string_view::npos) ? full : full.substr (slash + 1);
+		if (base.length () > 6) { // "lib" + name + ".so"
+			std::string_view asm_name = base.substr (3, base.length () - 6);
+			log_debug (LOG_ASSEMBLY, "assemblystore-mmap: found R2R composite '{}' -> assembly '{}'"sv, entry_name.get (), asm_name);
+			AssemblyStore::register_extra_assembly (asm_name, apk_fd, apk_path, offset, size);
+		}
+		return false; // keep the APK open
+	}
+
 	if (!AndroidSystem::is_embedded_dso_mode_enabled () || !entry_name.starts_with (Zip::lib_prefix) || !entry_name.ends_with (Constants::dso_suffix)) {
 		return false;
 	}
@@ -265,6 +280,19 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	bool got_split_config_abi_apk = false;
 	std::string_view base_apk{};
+
+	// EXPERIMENT (assemblystore-mmap): the assembly store ships as a DEFLATE-compressed, non-.so
+	// APK asset. Extract it once into the app's files dir and mmap that uncompressed copy before we
+	// scan the APK(s) for shared libraries, so the regular scan below skips the store lookup.
+	{
+		std::string const& override_dir = AndroidSystem::get_primary_override_dir ();
+		for (int64_t i = 0; i < apk_count && !found_assembly_store; i++) {
+			std::string_view apk_file = runtimeApks [static_cast<size_t>(i)].get_string_view ();
+			if (AssemblyStore::try_extract_and_map (apk_file, override_dir)) {
+				found_assembly_store = true;
+			}
+		}
+	}
 
 	for (int64_t i = 0; i < apk_count; i++) {
 		std::string_view apk_file = runtimeApks [static_cast<size_t>(i)].get_string_view ();

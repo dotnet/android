@@ -33,6 +33,11 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 	public bool UseAssemblyStore { get; set; }
 
+	// EXPERIMENT (assemblystore-mmap hybrid): architecture-specific ReadyToRun composite images,
+	// peeled out of the shared assembly store by CreateAssemblyStore, to be packaged per-ABI under
+	// lib/<abi>/ (DSO-wrapped, stored uncompressed) so an AAB can split them by architecture.
+	public ITaskItem [] R2RCompositeAssemblies { get; set; } = [];
+
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
@@ -52,9 +57,31 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 		else
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedAssemblies, (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly) => WrapAssembly (log, arch, assembly, wrapper_config, files));
 
+		WrapR2RComposites (wrapper_config, files);
+
 		WrappedAssemblies = files.ToArray ();
 
 		return !Log.HasLoggedErrors;
+	}
+
+	// EXPERIMENT (assemblystore-mmap hybrid): DSO-wrap each architecture-specific R2R composite image
+	// and place it under lib/<abi>/ (as a `.so`, which is stored uncompressed and can be ABI-split by
+	// an AAB), keeping the shared assembly store free of architecture-specific content.
+	void WrapR2RComposites (DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files)
+	{
+		foreach (var composite in R2RCompositeAssemblies) {
+			var abi = composite.GetMetadata ("Abi");
+			if (abi.IsNullOrEmpty ()) {
+				Log.LogError ($"Internal error: R2R composite '{composite.ItemSpec}' lacks the required 'Abi' metadata");
+				return;
+			}
+
+			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
+			var archive_path = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (composite.ItemSpec) + ".so");
+			var wrapped_source_path = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, composite.ItemSpec, Path.GetFileName (archive_path));
+			files.AddItem (wrapped_source_path, archive_path);
+			Log.LogDebugMessage ($"Packaged R2R composite '{composite.ItemSpec}' as '{archive_path}'");
+		}
 	}
 
 	void WrapAssemblyStores (DSOWrapperGenerator.Config dsoWrapperConfig, PackageFileListBuilder files)
@@ -67,11 +94,14 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 			if (abi is null)
 				return;
 
-			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
-			var archive_path = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (store_path));
-			var wrapped_source_path = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, store_path, Path.GetFileName (archive_path));
-
-			files.AddItem (wrapped_source_path, archive_path);
+			// EXPERIMENT (assemblystore-mmap): instead of disguising the assembly store as a
+			// native library (`lib/{ABI}/libassembly-store.so`, which Google Play force-stores
+			// uncompressed for AAB delivery on API 26+), emit the raw store blob as a plain
+			// APK asset. Assets are DEFLATE-compressed by the packager and are *not* force-stored
+			// uncompressed by Play (small download), and the runtime extracts the store once to the
+			// app's files dir and mmaps it without any per-assembly decompression.
+			var archive_path = MonoAndroidHelper.MakeZipArchivePath ("assets", "libassembly-store.assemblystore");
+			files.AddItem (store_path, archive_path);
 		}
 	}
 

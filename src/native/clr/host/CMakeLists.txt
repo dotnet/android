@@ -158,6 +158,7 @@ macro(lib_target_options TARGET_NAME)
     xa::lz4
     -landroid
     -llog
+    -lz
     -lcoreclr
   )
 endmacro ()

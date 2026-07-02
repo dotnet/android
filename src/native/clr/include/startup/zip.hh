@@ -36,9 +36,20 @@ namespace xamarin::android {
 			uint32_t			    local_header_offset;
 			uint32_t			    data_offset;
 			uint32_t			    file_size;
+			uint32_t			    compressed_size;
 			bool				    bundled_assemblies_slow_path;
 			uint32_t			    max_assembly_name_size;
 			uint32_t			    max_assembly_file_name_size;
+		};
+
+		// EXPERIMENT (assemblystore-mmap): information about a single ZIP entry located by name,
+		// used to extract the DEFLATE-compressed assembly store asset from the APK.
+		struct zip_entry_info
+		{
+			uint32_t data_offset;        // offset of the entry's file data within the APK
+			uint32_t compressed_size;    // size of the (possibly compressed) data in the APK
+			uint32_t uncompressed_size;  // size of the data once decompressed
+			uint16_t compression_method; // 0 == stored, 8 == deflate
 		};
 
 	private:
@@ -74,6 +85,11 @@ namespace xamarin::android {
 		// was interesting/useful), then the APK file descriptor is closed. Otherwise, the descriptor is
 		// kept open since we will need it later on.
 		static void scan_archive (std::string_view const& apk_path, ScanCallbackFn entry_cb) noexcept;
+
+		// EXPERIMENT (assemblystore-mmap): locate a single ZIP entry by its exact name, without
+		// the `lib/{ABI}/` prefix filtering or the "must be stored uncompressed" requirement that
+		// `scan_archive` imposes. Returns `true` and fills `out` when the entry is found.
+		static bool find_entry (int apk_fd, std::string_view const& apk_path, std::string_view const& entry_name, zip_entry_info& out) noexcept;
 
 	private:
 		static std::tuple<const char*, uint32_t> get_assemblies_prefix_and_length () noexcept;

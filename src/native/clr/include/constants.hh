@@ -105,6 +105,11 @@ namespace xamarin::android {
 	public:
 		static constexpr std::string_view assembly_store_file_name { "libassembly-store.so" };
 
+		// EXPERIMENT (assemblystore-mmap): name of the raw assembly store when shipped as a
+		// plain, DEFLATE-compressed APK asset (not a native library) and of the copy the
+		// runtime extracts once into the app's files dir before mmap'ing it.
+		static constexpr std::string_view assembly_store_asset_file_name { "libassembly-store.assemblystore" };
+
 		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
 		static constexpr std::string_view base_apk_name = { "/base.apk" };
 

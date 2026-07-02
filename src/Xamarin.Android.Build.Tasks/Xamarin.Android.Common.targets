@@ -2224,6 +2224,7 @@ because xbuild doesn't support framework reference assemblies.
       SupportedAbis="@(_BuildTargetAbis)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)">
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
+    <Output TaskParameter="R2RCompositeAssemblies" ItemName="_BuildApkR2RCompositeAssemblies" />
   </CreateAssemblyStore>
 
   <WrapAssembliesAsSharedLibraries
@@ -2232,6 +2233,7 @@ because xbuild doesn't support framework reference assemblies.
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
+      R2RCompositeAssemblies="@(_BuildApkR2RCompositeAssemblies)"
       SupportedAbis="@(_BuildTargetAbis)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">

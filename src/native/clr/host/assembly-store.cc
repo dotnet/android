@@ -1,11 +1,23 @@
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
 #include <string>
+#include <vector>
 
 #if defined (HAVE_LZ4)
 #include <lz4.h>
 #endif
 
+#include <zlib.h>
+
 #include <xamarin-app.hh>
+#include <constants.hh>
 #include <host/assembly-store.hh>
+#include <startup/zip.hh>
 #include <runtime-base/util.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
@@ -149,32 +161,28 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	} else
 #endif // def HAVE_LZ4 && def RELEASE
 	{
-		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store"sv, name);
-
-		// HACK! START
-		// Currently, MAUI crashes when we return a pointer to read-only data, so we must copy
-		// the assembly data to a read-write area.
-		log_debug (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area"sv);
+		// EXPERIMENT (assemblystore-mmap zero-copy): the assembly is stored uncompressed in a store
+		// mmap'd MAP_PRIVATE, PROT_READ|PROT_WRITE. Hand CoreCLR a pointer straight into the mapping
+		// with no decompression and no memcpy: in-place writes to the PE image fault in copy-on-write
+		// pages (only the touched ones), everything else stays demand-paged and shared with the file's
+		// page cache. Requires the store to page-align each assembly (see AssemblyStoreGenerator) so
+		// one image's writes cannot corrupt a neighbour sharing a page.
+		log_debug (LOG_ASSEMBLY, "assemblystore-mmap: zero-copy mapping assembly '{}' ({} bytes)"sv, name, e.descriptor->data_size);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::AssemblyLoad);
 		}
 
-		uint8_t *rw_pointer = static_cast<uint8_t*>(malloc (e.descriptor->data_size));
-		memcpy (rw_pointer, e.image_data, e.descriptor->data_size);
+		set_assembly_data_and_size (e.image_data, e.descriptor->data_size, assembly_data, assembly_data_size);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.end_event (true /* uses more info */);
 
 			dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
 			msg.append (name);
-			msg.append (" (memcpy to r/w area, part of assembly load time)"sv);
+			msg.append (" (zero-copy mmap COW pointer)"sv);
 			internal_timing.add_more_info (msg);
 		}
-
-		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);
-		// HACK! END
-		// 	set_assembly_data_and_size (e.image_data, e.descriptor->data_size, assembly_data, assembly_data_size);
 	}
 
 	return {assembly_data, assembly_data_size};
@@ -192,9 +200,39 @@ auto AssemblyStore::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 	return nullptr;
 }
 
+void AssemblyStore::register_extra_assembly (std::string_view const& name, int fd, std::string_view const& apk_path, uint32_t offset, uint32_t size) noexcept
+{
+	detail::mmap_info map = Util::mmap_file (fd, offset, size, apk_path);
+	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (map, apk_path);
+
+	// CoreCLR needs a writable image (see the get_assembly_data HACK), so copy the payload into a
+	// read-write buffer that lives for the process lifetime.
+	uint8_t *rw = static_cast<uint8_t*>(malloc (payload_size));
+	memcpy (rw, payload_start, payload_size);
+
+	hash_t name_hash = xxhash::hash (name.data (), name.length ());
+	extra_assemblies.push_back (ExtraAssembly { name_hash, rw, static_cast<uint32_t>(payload_size) });
+
+	log_debug (
+		LOG_ASSEMBLY,
+		"assemblystore-mmap: registered extra assembly '{}' (hash 0x{:x}, {} bytes) from '{}'"sv,
+		name, name_hash, payload_size, apk_path
+	);
+}
+
 auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
 	hash_t name_hash = xxhash::hash (name.data (), name.length ());
+
+	// EXPERIMENT (assemblystore-mmap hybrid): out-of-store assemblies (R2R composites) live in
+	// per-ABI lib/<abi>/*.so entries instead of the shared store; serve them here.
+	for (ExtraAssembly const& extra : extra_assemblies) {
+		if (extra.name_hash == name_hash) {
+			size = extra.size;
+			log_debug (LOG_ASSEMBLY, "assemblystore-mmap: serving extra assembly '{}' ({} bytes)"sv, name, extra.size);
+			return extra.data;
+		}
+	}
 
 	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.
@@ -259,9 +297,9 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	return assembly_data;
 }
 
-void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size) noexcept
+void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size, bool writable) noexcept
 {
-	detail::mmap_info assembly_store_map = Util::mmap_file (fd, offset, size, store_path);
+	detail::mmap_info assembly_store_map = Util::mmap_file (fd, offset, size, store_path, writable);
 
 	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (assembly_store_map, store_path);
 	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}"sv, payload_start, payload_size);
@@ -313,4 +351,156 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
 	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
+}
+
+// EXPERIMENT (assemblystore-mmap): the assembly store is shipped as a plain, DEFLATE-compressed
+// APK asset (`assemblies/<abi>/libassembly-store.assemblystore`) rather than a native library, so
+// that Google Play keeps it compressed for AAB delivery. It cannot be mmap'd straight from the APK
+// (compressed ZIP entries are not contiguous uncompressed bytes), so on the first launch we inflate
+// it once into the app's files dir and, on every launch, mmap that uncompressed on-disk copy with
+// no per-assembly decompression.
+bool AssemblyStore::try_extract_and_map (std::string_view const& apk_path, std::string_view const& override_dir) noexcept
+{
+	int apk_fd = open (apk_path.data (), O_RDONLY);
+	if (apk_fd < 0) {
+		log_warn (LOG_ASSEMBLY, "assemblystore-mmap: unable to open APK '{}': {}"sv, apk_path, std::strerror (errno));
+		return false;
+	}
+
+	std::string entry_name;
+	entry_name.append ("assets/"sv);
+	entry_name.append (Constants::assembly_store_asset_file_name);
+
+	Zip::zip_entry_info info {};
+	if (!Zip::find_entry (apk_fd, apk_path, entry_name, info)) {
+		close (apk_fd);
+		return false;
+	}
+
+	log_debug (
+		LOG_ASSEMBLY,
+		"assemblystore-mmap: found store asset '{}' (offset {}, {} compressed, {} uncompressed, method {})"sv,
+		entry_name, info.data_offset, info.compressed_size, info.uncompressed_size, info.compression_method
+	);
+
+	std::string dest;
+	dest.append (override_dir);
+	dest.append ("/"sv);
+	dest.append (Constants::assembly_store_asset_file_name);
+
+	// Extract once: reuse an already-extracted copy of the expected size.
+	struct stat st;
+	bool need_extract = !(stat (dest.c_str (), &st) == 0 && static_cast<uint32_t>(st.st_size) == info.uncompressed_size);
+
+	if (need_extract) {
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
+		}
+
+		// The override/files sub-directory may not exist yet; create it recursively.
+		{
+			std::string partial;
+			for (char c : dest) {
+				if (c == '/' && !partial.empty ()) {
+					mkdir (partial.c_str (), 0700); // best-effort; EEXIST is fine
+				}
+				partial += c;
+			}
+		}
+
+		std::vector<uint8_t> compressed (info.compressed_size);
+		size_t total = 0;
+		while (total < info.compressed_size) {
+			ssize_t n = pread (apk_fd, compressed.data () + total, info.compressed_size - total, static_cast<off_t>(info.data_offset + total));
+			if (n < 0) {
+				if (errno == EINTR) {
+					continue;
+				}
+				Helpers::abort_application (LOG_ASSEMBLY, std::format ("assemblystore-mmap: failed to read store data from APK: {}", std::strerror (errno)));
+			}
+			if (n == 0) {
+				break;
+			}
+			total += static_cast<size_t>(n);
+		}
+
+		std::string tmp = dest;
+		tmp.append (".tmp"sv);
+		int out_fd = open (tmp.c_str (), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+		if (out_fd < 0) {
+			Helpers::abort_application (LOG_ASSEMBLY, std::format ("assemblystore-mmap: unable to create '{}': {}", tmp, std::strerror (errno)));
+		}
+
+		auto write_all = [](int fd, const uint8_t *data, size_t len) -> bool {
+			size_t off = 0;
+			while (off < len) {
+				ssize_t w = write (fd, data + off, len - off);
+				if (w < 0) {
+					if (errno == EINTR) {
+						continue;
+					}
+					return false;
+				}
+				off += static_cast<size_t>(w);
+			}
+			return true;
+		};
+
+		bool ok = true;
+		if (info.compression_method == 0) {
+			ok = write_all (out_fd, compressed.data (), info.compressed_size);
+		} else {
+			z_stream zs {};
+			if (inflateInit2 (&zs, -MAX_WBITS) != Z_OK) {
+				Helpers::abort_application (LOG_ASSEMBLY, "assemblystore-mmap: inflateInit2 failed"sv);
+			}
+			zs.next_in = compressed.data ();
+			zs.avail_in = info.compressed_size;
+			std::vector<uint8_t> outbuf (256uz * 1024uz);
+			int ret;
+			do {
+				zs.next_out = outbuf.data ();
+				zs.avail_out = static_cast<uInt>(outbuf.size ());
+				ret = inflate (&zs, Z_NO_FLUSH);
+				if (ret != Z_OK && ret != Z_STREAM_END) {
+					inflateEnd (&zs);
+					Helpers::abort_application (LOG_ASSEMBLY, std::format ("assemblystore-mmap: inflate failed with code {}", ret));
+				}
+				size_t have = outbuf.size () - zs.avail_out;
+				if (!write_all (out_fd, outbuf.data (), have)) {
+					ok = false;
+					break;
+				}
+			} while (ret != Z_STREAM_END);
+			inflateEnd (&zs);
+		}
+
+		if (!ok) {
+			Helpers::abort_application (LOG_ASSEMBLY, std::format ("assemblystore-mmap: failed to write '{}': {}", tmp, std::strerror (errno)));
+		}
+
+		fsync (out_fd);
+		close (out_fd);
+		if (rename (tmp.c_str (), dest.c_str ()) != 0) {
+			Helpers::abort_application (LOG_ASSEMBLY, std::format ("assemblystore-mmap: failed to rename '{}' to '{}': {}", tmp, dest, std::strerror (errno)));
+		}
+
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing.end_event (true /* uses_more_info */);
+			internal_timing.add_more_info ("assemblystore-mmap extract"sv);
+		}
+		log_debug (LOG_ASSEMBLY, "assemblystore-mmap: extracted store to '{}' ({} bytes)"sv, dest, info.uncompressed_size);
+	} else {
+		log_debug (LOG_ASSEMBLY, "assemblystore-mmap: reusing extracted store '{}'"sv, dest);
+	}
+
+	close (apk_fd);
+
+	int store_fd = open (dest.c_str (), O_RDONLY);
+	if (store_fd < 0) {
+		Helpers::abort_application (LOG_ASSEMBLY, std::format ("assemblystore-mmap: unable to open extracted store '{}': {}", dest, std::strerror (errno)));
+	}
+	AssemblyStore::map (store_fd, dest, 0, info.uncompressed_size, /* writable */ true);
+	close (store_fd);
+	return true;
 }

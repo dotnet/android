@@ -195,7 +195,7 @@ namespace xamarin::android {
 			return page_size;
 		}
 
-		static detail::mmap_info mmap_file (int fd, uint32_t offset, size_t size, std::string_view const& filename) noexcept
+		static detail::mmap_info mmap_file (int fd, uint32_t offset, size_t size, std::string_view const& filename, bool writable = false) noexcept
 		{
 			detail::mmap_info file_info;
 			detail::mmap_info mmap_info;
@@ -205,7 +205,13 @@ namespace xamarin::android {
 			size_t offsetPage     = offset - offsetFromPage;
 			size_t offsetSize     = size + offsetFromPage;
 
-			mmap_info.area		  = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
+			// EXPERIMENT (assemblystore-mmap zero-copy): when `writable` is set we map the file
+			// MAP_PRIVATE with PROT_READ|PROT_WRITE so callers can hand the mapped bytes straight to
+			// a consumer that writes into them (e.g. CoreCLR patching a PE image in place). Writes
+			// are copy-on-write: only the touched pages are privately copied, untouched pages stay
+			// demand-paged and shared with the file's page cache, and the backing file is unchanged.
+			int prot = writable ? (PROT_READ | PROT_WRITE) : PROT_READ;
+			mmap_info.area		  = mmap (nullptr, offsetSize, prot, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
 			if (mmap_info.area == MAP_FAILED) {
 				Helpers::abort_application (
@@ -222,6 +228,15 @@ namespace xamarin::android {
 			mmap_info.size = offsetSize;
 			file_info.area = pointer_add (mmap_info.area, offsetFromPage);
 			file_info.size = size;
+
+			// EXPERIMENT (assemblystore-mmap zero-copy): when we intend to hand these bytes to CoreCLR
+			// directly (writable path), advise the kernel to read the whole region ahead sequentially.
+			// This turns the many small, random demand-fault reads that CoreCLR would otherwise trigger
+			// while loading assemblies into one efficient prefetch, which matters because startup ends
+			// up touching almost every page anyway.
+			if (writable) {
+				madvise (mmap_info.area, offsetSize, MADV_WILLNEED);
+			}
 
 			log_info (
 				LOG_ASSEMBLY,
@@ -250,16 +265,16 @@ namespace xamarin::android {
 			auto elf_bytes = static_cast<const uint8_t* const>(mapped_elf);
 			auto elf_header = reinterpret_cast<const Elf_Header*const>(mapped_elf);
 
-			if constexpr (Constants::is_debug_build) {
-				// In debug mode we might be dealing with plain data, without DSO wrapper
-				if (elf_header->e_ident[EI_MAG0] != ELFMAG0 ||
-					elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
-					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
-					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-						log_debug (LOG_ASSEMBLY, "Not an ELF image: {}", file_name);
-						// Not an ELF image, just return what we mmapped before
-						return { map_info.area, map_info.size };
-				}
+			// EXPERIMENT (assemblystore-mmap): the assembly store may be a raw (non-ELF) blob that
+			// was extracted from the APK rather than a DSO-wrapped native library, so always check
+			// the ELF magic and return the mapping as-is when it is not an ELF image.
+			if (elf_header->e_ident[EI_MAG0] != ELFMAG0 ||
+				elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
+				elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
+				elf_header->e_ident[EI_MAG3] != ELFMAG3) {
+					log_debug (LOG_ASSEMBLY, "Not an ELF image: {}", file_name);
+					// Not an ELF image, just return what we mmapped before
+					return { map_info.area, map_info.size };
 			}
 
 			auto section_header = reinterpret_cast<const Elf_SHeader*const>(elf_bytes + elf_header->e_shoff);

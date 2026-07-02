@@ -127,6 +127,20 @@ partial class AssemblyStoreGenerator
 
 		uint mappingIndex = 0;
 		foreach (AssemblyStoreAssemblyInfo info in infos) {
+			// EXPERIMENT (assemblystore-mmap zero-copy): page-align each assembly's data so the
+			// runtime can hand CoreCLR a direct pointer into a writable (MAP_PRIVATE COW) mapping of
+			// the store. Alignment guarantees (a) the PE image starts on a page boundary, and (b) no
+			// two assemblies (or the store metadata) share a page, so CoreCLR's in-place writes to one
+			// image cannot corrupt a neighbour via copy-on-write.
+			const ulong AssemblyAlignment = 16384;
+			if (!info.Ignored) {
+				ulong aligned = (curPos + (AssemblyAlignment - 1)) & ~(AssemblyAlignment - 1);
+				if (aligned != curPos) {
+					fs.Seek ((long)aligned, SeekOrigin.Begin);
+					curPos = aligned;
+				}
+			}
+
 			(AssemblyStoreEntryDescriptor desc, curPos) = MakeDescriptor (info, curPos);
 			if (info.Ignored) {
 				desc.mapping_index = 0;

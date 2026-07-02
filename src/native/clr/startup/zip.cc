@@ -77,6 +77,7 @@ bool Zip::zip_adjust_data_offset (int fd, zip_scan_state &state) noexcept
 bool Zip::zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, zip_scan_state &state) noexcept
 {
 	constexpr size_t CD_COMPRESSION_METHOD_OFFSET = 10uz;
+	constexpr size_t CD_COMPRESSED_SIZE_OFFSET    = 20uz;
 	constexpr size_t CD_UNCOMPRESSED_SIZE_OFFSET  = 24uz;
 	constexpr size_t CD_FILENAME_LENGTH_OFFSET	  = 28uz;
 	constexpr size_t CD_EXTRA_LENGTH_OFFSET		  = 30uz;
@@ -106,6 +107,12 @@ bool Zip::zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_st
 	index = state.buf_offset + CD_UNCOMPRESSED_SIZE_OFFSET;;
 	if (!zip_read_field (buf, index, state.file_size)) {
 		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'uncompressed size' field"sv);
+		return false;
+	}
+
+	index = state.buf_offset + CD_COMPRESSED_SIZE_OFFSET;
+	if (!zip_read_field (buf, index, state.compressed_size)) {
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory entry 'compressed size' field"sv);
 		return false;
 	}
 
@@ -418,6 +425,7 @@ bool Zip::zip_scan_entries (int apk_fd, std::string_view const& apk_path, ScanCa
 		.local_header_offset = 0u,
 		.data_offset		 = 0u,
 		.file_size			 = 0u,
+		.compressed_size	 = 0u,
 		.bundled_assemblies_slow_path = false,
 		.max_assembly_name_size = 0u,
 		.max_assembly_file_name_size = 0u,
@@ -454,6 +462,75 @@ bool Zip::zip_scan_entries (int apk_fd, std::string_view const& apk_path, ScanCa
 	}
 
 	return keep_archive_open;
+}
+
+bool Zip::find_entry (int apk_fd, std::string_view const& apk_path, std::string_view const& entry_name, zip_entry_info& out) noexcept
+{
+	uint32_t cd_offset;
+	uint32_t cd_size;
+	uint16_t cd_entries;
+
+	if (!zip_read_cd_info (apk_fd, cd_offset, cd_size, cd_entries)) {
+		log_error (LOG_ASSEMBLY, "Failed to read the EOCD record from APK file {}", apk_path);
+		return false;
+	}
+
+	if (::lseek (apk_fd, static_cast<off_t>(cd_offset), SEEK_SET) < 0) {
+		log_error (LOG_ASSEMBLY, "Failed to seek to central directory in APK {}: {}", apk_path, std::strerror (errno));
+		return false;
+	}
+
+	std::vector<uint8_t> buf (cd_size);
+	ssize_t nread;
+	do {
+		nread = read (apk_fd, buf.data (), buf.size ());
+	} while (nread < 0 && errno == EINTR);
+
+	if (static_cast<size_t>(nread) != cd_size) {
+		log_error (LOG_ASSEMBLY, "Failed to read Central Directory from APK {}: {}", apk_path, std::strerror (errno));
+		return false;
+	}
+
+	zip_scan_state state {
+		.file_fd			 = apk_fd,
+		.file_name			 = apk_path,
+		.prefix				 = "",
+		.prefix_len			 = 0u,
+		.buf_offset			 = 0uz,
+		.compression_method	 = 0u,
+		.local_header_offset = 0u,
+		.data_offset		 = 0u,
+		.file_size			 = 0u,
+		.compressed_size	 = 0u,
+		.bundled_assemblies_slow_path = false,
+		.max_assembly_name_size = 0u,
+		.max_assembly_file_name_size = 0u,
+	};
+
+	dynamic_local_string<SENSIBLE_PATH_MAX> cur_name;
+	for (size_t i = 0uz; i < cd_entries; i++) {
+		if (!zip_read_entry_info (buf, cur_name, state)) {
+			log_error (LOG_ASSEMBLY, "Failed to read Central Directory info for entry {} in APK {}", i, apk_path);
+			return false;
+		}
+
+		if (cur_name.length () != entry_name.length () || memcmp (cur_name.get (), entry_name.data (), entry_name.length ()) != 0) {
+			continue;
+		}
+
+		if (!zip_adjust_data_offset (apk_fd, state)) {
+			log_error (LOG_ASSEMBLY, "Failed to adjust data offset for entry {} in APK {}", i, apk_path);
+			return false;
+		}
+
+		out.data_offset        = state.data_offset;
+		out.compressed_size    = state.compressed_size;
+		out.uncompressed_size  = state.file_size;
+		out.compression_method = state.compression_method;
+		return true;
+	}
+
+	return false;
 }
 
 void Zip::scan_archive (std::string_view const& apk_path, ScanCallbackFn entry_cb) noexcept
