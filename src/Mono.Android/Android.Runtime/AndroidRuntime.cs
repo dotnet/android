@@ -390,17 +390,6 @@ namespace Android.Runtime {
 
 		delegate Delegate GetCallbackHandler ();
 
-		static MethodInfo? dynamic_callback_gen;
-
-		static Delegate CreateDynamicCallback (MethodInfo method)
-		{
-			// We're loading the Mono.Android.Export assembly dynamically to avoid problems with circular dependencies.
-			dynamic_callback_gen ??= Type.GetType ("Java.Interop.DynamicCallbackCodeGenerator, Mono.Android.Export")?.GetMethod ("Create")
-				?? throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-
-			return (Delegate?)dynamic_callback_gen.Invoke (null, [method])
-				?? throw new InvalidOperationException (FormattableString.Invariant ($"Unable to create dynamic callback for method '{method.Name}' on type '{method.DeclaringType?.FullName}'"));
-		}
 
 		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
 		// cached in static fields (unlike non-[Export] connector delegates). Without rooting them here,
@@ -541,15 +530,10 @@ namespace Android.Runtime {
 									break;
 								}
 							}
-							if (minfo == null)
-								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
+							
+							callback = minfo?.GetCustomAttribute<BaseExportAttribute> ()?.CreateDynamicCallback (minfo)
+								?? throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
 
-							// This check is for trimming purposes: if `ExportAttribute` is trimmed from the app, so should be `CreateDynamicCallback`
-							// and with it the implicit dependency on `Mono.Android.Export.dll`.
-							if (minfo.GetCustomAttribute<ExportAttribute> () is not ExportAttribute)
-								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{minfo.Name}' was not marked with [Export] attribute. Signature: {signature.ToString ()}"));
-
-							callback = CreateDynamicCallback (minfo);
 							lock (prevent_delegate_gc_lock) {
 								prevent_delegate_gc.Add (callback);
 							}
