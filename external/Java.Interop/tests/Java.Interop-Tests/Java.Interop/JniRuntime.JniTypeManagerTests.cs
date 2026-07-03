@@ -10,6 +10,7 @@ namespace Java.InteropTests {
 	public class JniRuntimeJniTypeManagerTests : JavaVMFixture {
 
 		[Test]
+		[Category ("TrimmableTypeMapUnsupported")]
 		[RequiresDynamicCode ("This test uses ReflectionJniTypeManager, which is reflection-based and not NativeAOT-compatible.")]
 		[RequiresUnreferencedCode ("This test uses ReflectionJniTypeManager, which is reflection-based and not trimming-compatible.")]
 		public void GetInvokerType ()
