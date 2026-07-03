@@ -37,7 +37,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///         // or: null;                                                // no activation
 ///         // or: throw new NotSupportedException(...);                // open generic
 ///
-///     // JniName / TargetType / InvokerType are supplied by the base JavaPeerProxy constructor.
+///     // JniName / TargetType are supplied by the base JavaPeerProxy constructor.
 ///
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
@@ -731,22 +731,20 @@ sealed class TypeMapAssemblyEmitter
 		if (useNonGenericBase) {
 			proxyBaseType = _javaPeerProxyNonGenericRef;
 			baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 					rt => rt.Void (),
 					p => {
 						p.AddParameter ().Type ().String ();
-						p.AddParameter ().Type ().Type (_systemTypeRef, false);
 						p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					}));
 		} else {
 			var genericProxyBase = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
 			proxyBaseType = genericProxyBase;
 			baseCtorRef = _pe.AddMemberRef (genericProxyBase, ".ctor",
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
 					rt => rt.Void (),
 					p => {
 						p.AddParameter ().Type ().String ();
-						p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					}));
 		}
 
@@ -762,8 +760,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor — pass the resolved JNI name, (for generic-definition base) target type, and
-		// optional invoker type to the base proxy constructor.
+		// .ctor — pass the resolved JNI name and (for generic-definition base) target type
+		// to the base proxy constructor.
 		var selfAttrCtorDef = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
@@ -771,18 +769,12 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ldarg_0);
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
 				if (useNonGenericBase) {
-					// Non-generic base ctor signature: (string, Type, Type?). Push the
+					// Non-generic base ctor signature: (string, Type). Push the
 					// target type (open-generic definition or interface) as the second argument.
 					encoder.LoadToken (targetTypeRef);
 					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
 				}
-				if (proxy.InvokerType != null) {
-					encoder.LoadToken (_pe.ResolveTypeRef (proxy.InvokerType));
-					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				} else {
-					encoder.OpCode (ILOpCode.Ldnull);
-				}
-				encoder.Call (baseCtorRef, parameterCount: useNonGenericBase ? 3 : 2, isInstance: true);
+				encoder.Call (baseCtorRef, parameterCount: useNonGenericBase ? 2 : 1, isInstance: true);
 				encoder.Return ();
 			});
 
