@@ -29,7 +29,7 @@ public class CompressAssemblies : AndroidTask
 	/// MSBuild property.
 	/// </summary>
 	[Required]
-	public int CompressionLevel { get; set; }
+	public int CompressionLevel { get; set; } = 3;
 
 	[Output]
 	public ITaskItem [] FailedToCompressAssembliesOutput { get; set; } = [];
