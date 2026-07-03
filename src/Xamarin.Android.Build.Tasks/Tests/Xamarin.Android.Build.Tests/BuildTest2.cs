@@ -1512,6 +1512,36 @@ namespace UnamedProject
 			}
 		}
 
+		[Test]
+		public void NativeAotKeepsRuntimeAcwJavaTypesUnderR8 ()
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				LinkTool = "r8",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+				FileAssert.Exists (dexFile);
+
+				// Regression test: the trimmable NativeAOT path generates its ACW keep rules from the
+				// ILC DGML into proguard_project_references.cfg. If that file is not passed to R8, R8
+				// tree-shakes the runtime ACW/JCW classes out of classes.dex and the app crashes at
+				// startup inside JavaInteropRuntime.init with a ClassNotFoundException for the
+				// UncaughtExceptionMarshaler Java Callable Wrapper. The JCW class name is CRC-hashed
+				// (e.g. `scrc64...UncaughtExceptionMarshaler`), so match on the type name suffix.
+				Assert.IsTrue (DexUtils.ContainsClass ("UncaughtExceptionMarshaler;", dexFile, AndroidSdkPath),
+					$"`{dexFile}` should include the UncaughtExceptionMarshaler ACW kept by the generated NativeAOT ProGuard rules.");
+			}
+		}
+
 		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
 			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
