@@ -82,6 +82,7 @@ stages:
     steps:
     - checkout: self
       path: s/android
+      submodules: recursive
       persistCredentials: false
 
     # Checkout a second repo to force multi-repo checkout behavior
@@ -113,6 +114,7 @@ stages:
     timeoutInMinutes: 240
     steps:
     - checkout: self
+      submodules: recursive
       persistCredentials: false
 
     - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml
@@ -140,6 +142,7 @@ stages:
     steps:
     - checkout: self
       path: s/android
+      submodules: recursive
       persistCredentials: false
 
     # Checkout a second repo to force multi-repo checkout behavior

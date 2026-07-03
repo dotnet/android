@@ -4,10 +4,6 @@
     Note: This file *must* be imported *after* `$(Configuration)` is set.
   -->
   <Import
-      Project="$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props"
-      Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.OperatingSystem.props') And '$(DoNotLoadOSProperties)' != 'True' "
-  />
-  <Import
       Project="$(MSBuildThisFileDirectory)external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props"
       Condition=" Exists('$(MSBuildThisFileDirectory)external\Java.Interop\bin\Build$(Configuration)\JdkInfo.props') And '$(DoNotLoadOSProperties)' != 'True' "
   />
@@ -69,7 +65,6 @@
     <MicrosoftAndroidSdkPackDir>$(MicrosoftAndroidPacksRootDir)$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)tools\</MicrosoftAndroidSdkOutDir>
     <MicrosoftAndroidSdkAnalysisOutDir>$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.$(AndroidLatestStableApiLevel)\$(AndroidPackVersion)\analyzers\dotnet\cs\</MicrosoftAndroidSdkAnalysisOutDir>
-    <MakeConcurrency Condition=" '$(MakeConcurrency)' == '' And '$(HostCpuCount)' != '' ">-j$(HostCpuCount)</MakeConcurrency>
     <HOME Condition=" '$(HOME)' == '' ">$(USERPROFILE)</HOME>
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
@@ -260,7 +255,7 @@
         AndroidRuntime="CoreCLR" />
   </ItemGroup>
 
-  <!-- These properties serve the purpose of not duplicating the strings between xaprepare and
+  <!-- These properties serve the purpose of not duplicating the strings used by
        package creation tools -->
   <PropertyGroup>
     <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>

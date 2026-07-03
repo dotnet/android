@@ -1,11 +1,7 @@
 .PHONY: leeroy jenkins leeroy-all
 
 jenkins:
-ifeq ($(PREPARE_CI_PR)$(PREPARE_CI),00)
-	$(MAKE) PREPARE_ARGS=-a prepare
-else
 	$(MAKE) prepare
-endif
 	$(MAKE) leeroy
 
 leeroy:

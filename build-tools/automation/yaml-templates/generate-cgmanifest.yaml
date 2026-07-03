@@ -1,8 +1,7 @@
 # Generates bin/Build$(Configuration)/cgmanifest.json from the repository's
 # git submodules. The file is consumed by the Azure DevOps Component
 # Governance Detection task (auto-injected on internal pipelines by
-# eng/common/core-templates/job/job.yml). This replaces the previous
-# xaprepare Step_GenerateCGManifest step.
+# eng/common/core-templates/job/job.yml).
 
 parameters:
   configuration: $(XA.Build.Configuration)

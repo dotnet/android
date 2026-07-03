@@ -3,7 +3,6 @@
 *.user
 bin
 Configuration.Override.props
-Configuration.OperatingSystem.props
 obj
 packages
 .DS_Store

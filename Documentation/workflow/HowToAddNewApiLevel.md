@@ -102,12 +102,12 @@ Next, keep this snippet for a preview API level in mind when reviewing the follo
   </remotePackage>
 ```
 
-### Add New Platform to `xaprepare`
+### Add New Platform to the SDK component list
 
 For the new API level, you need:
 
   * The API level value.  For previews, this is the `//remotePackage/type-details/codename` value; `CANARY`, in this case.
-  * The *base file name* of the `//url` value.  `xaprepare` automatically appends a `.zip` suffix.
+  * The *base file name* of the `//url` value.  The build automatically appends a `.zip` suffix.
 
 Then update the following files:
 
@@ -134,14 +134,16 @@ Then update the following files:
 
     TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
 
-  - Add new level to
-    [`/build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs`](../../build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs):
+  - Add a new `<_PlatformPackage>` entry to the platform catalog in
+    [`/src/androidsdk/androidsdk.targets`](../../src/androidsdk/androidsdk.targets):
 
-    ```csharp
-    new AndroidPlatformComponent ("platform-36.0-CANARY_r03",   apiLevel: "CANARY", pkgRevision: "3", isLatestStable: false, isPreview: true),
+    ```xml
+    <_PlatformPackage Include="platform-36.0-CANARY_r03"> <ApiLevel>CANARY</ApiLevel> <Hash>...</Hash></_PlatformPackage>
     ```
 
-    *Note*: the first argument is *base filename* of the package to download; `xaprepare` will automatically append `.zip`.
+    The `Include` value is the *base filename* of the package to download; the
+    build automatically appends `.zip`. Provide the package's SHA-256 hash in
+    the `<Hash>` metadata.
 
 At this point, you can run `Xamarin.Android.sln -t:Prepare` using your usual mechanism.
 However, it might not download the new platform into your local Android SDK.
@@ -155,11 +157,11 @@ in the next steps.
 
 ### Download the new API Levels
 
-If preparing the repo did not download the new API level, you may explicitly do so via
-`xaprepare --android-sdk-platforms=all`:
+If preparing the repo did not download the new API level, you may explicitly do so by
+building `src/androidsdk/androidsdk.csproj` with `AndroidSdkPlatforms=all`:
 
 ```dotnetcli
-./dotnet-local.sh run --project build-tools/xaprepare/xaprepare/xaprepare.csproj -- --android-sdk-platforms=all
+./dotnet-local.sh build src/androidsdk/androidsdk.csproj -p:AndroidSdkPlatforms=all
 ```
 
 ### Generate `params.txt` File
