@@ -494,13 +494,6 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Gets the invoker type for an interface or abstract class from the proxy attribute.
-	/// </summary>
-	internal Type? GetInvokerType (Type type)
-	{
-		return GetProxyForManagedType (type)?.InvokerType;
-	}
-
 	/// <summary>
 	/// Gets the container factory for a type from its proxy attribute.
 	/// Used for AOT-safe array/collection/dictionary creation.
