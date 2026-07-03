@@ -73,14 +73,15 @@ namespace {
 		struct WriteRequest final
 		{
 			std::string                path;
-			// Private snapshot of the decompressed bytes, taken at enqueue time
-			// while the shared decompression buffer is still pristine. Owning a
-			// copy (rather than pointing into uncompressed_assemblies_data_buffer)
-			// avoids racing with the runtime, which may write into the image it
-			// receives once the decompress lock is released.
+			// The complete file image to persist: the decompressed bytes followed
+			// by the 8-byte token footer, laid out exactly as it lives on disk.
+			// This is a private snapshot taken at enqueue time while the shared
+			// decompression buffer is still pristine (owning a copy, rather than
+			// pointing into uncompressed_assemblies_data_buffer, avoids racing with
+			// the runtime, which may write into the image once the decompress lock
+			// is released).
 			std::unique_ptr<uint8_t[]> data;
 			size_t                     size;
-			uint64_t                   token;
 		};
 
 		std::mutex               state_lock;
@@ -95,6 +96,25 @@ namespace {
 		// uncompressed data (either the mmap'd cache file or the shared
 		// decompression buffer). Indexed by CompressedAssemblyHeader.descriptor_index.
 		uint8_t **tracking = nullptr;
+
+		// write(2) can write fewer bytes than requested or be interrupted by a
+		// signal (EINTR); loop until the whole buffer is written or an
+		// unrecoverable error occurs.
+		bool write_fully (int fd, const uint8_t *buf, size_t len) noexcept
+		{
+			size_t off = 0;
+			while (off < len) {
+				ssize_t n = write (fd, buf + off, len - off);
+				if (n < 0) {
+					if (errno == EINTR) {
+						continue;
+					}
+					return false;
+				}
+				off += static_cast<size_t>(n);
+			}
+			return true;
+		}
 
 		[[gnu::cold]]
 		void writer_loop () noexcept
@@ -116,25 +136,7 @@ namespace {
 					continue;
 				}
 
-				bool ok = true;
-				size_t off = 0;
-				while (off < req.size) {
-					ssize_t written = write (fd, req.data.get () + off, req.size - off);
-					if (written < 0) {
-						if (errno == EINTR) {
-							continue;
-						}
-						ok = false;
-						break;
-					}
-					off += static_cast<size_t>(written);
-				}
-
-				if (ok) {
-					ssize_t written = write (fd, &req.token, FOOTER_SIZE);
-					ok = (written == static_cast<ssize_t>(FOOTER_SIZE));
-				}
-
+				bool ok = write_fully (fd, req.data.get (), req.size);
 				if (ok) {
 					fsync (fd);
 				}
@@ -254,19 +256,21 @@ namespace {
 				return;
 			}
 
-			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[size]);
+			// Build the full on-disk image up front: [payload][8-byte token footer].
+			size_t total = size + FOOTER_SIZE;
+			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
 			if (snapshot == nullptr) {
 				// Out of memory: skip caching this assembly. Not fatal — the next
 				// launch simply decompresses it again.
 				return;
 			}
 			memcpy (snapshot.get (), data, size);
+			memcpy (snapshot.get () + size, &token, FOOTER_SIZE);
 
 			WriteRequest req {
-				.path  = build_path (name),
-				.data  = std::move (snapshot),
-				.size  = size,
-				.token = token,
+				.path = build_path (name),
+				.data = std::move (snapshot),
+				.size = total,
 			};
 
 			{
