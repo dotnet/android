@@ -71,6 +71,7 @@
     <ItemGroup>
       <_TrimmableNativeAotRuntimeIdentifiers Remove="@(_TrimmableNativeAotRuntimeIdentifiers)" />
       <_TrimmableNativeAotDgmlFiles Remove="@(_TrimmableNativeAotDgmlFiles)" />
+      <_TrimmableNativeAotCodegenDgmlFiles Remove="@(_TrimmableNativeAotCodegenDgmlFiles)" />
       <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifier)" Condition=" '$(RuntimeIdentifier)' != '' " />
       <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' != '' " />
       <!-- ILC writes each *.scan.dgml.xml into the per-RID inner build's NativeIntermediateOutputPath
@@ -87,6 +88,17 @@
           Condition=" Exists('$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml') " />
       <_TrimmableNativeAotDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml"
           Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' and Exists('$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml') " />
+      <!-- ILC only emits the scan graph (*.scan.dgml.xml) when its scanner phase runs (optimized/Release
+           builds). Unoptimized builds - e.g. Debug NativeAOT - emit only the codegen graph
+           (*.codegen.dgml.xml), which carries the same "Type metadata: [...]" nodes. Collect it at the same
+           two candidate locations and fall back to it only when no scan graph was found, so the ACW keep
+           rules are still generated (the codegen graph is larger, hence preferring the scan graph). -->
+      <_TrimmableNativeAotCodegenDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml"
+          Condition=" Exists('$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml') " />
+      <_TrimmableNativeAotCodegenDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).codegen.dgml.xml"
+          Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' and Exists('$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).codegen.dgml.xml') " />
+      <_TrimmableNativeAotDgmlFiles Include="@(_TrimmableNativeAotCodegenDgmlFiles)"
+          Condition=" '@(_TrimmableNativeAotDgmlFiles->Count())' == '0' " />
     </ItemGroup>
   </Target>
 
