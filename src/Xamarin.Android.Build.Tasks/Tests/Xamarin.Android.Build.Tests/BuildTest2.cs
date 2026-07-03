@@ -1451,9 +1451,19 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
-				FileAssert.Exists (proguardProjectPrimary);
-				Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					// On the trimmable NativeAOT path R8 consolidates the ACW keep rules into the per-RID
+					// proguard_project_references.cfg (see R8.UseTrimmableNativeAotProguardConfiguration);
+					// proguard_project_primary.cfg is intentionally left as just a comment.
+					var referencesFiles = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath), "proguard_project_references.cfg", SearchOption.AllDirectories);
+					Assert.IsNotEmpty (referencesFiles, "proguard_project_references.cfg should have been generated.");
+					Assert.IsTrue (referencesFiles.Any (f => StringAssertEx.ContainsText (File.ReadAllLines (f), $"-keep class {proj.JavaPackageName}.MainActivity")),
+						$"`{proj.JavaPackageName}.MainActivity` should exist in a `proguard_project_references.cfg`!");
+				} else {
+					var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
+					FileAssert.Exists (proguardProjectPrimary);
+					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
+				}
 
 				var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
 				FileAssert.Exists (aapt_rules);
