@@ -17,6 +17,13 @@
       <_MaxJdk Condition=" '$(_MaxJdk)' == '' ">$(JI_MAX_JDK)</_MaxJdk>
       <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME_17_X64)' != '' And Exists($(JAVA_HOME_17_X64)) ">$(JAVA_HOME_17_X64)</JdksRoot>
       <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME_11_X64)' != '' And Exists($(JAVA_HOME_11_X64)) ">$(JAVA_HOME_11_X64)</JdksRoot>
+      <!--
+        Fall back to $JAVA_HOME. The JAVA_HOME_*_X64 env vars are set by
+        Azure Pipelines on x64 hosted images only, so on arm64 macOS/Linux
+        agents JdksRoot would otherwise remain empty and JdkInfo would pick
+        the newest system JDK - which may be too new for our Gradle version.
+      -->
+      <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME)' != '' And Exists('$(JAVA_HOME)') ">$(JAVA_HOME)</JdksRoot>
     </PropertyGroup>
     <JdkInfo
         JdksRoot="$(JdksRoot)"
