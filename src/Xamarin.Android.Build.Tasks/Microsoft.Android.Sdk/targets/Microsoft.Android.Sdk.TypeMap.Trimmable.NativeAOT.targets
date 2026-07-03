@@ -73,10 +73,13 @@
       <_TrimmableNativeAotDgmlFiles Remove="@(_TrimmableNativeAotDgmlFiles)" />
       <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifier)" Condition=" '$(RuntimeIdentifier)' != '' " />
       <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' != '' " />
-      <!-- RuntimeIdentifier, RuntimeIdentifiers, and no-RID publishes place ILC DGML under different intermediate paths. -->
+      <!-- _ResolveAssemblies always dispatches a per-RID inner build with AppendRuntimeIdentifierToOutputPath=true,
+           so ILC writes each DGML under the RID-nested '$(IntermediateOutputPath)<rid>/native/', for both a single
+           explicit RuntimeIdentifier and a RuntimeIdentifiers list. This target runs in the outer build, whose own
+           '$(NativeIntermediateOutputPath)' has no RID segment, so we must reconstruct the RID-nested path here.
+           The one remaining flat fallback is the (defensive) no-RID case, where ILC runs in the outer build. -->
       <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' == '' " />
-      <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' != '' " />
-      <_TrimmableNativeAotDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml" Condition=" '$(RuntimeIdentifier)' == '' and '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' " />
+      <_TrimmableNativeAotDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml" Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' " />
     </ItemGroup>
   </Target>
 
