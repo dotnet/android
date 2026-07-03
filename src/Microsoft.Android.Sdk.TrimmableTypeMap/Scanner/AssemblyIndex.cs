@@ -164,6 +164,7 @@ sealed class AssemblyIndex : IDisposable
 		// with the wrong AttributeName.
 		List<IntentFilterInfo>? intentFilters = null;
 		List<MetaDataInfo>? metaData = null;
+		Dictionary<string, object?>? layoutProperties = null;
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
@@ -214,6 +215,8 @@ sealed class AssemblyIndex : IDisposable
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
 				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
+			} else if (attrName == "LayoutAttribute") {
+				layoutProperties = ParseLayoutAttribute (ca);
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
 				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
 				var name = TryGetNameProperty (ca);
@@ -231,6 +234,9 @@ sealed class AssemblyIndex : IDisposable
 			}
 			if (metaData is not null) {
 				attrInfo.MetaData.AddRange (metaData);
+			}
+			if (layoutProperties is not null) {
+				attrInfo.LayoutProperties = layoutProperties;
 			}
 		}
 
@@ -423,6 +429,18 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		return null;
+	}
+
+	Dictionary<string, object?> ParseLayoutAttribute (CustomAttribute ca)
+	{
+		var value = DecodeAttribute (ca);
+		var properties = new Dictionary<string, object?> (StringComparer.Ordinal);
+		foreach (var named in value.NamedArguments) {
+			if (named.Name is not null) {
+				properties [named.Name] = named.Value;
+			}
+		}
+		return properties;
 	}
 
 	IntentFilterInfo ParseIntentFilterAttribute (CustomAttribute ca)
@@ -712,6 +730,12 @@ class TypeAttributeInfo (string attributeName)
 	/// Metadata entries declared on this type via [MetaData] attributes.
 	/// </summary>
 	public List<MetaDataInfo> MetaData { get; } = [];
+
+	/// <summary>
+	/// Named property values from a [Layout] attribute on this type, or null if none.
+	/// Maps to the &lt;layout&gt; child element of the component in the manifest.
+	/// </summary>
+	public Dictionary<string, object?>? LayoutProperties { get; set; }
 }
 
 sealed class ApplicationAttributeInfo () : TypeAttributeInfo ("ApplicationAttribute")
