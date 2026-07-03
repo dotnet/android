@@ -518,7 +518,11 @@ class ManifestGenerator
 				var eqIndex = entry.IndexOf ('=');
 				if (eqIndex > 0) {
 					var key = entry.Substring (0, eqIndex).Trim ();
-					var value = entry.Substring (eqIndex + 1).Trim ();
+					// Normalize '\' to the platform directory separator to match the legacy pipeline,
+					// where the substituted manifest is re-encoded by aapt2 (which rewrites backslashes
+					// to '/' on Unix). The trimmable generator writes the merged manifest directly, so we
+					// apply the same normalization here to keep placeholder values byte-for-byte identical.
+					var value = entry.Substring (eqIndex + 1).Trim ().Replace ('\\', Path.DirectorySeparatorChar);
 					replacements ["${" + key + "}"] = value;
 				} else if (eqIndex < 0) {
 					// An entry without '=' is not a valid key=value pair. Mirror the legacy
