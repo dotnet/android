@@ -44,13 +44,10 @@ namespace Java.Interop
 	{
 		protected JavaPeerProxy (
 			string jniName,
-			Type targetType,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type? invokerType)
+			Type targetType)
 		{
 			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
 			TargetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
-			InvokerType = invokerType;
 		}
 
 		/// <summary>
@@ -71,13 +68,6 @@ namespace Java.Interop
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
 		public Type TargetType { get; }
-
-		/// <summary>
-		/// Gets the invoker type for interfaces and abstract classes.
-		/// Returns null for concrete types that can be directly instantiated.
-		/// </summary>
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		public Type? InvokerType { get; }
 
 		/// <summary>
 		/// Gets a factory for creating containers (arrays, collections) of the target type.
@@ -148,9 +138,7 @@ namespace Java.Interop
 	> : JavaPeerProxy where T : class, IJavaPeerable
 	{
 		protected JavaPeerProxy (
-			string jniName,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type? invokerType) : base (jniName, typeof (T), invokerType)
+			string jniName) : base (jniName, typeof (T))
 		{
 		}
 

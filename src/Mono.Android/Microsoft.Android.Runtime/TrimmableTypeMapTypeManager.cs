@@ -96,12 +96,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.ReflectionJniTypeManager
 
 	protected override Type? GetInvokerTypeCore (Type type)
 	{
-		var invokerType = TrimmableTypeMap.Instance.GetInvokerType (type);
-		if (invokerType != null) {
-			return invokerType;
-		}
-
-		return base.GetInvokerTypeCore (type);
+		throw new NotSupportedException (
+			$"GetInvokerTypeCore should not be called in the trimmable typemap path. " +
+			$"Peers for '{type.FullName}' are activated through the generated {nameof (JavaPeerProxy)}.CreateInstance, " +
+			$"so invoker types are never used.");
 	}
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
