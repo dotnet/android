@@ -116,6 +116,33 @@ namespace {
 			return true;
 		}
 
+		// Persists one request to disk: write to a temp file, fsync, then
+		// atomically rename it into place. A half-written temp file never becomes
+		// visible under the final name, and on any failure the temp is removed.
+		void write_cache_file (WriteRequest const& req) noexcept
+		{
+			std::string tmp_path = req.path;
+			tmp_path.append (".tmp"sv);
+
+			int fd = open (tmp_path.c_str (), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+			if (fd < 0) {
+				return;
+			}
+
+			bool ok = write_fully (fd, req.data.get (), req.size);
+			if (ok) {
+				fsync (fd);
+			}
+			close (fd);
+
+			// Atomic publish: a half-written temp file never becomes visible
+			// under the final name.
+			if (!ok || rename (tmp_path.c_str (), req.path.c_str ()) != 0) {
+				unlink (tmp_path.c_str ());
+			}
+		}
+
+		// Single background thread: dequeues requests and persists them.
 		[[gnu::cold]]
 		void writer_loop () noexcept
 		{
@@ -128,25 +155,7 @@ namespace {
 					write_queue.pop_front ();
 				}
 
-				std::string tmp_path = req.path;
-				tmp_path.append (".tmp"sv);
-
-				int fd = open (tmp_path.c_str (), O_WRONLY | O_CREAT | O_TRUNC, 0600);
-				if (fd < 0) {
-					continue;
-				}
-
-				bool ok = write_fully (fd, req.data.get (), req.size);
-				if (ok) {
-					fsync (fd);
-				}
-				close (fd);
-
-				// Atomic publish: a half-written temp file never becomes visible
-				// under the final name.
-				if (!ok || rename (tmp_path.c_str (), req.path.c_str ()) != 0) {
-					unlink (tmp_path.c_str ());
-				}
+				write_cache_file (req);
 			}
 		}
 
