@@ -3,6 +3,7 @@
 #include <cstring>
 #include <condition_variable>
 #include <deque>
+#include <memory>
 #include <string>
 #include <thread>
 
@@ -71,10 +72,15 @@ namespace {
 
 		struct WriteRequest final
 		{
-			std::string    path;
-			const uint8_t *data; // stable pointer into uncompressed_assemblies_data_buffer
-			size_t         size;
-			uint64_t       token;
+			std::string                path;
+			// Private snapshot of the decompressed bytes, taken at enqueue time
+			// while the shared decompression buffer is still pristine. Owning a
+			// copy (rather than pointing into uncompressed_assemblies_data_buffer)
+			// avoids racing with the runtime, which may write into the image it
+			// receives once the decompress lock is released.
+			std::unique_ptr<uint8_t[]> data;
+			size_t                     size;
+			uint64_t                   token;
 		};
 
 		std::mutex               state_lock;
@@ -113,7 +119,7 @@ namespace {
 				bool ok = true;
 				size_t off = 0;
 				while (off < req.size) {
-					ssize_t written = write (fd, req.data + off, req.size - off);
+					ssize_t written = write (fd, req.data.get () + off, req.size - off);
 					if (written < 0) {
 						if (errno == EINTR) {
 							continue;
@@ -235,9 +241,12 @@ namespace {
 			return static_cast<uint8_t*>(mapped);
 		}
 
-		// Queues a freshly decompressed assembly to be persisted. The data
-		// pointer must remain valid and immutable for the process lifetime
-		// (it points into uncompressed_assemblies_data_buffer).
+		// Queues a freshly decompressed assembly to be persisted. Takes a private
+		// snapshot of the bytes up front: the caller holds assembly_decompress_mutex
+		// and has not yet handed the shared buffer to the runtime, so the data is
+		// still pristine here. Copying now (rather than letting the background
+		// thread read the shared buffer later) avoids racing with the runtime,
+		// which may write into the image once the lock is released.
 		// Must be called while holding assembly_decompress_mutex.
 		void enqueue_write (std::string_view name, const uint8_t *data, size_t size, uint64_t token) noexcept
 		{
@@ -245,9 +254,17 @@ namespace {
 				return;
 			}
 
+			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[size]);
+			if (snapshot == nullptr) {
+				// Out of memory: skip caching this assembly. Not fatal — the next
+				// launch simply decompresses it again.
+				return;
+			}
+			memcpy (snapshot.get (), data, size);
+
 			WriteRequest req {
 				.path  = build_path (name),
-				.data  = data,
+				.data  = std::move (snapshot),
 				.size  = size,
 				.token = token,
 			};
