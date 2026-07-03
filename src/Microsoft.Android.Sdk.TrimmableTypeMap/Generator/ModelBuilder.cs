@@ -145,7 +145,14 @@ static class ModelBuilder
 		if (!isAliasGroup) {
 			// Single peer — no aliases needed, emit directly with the base JNI name
 			var peer = peersForName [0];
-			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
+			// A concrete type that supplies its own Java peer ([JniTypeSignature(GenerateJavaPeer=false)]
+			// or an MCW binding without an activation ctor) is constructed managed-side via `new`, so its
+			// managed→Java JNI name must still be resolvable in order to instantiate the correct Java class.
+			// Such types have neither an activation ctor nor an invoker; without a proxy + association they
+			// fall back to the generic mono.android.runtime.JavaObject peer and throw ArrayStoreException
+			// when stored into a typed Java array (e.g. CrossReferenceBridge[]).
+			bool needsManagedToJavaName = peer.DoNotGenerateAcw && !peer.IsInterface && !peer.IsAbstract;
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null || needsManagedToJavaName;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
 
 			JavaPeerProxyData? proxy = null;
@@ -364,6 +371,8 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				CallbackParameterTypeNames = mm.NativeCallbackParameterTypeNames,
+				CallbackReturnTypeName = mm.NativeCallbackReturnTypeName,
 				ExportMethodDispatch = (mm.IsExport || mm.CallManagedMethodDirectly) ? new ExportMethodDispatchData {
 					ManagedMethodName = mm.ManagedMethodName,
 					ParameterTypes = mm.ManagedParameterTypes,

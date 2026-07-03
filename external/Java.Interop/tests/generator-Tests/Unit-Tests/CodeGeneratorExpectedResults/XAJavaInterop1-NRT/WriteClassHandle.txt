@@ -1,0 +1,7 @@
+	static readonly JniPeerMembers _members = new XAPeerMembers ("com/mypackage/foo", typeof (foo));
+	internal static IntPtr class_ref {
+		get {
+			return _members.JniPeerType.PeerReference.Handle;
+		}
+	}
+

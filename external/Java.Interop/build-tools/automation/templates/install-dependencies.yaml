@@ -1,0 +1,8 @@
+parameters:
+  condition: succeeded()
+
+steps:
+- task: UseDotNet@2
+  displayName: Use .NET $(DotNetCoreVersion)
+  inputs:
+    version: $(DotNetCoreVersion)

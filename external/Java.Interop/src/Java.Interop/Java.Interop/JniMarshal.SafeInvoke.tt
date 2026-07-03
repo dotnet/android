@@ -1,0 +1,63 @@
+<#@ template  language="C#" #>
+<#@ assembly  name="System.Core" #>
+<#@ import    namespace="System.Linq" #>
+#nullable enable
+
+using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Java.Interop {
+
+	[SuppressMessage (
+		"Design",
+		"CA1031:Do not catch general exception types",
+		Justification = "Exceptions cannot cross a JNI boundary.")]
+	public static partial class JniMarshal {
+<#
+	for (int i = 0; i <= 16; ++i) {
+		var types             = Enumerable.Range (0, i).Select (v => "T" + v).ToArray ();
+		var parameters        = Enumerable.Range (0, i).Select (v => "p" + v).ToArray ();
+		string typeParams     = i == 0 ? "" : "<" + string.Join (", ", types) + ">";
+		string funcTypeParams = "<" + string.Join (", ", types.Concat (new [] { "TResult" })) + ">";
+		string methodParams   = i == 0 ? "" : ", " + string.Join (", ", types.Zip (parameters, (t, p) => t + " " + p));
+		string delegateParams = i == 0 ? "" : ", " + string.Join (", ", types);
+		string invokeParams   = i == 0 ? "" : ", " + string.Join (", ", parameters);
+#>
+
+		[DebuggerDisableUserUnhandledExceptions]
+		public static unsafe void SafeInvokeAction<#= typeParams #> (IntPtr jnienv, IntPtr self<#= methodParams #>, delegate* managed<IntPtr, IntPtr<#= delegateParams #>, void> action)
+		{
+			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return;
+
+			try {
+				action (jnienv, self<#= invokeParams #>);
+			} catch (Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+			} finally {
+				JniEnvironment.EndMarshalMethod (ref __envp);
+			}
+		}
+
+		[return: MaybeNull]
+		[DebuggerDisableUserUnhandledExceptions]
+		public static unsafe TResult SafeInvokeFunc<#= funcTypeParams #> (IntPtr jnienv, IntPtr self<#= methodParams #>, delegate* managed<IntPtr, IntPtr<#= delegateParams #>, TResult> action)
+		{
+			if (!JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				return action (jnienv, self<#= invokeParams #>);
+			} catch (Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				JniEnvironment.EndMarshalMethod (ref __envp);
+			}
+		}
+<#
+	}
+#>
+	}
+}

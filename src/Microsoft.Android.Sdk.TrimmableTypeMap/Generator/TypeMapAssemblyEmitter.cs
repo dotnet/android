@@ -1205,14 +1205,38 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
-		// Callback member reference: uses MCW n_* types (sbyte for boolean)
+		// Callback member reference: mirror the real MCW n_* method's signature. JNI boolean and char
+		// are ambiguous (bool/sbyte, char/ushort) across generator versions, so when we could read the
+		// real n_* method's signature (NuGet binding implementation assemblies, e.g. AndroidX) we use it
+		// exactly. When we couldn't — framework callbacks, because the generator scans the compile-time
+		// *reference* assemblies (Microsoft.Android.Ref) which strip the private static n_* methods — we
+		// fall back to the blittable encoding (sbyte/ushort). That is correct for those callbacks because
+		// framework bindings are always produced by the current (post-#1296) generator.
+		var capturedParameterTypeNames = uco.CallbackParameterTypeNames;
+		var capturedReturnTypeName = uco.CallbackReturnTypeName;
+		bool hasCapturedCallbackSignature = capturedParameterTypeNames is not null &&
+			capturedReturnTypeName is not null && capturedParameterTypeNames.Count == jniParams.Count;
+
 		Action<BlobEncoder> encodeCallbackSig = sig => sig.MethodSignature ().Parameters (paramCount,
-			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind); },
+			rt => {
+				if (isVoid) {
+					rt.Void ();
+				} else if (hasCapturedCallbackSignature && capturedReturnTypeName is not null) {
+					JniSignatureHelper.EncodeClrTypeName (rt.Type (), capturedReturnTypeName);
+				} else {
+					JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind);
+				}
+			},
 			p => {
 				p.AddParameter ().Type ().IntPtr ();
 				p.AddParameter ().Type ().IntPtr ();
-				for (int j = 0; j < jniParams.Count; j++)
-					JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+				for (int j = 0; j < jniParams.Count; j++) {
+					if (hasCapturedCallbackSignature && capturedParameterTypeNames is not null) {
+						JniSignatureHelper.EncodeClrTypeName (p.AddParameter ().Type (), capturedParameterTypeNames [j]);
+					} else {
+						JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+					}
+				}
 			});
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);

@@ -1,0 +1,5 @@
+const string __id = "bar.()V";
+try {
+	_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
+} finally {
+}

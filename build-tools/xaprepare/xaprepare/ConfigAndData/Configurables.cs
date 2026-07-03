@@ -15,8 +15,6 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string MicrosoftOpenJDKVersion        = "21.0.8";
-
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
@@ -32,9 +30,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly char[] PropertyListSeparator            = new [] { ':' };
 
 			public static readonly string JdkFolder                        = "jdk-21";
-
-			public static readonly Version MicrosoftMinOpenJDKVersion      = new Version (17, 0);
-			public static readonly Version MicrosoftOpenJDKVersion         = new Version (Configurables.MicrosoftOpenJDKVersion);
 
 			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
@@ -107,11 +102,6 @@ namespace Xamarin.Android.Prepare
 			///   Default logging verbosity for the entire program. <see cref="Prepare.LoggingVerbosity" />
 			/// </summary>
 			public static readonly LoggingVerbosity LoggingVerbosity = LoggingVerbosity.Normal;
-
-			/// <summary>
-			///   Length to truncate the git commit hash to.
-			/// </summary>
-			public const uint AbbreviatedHashLength = 7;
 
 			/// <summary>
 			///   Default hash algorithm to compute file hashes

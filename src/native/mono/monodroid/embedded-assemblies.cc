@@ -15,10 +15,6 @@
 #include <dirent.h>
 #include <sys/types.h>
 
-#if defined (HAVE_LZ4)
-#include <lz4.h>
-#endif
-
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/class.h>
 #include <mono/metadata/image.h>
@@ -37,6 +33,7 @@
 #include "startup-aware-lock.hh"
 #include <runtime-base/timing-internal.hh>
 #include <runtime-base/search.hh>
+#include <runtime-base/zstd.hh>
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -82,7 +79,7 @@ EmbeddedAssemblies::set_assembly_data_and_size (uint8_t* source_assembly_data, u
 [[gnu::always_inline]] void
 EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
-#if defined (HAVE_LZ4) && defined (RELEASE)
+#if defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (compressed_assembly_count == 0) [[unlikely]] {
@@ -156,20 +153,20 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			}
 
 			const char *data_start = pointer_add<const char*>(data, sizeof(CompressedAssemblyHeader));
-			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(data_buffer), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
+			size_t ret = ZSTD_decompress (data_buffer, cad.uncompressed_file_size, data_start, assembly_data_size);
 
-			if (ret < 0) {
+			if (ZSTD_isError (ret)) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Decompression of assembly {} failed with code {}",
+						"Decompression of assembly {} failed: {}",
 						optional_string (name),
-						ret
+						ZSTD_getErrorName (ret)
 					)
 				);
 			}
 
-			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
+			if (ret != cad.uncompressed_file_size) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
@@ -185,7 +182,7 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 
 		set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
 	} else
-#endif // def HAVE_LZ4 && def RELEASE
+#endif // def RELEASE
 	{
 		set_assembly_data_and_size (data, data_size, assembly_data, assembly_data_size);
 	}

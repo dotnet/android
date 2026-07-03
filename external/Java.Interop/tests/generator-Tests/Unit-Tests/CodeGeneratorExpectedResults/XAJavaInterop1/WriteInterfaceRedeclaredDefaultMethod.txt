@@ -1,0 +1,93 @@
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface2']"
+[Register ("java/code/IMyInterface2", "", "java.code.IMyInterface2Invoker")]
+public partial interface IMyInterface2 : java.code.IMyInterface {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='DoSomething' and count(parameter)=0]"
+	[Register ("DoSomething", "()V", "GetDoSomethingHandler:java.code.IMyInterface2Invoker, MyAssembly")]
+	void DoSomething ();
+
+}
+
+[global::Android.Runtime.Register ("java/code/IMyInterface2", DoNotGenerateAcw=true)]
+internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInterface2 {
+	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface2", typeof (IMyInterface2Invoker));
+
+	static IntPtr java_class_ref {
+		get { return _members.JniPeerType.PeerReference.Handle; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	protected override IntPtr ThresholdClass {
+		get { return class_ref; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	protected override global::System.Type ThresholdType {
+		get { return _members.ManagedPeerType; }
+	}
+
+	IntPtr class_ref;
+
+	public static IMyInterface2 GetObject (IntPtr handle, JniHandleOwnership transfer)
+	{
+		return global::Java.Lang.Object.GetObject<IMyInterface2> (handle, transfer);
+	}
+
+	static IntPtr Validate (IntPtr handle)
+	{
+		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
+			throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'java.code.IMyInterface2'.");
+		return handle;
+	}
+
+	protected override void Dispose (bool disposing)
+	{
+		if (this.class_ref != IntPtr.Zero)
+			JNIEnv.DeleteGlobalRef (this.class_ref);
+		this.class_ref = IntPtr.Zero;
+		base.Dispose (disposing);
+	}
+
+	public IMyInterface2Invoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
+	{
+		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
+		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
+		JNIEnv.DeleteLocalRef (local_ref);
+	}
+
+	static Delegate cb_DoSomething_DoSomething_V;
+#pragma warning disable 0169
+	static Delegate GetDoSomethingHandler ()
+	{
+		return cb_DoSomething_DoSomething_V ??= new _JniMarshal_PP_V (n_DoSomething);
+	}
+
+	static void n_DoSomething (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_DoSomething);
+		}
+	}
+	private static void __n_DoSomething (IntPtr jnienv, IntPtr native__this)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface2> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		__this.DoSomething ();
+	}
+#pragma warning restore 0169
+
+	IntPtr id_DoSomething;
+	public unsafe void DoSomething ()
+	{
+		if (id_DoSomething == IntPtr.Zero)
+			id_DoSomething = JNIEnv.GetMethodID (class_ref, "DoSomething", "()V");
+		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_DoSomething);
+	}
+
+}

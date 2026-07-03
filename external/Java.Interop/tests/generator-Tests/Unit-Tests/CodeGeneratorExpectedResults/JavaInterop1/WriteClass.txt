@@ -1,0 +1,168 @@
+// Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
+[global::Java.Interop.JniTypeSignature ("java/code/MyClass", GenerateJavaPeer=false)]
+public partial class MyClass {
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
+
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+	{
+	}
+
+	// Metadata.xml XPath constructor reference: path="/api/package[@name='java.code']/class[@name='MyClass']/constructor[@name='MyClass' and count(parameter)=0]"
+	[global::Java.Interop.JniConstructorSignature ("()V")]
+	unsafe MyClass () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+	{
+		const string __id = "()V";
+
+		if (PeerReference.IsValid)
+			return;
+
+		try {
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
+		} finally {
+		}
+	}
+
+	// Metadata.xml XPath constructor reference: path="/api/package[@name='java.code']/class[@name='MyClass']/constructor[@name='MyClass' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+	[global::Java.Interop.JniConstructorSignature ("(Ljava/lang/String;)V")]
+	unsafe MyClass (string? p0) : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+	{
+		const string __id = "(Ljava/lang/String;)V";
+
+		if (PeerReference.IsValid)
+			return;
+
+		var native_p0 = global::Java.Interop.JniEnvironment.Strings.NewString (p0);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_p0);
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
+		} finally {
+			global::Java.Interop.JniObjectReference.Dispose (ref native_p0);
+		}
+	}
+
+	public virtual unsafe int Count {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_Count' and count(parameter)=0]"
+		get {
+			const string __id = "get_Count.()I";
+			try {
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Count' and count(parameter)=1 and parameter[1][@type='int']]"
+		set {
+			const string __id = "set_Count.(I)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			} finally {
+			}
+		}
+	}
+
+	public virtual unsafe string? Key {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_Key' and count(parameter)=0]"
+		get {
+			const string __id = "get_Key.()Ljava/lang/String;";
+			try {
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+		set {
+			const string __id = "set_Key.(Ljava/lang/String;)V";
+			var native_value = global::Java.Interop.JniEnvironment.Strings.NewString (value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			} finally {
+				global::Java.Interop.JniObjectReference.Dispose (ref native_value);
+			}
+		}
+	}
+
+	public static unsafe int StaticCount {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_StaticCount' and count(parameter)=0]"
+		get {
+			const string __id = "get_StaticCount.()I";
+			try {
+				var __rm = _members.StaticMethods.InvokeInt32Method (__id, null);
+				return __rm;
+			} finally {
+			}
+		}
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_StaticCount' and count(parameter)=1 and parameter[1][@type='int']]"
+		set {
+			const string __id = "set_StaticCount.(I)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.StaticMethods.InvokeVoidMethod (__id, __args);
+			} finally {
+			}
+		}
+	}
+
+	public abstract int AbstractCount {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='get_AbstractCount' and count(parameter)=0]"
+		[global::Java.Interop.JniMethodSignature ("get_AbstractCount", "()I")]
+		get; 
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniMethodSignature ("set_AbstractCount", "(I)V")]
+		set; 
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+	[global::Java.Interop.JniMethodSignature ("GetCountForKey", "(Ljava/lang/String;)I")]
+	public virtual unsafe int GetCountForKey (string? key)
+	{
+		const string __id = "GetCountForKey.(Ljava/lang/String;)I";
+		var native_key = global::Java.Interop.JniEnvironment.Strings.NewString (key);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_key);
+			var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+			return __rm;
+		} finally {
+			global::Java.Interop.JniObjectReference.Dispose (ref native_key);
+		}
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Key' and count(parameter)=0]"
+	[global::Java.Interop.JniMethodSignature ("Key", "()Ljava/lang/String;")]
+	public virtual unsafe string? Key ()
+	{
+		const string __id = "Key.()Ljava/lang/String;";
+		try {
+			var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return global::Java.Interop.JniEnvironment.Strings.ToString (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+		} finally {
+		}
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='StaticMethod' and count(parameter)=0]"
+	[global::Java.Interop.JniMethodSignature ("StaticMethod", "()V")]
+	public static unsafe void StaticMethod ()
+	{
+		const string __id = "StaticMethod.()V";
+		try {
+			_members.StaticMethods.InvokeVoidMethod (__id, null);
+		} finally {
+		}
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='AbstractMethod' and count(parameter)=0]"
+	public abstract void AbstractMethod ();
+
+}

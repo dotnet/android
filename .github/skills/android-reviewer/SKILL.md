@@ -3,7 +3,8 @@ name: android-reviewer
 description: >-
   Review dotnet/android PRs against established rules. Trigger on "review this PR",
   a GitHub PR URL, or code review requests. Checks MSBuild, nullable, async, security,
-  error handling, formatting, performance, native code.
+  error handling, formatting, performance, native code, JNI interop, generator codegen,
+  and trimmer/AOT compatibility.
 ---
 
 # Android PR Reviewer
@@ -15,7 +16,7 @@ Review PRs against guidelines distilled from past reviews by senior maintainers 
 Be polite but skeptical. Prioritize bugs, performance regressions, safety issues, and pattern violations over style nitpicks. **3 important comments > 15 nitpicks.**
 
 Flag severity clearly in every comment:
-- ❌ **error** — Must fix before merge. Bugs, security issues, missing error codes, broken incremental builds.
+- ❌ **error** — Must fix before merge. Bugs, security issues, missing error codes, broken incremental builds, JNI reference leaks, broken codegen.
 - ⚠️ **warning** — Should fix. Performance issues, missing validation, inconsistency with patterns.
 - 💡 **suggestion** — Consider changing. Style, readability, optional improvements.
 
@@ -71,7 +72,7 @@ Based on the file types identified in step 2, read the appropriate rule files fr
 - `references/csharp-rules.md` — When any `.cs` files changed. Covers nullable, async, error handling, performance, and code organization.
 - `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/`).
 - `references/native-rules.md` — When `.c`, `.cpp`, `.h`, or `.hpp` files changed. Covers memory management, C++ best practices, symbol visibility, and platform-specific code.
-- `references/interop-rules.md` — When both C# and native files changed, or when the diff contains P/Invoke or JNI interop code (e.g., `DllImport`, `[Register]` attribute changes, `JNIEnv` calls, `[MarshalAs]`, `[StructLayout]`, or marshal-related changes in files under `src/Mono.Android/` or `src/native/`).
+- `references/interop-rules.md` — When both C# and native files changed, when the diff contains P/Invoke or JNI interop code (e.g., `DllImport`, `[Register]` attribute changes, `JNIEnv` calls, `[MarshalAs]`, `[StructLayout]`, `JniObjectReference`, `JniPeerMembers`, `JniTransition`), or when files under `external/Java.Interop/`, `src/Mono.Android/`, or `src/native/` changed.
 - `references/testing-rules.md` — When test files changed (e.g., files under `tests/`, `**/Tests/`, or test project directories).
 - `references/security-rules.md` — When any code files changed (C#, C/C++, or MSBuild).
 
@@ -84,13 +85,14 @@ For each changed file, check against the review rules. Record issues as:
 ```
 
 **What to look for (in priority order):**
-1. **Bugs & correctness** — race conditions, null dereferences, off-by-one, logic errors
+1. **Bugs & correctness** — race conditions, null dereferences, off-by-one, logic errors, JNI reference leaks
 2. **Safety** — thread safety, resource leaks, security vulnerabilities
-3. **Performance** — O(n²) patterns, unnecessary allocations, missing caches
-4. **Missing tests** — untested error paths, edge cases, missing regression tests for bug fixes
-5. **Code duplication** — near-identical methods that should be consolidated
-6. **Consistency** — dedup patterns mixed within the same PR, API return types inconsistent with repo conventions
-7. **Documentation** — misleading comments, undocumented behavioral decisions
+3. **Performance** — O(n²) patterns, unnecessary allocations, missing caches, startup-time regressions
+4. **Trimmer/NativeAOT compatibility** — reflection without `[DynamicallyAccessedMembers]`, `Type.GetType()` misuse
+5. **Missing tests** — untested error paths, edge cases, missing regression tests for bug fixes
+6. **Code duplication** — near-identical methods that should be consolidated
+7. **Consistency** — dedup patterns mixed within the same PR, API return types inconsistent with repo conventions
+8. **Documentation** — misleading comments, undocumented behavioral decisions
 
 Constraints:
 - Only comment on added/modified lines in the diff — the API rejects out-of-range lines.
@@ -122,4 +124,4 @@ _{Rule: Brief name (Postmortem `#N`)}_
 
 Where `{severity}` is ❌, ⚠️, or 💡. Always wrap `#N` in backticks so GitHub doesn't auto-link to issues.
 
-**Categories:** MSBuild tasks · MSBuild targets · Nullable · Async pattern · Error handling · Resource management · Security · Formatting · Performance · Code organization · Patterns · Native memory · Native C++ · Symbol visibility · Platform-specific · Testing · YAGNI · API design · Documentation
+**Categories:** MSBuild tasks · MSBuild targets · Nullable · Async pattern · Error handling · Resource management · Security · Formatting · Performance · Code organization · Patterns · Naming · Native memory · Native C++ · Symbol visibility · Platform-specific · JNI interop · JNI references · Generator codegen · Trimmer/AOT · Testing · YAGNI · API design · Documentation
