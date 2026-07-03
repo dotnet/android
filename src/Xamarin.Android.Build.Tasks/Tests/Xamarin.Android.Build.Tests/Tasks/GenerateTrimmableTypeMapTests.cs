@@ -271,6 +271,7 @@ namespace Xamarin.Android.Build.Tests {
 				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
 				AcwMapFile = acwMapFile,
 				OutputFile = outputFile,
+				TrimJavaCallableWrappers = true,
 			};
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
@@ -280,6 +281,37 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
 			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
 			StringAssert.DoesNotContain ("other.Type", proguard);
+		}
+
+		[Test]
+		public void Execute_GenerateNativeAotProguardConfiguration_KeepsAllWhenTrimmingDisabled ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (acwMapFile, """
+				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
+				Android.App.Activity, Mono.Android;android.app.Activity
+				Duplicate.Type, My.Assembly;my.app.Duplicate
+				Other.Type;other.Type
+				""");
+
+			// No DGML is provided: with trimming disabled the task must keep every ACW from the map
+			// rather than shrinking to the DGML-retained subset.
+			var task = new GenerateNativeAotProguardConfiguration {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				AcwMapFile = acwMapFile,
+				OutputFile = outputFile,
+				TrimJavaCallableWrappers = false,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed without a DGML when trimming is disabled.");
+			var proguard = File.ReadAllText (outputFile);
+			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
+			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
+			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
+			StringAssert.Contains ("-keep class other.Type { *; }", proguard);
 		}
 
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,

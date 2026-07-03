@@ -5,12 +5,20 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
+    <!-- Controls DGML-based trimming of Java Callable Wrappers on the trimmable NativeAOT path.
+         When true, ILC emits a DGML dependency graph and _GenerateTrimmableTypeMapProguardConfiguration
+         turns it into R8 -keep rules so R8 can shrink the unused JCWs from classes.dex. Those DGML files
+         are very large (hundreds of MB) and dominate build time, so this defaults to false until ILC/illink
+         expose a leaner typemap dump: R8 still runs, but every JCW is kept (a few hundred kB of extra dex)
+         and the DGML is never generated. -->
+    <_AndroidTrimmableTypemapTrimJavaCode Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == '' ">false</_AndroidTrimmableTypemapTrimJavaCode>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">net.dot.jni.nativeaot.NativeAotRuntimeProvider</_TrimmableRuntimeProviderJavaName>
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
     <AndroidDexTool Condition=" '$(AndroidLinkTool)' == 'r8' ">d8</AndroidDexTool>
     <AndroidEnableProguard Condition=" '$(AndroidLinkTool)' != '' ">True</AndroidEnableProguard>
     <AndroidCreateProguardMappingFile Condition=" '$(AndroidCreateProguardMappingFile)' == '' and '$(AndroidLinkTool)' == 'r8' ">True</AndroidCreateProguardMappingFile>
-    <IlcGenerateDgmlFile Condition=" '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
+    <!-- Only ask ILC for the DGML when JCW trimming is enabled; it is only consumed to compute the keep rules. -->
+    <IlcGenerateDgmlFile Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' and '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
     <_UseTrimmableNativeAotProguardConfiguration Condition=" '$(_UseTrimmableNativeAotProguardConfiguration)' == '' ">true</_UseTrimmableNativeAotProguardConfiguration>
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateTrimmableTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
@@ -67,7 +75,7 @@
       DependsOnTargets="_GenerateTrimmableTypeMap" />
 
   <Target Name="_CollectTrimmableNativeAotDgmlFiles"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+      Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' and '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
       <_TrimmableNativeAotRuntimeIdentifiers Remove="@(_TrimmableNativeAotRuntimeIdentifiers)" />
       <_TrimmableNativeAotDgmlFiles Remove="@(_TrimmableNativeAotDgmlFiles)" />
@@ -110,6 +118,7 @@
     <GenerateNativeAotProguardConfiguration
         NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
         AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
+        TrimJavaCallableWrappers="$(_AndroidTrimmableTypemapTrimJavaCode)"
         OutputFile="$(_ProguardProjectConfiguration)" />
     <ItemGroup>
       <FileWrites Include="$(_ProguardProjectConfiguration)" />
