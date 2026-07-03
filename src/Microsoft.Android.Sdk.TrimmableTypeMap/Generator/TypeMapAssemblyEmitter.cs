@@ -760,7 +760,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor — pass the resolved JNI name and (for generic-definition base) target type
+		// .ctor — pass the resolved JNI name and (for proxies using the non-generic
+		// base, i.e. open generic definitions and interfaces) the target type
 		// to the base proxy constructor.
 		var selfAttrCtorDef = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,

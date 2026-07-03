@@ -494,7 +494,6 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// <summary>
 	/// Gets the container factory for a type from its proxy attribute.
 	/// Used for AOT-safe array/collection/dictionary creation.
 	/// </summary>
@@ -605,7 +604,7 @@ public class TrimmableTypeMap
 
 	sealed class MissingJavaPeerProxy : JavaPeerProxy
 	{
-		public MissingJavaPeerProxy () : base ("<missing>", typeof (Java.Lang.Object), null)
+		public MissingJavaPeerProxy () : base ("<missing>", typeof (Java.Lang.Object))
 		{
 		}
 
