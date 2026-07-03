@@ -36,6 +36,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
+		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
+			warnings?.Add ($"Invalid $(AndroidManifestPlaceholders) '{placeholders}'.");
 		public void LogUnresolvableJavaPeerSkippedWarning (
 			string managedTypeName,
 			string assemblyName,
