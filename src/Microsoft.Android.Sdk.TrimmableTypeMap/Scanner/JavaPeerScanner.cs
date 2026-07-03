@@ -274,6 +274,13 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
+	// Managed types that must never be emitted into the trimmable type map, keyed by
+	// (managed full name, assembly simple name). These are reflection-based ([RequiresUnreferencedCode])
+	// helpers that the trimmable runtime never activates via the type map; emitting proxies for them
+	// only produces IL2026 trim warnings.
+	static bool IsUnsupportedByTrimmableTypeMap (string managedFullName, string assemblyName) =>
+		managedFullName == "Java.Interop.ManagedPeer" && assemblyName == "Java.Interop";
+
 	void ScanAssembly (AssemblyIndex index, Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results)
 	{
 		foreach (var typeHandle in index.Reader.TypeDefinitions) {
@@ -285,6 +292,16 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
+
+			// Java.Interop.ManagedPeer is a reflection-based helper (marked
+			// [RequiresUnreferencedCode]) that is not supported by the trimmable type map: on the
+			// trimmable path native registration goes through IAndroidCallableWrapper.RegisterNatives
+			// and ManagedPeerNativeRegistration is disabled, so ManagedPeer is never activated via the
+			// type map. Emitting a proxy for it only produces IL2026 trim warnings (its constructors
+			// use reflection), so exclude it here.
+			if (IsUnsupportedByTrimmableTypeMap (fullName, index.AssemblyName)) {
+				continue;
+			}
 
 			// Temporarily allow [JniAddNativeMethodRegistrationAttribute] while we investigate
 			// which scenarios fail later in the trimmable typemap pipeline.
