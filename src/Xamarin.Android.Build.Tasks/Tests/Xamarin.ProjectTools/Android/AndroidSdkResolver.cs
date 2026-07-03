@@ -15,10 +15,8 @@ namespace Xamarin.ProjectTools
 
 		static string GetPathFromRegistry (string valueName)
 		{
-			if (TestEnvironment.IsWindows) {
-#pragma warning disable CA1416 // This call site is reachable on all platforms. 'Registry.GetValue(string, string?, object?)' is only supported on: 'windows'.
+			if (OperatingSystem.IsWindows ()) {
 				return (string) Microsoft.Win32.Registry.GetValue ("HKEY_CURRENT_USER\\SOFTWARE\\Novell\\Mono for Android", valueName, null);
-#pragma warning restore CA1416
 			}
 			return null;
 		}

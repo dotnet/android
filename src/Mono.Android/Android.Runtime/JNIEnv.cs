@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -723,8 +721,8 @@ namespace Android.Runtime {
 			}
 
 			if (array != IntPtr.Zero) {
-				string? type = GetClassNameFromInstance (array);
-				if (type == null || type.Length < 1 || type [0] != '[')
+				string type = GetClassNameFromInstance (array);
+				if (type.Length < 1 || type [0] != '[')
 					throw new InvalidOperationException ("Unsupported java array type: " + type);
 
 				switch (type [1]) {
