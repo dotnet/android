@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 
 namespace Java.Interop {
 
@@ -9,7 +10,7 @@ namespace Java.Interop {
 #if !JCW_ONLY_TYPE_NAMES
 	public
 #endif  // !JCW_ONLY_TYPE_NAMES
-	partial class ExportFieldAttribute : Attribute {
+	partial class ExportFieldAttribute : BaseExportAttribute {
 
 		public ExportFieldAttribute (string name)
 		{
@@ -17,7 +18,10 @@ namespace Java.Interop {
 		}
 
 		public string                 Name                    {get; set;}
+
+		internal override Delegate CreateDynamicCallback (MethodInfo method)
+		{
+			return CreateDynamicCallbackCore (method);
+		}
 	}
 }
-
-
