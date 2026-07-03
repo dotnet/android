@@ -315,7 +315,7 @@ namespace Android.Runtime {
 	}
 
 	[RequiresDynamicCode ("This type manager is reflection-backed and is not compatible with Native AOT.")]
-	[RequiresUnreferencedCode ("AndroidTypeManager is reflection-backed (it loads Mono.Android.Export for [Export] members) and is not trimming-compatible.")]
+	[RequiresUnreferencedCode ("This type manager is reflection-backed and is not trimming-compatible.")]
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
@@ -520,16 +520,19 @@ namespace Android.Runtime {
 							var mname = name.Slice (2);
 							MethodInfo? minfo = null;
 							typeMethods ??= type.GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-							foreach (var mi in typeMethods) {
+							foreach (var mi in typeMethods)
 								if (mname.SequenceEqual (mi.Name) && signature.SequenceEqual (JavaNativeTypeManager.GetJniSignature (mi))) {
 									minfo = mi;
 									break;
 								}
-							}
-							
-							callback = minfo?.GetCustomAttribute<BaseExportAttribute> ()?.CreateDynamicCallback (minfo)
-								?? throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
 
+							if (minfo == null)
+								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
+
+							var exportAttribute = minfo.GetCustomAttribute<BaseExportAttribute> ()
+								?? throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' does not have [Export] attribute. Signature: {signature.ToString ()}"));
+
+							callback = exportAttribute.CreateDynamicCallback (minfo);
 							lock (prevent_delegate_gc_lock) {
 								prevent_delegate_gc.Add (callback);
 							}
