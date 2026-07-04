@@ -80,12 +80,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Testing.Extensions.TrxReport.dll" TargetPath="tools" />
       <FilesToPackage Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Testing.Extensions.TrxReport.Abstractions.dll" TargetPath="tools" />
       <FilesToPackage Include="@(VersionFiles)" TargetPath="tools" />
-      <!-- Reference assembly for the NativeAOT runtime host. Shipped under tools/typemap-refs so the
-           trimmable typemap generator can scan its Java Callable Wrapper types (e.g.
-           UncaughtExceptionMarshaler) in the RID-independent outer build. It is a runtime-only
-           assembly with no counterpart in the Microsoft.Android.Ref targeting pack. See
-           Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets (_AddNativeAotRuntimeHostToTrimmableTypeMapInputs). -->
-      <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)ref\Microsoft.Android.Runtime.NativeAOT.dll" TargetPath="tools\typemap-refs" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Sdk.ILLink\PreserveLists\**" TargetPath="PreserveLists" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\PreserveLists\**" TargetPath="PreserveLists" />
