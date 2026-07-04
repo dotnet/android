@@ -68,6 +68,38 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_WithTrimmableTypeMap_KeepsNativeAotRuntimeHostAcws ()
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				LinkTool = "r8",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+
+			// Regression test: the NativeAOT runtime host assembly (Microsoft.Android.Runtime.NativeAOT) is
+			// resolved only in the per-RID inner build, so the RID-independent outer-build trimmable typemap
+			// generator never scanned it. Its only Java Callable Wrapper type, UncaughtExceptionMarshaler,
+			// therefore had no JCW and no typemap entry -> the runtime ACW is absent from classes.dex and the
+			// app crashes at startup in JavaInteropRuntime.init (setDefaultUncaughtExceptionHandler). A
+			// reference assembly for the host is now shipped in the SDK pack and fed to the generator. The JCW
+			// name is CRC-hashed (e.g. `scrc64...UncaughtExceptionMarshaler`), so match on the type name suffix.
+			Assert.IsTrue (DexUtils.ContainsClass ("UncaughtExceptionMarshaler;", dexFile, AndroidSdkPath),
+				$"`{dexFile}` should include the UncaughtExceptionMarshaler runtime ACW.");
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_DeletesStaleGeneratedJavaSourcesAndCopies ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
