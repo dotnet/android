@@ -604,10 +604,11 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				totalWarnings ??= codes.Length;
 
-				string warningSummaryLine = b.LastBuildOutput.LastOrDefault (line => line.Contains ("Warning(s)", StringComparison.Ordinal)) ?? "";
+				string [] buildOutput = b.LastBuildOutput.ToArray ();
+				string warningSummaryLine = buildOutput.LastOrDefault (line => line.Contains ("Warning(s)", StringComparison.Ordinal)) ?? "";
 				var actualWarnings = GetWarningCount (warningSummaryLine);
 
-				var allWarningLines = b.LastBuildOutput
+				var allWarningLines = buildOutput
 					.Where (line => line.Contains (": warning ", StringComparison.OrdinalIgnoreCase))
 					.Take (maxWarningLinesToShow)
 					.ToArray ();
@@ -619,7 +620,7 @@ namespace Xamarin.Android.Build.Tests
 				);
 				foreach (var code in codes) {
 					Assert.True (
-						StringAssertEx.ContainsText (b.LastBuildOutput, code),
+						StringAssertEx.ContainsText (buildOutput, code),
 						$"{b.BuildLogFile} should contain warning {code}. Summary line: '{warningSummaryLine}'. " +
 						$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
 					);
