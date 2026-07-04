@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Build.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
 using Xamarin.Android.Tools;
 
