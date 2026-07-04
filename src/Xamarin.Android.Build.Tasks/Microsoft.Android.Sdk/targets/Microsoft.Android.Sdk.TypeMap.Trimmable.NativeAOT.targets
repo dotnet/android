@@ -35,6 +35,13 @@
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(PrivateSdkAssemblies->'_%(Filename).TypeMap')" />
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(ReferencePath->'_%(Filename).TypeMap')"
           Condition=" '%(ReferencePath.FrameworkAssembly)' == 'true' " />
+      <!-- The NativeAOT runtime host (Microsoft.Android.Runtime.NativeAOT) is a framework/runtime
+           assembly with no @(ReferencePath) counterpart in the inner build, so its per-assembly
+           typemap DLL is not caught by the rules above. Classify it as framework so it stays an
+           IlcReference (ILC reads its conditional TypeMap attributes) but is removed from the
+           unmanaged-entrypoint roots, matching Mono.Android/Java.Interop. Its Java Callable Wrapper
+           native methods register via the runtime registerNatives path. -->
+      <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="_Microsoft.Android.Runtime.NativeAOT.TypeMap" />
       <!-- The root assembly (_Microsoft.Android.TypeMaps) only contains TypeMapLoader.Initialize()
             and assembly-level attributes — no types that need vtable generation.
             Framework per-assembly typemap DLLs must remain IlcReference inputs so ILC can read
@@ -73,6 +80,35 @@
       Condition=" '$(_OuterIntermediateOutputPath)' == '' "
       BeforeTargets="_ResolveAssemblies"
       DependsOnTargets="_GenerateTrimmableTypeMap" />
+
+  <!--
+    The trimmable typemap generator runs in the OUTER build over @(ReferencePath), which contains
+    only the compile closure (app + its references + the ref-pack framework assemblies). The NativeAOT
+    runtime host, Microsoft.Android.Runtime.NativeAOT, is a runtime-only assembly resolved solely in
+    the per-RID inner build (as a RID-specific runtime pack asset), so it is never in @(ReferencePath)
+    and its Java Callable Wrapper types (e.g. UncaughtExceptionMarshaler) would be missing from the
+    typemap and JCWs -> R8 has nothing to keep -> on-device startup crash in JavaInteropRuntime.init.
+
+    Its managed metadata is RID-independent (byte-identical across RIDs), so a single reference
+    assembly is shipped in this SDK pack under tools/typemap-refs (see
+    Microsoft.Android.Runtime.NativeAOT.csproj and build-tools/create-packs/Microsoft.Android.Sdk.proj).
+    It is intentionally not in the Microsoft.Android.Ref targeting pack, so it never becomes a universal
+    framework reference. Feed it to the generator as an extra framework input in the RID-independent
+    outer build; this target is the only place it enters the build.
+  -->
+  <Target Name="_AddNativeAotRuntimeHostToTrimmableTypeMapInputs"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' "
+      BeforeTargets="_GenerateTrimmableTypeMap">
+    <PropertyGroup>
+      <_NativeAotRuntimeHostRefAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\tools\typemap-refs\Microsoft.Android.Runtime.NativeAOT.dll'))</_NativeAotRuntimeHostRefAssembly>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidTrimmableTypeMapExtraFrameworkAssembly Include="$(_NativeAotRuntimeHostRefAssembly)"
+          Condition=" Exists('$(_NativeAotRuntimeHostRefAssembly)') " />
+    </ItemGroup>
+    <Warning Condition=" !Exists('$(_NativeAotRuntimeHostRefAssembly)') "
+        Text="The NativeAOT runtime host reference assembly was not found at '$(_NativeAotRuntimeHostRefAssembly)'; runtime Java Callable Wrappers (e.g. UncaughtExceptionMarshaler) may be missing from the typemap." />
+  </Target>
 
   <Target Name="_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' and '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">

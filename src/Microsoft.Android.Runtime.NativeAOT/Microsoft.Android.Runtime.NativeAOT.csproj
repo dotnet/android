@@ -14,6 +14,11 @@
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
     <RootNamespace>Microsoft.Android.Runtime</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Produce a reference assembly so the trimmable typemap generator can scan this
+         runtime-only host assembly (which has no other reference-assembly counterpart) for
+         its Java Callable Wrapper types (e.g. UncaughtExceptionMarshaler) in the RID-independent
+         outer build. See _CopyToPackDirs below and Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets. -->
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,6 +47,18 @@
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
         DestinationFolder="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_RuntimePackFiles.AndroidRuntime).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\lib\$(DotNetTargetFramework)"
+        SkipUnchangedFiles="true"
+    />
+    <!-- Copy the reference assembly into the local Microsoft.Android.Sdk pack so the trimmable
+         typemap generator can scan it during app builds (see
+         Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets). It is deliberately NOT placed
+         in the Microsoft.Android.Ref targeting pack: files under a targeting pack's ref/ folder must
+         all be classified in its FrameworkList and would become universal framework references for
+         every Android app. Shipping it in the SDK pack keeps it a build-time-only input for the
+         trimmable NativeAOT path. -->
+    <Copy
+        SourceFiles="$(OutputPath)ref\Microsoft.Android.Runtime.NativeAOT.dll"
+        DestinationFolder="$(MicrosoftAndroidSdkOutDir)typemap-refs"
         SkipUnchangedFiles="true"
     />
   </Target>
