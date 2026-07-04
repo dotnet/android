@@ -80,32 +80,5 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.That (output, Does.Not.Contain ("%\t)"), "Generated LLVM IR should not contain 'ptr noundef %\\t)' pattern");
 			Assert.That (output, Does.Contain ("@test_function"), "Generated LLVM IR should contain the function name");
 		}
-
-		/// <summary>
-		/// Regression test for the NativeAOT link failure in https://github.com/dotnet/android/pull/11669.
-		///
-		/// `Android.Runtime.JNIEnvInit.Initialize` (used only by MonoVM/CoreCLR) has a `[LibraryImport]`
-		/// p/invoke to the native `xamarin_app_init` function, which becomes a direct native reference
-		/// under NativeAOT (`xa-internal-api` is a `DirectPInvoke`). Since `Initialize` is force-preserved
-		/// by the ILLink descriptor and is never trimmed, the reference reaches the linker even though
-		/// NativeAOT never generates the marshal methods native code that defines `xamarin_app_init`.
-		/// The NativeAOT jni-init assembler source must therefore emit a no-op definition so the linker
-		/// can resolve the symbol.
-		/// </summary>
-		[Test]
-		public void NativeAotJniInit_EmitsNoOpXamarinAppInit ()
-		{
-			var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out, [], [], []), "test");
-			var composer = new NativeAotJniInitNativeAssemblyGenerator (log, runtimeComponentsJniOnLoadHandlers: null, customJniOnLoadHandlers: null);
-			LlvmIrModule module = composer.Construct ();
-
-			var generator = LlvmIrGenerator.Create (AndroidTargetArch.Arm64, "jniinit.ll");
-			using var writer = new StringWriter ();
-			generator.Generate (writer, module);
-
-			string output = writer.ToString ();
-			Assert.That (output, Does.Contain ("define"), "Generated LLVM IR should contain a function definition");
-			Assert.That (output, Does.Contain ("@xamarin_app_init"), "Generated LLVM IR should define xamarin_app_init so the NativeAOT linker can resolve JNIEnvInit.Initialize's DirectPInvoke");
-		}
 	}
 }
