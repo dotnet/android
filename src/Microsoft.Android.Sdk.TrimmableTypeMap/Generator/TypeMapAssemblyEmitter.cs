@@ -1636,12 +1636,14 @@ sealed class TypeMapAssemblyEmitter
 			return ExpandRankOneTypes (rankOneObjectTypes, proxy.Rank);
 		}
 
-		var rankOneTypes = new RuntimeTypeSpec [] {
+		List<RuntimeTypeSpec> rankOneTypes = [
 			AddSzArrayRank (elementType, 1),
 			new GenericRuntimeTypeSpec (_javaArrayOpenRef, elementType),
 			new GenericRuntimeTypeSpec (_javaPrimitiveArrayOpenRef, elementType),
-			new NamedRuntimeTypeSpec (proxy.Primitive.ConcreteArrayType),
-		};
+		];
+		foreach (var concreteArrayType in proxy.Primitive.ConcreteArrayTypes) {
+			rankOneTypes.Add (new NamedRuntimeTypeSpec (concreteArrayType));
+		}
 
 		return ExpandRankOneTypes (rankOneTypes, proxy.Rank);
 	}
