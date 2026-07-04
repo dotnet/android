@@ -219,6 +219,8 @@ namespace Java.InteropTests
 		static int NativeAdd (IntPtr jnienv, IntPtr self, int a, int b) => a + b;
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniNativeMethodRegistration[] registration path.")]
 		public unsafe void RegisterNativeMethods_JniNativeMethodRegistration ()
 		{
@@ -253,6 +255,8 @@ namespace Java.InteropTests
 		static int ManagedAdd (IntPtr jnienv, IntPtr self, int a, int b) => a + b;
 
 		[Test]
+		[Category ("NativeAOTIgnore")]
+		[Category ("TrimmableTypeMapUnsupported")]
 		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniNativeMethodRegistration[] registration path with many methods.")]
 		public unsafe void RegisterNativeMethods_JniNativeMethodRegistration_ManyMethods ()
 		{
