@@ -114,21 +114,22 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_AliasGroup_RegisterPeerSortsBeforeJniTypeSignaturePeer ()
+		public void Build_AliasGroup_MonoAndroidPeerSortsFirst ()
 		{
-			// The runtime's GetTypeForSimpleReference returns the first target type for a JNI name.
-			// For java/lang/Object, Java.Interop.JavaObject ([JniTypeSignature]) sorts alphabetically
-			// before Java.Lang.Object ([Register]); without the [Register]-first ordering the runtime
-			// would resolve java/lang/Object to JavaObject instead of the canonical Java.Lang.Object.
-			// Declare them in the "wrong" order to prove the sort reorders them.
+			// Mirror the native runtime's java→managed selection (clr_typemap_java_to_managed /
+			// monovm_typemap_java_to_managed): NativeTypeMappingData builds that map by processing the
+			// Mono.Android module first and keeping the first managed type to claim a Java name, so
+			// java/lang/Object resolves to Java.Lang.Object (Mono.Android), not Java.Interop.JavaObject
+			// (Java.Interop). GetTypeForSimpleReference returns alias index [0], so the Mono.Android peer
+			// must sort first. Declare them in the "wrong" order to prove the sort reorders them.
 			var peers = new List<JavaPeerInfo> {
-				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Mono.Android") with { IsFromJniTypeSignature = true },
+				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Java.Interop") with { IsFromJniTypeSignature = true },
 				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android"),
 			};
 
 			var model = BuildModel (peers, "MonoAndroid");
 
-			// The [Register] peer (Java.Lang.Object) must be alias index [0].
+			// The Mono.Android peer (Java.Lang.Object) must be alias index [0].
 			Assert.Equal ("java/lang/Object[0]", model.Entries [0].MapKey);
 			Assert.Contains ("Java.Lang.Object", model.Entries [0].ProxyTypeReference);
 			Assert.Equal ("java/lang/Object[1]", model.Entries [1].MapKey);
