@@ -114,6 +114,28 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_AliasGroup_RegisterPeerSortsBeforeJniTypeSignaturePeer ()
+		{
+			// The runtime's GetTypeForSimpleReference returns the first target type for a JNI name.
+			// For java/lang/Object, Java.Interop.JavaObject ([JniTypeSignature]) sorts alphabetically
+			// before Java.Lang.Object ([Register]); without the [Register]-first ordering the runtime
+			// would resolve java/lang/Object to JavaObject instead of the canonical Java.Lang.Object.
+			// Declare them in the "wrong" order to prove the sort reorders them.
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Mono.Android") with { IsFromJniTypeSignature = true },
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android"),
+			};
+
+			var model = BuildModel (peers, "MonoAndroid");
+
+			// The [Register] peer (Java.Lang.Object) must be alias index [0].
+			Assert.Equal ("java/lang/Object[0]", model.Entries [0].MapKey);
+			Assert.Contains ("Java.Lang.Object", model.Entries [0].ProxyTypeReference);
+			Assert.Equal ("java/lang/Object[1]", model.Entries [1].MapKey);
+			Assert.Contains ("Java.Interop.JavaObject", model.Entries [1].ProxyTypeReference);
+		}
+
+		[Fact]
 		public void Build_AliasWithMixedActivation_PrimaryNoActivation_AliasHasActivation ()
 		{
 			var peers = new List<JavaPeerInfo> {

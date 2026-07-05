@@ -102,9 +102,19 @@ static class ModelBuilder
 			string jniName = kvp.Key;
 			var peersForName = kvp.Value;
 
-			// Sort aliases by managed type name for deterministic proxy naming
+			// Order aliases so the canonical [Register] MCW binding comes first: the runtime's
+			// GetTypeForSimpleReference returns the first target type for a JNI name, and the legacy
+			// typemap resolves e.g. java/lang/Object to Java.Lang.Object (Mono.Android, [Register]),
+			// not Java.Interop.JavaObject ([JniTypeSignature]). [JniTypeSignature]-only peers
+			// (IsFromJniTypeSignature) therefore sort after [Register] peers; ties break by ordinal
+			// managed type name for deterministic proxy naming.
 			if (peersForName.Count > 1) {
-				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
+				peersForName.Sort ((a, b) => {
+					if (a.IsFromJniTypeSignature != b.IsFromJniTypeSignature) {
+						return a.IsFromJniTypeSignature ? 1 : -1;
+					}
+					return StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName);
+				});
 			}
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
