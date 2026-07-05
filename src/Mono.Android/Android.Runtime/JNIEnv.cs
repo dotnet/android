@@ -631,8 +631,8 @@ namespace Android.Runtime {
 				dest [i] = GetString (GetObjectArrayElement (src, i), JniHandleOwnership.TransferLocalRef)!;
 		}
 
-		static Dictionary<Type, NativeArrayElementToManagedConverter>? nativeArrayElementToManaged;
-		static Dictionary<Type, NativeArrayElementToManagedConverter> NativeArrayElementToManaged {
+		static Dictionary<Type, Func<Type?, IntPtr, int, object?>>? nativeArrayElementToManaged;
+		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> NativeArrayElementToManaged {
 			get {
 				if (nativeArrayElementToManaged != null)
 					return nativeArrayElementToManaged;
@@ -643,12 +643,9 @@ namespace Android.Runtime {
 			}
 		}
 
-		delegate object? NativeArrayElementToManagedConverter (
-			[DynamicallyAccessedMembers (Constructors)] Type? elementType, IntPtr array, int index);
-
-		static Dictionary<Type, NativeArrayElementToManagedConverter> CreateNativeArrayElementToManaged ()
+		static Dictionary<Type, Func<Type?, IntPtr, int, object?>> CreateNativeArrayElementToManaged ()
 		{
-			return new Dictionary<Type, NativeArrayElementToManagedConverter> () {
+			return new Dictionary<Type, Func<Type?, IntPtr, int, object?>> () {
 				{ typeof (bool), (type, source, index) => {
 					var r = new bool [1];
 					_GetBooleanArrayRegion (source, index, 1, r);
@@ -695,20 +692,23 @@ namespace Android.Runtime {
 						return new Java.Lang.String (elem, JniHandleOwnership.TransferLocalRef);
 					return GetString (elem, JniHandleOwnership.TransferLocalRef);
 				} },
-				{ typeof (IJavaObject), ConvertIJavaObject },
+				{ typeof (IJavaObject), (type, source, index) => {
+					AssertIsJavaObject (type);
+
+					IntPtr elem = GetObjectArrayElement (source, index);
+					return GetObject (elem, type);
+
+					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
+					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
+					static object? GetObject (IntPtr e, Type? t) =>
+						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
+				} },
 				{ typeof (Array), (type, source, index) => {
 					IntPtr  elem      = GetObjectArrayElement (source, index);
 					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type);
 				} },
 			};
-
-			static object? ConvertIJavaObject ([DynamicallyAccessedMembers (Constructors)] Type? elementType, IntPtr source, int index)
-			{
-				AssertIsJavaObject (elementType);
-
-				IntPtr elem = GetObjectArrayElement (source, index);
-				return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, elementType);
-			}
 		}
 
 		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type? elementType, IntPtr array)
@@ -802,8 +802,7 @@ namespace Android.Runtime {
 		}
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-		[RequiresUnreferencedCode ("The elementType parameter is used to determine the type of the elements in the destination array. This method can fail in trimming scenarios for multi-rank arrays.")]
-		public static void CopyArray (IntPtr src, Array dest, [DynamicallyAccessedMembers (Constructors)] Type? elementType = null)
+		public static void CopyArray (IntPtr src, Array dest, Type? elementType = null)
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		{
 			if (dest == null)
@@ -840,8 +839,7 @@ namespace Android.Runtime {
 				throw new NotSupportedException ("Don't know how to convert type '" + targetType.FullName + "' to an Android.Runtime.IJavaObject.");
 		}
 
-		[RequiresUnreferencedCode ("The elementType parameter is used to determine the type of the elements in the destination array. This method can fail in trimming scenarios for multi-rank arrays.")]
-		public static void CopyArray<[DynamicallyAccessedMembers (Constructors)] T> (IntPtr src, T[] dest)
+		public static void CopyArray<T> (IntPtr src, T[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
