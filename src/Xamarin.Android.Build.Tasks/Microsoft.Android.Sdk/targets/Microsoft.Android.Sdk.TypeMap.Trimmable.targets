@@ -436,4 +436,30 @@
       <FileWrites Include="@(_TypeMapAssemblySource)" />
     </ItemGroup>
   </Target>
+
+  <!--
+    Keep the resource designer assembly on the trimmable type map path.
+
+    The non-trimmable path (Microsoft.Android.Sdk.TypeMap.LlvmIr.targets) runs
+    PreTrimmingFixLegacyDesigner, which rewrites legacy resource field loads into designer
+    property-getter calls so the trimmer can drop unused designer members. The trimmable path
+    does not run that rewrite. More importantly, resource ids are resolved via reflection at
+    runtime (Android.Runtime.ResourceIdManager then ResourceDesignerAttribute then Type.GetType /
+    UpdateIdValues), which neither ILLink nor ILC can follow. If the designer assembly is left
+    trimmable it gets removed entirely, and accessing any resource id (e.g. from a reflection-only
+    code path) throws a TypeInitializationException wrapping
+    System.IO.FileNotFoundException: _Microsoft.Android.Resource.Designer at runtime.
+
+    Root the whole _Microsoft.Android.Resource.Designer assembly so it is kept. TrimmerRootAssembly
+    is honored by both ILLink (CoreCLR) and ILC (NativeAOT). Note that ILC's TrimMode-based rooting
+    reads @(_IlcManagedInputAssemblies), which _AndroidComputeIlcCompileInputs clears, so
+    TrimmerRootAssembly is the reliable mechanism here.
+  -->
+  <Target Name="_RootResourceDesignerForTrimmableTypeMap"
+      Condition=" '$(AndroidUseDesignerAssembly)' == 'True' and '$(PublishTrimmed)' == 'true' "
+      BeforeTargets="PrepareForILLink;WriteIlcRspFileForCompilation">
+    <ItemGroup>
+      <TrimmerRootAssembly Include="_Microsoft.Android.Resource.Designer" />
+    </ItemGroup>
+  </Target>
 </Project>
