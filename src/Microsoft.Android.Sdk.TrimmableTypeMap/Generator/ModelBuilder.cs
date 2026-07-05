@@ -102,9 +102,22 @@ static class ModelBuilder
 			string jniName = kvp.Key;
 			var peersForName = kvp.Value;
 
-			// Sort aliases by managed type name for deterministic proxy naming
+			// Order aliases to match the java→managed selection the native runtime performs (see
+			// clr_typemap_java_to_managed / monovm_typemap_java_to_managed and NativeTypeMappingData):
+			// the runtime builds its java→managed map by processing the Mono.Android module first and
+			// keeping the first managed type that claims a Java name (first-writer-wins). GetTypeForSimpleReference
+			// returns the first (index [0]) alias, so put the Mono.Android peer first — e.g. java/lang/Object
+			// must resolve to Java.Lang.Object (Mono.Android), not Java.Interop.JavaObject. Remaining peers are
+			// ordered by ordinal managed type name for deterministic proxy naming.
 			if (peersForName.Count > 1) {
-				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
+				peersForName.Sort ((a, b) => {
+					bool aMonoAndroid = string.Equals (a.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+					bool bMonoAndroid = string.Equals (b.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+					if (aMonoAndroid != bMonoAndroid) {
+						return aMonoAndroid ? -1 : 1;
+					}
+					return StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName);
+				});
 			}
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);

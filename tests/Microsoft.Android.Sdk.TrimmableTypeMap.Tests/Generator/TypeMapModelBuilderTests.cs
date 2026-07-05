@@ -114,6 +114,29 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_AliasGroup_MonoAndroidPeerSortsFirst ()
+		{
+			// Mirror the native runtime's java→managed selection (clr_typemap_java_to_managed /
+			// monovm_typemap_java_to_managed): NativeTypeMappingData builds that map by processing the
+			// Mono.Android module first and keeping the first managed type to claim a Java name, so
+			// java/lang/Object resolves to Java.Lang.Object (Mono.Android), not Java.Interop.JavaObject
+			// (Java.Interop). GetTypeForSimpleReference returns alias index [0], so the Mono.Android peer
+			// must sort first. Declare them in the "wrong" order to prove the sort reorders them.
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Java.Interop") with { IsFromJniTypeSignature = true },
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android"),
+			};
+
+			var model = BuildModel (peers, "MonoAndroid");
+
+			// The Mono.Android peer (Java.Lang.Object) must be alias index [0].
+			Assert.Equal ("java/lang/Object[0]", model.Entries [0].MapKey);
+			Assert.Contains ("Java.Lang.Object", model.Entries [0].ProxyTypeReference);
+			Assert.Equal ("java/lang/Object[1]", model.Entries [1].MapKey);
+			Assert.Contains ("Java.Interop.JavaObject", model.Entries [1].ProxyTypeReference);
+		}
+
+		[Fact]
 		public void Build_AliasWithMixedActivation_PrimaryNoActivation_AliasHasActivation ()
 		{
 			var peers = new List<JavaPeerInfo> {
