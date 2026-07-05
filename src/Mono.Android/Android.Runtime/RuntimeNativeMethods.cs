@@ -115,7 +115,7 @@ namespace Android.Runtime
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		internal static partial IntPtr clr_typemap_managed_to_java (string fullName, IntPtr mvid);
+		internal static partial IntPtr clr_typemap_managed_to_java (string? fullName, IntPtr mvid);
 
 		[LibraryImport (RuntimeConstants.InternalDllName, StringMarshalling = StringMarshalling.Utf8)]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
