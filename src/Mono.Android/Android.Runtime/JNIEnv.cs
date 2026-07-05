@@ -26,14 +26,11 @@ namespace Android.Runtime {
 
 		static Array ArrayCreateInstance (Type elementType, int length)
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				if (RuntimeFeature.IsCoreClrRuntime) {
-					// CoreCLR runtime type loader can construct any T[] dynamically.
-					// IsDynamicCodeSupported is a [FeatureGuard] so this branch is
-					// dead-coded under PublishAot.
-					return Array.CreateInstance (elementType, length);
-				}
+			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				return Array.CreateInstance (elementType, length);
+			}
 
+			if (RuntimeFeature.TrimmableTypeMap) {
 				if (RuntimeFeature.IsNativeAotRuntime) {
 					// NativeAOT: resolve via per-rank typemap + generated array proxy.
 					if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, additionalRank: 1, out var arrayProxy)) {
@@ -47,9 +44,18 @@ namespace Android.Runtime {
 					$"ensure the mapping is emitted for that rank (for example by increasing _AndroidTrimmableTypeMapMaxArrayRank) or report an issue.");
 			}
 
-			#pragma warning disable IL3050 // legacy fallback path
-			return Array.CreateInstance (elementType, length);
-			#pragma warning restore IL3050
+			if (RuntimeFeature.ManagedTypeMap) {
+				return ArrayCreateInstanceWithSuppression (elementType, length);
+
+				[UnconditionalSuppressMessage ("Trimming", "IL3050:RequiresDynamicCode",
+					Justification = "Temporarily suppressed for the \"ManagedTypeMap\".")]
+				Array ArrayCreateInstanceWithSuppression (Type elementType, int length)
+				{
+					return Array.CreateInstance (elementType, length);
+				}
+			}
+
+			throw new NotSupportedException ($"It is not possible to create an array with element type '{elementType}'.");
 		}
 
 		static int GetArrayRank (Type elementType)
