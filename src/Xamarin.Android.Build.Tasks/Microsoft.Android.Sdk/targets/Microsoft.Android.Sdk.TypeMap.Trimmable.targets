@@ -450,16 +450,27 @@
     code path) throws a TypeInitializationException wrapping
     System.IO.FileNotFoundException: _Microsoft.Android.Resource.Designer at runtime.
 
-    Root the whole _Microsoft.Android.Resource.Designer assembly so it is kept. TrimmerRootAssembly
-    is honored by both ILLink (CoreCLR) and ILC (NativeAOT). Note that ILC's TrimMode-based rooting
-    reads @(_IlcManagedInputAssemblies), which _AndroidComputeIlcCompileInputs clears, so
-    TrimmerRootAssembly is the reliable mechanism here.
+    Keep the whole _Microsoft.Android.Resource.Designer assembly. Two things are required on the
+    NativeAOT (ILC) path:
+      * ILC only loads the assemblies passed to it as references; the designer is a compile-time
+        reference but is NOT in @(IlcReference), so add it. Rooting an assembly ILC never loaded
+        fails hard with "Failed to load assembly '_Microsoft.Android.Resource.Designer'".
+      * Root it so ILC/ILLink keep it whole (TrimMode-based rooting can't be used here because
+        _AndroidComputeIlcCompileInputs clears @(_IlcManagedInputAssemblies)).
+
+    Drive both off @(ReferencePath) filtered to the designer: the item is empty when the designer
+    assembly was not generated (e.g. no resources / AndroidGenerateResourceDesigner=false), so we
+    never reference or root a non-existent assembly. @(IlcReference) is ignored by ILLink, so the
+    CoreCLR path just gets the root.
   -->
   <Target Name="_RootResourceDesignerForTrimmableTypeMap"
       Condition=" '$(AndroidUseDesignerAssembly)' == 'True' and '$(PublishTrimmed)' == 'true' "
       BeforeTargets="PrepareForILLink;WriteIlcRspFileForCompilation">
     <ItemGroup>
-      <TrimmerRootAssembly Include="_Microsoft.Android.Resource.Designer" />
+      <_ResourceDesignerReferenceToRoot Include="@(ReferencePath)"
+          Condition=" '%(Filename)' == '_Microsoft.Android.Resource.Designer' " />
+      <IlcReference Include="@(_ResourceDesignerReferenceToRoot->'%(FullPath)')" />
+      <TrimmerRootAssembly Include="@(_ResourceDesignerReferenceToRoot->'%(Filename)')" />
     </ItemGroup>
   </Target>
 </Project>
