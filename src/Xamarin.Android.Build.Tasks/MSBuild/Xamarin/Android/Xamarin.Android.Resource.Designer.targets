@@ -273,24 +273,27 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     DependsOnTargets="$(_BuildResourceDesignerDependsOn)" />
 
 <!--
-  Experimental: inline resource designer constants (default off).
+  Inline resource designer constants (default on for the trimmable type map).
 
   Instead of keeping/rooting the _Microsoft.Android.Resource.Designer assembly for the trimmer/ILC,
   rewrite every `call ..._Microsoft.Android.Resource.Designer.Resource/<Type>::get_<X>()` in the
-  resolved (non-main) managed assemblies into an inline `ldc.i4 <id>` literal, using the final
-  post-aapt2 R.txt. Once all references are literals, the designer assembly is unreferenced and the
-  trimmer / ILC drops it entirely — no reflection, no shipped designer assembly, nothing to root.
+  resolved managed assemblies (including the main app assembly, for its library-resource references)
+  into an inline `ldc.i4 <id>` literal, using the final post-aapt2 R.txt. Once all references are
+  literals, the designer assembly is unreferenced and the trimmer / ILC drops it entirely — no
+  reflection, no shipped designer assembly, nothing to root.
 
   This is trimmer-agnostic: it rewrites the ResolvedFileToPublish assemblies and swaps the modified
   copies back, which both ILLink (@(ManagedAssemblyToLink)) and ILC (@(IlcReference)) consume. The
-  only per-runtime piece is ordering for NativeAOT, handled by _AndroidRunNativeCompileDependsOn in
-  Microsoft.Android.Sdk.NativeAOT.targets (so the swap runs before NativeCompile).
+  main assembly on the ILC path comes from @(IlcCompileInput)/@(IntermediateAssembly), so it is
+  additionally redirected in _AndroidComputeIlcCompileInputs; the NativeAOT ordering (swap before
+  NativeCompile) is handled by _AndroidRunNativeCompileDependsOn in Microsoft.Android.Sdk.NativeAOT.targets.
 
-  Gated behind $(_AndroidInlineResourceDesignerConstants) while it bakes on CI; when enabled it also
-  disables _RootResourceDesignerForTrimmableTypeMap (they are mutually exclusive).
+  Scoped to the trimmable type map path. When on it disables _RootResourceDesignerForTrimmableTypeMap
+  (they are mutually exclusive); set $(_AndroidInlineResourceDesignerConstants)=false to fall back to
+  rooting the whole designer assembly.
 -->
 <PropertyGroup>
-  <_AndroidInlineResourceDesignerConstants Condition=" '$(_AndroidInlineResourceDesignerConstants)' == '' ">false</_AndroidInlineResourceDesignerConstants>
+  <_AndroidInlineResourceDesignerConstants Condition=" '$(_AndroidInlineResourceDesignerConstants)' == '' ">true</_AndroidInlineResourceDesignerConstants>
 </PropertyGroup>
 
 <UsingTask TaskName="Xamarin.Android.Tasks.InlineResourceDesignerConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -298,7 +301,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Target Name="_InlineResourceDesignerConstants"
     AfterTargets="ComputeResolvedFilesToPublishList"
     DependsOnTargets="_SetupDesignerProperties;_ComputeAssembliesToPostprocessOnPublish"
-    Condition=" '$(_AndroidInlineResourceDesignerConstants)' == 'true' And '$(PublishTrimmed)' == 'true' And '$(AndroidUseDesignerAssembly)' == 'True' And Exists('$(IntermediateOutputPath)R.txt') "
+    Condition=" '$(_AndroidInlineResourceDesignerConstants)' == 'true' And '$(_AndroidTypeMapImplementation)' == 'trimmable' And '$(PublishTrimmed)' == 'true' And '$(AndroidUseDesignerAssembly)' == 'True' And Exists('$(IntermediateOutputPath)R.txt') "
     Inputs="$(IntermediateOutputPath)R.txt;@(ResolvedFileToPublish)"
     Outputs="$(_AndroidStampDirectory)_InlineResourceDesignerConstants.stamp">
   <MakeDir Directories="$(_AndroidStampDirectory)" />
@@ -327,7 +330,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Target Name="_InlineResourceDesignerConstantsUpdateItems"
     AfterTargets="ComputeResolvedFilesToPublishList"
     DependsOnTargets="_InlineResourceDesignerConstants"
-    Condition=" '$(_AndroidInlineResourceDesignerConstants)' == 'true' And '$(PublishTrimmed)' == 'true' And '$(AndroidUseDesignerAssembly)' == 'True' ">
+    Condition=" '$(_AndroidInlineResourceDesignerConstants)' == 'true' And '$(_AndroidTypeMapImplementation)' == 'trimmable' And '$(PublishTrimmed)' == 'true' And '$(AndroidUseDesignerAssembly)' == 'True' ">
   <ItemGroup>
     <_InlineDesignerSwappableItem Include="@(ResolvedFileToPublish)"
         Condition=" '%(Extension)' == '.dll' And Exists('$(IntermediateOutputPath)inlinedesigner/%(Filename)%(Extension)') " />
