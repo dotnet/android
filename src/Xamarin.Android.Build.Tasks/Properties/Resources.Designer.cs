@@ -2035,6 +2035,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid AssemblyStore compression level &apos;{0}&apos;. The value must be between {1} and {2}..
+        /// </summary>
+        public static string XA5304 {
+            get {
+                return ResourceManager.GetString("XA5304", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find Android Resource &apos;{0}&apos;. Please update @(AndroidResource) to add the missing resource..
         /// </summary>
         public static string XA8000 {
