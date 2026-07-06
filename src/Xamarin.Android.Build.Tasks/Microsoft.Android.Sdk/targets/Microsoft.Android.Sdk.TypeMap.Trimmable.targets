@@ -469,7 +469,7 @@
     CoreCLR path just gets the root.
   -->
   <Target Name="_RootResourceDesignerForTrimmableTypeMap"
-      Condition=" '$(AndroidUseDesignerAssembly)' == 'True' and '$(PublishTrimmed)' == 'true' "
+      Condition=" '$(AndroidUseDesignerAssembly)' == 'True' and '$(PublishTrimmed)' == 'true' and '$(_AndroidInlineResourceDesignerConstants)' != 'true' "
       BeforeTargets="PrepareForILLink;WriteIlcRspFileForCompilation">
     <ItemGroup>
       <_ResourceDesignerReferenceToRoot Include="@(ReferencePath)"
