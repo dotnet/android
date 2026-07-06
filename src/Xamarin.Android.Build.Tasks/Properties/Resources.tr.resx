@@ -917,7 +917,7 @@ Daha fazla ayrıntı için https://aka.ms/xa5207 adresine bakın.</value>
     <comment>This string is the instrucitons to install the component</comment>
   </data>
   <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
-    <value>Eksik API düzeyini `dotnet build -t:InstallAndroidDependegency -f {0} "-p:AndroidSdkDirectory={1}"` komutunu çalıştırarak yükleyebilir veya yüklü olan bir API sürümünü hedefleyecek şekilde projeyi değiştirebilirsiniz.</value>
+    <value>Eksik API düzeyini `dotnet build -t:InstallAndroidDependencies -f {0} "-p:AndroidSdkDirectory={1}"` komutunu çalıştırarak yükleyebilir veya yüklü olan bir API sürümünü hedefleyecek şekilde projeyi değiştirebilirsiniz.</value>
     <comment>This string is the instrucitons to install the component
 {0} - The TargetFramework the app is targeting.
 {1} - The current AndroidSdkDirectory path.</comment>
