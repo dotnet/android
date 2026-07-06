@@ -1,5 +1,5 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace Java.Interop {
 
@@ -7,20 +7,15 @@ namespace Java.Interop {
 	[AttributeUsage (AttributeTargets.Method | AttributeTargets.Constructor, 
 			AllowMultiple=false, 
 			Inherited=false)]
-#if !NETSTANDARD2_0
-	[RequiresUnreferencedCode ("[ExportAttribute] uses dynamic features.")]
-#endif
 #if !JCW_ONLY_TYPE_NAMES
 	public
 #endif  // !JCW_ONLY_TYPE_NAMES
-	partial class ExportAttribute : Attribute {
+	partial class ExportAttribute : BaseExportAttribute {
 
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		public ExportAttribute ()
 		{
 		}
 		
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Java.Interop.DynamicCallbackCodeGenerator", "Mono.Android.Export")]
 		public ExportAttribute (string name)
 		{
 			Name = name;
@@ -30,6 +25,11 @@ namespace Java.Interop {
 		public string?                SuperArgumentsString    {get; set;}
 		public Type []?               Throws                  {get; set;}
 		internal string []?           ThrownNames             {get; set;} // msbuild internal use
+
+		internal override Delegate CreateDynamicCallback (MethodInfo method)
+		{
+			return CreateDynamicCallbackCore (method);
+		}
 	}
 }
 
