@@ -22,4 +22,10 @@
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Shared wire contract for the instrumentation streaming protocol, kept in
+         sync with the host in src/Microsoft.Android.Run. -->
+    <Compile Include="..\..\src\Microsoft.Android.Run\InstrumentationProtocol.cs" Link="InstrumentationProtocol.cs" />
+  </ItemGroup>
+
 </Project>

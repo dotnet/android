@@ -74,7 +74,7 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx ${{ parameters.extraBuildArgs }}
+    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
     Pop-Location
   displayName: run ${{ parameters.testName }}
   condition: ${{ parameters.condition }}
