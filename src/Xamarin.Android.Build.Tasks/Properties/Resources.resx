@@ -919,6 +919,7 @@ See https://aka.ms/xa5207 for more details.</value>
   <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
     <value>You can install the missing API level by running `dotnet build -t:InstallAndroidDependencies -f {0} "-p:AndroidSdkDirectory={1}"`, or change the project to target an API version that is installed.</value>
     <comment>This string is the instrucitons to install the component
+The following are literal names and should not be translated: `dotnet build`, `InstallAndroidDependencies`, `AndroidSdkDirectory`
 {0} - The TargetFramework the app is targeting.
 {1} - The current AndroidSdkDirectory path.</comment>
   </data>
