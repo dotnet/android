@@ -71,10 +71,10 @@ stages:
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
+    # dnceng/internal has no AcesShared pool, so use hosted macOS images
     pool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
       os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -274,10 +274,10 @@ stages:
     strategy:
       parallel: 10
     displayName: macOS > Tests > MSBuild
+    # dnceng/internal has no AcesShared pool, so use hosted macOS images
     pool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
       os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -366,7 +366,7 @@ stages:
     strategy:
       parallel: 12
     displayName: "macOS > Tests > MSBuild+Emulator"
-    # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
+    # Emulator jobs need the hosted image that can boot Android emulators
     pool:
       name: Azure Pipelines
       vmImage: $(HostedMacImageWithEmulator)
@@ -421,9 +421,8 @@ stages:
       demands:
       - ImageOverride -equals $(WindowsPoolImageNetCoreInternal)
     macPool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
       os: macOS
 
 # MAUI Tests Stage
