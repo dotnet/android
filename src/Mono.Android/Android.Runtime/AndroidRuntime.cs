@@ -397,25 +397,6 @@ namespace Android.Runtime {
 
 		delegate Delegate GetCallbackHandler ();
 
-		static MethodInfo? dynamic_callback_gen;
-
-		// See ExportAttribute.cs
-		static Delegate CreateDynamicCallback (MethodInfo method)
-		{
-			if (dynamic_callback_gen == null) {
-				var assembly = Assembly.Load ("Mono.Android.Export");
-				if (assembly == null)
-					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
-				if (type == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
-				dynamic_callback_gen = type.GetMethod ("Create");
-				if (dynamic_callback_gen == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
-			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
-		}
-
 		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
 		// cached in static fields (unlike non-[Export] connector delegates). Without rooting them here,
 		// CoreCLR's GC can collect them between JNI registration and first invocation, causing a crash.
@@ -547,7 +528,11 @@ namespace Android.Runtime {
 
 							if (minfo == null)
 								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
-							callback = CreateDynamicCallback (minfo);
+
+							var exportAttribute = minfo.GetCustomAttribute<BaseExportAttribute> ()
+								?? throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' does not have [Export] attribute. Signature: {signature.ToString ()}"));
+
+							callback = exportAttribute.CreateDynamicCallback (minfo);
 							lock (prevent_delegate_gc_lock) {
 								prevent_delegate_gc.Add (callback);
 							}

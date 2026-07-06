@@ -22,11 +22,29 @@ public class CompressAssemblies : AndroidTask
 	[Required]
 	public ITaskItem [] AssembliesToCompress { get; set; } = [];
 
+	/// <summary>
+	/// The Zstandard compression level (quality) to use, in the range 1-22. Higher values
+	/// produce a smaller AssemblyStore at the cost of build time; decompression speed is
+	/// independent of the level. Flows from the <c>$(_AndroidAssemblyStoreCompressionLevel)</c>
+	/// MSBuild property.
+	/// </summary>
+	[Required]
+	public int CompressionLevel { get; set; } = 3;
+
 	[Output]
 	public ITaskItem [] FailedToCompressAssembliesOutput { get; set; } = [];
 
+	// Zstandard's valid quality range for the levels we expose (positive levels only).
+	const int MinCompressionLevel = 1;
+	const int MaxCompressionLevel = 22;
+
 	public override bool RunTask ()
 	{
+		if (CompressionLevel < MinCompressionLevel || CompressionLevel > MaxCompressionLevel) {
+			Log.LogCodedError ("XA5304", Properties.Resources.XA5304, CompressionLevel, MinCompressionLevel, MaxCompressionLevel);
+			return false;
+		}
+
 		var failed_assemblies = new List<ITaskItem> ();
 
 		foreach (var assembly in AssembliesToCompress) {
@@ -43,7 +61,7 @@ public class CompressAssemblies : AndroidTask
 				break;
 			}
 
-			if (!AssemblyCompressor.TryCompress (Log, assembly.ItemSpec, destination_path, descriptor_index)) {
+			if (!AssemblyCompressor.TryCompress (Log, assembly.ItemSpec, destination_path, descriptor_index, CompressionLevel)) {
 				failed_assemblies.Add (assembly);
 				continue;
 			}

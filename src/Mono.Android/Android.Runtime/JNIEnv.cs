@@ -41,9 +41,11 @@ namespace Android.Runtime {
 					}
 				}
 
+				int arrayRank = GetArrayRank (elementType, out var leafElementType);
 				throw new NotSupportedException (
-					$"No TrimmableTypeMap array proxy entry for element type '{elementType}'. " +
-					$"Array lookups use the element type within the per-rank __ArrayMapRank{GetArrayRank (elementType)} typemap group; " +
+					$"No TrimmableTypeMap array proxy entry for element type '{elementType}' " +
+					$"(leaf element type '{leafElementType}', rank {arrayRank}). " +
+					$"Array lookups use the leaf element type within the per-rank __ArrayMapRank{arrayRank} typemap group; " +
 					$"ensure the mapping is emitted for that rank (for example by increasing _AndroidTrimmableTypeMapMaxArrayRank) or report an issue.");
 			}
 
@@ -52,7 +54,7 @@ namespace Android.Runtime {
 			#pragma warning restore IL3050
 		}
 
-		static int GetArrayRank (Type elementType)
+		static int GetArrayRank (Type elementType, out Type leafElementType)
 		{
 			int rank = 1;
 			while (elementType.IsSZArray) {
@@ -63,6 +65,7 @@ namespace Android.Runtime {
 				}
 				elementType = nestedElementType;
 			}
+			leafElementType = elementType;
 			return rank;
 		}
 

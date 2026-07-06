@@ -11,13 +11,13 @@
       "Size": 2717688
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2836936
+      "Size": 2835128
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4890752
+      "Size": 4891056
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1264112
+      "Size": 1324320
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72112

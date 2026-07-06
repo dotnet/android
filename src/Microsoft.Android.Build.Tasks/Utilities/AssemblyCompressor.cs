@@ -27,9 +27,9 @@ static class AssemblyCompressor
 		EncodingFailed,
 	}
 
-	public static bool TryCompress (TaskLoggingHelper log, string sourceAssembly, string destinationAssembly, uint descriptorIndex)
+	public static bool TryCompress (TaskLoggingHelper log, string sourceAssembly, string destinationAssembly, uint descriptorIndex, int compressionLevel)
 	{
-		CompressionResult result = Compress (sourceAssembly, destinationAssembly, descriptorIndex);
+		CompressionResult result = Compress (sourceAssembly, destinationAssembly, descriptorIndex, compressionLevel);
 
 		if (result != CompressionResult.Success) {
 			log.LogMessage ($"Failed to compress {sourceAssembly}");
@@ -39,7 +39,7 @@ static class AssemblyCompressor
 		return true;
 	}
 
-	static CompressionResult Compress (string sourcePath, string outputFilePath, uint descriptorIndex)
+	static CompressionResult Compress (string sourcePath, string outputFilePath, uint descriptorIndex, int compressionLevel)
 	{
 		var outputDirectory = Path.GetDirectoryName (outputFilePath);
 		if (string.IsNullOrEmpty (outputDirectory))
@@ -76,7 +76,7 @@ static class AssemblyCompressor
 				return CompressionResult.EncodingFailed;
 
 			destBytes = bytePool.Rent ((int) maxOutputSize);
-			if (!ZstandardEncoder.TryCompress (sourceBytes.AsSpan (0, bytesRead), destBytes, out int encodedLength))
+			if (!ZstandardEncoder.TryCompress (sourceBytes.AsSpan (0, bytesRead), destBytes, out int encodedLength, compressionLevel, 0))
 				return CompressionResult.EncodingFailed;
 
 			using (var fs = File.Open (outputFilePath, FileMode.Create, FileAccess.Write, FileShare.Read))

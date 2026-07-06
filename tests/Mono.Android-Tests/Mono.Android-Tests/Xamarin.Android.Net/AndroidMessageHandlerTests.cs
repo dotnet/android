@@ -137,7 +137,6 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		[Ignore ("Crashes the test process with a native SIGSEGV: https://github.com/dotnet/android/issues/8608")]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -164,7 +163,6 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		[Ignore ("Crashes the test process with a native SIGSEGV: https://github.com/dotnet/android/issues/8608")]
 		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -183,7 +181,6 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		[Ignore ("Crashes the test process with a native SIGSEGV: https://github.com/dotnet/android/issues/8608")]
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -211,7 +208,6 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		[Ignore ("Crashes the test process with a native SIGSEGV: https://github.com/dotnet/android/issues/8608")]
 		public async Task ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -233,7 +229,6 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		[Ignore ("Crashes the test process with a native SIGSEGV: https://github.com/dotnet/android/issues/8608")]
 		public async Task ServerCertificateCustomValidationCallback_Redirects ()
 		{
 			int callbackCounter = 0;

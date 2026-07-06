@@ -61,6 +61,7 @@
       <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_ARM64@=$(_NetCoreRuntimePrefix)arm64$(_NetCoreRuntimeSuffix)arm64" />
       <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_X86@=$(_NetCoreRuntimePrefix)x86$(_NetCoreRuntimeSuffix)x86" />
       <_XaBuildConfigurationReplacement Include="@NETCORE_APP_RUNTIME_ANDROID_X86_64@=$(_NetCoreRuntimePrefix)x64$(_NetCoreRuntimeSuffix)x64" />
+      <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_ARM@=$(_CoreClrRuntimePrefix)arm$(_CoreClrRuntimeSuffix)arm" />
       <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_ARM64@=$(_CoreClrRuntimePrefix)arm64$(_CoreClrRuntimeSuffix)arm64" />
       <_XaBuildConfigurationReplacement Include="@CORECLR_APP_RUNTIME_ANDROID_X86_64@=$(_CoreClrRuntimePrefix)x64$(_CoreClrRuntimeSuffix)x64" />
 

@@ -119,7 +119,7 @@ sealed record ArrayProxyData
 /// </summary>
 sealed record PrimitiveArrayProxyData
 {
-	public required TypeRefData ConcreteArrayType { get; init; }
+	public IReadOnlyList<TypeRefData> ConcreteArrayTypes { get; init; } = [];
 }
 
 /// <summary>
