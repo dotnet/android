@@ -417,7 +417,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   -->
   <PropertyGroup>
     <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' ">_PreTrimmingFixLegacyDesignerUpdateItems;NativeCompile</_AndroidRunNativeCompileDependsOn>
-    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">NativeCompile</_AndroidRunNativeCompileDependsOn>
+    <_AndroidRunNativeCompileDependsOn Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">_InlineResourceDesignerConstantsUpdateItems;NativeCompile</_AndroidRunNativeCompileDependsOn>
   </PropertyGroup>
   <Target Name="_AndroidRunNativeCompile"
       AfterTargets="ComputeResolvedFilesToPublishList"
