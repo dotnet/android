@@ -248,6 +248,60 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
 	}
 
+	// Regression test: decode the emitted proxy `.ctor` *body* (not just member presence)
+	// and verify it chains to the correct base constructor. Concrete (constructible) proxies
+	// derive from `JavaPeerProxy<T>` and call the single-arg base ctor `(string)`; interface
+	// and open-generic proxies derive from the non-generic `JavaPeerProxy` and call the
+	// two-arg base ctor `(string, Type)` — pushing the target type via `Type.GetTypeFromHandle`.
+	// A base-ctor arity/token mismatch here would pass metadata inspection but blow up as an
+	// InvalidProgramException/TypeLoadException on the CoreCLR device legs, so assert it directly.
+	[Theory]
+	[InlineData ("Java_Lang_Object_Proxy", 1, false)]              // concrete class -> generic base (string)
+	[InlineData ("Android_Views_IOnClickListener_Proxy", 2, true)] // interface -> non-generic base (string, Type)
+	[InlineData ("MyApp_Generic_GenericHolder_1_Proxy", 2, true)]  // open generic -> non-generic base (string, Type)
+	public void Generate_ProxyCtor_ChainsToExpectedBaseConstructor (string proxyTypeName, int expectedBaseCtorArity, bool expectsGetTypeFromHandle)
+	{
+		var peers = ScanFixtures ();
+		using var stream = GenerateAssembly (peers);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var proxyTypeHandle = reader.TypeDefinitions.First (h => {
+			var type = reader.GetTypeDefinition (h);
+			return reader.GetString (type.Namespace) == "_TypeMap.Proxies" &&
+				reader.GetString (type.Name) == proxyTypeName;
+		});
+		var proxyType = reader.GetTypeDefinition (proxyTypeHandle);
+		var ctorHandle = proxyType.GetMethods ().First (h =>
+			reader.GetString (reader.GetMethodDefinition (h).Name) == ".ctor");
+		var ctor = reader.GetMethodDefinition (ctorHandle);
+		var body = pe.GetMethodBody (ctor.RelativeVirtualAddress);
+		Assert.NotNull (body);
+		var ilBytes = body.GetILBytes ();
+		Assert.NotNull (ilBytes);
+
+		var decoder = new TypeNameSignatureDecoder (reader);
+		int? baseCtorArity = null;
+		bool sawGetTypeFromHandle = false;
+		foreach (var token in ReadCallTokens (ilBytes!)) {
+			var handle = MetadataTokens.EntityHandle (token);
+			if (handle.Kind != HandleKind.MemberReference)
+				continue;
+			var mref = reader.GetMemberReference ((MemberReferenceHandle) handle);
+			var name = reader.GetString (mref.Name);
+			if (name == "GetTypeFromHandle") {
+				sawGetTypeFromHandle = true;
+			} else if (name == ".ctor") {
+				var sig = mref.DecodeMethodSignature (decoder, genericContext: null);
+				baseCtorArity = sig.RequiredParameterCount;
+			}
+		}
+
+		Assert.True (baseCtorArity.HasValue, $"Proxy '{proxyTypeName}' .ctor must chain to a base ctor");
+		Assert.Equal (expectedBaseCtorArity, baseCtorArity!.Value);
+		Assert.Equal (expectsGetTypeFromHandle, sawGetTypeFromHandle);
+	}
+
 	// Regression test: every generated proxy type must carry a custom attribute whose
 	// constructor points at the proxy's own TypeDefinitionHandle (either as a MemberRef
 	// parented on the TypeDef, or as a MethodDefinition on the TypeDef). This is how
