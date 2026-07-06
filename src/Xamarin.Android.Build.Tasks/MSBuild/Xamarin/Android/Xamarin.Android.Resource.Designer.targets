@@ -290,7 +290,10 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   disables _RootResourceDesignerForTrimmableTypeMap (they are mutually exclusive).
 -->
 <PropertyGroup>
-  <_AndroidInlineResourceDesignerConstants Condition=" '$(_AndroidInlineResourceDesignerConstants)' == '' ">false</_AndroidInlineResourceDesignerConstants>
+  <!-- Validation default (scratch branch): force the inline path on for every trimmed build so CI
+       exercises "drop the designer assembly" end to end. Before merging this should default to false
+       (or be scoped to the trimmable type map) rather than on. -->
+  <_AndroidInlineResourceDesignerConstants Condition=" '$(_AndroidInlineResourceDesignerConstants)' == '' ">true</_AndroidInlineResourceDesignerConstants>
 </PropertyGroup>
 
 <UsingTask TaskName="Xamarin.Android.Tasks.InlineResourceDesignerConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
