@@ -190,6 +190,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <TrimmerRootAssembly Include="@(_AndroidILLinkAssemblies->'%(Filename)')" Exclude="System.Private.CoreLib" TrimMode="All" />
     </ItemGroup>
 
+    <!-- Inline resource designer constants: the main app assembly is compiled by ILC from
+         @(IntermediateAssembly) (i.e. @(IlcCompileInput)), not from @(ResolvedFileToPublish), so the
+         ResolvedFileToPublish swap in _InlineResourceDesignerConstantsUpdateItems does not reach it.
+         Point IlcCompileInput at the rewritten copy so the designer property-getter calls the app
+         makes for *library* resources (e.g. SomeLibrary.Resource.Drawable.foo) are inlined too and
+         the designer assembly can be dropped. -->
+    <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' And '$(_AndroidInlineResourceDesignerConstants)' == 'true' ">
+      <_InlineDesignerIlcMainInput Include="@(IlcCompileInput)" Condition=" Exists('$(IntermediateOutputPath)inlinedesigner/%(Filename)%(Extension)') " />
+      <IlcCompileInput Remove="@(_InlineDesignerIlcMainInput)" />
+      <IlcCompileInput Include="@(_InlineDesignerIlcMainInput->'$(IntermediateOutputPath)inlinedesigner/%(Filename)%(Extension)')" />
+    </ItemGroup>
+
     <ItemGroup>
 
       <!-- Satellite assemblies -->

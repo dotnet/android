@@ -46,9 +46,6 @@ public class InlineResourceDesignerConstants : AndroidTask
 	public string RTxtFile { get; set; } = "";
 
 	[Required]
-	public string TargetName { get; set; } = "";
-
-	[Required]
 	public string OutputDirectory { get; set; } = "";
 
 	public string? CaseMapFile { get; set; }
@@ -108,11 +105,10 @@ public class InlineResourceDesignerConstants : AndroidTask
 
 		var modified = new List<ITaskItem> ();
 		foreach (var item in Assemblies) {
-			// The main assembly already has its ids baked in at compile time (post-aapt2), and
-			// framework assemblies never reference the designer.
-			if (Path.GetFileNameWithoutExtension (item.ItemSpec) == TargetName) {
-				continue;
-			}
+			// Framework assemblies never reference the designer. The main app assembly is NOT skipped:
+			// its own resource ids are already baked in as constants at compile time, but it can still
+			// call the designer property getters for *library* resources (e.g.
+			// SomeLibrary.Resource.Drawable.foo), and those calls must be inlined too.
 			if (MonoAndroidHelper.IsFrameworkAssembly (item)) {
 				continue;
 			}
