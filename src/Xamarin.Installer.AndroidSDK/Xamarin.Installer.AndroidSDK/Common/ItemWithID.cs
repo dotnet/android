@@ -6,6 +6,9 @@
 //
 //  All rights reserved.
 //
+
+#nullable enable
+
 using System;
 
 namespace Xamarin.Installer.AndroidSDK.Common
