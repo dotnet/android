@@ -42,7 +42,7 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
-		private protected JavaPeerProxy (string jniName, Type targetType)
+		protected JavaPeerProxy (string jniName, Type targetType)
 		{
 			ArgumentNullException.ThrowIfNull (jniName);
 			ArgumentNullException.ThrowIfNull (targetType);
