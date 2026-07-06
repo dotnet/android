@@ -48,9 +48,9 @@
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>b4b350a66ea5dcf13420747036d8b263cdf6cbef</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="4.3.0-preview.26326.13">
+    <Dependency Name="MSTest" Version="4.3.0-preview.26355.11">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>f828682ecb633d5991843029ae571903f91b17ab</Sha>
+      <Sha>8609d3bf430db360f420fbe9af9b223aa372ec2b</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
