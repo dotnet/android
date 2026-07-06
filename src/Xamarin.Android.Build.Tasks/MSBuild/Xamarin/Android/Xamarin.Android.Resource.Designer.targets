@@ -311,7 +311,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <InlineResourceDesignerConstants
       Assemblies="@(_InlineDesignerAssembly)"
       RTxtFile="$(IntermediateOutputPath)R.txt"
-      TargetName="$(TargetName)"
       OutputDirectory="$(IntermediateOutputPath)inlinedesigner"
       CaseMapFile="$(_GenerateResourceCaseMapFile)"
       Deterministic="$(Deterministic)">
