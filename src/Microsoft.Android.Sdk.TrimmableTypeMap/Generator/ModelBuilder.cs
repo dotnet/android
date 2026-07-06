@@ -17,14 +17,18 @@ static class ModelBuilder
 	const string ProxyTypeSuffix = "_Proxy";
 
 	static readonly PrimitiveArrayProxyInfo [] PrimitiveArrayProxies = [
-		new ("Z", "Boolean", "System.Boolean", "Java.Interop.JavaBooleanArray"),
-		new ("B", "SByte", "System.SByte", "Java.Interop.JavaSByteArray"),
-		new ("C", "Char", "System.Char", "Java.Interop.JavaCharArray"),
-		new ("S", "Int16", "System.Int16", "Java.Interop.JavaInt16Array"),
-		new ("I", "Int32", "System.Int32", "Java.Interop.JavaInt32Array"),
-		new ("J", "Int64", "System.Int64", "Java.Interop.JavaInt64Array"),
-		new ("F", "Single", "System.Single", "Java.Interop.JavaSingleArray"),
-		new ("D", "Double", "System.Double", "Java.Interop.JavaDoubleArray"),
+		new ("Z", "Boolean", "System.Boolean", ["Java.Interop.JavaBooleanArray"]),
+		new ("B", "SByte", "System.SByte", ["Java.Interop.JavaSByteArray"]),
+		new ("B", "Byte", "System.Byte", []),
+		new ("C", "Char", "System.Char", ["Java.Interop.JavaCharArray"]),
+		new ("S", "Int16", "System.Int16", ["Java.Interop.JavaInt16Array"]),
+		new ("S", "UInt16", "System.UInt16", []),
+		new ("I", "Int32", "System.Int32", ["Java.Interop.JavaInt32Array"]),
+		new ("I", "UInt32", "System.UInt32", []),
+		new ("J", "Int64", "System.Int64", ["Java.Interop.JavaInt64Array"]),
+		new ("J", "UInt64", "System.UInt64", []),
+		new ("F", "Single", "System.Single", ["Java.Interop.JavaSingleArray"]),
+		new ("D", "Double", "System.Double", ["Java.Interop.JavaDoubleArray"]),
 	];
 
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
@@ -575,12 +579,14 @@ static class ModelBuilder
 			return ExpandRankOneTypes (rankOneTypes, proxy.Rank);
 		}
 
-		var rankOnePrimitiveTypes = new [] {
+		List<string> rankOnePrimitiveTypes = [
 			AddArrayRank (elementType, 1),
 			MakeGenericTypeReference ("Java.Interop.JavaArray`1", "Java.Interop", elementType),
 			MakeGenericTypeReference ("Java.Interop.JavaPrimitiveArray`1", "Java.Interop", elementType),
-			AssemblyQualify (proxy.Primitive.ConcreteArrayType.ManagedTypeName, proxy.Primitive.ConcreteArrayType.AssemblyName),
-		};
+		];
+		foreach (var concreteArrayType in proxy.Primitive.ConcreteArrayTypes) {
+			rankOnePrimitiveTypes.Add (AssemblyQualify (concreteArrayType.ManagedTypeName, concreteArrayType.AssemblyName));
+		}
 		return ExpandRankOneTypes (rankOnePrimitiveTypes, proxy.Rank);
 	}
 
@@ -615,22 +621,25 @@ static class ModelBuilder
 	/// <summary>
 	/// Emits per-rank array TypeMap entries for one peer, anchored to the per-assembly
 	/// <c>__ArrayMapRank{N}</c> sentinels. Keys are managed element type names (rank is encoded
-	/// by the sentinel anchor, not by JNI array prefixes). Skips open generics and alias groups.
+	/// by the sentinel anchor, not by JNI array prefixes). Skips open generics.
 	/// </summary>
 	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName, int maxArrayRank)
 	{
-		if (peersForName.Count != 1) {
+		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
 			return;
 		}
 
-		var peer = peersForName [0];
+		foreach (var peer in peersForName) {
+			EmitArrayEntriesForPeer (model, peer, maxArrayRank);
+		}
+	}
+
+	static void EmitArrayEntriesForPeer (TypeMapAssemblyData model, JavaPeerInfo peer, int maxArrayRank)
+	{
 		if (!peer.GenerateArrayEntries) {
 			return;
 		}
 		if (peer.IsGenericDefinition) {
-			return;
-		}
-		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
 			return;
 		}
 
@@ -668,10 +677,10 @@ static class ModelBuilder
 					},
 					Rank = rank,
 					Primitive = new PrimitiveArrayProxyData {
-						ConcreteArrayType = new TypeRefData {
-							ManagedTypeName = primitive.ConcreteArrayTypeName,
+						ConcreteArrayTypes = primitive.ConcreteArrayTypeNames.Select (name => new TypeRefData {
+							ManagedTypeName = name,
 							AssemblyName = "Java.Interop",
-						},
+						}).ToList (),
 					},
 				};
 				model.ArrayProxyTypes.Add (proxy);
@@ -711,5 +720,5 @@ static class ModelBuilder
 		string JniName,
 		string Name,
 		string ManagedTypeName,
-		string ConcreteArrayTypeName);
+		IReadOnlyList<string> ConcreteArrayTypeNames);
 }
