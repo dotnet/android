@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include <xamarin-app.hh>
-#include <shared/xxhash.hh>
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
 // designer on desktop.
@@ -110,8 +109,8 @@ constexpr char fake_dso_name2[] = "libaot-Another.Assembly.dll.so";
 
 DSOCacheEntry dso_cache[] = {
 	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
+		.hash = 0x4ce380ac,
+		.real_name_hash = 0x4ce380ac,
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 1,
@@ -119,8 +118,8 @@ DSOCacheEntry dso_cache[] = {
 	},
 
 	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
+		.hash = 0x5f995ac5,
+		.real_name_hash = 0x5f995ac5,
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 2,
@@ -136,8 +135,8 @@ const uint dso_jni_preloads_idx[1] = {
 
 DSOCacheEntry aot_dso_cache[] = {
 	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
+		.hash = 0x4ce380ac,
+		.real_name_hash = 0x4ce380ac,
 		.ignore = true,
 		.is_jni_library = true,
 		.name_index = 3,
@@ -145,8 +144,8 @@ DSOCacheEntry aot_dso_cache[] = {
 	},
 
 	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
+		.hash = 0x5f995ac5,
+		.real_name_hash = 0x5f995ac5,
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 4,
@@ -273,18 +272,18 @@ const char runtime_properties_data[] = {};
 
 const RuntimePropertyIndexEntry runtime_property_index[] = {
 	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_string_key, sizeof(prop_test_string_key) - 1),
+		.key_hash = 0x0967b587,
 		.index = 0,
 	},
 
 	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_integer_key, sizeof(prop_test_integer_key) - 1),
-		.index = 1,
+		.key_hash = 0x56c45ca0,
+		.index = 2,
 	},
 
 	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_boolean_key, sizeof(prop_test_boolean_key) - 1),
-		.index = 2,
+		.key_hash = 0x864e7fc3,
+		.index = 1,
 	},
 };
 

@@ -55,10 +55,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public string? RealName;
 
 		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong hash;
+		public uint hash;
 
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong real_name_hash;
+		public uint real_name_hash;
 		public bool ignore;
 		public bool is_jni_library;
 
@@ -90,7 +90,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public string Name = String.Empty;
 
 		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong name_hash;
+		public uint name_hash;
 		public uint  offset; // offset into the APK
 		public int   fd; // apk file descriptor
 	};
@@ -183,7 +183,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public string? HashedKey;
 
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong key_hash;
+		public uint key_hash;
 		public uint index;
 	}
 
@@ -474,7 +474,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			return;
 		}
 
-		bool is64Bit = target.Is64Bit;
 		foreach (StructureInstance instance in index) {
 			if (instance.Obj == null) {
 				throw new InvalidOperationException ("Internal error: runtime property index must not contain null entries");
@@ -485,7 +484,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				throw new InvalidOperationException ($"Internal error: runtime property index entry has unexpected type {instance.Obj.GetType ()}");
 			}
 
-			entry.key_hash = MonoAndroidHelper.GetXxHash (entry.HashedKey ?? "", is64Bit);
+			entry.key_hash = TypeMapHelper.HashNameForCLR (entry.HashedKey ?? "");
 		};
 
 		index.Sort ((StructureInstance<RuntimePropertyIndexEntry> a, StructureInstance<RuntimePropertyIndexEntry> b) => {
@@ -584,13 +583,12 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			throw new InvalidOperationException ($"Internal error: DSO apk entries count ({dso_apk_entries.Count}) is different to the native libraries count ({NativeLibraries.Count}).");
 		}
 
-		bool is64Bit = target.Is64Bit;
 		foreach (ITaskItem item in NativeLibraries) {
 			string name = Path.GetFileName (item.ItemSpec);
 			var entry = new DSOApkEntry {
 				Name = name,
 
-				name_hash = MonoAndroidHelper.GetXxHash (name, is64Bit),
+				name_hash = TypeMapHelper.HashNameForCLR (name),
 				offset = 0,
 				fd = -1,
 			};
@@ -640,7 +638,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			throw new InvalidOperationException ($"Internal error: DSO cache must not be empty");
 		}
 
-		bool is64Bit = target.Is64Bit;
 		foreach (StructureInstance instance in cache) {
 			if (instance.Obj == null) {
 				throw new InvalidOperationException ("Internal error: DSO cache must not contain null entries");
@@ -651,8 +648,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 			}
 
-			entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName ?? "", is64Bit);
-			entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.RealName ?? "", is64Bit);
+			entry.hash = TypeMapHelper.HashNameForCLR (entry.HashedName ?? "");
+			entry.real_name_hash = TypeMapHelper.HashNameForCLR (entry.RealName ?? "");
 		}
 
 		cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => {

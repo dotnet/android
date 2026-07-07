@@ -103,7 +103,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			// Hardcoded, by design - we want to know if there are any changes in the
 			// native assembly layout.
-			public const uint NativeSize_CoreCLR = 32;
+			public const uint NativeSize_CoreCLR = 24;
 			public const uint NativeSize_MonoVM = 40;
 
 			public ulong hash;
@@ -1135,13 +1135,13 @@ namespace Xamarin.Android.Build.Tests
 				string value;
 				int index = i;
 
-				// uint64_t hash
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
-				ulong hash = ConvertFieldToUInt64 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				// uint32_t hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
+				ulong hash = ConvertFieldToUInt32 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
-				// uint64_t real_name_hash
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
-				ulong real_name_hash = ConvertFieldToUInt64 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				// uint32_t real_name_hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
+				ulong real_name_hash = ConvertFieldToUInt32 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// bool ignore
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");

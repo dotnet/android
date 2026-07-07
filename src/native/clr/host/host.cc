@@ -22,13 +22,13 @@
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
 #include <runtime-base/dso-loader.hh>
+#include <runtime-base/crc32.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
-#include <shared/xxhash.hh>
 #include <startup/zip.hh>
 
 using namespace xamarin::android;
@@ -60,11 +60,11 @@ size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size
 		return 0;
 	}
 
-	hash_t key_hash = xxhash::hash (key, strlen (key));
+	uint32_t key_hash = crc32_hash (key, strlen (key));
 
-	auto equal = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash == key; };
-	auto less_than = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash < key; };
-	ssize_t idx = Search::binary_search<RuntimePropertyIndexEntry, equal, less_than> (key_hash, runtime_property_index, application_config.number_of_runtime_properties);
+	auto equal = [](RuntimePropertyIndexEntry const& entry, uint32_t key) -> bool { return entry.key_hash == key; };
+	auto less_than = [](RuntimePropertyIndexEntry const& entry, uint32_t key) -> bool { return entry.key_hash < key; };
+	ssize_t idx = Search::binary_search<RuntimePropertyIndexEntry, uint32_t, equal, less_than> (key_hash, runtime_property_index, application_config.number_of_runtime_properties);
 	if (idx < 0) {
 		log_debug (LOG_DEFAULT, "Runtime property '{}' not found"sv, key);
 		return 0;
@@ -154,7 +154,7 @@ auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dyna
 
 	log_debug (LOG_ASSEMBLY, "Found shared library in '{}': {}"sv, apk_path, entry_name.get ());
 	std::string_view lib_name { entry_name.get () + Zip::lib_prefix.length () };
-	hash_t name_hash = xxhash::hash (lib_name.data (), lib_name.length ());
+	uint32_t name_hash = crc32_hash (lib_name);
 	log_debug (LOG_ASSEMBLY, "Library name is: {}; hash == 0x{:x}", lib_name, name_hash);
 
 	DSOApkEntry *apk_entry = MonodroidDl::find_dso_apk_entry (name_hash);

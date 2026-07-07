@@ -6,8 +6,6 @@
 
 #include <jni.h>
 
-#include <shared/xxhash.hh>
-
 static constexpr uint64_t FORMAT_TAG = 0x00045E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x535A4158; // 'XAZS', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
@@ -244,21 +242,21 @@ struct RuntimeProperty
 
 struct RuntimePropertyIndexEntry
 {
-	xamarin::android::hash_t key_hash;
+	uint32_t key_hash;
 	uint32_t index;
 };
 
 struct DSOApkEntry
 {
-	uint64_t name_hash;
+	uint32_t name_hash;
 	uint32_t offset; // offset into the APK
 	int32_t  fd; // apk file descriptor
 };
 
 struct DSOCacheEntry
 {
-	const uint64_t  hash;
-	const uint64_t  real_name_hash;
+	const uint32_t  hash;
+	const uint32_t  real_name_hash;
 	const bool      ignore;
 	const bool      is_jni_library;
 	const uint32_t  name_index;
