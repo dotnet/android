@@ -11,12 +11,12 @@ namespace Java.Util
 	{
 		public partial class AbstractSpliterator
 		{
-			public abstract bool TryAdvance (IConsumer action);
+			public abstract bool TryAdvance (IConsumer? action);
 		}
 
 		internal partial class AbstractSpliteratorInvoker
 		{
-			public override unsafe bool TryAdvance (IConsumer action)
+			public override unsafe bool TryAdvance (IConsumer? action)
 			{
 				const string __id = "tryAdvance.(Ljava/util/function/Consumer;)V";
 				IntPtr native_action = JNIEnv.ToLocalJniHandle (action);

@@ -49,8 +49,10 @@ namespace Xamarin.Android.Net
 				_serverCertificateCustomValidationCallback = serverCertificateCustomValidationCallback;
 			}
 
-			public void CheckServerTrusted (JavaX509Certificate[] javaChain, string authType)
+			public void CheckServerTrusted (JavaX509Certificate[]? javaChain, string? authType)
 			{
+				ArgumentNullException.ThrowIfNull (javaChain);
+				ArgumentNullException.ThrowIfNull (authType);
 				var sslPolicyErrors = SslPolicyErrors.None;
 
 				try {
@@ -78,7 +80,7 @@ namespace Xamarin.Android.Net
 				}
 			}
 
-			public void CheckClientTrusted (JavaX509Certificate[] chain, string authType)
+			public void CheckClientTrusted (JavaX509Certificate[]? chain, string? authType)
 				=> _internalTrustManager.CheckClientTrusted (chain, authType);
 
 			public JavaX509Certificate[] GetAcceptedIssuers ()
@@ -150,11 +152,11 @@ namespace Xamarin.Android.Net
 				public byte[] GetId () => throw new InvalidOperationException ();
 				public Java.Security.Cert.Certificate[] GetLocalCertificates () => throw new InvalidOperationException ();
 				public Javax.Security.Cert.X509Certificate[] GetPeerCertificateChain () => throw new InvalidOperationException ();
-				public Java.Lang.Object GetValue(string name) => throw new InvalidOperationException ();
+				public Java.Lang.Object GetValue(string? name) => throw new InvalidOperationException ();
 				public string[] GetValueNames () => throw new InvalidOperationException ();
 				public void Invalidate () => throw new InvalidOperationException ();
-				public void PutValue(string name, Java.Lang.Object value) => throw new InvalidOperationException ();
-				public void RemoveValue(string name) => throw new InvalidOperationException ();
+				public void PutValue(string? name, Java.Lang.Object? value) => throw new InvalidOperationException ();
+				public void RemoveValue(string? name) => throw new InvalidOperationException ();
 			}
 		}
 
