@@ -18,12 +18,12 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	{
 		public readonly LlvmIrFunction NativeFunction;
 		public readonly PinvokeScanner.PinvokeEntryInfo Info;
-		public readonly ulong Hash;
+		public readonly uint Hash;
 
-		public PInvoke (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo, bool is64Bit)
+		public PInvoke (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo)
 		{
 			Info = pinfo;
-			Hash = MonoAndroidHelper.GetXxHash (pinfo.EntryName, is64Bit);
+			Hash = TypeMapHelper.HashNameForCLR (pinfo.EntryName);
 
 			// All the p/invoke functions use the same dummy signature.  The only thing we care about is
 			// a way to reference to the symbol at build time so that we can return pointer to it.  For
@@ -36,21 +36,19 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	sealed class Component
 	{
 		public readonly string Name;
-		public readonly ulong NameHash;
+		public readonly uint NameHash;
 		public readonly List<PInvoke> PInvokes;
-		public bool Is64Bit;
 
-		public Component (string name, bool is64Bit)
+		public Component (string name)
 		{
 			Name = name;
-			NameHash = MonoAndroidHelper.GetXxHash (name, is64Bit);
+			NameHash = TypeMapHelper.HashNameForCLR (name);
 			PInvokes = new ();
-			Is64Bit = is64Bit;
 		}
 
 		public void Add (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo)
 		{
-			PInvokes.Add (new PInvoke (module, pinfo, Is64Bit));
+			PInvokes.Add (new PInvoke (module, pinfo));
 		}
 
 		public void Sort ()
@@ -132,11 +130,11 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			return;
 		}
 
-		bool is64Bit = state.TargetArch switch {
+		_ = state.TargetArch switch {
 			AndroidTargetArch.Arm64  => true,
 			AndroidTargetArch.X86_64 => true,
-			AndroidTargetArch.Arm    => false,
-			AndroidTargetArch.X86    => false,
+			AndroidTargetArch.Arm    => true,
+			AndroidTargetArch.X86    => true,
 			_                        => throw new NotSupportedException ($"Architecture {state.TargetArch} is not supported here")
 		};
 
@@ -182,7 +180,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			}
 
 			if (!preservedPerComponent.TryGetValue (pinfo.LibraryName, out Component? component)) {
-				component = new Component (pinfo.LibraryName, is64Bit);
+				component = new Component (pinfo.LibraryName);
 				preservedPerComponent.Add (component.Name, component);
 			}
 			component.Add (module, pinfo);
@@ -192,11 +190,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		module.AddGlobalVariable ("__explicitly_preserved_symbols", symbolsToExplicitlyPreserve, LlvmIrVariableOptions.GlobalConstant);
 
 		var components = new List<Component> (preservedPerComponent.Values);
-		if (is64Bit) {
-			AddFindPinvoke<ulong> (module, components, is64Bit);
-		} else {
-			AddFindPinvoke<uint> (module, components, is64Bit);
-		}
+		AddFindPinvoke<uint> (module, components, is64Bit: false);
 	}
 
 	void AddFindPinvoke<T> (LlvmIrModule module, List<Component> components, bool is64Bit) where T: struct

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -31,22 +32,28 @@
 #endif
 
 #include "../runtime-base/monodroid-dl.hh"
-#include <shared/xxhash.hh>
+#include <runtime-base/crc32.hh>
 
 namespace xamarin::android {
+#if INTPTR_MAX == INT64_MAX
+	using pinvoke_entry_hash_t = uint64_t;
+#else
+	using pinvoke_entry_hash_t = uint32_t;
+#endif
+
 	struct PinvokeEntry
 	{
-		hash_t      hash;
-		const char *name;
-		void       *func;
+		pinvoke_entry_hash_t hash;
+		const char          *name;
+		void                *func;
 	};
 
 	struct string_hash
 	{
 		[[gnu::always_inline]]
-		xamarin::android::hash_t operator() (std::string const& s) const noexcept
+		size_t operator() (std::string const& s) const noexcept
 		{
-			return xamarin::android::xxhash::hash (s.c_str (), s.length ());
+			return xamarin::android::crc32_hash (s.c_str (), s.length ());
 		}
 	};
 
@@ -76,9 +83,9 @@ namespace xamarin::android {
 	public:
 		static auto load_library_symbol (std::string_view const& library_name, std::string_view const& symbol_name, void **dso_handle = nullptr) noexcept -> void*;
 		static auto load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map) noexcept -> void*;
-		static auto fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*;
-		static auto find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*;
-		static auto handle_other_pinvoke_request (std::string_view const& library_name, hash_t library_name_hash, std::string_view const& entrypoint_name, hash_t entrypoint_name_hash) noexcept -> void*;
+		static auto fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*;
+		static auto find_pinvoke_address (pinvoke_entry_hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*;
+		static auto handle_other_pinvoke_request (std::string_view const& library_name, std::string_view const& entrypoint_name) noexcept -> void*;
 		static void handle_jni_on_load (JavaVM *vm, void *reserved) noexcept;
 		static auto monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept -> void*;
 

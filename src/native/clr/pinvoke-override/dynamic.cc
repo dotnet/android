@@ -13,7 +13,7 @@ using JniOnLoadHandler = jint (*) (JavaVM *vm, void *reserved);
 // These external functions are generated during application build (see obj/${CONFIGURATION}/${RID}/android/pinvoke_preserve.*.ll)
 //
 extern "C" {
-	void* find_pinvoke (hash_t library_name_hash, hash_t entrypoint_hash, bool &known_library);
+	void* find_pinvoke (uint32_t library_name_hash, uint32_t entrypoint_hash, bool &known_library);
 
 	extern const uint32_t __jni_on_load_handler_count;
 	extern const JniOnLoadHandler __jni_on_load_handlers[];
@@ -37,8 +37,8 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 		);
 	}
 
-	hash_t library_name_hash = xxhash::hash (library_name, strlen (library_name));
-	hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
+	uint32_t library_name_hash = crc32_hash (library_name, strlen (library_name));
+	uint32_t entrypoint_hash = crc32_hash (entrypoint_name, strlen (entrypoint_name));
 	log_debug (LOG_ASSEMBLY, "library_name_hash == 0x{:x}; entrypoint_hash == 0x{:x}"sv, library_name_hash, entrypoint_hash);
 
 	bool known_library = true;
@@ -69,7 +69,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	}
 
 	log_debug (LOG_ASSEMBLY, "p/invoke not from a known library, slow path taken."sv);
-	pinvoke_ptr = handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
+	pinvoke_ptr = handle_other_pinvoke_request (library_name, entrypoint_name);
 	log_debug (LOG_ASSEMBLY, "foreign library pinvoke_ptr == {:p}"sv, pinvoke_ptr);
 	return pinvoke_ptr;
 }

@@ -85,9 +85,9 @@ namespace xamarin::android {
 	}
 
 	PINVOKE_OVERRIDE_INLINE
-	auto PinvokeOverride::fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*
+	auto PinvokeOverride::fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*
 	{
-		auto iter = api_map->find (entrypoint_name, entrypoint_name_hash);
+		auto iter = api_map->find (entrypoint_name);
 		if (iter != api_map->end () && iter->second != nullptr) {
 			return iter->second;
 		}
@@ -101,7 +101,7 @@ namespace xamarin::android {
 	}
 
 	PINVOKE_OVERRIDE_INLINE
-	auto PinvokeOverride::find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*
+	auto PinvokeOverride::find_pinvoke_address (pinvoke_entry_hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*
 	{
 		while (entry_count > 0uz) {
 			const size_t mid = entry_count / 2uz;
@@ -122,19 +122,19 @@ namespace xamarin::android {
 	}
 
 	PINVOKE_OVERRIDE_INLINE
-	auto PinvokeOverride::handle_other_pinvoke_request (std::string_view const& library_name, hash_t library_name_hash, std::string_view const& entrypoint_name, hash_t entrypoint_name_hash) noexcept -> void*
+	auto PinvokeOverride::handle_other_pinvoke_request (std::string_view const& library_name, std::string_view const& entrypoint_name) noexcept -> void*
 	{
 		std::string lib_name {library_name};
 		std::string entry_name {entrypoint_name};
 
-		auto iter = other_pinvoke_map.find (lib_name, library_name_hash);
+		auto iter = other_pinvoke_map.find (lib_name);
 		void *handle = nullptr;
 		if (iter == other_pinvoke_map.end ()) {
 			StartupAwareLock lock (pinvoke_map_write_lock);
 
 			pinvoke_api_map_ptr lib_map;
 			// Make sure some other thread hasn't just added the map
-			iter = other_pinvoke_map.find (lib_name, library_name_hash);
+			iter = other_pinvoke_map.find (lib_name);
 			if (iter == other_pinvoke_map.end () || iter->second == nullptr) {
 				lib_map = new pinvoke_api_map (1);
 				other_pinvoke_map[lib_name] = lib_map;
@@ -142,14 +142,14 @@ namespace xamarin::android {
 				lib_map = iter->second;
 			}
 
-			handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, entrypoint_name_hash, lib_map, /* need_lock */ false);
+			handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, lib_map, /* need_lock */ false);
 		} else {
 			if (iter->second == nullptr) [[unlikely]] {
 				log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '{}'", library_name);
 				return nullptr; // fall back to `monodroid_dlopen`
 			}
 
-			handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, entrypoint_name_hash, iter->second, /* need_lock */ true);
+			handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, iter->second, /* need_lock */ true);
 		}
 
 		return handle;

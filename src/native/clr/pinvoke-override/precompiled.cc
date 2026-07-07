@@ -1,6 +1,7 @@
 #define PINVOKE_OVERRIDE_INLINE [[gnu::always_inline]]
 
 #include <host/host.hh>
+#include <shared/xxhash.hh>
 #include <host/pinvoke-override-impl.hh>
 #include <runtime-base/internal-pinvokes.hh>
 
@@ -72,7 +73,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	// directories. CoreCLR's default resolver does not replicate that behaviour, so this path is kept.
 	// It also carries no static table, so it is not subject to the drift problem that motivated the
 	// BCL change above.
-	return handle_other_pinvoke_request (library_name, library_name_hash, entrypoint_name, entrypoint_hash);
+	return handle_other_pinvoke_request (library_name, entrypoint_name);
 }
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
