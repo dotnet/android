@@ -110,7 +110,7 @@ Several `.nupkg` files will be output in `.\bin\Build$(Configuration)\nuget-unsi
 Once `dotnet-local.cmd build Xamarin.Android.sln` has completed, the unit tests may
 be built with e.g.:
 
-    dotnet-local.cmd build Xamarin.Android-Tests.sln /restore /p:Configuration=Debug /bl:bin\TestDebug\msbuild-build-tests.binlog
+    dotnet-local.cmd build Xamarin.Android-Tests.slnx /restore /p:Configuration=Debug /bl:bin\TestDebug\msbuild-build-tests.binlog
 
 Note that the `Debug` in `bin\Debug` must match the Configuration
 which was built.  If dotnet/android was built with `-c Release`, then
