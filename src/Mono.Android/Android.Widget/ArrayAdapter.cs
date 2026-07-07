@@ -178,7 +178,7 @@ namespace Android.Widget {
 
 		static IntPtr id_createFromResource_Landroid_content_Context_II;
 		[Register ("createFromResource", "(Landroid/content/Context;II)Landroid/widget/ArrayAdapter;", "")]
-		public static Android.Widget.ArrayAdapter<Java.Lang.ICharSequence> CreateFromResource (Android.Content.Context context, int textArrayResId, int textViewResId)
+		public new static Android.Widget.ArrayAdapter<Java.Lang.ICharSequence> CreateFromResource (Android.Content.Context context, int textArrayResId, int textViewResId)
 		{
 			if (id_createFromResource_Landroid_content_Context_II == IntPtr.Zero)
 				id_createFromResource_Landroid_content_Context_II = JNIEnv.GetStaticMethodID (class_ref, "createFromResource", "(Landroid/content/Context;II)Landroid/widget/ArrayAdapter;");
