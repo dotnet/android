@@ -59,7 +59,7 @@ namespace Java.Interop {
 		}
 
 		class TypeNameComparer : IComparer<string> {
-			public int Compare (string x, string y)
+			public int Compare (string? x, string? y)
 			{
 				if (object.ReferenceEquals (x, y))
 					return 0;
