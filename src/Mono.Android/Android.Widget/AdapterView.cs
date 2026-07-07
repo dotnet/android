@@ -129,7 +129,7 @@ namespace Android.Widget {
 			}
 		}
 
-		protected override Java.Lang.Object RawAdapter {
+		protected override Java.Lang.Object? RawAdapter {
 			get { return JavaObjectExtensions.JavaCast<Java.Lang.Object>(JavaConvert.ToJavaObject (Adapter))!; }
 			set { Adapter = JavaConvert.FromJavaObject<T>(value)!; }
 		}
