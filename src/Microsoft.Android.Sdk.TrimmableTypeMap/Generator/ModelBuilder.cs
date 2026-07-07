@@ -691,8 +691,10 @@ static class ModelBuilder
 	// Emits array proxies for the built-in element types that are not scanned Java peers:
 	//   * the keyword primitives (int/bool/...) up to maxArrayRank (jagged/multidim primitive arrays
 	//     like int[][][] are cheap — a small fixed set of element types),
-	//   * System.String and the boxed Nullable<T> value types up to maxReferenceArrayRank (these map to
-	//     java/lang/String and java/lang/<Boxed>, i.e. Java reference arrays).
+	//   * System.String up to maxArrayRank (also a built-in element type, so multidimensional string
+	//     arrays like String[][] stay resolvable),
+	//   * the boxed Nullable<T> value types up to maxReferenceArrayRank (these map to java/lang/<Boxed>,
+	//     i.e. Java reference arrays).
 	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank, int maxReferenceArrayRank)
 	{
 		foreach (var primitive in PrimitiveArrayProxies) {
@@ -723,13 +725,15 @@ static class ModelBuilder
 			}
 		}
 
-		// System.String maps to java/lang/String but is a built-in reference type injected at runtime
-		// by TrimmableTypeMapTypeManager.GetBuiltInTypeForSimpleReference, so it is neither a scanned
-		// Java peer (EmitArrayEntriesForPeer) nor a primitive. Emit its array proxies here (Primitive is
-		// null, so it gets the reference-array family) so GetTypes ("[Ljava/lang/String;") yields
+		// System.String maps to java/lang/String but is a built-in element type injected at runtime by
+		// TrimmableTypeMapTypeManager.GetBuiltInTypeForSimpleReference, so it is neither a scanned Java
+		// peer (EmitArrayEntriesForPeer) nor a keyword primitive. Emit its array proxies here (Primitive
+		// is null, so it gets the reference-array family) so GetTypes ("[Ljava/lang/String;") yields
 		// System.String[] / JavaObjectArray<string> / JavaArray<string> on NativeAOT, matching CoreCLR.
-		// It is a reference type, so it only goes up to maxReferenceArrayRank.
-		for (int rank = 1; rank <= maxReferenceArrayRank; rank++) {
+		// String is a single, fixed built-in element type (not part of the scanned-peer explosion), so —
+		// like the keyword primitives — it goes up to maxArrayRank. This keeps multidimensional string
+		// arrays (String[][], "[[Ljava/lang/String;") resolvable, matching the other type-map backends.
+		for (int rank = 1; rank <= maxArrayRank; rank++) {
 			var proxy = new ArrayProxyData {
 				TypeName = ManagedTypeNameToArrayProxyTypeName ("System.String", rank),
 				ElementType = new TypeRefData {
