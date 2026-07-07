@@ -189,7 +189,7 @@ namespace Android.Widget {
 
 		static IntPtr id_getItem_I;
 		[Register ("getItem", "(I)Ljava/lang/Object;", "GetGetItem_IHandler")]
-		public T? GetItem (int position)
+		public new T? GetItem (int position)
 		{
 			if (id_getItem_I == IntPtr.Zero)
 				id_getItem_I = JNIEnv.GetMethodID (class_ref, "getItem", "(I)Ljava/lang/Object;");
@@ -234,7 +234,7 @@ namespace Android.Widget {
 
 		static IntPtr id_sort_Ljava_util_Comparator_;
 		[Register ("sort", "(Ljava/util/Comparator;)V", "GetSort_Ljava_util_Comparator_Handler")]
-		public void Sort (Java.Util.IComparator comparator)
+		public new void Sort (Java.Util.IComparator comparator)
 		{
 			if (id_sort_Ljava_util_Comparator_ == IntPtr.Zero)
 				id_sort_Ljava_util_Comparator_ = JNIEnv.GetMethodID (class_ref, "sort", "(Ljava/util/Comparator;)V");
