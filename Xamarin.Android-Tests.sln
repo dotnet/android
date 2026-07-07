@@ -35,7 +35,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelloWorld", "HelloWorld", "{2633B698-A9AF-DF75-F94C-9021C604CA0C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelloWorld", "HelloWorld", "{00F1FAFB-D484-5C99-D022-F523885E2C79}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HelloWorld.DotNet", "HelloWorld.DotNet", "{00F1FAFB-D484-5C99-D022-F523885E2C79}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWorld.DotNet", "samples\HelloWorld\HelloWorld\HelloWorld.DotNet.csproj", "{42E4D469-9EF9-4EF5-963C-26E2B8EBA764}"
 EndProject
@@ -53,7 +53,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Java.Interop-Tests", "Java.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop-Tests.NET", "tests\Mono.Android-Tests\Java.Interop-Tests\Java.Interop-Tests.NET.csproj", "{83E25890-BFC5-494A-BFF7-C3021C4272AF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mono.Android-Tests", "Mono.Android-Tests", "{5569B99A-9837-0E0F-C6F1-1926591449D0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mono.Android.NET-Tests", "Mono.Android.NET-Tests", "{5569B99A-9837-0E0F-C6F1-1926591449D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mono.Android.NET-Tests", "tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj", "{B2DA401C-F837-4B48-A4A5-A922C2993153}"
 EndProject
