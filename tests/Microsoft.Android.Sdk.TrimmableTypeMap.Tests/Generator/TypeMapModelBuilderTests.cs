@@ -1180,7 +1180,8 @@ public class ModelBuilderTests : FixtureTestBase
 			var primitiveEntries = model.Entries
 				.Where (e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null)
 				.ToList ();
-			Assert.Equal (36, primitiveEntries.Count);
+			// 12 primitives × 3 ranks + System.String × 3 ranks.
+			Assert.Equal (39, primitiveEntries.Count);
 
 			var sbyteRank1 = primitiveEntries.Single (e => e.MapKey == "System.SByte, System.Runtime" && e.AnchorRank == 1);
 			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
@@ -1216,6 +1217,25 @@ public class ModelBuilderTests : FixtureTestBase
 					a.SourceTypeReference == concreteArrayTypeReference &&
 					a.AliasProxyTypeReference == rank1.ProxyTypeReference);
 			}
+
+			// System.String is a built-in reference mapping (java/lang/String), emitted with the
+			// reference-array family (JavaObjectArray<T>, JavaArray<T>, T[]) and no primitive concrete
+			// arrays or JavaPrimitiveArray<T>.
+			var stringRank1 = primitiveEntries.Single (e => e.MapKey == "System.String, System.Runtime" && e.AnchorRank == 1);
+			Assert.Equal ("_TypeMap.ArrayProxies.System_String_ArrayProxy1, _Java.Interop.TypeMap", stringRank1.ProxyTypeReference);
+			Assert.Equal ("_TypeMap.ArrayProxies.System_String_ArrayProxy1, _Java.Interop.TypeMap", stringRank1.TargetTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "System.String[], System.Runtime" &&
+				a.AliasProxyTypeReference == stringRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[System.String, System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == stringRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaArray`1[[System.String, System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == stringRank1.ProxyTypeReference);
+			Assert.DoesNotContain (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaPrimitiveArray`1[[System.String, System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == stringRank1.ProxyTypeReference);
 		}
 
 		[Fact]
