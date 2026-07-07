@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Android.Runtime;
 using Java.Interop;
@@ -543,25 +544,58 @@ public class TrimmableTypeMap
 
 	static bool TryGetManagedTypeKey (Type type, [NotNullWhen (true)] out string? key)
 	{
-		var fullName = type.FullName;
-		if (fullName is null) {
-			key = null;
-			return false;
-		}
+		key = BuildManagedTypeKey (type);
+		return key is not null;
+	}
 
+	// Builds the array-proxy map key for a managed type. Closed generic types use a normalized,
+	// version-independent form so the key matches the one emitted by the trimmable typemap generator,
+	// which references types by simple assembly name (no Version/Culture/PublicKeyToken). Without
+	// normalization a closed generic like Nullable<bool> would key on Type.FullName, whose type
+	// arguments carry the full versioned assembly-qualified name and would never match.
+	static string? BuildManagedTypeKey (Type type)
+	{
 		var assemblyName = GetAssemblyNameForManagedTypeKey (type);
 		if (assemblyName is null) {
-			key = null;
-			return false;
+			return null;
 		}
 
-		key = $"{fullName}, {assemblyName}";
-		return true;
+		if (type.IsGenericType && !type.IsGenericTypeDefinition) {
+			var definitionName = type.GetGenericTypeDefinition ().FullName;
+			if (definitionName is null) {
+				return null;
+			}
+			var arguments = type.GetGenericArguments ();
+			var builder = new StringBuilder (definitionName);
+			builder.Append ("[[");
+			for (int i = 0; i < arguments.Length; i++) {
+				if (i > 0) {
+					builder.Append ("],[");
+				}
+				var argumentKey = BuildManagedTypeKey (arguments [i]);
+				if (argumentKey is null) {
+					return null;
+				}
+				builder.Append (argumentKey);
+			}
+			builder.Append ("]], ");
+			builder.Append (assemblyName);
+			return builder.ToString ();
+		}
+
+		var fullName = type.FullName;
+		if (fullName is null) {
+			return null;
+		}
+		return $"{fullName}, {assemblyName}";
 	}
 
 	static string? GetAssemblyNameForManagedTypeKey (Type type)
 	{
-		if (type.IsPrimitive || type == typeof (string)) {
+		// Primitives, string, and Nullable<T> are surfaced through the System.Runtime reference
+		// assembly; the trimmable typemap generator emits their keys with "System.Runtime", so
+		// normalize to it here (the runtime implementation assembly is System.Private.CoreLib).
+		if (type.IsPrimitive || type == typeof (string) || Nullable.GetUnderlyingType (type) is not null) {
 			return "System.Runtime";
 		}
 

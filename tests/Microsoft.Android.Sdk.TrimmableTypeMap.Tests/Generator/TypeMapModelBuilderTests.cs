@@ -1180,8 +1180,8 @@ public class ModelBuilderTests : FixtureTestBase
 			var primitiveEntries = model.Entries
 				.Where (e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null)
 				.ToList ();
-			// 12 primitives × 3 ranks + System.String × 3 ranks.
-			Assert.Equal (39, primitiveEntries.Count);
+			// 12 primitives × 3 ranks + System.String × 3 ranks + 8 Nullable<primitive> × 3 ranks.
+			Assert.Equal (63, primitiveEntries.Count);
 
 			var sbyteRank1 = primitiveEntries.Single (e => e.MapKey == "System.SByte, System.Runtime" && e.AnchorRank == 1);
 			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
@@ -1236,6 +1236,19 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.DoesNotContain (model.Associations, a =>
 				a.SourceTypeReference == "Java.Interop.JavaPrimitiveArray`1[[System.String, System.Runtime]], Java.Interop" &&
 				a.AliasProxyTypeReference == stringRank1.ProxyTypeReference);
+
+			// Nullable<T> boxed mappings (java/lang/Boolean etc.) use the normalized generic key
+			// (simple assembly names) that TrimmableTypeMap.BuildManagedTypeKey produces at runtime, and
+			// get the reference-array family.
+			var nullableBoolRank1 = primitiveEntries.Single (e =>
+				e.MapKey == "System.Nullable`1[[System.Boolean, System.Runtime]], System.Runtime" && e.AnchorRank == 1);
+			Assert.Equal ("_TypeMap.ArrayProxies.Nullable_Boolean_ArrayProxy1, _Java.Interop.TypeMap", nullableBoolRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "System.Nullable`1[[System.Boolean, System.Runtime]][], System.Runtime" &&
+				a.AliasProxyTypeReference == nullableBoolRank1.ProxyTypeReference);
+			Assert.Contains (model.Associations, a =>
+				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[System.Nullable`1[[System.Boolean, System.Runtime]], System.Runtime]], Java.Interop" &&
+				a.AliasProxyTypeReference == nullableBoolRank1.ProxyTypeReference);
 		}
 
 		[Fact]
