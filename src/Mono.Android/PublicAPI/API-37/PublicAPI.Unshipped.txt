@@ -2342,6 +2342,8 @@ Android.Widget.Photopicker.AspectRatio
 Android.Widget.Photopicker.AspectRatio.Portrait916 = 1 -> Android.Widget.Photopicker.AspectRatio
 Android.Widget.Photopicker.AspectRatio.Square11 = 0 -> Android.Widget.Photopicker.AspectRatio
 Android.Widget.Photopicker.AspectRatio.Undefined = -1 -> Android.Widget.Photopicker.AspectRatio
+Java.Interop.BaseExportAttribute
+Java.Interop.BaseExportAttribute.BaseExportAttribute() -> void
 Java.Interop.IAndroidCallableWrapper
 Java.Interop.IAndroidCallableWrapper.RegisterNatives(Java.Interop.JniType! nativeClass) -> void
 Java.Interop.JavaArrayProxy
@@ -2353,12 +2355,11 @@ Java.Interop.JavaPeerContainerFactory
 Java.Interop.JavaPeerContainerFactory.JavaPeerContainerFactory() -> void
 Java.Interop.JavaPeerContainerFactory<T>
 Java.Interop.JavaPeerProxy
-Java.Interop.JavaPeerProxy.InvokerType.get -> System.Type?
-Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType, System.Type? invokerType) -> void
+Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType) -> void
 Java.Interop.JavaPeerProxy.JniName.get -> string!
 Java.Interop.JavaPeerProxy.TargetType.get -> System.Type!
 Java.Interop.JavaPeerProxy<T>
-Java.Interop.JavaPeerProxy<T>.JavaPeerProxy(string! jniName, System.Type? invokerType) -> void
+Java.Interop.JavaPeerProxy<T>.JavaPeerProxy(string! jniName) -> void
 Java.Lang.ICharSequence.GetChars(int srcBegin, int srcEnd, char[]! dst, int dstBegin) -> void
 Java.Lang.IllegalCallerException
 Java.Lang.IllegalCallerException.IllegalCallerException() -> void
