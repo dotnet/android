@@ -11,6 +11,7 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
 using System.Diagnostics.CodeAnalysis;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 #if JAVA_INTEROP
 namespace Android.Runtime {

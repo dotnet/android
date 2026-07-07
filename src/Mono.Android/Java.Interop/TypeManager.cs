@@ -9,6 +9,7 @@ using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
 using Microsoft.Android.Runtime;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Java.Interop {
 
