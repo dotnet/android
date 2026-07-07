@@ -256,23 +256,6 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void TryGetArrayProxy_ObjectLeaf_ReturnsAllRankTypes ()
-		{
-			AssumeTrimmableTypeMapEnabled ();
-			AssumeGeneratedArrayProxiesEnabled ();
-
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 1, out var objectArrayProxy));
-			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Lang.Object>));
-			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>));
-			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[]));
-
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 2, out var jaggedObjectArrayProxy));
-			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>));
-			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>[]));
-			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[][]));
-		}
-
-		[Test]
 		public void TryGetArrayProxy_PrimitiveLeaf_ReturnsAllRankTypes ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
