@@ -585,7 +585,7 @@ namespace Android.Runtime {
 			return true;
 		}
 		
-		public virtual bool Equals (Java.Lang.Object obj)
+		public virtual new bool Equals (Java.Lang.Object obj)
 		{
 			var collection = obj as JavaList;
 			if (collection == null || Count != collection.Count)
