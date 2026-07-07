@@ -12,7 +12,12 @@
 using namespace xamarin::android;
 
 namespace {
-	auto load_internal_symbol (std::string_view const& entrypoint_name) noexcept -> void*
+	auto load_java_interop_symbol ([[maybe_unused]] std::string_view const& entrypoint_name) noexcept -> void*
+	{
+		return nullptr;
+	}
+
+	auto load_xa_internal_api_symbol (std::string_view const& entrypoint_name) noexcept -> void*
 	{
 		if (entrypoint_name == "_monodroid_detect_cpu_and_architecture"sv) {
 			return reinterpret_cast<void*> (&_monodroid_detect_cpu_and_architecture);
@@ -95,6 +100,12 @@ namespace {
 		if (entrypoint_name == "xamarin_app_init"sv) {
 			return reinterpret_cast<void*> (&xamarin_app_init);
 		}
+
+		return nullptr;
+	}
+
+	auto load_liblog_symbol (std::string_view const& entrypoint_name) noexcept -> void*
+	{
 		if (entrypoint_name == "__android_log_print"sv) {
 			return reinterpret_cast<void*> (&__android_log_print);
 		}
@@ -113,8 +124,42 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	std::string_view library_name_view {library_name};
 	std::string_view entrypoint_name_view {entrypoint_name};
 
-	if (library_name_view == "java-interop"sv || library_name_view == "xa-internal-api"sv || library_name_view == "liblog"sv) {
-		void *entry = load_internal_symbol (entrypoint_name_view);
+	if (library_name_view == "java-interop"sv) {
+		void *entry = load_java_interop_symbol (entrypoint_name_view);
+
+		if (entry == nullptr) [[unlikely]] {
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				std::format (
+					"Internal p/invoke symbol '{}'@'{}' not found"sv,
+					optional_string (entrypoint_name),
+					optional_string (library_name)
+				)
+			);
+		}
+
+		return entry;
+	}
+
+	if (library_name_view == "xa-internal-api"sv) {
+		void *entry = load_xa_internal_api_symbol (entrypoint_name_view);
+
+		if (entry == nullptr) [[unlikely]] {
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				std::format (
+					"Internal p/invoke symbol '{}'@'{}' not found"sv,
+					optional_string (entrypoint_name),
+					optional_string (library_name)
+				)
+			);
+		}
+
+		return entry;
+	}
+
+	if (library_name_view == "liblog"sv) {
+		void *entry = load_liblog_symbol (entrypoint_name_view);
 
 		if (entry == nullptr) [[unlikely]] {
 			Helpers::abort_application (
