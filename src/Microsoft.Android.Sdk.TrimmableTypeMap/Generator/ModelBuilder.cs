@@ -577,6 +577,26 @@ static class ModelBuilder
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
 
+	static string AssemblyQualify (TypeRefData type)
+	{
+		if (type.GenericArguments.Count == 0) {
+			return AssemblyQualify (type.ManagedTypeName, type.AssemblyName);
+		}
+
+		var builder = new StringBuilder ();
+		builder.Append (type.ManagedTypeName);
+		builder.Append ("[[");
+		for (int i = 0; i < type.GenericArguments.Count; i++) {
+			if (i > 0) {
+				builder.Append ("],[");
+			}
+			builder.Append (AssemblyQualify (type.GenericArguments [i]));
+		}
+		builder.Append ("]], ");
+		builder.Append (type.AssemblyName);
+		return builder.ToString ();
+	}
+
 	static string AddArrayRank (string typeReference, int rank)
 	{
 		if (rank == 0) {
@@ -605,7 +625,7 @@ static class ModelBuilder
 
 	static IReadOnlyList<string> GetArrayTypeReferences (ArrayProxyData proxy)
 	{
-		var elementType = AssemblyQualify (proxy.ElementType.ManagedTypeName, proxy.ElementType.AssemblyName);
+		var elementType = AssemblyQualify (proxy.ElementType);
 		if (proxy.Primitive is null) {
 			var rankOneTypes = new [] {
 				MakeGenericTypeReference ("Java.Interop.JavaObjectArray`1", "Java.Interop", elementType),
@@ -621,7 +641,7 @@ static class ModelBuilder
 			MakeGenericTypeReference ("Java.Interop.JavaPrimitiveArray`1", "Java.Interop", elementType),
 		];
 		foreach (var concreteArrayType in proxy.Primitive.ConcreteArrayTypes) {
-			rankOnePrimitiveTypes.Add (AssemblyQualify (concreteArrayType.ManagedTypeName, concreteArrayType.AssemblyName));
+			rankOnePrimitiveTypes.Add (AssemblyQualify (concreteArrayType));
 		}
 		return ExpandRankOneTypes (rankOnePrimitiveTypes, proxy.Rank);
 	}
@@ -652,7 +672,7 @@ static class ModelBuilder
 	}
 
 	static string GetArrayProxyMapKey (TypeRefData elementType)
-		=> AssemblyQualify (elementType.ManagedTypeName, elementType.AssemblyName);
+		=> AssemblyQualify (elementType);
 
 	/// <summary>
 	/// Emits per-rank array TypeMap entries for one peer, anchored to the per-assembly
@@ -771,17 +791,26 @@ static class ModelBuilder
 		// primitive proxy). Emit reference-array proxies (Primitive is null) so GetTypes
 		// ("[Ljava/lang/Boolean;") yields bool?[] / JavaObjectArray<bool?> on NativeAOT. The element
 		// key uses the normalized generic form (simple assembly names) that
-		// TrimmableTypeMap.BuildManagedTypeKey produces at runtime for Nullable<T>. Like the primitives
-		// and System.String, these are a small fixed set of built-in element types (not the scanned-peer
-		// explosion), so they go up to maxArrayRank and keep multidim boxed arrays resolvable.
+		// TrimmableTypeMap.BuildManagedTypeKey produces at runtime for Nullable<T>, while the model
+		// keeps the generic instantiation structured so the emitter writes a real Nullable<T> type
+		// signature. Like the primitives and System.String, these are a small fixed set of built-in
+		// element types (not the scanned-peer explosion), so they go up to maxArrayRank and keep
+		// multidim boxed arrays resolvable.
 		foreach (var nullablePrimitive in NullableArrayProxies) {
-			var elementTypeName = $"System.Nullable`1[[{nullablePrimitive.ManagedTypeName}, System.Runtime]]";
 			for (int rank = 1; rank <= maxArrayRank; rank++) {
 				var proxy = new ArrayProxyData {
 					TypeName = $"Nullable_{nullablePrimitive.Name}_ArrayProxy{rank}",
 					ElementType = new TypeRefData {
-						ManagedTypeName = elementTypeName,
+						ManagedTypeName = "System.Nullable`1",
 						AssemblyName = "System.Runtime",
+						GenericArguments = [
+							new TypeRefData {
+								ManagedTypeName = nullablePrimitive.ManagedTypeName,
+								AssemblyName = "System.Runtime",
+								IsValueType = true,
+							},
+						],
+						IsValueType = true,
 					},
 					Rank = rank,
 				};

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using Xunit;
 
@@ -1266,6 +1267,13 @@ public class ModelBuilderTests : FixtureTestBase
 			var nullableBoolRank1 = primitiveEntries.Single (e =>
 				e.MapKey == "System.Nullable`1[[System.Boolean, System.Runtime]], System.Runtime" && e.AnchorRank == 1);
 			Assert.Equal ("_TypeMap.ArrayProxies.Nullable_Boolean_ArrayProxy1, _Java.Interop.TypeMap", nullableBoolRank1.ProxyTypeReference);
+			var nullableBoolProxy = model.ArrayProxyTypes.Single (p => p.TypeName == "Nullable_Boolean_ArrayProxy1");
+			Assert.Equal ("System.Nullable`1", nullableBoolProxy.ElementType.ManagedTypeName);
+			Assert.Equal ("System.Runtime", nullableBoolProxy.ElementType.AssemblyName);
+			Assert.True (nullableBoolProxy.ElementType.IsValueType);
+			var nullableBoolArgument = Assert.Single (nullableBoolProxy.ElementType.GenericArguments);
+			Assert.Equal ("System.Boolean", nullableBoolArgument.ManagedTypeName);
+			Assert.Equal ("System.Runtime", nullableBoolArgument.AssemblyName);
 			Assert.Contains (model.Associations, a =>
 				a.SourceTypeReference == "System.Nullable`1[[System.Boolean, System.Runtime]][], System.Runtime" &&
 				a.AliasProxyTypeReference == nullableBoolRank1.ProxyTypeReference);
@@ -1416,6 +1424,20 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.Contains ("Primitive_Byte_ArrayProxy1", typeDefNames);
 				Assert.Contains ("Primitive_Byte_ArrayProxy2", typeDefNames);
 				Assert.Contains ("Primitive_UInt32_ArrayProxy1", typeDefNames);
+				Assert.Contains ("Nullable_Boolean_ArrayProxy1", typeDefNames);
+
+				var typeRefNames = reader.TypeReferences
+					.Select (h => reader.GetString (reader.GetTypeReference (h).Name))
+					.ToList ();
+				Assert.Contains ("Nullable`1", typeRefNames);
+				Assert.DoesNotContain (typeRefNames, name => name.Contains ("[[", StringComparison.Ordinal));
+
+				var typeSpecNames = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.TypeSpec))
+					.Select (MetadataTokens.TypeSpecificationHandle)
+					.Select (h => reader.GetTypeSpecification (h).DecodeSignature (SignatureTypeProvider.Instance, genericContext: null))
+					.ToList ();
+				Assert.Contains ("System.Nullable`1<System.Boolean>[]", typeSpecNames);
+				Assert.Contains ("Java.Interop.JavaObjectArray`1<System.Nullable`1<System.Boolean>>", typeSpecNames);
 
 				var assocAttrs = ReadAllTypeMapAssociationAttributeBlobs (reader);
 				Assert.Contains (assocAttrs, a =>
