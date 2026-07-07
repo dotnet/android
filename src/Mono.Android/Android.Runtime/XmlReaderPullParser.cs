@@ -9,7 +9,7 @@ namespace Android.Runtime
 {
 	public class XmlReaderResourceParser : XmlReaderPullParser, IXmlResourceParser
 	{
-		public static IntPtr ToLocalJniHandle (XmlReader? value)
+		public new static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
