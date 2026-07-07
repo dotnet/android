@@ -73,7 +73,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		{
 			var entry = EnsureType<TypeMapAssembly> (data);
 
-			if (MonoAndroidHelper.StringEquals ("mvid_hash", fieldName)) {
+			if (MonoAndroidHelper.StringEquals ("module_uuid", fieldName)) {
 				return $" MVID: {entry.MVID}";
 			}
 
@@ -118,7 +118,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public uint from;
 
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong from_hash;
+		public uint from_hash;
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint to;
@@ -174,8 +174,9 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (Ignore = true)]
 		public Guid MVID;
 
-		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong mvid_hash;
+		[NativeAssembler (UsesDataProvider = true, InlineArray = true, InlineArraySize = 16)]
+		public byte[] module_uuid = [];
+
 		public ulong name_length;
 
 		[NativeAssembler (UsesDataProvider = true)]
@@ -224,12 +225,12 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// CoreCLR supports only 64-bit targets, so we can make things simpler by hashing all the things here instead of
 		// in a callback during code generation
 
-		// Probability of xxHash clashes on managed type names is very low, it might be hard to find such type names that
-		// would create collision, so in order to be able to test the string-based managed-to-java typemaps, we check whether
+		// CRC32 collisions on managed type names should be rare, but if one happens we fall back to string matching. In order
+		// to be able to test the string-based managed-to-java typemaps, we check whether
 		// the `CI_TYPEMAP_DEBUG_USE_STRINGS` environment variable is present and not empty.  If it's not in the environment
 		// or its value is an empty string, we default to using hashes for the managed-to-java type maps.
 		bool typemap_uses_hashes = String.IsNullOrEmpty (Environment.GetEnvironmentVariable ("CI_TYPEMAP_DEBUG_USE_STRINGS"));
-		var usedHashes = new Dictionary<ulong, string> ();
+		var usedHashes = new Dictionary<uint, string> ();
 		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
 			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
 			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
@@ -238,7 +239,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				To = entry.JavaName,
 
 				from = (uint)managedTypeNameOffset,
-				from_hash = typemap_uses_hashes ? MonoAndroidHelper.GetXxHash (entry.ManagedName, is64Bit: true) : 0,
+				from_hash = typemap_uses_hashes ? TypeMapHelper.HashNameForCLR (entry.ManagedName) : 0,
 				to = (uint)javaTypeNameOffset,
 			};
 			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
@@ -250,7 +251,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			if (usedHashes.ContainsKey (m2j.from_hash)) {
 				typemap_uses_hashes = false;
 				// It could be a warning, but it's not really actionable - users might not be able to rename the clashing types
-				Log.LogMessage ($"Detected xxHash conflict between managed type names '{entry.ManagedName}' and '{usedHashes[m2j.from_hash]}' when mapping to Java type '{entry.JavaName}'.");
+				Log.LogMessage ($"Detected CRC32 conflict between managed type names '{entry.ManagedName}' and '{usedHashes[m2j.from_hash]}' when mapping to Java type '{entry.JavaName}'.");
 			} else {
 				usedHashes[m2j.from_hash] = entry.ManagedName;
 			}
@@ -282,7 +283,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				Name = asm.Name,
 				MVID = asm.MVID,
 
-				mvid_hash = MonoAndroidHelper.GetXxHash (asm.MVIDBytes, is64Bit: true),
+				module_uuid = asm.MVIDBytes,
 				name_length = (ulong)assemblyNameLength, // without the trailing NUL
 				name_offset = (ulong)assemblyNameOffset,
 			};
@@ -298,7 +299,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				return 1;
 			}
 
-			return a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash);
+			return CompareBytes (a.Instance.module_uuid, b.Instance.module_uuid);
 		});
 
 		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();
@@ -359,5 +360,17 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		typeMapEntryStructureInfo = module.MapStructure<TypeMapEntry> ();
 		typeMapStructureInfo = module.MapStructure<TypeMap> ();
 		typeMapManagedTypeInfoStructureInfo = module.MapStructure<TypeMapManagedTypeInfo> ();
+	}
+
+	static int CompareBytes (byte[] left, byte[] right)
+	{
+		for (int i = 0; i < left.Length; i++) {
+			int ret = left [i].CompareTo (right [i]);
+			if (ret != 0) {
+				return ret;
+			}
+		}
+
+		return 0;
 	}
 }

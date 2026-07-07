@@ -46,7 +46,7 @@ static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with 
 struct TypeMapEntry
 {
 	const uint32_t from;
-	const xamarin::android::hash_t from_hash;
+	const uint32_t from_hash;
 	const uint32_t to;
 };
 
@@ -69,14 +69,16 @@ struct TypeMap
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 struct TypeMapAssembly
 {
-	xamarin::android::hash_t mvid_hash;
+	uint8_t module_uuid[16];
 	uint64_t name_length;
 	uint64_t name_offset; // into the assembly names blob
 };
 #else
 struct TypeMapModuleEntry
 {
-	xamarin::android::hash_t managed_type_name_hash;
+	uint32_t                 managed_type_name_hash;
+	uint32_t                 managed_type_name_index;
+	uint32_t                 managed_type_name_length;
 	uint32_t                 java_map_index;
 };
 
@@ -329,7 +331,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_map_data[];
 	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_duplicates_data[];
 	[[gnu::visibility("default")]] extern const TypeMapJava java_to_managed_map[];
-	[[gnu::visibility("default")]] extern const xamarin::android::hash_t java_to_managed_hashes[];
+	[[gnu::visibility("default")]] extern const uint32_t java_to_managed_hashes[];
 #endif
 
 	[[gnu::visibility("default")]] extern uint32_t compressed_assembly_count;

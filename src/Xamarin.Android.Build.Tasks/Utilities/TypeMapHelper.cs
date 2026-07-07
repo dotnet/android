@@ -21,15 +21,15 @@ static class TypeMapHelper
 	}
 
 	/// <summary>
-	/// Hash the given Java type name for use in java-to-managed typemap array (CoreCLR version)
+	/// Hash the given type name for use in CoreCLR native typemap arrays.
 	/// </summary>
-	public static ulong HashJavaNameForCLR (string name, bool is64Bit)
+	public static uint HashNameForCLR (string name)
 	{
 		if (name.Length == 0) {
-			return UInt64.MaxValue;
+			return UInt32.MaxValue;
 		}
 
-		return HashString (name, Encoding.UTF8, is64Bit);
+		return Crc32.HashToUInt32 (Encoding.UTF8.GetBytes (name));
 	}
 
 	// Java type names are always ASCII and typically 20-100 characters,
