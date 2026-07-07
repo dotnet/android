@@ -126,9 +126,6 @@ sealed class PEAssemblyBuilder
 				continue;
 			}
 			Debug.Assert (segment.Array is not null);
-			if (segment.Array is null) {
-				throw new InvalidOperationException ("PE content blob segment has no backing array.");
-			}
 			hash.AppendData (segment.Array, segment.Offset, segment.Count);
 		}
 		return BlobContentId.FromHash (hash.GetHashAndReset ());
