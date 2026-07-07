@@ -314,6 +314,44 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ("-keep class other.Type { *; }", proguard);
 		}
 
+		[Test]
+		public void Execute_GenerateNativeAotProguardConfiguration_IgnoresDgmlWhenTrimmingDisabled ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
+			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (dgmlFile, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+				  <Nodes>
+				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
+				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
+				  </Nodes>
+				</DirectedGraph>
+				""");
+			File.WriteAllText (acwMapFile, """
+				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
+				Android.App.Activity, Mono.Android;android.app.Activity
+				Other.Type;other.Type
+				""");
+
+			var task = new GenerateNativeAotProguardConfiguration {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
+				AcwMapFile = acwMapFile,
+				OutputFile = outputFile,
+				TrimJavaCallableWrappers = false,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed and ignore the DGML when trimming is disabled.");
+			var proguard = File.ReadAllText (outputFile);
+			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
+			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
+			StringAssert.Contains ("-keep class other.Type { *; }", proguard);
+		}
+
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
 			IList<BuildMessageEventArgs>? messages = null, IList<BuildWarningEventArgs>? warnings = null, string tfv = "v11.0")
 		{

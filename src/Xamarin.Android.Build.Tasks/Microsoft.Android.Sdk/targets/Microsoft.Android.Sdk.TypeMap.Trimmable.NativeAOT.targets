@@ -20,6 +20,7 @@
     <!-- Only ask ILC for the DGML when JCW trimming is enabled; it is only consumed to compute the keep rules. -->
     <IlcGenerateDgmlFile Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' and '$(AndroidLinkTool)' != '' and '$(IlcGenerateDgmlFile)' == '' ">true</IlcGenerateDgmlFile>
     <_UseTrimmableNativeAotProguardConfiguration Condition=" '$(_UseTrimmableNativeAotProguardConfiguration)' == '' ">true</_UseTrimmableNativeAotProguardConfiguration>
+    <_TrimmableNativeAotProguardConfigurationInputsStamp>$(_AndroidStampDirectory)_GenerateTrimmableTypeMapProguardConfiguration.inputs</_TrimmableNativeAotProguardConfigurationInputsStamp>
     <_CompileToDalvikDependsOnTargets>$(_CompileToDalvikDependsOnTargets);_GenerateTrimmableTypeMapProguardConfiguration</_CompileToDalvikDependsOnTargets>
   </PropertyGroup>
 
@@ -110,10 +111,23 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_WriteTrimmableNativeAotProguardConfigurationInputs"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+    <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
+    <WriteLinesToFile
+        File="$(_TrimmableNativeAotProguardConfigurationInputsStamp)"
+        Lines="$(_AndroidTrimmableTypemapTrimJavaCode)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_TrimmableNativeAotProguardConfigurationInputsStamp)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
-      DependsOnTargets="_CollectTrimmableNativeAotDgmlFiles"
+      DependsOnTargets="_WriteTrimmableNativeAotProguardConfigurationInputs;_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
+      Inputs="$(_TrimmableNativeAotProguardConfigurationInputsStamp);@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateNativeAotProguardConfiguration
         NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"

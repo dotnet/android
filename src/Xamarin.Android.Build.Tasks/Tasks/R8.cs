@@ -66,6 +66,7 @@ namespace Xamarin.Android.Tasks
 				yield break;
 			}
 			var seen = new HashSet<string> (StringComparer.Ordinal);
+			var javaTypes = new List<string> ();
 			foreach (var item in JavaSourceFiles) {
 				var path = item.ItemSpec;
 				if (path.IsNullOrEmpty () || !File.Exists (path)) {
@@ -77,8 +78,12 @@ namespace Xamarin.Android.Tasks
 					typeName = $"{package}.{typeName}";
 				}
 				if (seen.Add (typeName)) {
-					yield return typeName;
+					javaTypes.Add (typeName);
 				}
+			}
+			javaTypes.Sort (StringComparer.Ordinal);
+			foreach (var javaType in javaTypes) {
+				yield return javaType;
 			}
 		}
 
