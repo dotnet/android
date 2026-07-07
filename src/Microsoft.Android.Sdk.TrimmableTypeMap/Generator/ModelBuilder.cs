@@ -693,8 +693,8 @@ static class ModelBuilder
 	//     like int[][][] are cheap — a small fixed set of element types),
 	//   * System.String up to maxArrayRank (also a built-in element type, so multidimensional string
 	//     arrays like String[][] stay resolvable),
-	//   * the boxed Nullable<T> value types up to maxReferenceArrayRank (these map to java/lang/<Boxed>,
-	//     i.e. Java reference arrays).
+	//   * the boxed Nullable<T> value types up to maxArrayRank (also built-in element types mapping to
+	//     java/lang/<Boxed>; a small fixed set, so multidim boxed arrays stay resolvable too).
 	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank, int maxReferenceArrayRank)
 	{
 		foreach (var primitive in PrimitiveArrayProxies) {
@@ -754,15 +754,16 @@ static class ModelBuilder
 		}
 
 		// Nullable counterparts of the primitive value types map to the boxed java/lang/<Boxed>
-		// references and, like System.String, are built-in reference mappings (no scanned peer, no
+		// references and, like System.String, are built-in element mappings (no scanned peer, no
 		// primitive proxy). Emit reference-array proxies (Primitive is null) so GetTypes
 		// ("[Ljava/lang/Boolean;") yields bool?[] / JavaObjectArray<bool?> on NativeAOT. The element
 		// key uses the normalized generic form (simple assembly names) that
-		// TrimmableTypeMap.BuildManagedTypeKey produces at runtime for Nullable<T>. The boxed values are
-		// Java reference types, so they only go up to maxReferenceArrayRank.
+		// TrimmableTypeMap.BuildManagedTypeKey produces at runtime for Nullable<T>. Like the primitives
+		// and System.String, these are a small fixed set of built-in element types (not the scanned-peer
+		// explosion), so they go up to maxArrayRank and keep multidim boxed arrays resolvable.
 		foreach (var nullablePrimitive in NullableArrayProxies) {
 			var elementTypeName = $"System.Nullable`1[[{nullablePrimitive.ManagedTypeName}, System.Runtime]]";
-			for (int rank = 1; rank <= maxReferenceArrayRank; rank++) {
+			for (int rank = 1; rank <= maxArrayRank; rank++) {
 				var proxy = new ArrayProxyData {
 					TypeName = $"Nullable_{nullablePrimitive.Name}_ArrayProxy{rank}",
 					ElementType = new TypeRefData {
