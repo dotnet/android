@@ -35,11 +35,7 @@
 #include <runtime-base/crc32.hh>
 
 namespace xamarin::android {
-#if INTPTR_MAX == INT64_MAX
-	using pinvoke_entry_hash_t = uint64_t;
-#else
 	using pinvoke_entry_hash_t = uint32_t;
-#endif
 
 	struct PinvokeEntry
 	{

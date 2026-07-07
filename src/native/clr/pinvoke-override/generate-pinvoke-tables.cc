@@ -18,20 +18,44 @@
 //
 #include <algorithm>
 #include <cerrno>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <limits>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <vector>
 
-#include <shared/xxhash.hh>
-
 namespace fs = std::filesystem;
-using namespace xamarin::android;
+
+constexpr uint32_t CRC32_POLYNOMIAL = 0xedb88320;
+
+constexpr uint32_t crc32_hash (const char *p, size_t len) noexcept
+{
+	if (len == 0) {
+		return std::numeric_limits<uint32_t>::max ();
+	}
+
+	uint32_t crc = 0xffffffff;
+	for (size_t i = 0; i < len; i++) {
+		crc ^= static_cast<uint8_t>(p[i]);
+		for (size_t bit = 0; bit < 8; bit++) {
+			crc = (crc >> 1) ^ ((crc & 1) != 0 ? CRC32_POLYNOMIAL : 0);
+		}
+	}
+
+	return ~crc;
+}
+
+constexpr uint32_t crc32_hash (std::string_view const& input) noexcept
+{
+	return crc32_hash (input.data (), input.length ());
+}
 
 const std::vector<std::string> internal_pinvoke_names = {
 //	"create_public_directory",
@@ -89,15 +113,14 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"__android_log_print",
 };
 
-template<typename Hash>
 struct PinvokeEntry
 {
 	std::string name;
-	Hash hash;
+	uint32_t hash;
 	bool write_func_pointer;
 
 	template<class Os> friend
-	Os& operator<< (Os& os, PinvokeEntry<Hash> const& p)
+	Os& operator<< (Os& os, PinvokeEntry const& p)
 	{
 		os << std::showbase << std::hex << p.hash << ", \"" << p.name << "\", ";
 
@@ -121,12 +144,11 @@ void print (std::ostream& os, std::string comment, std::string variable_name, au
 	os << "\t}};" << std::endl << std::endl;
 }
 
-template<typename Hash>
-bool add_hash (std::string const& pinvoke, Hash hash, std::vector<PinvokeEntry<Hash>>& vec, std::unordered_set<Hash>& used_cache, bool write_func_pointer)
+bool add_hash (std::string const& pinvoke, uint32_t hash, std::vector<PinvokeEntry>& vec, std::unordered_set<uint32_t>& used_cache, bool write_func_pointer)
 {
 	vec.emplace_back (pinvoke, hash, write_func_pointer);
 	if (used_cache.contains (hash)) {
-		std::cerr << (sizeof(Hash) == 4 ? "32" : "64") << "-bit hash collision for key '" << pinvoke << "': " << std::hex << std::showbase << hash << std::endl;
+		std::cerr << "CRC32 hash collision for key '" << pinvoke << "': " << std::hex << std::showbase << hash << std::endl;
 		return true;
 	}
 
@@ -134,45 +156,38 @@ bool add_hash (std::string const& pinvoke, Hash hash, std::vector<PinvokeEntry<H
 	return false;
 }
 
-bool generate_hashes (std::string table_name, std::vector<std::string> const& names, std::vector<PinvokeEntry<uint32_t>>& pinvokes32, std::vector<PinvokeEntry<uint64_t>>& pinvokes64, bool write_func_pointer)
+bool generate_hashes (std::string table_name, std::vector<std::string> const& names, std::vector<PinvokeEntry>& pinvokes, bool write_func_pointer)
 {
 	std::unordered_set<uint32_t> used_pinvokes32{};
-	std::unordered_set<uint64_t> used_pinvokes64{};
-	uint32_t hash32;
-	uint64_t hash64;
 	bool have_collisions = false;
 
 	std::cout << "There are " << names.size () << " " << table_name << " p/invoke functions" << std::endl;
 	for (std::string const& pinvoke : names) {
-		have_collisions |= add_hash (pinvoke, xxhash32::hash (pinvoke.c_str (), pinvoke.length ()), pinvokes32, used_pinvokes32, write_func_pointer);
-		have_collisions |= add_hash (pinvoke, xxhash64::hash (pinvoke.c_str (), pinvoke.length ()), pinvokes64, used_pinvokes64, write_func_pointer);
+		have_collisions |= add_hash (pinvoke, crc32_hash (pinvoke.c_str (), pinvoke.length ()), pinvokes, used_pinvokes32, write_func_pointer);
 	}
 
 	std::cout << "p/invoke hash collisions for '" << table_name << "' were " << (have_collisions ? "" : "not ") << "found" << std::endl;
 
-	std::ranges::sort (pinvokes32, {}, &PinvokeEntry<uint32_t>::hash);
-	std::ranges::sort (pinvokes64, {}, &PinvokeEntry<uint64_t>::hash);
+	std::ranges::sort (pinvokes, {}, &PinvokeEntry::hash);
 
 	return have_collisions;
 }
 
-template<typename Hash>
-void write_library_name_hash (Hash (*hasher)(const char*, size_t), std::ostream& os, std::string library_name, std::string variable_prefix)
+void write_library_name_hash (std::ostream& os, std::string library_name, std::string variable_prefix)
 {
-	Hash hash = hasher (library_name.c_str (), library_name.length ());
-	os << "constexpr hash_t " << variable_prefix << "_library_hash = " << std::hex << hash << ";" << std::endl;
+	uint32_t hash = crc32_hash (library_name.c_str (), library_name.length ());
+	os << "constexpr pinvoke_entry_hash_t " << variable_prefix << "_library_hash = " << std::hex << hash << ";" << std::endl;
 }
 
-template<typename Hash>
-void write_library_name_hashes (Hash (*hasher)(const char*, size_t), std::ostream& output)
+void write_library_name_hashes (std::ostream& output)
 {
-	write_library_name_hash (hasher, output, "java-interop", "java_interop");
-	write_library_name_hash (hasher, output, "xa-internal-api", "xa_internal_api");
-	write_library_name_hash (hasher, output, "liblog", "android_liblog");
-	write_library_name_hash (hasher, output, "libSystem.Native", "system_native");
-	write_library_name_hash (hasher, output, "libSystem.IO.Compression.Native", "system_io_compression_native");
-	write_library_name_hash (hasher, output, "libSystem.Security.Cryptography.Native.Android", "system_security_cryptography_native_android");
-	write_library_name_hash (hasher, output, "libSystem.Globalization.Native", "system_globalization_native");
+	write_library_name_hash (output, "java-interop", "java_interop");
+	write_library_name_hash (output, "xa-internal-api", "xa_internal_api");
+	write_library_name_hash (output, "liblog", "android_liblog");
+	write_library_name_hash (output, "libSystem.Native", "system_native");
+	write_library_name_hash (output, "libSystem.IO.Compression.Native", "system_io_compression_native");
+	write_library_name_hash (output, "libSystem.Security.Cryptography.Native.Android", "system_security_cryptography_native_android");
+	write_library_name_hash (output, "libSystem.Globalization.Native", "system_globalization_native");
 }
 
 int main (int argc, char **argv)
@@ -208,9 +223,8 @@ int main (int argc, char **argv)
 	}
 
 	bool have_collisions = false;
-	std::vector<PinvokeEntry<uint32_t>> internal_pinvokes32{};
-	std::vector<PinvokeEntry<uint64_t>> internal_pinvokes64{};
-	have_collisions |= generate_hashes ("internal", internal_pinvoke_names, internal_pinvokes32, internal_pinvokes64, true);
+	std::vector<PinvokeEntry> internal_pinvokes{};
+	have_collisions |= generate_hashes ("internal", internal_pinvoke_names, internal_pinvokes, true);
 
 	std::cout << "Generating tables in file: " << output_file_path << std::endl;
 
@@ -219,7 +233,7 @@ int main (int argc, char **argv)
 	output << "//" << std::endl;
 	output << "// Autogenarated file. DO NOT EDIT." << std::endl;
 	output << "//" << std::endl;
-	output << "// To regenerate run ../../../../build-tools/scripts/generate-pinvoke-tables.sh on Linux or macOS" << std::endl;
+	output << "// To regenerate, compile and run generate-pinvoke-tables.cc with the output path as the only argument." << std::endl;
 	output << "// A compiler with support for C++20 ranges is required" << std::endl;
 	output << "//" << std::endl << std::endl;
 
@@ -227,18 +241,10 @@ int main (int argc, char **argv)
 	output << "#include <cstdint>" << std::endl << std::endl;
 
 	output << "namespace {" << std::endl;
-	output << "#if INTPTR_MAX == INT64_MAX" << std::endl;
-	print (output, "64-bit internal p/invoke table", "internal_pinvokes", internal_pinvokes64);
+	print (output, " CRC32 internal p/invoke table", "internal_pinvokes", internal_pinvokes);
 	output << std::endl;
-	write_library_name_hashes<uint64_t> (xxhash64::hash, output);
-
-	output << "#else" << std::endl;
-
-	print (output, "32-bit internal p/invoke table", "internal_pinvokes", internal_pinvokes32);
+	write_library_name_hashes (output);
 	output << std::endl;
-	write_library_name_hashes<uint32_t> (xxhash32::hash, output);
-
-	output << "#endif" << std::endl << std::endl;
 
 	output << "constexpr size_t internal_pinvokes_count = " << std::dec << std::noshowbase << internal_pinvoke_names.size () << ";" << std::endl;
 	output << "} // end of anonymous namespace" << std::endl;
@@ -247,18 +253,12 @@ int main (int argc, char **argv)
 }
 
 // This serves as a quick compile-time test of the algorithm's correctness.
-// The tests are copied from https://github.com/ekpyron/xxhashct/test.cpp
 
-template<uint64_t value, uint64_t expected>
+template<uint32_t value, uint32_t expected>
 struct constexpr_test {
 	static_assert (value == expected, "Compile-time hash mismatch.");
 };
 
-constexpr_test<xxhash32::hash<0> ("", 0), 0x2CC5D05U> constexprTest_1;
-constexpr_test<xxhash32::hash<2654435761U> ("", 0), 0x36B78AE7U> constexprTest_2;
-//constexpr_test<xxhash64::hash<0> ("", 0), 0xEF46DB3751D8E999ULL> constexprTest_3;
-//constexpr_test<xxhash64::hash<2654435761U> ("", 0), 0xAC75FDA2929B17EFULL> constexprTest_4;
-constexpr_test<xxhash32::hash<0> ("test", 4), 0x3E2023CFU> constexprTest32_5;
-constexpr_test<xxhash32::hash<2654435761U> ("test", 4), 0xA9C14438U> constexprTest32_6;
-//constexpr_test<xxhash64::hash<0> ("test", 4), 0x4fdcca5ddb678139ULL> constexprTest64_7;
-//constexpr_test<xxhash64::hash<2654435761U> ("test", 4), 0x5A183B8150E2F651ULL> constexprTest64_8;
+constexpr_test<crc32_hash ("", 0), std::numeric_limits<uint32_t>::max ()> constexprTest_1;
+constexpr_test<crc32_hash ("test", 4), 0xd87f7e0c> constexprTest_2;
+constexpr_test<crc32_hash ("java-interop"), 0x33b98009> constexprTest_3;
