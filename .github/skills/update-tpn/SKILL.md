@@ -63,7 +63,6 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 | libunwind | https://github.com/libunwind/libunwind | `external/libunwind/LICENSE` |
 | xamarin-android-tools | https://github.com/dotnet/android-tools | (not a third-party dep) |
 | android-api-docs | https://github.com/dotnet/android-api-docs | (not a third-party dep) |
-| debugger-libs | https://github.com/mono/debugger-libs | (not a third-party dep — internal) |
 
 #### Vendored Source (`src-ThirdParty/`)
 List contents of `src-ThirdParty/` directory. Current vendored code and license sources:

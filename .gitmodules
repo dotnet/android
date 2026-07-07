@@ -6,10 +6,6 @@
     path = external/constexpr-xxh3
     url = https://github.com/chys87/constexpr-xxh3.git
     branch = main
-[submodule "external/debugger-libs"]
-    path = external/debugger-libs
-    url = https://github.com/mono/debugger-libs
-    branch = main
 [submodule "external/libunwind"]
     path = external/libunwind
     url = https://github.com/libunwind/libunwind.git
