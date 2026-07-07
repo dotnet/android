@@ -516,7 +516,7 @@ class ManifestGenerator
 		if (!placeholders.IsNullOrEmpty ()) {
 			foreach (var entry in placeholders.Split (PlaceholderSeparators, StringSplitOptions.RemoveEmptyEntries)) {
 				var eqIndex = entry.IndexOf ('=');
-				if (eqIndex > 0) {
+				if (eqIndex >= 0) {
 					var key = entry.Substring (0, eqIndex).Trim ();
 					// Normalize '\' to the platform directory separator to match the legacy pipeline,
 					// where the substituted manifest is re-encoded by aapt2 (which rewrites backslashes

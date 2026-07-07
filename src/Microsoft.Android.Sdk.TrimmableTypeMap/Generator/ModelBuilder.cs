@@ -124,22 +124,8 @@ static class ModelBuilder
 			string jniName = kvp.Key;
 			var peersForName = kvp.Value;
 
-			// Order aliases to match the java→managed selection the native runtime performs (see
-			// clr_typemap_java_to_managed / monovm_typemap_java_to_managed and NativeTypeMappingData):
-			// the runtime builds its java→managed map by processing the Mono.Android module first and
-			// keeping the first managed type that claims a Java name (first-writer-wins). GetTypeForSimpleReference
-			// returns the first (index [0]) alias, so put the Mono.Android peer first — e.g. java/lang/Object
-			// must resolve to Java.Lang.Object (Mono.Android), not Java.Interop.JavaObject. Remaining peers are
-			// ordered by ordinal managed type name for deterministic proxy naming.
 			if (peersForName.Count > 1) {
-				peersForName.Sort ((a, b) => {
-					bool aMonoAndroid = string.Equals (a.AssemblyName, "Mono.Android", StringComparison.Ordinal);
-					bool bMonoAndroid = string.Equals (b.AssemblyName, "Mono.Android", StringComparison.Ordinal);
-					if (aMonoAndroid != bMonoAndroid) {
-						return aMonoAndroid ? -1 : 1;
-					}
-					return StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName);
-				});
+				peersForName.Sort (CompareAliasesForRuntimeResolution);
 			}
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
@@ -175,6 +161,19 @@ static class ModelBuilder
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
 
 		return model;
+	}
+
+	static int CompareAliasesForRuntimeResolution (JavaPeerInfo a, JavaPeerInfo b)
+	{
+		// Keep alias [0] aligned with the native java→managed map, which processes Mono.Android first.
+		bool aMonoAndroid = string.Equals (a.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+		bool bMonoAndroid = string.Equals (b.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+		if (aMonoAndroid != bMonoAndroid) {
+			return aMonoAndroid ? -1 : 1;
+		}
+
+		int result = StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName);
+		return result != 0 ? result : StringComparer.Ordinal.Compare (a.AssemblyName, b.AssemblyName);
 	}
 
 	static void EmitPeers (TypeMapAssemblyData model, string jniName,

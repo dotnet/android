@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -109,11 +110,7 @@ sealed class PEAssemblyBuilder
 			new MetadataRootBuilder (Metadata),
 			ILBuilder,
 			mappedFieldData: _mappedFieldData.Count > 0 ? _mappedFieldData : null,
-			// Derive the PE content id (and thus the header TimeDateStamp/debug id) from a hash of the
-			// image so the bytes are fully deterministic. Without this, ManagedPEBuilder falls back to a
-			// time-based id, so every regeneration produces different bytes even for identical input; that
-			// churns the generated typemap assemblies and breaks incremental packaging (a no-op rebuild
-			// re-touches the .dll, forcing repackage + re-sign). The MVID is already deterministic.
+			// ManagedPEBuilder otherwise uses a time-based id, changing bytes on every regeneration.
 			deterministicIdProvider: DeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
@@ -125,7 +122,14 @@ sealed class PEAssemblyBuilder
 		using var hash = IncrementalHash.CreateHash (HashAlgorithmName.SHA256);
 		foreach (var blob in content) {
 			var segment = blob.GetBytes ();
-			hash.AppendData (segment.Array!, segment.Offset, segment.Count);
+			if (segment.Count == 0) {
+				continue;
+			}
+			Debug.Assert (segment.Array is not null);
+			if (segment.Array is null) {
+				throw new InvalidOperationException ("PE content blob segment has no backing array.");
+			}
+			hash.AppendData (segment.Array, segment.Offset, segment.Count);
 		}
 		return BlobContentId.FromHash (hash.GetHashAndReset ());
 	}
