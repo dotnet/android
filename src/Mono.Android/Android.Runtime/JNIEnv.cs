@@ -492,6 +492,8 @@ namespace Android.Runtime {
 				if (RuntimeFeature.IsMonoRuntime) {
 					ret = monovm_typemap_managed_to_java (type, mvidptr);
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
+					if (type.FullName is null)
+						return null;
 					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");

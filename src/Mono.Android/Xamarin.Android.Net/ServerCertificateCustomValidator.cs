@@ -81,7 +81,11 @@ namespace Xamarin.Android.Net
 			}
 
 			public void CheckClientTrusted (JavaX509Certificate[]? chain, string? authType)
-				=> _internalTrustManager.CheckClientTrusted (chain, authType);
+			{
+				ArgumentNullException.ThrowIfNull (chain);
+				ArgumentNullException.ThrowIfNull (authType);
+				_internalTrustManager.CheckClientTrusted (chain, authType);
+			}
 
 			public JavaX509Certificate[] GetAcceptedIssuers ()
 				=> _internalTrustManager.GetAcceptedIssuers () ?? Array.Empty<JavaX509Certificate> ();
