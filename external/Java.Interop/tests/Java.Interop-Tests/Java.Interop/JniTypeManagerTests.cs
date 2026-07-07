@@ -161,6 +161,20 @@ namespace Java.InteropTests
 			AssertArrayTypesFromSignature<double[]> (manager, "[[D", typeof (JavaObjectArray<JavaPrimitiveArray<double>>));
 			AssertArrayTypesFromSignature<string[]> (manager, "[[Ljava/lang/String;", typeof (JavaObjectArray<JavaObjectArray<string>>));
 
+			// Nullable counterparts of the primitive value types: the boxed reference signatures
+			// java/lang/<Boxed> map to Nullable<T> (see JniBuiltinSimpleReferenceToType /
+			// GetBuiltInTypeForSimpleReference). Unlike the primitive keyword arrays above, these are
+			// non-keyword reference arrays, so the element type is the boxed Nullable<T> and the array
+			// family is T?[] and JavaObjectArray<T?> (no JavaArray<T>/JavaPrimitiveArray<T>).
+			AssertArrayTypesFromSignature<bool?>   (manager, "[Ljava/lang/Boolean;",   typeof (JavaObjectArray<bool?>));
+			AssertArrayTypesFromSignature<sbyte?>  (manager, "[Ljava/lang/Byte;",      typeof (JavaObjectArray<sbyte?>));
+			AssertArrayTypesFromSignature<char?>   (manager, "[Ljava/lang/Character;", typeof (JavaObjectArray<char?>));
+			AssertArrayTypesFromSignature<short?>  (manager, "[Ljava/lang/Short;",     typeof (JavaObjectArray<short?>));
+			AssertArrayTypesFromSignature<int?>    (manager, "[Ljava/lang/Integer;",   typeof (JavaObjectArray<int?>));
+			AssertArrayTypesFromSignature<long?>   (manager, "[Ljava/lang/Long;",      typeof (JavaObjectArray<long?>));
+			AssertArrayTypesFromSignature<float?>  (manager, "[Ljava/lang/Float;",     typeof (JavaObjectArray<float?>));
+			AssertArrayTypesFromSignature<double?> (manager, "[Ljava/lang/Double;",    typeof (JavaObjectArray<double?>));
+
 			// Yes, these look weird...
 			// Assume: class II {}
 			Assert.AreEqual (null, GetType ("II"));
