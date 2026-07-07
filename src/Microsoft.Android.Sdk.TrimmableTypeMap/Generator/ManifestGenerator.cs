@@ -25,6 +25,9 @@ class ManifestGenerator
 		"provider",
 	};
 
+	/// <summary>Warning code for library-manifest merge failures (maps to XA4302).</summary>
+	internal const int LibraryManifestMergeWarningCode = 4302;
+
 	int appInitOrder = 2000000000;
 
 	public string PackageName { get; set; } = "";
@@ -41,7 +44,7 @@ class ManifestGenerator
 	public bool ForceExtractNativeLibs { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? ApplicationJavaClass { get; set; }
-	public Action<string>? Warn { get; set; }
+	public Action<int, string>? Warn { get; set; }
 	public Action<string>? WarnInvalidPlaceholder { get; set; }
 
 	/// <summary>
@@ -194,7 +197,7 @@ class ManifestGenerator
 			try {
 				libDoc = XDocument.Load (path);
 			} catch (Exception ex) {
-				Warn?.Invoke ($"Unable to merge library manifest '{path}': {ex.Message}");
+				Warn?.Invoke (LibraryManifestMergeWarningCode, $"Unable to merge library manifest '{path}': {ex.Message}");
 				continue;
 			}
 
