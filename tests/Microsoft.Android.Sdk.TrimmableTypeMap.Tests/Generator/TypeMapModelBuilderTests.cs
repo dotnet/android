@@ -1304,13 +1304,13 @@ public class ModelBuilderTests : FixtureTestBase
 			var stringRanks = model.Entries.Where (e => e.MapKey == "System.String, System.Runtime" && e.AnchorRank is not null).Select (e => e.AnchorRank).OrderBy (r => r).ToList ();
 			Assert.Equal (new int? [] { 1, 2, 3 }, stringRanks);
 
-			// Nullable<bool> (boxed reference) only rank 1.
-			var nullableRanks = model.Entries.Where (e => e.MapKey == "System.Nullable`1[[System.Boolean, System.Runtime]], System.Runtime" && e.AnchorRank is not null).Select (e => e.AnchorRank).ToList ();
-			Assert.Equal (new int? [] { 1 }, nullableRanks);
+			// Nullable<bool> is a built-in element type too (boxed java/lang/Boolean), so it keeps ranks 1..3.
+			var nullableRanks = model.Entries.Where (e => e.MapKey == "System.Nullable`1[[System.Boolean, System.Runtime]], System.Runtime" && e.AnchorRank is not null).Select (e => e.AnchorRank).OrderBy (r => r).ToList ();
+			Assert.Equal (new int? [] { 1, 2, 3 }, nullableRanks);
 
-			// Totals: (12 primitives + String) × 3 + 8 nullables × 1 = 39 + 8 = 47.
+			// Totals: (12 primitives + String + 8 nullables) × 3 = 21 × 3 = 63.
 			var builtinEntries = model.Entries.Count (e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null);
-			Assert.Equal (47, builtinEntries);
+			Assert.Equal (63, builtinEntries);
 		}
 
 		[Fact]
