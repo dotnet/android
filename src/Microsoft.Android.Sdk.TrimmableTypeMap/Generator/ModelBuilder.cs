@@ -707,6 +707,31 @@ static class ModelBuilder
 				AddArrayProxyAssociations (model, proxy, proxyReference);
 			}
 		}
+
+		// System.String maps to java/lang/String but is a built-in reference type injected at runtime
+		// by TrimmableTypeMapTypeManager.GetBuiltInTypeForSimpleReference, so it is neither a scanned
+		// Java peer (EmitArrayEntriesForPeer) nor a primitive. Emit its array proxies here (Primitive is
+		// null, so it gets the reference-array family) so GetTypes ("[Ljava/lang/String;") yields
+		// System.String[] / JavaObjectArray<string> / JavaArray<string> on NativeAOT, matching CoreCLR.
+		for (int rank = 1; rank <= maxArrayRank; rank++) {
+			var proxy = new ArrayProxyData {
+				TypeName = ManagedTypeNameToArrayProxyTypeName ("System.String", rank),
+				ElementType = new TypeRefData {
+					ManagedTypeName = "System.String",
+					AssemblyName = "System.Runtime",
+				},
+				Rank = rank,
+			};
+			model.ArrayProxyTypes.Add (proxy);
+			var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
+			model.Entries.Add (new TypeMapAttributeData {
+				MapKey = GetArrayProxyMapKey (proxy.ElementType),
+				ProxyTypeReference = proxyReference,
+				TargetTypeReference = proxyReference,
+				AnchorRank = rank,
+			});
+			AddArrayProxyAssociations (model, proxy, proxyReference);
+		}
 	}
 
 	static string Brackets (int rank) => rank switch {
