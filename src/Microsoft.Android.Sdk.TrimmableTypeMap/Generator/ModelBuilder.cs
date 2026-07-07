@@ -31,6 +31,21 @@ static class ModelBuilder
 		new ("D", "Double", "System.Double", ["Java.Interop.JavaDoubleArray"]),
 	];
 
+	// Nullable value types map to the boxed java/lang/<Boxed> references (java/lang/Boolean etc.) via
+	// TrimmableTypeMapTypeManager.GetBuiltInTypeForSimpleReference. Like System.String they are neither
+	// scanned Java peers nor primitives, so their array proxies are emitted explicitly. Only the eight
+	// types with a boxed java/lang mapping are included (java/lang/Byte -> sbyte?, not byte?, etc.).
+	static readonly (string Name, string ManagedTypeName) [] NullableArrayProxies = [
+		("Boolean", "System.Boolean"),
+		("SByte",   "System.SByte"),
+		("Char",    "System.Char"),
+		("Int16",   "System.Int16"),
+		("Int32",   "System.Int32"),
+		("Int64",   "System.Int64"),
+		("Single",  "System.Single"),
+		("Double",  "System.Double"),
+	];
+
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -731,6 +746,35 @@ static class ModelBuilder
 				AnchorRank = rank,
 			});
 			AddArrayProxyAssociations (model, proxy, proxyReference);
+		}
+
+		// Nullable counterparts of the primitive value types map to the boxed java/lang/<Boxed>
+		// references and, like System.String, are built-in reference mappings (no scanned peer, no
+		// primitive proxy). Emit reference-array proxies (Primitive is null) so GetTypes
+		// ("[Ljava/lang/Boolean;") yields bool?[] / JavaObjectArray<bool?> on NativeAOT. The element
+		// key uses the normalized generic form (simple assembly names) that
+		// TrimmableTypeMap.BuildManagedTypeKey produces at runtime for Nullable<T>.
+		foreach (var nullablePrimitive in NullableArrayProxies) {
+			var elementTypeName = $"System.Nullable`1[[{nullablePrimitive.ManagedTypeName}, System.Runtime]]";
+			for (int rank = 1; rank <= maxArrayRank; rank++) {
+				var proxy = new ArrayProxyData {
+					TypeName = $"Nullable_{nullablePrimitive.Name}_ArrayProxy{rank}",
+					ElementType = new TypeRefData {
+						ManagedTypeName = elementTypeName,
+						AssemblyName = "System.Runtime",
+					},
+					Rank = rank,
+				};
+				model.ArrayProxyTypes.Add (proxy);
+				var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
+				model.Entries.Add (new TypeMapAttributeData {
+					MapKey = GetArrayProxyMapKey (proxy.ElementType),
+					ProxyTypeReference = proxyReference,
+					TargetTypeReference = proxyReference,
+					AnchorRank = rank,
+				});
+				AddArrayProxyAssociations (model, proxy, proxyReference);
+			}
 		}
 	}
 
