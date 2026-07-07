@@ -1376,6 +1376,13 @@ public class MyWorker : Worker
 			});
 			proj.PackageReferences.Add (KnownPackages.AndroidXWorkRuntime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
+			// Xamarin.Forms 5.0.0.2622 transitively pulls old Xamarin.AndroidX.Fragment (1.5.5) and
+			// Xamarin.Google.Android.Material (1.4.0.2) that were compiled before the AndroidX.Collection
+			// KMP split and carry dangling type references to AndroidX.Collection.SimpleArrayMap in the now
+			// type-less Xamarin.AndroidX.Collection facade. NativeAOT/ILC resolves those references eagerly
+			// while building vtables and fails to load the type. Reference a current Material (which depends
+			// on Fragment 1.6.2.1) so both resolve to Xamarin.AndroidX.Collection.Jvm.
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
