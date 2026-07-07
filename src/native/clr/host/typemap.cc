@@ -1,9 +1,9 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include <limits>
 
 #include <host/typemap.hh>
+#include <runtime-base/crc32.hh>
 #include <runtime-base/timing-internal.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/util.hh>
@@ -11,19 +11,7 @@
 
 using namespace xamarin::android;
 
-extern "C" uint32_t CompressionNative_Crc32 (uint32_t crc, uint8_t *buffer, int32_t len);
-
 namespace {
-	[[gnu::always_inline]]
-	auto typemap_hash (const char *value, size_t len) noexcept -> uint32_t
-	{
-		if (len == 0) [[unlikely]] {
-			return std::numeric_limits<uint32_t>::max ();
-		}
-
-		return CompressionNative_Crc32 (0, reinterpret_cast<uint8_t*>(const_cast<char*>(value)), static_cast<int32_t>(len));
-	}
-
 	[[gnu::always_inline]]
 	auto same_string (const char *value, uint32_t value_length, const char *key, size_t key_length) noexcept -> bool
 	{
@@ -120,7 +108,7 @@ auto TypeMapper::find_index_by_hash (const char *typeName, const TypeMapEntry *m
 	log_debug (LOG_ASSEMBLY, "typemap: map {} -> {} uses hashes"sv, from_name, to_name);
 
 	size_t type_name_length = strlen (typeName);
-	uint32_t type_name_hash = typemap_hash (typeName, type_name_length);
+	uint32_t type_name_hash = crc32_hash (typeName, type_name_length);
 
 	size_t left = 0;
 	size_t right = type_map.entry_count;
@@ -270,7 +258,7 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 
 	log_debug (LOG_ASSEMBLY, "typemap: found module matching MVID [{}]"sv, MonoGuidString (mvid).c_str ());
 	size_t type_name_length = strlen (typeName);
-	uint32_t name_hash = typemap_hash (typeName, type_name_length);
+	uint32_t name_hash = crc32_hash (typeName, type_name_length);
 
 	// We implicitly trust the build process that the indexes are correct. This is by design, the libxamarin-app.so built
 	// with the application is immutable and the build process made sure that the data in it matches the application.
@@ -479,7 +467,7 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 	}
 
 	size_t java_type_name_length = strlen (java_type_name);
-	uint32_t name_hash = typemap_hash (java_type_name, java_type_name_length);
+	uint32_t name_hash = crc32_hash (java_type_name, java_type_name_length);
 	TypeMapJava const* java_entry = find_java_to_managed_entry (name_hash, java_type_name, java_type_name_length);
 	if (java_entry == nullptr) {
 		log_info (

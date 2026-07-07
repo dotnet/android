@@ -2,6 +2,7 @@
 
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
+#include <runtime-base/crc32.hh>
 #include <runtime-base/util.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
@@ -178,11 +179,11 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 }
 
 [[gnu::always_inline]]
-auto AssemblyStore::find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*
+auto AssemblyStore::find_assembly_store_entry (uint32_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*
 {
-	auto equal = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
-	auto less_than = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
-	ssize_t idx = Search::binary_search<AssemblyStoreIndexEntry, equal, less_than> (hash, entries, entry_count);
+	auto equal = [](AssemblyStoreIndexEntry const& entry, uint32_t key) -> bool { return entry.name_hash == key; };
+	auto less_than = [](AssemblyStoreIndexEntry const& entry, uint32_t key) -> bool { return entry.name_hash < key; };
+	ssize_t idx = Search::binary_search<AssemblyStoreIndexEntry, uint32_t, equal, less_than> (hash, entries, entry_count);
 	if (idx >= 0) {
 		return &entries[idx];
 	}
@@ -191,7 +192,7 @@ auto AssemblyStore::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 
 auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
-	hash_t name_hash = xxhash::hash (name.data (), name.length ());
+	uint32_t name_hash = crc32_hash (name);
 
 	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.

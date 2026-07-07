@@ -31,7 +31,7 @@ static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00040000;
 #endif
 
 // Increase whenever an incompatible change is made to the assembly store format
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 3 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 4 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
 
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
@@ -140,7 +140,7 @@ struct CompressedAssemblyDescriptor
 //  [INDEX_SIZE]         uint; index size in bytes
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
-//  [NAME_HASH]          uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
+//  [NAME_HASH]          uint; CRC32 of the assembly name
 //  [DESCRIPTOR_INDEX]   uint; index into in-store assembly descriptor array
 //  [IGNORE]             byte; if set to anything other than 0, the assembly is to be ignored when loading
 //
@@ -173,7 +173,7 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 
 struct [[gnu::packed]] AssemblyStoreIndexEntry final
 {
-	xamarin::android::hash_t name_hash;
+	uint32_t name_hash;
 	uint32_t descriptor_index;
 	uint8_t ignore; // Assembly should be ignored when loading, its data isn't actually there
 };

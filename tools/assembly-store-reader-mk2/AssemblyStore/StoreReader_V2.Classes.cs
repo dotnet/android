@@ -30,6 +30,10 @@ partial class StoreReader_V2
 
 	sealed class IndexEntry
 	{
+		// We treat `bool` as `byte` here, since that's what gets written to the binary.
+		public const uint NativeSize32 = 2 * sizeof (uint) + sizeof (byte);
+		public const uint NativeSize64 = sizeof (ulong) + sizeof (uint) + sizeof (byte);
+
 		public readonly ulong name_hash;
 		public readonly uint  descriptor_index;
 		public readonly bool  ignore;

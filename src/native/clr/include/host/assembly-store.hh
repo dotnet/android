@@ -27,7 +27,7 @@ namespace xamarin::android {
 
 		// Returns a tuple of <assembly_data_pointer, data_size>
 		static auto get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>;
-		static auto find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*;
+		static auto find_assembly_store_entry (uint32_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*;
 
 	private:
 		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;

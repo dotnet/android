@@ -13,6 +13,8 @@ partial class StoreReader_V2 : AssemblyStoreReader
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000003;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT = 0x00000004;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_MASK  = 0xF0000000;
 
 	const uint ASSEMBLY_STORE_ABI_AARCH64          = 0x00010000;
@@ -79,6 +81,10 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			ASSEMBLY_STORE_FORMAT_VERSION_64BIT | ASSEMBLY_STORE_ABI_X64,
 			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_ARM,
 			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_X86,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT | ASSEMBLY_STORE_ABI_AARCH64,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT | ASSEMBLY_STORE_ABI_X64,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT | ASSEMBLY_STORE_ABI_ARM,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT | ASSEMBLY_STORE_ABI_X86,
 		};
 	}
 
@@ -150,13 +156,16 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		StoreStream.Seek ((long)elfOffset + Header.NativeSize, SeekOrigin.Begin);
 		using var reader = CreateReader ();
 
+		uint indexEntrySize = GetIndexEntrySize ();
 		var index = new List<IndexEntry> ();
 		for (uint i = 0; i < header.index_entry_count; i++) {
 			ulong name_hash;
-			if (Is64Bit) {
+			if (indexEntrySize == IndexEntry.NativeSize64) {
 				name_hash = reader.ReadUInt64 ();
-			} else {
+			} else if (indexEntrySize == IndexEntry.NativeSize32) {
 				name_hash = (ulong)reader.ReadUInt32 ();
+			} else {
+				throw new InvalidOperationException ($"Assembly store '{StorePath}' index entry size {indexEntrySize} is not supported.");
 			}
 
 			uint descriptor_index = reader.ReadUInt32 ();
@@ -213,5 +222,14 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			storeItems.Add (item);
 		}
 		Assemblies = storeItems.AsReadOnly ();
+
+		uint GetIndexEntrySize ()
+		{
+			if (header.index_entry_count == 0) {
+				return 0;
+			}
+
+			return header.index_size / header.index_entry_count;
+		}
 	}
 }

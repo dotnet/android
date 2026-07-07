@@ -32,6 +32,18 @@ static class TypeMapHelper
 		return Crc32.HashToUInt32 (Encoding.UTF8.GetBytes (name));
 	}
 
+	/// <summary>
+	/// Hash the given bytes for use in CoreCLR native lookup tables.
+	/// </summary>
+	public static uint HashBytesForCLR (ReadOnlySpan<byte> bytes)
+	{
+		if (bytes.Length == 0) {
+			return UInt32.MaxValue;
+		}
+
+		return Crc32.HashToUInt32 (bytes);
+	}
+
 	// Java type names are always ASCII and typically 20-100 characters,
 	// so the encoded byte count is well within stackalloc limits.
 	// The unsafe Encoding.GetBytes(char*, int, byte*, int) overload is
