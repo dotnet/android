@@ -80,6 +80,7 @@
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
+        MaxReferenceArrayRank="$(_AndroidTrimmableTypeMapMaxReferenceArrayRank)"
         GenerateTypeMapAssemblies="false"
         CleanJavaSourceOutputDirectory="true"
         AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
