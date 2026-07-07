@@ -70,7 +70,7 @@ static class ModelBuilder
 	/// Emit per-rank array <c>TypeMap</c> entries + <c>__ArrayMapRank{N}</c> sentinels
 	/// for ranks 1..<paramref name="maxArrayRank"/>. 0 disables array entry emission.
 	/// </param>
-	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0, int maxReferenceArrayRank = 0)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
@@ -81,13 +81,20 @@ static class ModelBuilder
 		if (maxArrayRank < 0) {
 			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
 		}
+		if (maxReferenceArrayRank < 0) {
+			throw new ArgumentOutOfRangeException (nameof (maxReferenceArrayRank), maxReferenceArrayRank, "Must be >= 0.");
+		}
 
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
 
 		var model = new TypeMapAssemblyData {
 			AssemblyName = assemblyName,
 			ModuleName = Path.GetFileName (outputPath),
-			MaxArrayRank = maxArrayRank,
+			// The per-assembly __ArrayMapRank{N} anchor count must be uniform across every typemap
+			// assembly (the root generator builds a rectangular [assembly][rank] matrix), so the model
+			// always carries the overall maximum rank. Primitive and reference element types may
+			// populate different rank ranges within that shared anchor set.
+			MaxArrayRank = Math.Max (maxArrayRank, maxReferenceArrayRank),
 		};
 
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries.
@@ -137,13 +144,14 @@ static class ModelBuilder
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
 
-			if (maxArrayRank > 0) {
-				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
+			// Java peer types are reference types: emit array proxies only up to the reference rank.
+			if (maxReferenceArrayRank > 0) {
+				EmitArrayEntries (model, jniName, peersForName, maxReferenceArrayRank);
 			}
 		}
 
-		if (maxArrayRank > 0 && string.Equals (assemblyName, "_Java.Interop.TypeMap", StringComparison.Ordinal)) {
-			EmitPrimitiveArrayEntries (model, maxArrayRank);
+		if (string.Equals (assemblyName, "_Java.Interop.TypeMap", StringComparison.Ordinal)) {
+			EmitPrimitiveArrayEntries (model, maxArrayRank, maxReferenceArrayRank);
 		}
 
 		BuildNativeRegistrations (model);
@@ -693,7 +701,12 @@ static class ModelBuilder
 		}
 	}
 
-	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank)
+	// Emits array proxies for the built-in element types that are not scanned Java peers:
+	//   * the keyword primitives (int/bool/...) up to maxArrayRank (jagged/multidim primitive arrays
+	//     like int[][][] are cheap — a small fixed set of element types),
+	//   * System.String and the boxed Nullable<T> value types up to maxReferenceArrayRank (these map to
+	//     java/lang/String and java/lang/<Boxed>, i.e. Java reference arrays).
+	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank, int maxReferenceArrayRank)
 	{
 		foreach (var primitive in PrimitiveArrayProxies) {
 			for (int rank = 1; rank <= maxArrayRank; rank++) {
@@ -728,7 +741,8 @@ static class ModelBuilder
 		// Java peer (EmitArrayEntriesForPeer) nor a primitive. Emit its array proxies here (Primitive is
 		// null, so it gets the reference-array family) so GetTypes ("[Ljava/lang/String;") yields
 		// System.String[] / JavaObjectArray<string> / JavaArray<string> on NativeAOT, matching CoreCLR.
-		for (int rank = 1; rank <= maxArrayRank; rank++) {
+		// It is a reference type, so it only goes up to maxReferenceArrayRank.
+		for (int rank = 1; rank <= maxReferenceArrayRank; rank++) {
 			var proxy = new ArrayProxyData {
 				TypeName = ManagedTypeNameToArrayProxyTypeName ("System.String", rank),
 				ElementType = new TypeRefData {
@@ -753,10 +767,11 @@ static class ModelBuilder
 		// primitive proxy). Emit reference-array proxies (Primitive is null) so GetTypes
 		// ("[Ljava/lang/Boolean;") yields bool?[] / JavaObjectArray<bool?> on NativeAOT. The element
 		// key uses the normalized generic form (simple assembly names) that
-		// TrimmableTypeMap.BuildManagedTypeKey produces at runtime for Nullable<T>.
+		// TrimmableTypeMap.BuildManagedTypeKey produces at runtime for Nullable<T>. The boxed values are
+		// Java reference types, so they only go up to maxReferenceArrayRank.
 		foreach (var nullablePrimitive in NullableArrayProxies) {
 			var elementTypeName = $"System.Nullable`1[[{nullablePrimitive.ManagedTypeName}, System.Runtime]]";
-			for (int rank = 1; rank <= maxArrayRank; rank++) {
+			for (int rank = 1; rank <= maxReferenceArrayRank; rank++) {
 				var proxy = new ArrayProxyData {
 					TypeName = $"Nullable_{nullablePrimitive.Name}_ArrayProxy{rank}",
 					ElementType = new TypeRefData {

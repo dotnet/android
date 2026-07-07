@@ -55,6 +55,12 @@
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and ('$(PublishAot)' == 'true' or '$(DynamicCodeSupport)' == 'false') ">3</_AndroidTrimmableTypeMapMaxArrayRank>
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
+    <!-- Reference-type array rank (scanned Java peers, System.String, boxed Nullable<T>). Kept at 1
+         because jagged reference arrays are rare and each nesting level multiplies the generated
+         JavaObjectArray<T> closure that ILC must compile/preinitialize (the dominant NativeAOT
+         build-time and binary-size cost). Primitive arrays keep the higher _AndroidTrimmableTypeMapMaxArrayRank. -->
+    <_AndroidTrimmableTypeMapMaxReferenceArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxReferenceArrayRank)' == '' and ('$(PublishAot)' == 'true' or '$(DynamicCodeSupport)' == 'false') ">1</_AndroidTrimmableTypeMapMaxReferenceArrayRank>
+    <_AndroidTrimmableTypeMapMaxReferenceArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxReferenceArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxReferenceArrayRank>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
       $(IncrementalCleanDependsOn);
@@ -153,6 +159,7 @@
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
+        MaxReferenceArrayRank="$(_AndroidTrimmableTypeMapMaxReferenceArrayRank)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"

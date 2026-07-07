@@ -16,10 +16,10 @@ public class ModelBuilderTests : FixtureTestBase
 		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
-	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3)
+	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3, int? maxReferenceArrayRank = null)
 	{
 		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
-		return ModelBuilder.Build (peers, outputPath, assemblyName, maxArrayRank);
+		return ModelBuilder.Build (peers, outputPath, assemblyName, maxArrayRank, maxReferenceArrayRank ?? maxArrayRank);
 	}
 
 	public class BasicStructure
@@ -1275,6 +1275,45 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_ReferenceRankLowerThanPrimitiveRank_PeersGetReferenceRankOnly ()
+		{
+			// Split ranks: reference types (Java peers) capped at rank 1, primitives at rank 3.
+			var peer = MakeMcwPeer ("com/example/Foo", "Com.Example.Foo", "App");
+			var model = BuildModelWithArrays (new [] { peer }, maxArrayRank: 3, maxReferenceArrayRank: 1);
+
+			// The peer (a reference type) gets exactly one array entry, at rank 1.
+			var peerEntries = model.Entries.Where (e => e.MapKey == "Com.Example.Foo, App" && e.AnchorRank is not null).ToList ();
+			Assert.Single (peerEntries);
+			Assert.Equal (1, peerEntries [0].AnchorRank);
+
+			// The anchor set is still rank 3 (uniform across assemblies for the root matrix).
+			Assert.Equal (3, model.MaxArrayRank);
+		}
+
+		[Fact]
+		public void Build_ReferenceRankLowerThanPrimitiveRank_PrimitivesRank3ReferencesRank1 ()
+		{
+			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Java.Interop.TypeMap", maxArrayRank: 3, maxReferenceArrayRank: 1);
+
+			// Primitives keep ranks 1..3: 12 primitives × 3.
+			var primitiveInt = model.Entries.Where (e => e.MapKey == "System.Int32, System.Runtime" && e.AnchorRank is not null).Select (e => e.AnchorRank).OrderBy (r => r).ToList ();
+			Assert.Equal (new int? [] { 1, 2, 3 }, primitiveInt);
+
+			// System.String (reference) only rank 1.
+			var stringRanks = model.Entries.Where (e => e.MapKey == "System.String, System.Runtime" && e.AnchorRank is not null).Select (e => e.AnchorRank).ToList ();
+			Assert.Equal (new int? [] { 1 }, stringRanks);
+
+			// Nullable<bool> (boxed reference) only rank 1.
+			var nullableRanks = model.Entries.Where (e => e.MapKey == "System.Nullable`1[[System.Boolean, System.Runtime]], System.Runtime" && e.AnchorRank is not null).Select (e => e.AnchorRank).ToList ();
+			Assert.Equal (new int? [] { 1 }, nullableRanks);
+
+			// Totals: 12 primitives × 3 + (String + 8 nullables) × 1 = 36 + 9 = 45.
+			var builtinEntries = model.Entries.Count (e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null);
+			Assert.Equal (45, builtinEntries);
+		}
+
+		[Fact]
 		public void Build_EmitArrayEntries_PrimitiveEntries_NotDuplicatedInOtherAssemblies ()
 		{
 			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
@@ -1397,7 +1436,7 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
 			var outputPath = Path.Combine (Path.GetTempPath (), "ArrBlobs.dll");
-			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrBlobs", maxArrayRank: 3);
+			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrBlobs", maxArrayRank: 3, maxReferenceArrayRank: 3);
 
 			EmitAndVerify (model, "ArrBlobs", (pe, reader) => {
 				var arrayAttrs = ReadAllTypeMapAttributeBlobs (reader)
