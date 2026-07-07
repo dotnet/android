@@ -1436,4 +1436,89 @@ public class ManifestGeneratorTests
 		Assert.NotNull (app);
 		Assert.Equal ("com.example.app.ManageActivity", (string?)app?.Attribute (AndroidNs + "manageSpaceActivity"));
 	}
+
+	[Fact]
+	public void LibraryManifests_MergedWithApplicationIdAndRelativeNamesResolved ()
+	{
+		// Mirrors ManifestTest.MergeLibraryManifest: a library (.aar) manifest is merged into the
+		// app manifest, ${applicationId} resolves to the app package, and relative component names
+		// (".Type") are qualified with the library's own package attribute.
+		var libManifest = Path.Combine (Path.GetTempPath (), $"lib-manifest-{Path.GetRandomFileName ()}.xml");
+		File.WriteAllText (libManifest, """
+			<?xml version='1.0'?>
+			<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
+			    <uses-sdk android:minSdkVersion='16'/>
+			    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
+			    <application>
+			        <activity android:name='.signin.internal.SignInHubActivity' />
+			        <provider
+			            android:authorities='${applicationId}.FacebookInitProvider'
+			            android:name='.internal.FacebookInitProvider'
+			            android:exported='false' />
+			        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
+			        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
+			    </application>
+			</manifest>
+			""");
+		try {
+			var gen = CreateDefaultGenerator ();
+			gen.PackageName = "com.xamarin.manifest";
+			gen.LibraryManifests = [libManifest];
+			var template = ParseTemplate ("""
+				<?xml version="1.0" encoding="utf-8"?>
+				<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.xamarin.manifest">
+				  <uses-sdk />
+				  <application android:label="App" />
+				</manifest>
+				""");
+
+			var doc = GenerateAndLoad (gen, template: template);
+
+			// ${applicationId} resolves to the app package on the merged permission.
+			var permission = doc.Root?.Elements ("permission")
+				.FirstOrDefault (e => (string?) e.Attribute (AttName) == "com.xamarin.manifest.permission.C2D_MESSAGE");
+			Assert.NotNull (permission);
+
+			var app = doc.Root?.Element ("application");
+			Assert.NotNull (app);
+
+			// Relative ".Type" names are qualified with the library package (com.xamarin.test).
+			var activity = app?.Elements ("activity")
+				.FirstOrDefault (e => (string?) e.Attribute (AttName) == "com.xamarin.test.signin.internal.SignInHubActivity");
+			Assert.NotNull (activity);
+
+			var provider = app?.Elements ("provider")
+				.FirstOrDefault (e => (string?) e.Attribute (AttName) == "com.xamarin.test.internal.FacebookInitProvider");
+			Assert.NotNull (provider);
+			// authorities uses ${applicationId} -> app package.
+			Assert.Equal ("com.xamarin.manifest.FacebookInitProvider", (string?) provider?.Attribute (AndroidNs + "authorities"));
+
+			// The two identical meta-data elements collapse to a single element.
+			var versionMeta = app?.Elements ("meta-data")
+				.Where (e => (string?) e.Attribute (AttName) == "android.support.VERSION")
+				.ToList ();
+			Assert.NotNull (versionMeta);
+			Assert.Single (versionMeta);
+		} finally {
+			File.Delete (libManifest);
+		}
+	}
+
+	[Fact]
+	public void LibraryManifests_MissingFileIgnored ()
+	{
+		// A non-existent library manifest path is skipped without throwing.
+		var gen = CreateDefaultGenerator ();
+		gen.LibraryManifests = [Path.Combine (Path.GetTempPath (), $"does-not-exist-{Path.GetRandomFileName ()}.xml")];
+		var template = ParseTemplate ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <uses-sdk />
+			  <application android:label="App" />
+			</manifest>
+			""");
+
+		var doc = GenerateAndLoad (gen, template: template);
+		Assert.NotNull (doc.Root?.Element ("application"));
+	}
 }

@@ -149,6 +149,8 @@ public class TrimmableTypeMapGenerator
 			ForceExtractNativeLibs = forceDebuggable,
 			ManifestPlaceholders = config.ManifestPlaceholders,
 			ApplicationJavaClass = config.ApplicationJavaClass,
+			Warn = message => logger.LogLibraryManifestMergeWarning (message),
+			LibraryManifests = config.LibraryManifests ?? [],
 		};
 
 		var (doc, providerNames) = generator.Generate (manifestTemplate, allPeers, assemblyManifestInfo);
