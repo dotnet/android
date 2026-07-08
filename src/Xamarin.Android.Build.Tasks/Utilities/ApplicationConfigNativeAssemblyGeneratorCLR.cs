@@ -139,54 +139,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public AssemblyStoreAssemblyDescriptor? assemblies;
 	}
 
-	sealed class RuntimePropertyContextDataProvider : NativeAssemblerStructContextDataProvider
-	{
-		public override string GetComment (object data, string fieldName)
-		{
-			var runtimeProp = EnsureType<RuntimeProperty> (data);
-			if (MonoAndroidHelper.StringEquals ("key_index", fieldName)) {
-				return $" '{runtimeProp.Key}'";
-			}
-
-			if (MonoAndroidHelper.StringEquals ("value_index", fieldName)) {
-				return $" '{runtimeProp.Value}'";
-			}
-
-			return String.Empty;
-		}
-	}
-
-	// Order of fields and their types must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh RuntimeProperty structure
-	[NativeAssemblerStructContextDataProvider (typeof (RuntimePropertyContextDataProvider))]
-	sealed class RuntimeProperty
-	{
-		[NativeAssembler (Ignore = true)]
-		public string? Key;
-
-		[NativeAssembler (Ignore = true)]
-		public string? Value;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public uint key_index;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public uint value_index;
-		public uint value_size;
-	}
-
-	// Order of fields and their types must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh RuntimePropertyIndexEntry structure
-	sealed class RuntimePropertyIndexEntry
-	{
-		[NativeAssembler (Ignore = true)]
-		public string? HashedKey;
-
-		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public uint key_hash;
-		public uint index;
-	}
-
 	sealed class XamarinAndroidBundledAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override ulong GetBufferSize (object data, string fieldName)
@@ -250,8 +202,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value - assigned conditionally by build process
 	List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
 #pragma warning restore CS0649
-	List<StructureInstance<RuntimeProperty>>? runtimePropertiesData;
-	List<StructureInstance<RuntimePropertyIndexEntry>>? runtimePropertyIndex;
 
 	StructureInfo? applicationConfigStructureInfo;
 	StructureInfo? dsoCacheEntryStructureInfo;
@@ -259,8 +209,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? xamarinAndroidBundledAssemblyStructureInfo;
 	StructureInfo? assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
-	StructureInfo? runtimePropertyStructureInfo;
-	StructureInfo? runtimePropertyIndexEntryStructureInfo;
 #pragma warning disable CS0169 // Field is never used - might be used in future versions
 	StructureInfo? hostConfigurationPropertyStructureInfo;
 #pragma warning restore CS0169
@@ -410,23 +358,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		(runtimePropertiesData, runtimePropertyIndex, LlvmIrStringBlob runtimePropsBlob) = InitRuntimeProperties ();
-		var runtime_properties = new LlvmIrGlobalVariable (runtimePropertiesData, "runtime_properties", LlvmIrVariableOptions.GlobalConstant) {
-			Comment = "Runtime config properties",
-		};
-		module.Add (runtime_properties);
-
-		var runtime_properties_data = new LlvmIrGlobalVariable (runtimePropsBlob, "runtime_properties_data", LlvmIrVariableOptions.GlobalConstant) {
-			Comment = "Runtime config properties data",
-		};
-		module.Add (runtime_properties_data);
-
-		var runtime_property_index = new LlvmIrGlobalVariable (runtimePropertyIndex, "runtime_property_index", LlvmIrVariableOptions.GlobalConstant) {
-			Comment = "Runtime config property index, sorted on property key hash",
-			BeforeWriteCallback = HashAndSortRuntimePropertiesIndex,
-		};
-		module.Add (runtime_property_index);
-
 		// HOST_PROPERTY_RUNTIME_CONTRACT will come first, our native runtime requires that since it needs
 		// to set its value in the values array and we don't want to spend time searching for the index, nor
 		// we want to add yet another variable storing the index to the entry. KISS.
@@ -458,74 +389,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.Add (init_runtime_property_values);
 
 		AddAssemblyStores (module);
-	}
-
-	void HashAndSortRuntimePropertiesIndex (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
-	{
-		var index = variable.Value as List<StructureInstance<RuntimePropertyIndexEntry>>;
-		if (index == null) {
-			return;
-		}
-
-		foreach (StructureInstance instance in index) {
-			if (instance.Obj == null) {
-				throw new InvalidOperationException ("Internal error: runtime property index must not contain null entries");
-			}
-
-			var entry = instance.Obj as RuntimePropertyIndexEntry;
-			if (entry == null) {
-				throw new InvalidOperationException ($"Internal error: runtime property index entry has unexpected type {instance.Obj.GetType ()}");
-			}
-
-			entry.key_hash = TypeMapHelper.HashNameForCLR (entry.HashedKey ?? "");
-		};
-
-		index.Sort ((StructureInstance<RuntimePropertyIndexEntry> a, StructureInstance<RuntimePropertyIndexEntry> b) => {
-			if (a.Instance == null || b.Instance == null) return 0;
-			return a.Instance.key_hash.CompareTo (b.Instance.key_hash);
-		});
-	}
-
-	(
-		List<StructureInstance<RuntimeProperty>> runtimeProps,
-		List<StructureInstance<RuntimePropertyIndexEntry>> runtimePropsIndex,
-		LlvmIrStringBlob
-	) InitRuntimeProperties ()
-	{
-		var runtimeProps = new List<StructureInstance<RuntimeProperty>> ();
-		var runtimePropsIndex = new List<StructureInstance<RuntimePropertyIndexEntry>> ();
-		var propsBlob = new LlvmIrStringBlob ();
-
-		if (runtimeProperties == null || runtimeProperties.Count == 0) {
-			return (runtimeProps, runtimePropsIndex, propsBlob);
-		}
-
-		foreach (var kvp in runtimeProperties) {
-			string name = kvp.Key;
-			string value = kvp.Value;
-			(int name_index, _) = propsBlob.Add (name);
-			(int value_index, int value_size) = propsBlob.Add (value);
-
-			var prop = new RuntimeProperty {
-				Key = name,
-				Value = value,
-
-				key_index = (uint)name_index,
-				value_index = (uint)value_index,
-
-				// Includes the terminating NUL
-				value_size = (uint)value_size,
-			};
-			runtimeProps.Add (new StructureInstance<RuntimeProperty> (runtimePropertyStructureInfo, prop));
-
-			var indexEntry = new RuntimePropertyIndexEntry {
-				HashedKey = prop.Key,
-				index = (uint)(runtimeProps.Count - 1),
-			};
-			runtimePropsIndex.Add (new StructureInstance<RuntimePropertyIndexEntry> (runtimePropertyIndexEntryStructureInfo, indexEntry));
-		}
-
-		return (runtimeProps, runtimePropsIndex, propsBlob);
 	}
 
 	void AddAssemblyStores (LlvmIrModule module)
@@ -758,8 +621,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		xamarinAndroidBundledAssemblyStructureInfo = module.MapStructure<XamarinAndroidBundledAssembly> ();
 		dsoCacheEntryStructureInfo = module.MapStructure<DSOCacheEntry> ();
 		dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
-		runtimePropertyStructureInfo = module.MapStructure<RuntimeProperty> ();
-		runtimePropertyIndexEntryStructureInfo = module.MapStructure<RuntimePropertyIndexEntry> ();
 		appEnvironmentVariableStructureInfo = module.MapStructure<LlvmIrHelpers.AppEnvironmentVariable> ();
 	}
 

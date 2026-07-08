@@ -233,19 +233,6 @@ struct ApplicationConfig
 	bool managed_marshal_methods_lookup_enabled;
 };
 
-struct RuntimeProperty
-{
-	const uint32_t key_index;
-	const uint32_t value_index;
-	const uint32_t value_size; // including the terminating NUL
-};
-
-struct RuntimePropertyIndexEntry
-{
-	xamarin::android::hash_t key_hash;
-	uint32_t index;
-};
-
 struct DSOApkEntry
 {
 	xamarin::android::hash_t name_hash;
@@ -353,10 +340,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
-
-	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];
-	[[gnu::visibility("default")]] extern const char runtime_properties_data[];
-	[[gnu::visibility("default")]] extern const RuntimePropertyIndexEntry runtime_property_index[];
 
 	[[gnu::visibility("default")]] extern const char *init_runtime_property_names[];
 	[[gnu::visibility("default")]] extern char *init_runtime_property_values[];

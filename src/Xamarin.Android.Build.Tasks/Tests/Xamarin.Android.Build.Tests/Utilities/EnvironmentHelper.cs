@@ -185,8 +185,6 @@ namespace Xamarin.Android.Build.Tests
 			"java_type_count",
 			"managed_to_java_map",
 			"managed_to_java_map_module_count",
-			"runtime_properties",
-			"runtime_properties_data",
 			AppEnvironmentVariableContentsSymbolName,
 			AppEnvironmentVariablesSymbolName,
 			ApplicationConfigSymbolName,

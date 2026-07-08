@@ -53,7 +53,7 @@ const ApplicationConfig application_config = {
 	.jni_add_native_method_registration_attribute_present = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
-	.number_of_runtime_properties = 3,
+	.number_of_runtime_properties = 1,
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
@@ -218,50 +218,6 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 			.str = "some/other/java/type",
 		},
 		.replacement = "another/replacement/java/type",
-	},
-};
-
-constexpr char prop_test_string_key[] = "test_string";
-constexpr char prop_test_integer_key[] = "test_integer";
-constexpr char prop_test_boolean_key[] = "test_boolean";
-
-const RuntimeProperty runtime_properties[] = {
-	{
-		.key_index = 0,
-		.value_index = 10,
-		.value_size = 10,
-	},
-
-	{
-		.key_index = 20,
-		.value_index = 25,
-		.value_size = 5,
-	},
-
-	{
-		.key_index = 30,
-		.value_index = 33,
-		.value_size = 7,
-	},
-};
-
-
-const char runtime_properties_data[] = {};
-
-const RuntimePropertyIndexEntry runtime_property_index[] = {
-	{
-		.key_hash = xamarin::android::crc32_hash (prop_test_string_key),
-		.index = 0,
-	},
-
-	{
-		.key_hash = xamarin::android::crc32_hash (prop_test_boolean_key),
-		.index = 2,
-	},
-
-	{
-		.key_hash = xamarin::android::crc32_hash (prop_test_integer_key),
-		.index = 1,
 	},
 };
 

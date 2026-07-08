@@ -40,16 +40,13 @@ void Host::clr_error_writer (const char *message) noexcept
 
 size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, [[maybe_unused]] void *contract_context) noexcept
 {
-	// NOTE: this code was tested locally, but it's **not** used by CoreCLR yet, so there's been no
-	// "live" testing.
 	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)"sv, optional_string (key));
 	if (application_config.number_of_runtime_properties == 0) [[unlikely]] {
 		log_debug (LOG_DEFAULT, "No runtime properties defined"sv);
-		return 0;
+		return static_cast<size_t>(-1);
 	}
 
-	// value_buffer_size must have enough space for at least 1 character + the terminating NUL
-	if (key == nullptr || value_buffer == nullptr || value_buffer_size <= 1) [[unlikely]] {
+	if (key == nullptr || value_buffer == nullptr || value_buffer_size == 0) [[unlikely]] {
 		log_warn (
 			LOG_DEFAULT,
 			"runtime property retrieval API called with invalid arguments. key == {:p}; value_buffer == {:p}; value_buffer_size == {}"sv,
@@ -57,35 +54,40 @@ size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size
 			static_cast<void*>(value_buffer),
 			value_buffer_size
 		);
-		return 0;
+		return static_cast<size_t>(-1);
 	}
 
-	hash_t key_hash = crc32_hash (key, strlen (key));
+	for (uint32_t i = 0; i < application_config.number_of_runtime_properties; i++) {
+		const char *property_key = init_runtime_property_names[i];
+		if (property_key == nullptr || strcmp (key, property_key) != 0) {
+			continue;
+		}
 
-	auto equal = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash == key; };
-	auto less_than = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash < key; };
-	ssize_t idx = Search::binary_search<RuntimePropertyIndexEntry, hash_t, equal, less_than> (key_hash, runtime_property_index, application_config.number_of_runtime_properties);
-	if (idx < 0) {
-		log_debug (LOG_DEFAULT, "Runtime property '{}' not found"sv, key);
-		return 0;
+		const char *property_value = init_runtime_property_values[i];
+		if (property_value == nullptr) {
+			log_warn (LOG_DEFAULT, "Runtime property '{}' has no value"sv, key);
+			return static_cast<size_t>(-1);
+		}
+
+		size_t value_size = strlen (property_value) + 1;
+		if (value_size > value_buffer_size) {
+			log_warn (
+				LOG_DEFAULT,
+				"Value of property '{}' is longer than available buffer space. Need {}b, available {}b"sv,
+				key,
+				value_size,
+				value_buffer_size
+			);
+		}
+
+		size_t bytes_to_copy = std::min (value_size, value_buffer_size);
+		strncpy (value_buffer, property_value, bytes_to_copy);
+		value_buffer[value_buffer_size - 1] = '\0';
+		return value_size;
 	}
 
-	RuntimePropertyIndexEntry const& idx_entry = runtime_property_index[idx];
-	RuntimeProperty const& prop = runtime_properties[idx_entry.index];
-
-	// `value_size` includes the terminating NUL
-	if (prop.value_size > value_buffer_size) {
-		log_warn (
-			LOG_DEFAULT,
-			"Value of property '{}' is longer than available buffer space. Need {}b, available {}b"sv,
-			key,
-			prop.value_size,
-			value_buffer_size
-		);
-	}
-
-	strncpy (value_buffer, &runtime_properties_data[prop.value_index], value_buffer_size);
-	return std::min (static_cast<size_t>(prop.value_size - 1), value_buffer_size - 1);
+	log_debug (LOG_DEFAULT, "Runtime property '{}' not found"sv, key);
+	return static_cast<size_t>(-1);
 }
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
