@@ -26,7 +26,6 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
-#include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
 #include <startup/zip.hh>
@@ -36,58 +35,6 @@ using namespace xamarin::android;
 void Host::clr_error_writer (const char *message) noexcept
 {
 	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
-}
-
-size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, [[maybe_unused]] void *contract_context) noexcept
-{
-	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)"sv, optional_string (key));
-	if (application_config.number_of_runtime_properties == 0) [[unlikely]] {
-		log_debug (LOG_DEFAULT, "No runtime properties defined"sv);
-		return static_cast<size_t>(-1);
-	}
-
-	if (key == nullptr || value_buffer == nullptr || value_buffer_size == 0) [[unlikely]] {
-		log_warn (
-			LOG_DEFAULT,
-			"runtime property retrieval API called with invalid arguments. key == {:p}; value_buffer == {:p}; value_buffer_size == {}"sv,
-			static_cast<const void*>(key),
-			static_cast<void*>(value_buffer),
-			value_buffer_size
-		);
-		return static_cast<size_t>(-1);
-	}
-
-	for (uint32_t i = 0; i < application_config.number_of_runtime_properties; i++) {
-		const char *property_key = init_runtime_property_names[i];
-		if (property_key == nullptr || strcmp (key, property_key) != 0) {
-			continue;
-		}
-
-		const char *property_value = init_runtime_property_values[i];
-		if (property_value == nullptr) {
-			log_warn (LOG_DEFAULT, "Runtime property '{}' has no value"sv, key);
-			return static_cast<size_t>(-1);
-		}
-
-		size_t value_size = strlen (property_value) + 1;
-		if (value_size > value_buffer_size) {
-			log_warn (
-				LOG_DEFAULT,
-				"Value of property '{}' is longer than available buffer space. Need {}b, available {}b"sv,
-				key,
-				value_size,
-				value_buffer_size
-			);
-		}
-
-		size_t bytes_to_copy = std::min (value_size, value_buffer_size);
-		strncpy (value_buffer, property_value, bytes_to_copy);
-		value_buffer[value_buffer_size - 1] = '\0';
-		return value_size;
-	}
-
-	log_debug (LOG_DEFAULT, "Runtime property '{}' not found"sv, key);
-	return static_cast<size_t>(-1);
 }
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
