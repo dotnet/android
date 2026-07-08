@@ -11,44 +11,44 @@
 namespace {
 	// CRC32 internal p/invoke table
 	std::array<PinvokeEntry, 28> internal_pinvokes {{
-		{0xc7eb66d, "monodroid_log", reinterpret_cast<void*>(&monodroid_log)},
-		{0x1208417b, "_monodroid_gref_log_new", reinterpret_cast<void*>(&_monodroid_gref_log_new)},
-		{0x21f6db74, "_monodroid_lookup_replacement_type", reinterpret_cast<void*>(&_monodroid_lookup_replacement_type)},
-		{0x28cb701d, "_monodroid_weak_gref_inc", reinterpret_cast<void*>(&_monodroid_weak_gref_inc)},
-		{0x2e4c74a2, "_monodroid_gref_log", reinterpret_cast<void*>(&_monodroid_gref_log)},
-		{0x36396c04, "monodroid_timing_stop", reinterpret_cast<void*>(&monodroid_timing_stop)},
-		{0x36f14311, "_monodroid_gref_inc", reinterpret_cast<void*>(&_monodroid_gref_inc)},
-		{0x4272011b, "_monodroid_weak_gref_get", reinterpret_cast<void*>(&_monodroid_weak_gref_get)},
-		{0x5c483217, "_monodroid_gref_get", reinterpret_cast<void*>(&_monodroid_gref_get)},
-		{0x5e487bd1, "_monodroid_gref_log_delete", reinterpret_cast<void*>(&_monodroid_gref_log_delete)},
-		{0x638c99a0, "_monodroid_weak_gref_delete", reinterpret_cast<void*>(&_monodroid_weak_gref_delete)},
-		{0x639ae575, "_monodroid_lref_log_new", reinterpret_cast<void*>(&_monodroid_lref_log_new)},
-		{0x6c845282, "__android_log_print", reinterpret_cast<void*>(&__android_log_print)},
-		{0x741c16ae, "xamarin_app_init", reinterpret_cast<void*>(&xamarin_app_init)},
-		{0x80bcdd2f, "_monodroid_lref_log_delete", reinterpret_cast<void*>(&_monodroid_lref_log_delete)},
-		{0x95a0abcc, "monodroid_free", reinterpret_cast<void*>(&monodroid_free)},
-		{0x9fe0c9d9, "_monodroid_detect_cpu_and_architecture", reinterpret_cast<void*>(&_monodroid_detect_cpu_and_architecture)},
-		{0xb29db2e8, "_monodroid_lookup_replacement_method_info", reinterpret_cast<void*>(&_monodroid_lookup_replacement_method_info)},
-		{0xba99e855, "monodroid_timing_start", reinterpret_cast<void*>(&monodroid_timing_start)},
-		{0xc3e73a85, "_monodroid_weak_gref_dec", reinterpret_cast<void*>(&_monodroid_weak_gref_dec)},
-		{0xc58330cb, "monodroid_TypeManager_get_java_class_name", reinterpret_cast<void*>(&monodroid_TypeManager_get_java_class_name)},
-		{0xcdc08ad5, "clr_typemap_managed_to_java", reinterpret_cast<void*>(&clr_typemap_managed_to_java)},
-		{0xce55fbf3, "clr_initialize_gc_bridge", reinterpret_cast<void*>(&clr_initialize_gc_bridge)},
-		{0xd4aa6b2e, "_monodroid_weak_gref_new", reinterpret_cast<void*>(&_monodroid_weak_gref_new)},
-		{0xdddd0989, "_monodroid_gref_dec", reinterpret_cast<void*>(&_monodroid_gref_dec)},
-		{0xdf04d569, "_monodroid_gc_wait_for_bridge_processing", reinterpret_cast<void*>(&_monodroid_gc_wait_for_bridge_processing)},
-		{0xf403b8b9, "_monodroid_max_gref_get", reinterpret_cast<void*>(&_monodroid_max_gref_get)},
-		{0xf65149df, "clr_typemap_java_to_managed", reinterpret_cast<void*>(&clr_typemap_java_to_managed)},
+		{crc32_hash ("monodroid_log"), "monodroid_log", reinterpret_cast<void*>(&monodroid_log)},
+		{crc32_hash ("_monodroid_gref_log_new"), "_monodroid_gref_log_new", reinterpret_cast<void*>(&_monodroid_gref_log_new)},
+		{crc32_hash ("_monodroid_lookup_replacement_type"), "_monodroid_lookup_replacement_type", reinterpret_cast<void*>(&_monodroid_lookup_replacement_type)},
+		{crc32_hash ("_monodroid_weak_gref_inc"), "_monodroid_weak_gref_inc", reinterpret_cast<void*>(&_monodroid_weak_gref_inc)},
+		{crc32_hash ("_monodroid_gref_log"), "_monodroid_gref_log", reinterpret_cast<void*>(&_monodroid_gref_log)},
+		{crc32_hash ("monodroid_timing_stop"), "monodroid_timing_stop", reinterpret_cast<void*>(&monodroid_timing_stop)},
+		{crc32_hash ("_monodroid_gref_inc"), "_monodroid_gref_inc", reinterpret_cast<void*>(&_monodroid_gref_inc)},
+		{crc32_hash ("_monodroid_weak_gref_get"), "_monodroid_weak_gref_get", reinterpret_cast<void*>(&_monodroid_weak_gref_get)},
+		{crc32_hash ("_monodroid_gref_get"), "_monodroid_gref_get", reinterpret_cast<void*>(&_monodroid_gref_get)},
+		{crc32_hash ("_monodroid_gref_log_delete"), "_monodroid_gref_log_delete", reinterpret_cast<void*>(&_monodroid_gref_log_delete)},
+		{crc32_hash ("_monodroid_weak_gref_delete"), "_monodroid_weak_gref_delete", reinterpret_cast<void*>(&_monodroid_weak_gref_delete)},
+		{crc32_hash ("_monodroid_lref_log_new"), "_monodroid_lref_log_new", reinterpret_cast<void*>(&_monodroid_lref_log_new)},
+		{crc32_hash ("__android_log_print"), "__android_log_print", reinterpret_cast<void*>(&__android_log_print)},
+		{crc32_hash ("xamarin_app_init"), "xamarin_app_init", reinterpret_cast<void*>(&xamarin_app_init)},
+		{crc32_hash ("_monodroid_lref_log_delete"), "_monodroid_lref_log_delete", reinterpret_cast<void*>(&_monodroid_lref_log_delete)},
+		{crc32_hash ("monodroid_free"), "monodroid_free", reinterpret_cast<void*>(&monodroid_free)},
+		{crc32_hash ("_monodroid_detect_cpu_and_architecture"), "_monodroid_detect_cpu_and_architecture", reinterpret_cast<void*>(&_monodroid_detect_cpu_and_architecture)},
+		{crc32_hash ("_monodroid_lookup_replacement_method_info"), "_monodroid_lookup_replacement_method_info", reinterpret_cast<void*>(&_monodroid_lookup_replacement_method_info)},
+		{crc32_hash ("monodroid_timing_start"), "monodroid_timing_start", reinterpret_cast<void*>(&monodroid_timing_start)},
+		{crc32_hash ("_monodroid_weak_gref_dec"), "_monodroid_weak_gref_dec", reinterpret_cast<void*>(&_monodroid_weak_gref_dec)},
+		{crc32_hash ("monodroid_TypeManager_get_java_class_name"), "monodroid_TypeManager_get_java_class_name", reinterpret_cast<void*>(&monodroid_TypeManager_get_java_class_name)},
+		{crc32_hash ("clr_typemap_managed_to_java"), "clr_typemap_managed_to_java", reinterpret_cast<void*>(&clr_typemap_managed_to_java)},
+		{crc32_hash ("clr_initialize_gc_bridge"), "clr_initialize_gc_bridge", reinterpret_cast<void*>(&clr_initialize_gc_bridge)},
+		{crc32_hash ("_monodroid_weak_gref_new"), "_monodroid_weak_gref_new", reinterpret_cast<void*>(&_monodroid_weak_gref_new)},
+		{crc32_hash ("_monodroid_gref_dec"), "_monodroid_gref_dec", reinterpret_cast<void*>(&_monodroid_gref_dec)},
+		{crc32_hash ("_monodroid_gc_wait_for_bridge_processing"), "_monodroid_gc_wait_for_bridge_processing", reinterpret_cast<void*>(&_monodroid_gc_wait_for_bridge_processing)},
+		{crc32_hash ("_monodroid_max_gref_get"), "_monodroid_max_gref_get", reinterpret_cast<void*>(&_monodroid_max_gref_get)},
+		{crc32_hash ("clr_typemap_java_to_managed"), "clr_typemap_java_to_managed", reinterpret_cast<void*>(&clr_typemap_java_to_managed)},
 	}};
 
 
-constexpr hash_t java_interop_library_hash = 0x33b98009;
-constexpr hash_t xa_internal_api_library_hash = 0xf03cbae;
-constexpr hash_t android_liblog_library_hash = 0xbb87f5e1;
-constexpr hash_t system_native_library_hash = 0xa9877ba;
-constexpr hash_t system_io_compression_native_library_hash = 0xb234abb7;
-constexpr hash_t system_security_cryptography_native_android_library_hash = 0x6bfed756;
-constexpr hash_t system_globalization_native_library_hash = 0x7d160aeb;
+constexpr hash_t java_interop_library_hash = crc32_hash ("java-interop");
+constexpr hash_t xa_internal_api_library_hash = crc32_hash ("xa-internal-api");
+constexpr hash_t android_liblog_library_hash = crc32_hash ("liblog");
+constexpr hash_t system_native_library_hash = crc32_hash ("libSystem.Native");
+constexpr hash_t system_io_compression_native_library_hash = crc32_hash ("libSystem.IO.Compression.Native");
+constexpr hash_t system_security_cryptography_native_android_library_hash = crc32_hash ("libSystem.Security.Cryptography.Native.Android");
+constexpr hash_t system_globalization_native_library_hash = crc32_hash ("libSystem.Globalization.Native");
 
 constexpr size_t internal_pinvokes_count = 28;
 } // end of anonymous namespace

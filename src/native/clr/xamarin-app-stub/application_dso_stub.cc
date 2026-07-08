@@ -109,8 +109,8 @@ constexpr char fake_dso_name2[] = "libaot-Another.Assembly.dll.so";
 
 DSOCacheEntry dso_cache[] = {
 	{
-		.hash = 0x4ce380ac,
-		.real_name_hash = 0x4ce380ac,
+		.hash = xamarin::android::crc32_hash (fake_dso_name),
+		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name),
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 1,
@@ -118,8 +118,8 @@ DSOCacheEntry dso_cache[] = {
 	},
 
 	{
-		.hash = 0x5f995ac5,
-		.real_name_hash = 0x5f995ac5,
+		.hash = xamarin::android::crc32_hash (fake_dso_name2),
+		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name2),
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 2,
@@ -135,8 +135,8 @@ const uint dso_jni_preloads_idx[1] = {
 
 DSOCacheEntry aot_dso_cache[] = {
 	{
-		.hash = 0x4ce380ac,
-		.real_name_hash = 0x4ce380ac,
+		.hash = xamarin::android::crc32_hash (fake_dso_name),
+		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name),
 		.ignore = true,
 		.is_jni_library = true,
 		.name_index = 3,
@@ -144,8 +144,8 @@ DSOCacheEntry aot_dso_cache[] = {
 	},
 
 	{
-		.hash = 0x5f995ac5,
-		.real_name_hash = 0x5f995ac5,
+		.hash = xamarin::android::crc32_hash (fake_dso_name2),
+		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name2),
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 4,
@@ -272,17 +272,17 @@ const char runtime_properties_data[] = {};
 
 const RuntimePropertyIndexEntry runtime_property_index[] = {
 	{
-		.key_hash = 0x0967b587,
+		.key_hash = xamarin::android::crc32_hash (prop_test_string_key),
 		.index = 0,
 	},
 
 	{
-		.key_hash = 0x56c45ca0,
+		.key_hash = xamarin::android::crc32_hash (prop_test_boolean_key),
 		.index = 2,
 	},
 
 	{
-		.key_hash = 0x864e7fc3,
+		.key_hash = xamarin::android::crc32_hash (prop_test_integer_key),
 		.index = 1,
 	},
 };
