@@ -239,41 +239,59 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_Without_Protocol_Works ()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/dotnet/android");
-			var redirectedURI = new Uri ("https://github.com/dotnet/android");
-			using (var c = new HttpClient (CreateHandler ())) {
-				var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
-				if (connectionFailed)
-					return;
+			using (var redirectedServer = LocalHttpServer.Start (context => LocalHttpServer.WriteStringAsync (context.Response, "OK", "text/plain")))
+			using (var redirectServer = LocalHttpServer.Start (context => {
+				LocalHttpServer.DrainRequestBody (context.Request);
+				context.Response.StatusCode = (int) HttpStatusCode.Redirect;
+				context.Response.RedirectLocation = redirectedServer.Url;
+			})) {
+				var requestURI = redirectServer.Uri;
+				var redirectedURI = redirectedServer.Uri;
+				using (var c = new HttpClient (CreateHandler ())) {
+					var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
+					if (connectionFailed)
+						return;
 
-				RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
-				if (connectionFailed)
-					return;
+					RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+					if (connectionFailed)
+						return;
 
-				EnsureSuccessStatusCode (tr.Result);
-				Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
+					EnsureSuccessStatusCode (tr.Result);
+					Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
+				}
+				redirectServer.AssertNoUnhandledExceptions ();
+				redirectedServer.AssertNoUnhandledExceptions ();
 			}
 		}
 
 		[Test]
 		public void Redirect_POST_With_Content_Works ()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/dotnet/android");
-			var redirectedURI = new Uri ("https://github.com/dotnet/android");
-			using (var c = new HttpClient (CreateHandler ())) {
-				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
-				request.Content = new StringContent ("{}", Encoding.UTF8, "application/json");
-				var t = ConnectIgnoreFailure (() => c.SendAsync (request), out bool connectionFailed);
-				if (connectionFailed)
-					return;
+			using (var redirectedServer = LocalHttpServer.Start (context => LocalHttpServer.WriteStringAsync (context.Response, "OK", "text/plain")))
+			using (var redirectServer = LocalHttpServer.Start (context => {
+				LocalHttpServer.DrainRequestBody (context.Request);
+				context.Response.StatusCode = (int) HttpStatusCode.Redirect;
+				context.Response.RedirectLocation = redirectedServer.Url;
+			})) {
+				var requestURI = redirectServer.Uri;
+				var redirectedURI = redirectedServer.Uri;
+				using (var c = new HttpClient (CreateHandler ())) {
+					var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
+					request.Content = new StringContent ("{}", Encoding.UTF8, "application/json");
+					var t = ConnectIgnoreFailure (() => c.SendAsync (request), out bool connectionFailed);
+					if (connectionFailed)
+						return;
 
-				HttpResponseMessage response = null;
-				RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
-				if (connectionFailed)
-					return;
+					HttpResponseMessage response = null;
+					RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
+					if (connectionFailed)
+						return;
 
-				EnsureSuccessStatusCode (response);
-				Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
+					EnsureSuccessStatusCode (response);
+					Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
+				}
+				redirectServer.AssertNoUnhandledExceptions ();
+				redirectedServer.AssertNoUnhandledExceptions ();
 			}
 		}
 

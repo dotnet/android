@@ -1187,6 +1187,7 @@ namespace Library1 {
 				Version = "2.0.3",
 			});
 
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:usesCleartextTraffic=\"true\" ");
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
 				proj.MainActivity = sr.ReadToEnd ();
