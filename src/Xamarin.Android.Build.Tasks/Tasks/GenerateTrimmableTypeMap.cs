@@ -104,17 +104,18 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	/// <summary>
 	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
-	/// sentinels and primitive-element <c>TypeMap</c> entries (e.g. <c>int[][][]</c>). 0 disables.
-	/// Set via <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
+	/// sentinels and built-in element <c>TypeMap</c> entries: primitive arrays
+	/// (e.g. <c>int[][][]</c>), <c>System.String</c>, and boxed <c>Nullable&lt;T&gt;</c>.
+	/// 0 disables. Set via <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
 	/// </summary>
 	public int MaxArrayRank { get; set; }
 
 	/// <summary>
-	/// Maximum array rank for reference-type element <c>TypeMap</c> entries — scanned Java peers,
-	/// <c>System.String</c>, and boxed <c>Nullable&lt;T&gt;</c> (which map to Java reference arrays).
-	/// Kept lower than <see cref="MaxArrayRank"/> because jagged reference arrays are rare and each
-	/// nesting level multiplies the generated <c>JavaObjectArray&lt;T&gt;</c> closure. 0 disables. Set
-	/// via <c>$(_AndroidTrimmableTypeMapMaxReferenceArrayRank)</c>.
+	/// Maximum array rank for scanned Java peer reference-type <c>TypeMap</c> entries.
+	/// Kept lower than <see cref="MaxArrayRank"/> because jagged arrays for arbitrary scanned
+	/// reference types are rare and each nesting level multiplies the generated
+	/// <c>JavaObjectArray&lt;T&gt;</c> closure. 0 disables. Set via
+	/// <c>$(_AndroidTrimmableTypeMapMaxReferenceArrayRank)</c>.
 	/// </summary>
 	public int MaxReferenceArrayRank { get; set; }
 
