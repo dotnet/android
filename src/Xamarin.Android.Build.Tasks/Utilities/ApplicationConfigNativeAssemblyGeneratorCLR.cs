@@ -209,12 +209,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	StructureInfo? xamarinAndroidBundledAssemblyStructureInfo;
 	StructureInfo? assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
 	StructureInfo? assemblyStoreRuntimeDataStructureInfo;
-#pragma warning disable CS0169 // Field is never used - might be used in future versions
-	StructureInfo? hostConfigurationPropertyStructureInfo;
-#pragma warning restore CS0169
-#pragma warning disable CS0169 // Field is never used - might be used in future versions
-	StructureInfo? hostConfigurationPropertiesStructureInfo;
-#pragma warning restore CS0169
 	StructureInfo? appEnvironmentVariableStructureInfo;
 
 	public bool UsesAssemblyPreload { get; set; }
