@@ -8,7 +8,7 @@ parameters:
   testCases:
   - name: android-arm64-default
     runtimeIdentifier: android-arm64
-    packageName: com.xamarin.mauir2r.arm64.default
+    packageName: com.xamarin.mauir2r.arm64.baseline
     helixQueue: windows.11.amd64.android.open
     displayName: android-arm64 default R2R
   - name: android-arm64-fullr2r
@@ -18,7 +18,7 @@ parameters:
     displayName: android-arm64 full R2R
   - name: android-arm-default
     runtimeIdentifier: android-arm
-    packageName: com.xamarin.mauir2r.arm.default
+    packageName: com.xamarin.mauir2r.arm.baseline
     helixQueue: windows.11.amd64.android-armel.open
     displayName: android-arm default R2R
   - name: android-arm-fullr2r
@@ -37,7 +37,7 @@ steps:
       @{
         Name = 'android-arm64-default'
         RuntimeIdentifier = 'android-arm64'
-        ApplicationId = 'com.xamarin.mauir2r.arm64.default'
+        ApplicationId = 'com.xamarin.mauir2r.arm64.baseline'
         DisablePartialReadyToRun = $false
       },
       @{
@@ -49,7 +49,7 @@ steps:
       @{
         Name = 'android-arm-default'
         RuntimeIdentifier = 'android-arm'
-        ApplicationId = 'com.xamarin.mauir2r.arm.default'
+        ApplicationId = 'com.xamarin.mauir2r.arm.baseline'
         DisablePartialReadyToRun = $false
       },
       @{
