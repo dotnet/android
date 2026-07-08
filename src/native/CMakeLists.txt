@@ -248,7 +248,6 @@ endif()
 
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
 set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
-set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
 
 include_directories(common/include)
 
@@ -260,8 +259,6 @@ if(IS_CLR_RUNTIME)
         ${TARGET}
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
-        ${EXTERNAL_DIR}
-        ${CONSTEXPR_XXH3_DIR}
         ${RUNTIME_INCLUDE_DIR}
      )
   endmacro()
