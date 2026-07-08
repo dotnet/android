@@ -28,14 +28,13 @@ namespace Android.Runtime
 			this.r = r;
 		}
 	
-		#region IXmlResourceParser implementation
+		// IXmlResourceParser implementation
 		public void Close ()
 		{
 			r.Close ();
 		}
-		#endregion
 	
-		#region IAttributeSet implementation
+		// IAttributeSet implementation
 		public bool GetAttributeBooleanValue (int index, bool defaultValue)
 		{
 			return index < AttributeCount ? XmlConvert.ToBoolean (GetAttributeValue (index)) : defaultValue;
@@ -121,7 +120,6 @@ namespace Android.Runtime
 		public int StyleAttribute {
 			get { return GetAttributeResourceValue (null, "style", 0); }
 		}
-		#endregion
 	}
 
 	public class XmlReaderPullParser : Java.Lang.Object, IXmlPullParser
@@ -145,7 +143,7 @@ namespace Android.Runtime
 			this.r = r;
 		}
 	
-		#region IXmlPullParser implementation
+		// IXmlPullParser implementation
 		public void DefineEntityReplacementText (string? entityName, string? replacementText)
 		{
 			throw new NotSupportedException ();
@@ -481,7 +479,5 @@ namespace Android.Runtime
 				return r.Value;
 			}
 		}
-		#endregion
 	}
 }
-
