@@ -14,27 +14,89 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Xamarin.Android.NetTests {
-	sealed class LocalHttpServer : IDisposable
+	abstract class LocalTestServer : IDisposable
 	{
-		const string LoopbackHost = "127.0.0.1";
+		protected const string LoopbackHost = "127.0.0.1";
 
+		readonly string name;
+		readonly List<Exception> handlerExceptions = [];
+
+		protected LocalTestServer (string name)
+		{
+			Port = GetAvailablePort ();
+			this.name = name;
+		}
+
+		public int Port { get; }
+
+		public abstract void Dispose ();
+
+		public void AssertNoUnhandledExceptions ()
+		{
+			lock (handlerExceptions) {
+				if (handlerExceptions.Count == 0) {
+					return;
+				}
+
+				Assert.Fail ($"{name} handler failed: {handlerExceptions [0]}");
+			}
+		}
+
+		protected void AddHandlerException (Exception ex)
+		{
+			lock (handlerExceptions) {
+				handlerExceptions.Add (ex);
+			}
+		}
+
+		protected static void WaitForShutdown (Task task, Func<Exception, bool> isExpectedException)
+		{
+			try {
+				task.Wait (TimeSpan.FromSeconds (5));
+			} catch (AggregateException ex) {
+				if (!OnlyExpectedShutdownExceptions (ex, isExpectedException)) {
+					throw;
+				}
+			}
+		}
+
+		static bool OnlyExpectedShutdownExceptions (AggregateException ex, Func<Exception, bool> isExpectedException)
+		{
+			foreach (var inner in ex.Flatten ().InnerExceptions) {
+				if (!isExpectedException (inner)) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		static int GetAvailablePort ()
+		{
+			using (var tcpListener = new TcpListener (IPAddress.Loopback, 0)) {
+				tcpListener.Start ();
+				int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
+				tcpListener.Stop ();
+				return port;
+			}
+		}
+	}
+
+	sealed class LocalHttpServer : LocalTestServer
+	{
 		readonly HttpListener listener;
 		readonly Func<HttpListenerContext, Task> handler;
-		readonly List<Exception> handlerExceptions = new List<Exception> ();
 		readonly Task acceptLoop;
 		bool disposed;
 
 		LocalHttpServer (Func<HttpListenerContext, Task> handler)
+			: base ("Local HTTP server")
 		{
 			this.handler = handler;
-			Port = GetAvailablePort ();
 			listener = new HttpListener ();
 			listener.Prefixes.Add ($"http://{LoopbackHost}:{Port}/");
 			listener.Start ();
 			acceptLoop = Task.Run (AcceptLoop);
 		}
-
-		public int Port { get; }
 
 		public Uri Uri {
 			get { return new Uri ($"http://{LoopbackHost}:{Port}/"); }
@@ -57,14 +119,18 @@ namespace Xamarin.Android.NetTests {
 			return new LocalHttpServer (handler);
 		}
 
-		public static int GetAvailablePort ()
+		public static LocalHttpServer StartTextResponse (string content, string contentType = "text/plain")
 		{
-			using (var tcpListener = new TcpListener (IPAddress.Loopback, 0)) {
-				tcpListener.Start ();
-				int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
-				tcpListener.Stop ();
-				return port;
-			}
+			return Start (context => WriteStringAsync (context.Response, content, contentType));
+		}
+
+		public static LocalHttpServer StartRedirectTo (string location, HttpStatusCode statusCode = HttpStatusCode.Redirect)
+		{
+			return Start (context => {
+				DrainRequestBody (context.Request);
+				context.Response.StatusCode = (int) statusCode;
+				context.Response.RedirectLocation = location;
+			});
 		}
 
 		public Uri GetUri (string relativeUri)
@@ -83,28 +149,11 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		public void AssertNoUnhandledExceptions ()
-		{
-			lock (handlerExceptions) {
-				if (handlerExceptions.Count == 0) {
-					return;
-				}
-
-				Assert.Fail ($"Local HTTP server handler failed: {handlerExceptions [0]}");
-			}
-		}
-
-		public void Dispose ()
+		public override void Dispose ()
 		{
 			disposed = true;
 			listener.Close ();
-			try {
-				acceptLoop.Wait (TimeSpan.FromSeconds (5));
-			} catch (AggregateException ex) {
-				if (!OnlyExpectedShutdownExceptions (ex)) {
-					throw;
-				}
-			}
+			WaitForShutdown (acceptLoop, inner => inner is ObjectDisposedException || inner is HttpListenerException);
 		}
 
 		async Task AcceptLoop ()
@@ -128,9 +177,7 @@ namespace Xamarin.Android.NetTests {
 			try {
 				await handler (context).ConfigureAwait (false);
 			} catch (Exception ex) {
-				lock (handlerExceptions) {
-					handlerExceptions.Add (ex);
-				}
+				AddHandlerException (ex);
 
 				try {
 					context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
@@ -146,20 +193,6 @@ namespace Xamarin.Android.NetTests {
 				} catch (HttpListenerException) {
 				}
 			}
-		}
-
-		static bool OnlyExpectedShutdownExceptions (AggregateException ex)
-		{
-			foreach (var inner in ex.Flatten ().InnerExceptions) {
-				if (inner is ObjectDisposedException) {
-					continue;
-				}
-				if (inner is HttpListenerException) {
-					continue;
-				}
-				return false;
-			}
-			return true;
 		}
 
 		public static async Task WriteStringAsync (HttpListenerResponse response, string content, string contentType)
@@ -201,28 +234,25 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-	sealed class LocalHttpsServer : IDisposable
+	sealed class LocalHttpsServer : LocalTestServer
 	{
 		readonly TcpListener listener;
 		readonly RSA certificateKey;
 		readonly X509Certificate2 certificate;
 		readonly Func<Stream, Task> handler;
-		readonly List<Exception> handlerExceptions = new List<Exception> ();
 		readonly Task acceptLoop;
 		bool disposed;
 
 		LocalHttpsServer (Func<Stream, Task> handler, string certificateHost)
+			: base ("Local HTTPS server")
 		{
 			this.handler = handler;
-			Port = LocalHttpServer.GetAvailablePort ();
 			certificateKey = RSA.Create (keySizeInBits: 2048);
 			certificate = CreateCertificate (certificateKey, certificateHost);
 			listener = new TcpListener (IPAddress.Loopback, Port);
 			listener.Start ();
 			acceptLoop = Task.Run (AcceptLoop);
 		}
-
-		public int Port { get; }
 
 		public Uri Uri {
 			get { return new Uri ($"https://localhost:{Port}/"); }
@@ -242,28 +272,21 @@ namespace Xamarin.Android.NetTests {
 			return new LocalHttpsServer (handler, certificateHost);
 		}
 
-		public void AssertNoUnhandledExceptions ()
+		public static LocalHttpsServer StartOk (string certificateHost = "localhost")
 		{
-			lock (handlerExceptions) {
-				if (handlerExceptions.Count == 0) {
-					return;
-				}
-
-				Assert.Fail ($"Local HTTPS server handler failed: {handlerExceptions [0]}");
-			}
+			return Start (stream => WriteResponseAsync (stream, HttpStatusCode.OK, "OK"), certificateHost);
 		}
 
-		public void Dispose ()
+		public static LocalHttpsServer StartRedirectTo (string location, HttpStatusCode statusCode = HttpStatusCode.Redirect)
+		{
+			return Start (stream => WriteResponseAsync (stream, statusCode, "", location));
+		}
+
+		public override void Dispose ()
 		{
 			disposed = true;
 			listener.Stop ();
-			try {
-				acceptLoop.Wait (TimeSpan.FromSeconds (5));
-			} catch (AggregateException ex) {
-				if (!OnlyExpectedShutdownExceptions (ex)) {
-					throw;
-				}
-			}
+			WaitForShutdown (acceptLoop, inner => inner is ObjectDisposedException || inner is SocketException);
 			certificate.Dispose ();
 			certificateKey.Dispose ();
 		}
@@ -298,9 +321,7 @@ namespace Xamarin.Android.NetTests {
 				} catch (IOException) when (handlerCompleted) {
 				} catch (ObjectDisposedException) when (handlerCompleted) {
 				} catch (Exception ex) {
-					lock (handlerExceptions) {
-						handlerExceptions.Add (ex);
-					}
+					AddHandlerException (ex);
 				}
 			}
 		}
@@ -384,20 +405,6 @@ namespace Xamarin.Android.NetTests {
 			request.CertificateExtensions.Add (subjectAlternativeNames.Build ());
 
 			return request.CreateSelfSigned (start, end);
-		}
-
-		static bool OnlyExpectedShutdownExceptions (AggregateException ex)
-		{
-			foreach (var inner in ex.Flatten ().InnerExceptions) {
-				if (inner is ObjectDisposedException) {
-					continue;
-				}
-				if (inner is SocketException) {
-					continue;
-				}
-				return false;
-			}
-			return true;
 		}
 	}
 }

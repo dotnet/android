@@ -239,12 +239,8 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_Without_Protocol_Works ()
 		{
-			using (var redirectedServer = LocalHttpServer.Start (context => LocalHttpServer.WriteStringAsync (context.Response, "OK", "text/plain")))
-			using (var redirectServer = LocalHttpServer.Start (context => {
-				LocalHttpServer.DrainRequestBody (context.Request);
-				context.Response.StatusCode = (int) HttpStatusCode.Redirect;
-				context.Response.RedirectLocation = redirectedServer.Url;
-			})) {
+			using (var redirectedServer = LocalHttpServer.StartTextResponse ("OK"))
+			using (var redirectServer = LocalHttpServer.StartRedirectTo (redirectedServer.Url)) {
 				var requestURI = redirectServer.Uri;
 				var redirectedURI = redirectedServer.Uri;
 				using (var c = new HttpClient (CreateHandler ())) {
@@ -267,12 +263,8 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_POST_With_Content_Works ()
 		{
-			using (var redirectedServer = LocalHttpServer.Start (context => LocalHttpServer.WriteStringAsync (context.Response, "OK", "text/plain")))
-			using (var redirectServer = LocalHttpServer.Start (context => {
-				LocalHttpServer.DrainRequestBody (context.Request);
-				context.Response.StatusCode = (int) HttpStatusCode.Redirect;
-				context.Response.RedirectLocation = redirectedServer.Url;
-			})) {
+			using (var redirectedServer = LocalHttpServer.StartTextResponse ("OK"))
+			using (var redirectServer = LocalHttpServer.StartRedirectTo (redirectedServer.Url)) {
 				var requestURI = redirectServer.Uri;
 				var redirectedURI = redirectedServer.Uri;
 				using (var c = new HttpClient (CreateHandler ())) {

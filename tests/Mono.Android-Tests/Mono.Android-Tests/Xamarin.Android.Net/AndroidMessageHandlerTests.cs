@@ -155,7 +155,7 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
-			using var server = LocalHttpsServer.Start (stream => LocalHttpsServer.WriteResponseAsync (stream, HttpStatusCode.OK, "OK"));
+			using var server = LocalHttpsServer.StartOk ();
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -174,7 +174,7 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
-			using var server = LocalHttpsServer.Start (stream => LocalHttpsServer.WriteResponseAsync (stream, HttpStatusCode.OK, "OK"), "wrong.host.test");
+			using var server = LocalHttpsServer.StartOk ("wrong.host.test");
 			var handler = new AndroidMessageHandler ();
 			var client = new HttpClient (handler);
 
@@ -186,7 +186,7 @@ namespace Xamarin.Android.NetTests
 		{
 			bool callbackHasBeenCalled = false;
 			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
-			using var server = LocalHttpsServer.Start (stream => LocalHttpsServer.WriteResponseAsync (stream, HttpStatusCode.OK, "OK"), "wrong.host.test");
+			using var server = LocalHttpsServer.StartOk ("wrong.host.test");
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -208,8 +208,8 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_Redirects ()
 		{
 			int callbackCounter = 0;
-			using var redirectedServer = LocalHttpsServer.Start (stream => LocalHttpsServer.WriteResponseAsync (stream, HttpStatusCode.OK, "OK"));
-			using var redirectServer = LocalHttpsServer.Start (stream => LocalHttpsServer.WriteResponseAsync (stream, HttpStatusCode.Redirect, "", redirectedServer.Url));
+			using var redirectedServer = LocalHttpsServer.StartOk ();
+			using var redirectServer = LocalHttpsServer.StartRedirectTo (redirectedServer.Url);
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -230,11 +230,8 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task AndroidMessageHandlerFollows308PermanentRedirect ()
 		{
-			using var redirectedServer = LocalHttpServer.Start (context => LocalHttpServer.WriteStringAsync (context.Response, "OK", "text/plain"));
-			using var redirectServer = LocalHttpServer.Start (context => {
-				context.Response.StatusCode = 308;
-				context.Response.RedirectLocation = redirectedServer.Url;
-			});
+			using var redirectedServer = LocalHttpServer.StartTextResponse ("OK");
+			using var redirectServer = LocalHttpServer.StartRedirectTo (redirectedServer.Url, (HttpStatusCode) 308);
 
 			var handler = new AndroidMessageHandler ();
 
