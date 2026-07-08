@@ -275,7 +275,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				return 1;
 			}
 
-			return CompareBytes (a.Instance.module_uuid, b.Instance.module_uuid);
+			return a.Instance.module_uuid.AsSpan ().SequenceCompareTo (b.Instance.module_uuid);
 		});
 
 		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();
@@ -335,17 +335,5 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		typeMapEntryStructureInfo = module.MapStructure<TypeMapEntry> ();
 		typeMapStructureInfo = module.MapStructure<TypeMap> ();
 		typeMapManagedTypeInfoStructureInfo = module.MapStructure<TypeMapManagedTypeInfo> ();
-	}
-
-	static int CompareBytes (byte[] left, byte[] right)
-	{
-		for (int i = 0; i < left.Length; i++) {
-			int ret = left [i].CompareTo (right [i]);
-			if (ret != 0) {
-				return ret;
-			}
-		}
-
-		return 0;
 	}
 }

@@ -27,35 +27,13 @@
 #include <limits>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <unordered_set>
 #include <vector>
 
+#include <runtime-base/crc32.hh>
+
 namespace fs = std::filesystem;
-
-constexpr uint32_t CRC32_POLYNOMIAL = 0xedb88320;
-
-constexpr uint32_t crc32_hash (const char *p, size_t len) noexcept
-{
-	if (len == 0) {
-		return std::numeric_limits<uint32_t>::max ();
-	}
-
-	uint32_t crc = 0xffffffff;
-	for (size_t i = 0; i < len; i++) {
-		crc ^= static_cast<uint8_t>(p[i]);
-		for (size_t bit = 0; bit < 8; bit++) {
-			crc = (crc >> 1) ^ ((crc & 1) != 0 ? CRC32_POLYNOMIAL : 0);
-		}
-	}
-
-	return ~crc;
-}
-
-constexpr uint32_t crc32_hash (std::string_view const& input) noexcept
-{
-	return crc32_hash (input.data (), input.length ());
-}
+using namespace xamarin::android;
 
 const std::vector<std::string> internal_pinvoke_names = {
 //	"create_public_directory",

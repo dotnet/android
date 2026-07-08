@@ -13,7 +13,7 @@ using namespace xamarin::android;
 
 namespace {
 	[[gnu::always_inline]]
-	auto same_string (const char *value, uint32_t value_length, const char *key, size_t key_length) noexcept -> bool
+	auto same_string (const char *value, size_t value_length, const char *key, size_t key_length) noexcept -> bool
 	{
 		return value_length == key_length && strncmp (value, key, key_length) == 0;
 	}
@@ -106,29 +106,22 @@ auto TypeMapper::find_index_by_hash (const char *typeName, const TypeMapEntry *m
 	size_t type_name_length = strlen (typeName);
 	hash_t type_name_hash = crc32_hash (typeName, type_name_length);
 
-	size_t left = 0;
-	size_t right = type_map.entry_count;
-	while (left < right) {
-		size_t middle = (left + right) >> 1u;
-		TypeMapEntry const& entry = map[middle];
-		if (entry.from != std::numeric_limits<uint32_t>::max () && entry.from_hash < type_name_hash) {
-			left = middle + 1;
-		} else {
-			right = middle;
-		}
-	}
+	auto less_than = [](TypeMapEntry const& entry, hash_t key) -> bool {
+		return entry.from != std::numeric_limits<uint32_t>::max () && entry.from_hash < key;
+	};
 
-	while (left < type_map.entry_count) {
-		TypeMapEntry const& entry = map[left];
+	size_t idx = Search::lower_bound<TypeMapEntry, hash_t, less_than> (type_name_hash, map, type_map.entry_count);
+	while (idx < type_map.entry_count) {
+		TypeMapEntry const& entry = map[idx];
 		if (entry.from == std::numeric_limits<uint32_t>::max () || entry.from_hash != type_name_hash) {
 			break;
 		}
 
 		const char *mapped_type_name = &name_map[entry.from];
-		if (same_string (mapped_type_name, static_cast<uint32_t>(strlen (mapped_type_name)), typeName, type_name_length)) {
-			return static_cast<ssize_t>(left);
+		if (same_string (mapped_type_name, strlen (mapped_type_name), typeName, type_name_length)) {
+			return static_cast<ssize_t>(idx);
 		}
-		left++;
+		idx++;
 	}
 
 	return -1z;
@@ -213,24 +206,18 @@ auto TypeMapper::find_managed_to_java_map_entry (hash_t name_hash, const char *t
 		return nullptr;
 	};
 
-	size_t left = 0;
-	size_t right = entry_count;
-	while (left < right) {
-		size_t middle = (left + right) >> 1u;
-		if (map[middle].managed_type_name_hash < name_hash) {
-			left = middle + 1;
-		} else {
-			right = middle;
-		}
-	}
+	auto less_than = [](TypeMapModuleEntry const& entry, hash_t key) -> bool {
+		return entry.managed_type_name_hash < key;
+	};
 
-	while (left < entry_count && map[left].managed_type_name_hash == name_hash) {
-		TypeMapModuleEntry const& entry = map[left];
+	size_t idx = Search::lower_bound<TypeMapModuleEntry, hash_t, less_than> (name_hash, map, entry_count);
+	while (idx < entry_count && map[idx].managed_type_name_hash == name_hash) {
+		TypeMapModuleEntry const& entry = map[idx];
 		const char *managed_type_name = &managed_type_names[entry.managed_type_name_index];
 		if (same_string (managed_type_name, entry.managed_type_name_length, type_name, type_name_length)) {
 			return &entry;
 		}
-		left++;
+		idx++;
 	}
 
 	return nullptr;
@@ -402,24 +389,18 @@ auto TypeMapper::java_to_managed_debug (const char *java_type_name, char const**
 [[gnu::always_inline]]
 auto TypeMapper::find_java_to_managed_entry (hash_t name_hash, const char *java_type_name, size_t java_type_name_length) noexcept -> const TypeMapJava*
 {
-	size_t left = 0;
-	size_t right = java_type_count;
-	while (left < right) {
-		size_t middle = (left + right) >> 1u;
-		if (java_to_managed_hashes[middle] < name_hash) {
-			left = middle + 1;
-		} else {
-			right = middle;
-		}
-	}
+	auto less_than = [](hash_t const& entry, hash_t key) -> bool {
+		return entry < key;
+	};
 
-	while (left < java_type_count && java_to_managed_hashes[left] == name_hash) {
-		TypeMapJava const& entry = java_to_managed_map[left];
+	size_t idx = Search::lower_bound<hash_t, hash_t, less_than> (name_hash, java_to_managed_hashes, java_type_count);
+	while (idx < java_type_count && java_to_managed_hashes[idx] == name_hash) {
+		TypeMapJava const& entry = java_to_managed_map[idx];
 		const char *mapped_java_type_name = &java_type_names[entry.java_name_index];
 		if (same_string (mapped_java_type_name, entry.java_name_length, java_type_name, java_type_name_length)) {
 			return &entry;
 		}
-		left++;
+		idx++;
 	}
 
 	return nullptr;
