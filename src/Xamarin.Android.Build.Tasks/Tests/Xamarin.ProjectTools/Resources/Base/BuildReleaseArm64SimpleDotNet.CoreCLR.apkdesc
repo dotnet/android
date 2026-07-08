@@ -5,34 +5,34 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 402352
+      "Size": 402852
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 2717688
+      "Size": 2724560
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2835128
+      "Size": 2757816
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4891056
+      "Size": 4837240
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 1324320
+      "Size": 1252416
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72112
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 1262888
+      "Size": 1258776
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 101888
+      "Size": 99664
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 168080
+      "Size": 163936
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 20968
+      "Size": 21072
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -59,5 +59,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 7271867
+  "PackageSize": 7235003
 }
