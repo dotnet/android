@@ -19,7 +19,6 @@ const TypeMap type_map = {
 	.managed_to_java = managed_to_java,
 };
 
-const bool typemap_use_hashes = true;
 const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
 const TypeMapAssembly type_map_unique_assemblies[] = {};
 const char type_map_assembly_names[] = {};
@@ -61,7 +60,6 @@ const ApplicationConfig application_config = {
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
 	.number_of_dso_cache_entries = 2,
-	.number_of_aot_cache_entries = 2,
 	.number_of_shared_libraries = 2,
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
@@ -104,8 +102,8 @@ AssemblyStoreRuntimeData assembly_store = {
 	.assemblies = nullptr,
 };
 
-constexpr char fake_dso_name[] = "libaot-Some.Assembly.dll.so";
-constexpr char fake_dso_name2[] = "libaot-Another.Assembly.dll.so";
+constexpr char fake_dso_name[] = "libSome.Library.so";
+constexpr char fake_dso_name2[] = "libAnother.Library.so";
 
 DSOCacheEntry dso_cache[] = {
 	{
@@ -131,26 +129,6 @@ const uint dso_jni_preloads_idx_stride = 1;
 const uint dso_jni_preloads_idx_count = 1;
 const uint dso_jni_preloads_idx[1] = {
 	0
-};
-
-DSOCacheEntry aot_dso_cache[] = {
-	{
-		.hash = xamarin::android::crc32_hash (fake_dso_name),
-		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name),
-		.ignore = true,
-		.is_jni_library = true,
-		.name_index = 3,
-		.handle = nullptr,
-	},
-
-	{
-		.hash = xamarin::android::crc32_hash (fake_dso_name2),
-		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name2),
-		.ignore = true,
-		.is_jni_library = false,
-		.name_index = 4,
-		.handle = nullptr,
-	},
 };
 
 const char dso_names_data[] = {};

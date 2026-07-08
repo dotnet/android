@@ -20,57 +20,22 @@ namespace xamarin::android
 {
 	class MonodroidDl
 	{
-		enum class CacheKind
-		{
-			// Access AOT cache
-			AOT,
-
-			// Access DSO cache
-			DSO,
-		};
-
 		static inline std::mutex   dso_handle_write_lock;
 
-		template<CacheKind WhichCache>
 		[[gnu::always_inline, gnu::flatten]]
-		static auto find_dso_cache_entry_common (hash_t hash) noexcept -> DSOCacheEntry*
+		static auto find_dso_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
 		{
-			static_assert (WhichCache == CacheKind::AOT || WhichCache == CacheKind::DSO, "Unknown cache type specified");
-
-			DSOCacheEntry *arr;
-			size_t arr_size;
-
-			if constexpr (WhichCache == CacheKind::AOT) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in AOT cache", hash);
-				arr = aot_dso_cache;
-				arr_size = application_config.number_of_aot_cache_entries;
-			} else if constexpr (WhichCache == CacheKind::DSO) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
-				arr = dso_cache;
-				arr_size = application_config.number_of_dso_cache_entries;
-			}
+			log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
 
 			auto equal = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash == key; };
 			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
-			ssize_t idx = Search::binary_search<DSOCacheEntry, hash_t, equal, less_than> (hash, arr, arr_size);
+			ssize_t idx = Search::binary_search<DSOCacheEntry, hash_t, equal, less_than> (hash, dso_cache, application_config.number_of_dso_cache_entries);
 
 			if (idx >= 0) {
-				return &arr[idx];
+				return &dso_cache[idx];
 			}
 
 			return nullptr;
-		}
-
-		[[gnu::always_inline, gnu::flatten]]
-		static auto find_only_aot_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
-		{
-			return find_dso_cache_entry_common<CacheKind::AOT> (hash);
-		}
-
-		[[gnu::always_inline, gnu::flatten]]
-		static auto find_only_dso_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
-		{
-			return find_dso_cache_entry_common<CacheKind::DSO> (hash);
 		}
 
 	public:
@@ -144,7 +109,6 @@ namespace xamarin::android
 			return dso->handle;
 		}
 
-		template<bool PREFER_AOT_CACHE> [[gnu::flatten]]
 		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*
 		{
 			if (name.empty ()) [[unlikely]] {
@@ -155,34 +119,8 @@ namespace xamarin::android
 			hash_t name_hash = crc32_hash (name);
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
 
-			DSOCacheEntry *dso = nullptr;
-			if constexpr (PREFER_AOT_CACHE) {
-				// This code isn't currently used by CoreCLR, but it's possible that in the future we will have separate
-				// .so files for AOT-d assemblies, similar to MonoVM, so let's keep it.
-				//
-				// If we're asked to look in the AOT DSO cache, do it first.  This is because we're likely called from the
-				// MonoVM's dlopen fallback handler and it will not be a request to resolved a p/invoke, but most likely to
-				// find and load an AOT image for a managed assembly.  Since there might be naming/hash conflicts in this
-				// scenario, we look at the AOT cache first.
-				//
-				// See: https://github.com/dotnet/android/issues/9081
-				dso = find_only_aot_cache_entry (name_hash);
-			}
-
-			if (dso == nullptr) {
-				dso = find_only_dso_cache_entry (name_hash);
-			}
-
+			DSOCacheEntry *dso = find_dso_cache_entry (name_hash);
 			return monodroid_dlopen (dso, name, flags);
-		}
-
-		[[gnu::flatten]]
-		static auto monodroid_dlopen (const char *name, int flags) noexcept -> void*
-		{
-			// We're called by MonoVM via a callback, we might need to return an AOT DSO.
-			// See: https://github.com/dotnet/android/issues/9081
-			constexpr bool PREFER_AOT_CACHE = true;
-			return monodroid_dlopen<PREFER_AOT_CACHE> (name, flags);
 		}
 
 		[[gnu::flatten]]

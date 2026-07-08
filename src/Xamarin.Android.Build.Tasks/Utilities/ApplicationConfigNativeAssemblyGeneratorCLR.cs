@@ -230,7 +230,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public List<StructureInstance<DSOCacheEntry>> DsoCache = [];
 		public List<DSOCacheEntry> JniPreloadDSOs = [];
 		public List<string> JniPreloadNames = [];
-		public List<StructureInstance<DSOCacheEntry>> AotDsoCache = [];
 		public LlvmIrStringBlob NamesBlob = null!;
 		public uint NameMutationsCount = 1;
 	}
@@ -366,7 +365,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			number_of_shared_libraries = (uint)NativeLibraries.Count,
 			bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 			number_of_dso_cache_entries = (uint)dsoState.DsoCache.Count,
-			number_of_aot_cache_entries = (uint)dsoState.AotDsoCache.Count,
 			android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 			jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
 			jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
@@ -397,11 +395,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.AddGlobalVariable ("dso_jni_preloads_idx_count", dso_jni_preloads_idx.ArrayItemCount);
 		module.Add (dso_jni_preloads_idx);
 
-		var aot_dso_cache = new LlvmIrGlobalVariable (dsoState.AotDsoCache, "aot_dso_cache", LlvmIrVariableOptions.GlobalWritable) {
-			Comment = " AOT DSO cache entries",
-			BeforeWriteCallback = HashAndSortDSOCache,
-		};
-		module.Add (aot_dso_cache);
 		module.AddGlobalVariable ("dso_names_data", dsoState.NamesBlob, LlvmIrVariableOptions.GlobalConstant);
 
 		var dso_apk_entries = new LlvmIrGlobalVariable (new List<StructureInstance<DSOApkEntry>> (NativeLibraries.Count), "dso_apk_entries") {
@@ -679,7 +672,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var jniPreloads = new List<DSOCacheEntry> ();
-		var aotDsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 		var nameMutations = new List<string> ();
 		var dsoNamesBlob = new LlvmIrStringBlob ();
 		int nameMutationsCount = -1;
@@ -687,6 +679,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		for (int i = 0; i < dsos.Count; i++) {
 			string name = dsos[i].name;
+			if (name.StartsWith ("libaot-", StringComparison.OrdinalIgnoreCase)) {
+				throw new InvalidOperationException ($"Internal error: CoreCLR native library configuration must not use AOT DSO cache entries ('{name}').");
+			}
+
 			(int nameOffset, _) = dsoNamesBlob.Add (name);
 
 			bool isJniLibrary = ELFHelper.IsJniLibrary (Log, dsos[i].item.ItemSpec);
@@ -712,10 +708,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				};
 
 				var item = new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry);
-				if (name.StartsWith ("libaot-", StringComparison.OrdinalIgnoreCase)) {
-					aotDsoCache.Add (item);
-					continue;
-				}
 
 				// We must add all aliases to the preloads indices array so that all of them have their handle
 				// set when the library is preloaded.
@@ -730,7 +722,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		return new DsoCacheState {
 			DsoCache = dsoCache,
 			JniPreloadDSOs = jniPreloads,
-			AotDsoCache = aotDsoCache,
 			NamesBlob = dsoNamesBlob,
 			NameMutationsCount = (uint)(nameMutationsCount <= 0 ? 1 : nameMutationsCount),
 		};
@@ -749,11 +740,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 				nameMutations.Add ($"{nameNoExt}.so");
 			} else {
 				nameMutations.Add (Path.GetFileNameWithoutExtension (name)!);
-			}
-
-			const string aotPrefix = "libaot-";
-			if (name.StartsWith (aotPrefix, StringComparison.OrdinalIgnoreCase)) {
-				AddNameMutations (name.Substring (aotPrefix.Length));
 			}
 
 			const string libPrefix = "lib";

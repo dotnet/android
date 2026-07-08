@@ -223,7 +223,6 @@ struct ApplicationConfig
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_dso_cache_entries;
-	uint32_t number_of_aot_cache_entries;
 	uint32_t number_of_shared_libraries;
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
@@ -312,7 +311,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)
-	[[gnu::visibility("default")]] extern const bool typemap_use_hashes;
 	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
 	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
@@ -353,7 +351,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_stride;
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_count;
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
-	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
 	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
 

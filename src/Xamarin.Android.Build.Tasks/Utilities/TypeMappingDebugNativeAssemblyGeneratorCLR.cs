@@ -18,7 +18,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 	const string AssemblyNamesBlobSymbol = "type_map_assembly_names";
 	const string ManagedTypeNamesBlobSymbol = "type_map_managed_type_names";
 	const string JavaTypeNamesBlobSymbol = "type_map_java_type_names";
-	const string TypeMapUsesHashesSymbol = "typemap_use_hashes";
 	const string TypeMapManagedTypeInfoSymbol = "type_map_managed_type_info";
 
 	sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -225,12 +224,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// CoreCLR supports only 64-bit targets, so we can make things simpler by hashing all the things here instead of
 		// in a callback during code generation
 
-		// CRC32 collisions on managed type names should be rare, but if one happens we fall back to string matching. In order
-		// to be able to test the string-based managed-to-java typemaps, we check whether
-		// the `CI_TYPEMAP_DEBUG_USE_STRINGS` environment variable is present and not empty.  If it's not in the environment
-		// or its value is an empty string, we default to using hashes for the managed-to-java type maps.
-		bool typemap_uses_hashes = String.IsNullOrEmpty (Environment.GetEnvironmentVariable ("CI_TYPEMAP_DEBUG_USE_STRINGS"));
-		var usedHashes = new Dictionary<uint, string> ();
 		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
 			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
 			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
@@ -239,41 +232,24 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				To = entry.JavaName,
 
 				from = (uint)managedTypeNameOffset,
-				from_hash = typemap_uses_hashes ? TypeMapHelper.HashNameForCLR (entry.ManagedName) : 0,
+				from_hash = TypeMapHelper.HashNameForCLR (entry.ManagedName),
 				to = (uint)javaTypeNameOffset,
 			};
 			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
+		}
 
-			if (!typemap_uses_hashes) {
-				continue;
+		// Input is sorted on name, we need to re-sort it on hashes.
+		managedToJavaMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => {
+			if (a.Instance == null) {
+				return b.Instance == null ? 0 : -1;
 			}
 
-			if (usedHashes.ContainsKey (m2j.from_hash)) {
-				typemap_uses_hashes = false;
-				// It could be a warning, but it's not really actionable - users might not be able to rename the clashing types
-				Log.LogMessage ($"Detected CRC32 conflict between managed type names '{entry.ManagedName}' and '{usedHashes[m2j.from_hash]}' when mapping to Java type '{entry.JavaName}'.");
-			} else {
-				usedHashes[m2j.from_hash] = entry.ManagedName;
+			if (b.Instance == null) {
+				return 1;
 			}
-		}
-		// Input is sorted on name, we need to re-sort it on hashes, if used
-		if (typemap_uses_hashes) {
-			managedToJavaMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => {
-				if (a.Instance == null) {
-					return b.Instance == null ? 0 : -1;
-				}
 
-				if (b.Instance == null) {
-					return 1;
-				}
-
-				return a.Instance.from_hash.CompareTo (b.Instance.from_hash);
-			});
-		}
-
-		if (!typemap_uses_hashes) {
-			Log.LogMessage ("Managed-to-java typemaps will use string-based matching.");
-		}
+			return a.Instance.from_hash.CompareTo (b.Instance.from_hash);
+		});
 
 		var assemblyNamesBlob = new LlvmIrStringBlob ();
 		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
@@ -347,7 +323,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);
 		module.AddGlobalVariable (JavaToManagedSymbol, javaToManagedMap, LlvmIrVariableOptions.LocalConstant);
 		module.AddGlobalVariable (TypeMapManagedTypeInfoSymbol, managedTypeInfos, LlvmIrVariableOptions.GlobalConstant);
-		module.AddGlobalVariable (TypeMapUsesHashesSymbol, typemap_uses_hashes, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (UniqueAssembliesSymbol, uniqueAssemblies, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (AssemblyNamesBlobSymbol, assemblyNamesBlob, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (ManagedTypeNamesBlobSymbol, managedTypeNames, LlvmIrVariableOptions.GlobalConstant);

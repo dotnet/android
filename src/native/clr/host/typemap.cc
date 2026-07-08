@@ -101,10 +101,6 @@ auto TypeMapper::find_index_by_name (const char *typeName, const TypeMapEntry *m
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::find_index_by_hash (const char *typeName, const TypeMapEntry *map, const char (&name_map)[], std::string_view const& from_name, std::string_view const& to_name) noexcept -> ssize_t
 {
-	if (!typemap_use_hashes) [[unlikely]] {
-		return find_index_by_name (typeName, map, name_map, from_name, to_name);
-	}
-
 	log_debug (LOG_ASSEMBLY, "typemap: map {} -> {} uses hashes"sv, from_name, to_name);
 
 	size_t type_name_length = strlen (typeName);
@@ -180,11 +176,8 @@ auto TypeMapper::managed_to_java_debug (const char *typeName, const uint8_t *mvi
 		log_warn (LOG_ASSEMBLY, "typemap: unable to look up assembly name for type '{}', trying without it."sv, typeName);
 	}
 
-	// If hashes are used for matching, the type names array is not used. If, however, string-based matching is in
-	// effect, the managed type name is looked up and then...
 	idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 
-	// ...either method gives us index into the Java type names array
 	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
 }
 #endif // def DEBUG
