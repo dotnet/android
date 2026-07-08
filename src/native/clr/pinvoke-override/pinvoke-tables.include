@@ -42,13 +42,13 @@ namespace {
 	}};
 
 
-constexpr pinvoke_entry_hash_t java_interop_library_hash = 0x33b98009;
-constexpr pinvoke_entry_hash_t xa_internal_api_library_hash = 0xf03cbae;
-constexpr pinvoke_entry_hash_t android_liblog_library_hash = 0xbb87f5e1;
-constexpr pinvoke_entry_hash_t system_native_library_hash = 0xa9877ba;
-constexpr pinvoke_entry_hash_t system_io_compression_native_library_hash = 0xb234abb7;
-constexpr pinvoke_entry_hash_t system_security_cryptography_native_android_library_hash = 0x6bfed756;
-constexpr pinvoke_entry_hash_t system_globalization_native_library_hash = 0x7d160aeb;
+constexpr hash_t java_interop_library_hash = 0x33b98009;
+constexpr hash_t xa_internal_api_library_hash = 0xf03cbae;
+constexpr hash_t android_liblog_library_hash = 0xbb87f5e1;
+constexpr hash_t system_native_library_hash = 0xa9877ba;
+constexpr hash_t system_io_compression_native_library_hash = 0xb234abb7;
+constexpr hash_t system_security_cryptography_native_android_library_hash = 0x6bfed756;
+constexpr hash_t system_globalization_native_library_hash = 0x7d160aeb;
 
 constexpr size_t internal_pinvokes_count = 28;
 } // end of anonymous namespace

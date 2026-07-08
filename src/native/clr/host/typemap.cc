@@ -108,7 +108,7 @@ auto TypeMapper::find_index_by_hash (const char *typeName, const TypeMapEntry *m
 	log_debug (LOG_ASSEMBLY, "typemap: map {} -> {} uses hashes"sv, from_name, to_name);
 
 	size_t type_name_length = strlen (typeName);
-	uint32_t type_name_hash = crc32_hash (typeName, type_name_length);
+	hash_t type_name_hash = crc32_hash (typeName, type_name_length);
 
 	size_t left = 0;
 	size_t right = type_map.entry_count;
@@ -214,7 +214,7 @@ auto TypeMapper::find_module_entry (const uint8_t *mvid, const TypeMapModule *en
 }
 
 [[gnu::always_inline]]
-auto TypeMapper::find_managed_to_java_map_entry (uint32_t name_hash, const char *type_name, size_t type_name_length, const TypeMapModuleEntry *map, size_t entry_count) noexcept -> const TypeMapModuleEntry*
+auto TypeMapper::find_managed_to_java_map_entry (hash_t name_hash, const char *type_name, size_t type_name_length, const TypeMapModuleEntry *map, size_t entry_count) noexcept -> const TypeMapModuleEntry*
 {
 	if (map == nullptr) {
 		return nullptr;
@@ -258,7 +258,7 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 
 	log_debug (LOG_ASSEMBLY, "typemap: found module matching MVID [{}]"sv, MonoGuidString (mvid).c_str ());
 	size_t type_name_length = strlen (typeName);
-	uint32_t name_hash = crc32_hash (typeName, type_name_length);
+	hash_t name_hash = crc32_hash (typeName, type_name_length);
 
 	// We implicitly trust the build process that the indexes are correct. This is by design, the libxamarin-app.so built
 	// with the application is immutable and the build process made sure that the data in it matches the application.
@@ -407,7 +407,7 @@ auto TypeMapper::java_to_managed_debug (const char *java_type_name, char const**
 #else // def DEBUG
 
 [[gnu::always_inline]]
-auto TypeMapper::find_java_to_managed_entry (uint32_t name_hash, const char *java_type_name, size_t java_type_name_length) noexcept -> const TypeMapJava*
+auto TypeMapper::find_java_to_managed_entry (hash_t name_hash, const char *java_type_name, size_t java_type_name_length) noexcept -> const TypeMapJava*
 {
 	size_t left = 0;
 	size_t right = java_type_count;
@@ -467,7 +467,7 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 	}
 
 	size_t java_type_name_length = strlen (java_type_name);
-	uint32_t name_hash = crc32_hash (java_type_name, java_type_name_length);
+	hash_t name_hash = crc32_hash (java_type_name, java_type_name_length);
 	TypeMapJava const* java_entry = find_java_to_managed_entry (name_hash, java_type_name, java_type_name_length);
 	if (java_entry == nullptr) {
 		log_info (

@@ -176,7 +176,7 @@ bool generate_hashes (std::string table_name, std::vector<std::string> const& na
 void write_library_name_hash (std::ostream& os, std::string library_name, std::string variable_prefix)
 {
 	uint32_t hash = crc32_hash (library_name.c_str (), library_name.length ());
-	os << "constexpr pinvoke_entry_hash_t " << variable_prefix << "_library_hash = " << std::hex << hash << ";" << std::endl;
+	os << "constexpr hash_t " << variable_prefix << "_library_hash = " << std::hex << hash << ";" << std::endl;
 }
 
 void write_library_name_hashes (std::ostream& output)

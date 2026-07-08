@@ -101,7 +101,7 @@ namespace xamarin::android {
 	}
 
 	PINVOKE_OVERRIDE_INLINE
-	auto PinvokeOverride::find_pinvoke_address (pinvoke_entry_hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*
+	auto PinvokeOverride::find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*
 	{
 		while (entry_count > 0uz) {
 			const size_t mid = entry_count / 2uz;

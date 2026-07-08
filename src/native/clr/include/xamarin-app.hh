@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include <jni.h>
+#include <runtime-base/crc32.hh>
 
 static constexpr uint64_t FORMAT_TAG = 0x00045E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x535A4158; // 'XAZS', little-endian
@@ -44,7 +45,7 @@ static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with 
 struct TypeMapEntry
 {
 	const uint32_t from;
-	const uint32_t from_hash;
+	const xamarin::android::hash_t from_hash;
 	const uint32_t to;
 };
 
@@ -74,7 +75,7 @@ struct TypeMapAssembly
 #else
 struct TypeMapModuleEntry
 {
-	uint32_t                 managed_type_name_hash;
+	xamarin::android::hash_t managed_type_name_hash;
 	uint32_t                 managed_type_name_index;
 	uint32_t                 managed_type_name_length;
 	uint32_t                 java_map_index;
@@ -171,7 +172,7 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 
 struct [[gnu::packed]] AssemblyStoreIndexEntry final
 {
-	uint32_t name_hash;
+	xamarin::android::hash_t name_hash;
 	uint32_t descriptor_index;
 	uint8_t ignore; // Assembly should be ignored when loading, its data isn't actually there
 };
@@ -242,21 +243,21 @@ struct RuntimeProperty
 
 struct RuntimePropertyIndexEntry
 {
-	uint32_t key_hash;
+	xamarin::android::hash_t key_hash;
 	uint32_t index;
 };
 
 struct DSOApkEntry
 {
-	uint32_t name_hash;
+	xamarin::android::hash_t name_hash;
 	uint32_t offset; // offset into the APK
 	int32_t  fd; // apk file descriptor
 };
 
 struct DSOCacheEntry
 {
-	const uint32_t  hash;
-	const uint32_t  real_name_hash;
+	const xamarin::android::hash_t hash;
+	const xamarin::android::hash_t real_name_hash;
 	const bool      ignore;
 	const bool      is_jni_library;
 	const uint32_t  name_index;
@@ -329,7 +330,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_map_data[];
 	[[gnu::visibility("default")]] extern const TypeMapModuleEntry modules_duplicates_data[];
 	[[gnu::visibility("default")]] extern const TypeMapJava java_to_managed_map[];
-	[[gnu::visibility("default")]] extern const uint32_t java_to_managed_hashes[];
+	[[gnu::visibility("default")]] extern const xamarin::android::hash_t java_to_managed_hashes[];
 #endif
 
 	[[gnu::visibility("default")]] extern uint32_t compressed_assembly_count;

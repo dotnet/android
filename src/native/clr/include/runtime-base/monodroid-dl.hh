@@ -33,7 +33,7 @@ namespace xamarin::android
 
 		template<CacheKind WhichCache>
 		[[gnu::always_inline, gnu::flatten]]
-		static auto find_dso_cache_entry_common (uint32_t hash) noexcept -> DSOCacheEntry*
+		static auto find_dso_cache_entry_common (hash_t hash) noexcept -> DSOCacheEntry*
 		{
 			static_assert (WhichCache == CacheKind::AOT || WhichCache == CacheKind::DSO, "Unknown cache type specified");
 
@@ -50,9 +50,9 @@ namespace xamarin::android
 				arr_size = application_config.number_of_dso_cache_entries;
 			}
 
-			auto equal = [](DSOCacheEntry const& entry, uint32_t key) -> bool { return entry.hash == key; };
-			auto less_than = [](DSOCacheEntry const& entry, uint32_t key) -> bool { return entry.hash < key; };
-			ssize_t idx = Search::binary_search<DSOCacheEntry, uint32_t, equal, less_than> (hash, arr, arr_size);
+			auto equal = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash == key; };
+			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
+			ssize_t idx = Search::binary_search<DSOCacheEntry, hash_t, equal, less_than> (hash, arr, arr_size);
 
 			if (idx >= 0) {
 				return &arr[idx];
@@ -62,13 +62,13 @@ namespace xamarin::android
 		}
 
 		[[gnu::always_inline, gnu::flatten]]
-		static auto find_only_aot_cache_entry (uint32_t hash) noexcept -> DSOCacheEntry*
+		static auto find_only_aot_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
 		{
 			return find_dso_cache_entry_common<CacheKind::AOT> (hash);
 		}
 
 		[[gnu::always_inline, gnu::flatten]]
-		static auto find_only_dso_cache_entry (uint32_t hash) noexcept -> DSOCacheEntry*
+		static auto find_only_dso_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
 		{
 			return find_dso_cache_entry_common<CacheKind::DSO> (hash);
 		}
@@ -85,11 +85,11 @@ namespace xamarin::android
 		}
 
 		[[gnu::flatten]]
-		static auto find_dso_apk_entry (uint32_t hash) -> DSOApkEntry*
+		static auto find_dso_apk_entry (hash_t hash) -> DSOApkEntry*
 		{
-			auto equal = [](DSOApkEntry const& entry, uint32_t key) -> bool { return entry.name_hash == key; };
-			auto less_than = [](DSOApkEntry const& entry, uint32_t key) -> bool { return entry.name_hash < key; };
-			ssize_t idx = Search::binary_search<DSOApkEntry, uint32_t, equal, less_than> (
+			auto equal = [](DSOApkEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
+			auto less_than = [](DSOApkEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
+			ssize_t idx = Search::binary_search<DSOApkEntry, hash_t, equal, less_than> (
 				hash,
 				dso_apk_entries, application_config.number_of_shared_libraries
 			);
@@ -152,7 +152,7 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			uint32_t name_hash = crc32_hash (name);
+			hash_t name_hash = crc32_hash (name);
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
 
 			DSOCacheEntry *dso = nullptr;

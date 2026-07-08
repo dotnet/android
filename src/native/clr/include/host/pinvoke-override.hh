@@ -35,13 +35,11 @@
 #include <runtime-base/crc32.hh>
 
 namespace xamarin::android {
-	using pinvoke_entry_hash_t = uint32_t;
-
 	struct PinvokeEntry
 	{
-		pinvoke_entry_hash_t hash;
-		const char          *name;
-		void                *func;
+		hash_t      hash;
+		const char *name;
+		void       *func;
 	};
 
 	struct string_hash
@@ -80,7 +78,7 @@ namespace xamarin::android {
 		static auto load_library_symbol (std::string_view const& library_name, std::string_view const& symbol_name, void **dso_handle = nullptr) noexcept -> void*;
 		static auto load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map) noexcept -> void*;
 		static auto fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map, bool need_lock) noexcept -> void*;
-		static auto find_pinvoke_address (pinvoke_entry_hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*;
+		static auto find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept -> PinvokeEntry*;
 		static auto handle_other_pinvoke_request (std::string_view const& library_name, std::string_view const& entrypoint_name) noexcept -> void*;
 		static void handle_jni_on_load (JavaVM *vm, void *reserved) noexcept;
 		static auto monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept -> void*;

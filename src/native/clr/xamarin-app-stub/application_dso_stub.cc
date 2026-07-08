@@ -36,7 +36,7 @@ const TypeMapModule managed_to_java_map[] = {};
 const TypeMapModuleEntry modules_map_data[] = {};
 const TypeMapModuleEntry modules_duplicates_data[] = {};
 const TypeMapJava java_to_managed_map[] = {};
-const uint32_t java_to_managed_hashes[] = {};
+const xamarin::android::hash_t java_to_managed_hashes[] = {};
 #endif
 
 uint32_t compressed_assembly_count = 0;
