@@ -1,0 +1,217 @@
+parameters:
+  project:
+  xaSourcePath:
+  logsDirectory:
+  matrixDirectory: $(Build.StagingDirectory)/MauiR2RMatrix
+  payloadDirectory: $(Build.StagingDirectory)/MauiR2RHelix
+  extraBuildArguments: ''
+  testCases:
+  - name: android-arm64-default
+    runtimeIdentifier: android-arm64
+    packageName: com.xamarin.mauir2r.arm64.default
+    helixQueue: windows.11.amd64.android.open
+    displayName: android-arm64 default R2R
+  - name: android-arm64-fullr2r
+    runtimeIdentifier: android-arm64
+    packageName: com.xamarin.mauir2r.arm64.fullr2r
+    helixQueue: windows.11.amd64.android.open
+    displayName: android-arm64 full R2R
+  - name: android-arm-default
+    runtimeIdentifier: android-arm
+    packageName: com.xamarin.mauir2r.arm.default
+    helixQueue: windows.11.amd64.android-armel.open
+    displayName: android-arm default R2R
+  - name: android-arm-fullr2r
+    runtimeIdentifier: android-arm
+    packageName: com.xamarin.mauir2r.arm.fullr2r
+    helixQueue: windows.11.amd64.android-armel.open
+    displayName: android-arm full R2R
+
+steps:
+- powershell: |
+    $sourceProject = '${{ parameters.project }}'
+    $sourceDirectory = Split-Path -Parent $sourceProject
+    $projectFileName = Split-Path -Leaf $sourceProject
+    $matrixDirectory = '${{ parameters.matrixDirectory }}'
+    $cases = @(
+      @{
+        Name = 'android-arm64-default'
+        RuntimeIdentifier = 'android-arm64'
+        ApplicationId = 'com.xamarin.mauir2r.arm64.default'
+        DisablePartialReadyToRun = $false
+      },
+      @{
+        Name = 'android-arm64-fullr2r'
+        RuntimeIdentifier = 'android-arm64'
+        ApplicationId = 'com.xamarin.mauir2r.arm64.fullr2r'
+        DisablePartialReadyToRun = $true
+      },
+      @{
+        Name = 'android-arm-default'
+        RuntimeIdentifier = 'android-arm'
+        ApplicationId = 'com.xamarin.mauir2r.arm.default'
+        DisablePartialReadyToRun = $false
+      },
+      @{
+        Name = 'android-arm-fullr2r'
+        RuntimeIdentifier = 'android-arm'
+        ApplicationId = 'com.xamarin.mauir2r.arm.fullr2r'
+        DisablePartialReadyToRun = $true
+      }
+    )
+
+    function Set-Property([xml] $xml, [string] $name, [string] $value) {
+      $node = $xml.SelectSingleNode("/Project/PropertyGroup/$name")
+      if (-not $node) {
+        $propertyGroup = $xml.SelectSingleNode('/Project/PropertyGroup')
+        if (-not $propertyGroup) {
+          $propertyGroup = $xml.CreateElement('PropertyGroup')
+          $xml.Project.AppendChild($propertyGroup) | Out-Null
+        }
+        $node = $xml.CreateElement($name)
+        $propertyGroup.AppendChild($node) | Out-Null
+      }
+      $node.InnerText = $value
+    }
+
+    function Add-FullReadyToRunAssertion([xml] $xml) {
+      $existing = $xml.SelectSingleNode("/Project/Target[@Name='AssertFullReadyToRunForFullR2RTest']")
+      if ($existing) {
+        $existing.ParentNode.RemoveChild($existing) | Out-Null
+      }
+
+      $assertTarget = $xml.CreateElement('Target')
+      $assertTarget.SetAttribute('Name', 'AssertFullReadyToRunForFullR2RTest')
+      $assertTarget.SetAttribute('BeforeTargets', '_CreateR2RImages')
+
+      $assertItemGroup = $xml.CreateElement('ItemGroup')
+      $partialItem = $xml.CreateElement('_PartialReadyToRunCompileList')
+      $partialItem.SetAttribute('Include', '@(_ReadyToRunCompileList)')
+      $partialItem.SetAttribute('Condition', "'%(_ReadyToRunCompileList.PartialCompile)' == 'true'")
+      $assertItemGroup.AppendChild($partialItem) | Out-Null
+      $assertTarget.AppendChild($assertItemGroup) | Out-Null
+
+      $partialError = $xml.CreateElement('Error')
+      $partialError.SetAttribute('Condition', "'@(_PartialReadyToRunCompileList)' != ''")
+      $partialError.SetAttribute('Text', "Full ReadyToRun test expected no partial ReadyToRun inputs with `$(_MauiPublishReadyToRunPartial)=false`, but found '@(_PartialReadyToRunCompileList)'.")
+      $assertTarget.AppendChild($partialError) | Out-Null
+
+      $compositeRootsError = $xml.CreateElement('Error')
+      $compositeRootsError.SetAttribute('Condition', "'@(_ReadyToRunCompositeUnrootedBuildInput)' != ''")
+      $compositeRootsError.SetAttribute('Text', "Full ReadyToRun test expected no unrooted composite ReadyToRun inputs with `$(_MauiPublishReadyToRunPartial)=false`, but found '@(_ReadyToRunCompositeUnrootedBuildInput)'.")
+      $assertTarget.AppendChild($compositeRootsError) | Out-Null
+
+      $xml.Project.AppendChild($assertTarget) | Out-Null
+    }
+
+    New-Item -ItemType Directory -Force -Path $matrixDirectory | Out-Null
+
+    foreach ($case in $cases) {
+      $caseDirectory = Join-Path $matrixDirectory $case.Name
+      if (Test-Path $caseDirectory) {
+        Remove-Item -LiteralPath $caseDirectory -Recurse -Force
+      }
+      New-Item -ItemType Directory -Force -Path $caseDirectory | Out-Null
+
+      Get-ChildItem -LiteralPath $sourceDirectory -Force |
+        Where-Object { $_.Name -notin @('bin', 'obj') } |
+        Copy-Item -Destination $caseDirectory -Recurse -Force
+
+      $caseProject = Join-Path $caseDirectory $projectFileName
+      [xml] $xml = Get-Content $caseProject
+      Set-Property $xml 'ApplicationId' $case.ApplicationId
+      Set-Property $xml 'RuntimeIdentifier' $case.RuntimeIdentifier
+      Set-Property $xml 'UseMonoRuntime' 'false'
+      Set-Property $xml 'PublishReadyToRun' 'true'
+      Set-Property $xml 'PublishReadyToRunComposite' 'true'
+      Set-Property $xml 'AndroidPackageFormat' 'apk'
+
+      if ($case.DisablePartialReadyToRun) {
+        Set-Property $xml '_MauiPublishReadyToRunPartial' 'false'
+        Add-FullReadyToRunAssertion $xml
+      }
+
+      $xml.Save($caseProject)
+    }
+  displayName: Configure MAUI R2R matrix projects
+
+- ${{ each testCase in parameters.testCases }}:
+  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    parameters:
+      project: ${{ parameters.matrixDirectory }}/${{ testCase.name }}/MauiTestProj.csproj
+      arguments: >-
+        -f $(DotNetTargetFramework)-android -c Release
+        ${{ parameters.extraBuildArguments }}
+        -bl:${{ parameters.logsDirectory }}/MauiTestProj-${{ testCase.name }}.binlog
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+      displayName: Build MAUI template - ${{ testCase.displayName }}
+      continueOnError: false
+
+  - powershell: |
+      $projectDirectory = '${{ parameters.matrixDirectory }}/${{ testCase.name }}'
+      $payloadDirectory = '${{ parameters.payloadDirectory }}/${{ testCase.name }}'
+      $runtimeIdentifier = '${{ testCase.runtimeIdentifier }}'
+      $packageName = '${{ testCase.packageName }}'
+      $apkName = "MauiR2R-${{ testCase.name }}-Signed.apk"
+
+      New-Item -ItemType Directory -Force -Path $payloadDirectory | Out-Null
+      $apk = Get-ChildItem $projectDirectory -Recurse -Filter '*-Signed.apk' |
+        Where-Object { $_.FullName -like "*\bin\Release\*$runtimeIdentifier*" } |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+      if (-not $apk) {
+        throw "Could not find the $runtimeIdentifier signed APK under $projectDirectory"
+      }
+
+      Copy-Item -LiteralPath $apk.FullName -Destination (Join-Path $payloadDirectory $apkName) -Force
+
+      $script = @"
+      @echo on
+      setlocal
+      set "UPLOAD_DIR=%HELIX_WORKITEM_UPLOAD_ROOT%"
+      if "%UPLOAD_DIR%"=="" set "UPLOAD_DIR=%~dp0"
+      if not exist "%UPLOAD_DIR%" mkdir "%UPLOAD_DIR%"
+      where adb
+      adb devices -l
+      adb wait-for-device
+      adb uninstall $packageName
+      adb install -r "%~dp0$apkName" || exit /b 1
+      adb shell logcat -c
+      adb shell monkey -p $packageName -c android.intent.category.LAUNCHER 1 || exit /b 1
+      ping -n 11 127.0.0.1 > nul
+      adb shell pidof $packageName
+      if errorlevel 1 (
+        adb logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
+        adb uninstall $packageName
+        exit /b 1
+      )
+      adb logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
+      adb uninstall $packageName
+      exit /b 0
+      "@
+
+      Set-Content -LiteralPath (Join-Path $payloadDirectory 'run-maui-r2r.cmd') -Value $script -Encoding ASCII
+    displayName: Prepare MAUI R2R Helix payload - ${{ testCase.displayName }}
+
+  - powershell: >
+      & "${{ parameters.xaSourcePath }}/eng/common/msbuild.ps1"
+      "${{ parameters.xaSourcePath }}/eng/common/helixpublish.proj"
+      /restore
+      /p:TreatWarningsAsErrors=false
+      /t:Test
+      /bl:${{ parameters.logsDirectory }}/SendMauiR2R-${{ testCase.name }}ToHelix.binlog
+    displayName: Run MAUI ${{ testCase.displayName }} APK on Helix
+    env:
+      BuildConfig: $(XA.Build.Configuration)
+      HelixSource: pr/dotnet/android
+      HelixType: tests/android/maui-r2r/${{ testCase.name }}/
+      HelixBuild: $(Build.BuildNumber)
+      HelixConfiguration: ${{ testCase.name }}
+      HelixTargetQueues: ${{ testCase.helixQueue }}
+      HelixAccessToken: ''
+      WorkItemDirectory: ${{ parameters.payloadDirectory }}/${{ testCase.name }}
+      WorkItemCommand: run-maui-r2r.cmd
+      WorkItemTimeout: 00:10:00
+      WaitForWorkItemCompletion: true
+      Creator: dotnet-android
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)

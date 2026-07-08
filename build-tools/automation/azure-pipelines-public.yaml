@@ -591,7 +591,7 @@ stages:
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Build MAUI template - Release
 
-    - template: /build-tools/automation/yaml-templates/run-maui-full-r2r-android-arm-helix.yaml
+    - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml
       parameters:
         project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
         xaSourcePath: $(Build.SourcesDirectory)/android
