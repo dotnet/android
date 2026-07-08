@@ -193,25 +193,29 @@ steps:
       Set-Content -LiteralPath (Join-Path $payloadDirectory 'run-maui-r2r.cmd') -Value $script -Encoding ASCII
     displayName: Prepare MAUI R2R Helix payload - ${{ testCase.displayName }}
 
-  - powershell: >
-      & "${{ parameters.xaSourcePath }}/eng/common/msbuild.ps1"
-      "${{ parameters.xaSourcePath }}/eng/common/helixpublish.proj"
-      /restore
-      /p:TreatWarningsAsErrors=false
-      /t:Test
-      /bl:${{ parameters.logsDirectory }}/SendMauiR2R-${{ testCase.name }}ToHelix.binlog
-    displayName: Run MAUI ${{ testCase.displayName }} APK on Helix
-    env:
-      BuildConfig: $(XA.Build.Configuration)
-      HelixSource: pr/dotnet/android
-      HelixType: tests/android/maui-r2r/${{ testCase.name }}/
-      HelixBuild: $(Build.BuildNumber)
-      HelixConfiguration: ${{ testCase.name }}
-      HelixTargetQueues: ${{ testCase.helixQueue }}
-      HelixAccessToken: ''
-      WorkItemDirectory: ${{ parameters.payloadDirectory }}/${{ testCase.name }}
-      WorkItemCommand: run-maui-r2r.cmd
-      WorkItemTimeout: 00:10:00
-      WaitForWorkItemCompletion: true
-      Creator: dotnet-android
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+    parameters:
+      command: msbuild
+      project: ${{ parameters.xaSourcePath }}/eng/common/helixpublish.proj
+      arguments: >-
+        /restore
+        /p:TreatWarningsAsErrors=false
+        /t:Test
+        /bl:${{ parameters.logsDirectory }}/SendMauiR2R-${{ testCase.name }}ToHelix.binlog
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+      displayName: Run MAUI ${{ testCase.displayName }} APK on Helix
+      continueOnError: false
+      env:
+        BuildConfig: $(XA.Build.Configuration)
+        HelixSource: pr/dotnet/android
+        HelixType: tests/android/maui-r2r/${{ testCase.name }}/
+        HelixBuild: $(Build.BuildNumber)
+        HelixConfiguration: ${{ testCase.name }}
+        HelixTargetQueues: ${{ testCase.helixQueue }}
+        HelixAccessToken: ''
+        WorkItemDirectory: ${{ parameters.payloadDirectory }}/${{ testCase.name }}
+        WorkItemCommand: run-maui-r2r.cmd
+        WorkItemTimeout: 00:10:00
+        WaitForWorkItemCompletion: true
+        Creator: dotnet-android
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
