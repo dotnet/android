@@ -27,8 +27,8 @@ public sealed class TypeMapAssemblyGenerator
 	/// <param name="useSharedTypemapUniverse">
 	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type. When false, emits a per-assembly anchor.
 	/// </param>
-	/// <param name="maxArrayRank">Max rank for per-rank primitive array <c>TypeMap</c> entries. 0 disables.</param>
-	/// <param name="maxReferenceArrayRank">Max rank for per-rank reference-type (Java peer, String, boxed Nullable) array <c>TypeMap</c> entries. 0 disables.</param>
+	/// <param name="maxArrayRank">Max rank for per-rank built-in element array <c>TypeMap</c> entries. 0 disables.</param>
+	/// <param name="maxReferenceArrayRank">Max rank for per-rank scanned Java peer reference-type array <c>TypeMap</c> entries. 0 disables.</param>
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false, int maxArrayRank = 0, int maxReferenceArrayRank = 0)
 	{
 		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank, maxReferenceArrayRank);
