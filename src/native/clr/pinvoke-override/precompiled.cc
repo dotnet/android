@@ -25,11 +25,6 @@ namespace {
 		);
 	}
 
-	auto load_java_interop_symbol ([[maybe_unused]] std::string_view const& entrypoint_name) -> void*
-	{
-		abort_missing_internal_symbol ("java-interop"sv, entrypoint_name);
-	}
-
 	auto load_xa_internal_api_symbol (std::string_view const& entrypoint_name) -> void*
 	{
 		if (entrypoint_name == "_monodroid_detect_cpu_and_architecture"sv) {
@@ -137,9 +132,7 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	std::string_view library_name_view {library_name};
 	std::string_view entrypoint_name_view {entrypoint_name};
 
-	if (library_name_view == "java-interop"sv) {
-		return load_java_interop_symbol (entrypoint_name_view);
-	} else if (library_name_view == "xa-internal-api"sv) {
+	if (library_name_view == "xa-internal-api"sv) {
 		return load_xa_internal_api_symbol (entrypoint_name_view);
 	} else if (library_name_view == "liblog"sv) {
 		return load_liblog_symbol (entrypoint_name_view);
