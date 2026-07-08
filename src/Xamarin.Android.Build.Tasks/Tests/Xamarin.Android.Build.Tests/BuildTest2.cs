@@ -1636,11 +1636,17 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				var proguardProjectConfiguration = Path.Combine (intermediate, "proguard",
-					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg");
-				FileAssert.Exists (proguardProjectConfiguration);
-				Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectConfiguration), $"-keep class {proj.JavaPackageName}.MainActivity"),
-					$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`!");
+				IEnumerable<string> proguardProjectConfigurations = [Path.Combine (intermediate, "proguard",
+					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg")];
+				if (runtime == AndroidRuntime.NativeAOT && string.IsNullOrEmpty (rid)) {
+					proguardProjectConfigurations = proj.GetRuntimeIdentifiers ()
+						.Select (r => Path.Combine (intermediate, r, "proguard", "proguard_project_references.cfg"));
+				}
+				foreach (var proguardProjectConfiguration in proguardProjectConfigurations) {
+					FileAssert.Exists (proguardProjectConfiguration);
+					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectConfiguration), $"-keep class {proj.JavaPackageName}.MainActivity"),
+						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`!");
+				}
 
 				var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
 				FileAssert.Exists (aapt_rules);
