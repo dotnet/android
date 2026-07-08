@@ -165,28 +165,51 @@ steps:
 
       Copy-Item -LiteralPath $apk.FullName -Destination (Join-Path $payloadDirectory $apkName) -Force
 
+      $sdkCandidates = @(
+        $env:ANDROID_HOME,
+        $env:ANDROID_SDK_ROOT,
+        $env:AndroidSdkDirectory,
+        $(if ($env:USERPROFILE) { Join-Path $env:USERPROFILE 'android-toolchain\sdk' }),
+        $(if ($env:HOME) { Join-Path $env:HOME 'android-toolchain\sdk' })
+      ) | Where-Object { $_ -and (Test-Path (Join-Path $_ 'platform-tools\adb.exe')) }
+      $androidSdk = $sdkCandidates | Select-Object -First 1
+      if (-not $androidSdk) {
+        throw "Could not find Android SDK platform-tools. Tried ANDROID_HOME, ANDROID_SDK_ROOT, AndroidSdkDirectory, and user android-toolchain paths."
+      }
+
+      $platformTools = Join-Path $androidSdk 'platform-tools'
+      $payloadPlatformTools = Join-Path $payloadDirectory 'platform-tools'
+      New-Item -ItemType Directory -Force -Path $payloadPlatformTools | Out-Null
+      Copy-Item -Path (Join-Path $platformTools '*') -Destination $payloadPlatformTools -Recurse -Force
+
       $script = @"
       @echo on
       setlocal
       set "UPLOAD_DIR=%HELIX_WORKITEM_UPLOAD_ROOT%"
       if "%UPLOAD_DIR%"=="" set "UPLOAD_DIR=%~dp0"
       if not exist "%UPLOAD_DIR%" mkdir "%UPLOAD_DIR%"
-      where adb
-      adb devices -l
-      adb wait-for-device
-      adb uninstall $packageName
-      adb install -r "%~dp0$apkName" || exit /b 1
-      adb shell logcat -c
-      adb shell monkey -p $packageName -c android.intent.category.LAUNCHER 1 || exit /b 1
-      ping -n 11 127.0.0.1 > nul
-      adb shell pidof $packageName
-      if errorlevel 1 (
-        adb logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
-        adb uninstall $packageName
+      set "ADB=%~dp0platform-tools\adb.exe"
+      if not exist "%ADB%" (
+        echo Could not find payload adb.exe at "%ADB%"
+        dir "%~dp0" /s
         exit /b 1
       )
-      adb logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
-      adb uninstall $packageName
+      "%ADB%" version || exit /b 1
+      "%ADB%" devices -l
+      "%ADB%" wait-for-device || exit /b 1
+      "%ADB%" uninstall $packageName
+      "%ADB%" install -r "%~dp0$apkName" || exit /b 1
+      "%ADB%" shell logcat -c
+      "%ADB%" shell monkey -p $packageName -c android.intent.category.LAUNCHER 1 || exit /b 1
+      ping -n 11 127.0.0.1 > nul
+      "%ADB%" shell pidof $packageName
+      if errorlevel 1 (
+        "%ADB%" logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
+        "%ADB%" uninstall $packageName
+        exit /b 1
+      )
+      "%ADB%" logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
+      "%ADB%" uninstall $packageName
       exit /b 0
       "@
 
