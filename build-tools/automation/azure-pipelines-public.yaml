@@ -593,6 +593,13 @@ stages:
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Build MAUI template - Release
 
+    - template: /build-tools/automation/yaml-templates/run-maui-full-r2r-android-arm-helix.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        logsDirectory: $(Build.StagingDirectory)/logs
+        extraBuildArguments: --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+
     - task: CopyFiles@2
       displayName: copy build logs
       condition: always()
