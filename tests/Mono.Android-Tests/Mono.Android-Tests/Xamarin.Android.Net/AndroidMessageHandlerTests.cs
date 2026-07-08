@@ -214,6 +214,7 @@ namespace Xamarin.Android.NetTests
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					callbackCounter++;
+					Assert.AreNotEqual (SslPolicyErrors.None, errors, "Local self-signed certificates should report policy errors.");
 					return true;
 				}
 			};

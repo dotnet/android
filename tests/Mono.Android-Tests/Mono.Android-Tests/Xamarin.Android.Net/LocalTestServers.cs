@@ -16,6 +16,8 @@ using NUnit.Framework;
 namespace Xamarin.Android.NetTests {
 	sealed class LocalHttpServer : IDisposable
 	{
+		const string LoopbackHost = "127.0.0.1";
+
 		readonly HttpListener listener;
 		readonly Func<HttpListenerContext, Task> handler;
 		readonly List<Exception> handlerExceptions = new List<Exception> ();
@@ -27,7 +29,7 @@ namespace Xamarin.Android.NetTests {
 			this.handler = handler;
 			Port = GetAvailablePort ();
 			listener = new HttpListener ();
-			listener.Prefixes.Add ($"http://+:{Port}/");
+			listener.Prefixes.Add ($"http://{LoopbackHost}:{Port}/");
 			listener.Start ();
 			acceptLoop = Task.Run (AcceptLoop);
 		}
@@ -35,7 +37,7 @@ namespace Xamarin.Android.NetTests {
 		public int Port { get; }
 
 		public Uri Uri {
-			get { return new Uri ($"http://localhost:{Port}/"); }
+			get { return new Uri ($"http://{LoopbackHost}:{Port}/"); }
 		}
 
 		public string Url {
@@ -365,7 +367,7 @@ namespace Xamarin.Android.NetTests {
 
 		static X509Certificate2 CreateCertificate (RSA key, string certificateHost)
 		{
-			DateTimeOffset start = DateTimeOffset.UtcNow.AddDays (-1);
+			DateTimeOffset start = DateTimeOffset.UtcNow.AddDays (-30);
 			DateTimeOffset end = start.AddMonths (3);
 
 			var request = new CertificateRequest ($"CN={certificateHost}", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);

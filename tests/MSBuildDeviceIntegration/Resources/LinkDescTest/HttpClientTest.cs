@@ -15,15 +15,16 @@ public class HttpClientTest
 		try {
 			int port = GetAvailablePort ();
 			listener = new HttpListener ();
-			listener.Prefixes.Add ($"http://+:{port}/");
+			listener.Prefixes.Add ($"http://127.0.0.1:{port}/");
 			listener.Start ();
 			var serverTask = Task.Run (() => HandlePost (listener));
 
-			var client = new HttpClient ();
-			var data = new StringContent ("{\"foo\": \"bar\" }", Encoding.UTF8, "application/json");
-			var response = client.PostAsync ($"http://localhost:{port}/post", data).Result;
-			response.EnsureSuccessStatusCode ();
-			serverTask.Wait ();
+			using (var client = new HttpClient ())
+			using (var data = new StringContent ("{\"foo\": \"bar\" }", Encoding.UTF8, "application/json"))
+			using (var response = client.PostAsync ($"http://127.0.0.1:{port}/post", data).Result) {
+				response.EnsureSuccessStatusCode ();
+				serverTask.Wait ();
+			}
 			return $"[PASS] {nameof (HttpClientTest)}.{nameof (Post)}";
 		} catch (Exception ex) {
 			return $"[FAIL] {nameof (HttpClientTest)}.{nameof (Post)} FAILED: {ex}";
