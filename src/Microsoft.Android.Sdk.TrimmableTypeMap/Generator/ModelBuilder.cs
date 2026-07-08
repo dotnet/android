@@ -138,7 +138,7 @@ static class ModelBuilder
 		}
 
 		if (string.Equals (assemblyName, "_Java.Interop.TypeMap", StringComparison.Ordinal)) {
-			EmitPrimitiveArrayEntries (model, maxArrayRank, maxReferenceArrayRank);
+			EmitPrimitiveArrayEntries (model, maxArrayRank);
 		}
 
 		BuildNativeRegistrations (model);
@@ -715,7 +715,7 @@ static class ModelBuilder
 	//     arrays like String[][] stay resolvable),
 	//   * the boxed Nullable<T> value types up to maxArrayRank (also built-in element types mapping to
 	//     java/lang/<Boxed>; a small fixed set, so multidim boxed arrays stay resolvable too).
-	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank, int maxReferenceArrayRank)
+	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank)
 	{
 		foreach (var primitive in PrimitiveArrayProxies) {
 			for (int rank = 1; rank <= maxArrayRank; rank++) {
