@@ -17,15 +17,6 @@ static class SafeArrayFactory
 	// vector EEType/template must be available. ValueTypeFactory roots typeof(T[]), new T[length],
 	// and the matching Java collection wrapper instantiations in one shared primitive map.
 
-	internal static Type GetArrayType (Type elementType, int rank)
-	{
-		if (TryGetArrayType (elementType, rank, out var arrayType)) {
-			return arrayType;
-		}
-
-		throw CreateUnsupportedArrayException (elementType, rank);
-	}
-
 	internal static bool TryGetArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
 	{
 		ValidateRank (rank);

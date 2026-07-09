@@ -171,6 +171,30 @@ namespace Java.InteropTests
 			}
 		}
 
+		// Both type arguments are value types: on the trimmable typemap path this builds
+		// JavaDictionary<int, long> through the generic-virtual CreateDictionaryWithKey<TKey>,
+		// the most NativeAOT-fragile construct in SafeJavaCollectionFactory (no dedicated rooting
+		// token). This asserts that exact value/value instantiation is rooted at runtime.
+		[Test]
+		public void FromJniHandle_IDictionaryInt32Int64 ()
+		{
+			using (var source = new JavaDictionary<int, long> ()) {
+				source.Add (1, 100L);
+				source.Add (2, 200L);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int, long>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (typeof (JavaDictionary<int, long>), converted.GetType ());
+
+					var dictionary = (IDictionary<int, long>) converted;
+					Assert.AreEqual (100L, dictionary [1]);
+					Assert.AreEqual (200L, dictionary [2]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		static Java.Util.ArrayList CreateList (params int[][] items)
 		{
 			var list = new Java.Util.ArrayList ();

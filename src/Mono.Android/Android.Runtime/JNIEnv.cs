@@ -950,11 +950,18 @@ namespace Android.Runtime {
 
 		static void CopyManagedObjectArray (Array source, IntPtr dest)
 		{
+			// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
+			// closure per element (this runs once per array element for both NewObjectArray and the
+			// nullable-primitive CopyManagedToNativeArray entries).
 			for (int i = 0; i < source.Length; i++) {
-				JavaConvert.WithLocalJniHandle (source.GetValue (i), lref => {
+				object? value = source.GetValue (i);
+				IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+				try {
 					SetObjectArrayElement (dest, i, lref);
-					return IntPtr.Zero;
-				});
+				} finally {
+					DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 
