@@ -22,7 +22,6 @@
       <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
       <Command>$(WorkItemCommand)</Command>
       <Timeout Condition="'$(WorkItemTimeout)' != ''">$(WorkItemTimeout)</Timeout>
-      <DownloadFilesFromResults>**/*</DownloadFilesFromResults>
     </HelixWorkItem>
   </ItemGroup>
 </Project>
