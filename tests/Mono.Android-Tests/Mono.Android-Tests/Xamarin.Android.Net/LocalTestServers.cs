@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
+#if !NETSTANDARD2_0
+using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-
-using NUnit.Framework;
+#endif
 
 namespace Xamarin.Android.NetTests {
 	abstract class LocalTestServer : IDisposable
@@ -19,7 +19,7 @@ namespace Xamarin.Android.NetTests {
 		protected const string LoopbackHost = "127.0.0.1";
 
 		readonly string name;
-		readonly List<Exception> handlerExceptions = [];
+		readonly List<Exception> handlerExceptions = new List<Exception> ();
 
 		protected LocalTestServer (string name)
 		{
@@ -33,13 +33,16 @@ namespace Xamarin.Android.NetTests {
 
 		public void AssertNoUnhandledExceptions ()
 		{
+			Exception exception;
 			lock (handlerExceptions) {
 				if (handlerExceptions.Count == 0) {
 					return;
 				}
 
-				Assert.Fail ($"{name} handler failed: {handlerExceptions [0]}");
+				exception = handlerExceptions [0];
 			}
+
+			throw new InvalidOperationException ($"{name} handler failed.", exception);
 		}
 
 		protected void AddHandlerException (Exception ex)
@@ -72,11 +75,13 @@ namespace Xamarin.Android.NetTests {
 
 		static int GetAvailablePort ()
 		{
-			using (var tcpListener = new TcpListener (IPAddress.Loopback, 0)) {
+			var tcpListener = new TcpListener (IPAddress.Loopback, 0);
+			try {
 				tcpListener.Start ();
 				int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
-				tcpListener.Stop ();
 				return port;
+			} finally {
+				tcpListener.Stop ();
 			}
 		}
 	}
@@ -248,8 +253,10 @@ namespace Xamarin.Android.NetTests {
 		static Task HandleRequest (Stream stream, LocalHttpRequest request)
 		{
 			switch (request.Path) {
+#if !NETSTANDARD2_0
 				case "/brotli":
 					return WriteCompressedStringAsync (stream, "br", "{ \"brotli\": true }", "application/json");
+#endif
 				case "/gzip":
 					return WriteCompressedStringAsync (stream, "gzip", "{ \"gzipped\": true }", "application/json");
 				case "/ok":
@@ -266,7 +273,7 @@ namespace Xamarin.Android.NetTests {
 
 		static Task HandlePost (Stream stream, LocalHttpRequest request)
 		{
-			if (request.Method != "POST" || !request.Body.Contains ("\"foo\": \"bar\"", StringComparison.Ordinal)) {
+			if (request.Method != "POST" || request.Body.IndexOf ("\"foo\": \"bar\"", StringComparison.Ordinal) < 0) {
 				return WriteResponseAsync (stream, HttpStatusCode.BadRequest, "{\"ok\": false}", "application/json", null, null);
 			}
 
@@ -308,9 +315,11 @@ namespace Xamarin.Android.NetTests {
 			if (String.Compare (encoding, "gzip", StringComparison.OrdinalIgnoreCase) == 0) {
 				return new GZipStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
+#if !NETSTANDARD2_0
 			if (String.Compare (encoding, "br", StringComparison.OrdinalIgnoreCase) == 0) {
 				return new BrotliStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
+#endif
 
 			throw new ArgumentOutOfRangeException (nameof (encoding), encoding, "Unsupported compression encoding.");
 		}
@@ -400,6 +409,7 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
+#if !NETSTANDARD2_0
 	sealed class LocalHttpsServer : LocalHttpServer
 	{
 		readonly RSA certificateKey;
@@ -467,4 +477,5 @@ namespace Xamarin.Android.NetTests {
 			return request.CreateSelfSigned (start, end);
 		}
 	}
+#endif
 }

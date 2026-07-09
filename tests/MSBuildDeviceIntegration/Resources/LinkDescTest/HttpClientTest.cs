@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Net.Http;
+using Xamarin.Android.NetTests;
 
 public class HttpClientTest
 {
