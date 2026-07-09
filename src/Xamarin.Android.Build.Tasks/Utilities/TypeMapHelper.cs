@@ -23,13 +23,21 @@ static class TypeMapHelper
 	/// <summary>
 	/// Hash the given type name for use in CoreCLR native typemap arrays.
 	/// </summary>
-	public static uint HashNameForCLR (string name)
+	public static unsafe uint HashNameForCLR (string name)
 	{
 		if (name.Length == 0) {
 			return UInt32.MaxValue;
 		}
 
-		return Crc32.HashToUInt32 (Encoding.UTF8.GetBytes (name));
+		int byteCount = Encoding.UTF8.GetByteCount (name);
+		Span<byte> buffer = byteCount <= 256
+			? stackalloc byte [byteCount]
+			: new byte [byteCount];
+		fixed (char* pChars = name)
+		fixed (byte* pBuffer = buffer) {
+			Encoding.UTF8.GetBytes (pChars, name.Length, pBuffer, byteCount);
+		}
+		return Crc32.HashToUInt32 (buffer);
 	}
 
 	/// <summary>

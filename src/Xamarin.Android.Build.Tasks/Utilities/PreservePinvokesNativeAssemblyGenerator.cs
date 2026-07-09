@@ -130,13 +130,15 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			return;
 		}
 
-		_ = state.TargetArch switch {
-			AndroidTargetArch.Arm64  => true,
-			AndroidTargetArch.X86_64 => true,
-			AndroidTargetArch.Arm    => true,
-			AndroidTargetArch.X86    => true,
-			_                        => throw new NotSupportedException ($"Architecture {state.TargetArch} is not supported here")
-		};
+		switch (state.TargetArch) {
+			case AndroidTargetArch.Arm64:
+			case AndroidTargetArch.X86_64:
+			case AndroidTargetArch.Arm:
+			case AndroidTargetArch.X86:
+				break;
+			default:
+				throw new NotSupportedException ($"Architecture {state.TargetArch} is not supported here");
+		}
 
 		Log.LogDebugMessage ("  Checking discovered p/invokes against the list of components");
 		var preservedPerComponent = new Dictionary<string, Component> (StringComparer.OrdinalIgnoreCase);

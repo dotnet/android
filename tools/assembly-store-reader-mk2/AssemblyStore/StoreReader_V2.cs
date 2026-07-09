@@ -229,6 +229,10 @@ partial class StoreReader_V2 : AssemblyStoreReader
 				return 0;
 			}
 
+			if (header.index_size % header.index_entry_count != 0) {
+				throw new InvalidOperationException ($"Assembly store '{StorePath}' index is corrupted: index size {header.index_size} is not evenly divisible by entry count {header.index_entry_count}.");
+			}
+
 			return header.index_size / header.index_entry_count;
 		}
 	}
