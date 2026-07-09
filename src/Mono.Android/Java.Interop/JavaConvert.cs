@@ -102,6 +102,11 @@ namespace Java.Interop {
 
 			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
 				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
+			[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
+				Justification = "This legacy MakeGenericType() path is only reached from the '!RuntimeFeature.TrimmableTypeMap' branch above, " +
+					"i.e. on the reflection-based Mono/CoreCLR runtimes where dynamic code is available. NativeAOT always enables the trimmable " +
+					"type map, so under AOT the branch above (SafeJavaCollectionFactory) is used instead and this helper is never executed. " +
+					"The AOT-safe generic collection construction lives in SafeJavaCollectionFactory.")]
 			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
 			{
 				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
