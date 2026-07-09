@@ -104,6 +104,18 @@ stages:
         fi
       displayName: Ensure cmake is installed
 
+    # The hosted macOS pool architecture can change between Intel (osx-x64) and
+    # Apple Silicon (osx-arm64), so detect it at runtime and publish/run the
+    # NativeAOT sample for the matching RID. Otherwise the produced .dylib fails
+    # to dlopen with an "incompatible architecture" error.
+    - bash: |
+        if [ "$(Agent.OSArchitecture)" = "ARM64" ]; then
+          echo "##vso[task.setvariable variable=NativeAOTRid]osx-arm64"
+        else
+          echo "##vso[task.setvariable variable=NativeAOTRid]osx-x64"
+        fi
+      displayName: Determine NativeAOT RID
+
     - template: /external/Java.Interop/build-tools/automation/templates/install-dependencies.yaml@self
 
     - template: /external/Java.Interop/build-tools/automation/templates/core-build.yaml@self
@@ -111,7 +123,7 @@ stages:
     - template: /external/Java.Interop/build-tools/automation/templates/core-tests.yaml@self
       parameters:
         runNativeTests: true
-        nativeAotRid: osx-arm64
+        nativeAotRid: $(NativeAOTRid)
         platformName: .NET - MacOS
 
     - template: /external/Java.Interop/build-tools/automation/templates/fail-on-dirty-tree.yaml@self
