@@ -22,7 +22,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
     <DisableUnsupportedError Condition=" $([MSBuild]::IsOSPlatform('windows')) and '$(DisableUnsupportedError)' == '' ">true</DisableUnsupportedError>
-    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-* packs -->
+    <!-- HACK: make dotnet restore include Microsoft.NETCore.App.Runtime.NativeAOT.* packs -->
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' ">true</_IsPublishing>
     <!-- ResolvedFileToPublish is not populated until _AndroidComputeIlcCompileInputs, so
          proguard generation must run after that target instead of after ILLink. -->
@@ -34,6 +34,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
          exported as native symbols so JNI can find them via dlsym. -->
     <IlcExportUnmanagedEntrypoints>true</IlcExportUnmanagedEntrypoints>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">
+    <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler">
+      <ILCompilerPackVersion>$(MicrosoftNETCoreAppRefPackageVersion)</ILCompilerPackVersion>
+    </KnownILCompilerPack>
+    <_AndroidNetCoreAppNativeAotKnownRuntimePack Include="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'NativeAOT'))" />
+    <KnownRuntimePack Remove="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)" />
+    <KnownRuntimePack Include="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)">
+      <LatestRuntimeFrameworkVersion>$(MicrosoftNETCoreAppRefPackageVersion)</LatestRuntimeFrameworkVersion>
+      <RuntimePackRuntimeIdentifiers>%(RuntimePackRuntimeIdentifiers);android-arm</RuntimePackRuntimeIdentifiers>
+    </KnownRuntimePack>
+  </ItemGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
   <PropertyGroup Condition="'$(DebugSymbols)' == 'true'">
@@ -365,6 +377,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotSystemLibraries Include="log" />
       <_NativeAotSystemLibraries Include="m" />
       <_NativeAotSystemLibraries Include="c" />
+    </ItemGroup>
+    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' and Exists('$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a') ">
+      <_NativeAotLinkLibraries Remove="$(IlcSdkPath)libSystem.Security.Cryptography.Native.Android.a" />
+      <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a" />
     </ItemGroup>
 
     <!-- When using workload linker, resolve libc++/libnaot from runtime pack dir.

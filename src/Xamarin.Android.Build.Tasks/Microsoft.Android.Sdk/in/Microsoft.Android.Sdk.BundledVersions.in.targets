@@ -10,6 +10,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   <PropertyGroup>
     <AndroidNETSdkVersion>@ANDROID_PACK_VERSION_LONG@</AndroidNETSdkVersion>
     <XamarinAndroidVersion>@ANDROID_PACK_VERSION_LONG@</XamarinAndroidVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>@MICROSOFT_NETCORE_APP_REF_PACKAGE_VERSION@</MicrosoftNETCoreAppRefPackageVersion>
     <_AndroidLatestStableApiLevel>@ANDROID_LATEST_STABLE_API_LEVEL@</_AndroidLatestStableApiLevel>
     <_AndroidLatestUnstableApiLevel>@ANDROID_LATEST_UNSTABLE_API_LEVEL@</_AndroidLatestUnstableApiLevel>
   </PropertyGroup>

@@ -383,6 +383,11 @@
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
+      <_RuntimePackFiles Include="$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a"
+                         Condition="Exists('$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a')"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
       <!-- NativeAOT uses a separate redist directory with CRT objects and system lib stubs
            from the higher API level required by dotnet/runtime's native libraries. -->
       <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)redist-nativeaot\%(AndroidSupportedTargetJitAbi.AndroidRID)\*"
