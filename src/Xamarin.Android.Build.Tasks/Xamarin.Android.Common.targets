@@ -350,8 +350,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' ">False</_AndroidUseManagedMarshalMethodsLookup>
 
   <!-- Native runtime linking during app build -->
-  <_AndroidEnableNativeRuntimeLinking Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">false</_AndroidEnableNativeRuntimeLinking>
-  <_AndroidEnableNativeRuntimeLinking Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And '$(_AndroidRuntime)' == 'CoreCLR' And '$(_AndroidEnableNativeRuntimeLinking)' == '' ">false</_AndroidEnableNativeRuntimeLinking>
+  <_AndroidEnableNativeRuntimeLinking Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == '' ">false</_AndroidEnableNativeRuntimeLinking>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -2938,10 +2937,10 @@ because xbuild doesn't support framework reference assemblies.
            Text="Invalid value for _AndroidTypeMapImplementation: '$(_AndroidTypeMapImplementation)'. Valid values are: llvm-ir, managed, trimmable." />
   </Target>
 
-  <Target Name="_ValidateCoreClrNativeRuntimeLinking"
+  <Target Name="_ValidateNativeRuntimeLinking"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_PrepareUnifiedNativeRuntimeItems;_LinkNativeRuntime">
-    <Error Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
-           Text="_AndroidEnableNativeRuntimeLinking=true is not supported with CoreCLR." />
+    <Error Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
+           Text="_AndroidEnableNativeRuntimeLinking=true is not supported." />
   </Target>
 
   <Target Name="_LinkAssemblies"
