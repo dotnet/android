@@ -47,7 +47,7 @@ namespace Xamarin.Android.NetTests
 				AutomaticDecompression = DecompressionMethods.All
 			};
 
-			using var server = LocalHttpTestServer.Start ();
+			using var server = LocalHttpServer.Start ();
 			using var client = new HttpClient (handler);
 			using HttpResponseMessage response = await client.GetAsync (server.GetUri (urlPath));
 			EnsureSuccessStatusCode (response);
@@ -229,7 +229,7 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task AndroidMessageHandlerFollows308PermanentRedirect ()
 		{
-			using var server = LocalHttpTestServer.Start ();
+			using var server = LocalHttpServer.Start ();
 
 			var handler = new AndroidMessageHandler ();
 

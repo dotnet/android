@@ -106,6 +106,15 @@ namespace Xamarin.Android.NetTests {
 			get { return Uri.ToString (); }
 		}
 
+		public Uri OkUri {
+			get { return GetUri ("ok"); }
+		}
+
+		public static LocalHttpServer Start ()
+		{
+			return Start (HandleRequest);
+		}
+
 		public static LocalHttpServer Start (Action<HttpListenerContext> handler)
 		{
 			return Start (context => {
@@ -122,6 +131,16 @@ namespace Xamarin.Android.NetTests {
 		public Uri GetUri (string relativeUri)
 		{
 			return new Uri (Uri, relativeUri);
+		}
+
+		public Uri GetRedirectUri (Uri location)
+		{
+			return GetRedirectUri (location, HttpStatusCode.Redirect);
+		}
+
+		public Uri GetRedirectUri (Uri location, HttpStatusCode statusCode)
+		{
+			return GetUri ($"redirect-to?url={Uri.EscapeDataString (location.ToString ())}&status_code={(int) statusCode}");
 		}
 
 		public static void DrainRequestBody (HttpListenerRequest request)
@@ -181,6 +200,50 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
+		static Task HandleRequest (HttpListenerContext context)
+		{
+			string path = context.Request.Url?.AbsolutePath ?? "";
+			switch (path) {
+				case "/brotli":
+					return WriteCompressedStringAsync (context.Response, "br", "{ \"brotli\": true }", "application/json");
+				case "/gzip":
+					return WriteCompressedStringAsync (context.Response, "gzip", "{ \"gzipped\": true }", "application/json");
+				case "/ok":
+					return WriteStringAsync (context.Response, "OK", "text/plain");
+				case "/post":
+					return HandlePost (context);
+				case "/redirect-to":
+					DrainRequestBody (context.Request);
+					context.Response.StatusCode = GetStatusCode (context);
+					context.Response.RedirectLocation = context.Request.QueryString ["url"];
+					return Task.CompletedTask;
+				default:
+					context.Response.StatusCode = (int) HttpStatusCode.NotFound;
+					return Task.CompletedTask;
+			}
+		}
+
+		static Task HandlePost (HttpListenerContext context)
+		{
+			using var reader = new StreamReader (context.Request.InputStream, context.Request.ContentEncoding);
+			string body = reader.ReadToEnd ();
+			if (context.Request.HttpMethod != "POST" || !body.Contains ("\"foo\": \"bar\"", StringComparison.Ordinal)) {
+				context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+				return WriteStringAsync (context.Response, "{\"ok\": false}", "application/json");
+			}
+
+			return WriteStringAsync (context.Response, "{\"ok\": true}", "application/json");
+		}
+
+		static int GetStatusCode (HttpListenerContext context)
+		{
+			string statusCode = context.Request.QueryString ["status_code"];
+			if (Int32.TryParse (statusCode, out int code)) {
+				return code;
+			}
+			return (int) HttpStatusCode.Redirect;
+		}
+
 		public static async Task WriteStringAsync (HttpListenerResponse response, string content, string contentType)
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes (content);
@@ -217,94 +280,6 @@ namespace Xamarin.Android.NetTests {
 			}
 
 			throw new ArgumentOutOfRangeException (nameof (encoding), encoding, "Unsupported compression encoding.");
-		}
-	}
-
-	sealed class LocalHttpTestServer : IDisposable
-	{
-		readonly LocalHttpServer server;
-
-		LocalHttpTestServer ()
-		{
-			server = LocalHttpServer.Start (HandleRequest);
-		}
-
-		public Uri OkUri {
-			get { return GetUri ("ok"); }
-		}
-
-		public static LocalHttpTestServer Start ()
-		{
-			return new LocalHttpTestServer ();
-		}
-
-		public Uri GetUri (string relativeUri)
-		{
-			return server.GetUri (relativeUri);
-		}
-
-		public Uri GetRedirectUri (Uri location)
-		{
-			return GetRedirectUri (location, HttpStatusCode.Redirect);
-		}
-
-		public Uri GetRedirectUri (Uri location, HttpStatusCode statusCode)
-		{
-			return GetUri ($"redirect-to?url={Uri.EscapeDataString (location.ToString ())}&status_code={(int) statusCode}");
-		}
-
-		public void AssertNoUnhandledExceptions ()
-		{
-			server.AssertNoUnhandledExceptions ();
-		}
-
-		public void Dispose ()
-		{
-			server.Dispose ();
-		}
-
-		Task HandleRequest (HttpListenerContext context)
-		{
-			string path = context.Request.Url?.AbsolutePath ?? "";
-			switch (path) {
-				case "/brotli":
-					return LocalHttpServer.WriteCompressedStringAsync (context.Response, "br", "{ \"brotli\": true }", "application/json");
-				case "/gzip":
-					return LocalHttpServer.WriteCompressedStringAsync (context.Response, "gzip", "{ \"gzipped\": true }", "application/json");
-				case "/ok":
-					return LocalHttpServer.WriteStringAsync (context.Response, "OK", "text/plain");
-				case "/post":
-					return HandlePost (context);
-				case "/redirect-to":
-					LocalHttpServer.DrainRequestBody (context.Request);
-					context.Response.StatusCode = GetStatusCode (context);
-					context.Response.RedirectLocation = context.Request.QueryString ["url"];
-					return Task.CompletedTask;
-				default:
-					context.Response.StatusCode = (int) HttpStatusCode.NotFound;
-					return Task.CompletedTask;
-			}
-		}
-
-		static Task HandlePost (HttpListenerContext context)
-		{
-			using var reader = new StreamReader (context.Request.InputStream, context.Request.ContentEncoding);
-			string body = reader.ReadToEnd ();
-			if (context.Request.HttpMethod != "POST" || !body.Contains ("\"foo\": \"bar\"", StringComparison.Ordinal)) {
-				context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
-				return LocalHttpServer.WriteStringAsync (context.Response, "{\"ok\": false}", "application/json");
-			}
-
-			return LocalHttpServer.WriteStringAsync (context.Response, "{\"ok\": true}", "application/json");
-		}
-
-		static int GetStatusCode (HttpListenerContext context)
-		{
-			string statusCode = context.Request.QueryString ["status_code"];
-			if (Int32.TryParse (statusCode, out int code)) {
-				return code;
-			}
-			return (int) HttpStatusCode.Redirect;
 		}
 	}
 
