@@ -109,22 +109,24 @@ static class SafeJavaCollectionFactory
 		[NotNullWhen (true)] out object? collection)
 	{
 		if (shape.Kind == JavaCollectionKind.Dictionary) {
-			var hasKeyFactory = TryGetValueTypeFactory (shape.Arguments [0], out var keyFactory);
-			var hasValueFactory = TryGetValueTypeFactory (shape.Arguments [1], out var valueFactory);
+			// Null when the argument is not a supported value type; the direct null checks below let the
+			// compiler track the non-null flow (an intermediate bool would not, producing CS8602/CS8604).
+			TryGetValueTypeFactory (shape.Arguments [0], out var keyFactory);
+			TryGetValueTypeFactory (shape.Arguments [1], out var valueFactory);
 
-			if (hasKeyFactory && hasValueFactory) {
+			if (keyFactory != null && valueFactory != null) {
 				collection = keyFactory.CreateDictionary (valueFactory, handle, transfer);
 				return true;
 			}
 
 			// Mixed dictionaries are safe only when the other side is a reference type. If it is an
 			// unsupported value type, MakeGenericType() would need an exact unrooted instantiation.
-			if (hasKeyFactory && !shape.Arguments [1].IsValueType) {
+			if (keyFactory != null && !shape.Arguments [1].IsValueType) {
 				collection = keyFactory.CreateDictionaryWithReferenceValue (shape.Arguments [1], handle, transfer);
 				return true;
 			}
 
-			if (hasValueFactory && !shape.Arguments [0].IsValueType) {
+			if (valueFactory != null && !shape.Arguments [0].IsValueType) {
 				collection = valueFactory.CreateDictionaryWithReferenceKey (shape.Arguments [0], handle, transfer);
 				return true;
 			}
