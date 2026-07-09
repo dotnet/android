@@ -288,12 +288,11 @@ namespace Xamarin.Android.NetTests {
 
 		static Task HandlePost (HttpListenerContext context)
 		{
-			using (var reader = new StreamReader (context.Request.InputStream, context.Request.ContentEncoding)) {
-				string body = reader.ReadToEnd ();
-				if (context.Request.HttpMethod != "POST" || !body.Contains ("\"foo\": \"bar\"", StringComparison.Ordinal)) {
-					context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
-					return LocalHttpServer.WriteStringAsync (context.Response, "{\"ok\": false}", "application/json");
-				}
+			using var reader = new StreamReader (context.Request.InputStream, context.Request.ContentEncoding);
+			string body = reader.ReadToEnd ();
+			if (context.Request.HttpMethod != "POST" || !body.Contains ("\"foo\": \"bar\"", StringComparison.Ordinal)) {
+				context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+				return LocalHttpServer.WriteStringAsync (context.Response, "{\"ok\": false}", "application/json");
 			}
 
 			return LocalHttpServer.WriteStringAsync (context.Response, "{\"ok\": true}", "application/json");

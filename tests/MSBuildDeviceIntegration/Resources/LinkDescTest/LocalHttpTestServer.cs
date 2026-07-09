@@ -73,10 +73,8 @@ sealed class LocalHttpTestServer : IDisposable
 
 	static void HandlePost (HttpListenerContext context)
 	{
-		string requestBody;
-		using (var reader = new StreamReader (context.Request.InputStream, context.Request.ContentEncoding)) {
-			requestBody = reader.ReadToEnd ();
-		}
+		using var reader = new StreamReader (context.Request.InputStream, context.Request.ContentEncoding);
+		string requestBody = reader.ReadToEnd ();
 
 		if (context.Request.HttpMethod != "POST" || context.Request.Url.AbsolutePath != "/post" || !requestBody.Contains ("\"foo\": \"bar\"")) {
 			WriteJson (context.Response, HttpStatusCode.BadRequest, "{\"ok\": false}");

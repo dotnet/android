@@ -1145,6 +1145,7 @@ namespace Library1 {
 				},
 			};
 			lib2.SetRuntime (runtime);
+			lib2.SetProperty ("LangVersion", "8.0");
 
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,

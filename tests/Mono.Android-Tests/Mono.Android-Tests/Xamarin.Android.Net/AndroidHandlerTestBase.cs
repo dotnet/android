@@ -239,48 +239,44 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_Without_Protocol_Works ()
 		{
-			using (var server = LocalHttpTestServer.Start ()) {
-				var requestURI = server.GetRedirectUri (server.OkUri);
-				var redirectedURI = server.OkUri;
-				using (var c = new HttpClient (CreateHandler ())) {
-					var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
-					if (connectionFailed)
-						return;
+			using var server = LocalHttpTestServer.Start ();
+			var requestURI = server.GetRedirectUri (server.OkUri);
+			var redirectedURI = server.OkUri;
+			using var c = new HttpClient (CreateHandler ());
+			var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
+			if (connectionFailed)
+				return;
 
-					RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
-					if (connectionFailed)
-						return;
+			RunIgnoringNetworkIssues (() => tr.Wait (), out connectionFailed);
+			if (connectionFailed)
+				return;
 
-					EnsureSuccessStatusCode (tr.Result);
-					Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
-				}
-				server.AssertNoUnhandledExceptions ();
-			}
+			EnsureSuccessStatusCode (tr.Result);
+			Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
 		public void Redirect_POST_With_Content_Works ()
 		{
-			using (var server = LocalHttpTestServer.Start ()) {
-				var requestURI = server.GetRedirectUri (server.OkUri);
-				var redirectedURI = server.OkUri;
-				using (var c = new HttpClient (CreateHandler ())) {
-					var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
-					request.Content = new StringContent ("{}", Encoding.UTF8, "application/json");
-					var t = ConnectIgnoreFailure (() => c.SendAsync (request), out bool connectionFailed);
-					if (connectionFailed)
-						return;
+			using var server = LocalHttpTestServer.Start ();
+			var requestURI = server.GetRedirectUri (server.OkUri);
+			var redirectedURI = server.OkUri;
+			using var c = new HttpClient (CreateHandler ());
+			var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
+			request.Content = new StringContent ("{}", Encoding.UTF8, "application/json");
+			var t = ConnectIgnoreFailure (() => c.SendAsync (request), out bool connectionFailed);
+			if (connectionFailed)
+				return;
 
-					HttpResponseMessage response = null;
-					RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
-					if (connectionFailed)
-						return;
+			HttpResponseMessage response = null;
+			RunIgnoringNetworkIssues (() => response = t.Result, out connectionFailed);
+			if (connectionFailed)
+				return;
 
-					EnsureSuccessStatusCode (response);
-					Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
-				}
-				server.AssertNoUnhandledExceptions ();
-			}
+			EnsureSuccessStatusCode (response);
+			Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		public void EnsureSuccessStatusCode (HttpResponseMessage response)
