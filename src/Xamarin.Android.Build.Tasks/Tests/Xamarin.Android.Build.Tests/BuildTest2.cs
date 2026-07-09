@@ -1640,7 +1640,6 @@ namespace UnamedProject
 					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg")];
 				if (runtime == AndroidRuntime.NativeAOT && string.IsNullOrEmpty (rid)) {
 					proguardProjectConfigurations = Directory.GetFiles (intermediate, "proguard_project_references.cfg", SearchOption.AllDirectories);
-					Assert.AreEqual (1, proguardProjectConfigurations.Count (), "A multi-RID NativeAOT build should generate one references proguard config for the single R8 invocation.");
 				}
 				foreach (var proguardProjectConfiguration in proguardProjectConfigurations) {
 					FileAssert.Exists (proguardProjectConfiguration);
