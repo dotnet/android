@@ -81,25 +81,20 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-	sealed class LocalHttpServer : LocalTestServer
+	class LocalHttpServer : LocalTestServer
 	{
-		readonly HttpListener listener;
-		readonly Func<HttpListenerContext, Task> handler;
-		readonly Task acceptLoop;
+		readonly TcpListener listener;
+		Task acceptLoop = Task.CompletedTask;
 		bool disposed;
 
-		LocalHttpServer (Func<HttpListenerContext, Task> handler)
-			: base ("Local HTTP server")
+		protected LocalHttpServer (string name)
+			: base (name)
 		{
-			this.handler = handler;
-			listener = new HttpListener ();
-			listener.Prefixes.Add ($"http://{LoopbackHost}:{Port}/");
-			listener.Start ();
-			acceptLoop = Task.Run (AcceptLoop);
+			listener = new TcpListener (IPAddress.Loopback, Port);
 		}
 
 		public Uri Uri {
-			get { return new Uri ($"http://{LoopbackHost}:{Port}/"); }
+			get { return new Uri ($"{Scheme}://{Host}:{Port}/"); }
 		}
 
 		public string Url {
@@ -110,22 +105,19 @@ namespace Xamarin.Android.NetTests {
 			get { return GetUri ("ok"); }
 		}
 
+		protected virtual string Scheme {
+			get { return "http"; }
+		}
+
+		protected virtual string Host {
+			get { return LoopbackHost; }
+		}
+
 		public static LocalHttpServer Start ()
 		{
-			return Start (HandleRequest);
-		}
-
-		public static LocalHttpServer Start (Action<HttpListenerContext> handler)
-		{
-			return Start (context => {
-				handler (context);
-				return Task.CompletedTask;
-			});
-		}
-
-		public static LocalHttpServer Start (Func<HttpListenerContext, Task> handler)
-		{
-			return new LocalHttpServer (handler);
+			var server = new LocalHttpServer ("Local HTTP server");
+			server.StartListening ();
+			return server;
 		}
 
 		public Uri GetUri (string relativeUri)
@@ -143,201 +135,27 @@ namespace Xamarin.Android.NetTests {
 			return GetUri ($"redirect-to?url={Uri.EscapeDataString (location.ToString ())}&status_code={(int) statusCode}");
 		}
 
-		public static void DrainRequestBody (HttpListenerRequest request)
-		{
-			if (!request.HasEntityBody) {
-				return;
-			}
-
-			byte[] buffer = new byte [4096];
-			while (request.InputStream.Read (buffer, 0, buffer.Length) > 0) {
-			}
-		}
-
-		public override void Dispose ()
-		{
-			disposed = true;
-			listener.Close ();
-			WaitForShutdown (acceptLoop, inner => inner is ObjectDisposedException || inner is HttpListenerException);
-		}
-
-		async Task AcceptLoop ()
-		{
-			while (!disposed) {
-				HttpListenerContext context;
-				try {
-					context = await listener.GetContextAsync ().ConfigureAwait (false);
-				} catch (ObjectDisposedException) {
-					return;
-				} catch (HttpListenerException) when (disposed) {
-					return;
-				}
-
-				_ = Task.Run (() => HandleContext (context));
-			}
-		}
-
-		async Task HandleContext (HttpListenerContext context)
-		{
-			try {
-				await handler (context).ConfigureAwait (false);
-			} catch (Exception ex) {
-				AddHandlerException (ex);
-
-				try {
-					context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
-				} catch (ObjectDisposedException) {
-				} catch (InvalidOperationException) {
-				} catch (HttpListenerException) {
-				}
-			} finally {
-				try {
-					context.Response.Close ();
-				} catch (ObjectDisposedException) {
-				} catch (InvalidOperationException) {
-				} catch (HttpListenerException) {
-				}
-			}
-		}
-
-		static Task HandleRequest (HttpListenerContext context)
-		{
-			string path = context.Request.Url?.AbsolutePath ?? "";
-			switch (path) {
-				case "/brotli":
-					return WriteCompressedStringAsync (context.Response, "br", "{ \"brotli\": true }", "application/json");
-				case "/gzip":
-					return WriteCompressedStringAsync (context.Response, "gzip", "{ \"gzipped\": true }", "application/json");
-				case "/ok":
-					return WriteStringAsync (context.Response, "OK", "text/plain");
-				case "/post":
-					return HandlePost (context);
-				case "/redirect-to":
-					DrainRequestBody (context.Request);
-					context.Response.StatusCode = GetStatusCode (context);
-					context.Response.RedirectLocation = context.Request.QueryString ["url"];
-					return Task.CompletedTask;
-				default:
-					context.Response.StatusCode = (int) HttpStatusCode.NotFound;
-					return Task.CompletedTask;
-			}
-		}
-
-		static Task HandlePost (HttpListenerContext context)
-		{
-			using var reader = new StreamReader (context.Request.InputStream, context.Request.ContentEncoding);
-			string body = reader.ReadToEnd ();
-			if (context.Request.HttpMethod != "POST" || !body.Contains ("\"foo\": \"bar\"", StringComparison.Ordinal)) {
-				context.Response.StatusCode = (int) HttpStatusCode.BadRequest;
-				return WriteStringAsync (context.Response, "{\"ok\": false}", "application/json");
-			}
-
-			return WriteStringAsync (context.Response, "{\"ok\": true}", "application/json");
-		}
-
-		static int GetStatusCode (HttpListenerContext context)
-		{
-			string statusCode = context.Request.QueryString ["status_code"];
-			if (Int32.TryParse (statusCode, out int code)) {
-				return code;
-			}
-			return (int) HttpStatusCode.Redirect;
-		}
-
-		public static async Task WriteStringAsync (HttpListenerResponse response, string content, string contentType)
-		{
-			byte[] bytes = Encoding.UTF8.GetBytes (content);
-			response.ContentType = contentType;
-			response.ContentLength64 = bytes.Length;
-			await response.OutputStream.WriteAsync (bytes, 0, bytes.Length).ConfigureAwait (false);
-		}
-
-		public static async Task WriteCompressedStringAsync (HttpListenerResponse response, string encoding, string content, string contentType)
-		{
-			byte[] bytes = Encoding.UTF8.GetBytes (content);
-			byte[] compressedBytes;
-			using (var compressedStream = new MemoryStream ()) {
-				Stream compressor = CreateCompressionStream (compressedStream, encoding);
-				using (compressor) {
-					await compressor.WriteAsync (bytes, 0, bytes.Length).ConfigureAwait (false);
-				}
-				compressedBytes = compressedStream.ToArray ();
-			}
-
-			response.ContentType = contentType;
-			response.AddHeader ("Content-Encoding", encoding);
-			response.ContentLength64 = compressedBytes.Length;
-			await response.OutputStream.WriteAsync (compressedBytes, 0, compressedBytes.Length).ConfigureAwait (false);
-		}
-
-		static Stream CreateCompressionStream (Stream stream, string encoding)
-		{
-			if (String.Compare (encoding, "gzip", StringComparison.OrdinalIgnoreCase) == 0) {
-				return new GZipStream (stream, CompressionLevel.Fastest, leaveOpen: true);
-			}
-			if (String.Compare (encoding, "br", StringComparison.OrdinalIgnoreCase) == 0) {
-				return new BrotliStream (stream, CompressionLevel.Fastest, leaveOpen: true);
-			}
-
-			throw new ArgumentOutOfRangeException (nameof (encoding), encoding, "Unsupported compression encoding.");
-		}
-	}
-
-	sealed class LocalHttpsServer : LocalTestServer
-	{
-		readonly TcpListener listener;
-		readonly RSA certificateKey;
-		readonly X509Certificate2 certificate;
-		readonly Func<Stream, Task> handler;
-		readonly Task acceptLoop;
-		bool disposed;
-
-		LocalHttpsServer (Func<Stream, Task> handler, string certificateHost)
-			: base ("Local HTTPS server")
-		{
-			this.handler = handler;
-			certificateKey = RSA.Create (keySizeInBits: 2048);
-			certificate = CreateCertificate (certificateKey, certificateHost);
-			listener = new TcpListener (IPAddress.Loopback, Port);
-			listener.Start ();
-			acceptLoop = Task.Run (AcceptLoop);
-		}
-
-		public Uri Uri {
-			get { return new Uri ($"https://localhost:{Port}/"); }
-		}
-
-		public string Url {
-			get { return Uri.ToString (); }
-		}
-
-		public static LocalHttpsServer Start (Func<Stream, Task> handler)
-		{
-			return Start (handler, "localhost");
-		}
-
-		public static LocalHttpsServer Start (Func<Stream, Task> handler, string certificateHost)
-		{
-			return new LocalHttpsServer (handler, certificateHost);
-		}
-
-		public static LocalHttpsServer StartOk (string certificateHost = "localhost")
-		{
-			return Start (stream => WriteResponseAsync (stream, HttpStatusCode.OK, "OK"), certificateHost);
-		}
-
-		public static LocalHttpsServer StartRedirectTo (string location, HttpStatusCode statusCode = HttpStatusCode.Redirect)
-		{
-			return Start (stream => WriteResponseAsync (stream, statusCode, "", location));
-		}
-
 		public override void Dispose ()
 		{
 			disposed = true;
 			listener.Stop ();
 			WaitForShutdown (acceptLoop, inner => inner is ObjectDisposedException || inner is SocketException);
-			certificate.Dispose ();
-			certificateKey.Dispose ();
+		}
+
+		protected void StartListening ()
+		{
+			listener.Start ();
+			acceptLoop = Task.Run (AcceptLoop);
+		}
+
+		protected virtual Task<Stream> GetRequestStream (TcpClient client)
+		{
+			return Task.FromResult<Stream> (client.GetStream ());
+		}
+
+		protected virtual bool IgnoreHandlerException (Exception ex, bool handlerCompleted)
+		{
+			return handlerCompleted && (ex is IOException || ex is ObjectDisposedException);
 		}
 
 		async Task AcceptLoop ()
@@ -361,55 +179,165 @@ namespace Xamarin.Android.NetTests {
 			using (client) {
 				bool handlerCompleted = false;
 				try {
-					using (var sslStream = new SslStream (client.GetStream (), leaveInnerStreamOpen: false)) {
-						await sslStream.AuthenticateAsServerAsync (certificate, clientCertificateRequired: false, enabledSslProtocols: SslProtocols.None, checkCertificateRevocation: false).ConfigureAwait (false);
-						await ReadRequestHeadersAsync (sslStream).ConfigureAwait (false);
-						await handler (sslStream).ConfigureAwait (false);
+					using (Stream stream = await GetRequestStream (client).ConfigureAwait (false)) {
+						LocalHttpRequest request = await ReadRequestAsync (stream).ConfigureAwait (false);
+						await HandleRequest (stream, request).ConfigureAwait (false);
 						handlerCompleted = true;
 					}
-				} catch (IOException) when (handlerCompleted) {
-				} catch (ObjectDisposedException) when (handlerCompleted) {
 				} catch (Exception ex) {
-					AddHandlerException (ex);
+					if (!IgnoreHandlerException (ex, handlerCompleted)) {
+						AddHandlerException (ex);
+					}
 				}
 			}
 		}
 
-		static async Task ReadRequestHeadersAsync (Stream stream)
+		static async Task<LocalHttpRequest> ReadRequestAsync (Stream stream)
 		{
 			byte[] endOfHeaders = Encoding.ASCII.GetBytes ("\r\n\r\n");
 			byte[] buffer = new byte [1];
 			int matched = 0;
-			int totalBytes = 0;
 
-			while (totalBytes < 64 * 1024) {
-				int bytesRead = await stream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false);
-				if (bytesRead == 0) {
-					return;
+			using var headersStream = new MemoryStream ();
+			while (headersStream.Length < 64 * 1024) {
+				int read = await stream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false);
+				if (read == 0) {
+					break;
 				}
 
-				totalBytes += bytesRead;
+				headersStream.WriteByte (buffer [0]);
 				if (buffer [0] == endOfHeaders [matched]) {
 					matched++;
 					if (matched == endOfHeaders.Length) {
-						return;
+						break;
 					}
 				} else {
 					matched = buffer [0] == endOfHeaders [0] ? 1 : 0;
 				}
 			}
+
+			string headers = Encoding.ASCII.GetString (headersStream.ToArray ());
+			string method = "";
+			string target = "/";
+			string[] lines = headers.Split (new [] { "\r\n" }, StringSplitOptions.None);
+			if (lines.Length > 0) {
+				string[] parts = lines [0].Split (new [] { ' ' }, 3);
+				if (parts.Length > 0) {
+					method = parts [0];
+				}
+				if (parts.Length > 1) {
+					target = parts [1];
+				}
+			}
+
+			int contentLength = GetContentLength (lines);
+			byte[] body = new byte [contentLength];
+			int offset = 0;
+			while (offset < body.Length) {
+				int read = await stream.ReadAsync (body, offset, body.Length - offset).ConfigureAwait (false);
+				if (read == 0) {
+					break;
+				}
+				offset += read;
+			}
+
+			return new LocalHttpRequest (method, target, Encoding.UTF8.GetString (body, 0, offset));
 		}
 
-		public static async Task WriteResponseAsync (Stream stream, HttpStatusCode statusCode, string content)
+		static int GetContentLength (string[] headers)
 		{
-			await WriteResponseAsync (stream, statusCode, content, null).ConfigureAwait (false);
+			foreach (string line in headers) {
+				if (line.StartsWith ("Content-Length:", StringComparison.OrdinalIgnoreCase) &&
+						Int32.TryParse (line.Substring ("Content-Length:".Length).Trim (), out int contentLength)) {
+					return contentLength;
+				}
+			}
+			return 0;
 		}
 
-		public static async Task WriteResponseAsync (Stream stream, HttpStatusCode statusCode, string content, string location)
+		static Task HandleRequest (Stream stream, LocalHttpRequest request)
 		{
-			byte[] body = Encoding.UTF8.GetBytes (content);
+			switch (request.Path) {
+				case "/brotli":
+					return WriteCompressedStringAsync (stream, "br", "{ \"brotli\": true }", "application/json");
+				case "/gzip":
+					return WriteCompressedStringAsync (stream, "gzip", "{ \"gzipped\": true }", "application/json");
+				case "/ok":
+					return WriteStringAsync (stream, "OK", "text/plain");
+				case "/post":
+					return HandlePost (stream, request);
+				case "/redirect-to":
+					request.Query.TryGetValue ("url", out string location);
+					return WriteResponseAsync (stream, (HttpStatusCode) GetStatusCode (request), "", "text/plain", null, location);
+				default:
+					return WriteResponseAsync (stream, HttpStatusCode.NotFound, "", "text/plain", null, null);
+			}
+		}
+
+		static Task HandlePost (Stream stream, LocalHttpRequest request)
+		{
+			if (request.Method != "POST" || !request.Body.Contains ("\"foo\": \"bar\"", StringComparison.Ordinal)) {
+				return WriteResponseAsync (stream, HttpStatusCode.BadRequest, "{\"ok\": false}", "application/json", null, null);
+			}
+
+			return WriteStringAsync (stream, "{\"ok\": true}", "application/json");
+		}
+
+		static int GetStatusCode (LocalHttpRequest request)
+		{
+			request.Query.TryGetValue ("status_code", out string statusCode);
+			if (Int32.TryParse (statusCode, out int code)) {
+				return code;
+			}
+			return (int) HttpStatusCode.Redirect;
+		}
+
+		public static Task WriteStringAsync (Stream stream, string content, string contentType)
+		{
+			byte[] bytes = Encoding.UTF8.GetBytes (content);
+			return WriteResponseAsync (stream, HttpStatusCode.OK, bytes, contentType, null, null);
+		}
+
+		public static async Task WriteCompressedStringAsync (Stream stream, string encoding, string content, string contentType)
+		{
+			byte[] bytes = Encoding.UTF8.GetBytes (content);
+			byte[] compressedBytes;
+			using (var compressedStream = new MemoryStream ()) {
+				Stream compressor = CreateCompressionStream (compressedStream, encoding);
+				using (compressor) {
+					await compressor.WriteAsync (bytes, 0, bytes.Length).ConfigureAwait (false);
+				}
+				compressedBytes = compressedStream.ToArray ();
+			}
+
+			await WriteResponseAsync (stream, HttpStatusCode.OK, compressedBytes, contentType, encoding, null).ConfigureAwait (false);
+		}
+
+		static Stream CreateCompressionStream (Stream stream, string encoding)
+		{
+			if (String.Compare (encoding, "gzip", StringComparison.OrdinalIgnoreCase) == 0) {
+				return new GZipStream (stream, CompressionLevel.Fastest, leaveOpen: true);
+			}
+			if (String.Compare (encoding, "br", StringComparison.OrdinalIgnoreCase) == 0) {
+				return new BrotliStream (stream, CompressionLevel.Fastest, leaveOpen: true);
+			}
+
+			throw new ArgumentOutOfRangeException (nameof (encoding), encoding, "Unsupported compression encoding.");
+		}
+
+		static Task WriteResponseAsync (Stream stream, HttpStatusCode statusCode, string content, string contentType, string contentEncoding, string location)
+		{
+			return WriteResponseAsync (stream, statusCode, Encoding.UTF8.GetBytes (content), contentType, contentEncoding, location);
+		}
+
+		static async Task WriteResponseAsync (Stream stream, HttpStatusCode statusCode, byte[] body, string contentType, string contentEncoding, string location)
+		{
 			var headers = new StringBuilder ();
 			headers.Append ("HTTP/1.1 ").Append ((int) statusCode).Append (' ').Append (GetReasonPhrase (statusCode)).Append ("\r\n");
+			headers.Append ("Content-Type: ").Append (contentType).Append ("\r\n");
+			if (contentEncoding != null) {
+				headers.Append ("Content-Encoding: ").Append (contentEncoding).Append ("\r\n");
+			}
 			if (location != null) {
 				headers.Append ("Location: ").Append (location).Append ("\r\n");
 			}
@@ -431,8 +359,101 @@ namespace Xamarin.Android.NetTests {
 				case 308:
 					return "Permanent Redirect";
 				default:
-					return "OK";
+					return statusCode.ToString ();
 			}
+		}
+
+		sealed class LocalHttpRequest
+		{
+			public LocalHttpRequest (string method, string target, string body)
+			{
+				Method = method;
+				Body = body;
+
+				int queryIndex = target.IndexOf ('?');
+				if (queryIndex < 0) {
+					Path = target;
+					Query = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+				} else {
+					Path = target.Substring (0, queryIndex);
+					Query = ParseQuery (target.Substring (queryIndex + 1));
+				}
+			}
+
+			public string Method { get; }
+			public string Path { get; }
+			public string Body { get; }
+			public Dictionary<string, string> Query { get; }
+
+			static Dictionary<string, string> ParseQuery (string query)
+			{
+				var ret = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+				foreach (string parameter in query.Split ('&')) {
+					if (parameter.Length == 0) {
+						continue;
+					}
+
+					int separator = parameter.IndexOf ('=');
+					if (separator < 0) {
+						ret [Unescape (parameter)] = "";
+					} else {
+						ret [Unescape (parameter.Substring (0, separator))] = Unescape (parameter.Substring (separator + 1));
+					}
+				}
+				return ret;
+			}
+
+			static string Unescape (string value)
+			{
+				return Uri.UnescapeDataString (value.Replace ("+", " "));
+			}
+		}
+	}
+
+	sealed class LocalHttpsServer : LocalHttpServer
+	{
+		readonly RSA certificateKey;
+		readonly X509Certificate2 certificate;
+
+		LocalHttpsServer (string certificateHost)
+			: base ("Local HTTPS server")
+		{
+			certificateKey = RSA.Create (keySizeInBits: 2048);
+			certificate = CreateCertificate (certificateKey, certificateHost);
+		}
+
+		protected override string Scheme {
+			get { return "https"; }
+		}
+
+		protected override string Host {
+			get { return "localhost"; }
+		}
+
+		public static LocalHttpsServer Start ()
+		{
+			return Start ("localhost");
+		}
+
+		public static LocalHttpsServer Start (string certificateHost)
+		{
+			var server = new LocalHttpsServer (certificateHost);
+			server.StartListening ();
+			return server;
+		}
+
+		public override void Dispose ()
+		{
+			base.Dispose ();
+			certificate.Dispose ();
+			certificateKey.Dispose ();
+		}
+
+		protected override async Task<Stream> GetRequestStream (TcpClient client)
+		{
+			var sslStream = new SslStream (client.GetStream (), leaveInnerStreamOpen: false);
+			await sslStream.AuthenticateAsServerAsync (certificate, clientCertificateRequired: false, enabledSslProtocols: SslProtocols.None, checkCertificateRevocation: false).ConfigureAwait (false);
+			return sslStream;
 		}
 
 		static X509Certificate2 CreateCertificate (RSA key, string certificateHost)

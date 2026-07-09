@@ -154,7 +154,7 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
-			using var server = LocalHttpsServer.StartOk ();
+			using var server = LocalHttpsServer.Start ();
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -164,7 +164,7 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			await client.GetStringAsync (server.Url);
+			await client.GetStringAsync (server.OkUri);
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 			server.AssertNoUnhandledExceptions ();
@@ -173,11 +173,11 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
-			using var server = LocalHttpsServer.StartOk ("wrong.host.test");
+			using var server = LocalHttpsServer.Start ("wrong.host.test");
 			var handler = new AndroidMessageHandler ();
 			var client = new HttpClient (handler);
 
-			await AssertRejectsRemoteCertificate (() => client.GetStringAsync (server.Url));
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync (server.OkUri));
 		}
 
 		[Test]
@@ -185,7 +185,7 @@ namespace Xamarin.Android.NetTests
 		{
 			bool callbackHasBeenCalled = false;
 			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
-			using var server = LocalHttpsServer.StartOk ("wrong.host.test");
+			using var server = LocalHttpsServer.Start ("wrong.host.test");
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -196,7 +196,7 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			await client.GetStringAsync (server.Url);
+			await client.GetStringAsync (server.OkUri);
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
@@ -207,8 +207,7 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_Redirects ()
 		{
 			int callbackCounter = 0;
-			using var redirectedServer = LocalHttpsServer.StartOk ();
-			using var redirectServer = LocalHttpsServer.StartRedirectTo (redirectedServer.Url);
+			using var server = LocalHttpsServer.Start ();
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -219,11 +218,10 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			using var result = await client.GetAsync (redirectServer.Url);
+			using var result = await client.GetAsync (server.GetRedirectUri (server.OkUri));
 			EnsureSuccessStatusCode (result);
 			Assert.AreEqual (2, callbackCounter);
-			redirectServer.AssertNoUnhandledExceptions ();
-			redirectedServer.AssertNoUnhandledExceptions ();
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]

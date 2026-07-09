@@ -8,7 +8,7 @@ public class HttpClientTest
 	public static string Post ()
 	{
 		try {
-			using var server = LocalHttpTestServer.Start ();
+			using var server = LinkDescHttpServer.Start ();
 			using var client = new HttpClient ();
 			using var data = new StringContent ("{\"foo\": \"bar\" }", Encoding.UTF8, "application/json");
 			using var response = client.PostAsync (server.PostUrl, data).Result;
