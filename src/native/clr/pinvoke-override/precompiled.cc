@@ -149,10 +149,6 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	// Measurements on a physical device showed the table provides no measurable startup benefit, so
 	// we return `nullptr` for these libraries and let CoreCLR's own resolver handle them, removing
 	// the whole class of drift bugs.
-	//
-	// NOTE: this only affects the precompiled override used by the default separate-`.so` layout. The
-	// unified-DSO layout uses the generated `find_pinvoke` function in `dynamic.cc`, where these
-	// symbols are hidden inside a single DSO and therefore must still be resolved by the override.
 	if (library_name_view == "libSystem.Native"sv ||
 			library_name_view == "libSystem.Security.Cryptography.Native.Android"sv ||
 			library_name_view == "libSystem.IO.Compression.Native"sv ||

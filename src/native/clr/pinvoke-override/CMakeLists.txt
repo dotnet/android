@@ -1,18 +1,10 @@
 set(LIB_NAME_PRECOMPILED pinvoke-override-precompiled)
 set(LIB_ALIAS_PRECOMPILED xa::pinvoke-override-precompiled)
 
-set(LIB_NAME_DYNAMIC pinvoke-override-dynamic)
-set(LIB_ALIAS_DYNAMIC xa::pinvoke-override-dynamic)
-
 set(XA_PINVOKE_OVERRIDE_PRECOMPILED_SOURCES
   precompiled.cc
 )
 add_clang_check_sources("${XA_PINVOKE_OVERRIDE_PRECOMPILED_SOURCES}")
-
-set(XA_PINVOKE_OVERRIDE_DYNAMIC_SOURCES
-  dynamic.cc
-)
-add_clang_check_sources("${XA_PINVOKE_OVERRIDE_DYNAMIC_SOURCES}")
 
 list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS
   -ffunction-sections
@@ -65,7 +57,6 @@ macro(create_library _libname _alias _sources)
 endmacro()
 
 create_library(${LIB_NAME_PRECOMPILED} ${LIB_ALIAS_PRECOMPILED} ${XA_PINVOKE_OVERRIDE_PRECOMPILED_SOURCES})
-create_library(${LIB_NAME_DYNAMIC} ${LIB_ALIAS_DYNAMIC} ${XA_PINVOKE_OVERRIDE_DYNAMIC_SOURCES})
 
 target_compile_definitions(
   ${LIB_NAME_PRECOMPILED}

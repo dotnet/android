@@ -4,8 +4,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
-using Mono.Debugging.Client;
-using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Xamarin.Android.Tasks;

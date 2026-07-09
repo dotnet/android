@@ -34,17 +34,6 @@ stages:
     variables:
       CXX: g++-10
       CC: gcc-10
-    ${{ if eq(parameters.use1ESTemplate, true) }}:
-      templateContext:
-        outputs:
-        - output: pipelineArtifact
-          displayName: upload linux sdk
-          artifactName: ${{ parameters.nugetArtifactName }}
-          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
-        - output: pipelineArtifact
-          displayName: upload linux sdk symbols
-          artifactName: ${{ parameters.nugetArtifactName }}-symbols
-          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:

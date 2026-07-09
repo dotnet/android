@@ -49,6 +49,11 @@ steps:
     displayName: Install p7zip on macOS
     condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
+- template: /build-tools/automation/yaml-templates/cache-android-archives.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
 - pwsh: |
     & "${{ parameters.xaSourcePath }}/eng/install-dotnet.ps1" -configuration ${{ parameters.configuration }}
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -82,6 +87,7 @@ steps:
     project: ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.csproj
     arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/androidsdk.binlog
     continueOnError: false
+    retryCountOnTaskFailure: 2
     env:
       AndroidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
 

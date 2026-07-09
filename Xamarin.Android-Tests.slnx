@@ -1,0 +1,46 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/CodeBehind/">
+    <Project Path="src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj" />
+  </Folder>
+  <Folder Name="/CodeGen-Binding/">
+    <Project Path="tests/CodeGen-Binding/Xamarin.Android.FixJavaAbstractMethod-APIv1Binding/Xamarin.Android.FixJavaAbstractMethod-APIv1Binding.csproj" />
+    <Project Path="tests/CodeGen-Binding/Xamarin.Android.FixJavaAbstractMethod-APIv2Binding/Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj" />
+    <Project Path="tests/CodeGen-Binding/Xamarin.Android.FixJavaAbstractMethod-Library/Xamarin.Android.FixJavaAbstractMethod-Library.csproj" />
+    <Project Path="tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj" />
+    <Project Path="tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/Xamarin.Android.LibraryProjectZip-LibBinding.csproj" />
+    <Project Path="tests/CodeGen-Binding/Xamarin.Android.McwGen-Tests/Xamarin.Android.McwGen-Tests.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="external/Java.Interop/src/Java.Interop/Java.Interop.csproj" />
+  </Folder>
+  <Folder Name="/samples/" />
+  <Folder Name="/samples/HelloWorld/" />
+  <Folder Name="/samples/HelloWorld/HelloLibrary/">
+    <Project Path="samples/HelloWorld/HelloLibrary/HelloLibrary.DotNet.csproj" />
+  </Folder>
+  <Folder Name="/samples/HelloWorld/HelloWorld.DotNet/">
+    <Project Path="samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StartupHook/StartupHook.csproj" />
+  </Folder>
+  <Folder Name="/tests/Mono.Android-Tests/" />
+  <Folder Name="/tests/Mono.Android-Tests/Java.Interop-Tests/">
+    <Project Path="tests/Mono.Android-Tests/Java.Interop-Tests/Java.Interop-Tests.NET.csproj" />
+  </Folder>
+  <Folder Name="/tests/Mono.Android-Tests/Mono.Android-Test.Library/">
+    <Project Path="tests/Mono.Android-Tests/Mono.Android-Test.Library/Mono.Android-Test.Library.NET.csproj" />
+  </Folder>
+  <Folder Name="/tests/Mono.Android-Tests/Mono.Android.NET-Tests/">
+    <Project Path="tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/TestRunner.Core/">
+    <Project Path="tests/TestRunner.Core/TestRunner.Core.NET.csproj" />
+  </Folder>
+  <Project Path="tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj" />
+</Solution>
