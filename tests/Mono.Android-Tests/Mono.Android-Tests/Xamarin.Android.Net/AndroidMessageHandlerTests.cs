@@ -173,7 +173,7 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
-			using var server = LocalHttpsServer.Start ("wrong.host.test");
+			using var server = LocalHttpsServer.Start (certificateHost: "wrong.host.test");
 			var handler = new AndroidMessageHandler ();
 			var client = new HttpClient (handler);
 
@@ -185,7 +185,7 @@ namespace Xamarin.Android.NetTests
 		{
 			bool callbackHasBeenCalled = false;
 			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
-			using var server = LocalHttpsServer.Start ("wrong.host.test");
+			using var server = LocalHttpsServer.Start (certificateHost: "wrong.host.test");
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -217,8 +217,10 @@ namespace Xamarin.Android.NetTests
 				}
 			};
 
-			var client = new HttpClient (handler);
-			using var result = await client.GetAsync (server.GetRedirectUri (server.OkUri));
+			var client = new HttpClient (handler) {
+				BaseAddress = server.Uri
+			};
+			using var result = await client.GetAsync ($"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}");
 			EnsureSuccessStatusCode (result);
 			Assert.AreEqual (2, callbackCounter);
 			server.AssertNoUnhandledExceptions ();
@@ -231,8 +233,10 @@ namespace Xamarin.Android.NetTests
 
 			var handler = new AndroidMessageHandler ();
 
-			var client = new HttpClient (handler);
-			using var result = await client.GetAsync (server.GetRedirectUri (server.OkUri, (HttpStatusCode) 308));
+			var client = new HttpClient (handler) {
+				BaseAddress = server.Uri
+			};
+			using var result = await client.GetAsync ($"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}&status_code=308");
 			EnsureSuccessStatusCode (result);
 			Assert.AreEqual (server.OkUri.ToString (), result.RequestMessage.RequestUri.ToString ());
 			server.AssertNoUnhandledExceptions ();

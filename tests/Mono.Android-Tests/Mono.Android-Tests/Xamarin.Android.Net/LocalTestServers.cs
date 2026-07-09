@@ -125,16 +125,6 @@ namespace Xamarin.Android.NetTests {
 			return new Uri (Uri, relativeUri);
 		}
 
-		public Uri GetRedirectUri (Uri location)
-		{
-			return GetRedirectUri (location, HttpStatusCode.Redirect);
-		}
-
-		public Uri GetRedirectUri (Uri location, HttpStatusCode statusCode)
-		{
-			return GetUri ($"redirect-to?url={Uri.EscapeDataString (location.ToString ())}&status_code={(int) statusCode}");
-		}
-
 		public override void Dispose ()
 		{
 			disposed = true;

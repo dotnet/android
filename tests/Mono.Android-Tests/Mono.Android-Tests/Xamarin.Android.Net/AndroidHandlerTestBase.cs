@@ -240,9 +240,10 @@ namespace Xamarin.Android.NetTests {
 		public void Redirect_Without_Protocol_Works ()
 		{
 			using var server = LocalHttpServer.Start ();
-			var requestURI = server.GetRedirectUri (server.OkUri);
+			var requestURI = $"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}";
 			var redirectedURI = server.OkUri;
 			using (var c = new HttpClient (CreateHandler ())) {
+				c.BaseAddress = server.Uri;
 				var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
 				if (connectionFailed)
 					return;
@@ -261,9 +262,10 @@ namespace Xamarin.Android.NetTests {
 		public void Redirect_POST_With_Content_Works ()
 		{
 			using var server = LocalHttpServer.Start ();
-			var requestURI = server.GetRedirectUri (server.OkUri);
+			var requestURI = $"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}";
 			var redirectedURI = server.OkUri;
 			using (var c = new HttpClient (CreateHandler ())) {
+				c.BaseAddress = server.Uri;
 				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
 				request.Content = new StringContent ("{}", Encoding.UTF8, "application/json");
 				var t = ConnectIgnoreFailure (() => c.SendAsync (request), out bool connectionFailed);

@@ -6,13 +6,13 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-sealed class LinkDescHttpServer : IDisposable
+sealed class LocalHttpServer : IDisposable
 {
 	readonly HttpListener listener;
 	readonly List<Exception> handlerExceptions = new List<Exception> ();
 	readonly Task serverTask;
 
-	LinkDescHttpServer ()
+	LocalHttpServer ()
 	{
 		Port = GetAvailablePort ();
 		listener = new HttpListener ();
@@ -23,13 +23,13 @@ sealed class LinkDescHttpServer : IDisposable
 
 	public int Port { get; }
 
-	public string PostUrl {
-		get { return $"http://localhost:{Port}/post"; }
+	public Uri Uri {
+		get { return new Uri ($"http://localhost:{Port}/"); }
 	}
 
-	public static LinkDescHttpServer Start ()
+	public static LocalHttpServer Start ()
 	{
-		return new LinkDescHttpServer ();
+		return new LocalHttpServer ();
 	}
 
 	public void AssertNoUnhandledExceptions ()

@@ -8,10 +8,12 @@ public class HttpClientTest
 	public static string Post ()
 	{
 		try {
-			using var server = LinkDescHttpServer.Start ();
-			using var client = new HttpClient ();
+			using var server = LocalHttpServer.Start ();
+			using var client = new HttpClient {
+				BaseAddress = server.Uri,
+			};
 			using var data = new StringContent ("{\"foo\": \"bar\" }", Encoding.UTF8, "application/json");
-			using var response = client.PostAsync (server.PostUrl, data).Result;
+			using var response = client.PostAsync ("/post", data).Result;
 			response.EnsureSuccessStatusCode ();
 			server.AssertNoUnhandledExceptions ();
 

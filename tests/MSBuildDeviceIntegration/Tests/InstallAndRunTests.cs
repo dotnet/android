@@ -1136,8 +1136,8 @@ namespace Library1 {
 					new BuildItem.Source ("HttpClientTest.cs") {
 						TextContent = () => getResource("HttpClientTest")
 					},
-					new BuildItem.Source ("LinkDescHttpServer.cs") {
-						TextContent = () => getResource ("LinkDescHttpServer")
+					new BuildItem.Source ("LocalHttpServer.cs") {
+						TextContent = () => getResource ("LocalHttpServer")
 					},
 					new BuildItem.Source ("PreserveTest.cs") {
 						TextContent = () => getResource("PreserveTest")
