@@ -14,6 +14,14 @@ namespace Java.Interop {
 		const DynamicallyAccessedMemberTypes Constructors =
 			DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
+		// NativeAOT's MakeGenericType() path eventually calls
+		// ExecutionEnvironment.TryGetConstructedGenericTypeForComponents(), then TypeBuilder.TryBuildGenericType().
+		// The builder looks for a template by canonical form: reference type arguments canonicalize to __Canon,
+		// while value-type arguments stay value-specific. Consequently, JavaList<string> can share the
+		// JavaList<__Canon> template, but JavaList<int> and JavaList<int?> need exact rooted instantiations.
+		//
+		// These factories intentionally root the exact primitive/nullable Java collection instantiations through
+		// direct generic type references and constructors instead of asking MakeGenericType() to invent them.
 		static readonly Dictionary<Type, CollectionArgumentFactory> ValueTypeArgumentFactories = new Dictionary<Type, CollectionArgumentFactory> {
 			{ typeof (bool),    CollectionArgumentFactory<bool>.Instance },
 			{ typeof (sbyte),   CollectionArgumentFactory<sbyte>.Instance },
@@ -150,6 +158,8 @@ namespace Java.Interop {
 					return true;
 				}
 
+				// Mixed dictionaries are safe only when the other side is a reference type. If it is an
+				// unsupported value type, MakeGenericType() would need an exact unrooted instantiation.
 				if (hasKeyFactory && !shape.Arguments [1].IsValueType) {
 					collection = keyFactory.CreateDictionaryWithReferenceValue (shape.Arguments [1], handle, transfer);
 					return true;
@@ -201,9 +211,14 @@ namespace Java.Interop {
 		}
 
 		[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-			Justification = "Reference-type generic instantiations use NativeAOT canonical generic support. Value-type arguments are limited to explicitly rooted primitive/nullable factories.")]
+			Justification = "NativeAOT's Type.MakeGenericType() is annotated because arbitrary constructed generics can lack a runtime template. " +
+				"Callers of this helper restrict the shape to Android.Runtime Java collection wrappers. Reference arguments use NativeAOT's __Canon generic templates. " +
+				"Value-type arguments are either rejected or handled by explicit primitive/nullable factories that root the exact instantiation. " +
+				"Mixed reference/value dictionaries additionally root JavaDictionary<__Canon,T> or JavaDictionary<T,__Canon> through dedicated type tokens.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
-			Justification = "The generic type definitions are known Java collection wrappers, and value-type instantiations are limited to explicit primitive/nullable mappings.")]
+			Justification = "The generic type definitions are known Java collection wrappers, not arbitrary user types. " +
+				"The constructed wrapper constructors are preserved by the return annotation and by the explicit value-type factory references. " +
+				"The generic element arguments are not activated by this helper; element peer creation still goes through the normal JavaConvert/trimmable typemap path.")]
 		[return: DynamicallyAccessedMembers (Constructors)]
 		static Type MakeGenericType (
 			[DynamicallyAccessedMembers (Constructors)]
@@ -214,9 +229,12 @@ namespace Java.Interop {
 		}
 
 		[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-			Justification = "The collection type is produced by SafeJavaCollectionFactory from known wrappers and explicit value-type mappings.")]
+			Justification = "Activator.CreateInstance() targets only collection wrapper types produced by SafeJavaCollectionFactory. " +
+				"Reference-only wrappers use NativeAOT's canonical generic construction, exact value-type wrappers are rooted by CollectionArgumentFactory<T>, " +
+				"and mixed dictionaries root their reference/value canonical shapes with dedicated type tokens.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
-			Justification = "The collection type carries constructor preservation from GetClosedCollectionType.")]
+			Justification = "The collection type is annotated with DynamicallyAccessedMembers(Constructors) by GetClosedCollectionType/MakeGenericType. " +
+				"Only the known JavaList<T>, JavaCollection<T>, and JavaDictionary<TKey,TValue> constructors are invoked here.")]
 		static object CreateInstance ([DynamicallyAccessedMembers (Constructors)] Type collectionType, params object?[] arguments)
 		{
 			var instance = Activator.CreateInstance (
@@ -271,6 +289,10 @@ namespace Java.Interop {
 		sealed class CollectionArgumentFactory<[DynamicallyAccessedMembers (Constructors)] T> : CollectionArgumentFactory
 		{
 			internal static readonly CollectionArgumentFactory<T> Instance = new CollectionArgumentFactory<T> ();
+
+			// These tokens root the mixed reference/value dictionary canonical shapes. For example,
+			// JavaDictionary<string,int> canonicalizes like JavaDictionary<__Canon,int>, so
+			// JavaDictionary<object,T> supplies the NativeAOT template when T is a mapped value type.
 			static readonly Type ReferenceKeyDictionaryType = typeof (JavaDictionary<object, T>);
 			static readonly Type ReferenceValueDictionaryType = typeof (JavaDictionary<T, object>);
 
