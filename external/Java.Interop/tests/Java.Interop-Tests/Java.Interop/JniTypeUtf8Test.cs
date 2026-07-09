@@ -93,29 +93,44 @@ namespace Java.InteropTests
 		[Test]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
-			// Prime the fallback miss path so this assertion doesn't include one-time runtime caches.
-			Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist/Warmup"u8, out var warmup));
-			Assert.IsFalse (warmup.IsValid);
-
-			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
-			JniEnvironment.Types.TryFindClass ("does/not/Exist"u8, out _);
-			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
-			Assert.AreEqual (grefsBefore, grefsAfter,
+			AssertDoesNotLeakGlobalRefs (() => {
+				Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist"u8, out var notFound));
+				Assert.IsFalse (notFound.IsValid);
+			},
 				"TryFindClass for non-existent classes should not leak global references");
 		}
 
 		[Test]
 		public void TryFindClass_String_DoesNotLeakGlobalRefs ()
 		{
-			// Prime the fallback miss path so this assertion doesn't include one-time runtime caches.
-			Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist/Warmup", out var warmup));
-			Assert.IsFalse (warmup.IsValid);
+			AssertDoesNotLeakGlobalRefs (() => {
+				Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist", out var notFound));
+				Assert.IsFalse (notFound.IsValid);
+			},
+				"TryFindClass for non-existent classes should not leak global references");
+		}
+
+		static void AssertDoesNotLeakGlobalRefs (Action action, string message)
+		{
+#if __ANDROID__
+			// Android's gref count is process-wide, and the on-device runner/runtime can
+			// create persistent grefs on background threads while a test is executing.
+			// Repeat the operation to amplify a per-call leak above ambient noise.
+			const int iterations = 200;
+			const int tolerance = 100;
+#else
+			const int iterations = 1;
+			const int tolerance = 0;
+#endif
+			action ();
 
 			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
-			JniEnvironment.Types.TryFindClass ("does/not/Exist", out _);
+			for (int i = 0; i < iterations; ++i)
+				action ();
 			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
-			Assert.AreEqual (grefsBefore, grefsAfter,
-				"TryFindClass for non-existent classes should not leak global references");
+			int delta = grefsAfter - grefsBefore;
+			Assert.LessOrEqual (delta, tolerance,
+				$"{message}. Before={grefsBefore}, After={grefsAfter}, Delta={delta}, Iterations={iterations}, Tolerance={tolerance}");
 		}
 
 		[Test]
