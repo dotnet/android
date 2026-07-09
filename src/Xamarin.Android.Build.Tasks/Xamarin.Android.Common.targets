@@ -2939,8 +2939,8 @@ because xbuild doesn't support framework reference assemblies.
 
   <Target Name="_ValidateNativeRuntimeLinking"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform;_PrepareUnifiedNativeRuntimeItems;_LinkNativeRuntime">
-    <Error Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
-           Text="_AndroidEnableNativeRuntimeLinking=true is not supported." />
+    <Error Condition=" '$(_AndroidRuntime)' != 'MonoVM' and '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
+           Text="_AndroidEnableNativeRuntimeLinking=true is only supported with MonoVM." />
   </Target>
 
   <Target Name="_LinkAssemblies"
