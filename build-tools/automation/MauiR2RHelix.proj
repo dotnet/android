@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
+  <PropertyGroup>
+    <Language>msbuild</Language>
+    <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</EnableAzurePipelinesReporter>
+    <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' == ''">false</EnableAzurePipelinesReporter>
+    <FailOnTestFailure>true</FailOnTestFailure>
+    <HelixType Condition="'$(HelixType)' == ''">tests/android/maui-r2r/</HelixType>
+    <HelixWorkItemName Condition="'$(HelixWorkItemName)' == ''">WorkItem</HelixWorkItemName>
+    <HelixTestRunName Condition="'$(HelixTestRunName)' == ''">$(HelixWorkItemName)</HelixTestRunName>
+    <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == '' and '$(BUILD_STAGINGDIRECTORY)' != ''">$(BUILD_STAGINGDIRECTORY)\helix-results\$(HelixWorkItemName)</HelixResultsDestinationDir>
+    <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == ''">$(MSBuildThisFileDirectory)..\..\artifacts\helix-results\$(HelixWorkItemName)</HelixResultsDestinationDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <HelixTargetQueue Include="$(HelixTargetQueueForItem)">
+      <TestRunName>$(HelixTestRunName)</TestRunName>
+    </HelixTargetQueue>
+  </ItemGroup>
+
+  <ItemGroup>
+    <HelixWorkItem Include="$(HelixWorkItemName)" Condition="'$(WorkItemDirectory)' != ''">
+      <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
+      <Command>$(WorkItemCommand)</Command>
+      <Timeout Condition="'$(WorkItemTimeout)' != ''">$(WorkItemTimeout)</Timeout>
+      <DownloadFilesFromResults>**/*</DownloadFilesFromResults>
+    </HelixWorkItem>
+  </ItemGroup>
+</Project>

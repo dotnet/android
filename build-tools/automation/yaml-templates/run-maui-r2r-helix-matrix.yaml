@@ -10,22 +10,26 @@ parameters:
     runtimeIdentifier: android-arm64
     packageName: com.xamarin.mauir2r.arm64.baseline
     helixQueue: windows.11.amd64.android.open
-    displayName: android-arm64 default R2R
+    displayName: CoreCLR/android-arm64/Default configuration
+    workItemName: CoreCLR_android-arm64_DefaultConfiguration
   - name: android-arm64-fullr2r
     runtimeIdentifier: android-arm64
     packageName: com.xamarin.mauir2r.arm64.fullr2r
     helixQueue: windows.11.amd64.android.open
-    displayName: android-arm64 full R2R
+    displayName: CoreCLR/android-arm64/Full R2R
+    workItemName: CoreCLR_android-arm64_FullR2R
   - name: android-arm-default
     runtimeIdentifier: android-arm
     packageName: com.xamarin.mauir2r.arm.baseline
     helixQueue: windows.11.amd64.android-armel.open
-    displayName: android-arm default R2R
+    displayName: CoreCLR/android-arm/Default configuration
+    workItemName: CoreCLR_android-arm_DefaultConfiguration
   - name: android-arm-fullr2r
     runtimeIdentifier: android-arm
     packageName: com.xamarin.mauir2r.arm.fullr2r
     helixQueue: windows.11.amd64.android-armel.open
-    displayName: android-arm full R2R
+    displayName: CoreCLR/android-arm/Full R2R
+    workItemName: CoreCLR_android-arm_FullR2R
 
 steps:
 - powershell: |
@@ -188,6 +192,10 @@ steps:
       set "UPLOAD_DIR=%HELIX_WORKITEM_UPLOAD_ROOT%"
       if "%UPLOAD_DIR%"=="" set "UPLOAD_DIR=%~dp0"
       if not exist "%UPLOAD_DIR%" mkdir "%UPLOAD_DIR%"
+      echo Scenario: ${{ testCase.displayName }} > "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
+      echo RuntimeIdentifier: $runtimeIdentifier >> "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
+      echo PackageName: $packageName >> "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
+      echo APK: $apkName >> "%UPLOAD_DIR%\scenario-${{ testCase.name }}.txt"
       set "ADB=%~dp0platform-tools\adb.exe"
       if not exist "%ADB%" (
         echo Could not find payload adb.exe at "%ADB%"
@@ -195,20 +203,27 @@ steps:
         exit /b 1
       )
       "%ADB%" version || exit /b 1
-      "%ADB%" devices -l
+      "%ADB%" devices -l > "%UPLOAD_DIR%\adb-devices-${{ testCase.name }}.log"
+      type "%UPLOAD_DIR%\adb-devices-${{ testCase.name }}.log"
       "%ADB%" wait-for-device || exit /b 1
+      "%ADB%" shell getprop > "%UPLOAD_DIR%\getprop-${{ testCase.name }}.log"
+      "%ADB%" shell getprop ro.product.cpu.abi
+      "%ADB%" shell getprop ro.product.cpu.abilist
+      "%ADB%" shell getprop ro.build.fingerprint
       "%ADB%" uninstall $packageName
       "%ADB%" install -r "%~dp0$apkName" || exit /b 1
+      "%ADB%" shell pm path $packageName > "%UPLOAD_DIR%\pm-path-${{ testCase.name }}.log"
+      "%ADB%" shell dumpsys package $packageName > "%UPLOAD_DIR%\dumpsys-package-${{ testCase.name }}.log"
       "%ADB%" shell logcat -c
       "%ADB%" shell monkey -p $packageName -c android.intent.category.LAUNCHER 1 || exit /b 1
       ping -n 11 127.0.0.1 > nul
       "%ADB%" shell pidof $packageName
       if errorlevel 1 (
-        "%ADB%" logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
+        "%ADB%" logcat -d -b all > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
         "%ADB%" uninstall $packageName
         exit /b 1
       )
-      "%ADB%" logcat -d > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
+      "%ADB%" logcat -d -b all > "%UPLOAD_DIR%\logcat-${{ testCase.name }}.log"
       "%ADB%" uninstall $packageName
       exit /b 0
       "@
@@ -219,7 +234,7 @@ steps:
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
     parameters:
       command: msbuild
-      project: ${{ parameters.xaSourcePath }}/eng/common/helixpublish.proj
+      project: ${{ parameters.xaSourcePath }}/build-tools/automation/MauiR2RHelix.proj
       arguments: >-
         /restore
         /p:TreatWarningsAsErrors=false
@@ -234,7 +249,10 @@ steps:
         HelixType: tests/android/maui-r2r/${{ testCase.name }}/
         HelixBuild: $(Build.BuildNumber)
         HelixConfiguration: ${{ testCase.name }}
-        HelixTargetQueues: ${{ testCase.helixQueue }}
+        HelixTargetQueueForItem: ${{ testCase.helixQueue }}
+        HelixTestRunName: ${{ testCase.displayName }}
+        HelixWorkItemName: ${{ testCase.workItemName }}
+        HelixResultsDestinationDir: ${{ parameters.logsDirectory }}/helix-results/${{ testCase.name }}
         HelixAccessToken: ''
         WorkItemDirectory: ${{ parameters.payloadDirectory }}/${{ testCase.name }}
         WorkItemCommand: run-maui-r2r.cmd
