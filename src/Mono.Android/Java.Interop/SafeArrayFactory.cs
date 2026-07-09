@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.Android.Runtime;
@@ -14,26 +13,8 @@ namespace Java.Interop {
 		// and StandardCanonicalizationAlgorithm canonicalizes reference DefTypes and arrays to __Canon.
 		//
 		// Value-type element arrays are different: value types do not collapse to __Canon, so an exact
-		// vector EEType/template must be available. These entries intentionally use typeof(T[]) and
-		// direct new T[length] delegates so ILC roots both the exact vector type and its allocation path.
-		static readonly Dictionary<Type, ArrayFactoryInfo> ValueTypeArrayFactories = new Dictionary<Type, ArrayFactoryInfo> {
-			{ typeof (bool),    new ArrayFactoryInfo (typeof (bool[]),    static length => new bool [length]) },
-			{ typeof (sbyte),   new ArrayFactoryInfo (typeof (sbyte[]),   static length => new sbyte [length]) },
-			{ typeof (char),    new ArrayFactoryInfo (typeof (char[]),    static length => new char [length]) },
-			{ typeof (short),   new ArrayFactoryInfo (typeof (short[]),   static length => new short [length]) },
-			{ typeof (int),     new ArrayFactoryInfo (typeof (int[]),     static length => new int [length]) },
-			{ typeof (long),    new ArrayFactoryInfo (typeof (long[]),    static length => new long [length]) },
-			{ typeof (float),   new ArrayFactoryInfo (typeof (float[]),   static length => new float [length]) },
-			{ typeof (double),  new ArrayFactoryInfo (typeof (double[]),  static length => new double [length]) },
-			{ typeof (bool?),   new ArrayFactoryInfo (typeof (bool?[]),   static length => new bool? [length]) },
-			{ typeof (sbyte?),  new ArrayFactoryInfo (typeof (sbyte?[]),  static length => new sbyte? [length]) },
-			{ typeof (char?),   new ArrayFactoryInfo (typeof (char?[]),   static length => new char? [length]) },
-			{ typeof (short?),  new ArrayFactoryInfo (typeof (short?[]),  static length => new short? [length]) },
-			{ typeof (int?),    new ArrayFactoryInfo (typeof (int?[]),    static length => new int? [length]) },
-			{ typeof (long?),   new ArrayFactoryInfo (typeof (long?[]),   static length => new long? [length]) },
-			{ typeof (float?),  new ArrayFactoryInfo (typeof (float?[]),  static length => new float? [length]) },
-			{ typeof (double?), new ArrayFactoryInfo (typeof (double?[]), static length => new double? [length]) },
-		};
+		// vector EEType/template must be available. ValueTypeFactory roots typeof(T[]), new T[length],
+		// and the matching Java collection wrapper instantiations in one shared primitive map.
 
 		internal static Type GetArrayType (Type elementType, int rank)
 		{
@@ -83,8 +64,8 @@ namespace Java.Interop {
 			if (elementType == null)
 				throw new ArgumentNullException (nameof (elementType));
 
-			if (rank == 1 && ValueTypeArrayFactories.TryGetValue (elementType, out var factory)) {
-				array = factory.CreateInstance (length);
+			if (rank == 1 && ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
+				array = factory.CreateArray (length);
 				return true;
 			}
 
@@ -111,7 +92,7 @@ namespace Java.Interop {
 		static bool TryGetVectorType (Type elementType, [NotNullWhen (true)] out Type? vectorType)
 		{
 			if (elementType.IsValueType) {
-				if (ValueTypeArrayFactories.TryGetValue (elementType, out var factory)) {
+				if (ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
 					vectorType = factory.ArrayType;
 					return true;
 				}
@@ -150,19 +131,6 @@ namespace Java.Interop {
 		{
 			return new NotSupportedException (
 				$"The array type for element type '{elementType}' and rank '{rank}' is not available for AOT-safe creation.");
-		}
-
-		sealed class ArrayFactoryInfo
-		{
-			public ArrayFactoryInfo (Type arrayType, Func<int, Array> createInstance)
-			{
-				ArrayType = arrayType;
-				CreateInstance = createInstance;
-			}
-
-			public Type ArrayType { get; }
-
-			public Func<int, Array> CreateInstance { get; }
 		}
 	}
 }

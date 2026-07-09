@@ -328,6 +328,7 @@
     <Compile Include="Java.Interop\SafeArrayFactory.cs" />
     <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
+    <Compile Include="Java.Interop\ValueTypeFactory.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
     <Compile Include="Java.Lang\Byte.cs" />
     <Compile Include="Java.Lang\Character.cs" />
