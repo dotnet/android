@@ -22,9 +22,6 @@ In order to diagnose and eventually fix the crash, you will next need to:
  2. [Understand the collected logs](#understand-logs).
  2. [Interpreting the collected logs](#read-logs).
 
-You may find [`logcat-parse`](#logcat-parse) useful in reading the log files.
-
-
 <a name="crash-unhandled-exception"></a>
 
 ### Crash via Unhandled Exception
@@ -327,17 +324,9 @@ From this we must *infer* that the instance associated with JNI Global Reference
 the association between *key_handle 0x466b26f* and the `Java.Lang.Runnable` *instance*. This also tells us where
 `Java.Lang.Object.Dispose()` was called from: within `JniActivationCrash()`, in `MainActivity.cs:35`.
 
-[`logcat-parse`](#logcat-parse) can be used to find the peer via the `key_handle` value, and determine its state:
-
-```
-% mono ~/Developer/src/xamarin/Java.Interop/bin/Debug/logcat-parse.exe grefs.txt
-
-csharp> var r = grefs.AllocatedPeers.Where(p => p.KeyHandle=="0x466b26f");
-csharp> r;
-{ PeerInfo(State='Collected' JniType='mono/java/lang/Runnable' McwType='Java.Lang.Runnable' KeyHandle=0x466b26f Handles=1) }
-```
-
-The `PeerInfo.State` value of `Collected` means that the instance has been collected.
+Search the collected GREF logs for the `key_handle` value to find the peer and follow its
+lifecycle. In this example, the latest lifecycle entries show that the instance was disposed
+and then collected.
 
 ### Android Runtime Abort Crash Logs
 
@@ -379,37 +368,3 @@ This lands us on:
 This tells us that the JNI Local Reference was in fact deleted, from `UseInvalidJniHandle()`,
 in `MainActivity.cs:15`. From there we can investigate our code and fix it so that an
 invalid JNI handle is no longer used.
-
-
-<a name="logcat-parse"></a>
-
-## `logcat-parse`
-
-`logcat-parse` combines an API around the JNI Global Reference logs with a C# REPL.
-It is included with Classic Xamarin.Android installs.
-
-To run `logcat-parse` on macOS, run the following command within a Terminal:
-
-```bash
-mono /Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android/logcat-parse.exe
-```
-
-To run `logcat-parse` on Windows, run the following command within a
-**Developer Command Prompt for VS 2022** window:
-
-```
-"%VSINSTALLDIR%\MSBuild\Xamarin\Android\logcat-parse.exe"
-```
-
-The code completion engine within the C# REPL doesn't work; it is helpful to have the source code in front of you:
-
-  * The `grefs` variable is of type [`Grefs`](https://github.com/xamarin/java.interop/blob/main/tools/logcat-parse/Grefs.cs).
-  * [`grefs.AllocatedPeers`](https://github.com/xamarin/java.interop/blob/fcc33ce2419c8f0e4ea41418ef8e07fcc4b81e2b/tools/logcat-parse/Grefs.cs#L66)
-    is a collection of [`PeerInfo`](https://github.com/xamarin/java.interop/blob/main/tools/logcat-parse/PeerInfo.cs) instances, one for each
-	Java peer which has been *allocated*.
-  * [`grefs.AlivePeers`](https://github.com/xamarin/java.interop/blob/fcc33ce2419c8f0e4ea41418ef8e07fcc4b81e2b/tools/logcat-parse/Grefs.cs#L67)
-    is a collection of `PeerInfo` instances, one for each Java peer which is still alive, has not been disposed of or GC'd.
-  * [`grefs.GetAliveJniTypeCounts()`](https://github.com/xamarin/java.interop/blob/fcc33ce2419c8f0e4ea41418ef8e07fcc4b81e2b/tools/logcat-parse/Grefs.cs#L83)
-    returns a `Dictionary<string, int>` mapping a JNI type name to the number of instances of that type.
-  * [`grefs.GetDistinctStacksForJniType(string jniType)`](https://github.com/xamarin/java.interop/blob/fcc33ce2419c8f0e4ea41418ef8e07fcc4b81e2b/tools/logcat-parse/Grefs.cs#L83)
-    returns an `IEnumerable<string>` of managed call stacks that involve the `jniType`.
