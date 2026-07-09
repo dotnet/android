@@ -348,10 +348,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' and '$(_AndroidUseMarshalMethods)' == 'True' and '$(_AndroidRuntime)' != 'MonoVM' ">True</_AndroidUseManagedMarshalMethodsLookup>
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' ">False</_AndroidUseManagedMarshalMethodsLookup>
-
-  <!-- Native runtime linking during app build -->
-  <_AndroidEnableNativeRuntimeLinking Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">false</_AndroidEnableNativeRuntimeLinking>
-  <_AndroidEnableNativeRuntimeLinking Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And '$(_AndroidRuntime)' == 'CoreCLR' ">false</_AndroidEnableNativeRuntimeLinking>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
