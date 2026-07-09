@@ -207,6 +207,22 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
+		public void GetArray_NullableInt32 ()
+		{
+			var values = new int? [] { 1, null, 3 };
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[Ljava/lang/Integer;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<int?> (array.Handle);
+				AssertArrays ("GetArray<int?>", copy, values);
+
+				Assert.IsNull (JNIEnv.GetArrayItem<int?> (array.Handle, 1));
+				JNIEnv.SetArrayItem<int?> (array.Handle, 1, 2);
+				Assert.AreEqual ((int?) 2, JNIEnv.GetArrayItem<int?> (array.Handle, 1));
+			}
+		}
+
+		[Test]
 		public void GetArray_JavaLangStringArrayToJavaLangObjectArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {

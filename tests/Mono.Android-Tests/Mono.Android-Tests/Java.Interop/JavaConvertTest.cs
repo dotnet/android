@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using Android.App;
 using Android.Content;
@@ -127,6 +128,49 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void FromJniHandle_IListNullableInt32 ()
+		{
+			using (var source = new JavaList<int?> ()) {
+				source.Add (1);
+				source.Add (null);
+				source.Add (3);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<int?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (typeof (JavaList<int?>), converted.GetType ());
+
+					var list = (IList<int?>) converted;
+					Assert.AreEqual (3, list.Count);
+					Assert.AreEqual ((int?) 1, list [0]);
+					Assert.IsNull (list [1]);
+					Assert.AreEqual ((int?) 3, list [2]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		public void FromJniHandle_IDictionaryNullableInt32String ()
+		{
+			using (var source = new JavaDictionary<int?, string> ()) {
+				source.Add (1, "one");
+				source.Add (null, "null");
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int?, string>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (typeof (JavaDictionary<int?, string>), converted.GetType ());
+
+					var dictionary = (IDictionary<int?, string>) converted;
+					Assert.AreEqual ("one", dictionary [1]);
+					Assert.AreEqual ("null", dictionary [null]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		static Java.Util.ArrayList CreateList (params int[][] items)
 		{
 			var list = new Java.Util.ArrayList ();
@@ -138,6 +182,23 @@ namespace Java.InteropTests
 			}
 			return list;
 		}
+
+		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle, JniHandleOwnership transfer)
+		{
+			var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
+			Assert.IsNotNull (javaConvert);
+
+			var method = javaConvert.GetMethod (
+				"FromJniHandle",
+				BindingFlags.Public | BindingFlags.Static,
+				binder: null,
+				types: new [] { typeof (IntPtr), typeof (JniHandleOwnership), typeof (Type) },
+				modifiers: null);
+			Assert.IsNotNull (method);
+
+			var value = method.Invoke (null, new object [] { handle, transfer, targetType });
+			Assert.IsNotNull (value);
+			return value;
+		}
 	}
 }
-

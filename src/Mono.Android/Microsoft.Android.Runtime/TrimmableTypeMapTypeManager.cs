@@ -55,9 +55,15 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			// We only pre-generate the array types proxy map for Native AOT because we can't manipulate types at runtime.
 			// For CoreCLR, we take advantage of the dynamic runtime and we save app size by not pre-generating the array types proxy map.
 			if (RuntimeFeature.IsNativeAotRuntime) {
-				return TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)
-					? arrayProxy.GetArrayTypes ()
-					: [];
+				if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)) {
+					return arrayProxy.GetArrayTypes ();
+				}
+
+				if (SafeArrayFactory.TryGetArrayType (elementType, typeSignature.ArrayRank, out var arrayType)) {
+					return [arrayType];
+				}
+
+				return [];
 			}
 			
 			if (RuntimeFeature.IsCoreClrRuntime) {
