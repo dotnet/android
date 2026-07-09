@@ -120,8 +120,9 @@ namespace Java.Interop {
 
 		[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
 			Justification = "Array.CreateInstanceFromArrayType() immediately asks for the array TypeHandle and allocates via RuntimeAugments.NewArray(). " +
-				"SafeArrayFactory only passes array types that are either NativeAOT-buildable reference-array canonical shapes " +
-				"or exact primitive/nullable value vectors rooted by the explicit typeof(T[])/new T[length] map above.")]
+				"SafeArrayFactory only passes NativeAOT-buildable reference-array canonical shapes here: either arrays whose original element type is a reference type, " +
+				"or outer jagged array wrappers whose element is already an array reference type. " +
+				"First-rank primitive/nullable value vectors are allocated directly by ValueTypeFactory<T>.CreateArray() before reaching this helper.")]
 		static Array CreateInstanceFromArrayType (Type arrayType, int length)
 		{
 			return Array.CreateInstanceFromArrayType (arrayType, length);
