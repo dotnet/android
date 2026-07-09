@@ -239,6 +239,8 @@ steps:
     arguments: >-
       /t:Restore
       /p:TreatWarningsAsErrors=false
+      /p:EnableAzurePipelinesReporter=false
+      /p:HelixTargetQueueForItem=windows.11.amd64.android.open
       /bl:${{ parameters.logsDirectory }}/RestoreMauiR2RHelix.binlog
     xaSourcePath: ${{ parameters.xaSourcePath }}
     displayName: Restore MAUI R2R Helix project
