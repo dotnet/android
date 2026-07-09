@@ -151,6 +151,7 @@ steps:
       displayName: Build MAUI template - ${{ testCase.displayName }}
       continueOnError: false
 
+- ${{ each testCase in parameters.testCases }}:
   - powershell: |
       $projectDirectory = '${{ parameters.matrixDirectory }}/${{ testCase.name }}'
       $payloadDirectory = '${{ parameters.payloadDirectory }}/${{ testCase.name }}'
@@ -231,32 +232,128 @@ steps:
       Set-Content -LiteralPath (Join-Path $payloadDirectory 'run-maui-r2r.cmd') -Value $script -Encoding ASCII
     displayName: Prepare MAUI R2R Helix payload - ${{ testCase.displayName }}
 
-  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-    parameters:
-      command: msbuild
-      project: ${{ parameters.xaSourcePath }}/build-tools/automation/MauiR2RHelix.proj
-      arguments: >-
-        /restore
-        /p:TreatWarningsAsErrors=false
-        /t:Test
-        /bl:${{ parameters.logsDirectory }}/SendMauiR2R-${{ testCase.name }}ToHelix.binlog
-      xaSourcePath: ${{ parameters.xaSourcePath }}
-      displayName: Run MAUI ${{ testCase.displayName }} APK on Helix
-      continueOnError: false
-      env:
-        BuildConfig: $(XA.Build.Configuration)
-        HelixSource: pr/dotnet/android
-        HelixType: tests/android/maui-r2r/${{ testCase.name }}/
-        HelixBuild: $(Build.BuildNumber)
-        HelixConfiguration: ${{ testCase.name }}
-        HelixTargetQueueForItem: ${{ testCase.helixQueue }}
-        HelixTestRunName: ${{ testCase.displayName }}
-        HelixWorkItemName: ${{ testCase.workItemName }}
-        HelixResultsDestinationDir: ${{ parameters.logsDirectory }}/helix-results/${{ testCase.name }}
-        HelixAccessToken: ''
-        WorkItemDirectory: ${{ parameters.payloadDirectory }}/${{ testCase.name }}
-        WorkItemCommand: run-maui-r2r.cmd
-        WorkItemTimeout: 00:10:00
-        WaitForWorkItemCompletion: true
-        Creator: dotnet-android
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    command: msbuild
+    project: ${{ parameters.xaSourcePath }}/build-tools/automation/MauiR2RHelix.proj
+    arguments: >-
+      /t:Restore
+      /p:TreatWarningsAsErrors=false
+      /bl:${{ parameters.logsDirectory }}/RestoreMauiR2RHelix.binlog
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    displayName: Restore MAUI R2R Helix project
+    continueOnError: false
+
+- powershell: |
+    $ErrorActionPreference = 'Stop'
+    $xaSourcePath = '${{ parameters.xaSourcePath }}'
+    $logsDirectory = '${{ parameters.logsDirectory }}'
+    $payloadRootDirectory = '${{ parameters.payloadDirectory }}'
+    New-Item -ItemType Directory -Force -Path $logsDirectory | Out-Null
+
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+      $dotnetRoot = Join-Path $xaSourcePath 'bin/$(XA.Build.Configuration)/dotnet'
+      $dotnetPath = Join-Path $dotnetRoot 'dotnet'
+    } else {
+      $dotnetRoot = Join-Path $xaSourcePath 'bin\$(XA.Build.Configuration)\dotnet'
+      $dotnetPath = Join-Path $dotnetRoot 'dotnet.exe'
+    }
+
+    if (-not (Test-Path $dotnetPath)) {
+      throw "Could not find dotnet at '$dotnetPath'."
+    }
+
+    $helixProject = Join-Path $xaSourcePath 'build-tools/automation/MauiR2RHelix.proj'
+    $pathSeparator = [IO.Path]::PathSeparator
+    $powerShellExe = (Get-Process -Id $PID).Path
+    if (-not $powerShellExe) {
+      $powerShellExe = 'powershell.exe'
+    }
+
+    $cases = @'
+    ${{ convertToJson(parameters.testCases) }}
+    '@ | ConvertFrom-Json
+
+    $submissions = @()
+    foreach ($case in @($cases)) {
+      $scriptPath = Join-Path $logsDirectory "SendMauiR2R-$($case.name)ToHelix.ps1"
+      $outputPath = Join-Path $logsDirectory "SendMauiR2R-$($case.name)ToHelix.out.log"
+      $errorPath = Join-Path $logsDirectory "SendMauiR2R-$($case.name)ToHelix.err.log"
+      $binlogPath = Join-Path $logsDirectory "SendMauiR2R-$($case.name)ToHelix.binlog"
+      $helixResultsDestinationDir = Join-Path (Join-Path $logsDirectory 'helix-results') $case.name
+      $workItemDirectory = Join-Path $payloadRootDirectory $case.name
+
+      Remove-Item -LiteralPath $scriptPath, $outputPath, $errorPath -Force -ErrorAction Ignore
+
+      $scriptLines = @(
+        '$ErrorActionPreference = ''Stop'''
+        "`$env:DOTNET_ROOT = '$dotnetRoot'"
+        "`$env:PATH = '$dotnetRoot$pathSeparator' + `$env:PATH"
+        "`$env:BuildConfig = '$(XA.Build.Configuration)'"
+        "`$env:HelixSource = 'pr/dotnet/android'"
+        "`$env:HelixType = 'tests/android/maui-r2r/$($case.name)/'"
+        "`$env:HelixBuild = '$(Build.BuildNumber)'"
+        "`$env:HelixConfiguration = '$($case.name)'"
+        "`$env:HelixTargetQueueForItem = '$($case.helixQueue)'"
+        "`$env:HelixTestRunName = '$($case.displayName)'"
+        "`$env:HelixWorkItemName = '$($case.workItemName)'"
+        "`$env:HelixResultsDestinationDir = '$helixResultsDestinationDir'"
+        "`$env:HelixAccessToken = ''"
+        "`$env:WorkItemDirectory = '$workItemDirectory'"
+        "`$env:WorkItemCommand = 'run-maui-r2r.cmd'"
+        "`$env:WorkItemTimeout = '00:10:00'"
+        "`$env:WaitForWorkItemCompletion = 'true'"
+        "`$env:Creator = 'dotnet-android'"
+        "& '$dotnetPath' msbuild '$helixProject' /p:TreatWarningsAsErrors=false /t:Test /bl:'$binlogPath'"
+        'exit $LASTEXITCODE'
+      )
+      Set-Content -LiteralPath $scriptPath -Value $scriptLines -Encoding ASCII
+
+      Write-Host "Starting MAUI R2R Helix submission: $($case.displayName)"
+      $process = Start-Process -FilePath $powerShellExe -ArgumentList @('-NoLogo', '-NoProfile', '-File', $scriptPath) -RedirectStandardOutput $outputPath -RedirectStandardError $errorPath -PassThru
+      $submissions += [pscustomobject]@{
+        Name = $case.name
+        DisplayName = $case.displayName
+        Process = $process
+        OutputPath = $outputPath
+        ErrorPath = $errorPath
+      }
+    }
+
+    while (($submissions | Where-Object { -not $_.Process.HasExited }).Count -ne 0) {
+      $runningNames = $submissions |
+        Where-Object { -not $_.Process.HasExited } |
+        ForEach-Object { $_.DisplayName }
+      Write-Host "Waiting for MAUI R2R Helix submissions: $($runningNames -join ', ')"
+      Start-Sleep -Seconds 30
+    }
+
+    foreach ($submission in $submissions) {
+      $submission.Process.WaitForExit()
+    }
+
+    $failedSubmissions = @()
+    foreach ($submission in $submissions) {
+      Write-Host "##[group]MAUI R2R Helix submission log - $($submission.DisplayName)"
+      if (Test-Path $submission.OutputPath) {
+        Get-Content -LiteralPath $submission.OutputPath
+      }
+      if (Test-Path $submission.ErrorPath) {
+        Get-Content -LiteralPath $submission.ErrorPath
+      }
+      Write-Host "##[endgroup]"
+
+      if ($submission.Process.ExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error]MAUI R2R Helix submission failed for $($submission.DisplayName) with exit code $($submission.Process.ExitCode)."
+        $failedSubmissions += $submission
+      }
+    }
+
+    if ($failedSubmissions.Count -ne 0) {
+      $failedNames = $failedSubmissions | ForEach-Object { $_.DisplayName }
+      throw "Failed MAUI R2R Helix submissions: $($failedNames -join ', ')"
+    }
+  displayName: Run MAUI R2R APKs on Helix
+  continueOnError: false
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
