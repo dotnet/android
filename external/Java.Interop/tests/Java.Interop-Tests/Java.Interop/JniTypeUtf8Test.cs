@@ -91,9 +91,12 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
+			// Prime the fallback miss path so this assertion doesn't include one-time runtime caches.
+			Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist/Warmup"u8, out var warmup));
+			Assert.IsFalse (warmup.IsValid);
+
 			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
 			JniEnvironment.Types.TryFindClass ("does/not/Exist"u8, out _);
 			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
@@ -104,6 +107,10 @@ namespace Java.InteropTests
 		[Test]
 		public void TryFindClass_String_DoesNotLeakGlobalRefs ()
 		{
+			// Prime the fallback miss path so this assertion doesn't include one-time runtime caches.
+			Assert.IsFalse (JniEnvironment.Types.TryFindClass ("does/not/Exist/Warmup", out var warmup));
+			Assert.IsFalse (warmup.IsValid);
+
 			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
 			JniEnvironment.Types.TryFindClass ("does/not/Exist", out _);
 			int grefsAfter = JniEnvironment.Runtime.GlobalReferenceCount;
