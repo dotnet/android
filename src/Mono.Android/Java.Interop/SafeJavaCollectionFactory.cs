@@ -56,7 +56,7 @@ namespace Java.Interop {
 			Type targetType,
 			IntPtr handle,
 			JniHandleOwnership transfer,
-			[NotNullWhen (true)] out object? collection)
+			out object? collection)
 		{
 			if (targetType == null)
 				throw new ArgumentNullException (nameof (targetType));
@@ -84,7 +84,7 @@ namespace Java.Interop {
 			return true;
 		}
 
-		internal static bool TryCreateInstance (Type targetType, object? items, [NotNullWhen (true)] out IJavaObject? collection)
+		internal static bool TryCreateInstance (Type targetType, object? items, out IJavaObject? collection)
 		{
 			if (targetType == null)
 				throw new ArgumentNullException (nameof (targetType));
@@ -150,12 +150,12 @@ namespace Java.Interop {
 					return true;
 				}
 
-				if (hasKeyFactory) {
+				if (hasKeyFactory && !shape.Arguments [1].IsValueType) {
 					collection = keyFactory.CreateDictionaryWithReferenceValue (shape.Arguments [1], handle, transfer);
 					return true;
 				}
 
-				if (hasValueFactory) {
+				if (hasValueFactory && !shape.Arguments [0].IsValueType) {
 					collection = valueFactory.CreateDictionaryWithReferenceKey (shape.Arguments [0], handle, transfer);
 					return true;
 				}
