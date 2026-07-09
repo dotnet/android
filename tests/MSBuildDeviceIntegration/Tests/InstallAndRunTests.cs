@@ -1185,6 +1185,7 @@ namespace Library1 {
 <network-security-config>
   <domain-config cleartextTrafficPermitted=""true"">
     <domain>localhost</domain>
+    <domain>127.0.0.1</domain>
   </domain-config>
 </network-security-config>
 ",

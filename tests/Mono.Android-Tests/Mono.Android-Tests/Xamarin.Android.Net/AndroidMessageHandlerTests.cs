@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
@@ -173,11 +174,23 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
-			using var server = LocalHttpsServer.Start (certificateHost: "wrong.host.test");
-			var handler = new AndroidMessageHandler ();
+			using var server = LocalHttpsServer.Start ();
+			using var certificateStream = new MemoryStream (server.CertificateData);
+			using var certificateFactory = Java.Security.Cert.CertificateFactory.GetInstance ("X.509")
+				?? throw new InvalidOperationException ("Failed to create the X.509 certificate factory.");
+			using var trustedCertificate = certificateFactory.GenerateCertificate (certificateStream)
+				?? throw new InvalidOperationException ("Failed to load the local HTTPS server certificate.");
+			var handler = new AndroidMessageHandler {
+				TrustedCerts = new [] { trustedCertificate },
+			};
 			var client = new HttpClient (handler);
 
-			await AssertRejectsRemoteCertificate (() => client.GetStringAsync (server.OkUri));
+			Assert.AreEqual ("OK", await client.GetStringAsync (server.OkUri));
+
+			Uri mismatchedUri = new UriBuilder (server.OkUri) {
+				Host = "127.0.0.1",
+			}.Uri;
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync (mismatchedUri));
 		}
 
 		[Test]

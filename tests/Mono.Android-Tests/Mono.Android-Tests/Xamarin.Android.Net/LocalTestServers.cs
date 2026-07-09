@@ -23,11 +23,8 @@ namespace Xamarin.Android.NetTests {
 
 		protected LocalTestServer (string name)
 		{
-			Port = GetAvailablePort ();
 			this.name = name;
 		}
-
-		public int Port { get; }
 
 		public abstract void Dispose ();
 
@@ -72,18 +69,6 @@ namespace Xamarin.Android.NetTests {
 			}
 			return true;
 		}
-
-		static int GetAvailablePort ()
-		{
-			var tcpListener = new TcpListener (IPAddress.Loopback, 0);
-			try {
-				tcpListener.Start ();
-				int port = ((IPEndPoint) tcpListener.LocalEndpoint).Port;
-				return port;
-			} finally {
-				tcpListener.Stop ();
-			}
-		}
 	}
 
 	class LocalHttpServer : LocalTestServer
@@ -95,8 +80,10 @@ namespace Xamarin.Android.NetTests {
 		protected LocalHttpServer (string name)
 			: base (name)
 		{
-			listener = new TcpListener (IPAddress.Loopback, Port);
+			listener = new TcpListener (IPAddress.Loopback, 0);
 		}
+
+		public int Port { get; private set; }
 
 		public Uri Uri {
 			get { return new Uri ($"{Scheme}://{Host}:{Port}/"); }
@@ -140,6 +127,7 @@ namespace Xamarin.Android.NetTests {
 		protected void StartListening ()
 		{
 			listener.Start ();
+			Port = ((IPEndPoint) listener.LocalEndpoint).Port;
 			acceptLoop = Task.Run (AcceptLoop);
 		}
 
@@ -420,6 +408,10 @@ namespace Xamarin.Android.NetTests {
 		{
 			certificateKey = RSA.Create (keySizeInBits: 2048);
 			certificate = CreateCertificate (certificateKey, certificateHost);
+		}
+
+		public byte [] CertificateData {
+			get { return certificate.RawData; }
 		}
 
 		protected override string Scheme {
