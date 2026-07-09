@@ -47,8 +47,7 @@ namespace Xamarin.Android.NetTests
 				AutomaticDecompression = DecompressionMethods.All
 			};
 
-			string expectedResponseBody = $"{{ \"{jsonFieldName}\": true }}";
-			using var server = LocalHttpServer.Start (context => LocalHttpServer.WriteCompressedStringAsync (context.Response, encoding, expectedResponseBody, "application/json"));
+			using var server = LocalHttpTestServer.Start ();
 			using var client = new HttpClient (handler);
 			using HttpResponseMessage response = await client.GetAsync (server.GetUri (urlPath));
 			EnsureSuccessStatusCode (response);
@@ -230,17 +229,15 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public async Task AndroidMessageHandlerFollows308PermanentRedirect ()
 		{
-			using var redirectedServer = LocalHttpServer.StartTextResponse ("OK");
-			using var redirectServer = LocalHttpServer.StartRedirectTo (redirectedServer.Url, (HttpStatusCode) 308);
+			using var server = LocalHttpTestServer.Start ();
 
 			var handler = new AndroidMessageHandler ();
 
 			var client = new HttpClient (handler);
-			using var result = await client.GetAsync (redirectServer.Url);
+			using var result = await client.GetAsync (server.GetRedirectUri (server.OkUri, (HttpStatusCode) 308));
 			EnsureSuccessStatusCode (result);
-			Assert.AreEqual (redirectedServer.Url, result.RequestMessage.RequestUri.ToString ());
-			redirectServer.AssertNoUnhandledExceptions ();
-			redirectedServer.AssertNoUnhandledExceptions ();
+			Assert.AreEqual (server.OkUri.ToString (), result.RequestMessage.RequestUri.ToString ());
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]

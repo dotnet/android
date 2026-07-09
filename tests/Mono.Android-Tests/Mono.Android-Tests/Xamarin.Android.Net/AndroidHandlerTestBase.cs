@@ -239,10 +239,9 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_Without_Protocol_Works ()
 		{
-			using (var redirectedServer = LocalHttpServer.StartTextResponse ("OK"))
-			using (var redirectServer = LocalHttpServer.StartRedirectTo (redirectedServer.Url)) {
-				var requestURI = redirectServer.Uri;
-				var redirectedURI = redirectedServer.Uri;
+			using (var server = LocalHttpTestServer.Start ()) {
+				var requestURI = server.GetRedirectUri (server.OkUri);
+				var redirectedURI = server.OkUri;
 				using (var c = new HttpClient (CreateHandler ())) {
 					var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
 					if (connectionFailed)
@@ -255,18 +254,16 @@ namespace Xamarin.Android.NetTests {
 					EnsureSuccessStatusCode (tr.Result);
 					Assert.AreEqual (redirectedURI, tr.Result.RequestMessage.RequestUri, "Invalid redirected URI");
 				}
-				redirectServer.AssertNoUnhandledExceptions ();
-				redirectedServer.AssertNoUnhandledExceptions ();
+				server.AssertNoUnhandledExceptions ();
 			}
 		}
 
 		[Test]
 		public void Redirect_POST_With_Content_Works ()
 		{
-			using (var redirectedServer = LocalHttpServer.StartTextResponse ("OK"))
-			using (var redirectServer = LocalHttpServer.StartRedirectTo (redirectedServer.Url)) {
-				var requestURI = redirectServer.Uri;
-				var redirectedURI = redirectedServer.Uri;
+			using (var server = LocalHttpTestServer.Start ()) {
+				var requestURI = server.GetRedirectUri (server.OkUri);
+				var redirectedURI = server.OkUri;
 				using (var c = new HttpClient (CreateHandler ())) {
 					var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
 					request.Content = new StringContent ("{}", Encoding.UTF8, "application/json");
@@ -282,8 +279,7 @@ namespace Xamarin.Android.NetTests {
 					EnsureSuccessStatusCode (response);
 					Assert.AreEqual (redirectedURI, response.RequestMessage.RequestUri, "Invalid redirected URI");
 				}
-				redirectServer.AssertNoUnhandledExceptions ();
-				redirectedServer.AssertNoUnhandledExceptions ();
+				server.AssertNoUnhandledExceptions ();
 			}
 		}
 

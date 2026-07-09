@@ -1136,6 +1136,9 @@ namespace Library1 {
 					new BuildItem.Source ("HttpClientTest.cs") {
 						TextContent = () => getResource("HttpClientTest")
 					},
+					new BuildItem.Source ("LocalHttpTestServer.cs") {
+						TextContent = () => getResource ("LocalHttpTestServer")
+					},
 					new BuildItem.Source ("PreserveTest.cs") {
 						TextContent = () => getResource("PreserveTest")
 					},
@@ -1176,6 +1179,15 @@ namespace Library1 {
 </linker>
 ",
 					},
+					new BuildItem ("AndroidResource", "Resources\\xml\\network_security_config.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<network-security-config>
+  <domain-config cleartextTrafficPermitted=""true"">
+    <domain>localhost</domain>
+  </domain-config>
+</network-security-config>
+",
+					},
 				},
 			};
 			proj.SetRuntime (runtime);
@@ -1187,7 +1199,7 @@ namespace Library1 {
 				Version = "2.0.3",
 			});
 
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:usesCleartextTraffic=\"true\" ");
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:networkSecurityConfig=\"@xml/network_security_config\" ");
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
 				proj.MainActivity = sr.ReadToEnd ();
