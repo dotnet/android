@@ -373,6 +373,14 @@
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_RuntimePackFiles Include="$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a"
+                         Condition="Exists('$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a')"
+                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
+    </ItemGroup>
+
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
         DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.RuntimePackName).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"
