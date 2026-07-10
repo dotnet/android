@@ -147,5 +147,19 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEquivalent (currentFiles, files);
 		}
 
+		[TestCase ("adb: error: failed to copy: No such file or directory")]
+		[TestCase ("adb: error: target '/data/local/tmp/app/arm64-v8a' is not a directory")]
+		[TestCase ("remote couldn't create file: Is a directory")]
+		public void FastDeploy2DetectsInvalidRemoteFilesystem (string output)
+		{
+			Assert.IsTrue (FastDeploy2.IsUnexpectedRemoteFilesystemError (output));
+		}
+
+		[Test]
+		public void FastDeploy2DoesNotResetForUnrelatedPushFailure ()
+		{
+			Assert.IsFalse (FastDeploy2.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
+		}
+
 	}
 }

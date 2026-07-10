@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tasks
 
 		string RemoteStagingRoot => RemoteStagingRootPath;
 
-		async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath)
+		async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath, bool forceFreshDeployment = false)
 		{
 			var files = PrepareDirectPushFiles ();
 			var currentManifest = CreateManifest (files);
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Tasks
 			var previousManifest = LoadPreviousManifest ();
 			string previousManifestHash = previousManifest == null ? "" : ComputeManifestHash (previousManifest);
 			DeviceManifestState deviceManifestState;
-			if (previousManifest == null) {
+			if (forceFreshDeployment || previousManifest == null) {
 				deviceManifestState = new DeviceManifestState ();
 			} else if (warmDeviceManifestState != null && string.Equals (warmDeviceManifestHash, previousManifestHash, StringComparison.Ordinal)) {
 				deviceManifestState = warmDeviceManifestState;
@@ -39,10 +39,13 @@ namespace Xamarin.Android.Tasks
 			}
 			bool remoteReady = previousManifest != null && string.Equals (deviceManifestState.RemoteHash, previousManifestHash, StringComparison.Ordinal);
 			bool overrideSymlinksReady = previousManifest != null && string.Equals (deviceManifestState.OverrideHash, previousManifestHash, StringComparison.Ordinal);
-			if (!remoteReady) {
+			if (forceFreshDeployment || !remoteReady) {
 				previousManifest = null;
 				overrideSymlinksReady = false;
 				if (!await ResetRemoteStagingDirectory (remoteStagingPath)) {
+					return false;
+				}
+				if (forceFreshDeployment && !await ClearOverrideDirectory (overridePath)) {
 					return false;
 				}
 			}
@@ -74,7 +77,13 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (!await UploadChangedFiles (remoteStagingPath, files, changedFiles)) {
+			UploadFilesResult uploadResult = await UploadChangedFiles (remoteStagingPath, files, changedFiles);
+			if (!uploadResult.Success) {
+				if (uploadResult.RemoteStateInvalid && !forceFreshDeployment) {
+					LogDiagnostic ($"FastDeploy2 remote staging state was incomplete. Retrying with a fresh deployment. Output: {uploadResult.Output}");
+					return await DeployFastDevFilesWithAdbPush (overridePath, forceFreshDeployment: true);
+				}
+				LogFastDeploy2Error ("XA0129", uploadResult.Output, uploadResult.RemoteDirectory);
 				return false;
 			}
 
@@ -316,7 +325,7 @@ namespace Xamarin.Android.Tasks
 				StringComparer.Ordinal);
 		}
 
-		async Task<bool> UploadChangedFiles (string remoteStagingPath, List<DirectPushFile> files, HashSet<string> changedFiles)
+		async Task<UploadFilesResult> UploadChangedFiles (string remoteStagingPath, List<DirectPushFile> files, HashSet<string> changedFiles)
 		{
 			var changedFileList = files.Where (file => changedFiles.Contains (file.RelativePath)).ToList ();
 			foreach (var group in changedFileList.GroupBy (file => GetDirectoryName (file.RelativePath), StringComparer.Ordinal)) {
@@ -324,12 +333,23 @@ namespace Xamarin.Android.Tasks
 				foreach (var batch in BatchPushFilesWithoutSync (group.ToList (), remoteDirectory)) {
 					var result = await RunAdbCommand (batch.ToArray ());
 					if (result.ExitCode != 0) {
-						LogFastDeploy2Error ("XA0129", result.Output, remoteDirectory);
-						return false;
+						return new UploadFilesResult (
+							success: false,
+							remoteStateInvalid: IsUnexpectedRemoteFilesystemError (result.Output),
+							output: result.Output,
+							remoteDirectory: remoteDirectory);
 					}
 				}
 			}
-			return true;
+			return new UploadFilesResult (success: true, remoteStateInvalid: false, output: "", remoteDirectory: "");
+		}
+
+		internal static bool IsUnexpectedRemoteFilesystemError (string output)
+		{
+			return IsMissingDirectoryError (output) ||
+				(!string.IsNullOrEmpty (output) &&
+					(output.IndexOf ("not a directory", StringComparison.OrdinalIgnoreCase) >= 0 ||
+					 output.IndexOf ("is a directory", StringComparison.OrdinalIgnoreCase) >= 0));
 		}
 
 		async Task<bool> RemoveRemoteStaleFiles (string remoteStagingPath, List<string> removedFiles)
@@ -539,6 +559,21 @@ namespace Xamarin.Android.Tasks
 		class DeviceManifestState {
 			public string RemoteHash { get; set; } = "";
 			public string OverrideHash { get; set; } = "";
+		}
+
+		readonly struct UploadFilesResult {
+			public bool Success { get; }
+			public bool RemoteStateInvalid { get; }
+			public string Output { get; }
+			public string RemoteDirectory { get; }
+
+			public UploadFilesResult (bool success, bool remoteStateInvalid, string output, string remoteDirectory)
+			{
+				Success = success;
+				RemoteStateInvalid = remoteStateInvalid;
+				Output = output;
+				RemoteDirectory = remoteDirectory;
+			}
 		}
 
 		internal class ManifestData {

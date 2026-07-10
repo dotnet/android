@@ -183,6 +183,13 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
    override markers, and the manifest is saved to `obj` for the next incremental
    build.
 
+The marker match is intentionally the fast-path filesystem contract; the task
+does not probe every expected directory before each upload. If a push reports
+that an expected remote path is missing or has the wrong file type, FastDeploy2
+discards the incremental state, clears the staging and override trees, and
+retries once as a full deployment. A successful retry rewrites both remote
+markers and the local manifest.
+
 ## Error codes
 
 Install failures are reported with `ADB####` codes; fast-deployment shell
