@@ -74,21 +74,21 @@ static class DlopenAssemblyStoreGenerator
 		File.WriteAllText (asmFile, asm);
 
 		string llvmMc = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-mc"));
-		var mcArgs = new List<string> {
+		var mcArgs = [
 			"--filetype=obj",
 			$"-triple={toolInfo.Triple}",
 			$"-o {MonoAndroidHelper.QuoteFileNameArgument (objFile)}",
 			MonoAndroidHelper.QuoteFileNameArgument (asmFile),
-		};
+		];
 
-		int ret = MonoAndroidHelper.RunProcess (llvmMc, String.Join (" ", mcArgs), log);
+		int ret = MonoAndroidHelper.RunProcess (llvmMc, string.Join (" ", mcArgs), log);
 		if (ret != 0) {
 			log.LogError ($"Failed to assemble assembly-store wrapper for '{targetArch}' (llvm-mc exit code {ret})");
 			return outputFile;
 		}
 
 		string ld = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "ld"));
-		var ldArgs = new List<string> {
+		var ldArgs = [
 			"--shared",
 			$"-soname {MonoAndroidHelper.QuoteFileNameArgument (outputFileName)}",
 			$"-m {toolInfo.ElfArch}",
@@ -97,9 +97,9 @@ static class DlopenAssemblyStoreGenerator
 			$"--export-dynamic-symbol={PayloadStartSymbol}",
 			$"-o {MonoAndroidHelper.QuoteFileNameArgument (outputFile)}",
 			MonoAndroidHelper.QuoteFileNameArgument (objFile),
-		};
+		];
 
-		ret = MonoAndroidHelper.RunProcess (ld, String.Join (" ", ldArgs), log);
+		ret = MonoAndroidHelper.RunProcess (ld, string.Join (" ", ldArgs), log);
 		if (ret != 0) {
 			log.LogError ($"Failed to link assembly-store wrapper for '{targetArch}' (ld exit code {ret})");
 			return outputFile;
