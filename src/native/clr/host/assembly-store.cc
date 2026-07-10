@@ -256,32 +256,6 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	return assembly_data;
 }
 
-void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size) noexcept
-{
-	detail::mmap_info assembly_store_map = Util::mmap_file (fd, offset, size, store_path);
-
-	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (assembly_store_map, store_path);
-	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}"sv, payload_start, payload_size);
-
-	auto get_full_store_path = [&apk_path, &store_path]() -> std::string {
-		std::string full_store_path;
-
-		if (!apk_path.empty ()) {
-			full_store_path.append (apk_path);
-			// store path will be relative, to the apk
-			full_store_path.append ("!/"sv);
-			full_store_path.append (store_path);
-		} else {
-			full_store_path.append (store_path);
-		}
-
-		return full_store_path;
-	};
-
-	configure_from_payload (payload_start, get_full_store_path);
-	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
-}
-
 void AssemblyStore::configure_from_payload (void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept
 {
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);

@@ -326,10 +326,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore>$(AndroidUseAssemblyStore)</_AndroidUseAssemblyStore>
-  <!-- EXPERIMENTAL (CoreCLR only): wrap the assembly store so its payload is reachable via the
-       `_assembly_store_start` dynamic symbol, letting the runtime dlopen()+dlsym() it instead of
-       parsing the APK ZIP directory. Opt-in via `-p:_AndroidDlopenAssemblyStore=true`. -->
-  <_AndroidDlopenAssemblyStore Condition=" '$(_AndroidDlopenAssemblyStore)' == '' ">false</_AndroidDlopenAssemblyStore>
+  <!-- The assembly store loading mechanism is dictated by the runtime and MUST NOT be overridden
+       (see the CoreCLR block below). MonoVM only supports the classic assembly store, which is
+       located at runtime by scanning the APK. -->
+  <_AndroidDlopenAssemblyStore>false</_AndroidDlopenAssemblyStore>
 </PropertyGroup>
 
 <!-- For CoreCLR assembly stores are always on, individual assembly entries in the APK aren't supported.
@@ -337,6 +337,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' == 'true' ">true</_AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' != 'true' ">false</_AndroidUseAssemblyStore>
+  <!-- CoreCLR's native host ONLY supports the dlopen()-based assembly store: the store is wrapped as
+       a real shared library whose payload is exposed via the `_assembly_store_start` dynamic symbol,
+       and the host resolves it with dlopen()+dlsym() (there is no ZIP-scanning fallback). This value
+       is intentionally hardcoded and MUST NOT be overridden. -->
+  <_AndroidDlopenAssemblyStore>true</_AndroidDlopenAssemblyStore>
 </PropertyGroup>
 
 <PropertyGroup>

@@ -17,17 +17,9 @@ namespace xamarin::android {
 	public:
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
 
-		static void map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size) noexcept;
-
-		static void map (int fd, std::string_view const& file_path, uint32_t offset, uint32_t size) noexcept
-		{
-			map (fd, {}, file_path, offset, size);
-		}
-
-		// Configure the store directly from an in-memory payload pointer (e.g. obtained via
-		// dlopen()+dlsym() of the `_assembly_store_start` dynamic symbol) instead of locating and
-		// mmapping it out of the APK. `get_full_store_path` is invoked only to build diagnostics
-		// if the payload turns out to be invalid.
+		// Configure the store directly from an in-memory payload pointer (obtained via
+		// dlopen()+dlsym() of the `_assembly_store_start` dynamic symbol). `get_full_store_path`
+		// is invoked only to build diagnostics if the payload turns out to be invalid.
 		static void configure_from_payload (void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept;
 
 	private:

@@ -10,20 +10,18 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks;
 
 /// <summary>
-/// EXPERIMENTAL / ADDITIVE (CoreCLR only).
-///
-/// Produces an assembly-store wrapper shared library whose payload lives in a
+/// Produces the CoreCLR assembly-store wrapper shared library, whose payload lives in a
 /// *loadable* ELF section (SHF_ALLOC, covered by a PT_LOAD segment) and is
 /// pointed at by an exported dynamic symbol (<c>_assembly_store_start</c>).
 ///
-/// This differs from <see cref="DSOWrapperGenerator"/>, which injects the
+/// This differs from <see cref="DSOWrapperGenerator"/> (used by MonoVM), which injects the
 /// payload with <c>llvm-objcopy --add-section</c> into a *non-loadable* section
 /// and requires the runtime to locate the store inside the APK (ZIP central
 /// directory parsing), mmap it and walk the ELF section headers by hand.
 ///
-/// With this layout the CoreCLR runtime can instead simply
+/// With this layout the CoreCLR runtime simply
 /// <c>dlopen("libassembly-store.so")</c> + <c>dlsym("_assembly_store_start")</c>
-/// and let the dynamic linker locate + map the payload.
+/// and lets the dynamic linker locate + map the payload.
 ///
 /// The wrapper is built with the shipped binutils (<c>llvm-mc</c> to assemble a
 /// tiny <c>.incbin</c> stub, <c>ld</c> to link a shared object). No clang is
