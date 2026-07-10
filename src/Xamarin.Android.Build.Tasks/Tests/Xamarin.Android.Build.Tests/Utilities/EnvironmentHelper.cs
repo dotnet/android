@@ -1305,24 +1305,16 @@ namespace Xamarin.Android.Build.Tests
 			return fv;
 		}
 
-		// llc usually emits signed decimal integers, but large unsigned fields can also be emitted as
-		// decimal values above Int32.MaxValue. Accept both forms.
+		// These fields are always uint32_t/uint64_t and the generator (LlvmIrGenerator/MonoAndroidHelper.CultureInvariantToString)
+		// writes them via uint/ulong.ToString(), which is always an unsigned decimal representation - there's no signed form to
+		// account for here, so parse directly as unsigned.
 		static bool TryParseInteger (string value, out uint fv)
 		{
 			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
 				return UInt32.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
 			}
 
-			if (UInt32.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out fv)) {
-				return true;
-			}
-
-			if (Int32.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out int signedFV)) {
-				fv = (uint)signedFV;
-				return true;
-			}
-
-			return false;
+			return UInt32.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out fv);
 		}
 
 		static bool TryParseInteger (string value, out ulong fv)
@@ -1331,16 +1323,7 @@ namespace Xamarin.Android.Build.Tests
 				return UInt64.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
 			}
 
-			if (UInt64.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out fv)) {
-				return true;
-			}
-
-			if (Int64.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out long signedFV)) {
-				fv = (ulong)signedFV;
-				return true;
-			}
-
-			return false;
+			return UInt64.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out fv);
 		}
 
 		static bool TryParseInteger (string value, out byte fv)
