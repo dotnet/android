@@ -1,0 +1,110 @@
+#nullable enable
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
+
+namespace Xamarin.Android.Tasks;
+
+/// <summary>
+/// EXPERIMENTAL / ADDITIVE (CoreCLR only).
+///
+/// Produces an assembly-store wrapper shared library whose payload lives in a
+/// *loadable* ELF section (SHF_ALLOC, covered by a PT_LOAD segment) and is
+/// pointed at by an exported dynamic symbol (<c>_assembly_store_start</c>).
+///
+/// This differs from <see cref="DSOWrapperGenerator"/>, which injects the
+/// payload with <c>llvm-objcopy --add-section</c> into a *non-loadable* section
+/// and requires the runtime to locate the store inside the APK (ZIP central
+/// directory parsing), mmap it and walk the ELF section headers by hand.
+///
+/// With this layout the CoreCLR runtime can instead simply
+/// <c>dlopen("libassembly-store.so")</c> + <c>dlsym("_assembly_store_start")</c>
+/// and let the dynamic linker locate + map the payload.
+///
+/// The wrapper is built with the shipped binutils (<c>llvm-mc</c> to assemble a
+/// tiny <c>.incbin</c> stub, <c>ld</c> to link a shared object). No clang is
+/// required.
+/// </summary>
+static class DlopenAssemblyStoreGenerator
+{
+	public const string PayloadStartSymbol = "_assembly_store_start";
+
+	// 16k so the payload is page-aligned on both 4k and 16k page-size devices.
+	const int PayloadAlignment = 16384;
+
+	static (string Triple, string ElfArch, int MaxPageSize) GetArchToolInfo (AndroidTargetArch arch) => arch switch {
+		AndroidTargetArch.Arm64  => ("aarch64-linux-android",   "aarch64linux",       16384),
+		AndroidTargetArch.Arm    => ("armv7-linux-androideabi",  "armelf_linux_eabi",  4096),
+		AndroidTargetArch.X86    => ("i686-linux-android",       "elf_i386",           4096),
+		AndroidTargetArch.X86_64 => ("x86_64-linux-android",     "elf_x86_64",         16384),
+		_ => throw new NotSupportedException ($"Unsupported Android target architecture: {arch}"),
+	};
+
+	/// <summary>
+	/// Wraps <paramref name="payloadFilePath"/> (the raw assembly-store blob) into a loadable-symbol
+	/// shared library and returns the path to the produced .so.
+	/// </summary>
+	public static string WrapIt (TaskLoggingHelper log, DSOWrapperGenerator.Config config, AndroidTargetArch targetArch, string payloadFilePath, string outputFileName)
+	{
+		var toolInfo = GetArchToolInfo (targetArch);
+
+		string outputDir = Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped-dlopen");
+		Directory.CreateDirectory (outputDir);
+
+		string outputFile = Path.Combine (outputDir, outputFileName);
+		string objFile = Path.Combine (outputDir, outputFileName + ".o");
+		string asmFile = Path.Combine (outputDir, outputFileName + ".S");
+
+		log.LogDebugMessage ($"[{targetArch}] Wrapping '{payloadFilePath}' into loadable-symbol shared library '{outputFile}'");
+
+		// The `.incbin` uses an absolute path so we don't depend on the assembler's working directory.
+		string incbinPath = payloadFilePath.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
+		string asm = $"""
+				.section .payload, "a"
+				.balign {PayloadAlignment}
+				.globl {PayloadStartSymbol}
+			{PayloadStartSymbol}:
+				.incbin "{incbinPath}"
+
+			""";
+		File.WriteAllText (asmFile, asm);
+
+		string llvmMc = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-mc"));
+		var mcArgs = new List<string> {
+			"--filetype=obj",
+			$"-triple={toolInfo.Triple}",
+			$"-o {MonoAndroidHelper.QuoteFileNameArgument (objFile)}",
+			MonoAndroidHelper.QuoteFileNameArgument (asmFile),
+		};
+
+		int ret = MonoAndroidHelper.RunProcess (llvmMc, String.Join (" ", mcArgs), log);
+		if (ret != 0) {
+			log.LogError ($"Failed to assemble assembly-store wrapper for '{targetArch}' (llvm-mc exit code {ret})");
+			return outputFile;
+		}
+
+		string ld = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "ld"));
+		var ldArgs = new List<string> {
+			"--shared",
+			$"-soname {MonoAndroidHelper.QuoteFileNameArgument (outputFileName)}",
+			$"-m {toolInfo.ElfArch}",
+			$"-z max-page-size={toolInfo.MaxPageSize}",
+			"--build-id=sha1",
+			$"--export-dynamic-symbol={PayloadStartSymbol}",
+			$"-o {MonoAndroidHelper.QuoteFileNameArgument (outputFile)}",
+			MonoAndroidHelper.QuoteFileNameArgument (objFile),
+		};
+
+		ret = MonoAndroidHelper.RunProcess (ld, String.Join (" ", ldArgs), log);
+		if (ret != 0) {
+			log.LogError ($"Failed to link assembly-store wrapper for '{targetArch}' (ld exit code {ret})");
+			return outputFile;
+		}
+
+		return outputFile;
+	}
+}

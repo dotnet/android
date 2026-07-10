@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <dirent.h>
+#include <dlfcn.h>
 
 #include <cerrno>
 #include <cstdio>
@@ -262,6 +263,14 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 		return;
 	}
 
+	// EXPERIMENTAL fast path (self-detecting): when the assembly store was wrapped so that its
+	// payload is exposed via the `_assembly_store_start` dynamic symbol, the dynamic linker has
+	// already located and mapped it out of the APK for us. In that case we skip parsing the APK
+	// ZIP central directory entirely and just resolve the payload with dlopen()+dlsym().
+	if (try_map_assembly_store_via_dlopen ()) {
+		return;
+	}
+
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	bool got_split_config_abi_apk = false;
 	std::string_view base_apk{};
@@ -295,6 +304,30 @@ void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, 
 		abort_unless (!base_apk.empty (), "Split config APKs are used, but no ABI config was found and no base.apk was encountered.");
 		Zip::scan_archive (base_apk, zip_scan_callback);
 	}
+}
+
+auto Host::try_map_assembly_store_via_dlopen () noexcept -> bool
+{
+	const char *store_name = Constants::assembly_store_file_name.data ();
+
+	void *handle = ::dlopen (store_name, RTLD_NOW | RTLD_GLOBAL);
+	if (handle == nullptr) {
+		log_debug (LOG_ASSEMBLY, "dlopen('{}') failed ({}); falling back to APK scan"sv, optional_string (store_name), optional_string (::dlerror ()));
+		return false;
+	}
+
+	void *payload = ::dlsym (handle, DLOPEN_ASSEMBLY_STORE_SYMBOL.data ());
+	if (payload == nullptr) {
+		// Not a dlopen-style assembly store (no exported symbol); keep the legacy behavior.
+		log_debug (LOG_ASSEMBLY, "Symbol '{}' not found in '{}'; falling back to APK scan"sv, DLOPEN_ASSEMBLY_STORE_SYMBOL, optional_string (store_name));
+		::dlclose (handle);
+		return false;
+	}
+
+	// NOTE: intentionally not calling dlclose() on success - we keep the store mapped.
+	AssemblyStore::map_from_pointer (payload, store_name);
+	found_assembly_store = true;
+	return true;
 }
 
 [[gnu::always_inline]]
