@@ -35,7 +35,7 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 	/// <summary>
 	/// When true (always the case for CoreCLR), the assembly store is wrapped into a shared library
-	/// whose payload is exported via the <c>_assembly_store_start</c> dynamic symbol, so the runtime
+	/// whose payload is exported via the <c>_assembly_store</c> dynamic symbol, so the runtime
 	/// can locate it with <c>dlopen</c>+<c>dlsym</c> instead of parsing the APK ZIP directory.
 	/// When false (MonoVM), the classic <see cref="DSOWrapperGenerator"/> layout is used instead.
 	/// </summary>

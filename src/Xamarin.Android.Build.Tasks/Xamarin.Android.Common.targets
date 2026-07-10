@@ -338,7 +338,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' == 'true' ">true</_AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' != 'true' ">false</_AndroidUseAssemblyStore>
   <!-- CoreCLR's native host ONLY supports the dlopen()-based assembly store: the store is wrapped as
-       a real shared library whose payload is exposed via the `_assembly_store_start` dynamic symbol,
+       a real shared library whose payload is exposed via the `_assembly_store` dynamic symbol,
        and the host resolves it with dlopen()+dlsym() (there is no ZIP-scanning fallback). This value
        is intentionally hardcoded and MUST NOT be overridden. -->
   <_AndroidDlopenAssemblyStore>true</_AndroidDlopenAssemblyStore>

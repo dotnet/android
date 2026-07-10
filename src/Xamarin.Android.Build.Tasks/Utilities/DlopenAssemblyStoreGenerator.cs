@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks;
 /// <summary>
 /// Produces the CoreCLR assembly-store wrapper shared library, whose payload lives in a
 /// *loadable* ELF section (SHF_ALLOC, covered by a PT_LOAD segment) and is
-/// pointed at by an exported dynamic symbol (<c>_assembly_store_start</c>).
+/// pointed at by an exported dynamic symbol (<c>_assembly_store</c>).
 ///
 /// This differs from <see cref="DSOWrapperGenerator"/> (used by MonoVM), which injects the
 /// payload with <c>llvm-objcopy --add-section</c> into a *non-loadable* section
@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks;
 /// directory parsing), mmap it and walk the ELF section headers by hand.
 ///
 /// With this layout the CoreCLR runtime simply
-/// <c>dlopen("libassembly-store.so")</c> + <c>dlsym("_assembly_store_start")</c>
+/// <c>dlopen("libassembly-store.so")</c> + <c>dlsym("_assembly_store")</c>
 /// and lets the dynamic linker locate + map the payload.
 ///
 /// The wrapper is built with the shipped binutils (<c>llvm-mc</c> to assemble a
@@ -29,7 +29,11 @@ namespace Xamarin.Android.Tasks;
 /// </summary>
 static class DlopenAssemblyStoreGenerator
 {
-	public const string PayloadStartSymbol = "_assembly_store_start";
+	public const string PayloadStartSymbol = "_assembly_store";
+
+	// Section name that holds the payload. Must match the name `tools/assembly-store-reader-mk2`
+	// (Utils.FindELFPayloadSectionOffsetAndSize) looks for and the one `DSOWrapperGenerator` uses.
+	const string PayloadSectionName = "payload";
 
 	// 16k so the payload is page-aligned on both 4k and 16k page-size devices.
 	const int PayloadAlignment = 16384;
@@ -60,9 +64,11 @@ static class DlopenAssemblyStoreGenerator
 		log.LogDebugMessage ($"[{targetArch}] Wrapping '{payloadFilePath}' into loadable-symbol shared library '{outputFile}'");
 
 		// The `.incbin` uses an absolute path so we don't depend on the assembler's working directory.
+		// The section is named `payload` (no leading dot) to match the name the MonoVM
+		// `DSOWrapperGenerator` uses and that `tools/assembly-store-reader-mk2` looks for.
 		string incbinPath = payloadFilePath.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
 		string asm = $"""
-				.section .payload, "a"
+				.section {PayloadSectionName}, "a"
 				.balign {PayloadAlignment}
 				.globl {PayloadStartSymbol}
 			{PayloadStartSymbol}:

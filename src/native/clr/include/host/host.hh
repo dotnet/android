@@ -35,7 +35,7 @@ namespace xamarin::android {
 
 	private:
 		// Must match `DlopenAssemblyStoreGenerator.PayloadStartSymbol` in the build tasks.
-		static constexpr std::string_view DLOPEN_ASSEMBLY_STORE_SYMBOL { "_assembly_store_start" };
+		static constexpr std::string_view DLOPEN_ASSEMBLY_STORE_SYMBOL { "_assembly_store" };
 
 		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
 		static void map_assembly_store_via_dlopen (const char *store_path) noexcept;

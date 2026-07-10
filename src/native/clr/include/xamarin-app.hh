@@ -192,18 +192,18 @@ struct [[gnu::packed]] AssemblyStoreEntryDescriptor final
 
 struct AssemblyStoreRuntimeData final
 {
-	uint8_t             *data_start;
+	const uint8_t       *data_start;
 	uint32_t             assembly_count;
 	uint32_t             index_entry_count;
-	AssemblyStoreEntryDescriptor *assemblies;
+	const AssemblyStoreEntryDescriptor *assemblies;
 };
 
 struct AssemblyStoreSingleAssemblyRuntimeData final
 {
-	uint8_t             *image_data;
-	uint8_t             *debug_info_data;
-	uint8_t             *config_data;
-	AssemblyStoreEntryDescriptor *descriptor;
+	const uint8_t       *image_data;
+	const uint8_t       *debug_info_data;
+	const uint8_t       *config_data;
+	const AssemblyStoreEntryDescriptor *descriptor;
 };
 
 // Keep in strict sync with:

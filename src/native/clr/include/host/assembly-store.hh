@@ -18,9 +18,9 @@ namespace xamarin::android {
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
 
 		// Configure the store directly from an in-memory payload pointer (obtained via
-		// dlopen()+dlsym() of the `_assembly_store_start` dynamic symbol). `get_full_store_path`
+		// dlopen()+dlsym() of the `_assembly_store` dynamic symbol). `get_full_store_path`
 		// is invoked only to build diagnostics if the payload turns out to be invalid.
-		static void configure_from_payload (void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept;
+		static void configure_from_payload (const void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept;
 
 	private:
 		static void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
@@ -30,7 +30,7 @@ namespace xamarin::android {
 		static auto find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*;
 
 	private:
-		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
+		static inline const AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
 		static inline std::mutex  assembly_decompress_mutex {};
 	};
 }

@@ -208,7 +208,7 @@ void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapp
 	}
 
 	// The assembly store is wrapped as a real shared library whose payload is exposed via the
-	// `_assembly_store_start` dynamic symbol, so the dynamic linker has already located and mapped
+	// `_assembly_store` dynamic symbol, so the dynamic linker has already located and mapped
 	// it out of the APK for us. We resolve the payload with dlopen()+dlsym() instead of parsing the
 	// APK ZIP central directory ourselves.
 	map_assembly_store_via_dlopen (Constants::assembly_store_file_name.data ());
