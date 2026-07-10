@@ -216,7 +216,9 @@ void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapp
 
 void Host::map_assembly_store_via_dlopen (const char *store_path) noexcept
 {
-	void *handle = ::dlopen (store_path, RTLD_NOW | RTLD_GLOBAL);
+	// RTLD_LOCAL: we only dlsym() our own handle, so there's no need to add the store's symbols to
+	// the global lookup scope (RTLD_GLOBAL would just add linker bookkeeping).
+	void *handle = ::dlopen (store_path, RTLD_NOW | RTLD_LOCAL);
 	if (handle == nullptr) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
