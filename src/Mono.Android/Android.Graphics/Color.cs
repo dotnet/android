@@ -18,7 +18,6 @@ namespace Android.Graphics
 	{
 		private int color;
 
-		#region Constuctors
 		public Color (int argb)
 		{
 			color = argb;
@@ -48,9 +47,7 @@ namespace Android.Graphics
 		{
 			color = FromArgb (r, g, b, a);
 		}
-		#endregion
 
-		#region Public Properties
 		/// <summary>
 		/// Gets or sets the alpha (opacity) component of the color, where 0 is fully transparent and 255 is fully opaque.
 		/// </summary>
@@ -74,9 +71,7 @@ namespace Android.Graphics
 		/// </summary>
 		/// <value>A <see cref="byte"/> representing the red component, in the range 0–255.</value>
 		public byte R { get { return (byte)(color >> 16); } set { color = FromArgb (value, G, B, A); } }
-		#endregion
 
-		#region Public Methods
 		public int ToArgb ()
 		{
 			return color;
@@ -146,9 +141,7 @@ namespace Android.Graphics
 
 			return hue;
 		}
-		#endregion
 
-		#region Public Static Methods
 		/// <summary>
 		/// Extracts the alpha (opacity) component from a packed ARGB color integer, where 0 is fully transparent and 255 is fully opaque.
 		/// </summary>
@@ -199,9 +192,7 @@ namespace Android.Graphics
 			int alpha = 255;
 			return new Color ((int)((uint)alpha << 24) | (red << 16) | (green << 8) | blue);
 		}
-		#endregion
 
-		#region Operators
 		public static bool operator == (Color left, Color right)
 		{
 			return left.color == right.color;
@@ -221,9 +212,7 @@ namespace Android.Graphics
 		{
 			return color;
 		}
-		#endregion
 
-		#region Private Methods
 		private static int FromRgb (int red, int green, int blue)
 		{
 			int alpha = 255;
@@ -285,9 +274,7 @@ namespace Android.Graphics
 		{
 			ColorObject.RGBToHSV (red, green, blue, hsv);
 		}
-		#endregion
 
-		#region Known Colors
 		public static Color Transparent { get { return new Color (0x000000); } }
 		public static Color AliceBlue { get { return new Color (0xFFF0F8FF); } }
 		public static Color AntiqueWhite { get { return new Color (0xFFFAEBD7); } }
@@ -429,23 +416,17 @@ namespace Android.Graphics
 		public static Color WhiteSmoke { get { return new Color (0xFFF5F5F5); } }
 		public static Color Yellow { get { return new Color (0xFFFFFF00); } }
 		public static Color YellowGreen { get { return new Color (0xFF9ACD32); } }
-		#endregion
 	}
 
 	public class ColorValueMarshaler : JniValueMarshaler<Color>
 	{
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
 
 		public override Type MarshalType {
 			get { return typeof (int); }
 		}
 
-		public override Color CreateGenericValue (
-				ref JniObjectReference reference,
-				JniObjectReferenceOptions options,
-				[DynamicallyAccessedMembers (Constructors)]
-				Type targetType)
+		public override Color CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
 		{
 			throw new NotImplementedException ();
 		}

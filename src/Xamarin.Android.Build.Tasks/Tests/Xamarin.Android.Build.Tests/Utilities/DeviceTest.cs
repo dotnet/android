@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,20 @@ namespace Xamarin.Android.Build.Tests
 	public class DeviceTest: BaseTest
 	{
 		public const string GuestUserName = "guest1";
+
+		// When running on CI we often see failures where the test fails to spot the "Displayed:" line
+		// because time between when we start logging and when the application actually is launched
+		// by the emulator is longer than the timeout we specify (usually 30s). Use this constant as the
+		// default timeout for all the activity start monitoring calls, adjust per-test as necessary.
+		//
+		// Sometimes emulators, for whatever reason, launch the app after a delay of up to 100s and the
+		// logcat is filled with time-consuming Java exceptions unrelated to our test. We need to account
+		// for that. Most of the tests used 30s as the activity start timeout, so let's give the emulator
+		// up to 2 minutes to gather all its ducks in the row + 30 "standard" seconds for our test app
+		// to start.
+		//
+		// It is recommended that no test waiting for the "Displayed:" message waits shorter than this
+		public const int ActivityStartTimeoutInSeconds = 150;
 
 		protected string DeviceAbi { get; private set; }
 
@@ -51,6 +66,59 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					Assert.Ignore (message);
 				}
+			}
+		}
+
+		/// <summary>
+		/// Probes the Android package manager service the same way `bundletool build-apks
+		/// --connected-device` (which runs `pm list features`) and `adb install` do. On CI the
+		/// emulator's system_server sometimes wedges while `adb shell echo OK` still succeeds, so
+		/// <see cref="IsDeviceAttached"/> reports the device as healthy even though every subsequent
+		/// build/install fails deep inside a test with a cryptic
+		/// "Failure calling service package: Broken pipe" (XABAS0000). Retries a few times so a
+		/// momentary hiccup does not trigger an unnecessary emulator restart.
+		/// </summary>
+		protected static bool IsPackageManagerResponsive (out string diagnostic)
+		{
+			string output = "";
+			for (int attempt = 0; attempt < 3; attempt++) {
+				output = (RunAdbCommand ("shell pm list features", timeout: 30) ?? "").Trim ();
+				bool broken = output.Contains ("Failure calling service", StringComparison.OrdinalIgnoreCase) ||
+					output.Contains ("Broken pipe", StringComparison.OrdinalIgnoreCase) ||
+					output.Contains ("Can't find service", StringComparison.OrdinalIgnoreCase);
+				// A responsive package service always lists the framework's own features.
+				if (!broken && output.Contains ("feature:", StringComparison.OrdinalIgnoreCase)) {
+					diagnostic = output;
+					return true;
+				}
+				WaitFor ((int) TimeSpan.FromSeconds (2).TotalMilliseconds);
+			}
+			diagnostic = output;
+			return false;
+		}
+
+		/// <summary>
+		/// Fails fast, with a clear reason, when the emulator's package manager service is
+		/// unusable — instead of letting the app build/install fail cryptically later and
+		/// reporting an emulator crash as N unrelated test failures. Attempts one emulator
+		/// restart first; if the service is still broken the run is marked inconclusive
+		/// (an infrastructure problem, not a product regression).
+		/// </summary>
+		protected void AssertPackageManagerResponsive ()
+		{
+			if (IsPackageManagerResponsive (out _)) {
+				return;
+			}
+
+			TestContext.Out.WriteLine ("Android package manager service is unresponsive; restarting the emulator.");
+			RestartDevice ();
+			AssertHasDevices ();
+
+			if (!IsPackageManagerResponsive (out string diagnostic)) {
+				Assert.Inconclusive (
+					"Android package manager service is unresponsive even after restarting the emulator " +
+					"(system_server likely crashed). Skipping so an emulator failure is not reported as a test failure. " +
+					$"Last 'adb shell pm list features' output: {diagnostic}");
 			}
 		}
 
@@ -111,6 +179,11 @@ namespace Xamarin.Android.Build.Tests
 				AssertHasDevices ();
 			}
 
+			// `adb shell echo OK` can succeed while the package manager service is wedged, so
+			// verify it is responsive before a test wastes time building/installing an app that
+			// would otherwise fail with a cryptic "Failure calling service package" error.
+			AssertPackageManagerResponsive ();
+
 			// We want to start with a clean logcat buffer for each test
 			ClearAdbLogcat ();
 		}
@@ -145,9 +218,53 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					TestContext.WriteLine ($"{localUi} did not exist!");
 				}
+
+				CaptureDeviceState (outputDir);
 			}
 
 			base.CleanupTest ();
+		}
+
+		// Best-effort device-state snapshot captured on test failure so that on-device
+		// install/deploy failures can be classified from CI artifacts instead of guessed:
+		// connectivity (adb devices/get-state), disk pressure (df, dumpsys diskstats),
+		// storage-service readiness (dumpsys storaged - the StorageStatsManager NPE seen
+		// during install-create), boot completion, and how many test apps have piled up.
+		// See dotnet/android#11830.
+		static void CaptureDeviceState (string outputDir)
+		{
+			// Re-check attachment (the cached value can be stale if the device
+			// disconnected mid-test); otherwise each adb command below would wait
+			// the full timeout against an unresponsive device.
+			if (!IsDeviceAttached (refreshCachedValue: true)) {
+				TestContext.WriteLine ("No device attached; skipping device-state capture.");
+				return;
+			}
+
+			var sb = new StringBuilder ();
+			foreach (var (title, command) in new [] {
+					("adb devices -l", "devices -l"),
+					("adb get-state", "get-state"),
+					("getprop sys.boot_completed", "shell getprop sys.boot_completed"),
+					("getprop dev.bootcomplete", "shell getprop dev.bootcomplete"),
+					("df /data", "shell df /data"),
+					("df /storage/emulated/0", "shell df /storage/emulated/0"),
+					("dumpsys diskstats", "shell dumpsys diskstats"),
+					("dumpsys storaged", "shell dumpsys storaged"),
+					("pm list packages -3", "shell pm list packages -3"),
+				}) {
+				sb.AppendLine (CultureInfo.InvariantCulture, $"===== {title} =====");
+				sb.AppendLine (RunAdbCommand (command));
+				sb.AppendLine ();
+			}
+
+			string localState = Path.Combine (outputDir, "device-state-failed.log");
+			File.WriteAllText (localState, sb.ToString ());
+			if (File.Exists (localState)) {
+				TestContext.AddTestAttachment (localState);
+			} else {
+				TestContext.WriteLine ($"{localState} did not exist!");
+			}
 		}
 
 		protected int GetSdkVersion ()

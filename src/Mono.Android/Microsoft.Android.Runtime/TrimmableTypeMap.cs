@@ -21,6 +21,7 @@ public class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
+	static readonly JavaArrayProxy s_noArrayProxySentinel = new MissingJavaArrayProxy ();
 	static TrimmableTypeMap? s_instance;
 	static bool s_nativeMethodsRegistered;
 	static JniMethodInfo? s_classGetInterfacesMethod;
@@ -31,6 +32,7 @@ public class TrimmableTypeMap
 
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
+	readonly ConcurrentDictionary<Type, JavaArrayProxy> _arrayProxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
 
@@ -201,7 +203,7 @@ public class TrimmableTypeMap
 		if (proxies.Length == 0) {
 			return null;
 		}
-		if (proxies.Length == 1 || targetType is null) {
+		if (targetType is null) {
 			return proxies [0];
 		}
 		foreach (var proxy in proxies) {
@@ -239,154 +241,154 @@ public class TrimmableTypeMap
 			return null;
 		}
 
-		return TryGetProxyFromHierarchy (this, handle, targetType) ??
-			TryGetProxyFromTargetType (this, handle, targetType);
+		return TryGetProxyFromHierarchy (handle, targetType) ??
+			TryGetProxyFromTargetType (handle, targetType);
+	}
 
-		static JavaPeerProxy? TryGetProxyFromHierarchy (TrimmableTypeMap self, IntPtr handle, Type? targetType)
-		{
-			var selfRef = new JniObjectReference (handle);
-			var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
+	JavaPeerProxy? TryGetProxyFromHierarchy (IntPtr handle, Type? targetType)
+	{
+		var selfRef = new JniObjectReference (handle);
+		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
 
-			try {
-				while (jniClass.IsValid) {
-					var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
-					if (className != null) {
-						var proxy = self.GetProxyForJniClass (className, targetType);
-						if (proxy != null && (targetType is null || TargetTypeMatches (targetType, proxy.TargetType))) {
+		try {
+			while (jniClass.IsValid) {
+				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
+				if (className is not null) {
+					var proxy = GetProxyForJniClass (className, targetType);
+					if (proxy is not null) {
+						return proxy;
+					}
+				}
+
+				// When targetType is an interface, also check the Java interfaces
+				// at each level. getInterfaces() only returns directly declared
+				// interfaces so we must call it at each class in the hierarchy.
+				// This handles the case where an intermediate class entry (e.g.,
+				// X509ExtendedTrustManager) was trimmed but the Java interface
+				// entry (e.g., X509TrustManager) survives.
+				if (targetType is { IsInterface: true } && className != null) {
+					var result = GetProxyForJavaInterfaces (jniClass, className, targetType);
+					if (result != null) {
+						return result;
+					}
+				}
+
+				var super = JniEnvironment.Types.GetSuperclass (jniClass);
+				JniObjectReference.Dispose (ref jniClass);
+				jniClass = super;
+			}
+		} finally {
+			JniObjectReference.Dispose (ref jniClass);
+		}
+
+		return null;
+	}
+
+	JavaPeerProxy? GetProxyForJavaInterfaces (JniObjectReference jniClass, string className, Type targetType)
+	{
+		var proxy = _interfaceProxyCache.GetOrAdd (
+			(className, targetType),
+			_ => TryMatchInterfaces (jniClass, targetType) ?? s_noPeerSentinel);
+		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
+	}
+
+	// getInterfaces() returns only directly declared interfaces (not transitive),
+	// so we recurse into super-interfaces to find the matching TypeMap entry.
+	JavaPeerProxy? TryMatchInterfaces (JniObjectReference jniClass, Type targetType)
+	{
+		var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
+		try {
+			if (!interfaces.IsValid) {
+				return null;
+			}
+
+			int count = JniEnvironment.Arrays.GetArrayLength (interfaces);
+			for (int i = 0; i < count; i++) {
+				var iface = JniEnvironment.Arrays.GetObjectArrayElement (interfaces, i);
+				try {
+					var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
+					if (ifaceName is not null) {
+						var proxy = GetProxyForJniClass (ifaceName, targetType);
+						if (proxy is not null) {
 							return proxy;
 						}
 					}
 
-					// When targetType is an interface, also check the Java interfaces
-					// at each level. getInterfaces() only returns directly declared
-					// interfaces so we must call it at each class in the hierarchy.
-					// This handles the case where an intermediate class entry (e.g.,
-					// X509ExtendedTrustManager) was trimmed but the Java interface
-					// entry (e.g., X509TrustManager) survives.
-					if (targetType is { IsInterface: true } && className != null) {
-						var result = GetProxyForJavaInterfaces (self, jniClass, className, targetType);
-						if (result != null) {
-							return result;
-						}
+					// Recurse into super-interfaces
+					var result = TryMatchInterfaces (iface, targetType);
+					if (result is not null) {
+						return result;
 					}
-
-					var super = JniEnvironment.Types.GetSuperclass (jniClass);
-					JniObjectReference.Dispose (ref jniClass);
-					jniClass = super;
+				} finally {
+					JniObjectReference.Dispose (ref iface);
 				}
-			} finally {
-				JniObjectReference.Dispose (ref jniClass);
 			}
+		} finally {
+			JniObjectReference.Dispose (ref interfaces);
+		}
 
+		return null;
+	}
+
+	static JniMethodInfo GetClassGetInterfacesMethod ()
+	{
+		var method = s_classGetInterfacesMethod;
+		if (method != null) {
+			return method;
+		}
+
+		var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
+		try {
+			method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
+		} finally {
+			JniObjectReference.Dispose (ref classClass);
+		}
+
+		var previous = Interlocked.CompareExchange (ref s_classGetInterfacesMethod, method, null);
+		return previous ?? method;
+	}
+
+	JavaPeerProxy? TryGetProxyFromTargetType (IntPtr handle, Type? targetType)
+	{
+		if (targetType is null) {
 			return null;
 		}
 
-		static JavaPeerProxy? GetProxyForJavaInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, string className, Type targetType)
-		{
-			var proxy = self._interfaceProxyCache.GetOrAdd (
-				(className, targetType),
-				_ => TryMatchInterfaces (self, jniClass, targetType) ?? s_noPeerSentinel);
-			return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
-		}
-
-		// getInterfaces() returns only directly declared interfaces (not transitive),
-		// so we recurse into super-interfaces to find the matching TypeMap entry.
-		static JavaPeerProxy? TryMatchInterfaces (TrimmableTypeMap self, JniObjectReference jniClass, Type targetType)
-		{
-			var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
-			try {
-				if (!interfaces.IsValid) {
-					return null;
-				}
-
-				int count = JniEnvironment.Arrays.GetArrayLength (interfaces);
-				for (int i = 0; i < count; i++) {
-					var iface = JniEnvironment.Arrays.GetObjectArrayElement (interfaces, i);
-					try {
-						var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
-						if (ifaceName != null) {
-							var proxy = self.GetProxyForJniClass (ifaceName, targetType);
-							if (proxy != null && TargetTypeMatches (targetType, proxy.TargetType)) {
-								return proxy;
-							}
-						}
-
-						// Recurse into super-interfaces
-						var result = TryMatchInterfaces (self, iface, targetType);
-						if (result != null) {
-							return result;
-						}
-					} finally {
-						JniObjectReference.Dispose (ref iface);
-					}
-				}
-			} finally {
-				JniObjectReference.Dispose (ref interfaces);
-			}
-
+		var proxy = GetProxyForManagedType (targetType);
+		// Verify the Java object is actually assignable to the target Java type
+		// before returning the fallback proxy. Without this, we'd create invalid peers
+		// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
+		if (proxy is null || !TryGetJniNameForManagedType (targetType, out var targetJniName)) {
 			return null;
 		}
 
-		static JniMethodInfo GetClassGetInterfacesMethod ()
-		{
-			var method = s_classGetInterfacesMethod;
-			if (method != null) {
-				return method;
-			}
-
-			var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
+		var selfRef = new JniObjectReference (handle);
+		var objClass = default (JniObjectReference);
+		var targetClass = default (JniObjectReference);
+		try {
+			objClass = JniEnvironment.Types.GetObjectClass (selfRef);
 			try {
-				method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
-			} finally {
-				JniObjectReference.Dispose (ref classClass);
-			}
-
-			var previous = Interlocked.CompareExchange (ref s_classGetInterfacesMethod, method, null);
-			return previous ?? method;
-		}
-
-		static JavaPeerProxy? TryGetProxyFromTargetType (TrimmableTypeMap self, IntPtr handle, Type? targetType)
-		{
-			if (targetType is null) {
+				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+			} catch (Java.Lang.ClassNotFoundException) {
+				// FindClass throws for managed types whose Java peer class is
+				// not present in the APK (e.g. test types annotated with
+				// [JniTypeSignature("__missing__")]). Treat as "no match" so
+				// TrimmableTypeMapValueManager.CreatePeer can surface the correct
+				// ArgumentException instead of leaking ClassNotFoundException.
 				return null;
 			}
-
-			var proxy = self.GetProxyForManagedType (targetType);
-			// Verify the Java object is actually assignable to the target Java type
-			// before returning the fallback proxy. Without this, we'd create invalid peers
-			// (e.g., IAppendableInvoker wrapping a java.lang.Integer).
-			if (proxy is null || !self.TryGetJniNameForManagedType (targetType, out var targetJniName)) {
-				return null;
-			}
-
-			var selfRef = new JniObjectReference (handle);
-			var objClass = default (JniObjectReference);
-			var targetClass = default (JniObjectReference);
-			try {
-				objClass = JniEnvironment.Types.GetObjectClass (selfRef);
-				try {
-					targetClass = JniEnvironment.Types.FindClass (targetJniName);
-				} catch (Java.Lang.ClassNotFoundException) {
-					// FindClass throws for managed types whose Java peer class is
-					// not present in the APK (e.g. test types annotated with
-					// [JniTypeSignature("__missing__")]). Treat as "no match" so
-					// JavaMarshalValueManager.CreatePeer can surface the correct
-					// ArgumentException instead of leaking ClassNotFoundException.
-					return null;
-				}
-				var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
-				return isAssignable ? proxy : null;
-			} finally {
-				JniObjectReference.Dispose (ref objClass);
-				JniObjectReference.Dispose (ref targetClass);
-			}
+			var isAssignable = JniEnvironment.Types.IsAssignableFrom (objClass, targetClass);
+			return isAssignable ? proxy : null;
+		} finally {
+			JniObjectReference.Dispose (ref objClass);
+			JniObjectReference.Dispose (ref targetClass);
 		}
 	}
 
 	internal IJavaPeerable? CreateInstance (
-			IntPtr handle,
-			[DynamicallyAccessedMembers (Constructors)]
-			Type? targetType = null)
+		IntPtr handle,
+		[DynamicallyAccessedMembers (Constructors)]
+		Type? targetType = null)
 	{
 		var proxy = GetProxyForJavaObject (handle, targetType);
 
@@ -492,15 +494,6 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Gets the invoker type for an interface or abstract class from the proxy attribute.
-	/// </summary>
-	[return: DynamicallyAccessedMembers (Constructors)]
-	internal Type? GetInvokerType (Type type)
-	{
-		return GetProxyForManagedType (type)?.InvokerType;
-	}
-
-	/// <summary>
 	/// Gets the container factory for a type from its proxy attribute.
 	/// Used for AOT-safe array/collection/dictionary creation.
 	/// </summary>
@@ -509,64 +502,70 @@ public class TrimmableTypeMap
 		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
-	/// <summary>AOT-safe lookup of the closed managed array type for the given element type.</summary>
-	internal bool TryGetArrayType (Type elementType, [NotNullWhen (true)] out Type? arrayType)
+	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>
+	internal bool TryGetArrayProxy (Type elementType, int additionalRank, [NotNullWhen (true)] out JavaArrayProxy? arrayProxy)
 	{
-		arrayType = null;
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero (additionalRank);
 
-		// Walk array nesting to the leaf; rankIndex = depth = (rank - 1).
-		// Reject multi-dim arrays (byte[,]) — JNI only supports szarrays.
-		var leaf = elementType;
-		int rankIndex = 0;
-		while (leaf.IsArray) {
-			if (!leaf.IsSZArray) {
+		var leafType = elementType;
+		int rankIndex = additionalRank - 1;
+		while (leafType.IsArray) {
+			if (!leafType.IsSZArray) {
+				arrayProxy = null;
 				return false;
 			}
-			var next = leaf.GetElementType ();
+			var next = leafType.GetElementType ();
 			if (next is null) {
+				arrayProxy = null;
 				return false;
 			}
-			leaf = next;
+			leafType = next;
 			rankIndex++;
 		}
 
-		bool isPrimitiveLeaf = leaf.IsPrimitive;
-		string? leafJniName = isPrimitiveLeaf
-			? TryGetPrimitiveJniName (leaf, out var p) ? p : null
-			: TryGetJniNameForManagedType (leaf, out var jni) ? jni : null;
-
-		if (leafJniName is not null && _typeMap.TryGetArrayType (leafJniName, rankIndex, out arrayType)) {
-			return true;
+		if (!TryGetManagedTypeKey (leafType, out var managedTypeKey)) {
+			arrayProxy = null;
+			return false;
 		}
 
-		if (isPrimitiveLeaf) {
-			arrayType = MakePrimitiveArrayType (elementType);
-			return true;
+		if (_typeMap.TryGetArrayProxyType (managedTypeKey, rankIndex, out var proxyType)) {
+			var proxy = _arrayProxyCache.GetOrAdd (proxyType, static type =>
+				type.GetCustomAttribute<JavaArrayProxy> (inherit: false) ?? s_noArrayProxySentinel);
+			if (!ReferenceEquals (proxy, s_noArrayProxySentinel)) {
+				arrayProxy = proxy;
+				return true;
+			}
 		}
 
+		arrayProxy = null;
 		return false;
 	}
 
-	static Type MakePrimitiveArrayType (Type elementType)
+	static bool TryGetManagedTypeKey (Type type, [NotNullWhen (true)] out string? key)
 	{
-#pragma warning disable IL3050 // Primitive array types are runtime intrinsic; no generated generic code is needed.
-		return elementType.MakeArrayType ();
-#pragma warning restore IL3050
+		var fullName = type.FullName;
+		if (fullName is null) {
+			key = null;
+			return false;
+		}
+
+		var assemblyName = GetAssemblyNameForManagedTypeKey (type);
+		if (assemblyName is null) {
+			key = null;
+			return false;
+		}
+
+		key = $"{fullName}, {assemblyName}";
+		return true;
 	}
 
-	/// <summary>JNI single-letter encoding for primitive element types.</summary>
-	static bool TryGetPrimitiveJniName (Type primitive, [NotNullWhen (true)] out string? jni)
+	static string? GetAssemblyNameForManagedTypeKey (Type type)
 	{
-		if (primitive == typeof (bool))   { jni = "Z"; return true; }
-		if (primitive == typeof (byte))   { jni = "B"; return true; }
-		if (primitive == typeof (char))   { jni = "C"; return true; }
-		if (primitive == typeof (short))  { jni = "S"; return true; }
-		if (primitive == typeof (int))    { jni = "I"; return true; }
-		if (primitive == typeof (long))   { jni = "J"; return true; }
-		if (primitive == typeof (float))  { jni = "F"; return true; }
-		if (primitive == typeof (double)) { jni = "D"; return true; }
-		jni = null;
-		return false;
+		if (type.IsPrimitive || type == typeof (string)) {
+			return "System.Runtime";
+		}
+
+		return type.Assembly.GetName ().Name;
 	}
 
 	[UnmanagedCallersOnly]
@@ -605,11 +604,18 @@ public class TrimmableTypeMap
 
 	sealed class MissingJavaPeerProxy : JavaPeerProxy
 	{
-		public MissingJavaPeerProxy () : base ("<missing>", typeof (Java.Lang.Object), null)
+		public MissingJavaPeerProxy () : base ("<missing>", typeof (Java.Lang.Object))
 		{
 		}
 
 		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+	}
+
+	sealed class MissingJavaArrayProxy : JavaArrayProxy
+	{
+		public override Type[] GetArrayTypes () => [];
+
+		public override Array CreateManagedArray (int length) => throw new NotSupportedException ();
 	}
 
 }

@@ -1,0 +1,298 @@
+<#@ template  language="C#" #>
+<#@ assembly  name="System.Core" #>
+<#@ import    namespace="System.Collections.Generic" #>
+<#@ import    namespace="System.Linq" #>
+<#@ import    namespace="System.Text" #>
+#nullable enable
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+
+using Java.Interop.Expressions;
+using System.Linq.Expressions;
+
+namespace Java.Interop {
+
+<#
+	var arrayTypeInfo = new[]{
+		new { JniType = "Z",    JniMarshalType  = "Boolean",    ManagedType = "Boolean",TypeModifier    = "Boolean" },
+		new { JniType = "B",    JniMarshalType  = "Byte",       ManagedType = "SByte",  TypeModifier    = "SByte" },
+		new { JniType = "C",    JniMarshalType  = "Char",       ManagedType = "Char",   TypeModifier    = "Char" },
+		new { JniType = "S",    JniMarshalType  = "Short",      ManagedType = "Int16",  TypeModifier    = "Int16" },
+		new { JniType = "I",    JniMarshalType  = "Int",        ManagedType = "Int32",  TypeModifier    = "Int32" },
+		new { JniType = "J",    JniMarshalType  = "Long",       ManagedType = "Int64",  TypeModifier    = "Int64" },
+		new { JniType = "F",    JniMarshalType  = "Float",      ManagedType = "Single", TypeModifier    = "Single" },
+		new { JniType = "D",    JniMarshalType  = "Double",     ManagedType = "Double", TypeModifier    = "Double" },
+	};
+#>
+	partial class JniRuntime {
+
+		partial class ReflectionJniTypeManager {
+
+			readonly struct JniPrimitiveArrayInfo {
+				public  readonly    JniTypeSignature    JniTypeSignature;
+				public  readonly    Type                PrimitiveType;
+				public  readonly    Type[]              ArrayTypes;
+
+				public JniPrimitiveArrayInfo (string jniSimpleReference, Type primitiveType, params Type[] arrayTypes)
+				{
+					JniTypeSignature    = new JniTypeSignature (jniSimpleReference, arrayRank: 1, keyword: true);
+					PrimitiveType       = primitiveType;
+					ArrayTypes          = arrayTypes;
+				}
+			}
+
+			static readonly JniPrimitiveArrayInfo[] JniPrimitiveArrayTypes = new JniPrimitiveArrayInfo[]{
+<#
+	foreach (var type in arrayTypeInfo) { 
+#>
+				new ("<#= type.JniType #>", typeof (<#= type.ManagedType #>), typeof (<#= type.ManagedType #>[]), typeof (JavaArray<<#= type.ManagedType #>>), typeof (JavaPrimitiveArray<<#= type.ManagedType #>>), typeof (Java<#= type.ManagedType #>Array)),
+<#
+	}
+#>
+			};
+
+			static bool GetBuiltInTypeArraySignature (Type type, ref JniTypeSignature signature)
+			{
+				foreach (var e in JniPrimitiveArrayTypes) {
+					if (Array.IndexOf (e.ArrayTypes, type) < 0)
+						continue;
+					signature   = e.JniTypeSignature;
+					return true;
+				}
+				signature   = default;
+				return false;
+			}
+		}
+
+		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniPrimitiveArrayMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniPrimitiveArrayMarshalers);
+
+		static KeyValuePair<Type, JniValueMarshaler>[] InitJniPrimitiveArrayMarshalers ()
+		{
+			return new [] {
+<#
+	foreach (var info in arrayTypeInfo) {
+#>
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (<#= info.ManagedType #>[]),                   Java<#= info.TypeModifier #>Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaArray<<#= info.ManagedType #>>),          Java<#= info.TypeModifier #>Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaPrimitiveArray<<#= info.ManagedType #>>), Java<#= info.TypeModifier #>Array.ArrayMarshaler),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (Java<#= info.TypeModifier #>Array),            Java<#= info.TypeModifier #>Array.ArrayMarshaler),
+<#
+	}
+#>
+			};
+		}
+	}
+
+<#
+	foreach (var info in arrayTypeInfo) {
+#>
+	partial class JniEnvironment {
+
+		partial class Arrays {
+
+			public static Java<#= info.TypeModifier #>Array? CreateMarshal<#= info.TypeModifier #>Array (System.Collections.Generic.IEnumerable<<#= info.ManagedType #>>? value)
+			{
+				if (value == null) {
+					return null;
+				}
+				if (value is Java<#= info.TypeModifier #>Array c) {
+					return c;
+				}
+				return new Java<#= info.TypeModifier #>Array (value) {
+					forMarshalCollection = true,
+				};
+			}
+		}
+	}
+
+	public sealed class Jni<#= info.TypeModifier #>ArrayElements : JniArrayElements {
+
+		JniObjectReference      arrayHandle;
+
+		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int size)
+			: base ((IntPtr) elements, size)
+		{
+			this.arrayHandle = arrayHandle;
+		}
+
+		public new unsafe <#= info.ManagedType #>* Elements {
+			get {return (<#= info.ManagedType #>*) base.Elements;}
+		}
+
+		public ref <#= info.ManagedType #> this [int index] {
+			get {
+				if (IsDisposed)
+					throw new ObjectDisposedException (GetType ().FullName);
+				unsafe {
+					return ref Elements [index];
+				}
+			}
+		}
+
+		protected override unsafe void Synchronize (JniReleaseArrayElementsMode releaseMode)
+		{
+			JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, releaseMode);
+		}
+	}
+
+	[JniTypeSignature ("<#= info.JniType #>", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
+	public sealed class Java<#= info.TypeModifier #>Array : JavaPrimitiveArray<<#= info.ManagedType #>> {
+
+		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
+
+		public Java<#= info.TypeModifier #>Array (ref JniObjectReference handle, JniObjectReferenceOptions options)
+			: base (ref handle, options)
+		{
+		}
+
+		public unsafe Java<#= info.TypeModifier #>Array (int length)
+			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+		{
+			var peer    = JniEnvironment.Arrays.New<#= info.JniMarshalType #>Array (CheckLength (length));
+			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
+		}
+
+		public Java<#= info.TypeModifier #>Array (System.Collections.Generic.IList<<#= info.ManagedType #>> value)
+			: this (CheckLength (value))
+		{
+			CopyFrom (ToArray (value), 0, 0, value.Count);
+		}
+
+		public Java<#= info.TypeModifier #>Array (System.Collections.Generic.IEnumerable<<#= info.ManagedType #>> value)
+			: this (ToArray (value))
+		{
+		}
+
+		protected override JniArrayElements CreateElements ()
+		{
+			return GetElements ();
+		}
+
+		public new unsafe Jni<#= info.TypeModifier #>ArrayElements GetElements ()
+		{
+			if (!PeerReference.IsValid)
+				throw JniEnvironment.CreateObjectDisposedException (this);
+			var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
+			if (elements == null)
+				throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");
+			return new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements, Length*sizeof (<#= info.ManagedType #>));
+		}
+
+		public override unsafe int IndexOf (<#= info.ManagedType #> item)
+		{
+			int len = Length;
+			if (len == 0)
+				return -1;
+			using (var e = GetElements ()) {
+				Debug.Assert (e != null, "Java.<#= info.TypeModifier #>.Array.GetElements() returned null! OOM?");
+				if (e == null)
+					return -1;      // IList<T>.IndexOf() documents no exceptions. :-/
+
+				for (int i = 0; i < len; ++i) {
+					if (e [i] == item)
+						return i;
+				}
+			}
+			return -1;
+		}
+
+		public override unsafe void Clear ()
+		{
+			int len = Length;
+			using (var e = GetElements ()) {
+				for (int i = 0; i < len; ++i) {
+					e [i] = default (<#= info.ManagedType #>);
+				}
+			}
+		}
+
+		public override unsafe void CopyTo (int sourceIndex, <#= info.ManagedType #>[] destinationArray, int destinationIndex, int length)
+		{
+			if (destinationArray == null)
+				throw new ArgumentNullException (nameof (destinationArray));
+			CheckArrayCopy (sourceIndex, Length, destinationIndex, destinationArray.Length, length);
+			if (destinationArray.Length == 0)
+				return;
+
+			fixed (<#= info.ManagedType #>* b = destinationArray)
+				JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
+		}
+
+		public override unsafe void CopyFrom (<#= info.ManagedType #>[] sourceArray, int sourceIndex, int destinationIndex, int length)
+		{
+			if (sourceArray == null)
+				throw new ArgumentNullException (nameof (sourceArray));
+			CheckArrayCopy (sourceIndex, sourceArray.Length, destinationIndex, Length, length);
+			if (sourceArray.Length == 0)
+				return;
+
+			fixed (<#= info.ManagedType #>* b = sourceArray)
+				JniEnvironment.Arrays.Set<#= info.JniMarshalType #>ArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
+		}
+
+		internal override bool TargetTypeIsCurrentType (Type? targetType)
+		{
+			return base.TargetTypeIsCurrentType (targetType) ||
+				typeof (JavaPrimitiveArray<<#= info.ManagedType #>>) == targetType ||
+				typeof (Java<#= info.TypeModifier #>Array) == targetType;
+		}
+
+		public static object? CreateMarshaledValue (
+				IntPtr handle,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
+		{
+			return ArrayMarshaler.CreateValue (handle, targetType);
+		}
+
+		internal sealed class ValueMarshaler : JniValueMarshaler<IList<<#= info.TypeModifier #>>> {
+
+			public override IList<<#= info.TypeModifier #>> CreateGenericValue (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					Type? targetType)
+			{
+				return JavaArray<<#= info.TypeModifier #>>.CreateValue (
+						ref reference,
+						options,
+						targetType,
+						(ref JniObjectReference h, JniObjectReferenceOptions o) => new Java<#= info.TypeModifier #>Array (ref h, o));
+			}
+
+			public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] IList<<#= info.TypeModifier #>> value, ParameterAttributes synchronize)
+			{
+				return JavaArray<<#= info.TypeModifier #>>.CreateArgumentState (value, synchronize, (list, copy) => {
+					var a = copy
+						? new Java<#= info.TypeModifier #>Array (list)
+						: new Java<#= info.TypeModifier #>Array (list.Count);
+					a.forMarshalCollection = true;
+					return a;
+				});
+			}
+
+			public override void DestroyGenericArgumentState ([AllowNull] IList<<#= info.TypeModifier #>> value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+			{
+				JavaArray<<#= info.ManagedType #>>.DestroyArgumentState<Java<#= info.TypeModifier #>Array> (value, ref state, synchronize);
+			}
+
+			[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
+			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
+			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
+			{
+				Func<IntPtr, Type?, object?>  m = Java<#= info.TypeModifier #>Array.CreateMarshaledValue;
+
+				var call    = Expression.Call (m.GetMethodInfo (), sourceValue, Expression.Constant (targetType, typeof (Type)));
+				return targetType == null
+					? (Expression) call
+					: Expression.Convert (call, targetType);
+			}
+		}
+	}
+
+<#  } #>
+}

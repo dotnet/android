@@ -18,17 +18,18 @@
 
 parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
+  condition: succeeded()
 
 steps:
 - script: echo "##vso[task.setvariable variable=ANDROID_ARCHIVES_DIR]$HOME/android-archives"
   displayName: prepare android-archives cache variables
-  condition: ne(variables['Agent.OS'], 'Windows_NT')
+  condition: and(${{ parameters.condition }}, ne(variables['Agent.OS'], 'Windows_NT'))
 
 - pwsh: |
     $dir = Join-Path $env:USERPROFILE 'android-archives'
     Write-Host "##vso[task.setvariable variable=ANDROID_ARCHIVES_DIR]$dir"
   displayName: prepare android-archives cache variables
-  condition: eq(variables['Agent.OS'], 'Windows_NT')
+  condition: and(${{ parameters.condition }}, eq(variables['Agent.OS'], 'Windows_NT'))
 
 # Key off every file that defines what gets downloaded or its expected hash.
 # Bumping a version or hash in any of these invalidates the cache; the
@@ -36,6 +37,7 @@ steps:
 # a subset changes (e.g. a single component bump).
 - task: Cache@2
   displayName: cache Android toolchain archives
+  condition: ${{ parameters.condition }}
   inputs:
     key: '"android-archives" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/Configuration.props | ${{ parameters.xaSourcePath }}/src/androidsdk/androidsdk.targets | ${{ parameters.xaSourcePath }}/src/openjdk/openjdk.targets | ${{ parameters.xaSourcePath }}/src/binutils/binutils.targets | ${{ parameters.xaSourcePath }}/src/aapt2/aapt2.targets | ${{ parameters.xaSourcePath }}/src/bundletool/bundletool.targets'
     restoreKeys: |

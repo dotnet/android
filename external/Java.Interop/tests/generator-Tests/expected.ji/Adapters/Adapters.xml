@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+		<class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+		</class>
+	</package>
+	<package name="xamarin.test">
+		<!-- 
+			public interface Adapter {
+			}
+		-->
+		<interface abstract="true" deprecated="not deprecated" final="false" name="Adapter" static="false" visibility="public">
+		</interface>
+		<!-- 
+			public interface SpinnerAdapter implementes Adapter {
+			}
+		-->
+		<interface abstract="true" deprecated="not deprecated" final="false" name="SpinnerAdapter" static="false" visibility="public">
+			<implements name="xamarin.test.Adapter" name-generic-aware="xamarin.test.Adapter">
+			</implements>
+		</interface>
+		<!--
+			public abstract class AdapterView<T extends Adapter> extends java.lang.Object {
+				public abstract T getAdapter ();
+				public abstract setAdapter (T adapter);
+			}
+		-->
+		<class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object"
+			final="false" name="AdapterView&lt;T&gt;" static="false" visibility="public">
+			<typeParameters>
+				<typeParameter name="T">
+					<genericConstraints>
+						<genericConstraint type="xamarin.test.Adapter">
+					</genericConstraint>
+					</genericConstraints>
+				</typeParameter>
+			</typeParameters>
+			<method abstract="true" deprecated="not deprecated" final="false" name="getAdapter" native="false" return="T" static="false" synchronized="false" visibility="public">
+			</method>
+			<method abstract="true" deprecated="not deprecated" final="false" name="setAdapter" native="false" return="void" static="false" synchronized="false" visibility="public">
+			<parameter name="adapter" type="T" />
+			</method>
+		</class>
+		<!-- 
+			public abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
+				public SpinnerAdapter getAdapter ();
+				public setAdapter (SpinnerAdapter adapter);
+			}
+		-->
+		<class abstract="true" deprecated="not deprecated" extends="xamarin.test.AdapterView&lt;xamarin.test.SpinnerAdapter&gt;" 
+			extends-generic-aware="xamarin.test.AdapterView&lt;xamarin.test.SpinnerAdapter&gt;"
+			final="false" name="AbsSpinner" static="false" visibility="public">
+			<method abstract="false" deprecated="not deprecated" final="false" name="getAdapter" native="false" return="xamarin.test.SpinnerAdapter" static="false" synchronized="false" visibility="public">
+			</method>
+			<method abstract="false" deprecated="not deprecated" final="false" name="setAdapter" native="false" return="void" static="false" synchronized="false" visibility="public">
+			<parameter name="adapter" type="xamarin.test.SpinnerAdapter" />
+			</method>
+		</class>
+		<!--
+			public class GenericReturnObject {
+				public xamarin.test.AdapterView<java.lang.Object> GenericReturn ();
+			}
+		-->
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="GenericReturnObject" static="false" visibility="public">
+			<method abstract="false" deprecated="not deprecated" final="false" name="GenericReturn" native="false" return="xamarin.test.AdapterView&lt;java.lang.Object&gt;" static="false" synchronized="false" visibility="public">
+			</method>
+		 </class>
+	</package>
+</api>
+
+
+

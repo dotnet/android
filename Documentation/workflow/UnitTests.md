@@ -437,7 +437,7 @@ testing the `Android.App.Application` class.
 
 ## Other Tests
 
-[`tests/CodeBehind/BuildTests/CodeBehindBuildTests.csproj`](../../tests/CodeBehind/BuildTests/CodeBehindBuildTests.csproj)
-is used to test [Layout CodeBehind](../guides/LayoutCodeBehind.md).
-If it builds, the test is considered successful, and is built via inclusion
-in the [`Xamarin.Android-Tests.sln` project](../../Xamarin.Android-Tests.sln).
+[Layout CodeBehind](../guides/LayoutCodeBehind.md) is tested by the
+`CodeBehindTests` fixture in `Xamarin.Android.Build.Tests`. The fixture copies
+and patches the template projects under `tests/CodeBehind/` for each runtime
+configuration before building them.

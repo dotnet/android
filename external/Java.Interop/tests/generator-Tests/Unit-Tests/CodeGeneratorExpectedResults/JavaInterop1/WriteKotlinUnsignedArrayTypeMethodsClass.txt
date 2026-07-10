@@ -1,0 +1,86 @@
+// Metadata.xml XPath class reference: path="/api/package[@name='java.code']/class[@name='MyClass']"
+[global::Java.Interop.JniTypeSignature ("java/code/MyClass", GenerateJavaPeer=false)]
+public partial class MyClass {
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/MyClass", typeof (MyClass));
+
+	protected MyClass (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+	{
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='uint[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([I)[I")]
+	public unsafe Java.Interop.JavaInt32Array? Echo (uint[]? value)
+	{
+		const string __id = "Echo.([I)[I";
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt32Array (value);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_value);
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt32Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+		} finally {
+			if (native_value != null) {
+				native_value.DisposeUnlessReferenced ();
+			}
+			global::System.GC.KeepAlive (value);
+		}
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ushort[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([S)[S")]
+	public unsafe Java.Interop.JavaInt16Array? Echo (ushort[]? value)
+	{
+		const string __id = "Echo.([S)[S";
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt16Array (value);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_value);
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt16Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+		} finally {
+			if (native_value != null) {
+				native_value.DisposeUnlessReferenced ();
+			}
+			global::System.GC.KeepAlive (value);
+		}
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ulong[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([J)[J")]
+	public unsafe Java.Interop.JavaInt64Array? Echo (ulong[]? value)
+	{
+		const string __id = "Echo.([J)[J";
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalInt64Array (value);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_value);
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaInt64Array>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+		} finally {
+			if (native_value != null) {
+				native_value.DisposeUnlessReferenced ();
+			}
+			global::System.GC.KeepAlive (value);
+		}
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='Echo' and count(parameter)=1 and parameter[1][@type='ubyte[]']]"
+	[global::Java.Interop.JniMethodSignature ("Echo", "([B)[B")]
+	public unsafe Java.Interop.JavaSByteArray? Echo (byte[]? value)
+	{
+		const string __id = "Echo.([B)[B";
+		var native_value = global::Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray (value);
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_value);
+			var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+			return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Interop.JavaSByteArray>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+		} finally {
+			if (native_value != null) {
+				native_value.DisposeUnlessReferenced ();
+			}
+			global::System.GC.KeepAlive (value);
+		}
+	}
+
+}

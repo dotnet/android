@@ -439,8 +439,8 @@ This prints out a breakdown for evaluation, and every MSBuild task &
 target:
 
     Project Evaluation Performance Summary:
-           12 ms  samples\HelloWorld\HelloLibrary\HelloLibrary.csproj   1 calls
-           98 ms  samples\HelloWorld\HelloWorld.csproj   1 calls
+           12 ms  samples\HelloWorld\HelloLibrary\HelloLibrary.DotNet.csproj   1 calls
+           98 ms  samples\HelloWorld\HelloWorld.DotNet.csproj   1 calls
     
     Target Performance Summary:
           275 ms  _UpdateAndroidResgen                       2 calls

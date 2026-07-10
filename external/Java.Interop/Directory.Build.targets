@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- Automatically add NRT attribute support for netstandard2.0 projects using NRT -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' AND '$(Nullable)' == 'enable' ">
+    <Compile Include="$(MSBuildThisFileDirectory)src\utils\NullableAttributes.cs" Visible="false" />
+  </ItemGroup>
+  
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' AND '$(Nullable)' == 'enable' ">
+    <DefineConstants>$(DefineConstants);INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Automatically support the latest C# for netstandard2.0 projects -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <LangVersion>13.0</LangVersion>
+  </PropertyGroup>
+
+  <!-- Add Roslyn analyzers NuGet to all projects -->
+  <ItemGroup Condition=" '$(DisableRoslynAnalyzers)' != 'True' ">
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- NuGet Dependencies -->
+  <ItemGroup>
+    <PackageReference Update="GitInfo"                                      Version="2.1.2" />
+    <PackageReference Update="HtmlAgilityPack"                              Version="1.12.4" />
+    <PackageReference Update="Irony"                                        Version="1.5.3" />
+    <PackageReference Update="Microsoft.Build.Framework"                    Version="17.3.2" />
+    <PackageReference Update="Microsoft.Build.Utilities.Core"               Version="17.3.2" />
+    <PackageReference Update="Microsoft.CodeAnalysis.CSharp"                Version="5.3.0" />
+    <PackageReference Update="Microsoft.CSharp"                             Version="4.7.0" />
+    <PackageReference Update="Microsoft.DotNet.GenAPI"                      Version="8.0.0-beta.26301.3" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk"                       Version="18.6.0" />
+    <!--
+      Microsoft.SourceLink.GitHub is a build-time only package (PrivateAssets="All"), but its
+      dependency Microsoft.Build.Tasks.Git 10.0.300 pulls System.IO.Hashing 10.0.8 in as a *runtime*
+      asset. Projects that only reference System.IO.Hashing transitively (e.g. class-parse, jcw-gen,
+      generator) therefore ship a System.IO.Hashing 10.0.8 assembly, which collides in the shared
+      .NET for Android SDK pack `tools/` directory with the 10.0.9 assembly the build tasks are
+      compiled against (System.IO.Hashing bumps its AssemblyVersion every patch: 10.0.0.8 vs 10.0.0.9),
+      producing a MissingMethodException on System.IO.Hashing.Crc64.Hash at build time. These tools do
+      not use System.IO.Hashing themselves, so exclude SourceLink's runtime assets to keep the unused
+      assembly out of their output. Source linking is unaffected (it runs via SourceLink's build assets).
+    -->
+    <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="10.0.300" ExcludeAssets="runtime" />
+    <PackageReference Update="Microsoft.Xml.SgmlReader"                     Version="1.8.30" />
+    <PackageReference Update="Mono.Linq.Expressions"                        Version="2.0.0" />
+    <PackageReference Update="Mono.Options"                                 Version="6.12.0.148" />
+    <PackageReference Update="nunit"                                        Version="3.14.0" />
+    <PackageReference Update="NUnit.ConsoleRunner"                          Version="3.22.0" />
+    <PackageReference Update="NUnit3TestAdapter"                            Version="4.6.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Update="protobuf-net"                                 Version="2.4.4" />
+  </ItemGroup>
+
+  <Import Project="build-tools\scripts\VersionInfo.targets" />
+
+</Project>

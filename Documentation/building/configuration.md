@@ -29,11 +29,6 @@ and will override any default values specified in `Configuration.props`.
 
 Overridable MSBuild properties include:
 
-  * `$(AutoProvision)`: Automatically install required dependencies, if possible.
-    Only supported on macOS and certain Linux distros.
-
-  * `$(AutoProvisionUsesSudo)`: Use `sudo` when installing dependencies.
-
   * `$(AndroidApiLevel)`: The Android API level to bind in `src/Mono.Android`.
     This is an integer value, e.g. `15` for
     [API-15 (Android 4.0.3)](http://developer.android.com/about/versions/android-4.0.3.html).
@@ -112,10 +107,6 @@ Overridable MSBuild properties include:
 
     If not specified, we'll attempt to use a default based on e.g. the
     `JAVA_HOME` environment variable and other "known" directories.
-
-  * `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
-    the number of CPU cores used when **make**(1) executes. By default this uses
-    `-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
 
   * `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
     Valid values include:

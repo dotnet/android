@@ -192,9 +192,9 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 
 ## CI / Build Investigation
 
-**dotnet/android's primary CI runs on Azure DevOps (internal), not GitHub Actions.** When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
+**dotnet/android PR validation runs on the public Azure DevOps `dotnet-android` pipeline on `dnceng-public`, not GitHub Actions.** When a user asks about CI status, CI failures, why a PR is blocked, or build errors:
 
-1. **ALWAYS invoke the `ci-status` skill first** — do NOT rely on `gh pr checks` alone. GitHub checks may all show ✅ while the internal Azure DevOps build is failing.
+1. **ALWAYS invoke the `ci-status` skill first.** The pipeline surfaces as ~39 `dotnet-android (...)` GitHub checks, but the skill adds build progress, ETA, per-stage failures, and failed-test names that `gh pr checks` alone doesn't give you.
 2. The skill auto-detects the current PR from the git branch when no PR number is given.
 3. For deep .binlog analysis, use the `azdo-build-investigator` skill.
 4. Only after the skill confirms no Azure DevOps failures should you report CI as passing.

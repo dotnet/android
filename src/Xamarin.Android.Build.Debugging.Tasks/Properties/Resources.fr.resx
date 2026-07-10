@@ -242,7 +242,7 @@ Veuillez définir la propriété MSBuild « EmbedAssembliesIntoApk » sur « 
   </data>
   <data name="XA0138_ErrorReadingStdin" xml:space="preserve">
     <value>Erreur lors du déploiement de « {0} » en utilisant « {1} : {2} ». 
-Cela est généralement dû à une erreur dans « adb » lorsque les données de fichier sont envoyées à l’appareil. 
+Cela est généralement dû à une erreur dans `adb` lorsque les données de fichier sont envoyées à l’appareil. 
 La cause normale de cette erreur est un câble USB faible ou de faible qualité. Veuillez essayer un autre câble.
 Vous pouvez également essayer d’utiliser le débogage Wifi, ce qui peut être plus fiable que le débogage USB pour certains appareils. 
 Si tout cela échoue, définissez la propriété MSBuild « EmbedAssembliesIntoApk » sur « true » pour désactiver Fast Deployment dans les pages de propriétés du projet Visual Studio, ou éditez le fichier du projet dans un éditeur de texte.</value>

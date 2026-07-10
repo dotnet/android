@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<api>
+	<package name="java.lang">
+		<class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public">
+		</class>
+		<interface abstract="true" deprecated="not deprecated" final="false" name="Comparable" static="false" visibility="public">
+			<typeParameters>
+				<typeParameter name="T" />
+			</typeParameters>
+			<method abstract="true" deprecated="not deprecated" final="false" name="compareTo" native="false" return="int" static="false" synchronized="false" visibility="public">
+				<parameter name="another" type="T">
+				</parameter>
+			</method>
+		</interface>
+		<class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" final="false" name="Enum" static="false" visibility="public">
+		<typeParameters>
+		<typeParameter name="E">
+			<genericConstraints>
+				<genericConstraint type="java.lang.Enum&lt;E&gt;" />
+			</genericConstraints>
+		</typeParameter>
+		</typeParameters>
+		<implements name="java.lang.Comparable" name-generic-aware="java.lang.Comparable&lt;E&gt;">
+		</implements>
+		<method abstract="false" deprecated="not deprecated" final="true" name="compareTo" native="false" return="int" static="false" synchronized="false" visibility="public">
+			<parameter name="o" type="E">
+			</parameter>
+		</method>
+		</class>
+		<class abstract="false" deprecated="not deprecated" extends="java.lang.Enum" extends-generic-aware="java.lang.Enum&lt;java.lang.State>" final="true" name="State" static="true" visibility="public">
+			<field deprecated="not deprecated" final="true" name="BLOCKED" static="true" transient="false" type="java.lang.State" type-generic-aware="java.lang.State" visibility="public" volatile="false">
+			</field>
+			<field deprecated="not deprecated" final="true" name="NEW" static="true" transient="false" type="java.lang.State" type-generic-aware="java.lang.State" visibility="public" volatile="false">
+			</field>
+			<field deprecated="not deprecated" final="true" name="RUNNABLE" static="true" transient="false" type="java.lang.State" type-generic-aware="java.lang.State" visibility="public" volatile="false">
+			</field>
+			<field deprecated="not deprecated" final="true" name="TERMINATED" static="true" transient="false" type="java.lang.State" type-generic-aware="java.lang.State" visibility="public" volatile="false">
+			</field>
+			<field deprecated="not deprecated" final="true" name="TIMED_WAITING" static="true" transient="false" type="java.lang.State" type-generic-aware="java.lang.State" visibility="public" volatile="false">
+			</field>
+			<field deprecated="not deprecated" final="true" name="WAITING" static="true" transient="false" type="java.lang.State" type-generic-aware="java.lang.State" visibility="public" volatile="false">
+			</field>
+		</class>
+	</package>
+</api>
+

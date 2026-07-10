@@ -56,6 +56,38 @@ and merge conflicts.
 
 ---
 
+## Naming (JNI / Interop-Aware)
+
+| Check | What to look for |
+|-------|-----------------|
+| **Disambiguate Java vs C# names** | Terms like `FullName`, `Name`, or `ReferenceType` are ambiguous in a JNI interop context. When both Java and C# interpretations exist, prefer a prefix (`JavaFullName`, `ManagedFullName`) or add doc comments that make the intent explicit. |
+| **Named constants for string lengths** | `n.Length - 7` should be `n.Length - "Invoker".Length`. Magic numbers for string suffix lengths (e.g., `"Invoker"`, `"_jni"`) are fragile and unreadable. |
+| **`KeyedCollection` for name-indexed lists** | When a `List<T>` is frequently searched by a name property, consider `KeyedCollection<string, T>` or `Dictionary<string, T>` for O(1) lookups. |
+
+---
+
+## JNI Interop Patterns (`external/Java.Interop/`, `src/Mono.Android/`)
+
+| Check | What to look for |
+|-------|-----------------|
+| **JNI reference lifecycle** | Every `JniObjectReference` must be properly disposed via `try`/`finally` or `using`. Local references are cleaned up by the JVM at JNI frame boundaries, but explicit cleanup prevents local-reference-table exhaustion in loops. |
+| **Use `JniTransition` for exception marshaling** | Native callbacks into managed code should use `JniTransition` to properly handle exception marshaling between Java and C#. |
+| **`JniPeerMembers` caching** | Method and field IDs should be accessed via `JniPeerMembers` for efficient caching. Don't look up method IDs on every call. |
+| **`[Register]` attribute correctness** | `[Register]` attributes must match the Java method signature exactly. Mismatches cause runtime `NoSuchMethodError`. |
+| **Trimmer/NativeAOT-aware reflection** | Reflection over managed types called from Java requires `[DynamicallyAccessedMembers]` annotations. `Type.GetType()` with assembly-qualified names breaks under trimming — prefer direct type references or typemap lookups. |
+
+---
+
+## Downstream Impact (Shared Java.Interop Types)
+
+| Check | What to look for |
+|-------|-----------------|
+| **Shared types affect every consumer** | Changes to `JniPeerMembers`, `JavaObject`, `JniRuntime`, `JniTypeManager`, and other types under `external/Java.Interop/src/` affect Mono.Android and every downstream .NET Android app. Validate API-shape changes and keep binary-compatibility in mind. |
+| **Port, don't rewrite** | If working code for the same task already exists in `external/Java.Interop/` (or vice versa in `src/Mono.Android/`), port it rather than writing new logic. Existing code has real-world edge cases already handled. |
+| **Consider startup-time impact** | Java.Interop core runs during every app startup. Extra allocations, type loading, or reflection in hot startup paths are expensive across billions of app launches. |
+
+---
+
 ## Performance (Repo-Specific)
 
 | Check | What to look for |

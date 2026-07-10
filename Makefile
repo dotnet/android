@@ -4,19 +4,7 @@ CONFIGURATION ?= Debug
 SOLUTION       = Xamarin.Android.sln
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
-PREPARE_NET_FX = net10.0
-PREPARE_ARGS =
-PREPARE_PROJECT = build-tools/xaprepare/xaprepare/xaprepare.csproj
-PREPARE_MSBUILD_FLAGS = $(PREPARE_MSBUILD_ARGS) $(MSBUILD_ARGS)
-PREPARE_SCENARIO =
-PREPARE_CI_PR ?= 0
-PREPARE_CI ?= 0
-PREPARE_AUTOPROVISION ?= 0
 LOCALIZE_TEMPLATES ?= 0
-
-_PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
-_PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
-_PREPARE_ARGS =
 
 all:
 	$(call DOTNET_BINLOG,all) $(MSBUILD_FLAGS) $(SOLUTION)
@@ -31,39 +19,10 @@ ifeq ($(OS_ARCH),)
 export OS_ARCH       := $(shell uname -m)
 endif
 
-export NO_SUDO       ?= false
-
-ifneq ($(NO_SUDO),false)
-_PREPARE_ARGS += --auto-provisioning-uses-sudo=false
-endif
-
 ifneq ($(V),0)
 MONO_OPTIONS   += --debug
 NUGET_VERBOSITY = -Verbosity Detailed
-_PREPARE_ARGS += -v:d
 endif
-
-ifneq ($(PREPARE_CI_PR),0)
-_PREPARE_ARGS += $(_PREPARE_CI_MODE_PR_ARGS)
-endif
-
-ifneq ($(PREPARE_CI),0)
-_PREPARE_ARGS += $(_PREPARE_CI_MODE_ARGS)
-endif
-
-ifneq ($(PREPARE_AUTOPROVISION),0)
-_PREPARE_ARGS += --auto-provision=yes --auto-provision-uses-sudo=yes
-endif
-
-ifneq ($(PREPARE_SCENARIO),)
-_PREPARE_ARGS += -s:"$(PREPARE_SCENARIO)"
-endif
-
-ifeq ($(XA_FORCE_COMPONENT_REFRESH),true)
-_PREPARE_ARGS += -refresh
-endif
-
-_PREPARE_ARGS += $(PREPARE_ARGS)
 
 include build-tools/scripts/msbuild.mk
 
@@ -122,18 +81,14 @@ include build-tools/scripts/runtime-helpers.mk
 
 .PHONY: prepare
 prepare: install-dotnet
-	$(call SYSTEM_DOTNET_BINLOG,prepare-run,run) $(PREPARE_MSBUILD_FLAGS) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- $(_PREPARE_ARGS)
 	$(call SYSTEM_DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
 	$(call SYSTEM_DOTNET_BINLOG,prepare-workloads) src/workloads/workloads.csproj
 	$(call DOTNET_BINLOG,prepare-java.interop) $(SOLUTION) -t:PrepareJavaInterop
+	$(call SYSTEM_DOTNET_BINLOG,prepare-build-tools-inventory) build-tools/build-tools-inventory/build-tools-inventory.proj
 
 .PHONY: install-dotnet
 install-dotnet:
 	CONFIGURATION=$(CONFIGURATION) bash ./eng/install-dotnet.sh
-
-.PHONY: prepare-help
-prepare-help:
-	$(call SYSTEM_DOTNET_BINLOG,prepare-help,run) --project "$(PREPARE_PROJECT)" --framework $(PREPARE_NET_FX) -- -h
 
 APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
 

@@ -61,7 +61,7 @@ namespace Java.Interop {
 			builder.TypeManager     ??= CreateDefaultTypeManager ();
 #endif  // NET
 
-			builder.ValueManager            ??= new JavaMarshalValueManager ();
+			builder.ValueManager            ??= CreateDefaultValueManager ();
 			builder.ObjectReferenceManager  ??= new Android.Runtime.AndroidObjectReferenceManager ();
 
 			if (builder.InvocationPointer != IntPtr.Zero || builder.EnvironmentPointer != IntPtr.Zero)
@@ -81,7 +81,18 @@ namespace Java.Interop {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			return new ManagedTypeManager ();
+			return CreateManagedTypeManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Managed type manager is preserved by the MarkJavaObjects trimmer step.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This type manager won't be used in Native AOT builds in the future.")]
+			static JniRuntime.JniTypeManager CreateManagedTypeManager () => new ManagedTypeManager ();
+		}
+
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
+		static JniRuntime.JniValueManager CreateDefaultValueManager ()
+		{
+			return new JavaMarshalValueManager ();
 		}
 
 		public override string? GetCurrentManagedThreadName ()

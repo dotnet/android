@@ -482,19 +482,30 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Nov 2025) produces 10 `ILC : AOT analysis warning IL3050` warnings for various
-					// bits of code. Even though this test expects no warnings and the above likely make the app not work
-					// correctly at run time, it is still worth running this test under NativeAOT to test for the absence
-					// of other warnings.
-					int numberOfExpectedWarnings = 10;
+					// NativeAOT currently (Jul 2026) produces 2 `ILC : AOT analysis warning IL3050`
+					// warnings: a single distinct warning (the reflection-backed ManagedTypeManager
+					// constructor, which chains to the [RequiresDynamicCode] ReflectionJniTypeManager
+					// base and is therefore not Native AOT compatible), surfaced twice in the MSBuild
+					// summary (once per publish target context). Even though this test expects no
+					// warnings and the above likely make the app not work correctly at run time, it is
+					// still worth running this test under NativeAOT to test for the absence of other
+					// warnings.
+					int numberOfExpectedWarnings = 2;
 
-					Assert.IsTrue (
-						StringAssertEx.ContainsText (
-							b.LastBuildOutput,
-							$" {numberOfExpectedWarnings} Warning(s)"
-						),
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT."
-					);
+					// MSBuild prints a "    N Warning(s)" summary line near the end of the build; parse N so the
+					// assertion can report the actual count instead of a bare "Expected: True But was: False".
+					var warningSummaryLine = b.LastBuildOutput.LastOrDefault (x => x.TrimEnd ().EndsWith ("Warning(s)", StringComparison.Ordinal));
+					int actualNumberOfWarnings = -1;
+					if (warningSummaryLine != null) {
+						var summary = warningSummaryLine.Trim ();
+						var firstSpace = summary.IndexOf (' ');
+						if (firstSpace > 0) {
+							int.TryParse (summary.Substring (0, firstSpace), out actualNumberOfWarnings);
+						}
+					}
+
+					Assert.AreEqual (numberOfExpectedWarnings, actualNumberOfWarnings,
+						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT, but found {actualNumberOfWarnings}.");
 
 					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
 					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
@@ -551,6 +562,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (Get_BuildHasTrimmerWarningsData))]
 		public void BuildHasTrimmerWarnings (AndroidRuntime runtime, string properties, string [] codes, bool isRelease, int? totalWarnings = null)
 		{
+			const int maxWarningLinesToShow = 25;
+
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -590,10 +603,39 @@ namespace Xamarin.Android.Build.Tests
 				b.AssertHasNoWarnings ();
 			} else {
 				totalWarnings ??= codes.Length;
-				Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
+
+				string [] buildOutput = b.LastBuildOutput.ToArray ();
+				string warningSummaryLine = buildOutput.LastOrDefault (line => line.Contains ("Warning(s)", StringComparison.Ordinal)) ?? "";
+				var actualWarnings = GetWarningCount (warningSummaryLine);
+
+				var allWarningLines = buildOutput
+					.Where (line => line.Contains (": warning ", StringComparison.OrdinalIgnoreCase))
+					.Take (maxWarningLinesToShow)
+					.ToArray ();
+				Assert.AreEqual (
+					totalWarnings.Value,
+					actualWarnings,
+					$"{b.BuildLogFile} should have {totalWarnings} warnings. Summary line: '{warningSummaryLine}'. " +
+					$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
+				);
 				foreach (var code in codes) {
-					Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, code), $"Should receive {code} warning");
+					Assert.True (
+						StringAssertEx.ContainsText (buildOutput, code),
+						$"{b.BuildLogFile} should contain warning {code}. Summary line: '{warningSummaryLine}'. " +
+						$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
+					);
 				}
+			}
+
+			static int GetWarningCount (string warningSummaryLine)
+			{
+				string [] tokens = warningSummaryLine.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+				for (int i = 1; i < tokens.Length; i++) {
+					if (tokens [i] == "Warning(s)" && int.TryParse (tokens [i - 1], out var warningCount)) {
+						return warningCount;
+					}
+				}
+				return -1;
 			}
 		}
 

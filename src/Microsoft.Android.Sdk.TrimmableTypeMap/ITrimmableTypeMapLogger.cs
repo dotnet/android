@@ -12,5 +12,12 @@ public interface ITrimmableTypeMapLogger
 	void LogGeneratedJcwFilesInfo (int sourceCount);
 	void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName);
 	void LogManifestReferencedTypeNotFoundWarning (string javaTypeName);
+	void LogLibraryManifestMergeWarning (string message);
+	void LogUnresolvableJavaPeerSkippedWarning (
+		string managedTypeName,
+		string assemblyName,
+		string unresolvedTypeName,
+		string unresolvedAssemblyName,
+		string unresolvedAssemblyPath);
 	void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName);
 }

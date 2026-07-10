@@ -20,15 +20,15 @@ When a .NET for Android app launches on an Android device, and the app was
 built in the `Debug` configuration, it will create an "update" directory
 during process startup, printing the created directory to `adb logcat`:
 
-     W/monodroid( 2796): Creating public update directory: `/data/data/Mono.Android_Tests/files/.__override__`
+     W/monodroid( 2796): Creating public update directory: `/data/data/Mono.Android.NET_Tests/files/.__override__`
 
 When the app needs to resolve native libraries and assemblies, it will look
 for those files within the update directory *first*. This includes the Mono
 runtime library and BCL assemblies.
 
-Note that the update directory is *per-app*. The above mentioned `Mono.Android_Tests`
+Note that the update directory is *per-app*. The above mentioned `Mono.Android.NET_Tests`
 directory is created when running the
-[`Mono.Android-Tests.csproj`](../../tests/Mono.Android-Tests/Mono.Android-Tests.csproj)
+[`Mono.Android.NET-Tests.csproj`](../../tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj)
 unit tests.
 
 The update directory is not used in `Release` configuration builds.
@@ -43,16 +43,16 @@ mono/x86 bug and need to quickly update the app on the device to test
     $ make -C src/mono-runtimes/obj/Debug/x86 && \
       adb push src/mono-runtimes/obj/Debug/x86/mono/mini/.libs/libmonosgen-2.0.so \
         /data/local/tmp/ && \
-      adb shell run-as Mono.Android_Tests cp /data/local/tmp/libmonosgen-2.0.so \
-        /data/data/Mono.Android_Tests/files/.__override__/
+      adb shell run-as Mono.Android.NET_Tests cp /data/local/tmp/libmonosgen-2.0.so \
+        /data/data/Mono.Android.NET_Tests/files/.__override__/
 
 Alternatively, if you're working on an `mscorlib.dll` bug:
 
     $ make -C external/mono/mcs/class/corlib PROFILE=monodroid && \
       adb push external/mono/mcs/class/lib/monodroid/mscorlib.dll \
         /data/local/tmp/ && \
-      adb shell run-as Mono.Android_Tests cp /data/local/tmp/mscorlib.dll \
-        /data/data/Mono.Android_Tests/files/.__override__/
+      adb shell run-as Mono.Android.NET_Tests cp /data/local/tmp/mscorlib.dll \
+        /data/data/Mono.Android.NET_Tests/files/.__override__/
 
 On some devices, the `run-as` command might not have permission to read the
 files in `/data/local/tmp/`.  In that case, you can use a `cat` command that
@@ -62,8 +62,8 @@ files in `/data/local/tmp/`.  In that case, you can use a `cat` command that
       adb push external/mono/mcs/class/lib/monodroid/mscorlib.dll \
         /data/local/tmp/ && \
       adb shell "cat /data/local/tmp/mscorlib.dll | \
-        run-as Mono.Android_Tests sh -c \
-        'cat > /data/data/Mono.Android_Tests/files/.__override__/mscorlib.dll'"
+        run-as Mono.Android.NET_Tests sh -c \
+        'cat > /data/data/Mono.Android.NET_Tests/files/.__override__/mscorlib.dll'"
 
 # Attaching LLDB using mono/lldb-binaries on macOS
 
@@ -166,14 +166,14 @@ little care to complete the `adb` steps correctly on the command line.
 
         $ adb push libmonosgen-2.0.d.so \
             /data/local/tmp/libmonosgen-2.0.so && \
-          adb shell run-as Mono.Android_Tests cp /data/local/tmp/libmonosgen-2.0.so \
-            /data/data/Mono.Android_Tests/files/.__override__/
+          adb shell run-as Mono.Android.NET_Tests cp /data/local/tmp/libmonosgen-2.0.so \
+            /data/data/Mono.Android.NET_Tests/files/.__override__/
 
  2. Ensure all users have execute permissions on the application's data
     directory:
 
-        $ adb shell run-as Mono.Android_Tests \
-            chmod a+x /data/data/Mono.Android_Tests/
+        $ adb shell run-as Mono.Android.NET_Tests \
+            chmod a+x /data/data/Mono.Android.NET_Tests/
 
     This will allow LLDB to re-download `libmonosgen-2.0.so` and load the
     symbols from it.
@@ -278,7 +278,7 @@ installed and don't currently have the Android NDK installed.
       window](../images/android-studio-start-window.png)
 
  3. If you skipped the **Android Studio Setup Wizard**, navigate to **File >
-    Project Structure > Modules > Mono.Android_Tests-Signed > Dependencies**,
+    Project Structure > Modules > Mono.Android.NET_Tests-Signed > Dependencies**,
     click **New > Android SDK** next to the **Module SDK**.
 
     ![New SDK in the Android Studio Project Structure Modules Dependencies
@@ -334,35 +334,35 @@ steps rely on having the Android NDK installed.
 
         $ adb push ~/Library/Developer/Xamarin/android-sdk-macosx/ndk-bundle/prebuilt/android-arm64/gdbserver/gdbserver \
             /data/local/tmp/ && \
-          adb shell run-as Mono.Android_Tests cp /data/local/tmp/gdbserver ./ && \
-          adb shell run-as Mono.Android_Tests chmod +x ./gdbserver
+          adb shell run-as Mono.Android.NET_Tests cp /data/local/tmp/gdbserver ./ && \
+          adb shell run-as Mono.Android.NET_Tests chmod +x ./gdbserver
 
  2. Ensure all users have execute permissions on the application's data
     directory:
 
-        $ adb shell run-as Mono.Android_Tests \
-            chmod a+x /data/data/Mono.Android_Tests/
+        $ adb shell run-as Mono.Android.NET_Tests \
+            chmod a+x /data/data/Mono.Android.NET_Tests/
 
  3. Start the app, for example by launching it with or without managed debugging
     from Visual Studio, or by tapping the app on the device.
 
  4. Find the process ID of the running app, for example by using `adb shell ps`:
 
-        $ adb shell ps | grep -F 'Mono.Android_Tests'
+        $ adb shell ps | grep -F 'Mono.Android.NET_Tests'
 
     Example output:
 
-        u0_a247   15087 336   780568 69200 SyS_epoll_ 00000000 S Mono.Android_Tests
+        u0_a247   15087 336   780568 69200 SyS_epoll_ 00000000 S Mono.Android.NET_Tests
 
  5. Start `gdbserver`, attaching it to the running app process:
 
-        $ adb shell run-as Mono.Android_Tests ./gdbserver \
+        $ adb shell run-as Mono.Android.NET_Tests ./gdbserver \
             +debug_socket --attach 15087
 
  6. In another console window, use `adb` to forward the `debug_socket` UNIX
     domain socket to a TCP port on the local host:
 
-        $ adb forward tcp:50999 localfilesystem:/data/data/Mono.Android_Tests/debug_socket
+        $ adb forward tcp:50999 localfilesystem:/data/data/Mono.Android.NET_Tests/debug_socket
 
  7. Pull the appropriate `app_process*` file for the application to a local
     location.  For example, if debugging an arm64-v8a app:

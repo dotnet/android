@@ -15,34 +15,11 @@
 // reads work forever after. CI therefore does NOT need credentials — it just
 // reads anonymously from packages already cached in the feed.
 //
-// =================== TESTING / INGESTING LOCALLY ===================
-//
-// To exercise the CI code path locally (or to ingest a new package that
-// Dependabot brought in but isn't yet cached in the feed):
-//
-//   1. Install the Azure Artifacts credential provider (one-time):
-//
-//        PowerShell:  iex "& { $(irm https://aka.ms/install-artifacts-credprovider.ps1) }"
-//        bash:        wget -qO- https://aka.ms/install-artifacts-credprovider.sh | bash
-//
-//   2. Flip the switch and run the gradle build that needs the package:
-//
-//        PowerShell:  $env:RunningOnCI='true';  ./build-tools/gradle/gradlew.bat --project-dir src/r8 build
-//        bash:        RunningOnCI=true          ./build-tools/gradle/gradlew         --project-dir src/r8 build
-//
-//      On first authenticated request, you'll get a device-flow login prompt
-//      pointing at https://aka.ms/devicelogin — sign in with your Microsoft
-//      account. The credprovider caches the token; the feed caches the
-//      package; future CI runs read it anonymously and pass.
-//
-// =================== WORKFLOW FOR DEPENDABOT PRs ===================
-//
-//   1. Dependabot opens a PR bumping a Gradle dep (uses public repos, so it
-//      always sees the latest upstream version).
-//   2. CI runs with RunningOnCI=true, hits the feed, and fails with 401 if
-//      the new package version isn't ingested yet.
-//   3. A maintainer follows the steps above to ingest the package, then
-//      re-runs CI. No PR edit is required.
+// When a Dependabot PR's CI fails with 401 because a new package isn't yet
+// cached in the feed, run the helper script described in
+// .github/instructions/gradle.instructions.md (TL;DR: `az login` once, then
+// `pwsh ./eng/gradle/mirror-dependencies.ps1 -ProjectDir <path> -Task <task>`).
+// After it succeeds, just re-run the failed CI job — no PR edit is needed.
 
 repositories {
     // Anonymous public Azure Artifacts feed that hosts the

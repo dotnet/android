@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json.schemastore.org/component-detection-manifest.json",
+    "version": 1,
+    "registrations": [
+        {
+            "component": {
+                "type": "maven",
+                "maven": {
+                    "groupId": "com.github.javaparser",
+                    "artifactId": "javaparser-core",
+                    "version": "3.16.1"
+                }
+            },
+            "developmentDependency":false
+        },
+        {
+            "component": {
+                "type": "maven",
+                "maven": {
+                    "groupId": "com.github.javaparser",
+                    "artifactId": "javaparser-symbol-solver-core",
+                    "version": "3.16.1"
+                }
+            },
+            "developmentDependency":false
+        }
+    ]
+}

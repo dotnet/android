@@ -1,23 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->
-  <Target Name="_BuildAssemblyInfo_cs"
-      DependsOnTargets="GetXAVersionInfo"
-      BeforeTargets="CoreCompile"
-      Condition="!Exists ('$(IntermediateOutputPath)AssemblyInfo.cs')"
-      Inputs="Properties\AssemblyInfo.cs.in"
-      Outputs="$(IntermediateOutputPath)AssemblyInfo.cs">
-    <PropertyGroup>
-      <_PackageVersion>$(AndroidPackVersion)</_PackageVersion>
-      <_PackageVersionBuild>$(PackVersionCommitCount)</_PackageVersionBuild>
-    </PropertyGroup>
-    <ReplaceFileContents
-        SourceFile="Properties\AssemblyInfo.cs.in"
-        DestinationFile="$(IntermediateOutputPath)AssemblyInfo.cs"
-        Replacements="@PACKAGE_VERSION@=$(_PackageVersion);@PACKAGE_VERSION_BUILD@=$(_PackageVersionBuild);@PACKAGE_HEAD_REV@=$(XAVersionHash);@PACKAGE_HEAD_BRANCH@=$(XAVersionBranch);@API_LEVEL@=$(AndroidApiLevel);@MIN_API_LEVEL@=$(AndroidMinimumDotNetApiLevel)">
-    </ReplaceFileContents>
-  </Target>
-
   <Target Name="_CopyToPackDirs">
     <Copy
         SourceFiles="$(OutputPath)ref\Mono.Android.Runtime.dll"

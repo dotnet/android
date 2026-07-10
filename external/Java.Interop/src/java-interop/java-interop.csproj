@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
+    <OutputPath>$(ToolOutputFullPath)</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DotNetRuntimePacksVersion>8.0.13</DotNetRuntimePacksVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(UseMonoRuntime)' != 'true' ">
+    <PackageDownload
+        Include="Microsoft.NETCore.App.Runtime.Mono.$(NETCoreSdkRuntimeIdentifier)"
+        Version="[$(DotNetRuntimePacksVersion)]"
+    />
+  </ItemGroup>
+
+  <Import Project="java-interop.targets" />
+
+</Project>

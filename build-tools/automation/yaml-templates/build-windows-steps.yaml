@@ -36,7 +36,11 @@ steps:
   retryCountOnTaskFailure: 1
   inputs:
     projects: Xamarin.Android.sln
-    arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
+    arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
+
+- template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
+  parameters:
+    configuration: $(XA.Build.Configuration)
 
 # Build Xamarin.Android and configure local workloads to test improved local build loop
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml

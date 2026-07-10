@@ -134,6 +134,37 @@ namespace Android.Views
 		bool OnLongClick (View v);
 	}
 
+	[Register ("android/view/View$OnLongClickListener", DoNotGenerateAcw = true)]
+	internal sealed class IOnLongClickListenerInvoker : Java.Lang.Object, IOnLongClickListener
+	{
+		public IOnLongClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		public bool OnLongClick (View v) => false;
+
+		// Real MCW-style n_* callback. This invoker models the *post-#1296* generator, where JNI
+		// boolean is declared as the blittable System.SByte. The emitted callback MemberRef must
+		// mirror this (sbyte), even though the pre-#1296 TouchHandler above uses bool.
+		static sbyte n_OnLongClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr v) => 0;
+	}
+
+	[Register ("android/view/View$OnKeyListener", "", "Android.Views.IOnKeyListenerInvoker")]
+	public interface IOnKeyListener
+	{
+		[Register ("onKey", "(C)C", "GetOnKey_CHandler:Android.Views.IOnKeyListenerInvoker")]
+		char OnKey (char c);
+	}
+
+	[Register ("android/view/View$OnKeyListener", DoNotGenerateAcw = true)]
+	internal sealed class IOnKeyListenerInvoker : Java.Lang.Object, IOnKeyListener
+	{
+		public IOnKeyListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		public char OnKey (char c) => c;
+
+		// Real MCW-style n_* callback. This invoker models the *post-#1296* generator, where JNI char
+		// is declared as the blittable System.UInt16 (ushort). The emitted callback MemberRef must
+		// mirror this (ushort), unlike the pre-#1296 TouchHandler above which uses char.
+		static ushort n_OnKey_C (IntPtr jnienv, IntPtr native__this, ushort c) => c;
+	}
+
 	/// <summary>
 	/// Interface with a registered property (for testing interface property implementation detection).
 	/// </summary>
@@ -362,6 +393,20 @@ namespace MyApp
 
 		[Register ("setItems", "([Ljava/lang/String;)V", "GetSetItemsHandler")]
 		public virtual void SetItems (string[]? items) { }
+
+		[Register ("getKeyChar", "()C", "GetGetKeyCharHandler")]
+		public virtual char GetKeyChar () => '\0';
+
+		[Register ("setKeyChar", "(C)V", "GetSetKeyCharHandler")]
+		public virtual void SetKeyChar (char c) { }
+
+		// Real MCW-style n_* callbacks. This binding models the *pre-#1296* generator, where JNI
+		// boolean is declared as System.Boolean (bool) and JNI char as System.Char (char). The
+		// emitted callback MemberRefs must mirror this.
+		static bool n_OnTouch (IntPtr jnienv, IntPtr native__this, IntPtr v, int action) => false;
+		static void n_OnFocusChange (IntPtr jnienv, IntPtr native__this, IntPtr v, bool hasFocus) { }
+		static char n_GetKeyChar (IntPtr jnienv, IntPtr native__this) => '\0';
+		static void n_SetKeyChar (IntPtr jnienv, IntPtr native__this, char c) { }
 	}
 
 	// --- Covariant return test types ---
@@ -674,6 +719,18 @@ namespace MyApp
 
 		public void OnClick (Android.Views.View v) { }
 		public bool OnLongClick (Android.Views.View v) => false;
+	}
+
+	/// <summary>
+	/// Implements a char-bearing interface without [Register], so its onKey marshal method forwards
+	/// to the post-#1296 invoker's ushort n_* callback (the modern char encoding).
+	/// </summary>
+	[Register ("my/app/KeyListenerImpl")]
+	public class KeyListenerImpl : Java.Lang.Object, Android.Views.IOnKeyListener
+	{
+		protected KeyListenerImpl (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public char OnKey (char c) => c;
 	}
 
 	/// <summary>
@@ -1014,6 +1071,26 @@ namespace MyApp
 	}
 
 	/// <summary>
+	/// Generic intermediate MCW base that forwards its generic parameter to the
+	/// registered generic base. This mirrors Xamarin.Forms renderer hierarchies
+	/// such as VisualElementRenderer&lt;TElement&gt;.
+	/// </summary>
+	[Register ("my/app/GenericForwardingSelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class GenericForwardingSelectionContainer<T> : GenericSelectionHost<T> where T : class
+	{
+		protected GenericForwardingSelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Non-generic MCW base that closes the generic forwarding base.
+	/// </summary>
+	[Register ("my/app/StringForwardingSelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class StringForwardingSelectionContainer : GenericForwardingSelectionContainer<string>
+	{
+		protected StringForwardingSelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
 	/// Overrides a registered method declared above the first MCW base in the hierarchy.
 	/// </summary>
 	[Register ("my/app/SelectableList")]
@@ -1031,6 +1108,91 @@ namespace MyApp
 	public class GenericSelectableList : GenericSelectionContainer
 	{
 		protected GenericSelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void SetSelection (int position) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method declared above a generic base that forwards
+	/// type parameters through another generic base.
+	/// </summary>
+	[Register ("my/app/GenericForwardingSelectableList")]
+	public class GenericForwardingSelectableList : StringForwardingSelectionContainer
+	{
+		protected GenericForwardingSelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void SetSelection (int position) { }
+	}
+
+	/// <summary>
+	/// Generic base whose registered method uses its type parameter in the managed
+	/// signature. Override detection must compare this as <c>string</c> when the
+	/// base is closed over <c>string</c>.
+	/// </summary>
+	[Register ("my/app/GenericValueHost", DoNotGenerateAcw = true)]
+	public abstract class GenericValueHost<T> : Java.Lang.Object where T : class
+	{
+		protected GenericValueHost (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("applyValue", "(Ljava/lang/Object;)V", "GetApplyValue_Ljava_lang_Object_Handler")]
+		public abstract void ApplyValue (T value);
+	}
+
+	/// <summary>
+	/// Intermediate MCW base that closes a registered generic method parameter.
+	/// </summary>
+	[Register ("my/app/StringValueContainer", DoNotGenerateAcw = true)]
+	public abstract class StringValueContainer : GenericValueHost<string>
+	{
+		protected StringValueContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method whose base managed signature contains a
+	/// substituted generic type parameter.
+	/// </summary>
+	[Register ("my/app/StringValueList")]
+	public class StringValueList : StringValueContainer
+	{
+		protected StringValueList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		public override void ApplyValue (string value) { }
+	}
+
+	public enum SelectionMode {
+		Single,
+		Multiple,
+	}
+
+	/// <summary>
+	/// Generic base closed over an enum argument so TypeSpec emission must encode
+	/// the argument as ELEMENT_TYPE_VALUETYPE.
+	/// </summary>
+	[Register ("my/app/GenericValueTypeSelectionHost", DoNotGenerateAcw = true)]
+	public abstract class GenericValueTypeSelectionHost<T> : Java.Lang.Object
+	{
+		protected GenericValueTypeSelectionHost (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("setSelection", "(I)V", "GetSetSelection_IHandler")]
+		public abstract void SetSelection (int position);
+	}
+
+	/// <summary>
+	/// Intermediate MCW base that closes a registered generic base over an enum.
+	/// </summary>
+	[Register ("my/app/EnumSelectionContainer", DoNotGenerateAcw = true)]
+	public abstract class EnumSelectionContainer : GenericValueTypeSelectionHost<SelectionMode>
+	{
+		protected EnumSelectionContainer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+	}
+
+	/// <summary>
+	/// Overrides a registered method declared on a constructed generic enum base.
+	/// </summary>
+	[Register ("my/app/EnumSelectableList")]
+	public class EnumSelectableList : EnumSelectionContainer
+	{
+		protected EnumSelectableList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		public override void SetSelection (int position) { }
 	}

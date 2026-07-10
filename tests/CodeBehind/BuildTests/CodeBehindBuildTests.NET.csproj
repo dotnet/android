@@ -6,7 +6,6 @@
     <AndroidGenerateLayoutBindings>True</AndroidGenerateLayoutBindings>
     <_ApkDebugKeyStore>debug.keystore</_ApkDebugKeyStore>
     <EnableDefaultItems>false</EnableDefaultItems>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -34,7 +33,6 @@
     <Compile Include="OnboardingActivityPartial.cs" />
     <Compile Include="SettingsActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\Main.axml" />

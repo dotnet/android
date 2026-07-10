@@ -1,0 +1,131 @@
+# Java.Interop tests stage
+#
+# Mirrors the two jobs from
+# external/Java.Interop/build-tools/automation/azure-pipelines.yaml
+# (windows_dotnet_build, mac_dotnet_build) so that the Java.Interop
+# build + tests continue to run as part of dotnet/android CI now that
+# Java.Interop has been merged in-tree.
+#
+# Referenced from both:
+#   - build-tools/automation/azure-pipelines.yaml         (official / 1ES)
+#   - build-tools/automation/azure-pipelines-public.yaml  (public PR validation)
+
+parameters:
+- name: stageName
+  type: string
+  default: java_interop_tests
+- name: dependsOn
+  type: object
+  default: []
+- name: condition
+  type: string
+  default: succeeded()
+- name: windowsPool
+  type: object
+  # NOTE: This default is a Microsoft-hosted Azure Pipelines pool, which is NOT
+  # allowed by 1ES Pipeline Templates in Official mode. Callers that extend the
+  # 1ES Official template (e.g. build-tools/automation/azure-pipelines.yaml) must
+  # override this with a 1ES-hosted pool like `MAUI-1ESPT`.
+  default:
+    name: Azure Pipelines
+    vmImage: $(HostedWinImage)
+    os: windows
+- name: macPool
+  type: object
+  default:
+    name: Azure Pipelines
+    vmImage: $(HostedMacImage)
+    os: macOS
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: Java.Interop Tests
+  dependsOn: ${{ parameters.dependsOn }}
+  condition: ${{ parameters.condition }}
+  variables:
+    # Variables consumed by external/Java.Interop/build-tools/automation/templates/*.yaml.
+    # Defined at stage scope so they don't conflict with dotnet/android-wide
+    # variables (e.g. DotNetTargetFramework=net11.0).
+    DotNetCoreVersion: $(DotNetSdkVersion).x
+    DotNetTargetFramework: $(DotNetStableTargetFramework)
+    NetCoreTargetFrameworkPathSuffix: -$(DotNetStableTargetFramework)
+    Build.Configuration: Release
+    RunningOnCI: true
+    # Cap the JDK that external/Java.Interop's Prepare.targets picks when it
+    # calls the JdkInfo bootstrap task. Recent hosted agent images ship Java 25
+    # as the default JDK, and Gradle 8.12 (used by java-source-utils and the
+    # Bytecode-Tests kotlin-gradle project) crashes with "Unsupported class
+    # file major version 69" on it. JdkInfo reads JI_MAX_JDK from the env.
+    JI_MAX_JDK: 21
+  jobs:
+
+  # Check - "Xamarin.Android (Java.Interop Tests Windows - .NET)"
+  - job: java_interop_windows_dotnet_build
+    displayName: Windows - .NET
+    pool: ${{ parameters.windowsPool }}
+    timeoutInMinutes: 60
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+      clean: true
+
+    - template: /external/Java.Interop/build-tools/automation/templates/install-dependencies.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-build.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-tests.yaml@self
+      parameters:
+        runNativeDotnetTests: true
+        nativeAotRid: win-x64
+        platformName: .NET - Windows
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-dirty-tree.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-issue.yaml@self
+
+  # Check - "Xamarin.Android (Java.Interop Tests Mac - .NET)"
+  - job: java_interop_mac_dotnet_build
+    displayName: Mac - .NET
+    pool: ${{ parameters.macPool }}
+    timeoutInMinutes: 20
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+      clean: true
+
+    - bash: |
+        set -e
+        if ! command -v cmake >/dev/null 2>&1 ; then
+          brew install cmake
+        fi
+      displayName: Ensure cmake is installed
+
+    # The hosted macOS pool architecture can change between Intel (osx-x64) and
+    # Apple Silicon (osx-arm64), so detect it at runtime and publish/run the
+    # NativeAOT sample for the matching RID. Otherwise the produced .dylib fails
+    # to dlopen with an "incompatible architecture" error.
+    - bash: |
+        if [ "$(Agent.OSArchitecture)" = "ARM64" ]; then
+          echo "##vso[task.setvariable variable=NativeAOTRid]osx-arm64"
+        else
+          echo "##vso[task.setvariable variable=NativeAOTRid]osx-x64"
+        fi
+      displayName: Determine NativeAOT RID
+
+    - template: /external/Java.Interop/build-tools/automation/templates/install-dependencies.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-build.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/core-tests.yaml@self
+      parameters:
+        runNativeTests: true
+        nativeAotRid: $(NativeAOTRid)
+        platformName: .NET - MacOS
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-dirty-tree.yaml@self
+
+    - template: /external/Java.Interop/build-tools/automation/templates/fail-on-issue.yaml@self

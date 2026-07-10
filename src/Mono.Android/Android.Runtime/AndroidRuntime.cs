@@ -11,6 +11,7 @@ using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
 using System.Diagnostics.CodeAnalysis;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 #if JAVA_INTEROP
 namespace Android.Runtime {
@@ -58,6 +59,10 @@ namespace Android.Runtime {
 			if (!reference.IsValid)
 				return null;
 			var peeked      = JniEnvironment.Runtime.ValueManager.PeekPeer (reference);
+			if (peeked is JavaProxyThrowable proxyThrowable) {
+				JniObjectReference.Dispose (ref reference, options);
+				return proxyThrowable.InnerException;
+			}
 			var peekedExc   = peeked as Exception;
 			if (peekedExc == null) {
 				var throwable = Java.Lang.Object.GetObject<Java.Lang.Throwable> (reference.Handle, JniHandleOwnership.DoNotTransfer);
@@ -310,14 +315,12 @@ namespace Android.Runtime {
 		}
 	}
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+	[RequiresDynamicCode ("This type manager is reflection-backed and is not compatible with Native AOT.")]
+	[RequiresUnreferencedCode ("This type manager is reflection-backed and is not trimming-compatible.")]
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
-		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
-		const DynamicallyAccessedMemberTypes MethodsConstructors = MethodsAndPrivateNested | Constructors;
 
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
@@ -334,8 +337,6 @@ namespace Android.Runtime {
 				yield return t;
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Temporary suppression until legacy typemap entries carry DAM annotations.")]
-		[return: DynamicallyAccessedMembers (MethodsConstructors)]
 		protected override Type? GetTypeForSimpleReference (string jniSimpleReference)
 		{
 			var type = base.GetTypeForSimpleReference (jniSimpleReference);
@@ -352,21 +353,22 @@ namespace Android.Runtime {
 			if (j != null) {
 				return GetReplacementTypeCore (j) ?? j;
 			}
-			return base.GetSimpleReference (type);
+			// Intentionally don't call base.GetSimpleReference(type): Android's
+			// non-trimmable runtime uses the generated/registered typemap, not
+			// Java.Interop's JniTypeSignatureAttribute fallback.
+			return null;
 		}
 
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
-			j   = GetReplacementTypeCore (j) ?? j;
+			j	   = GetReplacementTypeCore (j) ?? j;
 
 			if (j != null) {
-				yield return j;
-				yield break;
+				return [j];
 			}
-			foreach (var r in base.GetSimpleReferences (type)) {
-				yield return r;
-			}
+			// Keep this in sync with GetSimpleReference(): no base fallback.
+			return [];
 		}
 
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
@@ -374,7 +376,7 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
 		}
 
-		protected override string? GetReplacementTypeCore (string jniSimpleReference)
+		protected override string? GetReplacementTypeCore (string? jniSimpleReference)
 		{
 			return JniRemappingLookup.GetReplacementType (jniSimpleReference);
 		}
@@ -384,10 +386,7 @@ namespace Android.Runtime {
 			return JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
 		}
 
-		[return: DynamicallyAccessedMembers (Constructors)]
-		protected override Type? GetInvokerTypeCore (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type type)
+		protected override Type? GetInvokerTypeCore (Type type)
 		{
 			if (type.IsInterface || type.IsAbstract) {
 				return JavaObjectExtensions.GetInvokerType (type)
@@ -398,27 +397,6 @@ namespace Android.Runtime {
 		}
 
 		delegate Delegate GetCallbackHandler ();
-
-		static MethodInfo? dynamic_callback_gen;
-
-		// See ExportAttribute.cs
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
-		static Delegate CreateDynamicCallback (MethodInfo method)
-		{
-			if (dynamic_callback_gen == null) {
-				var assembly = Assembly.Load ("Mono.Android.Export");
-				if (assembly == null)
-					throw new InvalidOperationException ("To use methods marked with ExportAttribute, Mono.Android.Export.dll needs to be referenced in the application");
-				var type = assembly.GetType ("Java.Interop.DynamicCallbackCodeGenerator");
-				if (type == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required type was not found.");
-				dynamic_callback_gen = type.GetMethod ("Create");
-				if (dynamic_callback_gen == null)
-					throw new InvalidOperationException ("The referenced Mono.Android.Export.dll does not match the expected version. The required method was not found.");
-			}
-			return (Delegate)dynamic_callback_gen.Invoke (null, new object [] { method })!;
-		}
 
 		// [Export] callback delegates are created dynamically via DynamicCallbackCodeGenerator and are not
 		// cached in static fields (unlike non-[Export] connector delegates). Without rooting them here,
@@ -498,20 +476,10 @@ namespace Android.Runtime {
 		}
 
 		[Obsolete ("Use RegisterNativeMembers(JniType, Type, ReadOnlySpan<char>) instead.")]
-		public override void RegisterNativeMembers (
-				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
-				Type type,
-				string? methods) =>
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		public override void RegisterNativeMembers (
-				JniType nativeClass,
-				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
-				ReadOnlySpan<char> methods)
+		public override void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
 		{
 			try {
 				if (methods.IsEmpty) {
@@ -561,7 +529,11 @@ namespace Android.Runtime {
 
 							if (minfo == null)
 								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
-							callback = CreateDynamicCallback (minfo);
+
+							var exportAttribute = minfo.GetCustomAttribute<BaseExportAttribute> ()
+								?? throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' does not have [Export] attribute. Signature: {signature.ToString ()}"));
+
+							callback = exportAttribute.CreateDynamicCallback (minfo);
 							lock (prevent_delegate_gc_lock) {
 								prevent_delegate_gc.Add (callback);
 							}
@@ -594,15 +566,6 @@ namespace Android.Runtime {
 				}
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
-			}
-
-			bool ShouldRegisterDynamically (string callbackTypeName, string callbackString, string typeName, string callbackName)
-			{
-				if (String.Compare (typeName, callbackTypeName, StringComparison.Ordinal) != 0) {
-					return false;
-				}
-
-				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
 			}
 		}
 
@@ -640,7 +603,8 @@ namespace Android.Runtime {
 		}
 	}
 
-	[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+	[RequiresDynamicCode ("This value manager is reflection-backed and is not compatible with Native AOT.")]
+	[RequiresUnreferencedCode ("This value manager is reflection-backed and is not trimming-compatible.")]
 	class AndroidValueManager : JniRuntime.ReflectionJniValueManager {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
@@ -850,11 +814,7 @@ namespace Android.Runtime {
 			return null;
 		}
 
-		public override void ActivatePeer (
-			JniObjectReference reference,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type,
-			ConstructorInfo cinfo,
-			object?[]? argumentValues)
+		public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
 		{
 			Java.Interop.TypeManager.Activate (reference.Handle, cinfo, argumentValues);
 		}
