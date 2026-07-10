@@ -661,6 +661,76 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
+		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
+				IsRelease = true,
+			};
+			app.SetRuntime (AndroidRuntime.CoreCLR);
+			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
+			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+
+			using var appBuilder = CreateApkBuilder ();
+			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-first-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"First launch should succeed."
+			);
+
+			string [] cacheFiles = [];
+			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
+				Thread.Sleep (250);
+				cacheFiles = RunAdbCommand (
+					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
+				).Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			}
+			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
+
+			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			string cacheFileToCorrupt = cacheFiles.First ();
+			RunAdbCommand (
+				$"shell run-as {app.PackageName} dd if=/dev/zero of={cacheFileToCorrupt} bs=1 count=1 conv=notrunc"
+			);
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-second-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"Second launch should succeed."
+			);
+
+			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
+				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+			Assert.IsNotEmpty (pids, "The application process should be running after the second launch.");
+			var maps = new StringBuilder ();
+			foreach (string pid in pids) {
+				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
+			}
+			StringAssert.Contains (
+				"/code_cache/decompressed-assembly-cache-v1/",
+				maps.ToString (),
+				"The second launch should map persisted decompressed assemblies."
+			);
+		}
+
+		[Test]
 		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

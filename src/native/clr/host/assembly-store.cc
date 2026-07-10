@@ -1,13 +1,13 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
-#include <condition_variable>
 #include <deque>
 #include <memory>
+#include <mutex>
 #include <string>
-#include <thread>
 
 #include <fcntl.h>
+#include <pthread.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -46,60 +46,54 @@ namespace {
 		return false;
 	}
 
-	// -------------------------------------------------------------------------
-	// EXPERIMENTAL: on-device cache of decompressed assemblies.
-	//
-	// The first time a compressed assembly is decompressed we queue its
-	// uncompressed bytes to be written (on a single background thread) to a
-	// per-assembly file in the app cache directory. On subsequent launches the
-	// file is mmap'd directly, skipping decompression entirely: no ZSTD cost,
-	// and the pages are file-backed / copy-on-write rather than dirty anonymous
-	// memory.
-	//
-	// This is a prototype:
-	//   * There is no MSBuild opt-in yet (always on in RELEASE on this branch;
-	//     set the XA_DISABLE_ASSEMBLY_CACHE env var to turn it off for A/B runs).
-	//   * There is no assembly-store version stamp yet. Per-assembly staleness
-	//     is guarded by an 8-byte footer holding a hash of the *compressed*
-	//     payload, so any change to an assembly (e.g. after an app update)
-	//     invalidates just that assembly's cache file.
-	//   * We only ever cache the assemblies that were actually touched, since
-	//     decompression is lazy and driven by the runtime's assembly probe.
-	// -------------------------------------------------------------------------
 	namespace asm_cache {
-		constexpr std::string_view CACHE_DIR_NAME = "decompressed-assembly-cache"sv;
-		constexpr size_t FOOTER_SIZE = sizeof (uint64_t);
+		constexpr std::string_view CACHE_DIR_NAME = "decompressed-assembly-cache-v1"sv;
+		constexpr uint32_t CACHE_FILE_MAGIC = 0x43434158; // 'XACC', little-endian
+		constexpr uint32_t CACHE_FILE_FORMAT_VERSION = 1;
+		constexpr size_t MAX_QUEUED_BYTES = 32uz * 1024uz * 1024uz;
+
+		struct [[gnu::packed]] CacheFileFooter final
+		{
+			uint32_t magic;
+			uint32_t version;
+			uint64_t store_id;
+			uint64_t payload_hash;
+			uint32_t descriptor_index;
+			uint32_t payload_size;
+		};
+
+		static_assert (sizeof (CacheFileFooter) == 32uz);
 
 		struct WriteRequest final
 		{
 			std::string                path;
-			// The complete file image to persist: the decompressed bytes followed
-			// by the 8-byte token footer, laid out exactly as it lives on disk.
-			// This is a private snapshot taken at enqueue time while the shared
-			// decompression buffer is still pristine (owning a copy, rather than
-			// pointing into uncompressed_assemblies_data_buffer, avoids racing with
-			// the runtime, which may write into the image once the decompress lock
-			// is released).
 			std::unique_ptr<uint8_t[]> data;
 			size_t                     size;
 		};
 
-		std::mutex               state_lock;
-		std::condition_variable  queue_cv;
-		std::deque<WriteRequest> write_queue;
-		std::string              cache_dir;
-		bool                     initialized = false;
-		bool                     enabled = false;
-		bool                     writer_running = false;
+		enum class WriteResult
+		{
+			Succeeded,
+			Skipped,
+			Failed,
+		};
 
-		// Runtime-only, per-compressed-assembly pointer to the resolved
-		// uncompressed data (either the mmap'd cache file or the shared
-		// decompression buffer). Indexed by CompressedAssemblyHeader.descriptor_index.
-		uint8_t **tracking = nullptr;
+		std::mutex                        state_lock;
+		std::deque<WriteRequest>          write_queue;
+		std::string                       cache_dir;
+		std::unique_ptr<uint8_t*[]>       tracking;
+		size_t                            queued_bytes = 0;
+		uint64_t                          store_id = 0;
+		bool                              initialized = false;
+		bool                              enabled = false;
+		bool                              writes_enabled = false;
+		bool                              writer_running = false;
 
-		// write(2) can write fewer bytes than requested or be interrupted by a
-		// signal (EINTR); loop until the whole buffer is written or an
-		// unrecoverable error occurs.
+		auto hash_payload (const uint8_t *data, size_t size) noexcept -> uint64_t
+		{
+			return static_cast<uint64_t>(crc32_hash (reinterpret_cast<const char*>(data), size));
+		}
+
 		bool write_fully (int fd, const uint8_t *buf, size_t len) noexcept
 		{
 			size_t off = 0;
@@ -111,80 +105,191 @@ namespace {
 					}
 					return false;
 				}
+				if (n == 0) {
+					errno = EIO;
+					return false;
+				}
 				off += static_cast<size_t>(n);
 			}
 			return true;
 		}
 
-		// Persists one request to disk: write to a temp file, fsync, then
-		// atomically rename it into place. A half-written temp file never becomes
-		// visible under the final name, and on any failure the temp is removed.
-		void write_cache_file (WriteRequest const& req) noexcept
+		void log_file_error (std::string_view operation, std::string const& path, int error) noexcept
+		{
+			log_debug (LOG_ASSEMBLY, "Decompressed-assembly cache {} failed for '{}': {}"sv, operation, path, std::strerror (error));
+		}
+
+		auto write_cache_file (WriteRequest const& req) noexcept -> WriteResult
 		{
 			std::string tmp_path = req.path;
 			tmp_path.append (".tmp"sv);
 
-			int fd = open (tmp_path.c_str (), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+			int fd;
+			do {
+				fd = open (tmp_path.c_str (), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOFOLLOW, 0600);
+			} while (fd < 0 && errno == EINTR);
 			if (fd < 0) {
-				return;
+				log_file_error ("temporary-file creation"sv, req.path, errno);
+				return WriteResult::Failed;
 			}
 
 			bool ok = write_fully (fd, req.data.get (), req.size);
-			if (ok) {
-				fsync (fd);
+			int error = ok ? 0 : errno;
+			if (close (fd) != 0 && ok) {
+				ok = false;
+				error = errno;
 			}
-			close (fd);
 
-			// Atomic publish: a half-written temp file never becomes visible
-			// under the final name.
-			if (!ok || rename (tmp_path.c_str (), req.path.c_str ()) != 0) {
+			if (!ok) {
+				log_file_error ("write"sv, req.path, error);
 				unlink (tmp_path.c_str ());
+				return WriteResult::Failed;
 			}
+
+			int rename_result;
+			do {
+				rename_result = rename (tmp_path.c_str (), req.path.c_str ());
+			} while (rename_result != 0 && errno == EINTR);
+
+			if (rename_result != 0) {
+				error = errno;
+				// Another process can publish the shared, content-identical temp
+				// file first. Its rename consumes the temp path, so this writer
+				// has nothing left to publish.
+				if (error == ENOENT) {
+					return WriteResult::Skipped;
+				}
+
+				log_file_error ("publish"sv, req.path, error);
+				unlink (tmp_path.c_str ());
+				return WriteResult::Failed;
+			}
+
+			return WriteResult::Succeeded;
 		}
 
-		// Single background thread: dequeues requests and persists them.
-		[[gnu::cold]]
-		void writer_loop () noexcept
+		void clear_write_queue_locked () noexcept
 		{
-			for (;;) {
-				WriteRequest req;
+			for (WriteRequest const& request : write_queue) {
+				queued_bytes -= request.size;
+			}
+			write_queue.clear ();
+		}
+
+		[[gnu::cold]]
+		auto writer_loop ([[maybe_unused]] void *arg) noexcept -> void*
+		{
+			while (true) {
+				WriteRequest request;
 				{
-					std::unique_lock lock (state_lock);
-					queue_cv.wait (lock, [] { return !write_queue.empty (); });
-					req = std::move (write_queue.front ());
+					std::lock_guard lock (state_lock);
+					if (write_queue.empty ()) {
+						writer_running = false;
+						return nullptr;
+					}
+
+					request = std::move (write_queue.front ());
 					write_queue.pop_front ();
 				}
 
-				write_cache_file (req);
+				size_t request_size = request.size;
+				WriteResult write_result = write_cache_file (request);
+				request.data.reset ();
+
+				{
+					std::lock_guard lock (state_lock);
+					queued_bytes -= request_size;
+					if (write_result == WriteResult::Failed) {
+						writes_enabled = false;
+						clear_write_queue_locked ();
+						writer_running = false;
+						log_debug (LOG_ASSEMBLY, "Disabling decompressed-assembly cache writes after a persistence failure"sv);
+						return nullptr;
+					}
+				}
 			}
 		}
 
-		// Must be called while holding assembly_decompress_mutex.
-		void ensure_initialized () noexcept
+		bool start_writer_locked () noexcept
+		{
+			pthread_attr_t attributes;
+			int result = pthread_attr_init (&attributes);
+			bool attributes_initialized = result == 0;
+			if (result == 0) {
+				result = pthread_attr_setdetachstate (&attributes, PTHREAD_CREATE_DETACHED);
+			}
+
+			pthread_t writer_thread;
+			if (result == 0) {
+				result = pthread_create (&writer_thread, &attributes, writer_loop, nullptr);
+			}
+
+			if (attributes_initialized) {
+				pthread_attr_destroy (&attributes);
+			}
+			if (result != 0) {
+				log_debug (LOG_ASSEMBLY, "Failed to start decompressed-assembly cache writer: {}"sv, std::strerror (result));
+				return false;
+			}
+
+			return true;
+		}
+
+		bool ensure_directory (std::string const& path) noexcept
+		{
+			if (mkdir (path.c_str (), 0700) == 0) {
+				return true;
+			}
+
+			int error = errno;
+			if (error != EEXIST) {
+				log_file_error ("directory creation"sv, path, error);
+				return false;
+			}
+
+			struct stat st {};
+			if (lstat (path.c_str (), &st) != 0) {
+				log_file_error ("directory validation"sv, path, errno);
+				return false;
+			}
+			if (!S_ISDIR (st.st_mode)) {
+				log_file_error ("directory validation"sv, path, ENOTDIR);
+				return false;
+			}
+
+			return true;
+		}
+
+		void ensure_initialized (uint64_t assembly_store_id) noexcept
 		{
 			if (initialized) {
 				return;
 			}
 			initialized = true;
 
-			// Allow disabling at runtime (without rebuilding) for A/B benchmarking:
+			bool cache_requested = application_config.assembly_store_decompression_cache_enabled;
+
+			// Allow overriding the build setting at runtime for A/B benchmarking:
 			//   adb shell setprop debug.net.asmcache 0   # off
-			//   adb shell setprop debug.net.asmcache 1   # on (default)
+			//   adb shell setprop debug.net.asmcache 1   # on
 			if (getenv ("XA_DISABLE_ASSEMBLY_CACHE") != nullptr) {
 				return;
 			}
 			{
 				dynamic_local_property_string prop_value;
-				if (AndroidSystem::monodroid_get_system_property ("debug.net.asmcache"sv, prop_value) > 0 &&
-				    prop_value.get () != nullptr && prop_value.get ()[0] == '0') {
-					log_debug (LOG_ASSEMBLY, "On-device decompressed-assembly cache disabled via debug.net.asmcache"sv);
-					return;
+				if (AndroidSystem::monodroid_get_system_property ("debug.net.asmcache"sv, prop_value) > 0 && prop_value.get () != nullptr) {
+					if (prop_value.get ()[0] == '0') {
+						cache_requested = false;
+					} else if (prop_value.get ()[0] == '1') {
+						cache_requested = true;
+					}
 				}
 			}
 
-			// The app code-cache directory (Context.getCodeCacheDir()) is wiped by
-			// Android on both app and platform updates, so a stale cache from a
-			// previous build cannot survive an update.
+			if (!cache_requested) {
+				return;
+			}
+
 			std::string const& code_cache_dir = AndroidSystem::get_app_code_cache_dir ();
 			if (code_cache_dir.empty ()) {
 				return;
@@ -193,104 +298,184 @@ namespace {
 			cache_dir.assign (code_cache_dir);
 			cache_dir.append ("/");
 			cache_dir.append (CACHE_DIR_NAME);
-			mkdir (cache_dir.c_str (), 0700); // ignore errors (e.g. EEXIST)
+			if (!ensure_directory (cache_dir)) {
+				return;
+			}
+
+			store_id = assembly_store_id;
+			cache_dir.append ("/");
+			cache_dir.append (std::format ("{:x}", store_id));
+			if (!ensure_directory (cache_dir)) {
+				return;
+			}
 
 			if (compressed_assembly_count > 0) {
-				tracking = new (std::nothrow) uint8_t*[compressed_assembly_count]();
+				tracking.reset (new (std::nothrow) uint8_t*[compressed_assembly_count]());
 			}
 
 			enabled = (tracking != nullptr);
+			if (!enabled) {
+				return;
+			}
+
+			{
+				std::lock_guard lock (state_lock);
+				writes_enabled = true;
+			}
+
+			log_debug (
+				LOG_ASSEMBLY,
+				"Enabled decompressed-assembly cache at '{}'; store ID 0x{:x}; write queue limit {} bytes"sv,
+				cache_dir,
+				store_id,
+				MAX_QUEUED_BYTES
+			);
 		}
 
-		auto build_path (std::string_view name) noexcept -> std::string
+		auto build_path (uint32_t descriptor_index) noexcept -> std::string
 		{
 			std::string path = cache_dir;
 			path.append ("/");
-			path.append (name);
+			path.append (std::to_string (descriptor_index));
+			path.append (".bin"sv);
 			return path;
 		}
 
-		// Attempts to mmap a previously cached, decompressed assembly. Returns
-		// nullptr on any miss (absent, wrong size, stale footer, mmap failure).
-		// Must be called while holding assembly_decompress_mutex.
-		auto try_load (std::string_view name, uint32_t expected_size, uint64_t token) noexcept -> uint8_t*
+		auto try_load (uint32_t descriptor_index, std::string_view name, uint32_t expected_size) noexcept -> uint8_t*
 		{
 			if (!enabled) {
 				return nullptr;
 			}
 
-			std::string path = build_path (name);
-			int fd = open (path.c_str (), O_RDONLY);
+			std::string path = build_path (descriptor_index);
+			int fd = open (path.c_str (), O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
 			if (fd < 0) {
 				return nullptr;
 			}
 
 			struct stat st {};
 			if (fstat (fd, &st) != 0 ||
-			    static_cast<uint64_t>(st.st_size) != static_cast<uint64_t>(expected_size) + FOOTER_SIZE) {
+			    !S_ISREG (st.st_mode) ||
+			    static_cast<uint64_t>(st.st_size) != static_cast<uint64_t>(expected_size) + sizeof (CacheFileFooter)) {
 				close (fd);
 				return nullptr;
 			}
 
-			size_t map_size = static_cast<size_t>(expected_size) + FOOTER_SIZE;
-			// PROT_WRITE + MAP_PRIVATE: copy-on-write so the CLR/MAUI can write
-			// into the image (see the r/w HACK in the uncompressed path) while
-			// pages stay clean/file-backed until actually modified.
+			size_t map_size = static_cast<size_t>(expected_size) + sizeof (CacheFileFooter);
+			// The runtime may modify the image, so keep those changes private while
+			// retaining clean file-backed pages until they are actually written.
 			void *mapped = mmap (nullptr, map_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 			close (fd);
 			if (mapped == MAP_FAILED) {
 				return nullptr;
 			}
 
-			uint64_t stored_token = 0;
-			memcpy (&stored_token, static_cast<uint8_t*>(mapped) + expected_size, FOOTER_SIZE);
-			if (stored_token != token) {
+			CacheFileFooter footer {};
+			memcpy (&footer, static_cast<uint8_t*>(mapped) + expected_size, sizeof (footer));
+			if (footer.magic != CACHE_FILE_MAGIC ||
+			    footer.version != CACHE_FILE_FORMAT_VERSION ||
+			    footer.store_id != store_id ||
+			    footer.descriptor_index != descriptor_index ||
+			    footer.payload_size != expected_size ||
+			    footer.payload_hash != hash_payload (static_cast<uint8_t*>(mapped), expected_size)) {
 				munmap (mapped, map_size);
+				log_debug (LOG_ASSEMBLY, "Ignoring invalid decompressed-assembly cache entry for '{}'"sv, name);
 				return nullptr;
 			}
 
 			return static_cast<uint8_t*>(mapped);
 		}
 
-		// Queues a freshly decompressed assembly to be persisted. Takes a private
-		// snapshot of the bytes up front: the caller holds assembly_decompress_mutex
-		// and has not yet handed the shared buffer to the runtime, so the data is
-		// still pristine here. Copying now (rather than letting the background
-		// thread read the shared buffer later) avoids racing with the runtime,
-		// which may write into the image once the lock is released.
-		// Must be called while holding assembly_decompress_mutex.
-		void enqueue_write (std::string_view name, const uint8_t *data, size_t size, uint64_t token) noexcept
+		void enqueue_write (uint32_t descriptor_index, std::string_view name, const uint8_t *data, size_t size) noexcept
 		{
 			if (!enabled) {
 				return;
 			}
 
-			// Build the full on-disk image up front: [payload][8-byte token footer].
-			size_t total = size + FOOTER_SIZE;
-			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
-			if (snapshot == nullptr) {
-				// Out of memory: skip caching this assembly. Not fatal — the next
-				// launch simply decompresses it again.
+			if (size > SIZE_MAX - sizeof (CacheFileFooter)) {
 				return;
 			}
+			size_t total = size + sizeof (CacheFileFooter);
+
+			size_t bytes_queued = 0;
+			bool queue_full = false;
+			{
+				std::lock_guard lock (state_lock);
+				if (!writes_enabled) {
+					return;
+				}
+				if (total > MAX_QUEUED_BYTES || queued_bytes > MAX_QUEUED_BYTES - total) {
+					queue_full = true;
+					bytes_queued = queued_bytes;
+				} else {
+					queued_bytes += total;
+				}
+			}
+
+			if (queue_full) {
+				if (total > MAX_QUEUED_BYTES) {
+					log_debug (
+						LOG_ASSEMBLY,
+						"Skipping decompressed-assembly cache write for '{}': {} bytes exceed the {}-byte queue limit"sv,
+						name,
+						total,
+						MAX_QUEUED_BYTES
+					);
+				} else {
+					log_debug (
+						LOG_ASSEMBLY,
+						"Skipping decompressed-assembly cache write for '{}': {} of {} queue bytes are in use"sv,
+						name,
+						bytes_queued,
+						MAX_QUEUED_BYTES
+					);
+				}
+				return;
+			}
+
+			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
+			if (snapshot == nullptr) {
+				std::lock_guard lock (state_lock);
+				queued_bytes -= total;
+				return;
+			}
+			// The runtime can modify the shared decompression buffer after this
+			// method returns, so the background writer needs an immutable copy.
 			memcpy (snapshot.get (), data, size);
-			memcpy (snapshot.get () + size, &token, FOOTER_SIZE);
+
+			CacheFileFooter footer {
+				.magic = CACHE_FILE_MAGIC,
+				.version = CACHE_FILE_FORMAT_VERSION,
+				.store_id = store_id,
+				.payload_hash = hash_payload (snapshot.get (), size),
+				.descriptor_index = descriptor_index,
+				.payload_size = static_cast<uint32_t>(size),
+			};
+			memcpy (snapshot.get () + size, &footer, sizeof (footer));
 
 			WriteRequest req {
-				.path = build_path (name),
+				.path = build_path (descriptor_index),
 				.data = std::move (snapshot),
 				.size = total,
 			};
 
 			{
 				std::lock_guard lock (state_lock);
+				if (!writes_enabled) {
+					queued_bytes -= total;
+					return;
+				}
+
 				write_queue.push_back (std::move (req));
 				if (!writer_running) {
 					writer_running = true;
-					std::thread (writer_loop).detach ();
+					if (!start_writer_locked ()) {
+						writer_running = false;
+						writes_enabled = false;
+						clear_write_queue_locked ();
+					}
 				}
 			}
-			queue_cv.notify_one ();
 		}
 	} // namespace asm_cache
 } // anonymous namespace
@@ -310,7 +495,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 #if defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
-		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store"sv, name);
+		log_debug (LOG_ASSEMBLY, "Resolving compressed assembly '{}' from the assembly store"sv, name);
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
@@ -361,6 +546,9 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 		uint8_t *data_buffer = uncompressed_assemblies_data_buffer + cad.buffer_offset;
 		uint32_t const descriptor_index = header->descriptor_index;
+		auto is_loaded = [&cad]() noexcept -> bool {
+			return __atomic_load_n (&cad.loaded, __ATOMIC_ACQUIRE);
+		};
 
 		// Resolves to the mmap'd cache file when this assembly was loaded from
 		// the on-device cache, otherwise to the shared decompression buffer.
@@ -371,10 +559,10 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			return data_buffer;
 		};
 
-		if (!cad.loaded) {
+		if (!is_loaded ()) {
 			StartupAwareLock decompress_lock (assembly_decompress_mutex);
 
-			if (cad.loaded) {
+			if (is_loaded ()) {
 				set_assembly_data_and_size (resolve_data (), cad.uncompressed_file_size, assembly_data, assembly_data_size);
 
 				if (FastTiming::enabled ()) [[unlikely]] {
@@ -388,7 +576,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 				return {assembly_data, assembly_data_size};
 			}
 
-			asm_cache::ensure_initialized ();
+			asm_cache::ensure_initialized (assembly_store_content_id);
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
@@ -408,15 +596,17 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			}
 
 			const char *data_start = pointer_add<const char*>(e.image_data, sizeof(CompressedAssemblyHeader));
-			uint64_t payload_token = static_cast<uint64_t>(crc32_hash (data_start, assembly_data_size));
 
-			uint8_t *cached = asm_cache::try_load (name, cad.uncompressed_file_size, payload_token);
+			bool loaded_from_cache = false;
+			uint8_t *cached = asm_cache::try_load (descriptor_index, name, cad.uncompressed_file_size);
 			if (cached != nullptr) {
+				loaded_from_cache = true;
 				log_debug (LOG_ASSEMBLY, "Loaded decompressed assembly '{}' from the on-device cache"sv, name);
 				if (asm_cache::tracking != nullptr) {
 					asm_cache::tracking[descriptor_index] = cached;
 				}
 			} else {
+				log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store"sv, name);
 				size_t ret = ZSTD_decompress (data_buffer, cad.uncompressed_file_size, data_start, assembly_data_size);
 
 				if (ZSTD_isError (ret)) {
@@ -442,13 +632,19 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 					);
 				}
 
-				asm_cache::enqueue_write (name, data_buffer, cad.uncompressed_file_size, payload_token);
+				asm_cache::enqueue_write (descriptor_index, name, data_buffer, cad.uncompressed_file_size);
 			}
 
-			cad.loaded = true;
+			__atomic_store_n (&cad.loaded, true, __ATOMIC_RELEASE);
 			if (FastTiming::enabled ()) [[unlikely]] {
 				internal_timing.end_event (true /* uses_more_info */);
-				internal_timing.add_more_info (name);
+
+				dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
+				msg.append (name);
+				if (loaded_from_cache) {
+					msg.append (" (decompressed cache hit)"sv);
+				}
+				internal_timing.add_more_info (msg);
 			}
 		}
 
@@ -603,6 +799,7 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const std
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
 
+	assembly_store_content_id = header->content_id;
 	assembly_store.data_start = static_cast<const uint8_t*>(payload_start);
 	assembly_store.assembly_count = header->entry_count;
 	assembly_store.index_entry_count = header->index_entry_count;
@@ -625,4 +822,6 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const std
 		assembly_store_names[i] = std::string_view (reinterpret_cast<const char*>(names_cursor), name_length);
 		names_cursor += name_length;
 	}
+
+	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}; content ID 0x{:x}"sv, get_full_store_path (), assembly_store_content_id);
 }
