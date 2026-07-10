@@ -38,9 +38,9 @@ inside xaprepare.
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.Mono.android-x64"   Version="[$(DotNetRuntimePacksVersion)]" />
 
     <!-- NativeAOT Android runtime packs -->
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.NativeAOT.android-arm"   Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.NativeAOT.android-arm64" Version="[$(DotNetRuntimePacksVersion)]" />
-    <PackageDownload Include="Microsoft.NETCore.App.Runtime.NativeAOT.android-x64"   Version="[$(DotNetRuntimePacksVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.NativeAOT.android-arm"   Version="[$(MicrosoftNETCoreAppRefPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.NativeAOT.android-arm64" Version="[$(MicrosoftNETCoreAppRefPackageVersion)]" />
+    <PackageDownload Include="Microsoft.NETCore.App.Runtime.NativeAOT.android-x64"   Version="[$(MicrosoftNETCoreAppRefPackageVersion)]" />
 
     <!-- CoreCLR Android runtime packs -->
     <PackageDownload Include="Microsoft.NETCore.App.Runtime.android-arm"   Version="[$(DotNetRuntimePacksVersion)]" />

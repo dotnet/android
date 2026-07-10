@@ -35,7 +35,8 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <IlcExportUnmanagedEntrypoints>true</IlcExportUnmanagedEntrypoints>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(RuntimeIdentifier)' == 'android-arm' ">
+  <!-- Outer restores use RuntimeIdentifiers; RuntimeIdentifier is only set in per-RID inner builds. -->
+  <ItemGroup>
     <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler">
       <ILCompilerPackVersion>$(MicrosoftNETCoreAppRefPackageVersion)</ILCompilerPackVersion>
     </KnownILCompilerPack>
