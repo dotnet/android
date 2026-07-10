@@ -28,7 +28,8 @@ namespace xamarin::android {
 		}
 
 	private:
-		static void configure_from_payload (void *payload_start, std::string const& full_store_path) noexcept;
+		template<typename TFullPathProvider>
+		static void configure_from_payload (void *payload_start, TFullPathProvider get_full_store_path) noexcept;
 
 		static void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
 

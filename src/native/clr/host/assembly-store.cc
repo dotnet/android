@@ -263,27 +263,33 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (assembly_store_map, store_path);
 	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}"sv, payload_start, payload_size);
 
-	std::string full_store_path;
-	if (!apk_path.empty ()) {
-		full_store_path.append (apk_path);
-		// store path will be relative, to the apk
-		full_store_path.append ("!/"sv);
-		full_store_path.append (store_path);
-	} else {
-		full_store_path.append (store_path);
-	}
+	auto get_full_store_path = [&apk_path, &store_path]() -> std::string {
+		std::string full_store_path;
 
-	configure_from_payload (payload_start, full_store_path);
-	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, full_store_path);
+		if (!apk_path.empty ()) {
+			full_store_path.append (apk_path);
+			// store path will be relative, to the apk
+			full_store_path.append ("!/"sv);
+			full_store_path.append (store_path);
+		} else {
+			full_store_path.append (store_path);
+		}
+
+		return full_store_path;
+	};
+
+	configure_from_payload (payload_start, get_full_store_path);
+	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
 }
 
 void AssemblyStore::map_from_pointer (void *payload_start, std::string_view const& description) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: {:p} ({})"sv, payload_start, description);
-	configure_from_payload (payload_start, std::string { description });
+	configure_from_payload (payload_start, [&description]() -> std::string { return std::string { description }; });
 }
 
-void AssemblyStore::configure_from_payload (void *payload_start, std::string const& full_store_path) noexcept
+template<typename TFullPathProvider>
+void AssemblyStore::configure_from_payload (void *payload_start, TFullPathProvider get_full_store_path) noexcept
 {
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 
@@ -292,7 +298,7 @@ void AssemblyStore::configure_from_payload (void *payload_start, std::string con
 			LOG_ASSEMBLY,
 			std::format (
 				"Assembly store '{}' is not a valid .NET for Android assembly store file"sv,
-				full_store_path
+				get_full_store_path ()
 			)
 		);
 	}
@@ -302,7 +308,7 @@ void AssemblyStore::configure_from_payload (void *payload_start, std::string con
 			LOG_ASSEMBLY,
 			std::format (
 				"Assembly store '{}' uses format version {:x}, instead of the expected {:x}"sv,
-				full_store_path,
+				get_full_store_path (),
 				header->version,
 				ASSEMBLY_STORE_FORMAT_VERSION
 			)
