@@ -61,6 +61,9 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	<_DevicePropertyCache>$(IntermediateOutputPath)devices.cache</_DevicePropertyCache>
 	<_UploadFlag>$(IntermediateOutputPath)upload.flag</_UploadFlag>
 	<_ConfigurationCacheDirectory>$(BaseIntermediateOutputPath).cache\</_ConfigurationCacheDirectory>
+	<_AndroidFastDevStrategy Condition=" '$(_AndroidFastDevStrategy)' == '' ">FastDeploy2</_AndroidFastDevStrategy>
+	<_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' And '$(_AndroidFastDevStrategy)' == 'FastDeploy2' ">Symlink</_AndroidFastDeployAppFileTransferMode>
+	<_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
 </PropertyGroup>
 
 <PropertyGroup>
@@ -255,13 +258,16 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Target Name="_CheckForConfigurationChange">
 	<ItemGroup>
-		<_ConfigurationCacheItems Include="$(Configuration)$(Platform)$(AdbTarget)" />
+		<_ConfigurationCacheItems Include="$(Configuration)|$(Platform)|$(AdbTarget)|$(_AndroidFastDevStrategy)|$(_AndroidFastDeployAppFileTransferMode)" />
 	</ItemGroup>
 	<ReadLinesFromFile File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag"
 			Condition="Exists('$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag')">
 		<Output TaskParameter="Lines" ItemName="_ConfigurationCache"/>
 	</ReadLinesFromFile>
-	<Delete Files="$(_UploadFlag)" Condition="'@(_ConfigurationCache)' != '@(_ConfigurationCacheItems)'" />
+	<PropertyGroup>
+		<_FastDeploymentConfigurationChanged Condition="!Exists('$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag') Or '@(_ConfigurationCache)' != '@(_ConfigurationCacheItems)'">true</_FastDeploymentConfigurationChanged>
+	</PropertyGroup>
+	<Delete Files="$(_UploadFlag)" Condition="'$(_FastDeploymentConfigurationChanged)' == 'true'" />
 </Target>
 
 <Target Name="_GetUploadInputs">
@@ -322,9 +328,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       <_ReInstall Condition=" '$(_ReInstall)' == '' ">False</_ReInstall>
       <_AndroidIsTestOnlyPackage Condition=" '$(_AndroidIsTestOnlyPackage)' == '' ">False</_AndroidIsTestOnlyPackage>
       <_FastDeploymentDiagnosticLogging Condition=" '$(_FastDeploymentDiagnosticLogging)' == '' ">False</_FastDeploymentDiagnosticLogging>
-      <_AndroidFastDevStrategy Condition=" '$(_AndroidFastDevStrategy)' == '' ">FastDeploy2</_AndroidFastDevStrategy>
-      <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' And '$(_AndroidFastDevStrategy)' == 'FastDeploy2' ">Symlink</_AndroidFastDeployAppFileTransferMode>
-      <_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
       <AndroidFastDeploymentAdbCompressionAlgorithm Condition=" '$(AndroidFastDeploymentAdbCompressionAlgorithm)' == '' ">any</AndroidFastDeploymentAdbCompressionAlgorithm>
       <!--
         Internal/unsupported knobs for FastDeploy2 batching. The defaults below match the
@@ -370,6 +373,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       IsTestOnly="$(_AndroidIsTestOnlyPackage)"
       IntermediateOutputPath="$(IntermediateOutputPath)"
       EnvironmentFiles="@(_EnvironmentFiles)"
+      ResetOverrideDirectory="$(_FastDeploymentConfigurationChanged)"
     />
     <FastDeploy2
       Condition=" '$(_AndroidFastDevStrategy)' == 'FastDeploy2' "
@@ -400,7 +404,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <MakeDir Directories="$(_ConfigurationCacheDirectory)" Condition="!Exists('$(_ConfigurationCacheDirectory)')" />
     <WriteLinesToFile
       File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag"
-      Lines="$(Configuration)$(Platform)$(AdbTarget)"
+      Lines="@(_ConfigurationCacheItems)"
       Overwrite="true"/>
     <ItemGroup>
       <FileWrites Include="$(_UploadFlag)" />

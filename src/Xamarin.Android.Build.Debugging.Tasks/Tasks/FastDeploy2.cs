@@ -184,19 +184,26 @@ namespace Xamarin.Android.Tasks
 
 		async Task RunInstall ()
 		{
-			string redirectStdio = await GetDeviceProperty ("log.redirect-stdio");
-			if (string.Equals ("true", redirectStdio, StringComparison.OrdinalIgnoreCase)) {
-				LogFastDeploy2Error ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
+			WarmStateProbeOutcome warmState = await TryRunWarmStateProbe (LoadPreviousManifest ());
+			if (warmState == WarmStateProbeOutcome.Failed) {
 				return;
 			}
 
-			string runAsDisabled = await GetDeviceProperty ("ro.boot.disable_runas");
-			if (string.Equals ("true", runAsDisabled, StringComparison.OrdinalIgnoreCase)) {
-				LogFastDeploy2Error ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
-				return;
-			}
+			if (warmState != WarmStateProbeOutcome.Ready) {
+				string redirectStdio = await GetDeviceProperty ("log.redirect-stdio");
+				if (string.Equals ("true", redirectStdio, StringComparison.OrdinalIgnoreCase)) {
+					LogFastDeploy2Error ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
+					return;
+				}
 
-			await CheckAppInstalledAndDebuggable (PackageName);
+				string runAsDisabled = await GetDeviceProperty ("ro.boot.disable_runas");
+				if (string.Equals ("true", runAsDisabled, StringComparison.OrdinalIgnoreCase)) {
+					LogFastDeploy2Error ("XA0131", Resources.XA0131_DeveloperModeNotEnabled);
+					return;
+				}
+
+				await CheckAppInstalledAndDebuggable (PackageName);
+			}
 
 			if (EmbedAssembliesIntoApk) {
 				await RemoveOverrideDirectory ();
@@ -232,7 +239,9 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			await TerminateApp ();
+			if (!warmProbeStoppedApp) {
+				await TerminateApp ();
+			}
 			if (!await DeployFastDevFilesWithAdbPush (OverrideFullPath)) {
 				LogDiagnostic ("FastDeploy2 deployment did not complete successfully.");
 			}

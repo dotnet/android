@@ -47,6 +47,14 @@ defaults match the matching task properties:
   deployed manifest so the next build can detect whether the device is already up
   to date and skip redundant work.
 
+Changing `$(_AndroidFastDevStrategy)` or
+`$(_AndroidFastDeployAppFileTransferMode)` invalidates the deployment
+configuration. In particular, switching from `FastDeploy2` to legacy
+`FastDeploy` removes the FastDeploy2-managed override tree before
+`xamarin.sync` runs, so legacy deployment never attempts to overwrite
+FastDeploy2 symlinks. The installed package and unrelated application data are
+preserved.
+
 ## Stages
 
 ### 1. Resolve the device
@@ -55,15 +63,26 @@ The target device is resolved from `$(AdbTarget)` via `AndroidHelper.ParseTarget
 (which lists devices with `adb devices`). Only the resolved device id is kept; it
 is passed to every subsequent command as `adb -s <id> …`.
 
-### 2. Validate device state
+### 2. Validate warm device state
 
-Two system properties are read and the deployment is aborted with a coded error
-if either makes fast deployment unsafe:
+When the APK and local FastDeploy2 manifest are current, one tagged
+`adb shell` probe performs the warm-path validation. It reads both compatibility
+properties, the staging marker, the app-private path and override marker through
+`run-as`, and the current process id. If the app is running, the same shell
+invocation force-stops it after `run-as` succeeds.
+
+The deployment is aborted with a coded error if either compatibility property
+makes fast deployment unsafe:
 
 ```
 adb shell getprop log.redirect-stdio   # XA0128 if "true"
 adb shell getprop ro.boot.disable_runas # XA0131 if "true"
 ```
+
+If the compound probe is incomplete or cannot prove that `run-as` works, the
+task falls back to the individual property and package checks below. This keeps
+the detailed `XA0128` and `XA0131`–`XA0137` diagnostics while avoiding their
+separate `adb` startup cost on a healthy incremental deployment.
 
 ### 3. Inspect the installed app
 
@@ -111,6 +130,9 @@ adb shell pidof <package>        # only for system apps; otherwise the pid from 
 adb shell am force-stop <package>
 ```
 
+On the warm path this work is included in the compound probe from stage 2, so
+there is no separate process-id or force-stop `adb` invocation.
+
 ### 6. Deploy the fast-deployment files
 
 This is the incremental core (`DeployFastDevFilesWithAdbPush`):
@@ -126,7 +148,9 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
    ```
    adb shell rm -rf <staging-dir>
    ```
-3. **Create staging directories** for the files being deployed:
+3. **Create staging directories** for the files being deployed. After the
+   initial deployment, this step runs only when a file introduces a new
+   relative directory:
    ```
    adb shell mkdir -p <dir> [<dir> …]   # batched up to MaxShellCommandLength
    ```
@@ -154,9 +178,10 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
      task automatically falls back to `Copy`.
    * **`Copy`:** the staged files are copied into the override directory instead
      of symlinked.
-7. **Mark success.** When the override directory is up to date, the current
-   manifest hash is written to the staging and override markers, and the manifest
-   is saved to `obj` for the next incremental build.
+7. **Mark success.** When the override directory is up to date, one
+   `adb shell` invocation writes the current manifest hash to the staging and
+   override markers, and the manifest is saved to `obj` for the next incremental
+   build.
 
 ## Error codes
 

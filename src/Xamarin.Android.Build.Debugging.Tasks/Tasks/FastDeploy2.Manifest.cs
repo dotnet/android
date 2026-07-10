@@ -20,7 +20,6 @@ namespace Xamarin.Android.Tasks
 		async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath)
 		{
 			var files = PrepareDirectPushFiles ();
-			var expectedFiles = new HashSet<string> (files.Select (file => file.RelativePath), StringComparer.Ordinal);
 			var currentManifest = CreateManifest (files);
 			if (files.Count == 0) {
 				LogDiagnostic ("No FastDev files were prepared for adb push deployment.");
@@ -30,7 +29,14 @@ namespace Xamarin.Android.Tasks
 			string remoteStagingPath = GetRemoteAdbPushStagingPath ();
 			var previousManifest = LoadPreviousManifest ();
 			string previousManifestHash = previousManifest == null ? "" : ComputeManifestHash (previousManifest);
-			var deviceManifestState = previousManifest == null ? new DeviceManifestState () : await GetDeviceManifestState (remoteStagingPath, overridePath);
+			DeviceManifestState deviceManifestState;
+			if (previousManifest == null) {
+				deviceManifestState = new DeviceManifestState ();
+			} else if (warmDeviceManifestState != null && string.Equals (warmDeviceManifestHash, previousManifestHash, StringComparison.Ordinal)) {
+				deviceManifestState = warmDeviceManifestState;
+			} else {
+				deviceManifestState = await GetDeviceManifestState (remoteStagingPath, overridePath);
+			}
 			bool remoteReady = previousManifest != null && string.Equals (deviceManifestState.RemoteHash, previousManifestHash, StringComparison.Ordinal);
 			bool overrideSymlinksReady = previousManifest != null && string.Equals (deviceManifestState.OverrideHash, previousManifestHash, StringComparison.Ordinal);
 			if (!remoteReady) {
@@ -53,10 +59,15 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			string output = await CreateRemoteStagingDirectories (remoteStagingPath, expectedFiles);
-			if (!string.IsNullOrEmpty (output) && IsShellError (output, "mkdir")) {
-				LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
-				return false;
+			HashSet<string> filesRequiringDirectories = GetFilesRequiringStagingDirectories (
+				currentManifest.Files.Keys,
+				previousManifest?.Files.Keys);
+			if (filesRequiringDirectories.Count > 0) {
+				string output = await CreateRemoteStagingDirectories (remoteStagingPath, filesRequiringDirectories);
+				if (!string.IsNullOrEmpty (output) && IsShellError (output, "mkdir")) {
+					LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
+					return false;
+				}
 			}
 
 			if (!await RemoveRemoteStaleFiles (remoteStagingPath, removedFiles)) {
@@ -76,10 +87,10 @@ namespace Xamarin.Android.Tasks
 
 			if (result) {
 				string currentManifestHash = ComputeManifestHash (currentManifest);
-				if (!await MarkRemoteManifest (remoteStagingPath, currentManifestHash)) {
-					return false;
-				}
-				if (UseShellSymlinkAppFileTransfer () && !await MarkOverrideManifest (overridePath, currentManifestHash)) {
+				bool manifestsAlreadyMarked =
+					string.Equals (deviceManifestState.RemoteHash, currentManifestHash, StringComparison.Ordinal) &&
+					(!UseShellSymlinkAppFileTransfer () || string.Equals (deviceManifestState.OverrideHash, currentManifestHash, StringComparison.Ordinal));
+				if (!manifestsAlreadyMarked && !await MarkRemoteManifests (remoteStagingPath, overridePath, currentManifestHash)) {
 					return false;
 				}
 				WriteManifest (currentManifest);
@@ -288,6 +299,23 @@ namespace Xamarin.Android.Tasks
 			return removedFiles;
 		}
 
+		internal static HashSet<string> GetFilesRequiringStagingDirectories (IEnumerable<string> currentFiles, IEnumerable<string> previousFiles)
+		{
+			if (previousFiles == null) {
+				return new HashSet<string> (currentFiles, StringComparer.Ordinal);
+			}
+
+			var previousDirectories = new HashSet<string> (
+				previousFiles.Select (GetDirectoryName),
+				StringComparer.Ordinal);
+			return new HashSet<string> (
+				currentFiles.Where (file => {
+					string directory = GetDirectoryName (file);
+					return directory.Length > 0 && !previousDirectories.Contains (directory);
+				}),
+				StringComparer.Ordinal);
+		}
+
 		async Task<bool> UploadChangedFiles (string remoteStagingPath, List<DirectPushFile> files, HashSet<string> changedFiles)
 		{
 			var changedFileList = files.Where (file => changedFiles.Contains (file.RelativePath)).ToList ();
@@ -394,22 +422,28 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		async Task<bool> MarkRemoteManifest (string remoteStagingPath, string manifestHash)
+		async Task<bool> MarkRemoteManifests (string remoteStagingPath, string overridePath, string manifestHash)
 		{
-			string markerPath = CombineRemotePath (remoteStagingPath, ManifestHashMarker);
-			var result = await RunAdbShellCommand ($"printf %s {QuoteShellArgument (manifestHash)} > {QuoteShellArgument (markerPath)}");
-			if (result.ExitCode != 0 || IsShellError (result.Output, "printf")) {
-				LogFastDeploy2Error ("XA0129", result.Output, markerPath);
-				return false;
+			string remoteMarkerPath = CombineRemotePath (remoteStagingPath, ManifestHashMarker);
+			string script = $"printf %s {QuoteShellArgument (manifestHash)} > {QuoteShellArgument (remoteMarkerPath)}";
+			if (UseShellSymlinkAppFileTransfer ()) {
+				string overrideScript =
+					$"mkdir -p {QuoteShellArgument (overridePath)}; " +
+					$"printf %s {QuoteShellArgument (manifestHash)} > {QuoteShellArgument (CombineRemotePath (overridePath, ManifestHashMarker))}";
+				string runAsCommand = string.Join (" ", BuildRunAsArgs ().Concat (new [] {
+					"sh",
+					"-c",
+					overrideScript,
+				}).Select (QuoteShellArgument));
+				script += $" && {runAsCommand}";
 			}
-			return true;
-		}
 
-		async Task<bool> MarkOverrideManifest (string overridePath, string manifestHash)
-		{
-			string output = await RunAsShell ($"mkdir -p {QuoteShellArgument (overridePath)}; printf %s {QuoteShellArgument (manifestHash)} > {QuoteShellArgument (CombineRemotePath (overridePath, ManifestHashMarker))}");
-			if (RaiseRunAsError (output) || IsShellError (output, "mkdir") || IsShellError (output, "printf")) {
-				LogFastDeploy2Error ("XA0129", output, overridePath);
+			AdbCommandResult result = await RunAdbShellCommand (script);
+			if ((UseShellSymlinkAppFileTransfer () && RaiseRunAsError (result.Output)) ||
+					result.ExitCode != 0 ||
+					IsShellError (result.Output, "mkdir") ||
+					IsShellError (result.Output, "printf")) {
+				LogFastDeploy2Error ("XA0129", result.Output, remoteMarkerPath);
 				return false;
 			}
 			return true;

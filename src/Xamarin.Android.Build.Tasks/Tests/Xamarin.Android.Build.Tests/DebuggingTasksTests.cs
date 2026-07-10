@@ -73,5 +73,79 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.Contains (secondTaskExecMessages, "  Using cached MonoDroidSdk values");
 		}
 
+		[Test]
+		public void FastDeploy2ParsesWarmStateProbe ()
+		{
+			var state = FastDeploy2.ParseWarmStateProbeOutput (
+				"""
+				__XA_FD2_REDIRECT__=
+				__XA_FD2_RUN_AS_DISABLED__=
+				__XA_FD2_REMOTE_HASH__=remote-hash
+				__XA_FD2_PID__=123 456
+				__XA_FD2_PATH__=/data/user/0/com.example
+				__XA_FD2_OVERRIDE_HASH__=override-hash
+				__XA_FD2_RUN_AS_STATUS__=0
+				__XA_FD2_FORCE_STOP_STATUS__=0
+				""");
+
+			Assert.IsTrue (state.HasRequiredState);
+			Assert.AreEqual ("remote-hash", state.RemoteHash);
+			Assert.AreEqual ("override-hash", state.OverrideHash);
+			Assert.AreEqual ("/data/user/0/com.example", state.InternalPath);
+			Assert.AreEqual (123, state.ProcessId);
+			Assert.AreEqual (0, state.RunAsStatus);
+			Assert.AreEqual (0, state.ForceStopStatus);
+		}
+
+		[Test]
+		public void FastDeploy2RejectsIncompleteWarmStateProbe ()
+		{
+			var state = FastDeploy2.ParseWarmStateProbeOutput (
+				"""
+				__XA_FD2_REDIRECT__=
+				__XA_FD2_RUN_AS_DISABLED__=true
+				run-as: package not debuggable
+				""");
+
+			Assert.IsFalse (state.HasRequiredState);
+			Assert.IsTrue (state.HasRunAsDisabled);
+			Assert.AreEqual ("true", state.RunAsDisabled);
+		}
+
+		[Test]
+		public void FastDeploy2PlansOnlyNewStagingDirectories ()
+		{
+			var previousFiles = new [] {
+				"arm64-v8a/App.dll",
+				"arm64-v8a/en-US/App.resources.dll",
+			};
+			var currentFiles = new [] {
+				"arm64-v8a/App.dll",
+				"arm64-v8a/New.dll",
+				"arm64-v8a/en-US/App.resources.dll",
+				"arm64-v8a/fr/App.resources.dll",
+			};
+
+			HashSet<string> files = FastDeploy2.GetFilesRequiringStagingDirectories (currentFiles, previousFiles);
+
+			CollectionAssert.AreEquivalent (
+				new [] { "arm64-v8a/fr/App.resources.dll" },
+				files);
+		}
+
+		[Test]
+		public void FastDeploy2PlansAllStagingDirectoriesAfterReset ()
+		{
+			var currentFiles = new [] {
+				"App.dll",
+				"arm64-v8a/App.dll",
+				"arm64-v8a/fr/App.resources.dll",
+			};
+
+			HashSet<string> files = FastDeploy2.GetFilesRequiringStagingDirectories (currentFiles, previousFiles: null);
+
+			CollectionAssert.AreEquivalent (currentFiles, files);
+		}
+
 	}
 }
