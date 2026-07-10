@@ -246,13 +246,6 @@ struct RuntimePropertyIndexEntry
 	uint32_t index;
 };
 
-struct DSOApkEntry
-{
-	uint64_t name_hash;
-	uint32_t offset; // offset into the APK
-	int32_t  fd; // apk file descriptor
-};
-
 struct DSOCacheEntry
 {
 	const uint64_t  hash;
@@ -354,7 +347,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
 	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
-	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
 
 	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];
 	[[gnu::visibility("default")]] extern const char runtime_properties_data[];

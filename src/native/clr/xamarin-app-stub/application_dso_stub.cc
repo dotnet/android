@@ -156,8 +156,6 @@ DSOCacheEntry aot_dso_cache[] = {
 
 const char dso_names_data[] = {};
 
-DSOApkEntry dso_apk_entries[2] {};
-
 //
 // Support for marshal methods
 //
