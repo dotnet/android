@@ -282,14 +282,7 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
 }
 
-void AssemblyStore::map_from_pointer (void *payload_start, std::string_view const& description) noexcept
-{
-	log_debug (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: {:p} ({})"sv, payload_start, description);
-	configure_from_payload (payload_start, [&description]() -> std::string { return std::string { description }; });
-}
-
-template<typename TFullPathProvider>
-void AssemblyStore::configure_from_payload (void *payload_start, TFullPathProvider get_full_store_path) noexcept
+void AssemblyStore::configure_from_payload (void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept
 {
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 

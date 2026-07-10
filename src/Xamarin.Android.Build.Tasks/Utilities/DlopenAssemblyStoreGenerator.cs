@@ -74,7 +74,7 @@ static class DlopenAssemblyStoreGenerator
 		File.WriteAllText (asmFile, asm);
 
 		string llvmMc = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-mc"));
-		var mcArgs = [
+		List<string> mcArgs = [
 			"--filetype=obj",
 			$"-triple={toolInfo.Triple}",
 			$"-o {MonoAndroidHelper.QuoteFileNameArgument (objFile)}",
@@ -88,7 +88,7 @@ static class DlopenAssemblyStoreGenerator
 		}
 
 		string ld = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "ld"));
-		var ldArgs = [
+		List<string> ldArgs = [
 			"--shared",
 			$"-soname {MonoAndroidHelper.QuoteFileNameArgument (outputFileName)}",
 			$"-m {toolInfo.ElfArch}",

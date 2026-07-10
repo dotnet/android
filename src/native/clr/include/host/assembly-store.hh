@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <mutex>
+#include <string>
 #include <string_view>
 #include <tuple>
 
@@ -17,20 +19,18 @@ namespace xamarin::android {
 
 		static void map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size) noexcept;
 
-		// Configure the store directly from an in-memory payload pointer (e.g. obtained via
-		// dlopen()+dlsym() of the `_assembly_store_start` dynamic symbol) instead of locating and
-		// mmapping it out of the APK.
-		static void map_from_pointer (void *payload_start, std::string_view const& description) noexcept;
-
 		static void map (int fd, std::string_view const& file_path, uint32_t offset, uint32_t size) noexcept
 		{
 			map (fd, {}, file_path, offset, size);
 		}
 
-	private:
-		template<typename TFullPathProvider>
-		static void configure_from_payload (void *payload_start, TFullPathProvider get_full_store_path) noexcept;
+		// Configure the store directly from an in-memory payload pointer (e.g. obtained via
+		// dlopen()+dlsym() of the `_assembly_store_start` dynamic symbol) instead of locating and
+		// mmapping it out of the APK. `get_full_store_path` is invoked only to build diagnostics
+		// if the payload turns out to be invalid.
+		static void configure_from_payload (void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept;
 
+	private:
 		static void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
 
 		// Returns a tuple of <assembly_data_pointer, data_size>

@@ -325,7 +325,8 @@ auto Host::try_map_assembly_store_via_dlopen () noexcept -> bool
 	}
 
 	// NOTE: intentionally not calling dlclose() on success - we keep the store mapped.
-	AssemblyStore::map_from_pointer (payload, store_name);
+	log_debug (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: {:p} ({})"sv, payload, optional_string (store_name));
+	AssemblyStore::configure_from_payload (payload, [store_name]() -> std::string { return std::string { store_name }; });
 	found_assembly_store = true;
 	return true;
 }
