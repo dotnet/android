@@ -7,6 +7,7 @@
     <OutputPath>..\..\bin\Test$(Configuration)</OutputPath>
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableMSTestRunner>true</EnableMSTestRunner>
@@ -22,7 +23,7 @@
 
   <ItemGroup>
     <AndroidJavaSource Include="java/**/*.java" />
-    <PackageReference Include="MSTest" Version="$(MSTestPackageVersion)" />
+    <PackageReference Include="MSTest" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
