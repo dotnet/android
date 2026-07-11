@@ -271,11 +271,10 @@ void BridgeProcessingShared::take_weak_global_ref (const HandleContext &context)
 		// `handle` is a valid strong global reference, so NewWeakGlobalRef only returns null when the
 		// VM is out of memory. Continuing would delete the strong reference below and lose the object
 		// (a later NewGlobalRef of a null weak reference would look like a collected peer), so fail fast.
-		if (env->ExceptionCheck ()) {
-			env->ExceptionDescribe ();
-			env->ExceptionClear ();
-		}
-		Helpers::abort_application (LOG_GC, "Failed to create a weak global reference during GC bridge processing"sv);
+		// The OOM failure raises a pending exception; abort unconditionally in case it somehow did not.
+		constexpr std::string_view failure = "Failed to create a weak global reference during GC bridge processing"sv;
+		abort_on_pending_java_exception (failure);
+		Helpers::abort_application (LOG_GC, failure);
 	}
 	log_weak_gref_new (handle, weak);
 
