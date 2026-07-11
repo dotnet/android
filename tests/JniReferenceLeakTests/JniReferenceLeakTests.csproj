@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <AndroidJavaSource Include="java/**/*.java" />
-    <PackageReference Include="MSTest" Version="4.3.0" />
+    <PackageReference Include="MSTest" Version="$(MSTestPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
