@@ -15,6 +15,17 @@ void BridgeProcessingShared::initialize_on_runtime_init (JNIEnv *env, jclass run
 	GCUserPeer_ctor = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
 
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
+
+	// Cache the IGCUserPeer interface method IDs once, instead of resolving them per reference edge.
+	IGCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
+	abort_unless (IGCUserPeer_class != nullptr, "Failed to load mono.android.IGCUserPeer!");
+
+	IGCUserPeer_monodroidAddReference = env->GetMethodID (IGCUserPeer_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
+	IGCUserPeer_monodroidClearReferences = env->GetMethodID (IGCUserPeer_class, "monodroidClearReferences", "()V");
+
+	abort_unless (
+		IGCUserPeer_monodroidAddReference != nullptr && IGCUserPeer_monodroidClearReferences != nullptr,
+		"Failed to load mono.android.IGCUserPeer methods!");
 }
 
 BridgeProcessingShared::BridgeProcessingShared (MarkCrossReferencesArgs *args) noexcept
@@ -44,6 +55,29 @@ void BridgeProcessingShared::process () noexcept
 
 void BridgeProcessingShared::prepare_for_java_collection () noexcept
 {
+	// Each SCC with no IGCUserPeers is represented by a temporary peer held as a JNI local
+	// reference that must stay alive until every cross reference has been added. Reserve enough
+	// local reference capacity up front so that a large number of such SCCs cannot overflow the
+	// JNI local reference table (which only guarantees 16 slots by default).
+	size_t temporary_peer_count = 0;
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		if (cross_refs->Components [i].Count == 0) {
+			temporary_peer_count = Helpers::add_with_overflow_check<size_t> (temporary_peer_count, 1);
+		}
+	}
+
+	if (temporary_peer_count > 0) {
+		constexpr size_t local_ref_slack = 16;
+		constexpr size_t max_jint = static_cast<size_t> (0x7fffffff);
+		size_t desired_capacity = Helpers::add_with_overflow_check<size_t> (temporary_peer_count, local_ref_slack);
+		jint requested_capacity = static_cast<jint> (desired_capacity > max_jint ? max_jint : desired_capacity);
+
+		if (env->EnsureLocalCapacity (requested_capacity) != JNI_OK) [[unlikely]] {
+			env->ExceptionClear ();
+			log_warn (LOG_GC, "Failed to reserve JNI local reference capacity for {} temporary peers", temporary_peer_count);
+		}
+	}
+
 	// Before looking at xrefs, scan the SCCs. During collection, an SCC has to behave like a
 	// single object. If the number of objects in the SCC is anything other than 1, the SCC
 	// must be doctored to mimic that one-object nature.
@@ -161,19 +195,14 @@ bool BridgeProcessingShared::add_reference (jobject from, jobject to) noexcept
 		return true;
 	}
 
-	jclass java_class = env->GetObjectClass (from);
-	jmethodID add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
-
-	if (add_method_id == nullptr) [[unlikely]] {
-		// TODO: is this a fatal error?
-		env->ExceptionClear ();
+	if (!env->IsInstanceOf (from, IGCUserPeer_class)) [[unlikely]] {
+		jclass java_class = env->GetObjectClass (from);
 		log_missing_add_references_method (java_class);
 		env->DeleteLocalRef (java_class);
 		return false;
 	}
 
-	env->DeleteLocalRef (java_class);
-	env->CallVoidMethod (from, add_method_id, to);
+	env->CallVoidMethod (from, IGCUserPeer_monodroidAddReference, to);
 	return true;
 }
 
@@ -205,18 +234,14 @@ void BridgeProcessingShared::clear_references (jobject handle) noexcept
 		return;
 	}
 
-	jclass java_class = env->GetObjectClass (handle);
-	jmethodID clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
-
-	if (clear_method_id == nullptr) [[unlikely]] {
-		env->ExceptionClear ();
+	if (!env->IsInstanceOf (handle, IGCUserPeer_class)) [[unlikely]] {
+		jclass java_class = env->GetObjectClass (handle);
 		log_missing_clear_references_method (java_class);
 		env->DeleteLocalRef (java_class);
 		return;
 	}
 
-	env->DeleteLocalRef (java_class);
-	env->CallVoidMethod (handle, clear_method_id);
+	env->CallVoidMethod (handle, IGCUserPeer_monodroidClearReferences);
 }
 
 void BridgeProcessingShared::take_global_ref (HandleContext &context) noexcept
@@ -373,7 +398,7 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 {
-	if (Logger::gc_spew_enabled ()) [[likely]] {
+	if (!Logger::gc_spew_enabled ()) [[likely]] {
 		return;
 	}
 

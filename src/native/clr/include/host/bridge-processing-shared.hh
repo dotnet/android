@@ -34,6 +34,13 @@ private:
 	static inline jclass GCUserPeer_class = nullptr;
 	static inline jmethodID GCUserPeer_ctor = nullptr;
 
+	// Cached `mono.android.IGCUserPeer` interface and its methods. The method IDs are looked up
+	// once from the interface class and are valid for virtual dispatch on every implementing peer,
+	// so we avoid a per-edge GetObjectClass + GetMethodID lookup during bridge processing.
+	static inline jclass IGCUserPeer_class = nullptr;
+	static inline jmethodID IGCUserPeer_monodroidAddReference = nullptr;
+	static inline jmethodID IGCUserPeer_monodroidClearReferences = nullptr;
+
 	void prepare_for_java_collection () noexcept;
 	void prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept;
 	void take_weak_global_ref (const HandleContext &context) noexcept;
