@@ -174,6 +174,7 @@ bool BridgeProcessingShared::add_reference (jobject from, jobject to) noexcept
 
 	env->DeleteLocalRef (java_class);
 	env->CallVoidMethod (from, add_method_id, to);
+	abort_on_pending_java_exception ("A Java exception was thrown by monodroidAddReference during GC bridge processing"sv);
 	return true;
 }
 
@@ -217,6 +218,18 @@ void BridgeProcessingShared::clear_references (jobject handle) noexcept
 
 	env->DeleteLocalRef (java_class);
 	env->CallVoidMethod (handle, clear_method_id);
+	abort_on_pending_java_exception ("A Java exception was thrown by monodroidClearReferences during GC bridge processing"sv);
+}
+
+void BridgeProcessingShared::abort_on_pending_java_exception (std::string_view message) noexcept
+{
+	if (!env->ExceptionCheck ()) [[likely]] {
+		return;
+	}
+
+	env->ExceptionDescribe ();
+	env->ExceptionClear ();
+	Helpers::abort_application (LOG_GC, message);
 }
 
 void BridgeProcessingShared::take_global_ref (HandleContext &context) noexcept
@@ -230,6 +243,11 @@ void BridgeProcessingShared::take_global_ref (HandleContext &context) noexcept
 	log_weak_to_gref (weak, handle);
 
 	if (handle == nullptr) {
+		// A null result normally means the weak reference's target was collected by the Java GC.
+		// However, NewGlobalRef can also fail (returning null with a pending exception) when the VM
+		// is out of memory or the global reference table is full. Treating that as "collected" would
+		// tear down a live peer, so distinguish the two and fail fast on a genuine failure.
+		abort_on_pending_java_exception ("Failed to promote a weak global reference to a global reference during GC bridge processing"sv);
 		log_weak_ref_collected (weak);
 	}
 
@@ -249,6 +267,16 @@ void BridgeProcessingShared::take_weak_global_ref (const HandleContext &context)
 	log_take_weak_global_ref (handle);
 
 	jobject weak = env->NewWeakGlobalRef (handle);
+	if (weak == nullptr) [[unlikely]] {
+		// `handle` is a valid strong global reference, so NewWeakGlobalRef only returns null when the
+		// VM is out of memory. Continuing would delete the strong reference below and lose the object
+		// (a later NewGlobalRef of a null weak reference would look like a collected peer), so fail fast.
+		if (env->ExceptionCheck ()) {
+			env->ExceptionDescribe ();
+			env->ExceptionClear ();
+		}
+		Helpers::abort_application (LOG_GC, "Failed to create a weak global reference during GC bridge processing"sv);
+	}
 	log_weak_gref_new (handle, weak);
 
 	context.control_block->handle = weak;
