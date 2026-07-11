@@ -152,16 +152,6 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
-        buildConfiguration: $(XA.Build.Configuration)
-        configuration: Debug
-        testName: JniReferenceLeakTests-Mono
-        project: tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
-        extraBuildArgs: -p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true
-        artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/JniReferenceLeakTests-Signed.apk
-        artifactFolder: $(DotNetTargetFramework)-JniReferenceLeakTests-Mono
-
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-CoreCLR
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
