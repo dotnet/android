@@ -123,6 +123,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
+| **JNI reference leaks** | `tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj` | Dedicated serial MSTest/MTP app for JNI reference and peer leak checks |
 | **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
 | **android app** | Same project — tests in `Android.App/` | `Application`, `Activity` tests |
@@ -153,6 +154,15 @@ Command:
 ```
 
 Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:UseMonoRuntime=false`).
+
+For the dedicated JNI reference leak tests:
+```bash
+./dotnet-local.sh build -t:Install -c Debug tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
+(
+  cd tests/JniReferenceLeakTests
+  ../../dotnet-local.sh test JniReferenceLeakTests.csproj --no-build -c Debug --report-trx --results-directory ../../bin/TestDebug/TestResults
+)
+```
 
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash

@@ -145,6 +145,16 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: Mono.Android-$(XA.Build.Configuration)-$(avdApiLevel)
 
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        buildConfiguration: $(XA.Build.Configuration)
+        configuration: Debug
+        testName: JniReferenceLeakTests-$(avdApiLevel)
+        project: tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
+        extraBuildArgs: -p:UseMonoRuntime=false -p:TestAvdApiLevel=$(avdApiLevel) -p:TestAvdAbi=$(avdAbi) -p:TestAvdType=$(avdType)
+        artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/JniReferenceLeakTests-Signed.apk
+        artifactFolder: JniReferenceLeakTests-$(avdApiLevel)
+
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
