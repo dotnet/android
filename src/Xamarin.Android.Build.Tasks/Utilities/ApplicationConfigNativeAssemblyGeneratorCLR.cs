@@ -258,6 +258,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public bool MarshalMethodsEnabled { get; set; }
 	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
+	public bool HaveAssemblyStore { get; set; }
 
 	public ApplicationConfigNativeAssemblyGeneratorCLR (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties,
 		IDictionary<string, string>? runtimeProperties, TaskLoggingHelper log)
@@ -344,6 +345,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			jni_remapping_replacement_type_count = (uint)JniRemappingReplacementTypeCount,
 			jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
 			android_package_name = AndroidPackageName,
+			have_assembly_store = HaveAssemblyStore,
 		};
 		application_config = new StructureInstance<ApplicationConfigCLR> (applicationConfigStructureInfo, app_cfg);
 		module.AddGlobalVariable ("application_config", application_config);

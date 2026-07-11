@@ -202,6 +202,11 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 
 void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
 {
+	if (!application_config.have_assembly_store) {
+		log_debug (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery"sv);
+		return;
+	}
+
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		scan_filesystem_for_assemblies_and_libraries ();
 		return;
