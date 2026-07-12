@@ -67,7 +67,7 @@ public class GenerateMissingTypeMapStubs : AndroidTask
 
 			using var stream = new MemoryStream ();
 			generator.GenerateEmpty (stream, name);
-			Files.CopyIfBytesChanged (stream.ToArray (), linkedPath);
+			Files.CopyIfStreamChanged (stream, linkedPath);
 			Log.LogDebugMessage ($"Generated empty typemap stub for trimmed assembly '{name}'.");
 			stubs.Add (new TaskItem (linkedPath));
 		}
