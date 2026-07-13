@@ -195,6 +195,30 @@ namespace Java.InteropTests
 			}
 		}
 
+		// Regression: byte-element collections must stay supported on the trimmable typemap path
+		// (ValueTypeFactory maps byte alongside sbyte). byte marshals to java.lang.Byte bitwise, so
+		// values above 127 round-trip through the signed Java byte.
+		[Test]
+		public void FromJniHandle_IListByte ()
+		{
+			using (var source = new JavaList<byte> ()) {
+				source.Add ((byte) 1);
+				source.Add ((byte) 200);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<byte>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (typeof (JavaList<byte>), converted.GetType ());
+
+					var list = (IList<byte>) converted;
+					Assert.AreEqual (2, list.Count);
+					Assert.AreEqual ((byte) 1, list [0]);
+					Assert.AreEqual ((byte) 200, list [1]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		static Java.Util.ArrayList CreateList (params int[][] items)
 		{
 			var list = new Java.Util.ArrayList ();
