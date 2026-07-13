@@ -54,7 +54,7 @@ static class DlopenAssemblyStoreGenerator
 	{
 		var toolInfo = GetArchToolInfo (targetArch);
 
-		string outputDir = Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped-dlopen");
+		string outputDir = Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), DSOWrapperGenerator.WrappedDlopenSubDirectory);
 		Directory.CreateDirectory (outputDir);
 
 		string outputFile = Path.Combine (outputDir, outputFileName);
