@@ -395,9 +395,9 @@ extends:
             destinationPath: $(Build.StagingDirectory)\nuget-signed
 
         - task: DotNetCoreCLI@2
-          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
+          displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
           inputs:
-            projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
+            projects: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
             arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
