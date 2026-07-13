@@ -22,17 +22,113 @@ namespace xamarin::android
 	{
 		static inline std::mutex   dso_handle_write_lock;
 
+		[[gnu::always_inline]]
+		static constexpr auto ascii_to_lower (char c) noexcept -> char
+		{
+			return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : c;
+		}
+
+		[[gnu::always_inline]]
+		static auto ends_with_ci (std::string_view value, std::string_view suffix) noexcept -> bool
+		{
+			if (value.length () < suffix.length ()) {
+				return false;
+			}
+
+			size_t offset = value.length () - suffix.length ();
+			for (size_t i = 0; i < suffix.length (); i++) {
+				if (ascii_to_lower (value[offset + i]) != ascii_to_lower (suffix[i])) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		[[gnu::always_inline]]
+		static auto starts_with_ci (std::string_view value, std::string_view prefix) noexcept -> bool
+		{
+			if (value.length () < prefix.length ()) {
+				return false;
+			}
+
+			for (size_t i = 0; i < prefix.length (); i++) {
+				if (ascii_to_lower (value[i]) != ascii_to_lower (prefix[i])) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		// Equivalent of Path.GetFileNameWithoutExtension for a bare file name: strip the last '.' and
+		// everything following it.
+		[[gnu::always_inline]]
+		static auto strip_last_extension (std::string_view name) noexcept -> std::string_view
+		{
+			size_t dot = name.find_last_of ('.');
+			return dot == std::string_view::npos ? name : name.substr (0, dot);
+		}
+
+		// Mirror of AddNameMutations () in
+		// src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigNativeAssemblyGeneratorCLR.cs.
+		//
+		// The DSO cache stores one entry per name mutation of a library. Each entry is keyed by the
+		// CRC32 of the *mutation*, but only the library's real (unmutated) name is stored (referenced
+		// through `name_index`); the mutation strings themselves are discarded. To disambiguate a
+		// CRC32 collision we re-derive the mutations of a matched entry's real name and check whether
+		// the requested name is one of them. This MUST be kept in sync with the managed generator.
+		static auto name_is_mutation_of (std::string_view requested, std::string_view real_name) noexcept -> bool
+		{
+			// Mutation: the (real) name itself.
+			if (requested == real_name) {
+				return true;
+			}
+
+			if (ends_with_ci (real_name, ".dll.so"sv)) {
+				// Path.GetFileNameWithoutExtension applied twice strips ".so" and then ".dll".
+				std::string_view no_ext = strip_last_extension (strip_last_extension (real_name));
+
+				// Mutation: the name without the ".dll.so" suffix.
+				if (requested == no_ext) {
+					return true;
+				}
+
+				// Mutation: that same stem with a plain ".so" suffix.
+				if (requested.ends_with (".so"sv) && requested.substr (0, requested.length () - ".so"sv.length ()) == no_ext) {
+					return true;
+				}
+			} else if (requested == strip_last_extension (real_name)) {
+				// Mutation: the name without its final extension.
+				return true;
+			}
+
+			// The generator also emits the mutations of the name with a leading "lib" removed.
+			if (starts_with_ci (real_name, "lib"sv)) {
+				return name_is_mutation_of (requested, real_name.substr ("lib"sv.length ()));
+			}
+
+			return false;
+		}
+
+		// Entries are sorted by `hash`, so all entries sharing `hash` are contiguous. CRC32 is a
+		// 32-bit hash, so collisions are possible (though very unlikely); walk the whole run of
+		// entries with a matching hash and confirm the requested name really is a mutation of the
+		// candidate library's name before accepting it.
 		[[gnu::always_inline, gnu::flatten]]
-		static auto find_dso_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
+		static auto find_dso_cache_entry (std::string_view const& name, hash_t hash) noexcept -> DSOCacheEntry*
 		{
 			log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
 
-			auto equal = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash == key; };
 			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
-			ssize_t idx = Search::binary_search<DSOCacheEntry, hash_t, equal, less_than> (hash, dso_cache, application_config.number_of_dso_cache_entries);
+			size_t idx = Search::lower_bound<DSOCacheEntry, hash_t, less_than> (hash, dso_cache, application_config.number_of_dso_cache_entries);
 
-			if (idx >= 0) {
-				return &dso_cache[idx];
+			while (idx < application_config.number_of_dso_cache_entries && dso_cache[idx].hash == hash) {
+				DSOCacheEntry &entry = dso_cache[idx];
+				if (name_is_mutation_of (name, get_dso_name (&entry))) {
+					return &entry;
+				}
+				idx++;
 			}
 
 			return nullptr;
@@ -49,6 +145,12 @@ namespace xamarin::android
 			return &dso_names_data[dso->name_index];
 		}
 
+		// Unlike the DSO cache and assembly-store lookups, this table is matched on the CRC32 hash
+		// alone: a DSOApkEntry stores only `name_hash`, with no name to verify against. This is an
+		// accepted 32-bit trade-off. The primary collision risk is already closed elsewhere: this
+		// lookup is only reached with the `real_name_hash` of a DSOCacheEntry that find_dso_cache_entry
+		// has already name-verified, so the residual risk is limited to a CRC32 collision between two
+		// shared libraries actually packaged in the same APK, which is extremely unlikely.
 		[[gnu::flatten]]
 		static auto find_dso_apk_entry (hash_t hash) -> DSOApkEntry*
 		{
@@ -119,7 +221,7 @@ namespace xamarin::android
 			hash_t name_hash = crc32_hash (name);
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
 
-			DSOCacheEntry *dso = find_dso_cache_entry (name_hash);
+			DSOCacheEntry *dso = find_dso_cache_entry (name, name_hash);
 			return monodroid_dlopen (dso, name, flags);
 		}
 

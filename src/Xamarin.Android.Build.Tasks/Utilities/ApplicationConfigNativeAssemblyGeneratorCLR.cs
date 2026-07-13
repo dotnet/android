@@ -585,6 +585,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		void AddNameMutations (string name)
 		{
+			// NOTE: The CoreCLR runtime re-derives these mutations to disambiguate CRC32 hash
+			// collisions in the DSO cache (see MonodroidDl::name_is_mutation_of in
+			// src/native/clr/include/runtime-base/monodroid-dl.hh). Keep the two in sync.
 			nameMutations.Add (name);
 			if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
 				string nameNoExt = Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!;
