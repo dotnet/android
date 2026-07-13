@@ -152,21 +152,25 @@ namespace Microsoft.Android.Build.Tasks
 		}
 
 		public void LogError (string message)
-			=> LogCodedError (code: null, message: message, file: null, lineNumber: 0);
+			=> LogCodedErrorCore (code: null, message: message, file: null, lineNumber: 0);
 
 		public void LogError (string message, params object [] messageArgs)
-			=> LogCodedError (code: null, message: string.Format (message, messageArgs));
+			=> LogCodedErrorCore (code: null, message: FormatMessage (message, messageArgs), file: null, lineNumber: 0);
 
 		public void LogCodedError (string? code, string message)
-			=> LogCodedError (code: code, message: message, file: null, lineNumber: 0);
+			=> LogCodedErrorCore (code: code, message: message, file: null, lineNumber: 0);
 
 		public void LogCodedError (string? code, string message, params object [] messageArgs)
-			=> LogCodedError (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
+			=> LogCodedErrorCore (code: code, message: FormatMessage (message, messageArgs), file: null, lineNumber: 0);
 
 		public void LogCodedError (string? code, string? file, int lineNumber, string message, params object [] messageArgs)
-			=> LogCodedError (code: code, message: string.Format (message, messageArgs), file: file, lineNumber: lineNumber);
+			=> LogCodedErrorCore (code: code, message: FormatMessage (message, messageArgs), file: file, lineNumber: lineNumber);
 
+		[Obsolete ("This overload binds ambiguously when the trailing arguments are (string, int): a call meant to format the message, e.g. LogCodedError (\"XA0000\", Resources.XA0000, someString, someInt), silently binds here and treats the arguments as a source file and line number instead of substituting them into the message. To format the message use LogCodedError (code, message, params object[]); to attach a source location use LogCodedError (code, file, lineNumber, message, params object[]).", error: true)]
 		public void LogCodedError (string? code, string message, string? file, int lineNumber)
+			=> LogCodedErrorCore (code: code, message: message, file: file, lineNumber: lineNumber);
+
+		void LogCodedErrorCore (string? code, string message, string? file, int lineNumber)
 		{
 			if (uiThreadId == Thread.CurrentThread.ManagedThreadId) {
 #pragma warning disable 618
@@ -201,21 +205,25 @@ namespace Microsoft.Android.Build.Tasks
 		}
 
 		public void LogWarning (string message)
-			=> LogCodedWarning (code: null, message: message, file: null, lineNumber: 0);
+			=> LogCodedWarningCore (code: null, message: message, file: null, lineNumber: 0);
 
 		public void LogWarning (string message, params object [] messageArgs)
-			=> LogCodedWarning (code: null, message: string.Format (message, messageArgs));
+			=> LogCodedWarningCore (code: null, message: FormatMessage (message, messageArgs), file: null, lineNumber: 0);
 
 		public void LogCodedWarning (string? code, string message)
-			=> LogCodedWarning (code: code, message: message, file: null, lineNumber: 0);
+			=> LogCodedWarningCore (code: code, message: message, file: null, lineNumber: 0);
 
 		public void LogCodedWarning (string? code, string message, params object [] messageArgs)
-			=> LogCodedWarning (code: code, message: string.Format (message, messageArgs), file: null, lineNumber: 0);
+			=> LogCodedWarningCore (code: code, message: FormatMessage (message, messageArgs), file: null, lineNumber: 0);
 
 		public void LogCodedWarning (string? code, string? file, int lineNumber, string message, params object [] messageArgs)
-			=> LogCodedWarning (code: code, message: string.Format (message, messageArgs), file: file, lineNumber: lineNumber);
+			=> LogCodedWarningCore (code: code, message: FormatMessage (message, messageArgs), file: file, lineNumber: lineNumber);
 
+		[Obsolete ("This overload binds ambiguously when the trailing arguments are (string, int): a call meant to format the message, e.g. LogCodedWarning (\"XA0000\", Resources.XA0000, someString, someInt), silently binds here and treats the arguments as a source file and line number instead of substituting them into the message. To format the message use LogCodedWarning (code, message, params object[]); to attach a source location use LogCodedWarning (code, file, lineNumber, message, params object[]).", error: true)]
 		public void LogCodedWarning (string? code, string message, string? file, int lineNumber)
+			=> LogCodedWarningCore (code: code, message: message, file: file, lineNumber: lineNumber);
+
+		void LogCodedWarningCore (string? code, string message, string? file, int lineNumber)
 		{
 			if (uiThreadId == Thread.CurrentThread.ManagedThreadId) {
 #pragma warning disable 618
@@ -247,6 +255,11 @@ namespace Microsoft.Android.Build.Tasks
 			);
 			EnqueueMessage (warningMessageQueue, data, warningDataAvailable);
 		}
+
+		// Returns the message verbatim when there are no arguments, so pre-formatted messages
+		// that contain literal '{' or '}' characters are not passed through string.Format.
+		static string FormatMessage (string message, object [] messageArgs)
+			=> messageArgs is null || messageArgs.Length == 0 ? message : string.Format (message, messageArgs);
 
 		public void LogCustomBuildEvent (CustomBuildEventArgs e)
 		{
