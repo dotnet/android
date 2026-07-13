@@ -63,6 +63,7 @@ namespace Xamarin.Android.Build.Tests
 				using (var b = CreateApkBuilder ()) {
 					b.Verbosity = LoggerVerbosity.Detailed;
 					b.CleanupAfterSuccessfulBuild = false;
+					b.ThrowOnBuildFailure = false;
 					string defaultTarget = b.Target;
 					b.Target = "InstallAndroidDependencies";
 					b.BuildLogFile = "install-deps.log";
