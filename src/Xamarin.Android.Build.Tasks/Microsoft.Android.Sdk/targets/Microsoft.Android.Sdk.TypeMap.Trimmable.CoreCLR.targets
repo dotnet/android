@@ -1,6 +1,8 @@
 <!-- Trimmable typemap: CoreCLR-specific (ILLink integration). -->
 <Project>
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
@@ -167,6 +169,27 @@
     <ItemGroup>
       <FileWrites Include="$(_PrecompiledTrimmableTypeMapStamp)" />
     </ItemGroup>
+  </Target>
+
+  <!-- After ILLink trims per-assembly _X.TypeMap assemblies whose target Java binding was unused,
+       the root _Microsoft.Android.TypeMaps assembly still carries
+       [assembly: TypeMapAssemblyTarget<T>("_X.TypeMap")] attributes pointing at the trimmed
+       assemblies. Those attributes reference the assembly by an opaque name string, so ILLink cannot
+       follow (or prune) them, and at startup CoreCLR's TypeMapping would Assembly.Load each one and
+       throw FileNotFoundException. Emit an empty stub for each trimmed typemap so Assembly.Load
+       succeeds (contributing no mappings) while leaving the linked root - and ILLink's reconciled
+       assembly references in it - untouched. Runs before the linked TypeMap DLLs are handed to the
+       publish/ReadyToRun pipeline. -->
+  <Target Name="_GenerateMissingTrimmableTypeMapStubs"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(RuntimeIdentifier)' != '' "
+      AfterTargets="ILLink"
+      BeforeTargets="_AddTrimmableTypeMapToResolvedFileToPublish;CreateReadyToRunImages">
+    <GenerateMissingTypeMapStubs
+        Condition="Exists('$(IntermediateOutputPath)linked')"
+        TypeMapDirectory="$(_TypeMapOutputDirectory)"
+        LinkedAssembliesDirectory="$(IntermediateOutputPath)linked"
+        RootTypeMapAssemblyName="$(_TypeMapAssemblyName)"
+        TargetFrameworkVersion="$(TargetFrameworkVersion)" />
   </Target>
 
   <!-- Add linked TypeMap DLLs to the normal publish assembly pipeline.  The SDK R2R
