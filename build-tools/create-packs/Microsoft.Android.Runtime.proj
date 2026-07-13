@@ -113,6 +113,7 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a" />
+      <NativeRuntimeAsset Condition=" Exists('$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.$(AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\$(AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a') " Include="$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.$(AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\$(AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a" />
       <_AndroidRuntimePackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll" />
     </ItemGroup>
 
