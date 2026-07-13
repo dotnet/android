@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+      "ms-vscode.csharp",
+      "ms-vscode.mono-debug",
+      "hbenl.vscode-test-explorer",
+      "derivitec-ltd.vscode-dotnet-adapter",
+      "visualstudioexptteam.vscodeintellicode",
+    ]
+}
