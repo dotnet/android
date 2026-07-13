@@ -47,6 +47,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] FastDevFiles { get; set; }
 
 		public bool PreserveUserData { get; set; } = true;
+		public bool ResetOverrideDirectory { get; set; }
 
 		[Required]
 		public string FastDevToolPath { get; set; }
@@ -313,6 +314,30 @@ namespace Xamarin.Android.Tasks
 					LogCodedError (GetErrorCode (ex), ex.ToString ());
 					return;
 				}
+
+				// `pm install` can report success (or empty output) yet leave the package
+				// absent on the device; that only surfaces later as an opaque XA0137 run-as
+				// "couldn't stat /data/user/N/<pkg>" failure during the post-install probe.
+				// Positively confirm the package landed via `pm path` and, if it did not,
+				// force a single reinstall before continuing.
+				if (!await IsPackageInstalled (PackageName)) {
+					LogDiagnostic ($"`pm path {PackageName}` reported no package after a successful-looking install; forcing a reinstall.");
+					diagnosticData.SetProperty ("deploy.reinstall.after.missing.package", value: true);
+					await LogAvailableDiskSpace ();
+					ReInstall = true;
+					try {
+						await InstallPackage (installed: false);
+					} catch (Exception ex) {
+						LogDiagnosticDataError (GetErrorCode (ex), ex.ToString ());
+						PrintDiagnostics ();
+						LogCodedError (GetErrorCode (ex), ex.ToString ());
+						return;
+					}
+					if (!await IsPackageInstalled (PackageName)) {
+						LogDiagnostic ($"`pm path {PackageName}` still reports no package after reinstall; continuing — the run-as probe will surface the failure.");
+					}
+				}
+
 				if (!EmbedAssembliesIntoApk && packageInfo.InternalPath.IndexOf ("unknown", StringComparison.OrdinalIgnoreCase) >= 0) {
 					packageInfo.InternalPath = null;
 					await CheckAppInstalledAndDebuggable (PackageName);
@@ -325,6 +350,10 @@ namespace Xamarin.Android.Tasks
 			if (EmbedAssembliesIntoApk)
 				return;
 
+			if (ResetOverrideDirectory && !await ResetOverrideDirectoryForConfigurationChange ()) {
+				return;
+			}
+
 			if (!await InstallFastDevTools (ToolsFullPath)) {
 				return;
 			}
@@ -335,6 +364,22 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return;
+		}
+
+		async Task<bool> ResetOverrideDirectoryForConfigurationChange ()
+		{
+			LogDebugMessage ($"Removing {OverrideFullPath} after the fast deployment configuration changed.");
+			string output = await Device.RunAs (packageInfo, "rm", "-Rf", OverrideFullPath);
+			if (RaiseRunAsError (output)) {
+				return false;
+			}
+			if (output.IndexOf ("rm:", StringComparison.OrdinalIgnoreCase) >= 0) {
+				LogDiagnosticDataError ("XA0129", output, OverrideFullPath);
+				PrintDiagnostics ();
+				LogCodedError ("XA0129", Resources.XA0129_ErrorDeployingFile, OverrideFullPath);
+				return false;
+			}
+			return true;
 		}
 
 		bool IsPackageFileOutOfDate ()
@@ -525,6 +570,48 @@ namespace Xamarin.Android.Tasks
 				throw;
 			}
 			return;
+		}
+
+		/// <summary>
+		/// Confirms the package is actually present on the device via <c>pm path &lt;pkg&gt;</c>.
+		/// <c>pm install</c> can report success (or empty output) yet leave the package absent,
+		/// which otherwise only surfaces as an opaque <c>XA0137</c> run-as "couldn't stat" failure
+		/// during the post-install probe. Returns <see langword="true"/> when a <c>package:/…</c>
+		/// path is reported (or when there is no package name to query).
+		/// </summary>
+		async Task<bool> IsPackageInstalled (string packageName)
+		{
+			if (string.IsNullOrEmpty (packageName)) {
+				return true;
+			}
+			var args = new List<string> { "pm", "path" };
+			var userId = (UserID ?? string.Empty).Trim ();
+			if (userId.Length > 0) {
+				args.Add ("--user");
+				args.Add (userId);
+			}
+			args.Add (packageName);
+			string output = await Device.RunShellCommand (CancellationToken, args.ToArray ());
+			LogDiagnostic ($"`pm path {packageName}` returned: {(string.IsNullOrWhiteSpace (output) ? "<no output>" : output.Trim ())}");
+			return !string.IsNullOrWhiteSpace (output) &&
+				output.IndexOf ("package:", StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		/// <summary>
+		/// Logs the device's free space on the internal (<c>/data</c>) partition. A package that
+		/// vanishes right after a "successful" install is often a symptom of a full data partition
+		/// (test APKs accumulate on CI emulators), which <c>pm install</c> does not always surface
+		/// as <c>INSTALL_FAILED_INSUFFICIENT_STORAGE</c>. Best-effort: never throws.
+		/// </summary>
+		async Task LogAvailableDiskSpace ()
+		{
+			try {
+				var disk = await Device.GetAvailableSpace (CancellationToken);
+				LogDiagnostic ($"Free space on /data: {disk.InternalSpace / (1024 * 1024)} MiB ({disk.InternalSpace} bytes).");
+				diagnosticData.SetProperty ("deploy.data.free.bytes", disk.InternalSpace);
+			} catch (Exception ex) {
+				LogDiagnostic ($"Could not query device disk space: {ex.Message}");
+			}
 		}
 
 		async Task<bool> ShouldThrowIfPackageInstallFailed (PackageAlreadyExistsException e)

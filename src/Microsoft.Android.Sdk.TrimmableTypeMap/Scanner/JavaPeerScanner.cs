@@ -274,6 +274,10 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 	}
 
+	// ManagedPeer depends on reflection-based registration; the trimmable path uses IAndroidCallableWrapper.
+	static bool IsUnsupportedByTrimmableTypeMap (string managedFullName, string assemblyName) =>
+		managedFullName == "Java.Interop.ManagedPeer" && assemblyName == "Java.Interop";
+
 	void ScanAssembly (AssemblyIndex index, Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results)
 	{
 		foreach (var typeHandle in index.Reader.TypeDefinitions) {
@@ -285,6 +289,10 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
+
+			if (IsUnsupportedByTrimmableTypeMap (fullName, index.AssemblyName)) {
+				continue;
+			}
 
 			// Temporarily allow [JniAddNativeMethodRegistrationAttribute] while we investigate
 			// which scenarios fail later in the trimmable typemap pipeline.
@@ -2528,6 +2536,7 @@ public sealed class JavaPeerScanner : IDisposable
 			Properties = attrInfo.Properties,
 			IntentFilters = attrInfo.IntentFilters,
 			MetaData = attrInfo.MetaData,
+			LayoutProperties = attrInfo.LayoutProperties,
 		};
 	}
 }

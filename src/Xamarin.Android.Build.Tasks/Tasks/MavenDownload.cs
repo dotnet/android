@@ -95,7 +95,7 @@ public class MavenDownload : AsyncTask
 		if (artifact_file is null)
 			return null;
 
-		Log.LogMessage ("Found library '{0}' for Java artifact '{1}'.", artifact_file, artifact);
+		LogMessage ("Found library '{0}' for Java artifact '{1}'.", artifact_file, artifact);
 
 		var result = new TaskItem (artifact_file);
 
@@ -114,7 +114,7 @@ public class MavenDownload : AsyncTask
 			var primary_pom = resolver.ResolvedPoms [artifact.VersionedArtifactString];
 			result.SetMetadata ("Manifest", primary_pom);
 
-			Log.LogMessage ("Found POM file '{0}' for Java artifact '{1}'.", primary_pom, artifact);
+			LogMessage ("Found POM file '{0}' for Java artifact '{1}'.", primary_pom, artifact);
 
 			// Create TaskItems for any other POMs we resolved
 			foreach (var kv in resolver.ResolvedPoms.Where (k => k.Key != artifact.VersionedArtifactString)) {
@@ -126,10 +126,10 @@ public class MavenDownload : AsyncTask
 
 				additionalPoms.Add (pom_item);
 
-				Log.LogMessage ("Found POM file '{0}' for Java artifact '{1}'.", kv.Value, pom_artifact);
+				LogMessage ("Found POM file '{0}' for Java artifact '{1}'.", kv.Value, pom_artifact);
 			}
 		} catch (Exception ex) {
-			Log.LogCodedError ("XA4237", Properties.Resources.XA4237, artifact, ex.Unwrap ().Message);
+			LogCodedError ("XA4237", Properties.Resources.XA4237, artifact, ex.Unwrap ().Message);
 			return null;
 		}
 
@@ -150,7 +150,7 @@ public class MavenDownload : AsyncTask
 			(uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)) {
 			if (uri.Scheme == Uri.UriSchemeHttp &&
 				!string.Equals (item.GetMetadataOrDefault ("AllowInsecureHttp", "false"), "true", StringComparison.OrdinalIgnoreCase)) {
-				Log.LogCodedError ("XA4252", Properties.Resources.XA4252, type);
+				LogCodedError ("XA4252", Properties.Resources.XA4252, type);
 				return null;
 			}
 
@@ -162,7 +162,7 @@ public class MavenDownload : AsyncTask
 		}
 
 		if (repo is null)
-			Log.LogCodedError ("XA4239", Properties.Resources.XA4239, type);
+			LogCodedError ("XA4239", Properties.Resources.XA4239, type);
 
 		return repo is not null ? new CachedMavenRepository (MavenCacheDirectory, repo) : null;
 	}

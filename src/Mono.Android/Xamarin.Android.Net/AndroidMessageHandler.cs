@@ -784,7 +784,7 @@ namespace Xamarin.Android.Net
 		// failures must be surfaced as HttpRequestException rather than the legacy WebException. To avoid breaking
 		// existing code that migrated from classic Xamarin.Android and still inspects WebException (and its
 		// WebExceptionStatus), we keep the original WebException as the inner exception.
-		static HttpRequestException CreateHttpRequestException (string message, Exception? innerException, WebExceptionStatus status)
+		static HttpRequestException CreateHttpRequestException (string? message, Exception? innerException, WebExceptionStatus status)
 			=> new HttpRequestException (message, new WebException (message, innerException, status, null));
 
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)

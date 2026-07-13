@@ -105,7 +105,7 @@
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
-      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+      Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 
     <ItemGroup>
@@ -114,9 +114,14 @@
       <_TypeMapInputAssemblies Include="@(ResolvedFrameworkAssemblies)" />
       <_TypeMapInputAssemblies Include="@(PrivateSdkAssemblies)" />
       <_TypeMapInputAssemblies Include="@(FrameworkAssemblies)" />
+      <!-- Runtime-only framework assemblies that have no counterpart in @(ReferencePath) (e.g. the
+           NativeAOT runtime host Microsoft.Android.Runtime.NativeAOT.dll, injected by the trimmable
+           NativeAOT targets). They carry Java Callable Wrapper types that must be in the typemap. -->
+      <_TypeMapInputAssemblies Include="@(_AndroidTrimmableTypeMapExtraFrameworkAssembly)" />
       <_TypeMapFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies)" />
       <_TypeMapFrameworkAssemblies Include="@(PrivateSdkAssemblies)" />
       <_TypeMapFrameworkAssemblies Include="@(FrameworkAssemblies)" />
+      <_TypeMapFrameworkAssemblies Include="@(_AndroidTrimmableTypeMapExtraFrameworkAssembly)" />
       <_TypeMapInputAssemblies Include="$(IntermediateOutputPath)$(TargetFileName)"
           Condition="Exists('$(IntermediateOutputPath)$(TargetFileName)')" />
       <!-- Library (.aar) manifests to merge into the app manifest. Only on the legacy manifest

@@ -114,6 +114,23 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_AliasGroup_MonoAndroidPeerSortsFirst ()
+		{
+			// Java.Interop first proves Mono.Android still becomes alias [0], matching runtime lookup.
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Java.Interop") with { IsFromJniTypeSignature = true },
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android"),
+			};
+
+			var model = BuildModel (peers, "MonoAndroid");
+
+			Assert.Equal ("java/lang/Object[0]", model.Entries [0].MapKey);
+			Assert.Contains ("Java.Lang.Object", model.Entries [0].ProxyTypeReference);
+			Assert.Equal ("java/lang/Object[1]", model.Entries [1].MapKey);
+			Assert.Contains ("Java.Interop.JavaObject", model.Entries [1].ProxyTypeReference);
+		}
+
+		[Fact]
 		public void Build_AliasWithMixedActivation_PrimaryNoActivation_AliasHasActivation ()
 		{
 			var peers = new List<JavaPeerInfo> {
