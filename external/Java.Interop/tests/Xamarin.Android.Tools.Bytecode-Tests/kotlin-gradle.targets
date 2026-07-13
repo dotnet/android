@@ -35,7 +35,9 @@
         fully isolated. A stable per-project path (rather than obj/) keeps the Gradle
         distribution and dependency caches warm across incremental builds.
     -->
-    <_KotlinGradleUserHome Condition=" '$(_KotlinGradleUserHome)' == '' ">$([System.IO.Path]::Combine($([System.Environment]::GetFolderPath('UserProfile')), '.gradle-ji-$(MSBuildProjectName)'))</_KotlinGradleUserHome>
+    <_KotlinGradleUserHomeBase Condition=" '$(_KotlinGradleUserHomeBase)' == '' And '$(OS)' == 'Windows_NT' ">$(USERPROFILE)</_KotlinGradleUserHomeBase>
+    <_KotlinGradleUserHomeBase Condition=" '$(_KotlinGradleUserHomeBase)' == '' ">$(HOME)</_KotlinGradleUserHomeBase>
+    <_KotlinGradleUserHome Condition=" '$(_KotlinGradleUserHome)' == '' ">$([System.IO.Path]::Combine('$(_KotlinGradleUserHomeBase)', '.gradle-ji-$(MSBuildProjectName)'))</_KotlinGradleUserHome>
   </PropertyGroup>
 
   <Target Name="BuildKotlinGradleProject"
