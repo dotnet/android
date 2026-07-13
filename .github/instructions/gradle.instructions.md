@@ -12,7 +12,7 @@ All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-re
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
-if (System.getenv('RUNNINGONCI') == 'true') {
+if (System.getenv('ANDROID_MIRROR_MAVEN_DEPENDENCIES') == 'true') {
     apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
 }
 dependencyResolutionManagement {
@@ -31,8 +31,9 @@ Both files switch on `System.getenv('RUNNINGONCI')`. Azure DevOps exports the
 - **`RUNNINGONCI=true`** (Azure DevOps, sourced from `RunningOnCI` in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
 - **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()` for plugins, `google()` + `mavenCentral()` for deps. No credentials needed.
 
-The Azure Artifacts credential provider is also loaded only when
-`RUNNINGONCI=true`, so local builds never attempt Azure authentication.
+CI reads cached packages from the mirror anonymously. The Azure Artifacts
+credential provider is loaded only when `ANDROID_MIRROR_MAVEN_DEPENDENCIES=true`;
+`mirror-dependencies.ps1` sets this while seeding uncached packages.
 
 Test the CI path locally: `$env:RUNNINGONCI='true'` (PowerShell) or `RUNNINGONCI=true ...` (bash).
 

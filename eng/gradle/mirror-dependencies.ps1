@@ -114,6 +114,7 @@ Get-AzDevOpsToken | Out-Null
 
 if ($AndroidHome) { $env:ANDROID_HOME = $AndroidHome }
 $env:RUNNINGONCI = 'true'
+$env:ANDROID_MIRROR_MAVEN_DEPENDENCIES = 'true'
 
 Push-Location $projectDirAbs
 try {

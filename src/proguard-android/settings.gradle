@@ -3,7 +3,7 @@ pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
 
-if (System.getenv('RUNNINGONCI') == 'true') {
+if (System.getenv('ANDROID_MIRROR_MAVEN_DEPENDENCIES') == 'true') {
     apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
 }
 
