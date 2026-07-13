@@ -7,34 +7,9 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// A reference to a generated proxy type (assembly + full managed name) whose metadata token is
 /// embedded in the precompiled blob.
 /// </summary>
-sealed class PrecompiledProxyRef : IEquatable<PrecompiledProxyRef>
-{
-	public PrecompiledProxyRef (string assemblyName, string fullTypeName)
-	{
-		AssemblyName = assemblyName ?? throw new ArgumentNullException (nameof (assemblyName));
-		FullTypeName = fullTypeName ?? throw new ArgumentNullException (nameof (fullTypeName));
-	}
-
-	/// <summary>Assembly containing the proxy, e.g. <c>"_App.TypeMap"</c>.</summary>
-	public string AssemblyName { get; }
-
-	/// <summary>Full managed type name, e.g. <c>"_TypeMap.Proxies.Foo_Proxy"</c>.</summary>
-	public string FullTypeName { get; }
-
-	public bool Equals (PrecompiledProxyRef? other) =>
-		other is not null &&
-		string.Equals (AssemblyName, other.AssemblyName, StringComparison.Ordinal) &&
-		string.Equals (FullTypeName, other.FullTypeName, StringComparison.Ordinal);
-
-	public override bool Equals (object? obj) => Equals (obj as PrecompiledProxyRef);
-
-	public override int GetHashCode ()
-	{
-		unchecked {
-			return StringComparer.Ordinal.GetHashCode (AssemblyName) * 397 ^ StringComparer.Ordinal.GetHashCode (FullTypeName);
-		}
-	}
-}
+/// <param name="AssemblyName">Assembly containing the proxy, e.g. <c>"_App.TypeMap"</c>.</param>
+/// <param name="FullTypeName">Full managed type name, e.g. <c>"_TypeMap.Proxies.Foo_Proxy"</c>.</param>
+sealed record PrecompiledProxyRef (string AssemblyName, string FullTypeName);
 
 /// <summary>
 /// One precompiled typemap universe: the flattened JNI-name → proxies map (<c>GetProxyTypes</c>) and

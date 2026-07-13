@@ -55,15 +55,6 @@ sealed unsafe class PrecompiledTypeMap : ITypeMap
 		return ResolveProxyTypes (GetExternalProxyTokens (jniName));
 	}
 
-	/// <summary>
-	/// UTF-8 overload of <see cref="GetProxyTypes(string)"/>. The blob stores JNI names as UTF-8 and
-	/// hashes UTF-8 bytes, so a UTF-8 JNI name (e.g. handed straight from JNI) is matched with no
-	/// string allocation or re-encoding. Not yet on <see cref="ITypeMap"/>; wiring the JNI retrieval and
-	/// caches to feed UTF-8 is a follow-up.
-	/// </summary>
-	public IEnumerable<Type> GetProxyTypes (ReadOnlySpan<byte> jniNameUtf8) =>
-		ResolveProxyTypes (GetExternalProxyTokens (jniNameUtf8));
-
 	IEnumerable<Type> ResolveProxyTypes (int[]? tokens)
 	{
 		if (tokens is null) {
@@ -82,15 +73,6 @@ sealed unsafe class PrecompiledTypeMap : ITypeMap
 	{
 		var blob = Blob;
 		if (!PrecompiledTypeMapBlobFormat.TryGetExternalTokens (blob, jniName, out int tokenCount, out int tokensDataOffset)) {
-			return null;
-		}
-		return ReadTokens (blob, tokenCount, tokensDataOffset);
-	}
-
-	int[]? GetExternalProxyTokens (ReadOnlySpan<byte> jniNameUtf8)
-	{
-		var blob = Blob;
-		if (!PrecompiledTypeMapBlobFormat.TryGetExternalTokens (blob, jniNameUtf8, out int tokenCount, out int tokensDataOffset)) {
 			return null;
 		}
 		return ReadTokens (blob, tokenCount, tokensDataOffset);

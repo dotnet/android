@@ -1,6 +1,6 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -69,8 +69,10 @@ static class PrecompiledTypeMapBlobWriter
 		int proxyEntriesOffset = proxyHashesOffset + proxyCount * PrecompiledTypeMapBlobFormat.HashSize;
 		int stringsOffset = proxyEntriesOffset + proxyCount * PrecompiledTypeMapBlobFormat.ProxyEntrySize;
 
-		// Build the string + token regions, deduplicating identical payloads.
-		var stringHeap = new Region (stringsOffset);
+		// Build the string + token heaps, deduplicating identical payloads. Each offset is recorded
+		// relative to the final blob start (section base + position in the heap), so the heaps can be
+		// copied verbatim into their precomputed sections at the end.
+		var stringHeap = new List<byte> ();
 		var stringOffsets = new Dictionary<string, int> (StringComparer.Ordinal);
 
 		int InternString (string value, byte[] utf8)
@@ -78,14 +80,14 @@ static class PrecompiledTypeMapBlobWriter
 			if (stringOffsets.TryGetValue (value, out int existing)) {
 				return existing;
 			}
-			int offset = stringHeap.Position;
-			stringHeap.WriteUInt32 ((uint) utf8.Length);
-			stringHeap.WriteBytes (utf8);
+			int offset = stringsOffset + stringHeap.Count;
+			AppendUInt32 (stringHeap, (uint) utf8.Length);
+			stringHeap.AddRange (utf8);
 			stringOffsets [value] = offset;
 			return offset;
 		}
 
-		// String heap is written first; tokens region follows it (its base is only known afterwards).
+		// String heap is built first; the tokens region follows it (its base is only known afterwards).
 		foreach (var row in externalRows) {
 			row.KeyOffset = InternString (row.Key, row.KeyUtf8);
 		}
@@ -93,8 +95,8 @@ static class PrecompiledTypeMapBlobWriter
 			row.KeyOffset = InternString (row.Key, row.KeyUtf8);
 		}
 
-		int tokensOffset = stringsOffset + stringHeap.Length;
-		var tokenHeap = new Region (tokensOffset);
+		int tokensOffset = stringsOffset + stringHeap.Count;
+		var tokenHeap = new List<byte> ();
 		var tokenListOffsets = new Dictionary<string, int> (StringComparer.Ordinal);
 
 		int InternTokens (IReadOnlyList<int> tokens)
@@ -103,10 +105,10 @@ static class PrecompiledTypeMapBlobWriter
 			if (tokenListOffsets.TryGetValue (key, out int existing)) {
 				return existing;
 			}
-			int offset = tokenHeap.Position;
-			tokenHeap.WriteUInt32 ((uint) tokens.Count);
+			int offset = tokensOffset + tokenHeap.Count;
+			AppendUInt32 (tokenHeap, (uint) tokens.Count);
 			foreach (int token in tokens) {
-				tokenHeap.WriteInt32 (token);
+				AppendInt32 (tokenHeap, token);
 			}
 			tokenListOffsets [key] = offset;
 			return offset;
@@ -116,47 +118,77 @@ static class PrecompiledTypeMapBlobWriter
 			row.TokensOffset = InternTokens (row.Tokens);
 		}
 
-		int totalSize = tokensOffset + tokenHeap.Length;
+		int totalSize = tokensOffset + tokenHeap.Count;
 		var blob = new byte [totalSize];
-		var writer = new Region (0, blob);
 
-		// Header
-		writer.WriteUInt32 (PrecompiledTypeMapBlobFormat.Magic);
-		writer.WriteUInt32 (PrecompiledTypeMapBlobFormat.Version);
-		writer.WriteUInt32 ((uint) externalCount);
-		writer.WriteUInt32 ((uint) proxyCount);
-		writer.WriteUInt32 ((uint) externalHashesOffset);
-		writer.WriteUInt32 ((uint) externalEntriesOffset);
-		writer.WriteUInt32 ((uint) proxyHashesOffset);
-		writer.WriteUInt32 ((uint) proxyEntriesOffset);
+		// Every section lives at a precomputed offset, so each is written straight into the blob.
+		int pos = 0;
+		pos = WriteUInt32 (blob, pos, PrecompiledTypeMapBlobFormat.Magic);
+		pos = WriteUInt32 (blob, pos, PrecompiledTypeMapBlobFormat.Version);
+		pos = WriteUInt32 (blob, pos, (uint) externalCount);
+		pos = WriteUInt32 (blob, pos, (uint) proxyCount);
+		pos = WriteUInt32 (blob, pos, (uint) externalHashesOffset);
+		pos = WriteUInt32 (blob, pos, (uint) externalEntriesOffset);
+		pos = WriteUInt32 (blob, pos, (uint) proxyHashesOffset);
+		WriteUInt32 (blob, pos, (uint) proxyEntriesOffset);
 
-		// External hashes + entries
-		writer.Seek (externalHashesOffset);
+		// External hashes + entries (parallel arrays, sorted by hash).
+		int p = externalHashesOffset;
 		foreach (var row in externalRows) {
-			writer.WriteUInt64 (row.Hash);
+			p = WriteUInt64 (blob, p, row.Hash);
 		}
-		writer.Seek (externalEntriesOffset);
+		p = externalEntriesOffset;
 		foreach (var row in externalRows) {
-			writer.WriteUInt32 ((uint) row.KeyOffset);
-			writer.WriteUInt32 ((uint) row.TokensOffset);
+			p = WriteUInt32 (blob, p, (uint) row.KeyOffset);
+			p = WriteUInt32 (blob, p, (uint) row.TokensOffset);
 		}
 
-		// Proxy hashes + entries
-		writer.Seek (proxyHashesOffset);
+		// Proxy hashes + entries.
+		p = proxyHashesOffset;
 		foreach (var row in proxyRows) {
-			writer.WriteUInt64 (row.Hash);
+			p = WriteUInt64 (blob, p, row.Hash);
 		}
-		writer.Seek (proxyEntriesOffset);
+		p = proxyEntriesOffset;
 		foreach (var row in proxyRows) {
-			writer.WriteUInt32 ((uint) row.KeyOffset);
-			writer.WriteInt32 (row.Tokens [0]);
+			p = WriteUInt32 (blob, p, (uint) row.KeyOffset);
+			p = WriteInt32 (blob, p, row.Tokens [0]);
 		}
 
-		// String + token regions
-		Buffer.BlockCopy (stringHeap.ToArray (), 0, blob, stringsOffset, stringHeap.Length);
-		Buffer.BlockCopy (tokenHeap.ToArray (), 0, blob, tokensOffset, tokenHeap.Length);
+		// String + token heaps copied verbatim into their precomputed sections.
+		stringHeap.CopyTo (blob, stringsOffset);
+		tokenHeap.CopyTo (blob, tokensOffset);
 
 		return blob;
+	}
+
+	// Little-endian appends to a growable heap (the string/token regions, whose sizes aren't known up front).
+	static void AppendUInt32 (List<byte> heap, uint value)
+	{
+		heap.Add ((byte) value);
+		heap.Add ((byte) (value >> 8));
+		heap.Add ((byte) (value >> 16));
+		heap.Add ((byte) (value >> 24));
+	}
+
+	static void AppendInt32 (List<byte> heap, int value) => AppendUInt32 (heap, unchecked ((uint) value));
+
+	// Little-endian writes into a fixed section of the final blob; each returns the next write position.
+	static int WriteUInt32 (byte[] blob, int offset, uint value)
+	{
+		BinaryPrimitives.WriteUInt32LittleEndian (blob.AsSpan (offset), value);
+		return offset + sizeof (uint);
+	}
+
+	static int WriteInt32 (byte[] blob, int offset, int value)
+	{
+		BinaryPrimitives.WriteInt32LittleEndian (blob.AsSpan (offset), value);
+		return offset + sizeof (int);
+	}
+
+	static int WriteUInt64 (byte[] blob, int offset, ulong value)
+	{
+		BinaryPrimitives.WriteUInt64LittleEndian (blob.AsSpan (offset), value);
+		return offset + sizeof (ulong);
 	}
 
 	sealed class Row
@@ -205,69 +237,5 @@ static class PrecompiledTypeMapBlobWriter
 			}
 			return a.Length.CompareTo (b.Length);
 		}
-	}
-
-	// Little-endian byte sink. Used both for the growable string/token heaps (backing == null) and
-	// for patching fixed-offset regions of the final blob (backing != null).
-	sealed class Region
-	{
-		readonly int _base;
-		readonly List<byte>? _buffer;
-		readonly byte[]? _backing;
-		int _position;
-
-		public Region (int baseOffset)
-		{
-			_base = baseOffset;
-			_buffer = new List<byte> ();
-			_position = 0;
-		}
-
-		public Region (int baseOffset, byte[] backing)
-		{
-			_base = baseOffset;
-			_backing = backing;
-			_position = 0;
-		}
-
-		public int Position => _base + _position;
-		public int Length => _buffer?.Count ?? _position;
-
-		public void Seek (int absoluteOffset) => _position = absoluteOffset - _base;
-
-		public void WriteUInt32 (uint value)
-		{
-			WriteByte ((byte) value);
-			WriteByte ((byte) (value >> 8));
-			WriteByte ((byte) (value >> 16));
-			WriteByte ((byte) (value >> 24));
-		}
-
-		public void WriteInt32 (int value) => WriteUInt32 (unchecked ((uint) value));
-
-		public void WriteUInt64 (ulong value)
-		{
-			WriteUInt32 ((uint) value);
-			WriteUInt32 ((uint) (value >> 32));
-		}
-
-		public void WriteBytes (byte[] value)
-		{
-			foreach (byte b in value) {
-				WriteByte (b);
-			}
-		}
-
-		void WriteByte (byte value)
-		{
-			if (_backing != null) {
-				_backing [_position] = value;
-			} else {
-				_buffer!.Add (value);
-			}
-			_position++;
-		}
-
-		public byte[] ToArray () => _buffer!.ToArray ();
 	}
 }
