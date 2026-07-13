@@ -47,6 +47,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] FastDevFiles { get; set; }
 
 		public bool PreserveUserData { get; set; } = true;
+		public bool ResetOverrideDirectory { get; set; }
 
 		[Required]
 		public string FastDevToolPath { get; set; }
@@ -349,6 +350,10 @@ namespace Xamarin.Android.Tasks
 			if (EmbedAssembliesIntoApk)
 				return;
 
+			if (ResetOverrideDirectory && !await ResetOverrideDirectoryForConfigurationChange ()) {
+				return;
+			}
+
 			if (!await InstallFastDevTools (ToolsFullPath)) {
 				return;
 			}
@@ -359,6 +364,22 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return;
+		}
+
+		async Task<bool> ResetOverrideDirectoryForConfigurationChange ()
+		{
+			LogDebugMessage ($"Removing {OverrideFullPath} after the fast deployment configuration changed.");
+			string output = await Device.RunAs (packageInfo, "rm", "-Rf", OverrideFullPath);
+			if (RaiseRunAsError (output)) {
+				return false;
+			}
+			if (output.IndexOf ("rm:", StringComparison.OrdinalIgnoreCase) >= 0) {
+				LogDiagnosticDataError ("XA0129", output, OverrideFullPath);
+				PrintDiagnostics ();
+				LogCodedError ("XA0129", Resources.XA0129_ErrorDeployingFile, OverrideFullPath);
+				return false;
+			}
+			return true;
 		}
 
 		bool IsPackageFileOutOfDate ()
