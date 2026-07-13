@@ -2235,6 +2235,17 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
 
+  <!-- The dlopen()-based assembly-store layout is dictated by the runtime and MUST NOT be overridden:
+       CoreCLR's host resolves the store only via dlopen()+dlsym() (there is no ZIP-scanning fallback),
+       while MonoVM only supports the classic ZIP-scanned store. An accidental override (e.g. from a
+       later import) would abort the app at startup, so fail fast here where the value is consumed. -->
+  <Error
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidDlopenAssemblyStore)' != 'true' "
+      Text="Internal error: _AndroidDlopenAssemblyStore must be 'true' for the CoreCLR runtime, but was '$(_AndroidDlopenAssemblyStore)'. This property is dictated by the runtime and must not be overridden." />
+  <Error
+      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidDlopenAssemblyStore)' != 'false' "
+      Text="Internal error: _AndroidDlopenAssemblyStore must be 'false' for the '$(_AndroidRuntime)' runtime, but was '$(_AndroidDlopenAssemblyStore)'. This property is dictated by the runtime and must not be overridden." />
+
   <WrapAssembliesAsSharedLibraries
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
