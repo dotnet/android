@@ -1,12 +1,126 @@
 #define PINVOKE_OVERRIDE_INLINE [[gnu::always_inline]]
 
+#include <format>
+#include <string_view>
+
+#include <android/log.h>
+
 #include <host/host.hh>
 #include <host/pinvoke-override-impl.hh>
 #include <runtime-base/internal-pinvokes.hh>
 
 using namespace xamarin::android;
 
-#include "pinvoke-tables.include"
+namespace {
+	[[noreturn]]
+	void abort_missing_internal_symbol (std::string_view const& library_name, std::string_view const& entrypoint_name)
+	{
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format (
+				"Internal p/invoke symbol '{}'@'{}' not found"sv,
+				entrypoint_name,
+				library_name
+			)
+		);
+	}
+
+	auto load_xa_internal_api_symbol (std::string_view const& entrypoint_name) -> void*
+	{
+		if (entrypoint_name == "_monodroid_detect_cpu_and_architecture"sv) {
+			return reinterpret_cast<void*> (&_monodroid_detect_cpu_and_architecture);
+		}
+		if (entrypoint_name == "monodroid_free"sv) {
+			return reinterpret_cast<void*> (&monodroid_free);
+		}
+		if (entrypoint_name == "_monodroid_gc_wait_for_bridge_processing"sv) {
+			return reinterpret_cast<void*> (&_monodroid_gc_wait_for_bridge_processing);
+		}
+		if (entrypoint_name == "_monodroid_gref_dec"sv) {
+			return reinterpret_cast<void*> (&_monodroid_gref_dec);
+		}
+		if (entrypoint_name == "_monodroid_gref_get"sv) {
+			return reinterpret_cast<void*> (&_monodroid_gref_get);
+		}
+		if (entrypoint_name == "_monodroid_gref_inc"sv) {
+			return reinterpret_cast<void*> (&_monodroid_gref_inc);
+		}
+		if (entrypoint_name == "_monodroid_gref_log"sv) {
+			return reinterpret_cast<void*> (&_monodroid_gref_log);
+		}
+		if (entrypoint_name == "_monodroid_gref_log_delete"sv) {
+			return reinterpret_cast<void*> (&_monodroid_gref_log_delete);
+		}
+		if (entrypoint_name == "_monodroid_gref_log_new"sv) {
+			return reinterpret_cast<void*> (&_monodroid_gref_log_new);
+		}
+		if (entrypoint_name == "monodroid_log"sv) {
+			return reinterpret_cast<void*> (&monodroid_log);
+		}
+		if (entrypoint_name == "_monodroid_lookup_replacement_type"sv) {
+			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_type);
+		}
+		if (entrypoint_name == "_monodroid_lookup_replacement_method_info"sv) {
+			return reinterpret_cast<void*> (&_monodroid_lookup_replacement_method_info);
+		}
+		if (entrypoint_name == "_monodroid_lref_log_delete"sv) {
+			return reinterpret_cast<void*> (&_monodroid_lref_log_delete);
+		}
+		if (entrypoint_name == "_monodroid_lref_log_new"sv) {
+			return reinterpret_cast<void*> (&_monodroid_lref_log_new);
+		}
+		if (entrypoint_name == "_monodroid_max_gref_get"sv) {
+			return reinterpret_cast<void*> (&_monodroid_max_gref_get);
+		}
+		if (entrypoint_name == "monodroid_timing_start"sv) {
+			return reinterpret_cast<void*> (&monodroid_timing_start);
+		}
+		if (entrypoint_name == "monodroid_timing_stop"sv) {
+			return reinterpret_cast<void*> (&monodroid_timing_stop);
+		}
+		if (entrypoint_name == "monodroid_TypeManager_get_java_class_name"sv) {
+			return reinterpret_cast<void*> (&monodroid_TypeManager_get_java_class_name);
+		}
+		if (entrypoint_name == "clr_typemap_managed_to_java"sv) {
+			return reinterpret_cast<void*> (&clr_typemap_managed_to_java);
+		}
+		if (entrypoint_name == "clr_typemap_java_to_managed"sv) {
+			return reinterpret_cast<void*> (&clr_typemap_java_to_managed);
+		}
+		if (entrypoint_name == "clr_initialize_gc_bridge"sv) {
+			return reinterpret_cast<void*> (&clr_initialize_gc_bridge);
+		}
+		if (entrypoint_name == "_monodroid_weak_gref_dec"sv) {
+			return reinterpret_cast<void*> (&_monodroid_weak_gref_dec);
+		}
+		if (entrypoint_name == "_monodroid_weak_gref_delete"sv) {
+			return reinterpret_cast<void*> (&_monodroid_weak_gref_delete);
+		}
+		if (entrypoint_name == "_monodroid_weak_gref_get"sv) {
+			return reinterpret_cast<void*> (&_monodroid_weak_gref_get);
+		}
+		if (entrypoint_name == "_monodroid_weak_gref_inc"sv) {
+			return reinterpret_cast<void*> (&_monodroid_weak_gref_inc);
+		}
+		if (entrypoint_name == "_monodroid_weak_gref_new"sv) {
+			return reinterpret_cast<void*> (&_monodroid_weak_gref_new);
+		}
+		if (entrypoint_name == "xamarin_app_init"sv) {
+			return reinterpret_cast<void*> (&xamarin_app_init);
+		}
+
+		abort_missing_internal_symbol ("xa-internal-api"sv, entrypoint_name);
+	}
+
+	auto load_liblog_symbol (std::string_view const& entrypoint_name) -> void*
+	{
+		if (entrypoint_name == "__android_log_print"sv) {
+			return reinterpret_cast<void*> (&__android_log_print);
+		}
+
+		abort_missing_internal_symbol ("liblog"sv, entrypoint_name);
+	}
+}
 
 [[gnu::flatten]]
 auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept -> void*
@@ -15,31 +129,13 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 		return nullptr;
 	}
 
-	hash_t library_name_hash = crc32_hash (library_name, strlen (library_name));
-	hash_t entrypoint_hash = crc32_hash (entrypoint_name, strlen (entrypoint_name));
+	std::string_view library_name_view {library_name};
+	std::string_view entrypoint_name_view {entrypoint_name};
 
-	if (library_name_hash == java_interop_library_hash || library_name_hash == xa_internal_api_library_hash || library_name_hash == android_liblog_library_hash) {
-		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes.data (), internal_pinvokes_count);
-
-		if (entry == nullptr) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '{} @ {}' (hash: {:x}) not found in compile-time map."sv,
-									 optional_string (library_name), optional_string (entrypoint_name), entrypoint_hash);
-			log_fatal (LOG_ASSEMBLY, "compile-time map contents:"sv);
-			for (size_t i = 0uz; i < internal_pinvokes_count; i++) {
-				PinvokeEntry const& e = internal_pinvokes[i];
-				log_fatal (LOG_ASSEMBLY, "\t'{}'={:p} (hash: {:x})"sv, optional_string (e.name), e.func, e.hash);
-			}
-			Helpers::abort_application (
-				LOG_ASSEMBLY,
-				std::format (
-					"Failure handling a p/invoke request for '{}'@'{}'"sv,
-					optional_string (entrypoint_name),
-					optional_string (library_name)
-				)
-			);
-		}
-
-		return entry->func;
+	if (library_name_view == "xa-internal-api"sv) {
+		return load_xa_internal_api_symbol (entrypoint_name_view);
+	} else if (library_name_view == "liblog"sv) {
+		return load_liblog_symbol (entrypoint_name_view);
 	}
 
 	// The .NET BCL native libraries (`libSystem.Native`, `libSystem.Globalization.Native`,
@@ -53,22 +149,20 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 	// Measurements on a physical device showed the table provides no measurable startup benefit, so
 	// we return `nullptr` for these libraries and let CoreCLR's own resolver handle them, removing
 	// the whole class of drift bugs.
-	if (library_name_hash == system_native_library_hash ||
-			library_name_hash == system_security_cryptography_native_android_library_hash ||
-			library_name_hash == system_io_compression_native_library_hash ||
-			library_name_hash == system_globalization_native_library_hash) {
+	if (library_name_view == "libSystem.Native"sv ||
+			library_name_view == "libSystem.Security.Cryptography.Native.Android"sv ||
+			library_name_view == "libSystem.IO.Compression.Native"sv ||
+			library_name_view == "libSystem.Globalization.Native"sv) {
 		return nullptr;
 	}
 
 	// Any other library (e.g. `e_sqlite3`, app-specific or third-party native libraries) is resolved
 	// through dotnet/android's own loader. Unlike the BCL libraries above, this is NOT equivalent to
-	// returning `nullptr`: `handle_other_pinvoke_request` goes through `MonodroidDl::monodroid_dlopen`,
-	// which knows how to load DSOs embedded in the APK (`extractNativeLibs=false`), normalizes
+	// returning `nullptr`: `load_library_symbol` goes through `MonodroidDl::monodroid_dlopen`, which
+	// knows how to load DSOs embedded in the APK (`extractNativeLibs=false`), normalizes
 	// `[DllImport ("log")]`/`[DllImport ("liblog")]`-style names, and consults the runtime's lib
 	// directories. CoreCLR's default resolver does not replicate that behaviour, so this path is kept.
-	// It also carries no static table, so it is not subject to the drift problem that motivated the
-	// BCL change above.
-	return handle_other_pinvoke_request (library_name, entrypoint_name);
+	return load_library_symbol (library_name_view, entrypoint_name_view);
 }
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
