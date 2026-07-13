@@ -27,10 +27,13 @@ namespace xamarin::android {
 
 		// Returns a tuple of <assembly_data_pointer, data_size>
 		static auto get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, std::string_view const& name) noexcept -> std::tuple<uint8_t*, uint32_t>;
-		static auto find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*;
+		static auto find_assembly_store_entry (std::string_view const& name, hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*;
 
 	private:
 		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
+		// Assembly names indexed by `AssemblyStoreIndexEntry::descriptor_index`, used to disambiguate
+		// CRC32 hash collisions in the store index. Built once when the store is mapped.
+		static inline std::string_view *assembly_store_names = nullptr;
 		static inline std::mutex  assembly_decompress_mutex {};
 	};
 }
