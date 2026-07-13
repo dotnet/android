@@ -17,12 +17,14 @@ public class PrecompiledTrimmableTypeMapIntegrationTests : FixtureTestBase
 {
 	readonly List<string> _log = new ();
 
-	TrimmableTypeMapResult Execute (bool precompile) =>
+	TrimmableTypeMapResult Execute (bool precompile, int maxArrayRank = 0, int maxReferenceArrayRank = 0) =>
 		new TrimmableTypeMapGenerator (new SilentLogger (_log)).Execute (
 			new [] { new AssemblyInput ("TestFixtures", "", CreateFixtureReader ()) },
 			new Version (11, 0, 0, 0),
 			new HashSet<string> (),
 			useSharedTypemapUniverse: true,
+			maxArrayRank: maxArrayRank,
+			maxReferenceArrayRank: maxReferenceArrayRank,
 			precompileTypeMap: precompile);
 
 	static PEReader CreateFixtureReader ()
@@ -108,6 +110,59 @@ public class PrecompiledTrimmableTypeMapIntegrationTests : FixtureTestBase
 		}
 
 		Assert.True (verified >= 5, $"Expected to verify several fixture proxies, only verified {verified}.");
+	}
+
+	[Fact]
+	public void PrecompiledBlob_ResolvesArrayProxies ()
+	{
+		// Force reference array-proxy emission (disabled by default). Each scanned reference peer that
+		// generates array entries gets a rank-1 array proxy keyed by its element type.
+		var result = Execute (precompile: true, maxReferenceArrayRank: 1);
+		byte[] blob;
+		Dictionary<int, (string Namespace, string Name, string Assembly)> typeRefs;
+		using (var pe = new PEReader (new MemoryStream (RootBytes (result)))) {
+			var reader = pe.GetMetadataReader ();
+			blob = SingleRvaBlob (pe, reader);
+			typeRefs = reader.TypeReferences.ToDictionary (
+				h => MetadataTokens.GetToken (h),
+				h => {
+					var tr = reader.GetTypeReference (h);
+					var asm = reader.GetAssemblyReference ((AssemblyReferenceHandle) tr.ResolutionScope);
+					return (reader.GetString (tr.Namespace), reader.GetString (tr.Name), reader.GetString (asm.Name));
+				});
+		}
+
+		int arrayCount = (int) BinaryPrimitives.ReadUInt32LittleEndian (blob.AsSpan (PrecompiledTypeMapBlobFormat.OffArrayCount, 4));
+		Assert.True (arrayCount > 0, "Expected the precompiled blob to contain array-element entries.");
+
+		// The element key mirrors the runtime managed-type key: "Namespace.Type, AssemblyName".
+		int verified = 0;
+		foreach (var peer in result.AllPeers) {
+			string elementKey = $"{peer.ManagedTypeName}, {peer.AssemblyName}";
+			if (!PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, elementKey, 0, out int token)) {
+				continue; // Not every peer generates array entries.
+			}
+			Assert.Equal ("_TypeMap.ArrayProxies", typeRefs [token].Namespace);
+			Assert.Equal ("_TestFixtures.TypeMap", typeRefs [token].Assembly);
+			// Only rank 1 (index 0) was emitted; rank 2 (index 1) must not resolve.
+			Assert.False (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, elementKey, 1, out _));
+			verified++;
+		}
+
+		Assert.True (verified > 0, "Expected to verify at least one fixture array proxy.");
+	}
+
+	[Fact]
+	public void PrecompiledBlob_WithoutArrayRanks_HasEmptyArrayMap ()
+	{
+		var result = Execute (precompile: true);
+		using var pe = new PEReader (new MemoryStream (RootBytes (result)));
+		var reader = pe.GetMetadataReader ();
+		byte[] blob = SingleRvaBlob (pe, reader);
+
+		int arrayCount = (int) BinaryPrimitives.ReadUInt32LittleEndian (blob.AsSpan (PrecompiledTypeMapBlobFormat.OffArrayCount, 4));
+		Assert.Equal (0, arrayCount);
+		Assert.False (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "System.Int32, System.Runtime", 0, out _));
 	}
 
 	sealed class SilentLogger (List<string> log) : ITrimmableTypeMapLogger

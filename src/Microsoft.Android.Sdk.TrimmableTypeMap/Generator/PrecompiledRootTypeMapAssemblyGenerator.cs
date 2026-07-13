@@ -7,6 +7,7 @@ using System.Reflection.Metadata.Ecma335;
 
 using ExternalEntry = Microsoft.Android.Sdk.TrimmableTypeMap.PrecompiledTypeMapBlobWriter.ExternalEntry;
 using ProxyEntry = Microsoft.Android.Sdk.TrimmableTypeMap.PrecompiledTypeMapBlobWriter.ProxyEntry;
+using ArrayEntry = Microsoft.Android.Sdk.TrimmableTypeMap.PrecompiledTypeMapBlobWriter.ArrayEntry;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -187,6 +188,15 @@ public sealed class PrecompiledRootTypeMapAssemblyGenerator
 			proxy.Add (new ProxyEntry (entry.Key, token (entry.Value)));
 		}
 
-		return PrecompiledTypeMapBlobWriter.Write (external, proxy);
+		var array = new List<ArrayEntry> (universe.Array.Count);
+		foreach (var entry in universe.Array) {
+			var rankTokens = new (int RankIndex, int ProxyToken) [entry.Value.Count];
+			for (int i = 0; i < entry.Value.Count; i++) {
+				rankTokens [i] = (entry.Value [i].RankIndex, token (entry.Value [i].Proxy));
+			}
+			array.Add (new ArrayEntry (entry.Key, rankTokens));
+		}
+
+		return PrecompiledTypeMapBlobWriter.Write (external, proxy, array);
 	}
 }

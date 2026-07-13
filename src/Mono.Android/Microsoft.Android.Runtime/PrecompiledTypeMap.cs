@@ -119,10 +119,19 @@ sealed unsafe class PrecompiledTypeMap : ITypeMap
 
 	public bool TryGetArrayProxyType (string managedTypeKey, int rankIndex, [NotNullWhen (true)] out Type? proxyType)
 	{
-		// Array proxies are not yet precompiled into the blob. Callers fall back to the generic
-		// array-creation path, matching behavior when a per-rank array map is absent.
+		ArgumentNullException.ThrowIfNull (managedTypeKey);
+
 		proxyType = null;
-		return false;
+		if (rankIndex < 0) {
+			return false;
+		}
+
+		if (!PrecompiledTypeMapBlobFormat.TryGetArrayToken (Blob, managedTypeKey, rankIndex, out int token)) {
+			return false;
+		}
+
+		proxyType = ResolveProxyType (token);
+		return proxyType is not null;
 	}
 
 	// Mirrors ManagedTypeMapping.GetSimplifiedAssemblyQualifiedTypeName: keeps the full type name and

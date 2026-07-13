@@ -28,29 +28,36 @@ namespace Microsoft.Android.Runtime;
 ///
 /// Layout (all integers little-endian, offsets relative to the universe blob start):
 /// <code>
-/// Header (32 bytes):
+/// Header (44 bytes):
 ///   +0   u32  Magic         = 0x314D5450 ("PTM1")
-///   +4   u32  Version       = 1
+///   +4   u32  Version       = 2
 ///   +8   u32  ExternalCount           (number of JNI-name entries)
 ///   +12  u32  ProxyCount              (number of managed-type entries)
 ///   +16  u32  ExternalHashesOffset    -> u64[ExternalCount] (sorted ascending)
 ///   +20  u32  ExternalEntriesOffset   -> ExternalEntry[ExternalCount] (parallel to hashes)
 ///   +24  u32  ProxyHashesOffset       -> u64[ProxyCount]    (sorted ascending)
 ///   +28  u32  ProxyEntriesOffset      -> ProxyEntry[ProxyCount]      (parallel to hashes)
+///   +32  u32  ArrayCount              (number of array-element entries)
+///   +36  u32  ArrayHashesOffset       -> u64[ArrayCount]    (sorted ascending)
+///   +40  u32  ArrayEntriesOffset      -> ArrayEntry[ArrayCount]      (parallel to hashes)
 ///
 /// ExternalEntry (8 bytes): { u32 KeyOffset; u32 TokensOffset }
 /// ProxyEntry    (8 bytes): { u32 KeyOffset; i32 Token }
+/// ArrayEntry    (8 bytes): { u32 KeyOffset; u32 RankTokensOffset }
 ///
-/// KeyOffset    -> String region:  { u32 ByteLength; u8 Utf8[ByteLength] }
-/// TokensOffset -> Tokens region:  { u32 Count; i32 Token[Count] }
+/// KeyOffset        -> String region:      { u32 ByteLength; u8 Utf8[ByteLength] }
+/// TokensOffset     -> Tokens region:      { u32 Count; i32 Token[Count] }
+/// RankTokensOffset -> RankTokens region:  { u32 Count; (i32 RankIndex, i32 Token)[Count] }
 /// </code>
 /// Entries are sorted by (hash, key-bytes) so equal-hash collisions form a contiguous run that the
-/// reader scans and verifies by key.
+/// reader scans and verifies by key. The Array map keys the (managed element type key -> array proxy)
+/// lookup by the element type's simplified assembly-qualified name; each entry carries one
+/// (0-based array rank index, proxy token) pair per rank emitted for that element type.
 /// </summary>
 static class PrecompiledTypeMapBlobFormat
 {
 	public const uint Magic = 0x314D5450; // "PTM1" little-endian
-	public const uint Version = 1;
+	public const uint Version = 2;
 
 	public const int OffMagic = 0;
 	public const int OffVersion = 4;
@@ -60,11 +67,15 @@ static class PrecompiledTypeMapBlobFormat
 	public const int OffExternalEntries = 20;
 	public const int OffProxyHashes = 24;
 	public const int OffProxyEntries = 28;
-	public const int HeaderSize = 32;
+	public const int OffArrayCount = 32;
+	public const int OffArrayHashes = 36;
+	public const int OffArrayEntries = 40;
+	public const int HeaderSize = 44;
 
 	public const int HashSize = 8;
 	public const int ExternalEntrySize = 8; // u32 KeyOffset + u32 TokensOffset
 	public const int ProxyEntrySize = 8;    // u32 KeyOffset + i32 Token
+	public const int ArrayEntrySize = 8;    // u32 KeyOffset + u32 RankTokensOffset
 
 	// Keys (JNI names, simplified AQNs) are short and bounded in practice, so their UTF-8 form is
 	// encoded into a fixed stack buffer to avoid a per-lookup byte[] allocation. Longer keys fall back
@@ -195,6 +206,66 @@ static class PrecompiledTypeMapBlobFormat
 		int entryOffset = entriesOffset + index * ProxyEntrySize;
 		token = ReadI32 (blob, entryOffset + 4);
 		return true;
+	}
+
+	/// <summary>
+	/// Looks up the array-proxy token for a managed element-type key and a 0-based array
+	/// <paramref name="rankIndex"/> (the <c>TryGetArrayProxyType</c> map). The key must be the
+	/// simplified assembly-qualified name of the element type: <c>"Namespace.Type, AssemblyName"</c>.
+	/// </summary>
+	/// <remarks>Convenience string overload; UTF-8-encodes the key into a stack buffer, no heap allocation.</remarks>
+	public static bool TryGetArrayToken (ReadOnlySpan<byte> blob, string managedTypeKey, int rankIndex, out int token) =>
+		TryGetArrayToken (blob, managedTypeKey.AsSpan (), rankIndex, out token);
+
+	/// <summary>
+	/// <see cref="ReadOnlySpan{Char}"/> overload: UTF-8-encodes the key into a stack buffer (heap
+	/// fallback only for very long keys) then delegates to the UTF-8 overload.
+	/// </summary>
+	public static unsafe bool TryGetArrayToken (ReadOnlySpan<byte> blob, ReadOnlySpan<char> managedTypeKey, int rankIndex, out int token)
+	{
+		int maxBytes = Encoding.UTF8.GetMaxByteCount (managedTypeKey.Length);
+		if (maxBytes <= MaxStackAllocBytes) {
+			byte* buffer = stackalloc byte [MaxStackAllocBytes];
+			int written = EncodeUtf8 (managedTypeKey, buffer, MaxStackAllocBytes);
+			return TryGetArrayToken (blob, new ReadOnlySpan<byte> (buffer, written), rankIndex, out token);
+		}
+		return TryGetArrayToken (blob, (ReadOnlySpan<byte>) EncodeUtf8Heap (managedTypeKey), rankIndex, out token);
+	}
+
+	/// <summary>
+	/// Looks up the array-proxy token for a managed element-type key already encoded as UTF-8 and a
+	/// 0-based array <paramref name="rankIndex"/> (the <c>TryGetArrayProxyType</c> map). The element
+	/// entry carries one (rank index, token) pair per emitted rank; this scans that small run for the
+	/// requested rank.
+	/// </summary>
+	public static bool TryGetArrayToken (ReadOnlySpan<byte> blob, ReadOnlySpan<byte> managedTypeKeyUtf8, int rankIndex, out int token)
+	{
+		token = 0;
+
+		int count = (int) ReadU32 (blob, OffArrayCount);
+		if (count == 0) {
+			return false;
+		}
+
+		int hashesOffset = (int) ReadU32 (blob, OffArrayHashes);
+		int entriesOffset = (int) ReadU32 (blob, OffArrayEntries);
+		int index = FindVerifiedIndex (blob, managedTypeKeyUtf8, count, hashesOffset, entriesOffset, ArrayEntrySize);
+		if (index < 0) {
+			return false;
+		}
+
+		int entryOffset = entriesOffset + index * ArrayEntrySize;
+		int rankTokensOffset = (int) ReadU32 (blob, entryOffset + 4);
+		int rankCount = (int) ReadU32 (blob, rankTokensOffset);
+		int pairsOffset = rankTokensOffset + 4;
+		for (int i = 0; i < rankCount; i++) {
+			int pairOffset = pairsOffset + i * 8;
+			if (ReadI32 (blob, pairOffset) == rankIndex) {
+				token = ReadI32 (blob, pairOffset + 4);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// UTF-8-encodes chars into the pointer buffer, returning the byte count. Uses the pointer-based

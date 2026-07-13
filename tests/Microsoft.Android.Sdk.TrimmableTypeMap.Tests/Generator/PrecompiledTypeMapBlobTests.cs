@@ -8,15 +8,17 @@ using Xunit;
 
 using ExternalEntry = Microsoft.Android.Sdk.TrimmableTypeMap.PrecompiledTypeMapBlobWriter.ExternalEntry;
 using ProxyEntry = Microsoft.Android.Sdk.TrimmableTypeMap.PrecompiledTypeMapBlobWriter.ProxyEntry;
+using ArrayEntry = Microsoft.Android.Sdk.TrimmableTypeMap.PrecompiledTypeMapBlobWriter.ArrayEntry;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 public class PrecompiledTypeMapBlobTests
 {
-	static byte[] Write (IEnumerable<ExternalEntry>? external = null, IEnumerable<ProxyEntry>? proxy = null) =>
+	static byte[] Write (IEnumerable<ExternalEntry>? external = null, IEnumerable<ProxyEntry>? proxy = null, IEnumerable<ArrayEntry>? array = null) =>
 		PrecompiledTypeMapBlobWriter.Write (
 			(external ?? Enumerable.Empty<ExternalEntry> ()).ToList (),
-			(proxy ?? Enumerable.Empty<ProxyEntry> ()).ToList ());
+			(proxy ?? Enumerable.Empty<ProxyEntry> ()).ToList (),
+			(array ?? Enumerable.Empty<ArrayEntry> ()).ToList ());
 
 	static int[] ReadExternalTokens (byte[] blob, string jniName)
 	{
@@ -38,6 +40,7 @@ public class PrecompiledTypeMapBlobTests
 		Assert.True (PrecompiledTypeMapBlobFormat.IsValid (blob));
 		Assert.False (PrecompiledTypeMapBlobFormat.TryGetExternalTokens (blob, "android/app/Activity", out _, out _));
 		Assert.False (PrecompiledTypeMapBlobFormat.TryGetProxyToken (blob, "Android.App.Activity, Mono.Android", out _));
+		Assert.False (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.App.Activity, Mono.Android", 0, out _));
 	}
 
 	[Fact]
@@ -206,5 +209,69 @@ public class PrecompiledTypeMapBlobTests
 		Assert.True (PrecompiledTypeMapBlobFormat.TryGetProxyToken (blob, longKey, out int token));
 		Assert.Equal (0x02000123, token);
 		Assert.False (PrecompiledTypeMapBlobFormat.TryGetProxyToken (blob, new string ('k', 4095), out _));
+	}
+
+	[Fact]
+	public void ArrayEntry_MultipleRanks_RoundTrip ()
+	{
+		byte[] blob = Write (
+			array: new [] {
+				new ArrayEntry ("Android.App.Activity, Mono.Android", new [] { (0, 0x03000001), (1, 0x03000002), (2, 0x03000003) }),
+				new ArrayEntry ("System.Int32, System.Runtime", new [] { (0, 0x03000010) }),
+			});
+
+		Assert.True (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.App.Activity, Mono.Android", 0, out int r0));
+		Assert.Equal (0x03000001, r0);
+		Assert.True (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.App.Activity, Mono.Android", 1, out int r1));
+		Assert.Equal (0x03000002, r1);
+		Assert.True (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.App.Activity, Mono.Android", 2, out int r2));
+		Assert.Equal (0x03000003, r2);
+
+		Assert.True (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "System.Int32, System.Runtime", 0, out int p0));
+		Assert.Equal (0x03000010, p0);
+	}
+
+	[Fact]
+	public void ArrayEntry_UnknownKeyOrRank_ReturnsFalse ()
+	{
+		byte[] blob = Write (
+			array: new [] { new ArrayEntry ("Android.App.Activity, Mono.Android", new [] { (0, 0x03000001) }) });
+
+		Assert.False (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.Widget.Button, Mono.Android", 0, out _));
+		// Present element, but a rank that was not emitted.
+		Assert.False (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.App.Activity, Mono.Android", 1, out _));
+		Assert.False (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.App.Activity, Mono.Android", -1, out _));
+	}
+
+	[Fact]
+	public void ArrayEntry_Utf8AndCharOverloads_Match ()
+	{
+		byte[] blob = Write (
+			array: new [] { new ArrayEntry ("Android.App.Activity, Mono.Android", new [] { (0, 0x03000009), (1, 0x0300000A) }) });
+
+		foreach (var (key, rank) in new [] { ("Android.App.Activity, Mono.Android", 0), ("Android.App.Activity, Mono.Android", 1), ("Nope, Nope", 0) }) {
+			bool byString = PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, key, rank, out int t1);
+			bool byUtf8 = PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, (ReadOnlySpan<byte>) System.Text.Encoding.UTF8.GetBytes (key), rank, out int t2);
+			bool byChars = PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, key.AsSpan (), rank, out int t3);
+			Assert.Equal (byString, byUtf8);
+			Assert.Equal (byString, byChars);
+			Assert.Equal (t1, t2);
+			Assert.Equal (t1, t3);
+		}
+	}
+
+	[Fact]
+	public void ArrayEntries_CoexistWithExternalAndProxy ()
+	{
+		byte[] blob = Write (
+			external: new [] { new ExternalEntry ("android/app/Activity", new [] { 0x01000005 }) },
+			proxy: new [] { new ProxyEntry ("Android.App.Activity, Mono.Android", 0x01000005) },
+			array: new [] { new ArrayEntry ("Android.App.Activity, Mono.Android", new [] { (0, 0x03000001) }) });
+
+		Assert.Equal (new [] { 0x01000005 }, ReadExternalTokens (blob, "android/app/Activity"));
+		Assert.True (PrecompiledTypeMapBlobFormat.TryGetProxyToken (blob, "Android.App.Activity, Mono.Android", out int pt));
+		Assert.Equal (0x01000005, pt);
+		Assert.True (PrecompiledTypeMapBlobFormat.TryGetArrayToken (blob, "Android.App.Activity, Mono.Android", 0, out int at));
+		Assert.Equal (0x03000001, at);
 	}
 }

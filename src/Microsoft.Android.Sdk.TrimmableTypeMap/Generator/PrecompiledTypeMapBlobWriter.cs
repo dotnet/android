@@ -43,13 +43,30 @@ static class PrecompiledTypeMapBlobWriter
 	}
 
 	/// <summary>
-	/// Serializes one universe. <paramref name="external"/> keys (JNI names) and
-	/// <paramref name="proxy"/> keys (managed-type names) must each be unique within their map.
+	/// One array-element entry: a simplified assembly-qualified element-type name mapped to one or more
+	/// (0-based array rank index, array-proxy token) pairs — one per rank emitted for that element type.
 	/// </summary>
-	public static byte[] Write (IReadOnlyList<ExternalEntry> external, IReadOnlyList<ProxyEntry> proxy)
+	public readonly struct ArrayEntry
+	{
+		public ArrayEntry (string managedTypeKey, IReadOnlyList<(int RankIndex, int ProxyToken)> rankTokens)
+		{
+			ManagedTypeKey = managedTypeKey ?? throw new ArgumentNullException (nameof (managedTypeKey));
+			RankTokens = rankTokens ?? throw new ArgumentNullException (nameof (rankTokens));
+		}
+
+		public string ManagedTypeKey { get; }
+		public IReadOnlyList<(int RankIndex, int ProxyToken)> RankTokens { get; }
+	}
+
+	/// <summary>
+	/// Serializes one universe. <paramref name="external"/> keys (JNI names), <paramref name="proxy"/>
+	/// keys and <paramref name="array"/> keys (managed-type names) must each be unique within their map.
+	/// </summary>
+	public static byte[] Write (IReadOnlyList<ExternalEntry> external, IReadOnlyList<ProxyEntry> proxy, IReadOnlyList<ArrayEntry> array)
 	{
 		_ = external ?? throw new ArgumentNullException (nameof (external));
 		_ = proxy ?? throw new ArgumentNullException (nameof (proxy));
+		_ = array ?? throw new ArgumentNullException (nameof (array));
 
 		var externalRows = external
 			.Select (e => new Row (e.JniName, e.ProxyTokens))
@@ -59,15 +76,22 @@ static class PrecompiledTypeMapBlobWriter
 			.Select (p => new Row (p.ManagedTypeKey, new[] { p.ProxyToken }))
 			.OrderBy (r => r, RowComparer.Instance)
 			.ToList ();
+		var arrayRows = array
+			.Select (a => new ArrayRow (a.ManagedTypeKey, a.RankTokens))
+			.OrderBy (r => r, ArrayRowComparer.Instance)
+			.ToList ();
 
 		int externalCount = externalRows.Count;
 		int proxyCount = proxyRows.Count;
+		int arrayCount = arrayRows.Count;
 
 		int externalHashesOffset = PrecompiledTypeMapBlobFormat.HeaderSize;
 		int externalEntriesOffset = externalHashesOffset + externalCount * PrecompiledTypeMapBlobFormat.HashSize;
 		int proxyHashesOffset = externalEntriesOffset + externalCount * PrecompiledTypeMapBlobFormat.ExternalEntrySize;
 		int proxyEntriesOffset = proxyHashesOffset + proxyCount * PrecompiledTypeMapBlobFormat.HashSize;
-		int stringsOffset = proxyEntriesOffset + proxyCount * PrecompiledTypeMapBlobFormat.ProxyEntrySize;
+		int arrayHashesOffset = proxyEntriesOffset + proxyCount * PrecompiledTypeMapBlobFormat.ProxyEntrySize;
+		int arrayEntriesOffset = arrayHashesOffset + arrayCount * PrecompiledTypeMapBlobFormat.HashSize;
+		int stringsOffset = arrayEntriesOffset + arrayCount * PrecompiledTypeMapBlobFormat.ArrayEntrySize;
 
 		// Build the string + token heaps, deduplicating identical payloads. Each offset is recorded
 		// relative to the final blob start (section base + position in the heap), so the heaps can be
@@ -94,6 +118,9 @@ static class PrecompiledTypeMapBlobWriter
 		foreach (var row in proxyRows) {
 			row.KeyOffset = InternString (row.Key, row.KeyUtf8);
 		}
+		foreach (var row in arrayRows) {
+			row.KeyOffset = InternString (row.Key, row.KeyUtf8);
+		}
 
 		int tokensOffset = stringsOffset + stringHeap.Count;
 		var tokenHeap = new List<byte> ();
@@ -118,7 +145,33 @@ static class PrecompiledTypeMapBlobWriter
 			row.TokensOffset = InternTokens (row.Tokens);
 		}
 
-		int totalSize = tokensOffset + tokenHeap.Count;
+		// Array rank-token lists follow the external-token region. Each list is
+		// { u32 Count; (i32 RankIndex, i32 Token)[Count] }, deduplicated by payload.
+		int rankTokensOffset = tokensOffset + tokenHeap.Count;
+		var rankTokenHeap = new List<byte> ();
+		var rankTokenListOffsets = new Dictionary<string, int> (StringComparer.Ordinal);
+
+		int InternRankTokens (IReadOnlyList<(int RankIndex, int Token)> rankTokens)
+		{
+			string key = string.Join (",", rankTokens.Select (rt => $"{rt.RankIndex}:{rt.Token}"));
+			if (rankTokenListOffsets.TryGetValue (key, out int existing)) {
+				return existing;
+			}
+			int offset = rankTokensOffset + rankTokenHeap.Count;
+			AppendUInt32 (rankTokenHeap, (uint) rankTokens.Count);
+			foreach (var (rankIndex, token) in rankTokens) {
+				AppendInt32 (rankTokenHeap, rankIndex);
+				AppendInt32 (rankTokenHeap, token);
+			}
+			rankTokenListOffsets [key] = offset;
+			return offset;
+		}
+
+		foreach (var row in arrayRows) {
+			row.RankTokensOffset = InternRankTokens (row.RankTokens);
+		}
+
+		int totalSize = rankTokensOffset + rankTokenHeap.Count;
 		var blob = new byte [totalSize];
 
 		// Every section lives at a precomputed offset, so each is written straight into the blob.
@@ -130,7 +183,10 @@ static class PrecompiledTypeMapBlobWriter
 		pos = WriteUInt32 (blob, pos, (uint) externalHashesOffset);
 		pos = WriteUInt32 (blob, pos, (uint) externalEntriesOffset);
 		pos = WriteUInt32 (blob, pos, (uint) proxyHashesOffset);
-		WriteUInt32 (blob, pos, (uint) proxyEntriesOffset);
+		pos = WriteUInt32 (blob, pos, (uint) proxyEntriesOffset);
+		pos = WriteUInt32 (blob, pos, (uint) arrayCount);
+		pos = WriteUInt32 (blob, pos, (uint) arrayHashesOffset);
+		WriteUInt32 (blob, pos, (uint) arrayEntriesOffset);
 
 		// External hashes + entries (parallel arrays, sorted by hash).
 		int p = externalHashesOffset;
@@ -154,9 +210,21 @@ static class PrecompiledTypeMapBlobWriter
 			p = WriteInt32 (blob, p, row.Tokens [0]);
 		}
 
-		// String + token heaps copied verbatim into their precomputed sections.
+		// Array hashes + entries.
+		p = arrayHashesOffset;
+		foreach (var row in arrayRows) {
+			p = WriteUInt64 (blob, p, row.Hash);
+		}
+		p = arrayEntriesOffset;
+		foreach (var row in arrayRows) {
+			p = WriteUInt32 (blob, p, (uint) row.KeyOffset);
+			p = WriteUInt32 (blob, p, (uint) row.RankTokensOffset);
+		}
+
+		// String + token + rank-token heaps copied verbatim into their precomputed sections.
 		stringHeap.CopyTo (blob, stringsOffset);
 		tokenHeap.CopyTo (blob, tokensOffset);
+		rankTokenHeap.CopyTo (blob, rankTokensOffset);
 
 		return blob;
 	}
@@ -209,6 +277,24 @@ static class PrecompiledTypeMapBlobWriter
 		public int TokensOffset { get; set; }
 	}
 
+	sealed class ArrayRow
+	{
+		public ArrayRow (string key, IReadOnlyList<(int RankIndex, int Token)> rankTokens)
+		{
+			Key = key;
+			RankTokens = rankTokens;
+			KeyUtf8 = Encoding.UTF8.GetBytes (key);
+			Hash = PrecompiledTypeMapBlobFormat.HashKey (KeyUtf8);
+		}
+
+		public string Key { get; }
+		public byte[] KeyUtf8 { get; }
+		public ulong Hash { get; }
+		public IReadOnlyList<(int RankIndex, int Token)> RankTokens { get; }
+		public int KeyOffset { get; set; }
+		public int RankTokensOffset { get; set; }
+	}
+
 	// Sort by (hash, key bytes) so equal-hash collisions form a contiguous, deterministically ordered run.
 	sealed class RowComparer : IComparer<Row>
 	{
@@ -225,17 +311,35 @@ static class PrecompiledTypeMapBlobWriter
 			}
 			return CompareBytes (x.KeyUtf8, y.KeyUtf8);
 		}
+	}
 
-		static int CompareBytes (byte[] a, byte[] b)
+	// Sort by (hash, key bytes), matching RowComparer, for the array-element rows.
+	sealed class ArrayRowComparer : IComparer<ArrayRow>
+	{
+		public static readonly ArrayRowComparer Instance = new ();
+
+		public int Compare (ArrayRow? x, ArrayRow? y)
 		{
-			int min = Math.Min (a.Length, b.Length);
-			for (int i = 0; i < min; i++) {
-				int diff = a [i].CompareTo (b [i]);
-				if (diff != 0) {
-					return diff;
-				}
+			if (x is null || y is null) {
+				return Comparer<object?>.Default.Compare (x, y);
 			}
-			return a.Length.CompareTo (b.Length);
+			int byHash = x.Hash.CompareTo (y.Hash);
+			if (byHash != 0) {
+				return byHash;
+			}
+			return CompareBytes (x.KeyUtf8, y.KeyUtf8);
 		}
+	}
+
+	static int CompareBytes (byte[] a, byte[] b)
+	{
+		int min = Math.Min (a.Length, b.Length);
+		for (int i = 0; i < min; i++) {
+			int diff = a [i].CompareTo (b [i]);
+			if (diff != 0) {
+				return diff;
+			}
+		}
+		return a.Length.CompareTo (b.Length);
 	}
 }

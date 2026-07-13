@@ -27,6 +27,13 @@ public class PrecompiledTypeMapUniverseBuilderTests
 			InvokerType = invokerName is null ? null : new TypeRefData { ManagedTypeName = invokerName, AssemblyName = invokerAsm! },
 		};
 
+	static ArrayProxyData ArrayProxy (string typeName, string elementName, string elementAsm, int rank) =>
+		new () {
+			TypeName = typeName,
+			ElementType = new TypeRefData { ManagedTypeName = elementName, AssemblyName = elementAsm },
+			Rank = rank,
+		};
+
 	[Fact]
 	public void SharedUniverse_GroupsExternalByJniName_AndKeysProxyByTarget ()
 	{
@@ -110,5 +117,42 @@ public class PrecompiledTypeMapUniverseBuilderTests
 		Assert.Equal (2, universes.Count);
 		Assert.Equal ("android/app/Activity", universes [0].External.Single ().Key);
 		Assert.Equal ("myapp/MyActivity", universes [1].External.Single ().Key);
+	}
+
+	[Fact]
+	public void ArrayProxies_KeyedByElementType_WithRankIndex ()
+	{
+		var model = Model ("_App.TypeMap",
+			Proxy ("Android_App_Activity_Proxy", "android/app/Activity", "Android.App.Activity", "Mono.Android"));
+		model.ArrayProxyTypes.Add (ArrayProxy ("Android_App_Activity_ArrayProxy1", "Android.App.Activity", "Mono.Android", rank: 1));
+		model.ArrayProxyTypes.Add (ArrayProxy ("Android_App_Activity_ArrayProxy2", "Android.App.Activity", "Mono.Android", rank: 2));
+
+		var universe = PrecompiledTypeMapUniverseBuilder.Build (new [] { model }, useSharedTypemapUniverse: true).Single ();
+
+		var array = Assert.Single (universe.Array);
+		Assert.Equal ("Android.App.Activity, Mono.Android", array.Key);
+		Assert.Equal (2, array.Value.Count);
+		// Model Rank is 1-based; the universe stores the 0-based rank index the runtime looks up by.
+		Assert.Contains (array.Value, rt => rt.RankIndex == 0 && rt.Proxy.FullTypeName.EndsWith ("Android_App_Activity_ArrayProxy1"));
+		Assert.Contains (array.Value, rt => rt.RankIndex == 1 && rt.Proxy.FullTypeName.EndsWith ("Android_App_Activity_ArrayProxy2"));
+	}
+
+	[Fact]
+	public void ArrayProxies_TrimmedProxy_IsExcludedBySurvivalFilter ()
+	{
+		var model = Model ("_App.TypeMap");
+		model.ArrayProxyTypes.Add (ArrayProxy ("Kept_ArrayProxy1", "MyApp.Kept", "App", rank: 1));
+		model.ArrayProxyTypes.Add (ArrayProxy ("Trimmed_ArrayProxy1", "MyApp.Trimmed", "App", rank: 1));
+
+		var surviving = new Dictionary<string, HashSet<string>> (StringComparer.Ordinal) {
+			["_App.TypeMap"] = new (StringComparer.Ordinal) { "_TypeMap.ArrayProxies.Kept_ArrayProxy1" },
+		};
+
+		var universe = PrecompiledTypeMapUniverseBuilder.Build (new [] { model }, useSharedTypemapUniverse: true, surviving).Single ();
+
+		var array = Assert.Single (universe.Array);
+		Assert.Equal ("MyApp.Kept, App", array.Key);
+		var rt = Assert.Single (array.Value);
+		Assert.EndsWith ("Kept_ArrayProxy1", rt.Proxy.FullTypeName);
 	}
 }
