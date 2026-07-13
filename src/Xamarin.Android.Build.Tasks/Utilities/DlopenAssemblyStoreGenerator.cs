@@ -35,9 +35,11 @@ static class DlopenAssemblyStoreGenerator
 	// (Utils.FindELFPayloadSectionOffsetAndSize) looks for and the one `DSOWrapperGenerator` uses.
 	const string PayloadSectionName = "payload";
 
-	// 16k so the payload is page-aligned on both 4k and 16k page-size devices.
-	const int PayloadAlignment = 16384;
-
+	// Per-arch max page size, used both for `ld -z max-page-size` and to align the payload so it is
+	// page-aligned on the largest page size the ABI can run on: 16k for the 64-bit arches (which may
+	// run on 16k-page devices), 4k for the 32-bit arches (Android's 16k-page support is 64-bit-only).
+	// Using the per-arch value instead of a hardcoded 16k avoids ~12k of dead padding in each 32-bit
+	// wrapper.
 	static (string Triple, string ElfArch, int MaxPageSize) GetArchToolInfo (AndroidTargetArch arch) => arch switch {
 		AndroidTargetArch.Arm64  => ("aarch64-linux-android",   "aarch64linux",       16384),
 		AndroidTargetArch.Arm    => ("armv7-linux-androideabi",  "armelf_linux_eabi",  4096),
@@ -69,7 +71,7 @@ static class DlopenAssemblyStoreGenerator
 		string incbinPath = payloadFilePath.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
 		string asm = $"""
 				.section {PayloadSectionName}, "a"
-				.balign {PayloadAlignment}
+				.balign {toolInfo.MaxPageSize}
 				.globl {PayloadStartSymbol}
 			{PayloadStartSymbol}:
 				.incbin "{incbinPath}"
