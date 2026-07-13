@@ -120,6 +120,7 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
 		log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
 		free (class_name);
+		env->DeleteLocalRef (java_class);
 	} else {
 		log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
 	}
