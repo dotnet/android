@@ -27,6 +27,15 @@
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(PrivateSdkAssemblies->'_%(Filename).TypeMap')" />
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(ReferencePath->'_%(Filename).TypeMap')"
           Condition=" '%(ReferencePath.FrameworkAssembly)' == 'true' " />
+      <!-- Runtime-only assemblies (e.g. the NativeAOT runtime host Microsoft.Android.Runtime.NativeAOT)
+           come from the runtime pack and have no @(ReferencePath) counterpart, so their per-assembly
+           typemap DLLs are not caught by the rules above. Every runtime-pack managed assembly is a
+           framework/runtime assembly: classify its typemap DLL as framework so it stays an IlcReference
+           (ILC reads its conditional TypeMap attributes) but is removed from the unmanaged-entrypoint
+           roots, matching Mono.Android/Java.Interop. Their JCW native methods register via the runtime
+           registerNatives path. -->
+      <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(RuntimePackAsset->'_%(Filename).TypeMap')"
+          Condition=" '%(RuntimePackAsset.Extension)' == '.dll' and '%(RuntimePackAsset.AssetType)' == 'runtime' " />
       <!-- The root assembly (_Microsoft.Android.TypeMaps) only contains TypeMapLoader.Initialize()
             and assembly-level attributes — no types that need vtable generation.
             Framework per-assembly typemap DLLs must remain IlcReference inputs so ILC can read
@@ -65,6 +74,70 @@
       Condition=" '$(_OuterIntermediateOutputPath)' == '' "
       BeforeTargets="_ResolveAssemblies"
       DependsOnTargets="_GenerateTrimmableTypeMap" />
+
+  <!--
+    The trimmable typemap generator runs in the OUTER build over @(ReferencePath), which contains only
+    the compile closure (app + its references + the ref-pack framework assemblies). Runtime-only
+    assemblies - e.g. the NativeAOT runtime host Microsoft.Android.Runtime.NativeAOT - come from the
+    RID-specific runtime pack and have no ref-pack counterpart, so they are resolved only in the per-RID
+    inner build and are never in @(ReferencePath). Their Java Callable Wrapper types (e.g.
+    UncaughtExceptionMarshaler) would then be missing from the typemap and JCWs -> R8 has nothing to
+    keep -> on-device startup crash in JavaInteropRuntime.init (setDefaultUncaughtExceptionHandler).
+
+    Runtime-pack resolution (ResolveRuntimePackAssets) requires a single RuntimeIdentifier and must
+    happen before ILC. So, before _ResolveAssemblies spawns the per-RID ILC builds, run a lightweight
+    resolve-only pass for the first RID (the managed metadata is RID-independent) via
+    _ResolveRuntimeOnlyAssembliesForTypeMap, and cache the discovered runtime-only assemblies to a file.
+    This auto-detects every runtime-only Java-peer assembly - no assembly is hard-coded.
+
+    The nested resolve is gated on Inputs/Outputs so it only re-runs when the reference graph could have
+    changed (restore output or the cached build properties), not on every incremental build. The
+    always-run loader below reads the cached list into the item the generator consumes, keeping the
+    generator's Inputs stable across builds.
+  -->
+  <Target Name="_ResolveRuntimeOnlyAssembliesForTrimmableTypeMap"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
+      Inputs="$(ProjectAssetsFile);$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_TypeMapOutputDirectory)runtime-only-assemblies.txt">
+    <PropertyGroup>
+      <_TrimmableTypeMapResolveRid Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_TrimmableTypeMapResolveRid>
+      <_TrimmableTypeMapResolveRid Condition=" '$(_TrimmableTypeMapResolveRid)' == '' ">$(RuntimeIdentifier)</_TrimmableTypeMapResolveRid>
+      <!-- Item lists (e.g. @(IntermediateAssembly)) cannot be embedded directly in the MSBuild task's
+           Properties string, so flatten them into this property and pass it via AdditionalProperties
+           item metadata, mirroring _ResolveAssemblies. -->
+      <_TrimmableTypeMapResolveProperties>_ComputeFilesToPublishForRuntimeIdentifiers=true;SelfContained=true;DesignTimeBuild=$(DesignTimeBuild);AppendRuntimeIdentifierToOutputPath=true;ResolveAssemblyReferencesFindRelatedSatellites=false;SkipCompilerExecution=true;_OuterIntermediateAssembly=@(IntermediateAssembly);_OuterOutputPath=$(OutputPath);_OuterIntermediateOutputPath=$(IntermediateOutputPath);_AndroidNdkDirectory=$(_AndroidNdkDirectory)</_TrimmableTypeMapResolveProperties>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_TrimmableTypeMapResolveRid)' != '' ">
+      <_TrimmableTypeMapResolveProject Include="$(MSBuildProjectFile)"
+          AdditionalProperties="RuntimeIdentifier=$(_TrimmableTypeMapResolveRid);$(_TrimmableTypeMapResolveProperties)" />
+    </ItemGroup>
+    <MSBuild
+        Condition=" '$(_TrimmableTypeMapResolveRid)' != '' "
+        Projects="@(_TrimmableTypeMapResolveProject)"
+        Targets="_ResolveRuntimeOnlyAssembliesForTypeMap">
+      <Output TaskParameter="TargetOutputs" ItemName="_ResolvedRuntimeOnlyAssemblyForTypeMap" />
+    </MSBuild>
+    <MakeDir Directories="$(_TypeMapOutputDirectory)" />
+    <WriteLinesToFile
+        File="$(_TypeMapOutputDirectory)runtime-only-assemblies.txt"
+        Lines="@(_ResolvedRuntimeOnlyAssemblyForTypeMap)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_TypeMapOutputDirectory)runtime-only-assemblies.txt" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AddRuntimeOnlyAssembliesToTrimmableTypeMap"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
+      DependsOnTargets="_ResolveRuntimeOnlyAssembliesForTrimmableTypeMap"
+      BeforeTargets="_GenerateTrimmableTypeMap">
+    <ReadLinesFromFile
+        File="$(_TypeMapOutputDirectory)runtime-only-assemblies.txt"
+        Condition=" Exists('$(_TypeMapOutputDirectory)runtime-only-assemblies.txt') ">
+      <Output TaskParameter="Lines" ItemName="_AndroidTrimmableTypeMapExtraFrameworkAssembly" />
+    </ReadLinesFromFile>
+  </Target>
 
   <Target Name="_CollectTrimmableNativeAotDgmlFiles"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
