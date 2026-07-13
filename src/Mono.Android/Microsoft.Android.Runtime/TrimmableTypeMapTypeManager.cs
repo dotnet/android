@@ -56,16 +56,14 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				return GetArrayTypesForCoreClr (typeSignature, elementType);
 			}
 
-			// NativeAOT: prefer the generated array proxy, otherwise construct the array type at runtime.
+			// NativeAOT: prefer the generated array proxy; otherwise reconstruct the same set of
+			// array and wrapper types at runtime so Java-to-managed array marshaling still resolves
+			// them when array proxies are not pre-generated.
 			if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)) {
 				return arrayProxy.GetArrayTypes ();
 			}
 
-			if (SafeArrayFactory.TryGetArrayType (elementType, typeSignature.ArrayRank, out var arrayType)) {
-				return [arrayType];
-			}
-
-			return [];
+			return BuildRuntimeArrayTypes (elementType, typeSignature.ArrayRank);
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026:RequiresUnreferencedCode",
 				Justification = "This API is called as part of Java to .NET type marshalling when the target type is expected as the input " +
@@ -128,6 +126,73 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 				return [javaObjectArrayType, arrayType];
 			}
+		}
+	}
+
+	// Reconstructs the same array and wrapper types that a generated JavaArrayProxy.GetArrayTypes ()
+	// would return (see the trimmable typemap generator's ModelBuilder.GetArrayTypeReferences), for the
+	// NativeAOT path when no array proxy was pre-generated. All construction is AOT-safe: primitive
+	// wrappers are closed typeof tokens from PrimitiveArrayInfo, and every runtime-built type is a
+	// reference array or a Java.Interop array wrapper over a reference argument, which NativeAOT builds
+	// from canonical (__Canon) templates.
+	internal static IReadOnlyList<Type> BuildRuntimeArrayTypes (Type elementType, int rank)
+	{
+		Debug.Assert (rank > 0, "At least one array rank is expected");
+
+		if (PrimitiveArrayInfo.TryGetArrayTypes (elementType, out var primitiveRankOneTypes)) {
+			return ExpandRankOneTypes (primitiveRankOneTypes, rank);
+		}
+
+		if (elementType.IsValueType) {
+			// Non-primitive value types (e.g. Nullable<int>) have no generated array proxy and no
+			// Java.Interop array wrapper: JavaObjectArray<T>/JavaArray<T> over a value type would need
+			// an unrooted value-type generic instantiation. Only the exact rooted vector is AOT-safe,
+			// which is all these element types need to marshal.
+			if (SafeArrayFactory.TryGetArrayType (elementType, rank, out var valueArrayType)) {
+				return [valueArrayType];
+			}
+			return [];
+		}
+
+		Type[] referenceRankOneTypes = [
+			SafeArrayFactory.MakeReferenceGenericType (typeof (Java.Interop.JavaObjectArray<>), elementType),
+			SafeArrayFactory.MakeReferenceGenericType (typeof (Java.Interop.JavaArray<>), elementType),
+			SafeArrayFactory.MakeReferenceArrayType (elementType),
+		];
+		return ExpandRankOneTypes (referenceRankOneTypes, rank);
+
+		// Mirrors ModelBuilder.ExpandRankOneTypes: for jagged arrays each rank-one type is both wrapped
+		// in JavaObjectArray<> and given the remaining SZArray ranks. Every input here is a reference type.
+		static IReadOnlyList<Type> ExpandRankOneTypes (IReadOnlyList<Type> rankOneTypes, int rank)
+		{
+			if (rank == 1) {
+				return rankOneTypes;
+			}
+
+			var result = new List<Type> (rankOneTypes.Count * 2);
+			foreach (var type in rankOneTypes) {
+				result.Add (NestInJavaObjectArray (type, rank - 1));
+				result.Add (AddArrayRanks (type, rank - 1));
+			}
+			return result;
+		}
+
+		static Type NestInJavaObjectArray (Type type, int rank)
+		{
+			var result = type;
+			for (int i = 0; i < rank; i++) {
+				result = SafeArrayFactory.MakeReferenceGenericType (typeof (Java.Interop.JavaObjectArray<>), result);
+			}
+			return result;
+		}
+
+		static Type AddArrayRanks (Type type, int rank)
+		{
+			var result = type;
+			for (int i = 0; i < rank; i++) {
+				result = SafeArrayFactory.MakeReferenceArrayType (result);
+			}
+			return result;
 		}
 	}
 

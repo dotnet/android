@@ -105,9 +105,22 @@ static class SafeArrayFactory
 	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
 		Justification = "Creating an SZArray type does not perform member discovery. " +
 			"Value-type vectors are not passed here unless they are already array reference types for an outer jagged rank.")]
-	static Type MakeReferenceArrayType (Type elementType)
+	internal static Type MakeReferenceArrayType (Type elementType)
 	{
 		return elementType.MakeArrayType ();
+	}
+
+	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
+		Justification = "NativeAOT's Type.MakeGenericType() is annotated because arbitrary constructed generics can lack a runtime template. " +
+			"This helper only constructs Java.Interop array wrapper types (JavaObjectArray<T>, JavaArray<T>) over reference arguments, " +
+			"which canonicalize to __Canon templates in NativeAOT like every other reference generic in the trimmable typemap. " +
+			"The result is only used as a Java-to-managed marshaling lookup token; the constructed type is not activated here.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
+		Justification = "The generic definitions are the known Java.Interop array wrappers, not arbitrary user types, and the type argument " +
+			"is always a reference type. No members are discovered by constructing the type token.")]
+	internal static Type MakeReferenceGenericType (Type genericDefinition, Type referenceArgument)
+	{
+		return genericDefinition.MakeGenericType (referenceArgument);
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",

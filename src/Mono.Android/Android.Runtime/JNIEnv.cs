@@ -1557,10 +1557,15 @@ namespace Android.Runtime {
 
 		static void SetObjectArrayElementFromManagedValue (IntPtr dest, int index, object? value)
 		{
-			JavaConvert.WithLocalJniHandle (value, lref => {
+			// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
+			// closure on every element set (this runs once per element on the SetArrayItem path).
+			IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+			try {
 				SetObjectArrayElement (dest, index, lref);
-				return IntPtr.Zero;
-			});
+			} finally {
+				DeleteLocalRef (lref);
+				GC.KeepAlive (value);
+			}
 		}
 
 		static unsafe void _SetBooleanArrayRegion (IntPtr array, int start, int length, bool[] buffer)
