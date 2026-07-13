@@ -52,30 +52,26 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		{
 			Debug.Assert (elementType != typeof (void), "Cannot create an array of void");
 
-			// We only pre-generate the array types proxy map for Native AOT because we can't manipulate types at runtime.
-			// For CoreCLR, we take advantage of the dynamic runtime and we save app size by not pre-generating the array types proxy map.
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)) {
-					return arrayProxy.GetArrayTypes ();
-				}
-
-				if (SafeArrayFactory.TryGetArrayType (elementType, typeSignature.ArrayRank, out var arrayType)) {
-					return [arrayType];
-				}
-
-				return [];
-			}
-			
-			if (RuntimeFeature.IsCoreClrRuntime) {
+			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 				return GetArrayTypesForCoreClr (typeSignature, elementType);
 			}
-			
-			throw new NotSupportedException ("Unsupported runtime.");
+
+			// NativeAOT: prefer the generated array proxy, otherwise construct the array type at runtime.
+			if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)) {
+				return arrayProxy.GetArrayTypes ();
+			}
+
+			if (SafeArrayFactory.TryGetArrayType (elementType, typeSignature.ArrayRank, out var arrayType)) {
+				return [arrayType];
+			}
+
+			return [];
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026:RequiresUnreferencedCode",
 				Justification = "This API is called as part of Java to .NET type marshalling when the target type is expected as the input " +
 					"parameter of the target method, so it must be seen by the IL trimmer. This justification would not hold for Native AOT " +
 					"but this codepath is only reachable on CoreCLR.")]
+			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 			static IEnumerable<Type> GetArrayTypesForCoreClr (JniTypeSignature typeSignature, Type elementType)
 			{
 				if (IsKeyword (typeSignature)) {

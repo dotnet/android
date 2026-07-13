@@ -9,7 +9,7 @@ namespace Java.Lang
 {
 	public partial class StringBuffer
 	{
-		public IAppendable Append (string s, int start, int end)
+		public new IAppendable Append (string s, int start, int end)
 		{
 			return Append (new Java.Lang.String (s), start, end);
 		}

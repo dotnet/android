@@ -155,6 +155,7 @@ public class TrimmableTypeMapGenerator
 				// Other codes (e.g. unresolvable type properties) are not yet assigned XA codes
 				// and are intentionally not surfaced here.
 			},
+			WarnInvalidPlaceholder = placeholders => logger.LogInvalidManifestPlaceholderWarning (placeholders),
 			LibraryManifests = config.LibraryManifests ?? [],
 		};
 

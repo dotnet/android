@@ -1136,12 +1136,16 @@ namespace Library1 {
 					new BuildItem.Source ("HttpClientTest.cs") {
 						TextContent = () => getResource("HttpClientTest")
 					},
+					new BuildItem.Source ("LocalTestServers.cs") {
+						TextContent = () => File.ReadAllText (Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", "Xamarin.Android.Net", "LocalTestServers.cs"))
+					},
 					new BuildItem.Source ("PreserveTest.cs") {
 						TextContent = () => getResource("PreserveTest")
 					},
 				},
 			};
 			lib2.SetRuntime (runtime);
+			lib2.SetProperty ("LangVersion", "8.0");
 
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
@@ -1176,6 +1180,16 @@ namespace Library1 {
 </linker>
 ",
 					},
+					new BuildItem ("AndroidResource", "Resources\\xml\\network_security_config.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<network-security-config>
+  <domain-config cleartextTrafficPermitted=""true"">
+    <domain>localhost</domain>
+    <domain>127.0.0.1</domain>
+  </domain-config>
+</network-security-config>
+",
+					},
 				},
 			};
 			proj.SetRuntime (runtime);
@@ -1187,6 +1201,7 @@ namespace Library1 {
 				Version = "2.0.3",
 			});
 
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:networkSecurityConfig=\"@xml/network_security_config\" ");
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
 				proj.MainActivity = sr.ReadToEnd ();

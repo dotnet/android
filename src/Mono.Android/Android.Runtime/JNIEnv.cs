@@ -27,13 +27,26 @@ namespace Android.Runtime {
 
 		static Array ArrayCreateInstance (Type elementType, int length)
 		{
+			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				return Array.CreateInstance (elementType, length);
+			}
+
 			if (RuntimeFeature.TrimmableTypeMap) {
 				return SafeArrayFactory.CreateInstance (elementType, rank: 1, length);
 			}
 
-			#pragma warning disable IL3050 // legacy fallback path
-			return Array.CreateInstance (elementType, length);
-			#pragma warning restore IL3050
+			if (RuntimeFeature.ManagedTypeMap) {
+				return ArrayCreateInstanceWithSuppression (elementType, length);
+
+				[UnconditionalSuppressMessage ("Trimming", "IL3050:RequiresDynamicCode",
+					Justification = "Temporarily suppressed for the \"ManagedTypeMap\".")]
+				Array ArrayCreateInstanceWithSuppression (Type elementType, int length)
+				{
+					return Array.CreateInstance (elementType, length);
+				}
+			}
+
+			throw new NotSupportedException ($"It is not possible to create an array with element type '{elementType}'.");
 		}
 
 		internal static IntPtr IdentityHash (IntPtr v)
@@ -403,7 +416,7 @@ namespace Android.Runtime {
 				return NewObject (jclass, jmethod, p);
 		}
 
-		public static string GetClassNameFromInstance (IntPtr jobject)
+		public static string? GetClassNameFromInstance (IntPtr jobject)
 		{
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
@@ -456,6 +469,8 @@ namespace Android.Runtime {
 				if (RuntimeFeature.IsMonoRuntime) {
 					ret = monovm_typemap_managed_to_java (type, mvidptr);
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
+					if (type.FullName is null)
+						return null;
 					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -691,7 +706,7 @@ namespace Android.Runtime {
 					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
 					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
 					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type t) =>
+					static object? GetObject (IntPtr e, Type? t) =>
 						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
@@ -719,7 +734,7 @@ namespace Android.Runtime {
 			}
 
 			if (array != IntPtr.Zero) {
-				string type = GetClassNameFromInstance (array);
+				string? type = GetClassNameFromInstance (array);
 				if (type == null || type.Length < 1 || type [0] != '[')
 					throw new InvalidOperationException ("Unsupported java array type: " + type);
 

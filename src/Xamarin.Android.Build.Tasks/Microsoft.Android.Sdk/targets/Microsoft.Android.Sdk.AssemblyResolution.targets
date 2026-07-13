@@ -86,6 +86,36 @@ _ResolveAssemblies MSBuild target.
       </ItemGroup>
   </Target>
 
+  <!--
+    Resolve-only variant used by the trimmable typemap generator to discover runtime-only assemblies.
+
+    The trimmable typemap generator runs in the RID-independent OUTER build over @(ReferencePath),
+    the compile closure, which omits runtime-only assemblies (e.g. the NativeAOT runtime host) that
+    have no ref-pack counterpart and are only pulled from the RID-specific runtime pack. Runtime-pack
+    resolution (ResolveRuntimePackAssets, reached via ResolveReferences) requires a single
+    RuntimeIdentifier, so the outer build invokes this target through the MSBuild task for one RID.
+
+    It stops after ResolveReferences - it does NOT run ComputeFilesToPublish/ILLink/ILC/AOT - and
+    returns the Android runtime-pack managed assemblies that are NOT already in @(ReferencePath)
+    (matched on filename). Those are exactly the runtime-only assemblies the outer generator would
+    otherwise miss; everything with a compile reference is already scanned via @(ReferencePath). Only
+    the Android runtime packs (Microsoft.Android.Runtime.*) can carry Java peers, so the .NET/BCL
+    runtime pack (Microsoft.NETCore.App.Runtime.*) is excluded to avoid scanning large BCL assemblies
+    that have none. The managed metadata is RID-independent, so resolving one RID suffices for all. -->
+  <Target Name="_ResolveRuntimeOnlyAssembliesForTypeMap"
+      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences"
+      Returns="@(_TypeMapRuntimeOnlyAssembly)">
+    <ItemGroup>
+      <_TypeMapRuntimeOnlyAssembly Include="@(RuntimePackAsset)"
+          Condition=" '%(RuntimePackAsset.Extension)' == '.dll' and '%(RuntimePackAsset.AssetType)' == 'runtime' and $([System.String]::Copy('%(RuntimePackAsset.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime')) " />
+      <!-- Drop any runtime-pack assembly that also has a compile reference (e.g. Mono.Android,
+           Java.Interop): the outer build already scans those via @(ReferencePath), and scanning both
+           the ref and runtime-pack copies would double-process the same assembly (GenerateTrimmableTypeMap
+           groups inputs by path). Match on filename to keep only the runtime-only assemblies. -->
+      <_TypeMapRuntimeOnlyAssembly Remove="@(ReferencePath)" MatchOnMetadata="Filename" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_FixupIntermediateAssembly" Condition=" '$(_OuterIntermediateAssembly)' != '' ">
     <ItemGroup>
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />

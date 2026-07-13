@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
@@ -23,8 +24,8 @@ namespace Xamarin.Android.NetTests
 			return new AndroidMessageHandler ();
 		}
 
-		// We can't test `deflate` for now because it's broken in the BCL for https://httpbin.org/deflate (S.I.Compression.DeflateStream doesn't recognize the compression
-		// method used by the server)
+		// We can't test `deflate` for now because S.I.Compression.DeflateStream doesn't recognize the compression
+		// method previously used by the external test server.
 		static readonly object[] DecompressionSource = new object[] {
 			new object[] {
 				"gzip", // urlPath
@@ -41,46 +42,16 @@ namespace Xamarin.Android.NetTests
 
 		[Test]
 		[TestCaseSource (nameof (DecompressionSource))]
-		// Disabled because it doesn't exist in NUnitLite, uncomment when/if we switch to full NUnit
-		// When we can use it, replace all the Console.WriteLine calls with Assert.Warn
-		// [Retry (5)]
 		public async Task Decompression (string urlPath, string encoding, string jsonFieldName)
-		{
-			// Catch all the exceptions and warn about them or otherwise [Retry] above won't work
-			try {
-				int count = 0;
-				// Remove the loop when [Retry] can be used
-				while (count < 5) {
-					if (await DoDecompression (urlPath, encoding, jsonFieldName)) {
-						return;
-					}
-					count++;
-				}
-			} catch (Exception ex) {
-				Console.WriteLine ("Unexpected exception thrown");
-				Console.WriteLine (ex.ToString ());
-				Assert.Fail ("Exception should have not been thrown");
-			}
-		}
-
-		async Task<bool> DoDecompression (string urlPath, string encoding, string jsonFieldName)
 		{
 			var handler = new AndroidMessageHandler {
 				AutomaticDecompression = DecompressionMethods.All
 			};
 
-			var client = new HttpClient (handler);
-			HttpResponseMessage response = await client.GetAsync ($"https://httpbin.org/{urlPath}");
-
-			// Failing on error codes other than 2xx will make NUnit retry the test up to the number of times specified in the
-			// [Retry] attribute above.  This may or may not the desired effect if httpbin.org is throttling the requests, thus
-			// we will sleep a short while before failing the test
-			if (!response.IsSuccessStatusCode) {
-				System.Threading.Thread.Sleep (1000);
-				// Uncomment when we can use [Retry]
-				//Assert.Fail ($"Request ended with a failure error code: {response.StatusCode}");
-				return false;
-			}
+			using var server = LocalHttpServer.Start ();
+			using var client = new HttpClient (handler);
+			using HttpResponseMessage response = await client.GetAsync (server.GetUri (urlPath));
+			EnsureSuccessStatusCode (response);
 
 			foreach (string enc in response.Content.Headers.ContentEncoding) {
 				if (String.Compare (enc, encoding, StringComparison.Ordinal) == 0) {
@@ -98,7 +69,7 @@ namespace Xamarin.Android.NetTests
 			Assert.AreEqual (response.Content.Headers.ContentLength, responseBody.Length, "Retrieved data length is different than the one specified in the Content-Length header");
 			Assert.IsTrue (responseBody.Contains ($"\"{jsonFieldName}\"", StringComparison.OrdinalIgnoreCase), $"\"{jsonFieldName}\" should have been in the response JSON");
 
-			return true;
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		static int GetAvailablePort ()
@@ -184,6 +155,7 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
+			using var server = LocalHttpsServer.Start ();
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -193,18 +165,32 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			await client.GetStringAsync ("https://self-signed.badssl.com/");
+			await client.GetStringAsync (server.OkUri);
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
-			var handler = new AndroidMessageHandler ();
+			using var server = LocalHttpsServer.Start ();
+			using var certificateStream = new MemoryStream (server.CertificateData);
+			using var certificateFactory = Java.Security.Cert.CertificateFactory.GetInstance ("X.509")
+				?? throw new InvalidOperationException ("Failed to create the X.509 certificate factory.");
+			using var trustedCertificate = certificateFactory.GenerateCertificate (certificateStream)
+				?? throw new InvalidOperationException ("Failed to load the local HTTPS server certificate.");
+			var handler = new AndroidMessageHandler {
+				TrustedCerts = new [] { trustedCertificate },
+			};
 			var client = new HttpClient (handler);
 
-			await AssertRejectsRemoteCertificate (() => client.GetStringAsync ("https://wrong.host.badssl.com/"));
+			Assert.AreEqual ("OK", await client.GetStringAsync (server.OkUri));
+
+			Uri mismatchedUri = new UriBuilder (server.OkUri) {
+				Host = "127.0.0.1",
+			}.Uri;
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync (mismatchedUri));
 		}
 
 		[Test]
@@ -212,6 +198,7 @@ namespace Xamarin.Android.NetTests
 		{
 			bool callbackHasBeenCalled = false;
 			SslPolicyErrors reportedErrors = SslPolicyErrors.None;
+			using var server = LocalHttpsServer.Start (certificateHost: "wrong.host.test");
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -222,49 +209,50 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			await client.GetStringAsync ("https://wrong.host.badssl.com/");
+			await client.GetStringAsync (server.OkUri);
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 			Assert.AreEqual (SslPolicyErrors.RemoteCertificateNameMismatch, reportedErrors & SslPolicyErrors.RemoteCertificateNameMismatch);
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_Redirects ()
 		{
 			int callbackCounter = 0;
+			using var server = LocalHttpsServer.Start ();
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					callbackCounter++;
-					return errors == SslPolicyErrors.None;
+					Assert.AreNotEqual (SslPolicyErrors.None, errors, "Local self-signed certificates should report policy errors.");
+					return true;
 				}
 			};
 
-			var client = new HttpClient (handler);
-			try {
-				var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/");
-				EnsureSuccessStatusCode (result);
-				Assert.AreEqual (2, callbackCounter);
-			} catch (Exception ex) when (IsConnectionFailure (ex)) {
-				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-			}
+			var client = new HttpClient (handler) {
+				BaseAddress = server.Uri
+			};
+			using var result = await client.GetAsync ($"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}");
+			EnsureSuccessStatusCode (result);
+			Assert.AreEqual (2, callbackCounter);
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
 		public async Task AndroidMessageHandlerFollows308PermanentRedirect ()
 		{
-			int callbackCounter = 0;
+			using var server = LocalHttpServer.Start ();
 
 			var handler = new AndroidMessageHandler ();
 
-			var client = new HttpClient (handler);
-			try {
-				var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
-				EnsureSuccessStatusCode (result);
-				Assert.AreEqual ("https://www.microsoft.com/", result.RequestMessage.RequestUri.ToString ());
-			} catch (Exception ex) when (IsConnectionFailure (ex)) {
-				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-			}
+			var client = new HttpClient (handler) {
+				BaseAddress = server.Uri
+			};
+			using var result = await client.GetAsync ($"/redirect-to?url={Uri.EscapeDataString (server.OkUri.ToString ())}&status_code=308");
+			EnsureSuccessStatusCode (result);
+			Assert.AreEqual (server.OkUri.ToString (), result.RequestMessage.RequestUri.ToString ());
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]

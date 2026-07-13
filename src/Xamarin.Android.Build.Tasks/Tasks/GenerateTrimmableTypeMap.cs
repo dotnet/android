@@ -46,6 +46,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
 		public void LogLibraryManifestMergeWarning (string message) =>
 			log.LogCodedWarning ("XA4302", Properties.Resources.XA4302, message);
+		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
+			log.LogCodedWarning ("XA1010", Properties.Resources.XA1010, placeholders);
 		public void LogUnresolvableJavaPeerSkippedWarning (
 			string managedTypeName,
 			string assemblyName,
