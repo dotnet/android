@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -107,10 +109,26 @@ sealed class PEAssemblyBuilder
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
 			new MetadataRootBuilder (Metadata),
 			ILBuilder,
-			mappedFieldData: _mappedFieldData.Count > 0 ? _mappedFieldData : null);
+			mappedFieldData: _mappedFieldData.Count > 0 ? _mappedFieldData : null,
+			// ManagedPEBuilder otherwise uses a time-based id, changing bytes on every regeneration.
+			deterministicIdProvider: DeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
 		peBlob.WriteContentTo (stream);
+	}
+
+	static BlobContentId DeterministicContentId (IEnumerable<Blob> content)
+	{
+		using var hash = IncrementalHash.CreateHash (HashAlgorithmName.SHA256);
+		foreach (var blob in content) {
+			var segment = blob.GetBytes ();
+			if (segment.Count == 0) {
+				continue;
+			}
+			Debug.Assert (segment.Array is not null);
+			hash.AppendData (segment.Array, segment.Offset, segment.Count);
+		}
+		return BlobContentId.FromHash (hash.GetHashAndReset ());
 	}
 
 	/// <summary>

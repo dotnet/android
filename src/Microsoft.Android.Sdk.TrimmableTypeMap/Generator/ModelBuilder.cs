@@ -102,9 +102,8 @@ static class ModelBuilder
 			string jniName = kvp.Key;
 			var peersForName = kvp.Value;
 
-			// Sort aliases by managed type name for deterministic proxy naming
 			if (peersForName.Count > 1) {
-				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
+				peersForName.Sort (CompareAliasesForRuntimeResolution);
 			}
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
@@ -139,6 +138,19 @@ static class ModelBuilder
 		model.IgnoresAccessChecksTo.AddRange (referencedAssemblies);
 
 		return model;
+	}
+
+	static int CompareAliasesForRuntimeResolution (JavaPeerInfo a, JavaPeerInfo b)
+	{
+		// Keep alias [0] aligned with the native java→managed map, which processes Mono.Android first.
+		bool aMonoAndroid = string.Equals (a.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+		bool bMonoAndroid = string.Equals (b.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+		if (aMonoAndroid != bMonoAndroid) {
+			return aMonoAndroid ? -1 : 1;
+		}
+
+		int result = StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName);
+		return result != 0 ? result : StringComparer.Ordinal.Compare (a.AssemblyName, b.AssemblyName);
 	}
 
 	static void EmitPeers (TypeMapAssemblyData model, string jniName,

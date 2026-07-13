@@ -104,11 +104,11 @@ namespace Android.Runtime {
 			return inst.GetHashCode ();
 		}
 
-		public override string? ToString ()
+		public override string ToString ()
 		{
 			if (inst == null)
 				return "";
-			return inst.ToString ();
+			return inst.ToString () ?? "";
 		}
 	}
 }

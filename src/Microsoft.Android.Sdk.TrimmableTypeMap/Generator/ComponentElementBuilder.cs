@@ -44,8 +44,7 @@ static class ComponentElementBuilder
 			element.Add (CreateIntentFilterElement (intentFilter));
 		}
 
-		// Add <layout> element from a [Layout] attribute, if present
-		if (component.LayoutProperties is not null) {
+		if (component.Kind == ComponentKind.Activity && component.LayoutProperties is not null) {
 			var layout = CreateLayoutElement (component.LayoutProperties);
 			if (layout is not null) {
 				element.Add (layout);
