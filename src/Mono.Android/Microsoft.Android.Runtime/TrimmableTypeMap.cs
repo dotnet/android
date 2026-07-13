@@ -132,6 +132,17 @@ public class TrimmableTypeMap
 		}
 	}
 
+	/// <summary>
+	/// Initializes the singleton with a prebuilt <see cref="ITypeMap"/>. Used by the precompiled
+	/// typemap path, where the generated root assembly constructs one or more
+	/// <see cref="PrecompiledTypeMap"/> universes (optionally wrapped in an <see cref="AggregateTypeMap"/>).
+	/// </summary>
+	internal static void Initialize (ITypeMap typeMap)
+	{
+		ArgumentNullException.ThrowIfNull (typeMap);
+		InitializeCore (typeMap);
+	}
+
 	internal static unsafe void RegisterNativeMethods ()
 	{
 		lock (s_initLock) {

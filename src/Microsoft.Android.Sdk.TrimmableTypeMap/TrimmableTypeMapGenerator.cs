@@ -36,7 +36,8 @@ public class TrimmableTypeMapGenerator
 		string? packageNamingPolicy = null,
 		int maxArrayRank = 0,
 		int maxReferenceArrayRank = 0,
-		bool generateTypeMapAssemblies = true)
+		bool generateTypeMapAssemblies = true,
+		bool precompileTypeMap = false)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -59,9 +60,7 @@ public class TrimmableTypeMapGenerator
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
-		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, maxReferenceArrayRank)
-			: [];
+		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, maxReferenceArrayRank, generateTypeMapAssemblies, precompileTypeMap);
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers, manifestConfig?.ApplicationJavaClass);
@@ -184,10 +183,58 @@ public class TrimmableTypeMapGenerator
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
 		int maxArrayRank,
-		int maxReferenceArrayRank)
+		int maxReferenceArrayRank,
+		bool generateTypeMapAssemblies,
+		bool precompileTypeMap)
 	{
-		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
+		if (!generateTypeMapAssemblies && !precompileTypeMap) {
+			return [];
+		}
 
+		var peersByAssembly = GroupPeersByAssembly (allPeers, useSharedTypemapUniverse);
+
+		var generatedAssemblies = new List<GeneratedAssembly> ();
+		var perAssemblyNames = new List<string> ();
+		var models = new List<TypeMapAssemblyData> ();
+		foreach (var (assemblyName, peers) in peersByAssembly) {
+			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
+			perAssemblyNames.Add (typeMapAssemblyName);
+			// The model is always built: the per-assembly DLL emitter and the precompiled universe
+			// builder both consume it. In the precompiled post-trim pass the per-assembly DLLs are
+			// not re-emitted (they already exist, trimmed), so only the model is needed.
+			var model = ModelBuilder.Build (peers, typeMapAssemblyName + ".dll", typeMapAssemblyName, maxArrayRank, maxReferenceArrayRank);
+			models.Add (model);
+
+			if (generateTypeMapAssemblies) {
+				var stream = new MemoryStream ();
+				new TypeMapAssemblyEmitter (systemRuntimeVersion).Emit (model, stream, useSharedTypemapUniverse);
+				stream.Position = 0;
+				generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
+				logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
+			}
+		}
+
+		var rootStream = new MemoryStream ();
+		if (precompileTypeMap) {
+			// Blit precompiled lookup blobs for each universe and hydrate PrecompiledTypeMap at runtime,
+			// instead of relying on TypeMapping.GetOrCreate* dictionary construction at startup.
+			var universes = PrecompiledTypeMapUniverseBuilder.Build (models, useSharedTypemapUniverse);
+			new PrecompiledRootTypeMapAssemblyGenerator (systemRuntimeVersion).Generate (universes, rootStream);
+		} else {
+			// The root generator builds the [assembly][rank] anchor matrix, so it needs the overall
+			// maximum rank across primitive and reference element types.
+			new RootTypeMapAssemblyGenerator (systemRuntimeVersion)
+				.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: Math.Max (maxArrayRank, maxReferenceArrayRank));
+		}
+		rootStream.Position = 0;
+		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
+		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
+		return generatedAssemblies;
+	}
+
+	static List<(string AssemblyName, List<JavaPeerInfo> Peers)> GroupPeersByAssembly (List<JavaPeerInfo> allPeers, bool useSharedTypemapUniverse)
+	{
 		if (useSharedTypemapUniverse) {
 			// In Release builds all per-assembly typemaps are merged into a single
 			// shared universe dictionary.  Cross-assembly aliases (e.g. Java.Lang.Object
@@ -195,39 +242,16 @@ public class TrimmableTypeMapGenerator
 			// java/lang/Object) must be moved into the owner assembly's group so the
 			// ModelBuilder can handle them as an alias group and the runtime doesn't
 			// crash on duplicate keys.
-			peersByAssembly = MergeCrossAssemblyAliases (allPeers);
-		} else {
-			// In Debug builds each typemap DLL has its own per-assembly universe, so
-			// cross-assembly duplicates don't collide — simple GroupBy is sufficient.
-			peersByAssembly = allPeers
-				.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
-				.OrderBy (g => g.Key, StringComparer.Ordinal)
-				.Select (g => (g.Key, g.ToList ()))
-				.ToList ();
+			return MergeCrossAssemblyAliases (allPeers);
 		}
 
-		var generatedAssemblies = new List<GeneratedAssembly> ();
-		var perAssemblyNames = new List<string> ();
-		var generator = new TypeMapAssemblyGenerator (systemRuntimeVersion);
-		foreach (var (assemblyName, peers) in peersByAssembly) {
-			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
-			perAssemblyNames.Add (typeMapAssemblyName);
-			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank, maxReferenceArrayRank);
-			stream.Position = 0;
-			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
-			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
-		}
-		var rootStream = new MemoryStream ();
-		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		// The root generator builds the [assembly][rank] anchor matrix, so it needs the overall maximum
-		// rank across primitive and reference element types.
-		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: Math.Max (maxArrayRank, maxReferenceArrayRank));
-		rootStream.Position = 0;
-		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
-		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
-		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
-		return generatedAssemblies;
+		// In Debug builds each typemap DLL has its own per-assembly universe, so
+		// cross-assembly duplicates don't collide — simple GroupBy is sufficient.
+		return allPeers
+			.GroupBy (p => p.AssemblyName, StringComparer.Ordinal)
+			.OrderBy (g => g.Key, StringComparer.Ordinal)
+			.Select (g => (g.Key, g.ToList ()))
+			.ToList ();
 	}
 
 	static void MarkFrameworkAssemblyPeers (List<JavaPeerInfo> allPeers, HashSet<string> frameworkAssemblyNames)

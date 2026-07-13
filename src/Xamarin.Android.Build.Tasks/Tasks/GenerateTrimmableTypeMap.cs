@@ -123,6 +123,15 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
+
+	/// <summary>
+	/// When true, the root <c>_Microsoft.Android.TypeMaps.dll</c> is emitted in the <b>precompiled</b>
+	/// form (RVA lookup blob + <c>PrecompiledTypeMap</c> hydration) instead of the
+	/// <c>TypeMapping.GetOrCreate*</c> form. Set via <c>$(_AndroidPrecompileTrimmableTypeMap)</c>. Used
+	/// by the post-ILLink pass, which scans the linked assemblies and overwrites the linked root.
+	/// </summary>
+	public bool PrecompileTypeMap { get; set; }
+
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	[Output]
@@ -150,6 +159,14 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		foreach (var assemblyName in FrameworkAssemblyNames) {
 			frameworkAssemblyNames.Add (assemblyName);
 		}
+
+		// Root-only precompiled pass (post-ILLink): scan the linked assemblies and overwrite the linked
+		// root with the precompiled variant. No Java/manifest/acw work — that is produced by the normal
+		// pre-link and post-trim Java passes.
+		if (PrecompileTypeMap && !GenerateTypeMapAssemblies) {
+			return EmitPrecompiledRootOnly (systemRuntimeVersion, assemblyInputs, frameworkAssemblyNames);
+		}
+
 		if (CleanJavaSourceOutputDirectory && !JavaSourceInputDirectory.IsNullOrEmpty ()) {
 			var inputDirectory = Path.GetFullPath (JavaSourceInputDirectory);
 			var outputDirectory = Path.GetFullPath (JavaSourceOutputDirectory);
@@ -226,11 +243,14 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				packageNamingPolicy: PackageNamingPolicy,
 				maxArrayRank: MaxArrayRank,
 				maxReferenceArrayRank: MaxReferenceArrayRank,
-				generateTypeMapAssemblies: GenerateTypeMapAssemblies);
+				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
+				precompileTypeMap: PrecompileTypeMap);
 
-			if (GenerateTypeMapAssemblies) {
-				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
-				WriteGeneratedAssembliesListFile (GeneratedAssemblies);
+			if (GenerateTypeMapAssemblies || PrecompileTypeMap) {
+				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList (), forceRoot: PrecompileTypeMap);
+				if (GenerateTypeMapAssemblies) {
+					WriteGeneratedAssembliesListFile (GeneratedAssemblies);
+				}
 			}
 			GeneratedJavaFiles = JavaSourceInputDirectory.IsNullOrEmpty ()
 				? WriteJavaSourcesToDisk (result.GeneratedJavaSources)
@@ -289,6 +309,63 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
+	// Scans the linked assemblies and writes only the precompiled root, overwriting the linked
+	// _Microsoft.Android.TypeMaps.dll. Deliberately skips all Java/manifest/acw generation.
+	bool EmitPrecompiledRootOnly (Version systemRuntimeVersion, List<(string Path, bool IsFrameworkAssembly)> assemblyInputs, HashSet<string> frameworkAssemblyNames)
+	{
+		Directory.CreateDirectory (OutputDirectory);
+
+		var peReaders = new List<PEReader> ();
+		TrimmableTypeMapResult? result = null;
+		try {
+			var assemblies = new List<AssemblyInput> ();
+			// The precompiled root is emitted post-ILLink and references System.Private.CoreLib directly;
+			// stamp that reference with CoreLib's real assembly version (read from the linked assembly)
+			// rather than the major-only TargetFrameworkVersion, which would serialize as X.0.65535.65535
+			// and fail to load / break crossgen2.
+			var coreLibVersion = systemRuntimeVersion;
+			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
+				var peReader = new PEReader (File.OpenRead (path));
+				peReaders.Add (peReader);
+				var mdReader = peReader.GetMetadataReader ();
+				var assemblyDefinition = mdReader.GetAssemblyDefinition ();
+				var assemblyName = mdReader.GetString (assemblyDefinition.Name);
+				assemblies.Add (new AssemblyInput (assemblyName, path, peReader));
+				if (isFrameworkAssembly) {
+					frameworkAssemblyNames.Add (assemblyName);
+				}
+				if (string.Equals (assemblyName, "System.Private.CoreLib", StringComparison.Ordinal)) {
+					coreLibVersion = assemblyDefinition.Version;
+				}
+			}
+
+			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
+			result = generator.Execute (
+				assemblies,
+				coreLibVersion,
+				frameworkAssemblyNames,
+				useSharedTypemapUniverse: !Debug,
+				packageNamingPolicy: PackageNamingPolicy,
+				maxArrayRank: MaxArrayRank,
+				maxReferenceArrayRank: MaxReferenceArrayRank,
+				generateTypeMapAssemblies: false,
+				precompileTypeMap: true);
+
+			GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList (), forceRoot: true);
+		} finally {
+			if (result is not null) {
+				foreach (var assembly in result.GeneratedAssemblies) {
+					assembly.Content.Dispose ();
+				}
+			}
+			foreach (var peReader in peReaders) {
+				peReader.Dispose ();
+			}
+		}
+
+		return !Log.HasLoggedErrors;
+	}
+
 	static bool IsFrameworkAssemblyItem (ITaskItem item) =>
 		string.Equals (item.GetMetadata ("FrameworkAssembly"), bool.TrueString, StringComparison.OrdinalIgnoreCase) ||
 		MonoAndroidHelper.IsFrameworkAssembly (item);
@@ -333,7 +410,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		return items.ToArray ();
 	}
 
-	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths)
+	ITaskItem [] WriteAssembliesToDisk (IReadOnlyList<GeneratedAssembly> assemblies, IReadOnlyList<string> assemblyPaths, bool forceRoot = false)
 	{
 		// Build a map from assembly name -> source path for timestamp comparison
 		var sourcePathByName = new Dictionary<string, string> (StringComparer.Ordinal);
@@ -372,7 +449,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var rootAssembly = assemblies.FirstOrDefault (a => a.Name == "_Microsoft.Android.TypeMaps");
 		if (rootAssembly is not null) {
 			string rootOutputPath = Path.Combine (OutputDirectory, rootAssembly.Name + ".dll");
-			if (anyRegenerated || !File.Exists (rootOutputPath)) {
+			if (forceRoot || anyRegenerated || !File.Exists (rootOutputPath)) {
 				Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
 				Log.LogDebugMessage ($"  Root: written");
 			} else {

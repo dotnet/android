@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Preserved only when $(_AndroidPrecompileTrimmableTypeMap) is true. The precompiled typemap root
+  (_Microsoft.Android.TypeMaps.dll) is regenerated AFTER ILLink, so nothing references these types at
+  link time and the trimmer would otherwise remove them, causing a TypeLoadException when the
+  regenerated TypeMapLoader.Initialize() runs on device.
+-->
+<linker>
+  <assembly fullname="Mono.Android">
+    <type fullname="Microsoft.Android.Runtime.PrecompiledTypeMap" preserve="all" />
+    <type fullname="Microsoft.Android.Runtime.PrecompiledTypeMapBlobFormat" preserve="all" />
+    <type fullname="Microsoft.Android.Runtime.AggregateTypeMap" preserve="all" />
+    <type fullname="Microsoft.Android.Runtime.ITypeMap" preserve="all" />
+    <!-- The ITypeMap-based entry point the regenerated root calls; the dictionary-based overloads are
+         rooted by the pre-link root, but this one is only referenced post-link. -->
+    <type fullname="Microsoft.Android.Runtime.TrimmableTypeMap">
+      <method name="Initialize" />
+    </type>
+  </assembly>
+</linker>

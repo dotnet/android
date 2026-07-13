@@ -19,6 +19,8 @@
 
   <ItemGroup>
     <Compile Include="..\..\src-ThirdParty\System.Runtime.CompilerServices\CompilerFeaturePolyfills.cs" Link="CompilerFeaturePolyfills.cs" />
+    <!-- Shared single-source-of-truth blob format/reader, also compiled into Mono.Android for PrecompiledTypeMap. -->
+    <Compile Include="..\Mono.Android\Microsoft.Android.Runtime\PrecompiledTypeMapBlobFormat.cs" Link="PrecompiledTypeMapBlobFormat.cs" />
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" Link="Crc64Helper.cs" />
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs" Link="Crc64.Table.cs" />
   </ItemGroup>

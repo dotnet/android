@@ -7,15 +7,15 @@ using System.Diagnostics.CodeAnalysis;
 namespace Microsoft.Android.Runtime;
 
 /// <summary>
-/// Wraps N <see cref="SingleUniverseTypeMap"/> instances and flattens
-/// results across all universes. Debug-only — each assembly has its own
-/// universe with an isolated <c>TypeMapLazyDictionary</c>.
+/// Wraps N <see cref="ITypeMap"/> instances and flattens results across all universes.
+/// Used when each assembly has its own universe (per-assembly universes) — the aggregated
+/// universes may be <see cref="SingleUniverseTypeMap"/> or <see cref="PrecompiledTypeMap"/>.
 /// </summary>
 sealed class AggregateTypeMap : ITypeMap
 {
-	readonly SingleUniverseTypeMap[] _universes;
+	readonly ITypeMap[] _universes;
 
-	public AggregateTypeMap (SingleUniverseTypeMap[] universes)
+	public AggregateTypeMap (ITypeMap[] universes)
 	{
 		ArgumentNullException.ThrowIfNull (universes);
 		_universes = universes;

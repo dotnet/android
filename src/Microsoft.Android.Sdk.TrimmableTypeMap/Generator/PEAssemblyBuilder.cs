@@ -66,7 +66,20 @@ sealed class PEAssemblyBuilder
 	/// Emits the assembly definition, module definition, common assembly references, and &lt;Module&gt; type.
 	/// Call this first.
 	/// </summary>
-	public void EmitPreamble (string assemblyName, string moduleName, ReadOnlySpan<byte> contentFingerprint = default)
+	/// <param name="useCoreLibForBcl">
+	/// When true, BCL types (System.Object, System.Type, System.Reflection.Module, …) are referenced from
+	/// <c>System.Private.CoreLib</c> instead of the <c>System.Runtime</c> facade, and no separate
+	/// <c>System.Runtime.InteropServices</c> reference is emitted. This is required for assemblies
+	/// generated <b>after</b> ILLink (e.g. the precompiled typemap root): the <c>System.Runtime</c> facade
+	/// is trimmed out of the app, so an unrewritten reference to it fails to load and breaks crossgen2.
+	/// The pre-link path keeps referencing <c>System.Runtime</c>, which ILLink later rewrites to CoreLib.
+	/// </param>
+	/// <param name="coreLibVersion">
+	/// Version to stamp on the <c>System.Private.CoreLib</c> reference (its real assembly version, read
+	/// from the linked assembly). Required when <paramref name="useCoreLibForBcl"/> is true.
+	/// </param>
+	public void EmitPreamble (string assemblyName, string moduleName, ReadOnlySpan<byte> contentFingerprint = default,
+		bool useCoreLibForBcl = false, Version? coreLibVersion = null)
 	{
 		_asmRefCache.Clear ();
 		_typeRefCache.Clear ();
@@ -87,8 +100,17 @@ sealed class PEAssemblyBuilder
 			encBaseId: default);
 
 		// Common assembly references
-		SystemRuntimeRef = AddAssemblyRef ("System.Runtime", _systemRuntimeVersion);
-		SystemRuntimeInteropServicesRef = AddAssemblyRef ("System.Runtime.InteropServices", _systemRuntimeVersion);
+		if (useCoreLibForBcl) {
+			// Post-link: reference the real core library directly. TypeRefs into SystemRuntimeRef
+			// (System.Object/Type/Module/RuntimeTypeHandle) resolve to CoreLib, matching the trimmed app.
+			SystemRuntimeRef = AddAssemblyRef ("System.Private.CoreLib", coreLibVersion ?? _systemRuntimeVersion);
+			// The precompiled root uses no System.Runtime.InteropServices types; alias the field to CoreLib
+			// so no dangling, wrongly-versioned facade reference is emitted (which would break crossgen2).
+			SystemRuntimeInteropServicesRef = SystemRuntimeRef;
+		} else {
+			SystemRuntimeRef = AddAssemblyRef ("System.Runtime", _systemRuntimeVersion);
+			SystemRuntimeInteropServicesRef = AddAssemblyRef ("System.Runtime.InteropServices", _systemRuntimeVersion);
+		}
 		MonoAndroidRef = AddAssemblyRef ("Mono.Android", new Version (0, 0, 0, 0), MonoAndroidPublicKeyToken);
 
 		// <Module> type
@@ -307,6 +329,52 @@ sealed class PEAssemblyBuilder
 
 		_utf8FieldCache [value] = fieldHandle;
 		return fieldHandle;
+	}
+
+	/// <summary>
+	/// Adds a static <c>HasFieldRVA</c> field initialized with <paramref name="data"/> and returns its
+	/// handle plus length. Used to blit the precompiled typemap blob into the root assembly so the
+	/// runtime can read it in place (via <c>ldsflda</c>) without copying. Unlike
+	/// <see cref="GetOrAddUtf8Field"/>, the bytes are stored verbatim (no NUL terminator, no dedup).
+	/// </summary>
+	public (FieldDefinitionHandle Field, int Length) AddRvaDataField (byte[] data)
+	{
+		if (data is null) {
+			throw new ArgumentNullException (nameof (data));
+		}
+
+		EnsurePrivateImplDetailsType ();
+
+		var sizedType = GetOrCreateSizedType (data.Length);
+
+		_sigBlob.Clear ();
+		new BlobEncoder (_sigBlob).FieldSignature ().Type (sizedType, true);
+
+		int rva = _mappedFieldData.Count;
+		_mappedFieldData.WriteBytes (data);
+
+		var fieldHandle = Metadata.AddFieldDefinition (
+			FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
+			Metadata.GetOrAddString ($"__typemap_{_utf8FieldCounter++}"),
+			Metadata.GetOrAddBlob (_sigBlob));
+
+		Metadata.AddFieldRelativeVirtualAddress (fieldHandle, rva);
+
+		return (fieldHandle, data.Length);
+	}
+
+	/// <summary>
+	/// Returns the metadata token of a <c>TypeRef</c> to <paramref name="fullTypeName"/> in
+	/// <paramref name="assemblyName"/>, creating the reference if needed. The token is embedded in the
+	/// precompiled blob and resolved at runtime via <c>Module.ResolveType</c>.
+	/// </summary>
+	public int GetTypeRefToken (string assemblyName, string fullTypeName)
+	{
+		var handle = ResolveTypeRef (new TypeRefData {
+			ManagedTypeName = fullTypeName,
+			AssemblyName = assemblyName,
+		});
+		return MetadataTokens.GetToken (handle);
 	}
 
 	void EnsurePrivateImplDetailsType ()

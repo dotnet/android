@@ -9,6 +9,21 @@
     <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
   </PropertyGroup>
 
+  <!-- Experimental opt-in: after ILLink, replace the linked root _Microsoft.Android.TypeMaps.dll with a
+       precompiled lookup-blob variant (Microsoft.Android.Runtime.PrecompiledTypeMap) so trimmable-typemap
+       startup avoids TypeMapping.GetOrCreate* dictionary construction on the UI thread. -->
+  <PropertyGroup>
+    <_AndroidPrecompileTrimmableTypeMap Condition=" '$(_AndroidPrecompileTrimmableTypeMap)' == '' ">false</_AndroidPrecompileTrimmableTypeMap>
+    <_PrecompiledTrimmableTypeMapStamp>$(_AndroidStampDirectory)_PrecompileTrimmableTypeMap.stamp</_PrecompiledTrimmableTypeMapStamp>
+  </PropertyGroup>
+
+  <!-- Preserve the runtime types the post-ILLink precompiled root references; without this the trimmer
+       removes them (nothing references them at link time) and the regenerated TypeMapLoader.Initialize()
+       throws TypeLoadException on device. -->
+  <ItemGroup Condition=" '$(_AndroidPrecompileTrimmableTypeMap)' == 'true' and '$(_AndroidRuntime)' == 'CoreCLR' ">
+    <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)../PreserveLists/PrecompiledTypeMap.CoreCLR.xml" />
+  </ItemGroup>
+
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
@@ -115,6 +130,45 @@
       <_PostTrimDeletedCopiedJavaFiles Remove="@(_PostTrimDeletedCopiedJavaFiles)" />
     </ItemGroup>
   </Target>
+  <!-- Overwrite the linked root _Microsoft.Android.TypeMaps.dll with the precompiled variant, after
+       ILLink and before it is picked up for publish/R2R. Gated and anchored exactly like
+       _AddTrimmableTypeMapToResolvedFileToPublish (which runs in the same post-ILLink/publish build):
+       it reads the *linked* assemblies from disk rather than the inner-build ResolvedFileToPublish item,
+       so it is NOT conditioned on _ComputeFilesToPublishForRuntimeIdentifiers. -->
+  <Target Name="_PrecompileTrimmableTypeMap"
+      Condition=" '$(_AndroidPrecompileTrimmableTypeMap)' == 'true' and '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(RuntimeIdentifier)' != '' "
+      AfterTargets="ILLink"
+      BeforeTargets="_AddTrimmableTypeMapToResolvedFileToPublish;CreateReadyToRunImages"
+      Inputs="$(IntermediateOutputPath)linked\*.dll"
+      Outputs="$(_PrecompiledTrimmableTypeMapStamp)">
+
+    <ItemGroup>
+      <_PrecompiledTypeMapLinkedInput Remove="@(_PrecompiledTypeMapLinkedInput)" />
+      <_PrecompiledTypeMapLinkedInput Include="$(IntermediateOutputPath)linked\*.dll" />
+    </ItemGroup>
+
+    <!-- Re-scan the linked (trimmed) assemblies and emit the precompiled root over the linked one.
+         JavaSourceOutputDirectory is [Required] but unused here (the task early-returns before any
+         Java generation); a valid path is passed only to satisfy the parameter. -->
+    <GenerateTrimmableTypeMap
+        ResolvedAssemblies="@(_PrecompiledTypeMapLinkedInput)"
+        FrameworkAssemblyNames="@(ResolvedFrameworkAssemblies->'%(Filename)')"
+        OutputDirectory="$(IntermediateOutputPath)linked"
+        JavaSourceOutputDirectory="$(_PostTrimTypeMapJavaOutputDirectory)"
+        TargetFrameworkVersion="$(TargetFrameworkVersion)"
+        PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
+        MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
+        MaxReferenceArrayRank="$(_AndroidTrimmableTypeMapMaxReferenceArrayRank)"
+        GenerateTypeMapAssemblies="false"
+        PrecompileTypeMap="true" />
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_PrecompiledTrimmableTypeMapStamp)'))" />
+    <Touch Files="$(_PrecompiledTrimmableTypeMapStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_PrecompiledTrimmableTypeMapStamp)" />
+    </ItemGroup>
+  </Target>
+
   <!-- Add linked TypeMap DLLs to the normal publish assembly pipeline.  The SDK R2R
        target only compiles ResolvedFileToPublish items with PostprocessAssembly=true. -->
   <Target Name="_AddTrimmableTypeMapToResolvedFileToPublish"
