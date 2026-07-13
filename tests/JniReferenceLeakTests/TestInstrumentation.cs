@@ -46,6 +46,10 @@ public class TestInstrumentation : Instrumentation
 			bundle.PutString ("resultsPath", consumer.TrxReportPath);
 			Finish (Result.Ok, bundle);
 		} catch (Exception ex) {
+			// Also surface the failure in logcat: if the harness that reads the
+			// result Bundle isn't running or truncates the string, this is the
+			// only place the stack trace survives for post-mortem debugging.
+			Android.Util.Log.Error (nameof (TestInstrumentation), ex.ToString ());
 			bundle.PutString ("error", ex.ToString ());
 			Finish (Result.Canceled, bundle);
 		}

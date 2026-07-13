@@ -70,7 +70,6 @@ public sealed class PeerReferenceTests
 	{
 		if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime", out bool isNativeAot) && isNativeAot) {
 			Assert.Inconclusive ("Failing in NativeAOT: https://github.com/dotnet/android/issues/11690");
-			return;
 		}
 
 		ReferenceTestHelpers.CollectGarbage ();
