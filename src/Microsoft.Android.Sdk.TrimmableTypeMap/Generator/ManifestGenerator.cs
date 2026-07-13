@@ -516,7 +516,7 @@ class ManifestGenerator
 		if (!placeholders.IsNullOrEmpty ()) {
 			foreach (var entry in placeholders.Split (PlaceholderSeparators, StringSplitOptions.RemoveEmptyEntries)) {
 				var eqIndex = entry.IndexOf ('=');
-				if (eqIndex > 0) {
+				if (eqIndex >= 0) {
 					var key = entry.Substring (0, eqIndex).Trim ();
 					var value = entry.Substring (eqIndex + 1).Trim ();
 					replacements ["${" + key + "}"] = value;

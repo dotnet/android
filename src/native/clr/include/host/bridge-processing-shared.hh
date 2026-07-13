@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jni.h>
+#include <string_view>
 #include <unordered_map>
 
 #include <host/gc-bridge.hh>
@@ -50,6 +51,11 @@ private:
 
 	void clear_references_if_needed (const HandleContext &context) noexcept;
 	void clear_references (jobject handle) noexcept;
+
+	// If a Java exception is pending on `env`, describe it, clear it, and abort. Bridge
+	// processing has no safe way to recover from an exception thrown by a peer's reference
+	// callbacks, and leaving an exception pending would make subsequent JNI calls undefined.
+	void abort_on_pending_java_exception (std::string_view message) noexcept;
 
 	void log_missing_add_references_method (jclass java_class) noexcept;
 	void log_missing_clear_references_method (jclass java_class) noexcept;

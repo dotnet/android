@@ -45,6 +45,7 @@ namespace Java.InteropTests
 
 #if !__ANDROID__
 		[Test]
+		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void UnregisterFromRuntime ()
 		{
 			int registeredCount = JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count;

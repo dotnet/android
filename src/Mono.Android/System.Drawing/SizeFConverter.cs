@@ -48,7 +48,7 @@ namespace System.Drawing
 
 		}
 
-		public override bool CanConvertFrom (ITypeDescriptorContext context, Type sourceType)
+		public override bool CanConvertFrom (ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof (string))
 				return true;
@@ -56,7 +56,7 @@ namespace System.Drawing
 			return base.CanConvertFrom (context, sourceType);
 		}
 
-		public override bool CanConvertTo (ITypeDescriptorContext context, Type destinationType)
+		public override bool CanConvertTo (ITypeDescriptorContext? context, Type? destinationType)
 		{
 			if (destinationType == typeof (string))
 				return true;
@@ -67,8 +67,10 @@ namespace System.Drawing
 			return base.CanConvertTo (context, destinationType);
 		}
 
-		public override object? ConvertFrom (ITypeDescriptorContext context, CultureInfo culture, object value)
+		public override object? ConvertFrom (ITypeDescriptorContext? context, CultureInfo? culture, object value)
 		{
+			if (culture == null)
+				culture = CultureInfo.CurrentCulture;
 			var s = value as string;
 			if (s == null)
 				return base.ConvertFrom (context, culture, value);
@@ -91,8 +93,10 @@ namespace System.Drawing
 
 		}
 
-		public override object? ConvertTo (ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+		public override object? ConvertTo (ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
 		{
+			if (culture == null)
+				culture = CultureInfo.CurrentCulture;
 			if (value is SizeF) {
 				SizeF size = (SizeF) value;
 				if (destinationType == typeof (string)) {
@@ -107,20 +111,20 @@ namespace System.Drawing
 			return base.ConvertTo (context, culture, value, destinationType);
 		}
 
-		public override object CreateInstance (ITypeDescriptorContext context, IDictionary propertyValues)
+		public override object CreateInstance (ITypeDescriptorContext? context, IDictionary propertyValues)
 		{
 			float w = (float) propertyValues ["Width"]!;
 			float h = (float) propertyValues ["Height"]!;
 			return new SizeF (w, h);
 		}
 
-		public override bool GetCreateInstanceSupported (ITypeDescriptorContext context)
+		public override bool GetCreateInstanceSupported (ITypeDescriptorContext? context)
 		{
 			return true;
 		}
 
 		[RequiresUnreferencedCode ("The Type of value cannot be statically discovered.")]
-		public override PropertyDescriptorCollection? GetProperties (ITypeDescriptorContext context, object value, Attribute[] attributes)
+		public override PropertyDescriptorCollection? GetProperties (ITypeDescriptorContext? context, object value, Attribute[]? attributes)
 		{
 			if (value is SizeF)
 				return TypeDescriptor.GetProperties (value, attributes);
@@ -128,7 +132,7 @@ namespace System.Drawing
 			return base.GetProperties (context, value, attributes);
 		}
 
-		public override bool GetPropertiesSupported (ITypeDescriptorContext context)
+		public override bool GetPropertiesSupported (ITypeDescriptorContext? context)
 		{
 			return true;
 		}

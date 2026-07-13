@@ -60,7 +60,7 @@ namespace Java.Interop {
 		}
 
 		class TypeNameComparer : IComparer<string> {
-			public int Compare (string x, string y)
+			public int Compare (string? x, string? y)
 			{
 				if (object.ReferenceEquals (x, y))
 					return 0;
@@ -239,7 +239,11 @@ namespace Java.Interop {
 				return null;
 			}
 
-			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			if (managedAssemblyName is null) {
+				return null;
+			}
+
 			Assembly assembly = Assembly.Load (managedAssemblyName);
 			Type? ret = null;
 			foreach (Module module in assembly.Modules) {
@@ -309,9 +313,11 @@ namespace Java.Interop {
 			string? class_name = GetClassName (class_ptr);
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero) {
-					type = GetJavaToManagedTypeCore (class_name);
-					if (type != null) {
-						break;
+					if (!string.IsNullOrEmpty (class_name)) {
+						type = GetJavaToManagedTypeCore (class_name);
+						if (type != null) {
+							break;
+						}
 					}
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
