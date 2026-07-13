@@ -58,7 +58,7 @@ namespace Android.Graphics {
 		}
 
 		/// <inheritdoc />
-		public override bool Equals (object value)
+		public override bool Equals (object? value)
 		{
 			if (!(value is AndroidBitmapInfo))
 				return false;

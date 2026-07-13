@@ -15,6 +15,7 @@
         "Microsoft.Android.Runtime.CoreCLR.37.android-arm",
         "Microsoft.Android.Runtime.CoreCLR.37.android-arm64",
         "Microsoft.Android.Runtime.CoreCLR.37.android-x64",
+        "Microsoft.Android.Runtime.NativeAOT.37.android-arm",
         "Microsoft.Android.Runtime.NativeAOT.37.android-arm64",
         "Microsoft.Android.Runtime.NativeAOT.37.android-x64",
         "Microsoft.Android.Templates"
@@ -88,6 +89,10 @@
       "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Runtime.CoreCLR.37.android-x64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.NativeAOT.37.android-arm": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },

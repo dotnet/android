@@ -389,12 +389,12 @@ namespace Android.Runtime {
 			return GetEnumerator ()!;
 		}
 
-		public IEnumerator<T?> GetEnumerator ()
+		public new IEnumerator<T?> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator());
 		}
 		
-		public static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
