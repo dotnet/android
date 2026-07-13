@@ -31,13 +31,10 @@
         to honour the build's JVM settings. When both invocations share the default Gradle
         user home (~/.gradle) they race over the same daemon registry and loopback ports,
         which manifests as "Timeout waiting to connect to the Gradle daemon" on slower CI
-        agents. Give each importing project its own GRADLE_USER_HOME so the two daemons are
-        fully isolated. A stable per-project path (rather than obj/) keeps the Gradle
-        distribution and dependency caches warm across incremental builds.
+        agents. Point GRADLE_USER_HOME at each project's own obj/ directory so the two
+        daemons are fully isolated; it also gets cleaned up with the rest of obj/.
     -->
-    <_KotlinGradleUserHomeBase Condition=" '$(_KotlinGradleUserHomeBase)' == '' And '$(OS)' == 'Windows_NT' ">$(USERPROFILE)</_KotlinGradleUserHomeBase>
-    <_KotlinGradleUserHomeBase Condition=" '$(_KotlinGradleUserHomeBase)' == '' ">$(HOME)</_KotlinGradleUserHomeBase>
-    <_KotlinGradleUserHome Condition=" '$(_KotlinGradleUserHome)' == '' ">$([System.IO.Path]::Combine('$(_KotlinGradleUserHomeBase)', '.gradle-ji-$(MSBuildProjectName)'))</_KotlinGradleUserHome>
+    <_KotlinGradleUserHome Condition=" '$(_KotlinGradleUserHome)' == '' ">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\.gradle'))</_KotlinGradleUserHome>
   </PropertyGroup>
 
   <Target Name="BuildKotlinGradleProject"
