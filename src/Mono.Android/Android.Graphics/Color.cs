@@ -82,7 +82,7 @@ namespace Android.Graphics
 			return FormattableString.Invariant ($"Color [A={A}, R={R}, G={G}, B={B}]");
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			if (!(obj is Color))
 				return false;
@@ -426,7 +426,7 @@ namespace Android.Graphics
 			get { return typeof (int); }
 		}
 
-		public override Color CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Color CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
 		{
 			throw new NotImplementedException ();
 		}
@@ -443,7 +443,7 @@ namespace Android.Graphics
 
 		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
-		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
+		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 			var c = typeof (Color).GetConstructor (new[]{typeof (int)})!;
 			var v = Expression.Variable (typeof (Color), sourceValue.Name + "_val");

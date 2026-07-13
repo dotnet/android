@@ -92,10 +92,21 @@ namespace Java.Interop {
 					var factoryConverter = TryGetFactoryBasedConverter (target);
 					if (factoryConverter != null)
 						return factoryConverter;
-				} else {
+				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
 					if (factoryConverter != null)
 						return factoryConverter;
+				} else if (RuntimeFeature.ManagedTypeMap) {
+					var factoryConverter = TryMakeGenericCollectionTypeFactoryWithSuppression (target);
+					if (factoryConverter != null)
+						return factoryConverter;
+
+					[UnconditionalSuppressMessage ("AotAnalysis", "IL3050:RequiresDynamicCode",
+						Justification = "Temporary suppression for ManagedTypeMap")]
+					static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactoryWithSuppression (Type target)
+						=> TryMakeGenericCollectionTypeFactory (target);
+				} else {
+					throw new NotSupportedException ($"Cannot convert Java collection elements to closed generic array element type '{target}' because the runtime does not support dynamic code generation.");
 				}
 			}
 
@@ -110,6 +121,7 @@ namespace Java.Interop {
 
 			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
 				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
+			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
 			{
 				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
