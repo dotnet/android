@@ -12,8 +12,7 @@ All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-re
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
-def runningOnCI = System.getenv('RunningOnCI') ?: System.getenv('RUNNINGONCI')
-if (runningOnCI == 'true') {
+if (System.getenv('RUNNINGONCI') == 'true') {
     apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
 }
 dependencyResolutionManagement {
@@ -26,15 +25,16 @@ rootProject.name = '<project>'
 
 ## CI vs local
 
-Both files switch on `System.getenv('RunningOnCI')` (or `RUNNINGONCI` — AzDO uppercases env vars on Linux/macOS agents):
+Both files switch on `System.getenv('RUNNINGONCI')`. Azure DevOps exports the
+`RunningOnCI` pipeline variable under this normalized environment-variable name.
 
-- **`RunningOnCI=true`** (Azure DevOps, set in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
+- **`RUNNINGONCI=true`** (Azure DevOps, sourced from `RunningOnCI` in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
 - **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()` for plugins, `google()` + `mavenCentral()` for deps. No credentials needed.
 
 The Azure Artifacts credential provider is also loaded only when
-`RunningOnCI=true`, so local builds never attempt Azure authentication.
+`RUNNINGONCI=true`, so local builds never attempt Azure authentication.
 
-Test the CI path locally: `$env:RunningOnCI='true'` (PowerShell) or `RunningOnCI=true ...` (bash).
+Test the CI path locally: `$env:RUNNINGONCI='true'` (PowerShell) or `RUNNINGONCI=true ...` (bash).
 
 ## When CI fails 401 on a Dependabot bump
 
