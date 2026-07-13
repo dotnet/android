@@ -76,7 +76,7 @@ namespace Java.Interop {
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
 				if (RuntimeFeature.TrimmableTypeMap) {
-					if (SafeJavaCollectionFactory.TryGetCollectionType (target, out _)) {
+					if (SafeJavaCollectionFactory.IsSupportedCollectionType (target)) {
 						return (h, t) => {
 							if (SafeJavaCollectionFactory.TryCreateFromJniHandle (target, h, t, out var collection)) {
 								return collection;

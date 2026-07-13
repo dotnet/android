@@ -43,6 +43,31 @@ static class SafeJavaCollectionFactory
 		return collectionType != null;
 	}
 
+	internal static bool IsSupportedCollectionType (Type targetType)
+	{
+		if (targetType == null)
+			throw new ArgumentNullException (nameof (targetType));
+
+		if (!TryGetCollectionShape (targetType, out var shape)) {
+			return false;
+		}
+
+		// Gate GetJniHandleConverter on support without resolving (and rooting) the closed
+		// collection type. Unsupported value-type arguments are rejected here, before any
+		// MakeGenericType() call: those would need an exact unrooted instantiation, whereas
+		// reference and mapped primitive/nullable arguments are all AOT-safe. TryCreateFromJniHandle
+		// then resolves the type at most once (reference collections) or not at all (value
+		// collections, handled by the rooted ValueTypeFactory path), instead of resolving it
+		// once here for the gate and again per marshal.
+		foreach (var argument in shape.Arguments) {
+			if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	internal static bool TryCreateFromJniHandle (
 		Type targetType,
 		IntPtr handle,

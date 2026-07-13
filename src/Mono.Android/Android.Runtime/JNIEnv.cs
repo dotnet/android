@@ -1118,7 +1118,7 @@ namespace Android.Runtime {
 		static Array CreateManagedArrayFromObjectArray (Type? elementType, IntPtr source, int len)
 		{
 			if (elementType == null)
-				throw new ArgumentNullException ("elementType");
+				throw new ArgumentNullException (nameof (elementType));
 
 			var r = ArrayCreateInstance (elementType, len);
 			CopyArray (source, r, elementType);
