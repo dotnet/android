@@ -229,7 +229,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.EmbedAssembliesIntoApk = true;
 			}
 			if (withExtensionHook) {
-				// Validate that $(GetApplicationArtifactsDependsOn) runs *after* _CreateApplicationArtifacts,
+				// Validate that $(GetApplicationArtifactsDependsOn) runs *after* _CollectApplicationArtifacts,
 				// so MAUI-style extension targets can enrich the items the platform already produced.
 				// If the order regresses, `Update` will have nothing to update and the metadata won't appear.
 				proj.Imports.Add (new Import (() => "ApplicationArtifacts.targets") {

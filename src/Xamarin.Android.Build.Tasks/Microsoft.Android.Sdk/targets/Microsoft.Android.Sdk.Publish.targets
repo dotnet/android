@@ -38,8 +38,7 @@ This file contains the implementation for 'dotnet publish'.
       <_ApplicationArtifactPublishCopy Remove="@(_ApplicationArtifactPublishCopy)" />
       <_ApplicationArtifactForPublish Include="@(ApplicationArtifact)" />
       <_ApplicationArtifactPublishCopy
-          Include="@(_ApplicationArtifactForPublish->'$(PublishDir)%(Filename)%(Extension)')"
-          Condition="Exists('$(PublishDir)%(_ApplicationArtifactForPublish.Filename)%(_ApplicationArtifactForPublish.Extension)')">
+          Include="@(_ApplicationArtifactForPublish->'$(PublishDir)%(Filename)%(Extension)')">
         <PackageFormat>%(_ApplicationArtifactForPublish.PackageFormat)</PackageFormat>
         <Signed>%(_ApplicationArtifactForPublish.Signed)</Signed>
         <PackageId>%(_ApplicationArtifactForPublish.PackageId)</PackageId>
