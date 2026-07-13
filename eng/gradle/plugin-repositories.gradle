@@ -7,9 +7,6 @@
 // isolation compliance (https://aka.ms/1es/netiso/CFS). Locally and from
 // GitHub Actions (e.g. Dependabot), the standard Gradle Plugin Portal is used.
 //
-// AzureArtifacts (anonymous public feed) is always included because every
-// settings.gradle loads the artifacts-credprovider plugin from there.
-//
 // The dnceng feed proxies public sources. Once any package has been pulled
 // through the feed (an authenticated request), it is cached and anonymous
 // reads work forever after. CI therefore does NOT need credentials — it just
@@ -22,13 +19,6 @@
 // After it succeeds, just re-run the failed CI job — no PR edit is needed.
 
 repositories {
-    // Anonymous public Azure Artifacts feed that hosts the
-    // artifacts-credprovider Gradle plugin (loaded by every settings.gradle).
-    maven {
-        url = 'https://pkgs.dev.azure.com/artifacts-public/PublicTools/_packaging/AzureArtifacts/maven/v1'
-        name = 'AzureArtifacts'
-    }
-
     // AzDO uppercases pipeline variables when exporting them as env vars on
     // Linux/macOS agents, so check both spellings.
     def runningOnCI = System.getenv('RunningOnCI') ?: System.getenv('RUNNINGONCI')

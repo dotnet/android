@@ -12,9 +12,6 @@ All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-re
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
-plugins {
-    id 'com.microsoft.azure.artifacts.credprovider' version '1.1.1'
-}
 dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
@@ -54,5 +51,4 @@ After it succeeds, just re-run the failed CI job. No PR edits needed — the pac
 ## Don'ts
 
 - Don't hard-code Maven repo URLs in `build.gradle` / `settings.gradle`; use the shared file.
-- Don't wrap `plugins {}` in `if (...)` — Gradle rejects it.
 - Don't use modern `plugins { id 'com.android.application' version '...' }` DSL without confirming the plugin is in `dotnet-public-maven`; prefer `buildscript { ... } / apply plugin: '...'` when in doubt.

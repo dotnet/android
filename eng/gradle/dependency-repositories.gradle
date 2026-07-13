@@ -3,9 +3,6 @@
 // in this repo. See plugin-repositories.gradle for plugin resolution.
 //
 // Switches on RunningOnCI for the same CFSClean reasons described there.
-// AzureArtifacts is intentionally NOT included here — it only hosts the
-// credprovider plugin, so listing it in this scope would add a 404 round-trip
-// to every dependency lookup.
 
 repositories {
     // AzDO uppercases pipeline variables when exporting them as env vars on
