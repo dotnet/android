@@ -32,10 +32,22 @@ public class TrimmableTypeMap
 			"TrimmableTypeMap has not been initialized. Ensure RuntimeFeature.TrimmableTypeMap is enabled and the JNI runtime is initialized.");
 
 	readonly ITypeMap _typeMap;
-	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
-	readonly ConcurrentDictionary<Type, JavaArrayProxy> _arrayProxyCache = new ();
-	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
-	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
+	// Runtime memoization caches. Allocated lazily on first lookup (not at initialization) so typemap
+	// initialization stays cheap — allocating these four ConcurrentDictionary instances (and JIT-ing
+	// their generic instantiations) accounted for ~4 ms of init on a low-end device.
+	ConcurrentDictionary<Type, JavaPeerProxy>? _proxyCache;
+	ConcurrentDictionary<Type, JavaArrayProxy>? _arrayProxyCache;
+	ConcurrentDictionary<string, JavaPeerProxy[]>? _jniProxyCache;
+	ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy>? _interfaceProxyCache;
+
+	ConcurrentDictionary<Type, JavaPeerProxy> ProxyCache =>
+		LazyInitializer.EnsureInitialized (ref _proxyCache, static () => new ConcurrentDictionary<Type, JavaPeerProxy> ());
+	ConcurrentDictionary<Type, JavaArrayProxy> ArrayProxyCache =>
+		LazyInitializer.EnsureInitialized (ref _arrayProxyCache, static () => new ConcurrentDictionary<Type, JavaArrayProxy> ());
+	ConcurrentDictionary<string, JavaPeerProxy[]> JniProxyCache =>
+		LazyInitializer.EnsureInitialized (ref _jniProxyCache, static () => new ConcurrentDictionary<string, JavaPeerProxy[]> (StringComparer.Ordinal));
+	ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> InterfaceProxyCache =>
+		LazyInitializer.EnsureInitialized (ref _interfaceProxyCache, static () => new ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> ());
 
 	TrimmableTypeMap (ITypeMap typeMap)
 	{
@@ -192,7 +204,7 @@ public class TrimmableTypeMap
 	/// </summary>
 	JavaPeerProxy[] GetProxiesForJniName (string jniName)
 	{
-		return _jniProxyCache.GetOrAdd (jniName, static (name, self) => {
+		return JniProxyCache.GetOrAdd (jniName, static (name, self) => {
 			var result = new List<JavaPeerProxy> ();
 			foreach (var type in self._typeMap.GetProxyTypes (name)) {
 				var proxy = type.GetCustomAttribute<JavaPeerProxy> (inherit: false);
@@ -231,7 +243,7 @@ public class TrimmableTypeMap
 			managedType = managedType.GetGenericTypeDefinition ();
 		}
 
-		var proxy = _proxyCache.GetOrAdd (managedType, static (type, self) => {
+		var proxy = ProxyCache.GetOrAdd (managedType, static (type, self) => {
 			if (!self._typeMap.TryGetProxyType (type, out var proxyType)) {
 				return s_noPeerSentinel;
 			}
@@ -298,7 +310,7 @@ public class TrimmableTypeMap
 
 	JavaPeerProxy? GetProxyForJavaInterfaces (JniObjectReference jniClass, string className, Type targetType)
 	{
-		var proxy = _interfaceProxyCache.GetOrAdd (
+		var proxy = InterfaceProxyCache.GetOrAdd (
 			(className, targetType),
 			_ => TryMatchInterfaces (jniClass, targetType) ?? s_noPeerSentinel);
 		return ReferenceEquals (proxy, s_noPeerSentinel) ? null : proxy;
@@ -541,7 +553,7 @@ public class TrimmableTypeMap
 		}
 
 		if (_typeMap.TryGetArrayProxyType (managedTypeKey, rankIndex, out var proxyType)) {
-			var proxy = _arrayProxyCache.GetOrAdd (proxyType, static type =>
+			var proxy = ArrayProxyCache.GetOrAdd (proxyType, static type =>
 				type.GetCustomAttribute<JavaArrayProxy> (inherit: false) ?? s_noArrayProxySentinel);
 			if (!ReferenceEquals (proxy, s_noArrayProxySentinel)) {
 				arrayProxy = proxy;
