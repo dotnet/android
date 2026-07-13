@@ -49,8 +49,12 @@ variables:
   value: 21
 # Override pool images for internal (non-"-open") dnceng agents.
 # Confirm these pool/image names exist in the dnceng/internal project.
+# Match the public pipeline's Mac image (Apple Silicon). Using the x64
+# "macOS-15" image here breaks NativeAOT JNI samples: .NET builds an
+# osx-arm64 .dylib but the image's default JDK is x64, so java's dlopen()
+# fails with UnsatisfiedLinkError (architecture mismatch).
 - name: HostedMacImage
-  value: macOS-15
+  value: macOS-15-arm64
 - name: LinuxPoolImage
   value: ubuntu-22.04
 - name: NetCoreInternalPoolName
