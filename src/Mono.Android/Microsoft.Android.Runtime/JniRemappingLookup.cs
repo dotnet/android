@@ -10,12 +10,14 @@ namespace Microsoft.Android.Runtime;
 
 static class JniRemappingLookup
 {
+#pragma warning disable CS0649 // Field 'JniRemappingLookup.JniRemappingReplacementMethod.target_type' is never assigned to, and will always have its default value null
 	struct JniRemappingReplacementMethod
 	{
 		public string? target_type;
 		public string? target_name;
 		public bool    is_static;
 	}
+#pragma warning restore CS0649
 
 	internal static IReadOnlyList<string> GetStaticMethodFallbackTypes (string jniSimpleReference, bool useReplacementTypes)
 	{

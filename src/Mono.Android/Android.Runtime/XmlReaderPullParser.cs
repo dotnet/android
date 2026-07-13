@@ -9,7 +9,7 @@ namespace Android.Runtime
 {
 	public class XmlReaderResourceParser : XmlReaderPullParser, IXmlResourceParser
 	{
-		public static IntPtr ToLocalJniHandle (XmlReader? value)
+		public new static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
@@ -197,8 +197,10 @@ namespace Android.Runtime
 			return false;
 		}
 	
-		public string? GetNamespace (string prefix)
+		public string? GetNamespace (string? prefix)
 		{
+			if (prefix == null)
+				return null;
 			return r.LookupNamespace (prefix);
 		}
 	
@@ -222,7 +224,7 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 	
-		public char[] GetTextCharacters (int[] holderForStartAndLength)
+		public char[] GetTextCharacters (int[]? holderForStartAndLength)
 		{
 			throw new NotSupportedException ();
 		}
