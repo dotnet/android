@@ -24,23 +24,11 @@ macro(create_library _libname _alias _sources)
 
   set_static_library_suffix(${_libname})
 
-  target_compile_definitions(
-    ${_libname}
-    PRIVATE
-    TSL_NO_EXCEPTIONS
-  )
-
   target_compile_options(
     ${_libname}
     PRIVATE
     ${XA_COMMON_CXX_ARGS}
     ${PINVOKE_OVERRIDE_CXX_ARGS}
-  )
-
-  target_include_directories(
-    ${_libname}
-    PRIVATE
-    ${ROBIN_MAP_DIR}/include
   )
 
   target_include_directories(
