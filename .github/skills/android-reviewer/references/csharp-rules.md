@@ -4,6 +4,15 @@ General C# guidance applicable to any .NET repository.
 
 ---
 
+## Target Framework Compatibility
+
+| Check | What to look for |
+|-------|-----------------|
+| **Oldest TFM must compile** | Code under `external/xamarin-android-tools/` may target `netstandard2.0` and modern .NET. Verify every API and overload against the oldest target framework; common traps include cancellation-token overloads such as `HttpContent.ReadAsStringAsync(CancellationToken)`, modern `ProcessStartInfo.ArgumentList` usage without the existing fallback helpers, and newer language/BCL features that need `#if` guards or polyfills. |
+| **Prefer existing compatibility helpers** | Use repository helpers such as `ProcessUtils`, `FileUtil`, and nullable extension methods instead of direct modern-BCL calls when they provide `netstandard2.0` fallbacks or better annotations. |
+
+---
+
 ## Nullable Reference Types
 
 | Check | What to look for |
@@ -53,6 +62,8 @@ General C# guidance applicable to any .NET repository.
 |-------|-----------------|
 | **Avoid unnecessary allocations** | Don't create intermediate collections when LINQ chaining or a single list would do. Char arrays for `string.Split()` should be `static readonly` fields. |
 | **ArrayPool for large buffers** | Buffers ≥ 1 KB should use `ArrayPool<byte>.Shared.Rent()` with `try`/`finally` return. Large allocations go to the LOH and are expensive to GC. |
+| **Use existing pools for repeated streams/buffers** | In Android tools code, prefer existing pooling helpers such as `MemoryStreamPool`/`ObjectPool<T>` for repeated temporary streams or buffers instead of allocating new instances in hot paths. If mutable buffers are reused with single-caller assumptions, document the thread-safety invariant. |
+| **Static `HttpClient`** | `HttpClient` instances should be `static readonly` fields, not per-instance objects that are repeatedly constructed or disposed. Per-instance clients can exhaust sockets; inject clients only when there is a real caller requirement. |
 | **`HashSet.Add()` already handles duplicates** | Calling `.Contains()` before `.Add()` does the hash lookup twice. Just call `.Add()`. (Postmortem `#41`) |
 | **Don't wrap a value in an interpolated string** | `$"{someString}"` creates an unnecessary `string.Format` call when `someString` is already a string. (Postmortem `#42`) |
 | **Consider allocations when choosing types** | `Stopwatch` is heap-allocated; `DateTime`/`ValueStopwatch` is a struct. On hot paths or startup, prefer value types. (Postmortem `#39`) |

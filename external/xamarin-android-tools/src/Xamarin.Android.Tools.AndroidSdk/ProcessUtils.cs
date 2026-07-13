@@ -1,0 +1,365 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+#if !NET5_0_OR_GREATER
+using System.Runtime.InteropServices;
+#endif
+
+namespace Xamarin.Android.Tools
+{
+	public static class ProcessUtils
+	{
+		static string[] ExecutableFileExtensions;
+
+		static ProcessUtils ()
+		{
+			var pathExt     = Environment.GetEnvironmentVariable (EnvironmentVariableNames.PathExt);
+			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
+
+			ExecutableFileExtensions    = pathExts;
+		}
+
+		/// Backward-compatible overload matching the original shipped API (without environmentVariables).
+#pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
+		public static Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, Action<Process>? onStarted = null)
+#pragma warning restore RS0027
+		{
+			return StartProcess (psi, stdout, stderr, cancellationToken, null, onStarted);
+		}
+
+		/// Convenience overload accepting environmentVariables without requiring onStarted.
+		public static Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, IDictionary<string, string>? environmentVariables)
+		{
+			return StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables, null);
+		}
+
+		public static async Task<int> StartProcess (ProcessStartInfo psi, TextWriter? stdout, TextWriter? stderr, CancellationToken cancellationToken, IDictionary<string, string>? environmentVariables, Action<Process>? onStarted)
+		{
+			cancellationToken.ThrowIfCancellationRequested ();
+			psi.UseShellExecute = false;
+			psi.RedirectStandardOutput |= stdout != null;
+			psi.RedirectStandardError |= stderr != null;
+
+			if (environmentVariables != null) {
+				foreach (var kvp in environmentVariables)
+					psi.EnvironmentVariables[kvp.Key] = kvp.Value;
+			}
+
+			var process = new Process {
+				StartInfo = psi,
+				EnableRaisingEvents = true,
+			};
+
+			Task output = Task.FromResult (true);
+			Task error = Task.FromResult (true);
+			Task exit = WaitForExitAsync (process);
+			using (process) {
+				process.Start ();
+				if (onStarted != null)
+					onStarted (process);
+
+				// If the token is cancelled while we're running, kill the process.
+				// Otherwise once we finish the Task.WhenAll we can remove this registration
+				// as there is no longer any need to Kill the process.
+				//
+				// We wrap `stdout` and `stderr` in syncronized wrappers for safety in case they
+				// end up writing to the same buffer, or they are the same object.
+				using (cancellationToken.Register (() => KillProcess (process))) {
+					if (psi.RedirectStandardOutput)
+						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout!));
+
+					if (psi.RedirectStandardError)
+						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr!));
+
+					await Task.WhenAll (new [] { output, error, exit }).ConfigureAwait (false);
+				}
+				// If we invoke 'KillProcess' our output, error and exit tasks will all complete normally.
+				// To protected against passing the user incomplete data we have to call
+				// `cancellationToken.ThrowIfCancellationRequested ()` here.
+				cancellationToken.ThrowIfCancellationRequested ();
+				return process.ExitCode;
+			}
+		}
+
+		static void KillProcess (Process p)
+		{
+			try {
+				p.Kill ();
+			} catch (InvalidOperationException) {
+				// If the process has already exited this could happen
+			}
+		}
+
+		static Task WaitForExitAsync (Process process)
+		{
+			var exitDone = new TaskCompletionSource<bool> ();
+			process.Exited += (o, e) => exitDone.TrySetResult (true);
+			return exitDone.Task;
+		}
+
+		static async Task ReadStreamAsync (StreamReader stream, TextWriter destination)
+		{
+			int read;
+			var buffer = new char [4096];
+			while ((read = await stream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false)) > 0)
+				destination.Write (buffer, 0, read);
+		}
+
+		/// <summary>
+		/// Executes an Android Sdk tool and returns a result. The result is based on a function of the command output.
+		/// </summary>
+		public static Task<TResult> ExecuteToolAsync<TResult> (string exe, Func<string, TResult> result, CancellationToken token, Action<Process>? onStarted = null)
+		{
+			var tcs = new TaskCompletionSource<TResult> ();
+
+			var log = new StringWriter ();
+			var error = new StringWriter ();
+
+			var psi = new ProcessStartInfo (exe);
+			psi.CreateNoWindow = true;
+			psi.RedirectStandardInput = onStarted != null;
+
+			var processTask = ProcessUtils.StartProcess (psi, log, error, token, null, onStarted);
+			var exeName = Path.GetFileName (exe);
+
+			processTask.ContinueWith (t => {
+				var output = log.ToString ();
+				var errorOutput = error.ToString ();
+				log.Dispose ();
+				error.Dispose ();
+
+				if (t.IsCanceled) {
+					tcs.TrySetCanceled ();
+					return;
+				}
+
+				if (t.IsFaulted) {
+					tcs.TrySetException (t.Exception?.Flatten ()?.InnerException ?? t.Exception!);
+					return;
+				}
+
+				if (t.Result == 0) {
+					tcs.TrySetResult (result != null ? result (output) : default (TResult)!);
+				} else {
+					var errorMessage = !string.IsNullOrEmpty (errorOutput) ? errorOutput : output;
+					errorMessage = string.IsNullOrEmpty (errorMessage)
+						? $"`{exeName}` returned non-zero exit code"
+						: $"{t.Result} : {errorMessage}";
+
+					tcs.TrySetException (new InvalidOperationException (errorMessage));
+				}
+			}, TaskContinuationOptions.ExecuteSynchronously);
+
+			return tcs.Task;
+		}
+
+		internal static void Exec (ProcessStartInfo processStartInfo, DataReceivedEventHandler output, bool includeStderr = true)
+		{
+			processStartInfo.UseShellExecute         = false;
+			processStartInfo.RedirectStandardInput   = false;
+			processStartInfo.RedirectStandardOutput  = true;
+			processStartInfo.RedirectStandardError   = true;
+			processStartInfo.CreateNoWindow          = true;
+			processStartInfo.WindowStyle             = ProcessWindowStyle.Hidden;
+
+			var p = new Process () {
+				StartInfo   = processStartInfo,
+			};
+			p.OutputDataReceived    += output;
+			if (includeStderr) {
+				p.ErrorDataReceived   += output;
+			}
+
+			using (p) {
+				p.Start ();
+				p.BeginOutputReadLine ();
+				p.BeginErrorReadLine ();
+				p.WaitForExit ();
+			}
+		}
+
+		/// <summary>
+		/// Creates a <see cref="ProcessStartInfo"/> with the given filename and arguments.
+		/// On .NET 5+ uses <see cref="ProcessStartInfo.ArgumentList"/> to avoid shell-escaping issues;
+		/// on older frameworks falls back to a single <see cref="ProcessStartInfo.Arguments"/> string.
+		/// </summary>
+		public static ProcessStartInfo CreateProcessStartInfo (string fileName, params string[] args)
+		{
+			var psi = new ProcessStartInfo {
+				FileName = fileName,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+			};
+#if NET5_0_OR_GREATER
+			foreach (var arg in args)
+				psi.ArgumentList.Add (arg);
+#else
+			psi.Arguments = JoinArguments (args);
+#endif
+			return psi;
+		}
+
+#if !NET5_0_OR_GREATER
+		static string JoinArguments (string[] args)
+		{
+			var sb = new StringBuilder ();
+			for (int i = 0; i < args.Length; i++) {
+				if (i > 0)
+					sb.Append (' ');
+				sb.Append ('"').Append (args [i]).Append ('"');
+			}
+			return sb.ToString ();
+		}
+#endif
+
+		/// <summary>
+		/// Throws <see cref="InvalidOperationException"/> when <paramref name="exitCode"/> is non-zero.
+		/// Includes stderr/stdout context in the message when available.
+		/// </summary>
+		internal static void ThrowIfFailed (int exitCode, string command, string? stderr = null, string? stdout = null)
+		{
+			if (exitCode == 0)
+				return;
+
+			var message = $"'{command}' failed with exit code {exitCode}.";
+
+			if (stderr is { Length: > 0 })
+				message += $" stderr:{Environment.NewLine}{stderr.Trim ()}";
+			if (stdout is { Length: > 0 })
+				message += $" stdout:{Environment.NewLine}{stdout.Trim ()}";
+
+			throw new InvalidOperationException (message);
+		}
+
+		/// <summary>
+		/// Overload that accepts <see cref="StringWriter"/> directly so callers don't need to call ToString().
+		/// </summary>
+		internal static void ThrowIfFailed (int exitCode, string command, StringWriter? stderr = null, StringWriter? stdout = null)
+		{
+			ThrowIfFailed (exitCode, command, stderr?.ToString (), stdout?.ToString ());
+		}
+
+		/// <summary>
+		/// Searches for a cmdline-tools binary in the SDK.
+		/// Prefers the "latest" symlink, then the highest versioned directory.
+		/// </summary>
+		/// <param name="sdkPath">Root path to the Android SDK.</param>
+		/// <param name="toolName">Tool binary name without extension (e.g., "avdmanager").</param>
+		/// <param name="extension">File extension including the dot (e.g., ".bat") or empty string for no extension.</param>
+		/// <param name="logger">Optional logger for diagnostic messages.</param>
+		internal static string? FindCmdlineTool (string sdkPath, string toolName, string extension, Action<TraceLevel, string>? logger = null)
+		{
+			var cmdlineToolsDir = Path.Combine (sdkPath, "cmdline-tools");
+
+			if (Directory.Exists (cmdlineToolsDir)) {
+				// Prefer "latest" symlink first — it's the SDK's own recommended default
+				var latestPath = Path.Combine (cmdlineToolsDir, "latest", "bin", toolName + extension);
+				if (File.Exists (latestPath))
+					return latestPath;
+
+				try {
+					var subdirs = new List<(string name, Version version, bool isPreRelease)> ();
+					foreach (var dir in Directory.GetDirectories (cmdlineToolsDir)) {
+						var name = Path.GetFileName (dir);
+						if (string.IsNullOrEmpty (name) || name == "latest")
+							continue;
+						// Strip pre-release suffixes (e.g., "5.0-rc1" → "5.0") before parsing
+						var versionStr = name;
+						var dashIndex = name.IndexOf ('-');
+						var isPreRelease = dashIndex >= 0;
+						if (isPreRelease)
+							versionStr = name.Substring (0, dashIndex);
+						Version.TryParse (versionStr, out var v);
+						subdirs.Add ((name, v ?? new Version (0, 0), isPreRelease));
+					}
+					// Sort by version descending, then prefer stable (non-prerelease) over prerelease
+					subdirs.Sort ((a, b) => {
+						var cmp = b.version.CompareTo (a.version);
+						if (cmp != 0) return cmp;
+						if (a.isPreRelease != b.isPreRelease)
+							return a.isPreRelease ? 1 : -1; // stable first
+						return string.Compare (a.name, b.name, StringComparison.Ordinal);
+					});
+
+					foreach (var (name, _, _) in subdirs) {
+						var toolPath = Path.Combine (cmdlineToolsDir, name, "bin", toolName + extension);
+						if (File.Exists (toolPath))
+							return toolPath;
+					}
+				} catch (IOException ex) {
+					logger?.Invoke (TraceLevel.Warning, $"FindCmdlineTool: IO error enumerating {cmdlineToolsDir}: {ex.Message}");
+				} catch (UnauthorizedAccessException ex) {
+					logger?.Invoke (TraceLevel.Warning, $"FindCmdlineTool: Permission denied on {cmdlineToolsDir}: {ex.Message}");
+				}
+			}
+
+			return null;
+		}
+
+		internal static IEnumerable<string> FindExecutablesInPath (string executable)
+		{
+			var path        = Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "";
+			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+
+			foreach (var dir in pathDirs) {
+				foreach (var exe in FindExecutablesInDirectory (dir, executable)) {
+					yield return exe;
+				}
+			}
+		}
+
+		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable)
+		{
+			if (!Directory.Exists (dir))
+				yield break;
+			foreach (var exe in ExecutableFiles (executable)) {
+				string exePath;
+				try {
+					exePath = Path.Combine (dir, exe);
+				} catch (ArgumentException) {
+					continue;
+				}
+				if (File.Exists (exePath))
+					yield return exePath;
+			}
+		}
+
+		internal static IEnumerable<string> ExecutableFiles (string executable)
+		{
+			if (ExecutableFileExtensions == null || ExecutableFileExtensions.Length == 0) {
+				yield return executable;
+				yield break;
+			}
+
+			foreach (var ext in ExecutableFileExtensions)
+				yield return Path.ChangeExtension (executable, ext);
+			yield return executable;
+		}
+
+		/// <summary>Checks if running as Administrator (Windows) or root (macOS/Linux).</summary>
+		public static bool IsElevated ()
+		{
+#if NET5_0_OR_GREATER
+			return Environment.IsPrivilegedProcess;
+#else
+			if (OS.IsWindows)
+				return IsUserAnAdmin ();
+			return geteuid () == 0;
+#endif
+		}
+
+#if !NET5_0_OR_GREATER
+		[DllImport ("shell32.dll")]
+		[return: MarshalAs (UnmanagedType.Bool)]
+		static extern bool IsUserAnAdmin ();
+
+		[DllImport ("libc", SetLastError = true)]
+		static extern uint geteuid ();
+#endif
+	}
+}

@@ -1,0 +1,324 @@
+#nullable enable
+Xamarin.Android.Tools.AdbDeviceInfo
+Xamarin.Android.Tools.AdbDeviceInfo.AdbDeviceInfo() -> void
+Xamarin.Android.Tools.AdbDeviceInfo.AvdName.get -> string?
+Xamarin.Android.Tools.AdbDeviceInfo.AvdName.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.Description.get -> string!
+Xamarin.Android.Tools.AdbDeviceInfo.Description.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.Device.get -> string?
+Xamarin.Android.Tools.AdbDeviceInfo.Device.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.IsEmulator.get -> bool
+Xamarin.Android.Tools.AdbDeviceInfo.Model.get -> string?
+Xamarin.Android.Tools.AdbDeviceInfo.Model.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.Product.get -> string?
+Xamarin.Android.Tools.AdbDeviceInfo.Product.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.Serial.get -> string!
+Xamarin.Android.Tools.AdbDeviceInfo.Serial.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.Status.get -> Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceInfo.Status.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.TransportId.get -> string?
+Xamarin.Android.Tools.AdbDeviceInfo.TransportId.set -> void
+Xamarin.Android.Tools.AdbDeviceInfo.Type.get -> Xamarin.Android.Tools.AdbDeviceType
+Xamarin.Android.Tools.AdbDeviceInfo.Type.set -> void
+Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceStatus.NoPermissions = 3 -> Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceStatus.NotRunning = 4 -> Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceStatus.Offline = 1 -> Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceStatus.Online = 0 -> Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceStatus.Unauthorized = 2 -> Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceStatus.Unknown = 5 -> Xamarin.Android.Tools.AdbDeviceStatus
+Xamarin.Android.Tools.AdbDeviceType
+Xamarin.Android.Tools.AdbDeviceType.Device = 0 -> Xamarin.Android.Tools.AdbDeviceType
+Xamarin.Android.Tools.AdbDeviceType.Emulator = 1 -> Xamarin.Android.Tools.AdbDeviceType
+Xamarin.Android.Tools.AdbRunner
+Xamarin.Android.Tools.AdbRunner.AdbRunner(string! adbPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+virtual Xamarin.Android.Tools.AdbRunner.ListDevicesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>!
+Xamarin.Android.Tools.AdbRunner.StopEmulatorAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AdbRunner.WaitForDeviceAsync(string? serial = null, System.TimeSpan? timeout = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.ChecksumType
+Xamarin.Android.Tools.ChecksumType.Sha1 = 0 -> Xamarin.Android.Tools.ChecksumType
+Xamarin.Android.Tools.ChecksumType.Sha256 = 1 -> Xamarin.Android.Tools.ChecksumType
+Xamarin.Android.Tools.JdkInstallPhase
+Xamarin.Android.Tools.JdkInstallPhase.Complete = 4 -> Xamarin.Android.Tools.JdkInstallPhase
+Xamarin.Android.Tools.JdkInstallPhase.Downloading = 0 -> Xamarin.Android.Tools.JdkInstallPhase
+Xamarin.Android.Tools.JdkInstallPhase.Extracting = 2 -> Xamarin.Android.Tools.JdkInstallPhase
+Xamarin.Android.Tools.JdkInstallPhase.Validating = 3 -> Xamarin.Android.Tools.JdkInstallPhase
+Xamarin.Android.Tools.JdkInstallPhase.Verifying = 1 -> Xamarin.Android.Tools.JdkInstallPhase
+Xamarin.Android.Tools.JdkInstallProgress
+Xamarin.Android.Tools.JdkInstallProgress.JdkInstallProgress(Xamarin.Android.Tools.JdkInstallPhase Phase, double PercentComplete, string? Message = null) -> void
+Xamarin.Android.Tools.JdkInstallProgress.Message.get -> string?
+Xamarin.Android.Tools.JdkInstallProgress.Message.init -> void
+Xamarin.Android.Tools.JdkInstallProgress.PercentComplete.get -> double
+Xamarin.Android.Tools.JdkInstallProgress.PercentComplete.init -> void
+Xamarin.Android.Tools.JdkInstallProgress.Phase.get -> Xamarin.Android.Tools.JdkInstallPhase
+Xamarin.Android.Tools.JdkInstallProgress.Phase.init -> void
+Xamarin.Android.Tools.JdkInstaller
+Xamarin.Android.Tools.JdkInstaller.DiscoverAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.JdkVersionInfo!>!>!
+Xamarin.Android.Tools.JdkInstaller.Dispose() -> void
+Xamarin.Android.Tools.JdkInstaller.InstallAsync(int majorVersion, string! targetPath, System.IProgress<Xamarin.Android.Tools.JdkInstallProgress!>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.JdkInstaller.IsValid(string! jdkPath) -> bool
+Xamarin.Android.Tools.JdkInstaller.JdkInstaller(System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.JdkInstaller.Remove(string! jdkPath) -> bool
+Xamarin.Android.Tools.JdkVersionInfo
+Xamarin.Android.Tools.JdkVersionInfo.Checksum.get -> string?
+Xamarin.Android.Tools.JdkVersionInfo.ChecksumUrl.get -> string!
+Xamarin.Android.Tools.JdkVersionInfo.DisplayName.get -> string!
+Xamarin.Android.Tools.JdkVersionInfo.DownloadUrl.get -> string!
+Xamarin.Android.Tools.JdkVersionInfo.JdkVersionInfo(int majorVersion, string! displayName, string! downloadUrl, string! checksumUrl, long size = 0, string? checksum = null) -> void
+Xamarin.Android.Tools.JdkVersionInfo.MajorVersion.get -> int
+Xamarin.Android.Tools.JdkVersionInfo.ResolvedUrl.get -> string?
+Xamarin.Android.Tools.JdkVersionInfo.Size.get -> long
+Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapPhase.Complete = 4 -> Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapPhase.Downloading = 1 -> Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapPhase.Extracting = 3 -> Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapPhase.ReadingManifest = 0 -> Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapPhase.Verifying = 2 -> Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapProgress
+Xamarin.Android.Tools.SdkBootstrapProgress.Message.get -> string!
+Xamarin.Android.Tools.SdkBootstrapProgress.Message.init -> void
+Xamarin.Android.Tools.SdkBootstrapProgress.PercentComplete.get -> int
+Xamarin.Android.Tools.SdkBootstrapProgress.PercentComplete.init -> void
+Xamarin.Android.Tools.SdkBootstrapProgress.Phase.get -> Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapProgress.Phase.init -> void
+Xamarin.Android.Tools.SdkBootstrapProgress.SdkBootstrapProgress(Xamarin.Android.Tools.SdkBootstrapPhase Phase, int PercentComplete = -1, string! Message = "") -> void
+Xamarin.Android.Tools.SdkLicense
+Xamarin.Android.Tools.SdkLicense.Id.get -> string!
+Xamarin.Android.Tools.SdkLicense.Id.init -> void
+Xamarin.Android.Tools.SdkLicense.SdkLicense(string! Id, string! Text) -> void
+Xamarin.Android.Tools.SdkLicense.Text.get -> string!
+Xamarin.Android.Tools.SdkLicense.Text.init -> void
+Xamarin.Android.Tools.SdkManager
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync() -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Collections.Generic.IEnumerable<string!>! licenseIds) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Collections.Generic.IEnumerable<string!>! licenseIds, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AcceptLicensesAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.AndroidSdkPath.get -> string?
+Xamarin.Android.Tools.SdkManager.AndroidSdkPath.set -> void
+Xamarin.Android.Tools.SdkManager.AreLicensesAccepted() -> bool
+Xamarin.Android.Tools.SdkManager.BootstrapAsync(string! targetPath, System.IProgress<Xamarin.Android.Tools.SdkBootstrapProgress!>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.Dispose() -> void
+Xamarin.Android.Tools.SdkManager.FindSdkManagerPath() -> string?
+Xamarin.Android.Tools.SdkManager.GetPendingLicensesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.SdkLicense!>!>!
+Xamarin.Android.Tools.SdkManager.InstallAsync(System.Collections.Generic.IEnumerable<string!>! packages, bool acceptLicenses = true, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.JavaSdkPath.get -> string?
+Xamarin.Android.Tools.SdkManager.JavaSdkPath.set -> void
+Xamarin.Android.Tools.SdkManager.ListAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.SdkPackage!>! Installed, System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.SdkPackage!>! Available)>!
+Xamarin.Android.Tools.SdkManager.ManifestFeedUrl.get -> string!
+Xamarin.Android.Tools.SdkManager.ManifestFeedUrl.set -> void
+Xamarin.Android.Tools.SdkManager.SdkManager(System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.SdkManager.UninstallAsync(System.Collections.Generic.IEnumerable<string!>! packages, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkManager.UpdateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.SdkPackage
+Xamarin.Android.Tools.SdkPackage.Description.get -> string?
+Xamarin.Android.Tools.SdkPackage.Description.init -> void
+Xamarin.Android.Tools.SdkPackage.IsInstalled.get -> bool
+Xamarin.Android.Tools.SdkPackage.IsInstalled.init -> void
+Xamarin.Android.Tools.SdkPackage.Path.get -> string!
+Xamarin.Android.Tools.SdkPackage.Path.init -> void
+Xamarin.Android.Tools.SdkPackage.SdkPackage(string! Path, string? Version = null, string? Description = null, bool IsInstalled = false) -> void
+Xamarin.Android.Tools.SdkPackage.Version.get -> string?
+Xamarin.Android.Tools.SdkPackage.Version.init -> void
+const Xamarin.Android.Tools.SdkManager.DefaultManifestFeedUrl = "https://aka.ms/AndroidManifestFeed/d18-0" -> string!
+override Xamarin.Android.Tools.JdkVersionInfo.ToString() -> string!
+static Xamarin.Android.Tools.AdbRunner.BuildDeviceDescription(Xamarin.Android.Tools.AdbDeviceInfo! device, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> string!
+static Xamarin.Android.Tools.AdbRunner.FormatDisplayName(string! avdName) -> string!
+static Xamarin.Android.Tools.AdbRunner.MapAdbStateToStatus(string! adbState) -> Xamarin.Android.Tools.AdbDeviceStatus
+static Xamarin.Android.Tools.AdbRunner.MergeDevicesAndEmulators(System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>! adbDevices, System.Collections.Generic.IReadOnlyList<string!>! availableEmulators, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!
+static Xamarin.Android.Tools.AdbRunner.ParseAdbDevicesOutput(System.Collections.Generic.IEnumerable<string!>! lines) -> System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!
+static Xamarin.Android.Tools.JdkInstaller.RecommendedMajorVersion.get -> int
+static Xamarin.Android.Tools.JdkInstaller.SupportedVersions.get -> System.Collections.Generic.IReadOnlyList<int>!
+static Xamarin.Android.Tools.ProcessUtils.CreateProcessStartInfo(string! fileName, params string![]! args) -> System.Diagnostics.ProcessStartInfo!
+static Xamarin.Android.Tools.ProcessUtils.IsElevated() -> bool
+static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables, System.Action<System.Diagnostics.Process!>? onStarted) -> System.Threading.Tasks.Task<int>!
+static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables) -> System.Threading.Tasks.Task<int>!
+Xamarin.Android.Tools.AvdInfo
+Xamarin.Android.Tools.AvdInfo.AvdInfo(string! Name, string? DeviceProfile = null, string? Path = null) -> void
+Xamarin.Android.Tools.AvdInfo.DeviceProfile.get -> string?
+Xamarin.Android.Tools.AvdInfo.DeviceProfile.init -> void
+Xamarin.Android.Tools.AvdInfo.Name.get -> string!
+Xamarin.Android.Tools.AvdInfo.Name.init -> void
+Xamarin.Android.Tools.AvdInfo.Path.get -> string?
+Xamarin.Android.Tools.AvdInfo.Path.init -> void
+Xamarin.Android.Tools.AvdManagerRunner
+Xamarin.Android.Tools.AvdManagerRunner.AvdManagerRunner(string! avdManagerPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.AvdManagerRunner.GetOrCreateAvdAsync(string! name, string! systemImage, string? deviceProfile = null, bool force = false, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Xamarin.Android.Tools.AvdInfo!>!
+Xamarin.Android.Tools.AvdManagerRunner.DeleteAvdAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AvdManagerRunner.ListAvdsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AvdInfo!>!>!
+virtual Xamarin.Android.Tools.AdbRunner.GetShellPropertyAsync(string! serial, string! propertyName, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string?>!
+virtual Xamarin.Android.Tools.AdbRunner.RunShellCommandAsync(string! serial, string! command, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<string?>!
+virtual Xamarin.Android.Tools.AdbRunner.RunShellCommandAsync(string! serial, string! command, string![]! args, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string?>!
+Xamarin.Android.Tools.EmulatorBootOptions
+Xamarin.Android.Tools.EmulatorBootOptions.AdditionalArgs.get -> System.Collections.Generic.List<string!>?
+Xamarin.Android.Tools.EmulatorBootOptions.AdditionalArgs.init -> void
+Xamarin.Android.Tools.EmulatorBootOptions.BootTimeout.get -> System.TimeSpan
+Xamarin.Android.Tools.EmulatorBootOptions.BootTimeout.init -> void
+Xamarin.Android.Tools.EmulatorBootOptions.ColdBoot.get -> bool
+Xamarin.Android.Tools.EmulatorBootOptions.ColdBoot.init -> void
+Xamarin.Android.Tools.EmulatorBootOptions.PollInterval.get -> System.TimeSpan
+Xamarin.Android.Tools.EmulatorBootOptions.PollInterval.init -> void
+Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.None = 0 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.LaunchFailed = 1 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.Timeout = 2 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.Cancelled = 3 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootErrorKind.Unknown = 4 -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootResult
+Xamarin.Android.Tools.EmulatorBootResult.ErrorKind.get -> Xamarin.Android.Tools.EmulatorBootErrorKind
+Xamarin.Android.Tools.EmulatorBootResult.ErrorKind.init -> void
+Xamarin.Android.Tools.EmulatorBootResult.ErrorMessage.get -> string?
+Xamarin.Android.Tools.EmulatorBootResult.ErrorMessage.init -> void
+Xamarin.Android.Tools.EmulatorBootResult.Serial.get -> string?
+Xamarin.Android.Tools.EmulatorBootResult.Serial.init -> void
+Xamarin.Android.Tools.EmulatorBootResult.Success.get -> bool
+Xamarin.Android.Tools.EmulatorBootResult.Success.init -> void
+Xamarin.Android.Tools.EmulatorRunner
+Xamarin.Android.Tools.EmulatorRunner.BootEmulatorAsync(string! deviceOrAvdName, Xamarin.Android.Tools.AdbRunner! adbRunner, Xamarin.Android.Tools.EmulatorBootOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Xamarin.Android.Tools.EmulatorBootResult!>!
+Xamarin.Android.Tools.EmulatorRunner.EmulatorRunner(string! emulatorPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.EmulatorRunner.ListAvdNamesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+Xamarin.Android.Tools.EmulatorRunner.LaunchEmulator(string! avdName, bool coldBoot = false, System.Collections.Generic.List<string!>? additionalArgs = null) -> System.Diagnostics.Process!
+Xamarin.Android.Tools.AdbPortRule
+Xamarin.Android.Tools.AdbPortRule.AdbPortRule(Xamarin.Android.Tools.AdbPortSpec! Remote, Xamarin.Android.Tools.AdbPortSpec! Local) -> void
+Xamarin.Android.Tools.AdbPortRule.Local.get -> Xamarin.Android.Tools.AdbPortSpec!
+Xamarin.Android.Tools.AdbPortRule.Local.init -> void
+Xamarin.Android.Tools.AdbPortRule.Remote.get -> Xamarin.Android.Tools.AdbPortSpec!
+Xamarin.Android.Tools.AdbPortRule.Remote.init -> void
+Xamarin.Android.Tools.AdbPortSpec
+Xamarin.Android.Tools.AdbPortSpec.AdbPortSpec(Xamarin.Android.Tools.AdbProtocol Protocol, int Port) -> void
+Xamarin.Android.Tools.AdbPortSpec.Port.get -> int
+Xamarin.Android.Tools.AdbPortSpec.Port.init -> void
+Xamarin.Android.Tools.AdbPortSpec.Protocol.get -> Xamarin.Android.Tools.AdbProtocol
+Xamarin.Android.Tools.AdbPortSpec.Protocol.init -> void
+Xamarin.Android.Tools.AdbPortSpec.ToSocketSpec() -> string!
+Xamarin.Android.Tools.AdbProtocol
+
+Xamarin.Android.Tools.AdbProtocol.Tcp = 0 -> Xamarin.Android.Tools.AdbProtocol
+override Xamarin.Android.Tools.AdbPortSpec.ToString() -> string!
+static Xamarin.Android.Tools.AdbPortSpec.TryParse(string? socketSpec) -> Xamarin.Android.Tools.AdbPortSpec?
+virtual Xamarin.Android.Tools.AdbRunner.ListReversePortsAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbPortRule!>!>!
+virtual Xamarin.Android.Tools.AdbRunner.RemoveAllReversePortsAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+virtual Xamarin.Android.Tools.AdbRunner.RemoveReversePortAsync(string! serial, Xamarin.Android.Tools.AdbPortSpec! remote, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+virtual Xamarin.Android.Tools.AdbRunner.ReversePortAsync(string! serial, Xamarin.Android.Tools.AdbPortSpec! remote, Xamarin.Android.Tools.AdbPortSpec! local, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+virtual Xamarin.Android.Tools.AdbRunner.ForwardPortAsync(string! serial, Xamarin.Android.Tools.AdbPortSpec! local, Xamarin.Android.Tools.AdbPortSpec! remote, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+virtual Xamarin.Android.Tools.AdbRunner.ListForwardPortsAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbPortRule!>!>!
+virtual Xamarin.Android.Tools.AdbRunner.RemoveAllForwardPortsAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+virtual Xamarin.Android.Tools.AdbRunner.RemoveForwardPortAsync(string! serial, Xamarin.Android.Tools.AdbPortSpec! local, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AdbDeviceTracker
+Xamarin.Android.Tools.AdbDeviceTracker.AdbDeviceTracker(int port = 5037, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.AdbDeviceTracker.CurrentDevices.get -> System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!
+Xamarin.Android.Tools.AdbDeviceTracker.Dispose() -> void
+Xamarin.Android.Tools.AdbDeviceTracker.StartAsync(System.Action<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>! onDevicesChanged, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AvdManagerRunner.ListDeviceProfilesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AvdDeviceProfile!>!>!
+Xamarin.Android.Tools.AvdDeviceProfile
+Xamarin.Android.Tools.AvdDeviceProfile.AvdDeviceProfile(string! Id) -> void
+Xamarin.Android.Tools.AvdDeviceProfile.Id.get -> string!
+Xamarin.Android.Tools.AvdDeviceProfile.Id.init -> void
+override Xamarin.Android.Tools.AdbPortRule.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.AdbPortRule.GetHashCode() -> int
+override Xamarin.Android.Tools.AdbPortRule.ToString() -> string!
+override Xamarin.Android.Tools.AdbPortSpec.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.AdbPortSpec.GetHashCode() -> int
+override Xamarin.Android.Tools.AvdDeviceProfile.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.AvdDeviceProfile.GetHashCode() -> int
+override Xamarin.Android.Tools.AvdDeviceProfile.ToString() -> string!
+override Xamarin.Android.Tools.AvdInfo.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.AvdInfo.GetHashCode() -> int
+override Xamarin.Android.Tools.AvdInfo.ToString() -> string!
+override Xamarin.Android.Tools.EmulatorBootOptions.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.EmulatorBootOptions.GetHashCode() -> int
+override Xamarin.Android.Tools.EmulatorBootOptions.ToString() -> string!
+override Xamarin.Android.Tools.EmulatorBootResult.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.EmulatorBootResult.GetHashCode() -> int
+override Xamarin.Android.Tools.EmulatorBootResult.ToString() -> string!
+override Xamarin.Android.Tools.JdkInstallProgress.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.JdkInstallProgress.GetHashCode() -> int
+override Xamarin.Android.Tools.JdkInstallProgress.ToString() -> string!
+override Xamarin.Android.Tools.SdkBootstrapProgress.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.SdkBootstrapProgress.GetHashCode() -> int
+override Xamarin.Android.Tools.SdkBootstrapProgress.ToString() -> string!
+override Xamarin.Android.Tools.SdkLicense.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.SdkLicense.GetHashCode() -> int
+override Xamarin.Android.Tools.SdkLicense.ToString() -> string!
+override Xamarin.Android.Tools.SdkPackage.Equals(object? obj) -> bool
+override Xamarin.Android.Tools.SdkPackage.GetHashCode() -> int
+override Xamarin.Android.Tools.SdkPackage.ToString() -> string!
+static Xamarin.Android.Tools.AdbPortRule.operator !=(Xamarin.Android.Tools.AdbPortRule? left, Xamarin.Android.Tools.AdbPortRule? right) -> bool
+static Xamarin.Android.Tools.AdbPortRule.operator ==(Xamarin.Android.Tools.AdbPortRule? left, Xamarin.Android.Tools.AdbPortRule? right) -> bool
+static Xamarin.Android.Tools.AdbPortSpec.operator !=(Xamarin.Android.Tools.AdbPortSpec? left, Xamarin.Android.Tools.AdbPortSpec? right) -> bool
+static Xamarin.Android.Tools.AdbPortSpec.operator ==(Xamarin.Android.Tools.AdbPortSpec? left, Xamarin.Android.Tools.AdbPortSpec? right) -> bool
+static Xamarin.Android.Tools.AvdDeviceProfile.operator !=(Xamarin.Android.Tools.AvdDeviceProfile? left, Xamarin.Android.Tools.AvdDeviceProfile? right) -> bool
+static Xamarin.Android.Tools.AvdDeviceProfile.operator ==(Xamarin.Android.Tools.AvdDeviceProfile? left, Xamarin.Android.Tools.AvdDeviceProfile? right) -> bool
+static Xamarin.Android.Tools.AvdInfo.operator !=(Xamarin.Android.Tools.AvdInfo? left, Xamarin.Android.Tools.AvdInfo? right) -> bool
+static Xamarin.Android.Tools.AvdInfo.operator ==(Xamarin.Android.Tools.AvdInfo? left, Xamarin.Android.Tools.AvdInfo? right) -> bool
+static Xamarin.Android.Tools.EmulatorBootOptions.operator !=(Xamarin.Android.Tools.EmulatorBootOptions? left, Xamarin.Android.Tools.EmulatorBootOptions? right) -> bool
+static Xamarin.Android.Tools.EmulatorBootOptions.operator ==(Xamarin.Android.Tools.EmulatorBootOptions? left, Xamarin.Android.Tools.EmulatorBootOptions? right) -> bool
+static Xamarin.Android.Tools.EmulatorBootResult.operator !=(Xamarin.Android.Tools.EmulatorBootResult? left, Xamarin.Android.Tools.EmulatorBootResult? right) -> bool
+static Xamarin.Android.Tools.EmulatorBootResult.operator ==(Xamarin.Android.Tools.EmulatorBootResult? left, Xamarin.Android.Tools.EmulatorBootResult? right) -> bool
+static Xamarin.Android.Tools.JdkInstallProgress.operator !=(Xamarin.Android.Tools.JdkInstallProgress? left, Xamarin.Android.Tools.JdkInstallProgress? right) -> bool
+static Xamarin.Android.Tools.JdkInstallProgress.operator ==(Xamarin.Android.Tools.JdkInstallProgress? left, Xamarin.Android.Tools.JdkInstallProgress? right) -> bool
+static Xamarin.Android.Tools.SdkBootstrapProgress.operator !=(Xamarin.Android.Tools.SdkBootstrapProgress? left, Xamarin.Android.Tools.SdkBootstrapProgress? right) -> bool
+static Xamarin.Android.Tools.SdkBootstrapProgress.operator ==(Xamarin.Android.Tools.SdkBootstrapProgress? left, Xamarin.Android.Tools.SdkBootstrapProgress? right) -> bool
+static Xamarin.Android.Tools.SdkLicense.operator !=(Xamarin.Android.Tools.SdkLicense? left, Xamarin.Android.Tools.SdkLicense? right) -> bool
+static Xamarin.Android.Tools.SdkLicense.operator ==(Xamarin.Android.Tools.SdkLicense? left, Xamarin.Android.Tools.SdkLicense? right) -> bool
+static Xamarin.Android.Tools.SdkPackage.operator !=(Xamarin.Android.Tools.SdkPackage? left, Xamarin.Android.Tools.SdkPackage? right) -> bool
+static Xamarin.Android.Tools.SdkPackage.operator ==(Xamarin.Android.Tools.SdkPackage? left, Xamarin.Android.Tools.SdkPackage? right) -> bool
+virtual Xamarin.Android.Tools.AdbPortRule.<Clone>$() -> Xamarin.Android.Tools.AdbPortRule!
+virtual Xamarin.Android.Tools.AdbPortRule.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.AdbPortRule.Equals(Xamarin.Android.Tools.AdbPortRule? other) -> bool
+virtual Xamarin.Android.Tools.AdbPortRule.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.AdbPortSpec.<Clone>$() -> Xamarin.Android.Tools.AdbPortSpec!
+virtual Xamarin.Android.Tools.AdbPortSpec.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.AdbPortSpec.Equals(Xamarin.Android.Tools.AdbPortSpec? other) -> bool
+virtual Xamarin.Android.Tools.AdbPortSpec.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.AvdDeviceProfile.<Clone>$() -> Xamarin.Android.Tools.AvdDeviceProfile!
+virtual Xamarin.Android.Tools.AvdDeviceProfile.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.AvdDeviceProfile.Equals(Xamarin.Android.Tools.AvdDeviceProfile? other) -> bool
+virtual Xamarin.Android.Tools.AvdDeviceProfile.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.AvdInfo.<Clone>$() -> Xamarin.Android.Tools.AvdInfo!
+virtual Xamarin.Android.Tools.AvdInfo.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.AvdInfo.Equals(Xamarin.Android.Tools.AvdInfo? other) -> bool
+virtual Xamarin.Android.Tools.AvdInfo.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.EmulatorBootOptions.<Clone>$() -> Xamarin.Android.Tools.EmulatorBootOptions!
+virtual Xamarin.Android.Tools.EmulatorBootOptions.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.EmulatorBootOptions.Equals(Xamarin.Android.Tools.EmulatorBootOptions? other) -> bool
+virtual Xamarin.Android.Tools.EmulatorBootOptions.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.EmulatorBootResult.<Clone>$() -> Xamarin.Android.Tools.EmulatorBootResult!
+virtual Xamarin.Android.Tools.EmulatorBootResult.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.EmulatorBootResult.Equals(Xamarin.Android.Tools.EmulatorBootResult? other) -> bool
+virtual Xamarin.Android.Tools.EmulatorBootResult.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.JdkInstallProgress.<Clone>$() -> Xamarin.Android.Tools.JdkInstallProgress!
+virtual Xamarin.Android.Tools.JdkInstallProgress.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.JdkInstallProgress.Equals(Xamarin.Android.Tools.JdkInstallProgress? other) -> bool
+virtual Xamarin.Android.Tools.JdkInstallProgress.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.SdkBootstrapProgress.<Clone>$() -> Xamarin.Android.Tools.SdkBootstrapProgress!
+virtual Xamarin.Android.Tools.SdkBootstrapProgress.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.SdkBootstrapProgress.Equals(Xamarin.Android.Tools.SdkBootstrapProgress? other) -> bool
+virtual Xamarin.Android.Tools.SdkBootstrapProgress.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.SdkLicense.<Clone>$() -> Xamarin.Android.Tools.SdkLicense!
+virtual Xamarin.Android.Tools.SdkLicense.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.SdkLicense.Equals(Xamarin.Android.Tools.SdkLicense? other) -> bool
+virtual Xamarin.Android.Tools.SdkLicense.PrintMembers(System.Text.StringBuilder! builder) -> bool
+virtual Xamarin.Android.Tools.SdkPackage.<Clone>$() -> Xamarin.Android.Tools.SdkPackage!
+virtual Xamarin.Android.Tools.SdkPackage.EqualityContract.get -> System.Type!
+virtual Xamarin.Android.Tools.SdkPackage.Equals(Xamarin.Android.Tools.SdkPackage? other) -> bool
+virtual Xamarin.Android.Tools.SdkPackage.PrintMembers(System.Text.StringBuilder! builder) -> bool
+Xamarin.Android.Tools.AdbPortRule.AdbPortRule(Xamarin.Android.Tools.AdbPortRule! original) -> void
+Xamarin.Android.Tools.AdbPortRule.Deconstruct(out Xamarin.Android.Tools.AdbPortSpec! Remote, out Xamarin.Android.Tools.AdbPortSpec! Local) -> void
+Xamarin.Android.Tools.AdbPortSpec.AdbPortSpec(Xamarin.Android.Tools.AdbPortSpec! original) -> void
+Xamarin.Android.Tools.AdbPortSpec.Deconstruct(out Xamarin.Android.Tools.AdbProtocol Protocol, out int Port) -> void
+Xamarin.Android.Tools.AvdDeviceProfile.AvdDeviceProfile(Xamarin.Android.Tools.AvdDeviceProfile! original) -> void
+Xamarin.Android.Tools.AvdDeviceProfile.Deconstruct(out string! Id) -> void
+Xamarin.Android.Tools.AvdInfo.AvdInfo(Xamarin.Android.Tools.AvdInfo! original) -> void
+Xamarin.Android.Tools.AvdInfo.Deconstruct(out string! Name, out string? DeviceProfile, out string? Path) -> void
+Xamarin.Android.Tools.EmulatorBootOptions.EmulatorBootOptions() -> void
+Xamarin.Android.Tools.EmulatorBootOptions.EmulatorBootOptions(Xamarin.Android.Tools.EmulatorBootOptions! original) -> void
+Xamarin.Android.Tools.EmulatorBootResult.EmulatorBootResult() -> void
+Xamarin.Android.Tools.EmulatorBootResult.EmulatorBootResult(Xamarin.Android.Tools.EmulatorBootResult! original) -> void
+Xamarin.Android.Tools.JdkInstallProgress.Deconstruct(out Xamarin.Android.Tools.JdkInstallPhase Phase, out double PercentComplete, out string? Message) -> void
+Xamarin.Android.Tools.JdkInstallProgress.JdkInstallProgress(Xamarin.Android.Tools.JdkInstallProgress! original) -> void
+Xamarin.Android.Tools.SdkBootstrapProgress.Deconstruct(out Xamarin.Android.Tools.SdkBootstrapPhase Phase, out int PercentComplete, out string! Message) -> void
+Xamarin.Android.Tools.SdkBootstrapProgress.SdkBootstrapProgress(Xamarin.Android.Tools.SdkBootstrapProgress! original) -> void
+Xamarin.Android.Tools.SdkLicense.Deconstruct(out string! Id, out string! Text) -> void
+Xamarin.Android.Tools.SdkLicense.SdkLicense(Xamarin.Android.Tools.SdkLicense! original) -> void
+Xamarin.Android.Tools.SdkPackage.Deconstruct(out string! Path, out string? Version, out string? Description, out bool IsInstalled) -> void
+Xamarin.Android.Tools.SdkPackage.SdkPackage(Xamarin.Android.Tools.SdkPackage! original) -> void
