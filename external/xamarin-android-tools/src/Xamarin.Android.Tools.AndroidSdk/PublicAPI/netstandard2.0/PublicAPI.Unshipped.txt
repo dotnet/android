@@ -203,6 +203,11 @@ virtual Xamarin.Android.Tools.AdbRunner.ForwardPortAsync(string! serial, Xamarin
 virtual Xamarin.Android.Tools.AdbRunner.ListForwardPortsAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbPortRule!>!>!
 virtual Xamarin.Android.Tools.AdbRunner.RemoveAllForwardPortsAsync(string! serial, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 virtual Xamarin.Android.Tools.AdbRunner.RemoveForwardPortAsync(string! serial, Xamarin.Android.Tools.AdbPortSpec! local, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Xamarin.Android.Tools.AdbDeviceTracker
+Xamarin.Android.Tools.AdbDeviceTracker.AdbDeviceTracker(int port = 5037, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.AdbDeviceTracker.CurrentDevices.get -> System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!
+Xamarin.Android.Tools.AdbDeviceTracker.Dispose() -> void
+Xamarin.Android.Tools.AdbDeviceTracker.StartAsync(System.Action<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AdbDeviceInfo!>!>! onDevicesChanged, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.AvdManagerRunner.ListDeviceProfilesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AvdDeviceProfile!>!>!
 Xamarin.Android.Tools.AvdDeviceProfile
 Xamarin.Android.Tools.AvdDeviceProfile.AvdDeviceProfile(string! Id) -> void
