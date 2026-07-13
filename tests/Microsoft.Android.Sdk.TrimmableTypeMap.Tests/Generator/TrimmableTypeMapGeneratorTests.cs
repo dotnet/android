@@ -38,6 +38,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
 		public void LogLibraryManifestMergeWarning (string message) =>
 			warnings?.Add (message);
+		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
+			warnings?.Add ($"Invalid $(AndroidManifestPlaceholders) '{placeholders}'.");
 		public void LogUnresolvableJavaPeerSkippedWarning (
 			string managedTypeName,
 			string assemblyName,
