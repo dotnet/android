@@ -9,7 +9,7 @@ description: >-
 
 # Android PR Reviewer
 
-Review PRs against guidelines distilled from past reviews by senior maintainers of dotnet/android.
+Review PRs against guidelines distilled from past reviews by senior maintainers of dotnet/android, including the in-tree shared tooling under `external/xamarin-android-tools/`.
 
 ## Review Mindset
 
@@ -70,7 +70,7 @@ Based on the file types identified in step 2, read the appropriate rule files fr
 
 **Conditionally load based on changed file types:**
 - `references/csharp-rules.md` — When any `.cs` files changed. Covers nullable, async, error handling, performance, and code organization.
-- `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/`).
+- `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/` or `external/xamarin-android-tools/src/Microsoft.Android.Build.BaseTasks/`).
 - `references/native-rules.md` — When `.c`, `.cpp`, `.h`, or `.hpp` files changed. Covers memory management, C++ best practices, symbol visibility, and platform-specific code.
 - `references/interop-rules.md` — When both C# and native files changed, when the diff contains P/Invoke or JNI interop code (e.g., `DllImport`, `[Register]` attribute changes, `JNIEnv` calls, `[MarshalAs]`, `[StructLayout]`, `JniObjectReference`, `JniPeerMembers`, `JniTransition`), or when files under `external/Java.Interop/`, `src/Mono.Android/`, or `src/native/` changed.
 - `references/testing-rules.md` — When test files changed (e.g., files under `tests/`, `**/Tests/`, or test project directories).
