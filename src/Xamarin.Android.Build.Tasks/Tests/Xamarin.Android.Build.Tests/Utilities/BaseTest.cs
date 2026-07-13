@@ -490,8 +490,8 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				CreateNoWindow = true,
 			};
-			using var proc = Process.Start (psi);
-			string stdout = proc!.StandardOutput.ReadToEnd ();
+			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{apksignerExe}'.");
+			string stdout = proc.StandardOutput.ReadToEnd ();
 			string stderr = proc.StandardError.ReadToEnd ();
 			proc.WaitForExit ();
 			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
