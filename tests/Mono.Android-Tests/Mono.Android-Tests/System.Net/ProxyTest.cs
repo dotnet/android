@@ -4,6 +4,8 @@ using System.Net;
 
 using NUnit.Framework;
 
+using Xamarin.Android.NetTests;
+
 namespace System.NetTests {
 
 	[TestFixture, Category ("InetAccess")]
@@ -13,8 +15,9 @@ namespace System.NetTests {
 		[Test]
 		public void QuoteInvalidQuoteUrlsShouldWork ()
 		{
+			using var server = LocalHttpServer.Start ();
 			try {
-				string url      = "http://www.msftconnecttest.com/connecttest.txt?query&foo|bar";
+				string url      = $"{server.Url}ok?query&foo|bar";
 				var request     = (HttpWebRequest) WebRequest.Create (url);
 				request.Method  = "GET";
 				var response    = (HttpWebResponse) request.GetResponse ();
@@ -34,6 +37,8 @@ namespace System.NetTests {
 				ex.Status == WebExceptionStatus.Timeout) {
 				Assert.Ignore ($"Ignoring network failure: {ex.Message}");
 			}
+
+			server.AssertNoUnhandledExceptions ();
 		}
 	}
 }
