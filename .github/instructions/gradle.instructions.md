@@ -12,6 +12,10 @@ All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-re
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
+def runningOnCI = System.getenv('RunningOnCI') ?: System.getenv('RUNNINGONCI')
+if (runningOnCI == 'true') {
+    apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
+}
 dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
@@ -26,6 +30,9 @@ Both files switch on `System.getenv('RunningOnCI')` (or `RUNNINGONCI` — AzDO u
 
 - **`RunningOnCI=true`** (Azure DevOps, set in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
 - **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()` for plugins, `google()` + `mavenCentral()` for deps. No credentials needed.
+
+The Azure Artifacts credential provider is also loaded only when
+`RunningOnCI=true`, so local builds never attempt Azure authentication.
 
 Test the CI path locally: `$env:RunningOnCI='true'` (PowerShell) or `RunningOnCI=true ...` (bash).
 

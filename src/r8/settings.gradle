@@ -3,6 +3,11 @@ pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
 
+def runningOnCI = System.getenv('RunningOnCI') ?: System.getenv('RUNNINGONCI')
+if (runningOnCI == 'true') {
+    apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
+}
+
 dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
