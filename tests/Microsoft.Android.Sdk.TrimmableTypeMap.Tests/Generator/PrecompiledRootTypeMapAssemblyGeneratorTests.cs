@@ -198,8 +198,7 @@ public class PrecompiledRootTypeMapAssemblyGeneratorTests
 				ILOpCode.Ldtoken,   // typeof (TypeMapLoader)
 				ILOpCode.Call,      // Type.GetTypeFromHandle
 				ILOpCode.Callvirt,  // Type.get_Module
-				ILOpCode.Newobj,    // new PrecompiledTypeMap (...)
-				ILOpCode.Call,      // TrimmableTypeMap.Initialize (ITypeMap)
+				ILOpCode.Call,      // TrimmableTypeMap.InitializePrecompiled (IntPtr, int, Module)
 				ILOpCode.Ret,
 			},
 			opcodes);

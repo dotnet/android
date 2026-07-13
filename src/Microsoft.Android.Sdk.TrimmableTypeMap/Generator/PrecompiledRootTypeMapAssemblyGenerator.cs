@@ -15,20 +15,23 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// Generates the root <c>_Microsoft.Android.TypeMaps.dll</c> for the <b>precompiled</b> trimmable
 /// typemap path. Instead of emitting <c>[assembly: TypeMap]</c> data + <c>TypeMapping.GetOrCreate*</c>
 /// calls (see <see cref="RootTypeMapAssemblyGenerator"/>), it blits one precompiled blob per universe
-/// as RVA data and emits a <c>TypeMapLoader.Initialize()</c> that hydrates
-/// <see cref="Microsoft.Android.Runtime.PrecompiledTypeMap"/> instances in place.
+/// as RVA data and emits a trivial <c>TypeMapLoader.Initialize()</c> that hands the blob address(es)
+/// to <c>TrimmableTypeMap.InitializePrecompiled</c>, which constructs the
+/// <see cref="Microsoft.Android.Runtime.PrecompiledTypeMap"/> universe(s) inside the R2R-compiled
+/// Mono.Android assembly. Keeping construction out of this generated glue lets crossgen2 R2R-compile
+/// <c>Initialize()</c> (no <c>IgnoresAccessChecksTo</c> needed) so typemap init stays near zero-cost.
 ///
 /// <para>Generated (pseudo-C#):</para>
 /// <code>
 /// public static class TypeMapLoader {
 ///     public static void Initialize () {
 ///         // shared universe:
-///         TrimmableTypeMap.Initialize (new PrecompiledTypeMap (&amp;__typemap_0, len0, typeof (TypeMapLoader).Module));
+///         TrimmableTypeMap.InitializePrecompiled (&amp;__typemap_0, len0, typeof (TypeMapLoader).Module);
 ///         // OR per-assembly universes:
-///         TrimmableTypeMap.Initialize (new AggregateTypeMap (new ITypeMap [] {
-///             new PrecompiledTypeMap (&amp;__typemap_0, len0, module),
-///             new PrecompiledTypeMap (&amp;__typemap_1, len1, module),
-///         }));
+///         TrimmableTypeMap.InitializePrecompiled (
+///             new IntPtr [] { &amp;__typemap_0, &amp;__typemap_1 },
+///             new int [] { len0, len1 },
+///             typeof (TypeMapLoader).Module);
 ///     }
 /// }
 /// </code>
@@ -78,13 +81,11 @@ public sealed class PrecompiledRootTypeMapAssemblyGenerator
 			blobFields.Add (pe.AddRvaDataField (blob));
 		}
 
-		// Runtime type/member references used by Initialize().
-		var precompiledTypeMapRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
-			pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime"), pe.Metadata.GetOrAddString ("PrecompiledTypeMap"));
-		var aggregateTypeMapRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
-			pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime"), pe.Metadata.GetOrAddString ("AggregateTypeMap"));
-		var iTypeMapRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
-			pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime"), pe.Metadata.GetOrAddString ("ITypeMap"));
+		// Runtime type/member references used by Initialize(). The generated root only calls the public
+		// TrimmableTypeMap.InitializePrecompiled entry points (plus System.Type helpers); it constructs
+		// no runtime types itself. That keeps this glue free of internal access (no IgnoresAccessChecksTo)
+		// so crossgen2 can ReadyToRun-compile it, and moves PrecompiledTypeMap/AggregateTypeMap
+		// construction into the (already R2R-compiled) Mono.Android assembly.
 		var trimmableTypeMapRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
 			pe.Metadata.GetOrAddString ("Microsoft.Android.Runtime"), pe.Metadata.GetOrAddString ("TrimmableTypeMap"));
 		var systemTypeRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
@@ -93,23 +94,29 @@ public sealed class PrecompiledRootTypeMapAssemblyGenerator
 			pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("RuntimeTypeHandle"));
 		var moduleRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
 			pe.Metadata.GetOrAddString ("System.Reflection"), pe.Metadata.GetOrAddString ("Module"));
+		var intPtrRef = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
+			pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("IntPtr"));
+		var int32Ref = pe.Metadata.AddTypeReference (pe.SystemRuntimeRef,
+			pe.Metadata.GetOrAddString ("System"), pe.Metadata.GetOrAddString ("Int32"));
 
-		var precompiledCtorRef = pe.AddMemberRef (precompiledTypeMapRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
+		// TrimmableTypeMap.InitializePrecompiled (IntPtr blob, int length, Module tokenModule)
+		var initScalarRef = pe.AddMemberRef (trimmableTypeMapRef, "InitializePrecompiled",
+			sig => sig.MethodSignature ().Parameters (3,
 				rt => rt.Void (),
 				p => {
-					p.AddParameter ().Type ().VoidPointer ();
+					p.AddParameter ().Type ().IntPtr ();
 					p.AddParameter ().Type ().Int32 ();
 					p.AddParameter ().Type ().Type (moduleRef, isValueType: false);
 				}));
-		var aggregateCtorRef = pe.AddMemberRef (aggregateTypeMapRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+		// TrimmableTypeMap.InitializePrecompiled (IntPtr[] blobs, int[] lengths, Module tokenModule)
+		var initArrayRef = pe.AddMemberRef (trimmableTypeMapRef, "InitializePrecompiled",
+			sig => sig.MethodSignature ().Parameters (3,
 				rt => rt.Void (),
-				p => p.AddParameter ().Type ().SZArray ().Type (iTypeMapRef, isValueType: false)));
-		var initializeRef = pe.AddMemberRef (trimmableTypeMapRef, "Initialize",
-			sig => sig.MethodSignature ().Parameters (1,
-				rt => rt.Void (),
-				p => p.AddParameter ().Type ().Type (iTypeMapRef, isValueType: false)));
+				p => {
+					p.AddParameter ().Type ().SZArray ().IntPtr ();
+					p.AddParameter ().Type ().SZArray ().Int32 ();
+					p.AddParameter ().Type ().Type (moduleRef, isValueType: false);
+				}));
 		var getTypeFromHandleRef = pe.AddMemberRef (systemTypeRef, "GetTypeFromHandle",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Type (systemTypeRef, isValueType: false),
@@ -118,9 +125,6 @@ public sealed class PrecompiledRootTypeMapAssemblyGenerator
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
 				rt => rt.Type ().Type (moduleRef, isValueType: false),
 				p => { }));
-
-		// TypeMapLoader.Initialize() calls internal Mono.Android members.
-		pe.EmitIgnoresAccessChecksToAttribute (new List<string> { "Mono.Android" });
 
 		var typeMapLoaderHandle = pe.Metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.Class,
@@ -136,40 +140,49 @@ public sealed class PrecompiledRootTypeMapAssemblyGenerator
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				if (blobFields.Count == 1) {
-					EmitNewPrecompiledTypeMap (encoder, blobFields [0], typeMapLoaderHandle, getTypeFromHandleRef, getModuleRef, precompiledCtorRef);
+					// TrimmableTypeMap.InitializePrecompiled (&blob, len, typeof (TypeMapLoader).Module);
+					encoder.LoadStaticFieldAddress (blobFields [0].Field);
+					encoder.LoadConstantI4 (blobFields [0].Length);
+					EmitPushModule (encoder, typeMapLoaderHandle, getTypeFromHandleRef, getModuleRef);
+					encoder.Call (initScalarRef, parameterCount: 3);
 				} else {
+					// IntPtr[] blobs = { &blob0, &blob1, ... };
 					encoder.LoadConstantI4 (blobFields.Count);
-					encoder.NewArray (iTypeMapRef);
+					encoder.NewArray (intPtrRef);
 					for (int i = 0; i < blobFields.Count; i++) {
 						encoder.OpCode (ILOpCode.Dup);
 						encoder.LoadConstantI4 (i);
-						EmitNewPrecompiledTypeMap (encoder, blobFields [i], typeMapLoaderHandle, getTypeFromHandleRef, getModuleRef, precompiledCtorRef);
-						encoder.OpCode (ILOpCode.Stelem_ref);
+						encoder.LoadStaticFieldAddress (blobFields [i].Field);
+						encoder.OpCode (ILOpCode.Stelem_i);
 					}
-					encoder.NewObject (aggregateCtorRef, parameterCount: 1);
+					// int[] lengths = { len0, len1, ... };
+					encoder.LoadConstantI4 (blobFields.Count);
+					encoder.NewArray (int32Ref);
+					for (int i = 0; i < blobFields.Count; i++) {
+						encoder.OpCode (ILOpCode.Dup);
+						encoder.LoadConstantI4 (i);
+						encoder.LoadConstantI4 (blobFields [i].Length);
+						encoder.OpCode (ILOpCode.Stelem_i4);
+					}
+					EmitPushModule (encoder, typeMapLoaderHandle, getTypeFromHandleRef, getModuleRef);
+					encoder.Call (initArrayRef, parameterCount: 3);
 				}
-				encoder.Call (initializeRef, parameterCount: 1);
 				encoder.Return ();
 			});
 
 		pe.WritePE (stream);
 	}
 
-	// Pushes: new PrecompiledTypeMap (&blobField, length, typeof (TypeMapLoader).Module)
-	static void EmitNewPrecompiledTypeMap (
+	// Pushes: typeof (TypeMapLoader).Module
+	static void EmitPushModule (
 		PEAssemblyBuilder.TrackedInstructionEncoder encoder,
-		(FieldDefinitionHandle Field, int Length) blob,
 		TypeDefinitionHandle typeMapLoaderHandle,
 		MemberReferenceHandle getTypeFromHandleRef,
-		MemberReferenceHandle getModuleRef,
-		MemberReferenceHandle precompiledCtorRef)
+		MemberReferenceHandle getModuleRef)
 	{
-		encoder.LoadStaticFieldAddress (blob.Field);
-		encoder.LoadConstantI4 (blob.Length);
 		encoder.LoadToken (typeMapLoaderHandle);
 		encoder.Call (getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
 		encoder.Callvirt (getModuleRef, parameterCount: 0, returnsValue: true);
-		encoder.NewObject (precompiledCtorRef, parameterCount: 3);
 	}
 
 	static byte[] SerializeUniverse (PrecompiledUniverse universe, Func<PrecompiledProxyRef, int> token)

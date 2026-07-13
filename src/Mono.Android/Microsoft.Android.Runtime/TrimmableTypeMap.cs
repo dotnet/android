@@ -145,14 +145,51 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a prebuilt <see cref="ITypeMap"/>. Used by the precompiled
-	/// typemap path, where the generated root assembly constructs one or more
-	/// <see cref="PrecompiledTypeMap"/> universes (optionally wrapped in an <see cref="AggregateTypeMap"/>).
+	/// Initializes the singleton from a single precompiled typemap blob (the common shared-universe
+	/// case). Called by the generated root assembly's <c>TypeMapLoader.Initialize()</c>. The
+	/// <see cref="PrecompiledTypeMap"/> is constructed here — inside the (ReadyToRun-compiled)
+	/// Mono.Android assembly — rather than in the generated root, so the generated glue stays trivial,
+	/// needs no <c>IgnoresAccessChecksTo</c>, and typemap initialization stays close to zero-cost.
 	/// </summary>
-	internal static void Initialize (ITypeMap typeMap)
+	/// <param name="blob">Address of the universe blob (an RVA field in the root module).</param>
+	/// <param name="length">Length of the blob in bytes.</param>
+	/// <param name="tokenModule">Module whose metadata tokens the blob's proxy tokens refer to.</param>
+	public static unsafe void InitializePrecompiled (IntPtr blob, int length, Module tokenModule)
 	{
-		ArgumentNullException.ThrowIfNull (typeMap);
-		InitializeCore (typeMap);
+		ArgumentNullException.ThrowIfNull (tokenModule);
+		InitializeCore (new PrecompiledTypeMap ((void*) blob, length, tokenModule));
+	}
+
+	/// <summary>
+	/// Initializes the singleton from multiple precompiled typemap blobs (per-assembly universes),
+	/// flattened through an <see cref="AggregateTypeMap"/>. See
+	/// <see cref="InitializePrecompiled(IntPtr, int, Module)"/> for why construction happens here.
+	/// </summary>
+	/// <param name="blobs">Addresses of the universe blobs (RVA fields in the root module).</param>
+	/// <param name="lengths">Lengths of each blob in bytes; parallel to <paramref name="blobs"/>.</param>
+	/// <param name="tokenModule">Module whose metadata tokens the blobs' proxy tokens refer to.</param>
+	public static unsafe void InitializePrecompiled (IntPtr[] blobs, int[] lengths, Module tokenModule)
+	{
+		ArgumentNullException.ThrowIfNull (blobs);
+		ArgumentNullException.ThrowIfNull (lengths);
+		ArgumentNullException.ThrowIfNull (tokenModule);
+		if (blobs.Length == 0) {
+			throw new ArgumentException ("At least one blob must be provided.", nameof (blobs));
+		}
+		if (blobs.Length != lengths.Length) {
+			throw new ArgumentException ($"blobs.Length ({blobs.Length}) must equal lengths.Length ({lengths.Length}).", nameof (lengths));
+		}
+
+		if (blobs.Length == 1) {
+			InitializeCore (new PrecompiledTypeMap ((void*) blobs [0], lengths [0], tokenModule));
+			return;
+		}
+
+		var universes = new ITypeMap [blobs.Length];
+		for (int i = 0; i < blobs.Length; i++) {
+			universes [i] = new PrecompiledTypeMap ((void*) blobs [i], lengths [i], tokenModule);
+		}
+		InitializeCore (new AggregateTypeMap (universes));
 	}
 
 	internal static unsafe void RegisterNativeMethods ()

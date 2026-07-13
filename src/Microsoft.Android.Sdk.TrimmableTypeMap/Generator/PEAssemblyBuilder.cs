@@ -833,6 +833,8 @@ sealed class PEAssemblyBuilder
 				Pop (1);
 				break;
 			case ILOpCode.Stelem_ref:
+			case ILOpCode.Stelem_i:
+			case ILOpCode.Stelem_i4:
 				Pop (3);
 				break;
 			default:

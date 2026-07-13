@@ -11,10 +11,11 @@
     <type fullname="Microsoft.Android.Runtime.PrecompiledTypeMapBlobFormat" preserve="all" />
     <type fullname="Microsoft.Android.Runtime.AggregateTypeMap" preserve="all" />
     <type fullname="Microsoft.Android.Runtime.ITypeMap" preserve="all" />
-    <!-- The ITypeMap-based entry point the regenerated root calls; the dictionary-based overloads are
-         rooted by the pre-link root, but this one is only referenced post-link. -->
+    <!-- The precompiled entry points the regenerated root calls; the dictionary-based Initialize
+         overloads are rooted by the pre-link root, but these are only referenced post-link. Rooting
+         them also keeps PrecompiledTypeMap/AggregateTypeMap (constructed in their bodies). -->
     <type fullname="Microsoft.Android.Runtime.TrimmableTypeMap">
-      <method name="Initialize" />
+      <method name="InitializePrecompiled" />
     </type>
   </assembly>
 </linker>
