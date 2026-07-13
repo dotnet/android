@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
 
@@ -60,7 +61,7 @@ public class TrimmableTypeMapGenerator
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
 
-		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, maxReferenceArrayRank, generateTypeMapAssemblies, precompileTypeMap);
+		var generatedAssemblies = GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, maxReferenceArrayRank, generateTypeMapAssemblies, precompileTypeMap, assemblies);
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
 		var generatedJavaSources = GenerateJcwJavaSources (jcwPeers, manifestConfig?.ApplicationJavaClass);
@@ -185,7 +186,8 @@ public class TrimmableTypeMapGenerator
 		int maxArrayRank,
 		int maxReferenceArrayRank,
 		bool generateTypeMapAssemblies,
-		bool precompileTypeMap)
+		bool precompileTypeMap,
+		IReadOnlyList<AssemblyInput> assemblies)
 	{
 		if (!generateTypeMapAssemblies && !precompileTypeMap) {
 			return [];
@@ -218,7 +220,11 @@ public class TrimmableTypeMapGenerator
 		if (precompileTypeMap) {
 			// Blit precompiled lookup blobs for each universe and hydrate PrecompiledTypeMap at runtime,
 			// instead of relying on TypeMapping.GetOrCreate* dictionary construction at startup.
-			var universes = PrecompiledTypeMapUniverseBuilder.Build (models, useSharedTypemapUniverse);
+			// ILLink runs before this pass and trims proxy types that are unreachable after linking, so
+			// restrict the universe to the proxies that actually survive in each linked typemap assembly;
+			// otherwise the blob would embed TypeRef tokens that dangle (TypeLoadException) at runtime.
+			var survivingProxyTypes = BuildSurvivingProxyTypeIndex (assemblies);
+			var universes = PrecompiledTypeMapUniverseBuilder.Build (models, useSharedTypemapUniverse, survivingProxyTypes);
 			new PrecompiledRootTypeMapAssemblyGenerator (systemRuntimeVersion).Generate (universes, rootStream);
 		} else {
 			// The root generator builds the [assembly][rank] anchor matrix, so it needs the overall
@@ -231,6 +237,30 @@ public class TrimmableTypeMapGenerator
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
+	}
+
+	// Reads the proxy type definitions that actually survive in each linked per-assembly typemap
+	// assembly (_*.TypeMap). Used only by the precompiled post-ILLink pass: ILLink removes proxy types
+	// that are unreachable after linking, so the precompiled universe must reference only the survivors.
+	// Keyed by typemap-assembly name (e.g. "_Mono.Android.TypeMap") -> set of full type names.
+	static IReadOnlyDictionary<string, HashSet<string>> BuildSurvivingProxyTypeIndex (IReadOnlyList<AssemblyInput> assemblies)
+	{
+		var index = new Dictionary<string, HashSet<string>> (StringComparer.Ordinal);
+		foreach (var assembly in assemblies) {
+			if (!assembly.Name.StartsWith ("_", StringComparison.Ordinal) || !assembly.Name.EndsWith (".TypeMap", StringComparison.Ordinal)) {
+				continue;
+			}
+			var reader = assembly.Reader.GetMetadataReader ();
+			var types = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var handle in reader.TypeDefinitions) {
+				var typeDef = reader.GetTypeDefinition (handle);
+				string ns = reader.GetString (typeDef.Namespace);
+				string name = reader.GetString (typeDef.Name);
+				types.Add (ns.Length == 0 ? name : $"{ns}.{name}");
+			}
+			index [assembly.Name] = types;
+		}
+		return index;
 	}
 
 	static List<(string AssemblyName, List<JavaPeerInfo> Peers)> GroupPeersByAssembly (List<JavaPeerInfo> allPeers, bool useSharedTypemapUniverse)

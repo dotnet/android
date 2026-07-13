@@ -35,14 +35,17 @@ sealed class PrecompiledUniverse
 /// </summary>
 static class PrecompiledTypeMapUniverseBuilder
 {
-	public static IReadOnlyList<PrecompiledUniverse> Build (IReadOnlyList<TypeMapAssemblyData> models, bool useSharedTypemapUniverse)
+	public static IReadOnlyList<PrecompiledUniverse> Build (
+		IReadOnlyList<TypeMapAssemblyData> models,
+		bool useSharedTypemapUniverse,
+		IReadOnlyDictionary<string, HashSet<string>>? survivingProxyTypes = null)
 	{
 		_ = models ?? throw new ArgumentNullException (nameof (models));
 
 		if (useSharedTypemapUniverse) {
 			var universe = new UniverseAccumulator ();
 			foreach (var model in models) {
-				Accumulate (universe, model);
+				Accumulate (universe, model, survivingProxyTypes);
 			}
 			return new [] { universe.ToUniverse () };
 		}
@@ -50,16 +53,30 @@ static class PrecompiledTypeMapUniverseBuilder
 		var result = new List<PrecompiledUniverse> (models.Count);
 		foreach (var model in models) {
 			var universe = new UniverseAccumulator ();
-			Accumulate (universe, model);
+			Accumulate (universe, model, survivingProxyTypes);
 			result.Add (universe.ToUniverse ());
 		}
 		return result;
 	}
 
-	static void Accumulate (UniverseAccumulator universe, TypeMapAssemblyData model)
+	static void Accumulate (UniverseAccumulator universe, TypeMapAssemblyData model, IReadOnlyDictionary<string, HashSet<string>>? survivingProxyTypes)
 	{
 		foreach (var proxy in model.ProxyTypes) {
-			var proxyRef = new PrecompiledProxyRef (model.AssemblyName, $"{proxy.Namespace}.{proxy.TypeName}");
+			string fullTypeName = $"{proxy.Namespace}.{proxy.TypeName}";
+
+			// In the precompiled post-ILLink pass, ILLink has already removed proxy types that are
+			// unreachable after linking. When we have the linked typemap assembly to check against, skip
+			// any proxy that no longer exists in it so the blob never emits a TypeRef token that dangles
+			// (TypeLoadException) at runtime — mirroring what TypeMapping sees, i.e. only the surviving
+			// [TypeMap] attributes. If the typemap assembly isn't among the inputs (e.g. host unit tests
+			// that haven't materialized it), fall back to including the proxy.
+			if (survivingProxyTypes is not null &&
+			    survivingProxyTypes.TryGetValue (model.AssemblyName, out var survivors) &&
+			    !survivors.Contains (fullTypeName)) {
+				continue;
+			}
+
+			var proxyRef = new PrecompiledProxyRef (model.AssemblyName, fullTypeName);
 
 			universe.AddExternal (proxy.JniName, proxyRef);
 
