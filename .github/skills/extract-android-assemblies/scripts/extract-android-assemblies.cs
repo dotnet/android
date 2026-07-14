@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 		static int Usage (int exitCode = 1)
 		{
-			Console.WriteLine ("Usage: extract-android-assemblies [--output DIRECTORY] {file.{dll,apk,aab}} [{file.{dll,apk,aab} ...]");
+			Console.WriteLine ("Usage: extract-android-assemblies [--output DIRECTORY] {file.{dll,apk,aab}} [{file.{dll,apk,aab}} ...]");
 			Console.WriteLine ();
 			Console.WriteLine ("Extracts managed assemblies from .NET for Android files, including legacy/current stores and LZ4/Zstd compression.");
 			Console.WriteLine ("Without --output, files are written under `uncompressed-{input-name}` in the current directory.");
@@ -269,6 +269,9 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 					Console.Error.WriteLine ($"Unsupported input file '{file}'");
 					haveErrors = true;
 				} catch (UnauthorizedAccessException e) {
+					Console.Error.WriteLine ($"Unable to extract '{file}': {e.Message}");
+					haveErrors = true;
+				} catch (InvalidDataException e) {
 					Console.Error.WriteLine ($"Unable to extract '{file}': {e.Message}");
 					haveErrors = true;
 				} catch (IOException e) {

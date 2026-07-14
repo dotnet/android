@@ -21,43 +21,43 @@ class App
 		AndroidTargetArch.X86_64,
 	];
 
-	static void ShowHelp ()
-	{
-	}
-
 	static int WriteErrorAndReturn (string message)
 	{
 		Console.Error.WriteLine (message);
 		return 1;
 	}
 
-	static HashSet<AndroidTargetArch>? ParseArchList (string values)
+	static bool TryParseArchList (string values, out HashSet<AndroidTargetArch>? arches, out string? errorMessage)
 	{
 		if (String.IsNullOrEmpty (values)) {
-			return null;
+			arches = null;
+			errorMessage = null;
+			return true;
 		}
 
 		var ret = new HashSet<AndroidTargetArch> ();
 		foreach (string a in values.Split (',')) {
 			string archName = a.Trim ();
-			if (Enum.TryParse (archName, out AndroidTargetArch arch)) {
-				ret.Add (arch);
-				continue;
-			}
-
-			arch = archName.ToLowerInvariant () switch {
+			AndroidTargetArch arch = archName.ToLowerInvariant () switch {
 				"aarch64" => AndroidTargetArch.Arm64,
 				"arm32"   => AndroidTargetArch.Arm,
 				"arm64"   => AndroidTargetArch.Arm64,
 				"armv7a"  => AndroidTargetArch.Arm,
 				"armv8a"  => AndroidTargetArch.Arm64,
 				"x64"     => AndroidTargetArch.X86_64,
-				_ => throw new InvalidOperationException ($"Unknown architecture name '{archName}'")
+				_ => Enum.TryParse (archName, ignoreCase: true, out AndroidTargetArch parsed) ? parsed : AndroidTargetArch.None,
 			};
+			if (Array.IndexOf (supportedTargetArchitectures, arch) < 0) {
+				arches = null;
+				errorMessage = $"Unknown architecture name '{archName}'. Supported architectures: {GetArchNames ()}";
+				return false;
+			}
 			ret.Add (arch);
 		}
 
-		return ret;
+		arches = ret;
+		errorMessage = null;
+		return true;
 	}
 
 	static string GetArchNames ()
@@ -68,6 +68,7 @@ class App
 	static int Main (string[] args)
 	{
 		HashSet<AndroidTargetArch>? arches = null;
+		string? archError = null;
 		bool showHelp = false;
 
 		var options = new OptionSet {
@@ -90,12 +91,19 @@ class App
 			"  Whichever file is referenced in `BLOB_PATH`, the BASE_NAME component is extracted and all the found files are read.",
 			"  If `BLOB_PATH` points to an aab or an apk, BASE_NAME will always be `assemblies`",
 			"",
-			{"a|arch=", $"Limit listing of assemblies to these {{ARCHITECTURES}} only.  A comma-separated list of one or more of: {GetArchNames ()}", v => arches = ParseArchList (v) },
+			{"a|arch=", $"Limit listing of assemblies to these {{ARCHITECTURES}} only.  A comma-separated list of one or more of: {GetArchNames ()}", v => {
+				if (!TryParseArchList (v, out arches, out string? errorMessage)) {
+					archError = errorMessage;
+				}
+			}},
 			"",
 			{"?|h|help", "Show this help screen", v => showHelp = true},
 		};
 
 		List<string>? theRest = options.Parse (args);
+		if (archError != null) {
+			return WriteErrorAndReturn (archError);
+		}
 		if (theRest == null || theRest.Count == 0 || showHelp) {
 			options.WriteOptionDescriptions (Console.Out);
 			return showHelp ? 0 : 1;
