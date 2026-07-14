@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using Android.App;
 using Android.Content;
 using Android.Runtime;
+
+using Java.Interop;
 
 using NUnit.Framework;
 
@@ -131,20 +132,24 @@ namespace Java.InteropTests
 		[Test]
 		public void FromJniHandle_IListNullableInt32 ()
 		{
-			using (var source = new JavaList<int?> ()) {
+			// A non-generic source prevents ValueManager from returning the cached peer directly,
+			// forcing conversion through SafeJavaCollectionFactory.
+			using (var source = new JavaList ()) {
 				source.Add (1);
 				source.Add (null);
 				source.Add (3);
 
-				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<int?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				var reference = source.PeerReference;
+				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<int?>> (
+					ref reference,
+					JniObjectReferenceOptions.Copy);
 				try {
 					Assert.AreEqual (typeof (JavaList<int?>), converted.GetType ());
 
-					var list = (IList<int?>) converted;
-					Assert.AreEqual (3, list.Count);
-					Assert.AreEqual ((int?) 1, list [0]);
-					Assert.IsNull (list [1]);
-					Assert.AreEqual ((int?) 3, list [2]);
+					Assert.AreEqual (3, converted.Count);
+					Assert.AreEqual ((int?) 1, converted [0]);
+					Assert.IsNull (converted [1]);
+					Assert.AreEqual ((int?) 3, converted [2]);
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
@@ -154,17 +159,21 @@ namespace Java.InteropTests
 		[Test]
 		public void FromJniHandle_IDictionaryNullableInt32String ()
 		{
-			using (var source = new JavaDictionary<int?, string> ()) {
+			// A non-generic source prevents ValueManager from returning the cached peer directly,
+			// forcing conversion through SafeJavaCollectionFactory.
+			using (var source = new JavaDictionary ()) {
 				source.Add (1, "one");
 				source.Add (null, "null");
 
-				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int?, string>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				var reference = source.PeerReference;
+				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IDictionary<int?, string>> (
+					ref reference,
+					JniObjectReferenceOptions.Copy);
 				try {
 					Assert.AreEqual (typeof (JavaDictionary<int?, string>), converted.GetType ());
 
-					var dictionary = (IDictionary<int?, string>) converted;
-					Assert.AreEqual ("one", dictionary [1]);
-					Assert.AreEqual ("null", dictionary [null]);
+					Assert.AreEqual ("one", converted [1]);
+					Assert.AreEqual ("null", converted [null]);
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
@@ -186,11 +195,13 @@ namespace Java.InteropTests
 				source.Add (1, 100L);
 				source.Add (2, 200L);
 
-				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int, long>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				var reference = source.PeerReference;
+				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IDictionary<int, long>> (
+					ref reference,
+					JniObjectReferenceOptions.Copy);
 				try {
-					var dictionary = (IDictionary<int, long>) converted;
-					Assert.AreEqual (100L, dictionary [1]);
-					Assert.AreEqual (200L, dictionary [2]);
+					Assert.AreEqual (100L, converted [1]);
+					Assert.AreEqual (200L, converted [2]);
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
@@ -203,18 +214,22 @@ namespace Java.InteropTests
 		[Test]
 		public void FromJniHandle_IListByte ()
 		{
-			using (var source = new JavaList<byte> ()) {
+			// A non-generic source prevents ValueManager from returning the cached peer directly,
+			// forcing conversion through SafeJavaCollectionFactory.
+			using (var source = new JavaList ()) {
 				source.Add ((byte) 1);
 				source.Add ((byte) 200);
 
-				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<byte>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				var reference = source.PeerReference;
+				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<byte>> (
+					ref reference,
+					JniObjectReferenceOptions.Copy);
 				try {
 					Assert.AreEqual (typeof (JavaList<byte>), converted.GetType ());
 
-					var list = (IList<byte>) converted;
-					Assert.AreEqual (2, list.Count);
-					Assert.AreEqual ((byte) 1, list [0]);
-					Assert.AreEqual ((byte) 200, list [1]);
+					Assert.AreEqual (2, converted.Count);
+					Assert.AreEqual ((byte) 1, converted [0]);
+					Assert.AreEqual ((byte) 200, converted [1]);
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
@@ -231,24 +246,6 @@ namespace Java.InteropTests
 					list.Add (v);
 			}
 			return list;
-		}
-
-		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle, JniHandleOwnership transfer)
-		{
-			var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
-			Assert.IsNotNull (javaConvert);
-
-			var method = javaConvert.GetMethod (
-				"FromJniHandle",
-				BindingFlags.Public | BindingFlags.Static,
-				binder: null,
-				types: new [] { typeof (IntPtr), typeof (JniHandleOwnership), typeof (Type) },
-				modifiers: null);
-			Assert.IsNotNull (method);
-
-			var value = method.Invoke (null, new object [] { handle, transfer, targetType });
-			Assert.IsNotNull (value);
-			return value;
 		}
 	}
 }

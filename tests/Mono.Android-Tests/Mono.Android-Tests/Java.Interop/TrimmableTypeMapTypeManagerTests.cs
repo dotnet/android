@@ -308,24 +308,44 @@ namespace Java.InteropTests
 				rank1);
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (Java.Lang.Object), rank: 2);
-			CollectionAssert.Contains (rank2, typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>));
-			CollectionAssert.Contains (rank2, typeof (Java.Interop.JavaArray<Java.Lang.Object>[]));
-			CollectionAssert.Contains (rank2, typeof (Java.Lang.Object[][]));
+			CollectionAssert.AreEquivalent (
+				new [] {
+					typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>),
+					typeof (JavaObjectArray<Java.Lang.Object>[]),
+					typeof (JavaObjectArray<Java.Interop.JavaArray<Java.Lang.Object>>),
+					typeof (Java.Interop.JavaArray<Java.Lang.Object>[]),
+					typeof (JavaObjectArray<Java.Lang.Object[]>),
+					typeof (Java.Lang.Object[][]),
+				},
+				rank2);
 		}
 
 		[Test]
 		public void BuildRuntimeArrayTypes_PrimitiveLeaf_ReturnsProxyContract ()
 		{
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 1);
-			CollectionAssert.Contains (rank1, typeof (sbyte[]));
-			CollectionAssert.Contains (rank1, typeof (Java.Interop.JavaArray<sbyte>));
-			CollectionAssert.Contains (rank1, typeof (JavaPrimitiveArray<sbyte>));
-			CollectionAssert.Contains (rank1, typeof (JavaSByteArray));
+			CollectionAssert.AreEquivalent (
+				new [] {
+					typeof (sbyte[]),
+					typeof (Java.Interop.JavaArray<sbyte>),
+					typeof (JavaPrimitiveArray<sbyte>),
+					typeof (JavaSByteArray),
+				},
+				rank1);
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 2);
-			CollectionAssert.Contains (rank2, typeof (sbyte[][]));
-			CollectionAssert.Contains (rank2, typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>));
-			CollectionAssert.Contains (rank2, typeof (JavaObjectArray<JavaSByteArray>));
+			CollectionAssert.AreEquivalent (
+				new [] {
+					typeof (JavaObjectArray<sbyte[]>),
+					typeof (sbyte[][]),
+					typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>),
+					typeof (Java.Interop.JavaArray<sbyte>[]),
+					typeof (JavaObjectArray<JavaPrimitiveArray<sbyte>>),
+					typeof (JavaPrimitiveArray<sbyte>[]),
+					typeof (JavaObjectArray<JavaSByteArray>),
+					typeof (JavaSByteArray[]),
+				},
+				rank2);
 		}
 
 		[Test]
@@ -334,7 +354,10 @@ namespace Java.InteropTests
 			// Nullable primitives have no array proxy and no AOT-safe Java.Interop array wrapper, so the
 			// fallback returns just the exact rooted vector (int?[]) rather than an unrooted value generic.
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 1);
-			CollectionAssert.Contains (rank1, typeof (int?[]));
+			CollectionAssert.AreEquivalent (new [] { typeof (int?[]) }, rank1);
+
+			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 2);
+			CollectionAssert.AreEquivalent (new [] { typeof (int?[][]) }, rank2);
 		}
 
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
