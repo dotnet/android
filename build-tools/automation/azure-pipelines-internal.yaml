@@ -5,9 +5,10 @@
 # pipeline (azure-pipelines-public.yaml): same stage layout and step
 # templates, but retargeted to internal (non-"-open") 1ES pools.
 #
-# Work is validated by *pushing* to a branch of the internal Git repo
-# (https://dev.azure.com/dnceng/internal/_git/dotnet-android), so this
-# pipeline uses CI (push) triggers rather than PR triggers.
+# CI builds run for pushes to the branches listed below. PR validation for
+# the internal Azure Repos Git mirror is configured through build-validation
+# branch policies for main, release/*, and feature/*. Azure Repos does not
+# support YAML `pr` triggers.
 #
 # Signing is intentionally NOT enabled yet. We will eventually release &
 # sign from here; when we do, convert this to `extends` the 1ES
@@ -23,6 +24,7 @@ trigger:
     - release/*
     - feature/*
 
+# Azure Repos PR validation is configured through branch policies, not YAML.
 pr: none
 
 # Repository resources - checkout android-tools to force multi-repo checkout behavior
