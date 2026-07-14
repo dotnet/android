@@ -1,27 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- Note: MUST be imported *after* $(Configuration) is set! -->
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
-    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
-    <DotNetTargetFrameworkVersion>10.0</DotNetTargetFrameworkVersion>
-    <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
+  </PropertyGroup>
+  <Import Project="..\..\Directory.Build.props" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\LongBranchNames.props" />
+  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+  <PropertyGroup>
+    <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
+    <RestoreAdditionalProjectSources>
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-2b2a06c8/nuget/v3/index.json;
+    </RestoreAdditionalProjectSources>
     <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
   </PropertyGroup>
-  <Import
-      Project="$(MSBuildThisFileDirectory)Configuration.Override.props"
-      Condition=" Exists('$(MSBuildThisFileDirectory)Configuration.Override.props') "
-  />
-  <Import
-      Project="$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.props"
-      Condition=" Exists('$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.props') "
-  />
   <PropertyGroup>
     <BaseIntermediateOutputPath Condition=" '$(BaseIntermediateOutputPath)' == '' ">obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)</IntermediateOutputPath>
-    <BuildToolOutputFullPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPath>
     <ToolOutputFullPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</ToolOutputFullPath>
     <TestOutputFullPath>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputFullPath>
   </PropertyGroup>
+  <Target Name="_GetXAVersionInfo"
+      Condition=" '$(IsPacking)' == 'true' "
+      BeforeTargets="SetVersion"
+      DependsOnTargets="GetXAVersionInfo">
+    <PropertyGroup>
+      <PackageVersionSuffix Condition="$(XAVersionBranch.StartsWith('release/'))">-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
+      <PackageVersionSuffix Condition="!$(XAVersionBranch.StartsWith('release/'))">-ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</PackageVersionSuffix>
+    </PropertyGroup>
+  </Target>
 </Project>
