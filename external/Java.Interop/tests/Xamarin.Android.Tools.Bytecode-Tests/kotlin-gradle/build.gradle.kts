@@ -2,10 +2,6 @@ plugins {
     kotlin("jvm") version "2.0.21"
 }
 
-repositories {
-    mavenCentral()
-}
-
 // Don't pin a jvmToolchain -- it would force Gradle to auto-provision a
 // matching JDK and fail in CI environments without download repositories
 // configured. Use whatever JDK the caller already set in JAVA_HOME (the
