@@ -615,10 +615,12 @@ namespace Xamarin.Android.NetTests {
 		static Task WriteHandshakeResponseAsync (Stream stream, string key)
 		{
 			string accept;
+#pragma warning disable CA5350 // SHA-1 is mandated by the WebSocket handshake (RFC 6455 §1.3)
 			using (var sha1 = SHA1.Create ()) {
 				byte[] hash = sha1.ComputeHash (Encoding.ASCII.GetBytes (key + WebSocketGuid));
 				accept = Convert.ToBase64String (hash);
 			}
+#pragma warning restore CA5350
 
 			var response = new StringBuilder ();
 			response.Append ("HTTP/1.1 101 Switching Protocols\r\n");
