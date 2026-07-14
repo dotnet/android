@@ -1,9 +1,15 @@
+extern alias AssemblyStoreReaderV2;
+
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 
 using Xamarin.Tools.Zip;
 using Xamarin.Android.AssemblyStore;
+using Xamarin.Android.Tools;
+using AssemblyStoreExplorerV2 = AssemblyStoreReaderV2::Xamarin.Android.AssemblyStore.AssemblyStoreExplorer;
+using AssemblyStoreItemV2 = AssemblyStoreReaderV2::Xamarin.Android.AssemblyStore.AssemblyStoreItem;
 using ZstandardDecoder = System.IO.Compression.ZstandardDecoder;
 
 namespace Xamarin.Android.Tools.DecompressAssemblies
@@ -13,6 +19,12 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 		const uint CompressedDataMagic = 0x535A4158; // 'XAZS', little-endian
 
 		static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
+		static readonly AndroidTargetArch[] targetArchitectures = [
+			AndroidTargetArch.Arm64,
+			AndroidTargetArch.Arm,
+			AndroidTargetArch.X86_64,
+			AndroidTargetArch.X86,
+		];
 
 		static int Usage ()
 		{
@@ -84,6 +96,7 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 		static bool UncompressFromAPK_IndividualEntries (ZipArchive apk, string filePath, string assembliesPath, string prefix)
 		{
+			bool retVal = true;
 			foreach (ZipEntry entry in apk) {
 				if (!entry.FullName.StartsWith (assembliesPath, StringComparison.Ordinal)) {
 					continue;
@@ -97,15 +110,16 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 					entry.Extract (stream);
 					stream.Seek (0, SeekOrigin.Begin);
 					string fileName = entry.FullName.Substring (assembliesPath.Length);
-					UncompressDLL (stream, $"{filePath}!{entry.FullName}", fileName, prefix);
+					retVal &= UncompressDLL (stream, $"{filePath}!{entry.FullName}", fileName, prefix);
 				}
 			}
 
-			return true;
+			return retVal;
 		}
 
-		static bool UncompressFromAPK_AssemblyStores (string filePath, string prefix)
+		static bool UncompressFromAPK_LegacyAssemblyStores (string filePath, string prefix)
 		{
+			bool retVal = true;
 			var explorer = new AssemblyStoreExplorer (filePath, keepStoreInMemory: true);
 			foreach (AssemblyStoreAssembly assembly in explorer.Assemblies) {
 				string assemblyName = assembly.DllName;
@@ -117,23 +131,87 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 				using (var stream = new MemoryStream ()) {
 					assembly.ExtractImage (stream);
 					stream.Seek (0, SeekOrigin.Begin);
-					UncompressDLL (stream, $"{filePath}!{assemblyName}", assemblyName, prefix);
+					retVal &= UncompressDLL (stream, $"{filePath}!{assemblyName}", assemblyName, prefix);
 				}
 			}
 
-			return true;
+			return retVal;
 		}
 
-		static bool UncompressFromAPK (string filePath, string assembliesPath)
+		static bool UncompressFromAPK_AssemblyStores (string filePath, string prefix)
+		{
+			(IList<AssemblyStoreExplorerV2>? stores, string? errorMessage) = AssemblyStoreExplorerV2.Open (filePath);
+			if (stores == null) {
+				Console.Error.WriteLine (errorMessage ?? $"Unable to read assembly stores from '{filePath}'");
+				return false;
+			}
+
+			bool retVal = true;
+			foreach (AssemblyStoreExplorerV2 store in stores) {
+				if (!store.TargetArch.HasValue) {
+					Console.Error.WriteLine ($"Assembly store '{store.StorePath}' does not specify a target architecture");
+					retVal = false;
+					continue;
+				}
+
+				string abi = GetAndroidAbi (store.TargetArch.Value);
+				foreach (AssemblyStoreItemV2 assembly in store.Assemblies ?? []) {
+					if (assembly.Ignore) {
+						continue;
+					}
+
+					string assemblyName = $"{abi}/{assembly.Name}";
+					using Stream? stream = store.ReadImageData (assembly);
+					if (stream == null) {
+						Console.Error.WriteLine ($"Unable to read '{assembly.Name}' from assembly store '{store.StorePath}'");
+						retVal = false;
+						continue;
+					}
+
+					retVal &= UncompressDLL (stream, $"{filePath}!{assemblyName}", assemblyName, prefix);
+				}
+			}
+
+			return retVal;
+		}
+
+		static string GetAndroidAbi (AndroidTargetArch arch)
+		{
+			return arch switch {
+				AndroidTargetArch.Arm64  => "arm64-v8a",
+				AndroidTargetArch.Arm    => "armeabi-v7a",
+				AndroidTargetArch.X86_64 => "x86_64",
+				AndroidTargetArch.X86    => "x86",
+				_ => throw new NotSupportedException ($"Unsupported target architecture '{arch}'"),
+			};
+		}
+
+		static bool HasAssemblyStore (ZipArchive apk, string nativeLibrariesPath)
+		{
+			foreach (AndroidTargetArch arch in targetArchitectures) {
+				string abi = GetAndroidAbi (arch);
+				if (apk.ContainsEntry ($"{nativeLibrariesPath}{abi}/libassembly-store.so")) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		static bool UncompressFromAPK (string filePath, string assembliesPath, string nativeLibrariesPath)
 		{
 			string prefix = $"uncompressed-{Path.GetFileNameWithoutExtension (filePath)}{Path.DirectorySeparatorChar}";
 			using (ZipArchive apk = ZipArchive.Open (filePath, FileMode.Open)) {
-				if (!apk.ContainsEntry ($"{assembliesPath}assemblies.blob")) {
-					return UncompressFromAPK_IndividualEntries (apk, filePath, assembliesPath, prefix);
+				if (apk.ContainsEntry ($"{assembliesPath}assemblies.blob")) {
+					return UncompressFromAPK_LegacyAssemblyStores (filePath, prefix);
 				}
-			}
 
-			return UncompressFromAPK_AssemblyStores (filePath, prefix);
+				if (HasAssemblyStore (apk, nativeLibrariesPath)) {
+					return UncompressFromAPK_AssemblyStores (filePath, prefix);
+				}
+
+				return UncompressFromAPK_IndividualEntries (apk, filePath, assembliesPath, prefix);
+			}
 		}
 
 		static int Main (string[] args)
@@ -153,14 +231,14 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 				}
 
 				if (String.Compare (".apk", ext, StringComparison.OrdinalIgnoreCase) == 0) {
-					if (!UncompressFromAPK (file, "assemblies/")) {
+					if (!UncompressFromAPK (file, "assemblies/", "lib/")) {
 						haveErrors = true;
 					}
 					continue;
 				}
 
 				if (String.Compare (".aab", ext, StringComparison.OrdinalIgnoreCase) == 0) {
-					if (!UncompressFromAPK (file, "base/root/assemblies/")) {
+					if (!UncompressFromAPK (file, "base/root/assemblies/", "base/lib/")) {
 						haveErrors = true;
 					}
 					continue;

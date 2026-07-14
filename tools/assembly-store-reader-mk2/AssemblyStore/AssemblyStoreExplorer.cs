@@ -7,7 +7,7 @@ using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.AssemblyStore;
 
-class AssemblyStoreExplorer
+public class AssemblyStoreExplorer
 {
 	readonly AssemblyStoreReader reader;
 
@@ -125,7 +125,7 @@ class AssemblyStoreExplorer
 			}
 		}
 
-		return (null, "Unable to find any blob entries");
+		return (null, "Unable to find any assembly store entries");
 	}
 
 	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage, bool pathsFound) TryLoad (FileInfo fi, ZipArchive zip, IList<string> paths)

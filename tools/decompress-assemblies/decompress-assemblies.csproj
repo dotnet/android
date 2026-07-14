@@ -21,6 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\assembly-store-reader-mk2\AssemblyStore\AssemblyStore.csproj">
+      <Aliases>AssemblyStoreReaderV2</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
   </ItemGroup>
 

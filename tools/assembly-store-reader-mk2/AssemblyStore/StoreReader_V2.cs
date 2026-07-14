@@ -92,7 +92,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		uint magic = reader.ReadUInt32 ();
 		if (magic == Utils.ELF_MAGIC) {
 			ELFPayloadError error;
-			(elfOffset, _, error) = Utils.FindELFPayloadSectionOffsetAndSize (StoreStream);
+			(elfOffset, _, error) = Utils.FindELFPayloadOffsetAndSize (StoreStream);
 
 			if (error != ELFPayloadError.None) {
 				string message = error switch {
@@ -100,7 +100,8 @@ partial class StoreReader_V2 : AssemblyStoreReader
 					ELFPayloadError.LoadFailed       => $"Store '{StorePath}' could not be loaded",
 					ELFPayloadError.NotSharedLibrary => $"Store '{StorePath}' is not a shared ELF library",
 					ELFPayloadError.NotLittleEndian  => $"Store '{StorePath}' is not a little-endian ELF image",
-					ELFPayloadError.NoPayloadSection => $"Store '{StorePath}' does not contain the 'payload' section",
+					ELFPayloadError.InvalidPayloadSymbol => $"Store '{StorePath}' has an invalid '_assembly_store' symbol",
+					ELFPayloadError.NoPayloadSection     => $"Store '{StorePath}' does not contain the 'payload' section",
 					_                                => $"Unknown ELF payload section error for store '{StorePath}': {error}"
 				};
 				Log.Debug (message);

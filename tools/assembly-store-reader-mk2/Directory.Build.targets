@@ -1,6 +1,7 @@
 <Project>
   <Target Name="CopyLaunchScript"
-          AfterTargets="Build">
-    <Copy SourceFiles="..\scripts\read-assembly-store" DestinationFiles="$(OutputPath)\..\read-assembly-store" />
+          AfterTargets="Build"
+          Condition="'$(OutputType)' == 'Exe'">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)..\scripts\read-assembly-store" DestinationFiles="$(OutputPath)\..\read-assembly-store" />
   </Target>
 </Project>
