@@ -135,7 +135,12 @@ static class Utils
 			}
 
 			payloadOffset = section.Offset + sectionOffset;
-			payloadSize = symbol.Size == 0 ? availableSize : symbol.Size;
+			if (symbol.Size == 0) {
+				Log.Debug ($"ELF symbol '{AssemblyStorePayloadSymbol}' has size 0; using the remaining {availableSize} bytes in section '{section.Name}'");
+				payloadSize = availableSize;
+			} else {
+				payloadSize = symbol.Size;
+			}
 			return true;
 		}
 
@@ -159,7 +164,12 @@ static class Utils
 			}
 
 			payloadOffset = (ulong)section.Offset + sectionOffset;
-			payloadSize = symbol.Size == 0 ? availableSize : symbol.Size;
+			if (symbol.Size == 0) {
+				Log.Debug ($"ELF symbol '{AssemblyStorePayloadSymbol}' has size 0; using the remaining {availableSize} bytes in section '{section.Name}'");
+				payloadSize = availableSize;
+			} else {
+				payloadSize = symbol.Size;
+			}
 			return true;
 		}
 

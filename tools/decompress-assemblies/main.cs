@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using Xamarin.Android.AssemblyStore;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 
@@ -10,13 +11,6 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 {
 	class App
 	{
-		static readonly AndroidTargetArch[] targetArchitectures = [
-			AndroidTargetArch.Arm64,
-			AndroidTargetArch.Arm,
-			AndroidTargetArch.X86_64,
-			AndroidTargetArch.X86,
-		];
-
 		static int Usage ()
 		{
 			Console.WriteLine ("Usage: decompress-assemblies {file.{dll,apk,aab}} [{file.{dll,apk,aab} ...]");
@@ -97,7 +91,13 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 
 			bool retVal = true;
 			foreach (AssemblyStoreExplorer store in stores) {
-				string? abi = store.TargetArch.HasValue ? GetAndroidAbi (store.TargetArch.Value) : null;
+				string? abi = null;
+				if (store.TargetArch.HasValue && !TryGetAndroidAbi (store.TargetArch.Value, out abi)) {
+					Console.Error.WriteLine ($"Assembly store '{store.StorePath}' has unsupported target architecture '{store.TargetArch.Value}'");
+					retVal = false;
+					continue;
+				}
+
 				foreach (AssemblyStoreItem assembly in store.Assemblies ?? []) {
 					if (assembly.Ignore) {
 						continue;
@@ -119,15 +119,15 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 			return retVal;
 		}
 
-		static string GetAndroidAbi (AndroidTargetArch arch)
+		static bool TryGetAndroidAbi (AndroidTargetArch arch, out string abi)
 		{
-			return arch switch {
-				AndroidTargetArch.Arm64  => "arm64-v8a",
-				AndroidTargetArch.Arm    => "armeabi-v7a",
-				AndroidTargetArch.X86_64 => "x86_64",
-				AndroidTargetArch.X86    => "x86",
-				_ => throw new NotSupportedException ($"Unsupported target architecture '{arch}'"),
-			};
+			if (!MonoAndroidHelper.SupportedTargetArchitectures.Contains (arch)) {
+				abi = "";
+				return false;
+			}
+
+			abi = MonoAndroidHelper.ArchToAbi (arch);
+			return true;
 		}
 
 		static bool HasAssemblyStore (ZipArchive apk, string assembliesPath, string nativeLibrariesPath)
@@ -136,8 +136,8 @@ namespace Xamarin.Android.Tools.DecompressAssemblies
 				return true;
 			}
 
-			foreach (AndroidTargetArch arch in targetArchitectures) {
-				string abi = GetAndroidAbi (arch);
+			foreach (AndroidTargetArch arch in MonoAndroidHelper.SupportedTargetArchitectures) {
+				string abi = MonoAndroidHelper.ArchToAbi (arch);
 				if (
 					apk.ContainsEntry ($"{nativeLibrariesPath}{abi}/libassembly-store.so") ||
 					apk.ContainsEntry ($"{nativeLibrariesPath}{abi}/libassemblies.{abi}.blob.so")
