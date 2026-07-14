@@ -24,6 +24,7 @@
   <ItemGroup>
     <AndroidJavaSource Include="java/**/*.java" />
     <PackageReference Include="MSTest" Version="$(MSTestPackageVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.9.0" />
   </ItemGroup>
 
   <ItemGroup>
