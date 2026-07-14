@@ -1,14 +1,11 @@
 # xamarin-android-tools tests stage
 #
-# Mirrors the build + test jobs from the upstream dotnet/android-tools
-# azure-pipelines.yaml so that the Xamarin.Android.Tools build + unit tests
-# continue to run as part of dotnet/android CI now that android-tools has been
-# merged in-tree under external/xamarin-android-tools/.
+# Builds Xamarin.Android.Tools and runs its unit tests from the in-tree
+# external/xamarin-android-tools sources.
 #
-# The upstream pipeline also packed a NuGet and published build artifacts;
-# those are intentionally dropped here (the binaries aren't consumed from this
-# stage -- dotnet/android's own build produces the shipping assemblies). Only
-# logs + test results are surfaced.
+# This stage does not pack a NuGet or publish binaries because dotnet/android's
+# product build produces the shipping assemblies. Only logs and test results are
+# surfaced.
 #
 # Referenced from both:
 #   - build-tools/automation/azure-pipelines.yaml         (official / 1ES)
@@ -55,13 +52,10 @@ stages:
     # When built in-tree, external/xamarin-android-tools.override.props imports
     # dotnet/android's root Directory.Build.props, which pins
     # DotNetTargetFrameworkVersion=11.0 and sets AndroidToolsDisableMultiTargeting=true
-    # (so the product build gets a single netstandard2.0 assembly). Upstream
-    # dotnet/android-tools CI instead builds standalone: multi-targeting
-    # netstandard2.0 + net10.0, with the test projects running on net10.0. Its
-    # ProcessUtils tests assert ProcessStartInfo.ArgumentList, which only exists on
-    # the net10.0 (NET5_0_OR_GREATER) build -- the netstandard2.0 build takes the
-    # string-Arguments path. To reproduce upstream's green test configuration we
-    # re-enable multi-targeting and force net10.0 via these global properties.
+    # (so the product build gets a single netstandard2.0 assembly). The unit tests
+    # also need the net10.0 target because ProcessUtils tests exercise
+    # ProcessStartInfo.ArgumentList, which is unavailable in netstandard2.0.
+    # Re-enable multi-targeting and force net10.0 for this test stage.
     XatBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0
   jobs:
 

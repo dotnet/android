@@ -24,14 +24,9 @@ parameters:
   - 'true'
   - 'false'
 
-# Repository resources - checkout android-tools to force multi-repo checkout behavior
+# Repository resources
 resources:
   repositories:
-  - repository: android-tools
-    type: github
-    name: dotnet/android-tools
-    endpoint: public
-    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -85,8 +80,8 @@ stages:
 
     # Checkout a second repo to force multi-repo checkout behavior
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: android-tools
-      path: s/android-tools
+    - checkout: maui
+      path: s/maui
 
     - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
@@ -144,8 +139,8 @@ stages:
       persistCredentials: false
 
     # Checkout a second repo to force multi-repo checkout behavior
-    - checkout: android-tools
-      path: s/android-tools
+    - checkout: maui
+      path: s/maui
 
     - script: |
         sudo apt-get update
