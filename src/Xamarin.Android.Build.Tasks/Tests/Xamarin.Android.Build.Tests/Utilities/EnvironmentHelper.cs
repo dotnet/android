@@ -401,7 +401,7 @@ namespace Xamarin.Android.Build.Tests
 						ret.managed_marshal_methods_lookup_enabled = ConvertFieldToBool ("managed_marshal_methods_lookup_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 20: // have_assembly_store: bool / .byte
+					case 19: // have_assembly_store: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.have_assembly_store = ConvertFieldToBool ("have_assembly_store", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
