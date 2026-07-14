@@ -149,7 +149,6 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     xa::xamarin-app
     ${SHARED_LIB_NAME}
-    xa::xamarin-startup
     xa::runtime-base
     xa::java-interop
     xa::pinvoke-override-precompiled

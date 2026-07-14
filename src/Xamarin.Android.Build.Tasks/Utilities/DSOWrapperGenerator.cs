@@ -79,9 +79,19 @@ class DSOWrapperGenerator
 		return new Config (stubPaths, androidBinUtilsDirectory, baseOutputDirectory);
 	}
 
-	static string GetArchOutputPath (AndroidTargetArch targetArch, Config config)
+	// Per-RID subdirectory names that hold the generated wrapper shared libraries: `wrapped` for the
+	// MonoVM layout produced by this class, `wrapped-dlopen` for the CoreCLR layout produced by
+	// DlopenAssemblyStoreGenerator. Both live under `BaseOutputDirectory/<RID>/` and MUST be cleaned up
+	// after packaging (see CleanUp/GetDirectoriesToCleanUp) so we never package a "stale" wrapper — they
+	// aren't part of any dependency chain, so their up-to-date state can't be checked reliably.
+	internal const string WrappedSubDirectory = "wrapped";
+	internal const string WrappedDlopenSubDirectory = "wrapped-dlopen";
+
+	static readonly string[] WrapperSubDirectories = [ WrappedSubDirectory, WrappedDlopenSubDirectory ];
+
+	static string GetArchOutputPath (AndroidTargetArch targetArch, Config config, string subDirectory = WrappedSubDirectory)
 	{
-		return Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped");
+		return Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), subDirectory);
 	}
 
 	/// <summary>
@@ -134,12 +144,14 @@ class DSOWrapperGenerator
 	public static void CleanUp (Config config)
 	{
 		foreach (var kvp in config.DSOStubPaths) {
-			string outputDir = GetArchOutputPath (kvp.Key, config);
-			if (!Directory.Exists (outputDir)) {
-				continue;
-			}
+			foreach (string subDirectory in WrapperSubDirectories) {
+				string outputDir = GetArchOutputPath (kvp.Key, config, subDirectory);
+				if (!Directory.Exists (outputDir)) {
+					continue;
+				}
 
-			Directory.Delete (outputDir, recursive: true);
+				Directory.Delete (outputDir, recursive: true);
+			}
 		}
 	}
 
@@ -148,12 +160,14 @@ class DSOWrapperGenerator
 		var dirs = new List<string> ();
 
 		foreach (var kvp in config.DSOStubPaths) {
-			string outputDir = GetArchOutputPath (kvp.Key, config);
-			if (!Directory.Exists (outputDir)) {
-				continue;
-			}
+			foreach (string subDirectory in WrapperSubDirectories) {
+				string outputDir = GetArchOutputPath (kvp.Key, config, subDirectory);
+				if (!Directory.Exists (outputDir)) {
+					continue;
+				}
 
-			dirs.Add (outputDir);
+				dirs.Add (outputDir);
+			}
 		}
 
 		return dirs.ToArray ();

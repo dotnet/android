@@ -34,8 +34,11 @@ namespace xamarin::android {
 		}
 
 	private:
-		static auto zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool;
+		// Must match `DlopenAssemblyStoreGenerator.PayloadStartSymbol` in the build tasks.
+		static constexpr std::string_view DLOPEN_ASSEMBLY_STORE_SYMBOL { "_assembly_store" };
+
 		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
+		static void map_assembly_store_via_dlopen (const char *store_path) noexcept;
 		static void scan_filesystem_for_assemblies_and_libraries () noexcept;
 
 		static size_t clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, void *contract_context) noexcept;
