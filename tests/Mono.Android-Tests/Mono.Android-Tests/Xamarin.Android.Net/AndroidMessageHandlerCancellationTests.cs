@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -98,6 +99,54 @@ namespace Xamarin.Android.NetTests
 			await AssertCanceledPromptly (readContentTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
+		[Test]
+		public async Task ResponseHeadersReadDisposeResponseDuringCanceledBodyReadDoesNotRaceStreamDispose ()
+		{
+			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var request = new HttpRequestMessage (HttpMethod.Get, $"http://localhost:{server.Port}/");
+			using var response = await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (false);
+			using var responseStream = await response.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+			using var readCts = new CancellationTokenSource ();
+			var buffer = new byte [1];
+
+			Assert.AreEqual (1, await responseStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false));
+			Task readTask = responseStream.ReadAsync (buffer, 0, buffer.Length, readCts.Token);
+
+			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
+			readCts.Cancel ();
+			DisposeResponsePromptly (response);
+			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
+		}
+
+		[Test]
+		public async Task ResponseHeadersReadDisposeResponseDuringBodyReadDoesNotRaceStreamDispose ()
+		{
+			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var request = new HttpRequestMessage (HttpMethod.Get, $"http://localhost:{server.Port}/");
+			using var response = await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (false);
+			using var responseStream = await response.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+			var buffer = new byte [1];
+
+			Assert.AreEqual (1, await responseStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false));
+			Task<int> readTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
+
+			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
+			DisposeResponsePromptly (response);
+			await AssertReadAbortedPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
+		}
+
+		static void DisposeResponsePromptly (HttpResponseMessage response)
+		{
+			var stopwatch = Stopwatch.StartNew ();
+			response.Dispose ();
+			stopwatch.Stop ();
+			Assert.Less (stopwatch.ElapsedMilliseconds, PromptCancellationTimeoutMilliseconds, "Disposing the response blocked while aborting its active body read.");
+		}
+
 		static int GetAvailablePort ()
 		{
 			using var tcpListener = new TcpListener (IPAddress.Loopback, 0);
@@ -130,6 +179,22 @@ namespace Xamarin.Android.NetTests
 				await readTask.ConfigureAwait (false);
 				Assert.Fail ("Response body read completed successfully after cancellation.");
 			} catch (OperationCanceledException) {
+				return;
+			}
+		}
+
+		static async Task AssertReadAbortedPromptly (Task<int> readTask, Action releaseBody)
+		{
+			var completed = await Task.WhenAny (readTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
+			if (completed != readTask) {
+				releaseBody ();
+				await ObserveReadTaskAfterRelease (readTask).ConfigureAwait (false);
+				Assert.Fail ($"Response body read was not aborted within {PromptCancellationTimeoutMilliseconds}ms.");
+			}
+
+			try {
+				Assert.AreEqual (0, await readTask.ConfigureAwait (false));
+			} catch (Exception ex) when (ex is System.IO.IOException or Java.IO.IOException or InvalidDataException or ObjectDisposedException or WebException) {
 				return;
 			}
 		}

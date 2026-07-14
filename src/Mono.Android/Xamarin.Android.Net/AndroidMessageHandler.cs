@@ -108,6 +108,12 @@ namespace Xamarin.Android.Net
 		{
 			readonly Stream stream;
 			readonly HttpURLConnection httpConnection;
+			readonly object streamLock = new object ();
+			// Closing BufferedStream while its underlying Java stream is reading corrupts its state.
+			// Disconnect first to abort active reads, then close the stream after they unwind.
+			Task? abortReadTask;
+			int activeReadCount;
+			bool streamDisposalRequested;
 			int streamDisposed;
 
 			public CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
@@ -129,7 +135,9 @@ namespace Xamarin.Android.Net
 			protected override void Dispose (bool disposing)
 			{
 				if (disposing) {
-					DisposeStream ();
+					// Wait only for Disconnect before AndroidHttpResponseMessage releases the connection peer.
+					// The underlying stream is closed later by EndRead without blocking on the active read here.
+					RequestStreamDisposal ()?.GetAwaiter ().GetResult ();
 				}
 
 				base.Dispose (disposing);
@@ -140,17 +148,30 @@ namespace Xamarin.Android.Net
 			public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
 			{
 				cancellationToken.ThrowIfCancellationRequested ();
+				BeginRead ();
 
-				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
-					try {
-						await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
-					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
-						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+				try {
+					using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+						try {
+							await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
+						} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+							throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+						}
 					}
+				} finally {
+					EndRead ();
 				}
 			}
 
-			public override int Read (byte[] buffer, int offset, int count) => stream.Read (buffer, offset, count);
+			public override int Read (byte[] buffer, int offset, int count)
+			{
+				BeginRead ();
+				try {
+					return stream.Read (buffer, offset, count);
+				} finally {
+					EndRead ();
+				}
+			}
 
 			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
 
@@ -158,13 +179,18 @@ namespace Xamarin.Android.Net
 			public override async ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
 			{
 				cancellationToken.ThrowIfCancellationRequested ();
+				BeginRead ();
 
-				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
-					try {
-						return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
-					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
-						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+				try {
+					using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
+						try {
+							return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
+						} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
+							throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+						}
 					}
+				} finally {
+					EndRead ();
 				}
 			}
 
@@ -174,12 +200,53 @@ namespace Xamarin.Android.Net
 
 			public override void Write (byte[] buffer, int offset, int count) => stream.Write (buffer, offset, count);
 
-			void QueueAbortRead () =>
-				Task.Run (AbortRead).ContinueWith (
-					task => Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {task.Exception}"),
-					CancellationToken.None,
-					TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-					TaskScheduler.Default);
+			void BeginRead ()
+			{
+				lock (streamLock) {
+					if (streamDisposalRequested)
+						throw new ObjectDisposedException (nameof (CancellationAwareResponseStream));
+
+					activeReadCount++;
+				}
+			}
+
+			void EndRead ()
+			{
+				bool disposeStream;
+				lock (streamLock) {
+					activeReadCount--;
+					disposeStream = streamDisposalRequested && activeReadCount == 0;
+				}
+
+				if (disposeStream) {
+					try {
+						DisposeStream ();
+					} catch (Exception ex) {
+						Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
+					}
+				}
+			}
+
+			void QueueAbortRead () => RequestStreamDisposal ();
+
+			Task? RequestStreamDisposal ()
+			{
+				bool disposeStream;
+				Task? pendingDisposal;
+				lock (streamLock) {
+					streamDisposalRequested = true;
+					disposeStream = activeReadCount == 0;
+					if (!disposeStream) {
+						abortReadTask ??= Task.Run (AbortRead);
+					}
+					pendingDisposal = abortReadTask;
+				}
+
+				if (disposeStream)
+					DisposeStream ();
+
+				return pendingDisposal;
+			}
 
 			void AbortRead ()
 			{
@@ -187,12 +254,6 @@ namespace Xamarin.Android.Net
 					httpConnection.Disconnect ();
 				} catch (Exception ex) {
 					Logger.Log (LogLevel.Info, LOG_APP, $"Disconnection exception: {ex}");
-				}
-
-				try {
-					DisposeStream ();
-				} catch (Exception ex) {
-					Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
 				}
 			}
 
