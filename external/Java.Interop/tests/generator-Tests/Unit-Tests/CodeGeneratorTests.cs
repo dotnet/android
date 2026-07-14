@@ -1564,6 +1564,52 @@ namespace generatortests
 		}
 
 		[Test]
+		public void UnsupportedOSPlatformIgnoresPropertyAccessorMovedToBaseMethod ()
+		{
+			var xml = @$"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='android.widget' jni-name='android/widget'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Adapter' static='false' visibility='public' />
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='ListAdapter' static='false' visibility='public'>
+			       <implements name='android.widget.Adapter' name-generic-aware='android.widget.Adapter' />
+			     </interface>
+			    <class abstract='true' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='AdapterView' static='false' visibility='public'>
+			       <typeParameters>
+			         <typeParameter name='T' interfaceBounds='android.widget.Adapter'>
+			           <genericConstraints>
+			             <genericConstraint type='android.widget.Adapter' />
+			           </genericConstraints>
+			         </typeParameter>
+			       </typeParameters>
+			       <method abstract='true' deprecated='not deprecated' final='false' name='getAdapter' bridge='false' native='false' return='T' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <method abstract='true' deprecated='not deprecated' final='false' name='setAdapter' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public'>
+			         <parameter name='value' type='T' />
+			       </method>
+			     </class>
+			    <class abstract='true' deprecated='not deprecated' extends='android.widget.AdapterView' extends-generic-aware='android.widget.AdapterView&lt;android.widget.ListAdapter&gt;' final='false' name='AbsListView' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setAdapter' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public'>
+			         <parameter name='value' type='android.widget.ListAdapter' />
+			       </method>
+			     </class>
+			    <class abstract='false' deprecated='not deprecated' extends='android.widget.AbsListView' extends-generic-aware='android.widget.AbsListView' final='false' name='GridView' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='getAdapter' bridge='false' native='false' return='android.widget.ListAdapter' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setAdapter' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='15'>
+			         <parameter name='value' type='android.widget.ListAdapter' />
+			       </method>
+			     </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "GridView");
+			var actual = GetGeneratedTypeOutput (klass);
+
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
+		}
+
+		[Test]
 		public void StringPropertyOverride ([Values ("true", "false")] string final)
 		{
 			var xml = @$"<api>
