@@ -122,6 +122,22 @@ steps:
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
   parameters:
+    command: run
+    project: --file .github/skills/read-assembly-store/scripts/read-assembly-store.cs
+    arguments: -- --help
+    displayName: Build read-assembly-store file app
+    continueOnError: false
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+  parameters:
+    command: run
+    project: --file .github/skills/extract-android-assemblies/scripts/extract-android-assemblies.cs
+    arguments: -- --help
+    displayName: Build extract-android-assemblies file app
+    continueOnError: false
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+  parameters:
     command: test
     project: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
     arguments: --logger trx --results-directory $(Agent.TempDirectory)/trimmable-typemap-integration-tests

@@ -1,67 +1,26 @@
 ---
 name: read-assembly-store
-description: Read and inspect .NET assembly stores from Android APK, AAB, or raw store files. Use this when users want to inspect, examine, or list assemblies in an APK, AAB, assembly store, or manifest file.
+description: Inspect and list managed assemblies in .NET for Android APK, AAB, legacy assembly blob, manifest, or libassembly-store.so files. Use for customer package investigation, assembly-store format identification, ABI-specific assembly listings, offsets, sizes, hashes, or determining what managed code an Android package contains.
 ---
 
 # Read Assembly Store
 
-Read and inspect .NET assembly stores from Android APK, AAB, or raw store files using the `assembly-store-reader-mk2` tool in this repository.
+Inspect the package locally with the bundled C# file-based app. Never upload customer packages or extracted code.
 
-## What It Does
+## Workflow
 
-Lists all .NET managed assemblies embedded in an Android app, showing per-assembly metadata (PE image offset/size, debug data, config data, name hashes) grouped by target architecture.
+1. Resolve the input file and optional ABI filter.
+2. From the repository root, run:
 
-Supports these input types:
-- **APK files** (`.apk`)
-- **AAB files** (`.aab`)
-- **Assembly store files** (`libassembly-store.so`, `assemblies.blob`)
-- **Store manifest files** (`base_assemblies.manifest`)
-- **Store base names** (e.g. `base` or `base_assemblies`)
+   ```bash
+   dotnet run --file .github/skills/read-assembly-store/scripts/read-assembly-store.cs -- <input>
+   ```
 
-## How to Run
+3. To filter architectures, add `--arch=Arm64`, `--arch=Arm`, `--arch=X86_64`, or `--arch=X86`. Separate multiple values with commas.
+4. Report:
+   - target architectures
+   - assembly count
+   - assembly names and notable ignored entries
+   - the local input path
 
-From the repository root, run the tool using `dotnet-local` to ensure the correct SDK is used.
-
-**On Windows:**
-
-```powershell
-.\dotnet-local.cmd run --project .\tools\assembly-store-reader-mk2\ -- [OPTIONS] <file>
-```
-
-**On macOS/Linux:**
-
-```bash
-./dotnet-local.sh run --project ./tools/assembly-store-reader-mk2/ -- [OPTIONS] <file>
-```
-
-### Options
-
-- `-a`, `--arch=ARCHITECTURES` — Comma-separated list of architectures to limit output to (e.g. `Arm64`, `x64`, `Arm`, `X86`). Aliases like `aarch64`, `arm32`, `armv7a`, `armv8a` also work.
-- `-h`, `--help` — Show help.
-
-## Instructions
-
-1. Determine the user's operating system from the environment context.
-2. Ask the user which file to inspect if not already specified.
-3. Run the appropriate command from the **repository root**, passing the file path and any options after `--`.
-4. Report the output to the user, summarizing the assemblies found per architecture.
-
-## Examples
-
-Inspect an APK:
-
-```powershell
-.\dotnet-local.cmd run --project .\tools\assembly-store-reader-mk2\ -- path\to\app.apk
-```
-
-Inspect an APK, arm64 only:
-
-```powershell
-.\dotnet-local.cmd run --project .\tools\assembly-store-reader-mk2\ -- --arch=Arm64 path\to\app.apk
-```
-
-Inspect a raw store file:
-
-```powershell
-.\dotnet-local.cmd run --project .\tools\assembly-store-reader-mk2\ -- path\to\libassembly-store.so
-```
+The app supports legacy v1 store sets and manifests, v2/v3 RID-specific stores, raw blobs, ELF `payload` wrappers, and `_assembly_store` symbol wrappers.
