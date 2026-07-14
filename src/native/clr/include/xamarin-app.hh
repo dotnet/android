@@ -237,7 +237,6 @@ struct ApplicationConfig
 struct DSOCacheEntry
 {
 	const xamarin::android::hash_t hash;
-	const xamarin::android::hash_t real_name_hash;
 	const bool      ignore;
 	const bool      is_jni_library;
 	const uint32_t  name_index;

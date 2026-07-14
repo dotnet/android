@@ -181,6 +181,8 @@ namespace Xamarin.Android.Build.Tests
 			"app_system_properties",
 			"app_system_property_contents",
 			"format_tag",
+			"init_runtime_property_names",
+			"init_runtime_property_values",
 			"java_to_managed_hashes",
 			"java_to_managed_map",
 			"java_type_count",
@@ -1138,10 +1140,6 @@ namespace Xamarin.Android.Build.Tests
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
 				ulong hash = ConvertFieldToUInt32 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
-				// uint32_t real_name_hash
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
-				ulong real_name_hash = ConvertFieldToUInt32 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
-
 				// bool ignore
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
 				bool ignore = ConvertFieldToBool ("ignore", envFile.Path, parser.SourceFilePath, lineNumber, value);
@@ -1160,6 +1158,12 @@ namespace Xamarin.Android.Build.Tests
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
 				uint name_index = ConvertFieldToUInt32 ("name_index", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
+				// padding, 4 bytes
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, ".zero");
+				uint padding2 = ConvertFieldToUInt32 ("padding2", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (padding2 == 4, $"Padding field #2 at index {index} of symbol '{dsoCache.Name}' should have had a value of 4, instead it was set to {padding2}");
+				index++;
+
 				// void* handle
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, expectedUInt64Types);
 				ulong handle = ConvertFieldToUInt64 ("handle", envFile.Path, parser.SourceFilePath, lineNumber, value);
@@ -1169,7 +1173,6 @@ namespace Xamarin.Android.Build.Tests
 				ret.Add (
 					new DSOCacheEntry64 {
 						hash = hash,
-						real_name_hash = real_name_hash,
 						ignore = ignore,
 						is_jni_library = is_jni_library,
 						name = name,

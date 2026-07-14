@@ -109,7 +109,6 @@ constexpr char fake_dso_name2[] = "libAnother.Library.so";
 DSOCacheEntry dso_cache[] = {
 	{
 		.hash = xamarin::android::crc32_hash (fake_dso_name),
-		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name),
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 1,
@@ -118,7 +117,6 @@ DSOCacheEntry dso_cache[] = {
 
 	{
 		.hash = xamarin::android::crc32_hash (fake_dso_name2),
-		.real_name_hash = xamarin::android::crc32_hash (fake_dso_name2),
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 2,

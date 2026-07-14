@@ -260,10 +260,9 @@ void Host::preload_jni_libraries () noexcept
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Preloading JNI shared library: {} (entry's index: {}; real name hash: {:x}; name hash: {:x})",
+			"Preloading JNI shared library: {} (entry's index: {}; name hash: {:x})",
 			dso_name,
 			entry_index,
-			entry.real_name_hash,
 			entry.hash
 		);
 

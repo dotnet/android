@@ -2,7 +2,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 
 #include <runtime-base/search.hh>
 #include <shared/xxhash.hh>
@@ -27,21 +26,5 @@ namespace xamarin::android {
 			return Search::binary_search<hash_t, hash_t, equal, less_than> (key, arr, n);
 		}
 
-		[[gnu::always_inline]]
-		static ptrdiff_t binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept
-		{
-			const hash_t *base = arr;
-			while (len > 1) {
-				uint32_t half = len >> 1;
-				// __builtin_prefetch(&base[(len - half) / 2]);
-				// __builtin_prefetch(&base[half + (len - half) / 2]);
-				base = (base[half] < x ? &base[half] : base);
-				len -= half;
-			}
-
-			//return *(base + (*base < x));
-			ptrdiff_t ret = (base + (*base < x)) - arr;
-			return arr[ret] == x ? ret : -1;
-		}
 	};
 }

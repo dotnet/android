@@ -57,8 +57,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public uint hash;
 
-		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public uint real_name_hash;
 		public bool ignore;
 		public bool is_jni_library;
 
@@ -402,13 +400,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		var indices = new List<uint> ();
 		variable.Value = indices;
 		foreach (DSOCacheEntry preload in dsoState.JniPreloadDSOs) {
-			int dsoIdx = dsoState.DsoCache.FindIndex (entry => {
-				if (entry.Instance == null) {
-					return false;
-				}
-
-				return entry.Instance.hash == preload.hash && entry.Instance.real_name_hash == preload.real_name_hash;
-			});
+			int dsoIdx = dsoState.DsoCache.FindIndex (entry => ReferenceEquals (entry.Instance, preload));
 
 			if (dsoIdx == -1) {
 				throw new InvalidOperationException ($"Internal error: DSO entry in JNI preload list not found in the DSO cache list.");
@@ -438,7 +430,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			}
 
 			entry.hash = TypeMapHelper.HashNameForCLR (entry.HashedName ?? "");
-			entry.real_name_hash = TypeMapHelper.HashNameForCLR (entry.RealName ?? "");
 		}
 
 		cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => {
