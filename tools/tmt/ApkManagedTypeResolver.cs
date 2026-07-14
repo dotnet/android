@@ -4,15 +4,13 @@ using System.IO;
 
 using Mono.Cecil;
 using Xamarin.Android.AssemblyStore;
+using Xamarin.Android.AssemblyStore.V1;
 using Xamarin.Tools.Zip;
-using ZstandardDecoder = System.IO.Compression.ZstandardDecoder;
 
 namespace tmt
 {
 	class ApkManagedTypeResolver : ManagedTypeResolver
 	{
-		const uint CompressedDataMagic = 0x535A4158; // 'XAZS', little-endian
-
 		readonly Dictionary<string, ZipEntry>? individualAssemblies;
 		readonly Dictionary<string, AssemblyStoreAssembly>? blobAssemblies;
 		readonly ZipArchive apk;
@@ -129,71 +127,17 @@ namespace tmt
 
 		protected override AssemblyDefinition ReadAssembly (string assemblyPath)
 		{
-			byte[]? assemblyBytes = null;
-			byte[]? sourceBytes = null;
 			Stream stream = GetAssemblyStream (assemblyPath);
-
-			//
-			// Zstd compressed assembly header format:
-			//   uint magic;                 // 0x535A4158; 'XAZS', little-endian
-			//   uint descriptor_index;      // Index into an internal assembly descriptor table
-			//   uint uncompressed_length;   // Size of assembly, uncompressed
-			//
-			using var reader = new BinaryReader (stream);
-			uint magic = reader.ReadUInt32 ();
-			if (magic == CompressedDataMagic) {
-				reader.ReadUInt32 (); // descriptor index, ignore
-				uint decompressedLength = reader.ReadUInt32 ();
-
-				int inputLength = (int)(stream.Length - 12);
-				try {
-					sourceBytes = Utilities.BytePool.Rent (inputLength);
-					ReadFully (reader, sourceBytes, inputLength);
-
-					assemblyBytes = Utilities.BytePool.Rent ((int)decompressedLength);
-					int decoded = ZstandardDecoder.TryDecompress (
-						sourceBytes.AsSpan (0, inputLength),
-						assemblyBytes.AsSpan (0, (int)decompressedLength),
-						out int bytesWritten) ? bytesWritten : -1;
-					if (decoded != (int)decompressedLength) {
-						throw new InvalidOperationException ($"Failed to decompress Zstd data of {assemblyPath} (decoded: {decoded})");
-					}
-				} catch {
-					if (assemblyBytes != null) {
-						Utilities.BytePool.Return (assemblyBytes);
-						assemblyBytes = null;
-					}
-					throw;
-				} finally {
-					if (sourceBytes != null) {
-						Utilities.BytePool.Return (sourceBytes);
-						sourceBytes = null;
-					}
-				}
-			}
-
-			if (assemblyBytes != null) {
-				stream.Close ();
+			var decompressed = new MemoryStream ();
+			if (AssemblyCompression.TryDecompress (stream, decompressed, out _)) {
 				stream.Dispose ();
-				stream = new MemoryStream ();
-				stream.Write (assemblyBytes, 0, assemblyBytes.Length);
-				Utilities.BytePool.Return (assemblyBytes);
-				stream.Seek (0, SeekOrigin.Begin);
+				decompressed.Seek (0, SeekOrigin.Begin);
+				stream = decompressed;
+			} else {
+				decompressed.Dispose ();
 			}
 
 			return AssemblyDefinition.ReadAssembly (stream);
-		}
-
-		static void ReadFully (BinaryReader reader, byte[] destination, int count)
-		{
-			int totalRead = 0;
-			while (totalRead < count) {
-				int read = reader.Read (destination, totalRead, count - totalRead);
-				if (read <= 0)
-					throw new EndOfStreamException ("Unexpected end of stream while reading compressed assembly.");
-
-				totalRead += read;
-			}
 		}
 	}
 }

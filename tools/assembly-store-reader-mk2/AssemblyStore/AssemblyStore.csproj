@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
     <Copyright>2026 Microsoft Corporation</Copyright>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFrameworks>$(DotNetStableTargetFramework);$(DotNetTargetFramework)</TargetFrameworks>
     <AssemblyName>Xamarin.Android.AssemblyStore</AssemblyName>
     <RootNamespace>Xamarin.Android.AssemblyStore</RootNamespace>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -15,6 +15,7 @@
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

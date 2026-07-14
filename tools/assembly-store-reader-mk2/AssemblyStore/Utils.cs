@@ -191,6 +191,9 @@ static class Utils
 		if (!info.Exists) {
 			return (FileFormat.Unknown, null);
 		}
+		if (info.Length < sizeof (uint)) {
+			return (FileFormat.Unknown, info);
+		}
 
 		using var reader = new BinaryReader (info.OpenRead ());
 

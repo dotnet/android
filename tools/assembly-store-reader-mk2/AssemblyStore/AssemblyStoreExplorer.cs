@@ -20,16 +20,14 @@ public class AssemblyStoreExplorer
 	public bool Is64Bit                                             { get; }
 
 	protected AssemblyStoreExplorer (Stream storeStream, string path)
-	{
-		StorePath = path;
-		var storeReader = AssemblyStoreReader.Create (storeStream, path);
-		if (storeReader == null) {
-			storeStream.Dispose ();
-			throw new NotSupportedException ($"Format of assembly store '{path}' is unsupported");
-		}
+		: this (CreateReader (storeStream, path))
+	{}
 
+	AssemblyStoreExplorer (AssemblyStoreReader storeReader)
+	{
 		reader = storeReader;
-		TargetArch = reader.TargetArch;
+		StorePath = reader.StorePath;
+		TargetArch = reader.TargetArch == AndroidTargetArch.None ? null : reader.TargetArch;
 		AssemblyCount = reader.AssemblyCount;
 		IndexEntryCount = reader.IndexEntryCount;
 		Assemblies = reader.Assemblies;
@@ -42,6 +40,17 @@ public class AssemblyStoreExplorer
 		AssembliesByName = dict.AsReadOnly ();
 	}
 
+	static AssemblyStoreReader CreateReader (Stream storeStream, string path)
+	{
+		AssemblyStoreReader? storeReader = AssemblyStoreReader.Create (storeStream, path);
+		if (storeReader != null) {
+			return storeReader;
+		}
+
+		storeStream.Dispose ();
+		throw new NotSupportedException ($"Format of assembly store '{path}' is unsupported");
+	}
+
 	protected AssemblyStoreExplorer (FileInfo storeInfo)
 		: this (storeInfo.OpenRead (), storeInfo.FullName)
 	{}
@@ -50,17 +59,39 @@ public class AssemblyStoreExplorer
 	{
 		(FileFormat format, FileInfo? info) = Utils.DetectFileFormat (inputFile);
 		if (info == null) {
+			if (String.IsNullOrEmpty (Path.GetExtension (inputFile))) {
+				(IList<AssemblyStoreExplorer>? legacyExplorers, string? legacyError) = OpenV1 (inputFile);
+				if (legacyExplorers != null || legacyError != null) {
+					return (legacyExplorers, legacyError);
+				}
+			}
+
 			return (null, $"File '{inputFile}' does not exist.");
 		}
 
 		switch (format) {
-			case FileFormat.Unknown:
+			case FileFormat.Unknown: {
+				(IList<AssemblyStoreExplorer>? legacyExplorers, string? legacyError) = OpenV1 (inputFile);
+				if (legacyExplorers != null || legacyError != null) {
+					return (legacyExplorers, legacyError);
+				}
 				return (null, $"File '{inputFile}' has an unknown format.");
+			}
 
-			case FileFormat.Zip:
+			case FileFormat.Zip: {
+				(IList<AssemblyStoreExplorer>? legacyExplorers, string? legacyError) = OpenV1 (inputFile);
+				if (legacyExplorers != null || legacyError != null) {
+					return (legacyExplorers, legacyError);
+				}
 				return (null, $"File '{inputFile}' is a ZIP archive, but not an Android one.");
+			}
 
 			case FileFormat.AssemblyStore:
+				if (IsV1Store (info)) {
+					return OpenV1 (inputFile);
+				}
+				return (new List<AssemblyStoreExplorer> { new AssemblyStoreExplorer (info)}, null);
+
 			case FileFormat.ELF:
 				return (new List<AssemblyStoreExplorer> { new AssemblyStoreExplorer (info)}, null);
 
@@ -80,52 +111,57 @@ public class AssemblyStoreExplorer
 
 	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenAab (FileInfo fi)
 	{
-		return OpenCommon (
-			fi,
-			new List<IList<string>> {
-				StoreReader_V2.AabPaths,
-				StoreReader_V1.AabPaths,
-			}
-		);
+		return OpenArchive (fi, StoreReader_V2.AabPaths);
 	}
 
 	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenAabBase (FileInfo fi)
 	{
-		return OpenCommon (
-			fi,
-			new List<IList<string>> {
-				StoreReader_V2.AabBasePaths,
-				StoreReader_V1.AabBasePaths,
-			}
-		);
+		return OpenArchive (fi, StoreReader_V2.AabBasePaths);
 	}
 
 	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenApk (FileInfo fi)
 	{
-		return OpenCommon (
-			fi,
-			new List<IList<string>> {
-				StoreReader_V2.ApkPaths,
-				StoreReader_V1.ApkPaths,
-			}
-		);
+		return OpenArchive (fi, StoreReader_V2.ApkPaths);
 	}
 
-	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenCommon (FileInfo fi, List<IList<string>> pathLists)
+	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenArchive (FileInfo fi, IList<string> paths)
 	{
 		using var zip = ZipArchive.Open (fi.FullName, FileMode.Open);
-		IList<AssemblyStoreExplorer>? explorers;
-		string? errorMessage;
-		bool pathsFound;
-
-		foreach (IList<string> paths in pathLists) {
-			(explorers, errorMessage, pathsFound) = TryLoad (fi, zip, paths);
-			if (pathsFound) {
-				return (explorers, errorMessage);
-			}
+		(IList<AssemblyStoreExplorer>? explorers, string? errorMessage, bool pathsFound) = TryLoad (fi, zip, paths);
+		if (pathsFound) {
+			return (explorers, errorMessage);
 		}
 
-		return (null, "Unable to find any assembly store entries");
+		(IList<AssemblyStoreExplorer>? legacyExplorers, string? legacyError) = OpenV1 (fi.FullName);
+		if (legacyExplorers != null || legacyError != null) {
+			return (legacyExplorers, legacyError);
+		}
+
+		return (null, errorMessage ?? "Unable to find any assembly store entries");
+	}
+
+	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenV1 (string inputFile)
+	{
+		(IList<StoreReader_V1>? readers, string? errorMessage) = StoreReader_V1.Open (inputFile);
+		if (readers == null) {
+			return (null, errorMessage);
+		}
+
+		var explorers = new List<AssemblyStoreExplorer> ();
+		foreach (StoreReader_V1 reader in readers) {
+			explorers.Add (new AssemblyStoreExplorer (reader));
+		}
+		return (explorers.AsReadOnly (), null);
+	}
+
+	static bool IsV1Store (FileInfo info)
+	{
+		if (info.Length < 2 * sizeof (uint)) {
+			return false;
+		}
+
+		using var reader = new BinaryReader (info.OpenRead ());
+		return reader.ReadUInt32 () == Utils.ASSEMBLY_STORE_MAGIC && reader.ReadUInt32 () == 1;
 	}
 
 	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage, bool pathsFound) TryLoad (FileInfo fi, ZipArchive zip, IList<string> paths)

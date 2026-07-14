@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Xamarin.Android.AssemblyStore
+namespace Xamarin.Android.AssemblyStore.V1
 {
 	class AssemblyStoreReader
 	{
@@ -104,20 +104,28 @@ namespace Xamarin.Android.AssemblyStore
 			EnsureStoreDataAvailable ();
 			ArrayPool<byte> pool = ArrayPool<byte>.Shared;
 
-			storeData!.Seek (offset, SeekOrigin.Begin);
-			byte[] buf = pool.Rent (16384);
-			int nread;
-			long toRead = size;
-			while (toRead > 0 && (nread = storeData.Read (buf, 0, buf.Length)) > 0) {
-				if (nread > toRead) {
-					nread = (int)toRead;
-				}
-
-				output.Write (buf, 0, nread);
-				toRead -= nread;
+			MemoryStream? data = storeData;
+			if (data == null) {
+				throw new InvalidOperationException ("Store data not available");
 			}
-			output.Flush ();
-			pool.Return (buf);
+
+			data.Seek (offset, SeekOrigin.Begin);
+			byte[] buf = pool.Rent (16384);
+			try {
+				long toRead = size;
+				while (toRead > 0) {
+					int nread = data.Read (buf, 0, (int)Math.Min (buf.Length, toRead));
+					if (nread == 0) {
+						throw new EndOfStreamException ($"Unexpected end of assembly store while reading {size} bytes at offset {offset}");
+					}
+
+					output.Write (buf, 0, nread);
+					toRead -= nread;
+				}
+				output.Flush ();
+			} finally {
+				pool.Return (buf);
+			}
 		}
 
 		void EnsureStoreDataAvailable ()

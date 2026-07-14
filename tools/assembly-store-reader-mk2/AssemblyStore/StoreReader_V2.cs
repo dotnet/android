@@ -11,9 +11,12 @@ namespace Xamarin.Android.AssemblyStore;
 partial class StoreReader_V2 : AssemblyStoreReader
 {
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000003;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V2 = 0x80000002;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V2 = 0x00000002;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V3 = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V3 = 0x00000003;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_MASK  = 0xF0000000;
+	const uint ASSEMBLY_STORE_FORMAT_REVISION_MASK = 0x0000FFFF;
 
 	const uint ASSEMBLY_STORE_ABI_AARCH64          = 0x00010000;
 	const uint ASSEMBLY_STORE_ABI_ARM              = 0x00020000;
@@ -35,38 +38,40 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 	static StoreReader_V2 ()
 	{
-		var paths = new List<string> {
-			GetArchPath (AndroidTargetArch.Arm64),
-			GetArchPath (AndroidTargetArch.Arm),
-			GetArchPath (AndroidTargetArch.X86_64),
-			GetArchPath (AndroidTargetArch.X86),
-		};
+		var paths = new List<string> ();
+		AddArchPaths (paths, AndroidTargetArch.Arm64);
+		AddArchPaths (paths, AndroidTargetArch.Arm);
+		AddArchPaths (paths, AndroidTargetArch.X86_64);
+		AddArchPaths (paths, AndroidTargetArch.X86);
 		ApkPaths = paths.AsReadOnly ();
 		AabBasePaths = ApkPaths;
 
 		const string AabBaseDir = "base";
-		paths = new List<string> {
-			GetArchPath (AndroidTargetArch.Arm64, AabBaseDir),
-			GetArchPath (AndroidTargetArch.Arm, AabBaseDir),
-			GetArchPath (AndroidTargetArch.X86_64, AabBaseDir),
-			GetArchPath (AndroidTargetArch.X86, AabBaseDir),
-		};
+		paths = new List<string> ();
+		AddArchPaths (paths, AndroidTargetArch.Arm64, AabBaseDir);
+		AddArchPaths (paths, AndroidTargetArch.Arm, AabBaseDir);
+		AddArchPaths (paths, AndroidTargetArch.X86_64, AabBaseDir);
+		AddArchPaths (paths, AndroidTargetArch.X86, AabBaseDir);
 		AabPaths = paths.AsReadOnly ();
 
-		string GetArchPath (AndroidTargetArch arch, string? root = null)
+		void AddArchPaths (List<string> targetPaths, AndroidTargetArch arch, string? root = null)
+		{
+			string abi = MonoAndroidHelper.ArchToAbi (arch);
+			targetPaths.Add (GetArchPath (abi, "libassembly-store.so", root));
+			targetPaths.Add (GetArchPath (abi, $"libassemblies.{abi}.blob.so", root));
+		}
+
+		string GetArchPath (string abi, string fileName, string? root)
 		{
 			const string LibDirName = "lib";
-
-			string abi = MonoAndroidHelper.ArchToAbi (arch);
-			var parts = new List <string> ();
+			var parts = new List<string> ();
 			if (!String.IsNullOrEmpty (root)) {
 				parts.Add (LibDirName);
 			} else {
 				root = LibDirName;
 			}
 			parts.Add (abi);
-			parts.Add ("libassembly-store.so");
-
+			parts.Add (fileName);
 			return MonoAndroidHelper.MakeZipArchivePath (root, parts);
 		}
 	}
@@ -75,10 +80,14 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		: base (store, path)
 	{
 		supportedVersions = new HashSet<uint> {
-			ASSEMBLY_STORE_FORMAT_VERSION_64BIT | ASSEMBLY_STORE_ABI_AARCH64,
-			ASSEMBLY_STORE_FORMAT_VERSION_64BIT | ASSEMBLY_STORE_ABI_X64,
-			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_ARM,
-			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_X86,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V2 | ASSEMBLY_STORE_ABI_AARCH64,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V2 | ASSEMBLY_STORE_ABI_X64,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V2 | ASSEMBLY_STORE_ABI_ARM,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V2 | ASSEMBLY_STORE_ABI_X86,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V3 | ASSEMBLY_STORE_ABI_AARCH64,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V3 | ASSEMBLY_STORE_ABI_X64,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V3 | ASSEMBLY_STORE_ABI_ARM,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V3 | ASSEMBLY_STORE_ABI_X86,
 		};
 	}
 
@@ -161,7 +170,9 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			}
 
 			uint descriptor_index = reader.ReadUInt32 ();
-			bool ignore = reader.ReadByte () != 0;
+			bool ignore =
+				(header.version & ASSEMBLY_STORE_FORMAT_REVISION_MASK) >= 3 &&
+				reader.ReadByte () != 0;
 			index.Add (new IndexEntry (name_hash, descriptor_index, ignore));
 		}
 
