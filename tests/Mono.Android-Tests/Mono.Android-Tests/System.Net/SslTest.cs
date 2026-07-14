@@ -56,10 +56,6 @@ namespace System.NetTests {
 			ServicePointManager.ServerCertificateValidationCallback = cb;
 			var wex = (exception as AggregateException)?.InnerException as WebException;
 			if (wex != null) {
-				if (ShouldIgnoreException (wex)) {
-					Assert.Ignore ($"Ignoring network failure: {wex}");
-					return;
-				}
 				throw wex;
 			}
 

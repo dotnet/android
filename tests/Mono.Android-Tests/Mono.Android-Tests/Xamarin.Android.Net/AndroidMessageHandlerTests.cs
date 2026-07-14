@@ -260,7 +260,7 @@ namespace Xamarin.Android.NetTests
 		public async Task AndroidMessageHandlerSendsClientCertificate ([Values(true, false)] bool setClientCertificateOptionsExplicitly)
 		{
 			using X509Certificate2 certificate = BuildClientCertificate ();
-			using var server = LocalHttpsServer.Start (requestClientCertificate: true);
+			using var server = LocalHttpsServer.Start (clientCertificateRequired: true);
 
 			using var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => true,

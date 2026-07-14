@@ -404,14 +404,14 @@ namespace Xamarin.Android.NetTests {
 	{
 		readonly RSA certificateKey;
 		readonly X509Certificate2 certificate;
-		readonly bool requestClientCertificate;
+		readonly bool clientCertificateRequired;
 
-		LocalHttpsServer (string certificateHost, bool requestClientCertificate)
+		LocalHttpsServer (string certificateHost, bool clientCertificateRequired)
 			: base ("Local HTTPS server")
 		{
 			certificateKey = RSA.Create (keySizeInBits: 2048);
 			certificate = CreateCertificate (certificateKey, certificateHost);
-			this.requestClientCertificate = requestClientCertificate;
+			this.clientCertificateRequired = clientCertificateRequired;
 		}
 
 		public byte [] CertificateData {
@@ -426,14 +426,14 @@ namespace Xamarin.Android.NetTests {
 			get { return "localhost"; }
 		}
 
-		public static LocalHttpsServer Start (bool requestClientCertificate = false)
+		public static LocalHttpsServer Start (bool clientCertificateRequired = false)
 		{
-			return Start ("localhost", requestClientCertificate);
+			return Start ("localhost", clientCertificateRequired);
 		}
 
-		public static LocalHttpsServer Start (string certificateHost, bool requestClientCertificate = false)
+		public static LocalHttpsServer Start (string certificateHost, bool clientCertificateRequired = false)
 		{
-			var server = new LocalHttpsServer (certificateHost, requestClientCertificate);
+			var server = new LocalHttpsServer (certificateHost, clientCertificateRequired);
 			server.StartListening ();
 			return server;
 		}
@@ -448,7 +448,7 @@ namespace Xamarin.Android.NetTests {
 		protected override async Task<Stream> GetRequestStream (TcpClient client)
 		{
 			var sslStream = new SslStream (client.GetStream (), leaveInnerStreamOpen: false, userCertificateValidationCallback: (sender, clientCertificate, chain, sslPolicyErrors) => true);
-			await sslStream.AuthenticateAsServerAsync (certificate, clientCertificateRequired: requestClientCertificate, enabledSslProtocols: SslProtocols.None, checkCertificateRevocation: false).ConfigureAwait (false);
+			await sslStream.AuthenticateAsServerAsync (certificate, clientCertificateRequired: clientCertificateRequired, enabledSslProtocols: SslProtocols.None, checkCertificateRevocation: false).ConfigureAwait (false);
 			return sslStream;
 		}
 
