@@ -599,6 +599,7 @@ namespace Android.Runtime {
 		static string? GetBoxedPrimitiveJniClassName (Type type)
 		{
 			if (type == typeof (bool?))   return "java/lang/Boolean";
+			if (type == typeof (byte?))   return "java/lang/Byte";
 			if (type == typeof (sbyte?))  return "java/lang/Byte";
 			if (type == typeof (char?))   return "java/lang/Character";
 			if (type == typeof (short?))  return "java/lang/Short";
@@ -684,6 +685,7 @@ namespace Android.Runtime {
 					return r [0];
 				} },
 				{ typeof (bool?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (bool?)) },
+				{ typeof (byte?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (byte?)) },
 				{ typeof (sbyte?),  (type, source, index) => GetNullableArrayElement (source, index, typeof (sbyte?)) },
 				{ typeof (char?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (char?)) },
 				{ typeof (short?),  (type, source, index) => GetNullableArrayElement (source, index, typeof (short?)) },
@@ -927,6 +929,7 @@ namespace Android.Runtime {
 				{ typeof (float),       (source, dest) => CopyArray ((float[]) source, dest) },
 				{ typeof (double),      (source, dest) => CopyArray ((double[]) source, dest) },
 				{ typeof (bool?),       (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (byte?),       (source, dest) => CopyManagedObjectArray (source, dest) },
 				{ typeof (sbyte?),      (source, dest) => CopyManagedObjectArray (source, dest) },
 				{ typeof (char?),       (source, dest) => CopyManagedObjectArray (source, dest) },
 				{ typeof (short?),      (source, dest) => CopyManagedObjectArray (source, dest) },
@@ -1084,6 +1087,7 @@ namespace Android.Runtime {
 					return r;
 				} },
 				{ typeof (bool?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (byte?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
 				{ typeof (sbyte?),  (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
 				{ typeof (char?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
 				{ typeof (short?),  (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
@@ -1378,6 +1382,7 @@ namespace Android.Runtime {
 				{ typeof (float),         (source) => NewArray ((float[]) source) },
 				{ typeof (double),        (source) => NewArray ((double[]) source) },
 				{ typeof (bool?),         (source) => NewObjectArray (source, typeof (bool?)) },
+				{ typeof (byte?),         (source) => NewObjectArray (source, typeof (byte?)) },
 				{ typeof (sbyte?),        (source) => NewObjectArray (source, typeof (sbyte?)) },
 				{ typeof (char?),         (source) => NewObjectArray (source, typeof (char?)) },
 				{ typeof (short?),        (source) => NewObjectArray (source, typeof (short?)) },
@@ -1529,6 +1534,7 @@ namespace Android.Runtime {
 					_SetDoubleArrayRegion (dest, index, _value.Length, _value);
 				} },
 				{ typeof (bool?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (byte?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
 				{ typeof (sbyte?),  (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
 				{ typeof (char?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
 				{ typeof (short?),  (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },

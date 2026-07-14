@@ -223,6 +223,26 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
+		public void GetArray_NullableByte ()
+		{
+			var values = new byte? [] { 1, null, 200 };
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[Ljava/lang/Byte;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<byte?> (array.Handle);
+				AssertArrays ("GetArray<byte?>", copy, values);
+
+				Assert.IsNull (JNIEnv.GetArrayItem<byte?> (array.Handle, 1));
+				JNIEnv.SetArrayItem<byte?> (array.Handle, 1, 255);
+				Assert.AreEqual ((byte?) 255, JNIEnv.GetArrayItem<byte?> (array.Handle, 1));
+
+				var replacement = new byte? [] { 128, 129, null };
+				JNIEnv.CopyArray (replacement, array.Handle);
+				AssertArrays ("CopyArray<byte?>", JNIEnv.GetArray<byte?> (array.Handle), replacement);
+			}
+		}
+
+		[Test]
 		public void GetArray_JavaLangStringArrayToJavaLangObjectArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {

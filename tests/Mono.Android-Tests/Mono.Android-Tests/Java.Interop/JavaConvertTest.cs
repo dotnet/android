@@ -171,21 +171,23 @@ namespace Java.InteropTests
 			}
 		}
 
-		// Both type arguments are value types: on the trimmable typemap path this builds
-		// JavaDictionary<int, long> through the generic-virtual CreateDictionaryWithKey<TKey>,
-		// the most NativeAOT-fragile construct in SafeJavaCollectionFactory (no dedicated rooting
-		// token). This asserts that exact value/value instantiation is rooted at runtime.
+		// The non-generic source and assertions intentionally avoid referencing
+		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
+		// ValueTypeFactory<T>.CreateDictionaryWithKey<TKey>'s generic-virtual dispatch.
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryInt32Int64 ()
 		{
-			using (var source = new JavaDictionary<int, long> ()) {
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("This test validates value/value dictionary rooting on the trimmable typemap path.");
+			}
+
+			using (var source = new JavaDictionary ()) {
 				source.Add (1, 100L);
 				source.Add (2, 200L);
 
 				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int, long>), source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					Assert.AreEqual (typeof (JavaDictionary<int, long>), converted.GetType ());
-
 					var dictionary = (IDictionary<int, long>) converted;
 					Assert.AreEqual (100L, dictionary [1]);
 					Assert.AreEqual (200L, dictionary [2]);

@@ -24,41 +24,34 @@ static class SafeJavaCollectionFactory
 	// direct generic type references and constructors instead of asking MakeGenericType() to invent them.
 	// The shared ValueTypeFactory map also roots the exact array vectors for these same value types.
 
-	internal static bool TryGetCollectionType (Type targetType, [NotNullWhen (true)] out Type? collectionType)
+	internal static bool TryGetFromJniHandleConverter (
+		Type targetType,
+		[NotNullWhen (true)] out Func<IntPtr, JniHandleOwnership, object?>? converter)
 	{
 		if (targetType == null)
 			throw new ArgumentNullException (nameof (targetType));
 
 		if (!TryGetCollectionShape (targetType, out var shape)) {
-			collectionType = null;
+			converter = null;
 			return false;
 		}
 
-		collectionType = shape.Kind switch {
-			JavaCollectionKind.List => GetClosedCollectionType (typeof (JavaList<>), shape.Arguments),
-			JavaCollectionKind.Collection => GetClosedCollectionType (typeof (JavaCollection<>), shape.Arguments),
-			JavaCollectionKind.Dictionary => GetClosedCollectionType (typeof (JavaDictionary<,>), shape.Arguments),
-			_ => null,
-		};
-		return collectionType != null;
+		if (!IsSupportedCollectionShape (shape)) {
+			converter = null;
+			return false;
+		}
+
+		// Capture the parsed shape so GetGenericArguments() runs once when the converter is
+		// selected, rather than once for the support gate and again for every conversion.
+		converter = (handle, transfer) => CreateFromJniHandle (shape, handle, transfer);
+		return true;
 	}
 
-	internal static bool IsSupportedCollectionType (Type targetType)
+	static bool IsSupportedCollectionShape (CollectionShape shape)
 	{
-		if (targetType == null)
-			throw new ArgumentNullException (nameof (targetType));
-
-		if (!TryGetCollectionShape (targetType, out var shape)) {
-			return false;
-		}
-
-		// Gate GetJniHandleConverter on support without resolving (and rooting) the closed
-		// collection type. Unsupported value-type arguments are rejected here, before any
-		// MakeGenericType() call: those would need an exact unrooted instantiation, whereas
-		// reference and mapped primitive/nullable arguments are all AOT-safe. TryCreateFromJniHandle
-		// then resolves the type at most once (reference collections) or not at all (value
-		// collections, handled by the rooted ValueTypeFactory path), instead of resolving it
-		// once here for the gate and again per marshal.
+		// Unsupported value-type arguments are rejected before any MakeGenericType() call:
+		// those would need an exact unrooted instantiation, whereas reference and mapped
+		// primitive/nullable arguments are all AOT-safe.
 		foreach (var argument in shape.Arguments) {
 			if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
 				return false;
@@ -68,36 +61,20 @@ static class SafeJavaCollectionFactory
 		return true;
 	}
 
-	internal static bool TryCreateFromJniHandle (
-		Type targetType,
+	static object? CreateFromJniHandle (
+		CollectionShape shape,
 		IntPtr handle,
-		JniHandleOwnership transfer,
-		out object? collection)
+		JniHandleOwnership transfer)
 	{
-		if (targetType == null)
-			throw new ArgumentNullException (nameof (targetType));
-
 		if (handle == IntPtr.Zero) {
-			collection = null;
-			return true;
+			return null;
 		}
 
-		if (!TryGetCollectionShape (targetType, out var shape)) {
-			collection = null;
-			return false;
+		if (TryCreateFromMappedValueTypeFactories (shape, handle, transfer, out var collection)) {
+			return collection;
 		}
 
-		if (TryCreateFromMappedValueTypeFactories (shape, handle, transfer, out collection)) {
-			return true;
-		}
-
-		if (!TryGetCollectionType (targetType, out var collectionType)) {
-			collection = null;
-			return false;
-		}
-
-		collection = CreateInstance (collectionType, handle, transfer);
-		return true;
+		return CreateInstance (GetClosedCollectionType (shape), handle, transfer);
 	}
 
 	static bool TryGetCollectionShape (Type targetType, out CollectionShape shape)
@@ -182,18 +159,14 @@ static class SafeJavaCollectionFactory
 	}
 
 	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type? GetClosedCollectionType (
-		[DynamicallyAccessedMembers (Constructors)]
-		Type genericTypeDefinition,
-		Type[] arguments)
+	static Type GetClosedCollectionType (CollectionShape shape)
 	{
-		foreach (var argument in arguments) {
-			if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
-				return null;
-			}
-		}
-
-		return MakeGenericType (genericTypeDefinition, arguments);
+		return shape.Kind switch {
+			JavaCollectionKind.List => MakeGenericType (typeof (JavaList<>), shape.Arguments),
+			JavaCollectionKind.Collection => MakeGenericType (typeof (JavaCollection<>), shape.Arguments),
+			JavaCollectionKind.Dictionary => MakeGenericType (typeof (JavaDictionary<,>), shape.Arguments),
+			_ => throw new InvalidOperationException ($"Unsupported Java collection kind '{shape.Kind}'."),
+		};
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",

@@ -76,14 +76,8 @@ namespace Java.Interop {
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
 				if (RuntimeFeature.TrimmableTypeMap) {
-					if (SafeJavaCollectionFactory.IsSupportedCollectionType (target)) {
-						return (h, t) => {
-							if (SafeJavaCollectionFactory.TryCreateFromJniHandle (target, h, t, out var collection)) {
-								return collection;
-							}
-							return null;
-						};
-					}
+					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
+						return collectionConverter;
 				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
 					if (factoryConverter != null)
