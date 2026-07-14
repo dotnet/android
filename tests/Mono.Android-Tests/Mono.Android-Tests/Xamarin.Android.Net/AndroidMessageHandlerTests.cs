@@ -256,6 +256,24 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
+		public async Task AndroidMessageHandlerPreservesHeadMethodOnRedirect ()
+		{
+			using var server = LocalHttpServer.Start ();
+			Uri redirectUri = server.GetUri ("head");
+			Uri requestUri = server.GetUri ($"redirect-to?url={Uri.EscapeDataString (redirectUri.ToString ())}&status_code=302");
+
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var request = new HttpRequestMessage (HttpMethod.Head, requestUri);
+			using HttpResponseMessage response = await client.SendAsync (request);
+
+			Assert.AreEqual (HttpStatusCode.OK, response.StatusCode);
+			Assert.AreEqual (HttpMethod.Head, response.RequestMessage.Method);
+			Assert.AreEqual (redirectUri, response.RequestMessage.RequestUri);
+			server.AssertNoUnhandledExceptions ();
+		}
+
+		[Test]
 		public async Task AndroidMessageHandlerSendsClientCertificate ([Values(true, false)] bool setClientCertificateOptionsExplicitly)
 		{
 			using X509Certificate2 certificate = BuildClientCertificate ();
