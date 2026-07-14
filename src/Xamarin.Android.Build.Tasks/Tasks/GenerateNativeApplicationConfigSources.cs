@@ -285,6 +285,7 @@ namespace Xamarin.Android.Tasks
 					MarshalMethodsEnabled = EnableMarshalMethods,
 					ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
+					HaveAssemblyStore = UseAssemblyStore,
 				};
 			} else {
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, Log) {

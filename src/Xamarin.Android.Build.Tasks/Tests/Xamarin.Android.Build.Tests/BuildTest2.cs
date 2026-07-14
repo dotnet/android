@@ -1594,6 +1594,15 @@ namespace UnamedProject
 			if (!string.IsNullOrEmpty (rid)) {
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
+			// User-authored AndroidJavaSource (Bind != true) has no managed peer and is absent from the
+			// acw-map, so R8.GetUserJavaTypes () must emit an explicit -keep for it; otherwise shrinking
+			// removes it from classes.dex (which regressed multidex on the trimmable NativeAOT path).
+			const string userJavaType = "MyKeptJavaType";
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, $"{userJavaType}.java") {
+				TextContent = () => $"public class {userJavaType} {{ }}",
+				Encoding = Encoding.ASCII,
+				Metadata = { { "Bind", "False" } },
+			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}{runtime}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
@@ -1605,9 +1614,24 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
-				FileAssert.Exists (proguardProjectPrimary);
-				Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
+				IEnumerable<string> proguardProjectConfigurations = [Path.Combine (intermediate, "proguard",
+					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg")];
+				if (runtime == AndroidRuntime.NativeAOT && string.IsNullOrEmpty (rid)) {
+					proguardProjectConfigurations = Directory.GetFiles (intermediate, "proguard_project_references.cfg", SearchOption.AllDirectories);
+				}
+				foreach (var proguardProjectConfiguration in proguardProjectConfigurations) {
+					FileAssert.Exists (proguardProjectConfiguration);
+					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectConfiguration), $"-keep class {proj.JavaPackageName}.MainActivity"),
+						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`!");
+				}
+
+				// The user AndroidJavaSource keep is emitted into proguard_project_primary.cfg on every
+				// runtime (search recursively to cover the per-RID NativeAOT inner builds).
+				var primaryConfigs = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath),
+					"proguard_project_primary.cfg", SearchOption.AllDirectories);
+				Assert.IsNotEmpty (primaryConfigs, "`proguard_project_primary.cfg` should have been generated.");
+				Assert.IsTrue (primaryConfigs.Any (f => StringAssertEx.ContainsText (File.ReadAllLines (f), $"-keep class {userJavaType}")),
+					$"`{userJavaType}` should be kept in a `proguard_project_primary.cfg`!");
 
 				var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
 				FileAssert.Exists (aapt_rules);

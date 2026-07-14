@@ -61,9 +61,10 @@ namespace Xamarin.Android.Build.Tests
 			public uint   jni_remapping_replacement_method_index_entry_count;
 			public string android_package_name = String.Empty;
 			public bool   managed_marshal_methods_lookup_enabled;
+			public bool   have_assembly_store;
 		}
 
-		const uint ApplicationConfigFieldCount_CoreCLR = 19;
+		const uint ApplicationConfigFieldCount_CoreCLR = 20;
 
 		// This must be identical to the ApplicationConfig structure in src/native/mono/xamarin-app-stub/xamarin-app.hh
 		public sealed class ApplicationConfig_MonoVM : IApplicationConfig
@@ -398,6 +399,11 @@ namespace Xamarin.Android.Build.Tests
 					case 18: // managed_marshal_methods_lookup_enabled: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.managed_marshal_methods_lookup_enabled = ConvertFieldToBool ("managed_marshal_methods_lookup_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 20: // have_assembly_store: bool / .byte
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.have_assembly_store = ConvertFieldToBool ("have_assembly_store", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 				}
 				fieldCount++;
@@ -763,6 +769,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (firstAppConfig.environment_variable_count, secondAppConfig.environment_variable_count, $"Field 'environment_variable_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.system_property_count, secondAppConfig.system_property_count, $"Field 'system_property_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.android_package_name, secondAppConfig.android_package_name, $"Field 'android_package_name' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
+			Assert.AreEqual (firstAppConfig.have_assembly_store, secondAppConfig.have_assembly_store, $"Field 'have_assembly_store' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 		}
 
 		static void AssertApplicationConfigIsIdentical (ApplicationConfig_MonoVM firstAppConfig, string firstEnvFile, ApplicationConfig_MonoVM secondAppConfig, string secondEnvFile)

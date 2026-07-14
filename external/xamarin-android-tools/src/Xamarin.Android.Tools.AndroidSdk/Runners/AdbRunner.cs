@@ -1,0 +1,671 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Xamarin.Android.Tools;
+
+/// <summary>
+/// Runs Android Debug Bridge (adb) commands.
+/// Parsing logic ported from dotnet/android GetAvailableAndroidDevices task.
+/// </summary>
+public class AdbRunner
+{
+	readonly string adbPath;
+	readonly IDictionary<string, string>? environmentVariables;
+	readonly Action<TraceLevel, string> logger;
+
+	// Pattern to match device lines: <serial> <state> [key:value ...]
+	// Uses \s+ to match one or more whitespace characters (spaces or tabs) between fields.
+	// Explicit state list prevents false positives from non-device lines.
+	static readonly Regex AdbDevicesRegex = new Regex (
+		@"^([^\s]+)\s+(device|offline|unauthorized|authorizing|no permissions|recovery|sideload|bootloader|connecting|host)\s*(.*)$",
+		RegexOptions.Compiled | RegexOptions.IgnoreCase);
+	static readonly Regex ApiRegex = new Regex (@"\bApi\b", RegexOptions.Compiled);
+
+	/// <summary>
+	/// Creates a new AdbRunner with the full path to the adb executable.
+	/// </summary>
+	/// <param name="adbPath">Full path to the adb executable (e.g., "/path/to/sdk/platform-tools/adb").</param>
+	/// <param name="environmentVariables">Optional environment variables to pass to adb processes.</param>
+	/// <param name="logger">Optional logger callback receiving a <see cref="TraceLevel"/> and message string.</param>
+	public AdbRunner (string adbPath, IDictionary<string, string>? environmentVariables = null, Action<TraceLevel, string>? logger = null)
+	{
+		if (string.IsNullOrWhiteSpace (adbPath))
+			throw new ArgumentException ("Path to adb must not be empty.", nameof (adbPath));
+		this.adbPath = adbPath;
+		this.environmentVariables = environmentVariables;
+		this.logger = logger ?? RunnerDefaults.NullLogger;
+	}
+
+	/// <summary>
+	/// Lists connected devices using 'adb devices -l'.
+	/// For online emulators, queries the AVD name via <c>getprop</c> / <c>emu avd name</c>.
+	/// Offline emulators are included but without AVD names (querying them would fail).
+	/// </summary>
+	public virtual async Task<IReadOnlyList<AdbDeviceInfo>> ListDevicesAsync (CancellationToken cancellationToken = default)
+	{
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "devices", "-l");
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+
+		ProcessUtils.ThrowIfFailed (exitCode, "adb devices -l", stderr, stdout);
+
+		var devices = ParseAdbDevicesOutput (stdout.ToString ().Split ('\n'));
+
+		// For each online emulator, try to get the AVD name.
+		// Skip offline emulators — neither getprop nor 'emu avd name' work on them
+		// and attempting these commands causes unnecessary delays during boot polling.
+		foreach (var device in devices) {
+			if (device.Type == AdbDeviceType.Emulator && device.Status == AdbDeviceStatus.Online) {
+				device.AvdName = await GetEmulatorAvdNameAsync (device.Serial, cancellationToken).ConfigureAwait (false);
+				device.Description = BuildDeviceDescription (device);
+			} else if (device.Type == AdbDeviceType.Emulator) {
+				logger.Invoke (TraceLevel.Verbose, $"Skipping AVD name query for {device.Status} emulator {device.Serial}");
+			}
+		}
+
+		return devices;
+	}
+
+	/// <summary>
+	/// Queries the emulator for its AVD name.
+	/// Tries <c>adb shell getprop ro.boot.qemu.avd_name</c> first (reliable on all modern
+	/// emulators), then falls back to <c>adb -s &lt;serial&gt; emu avd name</c> (emulator
+	/// console protocol) for older emulator versions. The <c>emu avd name</c> command returns
+	/// empty output on emulator 36.4.10+ (observed with adb v36), so <c>getprop</c> is the
+	/// preferred method.
+	/// </summary>
+	internal async Task<string?> GetEmulatorAvdNameAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		// Try 1: Shell property (reliable on modern emulators, always set by the emulator kernel)
+		try {
+			var avdName = await GetShellPropertyAsync (serial, "ro.boot.qemu.avd_name", cancellationToken).ConfigureAwait (false);
+			if (avdName is { Length: > 0 } name && !string.IsNullOrWhiteSpace (name))
+				return name.Trim ();
+		} catch (OperationCanceledException) {
+			throw;
+		} catch (Exception ex) {
+			logger.Invoke (TraceLevel.Warning, $"GetEmulatorAvdNameAsync: getprop failed for {serial}: {ex.Message}");
+		}
+
+		// Try 2: Console command (fallback for older emulators where getprop may not be available)
+		try {
+			using var stdout = new StringWriter ();
+			var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "emu", "avd", "name");
+			await ProcessUtils.StartProcess (psi, stdout, null, cancellationToken, environmentVariables).ConfigureAwait (false);
+
+			foreach (var line in stdout.ToString ().Split ('\n')) {
+				var trimmed = line.Trim ();
+				if (!string.IsNullOrEmpty (trimmed) &&
+					!string.Equals (trimmed, "OK", StringComparison.OrdinalIgnoreCase)) {
+					return trimmed;
+				}
+			}
+		} catch (OperationCanceledException) {
+			throw;
+		} catch (Exception ex) {
+			logger.Invoke (TraceLevel.Warning, $"GetEmulatorAvdNameAsync: both methods failed for {serial}: {ex.Message}");
+		}
+
+		return null;
+	}
+
+	public async Task WaitForDeviceAsync (string? serial = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+	{
+		var effectiveTimeout = timeout ?? TimeSpan.FromSeconds (60);
+
+		if (effectiveTimeout <= TimeSpan.Zero)
+			throw new ArgumentOutOfRangeException (nameof (timeout), effectiveTimeout, "Timeout must be a positive value.");
+
+		var args = serial is { Length: > 0 } s
+			? new [] { "-s", s, "wait-for-device" }
+			: new [] { "wait-for-device" };
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, args);
+
+		using var cts = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
+		cts.CancelAfter (effectiveTimeout);
+
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+
+		try {
+			var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cts.Token, environmentVariables).ConfigureAwait (false);
+			ProcessUtils.ThrowIfFailed (exitCode, "adb wait-for-device", stderr, stdout);
+		} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
+			throw new TimeoutException ($"Timed out waiting for device after {effectiveTimeout.TotalSeconds}s.");
+		}
+	}
+
+	public async Task StopEmulatorAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "emu", "kill");
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} emu kill", stderr);
+	}
+
+	/// <summary>
+	/// Gets a system property from a device via 'adb -s &lt;serial&gt; shell getprop &lt;property&gt;'.
+	/// Returns the property value (first non-empty line of stdout), or <c>null</c> on failure.
+	/// </summary>
+	public virtual async Task<string?> GetShellPropertyAsync (string serial, string propertyName, CancellationToken cancellationToken = default)
+	{
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "shell", "getprop", propertyName);
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		if (exitCode != 0) {
+			var stderrText = stderr.ToString ().Trim ();
+			if (stderrText.Length > 0)
+				logger.Invoke (TraceLevel.Warning, $"adb shell getprop {propertyName} failed (exit {exitCode}): {stderrText}");
+			return null;
+		}
+		return FirstNonEmptyLine (stdout.ToString ());
+	}
+
+	/// <summary>
+	/// Runs a shell command on a device via 'adb -s &lt;serial&gt; shell &lt;command&gt;'.
+	/// Returns the full stdout output trimmed, or <c>null</c> on failure.
+	/// </summary>
+	/// <remarks>
+	/// The <paramref name="command"/> is passed as a single argument to <c>adb shell</c>,
+	/// which means the device's shell interprets it (shell expansion, pipes, semicolons are active).
+	/// Do not pass untrusted or user-supplied input without proper validation.
+	/// </remarks>
+	public virtual async Task<string?> RunShellCommandAsync (string serial, string command, CancellationToken cancellationToken)
+	{
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "shell", command);
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		if (exitCode != 0) {
+			var stderrText = stderr.ToString ().Trim ();
+			if (stderrText.Length > 0)
+				logger.Invoke (TraceLevel.Warning, $"adb shell {command} failed (exit {exitCode}): {stderrText}");
+			return null;
+		}
+		var output = stdout.ToString ().Trim ();
+		return output.Length > 0 ? output : null;
+	}
+
+	/// <summary>
+	/// Runs a shell command on a device via <c>adb -s &lt;serial&gt; shell &lt;command&gt; &lt;args&gt;</c>.
+	/// Returns the full stdout output trimmed, or <c>null</c> on failure.
+	/// </summary>
+	/// <remarks>
+	/// When <c>adb shell</c> receives the command and arguments as separate tokens, it uses
+	/// <c>exec()</c> directly on the device — bypassing the device's shell interpreter.
+	/// This avoids shell expansion, pipes, and injection risks, making it safer for dynamic input.
+	/// </remarks>
+	public virtual async Task<string?> RunShellCommandAsync (string serial, string command, string[] args, CancellationToken cancellationToken = default)
+	{
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		// Build: adb -s <serial> shell <command> <arg1> <arg2> ...
+		var allArgs = new string [3 + 1 + args.Length];
+		allArgs [0] = "-s";
+		allArgs [1] = serial;
+		allArgs [2] = "shell";
+		allArgs [3] = command;
+		Array.Copy (args, 0, allArgs, 4, args.Length);
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, allArgs);
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		if (exitCode != 0) {
+			var stderrText = stderr.ToString ().Trim ();
+			if (stderrText.Length > 0)
+				logger.Invoke (TraceLevel.Warning, $"adb shell {command} failed (exit {exitCode}): {stderrText}");
+			return null;
+		}
+		var output = stdout.ToString ().Trim ();
+		return output.Length > 0 ? output : null;
+	}
+
+	internal static string? FirstNonEmptyLine (string output)
+	{
+		foreach (var line in output.Split ('\n')) {
+			var trimmed = line.Trim ();
+			if (trimmed.Length > 0)
+				return trimmed;
+		}
+		return null;
+	}
+
+	/// <summary>
+	/// Sets up reverse port forwarding via 'adb -s &lt;serial&gt; reverse &lt;remote&gt; &lt;local&gt;'.
+	/// </summary>
+	/// <param name="serial">Device serial number.</param>
+	/// <param name="remote">Remote (device-side) port spec.</param>
+	/// <param name="local">Local (host-side) port spec.</param>
+	/// <param name="cancellationToken">Cancellation token.</param>
+	public virtual async Task ReversePortAsync (string serial, AdbPortSpec remote, AdbPortSpec local, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+		if (remote is null)
+			throw new ArgumentNullException (nameof (remote));
+		if (local is null)
+			throw new ArgumentNullException (nameof (local));
+		if (remote.Port <= 0 || remote.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (remote), remote.Port, "Port must be between 1 and 65535.");
+		if (local.Port <= 0 || local.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (local), local.Port, "Port must be between 1 and 65535.");
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", remote.ToSocketSpec (), local.ToSocketSpec ());
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse {remote} {local}", stderr);
+	}
+
+	/// <summary>
+	/// Removes a specific reverse port forwarding rule via
+	/// 'adb -s &lt;serial&gt; reverse --remove &lt;remote&gt;'.
+	/// </summary>
+	/// <param name="serial">Device serial number.</param>
+	/// <param name="remote">Remote (device-side) port spec to remove.</param>
+	/// <param name="cancellationToken">Cancellation token.</param>
+	public virtual async Task RemoveReversePortAsync (string serial, AdbPortSpec remote, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+		if (remote is null)
+			throw new ArgumentNullException (nameof (remote));
+		if (remote.Port <= 0 || remote.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (remote), remote.Port, "Port must be between 1 and 65535.");
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", "--remove", remote.ToSocketSpec ());
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse --remove {remote}", stderr);
+	}
+
+	/// <summary>
+	/// Removes all reverse port forwarding rules via
+	/// 'adb -s &lt;serial&gt; reverse --remove-all'.
+	/// </summary>
+	public virtual async Task RemoveAllReversePortsAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", "--remove-all");
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, null, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse --remove-all", stderr);
+	}
+
+	/// <summary>
+	/// Lists all active reverse port forwarding rules via
+	/// 'adb -s &lt;serial&gt; reverse --list'.
+	/// </summary>
+	public virtual async Task<IReadOnlyList<AdbPortRule>> ListReversePortsAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "reverse", "--list");
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} reverse --list", stderr, stdout);
+
+		return ParseReverseListOutput (stdout.ToString ().Split ('\n'));
+	}
+
+	/// <summary>
+	/// Parses the output of 'adb reverse --list'.
+	/// Each line is "(reverse) &lt;remote&gt; &lt;local&gt;", e.g. "(reverse) tcp:5000 tcp:5000".
+	/// Lines with unparseable socket specs are skipped.
+	/// </summary>
+	internal static IReadOnlyList<AdbPortRule> ParseReverseListOutput (IEnumerable<string> lines)
+	{
+		var rules = new List<AdbPortRule> ();
+
+		foreach (var line in lines) {
+			var trimmed = line.Trim ();
+			if (string.IsNullOrEmpty (trimmed))
+				continue;
+
+			// Expected format: "(reverse) tcp:5000 tcp:5000"
+			if (!trimmed.StartsWith ("(reverse)", StringComparison.Ordinal))
+				continue;
+
+			var parts = trimmed.Substring ("(reverse)".Length).Trim ().Split ((char[]?) null, StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length >= 2) {
+				var remote = AdbPortSpec.TryParse (parts [0]);
+				var local = AdbPortSpec.TryParse (parts [1]);
+				if (remote is { } r && local is { } l)
+					rules.Add (new AdbPortRule (r, l));
+			}
+		}
+
+		return rules;
+	}
+
+	/// <summary>
+	/// Sets up forward port forwarding via 'adb -s &lt;serial&gt; forward &lt;local&gt; &lt;remote&gt;'.
+	/// The host-side &lt;local&gt; socket is forwarded to the device-side &lt;remote&gt; socket,
+	/// the symmetric pair to <see cref="ReversePortAsync"/>.
+	/// </summary>
+	/// <param name="serial">Device serial number.</param>
+	/// <param name="local">Local (host-side) port spec.</param>
+	/// <param name="remote">Remote (device-side) port spec.</param>
+	/// <param name="cancellationToken">Cancellation token.</param>
+	public virtual async Task ForwardPortAsync (string serial, AdbPortSpec local, AdbPortSpec remote, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+		if (local is null)
+			throw new ArgumentNullException (nameof (local));
+		if (remote is null)
+			throw new ArgumentNullException (nameof (remote));
+		if (local.Port <= 0 || local.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (local), local.Port, "Port must be between 1 and 65535.");
+		if (remote.Port <= 0 || remote.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (remote), remote.Port, "Port must be between 1 and 65535.");
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "forward", local.ToSocketSpec (), remote.ToSocketSpec ());
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} forward {local} {remote}", stderr, stdout);
+	}
+
+	/// <summary>
+	/// Removes a specific forward port forwarding rule via
+	/// 'adb -s &lt;serial&gt; forward --remove &lt;local&gt;'.
+	/// </summary>
+	/// <param name="serial">Device serial number.</param>
+	/// <param name="local">Local (host-side) port spec to remove.</param>
+	/// <param name="cancellationToken">Cancellation token.</param>
+	public virtual async Task RemoveForwardPortAsync (string serial, AdbPortSpec local, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+		if (local is null)
+			throw new ArgumentNullException (nameof (local));
+		if (local.Port <= 0 || local.Port > 65535)
+			throw new ArgumentOutOfRangeException (nameof (local), local.Port, "Port must be between 1 and 65535.");
+
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "-s", serial, "forward", "--remove", local.ToSocketSpec ());
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb -s {serial} forward --remove {local}", stderr, stdout);
+	}
+
+	/// <summary>
+	/// Removes all forward port forwarding rules for the specified device.
+	/// </summary>
+	/// <remarks>
+	/// The underlying <c>adb forward --remove-all</c> command (and its wire-protocol
+	/// equivalent <c>host-serial:&lt;serial&gt;:killforward-all</c>) operates globally on the
+	/// adb daemon — the <c>-s &lt;serial&gt;</c> flag does not scope it, and calling it
+	/// would remove forwards for every connected device. To honour the per-device
+	/// contract of this method, we list the forwards for <paramref name="serial"/>
+	/// via <see cref="ListForwardPortsAsync"/> and remove them individually via
+	/// <see cref="RemoveForwardPortAsync"/>.
+	/// </remarks>
+	public virtual async Task RemoveAllForwardPortsAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+
+		var rules = await ListForwardPortsAsync (serial, cancellationToken).ConfigureAwait (false);
+		foreach (var rule in rules) {
+			cancellationToken.ThrowIfCancellationRequested ();
+			await RemoveForwardPortAsync (serial, rule.Local, cancellationToken).ConfigureAwait (false);
+		}
+	}
+
+	/// <summary>
+	/// Lists active forward port forwarding rules for the specified device via
+	/// 'adb forward --list'.
+	/// The underlying command always lists rules across all devices, so the
+	/// result is filtered to entries matching <paramref name="serial"/>.
+	/// </summary>
+	public virtual async Task<IReadOnlyList<AdbPortRule>> ListForwardPortsAsync (string serial, CancellationToken cancellationToken = default)
+	{
+		if (string.IsNullOrWhiteSpace (serial))
+			throw new ArgumentException ("Serial must not be empty.", nameof (serial));
+
+		using var stdout = new StringWriter ();
+		using var stderr = new StringWriter ();
+		var psi = ProcessUtils.CreateProcessStartInfo (adbPath, "forward", "--list");
+		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken, environmentVariables).ConfigureAwait (false);
+		ProcessUtils.ThrowIfFailed (exitCode, $"adb forward --list", stderr, stdout);
+
+		return ParseForwardListOutput (stdout.ToString ().Split ('\n'), serial);
+	}
+
+	/// <summary>
+	/// Parses the output of 'adb forward --list'.
+	/// Each line is "&lt;serial&gt; &lt;local&gt; &lt;remote&gt;", e.g. "emulator-5554 tcp:5000 tcp:6000".
+	/// Only rules matching <paramref name="serial"/> are returned. Lines with
+	/// unparseable socket specs are skipped.
+	/// </summary>
+	/// <remarks>
+	/// Note the field-order asymmetry vs <see cref="ParseReverseListOutput"/>:
+	///   forward --list: &lt;serial&gt; &lt;local&gt; &lt;remote&gt;
+	///   reverse --list: (reverse) &lt;remote&gt; &lt;local&gt;
+	/// Both parsers construct an <see cref="AdbPortRule"/> whose constructor takes
+	/// (Remote, Local), so the order in which we pass the parsed parts differs between
+	/// the two parsers — keep that in mind when modifying either of them.
+	/// </remarks>
+	internal static IReadOnlyList<AdbPortRule> ParseForwardListOutput (IEnumerable<string> lines, string serial)
+	{
+		var rules = new List<AdbPortRule> ();
+		if (string.IsNullOrEmpty (serial))
+			return rules;
+
+		foreach (var line in lines) {
+			var trimmed = line.Trim ();
+			if (string.IsNullOrEmpty (trimmed))
+				continue;
+
+			// Expected format: "<serial> <local> <remote>" — see <remarks> above for
+			// the field-order asymmetry with reverse --list.
+			var parts = trimmed.Split ((char[]?) null, StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length < 3)
+				continue;
+
+			if (!string.Equals (parts [0], serial, StringComparison.Ordinal))
+				continue;
+
+			var local = AdbPortSpec.TryParse (parts [1]);
+			var remote = AdbPortSpec.TryParse (parts [2]);
+			if (local is { } l && remote is { } r)
+				rules.Add (new AdbPortRule (r, l));
+		}
+
+		return rules;
+	}
+
+	/// <summary>
+	/// Parses the output lines from 'adb devices -l'.
+	/// Accepts an <see cref="IEnumerable{T}"/> to avoid allocating a joined string.
+	/// </summary>
+	public static IReadOnlyList<AdbDeviceInfo> ParseAdbDevicesOutput (IEnumerable<string> lines)
+	{
+		var devices = new List<AdbDeviceInfo> ();
+
+		foreach (var line in lines) {
+			var trimmed = line.Trim ();
+			if (string.IsNullOrEmpty (trimmed) ||
+				trimmed.IndexOf ("List of devices", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				trimmed.StartsWith ("*", StringComparison.Ordinal))
+				continue;
+
+			var match = AdbDevicesRegex.Match (trimmed);
+			if (!match.Success)
+				continue;
+
+			var serial = match.Groups [1].Value.Trim ();
+			var state = match.Groups [2].Value.Trim ();
+			var properties = match.Groups [3].Value.Trim ();
+
+			// Parse key:value pairs from the properties string
+			var propDict = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+			if (!string.IsNullOrEmpty (properties)) {
+				var pairs = properties.Split (new [] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+				foreach (var pair in pairs) {
+					var colonIndex = pair.IndexOf (':');
+					if (colonIndex > 0 && colonIndex < pair.Length - 1) {
+						var key = pair.Substring (0, colonIndex);
+						var value = pair.Substring (colonIndex + 1);
+						propDict [key] = value;
+					}
+				}
+			}
+
+			var deviceType = serial.StartsWith ("emulator-", StringComparison.OrdinalIgnoreCase)
+				? AdbDeviceType.Emulator
+				: AdbDeviceType.Device;
+
+			var device = new AdbDeviceInfo {
+				Serial = serial,
+				Type = deviceType,
+				Status = MapAdbStateToStatus (state),
+			};
+
+			if (propDict.TryGetValue ("model", out var model))
+				device.Model = model;
+			if (propDict.TryGetValue ("product", out var product))
+				device.Product = product;
+			if (propDict.TryGetValue ("device", out var deviceCodeName))
+				device.Device = deviceCodeName;
+			if (propDict.TryGetValue ("transport_id", out var transportId))
+				device.TransportId = transportId;
+
+			// Build description (will be updated later if emulator AVD name is available)
+			device.Description = BuildDeviceDescription (device);
+
+			devices.Add (device);
+		}
+
+		return devices;
+	}
+
+	/// <summary>
+	/// Maps adb device states to status values.
+	/// Ported from dotnet/android GetAvailableAndroidDevices.MapAdbStateToStatus.
+	/// </summary>
+	public static AdbDeviceStatus MapAdbStateToStatus (string adbState) => adbState.ToLowerInvariant () switch {
+		"device" => AdbDeviceStatus.Online,
+		"offline" => AdbDeviceStatus.Offline,
+		"unauthorized" => AdbDeviceStatus.Unauthorized,
+		"no permissions" => AdbDeviceStatus.NoPermissions,
+		_ => AdbDeviceStatus.Unknown,
+	};
+
+	/// <summary>
+	/// Builds a human-friendly description for a device.
+	/// Priority: AVD name (for emulators) > model > product > device > serial.
+	/// Ported from dotnet/android GetAvailableAndroidDevices.BuildDeviceDescription.
+	/// </summary>
+	public static string BuildDeviceDescription (AdbDeviceInfo device, Action<TraceLevel, string>? logger = null)
+	{
+		logger ??= RunnerDefaults.NullLogger;
+		if (device.Type == AdbDeviceType.Emulator && device.AvdName is { Length: > 0 } avdName) {
+			logger.Invoke (TraceLevel.Verbose, $"Emulator {device.Serial}, original AVD name: {avdName}");
+			var formatted = FormatDisplayName (avdName);
+			logger.Invoke (TraceLevel.Verbose, $"Emulator {device.Serial}, formatted AVD display name: {formatted}");
+			return formatted;
+		}
+
+		if (device.Model is { Length: > 0 } model)
+			return model.Replace ('_', ' ');
+
+		if (device.Product is { Length: > 0 } product)
+			return product.Replace ('_', ' ');
+
+		if (device.Device is { Length: > 0 } deviceName)
+			return deviceName.Replace ('_', ' ');
+
+		return device.Serial;
+	}
+
+	/// <summary>
+	/// Formats an AVD name into a user-friendly display name.
+	/// Replaces underscores with spaces, applies title case, and capitalizes "API".
+	/// ToTitleCase naturally preserves fully-uppercase segments (e.g. "XL", "SE").
+	/// Ported from dotnet/android GetAvailableAndroidDevices.FormatDisplayName.
+	/// </summary>
+	public static string FormatDisplayName (string avdName)
+	{
+		if (string.IsNullOrEmpty (avdName))
+			return avdName ?? string.Empty;
+
+		var textInfo = CultureInfo.InvariantCulture.TextInfo;
+		avdName = textInfo.ToTitleCase (avdName.Replace ('_', ' '));
+
+		// Replace "Api" with "API"
+		avdName = ApiRegex.Replace (avdName, "API");
+		return avdName;
+	}
+
+	/// <summary>
+	/// Merges devices from adb with available emulators from 'emulator -list-avds'.
+	/// Running emulators are not duplicated. Non-running emulators are added with Status=NotRunning.
+	/// Ported from dotnet/android GetAvailableAndroidDevices.MergeDevicesAndEmulators.
+	/// </summary>
+	public static IReadOnlyList<AdbDeviceInfo> MergeDevicesAndEmulators (IReadOnlyList<AdbDeviceInfo> adbDevices, IReadOnlyList<string> availableEmulators, Action<TraceLevel, string>? logger = null)
+	{
+		logger ??= RunnerDefaults.NullLogger;
+		var result = new List<AdbDeviceInfo> (adbDevices);
+
+		// Build a set of AVD names that are already running
+		var runningAvdNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		foreach (var device in adbDevices) {
+			if (device.AvdName is { Length: > 0 } avdName)
+				runningAvdNames.Add (avdName);
+		}
+
+		logger.Invoke (TraceLevel.Verbose, $"Running emulators AVD names: {string.Join (", ", runningAvdNames)}");
+
+		// Add non-running emulators
+		foreach (var avdName in availableEmulators) {
+			if (runningAvdNames.Contains (avdName)) {
+				logger.Invoke (TraceLevel.Verbose, $"Emulator '{avdName}' is already running, skipping");
+				continue;
+			}
+
+			var displayName = FormatDisplayName (avdName);
+			result.Add (new AdbDeviceInfo {
+				Serial = avdName,
+				Description = displayName + " (Not Running)",
+				Type = AdbDeviceType.Emulator,
+				Status = AdbDeviceStatus.NotRunning,
+				AvdName = avdName,
+			});
+			logger.Invoke (TraceLevel.Verbose, $"Added non-running emulator: {avdName}");
+		}
+
+		// Sort: online devices first, then not-running emulators, alphabetically by description
+		result.Sort ((a, b) => {
+			var aNotRunning = a.Status == AdbDeviceStatus.NotRunning;
+			var bNotRunning = b.Status == AdbDeviceStatus.NotRunning;
+
+			if (aNotRunning != bNotRunning)
+				return aNotRunning ? 1 : -1;
+
+			return string.Compare (a.Description, b.Description, StringComparison.OrdinalIgnoreCase);
+		});
+
+		return result;
+	}
+}
+

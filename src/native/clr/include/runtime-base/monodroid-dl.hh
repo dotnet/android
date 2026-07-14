@@ -145,30 +145,6 @@ namespace xamarin::android
 			return &dso_names_data[dso->name_index];
 		}
 
-		// Unlike the DSO cache and assembly-store lookups, this table is matched on the CRC32 hash
-		// alone: a DSOApkEntry stores only `name_hash`, with no name to verify against. This is an
-		// accepted 32-bit trade-off. The primary collision risk is already closed elsewhere: this
-		// lookup is only reached with the `real_name_hash` of a DSOCacheEntry that find_dso_cache_entry
-		// has already name-verified, so the residual risk is limited to a CRC32 collision between two
-		// shared libraries actually packaged in the same APK, which is extremely unlikely.
-		[[gnu::flatten]]
-		static auto find_dso_apk_entry (hash_t hash) -> DSOApkEntry*
-		{
-			auto equal = [](DSOApkEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
-			auto less_than = [](DSOApkEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
-			ssize_t idx = Search::binary_search<DSOApkEntry, hash_t, equal, less_than> (
-				hash,
-				dso_apk_entries, application_config.number_of_shared_libraries
-			);
-
-			if (idx >= 0) [[likely]] {
-				return &dso_apk_entries[idx];
-			}
-
-			return nullptr;
-		}
-
-		[[gnu::flatten]]
 		static auto monodroid_dlopen (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
 		{
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
@@ -189,18 +165,6 @@ namespace xamarin::android
 
 			std::string_view dso_name = get_dso_name (dso);
 			StartupAwareLock lock (dso_handle_write_lock);
-#if defined (RELEASE)
-			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
-				DSOApkEntry *apk_entry = find_dso_apk_entry (dso->real_name_hash);
-				if (apk_entry != nullptr && apk_entry->fd != -1) {
-					dso->handle = DsoLoader::load (apk_entry->fd, apk_entry->offset, dso_name, flags, dso->is_jni_library);
-				}
-
-				if (dso->handle != nullptr) {
-					return dso->handle;
-				}
-			}
-#endif
 			dso->handle = AndroidSystem::load_dso_from_any_directories (dso_name, flags, dso->is_jni_library);
 
 			if (dso->handle != nullptr) {

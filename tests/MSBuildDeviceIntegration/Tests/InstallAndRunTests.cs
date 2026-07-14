@@ -2480,12 +2480,19 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
 		}
 
-		[Test]
-		[TestCase ("run", AndroidRuntime.CoreCLR)]
-		[TestCase ("test", AndroidRuntime.CoreCLR)]
-		public void DotNetNewAndroidTest (string mode, AndroidRuntime runtime)
+		public enum MSTestPackageChannel
 		{
-			var templateName = $"DotNetNewAndroidTest_{mode}_{runtime}";
+			Stable,
+			Nightly,
+		}
+
+		[Test]
+		[TestCase ("run", MSTestPackageChannel.Nightly)]
+		[TestCase ("test", MSTestPackageChannel.Stable)]
+		[TestCase ("test", MSTestPackageChannel.Nightly)]
+		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
+		{
+			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -2494,22 +2501,21 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
-			// Override the MSTest version from the template with the version used by our build
-			var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
-			var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
-			var doc = XDocument.Load (csprojPath);
-			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
-			var msTestRef = doc.Descendants (ns + "PackageReference")
-				.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
-			Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
-			msTestRef.SetAttributeValue ("Version", msTestVersion);
-			doc.Save (csprojPath);
+			var buildParameters = new List<string> ();
 
-			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
-			var buildParameters = new List<string> {
-				$"UseMonoRuntime={useMonoRuntime}",
-				"RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json",
-			};
+			if (msTestPackageChannel == MSTestPackageChannel.Nightly) {
+				// Override the stable template version with the version used by our build.
+				var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
+				var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
+				var doc = XDocument.Load (csprojPath);
+				var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+				var msTestRef = doc.Descendants (ns + "PackageReference")
+					.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
+				Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
+				msTestRef.SetAttributeValue ("Version", msTestVersion);
+				doc.Save (csprojPath);
+				buildParameters.Add ("RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json");
+			}
 
 			// Build and assert 0 warnings
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");

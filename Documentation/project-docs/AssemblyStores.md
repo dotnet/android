@@ -59,6 +59,20 @@ An assembly store, however, needs to be mapped only once and any
 further operations are merely pointer arithmetic, making the process
 not only faster but also reducing the algorithm complexity to O(1).
 
+The way the store is located and mapped depends on the runtime:
+
+  - **MonoVM** locates the store by scanning the APK/AAB ZIP central
+    directory, then `mmap(2)`s the wrapper shared library and walks its
+    ELF section headers by hand to find the `payload` section.
+  - **CoreCLR** relies on the dynamic linker instead: the store is
+    wrapped in a shared library whose payload lives in a *loadable* ELF
+    section pointed at by the exported `_assembly_store` dynamic symbol.
+    The runtime simply `dlopen()`s `libassembly-store.so` and resolves
+    the payload pointer with `dlsym("_assembly_store")`; there is no
+    ZIP scanning or manual section-header parsing. See
+    [ApkSharedLibraries.md](ApkSharedLibraries.md) for the two payload
+    layouts.
+
 # Store locations
 
 There exists only one Assembly Store per architecture. Each application will contain 

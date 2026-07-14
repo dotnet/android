@@ -1,0 +1,158 @@
+# xamarin-android-tools tests stage
+#
+# Mirrors the build + test jobs from the upstream dotnet/android-tools
+# azure-pipelines.yaml so that the Xamarin.Android.Tools build + unit tests
+# continue to run as part of dotnet/android CI now that android-tools has been
+# merged in-tree under external/xamarin-android-tools/.
+#
+# The upstream pipeline also packed a NuGet and published build artifacts;
+# those are intentionally dropped here (the binaries aren't consumed from this
+# stage -- dotnet/android's own build produces the shipping assemblies). Only
+# logs + test results are surfaced.
+#
+# Referenced from both:
+#   - build-tools/automation/azure-pipelines.yaml         (official / 1ES)
+#   - build-tools/automation/azure-pipelines-public.yaml  (public PR validation)
+
+parameters:
+- name: stageName
+  type: string
+  default: xamarin_android_tools_tests
+- name: dependsOn
+  type: object
+  default: []
+- name: condition
+  type: string
+  default: succeeded()
+- name: use1ESTemplate
+  type: boolean
+  default: false
+- name: windowsPool
+  type: object
+  # NOTE: This default is a Microsoft-hosted Azure Pipelines pool, which is NOT
+  # allowed by 1ES Pipeline Templates in Official mode. Callers that extend the
+  # 1ES Official template (e.g. build-tools/automation/azure-pipelines.yaml) must
+  # override this with a 1ES-hosted pool like `MAUI-1ESPT`.
+  default:
+    name: Azure Pipelines
+    vmImage: $(HostedWinImage)
+    os: windows
+- name: macPool
+  type: object
+  default:
+    name: Azure Pipelines
+    vmImage: $(HostedMacImage)
+    os: macOS
+
+stages:
+- stage: ${{ parameters.stageName }}
+  displayName: Android Tools Tests
+  dependsOn: ${{ parameters.dependsOn }}
+  condition: ${{ parameters.condition }}
+  variables:
+    DotNetCoreVersion: 10.0.x
+    XatSourceDirectory: $(System.DefaultWorkingDirectory)/external/xamarin-android-tools
+    # When built in-tree, external/xamarin-android-tools.override.props imports
+    # dotnet/android's root Directory.Build.props, which pins
+    # DotNetTargetFrameworkVersion=11.0 and sets AndroidToolsDisableMultiTargeting=true
+    # (so the product build gets a single netstandard2.0 assembly). Upstream
+    # dotnet/android-tools CI instead builds standalone: multi-targeting
+    # netstandard2.0 + net10.0, with the test projects running on net10.0. Its
+    # ProcessUtils tests assert ProcessStartInfo.ArgumentList, which only exists on
+    # the net10.0 (NET5_0_OR_GREATER) build -- the netstandard2.0 build takes the
+    # string-Arguments path. To reproduce upstream's green test configuration we
+    # re-enable multi-targeting and force net10.0 via these global properties.
+    XatBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0
+  jobs:
+
+  # Check - "Xamarin.Android (Android Tools Tests Windows - .NET)"
+  - job: xamarin_android_tools_windows
+    displayName: Windows - .NET
+    pool: ${{ parameters.windowsPool }}
+    timeoutInMinutes: 30
+    workspace:
+      clean: all
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputs:
+        - output: pipelineArtifact
+          displayName: Upload build logs
+          condition: always()
+          targetPath: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-windows
+          sbomEnabled: false
+    steps:
+    - checkout: self
+      clean: true
+
+    - task: UseDotNet@2
+      displayName: Use .NET Core $(DotNetCoreVersion)
+      inputs:
+        version: $(DotNetCoreVersion)
+
+    - task: DotNetCoreCLI@2
+      displayName: Build Xamarin.Android.Tools.sln
+      inputs:
+        command: build
+        projects: $(XatSourceDirectory)/Xamarin.Android.Tools.sln
+        arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs:
+        command: test
+        projects: $(XatSourceDirectory)/bin/TestDebug/**/*-Tests.dll
+
+    - ${{ if eq(parameters.use1ESTemplate, false) }}:
+      - task: PublishBuildArtifacts@1
+        displayName: Upload build logs
+        condition: always()
+        inputs:
+          pathToPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-windows
+
+  # Check - "Xamarin.Android (Android Tools Tests Mac - .NET)"
+  - job: xamarin_android_tools_mac
+    displayName: Mac - .NET
+    pool: ${{ parameters.macPool }}
+    timeoutInMinutes: 30
+    workspace:
+      clean: all
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputs:
+        - output: pipelineArtifact
+          displayName: Upload build logs
+          condition: always()
+          targetPath: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-mac
+          sbomEnabled: false
+    steps:
+    - checkout: self
+      clean: true
+
+    - task: UseDotNet@2
+      displayName: Use .NET Core $(DotNetCoreVersion)
+      inputs:
+        version: $(DotNetCoreVersion)
+
+    - task: DotNetCoreCLI@2
+      displayName: Build Xamarin.Android.Tools.sln
+      inputs:
+        command: build
+        projects: $(XatSourceDirectory)/Xamarin.Android.Tools.sln
+        arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs:
+        command: test
+        projects: $(XatSourceDirectory)/bin/TestDebug/**/*-Tests.dll
+
+    - ${{ if eq(parameters.use1ESTemplate, false) }}:
+      - task: PublishBuildArtifacts@1
+        displayName: Upload build logs
+        condition: always()
+        inputs:
+          pathToPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-mac

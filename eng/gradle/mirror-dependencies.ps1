@@ -11,7 +11,7 @@
     so a developer has to authenticate locally once to seed the feed.
 
     This script does that by running the requested gradle build in a loop:
-      1. Run gradle with RunningOnCI=true so it points at the dnceng feed.
+      1. Run gradle with RUNNINGONCI=true so it points at the dnceng feed.
       2. Parse any 'Could not GET' URLs out of the build log.
       3. Re-fetch each failing URL with an Azure DevOps OAuth bearer token
          (obtained via `az account get-access-token`). The feed's upstream
@@ -113,7 +113,8 @@ if ($AndroidHome) { Write-Host "ANDROID_HOME: $AndroidHome" }
 Get-AzDevOpsToken | Out-Null
 
 if ($AndroidHome) { $env:ANDROID_HOME = $AndroidHome }
-$env:RunningOnCI = 'true'
+$env:RUNNINGONCI = 'true'
+$env:ANDROID_MIRROR_MAVEN_DEPENDENCIES = 'true'
 
 Push-Location $projectDirAbs
 try {

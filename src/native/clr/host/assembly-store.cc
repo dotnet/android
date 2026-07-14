@@ -259,7 +259,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		);
 	}
 
-	AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
+	const AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
 	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
 
 	if (assembly_runtime_info.image_data == nullptr) {
@@ -274,10 +274,10 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		log_debug (
 			LOG_ASSEMBLY,
 			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'"sv,
-			static_cast<void*>(assembly_runtime_info.image_data),
-			static_cast<void*>(assembly_runtime_info.debug_info_data),
-			static_cast<void*>(assembly_runtime_info.config_data),
-			static_cast<void*>(assembly_runtime_info.descriptor),
+			static_cast<const void*>(assembly_runtime_info.image_data),
+			static_cast<const void*>(assembly_runtime_info.debug_info_data),
+			static_cast<const void*>(assembly_runtime_info.config_data),
+			static_cast<const void*>(assembly_runtime_info.descriptor),
 			assembly_runtime_info.descriptor->data_size,
 			assembly_runtime_info.descriptor->debug_data_size,
 			assembly_runtime_info.descriptor->config_data_size,
@@ -290,28 +290,9 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	return assembly_data;
 }
 
-void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size) noexcept
+void AssemblyStore::configure_from_payload (const void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept
 {
-	detail::mmap_info assembly_store_map = Util::mmap_file (fd, offset, size, store_path);
-
-	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (assembly_store_map, store_path);
-	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}"sv, payload_start, payload_size);
-	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
-
-	auto get_full_store_path = [&apk_path, &store_path]() -> std::string {
-		std::string full_store_path;
-
-		if (!apk_path.empty ()) {
-			full_store_path.append (apk_path);
-			// store path will be relative, to the apk
-			full_store_path.append ("!/"sv);
-			full_store_path.append (store_path);
-		} else {
-			full_store_path.append (store_path);
-		}
-
-		return full_store_path;
-	};
+	auto header = static_cast<const AssemblyStoreHeader*>(payload_start);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
 		Helpers::abort_application (
@@ -337,11 +318,11 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
 
-	assembly_store.data_start = static_cast<uint8_t*>(payload_start);
+	assembly_store.data_start = static_cast<const uint8_t*>(payload_start);
 	assembly_store.assembly_count = header->entry_count;
 	assembly_store.index_entry_count = header->index_entry_count;
-	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
-	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
+	assembly_store.assemblies = reinterpret_cast<const AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
+	assembly_store_hashes = reinterpret_cast<const AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
 	// Build a lookup of assembly names indexed by descriptor index, used to disambiguate CRC32 hash
 	// collisions during lookup. The names section follows the descriptor table and consists of
@@ -359,6 +340,4 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 		assembly_store_names[i] = std::string_view (reinterpret_cast<const char*>(names_cursor), name_length);
 		names_cursor += name_length;
 	}
-
-	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
 }
