@@ -44,15 +44,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var minVersion        = ToVersion (MinimumApiLevel);
 			var targetVersion     = ToVersion (TargetApiLevel);
 			var versions          = AndroidApiInfo.Select (ToAndroidVersion).ToArray ();
-			var stableVersions    = versions
+			var maxStableVersion = versions
 				.Where (version => version.Stable)
-				.OrderBy (version => version.TargetFrameworkVersion)
-				.ToArray ();
-			if (stableVersions.Length == 0) {
+				.MaxBy (version => version.TargetFrameworkVersion);
+			if (maxStableVersion is null) {
 				Log.LogError ("No @(AndroidApiInfo) items are marked as stable.");
 				return false;
 			}
-			var maxStableVersion  = stableVersions [stableVersions.Length - 1];
 			var targetApiLevel    = targetVersion != null && targetVersion.Major > 0
 				? targetVersion
 				: maxStableVersion.VersionCodeFull;
