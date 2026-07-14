@@ -217,8 +217,8 @@ namespace Java.InteropTests
 			// A non-generic source prevents ValueManager from returning the cached peer directly,
 			// forcing conversion through SafeJavaCollectionFactory.
 			using (var source = new JavaList ()) {
-				source.Add ((byte) 1);
-				source.Add ((byte) 200);
+				source.Add ((object) (byte) 1);
+				source.Add ((object) (byte) 200);
 
 				var reference = source.PeerReference;
 				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<byte>> (
