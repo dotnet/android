@@ -33,6 +33,14 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 	public bool UseAssemblyStore { get; set; }
 
+	/// <summary>
+	/// When true (always the case for CoreCLR), the assembly store is wrapped into a shared library
+	/// whose payload is exported via the <c>_assembly_store</c> dynamic symbol, so the runtime
+	/// can locate it with <c>dlopen</c>+<c>dlsym</c> instead of parsing the APK ZIP directory.
+	/// When false (MonoVM), the classic <see cref="DSOWrapperGenerator"/> layout is used instead.
+	/// </summary>
+	public bool UseDlopenAssemblyStore { get; set; }
+
 	[Required]
 	public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
@@ -69,7 +77,9 @@ public class WrapAssembliesAsSharedLibraries : AndroidTask
 
 			var arch = MonoAndroidHelper.AbiToTargetArch (abi);
 			var archive_path = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (store_path));
-			var wrapped_source_path = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, store_path, Path.GetFileName (archive_path));
+			var wrapped_source_path = UseDlopenAssemblyStore
+				? DlopenAssemblyStoreGenerator.WrapIt (Log, dsoWrapperConfig, arch, store_path, Path.GetFileName (archive_path))
+				: DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, store_path, Path.GetFileName (archive_path));
 
 			files.AddItem (wrapped_source_path, archive_path);
 		}

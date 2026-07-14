@@ -73,14 +73,12 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Disposed ()
 		{
+			using var server = LocalHttpServer.Start ();
 			var h = CreateHandler ();
 			h.Dispose ();
 			var c = new HttpClient (h);
 			try {
-				var t = ConnectIgnoreFailure (() => c.GetAsync ("http://google.com"), out bool connectionFailed);
-				if (connectionFailed)
-					return;
-
+				var t = c.GetAsync (server.OkUri);
 				t.Wait ();
 				Assert.Fail ("#1");
 			} catch (AggregateException e) {

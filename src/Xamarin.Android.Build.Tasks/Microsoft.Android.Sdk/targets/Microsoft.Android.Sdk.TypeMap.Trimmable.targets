@@ -44,6 +44,12 @@
          stays incremental while still reacting to post-trim JCW regeneration. -->
     <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTrimmableTypeMapJavaStamp)</_TrimmableJavaSourceStamp>
     <_TrimmableJavaSourceStamp Condition=" '$(_TrimmableJavaSourceStamp)' == '' ">$(_TrimmableTypeMapOutputStamp)</_TrimmableJavaSourceStamp>
+    <!-- On NativeAOT, ensure ILC's dynamic build properties (e.g. RuntimeIdentifier-derived
+         paths) are computed before the typemap is generated. -->
+    <_GenerateTrimmableTypeMapDependsOn Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(IlcDynamicBuildPropertyDependencies)</_GenerateTrimmableTypeMapDependsOn>
+    <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) (the extracted library .aar
+         AndroidManifest.xml files) that the legacy manifest merger merges into the app manifest. -->
+    <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports</_GenerateTrimmableTypeMapDependsOn>
     <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
          dynamic code is unavailable, so array creation uses the typemap path;
          defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
@@ -98,7 +104,7 @@
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
-      DependsOnTargets="_GetLibraryImports"
+      DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
 
@@ -380,6 +386,7 @@
         OutputDirectory="$(IntermediateOutputPath)android"
         TargetName="$(TargetName)"
         Environments="@(_EnvironmentFiles)"
+        AdditionalProviderSources="@(_AdditionalProviderSources)"
         EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)" />
 
     <!-- Copy generated manifest to expected location -->
@@ -387,6 +394,15 @@
         DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
         SkipUnchangedFiles="true"
         Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
+
+    <!-- The manifestmerger.jar path runs _ManifestMerger to produce android\AndroidManifest.xml from the
+         generated manifest. The legacy merger has no equivalent step, so on the trimmable path (where the
+         merged manifest was already produced, placeholders included, by _GenerateTrimmableTypeMap) copy it
+         into place directly; otherwise _ReadAndroidManifest and downstream packaging cannot find it. -->
+    <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        DestinationFiles="$(IntermediateOutputPath)android\AndroidManifest.xml"
+        SkipUnchangedFiles="true"
+        Condition=" '$(AndroidManifestMerger)' != 'manifestmerger.jar' and Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml') " />
 
     <!-- acw-map.txt is populated by _GenerateTrimmableTypeMap with real managed→Java mappings.
          If that target was skipped (e.g., no input assemblies), create an empty placeholder so
@@ -397,6 +413,8 @@
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" />
+      <FileWrites Include="$(IntermediateOutputPath)android\AndroidManifest.xml"
+          Condition=" '$(AndroidManifestMerger)' != 'manifestmerger.jar' " />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
     </ItemGroup>
 
@@ -421,6 +439,43 @@
     </GenerateEmptyTypemapStub>
     <ItemGroup>
       <FileWrites Include="@(_TypeMapAssemblySource)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    Keep the resource designer assembly on the trimmable type map path.
+
+    The non-trimmable path (Microsoft.Android.Sdk.TypeMap.LlvmIr.targets) runs
+    PreTrimmingFixLegacyDesigner, which rewrites legacy resource field loads into designer
+    property-getter calls so the trimmer can drop unused designer members. The trimmable path
+    does not run that rewrite. More importantly, resource ids are resolved via reflection at
+    runtime (Android.Runtime.ResourceIdManager then ResourceDesignerAttribute then Type.GetType /
+    UpdateIdValues), which neither ILLink nor ILC can follow. If the designer assembly is left
+    trimmable it gets removed entirely, and accessing any resource id (e.g. from a reflection-only
+    code path) throws a TypeInitializationException wrapping
+    System.IO.FileNotFoundException: _Microsoft.Android.Resource.Designer at runtime.
+
+    Keep the whole _Microsoft.Android.Resource.Designer assembly. Two things are required on the
+    NativeAOT (ILC) path:
+      * ILC only loads the assemblies passed to it as references; the designer is a compile-time
+        reference but is NOT in @(IlcReference), so add it. Rooting an assembly ILC never loaded
+        fails hard with "Failed to load assembly '_Microsoft.Android.Resource.Designer'".
+      * Root it so ILC/ILLink keep it whole (TrimMode-based rooting can't be used here because
+        _AndroidComputeIlcCompileInputs clears @(_IlcManagedInputAssemblies)).
+
+    Drive both off @(ReferencePath) filtered to the designer: the item is empty when the designer
+    assembly was not generated (e.g. no resources / AndroidGenerateResourceDesigner=false), so we
+    never reference or root a non-existent assembly. @(IlcReference) is ignored by ILLink, so the
+    CoreCLR path just gets the root.
+  -->
+  <Target Name="_RootResourceDesignerForTrimmableTypeMap"
+      Condition=" '$(AndroidUseDesignerAssembly)' == 'True' and '$(PublishTrimmed)' == 'true' "
+      BeforeTargets="PrepareForILLink;WriteIlcRspFileForCompilation">
+    <ItemGroup>
+      <_ResourceDesignerReferenceToRoot Include="@(ReferencePath)"
+          Condition=" '%(Filename)' == '_Microsoft.Android.Resource.Designer' " />
+      <IlcReference Include="@(_ResourceDesignerReferenceToRoot->'%(FullPath)')" />
+      <TrimmerRootAssembly Include="@(_ResourceDesignerReferenceToRoot->'%(Filename)')" />
     </ItemGroup>
   </Target>
 </Project>

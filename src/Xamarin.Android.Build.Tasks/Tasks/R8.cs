@@ -66,6 +66,7 @@ namespace Xamarin.Android.Tasks
 				yield break;
 			}
 			var seen = new HashSet<string> (StringComparer.Ordinal);
+			var javaTypes = new List<string> ();
 			foreach (var item in JavaSourceFiles) {
 				var path = item.ItemSpec;
 				if (path.IsNullOrEmpty () || !File.Exists (path)) {
@@ -77,8 +78,12 @@ namespace Xamarin.Android.Tasks
 					typeName = $"{package}.{typeName}";
 				}
 				if (seen.Add (typeName)) {
-					yield return typeName;
+					javaTypes.Add (typeName);
 				}
+			}
+			javaTypes.Sort (StringComparer.Ordinal);
+			foreach (var javaType in javaTypes) {
+				yield return javaType;
 			}
 		}
 
@@ -150,7 +155,16 @@ namespace Xamarin.Android.Tasks
 
 			if (EnableShrinking) {
 				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-					File.WriteAllText (ProguardGeneratedApplicationConfiguration, "# ACW keep rules are generated from NativeAOT ILC metadata.\n");
+					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
+					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
+					// and is absent from that map, so keep it here explicitly; otherwise R8 shrinks it away
+					// (e.g. dropping large unreferenced sources so an app that needs multidex no longer does).
+					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
+						appcfg.WriteLine ("# ACW keep rules are generated from NativeAOT ILC metadata.");
+						foreach (var java in GetUserJavaTypes ()) {
+							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+						}
+					}
 				} else if (!AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);

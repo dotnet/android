@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <dirent.h>
+#include <dlfcn.h>
 
 #include <cerrno>
 #include <cstdio>
@@ -29,7 +30,6 @@
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
 #include <shared/xxhash.hh>
-#include <startup/zip.hh>
 
 using namespace xamarin::android;
 
@@ -136,38 +136,6 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 	return log_and_return (path, *data_start, *size);
 }
 
-auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool
-{
-	log_debug (LOG_ASSEMBLY, "zip entry: {}"sv, entry_name.get ());
-	if (!found_assembly_store) {
-		found_assembly_store = Zip::assembly_store_file_path.compare (0, entry_name.length (), entry_name.get ()) == 0;
-		if (found_assembly_store) {
-			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}': {}"sv, apk_path, Zip::assembly_store_file_path);
-			AssemblyStore::map (apk_fd, apk_path, Zip::assembly_store_file_path, offset, size);
-			return false; // This will make the scanner keep the APK open
-		}
-	}
-
-	if (!AndroidSystem::is_embedded_dso_mode_enabled () || !entry_name.starts_with (Zip::lib_prefix) || !entry_name.ends_with (Constants::dso_suffix)) {
-		return false;
-	}
-
-	log_debug (LOG_ASSEMBLY, "Found shared library in '{}': {}"sv, apk_path, entry_name.get ());
-	std::string_view lib_name { entry_name.get () + Zip::lib_prefix.length () };
-	hash_t name_hash = xxhash::hash (lib_name.data (), lib_name.length ());
-	log_debug (LOG_ASSEMBLY, "Library name is: {}; hash == 0x{:x}", lib_name, name_hash);
-
-	DSOApkEntry *apk_entry = MonodroidDl::find_dso_apk_entry (name_hash);
-	if (apk_entry == nullptr) {
-		return false;
-	}
-
-	log_debug (LOG_ASSEMBLY, "Found matching DSO APK entry");
-	apk_entry->fd = apk_fd;
-	apk_entry->offset = offset;
-	return false;
-}
-
 [[gnu::always_inline]]
 void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 {
@@ -221,80 +189,60 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 			}
 
 			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}/{}'"sv, native_lib_dir, Constants::assembly_store_file_name);
-			int store_fd = openat (dir_fd, cur->d_name, O_RDONLY);
-			if (store_fd < 0) {
-				Helpers::abort_application (
-					LOG_ASSEMBLY,
-					std::format (
-						"Unable to open assembly store '{}/{}' for reading. {}"sv,
-						native_lib_dir,
-						Constants::assembly_store_file_name,
-						std::strerror (errno)
-					)
-				);
-			}
 
-			auto file_size = Util::get_file_size_at (dir_fd, cur->d_name);
-			if (!file_size) {
-				// get_file_size_at logged errno for us
-				Helpers::abort_application (
-					LOG_ASSEMBLY,
-					std::format (
-						"Unable to map assembly store '{}/{}'"sv,
-						native_lib_dir,
-						Constants::assembly_store_file_name
-					)
-				);
-			}
-
-			AssemblyStore::map (store_fd, cur->d_name, 0, static_cast<uint32_t>(file_size.value ()));
-			close (store_fd);
+			std::string store_path = native_lib_dir;
+			store_path.append ("/"sv);
+			store_path.append (cur->d_name);
+			map_assembly_store_via_dlopen (store_path.c_str ());
 			break; // we've found all we need
 		}
 	} while (true);
 	closedir (lib_dir);
 }
 
-void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks)
+void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
 {
+	if (!application_config.have_assembly_store) {
+		log_debug (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery"sv);
+		return;
+	}
+
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		scan_filesystem_for_assemblies_and_libraries ();
 		return;
 	}
 
-	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
-	bool got_split_config_abi_apk = false;
-	std::string_view base_apk{};
+	// The assembly store is wrapped as a real shared library whose payload is exposed via the
+	// `_assembly_store` dynamic symbol, so the dynamic linker has already located and mapped
+	// it out of the APK for us. We resolve the payload with dlopen()+dlsym() instead of parsing the
+	// APK ZIP central directory ourselves.
+	map_assembly_store_via_dlopen (Constants::assembly_store_file_name.data ());
+}
 
-	for (int64_t i = 0; i < apk_count; i++) {
-		std::string_view apk_file = runtimeApks [static_cast<size_t>(i)].get_string_view ();
-
-		if (have_split_apks) {
-			bool scan_apk = false;
-
-			// With split configs we need to scan only the abi apk, because both the assembly stores and the runtime
-			// configuration blob **should be** in `lib/{ARCH}`, which in turn lives in the split config APK
-			if (!got_split_config_abi_apk && apk_file.ends_with (Constants::split_config_abi_apk_name.data ())) {
-				got_split_config_abi_apk = scan_apk = true;
-			} else if (base_apk.empty () && apk_file.ends_with (Constants::base_apk_name)) {
-				base_apk = apk_file;
-			}
-
-			if (!scan_apk) {
-				continue;
-			}
-		}
-
-		Zip::scan_archive (apk_file, zip_scan_callback);
+void Host::map_assembly_store_via_dlopen (const char *store_path) noexcept
+{
+	// RTLD_LOCAL: we only dlsym() our own handle, so there's no need to add the store's symbols to
+	// the global lookup scope (RTLD_GLOBAL would just add linker bookkeeping).
+	void *handle = ::dlopen (store_path, RTLD_NOW | RTLD_LOCAL);
+	if (handle == nullptr) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format ("Unable to dlopen() assembly store '{}': {}"sv, optional_string (store_path), optional_string (::dlerror ()))
+		);
 	}
 
-	// This apparently can happen now... It seems that sometimes (when and why? No idea) when AAB format is used, bundletool
-	// won't put the native libraries in a separate split config file, but it will instead put **all** of the ABIs
-	// in base.apk
-	if (have_split_apks && !got_split_config_abi_apk) {
-		abort_unless (!base_apk.empty (), "Split config APKs are used, but no ABI config was found and no base.apk was encountered.");
-		Zip::scan_archive (base_apk, zip_scan_callback);
+	// NOTE: intentionally not calling dlclose() - we keep the store mapped for the lifetime of the app.
+	void *payload = ::dlsym (handle, DLOPEN_ASSEMBLY_STORE_SYMBOL.data ());
+	if (payload == nullptr) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format ("Assembly store '{}' does not export the '{}' symbol"sv, optional_string (store_path), DLOPEN_ASSEMBLY_STORE_SYMBOL)
+		);
 	}
+
+	log_debug (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: {:p} ({})"sv, payload, optional_string (store_path));
+	AssemblyStore::configure_from_payload (payload, [store_path]() -> std::string { return std::string { store_path }; });
+	found_assembly_store = true;
 }
 
 [[gnu::always_inline]]

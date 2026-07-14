@@ -192,18 +192,18 @@ struct [[gnu::packed]] AssemblyStoreEntryDescriptor final
 
 struct AssemblyStoreRuntimeData final
 {
-	uint8_t             *data_start;
+	const uint8_t       *data_start;
 	uint32_t             assembly_count;
 	uint32_t             index_entry_count;
-	AssemblyStoreEntryDescriptor *assemblies;
+	const AssemblyStoreEntryDescriptor *assemblies;
 };
 
 struct AssemblyStoreSingleAssemblyRuntimeData final
 {
-	uint8_t             *image_data;
-	uint8_t             *debug_info_data;
-	uint8_t             *config_data;
-	AssemblyStoreEntryDescriptor *descriptor;
+	const uint8_t       *image_data;
+	const uint8_t       *debug_info_data;
+	const uint8_t       *config_data;
+	const AssemblyStoreEntryDescriptor *descriptor;
 };
 
 // Keep in strict sync with:
@@ -231,6 +231,7 @@ struct ApplicationConfig
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
 	bool managed_marshal_methods_lookup_enabled;
+	bool have_assembly_store;
 };
 
 struct RuntimeProperty
@@ -244,13 +245,6 @@ struct RuntimePropertyIndexEntry
 {
 	xamarin::android::hash_t key_hash;
 	uint32_t index;
-};
-
-struct DSOApkEntry
-{
-	uint64_t name_hash;
-	uint32_t offset; // offset into the APK
-	int32_t  fd; // apk file descriptor
 };
 
 struct DSOCacheEntry
@@ -354,7 +348,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
 	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
-	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
 
 	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];
 	[[gnu::visibility("default")]] extern const char runtime_properties_data[];

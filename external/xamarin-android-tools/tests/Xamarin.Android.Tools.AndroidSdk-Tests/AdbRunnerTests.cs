@@ -1,0 +1,1470 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using NUnit.Framework;
+
+namespace Xamarin.Android.Tools.Tests;
+
+/// <summary>
+/// Tests for AdbRunner parsing, formatting, and merging logic.
+/// Ported from dotnet/android GetAvailableAndroidDevicesTests.
+///
+/// API consumer reference:
+///   - ParseAdbDevicesOutput: used by dotnet/android GetAvailableAndroidDevices task
+///   - BuildDeviceDescription: used by dotnet/android GetAvailableAndroidDevices task
+///   - FormatDisplayName: used by dotnet/android GetAvailableAndroidDevices tests
+///   - MergeDevicesAndEmulators: used by dotnet/android GetAvailableAndroidDevices task
+///   - MapAdbStateToStatus: used internally by ParseAdbDevicesOutput, public for extensibility
+///   - ListDevicesAsync: used by MAUI DevTools Adb provider (Providers/Android/Adb.cs)
+///   - WaitForDeviceAsync: used by MAUI DevTools Adb provider
+///   - StopEmulatorAsync: used by MAUI DevTools Adb provider
+///   - GetEmulatorAvdNameAsync: internal, used by ListDevicesAsync only
+/// </summary>
+[TestFixture]
+public class AdbRunnerTests
+{
+	// Consumer: dotnet/android GetAvailableAndroidDevices.cs, MAUI DevTools (via ListDevicesAsync)
+
+	[Test]
+	public void ParseAdbDevicesOutput_RealWorldData ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"0A041FDD400327         device product:redfin model:Pixel_5 device:redfin transport_id:2\n" +
+			"emulator-5554          device product:sdk_gphone64_x86_64 model:sdk_gphone64_x86_64 device:emu64xa transport_id:1\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (2, devices.Count);
+
+		// Physical device
+		Assert.AreEqual ("0A041FDD400327", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceType.Device, devices [0].Type);
+		Assert.AreEqual (AdbDeviceStatus.Online, devices [0].Status);
+		Assert.AreEqual ("Pixel 5", devices [0].Description);
+		Assert.AreEqual ("Pixel_5", devices [0].Model);
+		Assert.AreEqual ("redfin", devices [0].Product);
+		Assert.AreEqual ("redfin", devices [0].Device);
+		Assert.AreEqual ("2", devices [0].TransportId);
+		Assert.IsFalse (devices [0].IsEmulator);
+
+		// Emulator
+		Assert.AreEqual ("emulator-5554", devices [1].Serial);
+		Assert.AreEqual (AdbDeviceType.Emulator, devices [1].Type);
+		Assert.AreEqual (AdbDeviceStatus.Online, devices [1].Status);
+		Assert.AreEqual ("sdk gphone64 x86 64", devices [1].Description); // model with underscores replaced
+		Assert.AreEqual ("sdk_gphone64_x86_64", devices [1].Model);
+		Assert.AreEqual ("1", devices [1].TransportId);
+		Assert.IsTrue (devices [1].IsEmulator);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_EmptyOutput ()
+	{
+		var output = "List of devices attached\n\n";
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+		Assert.AreEqual (0, devices.Count);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_SingleEmulator ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("emulator-5554", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceType.Emulator, devices [0].Type);
+		Assert.AreEqual (AdbDeviceStatus.Online, devices [0].Status);
+		Assert.AreEqual ("sdk_gphone64_arm64", devices [0].Model);
+		Assert.AreEqual ("1", devices [0].TransportId);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_SinglePhysicalDevice ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"0A041FDD400327         device usb:1-1 product:raven model:Pixel_6_Pro device:raven transport_id:2\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("0A041FDD400327", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceType.Device, devices [0].Type);
+		Assert.AreEqual (AdbDeviceStatus.Online, devices [0].Status);
+		Assert.AreEqual ("Pixel 6 Pro", devices [0].Description);
+		Assert.AreEqual ("Pixel_6_Pro", devices [0].Model);
+		Assert.AreEqual ("raven", devices [0].Product);
+		Assert.AreEqual ("2", devices [0].TransportId);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_OfflineDevice ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"emulator-5554          offline product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual (AdbDeviceStatus.Offline, devices [0].Status);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_UnauthorizedDevice ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"0A041FDD400327         unauthorized usb:1-1\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("0A041FDD400327", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceStatus.Unauthorized, devices [0].Status);
+		Assert.AreEqual (AdbDeviceType.Device, devices [0].Type);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_NoPermissionsDevice ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"????????????????       no permissions usb:1-1\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("????????????????", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceStatus.NoPermissions, devices [0].Status);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_DeviceWithMinimalMetadata ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"ABC123                 device\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("ABC123", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceType.Device, devices [0].Type);
+		Assert.AreEqual (AdbDeviceStatus.Online, devices [0].Status);
+		Assert.AreEqual ("ABC123", devices [0].Description, "Should fall back to serial");
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_InvalidLines ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"\n" +
+			"   \n" +
+			"Some random text\n" +
+			"* daemon not running; starting now at tcp:5037\n" +
+			"* daemon started successfully\n" +
+			"emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count, "Should only return valid device lines");
+		Assert.AreEqual ("emulator-5554", devices [0].Serial);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_MixedDeviceStates ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"emulator-5554          device product:sdk_gphone64_arm64 model:Pixel_7 device:emu64a\n" +
+			"emulator-5556          offline\n" +
+			"0A041FDD400327         device usb:1-1 product:raven model:Pixel_6_Pro\n" +
+			"0B123456789ABC         unauthorized usb:1-2\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (4, devices.Count);
+		Assert.AreEqual (AdbDeviceStatus.Online, devices [0].Status);
+		Assert.AreEqual (AdbDeviceStatus.Offline, devices [1].Status);
+		Assert.AreEqual (AdbDeviceStatus.Online, devices [2].Status);
+		Assert.AreEqual (AdbDeviceStatus.Unauthorized, devices [3].Status);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_WindowsNewlines ()
+	{
+		var output =
+			"List of devices attached\r\n" +
+			"emulator-5554          device transport_id:1\r\n" +
+			"\r\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("emulator-5554", devices [0].Serial);
+		Assert.IsTrue (devices [0].IsEmulator);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_TabSeparator ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"emulator-5554\tdevice\n" +
+			"R5CR10YZQPJ\tdevice\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (2, devices.Count);
+		Assert.AreEqual ("emulator-5554", devices [0].Serial);
+		Assert.AreEqual ("R5CR10YZQPJ", devices [1].Serial);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_IpPortDevice ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"192.168.1.100:5555     device product:sdk_gphone64_arm64 model:Remote_Device\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("192.168.1.100:5555", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceType.Device, devices [0].Type, "IP devices should be Device");
+		Assert.AreEqual ("Remote Device", devices [0].Description);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_AdbDaemonStarting ()
+	{
+		var output =
+			"* daemon not running; starting now at tcp:5037\n" +
+			"* daemon started successfully\n" +
+			"List of devices attached\n" +
+			"emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1\n" +
+			"0A041FDD400327         device usb:1-1 product:raven model:Pixel_6_Pro device:raven transport_id:2\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (2, devices.Count, "Should parse devices even with daemon startup messages");
+	}
+
+	// Consumer: dotnet/android GetAvailableAndroidDevices.cs
+
+	[Test]
+	public void DescriptionPriorityOrder ()
+	{
+		// Model has highest priority
+		var output1 = "List of devices attached\ndevice1                device product:product_name model:model_name device:device_name\n";
+		var devices1 = AdbRunner.ParseAdbDevicesOutput (output1.Split ('\n'));
+		Assert.AreEqual ("model name", devices1 [0].Description, "Model should have highest priority");
+
+		// Product has second priority
+		var output2 = "List of devices attached\ndevice2                device product:product_name device:device_name\n";
+		var devices2 = AdbRunner.ParseAdbDevicesOutput (output2.Split ('\n'));
+		Assert.AreEqual ("product name", devices2 [0].Description, "Product should have second priority");
+
+		// Device code name has third priority
+		var output3 = "List of devices attached\ndevice3                device device:device_name\n";
+		var devices3 = AdbRunner.ParseAdbDevicesOutput (output3.Split ('\n'));
+		Assert.AreEqual ("device name", devices3 [0].Description, "Device should have third priority");
+	}
+
+	[Test]
+	public void BuildDeviceDescription_EmulatorWithUppercaseAvdName ()
+	{
+		// Mirrors dotnet/android ParseMixedDeviceStates: offline emulator gets AVD name "Pixel_9_Pro_XL"
+		// BuildDeviceDescription should format it preserving "XL" uppercase
+		var device = new AdbDeviceInfo {
+			Serial = "emulator-5556",
+			Type = AdbDeviceType.Emulator,
+			Status = AdbDeviceStatus.Offline,
+			AvdName = "Pixel_9_Pro_XL",
+		};
+
+		var description = AdbRunner.BuildDeviceDescription (device);
+		Assert.AreEqual ("Pixel 9 Pro XL", description, "Offline emulator should still get AVD name with uppercase preserved");
+	}
+
+	// Consumer: dotnet/android GetAvailableAndroidDevicesTests, BuildDeviceDescription (via AVD name formatting)
+
+	[Test]
+	public void FormatDisplayName_ReplacesUnderscoresWithSpaces ()
+	{
+		Assert.AreEqual ("Pixel 7 Pro", AdbRunner.FormatDisplayName ("pixel_7_pro"));
+	}
+
+	[Test]
+	public void FormatDisplayName_AppliesTitleCase ()
+	{
+		Assert.AreEqual ("Pixel 7 Pro", AdbRunner.FormatDisplayName ("pixel 7 pro"));
+	}
+
+	[Test]
+	public void FormatDisplayName_ReplacesApiWithAPIUppercase ()
+	{
+		Assert.AreEqual ("Pixel 5 API 34", AdbRunner.FormatDisplayName ("pixel_5_api_34"));
+	}
+
+	[Test]
+	public void FormatDisplayName_HandlesMultipleApiOccurrences ()
+	{
+		Assert.AreEqual ("Test API Device API 35", AdbRunner.FormatDisplayName ("test_api_device_api_35"));
+	}
+
+	[Test]
+	public void FormatDisplayName_HandlesMixedCaseInput ()
+	{
+		Assert.AreEqual ("Pixel 7 API 35", AdbRunner.FormatDisplayName ("PiXeL_7_API_35"));
+	}
+
+	[Test]
+	public void FormatDisplayName_HandlesComplexNames ()
+	{
+		// Lowercase input: "xl" gets title-cased to "Xl"
+		Assert.AreEqual ("Pixel 9 Pro Xl API 36", AdbRunner.FormatDisplayName ("pixel_9_pro_xl_api_36"));
+	}
+
+	[Test]
+	public void FormatDisplayName_PreservesUppercaseSegments ()
+	{
+		// Fully-uppercase segments like "XL", "SE", "FE" are preserved
+		Assert.AreEqual ("Pixel 9 Pro XL", AdbRunner.FormatDisplayName ("Pixel_9_Pro_XL"));
+		Assert.AreEqual ("Galaxy S24 FE", AdbRunner.FormatDisplayName ("Galaxy_S24_FE"));
+	}
+
+	[Test]
+	public void FormatDisplayName_PreservesNumbersAndSpecialChars ()
+	{
+		Assert.AreEqual ("Pixel 7-Pro API 35", AdbRunner.FormatDisplayName ("pixel_7-pro_api_35"));
+	}
+
+	[Test]
+	public void FormatDisplayName_HandlesEmptyString ()
+	{
+		Assert.AreEqual ("", AdbRunner.FormatDisplayName (""));
+	}
+
+	[Test]
+	public void FormatDisplayName_HandlesSingleWord ()
+	{
+		Assert.AreEqual ("Pixel", AdbRunner.FormatDisplayName ("pixel"));
+	}
+
+	[Test]
+	public void FormatDisplayName_DoesNotReplaceApiInsideWords ()
+	{
+		Assert.AreEqual ("Erapidevice", AdbRunner.FormatDisplayName ("erapidevice"));
+	}
+
+	// Consumer: ParseAdbDevicesOutput (internal mapping), public for custom consumers
+
+	[Test]
+	public void MapAdbStateToStatus_AllStates ()
+	{
+		Assert.AreEqual (AdbDeviceStatus.Online, AdbRunner.MapAdbStateToStatus ("device"));
+		Assert.AreEqual (AdbDeviceStatus.Offline, AdbRunner.MapAdbStateToStatus ("offline"));
+		Assert.AreEqual (AdbDeviceStatus.Unauthorized, AdbRunner.MapAdbStateToStatus ("unauthorized"));
+		Assert.AreEqual (AdbDeviceStatus.NoPermissions, AdbRunner.MapAdbStateToStatus ("no permissions"));
+		Assert.AreEqual (AdbDeviceStatus.Unknown, AdbRunner.MapAdbStateToStatus ("something-else"));
+	}
+
+	// Consumer: dotnet/android GetAvailableAndroidDevices.cs
+
+	[Test]
+	public void MergeDevicesAndEmulators_NoEmulators_ReturnsAdbDevicesOnly ()
+	{
+		var adbDevices = new List<AdbDeviceInfo> {
+			new AdbDeviceInfo { Serial = "0A041FDD400327", Description = "Pixel 5", Type = AdbDeviceType.Device, Status = AdbDeviceStatus.Online },
+		};
+
+		var result = AdbRunner.MergeDevicesAndEmulators (adbDevices, new List<string> ());
+
+		Assert.AreEqual (1, result.Count);
+		Assert.AreEqual ("0A041FDD400327", result [0].Serial);
+	}
+
+	[Test]
+	public void MergeDevicesAndEmulators_NoRunningEmulators_AddsAllAvailable ()
+	{
+		var adbDevices = new List<AdbDeviceInfo> {
+			new AdbDeviceInfo { Serial = "0A041FDD400327", Description = "Pixel 5", Type = AdbDeviceType.Device, Status = AdbDeviceStatus.Online },
+		};
+		var available = new List<string> { "pixel_7_api_35", "pixel_9_api_36" };
+
+		var result = AdbRunner.MergeDevicesAndEmulators (adbDevices, available);
+
+		Assert.AreEqual (3, result.Count);
+
+		// Online first
+		Assert.AreEqual ("0A041FDD400327", result [0].Serial);
+
+		// Non-running sorted alphabetically
+		Assert.AreEqual ("pixel_7_api_35", result [1].Serial);
+		Assert.AreEqual (AdbDeviceStatus.NotRunning, result [1].Status);
+		Assert.AreEqual ("pixel_7_api_35", result [1].AvdName);
+		Assert.AreEqual ("Pixel 7 API 35 (Not Running)", result [1].Description);
+
+		Assert.AreEqual ("pixel_9_api_36", result [2].Serial);
+		Assert.AreEqual (AdbDeviceStatus.NotRunning, result [2].Status);
+		Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [2].Description);
+	}
+
+	[Test]
+	public void MergeDevicesAndEmulators_RunningEmulator_NoDuplicate ()
+	{
+		var adbDevices = new List<AdbDeviceInfo> {
+			new AdbDeviceInfo {
+				Serial = "emulator-5554", Description = "Pixel 7 API 35",
+				Type = AdbDeviceType.Emulator, Status = AdbDeviceStatus.Online,
+				AvdName = "pixel_7_api_35"
+			},
+		};
+		var available = new List<string> { "pixel_7_api_35" };
+
+		var result = AdbRunner.MergeDevicesAndEmulators (adbDevices, available);
+
+		Assert.AreEqual (1, result.Count, "Should not duplicate running emulator");
+		Assert.AreEqual ("emulator-5554", result [0].Serial);
+		Assert.AreEqual (AdbDeviceStatus.Online, result [0].Status);
+	}
+
+	[Test]
+	public void MergeDevicesAndEmulators_MixedRunningAndNotRunning ()
+	{
+		var adbDevices = new List<AdbDeviceInfo> {
+			new AdbDeviceInfo {
+				Serial = "emulator-5554", Description = "Pixel 7 API 35",
+				Type = AdbDeviceType.Emulator, Status = AdbDeviceStatus.Online,
+				AvdName = "pixel_7_api_35"
+			},
+			new AdbDeviceInfo {
+				Serial = "0A041FDD400327", Description = "Pixel 5",
+				Type = AdbDeviceType.Device, Status = AdbDeviceStatus.Online,
+			},
+		};
+		var available = new List<string> { "pixel_7_api_35", "pixel_9_api_36", "nexus_5_api_30" };
+
+		var result = AdbRunner.MergeDevicesAndEmulators (adbDevices, available);
+
+		Assert.AreEqual (4, result.Count);
+
+		// Online devices first, sorted alphabetically
+		Assert.AreEqual ("0A041FDD400327", result [0].Serial);
+		Assert.AreEqual (AdbDeviceStatus.Online, result [0].Status);
+
+		Assert.AreEqual ("emulator-5554", result [1].Serial);
+		Assert.AreEqual (AdbDeviceStatus.Online, result [1].Status);
+
+		// Non-running emulators second, sorted alphabetically
+		Assert.AreEqual ("nexus_5_api_30", result [2].Serial);
+		Assert.AreEqual (AdbDeviceStatus.NotRunning, result [2].Status);
+		Assert.AreEqual ("Nexus 5 API 30 (Not Running)", result [2].Description);
+
+		Assert.AreEqual ("pixel_9_api_36", result [3].Serial);
+		Assert.AreEqual (AdbDeviceStatus.NotRunning, result [3].Status);
+	}
+
+	[Test]
+	public void MergeDevicesAndEmulators_CaseInsensitiveAvdNameMatching ()
+	{
+		var adbDevices = new List<AdbDeviceInfo> {
+			new AdbDeviceInfo {
+				Serial = "emulator-5554", Description = "Pixel 7 API 35",
+				Type = AdbDeviceType.Emulator, Status = AdbDeviceStatus.Online,
+				AvdName = "Pixel_7_API_35"
+			},
+		};
+		var available = new List<string> { "pixel_7_api_35" }; // lowercase
+
+		var result = AdbRunner.MergeDevicesAndEmulators (adbDevices, available);
+
+		Assert.AreEqual (1, result.Count, "Should match AVD names case-insensitively");
+	}
+
+	[Test]
+	public void MergeDevicesAndEmulators_EmptyAdbDevices_ReturnsAllAvailable ()
+	{
+		var result = AdbRunner.MergeDevicesAndEmulators (new List<AdbDeviceInfo> (), new List<string> { "pixel_7_api_35", "pixel_9_api_36" });
+
+		Assert.AreEqual (2, result.Count);
+		Assert.AreEqual ("Pixel 7 API 35 (Not Running)", result [0].Description);
+		Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [1].Description);
+	}
+
+	// Consumer: MAUI DevTools Adb provider (AdbPath, IsAvailable properties)
+
+	[Test]
+	public void Constructor_NullPath_ThrowsArgumentException ()
+	{
+		Assert.Throws<ArgumentException> (() => new AdbRunner (null!));
+	}
+
+	[Test]
+	public void Constructor_EmptyPath_ThrowsArgumentException ()
+	{
+		Assert.Throws<ArgumentException> (() => new AdbRunner (""));
+	}
+
+	[Test]
+	public void Constructor_WhitespacePath_ThrowsArgumentException ()
+	{
+		Assert.Throws<ArgumentException> (() => new AdbRunner ("   "));
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_DeviceWithProductOnly ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"emulator-5554          device product:aosp_x86_64\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("aosp_x86_64", devices [0].Product);
+		Assert.AreEqual (AdbDeviceType.Emulator, devices [0].Type);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_MultipleDevices ()
+	{
+		var output =
+			"List of devices attached\n" +
+			"emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1\n" +
+			"emulator-5556          device product:sdk_gphone64_x86_64 model:sdk_gphone64_x86_64 device:emu64x transport_id:3\n" +
+			"0A041FDD400327         device usb:1-1 product:raven model:Pixel_6_Pro device:raven transport_id:2\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (3, devices.Count);
+		Assert.AreEqual ("emulator-5554", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceType.Emulator, devices [0].Type);
+		Assert.AreEqual ("emulator-5556", devices [1].Serial);
+		Assert.AreEqual (AdbDeviceType.Emulator, devices [1].Type);
+		Assert.AreEqual ("0A041FDD400327", devices [2].Serial);
+		Assert.AreEqual (AdbDeviceType.Device, devices [2].Type);
+		Assert.AreEqual ("Pixel_6_Pro", devices [2].Model);
+	}
+
+	[Test]
+	public void MergeDevicesAndEmulators_AllEmulatorsRunning_NoDuplicate ()
+	{
+		var emulator1 = new AdbDeviceInfo {
+			Serial = "emulator-5554", Description = "Pixel 7 API 35",
+			Type = AdbDeviceType.Emulator, Status = AdbDeviceStatus.Online,
+			AvdName = "pixel_7_api_35",
+		};
+		var emulator2 = new AdbDeviceInfo {
+			Serial = "emulator-5556", Description = "Pixel 9 API 36",
+			Type = AdbDeviceType.Emulator, Status = AdbDeviceStatus.Online,
+			AvdName = "pixel_9_api_36",
+		};
+
+		var result = AdbRunner.MergeDevicesAndEmulators (
+			new List<AdbDeviceInfo> { emulator1, emulator2 },
+			new List<string> { "pixel_7_api_35", "pixel_9_api_36" });
+
+		Assert.AreEqual (2, result.Count, "Should not add duplicates when all emulators are running");
+		Assert.IsTrue (result.All (d => d.Status == AdbDeviceStatus.Online));
+	}
+
+	[Test]
+	public void MergeDevicesAndEmulators_NonRunningEmulatorHasFormattedDescription ()
+	{
+		var result = AdbRunner.MergeDevicesAndEmulators (
+			new List<AdbDeviceInfo> (),
+			new List<string> { "pixel_7_pro_api_35" });
+
+		Assert.AreEqual (1, result.Count);
+		Assert.AreEqual ("Pixel 7 Pro API 35 (Not Running)", result [0].Description);
+		Assert.AreEqual (AdbDeviceStatus.NotRunning, result [0].Status);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_RecoveryState ()
+	{
+		var output = "List of devices attached\n" +
+			"0A041FDD400327         recovery product:redfin model:Pixel_5 device:redfin transport_id:2\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("0A041FDD400327", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceStatus.Unknown, devices [0].Status);
+	}
+
+	[Test]
+	public void ParseAdbDevicesOutput_SideloadState ()
+	{
+		var output = "List of devices attached\n" +
+			"0A041FDD400327         sideload\n";
+
+		var devices = AdbRunner.ParseAdbDevicesOutput (output.Split ('\n'));
+
+		Assert.AreEqual (1, devices.Count);
+		Assert.AreEqual ("0A041FDD400327", devices [0].Serial);
+		Assert.AreEqual (AdbDeviceStatus.Unknown, devices [0].Status);
+	}
+
+	[Test]
+	public void MapAdbStateToStatus_Recovery_ReturnsUnknown ()
+	{
+		Assert.AreEqual (AdbDeviceStatus.Unknown, AdbRunner.MapAdbStateToStatus ("recovery"));
+	}
+
+	[Test]
+	public void MapAdbStateToStatus_Sideload_ReturnsUnknown ()
+	{
+		Assert.AreEqual (AdbDeviceStatus.Unknown, AdbRunner.MapAdbStateToStatus ("sideload"));
+	}
+
+	// Consumer: MAUI DevTools Adb provider (WaitForDeviceAsync)
+
+	[Test]
+	public void WaitForDeviceAsync_NegativeTimeout_ThrowsArgumentOutOfRange ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentOutOfRangeException> (
+			async () => await runner.WaitForDeviceAsync (timeout: System.TimeSpan.FromSeconds (-1)));
+	}
+
+	[Test]
+	public void WaitForDeviceAsync_ZeroTimeout_ThrowsArgumentOutOfRange ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentOutOfRangeException> (
+			async () => await runner.WaitForDeviceAsync (timeout: System.TimeSpan.Zero));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_ReturnsFirstLine ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("hello\nworld\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_SkipsBlankLines ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("\n\nhello\nworld\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_TrimsWhitespace ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("  hello  \n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_HandlesWindowsNewlines ()
+	{
+		Assert.AreEqual ("hello", AdbRunner.FirstNonEmptyLine ("\r\nhello\r\nworld\r\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_EmptyString_ReturnsNull ()
+	{
+		Assert.IsNull (AdbRunner.FirstNonEmptyLine (""));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_OnlyNewlines_ReturnsNull ()
+	{
+		Assert.IsNull (AdbRunner.FirstNonEmptyLine ("\n\n\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_SingleValue_ReturnsIt ()
+	{
+		Assert.AreEqual ("1", AdbRunner.FirstNonEmptyLine ("1\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_TypicalGetpropOutput ()
+	{
+		// adb shell getprop sys.boot_completed returns "1\n" or "1\r\n"
+		Assert.AreEqual ("1", AdbRunner.FirstNonEmptyLine ("1\r\n"));
+	}
+
+	[Test]
+	public void FirstNonEmptyLine_PmPathOutput ()
+	{
+		// adb shell pm path android returns "package:/system/framework/framework-res.apk\n"
+		var output = "package:/system/framework/framework-res.apk\n";
+		Assert.AreEqual ("package:/system/framework/framework-res.apk", AdbRunner.FirstNonEmptyLine (output));
+	}
+
+	// Consumer: MAUI DevTools (via ListReversePortsAsync), vscode-maui ServiceHub replacement
+
+	[Test]
+	public void ParseReverseListOutput_SingleRule ()
+	{
+		var output = new [] {
+			"(reverse) tcp:5000 tcp:5000",
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+
+		Assert.AreEqual (1, rules.Count);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Remote.Protocol);
+		Assert.AreEqual (5000, rules [0].Remote.Port);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Local.Protocol);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_MultipleRules ()
+	{
+		var output = new [] {
+			"(reverse) tcp:5000 tcp:5000",
+			"(reverse) tcp:8081 tcp:8081",
+			"(reverse) tcp:19000 tcp:19001",
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+
+		Assert.AreEqual (3, rules.Count);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Remote.Protocol);
+		Assert.AreEqual (5000, rules [0].Remote.Port);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+		Assert.AreEqual (8081, rules [1].Remote.Port);
+		Assert.AreEqual (8081, rules [1].Local.Port);
+		Assert.AreEqual (19000, rules [2].Remote.Port);
+		Assert.AreEqual (19001, rules [2].Local.Port);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_EmptyOutput ()
+	{
+		var output = new [] { "", "  " };
+		var rules = AdbRunner.ParseReverseListOutput (output);
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_NoLines ()
+	{
+		var rules = AdbRunner.ParseReverseListOutput (Array.Empty<string> ());
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_IgnoresNonReverseLines ()
+	{
+		var output = new [] {
+			"some random header",
+			"(reverse) tcp:5000 tcp:5000",
+			"* daemon started successfully",
+			"(reverse) tcp:8081 tcp:8081",
+			"",
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+
+		Assert.AreEqual (2, rules.Count);
+		Assert.AreEqual (5000, rules [0].Remote.Port);
+		Assert.AreEqual (8081, rules [1].Remote.Port);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_MalformedLine_InsufficientParts ()
+	{
+		var output = new [] {
+			"(reverse) tcp:5000",  // missing local spec
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_DifferentRemoteAndLocalPorts ()
+	{
+		var output = new [] {
+			"(reverse) tcp:8080 tcp:3000",
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+
+		Assert.AreEqual (1, rules.Count);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Remote.Protocol);
+		Assert.AreEqual (8080, rules [0].Remote.Port);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Local.Protocol);
+		Assert.AreEqual (3000, rules [0].Local.Port);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_NonTcpSpecs_SkipsUnparseable ()
+	{
+		var output = new [] {
+			"(reverse) localabstract:chrome_devtools_remote tcp:9222",
+			"(reverse) tcp:5000 tcp:5000",
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+
+		// localabstract:chrome_devtools_remote has a non-numeric port, so it is skipped
+		Assert.AreEqual (1, rules.Count);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Remote.Protocol);
+		Assert.AreEqual (5000, rules [0].Remote.Port);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_WindowsLineEndings ()
+	{
+		// Simulate \r\n line endings (split on \n leaves trailing \r)
+		var output = new [] {
+			"(reverse) tcp:5000 tcp:5000\r",
+			"(reverse) tcp:8081 tcp:8081\r",
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+
+		Assert.AreEqual (2, rules.Count);
+		Assert.AreEqual (5000, rules [0].Remote.Port);
+		Assert.AreEqual (8081, rules [1].Remote.Port);
+	}
+
+	[Test]
+	public void ParseReverseListOutput_TabSeparated ()
+	{
+		var output = new [] {
+			"(reverse)\ttcp:5000\ttcp:5000",
+			"(reverse)\ttcp:8081\ttcp:8081",
+		};
+
+		var rules = AdbRunner.ParseReverseListOutput (output);
+
+		Assert.AreEqual (2, rules.Count);
+		Assert.AreEqual (5000, rules [0].Remote.Port);
+		Assert.AreEqual (8081, rules [1].Remote.Port);
+	}
+
+	// Consumer: MAUI DevTools (via ListForwardPortsAsync — host→device tunnel for JDWP debugger
+	// attach, perf endpoints, host-side DevFlow agent connect), vscode-maui ServiceHub replacement.
+	// Output format differs from reverse: "(reverse) <remote> <local>" → "<serial> <local> <remote>".
+
+	[Test]
+	public void ParseForwardListOutput_SingleRule ()
+	{
+		var output = new [] {
+			"emulator-5554 tcp:5000 tcp:6000",
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+
+		Assert.AreEqual (1, rules.Count);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Local.Protocol);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+		Assert.AreEqual (AdbProtocol.Tcp, rules [0].Remote.Protocol);
+		Assert.AreEqual (6000, rules [0].Remote.Port);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_MultipleRulesSameDevice ()
+	{
+		var output = new [] {
+			"emulator-5554 tcp:5000 tcp:6000",
+			"emulator-5554 tcp:8081 tcp:8081",
+			"emulator-5554 tcp:9222 tcp:9223",
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+
+		Assert.AreEqual (3, rules.Count);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+		Assert.AreEqual (6000, rules [0].Remote.Port);
+		Assert.AreEqual (8081, rules [1].Local.Port);
+		Assert.AreEqual (8081, rules [1].Remote.Port);
+		Assert.AreEqual (9222, rules [2].Local.Port);
+		Assert.AreEqual (9223, rules [2].Remote.Port);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_FiltersByDeviceSerial ()
+	{
+		// adb forward --list returns rules across ALL devices; we must filter.
+		var output = new [] {
+			"emulator-5554 tcp:5000 tcp:5000",
+			"emulator-5556 tcp:5001 tcp:5001",
+			"emulator-5554 tcp:8081 tcp:8081",
+			"abcd1234device tcp:9000 tcp:9000",
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+
+		Assert.AreEqual (2, rules.Count);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+		Assert.AreEqual (8081, rules [1].Local.Port);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_EmptyOutput ()
+	{
+		var output = new [] { "", "  " };
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_NoLines ()
+	{
+		var rules = AdbRunner.ParseForwardListOutput (Array.Empty<string> (), "emulator-5554");
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_EmptySerial_ReturnsEmpty ()
+	{
+		var output = new [] { "emulator-5554 tcp:5000 tcp:5000" };
+		var rules = AdbRunner.ParseForwardListOutput (output, "");
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_NoMatchingDevice ()
+	{
+		var output = new [] {
+			"emulator-5554 tcp:5000 tcp:5000",
+			"emulator-5556 tcp:5001 tcp:5001",
+		};
+		var rules = AdbRunner.ParseForwardListOutput (output, "missing-device");
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_MalformedLine_InsufficientParts ()
+	{
+		var output = new [] {
+			"emulator-5554 tcp:5000",  // missing remote spec
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_NonTcpSpecs_SkipsUnparseable ()
+	{
+		var output = new [] {
+			"emulator-5554 tcp:9222 localabstract:chrome_devtools_remote",
+			"emulator-5554 tcp:5000 tcp:5000",
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+
+		// localabstract:chrome_devtools_remote has a non-numeric port, so it is skipped
+		Assert.AreEqual (1, rules.Count);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+		Assert.AreEqual (5000, rules [0].Remote.Port);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_WindowsLineEndings ()
+	{
+		var output = new [] {
+			"emulator-5554 tcp:5000 tcp:6000\r",
+			"emulator-5554 tcp:8081 tcp:8081\r",
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+
+		Assert.AreEqual (2, rules.Count);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+		Assert.AreEqual (6000, rules [0].Remote.Port);
+		Assert.AreEqual (8081, rules [1].Local.Port);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_TabSeparated ()
+	{
+		var output = new [] {
+			"emulator-5554\ttcp:5000\ttcp:6000",
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "emulator-5554");
+
+		Assert.AreEqual (1, rules.Count);
+		Assert.AreEqual (5000, rules [0].Local.Port);
+		Assert.AreEqual (6000, rules [0].Remote.Port);
+	}
+
+	[Test]
+	public void ParseForwardListOutput_SerialMatch_IsCaseSensitive ()
+	{
+		// adb device serials are case-sensitive.
+		var output = new [] {
+			"emulator-5554 tcp:5000 tcp:5000",
+		};
+
+		var rules = AdbRunner.ParseForwardListOutput (output, "EMULATOR-5554");
+		Assert.AreEqual (0, rules.Count);
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_ValidTcp ()
+	{
+		var spec = AdbPortSpec.TryParse ("tcp:5000");
+		if (spec is null) {
+			Assert.Fail ("Expected non-null AdbPortSpec");
+			return;
+		}
+		Assert.AreEqual (AdbProtocol.Tcp, spec.Protocol);
+		Assert.AreEqual (5000, spec.Port);
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_NonTcpProtocol_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse ("localabstract:9222"));
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_Null_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse (default));
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_Empty_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse (""));
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_NoColon_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse ("tcp5000"));
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_NonNumericPort_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse ("localabstract:chrome_devtools_remote"));
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_ZeroPort_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse ("tcp:0"));
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_PortAbove65535_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse ("tcp:70000"));
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_UnknownProtocol_ReturnsNull ()
+	{
+		Assert.IsNull (AdbPortSpec.TryParse ("udp:5000"));
+	}
+
+	[Test]
+	public void AdbPortSpec_ToSocketSpec_Tcp ()
+	{
+		var spec = new AdbPortSpec (AdbProtocol.Tcp, 5000);
+		Assert.AreEqual ("tcp:5000", spec.ToSocketSpec ());
+	}
+
+	[Test]
+	public void AdbPortSpec_ToSocketSpec_HighPort ()
+	{
+		var spec = new AdbPortSpec (AdbProtocol.Tcp, 65535);
+		Assert.AreEqual ("tcp:65535", spec.ToSocketSpec ());
+	}
+
+	[Test]
+	public void AdbPortSpec_ToSocketSpec_LowPort ()
+	{
+		var spec = new AdbPortSpec (AdbProtocol.Tcp, 1);
+		Assert.AreEqual ("tcp:1", spec.ToSocketSpec ());
+	}
+
+	[Test]
+	public void AdbPortSpec_ToSocketSpec_InvalidProtocol_Throws ()
+	{
+		var spec = new AdbPortSpec ((AdbProtocol) 99, 5000);
+		Assert.Throws<System.ArgumentOutOfRangeException> (() => spec.ToSocketSpec ());
+	}
+
+	[Test]
+	public void AdbPortSpec_ToString_MatchesSocketSpec ()
+	{
+		var spec = new AdbPortSpec (AdbProtocol.Tcp, 8080);
+		Assert.AreEqual ("tcp:8080", spec.ToString ());
+	}
+
+	[Test]
+	public void AdbPortSpec_TryParse_Roundtrip ()
+	{
+		var original = new AdbPortSpec (AdbProtocol.Tcp, 3000);
+		var parsed = AdbPortSpec.TryParse (original.ToSocketSpec ());
+		Assert.AreEqual (original, parsed);
+	}
+
+	[Test]
+	public void AdbPortRule_ValueEquality ()
+	{
+		var rule1 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000));
+		var rule2 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000));
+		var rule3 = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
+
+		Assert.AreEqual (rule1, rule2);
+		Assert.AreNotEqual (rule1, rule3);
+		Assert.IsTrue (rule1 == rule2);
+		Assert.IsFalse (rule1 == rule3);
+	}
+
+	[Test]
+	public void AdbPortRule_Deconstruct ()
+	{
+		var rule = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
+		var (remote, local) = rule;
+
+		Assert.AreEqual (AdbProtocol.Tcp, remote.Protocol);
+		Assert.AreEqual (5000, remote.Port);
+		Assert.AreEqual (AdbProtocol.Tcp, local.Protocol);
+		Assert.AreEqual (3000, local.Port);
+	}
+
+	[Test]
+	public void AdbPortRule_ToString ()
+	{
+		var rule = new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 3000));
+		var str = rule.ToString ();
+
+		Assert.That (str, Does.Contain ("tcp:5000"));
+		Assert.That (str, Does.Contain ("tcp:3000"));
+	}
+
+	[Test]
+	public void ReversePortAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.ReversePortAsync ("", new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000)));
+	}
+
+	[Test]
+	public void ReversePortAsync_NullRemote_ThrowsArgumentNull ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentNullException> (
+			async () => await runner.ReversePortAsync ("emulator-5554", (AdbPortSpec) null, new AdbPortSpec (AdbProtocol.Tcp, 5000)));
+	}
+
+	[Test]
+	public void ReversePortAsync_NullLocal_ThrowsArgumentNull ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentNullException> (
+			async () => await runner.ReversePortAsync ("emulator-5554", new AdbPortSpec (AdbProtocol.Tcp, 5000), (AdbPortSpec) null));
+	}
+
+	[Test]
+	public void RemoveReversePortAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.RemoveReversePortAsync ("", new AdbPortSpec (AdbProtocol.Tcp, 5000)));
+	}
+
+	[Test]
+	public void RemoveReversePortAsync_NullRemote_ThrowsArgumentNull ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentNullException> (
+			async () => await runner.RemoveReversePortAsync ("emulator-5554", (AdbPortSpec) null));
+	}
+
+	[Test]
+	public void RemoveAllReversePortsAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.RemoveAllReversePortsAsync (""));
+	}
+
+	[Test]
+	public void ListReversePortsAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.ListReversePortsAsync (""));
+	}
+
+	[Test]
+	public void ForwardPortAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.ForwardPortAsync ("", new AdbPortSpec (AdbProtocol.Tcp, 5000), new AdbPortSpec (AdbProtocol.Tcp, 5000)));
+	}
+
+	[Test]
+	public void ForwardPortAsync_NullLocal_ThrowsArgumentNull ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentNullException> (
+			async () => await runner.ForwardPortAsync ("emulator-5554", (AdbPortSpec) null, new AdbPortSpec (AdbProtocol.Tcp, 5000)));
+	}
+
+	[Test]
+	public void ForwardPortAsync_NullRemote_ThrowsArgumentNull ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentNullException> (
+			async () => await runner.ForwardPortAsync ("emulator-5554", new AdbPortSpec (AdbProtocol.Tcp, 5000), (AdbPortSpec) null));
+	}
+
+	[Test]
+	public void RemoveForwardPortAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.RemoveForwardPortAsync ("", new AdbPortSpec (AdbProtocol.Tcp, 5000)));
+	}
+
+	[Test]
+	public void RemoveForwardPortAsync_NullLocal_ThrowsArgumentNull ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentNullException> (
+			async () => await runner.RemoveForwardPortAsync ("emulator-5554", (AdbPortSpec) null));
+	}
+
+	[Test]
+	public void RemoveAllForwardPortsAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.RemoveAllForwardPortsAsync (""));
+	}
+
+	[Test]
+	public async Task RemoveAllForwardPortsAsync_RemovesOnlyPortsForGivenSerial ()
+	{
+		var listedSerials = new List<string> ();
+		var removed = new List<(string Serial, AdbPortSpec Local)> ();
+		var runner = new RecordingAdbRunner (
+			listForwards: (serial, _) => {
+				listedSerials.Add (serial);
+				return Task.FromResult<IReadOnlyList<AdbPortRule>> (new [] {
+					new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 6000), new AdbPortSpec (AdbProtocol.Tcp, 5000)),
+					new AdbPortRule (new AdbPortSpec (AdbProtocol.Tcp, 6001), new AdbPortSpec (AdbProtocol.Tcp, 5001)),
+				});
+			},
+			removeForward: (serial, local, _) => {
+				removed.Add ((serial, local));
+				return Task.CompletedTask;
+			});
+
+		await runner.RemoveAllForwardPortsAsync ("emulator-5554");
+
+		Assert.AreEqual (new [] { "emulator-5554" }, listedSerials, "ListForwardPortsAsync should be called exactly once with the target serial.");
+		Assert.AreEqual (2, removed.Count, "Both listed rules should be removed.");
+		Assert.That (removed.Select (r => r.Serial), Is.All.EqualTo ("emulator-5554"), "Removes must target only the requested serial.");
+		Assert.AreEqual (5000, removed [0].Local.Port);
+		Assert.AreEqual (5001, removed [1].Local.Port);
+	}
+
+	[Test]
+	public async Task RemoveAllForwardPortsAsync_EmptyList_IsNoOp ()
+	{
+		var removed = new List<(string Serial, AdbPortSpec Local)> ();
+		var runner = new RecordingAdbRunner (
+			listForwards: (_, __) => Task.FromResult<IReadOnlyList<AdbPortRule>> (Array.Empty<AdbPortRule> ()),
+			removeForward: (serial, local, _) => {
+				removed.Add ((serial, local));
+				return Task.CompletedTask;
+			});
+
+		await runner.RemoveAllForwardPortsAsync ("emulator-5554");
+
+		Assert.IsEmpty (removed, "No removes should be issued when the listing is empty.");
+	}
+
+	sealed class RecordingAdbRunner : AdbRunner
+	{
+		readonly Func<string, System.Threading.CancellationToken, Task<IReadOnlyList<AdbPortRule>>> listForwards;
+		readonly Func<string, AdbPortSpec, System.Threading.CancellationToken, Task> removeForward;
+
+		public RecordingAdbRunner (
+			Func<string, System.Threading.CancellationToken, Task<IReadOnlyList<AdbPortRule>>> listForwards,
+			Func<string, AdbPortSpec, System.Threading.CancellationToken, Task> removeForward)
+			: base ("/fake/sdk/platform-tools/adb")
+		{
+			this.listForwards = listForwards;
+			this.removeForward = removeForward;
+		}
+
+		public override Task<IReadOnlyList<AdbPortRule>> ListForwardPortsAsync (string serial, System.Threading.CancellationToken cancellationToken = default)
+			=> listForwards (serial, cancellationToken);
+
+		public override Task RemoveForwardPortAsync (string serial, AdbPortSpec local, System.Threading.CancellationToken cancellationToken = default)
+			=> removeForward (serial, local, cancellationToken);
+	}
+
+	[Test]
+	public void ListForwardPortsAsync_EmptySerial_ThrowsArgumentException ()
+	{
+		var runner = new AdbRunner ("/fake/sdk/platform-tools/adb");
+		Assert.ThrowsAsync<System.ArgumentException> (
+			async () => await runner.ListForwardPortsAsync (""));
+	}
+
+	// These tests use a fake 'adb' script to control process output,
+	// verifying AVD detection order and offline emulator handling.
+
+	static string CreateFakeAdb (string scriptBody)
+	{
+		if (OS.IsWindows)
+			Assert.Ignore ("Fake adb tests use bash scripts and are not supported on Windows.");
+
+		var dir = Path.Combine (Path.GetTempPath (), $"fake-adb-{Guid.NewGuid ():N}");
+		Directory.CreateDirectory (dir);
+		var path = Path.Combine (dir, "adb");
+		File.WriteAllText (path, "#!/bin/bash\n" + scriptBody);
+		FileUtil.Chmod (path, 0x1ED); // 0755
+
+		return path;
+	}
+
+	static void CleanupFakeAdb (string adbPath)
+	{
+		var dir = Path.GetDirectoryName (adbPath);
+		if (dir is { Length: > 0 }) {
+			File.Delete (adbPath);
+			Directory.Delete (dir);
+		}
+	}
+
+	[Test]
+	public async Task GetEmulatorAvdNameAsync_PrefersGetprop ()
+	{
+		// getprop returns a value — should be used, emu avd name should NOT be needed
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$3" == "shell" && "$4" == "getprop" ]]; then
+			    echo "My_AVD_Name"
+			    exit 0
+			fi
+			if [[ "$3" == "emu" ]]; then
+			    echo "WRONG_NAME"
+			    echo "OK"
+			    exit 0
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var name = await runner.GetEmulatorAvdNameAsync ("emulator-5554");
+			Assert.AreEqual ("My_AVD_Name", name, "Should return getprop result");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task GetEmulatorAvdNameAsync_FallsBackToEmuAvdName ()
+	{
+		// getprop returns empty — should fall back to emu avd name
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$3" == "shell" && "$4" == "getprop" ]]; then
+			    echo ""
+			    exit 0
+			fi
+			if [[ "$3" == "emu" ]]; then
+			    echo "Fallback_AVD"
+			    echo "OK"
+			    exit 0
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var name = await runner.GetEmulatorAvdNameAsync ("emulator-5554");
+			Assert.AreEqual ("Fallback_AVD", name, "Should fall back to emu avd name");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task GetEmulatorAvdNameAsync_BothFail_ReturnsNull ()
+	{
+		// Both getprop and emu avd name return empty
+		var adbPath = CreateFakeAdb ("""
+			echo ""
+			exit 0
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var name = await runner.GetEmulatorAvdNameAsync ("emulator-5554");
+			Assert.IsNull (name, "Should return null when both methods fail");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+
+	[Test]
+	public async Task ListDevicesAsync_SkipsAvdQueryForOfflineEmulators ()
+	{
+		// adb devices returns one online emulator and one offline emulator.
+		// Only the online one should get an AVD name query.
+		var adbPath = CreateFakeAdb ("""
+			if [[ "$1" == "devices" ]]; then
+			    echo "List of devices attached"
+			    echo "emulator-5554          device product:sdk_gphone64_arm64 model:sdk_gphone64_arm64 device:emu64a transport_id:1"
+			    echo "emulator-5556          offline"
+			    exit 0
+			fi
+			if [[ "$1" == "-s" && "$2" == "emulator-5554" && "$3" == "shell" && "$4" == "getprop" ]]; then
+			    echo "Online_AVD"
+			    exit 0
+			fi
+			if [[ "$1" == "-s" && "$2" == "emulator-5556" ]]; then
+			    # This should NOT be called for offline emulators.
+			    # Return a name anyway so we can detect if it was incorrectly queried.
+			    echo "OFFLINE_SHOULD_NOT_APPEAR"
+			    exit 0
+			fi
+			exit 1
+			""");
+
+		try {
+			var runner = new AdbRunner (adbPath);
+			var devices = await runner.ListDevicesAsync ();
+
+			Assert.AreEqual (2, devices.Count, "Should return both emulators");
+
+			var online = devices.First (d => d.Serial == "emulator-5554");
+			var offline = devices.First (d => d.Serial == "emulator-5556");
+
+			Assert.AreEqual (AdbDeviceStatus.Online, online.Status);
+			Assert.AreEqual ("Online_AVD", online.AvdName, "Online emulator should have AVD name");
+
+			Assert.AreEqual (AdbDeviceStatus.Offline, offline.Status);
+			Assert.IsNull (offline.AvdName, "Offline emulator should NOT have AVD name queried");
+		} finally {
+			CleanupFakeAdb (adbPath);
+		}
+	}
+}

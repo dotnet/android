@@ -518,7 +518,15 @@ class ManifestGenerator
 				var eqIndex = entry.IndexOf ('=');
 				if (eqIndex >= 0) {
 					var key = entry.Substring (0, eqIndex).Trim ();
-					var value = entry.Substring (eqIndex + 1).Trim ();
+					// Normalize '\' to Path.DirectorySeparatorChar to stay byte-for-byte identical to the
+					// legacy pipeline on every platform: there the substituted manifest is re-encoded by
+					// aapt2, which rewrites backslashes to the platform separator ('/' on Unix, '\' preserved
+					// on Windows) across the whole manifest. The trimmable generator writes the merged
+					// manifest directly (no aapt2 re-encode of these values), so it applies the same
+					// per-platform normalization to every value. The ManifestPlaceholders build test pins
+					// this for both the legacy (CoreCLR) and trimmable (NativeAOT) paths, so a hardcoded '/'
+					// would fail on Windows.
+					var value = entry.Substring (eqIndex + 1).Trim ().Replace ('\\', Path.DirectorySeparatorChar);
 					replacements ["${" + key + "}"] = value;
 				} else if (eqIndex < 0) {
 					// An entry without '=' is not a valid key=value pair. Mirror the legacy

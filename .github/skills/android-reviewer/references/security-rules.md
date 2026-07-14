@@ -11,6 +11,7 @@ I/O, archives, or process execution.
 |-------|-----------------|
 | **Zip Slip protection** | Archive extraction must validate that every entry path, after `Path.GetFullPath()`, resolves under the destination directory. Never use `ZipFile.ExtractToDirectory()` for untrusted archives without entry-by-entry validation. |
 | **Path traversal** | `StartsWith()` checks on paths must normalize with `Path.GetFullPath()` first. A path like `C:\Program Files\..\Users\evil` bypasses naive prefix checks. Also check for directory boundary issues (`C:\Program FilesX` matching `C:\Program Files`). |
+| **Mandatory checksum verification** | Downloads or archive installs in Android tools code must not proceed unverified when checksum/hash data is expected but missing or mismatched. Fail closed with an actionable error. |
 
 ---
 

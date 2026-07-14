@@ -1,0 +1,34 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="3.6.1" PrivateAssets="all" />
+  </ItemGroup>
+  <PropertyGroup>
+    <GitThisAssembly>false</GitThisAssembly>
+    <GitDefaultBranch>main</GitDefaultBranch>
+  </PropertyGroup>
+
+  <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion;GenerateNuspec" DependsOnTargets="GitVersion">
+    <PropertyGroup>
+      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+      <PackageVersion>$(Version)$(PackageVersionSuffix)</PackageVersion>
+      <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Import
+      Project="$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.targets"
+      Condition=" Exists('$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory))).override.targets') "
+  />
+
+  <!-- NuGet Dependencies -->
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NET.Test.Sdk"                       Version="18.7.0" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="10.0.300" />
+    <PackageReference Update="Microsoft.VisualStudioEng.MicroBuild.Core"    Version="1.0.0" />
+    <PackageReference Update="nunit"                                        Version="3.13.2" />
+    <PackageReference Update="NUnit3TestAdapter"                            Version="6.2.0" />
+    <PackageReference Update="BenchmarkDotNet"                              Version="0.15.8" />
+    <PackageReference Update="System.IO.Hashing"                            Version="10.0.9" />
+  </ItemGroup>
+
+</Project>
