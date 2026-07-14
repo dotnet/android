@@ -56,13 +56,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				return GetArrayTypesForCoreClr (typeSignature, elementType);
 			}
 
-			// NativeAOT: prefer the generated array proxy; otherwise reconstruct the same set of
-			// array and wrapper types at runtime so Java-to-managed array marshaling still resolves
-			// them when array proxies are not pre-generated.
-			if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, typeSignature.ArrayRank, out var arrayProxy)) {
-				return arrayProxy.GetArrayTypes ();
-			}
-
+			// NativeAOT reconstructs the array and wrapper types at runtime instead of using
+			// generated array proxies.
 			return BuildRuntimeArrayTypes (elementType, typeSignature.ArrayRank);
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026:RequiresUnreferencedCode",
@@ -129,12 +124,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 	}
 
-	// Reconstructs the same array and wrapper types that a generated JavaArrayProxy.GetArrayTypes ()
-	// would return (see the trimmable typemap generator's ModelBuilder.GetArrayTypeReferences), for the
-	// NativeAOT path when no array proxy was pre-generated. All construction is AOT-safe: primitive
-	// wrappers are closed typeof tokens from PrimitiveArrayInfo, and every runtime-built type is a
-	// reference array or a Java.Interop array wrapper over a reference argument, which NativeAOT builds
-	// from canonical (__Canon) templates.
+	// Builds the array and wrapper types needed by the NativeAOT marshaling path without generated
+	// array proxies. All construction is AOT-safe: primitive wrappers are closed typeof tokens from
+	// PrimitiveArrayInfo, and every runtime-built type is a reference array or a Java.Interop array
+	// wrapper over a reference argument, which NativeAOT builds from canonical (__Canon) templates.
 	internal static IReadOnlyList<Type> BuildRuntimeArrayTypes (Type elementType, int rank)
 	{
 		Debug.Assert (rank > 0, "At least one array rank is expected");
@@ -144,10 +137,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		}
 
 		if (elementType.IsValueType) {
-			// Non-primitive value types (e.g. Nullable<int>) have no generated array proxy and no
-			// Java.Interop array wrapper: JavaObjectArray<T>/JavaArray<T> over a value type would need
-			// an unrooted value-type generic instantiation. Only the exact rooted vector is AOT-safe,
-			// which is all these element types need to marshal.
+			// Non-primitive value types (e.g. Nullable<int>) have no AOT-safe Java.Interop array
+			// wrapper: JavaObjectArray<T>/JavaArray<T> over a value type would need an unrooted
+			// value-type generic instantiation. Only the exact rooted vector is AOT-safe, which is
+			// all these element types need to marshal.
 			if (SafeArrayFactory.TryGetArrayType (elementType, rank, out var valueArrayType)) {
 				return [valueArrayType];
 			}
@@ -358,6 +351,7 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 				{
 					if (type == typeof (string))  { jni = "java/lang/String"; return true; }
 					if (type == typeof (bool?))   { jni = "java/lang/Boolean"; return true; }
+					if (type == typeof (byte?))   { jni = "java/lang/Byte"; return true; }
 					if (type == typeof (sbyte?))  { jni = "java/lang/Byte"; return true; }
 					if (type == typeof (char?))   { jni = "java/lang/Character"; return true; }
 					if (type == typeof (short?))  { jni = "java/lang/Short"; return true; }

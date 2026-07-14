@@ -243,6 +243,25 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetArray_NullableByteArrayArray ()
+		{
+			var values = new [] {
+				new byte? [] { 1, null, 200 },
+				new byte? [] { 255, 128 },
+			};
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[[Ljava/lang/Byte;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<byte?[]> (array.Handle);
+				Assert.AreEqual (values.Length, copy.Length);
+				for (int i = 0; i < values.Length; i++) {
+					AssertArrays ($"GetArray<byte?[]>[{i}]", copy [i], values [i]);
+				}
+			}
+		}
+
+		[Test]
 		public void GetArray_JavaLangStringArrayToJavaLangObjectArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {

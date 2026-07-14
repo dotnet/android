@@ -15,8 +15,8 @@ namespace Java.InteropTests
 	public class TrimmableTypeMapTypeManagerTests
 	{
 		// Test subclass that allows instantiation without full TrimmableTypeMap initialization.
-		// GetStaticMethodFallbackTypesCore does not use TrimmableTypeMap.Instance, so the test
-		// can run without an initialized TrimmableTypeMap singleton.
+		// Built-in type-signature and static-method fallback lookups do not use
+		// TrimmableTypeMap.Instance, so those tests can run without an initialized singleton.
 		sealed class TestableTrimmableTypeMapTypeManager : TrimmableTypeMapTypeManager
 		{
 		}
@@ -32,6 +32,16 @@ namespace Java.InteropTests
 			Assert.AreEqual (2, fallbacks.Count);
 			Assert.AreEqual (expectedDesugar, fallbacks [0]);
 			Assert.AreEqual (expectedFallback, fallbacks [1]);
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetTypeSignature_NullableByteArrayArray_ReturnsJavaLangByte ()
+		{
+			using var manager = new TestableTrimmableTypeMapTypeManager ();
+			var signature = manager.GetTypeSignature (typeof (byte?[][]));
+
+			Assert.AreEqual ("[[Ljava/lang/Byte;", signature.Name);
 		}
 
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
@@ -290,11 +300,10 @@ namespace Java.InteropTests
 			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
 		}
 
-		// Regression: when no array proxy is pre-generated, the runtime fallback (BuildRuntimeArrayTypes)
-		// must still return the full set of array and wrapper types — the same contract as the generated
-		// proxy — not just T[]. Previously it returned only [T[]], and nothing caught it: the
-		// TryGetArrayProxy_* tests above only cover the proxy path (gated on generated proxies), and the
-		// marshaling round-trip tests only need T[]. This is a pure function, so it runs on every config.
+		// Regression: the runtime replacement (BuildRuntimeArrayTypes) must return the full set of array
+		// and wrapper types, not just T[]. The TryGetArrayProxy_* tests above only cover the legacy
+		// generated-proxy path, and the marshaling round-trip tests only need T[]. This is a pure
+		// function, so it runs on every config.
 		[Test]
 		public void BuildRuntimeArrayTypes_ReferenceLeaf_ReturnsProxyContract ()
 		{

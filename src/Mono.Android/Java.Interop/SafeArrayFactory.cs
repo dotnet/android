@@ -2,8 +2,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-using Microsoft.Android.Runtime;
-
 namespace Java.Interop;
 
 static class SafeArrayFactory
@@ -63,12 +61,6 @@ static class SafeArrayFactory
 
 		if (TryGetArrayType (elementType, rank, out var arrayType)) {
 			array = CreateInstanceFromArrayType (arrayType, length);
-			return true;
-		}
-
-		if (RuntimeFeature.TrimmableTypeMap && RuntimeFeature.IsNativeAotRuntime &&
-				TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, rank, out var arrayProxy)) {
-			array = arrayProxy.CreateManagedArray (length);
 			return true;
 		}
 
