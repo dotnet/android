@@ -173,7 +173,7 @@ stages:
 # Linux Tests Stage
 - stage: linux_tests
   displayName: Linux Tests
-  dependsOn: 
+  dependsOn:
   - mac_build
   - linux_build
   condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
