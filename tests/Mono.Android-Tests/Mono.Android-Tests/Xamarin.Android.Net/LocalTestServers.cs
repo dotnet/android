@@ -5,9 +5,11 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 #if !NETSTANDARD2_0
 using System.Net.Security;
+using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -238,7 +240,7 @@ namespace Xamarin.Android.NetTests {
 			return 0;
 		}
 
-		static Task HandleRequest (Stream stream, LocalHttpRequest request)
+		protected virtual Task HandleRequest (Stream stream, LocalHttpRequest request)
 		{
 			switch (request.Path) {
 #if !NETSTANDARD2_0
@@ -350,7 +352,7 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 
-		sealed class LocalHttpRequest
+		protected sealed class LocalHttpRequest
 		{
 			public LocalHttpRequest (string method, string target, string body)
 			{
@@ -402,12 +404,14 @@ namespace Xamarin.Android.NetTests {
 	{
 		readonly RSA certificateKey;
 		readonly X509Certificate2 certificate;
+		readonly bool clientCertificateRequired;
 
-		LocalHttpsServer (string certificateHost)
+		LocalHttpsServer (string certificateHost, bool clientCertificateRequired)
 			: base ("Local HTTPS server")
 		{
 			certificateKey = RSA.Create (keySizeInBits: 2048);
 			certificate = CreateCertificate (certificateKey, certificateHost);
+			this.clientCertificateRequired = clientCertificateRequired;
 		}
 
 		public byte [] CertificateData {
@@ -422,14 +426,14 @@ namespace Xamarin.Android.NetTests {
 			get { return "localhost"; }
 		}
 
-		public static LocalHttpsServer Start ()
+		public static LocalHttpsServer Start (bool clientCertificateRequired = false)
 		{
-			return Start ("localhost");
+			return Start ("localhost", clientCertificateRequired);
 		}
 
-		public static LocalHttpsServer Start (string certificateHost)
+		public static LocalHttpsServer Start (string certificateHost, bool clientCertificateRequired = false)
 		{
-			var server = new LocalHttpsServer (certificateHost);
+			var server = new LocalHttpsServer (certificateHost, clientCertificateRequired);
 			server.StartListening ();
 			return server;
 		}
@@ -443,9 +447,28 @@ namespace Xamarin.Android.NetTests {
 
 		protected override async Task<Stream> GetRequestStream (TcpClient client)
 		{
-			var sslStream = new SslStream (client.GetStream (), leaveInnerStreamOpen: false);
-			await sslStream.AuthenticateAsServerAsync (certificate, clientCertificateRequired: false, enabledSslProtocols: SslProtocols.None, checkCertificateRevocation: false).ConfigureAwait (false);
+			var sslStream = new SslStream (client.GetStream (), leaveInnerStreamOpen: false, userCertificateValidationCallback: (sender, clientCertificate, chain, sslPolicyErrors) => true);
+			await sslStream.AuthenticateAsServerAsync (certificate, clientCertificateRequired: clientCertificateRequired, enabledSslProtocols: SslProtocols.None, checkCertificateRevocation: false).ConfigureAwait (false);
 			return sslStream;
+		}
+
+		protected override Task HandleRequest (Stream stream, LocalHttpRequest request)
+		{
+			if (request.Path == "/echo-client-certificate") {
+				return WriteClientCertificateAsync (stream);
+			}
+
+			return base.HandleRequest (stream, request);
+		}
+
+		static Task WriteClientCertificateAsync (Stream stream)
+		{
+			string clientCertificateData = "";
+			if (stream is SslStream sslStream && sslStream.RemoteCertificate != null) {
+				clientCertificateData = Convert.ToBase64String (sslStream.RemoteCertificate.Export (X509ContentType.Cert));
+			}
+
+			return WriteStringAsync (stream, clientCertificateData, "text/plain");
 		}
 
 		static X509Certificate2 CreateCertificate (RSA key, string certificateHost)
@@ -467,6 +490,167 @@ namespace Xamarin.Android.NetTests {
 			request.CertificateExtensions.Add (subjectAlternativeNames.Build ());
 
 			return request.CreateSelfSigned (start, end);
+		}
+	}
+
+	sealed class LocalWebSocketServer : LocalTestServer
+	{
+		const string WebSocketGuid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+		readonly TcpListener listener;
+		Task acceptLoop = Task.CompletedTask;
+		bool disposed;
+
+		LocalWebSocketServer ()
+			: base ("Local WebSocket server")
+		{
+			listener = new TcpListener (IPAddress.Loopback, 0);
+		}
+
+		public int Port { get; private set; }
+
+		public Uri Uri {
+			get { return new Uri ($"ws://{LoopbackHost}:{Port}/"); }
+		}
+
+		public string Url {
+			get { return Uri.ToString (); }
+		}
+
+		public static LocalWebSocketServer Start ()
+		{
+			var server = new LocalWebSocketServer ();
+			server.StartListening ();
+			return server;
+		}
+
+		public override void Dispose ()
+		{
+			disposed = true;
+			listener.Stop ();
+			WaitForShutdown (acceptLoop, inner => inner is ObjectDisposedException || inner is SocketException);
+		}
+
+		void StartListening ()
+		{
+			listener.Start ();
+			Port = ((IPEndPoint) listener.LocalEndpoint).Port;
+			acceptLoop = Task.Run (AcceptLoop);
+		}
+
+		async Task AcceptLoop ()
+		{
+			while (!disposed) {
+				TcpClient client;
+				try {
+					client = await listener.AcceptTcpClientAsync ().ConfigureAwait (false);
+				} catch (ObjectDisposedException) {
+					return;
+				} catch (SocketException) when (disposed) {
+					return;
+				}
+
+				_ = Task.Run (() => HandleClient (client));
+			}
+		}
+
+		async Task HandleClient (TcpClient client)
+		{
+			using (client) {
+				bool handshakeCompleted = false;
+				try {
+					Stream stream = client.GetStream ();
+					string key = await ReadWebSocketKeyAsync (stream).ConfigureAwait (false);
+					if (key == null) {
+						return;
+					}
+
+					await WriteHandshakeResponseAsync (stream, key).ConfigureAwait (false);
+					handshakeCompleted = true;
+
+					using var webSocket = WebSocket.CreateFromStream (stream, isServer: true, subProtocol: null, keepAliveInterval: TimeSpan.FromSeconds (30));
+					await EchoLoop (webSocket).ConfigureAwait (false);
+				} catch (Exception ex) {
+					if (!(handshakeCompleted && (ex is IOException || ex is ObjectDisposedException || ex is WebSocketException))) {
+						AddHandlerException (ex);
+					}
+				}
+			}
+		}
+
+		static async Task<string> ReadWebSocketKeyAsync (Stream stream)
+		{
+			byte[] endOfHeaders = Encoding.ASCII.GetBytes ("\r\n\r\n");
+			byte[] buffer = new byte [1];
+			int matched = 0;
+
+			using var headersStream = new MemoryStream ();
+			while (headersStream.Length < 64 * 1024) {
+				int read = await stream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false);
+				if (read == 0) {
+					break;
+				}
+
+				headersStream.WriteByte (buffer [0]);
+				if (buffer [0] == endOfHeaders [matched]) {
+					matched++;
+					if (matched == endOfHeaders.Length) {
+						break;
+					}
+				} else {
+					matched = buffer [0] == endOfHeaders [0] ? 1 : 0;
+				}
+			}
+
+			string headers = Encoding.ASCII.GetString (headersStream.ToArray ());
+			foreach (string line in headers.Split (new [] { "\r\n" }, StringSplitOptions.None)) {
+				if (line.StartsWith ("Sec-WebSocket-Key:", StringComparison.OrdinalIgnoreCase)) {
+					return line.Substring ("Sec-WebSocket-Key:".Length).Trim ();
+				}
+			}
+
+			return null;
+		}
+
+		static Task WriteHandshakeResponseAsync (Stream stream, string key)
+		{
+			string accept;
+#pragma warning disable CA5350 // SHA-1 is mandated by the WebSocket handshake (RFC 6455 §1.3)
+			using (var sha1 = SHA1.Create ()) {
+				byte[] hash = sha1.ComputeHash (Encoding.ASCII.GetBytes (key + WebSocketGuid));
+				accept = Convert.ToBase64String (hash);
+			}
+#pragma warning restore CA5350
+
+			var response = new StringBuilder ();
+			response.Append ("HTTP/1.1 101 Switching Protocols\r\n");
+			response.Append ("Upgrade: websocket\r\n");
+			response.Append ("Connection: Upgrade\r\n");
+			response.Append ("Sec-WebSocket-Accept: ").Append (accept).Append ("\r\n\r\n");
+
+			byte[] bytes = Encoding.ASCII.GetBytes (response.ToString ());
+			return stream.WriteAsync (bytes, 0, bytes.Length);
+		}
+
+		static async Task EchoLoop (WebSocket webSocket)
+		{
+			byte[] buffer = new byte [4096];
+			while (webSocket.State == WebSocketState.Open) {
+				WebSocketReceiveResult result;
+				try {
+					result = await webSocket.ReceiveAsync (new ArraySegment<byte> (buffer), CancellationToken.None).ConfigureAwait (false);
+				} catch (Exception ex) when (ex is WebSocketException || ex is IOException || ex is ObjectDisposedException) {
+					// The client closed the connection without a WebSocket close handshake.
+					return;
+				}
+
+				if (result.MessageType == WebSocketMessageType.Close) {
+					await webSocket.CloseAsync (WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).ConfigureAwait (false);
+					return;
+				}
+
+				await webSocket.SendAsync (new ArraySegment<byte> (buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None).ConfigureAwait (false);
+			}
 		}
 	}
 #endif

@@ -111,16 +111,15 @@ namespace Xamarin.Android.NetTests
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{
 			bool callbackHasBeenCalled = false;
+			using var server = LocalHttpsServer.Start ();
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
 					Assert.NotNull (request, "request");
-					Assert.AreEqual ("www.microsoft.com", request.RequestUri.Host);
+					Assert.AreEqual ("localhost", request.RequestUri.Host);
 					Assert.NotNull (cert, "cert");
-					Assert.True (cert!.Subject.Contains ("www.microsoft.com"), $"Unexpected certificate subject {cert!.Subject}");
-					Assert.True (cert!.Issuer.Contains ("Microsoft"), $"Unexpected certificate issuer {cert!.Issuer}");
+					Assert.True (cert.Subject.Contains ("localhost"), $"Unexpected certificate subject {cert.Subject}");
 					Assert.NotNull (chain, "chain");
-					Assert.AreEqual (SslPolicyErrors.None, errors);
 
 					callbackHasBeenCalled = true;
 					return true;
@@ -128,15 +127,17 @@ namespace Xamarin.Android.NetTests
 			};
 
 			var client = new HttpClient (handler);
-			await client.GetStringAsync ("https://www.microsoft.com/");
+			Assert.AreEqual ("OK", await client.GetStringAsync (server.OkUri));
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
+			using var server = LocalHttpsServer.Start ();
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -146,7 +147,7 @@ namespace Xamarin.Android.NetTests
 			};
 			var client = new HttpClient (handler);
 
-			await AssertRejectsRemoteCertificate (() => client.GetStringAsync ("https://www.microsoft.com/"));
+			await AssertRejectsRemoteCertificate (() => client.GetStringAsync (server.OkUri));
 
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 		}
@@ -259,19 +260,23 @@ namespace Xamarin.Android.NetTests
 		public async Task AndroidMessageHandlerSendsClientCertificate ([Values(true, false)] bool setClientCertificateOptionsExplicitly)
 		{
 			using X509Certificate2 certificate = BuildClientCertificate ();
+			using var server = LocalHttpsServer.Start (clientCertificateRequired: true);
 
-			using var handler = new AndroidMessageHandler ();
+			using var handler = new AndroidMessageHandler {
+				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => true,
+			};
 			if (setClientCertificateOptionsExplicitly) {
 				handler.ClientCertificateOptions = ClientCertificateOption.Manual;
 			}
 			handler.ClientCertificates.Add (certificate);
 
 			using var client = new HttpClient (handler);
-			var response = await client.GetAsync ("https://corefx-net-tls.azurewebsites.net/EchoClientCertificate.ashx");
+			var response = await client.GetAsync (server.GetUri ("echo-client-certificate"));
 			var content = await response.EnsureSuccessStatusCode ().Content.ReadAsStringAsync ();
 
 			X509Certificate2 certificate2 = new X509Certificate2 (global::System.Convert.FromBase64String (content));
 			Assert.AreEqual (certificate.Thumbprint, certificate2.Thumbprint);
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 using NUnit.Framework;
 
+using Xamarin.Android.NetTests;
+
 namespace System.NetTests {
 	// TODO: https://github.com/dotnet/android/issues/10069
 	[TestFixture, Category ("InetAccess"), Category ("SSL")]
@@ -29,6 +31,7 @@ namespace System.NetTests {
 		[Test]
 		public void SslWithinTasksShouldWork ()
 		{
+			using var server = LocalHttpsServer.Start ();
 			var cb = ServicePointManager.ServerCertificateValidationCallback;
 			ServicePointManager.ServerCertificateValidationCallback = (s, cert, chain, policy) => {
 					Console.WriteLine ("# ServerCertificateValidationCallback");
@@ -39,9 +42,7 @@ namespace System.NetTests {
 			Exception  exception  = null;
 
 			var thread = new Thread (() => {
-				string url = "https://dotnet.microsoft.com/";
-
-				var downloadTask = new WebClient ().DownloadDataTaskAsync (url);
+				var downloadTask = new WebClient ().DownloadDataTaskAsync (server.OkUri);
 				var completeTask = downloadTask.ContinueWith (t => {
 						Console.WriteLine ("# DownloadDataTaskAsync complete; status={0}; exception={1}", t.Status, t.Exception);
 						status    = t.Status;
@@ -55,10 +56,6 @@ namespace System.NetTests {
 			ServicePointManager.ServerCertificateValidationCallback = cb;
 			var wex = (exception as AggregateException)?.InnerException as WebException;
 			if (wex != null) {
-				if (ShouldIgnoreException (wex)) {
-					Assert.Ignore ($"Ignoring network failure: {wex}");
-					return;
-				}
 				throw wex;
 			}
 
@@ -66,6 +63,7 @@ namespace System.NetTests {
 				throw exception;
 
 			Assert.AreEqual (TaskStatus.RanToCompletion, status);
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
