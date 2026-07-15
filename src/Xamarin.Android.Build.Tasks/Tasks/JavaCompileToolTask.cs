@@ -17,6 +17,11 @@ namespace Xamarin.Android.Tasks
 	{
 		public string? StubSourceDirectory { get; set; }
 
+		// Extra directories whose *.java are compiled in place, in addition to StubSourceDirectory.
+		// Used by the trimmable type map so the generated Java Callable Wrappers can be compiled
+		// directly from the generator's output directory instead of being copied into android/src.
+		public ITaskItem[]? AdditionalStubSourceDirectories { get; set; }
+
 		public ITaskItem[]? JavaSourceFiles { get; set; }
 
 		public ITaskItem[]? Jars { get; set; }
@@ -66,33 +71,42 @@ namespace Xamarin.Android.Tasks
 					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java"))
 						sw.WriteLine (string.Format ("\"{0}\"", file.ItemSpec.Replace (@"\", @"\\")));
 
-				if (StubSourceDirectory.IsNullOrEmpty ())
-					return;
+				WriteJavaSourcesFromDirectory (sw, StubSourceDirectory);
 
-				if (!Directory.Exists (StubSourceDirectory))
-					return;
-
-				foreach (var file in Directory.GetFiles (StubSourceDirectory, "*.java", SearchOption.AllDirectories)) {
-					// This makes sense.  BAD sense.  but sense.
-					// Problem:
-					//    A perfectly sensible path like "E:\tmp\a.java" generates a
-					//    javac error that "E:       mp.java" can't be found.
-					// Cause:
-					//    javac uses java.io.StreamTokenizer to parse @response files, and
-					//    the docs for StreamTokenizer.quoteChar(int) [0] say:
-					//      The usual escape sequences such as "\n" and "\t" are recognized
-					//      and converted to single characters as the string is parsed.
-					//    i.e. '\' is an escape character!
-					// Solution:
-					//    Since '\' is an escape character, we need to escape it.
-					// [0] http://download.oracle.com/javase/1.4.2/docs/api/java/io/StreamTokenizer.html#quoteChar(int)
-					sw.WriteLine (string.Format ("\"{0}\"",
-								file.Replace (@"\", @"\\").Normalize (NormalizationForm.FormC)));
-				}
+				if (AdditionalStubSourceDirectories != null)
+					foreach (var dir in AdditionalStubSourceDirectories)
+						WriteJavaSourcesFromDirectory (sw, dir.ItemSpec);
 			}
 			Log.LogDebugMessage ($"javac response file contents: {TemporarySourceListFile}");
 			foreach (var line in File.ReadLines (TemporarySourceListFile)) {
 				Log.LogDebugMessage ($"  {line}");
+			}
+		}
+
+		void WriteJavaSourcesFromDirectory (StreamWriter sw, string? directory)
+		{
+			if (directory.IsNullOrEmpty ())
+				return;
+
+			if (!Directory.Exists (directory))
+				return;
+
+			foreach (var file in Directory.GetFiles (directory, "*.java", SearchOption.AllDirectories)) {
+				// This makes sense.  BAD sense.  but sense.
+				// Problem:
+				//    A perfectly sensible path like "E:\tmp\a.java" generates a
+				//    javac error that "E:       mp.java" can't be found.
+				// Cause:
+				//    javac uses java.io.StreamTokenizer to parse @response files, and
+				//    the docs for StreamTokenizer.quoteChar(int) [0] say:
+				//      The usual escape sequences such as "\n" and "\t" are recognized
+				//      and converted to single characters as the string is parsed.
+				//    i.e. '\' is an escape character!
+				// Solution:
+				//    Since '\' is an escape character, we need to escape it.
+				// [0] http://download.oracle.com/javase/1.4.2/docs/api/java/io/StreamTokenizer.html#quoteChar(int)
+				sw.WriteLine (string.Format ("\"{0}\"",
+							file.Replace (@"\", @"\\").Normalize (NormalizationForm.FormC)));
 			}
 		}
 	}
