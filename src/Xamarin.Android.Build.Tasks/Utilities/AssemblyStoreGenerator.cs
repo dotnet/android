@@ -187,7 +187,6 @@ partial class AssemblyStoreGenerator
 			throw new InvalidOperationException ($"Internal error: store '{storePath}' position is different than metadata size after header write");
 		}
 
-		writer.Flush ();
 		ulong contentId = ComputeContentId (fs);
 		header = new AssemblyStoreHeader (storeVersion | abiFlag, infoCount, (uint)index.Count, (uint)(index.Count * indexEntrySize), contentId);
 		fs.Seek (0, SeekOrigin.Begin);
