@@ -50,7 +50,8 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyCollection<string>? customViewTypeNames = null,
 		bool collectMarshalMethodsForNonAcw = true,
 		bool includeBuiltInValueTypeUniverses = false,
-		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null)
+		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
+		IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -87,7 +88,8 @@ public class TrimmableTypeMapGenerator
 				useSharedTypemapUniverse,
 				shouldGenerateTypeMapAssembly,
 				includeBuiltInValueTypeUniverses,
-				generateRootAssembly)
+				generateRootAssembly,
+				sharedFrameworkTypeMapNames)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -423,7 +425,8 @@ public class TrimmableTypeMapGenerator
 		bool useSharedTypemapUniverse,
 		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
 		bool includeBuiltInValueTypeUniverses = false,
-		bool generateRootAssembly = true)
+		bool generateRootAssembly = true,
+		IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -488,7 +491,8 @@ public class TrimmableTypeMapGenerator
 				var rootStream = rootGenerator.GenerateToStream (
 					perAssemblyNames,
 					useSharedTypemapUniverse,
-					includeBuiltInValueTypeUniverses);
+					includeBuiltInValueTypeUniverses,
+					sharedFrameworkTypeMapNames);
 				generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
 				logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
 			}
