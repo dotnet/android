@@ -139,6 +139,74 @@ namespace Xamarin.Android.NetTests
 			await AssertReadAbortedPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
+		// EXPERIMENT 1: token flowed to ReadAsync, cancel ONLY (no Dispose).
+		// Does aborting via the read's own token unwind the parked read cleanly?
+		[Test]
+		public async Task ResponseHeadersReadTokenPassedToReadCancelOnlyUnwindsCleanly ()
+		{
+			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var request = new HttpRequestMessage (HttpMethod.Get, $"http://localhost:{server.Port}/");
+			using var response = await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (false);
+			using var responseStream = await response.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+			using var readCts = new CancellationTokenSource ();
+			var buffer = new byte [1];
+
+			Assert.AreEqual (1, await responseStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false));
+			Task readTask = responseStream.ReadAsync (buffer, 0, buffer.Length, readCts.Token);
+
+			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
+			readCts.Cancel ();
+			// No Dispose here: the read must unwind purely from the token-driven abort.
+			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
+		}
+
+		// EXPERIMENT 2: token flowed to ReadAsync, then cancel AND dispose fire CONCURRENTLY
+		// from the same cancellation (the real gRPC shape). Must not crash the process.
+		[Test]
+		public async Task ResponseHeadersReadTokenPassedToReadCancelAndDisposeConcurrentlyDoesNotCrash ()
+		{
+			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
+			using var handler = new AndroidMessageHandler ();
+			using var client = new HttpClient (handler);
+			using var request = new HttpRequestMessage (HttpMethod.Get, $"http://localhost:{server.Port}/");
+			var response = await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (false);
+			var responseStream = await response.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+			using var readCts = new CancellationTokenSource ();
+			var buffer = new byte [1];
+
+			Assert.AreEqual (1, await responseStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false));
+			Task<int> readTask = responseStream.ReadAsync (buffer, 0, buffer.Length, readCts.Token);
+
+			await WaitForBodyReadToBlock (server.BodyStartedTask).ConfigureAwait (false);
+
+			// Fire both triggers concurrently, mirroring GrpcCall.CancelCallFromCancellationToken.
+			Task disposeTask = Task.Run (() => response.Dispose ());
+			readCts.Cancel ();
+			await disposeTask.ConfigureAwait (false);
+
+			await AssertReadFinishesPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
+		}
+
+		// Accepts any abort outcome (cancellation OR dispose-driven exception); only a hang
+		// or a native crash (which kills the test process) is a failure.
+		static async Task AssertReadFinishesPromptly (Task<int> readTask, Action releaseBody)
+		{
+			var completed = await Task.WhenAny (readTask, Task.Delay (PromptCancellationTimeoutMilliseconds)).ConfigureAwait (false);
+			if (completed != readTask) {
+				releaseBody ();
+				await ObserveReadTaskAfterRelease (readTask).ConfigureAwait (false);
+				Assert.Fail ($"Response body read did not finish within {PromptCancellationTimeoutMilliseconds}ms.");
+			}
+
+			try {
+				await readTask.ConfigureAwait (false);
+			} catch (Exception ex) when (ex is OperationCanceledException or System.IO.IOException or Java.IO.IOException or InvalidDataException or ObjectDisposedException or WebException) {
+				return;
+			}
+		}
+
 		static void DisposeResponsePromptly (HttpResponseMessage response)
 		{
 			var stopwatch = Stopwatch.StartNew ();
@@ -194,7 +262,9 @@ namespace Xamarin.Android.NetTests
 
 			try {
 				Assert.AreEqual (0, await readTask.ConfigureAwait (false));
-			} catch (Exception ex) when (ex is System.IO.IOException or Java.IO.IOException or InvalidDataException or ObjectDisposedException or WebException) {
+			} catch (Exception ex) when (ex is OperationCanceledException or System.IO.IOException or Java.IO.IOException or InvalidDataException or ObjectDisposedException or WebException) {
+				// Disposing the response aborts the read; it may surface either as an OperationCanceledException
+				// (the abort is driven by an internal CancellationTokenSource) or as a transport exception.
 				return;
 			}
 		}

@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading.Tasks;
 
+using Android.Runtime;
 using Java.Net;
 
 namespace Xamarin.Android.Net
@@ -39,14 +42,32 @@ namespace Xamarin.Android.Net
 
 		protected override void Dispose (bool disposing)
 		{
-			base.Dispose(disposing);
+			// Dispose the content first (base.Dispose). For a streaming response the content is a
+			// CancellationAwareResponseStream, which safely aborts any in-flight read and closes the
+			// underlying stream + connection itself (see AndroidMessageHandler.CancellationAwareResponseStream).
+			base.Dispose (disposing);
 
 			if (javaUrl != null) {
 				javaUrl.Dispose ();
 			}
 
-			if (httpConnection != null) {
-				httpConnection.Dispose ();
+			var connection = httpConnection;
+			if (connection != null) {
+				// Only Disconnect(), never Dispose(), the Java peer:
+				//  * Disconnect() releases the socket and aborts any in-flight read. It is the backstop for
+				//    non-streaming responses (e.g. the buffered StringContent error paths) whose content does
+				//    not own the connection.
+				//  * Disposing the peer (deleting its JNI global reference) could race a body read still
+				//    unwinding on another thread and crash; the peer is reclaimed on finalization.
+				// Dispatched to a background thread because Disconnect() performs socket I/O and Dispose()
+				// may run on the UI thread (e.g. gRPC cancelling from a UI callback).
+				Task.Run (() => {
+					try {
+						connection.Disconnect ();
+					} catch (Exception ex) {
+						Logger.Log (LogLevel.Info, AndroidMessageHandler.LOG_APP, $"Disconnection exception: {ex}");
+					}
+				});
 			}
 		}
 	}
