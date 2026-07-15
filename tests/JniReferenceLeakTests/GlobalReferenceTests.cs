@@ -5,10 +5,10 @@ using Java.Interop;
 
 namespace JniReferenceLeakTests;
 
-[TestClass]
+[TestFixture]
 public sealed class GlobalReferenceTests
 {
-	[TestMethod]
+	[Test]
 	public void TryFindClassUtf8DoesNotLeakGlobalReferences ()
 	{
 		ReferenceTestHelpers.AssertNoGlobalReferenceLeak (() => {
@@ -17,7 +17,7 @@ public sealed class GlobalReferenceTests
 		});
 	}
 
-	[TestMethod]
+	[Test]
 	public void TryFindClassStringDoesNotLeakGlobalReferences ()
 	{
 		ReferenceTestHelpers.AssertNoGlobalReferenceLeak (() => {
@@ -26,13 +26,13 @@ public sealed class GlobalReferenceTests
 		});
 	}
 
-	[TestMethod]
+	[Test]
 	public void JavaObjectArrayOperationsDoNotLeakGlobalReferences ()
 	{
 		ReferenceTestHelpers.AssertNoGlobalReferenceLeak (CreateAndDisposeObjectArray);
 	}
 
-	[TestMethod]
+	[Test]
 	public void JavaSideActivationDoesNotLeakGlobalReferences ()
 	{
 		ReferenceTestHelpers.AssertNoGlobalReferenceLeak (() => {

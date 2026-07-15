@@ -123,7 +123,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
-| **JNI reference leaks** | `tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj` | Dedicated serial MSTest/MTP app for JNI reference and peer leak checks |
+| **JNI reference leaks** | `tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj` | Dedicated serial NUnit/MTP app for JNI reference and peer leak checks |
 | **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
 | **android app** | Same project — tests in `Android.App/` | `Application`, `Activity` tests |

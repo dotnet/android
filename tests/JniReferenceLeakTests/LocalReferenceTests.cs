@@ -2,10 +2,10 @@ using Java.Interop;
 
 namespace JniReferenceLeakTests;
 
-[TestClass]
+[TestFixture]
 public sealed class LocalReferenceTests
 {
-	[TestMethod]
+	[Test]
 	public void InvalidCreatedReferenceDoesNotChangeLocalReferenceCount ()
 	{
 		int before = JniEnvironment.LocalReferenceCount;
@@ -14,7 +14,7 @@ public sealed class LocalReferenceTests
 		Assert.AreEqual (before, JniEnvironment.LocalReferenceCount);
 	}
 
-	[TestMethod]
+	[Test]
 	public void ArrayOperationsDoNotLeakLocalReferences ()
 	{
 		int before = JniEnvironment.LocalReferenceCount;
@@ -45,7 +45,7 @@ public sealed class LocalReferenceTests
 		Assert.AreEqual (before, JniEnvironment.LocalReferenceCount);
 	}
 
-	[TestMethod]
+	[Test]
 	public void JavaSideActivationDoesNotLeakLocalReferences ()
 	{
 		int before = JniEnvironment.LocalReferenceCount;

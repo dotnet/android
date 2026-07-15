@@ -7,15 +7,15 @@ using Android.Widget;
 
 namespace JniReferenceLeakTests;
 
-[TestClass]
+[TestFixture]
 public sealed class WidgetReferenceTests
 {
-	[TestMethod]
+	[Test]
 	public void InflateCustomViewDoesNotLeakGlobalReferences ()
 	{
 		var inflater = Application.Context.GetSystemService (Context.LayoutInflaterService) as LayoutInflater;
 		if (inflater is null) {
-			throw new AssertFailedException ("Could not obtain LayoutInflater.");
+			throw new AssertionException ("Could not obtain LayoutInflater.");
 		}
 
 		ReferenceTestHelpers.AssertNoGlobalReferenceLeak (() => {

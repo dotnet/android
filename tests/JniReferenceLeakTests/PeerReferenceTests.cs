@@ -4,10 +4,10 @@ using Java.Interop;
 
 namespace JniReferenceLeakTests;
 
-[TestClass]
+[TestFixture]
 public sealed class PeerReferenceTests
 {
-	[TestMethod]
+	[Test]
 	public void UnregisterFromRuntimeRemovesSurfacedPeer ()
 	{
 		using (var warmup = new JavaObject ()) {
@@ -29,7 +29,7 @@ public sealed class PeerReferenceTests
 		Assert.Throws<ObjectDisposedException> (() => instance.UnregisterFromRuntime ());
 	}
 
-	[TestMethod]
+	[Test]
 	public void AddPeerDoesNotRegisterDuplicates ()
 	{
 		var instance = new JavaObject ();
@@ -44,7 +44,7 @@ public sealed class PeerReferenceTests
 		Assert.AreEqual (0, CountSurfacedPeer (instance));
 	}
 
-	[TestMethod]
+	[Test]
 	public void RepeatedConstructPeerDoesNotLeakGlobalReferences ()
 	{
 		ReferenceTestHelpers.AssertNoGlobalReferenceLeak (() => {
@@ -65,7 +65,7 @@ public sealed class PeerReferenceTests
 		});
 	}
 
-	[TestMethod]
+	[Test]
 	public void WeakPeerIsCollectedWithoutLeakingReferences ()
 	{
 		if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime", out bool isNativeAot) && isNativeAot) {
@@ -88,12 +88,12 @@ public sealed class PeerReferenceTests
 		thread.Join ();
 
 		if (threadException is not null) {
-			throw new AssertFailedException ("Worker thread failed.", threadException);
+			throw new AssertionException ("Worker thread failed.", threadException);
 		}
 
 		ReferenceTestHelpers.CollectGarbage ();
 		if (weakReferences is null) {
-			throw new AssertFailedException ("The worker thread did not create the expected weak references.");
+			throw new AssertionException ("The worker thread did not create the expected weak references.");
 		}
 
 		Assert.IsTrue (weakReferences.All (reference => !reference.TryGetTarget (out _)));

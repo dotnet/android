@@ -10,7 +10,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
     <ApplicationId>net.dot.jni.referenceleaktests</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -23,11 +22,20 @@
 
   <ItemGroup>
     <AndroidJavaSource Include="java/**/*.java" />
-    <PackageReference Include="MSTest" Version="$(MSTestPackageVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.9.0" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <ProjectReference Include="..\TestRunner.Core\TestRunner.Core.NET.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <AndroidInstrumentation>net.dot.jni.referenceleaktests.TestInstrumentation</AndroidInstrumentation>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
 </Project>
