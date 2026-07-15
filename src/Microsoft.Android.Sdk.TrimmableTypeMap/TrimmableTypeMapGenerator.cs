@@ -35,7 +35,8 @@ public class TrimmableTypeMapGenerator
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
 		int maxArrayRank = 0,
-		bool generateTypeMapAssemblies = true)
+		bool generateTypeMapAssemblies = true,
+		bool generateRootAssembly = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -56,7 +57,7 @@ public class TrimmableTypeMapGenerator
 		PropagateCannotRegisterToDescendants (allPeers);
 
 		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank)
+			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, generateRootAssembly)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -179,7 +180,8 @@ public class TrimmableTypeMapGenerator
 		List<JavaPeerInfo> allPeers,
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
-		int maxArrayRank)
+		int maxArrayRank,
+		bool generateRootAssembly = true)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -213,12 +215,20 @@ public class TrimmableTypeMapGenerator
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
-		var rootStream = new MemoryStream ();
-		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank);
-		rootStream.Position = 0;
-		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
-		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		// The root assembly (_Microsoft.Android.TypeMaps) carries the
+		// [assembly: TypeMapAssemblyTarget<T>] attributes and TypeMapLoader.Initialize() that
+		// bind the per-assembly typemaps into universes at runtime. When pre-generating a
+		// framework typemap (e.g. Mono.Android) at SDK build time, the root is intentionally
+		// skipped: it is emitted by the app build, which references the pre-generated per-assembly
+		// typemap alongside the app's own.
+		if (generateRootAssembly) {
+			var rootStream = new MemoryStream ();
+			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+			rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank);
+			rootStream.Position = 0;
+			generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
+			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		}
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
 	}

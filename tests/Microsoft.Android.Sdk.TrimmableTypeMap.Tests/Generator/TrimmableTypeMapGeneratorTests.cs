@@ -90,6 +90,25 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_WithGenerateRootAssemblyFalse_EmitsPerAssemblyTypeMapButNoRoot ()
+	{
+		// SDK-time pre-generation (issue #10792) emits only the per-assembly typemap (and JCWs)
+		// for a framework assembly; the root _Microsoft.Android.TypeMaps is emitted by the app
+		// build, which references the pre-generated per-assembly typemap alongside its own.
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute (
+			[Input ("TestFixtures", peReader)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			generateRootAssembly: false);
+
+		Assert.Contains (result.GeneratedAssemblies, a => a.Name == "_TestFixtures.TypeMap");
+		Assert.DoesNotContain (result.GeneratedAssemblies, a => a.Name == "_Microsoft.Android.TypeMaps");
+		// JCWs are still produced so they can be pre-compiled into a jar shipped in the SDK pack.
+		Assert.NotEmpty (result.GeneratedJavaSources);
+	}
+
+	[Fact]
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
