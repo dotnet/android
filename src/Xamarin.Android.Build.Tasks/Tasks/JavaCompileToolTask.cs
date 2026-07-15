@@ -73,6 +73,9 @@ namespace Xamarin.Android.Tasks
 
 				WriteJavaSourcesFromDirectory (sw, StubSourceDirectory);
 
+				// StubSourceDirectory and the AdditionalStubSourceDirectories entries must be
+				// disjoint: a .java found under more than one directory is written to the response
+				// file more than once, which makes javac fail with a "duplicate class" error.
 				if (AdditionalStubSourceDirectories != null)
 					foreach (var dir in AdditionalStubSourceDirectories)
 						WriteJavaSourcesFromDirectory (sw, dir.ItemSpec);
