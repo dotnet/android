@@ -14,10 +14,12 @@ using Xamarin.Android.Net;
 
 namespace Xamarin.Android.NetTests
 {
-	// Deterministic (no network) coverage of the "drain, then close" behavior in
-	// AndroidMessageHandler.CancellationAwareResponseStream. These construct the wrapper directly over a
-	// controllable blocking stream and a fake HttpURLConnection so the dispose-during-read ordering is
-	// exercised without depending on real socket/okhttp timing.
+	/// <summary>
+	/// Deterministic (no network) coverage of the "drain, then close" behavior in
+	/// <c>AndroidMessageHandler.CancellationAwareResponseStream</c>. These construct the wrapper directly
+	/// over a controllable blocking stream and a fake <c>HttpURLConnection</c> so the dispose-during-read
+	/// ordering is exercised without depending on real socket/okhttp timing.
+	/// </summary>
 	[TestFixture]
 	[Category ("AndroidMessageHandlerCancellation")]
 	[Category ("CancellationAwareResponseStream")]
@@ -31,9 +33,11 @@ namespace Xamarin.Android.NetTests
 		[Test]
 		public Task DisposeDuringCanceledReadDefersInnerStreamClose () => AssertDisposeDefersClose (cancelReadFirst: true);
 
-		// The core invariant: disposing while a read is parked must (a) not block, (b) abort the read via
-		// Disconnect, (c) NOT close the inner stream while the read is in flight, and (d) close it exactly
-		// once the read has unwound -- so the stream is neither corrupted nor leaked.
+		/// <summary>
+		/// The core invariant: disposing while a read is parked must (a) not block, (b) abort the read via
+		/// Disconnect, (c) NOT close the inner stream while the read is in flight, and (d) close it exactly
+		/// once the read has unwound -- so the stream is neither corrupted nor leaked.
+		/// </summary>
 		static async Task AssertDisposeDefersClose (bool cancelReadFirst)
 		{
 			using var url = new URL ("http://localhost");

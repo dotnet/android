@@ -104,43 +104,66 @@ namespace Xamarin.Android.Net
 			}
 		}
 
-		// Wraps the response body stream (a BufferedStream over the Java HttpURLConnection's okhttp
-		// InputStream) so that disposing the HttpResponseMessage while a body read is still in flight on
-		// another thread does not corrupt the native stream.
-		//
-		// The problem this solves (https://github.com/dotnet/android/issues/12106):
-		//   HttpResponseMessage.Dispose() can be called from any thread while a read is parked. This is how
-		//   gRPC (and HttpContent.ReadAsByteArrayAsync, etc.) tear down a streaming call: they dispose the
-		//   response rather than cancelling the individual read. Dispose() disposes the content, which calls
-		//   Close() on this stream, which calls Close() on the Java InputStream.
-		//
-		//   okhttp implements InputStream.close() on a chunked/fixed-length body by *draining* it: it issues
-		//   another read() so the connection can be reused. okhttp's AsyncTimeout keeps a process-global list
-		//   of active timeout nodes that each read enters and exits. If the drain-read runs while the original
-		//   read is still parked in AsyncTimeout.enter(), the node is entered twice and okhttp throws
-		//   "java.lang.IllegalStateException: Unbalanced enter/exit", crashing the process.
-		//
-		//   The invariant that avoids it: NEVER call Close() on the underlying stream while a read is in
-		//   flight. Note that a managed CancellationToken cannot by itself interrupt the blocking Java read;
-		//   only HttpURLConnection.Disconnect() (closing the socket) makes a parked read throw and unwind.
-		//
-		// The "drain, then close" scheme implemented below mirrors the idiomatic Java/OkHttp pattern, where
-		// the reader thread owns close() (via try-with-resources) and a separate thread only *signals*
-		// cancellation via Call.cancel()/HttpURLConnection.disconnect() -- it never closes the stream:
-		//
-		//   * Every read/write/copy/flush brackets itself with BeginUse()/EndUse(), so we always know whether
-		//     an inner-stream operation is in flight (inUseCount) and whether Dispose() has been requested
-		//     (disposeRequested).
-		//   * Dispose() never closes the underlying stream while an operation is in flight. It records the
-		//     request and cancels 'abortCts' to abort the parked operation; that operation then unwinds on
-		//     its own thread and, as the last one out, performs the close there (EndUse -> DisposeCore).
-		//     Dispose() closes directly only when nothing is in flight. Dispose() therefore never blocks.
-		//   * Cancellation (from Dispose() or the caller's own token) is turned into a background
-		//     HttpURLConnection.Disconnect() -- see RequestDisconnect for why it must be backgrounded.
-		//   * We intentionally do NOT Dispose() the HttpURLConnection Java peer. Deleting its JNI global
-		//     reference can race a still-unwinding native read and crash; Disconnect() already releases the
-		//     socket and the peer is reclaimed on finalization. Avoiding peer disposal is what keeps this
-		//     scheme free of any cross-thread handshake.
+		/// <summary>
+		/// Wraps the response body stream (a <see cref="BufferedStream"/> over the Java
+		/// <see cref="HttpURLConnection"/>'s okhttp <c>InputStream</c>) so that disposing the
+		/// <see cref="HttpResponseMessage"/> while a body read is still in flight on another thread does not
+		/// corrupt the native stream.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// The problem this solves (https://github.com/dotnet/android/issues/12106):
+		/// <see cref="HttpResponseMessage.Dispose()"/> can be called from any thread while a read is parked.
+		/// This is how gRPC (and <c>HttpContent.ReadAsByteArrayAsync</c>, etc.) tear down a streaming call:
+		/// they dispose the response rather than cancelling the individual read. <c>Dispose()</c> disposes the
+		/// content, which calls <c>Close()</c> on this stream, which calls <c>Close()</c> on the Java
+		/// <c>InputStream</c>.
+		/// </para>
+		/// <para>
+		/// okhttp implements <c>InputStream.close()</c> on a chunked/fixed-length body by *draining* it: it
+		/// issues another <c>read()</c> so the connection can be reused. okhttp's <c>AsyncTimeout</c> keeps a
+		/// process-global list of active timeout nodes that each read enters and exits. If the drain-read runs
+		/// while the original read is still parked in <c>AsyncTimeout.enter()</c>, the node is entered twice
+		/// and okhttp throws "java.lang.IllegalStateException: Unbalanced enter/exit", crashing the process.
+		/// </para>
+		/// <para>
+		/// The invariant that avoids it: NEVER call <c>Close()</c> on the underlying stream while a read is in
+		/// flight. Note that a managed <see cref="CancellationToken"/> cannot by itself interrupt the blocking
+		/// Java read; only <c>HttpURLConnection.Disconnect()</c> (closing the socket) makes a parked read throw
+		/// and unwind.
+		/// </para>
+		/// <para>
+		/// The "drain, then close" scheme implemented below mirrors the idiomatic Java/OkHttp pattern, where
+		/// the reader thread owns <c>close()</c> (via try-with-resources) and a separate thread only *signals*
+		/// cancellation via <c>Call.cancel()</c>/<c>HttpURLConnection.disconnect()</c> -- it never closes the
+		/// stream:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>
+		///     Every read/write/copy/flush brackets itself with <c>BeginUse()</c>/<c>EndUse()</c>, so we
+		///     always know whether an inner-stream operation is in flight (<c>inUseCount</c>) and whether
+		///     <c>Dispose()</c> has been requested (<c>disposeRequested</c>).
+		///   </description></item>
+		///   <item><description>
+		///     <c>Dispose()</c> never closes the underlying stream while an operation is in flight. It records
+		///     the request and cancels <c>abortCts</c> to abort the parked operation; that operation then
+		///     unwinds on its own thread and, as the last one out, performs the close there
+		///     (<c>EndUse</c> -> <c>DisposeCore</c>). <c>Dispose()</c> closes directly only when nothing is in
+		///     flight. <c>Dispose()</c> therefore never blocks.
+		///   </description></item>
+		///   <item><description>
+		///     Cancellation (from <c>Dispose()</c> or the caller's own token) is turned into a background
+		///     <c>HttpURLConnection.Disconnect()</c> -- see <c>RequestDisconnect</c> for why it must be
+		///     backgrounded.
+		///   </description></item>
+		///   <item><description>
+		///     We intentionally do NOT <c>Dispose()</c> the <see cref="HttpURLConnection"/> Java peer.
+		///     Deleting its JNI global reference can race a still-unwinding native read and crash;
+		///     <c>Disconnect()</c> already releases the socket and the peer is reclaimed on finalization.
+		///     Avoiding peer disposal is what keeps this scheme free of any cross-thread handshake.
+		///   </description></item>
+		/// </list>
+		/// </remarks>
 		internal sealed class CancellationAwareResponseStream : Stream
 		{
 			readonly Stream stream;
@@ -317,10 +340,13 @@ namespace Xamarin.Android.Net
 				}
 			}
 
-			// The token a read should observe: our internal abort token (fired by Dispose) linked with the
-			// caller's token when they passed a cancelable one. The linked source, when created, is returned
-			// via 'linkedCts' so the caller disposes it after the read. Reached only between BeginUse() and
-			// EndUse(), so 'abortCts' is guaranteed alive (DisposeCore cannot run while inUseCount > 0).
+			/// <summary>
+			/// The token a read should observe: our internal abort token (fired by <c>Dispose</c>) linked
+			/// with the caller's token when they passed a cancelable one. The linked source, when created, is
+			/// returned via <paramref name="linkedCts"/> so the caller disposes it after the read. Reached
+			/// only between <c>BeginUse()</c> and <c>EndUse()</c>, so <c>abortCts</c> is guaranteed alive
+			/// (<c>DisposeCore</c> cannot run while <c>inUseCount &gt; 0</c>).
+			/// </summary>
 			CancellationToken GetAbortToken (CancellationToken callerToken, out CancellationTokenSource? linkedCts)
 			{
 				if (callerToken.CanBeCanceled) {
@@ -332,9 +358,11 @@ namespace Xamarin.Android.Net
 				return abortCts.Token;
 			}
 
-			// Start of an inner-stream operation (read/write/copy/flush). Throws if Dispose() has been
-			// requested so that operations started after (or racing) Dispose() observe ObjectDisposedException,
-			// per the Stream contract.
+			/// <summary>
+			/// Start of an inner-stream operation (read/write/copy/flush). Throws if <c>Dispose()</c> has been
+			/// requested so that operations started after (or racing) <c>Dispose()</c> observe
+			/// <see cref="ObjectDisposedException"/>, per the <see cref="Stream"/> contract.
+			/// </summary>
 			void BeginUse ()
 			{
 				lock (stateLock) {
@@ -345,9 +373,12 @@ namespace Xamarin.Android.Net
 				}
 			}
 
-			// End of an inner-stream operation. If Dispose() was requested while this was the last in-flight
-			// operation, close here -- on the operation's own thread, after it has fully unwound -- which is
-			// the only point at which closing the underlying Java stream cannot collide with an operation.
+			/// <summary>
+			/// End of an inner-stream operation. If <c>Dispose()</c> was requested while this was the last
+			/// in-flight operation, close here -- on the operation's own thread, after it has fully unwound --
+			/// which is the only point at which closing the underlying Java stream cannot collide with an
+			/// operation.
+			/// </summary>
 			void EndUse ()
 			{
 				bool shouldDispose;
@@ -362,10 +393,12 @@ namespace Xamarin.Android.Net
 					DisposeCore ();
 			}
 
-			// Aborts a parked read by disconnecting the socket. Dispatched to a background thread because
-			// CancellationTokenSource.Cancel() runs registered callbacks synchronously on the caller -- which
-			// in the motivating gRPC scenario is the UI thread -- and HttpURLConnection.Disconnect() performs
-			// socket I/O that must not run there.
+			/// <summary>
+			/// Aborts a parked read by disconnecting the socket. Dispatched to a background thread because
+			/// <see cref="CancellationTokenSource.Cancel()"/> runs registered callbacks synchronously on the
+			/// caller -- which in the motivating gRPC scenario is the UI thread -- and
+			/// <c>HttpURLConnection.Disconnect()</c> performs socket I/O that must not run there.
+			/// </summary>
 			void RequestDisconnect () =>
 				Task.Run (() => {
 					try {
@@ -375,11 +408,13 @@ namespace Xamarin.Android.Net
 					}
 				});
 
-			// The actual teardown. Runs exactly once (guarded by 'disposed') and only when no read is in
-			// flight, so calling Close() on the Java stream here cannot trigger the "Unbalanced enter/exit"
-			// drain-read race described above. This is always reached: whenever Dispose() sets
-			// disposeRequested, either Dispose() runs it (no read in flight) or the last EndUse() does
-			// (once the final read unwinds) -- so the stream and socket are never leaked.
+			/// <summary>
+			/// The actual teardown. Runs exactly once (guarded by <c>disposed</c>) and only when no read is in
+			/// flight, so calling <c>Close()</c> on the Java stream here cannot trigger the "Unbalanced
+			/// enter/exit" drain-read race described above. This is always reached: whenever <c>Dispose()</c>
+			/// sets <c>disposeRequested</c>, either <c>Dispose()</c> runs it (no read in flight) or the last
+			/// <c>EndUse()</c> does (once the final read unwinds) -- so the stream and socket are never leaked.
+			/// </summary>
 			void DisposeCore ()
 			{
 				try {
