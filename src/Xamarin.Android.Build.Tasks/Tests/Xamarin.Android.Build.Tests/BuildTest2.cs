@@ -64,7 +64,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DebugReadyToRunCompilesOnlyFrameworkAssemblies ()
+		public void DebugReadyToRunCompilesOnlyFrameworkAssemblies ([Values ("android-x64", "android-arm64")] string rid)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR)) {
 				return;
