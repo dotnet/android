@@ -58,8 +58,8 @@ sealed class TypeMapAssemblyData
 sealed record TypeMapAttributeData
 {
 	/// <summary>
-	/// Type map key, e.g., "android/app/Activity" for peer entries or
-	/// "Android.App.Activity, Mono.Android" for array proxy entries.
+	/// Type map key — the JNI name, e.g., "android/app/Activity", or an indexed alias
+	/// key such as "java/util/Collection[0]".
 	/// </summary>
 	public required string MapKey { get; init; }
 
