@@ -135,12 +135,6 @@ sealed class JavaPeerProxyData
 	public bool IsGenericDefinition { get; init; }
 
 	/// <summary>
-	/// True if the proxied peer type is a Java interface. Instances are created
-	/// from <see cref="InvokerType"/> in CreateInstance.
-	/// </summary>
-	public bool IsInterface { get; init; }
-
-	/// <summary>
 	/// True when the Java stub must not call RegisterNatives from a static initializer because
 	/// the type can be instantiated before the runtime is fully ready (for example Application
 	/// or Instrumentation subclasses).
