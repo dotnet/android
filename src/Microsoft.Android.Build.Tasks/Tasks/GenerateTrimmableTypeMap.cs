@@ -140,6 +140,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
 	public bool IncludeBuiltInValueTypeUniverses { get; set; }
+
+	// When false, the per-assembly typemap DLLs (and JCWs) are emitted but the root
+	// _Microsoft.Android.TypeMaps assembly is not. Used for SDK-build-time pre-generation of
+	// framework typemaps (e.g. Mono.Android, issue #10792); the app build emits the root, which
+	// references the pre-generated per-assembly typemaps alongside the app's own.
+	public bool GenerateRootAssembly { get; set; } = true;
+
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	/// <summary>
@@ -255,6 +262,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
+				generateRootAssembly: GenerateRootAssembly,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject,
 				customViewTypeNames: customViewTypeNames,
 				collectMarshalMethodsForNonAcw: false,

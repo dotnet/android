@@ -45,6 +45,7 @@ public class TrimmableTypeMapGenerator
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
 		bool generateTypeMapAssemblies = true,
+		bool generateRootAssembly = true,
 		bool errorOnCustomJavaObject = true,
 		IReadOnlyCollection<string>? customViewTypeNames = null,
 		bool collectMarshalMethodsForNonAcw = true,
@@ -85,7 +86,8 @@ public class TrimmableTypeMapGenerator
 				systemRuntimeVersion,
 				useSharedTypemapUniverse,
 				shouldGenerateTypeMapAssembly,
-				includeBuiltInValueTypeUniverses)
+				includeBuiltInValueTypeUniverses,
+				generateRootAssembly)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -420,7 +422,8 @@ public class TrimmableTypeMapGenerator
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
 		Func<string, byte [], bool>? shouldGenerateTypeMapAssembly = null,
-		bool includeBuiltInValueTypeUniverses = false)
+		bool includeBuiltInValueTypeUniverses = false,
+		bool generateRootAssembly = true)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -463,24 +466,32 @@ public class TrimmableTypeMapGenerator
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
-		const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
-		bool generateRoot = true;
-		if (shouldGenerateTypeMapAssembly is not null) {
-			var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (
-				perAssemblyNames,
-				systemRuntimeVersion,
-				useSharedTypemapUniverse,
-				includeBuiltInValueTypeUniverses);
-			generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
-		}
-		if (generateRoot) {
-			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			var rootStream = rootGenerator.GenerateToStream (
-				perAssemblyNames,
-				useSharedTypemapUniverse,
-				includeBuiltInValueTypeUniverses);
-			generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
-			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+		// The root assembly (_Microsoft.Android.TypeMaps) carries the
+		// [assembly: TypeMapAssemblyTarget<T>] attributes and TypeMapLoader.Initialize() that
+		// bind the per-assembly typemaps into universes at runtime. When pre-generating a
+		// framework typemap (e.g. Mono.Android) at SDK build time, the root is intentionally
+		// skipped: it is emitted by the app build, which references the pre-generated per-assembly
+		// typemap alongside the app's own.
+		if (generateRootAssembly) {
+			const string rootAssemblyName = "_Microsoft.Android.TypeMaps";
+			bool generateRoot = true;
+			if (shouldGenerateTypeMapAssembly is not null) {
+				var rootFingerprint = MetadataHelper.ComputeRootIncrementalFingerprint (
+					perAssemblyNames,
+					systemRuntimeVersion,
+					useSharedTypemapUniverse,
+					includeBuiltInValueTypeUniverses);
+				generateRoot = shouldGenerateTypeMapAssembly (rootAssemblyName, rootFingerprint);
+			}
+			if (generateRoot) {
+				var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
+				var rootStream = rootGenerator.GenerateToStream (
+					perAssemblyNames,
+					useSharedTypemapUniverse,
+					includeBuiltInValueTypeUniverses);
+				generatedAssemblies.Add (new GeneratedAssembly (rootAssemblyName, rootStream));
+				logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
+			}
 		}
 		logger.LogGeneratedTypeMapAssembliesInfo (generatedAssemblies.Count);
 		return generatedAssemblies;
