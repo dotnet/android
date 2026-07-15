@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Diagnostics;
-using System.Linq;
-
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.Tests
@@ -30,28 +28,34 @@ namespace Xamarin.Android.Tools.Tests
 		public void CreateProcessStartInfo_NoArgs ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("myapp");
-			AssertArguments (psi);
+			Assert.AreEqual (0, psi.ArgumentList.Count);
 		}
 
 		[Test]
 		public void CreateProcessStartInfo_SingleArg ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("myapp", "--version");
-			AssertArguments (psi, "--version");
+			Assert.AreEqual (1, psi.ArgumentList.Count);
+			Assert.AreEqual ("--version", psi.ArgumentList [0]);
 		}
 
 		[Test]
 		public void CreateProcessStartInfo_MultipleArgs ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("tar", "-xzf", "archive.tar.gz", "-C", "/tmp/output");
-			AssertArguments (psi, "-xzf", "archive.tar.gz", "-C", "/tmp/output");
+			Assert.AreEqual (4, psi.ArgumentList.Count);
+			Assert.AreEqual ("-xzf", psi.ArgumentList [0]);
+			Assert.AreEqual ("archive.tar.gz", psi.ArgumentList [1]);
+			Assert.AreEqual ("-C", psi.ArgumentList [2]);
+			Assert.AreEqual ("/tmp/output", psi.ArgumentList [3]);
 		}
 
 		[Test]
 		public void CreateProcessStartInfo_ArgWithSpaces ()
 		{
 			var psi = ProcessUtils.CreateProcessStartInfo ("cmd", "/c", "path with spaces");
-			AssertArguments (psi, "/c", "path with spaces");
+			Assert.AreEqual (2, psi.ArgumentList.Count);
+			Assert.AreEqual ("path with spaces", psi.ArgumentList [1]);
 		}
 
 		[Test]
@@ -60,16 +64,6 @@ namespace Xamarin.Android.Tools.Tests
 			// Smoke test: just verify it returns without crashing
 			bool result = ProcessUtils.IsElevated ();
 			Assert.That (result, Is.TypeOf<bool> ());
-		}
-
-		static void AssertArguments (ProcessStartInfo psi, params string [] expected)
-		{
-			if (psi.ArgumentList.Count > 0) {
-				Assert.That (psi.ArgumentList, Is.EqualTo (expected));
-				Assert.That (psi.Arguments, Is.Empty);
-			} else {
-				Assert.That (psi.Arguments, Is.EqualTo (string.Join (" ", expected.Select (argument => $"\"{argument}\""))));
-			}
 		}
 	}
 }
