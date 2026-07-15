@@ -189,6 +189,11 @@ namespace Xamarin.Android.NetTests
 				}
 			}
 
+			// Real body streams (BufferedStream, GZipStream, ...) implement the byte[] overload; mirror that
+			// by delegating to the Memory overload so the wrapper's byte[] Read/ReadAsync exercise this fake.
+			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+				ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+
 			protected override void Dispose (bool disposing)
 			{
 				if (disposing) {

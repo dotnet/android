@@ -230,17 +230,17 @@ namespace Xamarin.Android.Net
 				RunOperation (() => stream.Flush (), "Response body flush was canceled.");
 
 			public override Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken) =>
-				RunOperation (abortToken => new ValueTask (stream.CopyToAsync (destination, bufferSize, abortToken)), cancellationToken, "Response body read was canceled.")
-					.AsTask ();
+				RunOperation (abortToken => stream.CopyToAsync (destination, bufferSize, abortToken), cancellationToken, "Response body read was canceled.");
 
 			public override int Read (byte[] buffer, int offset, int count) =>
 				RunOperation (() => stream.Read (buffer, offset, count), "Response body read was canceled.");
 
-			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+				RunOperation (abortToken => stream.ReadAsync (buffer, offset, count, abortToken), cancellationToken, "Response body read was canceled.");
 
 			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
 			public override ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default) =>
-				RunOperation (abortToken => stream.ReadAsync (buffer, abortToken), cancellationToken, "Response body read was canceled.");
+				new ValueTask<int> (RunOperation (abortToken => stream.ReadAsync (buffer, abortToken).AsTask (), cancellationToken, "Response body read was canceled."));
 
 			public override long Seek (long offset, SeekOrigin origin)
 			{
@@ -257,10 +257,11 @@ namespace Xamarin.Android.Net
 			public override void Write (byte[] buffer, int offset, int count) =>
 				RunOperation (() => stream.Write (buffer, offset, count), "Response body write was canceled.");
 
-			public override Task WriteAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => WriteAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+			public override Task WriteAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+				RunOperation (abortToken => stream.WriteAsync (buffer, offset, count, abortToken), cancellationToken, "Response body write was canceled.");
 
 			public override ValueTask WriteAsync (ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) =>
-				RunOperation (abortToken => stream.WriteAsync (buffer, abortToken), cancellationToken, "Response body write was canceled.");
+				new ValueTask (RunOperation (abortToken => stream.WriteAsync (buffer, abortToken).AsTask (), cancellationToken, "Response body write was canceled."));
 
 			/// <summary>
 			/// Runs an inner-stream operation inside the drain-safety bracket: it counts as in-flight
@@ -268,7 +269,7 @@ namespace Xamarin.Android.Net
 			/// registers <c>RequestDisconnect</c> to abort the parked operation on cancellation, and maps a
 			/// cancellation-caused transport exception to <see cref="OperationCanceledException"/>.
 			/// </summary>
-			async ValueTask<T> RunOperation<T> (Func<CancellationToken, ValueTask<T>> operation, CancellationToken callerToken, string canceledMessage)
+			async Task<T> RunOperation<T> (Func<CancellationToken, Task<T>> operation, CancellationToken callerToken, string canceledMessage)
 			{
 				BeginUse ();
 				CancellationTokenSource? linkedCts = null;
@@ -290,7 +291,7 @@ namespace Xamarin.Android.Net
 			/// <summary>
 			/// Void counterpart of <see cref="RunOperation{T}"/>, for operations that return no value.
 			/// </summary>
-			async ValueTask RunOperation (Func<CancellationToken, ValueTask> operation, CancellationToken callerToken, string canceledMessage)
+			async Task RunOperation (Func<CancellationToken, Task> operation, CancellationToken callerToken, string canceledMessage)
 			{
 				BeginUse ();
 				CancellationTokenSource? linkedCts = null;
@@ -319,16 +320,16 @@ namespace Xamarin.Android.Net
 			/// already complete when its result is read.
 			/// </remarks>
 			T RunOperation<T> (Func<T> operation, string canceledMessage) =>
-				RunOperation (abortToken => new ValueTask<T> (operation ()), CancellationToken.None, canceledMessage)
+				RunOperation (abortToken => Task.FromResult (operation ()), CancellationToken.None, canceledMessage)
 					.GetAwaiter ().GetResult ();
 
 			/// <summary>
-			/// Synchronous, void wrapper over the void <see cref="RunOperation(Func{CancellationToken,ValueTask},CancellationToken,string)"/>.
+			/// Synchronous, void wrapper over the void <see cref="RunOperation(Func{CancellationToken,Task},CancellationToken,string)"/>.
 			/// See <see cref="RunOperation{T}(Func{T},string)"/> for why <c>GetAwaiter().GetResult()</c> does
 			/// not block.
 			/// </summary>
 			void RunOperation (Action operation, string canceledMessage) =>
-				RunOperation (abortToken => { operation (); return ValueTask.CompletedTask; }, CancellationToken.None, canceledMessage)
+				RunOperation (abortToken => { operation (); return Task.CompletedTask; }, CancellationToken.None, canceledMessage)
 					.GetAwaiter ().GetResult ();
 
 			/// <summary>
