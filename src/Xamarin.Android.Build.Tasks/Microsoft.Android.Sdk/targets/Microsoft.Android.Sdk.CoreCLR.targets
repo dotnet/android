@@ -13,12 +13,26 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   </PropertyGroup>
   <!-- Properties for $(OutputType)=Exe (Android Applications) -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
-    <!-- Default to R2R Composite for CoreCLR Release mode -->
-    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and '$(Configuration)' == 'Release' ">true</PublishReadyToRun>
-    <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' ">true</PublishReadyToRunComposite>
+    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' ">true</PublishReadyToRun>
+    <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' and '$(Configuration)' == 'Release' ">true</PublishReadyToRunComposite>
+    <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' ">false</PublishReadyToRunComposite>
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishReadyToRun)' == 'true' ">true</_IsPublishing>
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>
   </PropertyGroup>
+
+  <Target Name="_ConfigureDebugReadyToRun"
+      Condition=" '$(AndroidApplication)' == 'true' and '$(Configuration)' == 'Debug' and '$(PublishReadyToRun)' == 'true' "
+      BeforeTargets="_PrepareForReadyToRunCompilation">
+    <ItemGroup>
+      <_AndroidDebugReadyToRunFrameworkAssembly Include="@(RuntimePackAsset)"
+          Condition=" '%(RuntimePackAsset.AssetType)' == 'runtime' and '%(RuntimePackAsset.Extension)' == '.dll' " />
+      <_AndroidDebugReadyToRunExcludedAssembly Include="@(ResolvedFileToPublish->WithMetadataValue('PostprocessAssembly', 'true'))" />
+      <_AndroidDebugReadyToRunExcludedAssembly Remove="@(_AndroidDebugReadyToRunFrameworkAssembly)"
+          MatchOnMetadata="Filename;Extension"
+          MatchOnMetadataOptions="CaseInsensitive" />
+      <PublishReadyToRunExclude Include="@(_AndroidDebugReadyToRunExcludedAssembly->'%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
 
   <!-- Default feature switches -->
   <ItemGroup>

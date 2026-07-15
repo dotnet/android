@@ -64,6 +64,44 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DebugReadyToRunCompilesOnlyFrameworkAssemblies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", "android-x64");
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var assemblyDirectory = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "x86_64");
+			var frameworkAssembly = Path.Combine (assemblyDirectory, "System.Private.CoreLib.dll");
+			var userAssembly = Path.Combine (assemblyDirectory, $"{proj.ProjectName}.dll");
+			FileAssert.Exists (frameworkAssembly);
+			FileAssert.Exists (userAssembly);
+
+			using (var stream = File.OpenRead (frameworkAssembly))
+			using (var peReader = new System.Reflection.PortableExecutable.PEReader (stream)) {
+				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					"System.Private.CoreLib.dll should be a ReadyToRun image.");
+			}
+			using (var stream = File.OpenRead (userAssembly))
+			using (var peReader = new System.Reflection.PortableExecutable.PEReader (stream)) {
+				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size == 0,
+					$"{proj.ProjectName}.dll should remain IL.");
+			}
+
+			proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_CreateR2RImages"),
+				"Changing a user assembly should not rerun crossgen2.");
+		}
+
+		[Test]
 		public void BasicApplicationPublishReadyToRun ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
 			var proj = new XamarinAndroidApplicationProject {
