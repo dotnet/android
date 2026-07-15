@@ -172,10 +172,11 @@ namespace Xamarin.Android.Net
 			// Fired to abort a parked read when Dispose() (or a linked caller token) requests cancellation.
 			readonly CancellationTokenSource abortCts = new CancellationTokenSource ();
 
-			// Guards the draining state machine (inUseCount / disposeRequested).
+			// Guards the draining state machine (inUseCount / disposeRequested / disposed).
 			readonly object stateLock = new object ();
 			int inUseCount;          // operations (read/write/copy/flush) currently in flight (normally 0 or 1)
 			bool disposeRequested;   // Dispose() called: reject new operations; close once the last one unwinds
+			bool disposed;           // DisposeCore() has run (exactly once)
 
 			internal CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
 			{
@@ -199,30 +200,26 @@ namespace Xamarin.Android.Net
 			protected override void Dispose (bool disposing)
 			{
 				if (disposing) {
-					bool firstRequest, disposeNow = false;
+					bool disposeNow;
 					lock (stateLock) {
-						// Detect the false->true transition so a second Dispose() (Stream.Dispose is
-						// idempotent by contract) neither aborts nor tears down again.
-						firstRequest = !disposeRequested;
 						disposeRequested = true;
 						// Only close here if no operation is in flight. If one is, that operation owns the
 						// close and runs DisposeCore() from EndUse() once it has unwound -- closing now would
-						// race it.
-						if (firstRequest)
-							disposeNow = inUseCount == 0;
+						// race it. '!disposed' also makes a second Dispose() a no-op.
+						disposeNow = inUseCount == 0 && !disposed;
+						if (disposeNow)
+							disposed = true;
 					}
 
-					if (firstRequest) {
-						if (disposeNow) {
-							// Nothing is in flight (disposeRequested, set under the lock, now blocks new
-							// operations), so there is no parked operation to abort -- close directly.
-							DisposeCore ();
-						} else {
-							// An operation is parked. Abort it so it unwinds promptly and then closes the
-							// stream itself (EndUse -> DisposeCore). Cancelling only disconnects the socket,
-							// never the managed stream, so it cannot collide with the operation.
-							abortCts.Cancel ();
-						}
+					if (disposeNow) {
+						// Nothing is in flight (disposeRequested, set under the lock, now blocks new
+						// operations), so there is no parked operation to abort -- close directly.
+						DisposeCore ();
+					} else {
+						// An operation is parked. Abort it so it unwinds promptly and then closes the stream
+						// itself (EndUse -> DisposeCore). Cancelling only disconnects the socket, never the
+						// managed stream, so it cannot collide with the operation.
+						abortCts.Cancel ();
 					}
 				}
 
@@ -377,9 +374,9 @@ namespace Xamarin.Android.Net
 				bool shouldDispose;
 				lock (stateLock) {
 					inUseCount--;
-					// Only the operation that brings inUseCount back to 0 after a dispose request tears down;
-					// exactly one operation observes that transition, so no separate "done" flag is needed.
-					shouldDispose = disposeRequested && inUseCount == 0;
+					shouldDispose = disposeRequested && inUseCount == 0 && !disposed;
+					if (shouldDispose)
+						disposed = true;
 				}
 
 				if (shouldDispose)
@@ -402,12 +399,12 @@ namespace Xamarin.Android.Net
 				});
 
 			/// <summary>
-			/// The actual teardown. Runs exactly once and only when no operation is in flight, so calling
-			/// <c>Close()</c> on the Java stream here cannot trigger the "Unbalanced enter/exit" drain-read
-			/// race described above. It is always reached exactly once: when <c>Dispose()</c> first sets
-			/// <c>disposeRequested</c>, either <c>Dispose()</c> runs it (nothing in flight) or the unique
-			/// <c>EndUse()</c> that returns <c>inUseCount</c> to 0 does (once the final operation unwinds) --
-			/// so the stream and socket are never leaked and never closed twice.
+			/// The actual teardown. Runs exactly once (guarded by <c>disposed</c>) and only when no operation
+			/// is in flight, so calling <c>Close()</c> on the Java stream here cannot trigger the "Unbalanced
+			/// enter/exit" drain-read race described above. It is always reached: when <c>Dispose()</c> sets
+			/// <c>disposeRequested</c>, either <c>Dispose()</c> runs it (nothing in flight) or the last
+			/// <c>EndUse()</c> does (once the final operation unwinds) -- so the stream and socket are never
+			/// leaked.
 			/// </summary>
 			void DisposeCore ()
 			{
