@@ -1,0 +1,54 @@
+<!--
+  Pre-generates the trimmable type map for Mono.Android at SDK build time (issue #10792).
+
+  App builds otherwise rescan the ~8000 Mono.Android types on every (Debug) build. Instead we
+  scan Mono.Android once here and ship the resulting _Mono.Android.TypeMap.dll (and, later, the
+  Java Callable Wrapper jar) in the SDK pack. The typemap always anchors on Java.Lang.Object
+  (ForceSharedTypemapUniverse=true) so a single artifact serves both app-build universe modes:
+  merged (Release) and aggregate (Debug). The root _Microsoft.Android.TypeMaps assembly is NOT
+  generated here (GenerateRootAssembly=false) — the app build emits it and references this
+  pre-generated typemap under Java.Lang.Object.
+-->
+<Project>
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" />
+
+  <PropertyGroup>
+    <_PreBuiltTypeMapDir>$(IntermediateOutputPath)prebuilt-typemap\</_PreBuiltTypeMapDir>
+    <_PreBuiltTypeMapOutputDir>$(_PreBuiltTypeMapDir)typemap\</_PreBuiltTypeMapOutputDir>
+    <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapDir)java\</_PreBuiltTypeMapJavaDir>
+    <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
+  </PropertyGroup>
+
+  <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
+      BeforeTargets="_GenerateXASdkContent"
+      Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
+      Outputs="$(_PreBuiltTypeMapAssembly)">
+    <ItemGroup>
+      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
+      <!-- Reference-only framework assemblies needed to resolve Mono.Android's base types.
+           These are NOT scanned for peers; only @(_PreBuiltTypeMapInput) is. -->
+      <_PreBuiltTypeMapFramework Include="$(_MonoAndroidNETDefaultOutDir)*.dll"
+          Exclude="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
+    </ItemGroup>
+    <MakeDir Directories="$(_PreBuiltTypeMapOutputDir);$(_PreBuiltTypeMapJavaDir)" />
+    <GenerateTrimmableTypeMap
+        ResolvedAssemblies="@(_PreBuiltTypeMapInput)"
+        ResolvedFrameworkAssemblies="@(_PreBuiltTypeMapFramework)"
+        FrameworkAssemblyNames="@(_PreBuiltTypeMapFramework->'%(Filename)')"
+        OutputDirectory="$(_PreBuiltTypeMapOutputDir)"
+        JavaSourceOutputDirectory="$(_PreBuiltTypeMapJavaDir)"
+        TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
+        ForceSharedTypemapUniverse="true"
+        GenerateRootAssembly="false" />
+  </Target>
+
+  <Target Name="_AddPreBuiltMonoAndroidTypeMapToPackage"
+      BeforeTargets="_GenerateXASdkContent"
+      DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMap">
+    <ItemGroup>
+      <FilesToPackage Include="$(_PreBuiltTypeMapAssembly)" TargetPath="data\prebuilt-typemap" />
+    </ItemGroup>
+  </Target>
+
+</Project>
