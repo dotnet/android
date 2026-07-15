@@ -64,9 +64,19 @@ if (-not (Test-Path $installScript)) {
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   $installScriptTmp = "$installScript.tmp.$PID"
   try {
-    Invoke-WithRetry {
-      Invoke-WebRequest -Uri 'https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1' -OutFile $installScriptTmp -UseBasicParsing
-    }
+  # -UseBasicParsing is required on Windows PowerShell (Desktop) to avoid
+  # the Internet Explorer engine; on PowerShell 7+ (Core) it is the only
+  # mode and the parameter is unnecessary, so gate it by edition.
+  $iwrArgs = @{
+    Uri     = 'https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1'
+    OutFile = $installScriptTmp
+  }
+  if ($PSVersionTable.PSEdition -eq 'Desktop') {
+    $iwrArgs['UseBasicParsing'] = $true
+  }
+  Invoke-WithRetry {
+    Invoke-WebRequest @iwrArgs
+  }
     Move-Item -LiteralPath $installScriptTmp -Destination $installScript
   } finally {
     if (Test-Path $installScriptTmp) {

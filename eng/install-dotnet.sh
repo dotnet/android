@@ -58,7 +58,11 @@ install_script="$install_dir/dotnet-install.sh"
 if [[ ! -f "$install_script" ]]; then
   install_script_tmp="$install_script.tmp.$$"
   trap 'rm -f "$install_script_tmp"' EXIT
-  retry curl -fSL --retry 5 --retry-delay 1 --retry-all-errors \
+  # The outer retry() handles backoff for any failure (including transport
+  # errors like "curl: (56)"), so we don't use curl's own --retry flags
+  # here. --retry-all-errors in particular isn't supported by the older
+  # system curl on some macOS images.
+  retry curl -fSL \
     "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh" -o "$install_script_tmp"
   mv "$install_script_tmp" "$install_script"
   trap - EXIT
