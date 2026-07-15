@@ -14,9 +14,6 @@ namespace xamarin::android {
 	{
 		void *lib_handle = nullptr;
 
-		// We're being called as part of the p/invoke mechanism, so skip AOT DSO lookup.
-		constexpr bool PREFER_AOT_CACHE = false;
-
 		// Handle p/invokes of the form [DllImport ("liblog")] or [DllImport ("log")]
 		// TODO: try modifying the name to contain both the `log` prefix and the `.so` suffix
 		dynamic_local_path_string short_library_name;
@@ -30,11 +27,11 @@ namespace xamarin::android {
 			}
 
 			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name.get ());
-			lib_handle = MonodroidDl::monodroid_dlopen<PREFER_AOT_CACHE> (short_library_name.get (), microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name.get (), microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
 		}
 
 		if (lib_handle == nullptr) {
-			lib_handle = MonodroidDl::monodroid_dlopen<PREFER_AOT_CACHE> (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			lib_handle = MonodroidDl::monodroid_dlopen (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
 		}
 
 		if (lib_handle == nullptr) {

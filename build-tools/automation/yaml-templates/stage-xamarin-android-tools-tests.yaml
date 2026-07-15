@@ -24,6 +24,9 @@ parameters:
 - name: condition
   type: string
   default: succeeded()
+- name: use1ESTemplate
+  type: boolean
+  default: false
 - name: windowsPool
   type: object
   # NOTE: This default is a Microsoft-hosted Azure Pipelines pool, which is NOT
@@ -69,6 +72,15 @@ stages:
     timeoutInMinutes: 30
     workspace:
       clean: all
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputs:
+        - output: pipelineArtifact
+          displayName: Upload build logs
+          condition: always()
+          targetPath: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-windows
+          sbomEnabled: false
     steps:
     - checkout: self
       clean: true
@@ -91,12 +103,13 @@ stages:
         command: test
         projects: $(XatSourceDirectory)/bin/TestDebug/**/*-Tests.dll
 
-    - task: PublishBuildArtifacts@1
-      displayName: Upload build logs
-      condition: always()
-      inputs:
-        pathToPublish: $(Build.ArtifactStagingDirectory)
-        artifactName: android-tools-logs-windows
+    - ${{ if eq(parameters.use1ESTemplate, false) }}:
+      - task: PublishBuildArtifacts@1
+        displayName: Upload build logs
+        condition: always()
+        inputs:
+          pathToPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-windows
 
   # Check - "Xamarin.Android (Android Tools Tests Mac - .NET)"
   - job: xamarin_android_tools_mac
@@ -105,6 +118,15 @@ stages:
     timeoutInMinutes: 30
     workspace:
       clean: all
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputs:
+        - output: pipelineArtifact
+          displayName: Upload build logs
+          condition: always()
+          targetPath: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-mac
+          sbomEnabled: false
     steps:
     - checkout: self
       clean: true
@@ -127,9 +149,10 @@ stages:
         command: test
         projects: $(XatSourceDirectory)/bin/TestDebug/**/*-Tests.dll
 
-    - task: PublishBuildArtifacts@1
-      displayName: Upload build logs
-      condition: always()
-      inputs:
-        pathToPublish: $(Build.ArtifactStagingDirectory)
-        artifactName: android-tools-logs-mac
+    - ${{ if eq(parameters.use1ESTemplate, false) }}:
+      - task: PublishBuildArtifacts@1
+        displayName: Upload build logs
+        condition: always()
+        inputs:
+          pathToPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: android-tools-logs-mac

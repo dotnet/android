@@ -32,7 +32,7 @@
 #include "monodroid-state.hh"
 #include "startup-aware-lock.hh"
 #include <runtime-base/timing-internal.hh>
-#include <runtime-base/search.hh>
+#include <runtime-base/search-xxhash.hh>
 #include <runtime-base/zstd.hh>
 
 using namespace xamarin::android;
@@ -399,7 +399,7 @@ EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreI
 {
 	auto equal = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
 	auto less_than = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
-	ssize_t idx = Search::binary_search<AssemblyStoreIndexEntry, equal, less_than> (hash, entries, entry_count);
+	ssize_t idx = SearchXxHash::binary_search<AssemblyStoreIndexEntry, equal, less_than> (hash, entries, entry_count);
 	if (idx >= 0) {
 		return &entries[idx];
 	}
@@ -671,11 +671,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 [[gnu::always_inline]] MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept
 {
-	// In microbrenchmarks, `binary_search_branchless` is faster than `binary_search` but in "real" application tests,
-	// the simple version appears to yield faster startup... Leaving both for now, for further investigation and
-	// potential optimizations
-	ssize_t idx = Search::binary_search (hash, map_java_hashes, java_type_count);
-	//ptrdiff_t idx = binary_search_branchless (hash, map_java_hashes, java_type_count);
+	ssize_t idx = SearchXxHash::binary_search (hash, map_java_hashes, java_type_count);
 
 	TypeMapJava const* java_entry = idx >= 0 ? &map_java[idx] : nullptr;
 	TypeMapModule *module = java_entry != nullptr && java_entry->module_index < map_module_count ? &map_modules[java_entry->module_index] : nullptr;

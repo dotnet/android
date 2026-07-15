@@ -971,7 +971,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>Nível de compactação de AssemblyStore inválido ''{0}''. O valor deve estar entre {1} e {2}.</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level

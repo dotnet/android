@@ -68,10 +68,9 @@ target triple = "{{triple}}"
 			return header + """
 %struct.TypeMap = type { i32, i32, ptr, ptr }
 %struct.TypeMapManagedTypeInfo = type { i64, i32, i32 }
-%struct.TypeMapAssembly = type { i64 }
+%struct.TypeMapAssembly = type { [16 x i8], i64, i64 }
 
 @type_map = dso_local constant %struct.TypeMap zeroinitializer, align 8
-@typemap_use_hashes = dso_local constant i8 1, align 1
 @type_map_managed_type_info = dso_local constant [0 x %struct.TypeMapManagedTypeInfo] zeroinitializer, align 8
 @type_map_unique_assemblies = dso_local constant [0 x %struct.TypeMapAssembly] zeroinitializer, align 8
 @type_map_assembly_names = dso_local constant [1 x i8] zeroinitializer, align 1
@@ -84,7 +83,7 @@ target triple = "{{triple}}"
 @managed_to_java_map_module_count = dso_local constant i32 0, align 4
 @managed_to_java_map = dso_local constant [0 x i8] zeroinitializer, align 8
 @java_to_managed_map = dso_local constant [0 x i8] zeroinitializer, align 8
-@java_to_managed_hashes = dso_local constant [0 x i64] zeroinitializer, align 8
+@java_to_managed_hashes = dso_local constant [0 x i32] zeroinitializer, align 4
 @modules_map_data = dso_local constant [0 x i8] zeroinitializer, align 8
 @modules_duplicates_data = dso_local constant [0 x i8] zeroinitializer, align 8
 @java_type_count = dso_local constant i32 0, align 4
