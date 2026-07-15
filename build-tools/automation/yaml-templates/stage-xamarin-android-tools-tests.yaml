@@ -49,6 +49,7 @@ stages:
   variables:
     DotNetCoreVersion: $(DotNetSdkVersion).x
     XatSourceDirectory: $(System.DefaultWorkingDirectory)/external/xamarin-android-tools
+    XatTestBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=$(DotNetSdkVersion)
   jobs:
 
   # Check - "Xamarin.Android (Android Tools Tests Windows - .NET)"
@@ -81,7 +82,7 @@ stages:
       inputs:
         command: build
         projects: $(XatSourceDirectory)/Xamarin.Android.Tools.sln
-        arguments: -c Debug -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
+        arguments: -c Debug $(XatTestBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
 
     - task: DotNetCoreCLI@2
       displayName: Run Tests
@@ -127,7 +128,7 @@ stages:
       inputs:
         command: build
         projects: $(XatSourceDirectory)/Xamarin.Android.Tools.sln
-        arguments: -c Debug -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
+        arguments: -c Debug $(XatTestBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
 
     - task: DotNetCoreCLI@2
       displayName: Run Tests
