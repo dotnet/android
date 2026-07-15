@@ -27,6 +27,28 @@ fi
 install_dir="$repo_root/bin/$configuration/dotnet"
 mkdir -p "$install_dir"
 
+# Retry a command up to 5 times with exponential backoff (2s, 4s, 8s, 16s).
+# CI regularly hits transient network failures (e.g. "curl: (56) Recv
+# failure: Connection reset by peer") when reaching the .NET CDN.
+retry() {
+  local attempt=1
+  local max_attempts=5
+  local delay=2
+  while true; do
+    if "$@"; then
+      return 0
+    fi
+    if [[ $attempt -ge $max_attempts ]]; then
+      echo "error: command failed after $attempt attempts: $*" >&2
+      return 1
+    fi
+    echo "warning: command failed (attempt $attempt/$max_attempts), retrying in ${delay}s: $*" >&2
+    sleep "$delay"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+  done
+}
+
 # Download Microsoft's official dotnet-install.sh (cached under
 # $install_dir to avoid hitting the CDN on idempotent re-runs). Download
 # to a temp file and atomically `mv` into place so a failed/interrupted
@@ -35,9 +57,12 @@ mkdir -p "$install_dir"
 install_script="$install_dir/dotnet-install.sh"
 if [[ ! -f "$install_script" ]]; then
   install_script_tmp="$install_script.tmp.$$"
-  curl -fsSL "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh" -o "$install_script_tmp"
+  trap 'rm -f "$install_script_tmp"' EXIT
+  retry curl -fSL --retry 5 --retry-delay 1 --retry-all-errors \
+    "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh" -o "$install_script_tmp"
   mv "$install_script_tmp" "$install_script"
+  trap - EXIT
 fi
 
 echo "Installing .NET SDK $sdk_version into $install_dir"
-bash "$install_script" --version "$sdk_version" --install-dir "$install_dir" --no-path
+retry bash "$install_script" --version "$sdk_version" --install-dir "$install_dir" --no-path
