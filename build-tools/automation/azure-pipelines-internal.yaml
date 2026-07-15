@@ -428,6 +428,7 @@ stages:
           env:
             BUILD_REPOSITORY_NAME: dotnet/android
             BUILD_REPOSITORY_URI: https://github.com/dotnet/android
+            NUGET_CONFIG: $(Build.SourcesDirectory)\android\NuGet.config
             NUGET_PACKAGES: $(Build.SourcesDirectory)\android\.packages
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -459,6 +460,7 @@ stages:
           env:
             BUILD_REPOSITORY_NAME: dotnet/android
             BUILD_REPOSITORY_URI: https://github.com/dotnet/android
+            NUGET_CONFIG: $(Build.SourcesDirectory)\android\NuGet.config
             NUGET_PACKAGES: $(Build.SourcesDirectory)\android\.packages
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
