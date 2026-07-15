@@ -357,7 +357,7 @@ namespace MonoDroid.Generation
 								ParameterList.Equals (mm.Parameters, m.Parameters)) ||
 							(m == prop.Setter &&
 								(ParameterList.Equals (mm.Parameters, m.Parameters) ||
-									(mm.Parameters.Count == 1 && mm.Parameters [0].IsGeneric)))));
+									(mm.Parameters.Count == 1 && mm.Parameters [0].Symbol is GenericTypeParameter)))));
 						if (bm != null) {
 							m.ApiRemovedSince = default;
 							break;
