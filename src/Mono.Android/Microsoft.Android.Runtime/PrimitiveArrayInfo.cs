@@ -74,6 +74,15 @@ static class PrimitiveArrayInfo
 				return false;
 			}
 
+			var jniType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+			if (jniType != "[" + jniSimpleReference) {
+				if (IsCompatibleListType (targetType)) {
+					value = null;
+					return false;
+				}
+				throw new InvalidCastException ($"JNI reference of type '{jniType}' is not the primitive array required by managed type '{targetType}'.");
+			}
+
 			var array = createFromReference (ref reference, options);
 			if (targetType == typeof (T[]) || IsCompatibleListType (targetType)) {
 				try {

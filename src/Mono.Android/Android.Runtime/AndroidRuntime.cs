@@ -630,6 +630,14 @@ namespace Android.Runtime {
 			return peer;
 		}
 
+		protected override object? CreateNonArrayListValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				Type targetType)
+		{
+			return JavaConvert.FromObjectReference (ref reference, options, targetType);
+		}
+
 		public override void AddPeer (IJavaPeerable value)
 		{
 			if (value == null)

@@ -61,6 +61,14 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
 	}
 
+	protected override object? CreateNonArrayListValue (
+			ref JniObjectReference reference,
+			JniObjectReferenceOptions options,
+			Type targetType)
+	{
+		return JavaConvert.FromObjectReference (ref reference, options, targetType);
+	}
+
 	protected override bool TryConstructPeer (
 			IJavaPeerable self,
 			ref JniObjectReference reference,
