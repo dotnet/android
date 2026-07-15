@@ -55,6 +55,8 @@ variables:
     value: test
 - name: _BuildConfig
   value: Release
+- name: ArcadeDotNetSdkVersion
+  value: 11.0
 - name: DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE
   value: 'true'
 - name: DOTNET_SDK_VULNERABILITY_CHECK_DISABLE
@@ -340,7 +342,7 @@ stages:
         - task: UseDotNet@2
           displayName: Install .NET SDK for Arcade signing
           inputs:
-            version: 11.0.x
+            version: $(ArcadeDotNetSdkVersion).x
             includePreviewVersions: true
 
         - pwsh: |
