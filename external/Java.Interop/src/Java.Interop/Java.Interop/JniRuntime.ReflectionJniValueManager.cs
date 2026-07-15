@@ -430,10 +430,20 @@ namespace Java.Interop
 				if (IsMatchingPrimitiveArray (marshaler, jniType))
 					return marshaler.CreateValue (ref reference, options, targetType);
 
-				if (GetListType (targetType) != null && jniType != null && !jniType.StartsWith ("[", StringComparison.Ordinal))
-					return CreateNonArrayListValue (ref reference, options, targetType);
+				if (GetListType (targetType) != null && jniType != null && !jniType.StartsWith ("[", StringComparison.Ordinal)) {
+					if (JavaListType.IsInstanceOfType (reference))
+						return CreateNonArrayListValue (ref reference, options, targetType);
+					JniObjectReference.Dispose (ref reference, options);
+					throw new InvalidCastException ($"JNI reference of type '{jniType}' does not implement java.util.List required by managed type '{targetType}'.");
+				}
 
+				JniObjectReference.Dispose (ref reference, options);
 				throw new InvalidCastException ($"JNI reference of type '{jniType}' is not the primitive array required by managed type '{targetType}'.");
+			}
+
+			static JniType? javaListType;
+			static JniType JavaListType {
+				get {return JniType.GetCachedJniType (ref javaListType, "java/util/List");}
 			}
 
 			bool IsMatchingPrimitiveArray (JniValueMarshaler marshaler, string? jniType)
@@ -463,6 +473,7 @@ namespace Java.Interop
 					JniObjectReferenceOptions options,
 					Type targetType)
 			{
+				JniObjectReference.Dispose (ref reference, options);
 				throw new InvalidCastException ($"JNI reference cannot be converted to managed list type '{targetType}'.");
 			}
 		
