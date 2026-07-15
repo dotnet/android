@@ -20,13 +20,23 @@
     <_PreBuiltTypeMapIntDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'obj', 'prebuilt-typemap'))</_PreBuiltTypeMapIntDir>
     <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapIntDir)java\</_PreBuiltTypeMapJavaDir>
     <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
+    <_PreBuiltTypeMapJavaInteropAssembly>$(_PreBuiltTypeMapOutputDir)_Java.Interop.TypeMap.dll</_PreBuiltTypeMapJavaInteropAssembly>
     <_PreBuiltTypeMapAcwMap>$(_PreBuiltTypeMapOutputDir)mono.android-acw-map.txt</_PreBuiltTypeMapAcwMap>
+    <!--
+      Array-map rank baked into the pre-generated framework typemaps. This MUST match the app
+      build's effective MaxArrayRank when it consumes these artifacts, otherwise array entries land
+      in different universes (main vs __ArrayMapRank{N}) and the runtime throws BadImageFormatException.
+      The app-build value comes from _AndroidTrimmableTypeMapMaxArrayRank (see
+      Microsoft.Android.Sdk.TypeMap.Trimmable.targets), whose NativeAOT default is 3; pre-generation
+      only runs for that shape, so we hardcode the same value here.
+    -->
+    <_PreBuiltTypeMapMaxArrayRank>3</_PreBuiltTypeMapMaxArrayRank>
   </PropertyGroup>
 
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
       BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
       Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
-      Outputs="$(_PreBuiltTypeMapAssembly)">
+      Outputs="$(_PreBuiltTypeMapAssembly);$(_PreBuiltTypeMapJavaInteropAssembly)">
     <ItemGroup>
       <!-- Scan Mono.Android and Java.Interop TOGETHER so their cross-assembly aliases (e.g.
            java/lang/Object mapped by both Java.Lang.Object and Java.Interop.JavaObject) are
@@ -49,7 +59,7 @@
         AcwMapOutputFile="$(_PreBuiltTypeMapAcwMap)"
         TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
         ForceSharedTypemapUniverse="true"
-        MaxArrayRank="3"
+        MaxArrayRank="$(_PreBuiltTypeMapMaxArrayRank)"
         GenerateRootAssembly="false" />
   </Target>
 
