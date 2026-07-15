@@ -141,11 +141,6 @@ sealed class TypeMapAssemblyEmitter
 
 	ExportMethodDispatchEmitter? _exportMethodDispatchEmitter;
 
-	// Per-anchor TypeMap<TGroup> ctor refs, lazily built.
-	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr2ArgCtorRefByAnchor = new ();
-	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr3ArgCtorRefByAnchor = new ();
-	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAssociationAttrCtorRefByAnchor = new ();
-
 	// Cached open TypeMapAttribute`1 ref shared across closed TypeSpecs.
 	TypeReferenceHandle _typeMapAttrOpenRef;
 
@@ -528,23 +523,9 @@ sealed class TypeMapAssemblyEmitter
 
 		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional.
 		_typeMapAttrCtorRef2Arg = AddTypeMapAttr2ArgCtorRef (_anchorTypeHandle);
-		_typeMapAttr2ArgCtorRefByAnchor [_anchorTypeHandle] = _typeMapAttrCtorRef2Arg;
 
 		// 3-arg: TypeMap(string jniName, Type proxyType, Type targetType) — trimmable.
-		// Cache by anchor so rank-anchored entries can build their own closed ctor on demand.
 		_typeMapAttrCtorRef3Arg = AddTypeMapAttr3ArgCtorRef (_anchorTypeHandle);
-		_typeMapAttr3ArgCtorRefByAnchor [_anchorTypeHandle] = _typeMapAttrCtorRef3Arg;
-	}
-
-	/// <summary>Cached 2-arg <c>TypeMap&lt;TGroup&gt;</c> ctor ref for the given anchor, built on first use.</summary>
-	MemberReferenceHandle GetOrAddTypeMapAttr2ArgCtorRef (EntityHandle anchor)
-	{
-		if (_typeMapAttr2ArgCtorRefByAnchor.TryGetValue (anchor, out var cached)) {
-			return cached;
-		}
-		var ctorRef = AddTypeMapAttr2ArgCtorRef (anchor);
-		_typeMapAttr2ArgCtorRefByAnchor [anchor] = ctorRef;
-		return ctorRef;
 	}
 
 	MemberReferenceHandle AddTypeMapAttr2ArgCtorRef (EntityHandle anchor)
@@ -557,16 +538,6 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
-	}
-
-	MemberReferenceHandle GetOrAddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
-	{
-		if (_typeMapAttr3ArgCtorRefByAnchor.TryGetValue (anchor, out var cached)) {
-			return cached;
-		}
-		var ctorRef = AddTypeMapAttr3ArgCtorRef (anchor);
-		_typeMapAttr3ArgCtorRefByAnchor [anchor] = ctorRef;
-		return ctorRef;
 	}
 
 	MemberReferenceHandle AddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
@@ -597,24 +568,6 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
 				}));
-		_typeMapAssociationAttrCtorRefByAnchor [_anchorTypeHandle] = _typeMapAssociationAttrCtorRef;
-	}
-
-	MemberReferenceHandle GetOrAddTypeMapAssociationAttrCtorRef (EntityHandle anchor)
-	{
-		if (_typeMapAssociationAttrCtorRefByAnchor.TryGetValue (anchor, out var cached)) {
-			return cached;
-		}
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAssociationAttrOpenRef, anchor);
-		var ctorRef = _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-					p.AddParameter ().Type ().Type (_systemTypeRef, false);
-				}));
-		_typeMapAssociationAttrCtorRefByAnchor [anchor] = ctorRef;
-		return ctorRef;
 	}
 
 	ExportMethodDispatchEmitterContext CreateExportMethodDispatchEmitterContext ()
