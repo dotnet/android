@@ -246,6 +246,10 @@ namespace Android.RuntimeTests {
 		[Category ("NativeAOTTrimmable")]
 		public void GetArray_NullableByteArrayArray ()
 		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("Test only relevant for the trimmable typemap path.");
+			}
+
 			var values = new [] {
 				new byte? [] { 1, null, 200 },
 				new byte? [] { 255, 128 },

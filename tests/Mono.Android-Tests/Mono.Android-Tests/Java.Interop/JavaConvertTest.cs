@@ -130,13 +130,16 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IListNullableInt32 ()
 		{
+			AssumeTrimmableTypeMapEnabled ();
+
 			// A non-generic source prevents ValueManager from returning the cached peer directly,
 			// forcing conversion through SafeJavaCollectionFactory.
 			using (var source = new JavaList ()) {
 				source.Add (1);
-				source.Add (null);
+				source.Add ((object) null);
 				source.Add (3);
 
 				var reference = source.PeerReference;
@@ -157,8 +160,11 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryNullableInt32String ()
 		{
+			AssumeTrimmableTypeMapEnabled ();
+
 			// A non-generic source prevents ValueManager from returning the cached peer directly,
 			// forcing conversion through SafeJavaCollectionFactory.
 			using (var source = new JavaDictionary ()) {
@@ -187,9 +193,7 @@ namespace Java.InteropTests
 		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryInt32Int64 ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates value/value dictionary rooting on the trimmable typemap path.");
-			}
+			AssumeTrimmableTypeMapEnabled ();
 
 			using (var source = new JavaDictionary ()) {
 				source.Add (1, 100L);
@@ -212,8 +216,11 @@ namespace Java.InteropTests
 		// (ValueTypeFactory maps byte alongside sbyte). byte marshals to java.lang.Byte bitwise, so
 		// values above 127 round-trip through the signed Java byte.
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_IListByte ()
 		{
+			AssumeTrimmableTypeMapEnabled ();
+
 			// A non-generic source prevents ValueManager from returning the cached peer directly,
 			// forcing conversion through SafeJavaCollectionFactory.
 			using (var source = new JavaList ()) {
@@ -233,6 +240,13 @@ namespace Java.InteropTests
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
+			}
+		}
+
+		static void AssumeTrimmableTypeMapEnabled ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("Test only relevant for the trimmable typemap path.");
 			}
 		}
 
