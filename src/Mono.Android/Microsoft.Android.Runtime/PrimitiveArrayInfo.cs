@@ -74,6 +74,16 @@ static class PrimitiveArrayInfo
 				return false;
 			}
 
+			var jniType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+			if (jniType != "[" + jniSimpleReference) {
+				if (IsCompatibleListType (targetType) && JavaListType.IsInstanceOfType (reference)) {
+					value = null;
+					return false;
+				}
+				JniObjectReference.Dispose (ref reference, options);
+				throw new InvalidCastException ($"JNI reference of type '{jniType}' is not the primitive array required by managed type '{targetType}'.");
+			}
+
 			var array = createFromReference (ref reference, options);
 			if (targetType == typeof (T[]) || IsCompatibleListType (targetType)) {
 				try {
@@ -169,6 +179,9 @@ static class PrimitiveArrayInfo
 			(ref JniObjectReference h, JniObjectReferenceOptions o) => new JavaDoubleArray (ref h, o),
 			list => new JavaDoubleArray (list)),
 	];
+
+	static JniType? javaListType;
+	static JniType JavaListType => JniType.GetCachedJniType (ref javaListType, "java/util/List");
 
 	public static bool TryGetArrayTypes (Type elementType, [NotNullWhen (true)] out Type[]? arrayTypes)
 	{

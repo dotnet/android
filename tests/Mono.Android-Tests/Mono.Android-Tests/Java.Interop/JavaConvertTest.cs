@@ -127,6 +127,60 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void ValueManagerConvertsJavaListToPrimitiveIList ()
+		{
+			using (var values = new Java.Util.ArrayList ())
+			using (var first = new Java.Lang.Boolean (true))
+			using (var second = new Java.Lang.Boolean (false)) {
+				values.Add (first);
+				values.Add (second);
+
+				var reference = values.PeerReference;
+				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.Copy);
+
+				CollectionAssert.AreEqual (new [] { true, false }, converted);
+			}
+		}
+
+		[Test]
+		public void ValueManagerConvertsPrimitiveArrayToIList ()
+		{
+			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { true, false }), JniObjectReferenceType.Local);
+			var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.CopyAndDispose);
+
+			CollectionAssert.AreEqual (new [] { true, false }, converted);
+		}
+
+		[TestCase (JniObjectReferenceOptions.Copy, true)]
+		[TestCase (JniObjectReferenceOptions.CopyAndDispose, false)]
+		public void ValueManagerRejectsNonListForPrimitiveIListAndHonorsOwnership (
+			JniObjectReferenceOptions options,
+			bool remainsValid)
+		{
+			var reference = new JniObjectReference (JNIEnv.NewString ("not a list"), JniObjectReferenceType.Local);
+			try {
+				Assert.Throws<InvalidCastException> (() =>
+					JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, options));
+				Assert.AreEqual (remainsValid, reference.IsValid);
+			} finally {
+				JniObjectReference.Dispose (ref reference);
+			}
+		}
+
+		[Test]
+		public void ValueManagerRejectsMismatchedPrimitiveArrayAndDisposesReference ()
+		{
+			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { 1, 2 }), JniObjectReferenceType.Local);
+			try {
+				Assert.Throws<InvalidCastException> (() =>
+					JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.CopyAndDispose));
+				Assert.IsFalse (reference.IsValid);
+			} finally {
+				JniObjectReference.Dispose (ref reference);
+			}
+		}
+
 		static Java.Util.ArrayList CreateList (params int[][] items)
 		{
 			var list = new Java.Util.ArrayList ();
@@ -139,5 +193,5 @@ namespace Java.InteropTests
 			return list;
 		}
 	}
-}
 
+}
