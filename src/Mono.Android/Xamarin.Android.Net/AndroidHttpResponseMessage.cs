@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Threading.Tasks;
 
 using Android.Runtime;
 using Java.Net;
@@ -51,23 +50,22 @@ namespace Xamarin.Android.Net
 				javaUrl.Dispose ();
 			}
 
-			var connection = httpConnection;
-			if (connection != null) {
-				// Only Disconnect(), never Dispose(), the Java peer:
-				//  * Disconnect() releases the socket and aborts any in-flight read. It is the backstop for
+			if (httpConnection != null) {
+				// Release the connection with Disconnect(), never Dispose(), on the Java peer:
+				//  * Disconnect() closes the socket and aborts any in-flight read. It is the backstop for
 				//    non-streaming responses (e.g. the buffered StringContent error paths) whose content does
-				//    not own the connection.
+				//    not own the connection; for a streaming response the content already disconnected via
+				//    base.Dispose above, and Disconnect() is idempotent.
 				//  * Disposing the peer (deleting its JNI global reference) could race a body read still
 				//    unwinding on another thread and crash; the peer is reclaimed on finalization.
-				// Dispatched to a background thread because Disconnect() performs socket I/O and Dispose()
-				// may run on the UI thread (e.g. gRPC cancelling from a UI callback).
-				Task.Run (() => {
-					try {
-						connection.Disconnect ();
-					} catch (Exception ex) {
-						Logger.Log (LogLevel.Info, AndroidMessageHandler.LOG_APP, $"Disconnection exception: {ex}");
-					}
-				});
+				// This runs synchronously on the disposing thread (which may be the UI thread, e.g. gRPC
+				// cancelling from a UI callback): closing a socket is fast and, unlike connect/read/write,
+				// does not trigger NetworkOnMainThreadException.
+				try {
+					httpConnection.Disconnect ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, AndroidMessageHandler.LOG_APP, $"Disconnection exception: {ex}");
+				}
 			}
 		}
 	}
