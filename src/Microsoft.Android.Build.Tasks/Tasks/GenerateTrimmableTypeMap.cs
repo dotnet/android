@@ -140,6 +140,11 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	// references the pre-generated per-assembly typemaps alongside the app's own.
 	public bool GenerateRootAssembly { get; set; } = true;
 
+	// When true, forces the shared (Java.Lang.Object) typemap universe regardless of Debug.
+	// Set for SDK-build-time pre-generation of framework typemaps (issue #10792) so they always
+	// anchor on Java.Lang.Object and can be consumed by both app-build universe modes.
+	public bool ForceSharedTypemapUniverse { get; set; }
+
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	/// <summary>
@@ -255,7 +260,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				assemblies,
 				systemRuntimeVersion,
 				frameworkAssemblyNames,
-				useSharedTypemapUniverse: !Debug,
+				useSharedTypemapUniverse: ForceSharedTypemapUniverse || !Debug,
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
