@@ -25,6 +25,9 @@ class ManifestGenerator
 		"provider",
 	};
 
+	/// <summary>Warning code for library-manifest merge failures (maps to XA4302).</summary>
+	internal const int LibraryManifestMergeWarningCode = 4302;
+
 	int appInitOrder = 2000000000;
 
 	public string PackageName { get; set; } = "";
@@ -41,7 +44,7 @@ class ManifestGenerator
 	public bool ForceExtractNativeLibs { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? ApplicationJavaClass { get; set; }
-	public Action<string>? Warn { get; set; }
+	public Action<int, string>? Warn { get; set; }
 	public Action<string>? WarnInvalidPlaceholder { get; set; }
 
 	/// <summary>
@@ -194,7 +197,7 @@ class ManifestGenerator
 			try {
 				libDoc = XDocument.Load (path);
 			} catch (Exception ex) {
-				Warn?.Invoke ($"Unable to merge library manifest '{path}': {ex.Message}");
+				Warn?.Invoke (LibraryManifestMergeWarningCode, $"Unable to merge library manifest '{path}': {ex.Message}");
 				continue;
 			}
 
@@ -513,9 +516,17 @@ class ManifestGenerator
 		if (!placeholders.IsNullOrEmpty ()) {
 			foreach (var entry in placeholders.Split (PlaceholderSeparators, StringSplitOptions.RemoveEmptyEntries)) {
 				var eqIndex = entry.IndexOf ('=');
-				if (eqIndex > 0) {
+				if (eqIndex >= 0) {
 					var key = entry.Substring (0, eqIndex).Trim ();
-					var value = entry.Substring (eqIndex + 1).Trim ();
+					// Normalize '\' to Path.DirectorySeparatorChar to stay byte-for-byte identical to the
+					// legacy pipeline on every platform: there the substituted manifest is re-encoded by
+					// aapt2, which rewrites backslashes to the platform separator ('/' on Unix, '\' preserved
+					// on Windows) across the whole manifest. The trimmable generator writes the merged
+					// manifest directly (no aapt2 re-encode of these values), so it applies the same
+					// per-platform normalization to every value. The ManifestPlaceholders build test pins
+					// this for both the legacy (CoreCLR) and trimmable (NativeAOT) paths, so a hardcoded '/'
+					// would fail on Windows.
+					var value = entry.Substring (eqIndex + 1).Trim ().Replace ('\\', Path.DirectorySeparatorChar);
 					replacements ["${" + key + "}"] = value;
 				} else if (eqIndex < 0) {
 					// An entry without '=' is not a valid key=value pair. Mirror the legacy

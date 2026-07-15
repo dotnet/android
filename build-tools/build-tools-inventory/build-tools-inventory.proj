@@ -1,0 +1,71 @@
+<Project DefaultTargets="Build">
+  <!--
+    Generates bin/Build$(Configuration)/buildtoolsinventory.csv containing the
+    versions of the various Android SDK/NDK components, OpenJDK, and .NET SDK
+    that this repo depends on.
+
+    Required by Section 4.e.i.D of the Executive Order on Cybersecurity build
+    system security requirements. Consumed as the ``AndroidBuildToolsInventory``
+    pipeline artifact by ``build-macos-steps.yaml``, ``build-macos.yaml``, and
+    ``commercial-build.yaml``.
+
+    Previously produced by ``Context.WriteBuildToolsInventoryCsv ()`` in
+    xaprepare; now generated directly from the MSBuild properties/items that
+    are the single source of truth for these versions.
+  -->
+
+  <Import Project="..\..\Directory.Build.props" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\src\androidsdk\androidsdk.targets" />
+
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <_InventoryOutputPath>$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\buildtoolsinventory.csv</_InventoryOutputPath>
+  </PropertyGroup>
+
+  <Target Name="Build">
+    <ItemGroup>
+      <_InventoryRow Include="android-ndk-r$(AndroidNdkVersion)">
+        <Version>$(_XAAndroidNdkPkgRevision)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="android-sdk-build-tools">
+        <Version>$(XABuildToolsVersion)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="android-sdk-platform-tools">
+        <Version>$(XAPlatformToolsVersion)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="android-sdk-cmdline-tools">
+        <Version>$(CommandLineToolsFolder).$(CommandLineToolsVersion)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="android-sdk-cmake">
+        <Version>$(AndroidCmakeVersion)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="android-sdk-emulator">
+        <Version>$(EmulatorVersion)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="openjdk">
+        <Version>$(MicrosoftOpenJDKVersion)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="dotnet">
+        <Version>$(MicrosoftDotnetSdkInternalPackageVersion)</Version>
+      </_InventoryRow>
+      <_InventoryRow Include="android-sdk-%(_PlatformPackage.Identity)">
+        <Version>%(_PlatformPackage.ApiLevel)</Version>
+      </_InventoryRow>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_InventoryLine Include="BuildToolName,BuildToolVersion" />
+      <_InventoryLine Include="@(_InventoryRow -> '%(Identity),%(Version)')" />
+    </ItemGroup>
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_InventoryOutputPath)'))" />
+    <WriteLinesToFile
+        File="$(_InventoryOutputPath)"
+        Lines="@(_InventoryLine)"
+        Overwrite="true"
+        Encoding="UTF-8"
+    />
+    <Message Importance="high" Text="Wrote $(_InventoryOutputPath)." />
+  </Target>
+</Project>

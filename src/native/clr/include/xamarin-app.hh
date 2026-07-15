@@ -5,11 +5,10 @@
 #include <cstdint>
 
 #include <jni.h>
-
-#include <shared/xxhash.hh>
+#include <runtime-base/crc32.hh>
 
 static constexpr uint64_t FORMAT_TAG = 0x00045E6972616D58; // 'Xmari^XY' where XY is the format version
-static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
+static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x535A4158; // 'XAZS', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 
 // The highest bit of assembly store version is a 64-bit ABI flag
@@ -31,7 +30,7 @@ static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00040000;
 #endif
 
 // Increase whenever an incompatible change is made to the assembly store format
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 3 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 4 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
 
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
@@ -69,7 +68,7 @@ struct TypeMap
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 struct TypeMapAssembly
 {
-	xamarin::android::hash_t mvid_hash;
+	uint8_t module_uuid[16];
 	uint64_t name_length;
 	uint64_t name_offset; // into the assembly names blob
 };
@@ -77,6 +76,8 @@ struct TypeMapAssembly
 struct TypeMapModuleEntry
 {
 	xamarin::android::hash_t managed_type_name_hash;
+	uint32_t                 managed_type_name_index;
+	uint32_t                 managed_type_name_length;
 	uint32_t                 java_map_index;
 };
 
@@ -138,7 +139,7 @@ struct CompressedAssemblyDescriptor
 //  [INDEX_SIZE]         uint; index size in bytes
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
-//  [NAME_HASH]          uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
+//  [NAME_HASH]          uint; CRC32 of the assembly name
 //  [DESCRIPTOR_INDEX]   uint; index into in-store assembly descriptor array
 //  [IGNORE]             byte; if set to anything other than 0, the assembly is to be ignored when loading
 //
@@ -192,18 +193,18 @@ struct [[gnu::packed]] AssemblyStoreEntryDescriptor final
 
 struct AssemblyStoreRuntimeData final
 {
-	uint8_t             *data_start;
+	const uint8_t       *data_start;
 	uint32_t             assembly_count;
 	uint32_t             index_entry_count;
-	AssemblyStoreEntryDescriptor *assemblies;
+	const AssemblyStoreEntryDescriptor *assemblies;
 };
 
 struct AssemblyStoreSingleAssemblyRuntimeData final
 {
-	uint8_t             *image_data;
-	uint8_t             *debug_info_data;
-	uint8_t             *config_data;
-	AssemblyStoreEntryDescriptor *descriptor;
+	const uint8_t       *image_data;
+	const uint8_t       *debug_info_data;
+	const uint8_t       *config_data;
+	const AssemblyStoreEntryDescriptor *descriptor;
 };
 
 // Keep in strict sync with:
@@ -222,7 +223,6 @@ struct ApplicationConfig
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_dso_cache_entries;
-	uint32_t number_of_aot_cache_entries;
 	uint32_t number_of_shared_libraries;
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
@@ -231,32 +231,12 @@ struct ApplicationConfig
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
 	bool managed_marshal_methods_lookup_enabled;
-};
-
-struct RuntimeProperty
-{
-	const uint32_t key_index;
-	const uint32_t value_index;
-	const uint32_t value_size; // including the terminating NUL
-};
-
-struct RuntimePropertyIndexEntry
-{
-	xamarin::android::hash_t key_hash;
-	uint32_t index;
-};
-
-struct DSOApkEntry
-{
-	uint64_t name_hash;
-	uint32_t offset; // offset into the APK
-	int32_t  fd; // apk file descriptor
+	bool have_assembly_store;
 };
 
 struct DSOCacheEntry
 {
-	const uint64_t  hash;
-	const uint64_t  real_name_hash;
+	const xamarin::android::hash_t hash;
 	const bool      ignore;
 	const bool      is_jni_library;
 	const uint32_t  name_index;
@@ -311,7 +291,6 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint64_t format_tag;
 
 #if defined (DEBUG)
-	[[gnu::visibility("default")]] extern const bool typemap_use_hashes;
 	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
 	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
@@ -352,13 +331,7 @@ extern "C" {
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_stride;
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx_count;
 	[[gnu::visibility("default")]] extern const uint dso_jni_preloads_idx[];
-	[[gnu::visibility("default")]] extern DSOCacheEntry aot_dso_cache[];
 	[[gnu::visibility("default")]] extern const char dso_names_data[];
-	[[gnu::visibility("default")]] extern DSOApkEntry dso_apk_entries[];
-
-	[[gnu::visibility("default")]] extern const RuntimeProperty runtime_properties[];
-	[[gnu::visibility("default")]] extern const char runtime_properties_data[];
-	[[gnu::visibility("default")]] extern const RuntimePropertyIndexEntry runtime_property_index[];
 
 	[[gnu::visibility("default")]] extern const char *init_runtime_property_names[];
 	[[gnu::visibility("default")]] extern char *init_runtime_property_values[];

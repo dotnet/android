@@ -9,6 +9,43 @@ parameters:
   use1ESTemplate: true
 
 steps:
+# Detect whether a previous attempt of this job already published the Linux SDK
+# artifacts. Pipeline artifact names are immutable per build, so if an earlier
+# attempt succeeded far enough to publish `nuget-linux-unsigned` (and/or its
+# `-symbols` companion) but then failed in a later (often post-job) step, blindly
+# rebuilding and republishing on a rerun always fails with "Artifact
+# nuget-linux-unsigned already exists for build". We probe each artifact
+# independently and set a per-artifact variable. When BOTH artifacts already
+# exist we skip the ~20+ minute rebuild; each publish step is then skipped only
+# for the artifact that already exists, so a partial prior publish (e.g. the SDK
+# published but `-symbols` missing) still rebuilds and publishes just the missing
+# artifact without colliding on the one that is already there. Any failure to
+# query the API falls back to building normally (safe default).
+- bash: |
+    set -eo pipefail
+    sdk_artifact='${{ parameters.nugetArtifactName }}'
+    symbols_artifact='${{ parameters.nugetArtifactName }}-symbols'
+    url="$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/$(Build.BuildId)/artifacts?api-version=7.1"
+    echo "Checking whether artifacts already exist for build $(Build.BuildId)..."
+    response="$(curl -sS -H "Authorization: Bearer $SYSTEM_ACCESSTOKEN" "$url" || true)"
+    normalized="$(echo "$response" | tr -d '[:space:]')"
+    check_artifact () {
+      name="$1"
+      var="$2"
+      if echo "$normalized" | grep -qF "\"name\":\"$name\""; then
+        echo "Found existing '$name'; a previous attempt already published it."
+        echo "##vso[task.setvariable variable=$var]true"
+      else
+        echo "No existing '$name' artifact."
+        echo "##vso[task.setvariable variable=$var]false"
+      fi
+    }
+    check_artifact "$sdk_artifact" AlreadyBuiltLinuxSdk
+    check_artifact "$symbols_artifact" AlreadyBuiltLinuxSdkSymbols
+  displayName: check for existing linux sdk artifacts
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - ${{ if ne(parameters.use1ESTemplate, true) }}:
@@ -42,18 +79,26 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
-- script: make jenkins PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
+- script: make jenkins CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1
+  condition: and(succeeded(), or(ne(variables['AlreadyBuiltLinuxSdk'], 'true'), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true')))
+
+- template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
+  parameters:
+    configuration: $(XA.Build.Configuration)
+    xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - script: make create-nupkgs CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-nupkgs
+  condition: and(succeeded(), or(ne(variables['AlreadyBuiltLinuxSdk'], 'true'), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true')))
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
 - task: CopyFiles@2
+  condition: and(succeeded(), or(ne(variables['AlreadyBuiltLinuxSdk'], 'true'), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true')))
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
     Contents: |
@@ -62,6 +107,7 @@ steps:
     TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
 
 - task: DeleteFiles@1
+  condition: and(succeeded(), or(ne(variables['AlreadyBuiltLinuxSdk'], 'true'), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true')))
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
     Contents: '*.symbols.nupkg'
@@ -75,16 +121,33 @@ steps:
     ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: copy linux sdk
+  condition: and(succeeded(), or(ne(variables['AlreadyBuiltLinuxSdk'], 'true'), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true')))
 
-- ${{ if ne(parameters.use1ESTemplate, true) }}:
+- ${{ if eq(parameters.use1ESTemplate, true) }}:
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: upload linux sdk
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
+
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: upload linux sdk symbols
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true'))
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}-symbols
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
+- ${{ else }}:
   - task: PublishPipelineArtifact@1
     displayName: upload linux sdk
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdk'], 'true'))
     inputs:
       artifactName: ${{ parameters.nugetArtifactName }}
       targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux
 
   - task: PublishPipelineArtifact@1
     displayName: upload linux sdk symbols
+    condition: and(succeeded(), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true'))
     inputs:
       artifactName: ${{ parameters.nugetArtifactName }}-symbols
       targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
@@ -99,3 +162,37 @@ steps:
 - template: /build-tools/automation/yaml-templates/fail-on-dirty-tree.yaml
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
+
+# Public dnceng-public agents are sometimes provisioned with a very small (~29 GB) OS
+# disk mounted at '/'. The build fills '/' to ~94% via caches under $HOME, and the
+# implicit post-job 'cache Android toolchain archives' step then fails writing its tar
+# archive to '/' with a "No space left on device" error, failing the whole job. Note the
+# repo working tree (bin/obj) lives on the large /mnt volume, NOT on '/', so deleting it
+# does not help. Every pipeline artifact has already been uploaded by this point, so
+# reclaim space on '/' by deleting everything under $HOME that the build no longer needs.
+# The only things we must keep are the two post-job cache sources: $HOME/android-archives
+# (saved by 'cache Android toolchain archives') and $HOME/.gradle (saved by 'cache Gradle
+# downloads'). Everything else is disposable here, most importantly $HOME/android-toolchain
+# (the extracted SDK/NDK/JDK, ~9 GB) and the NuGet global packages cache.
+# Public-only: the 1ES pipeline runs on agents that do not have this small-disk problem.
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - bash: |
+      set -euo pipefail
+      echo "=== Disk usage (all mounts) before freeing space ==="
+      df -h
+      # Guard against an unset/empty/root $HOME so the 'rm -rf' below can never target
+      # a system directory (e.g. "/android-toolchain" or "/.dotnet").
+      if [ -z "${HOME:-}" ] || [ "$HOME" = "/" ] || [ ! -d "$HOME" ]; then
+        echo "##vso[task.logissue type=warning]HOME ('${HOME:-}') is not a valid directory; skipping cleanup."
+        exit 0
+      fi
+      echo "=== Largest entries under HOME ($HOME) on the small '/' disk ==="
+      du -xhd1 "$HOME" 2>/dev/null | sort -h | tail -20 || true
+      for d in "$HOME/android-toolchain" "${NUGET_PACKAGES:-$HOME/.nuget/packages}" "$HOME/.dotnet" "$HOME/.local/share/NuGet" "$HOME/.cache"; do
+        echo "Removing $d"
+        rm -rf -- "$d" || true
+      done
+      echo "=== Disk usage (all mounts) after freeing space ==="
+      df -h
+    displayName: Free disk space before post-job cache save
+    condition: always()

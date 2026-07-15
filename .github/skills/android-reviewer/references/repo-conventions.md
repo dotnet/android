@@ -40,10 +40,13 @@ and merge conflicts.
 | Check | What to look for |
 |-------|-----------------|
 | **Use existing utilities** | Check `MonoAndroidHelper`, `FileUtil`, `PathUtil`, `ITaskItemExtensions`, and other utilities before writing new helpers. Duplicating existing logic is the most expensive AI pattern. |
+| **Use Android tools utilities** | In `external/xamarin-android-tools/`, process execution should go through `ProcessUtils`, file extraction/download/checksum/path helpers through `FileUtil`, and repeated buffers/streams through `ObjectPool<T>` or `MemoryStreamPool` where applicable. |
 | **`Log.LogDebugMessage` for diagnostics** | Use `Log.LogDebugMessage(…)` for verbose/debug output, not `Console.WriteLine` or `Debug.WriteLine`. Don't spam logcat with messages that fire on every type lookup miss. (Postmortem `#9`) |
+| **Android tools logger delegate** | SDK/JDK discovery helpers in `external/xamarin-android-tools/` commonly use `Action<TraceLevel, string>? logger` (see `AndroidSdkInfo.DefaultConsoleLogger`) so callers can route diagnostics into MSBuild or IDE logs. Don't replace this with `Console.WriteLine` or `Debug.WriteLine`. |
 | **Return `IReadOnlyList<T>`** | Public methods should return `IReadOnlyList<T>` or `IReadOnlyCollection<T>` instead of mutable `List<T>`. |
 | **Prefer C# pattern matching** | Use `is`, `switch` expressions, and property patterns instead of `if`/`else` type-check chains. |
 | **Structured args, not string interpolation** | Process arguments should be `IEnumerable<string>` or use `ArgumentList`, not a single interpolated string. |
+| **Android SDK environment variables** | In `external/xamarin-android-tools/`, use `EnvironmentVariableNames.AndroidHome`/`ANDROID_HOME` for new SDK-root behavior. `ANDROID_SDK_ROOT` is deprecated by Android and should only be read for backward compatibility. |
 | **Method names must reflect behavior** | If `CreateFoo()` sometimes returns an existing instance, rename it `GetOrCreateFoo()` or `GetFoo()`. (Postmortem `#4`) |
 | **Choose collision-proof names** | Types and constants that could collide with user code or Android concepts need disambiguating prefixes (e.g., `__Xamarin.Android.Resource.Designer` with a `__` prefix). (Postmortem `#2`) |
 | **Don't assume transitive assembly references** | An assembly containing an `Activity` subclass does not necessarily reference `Mono.Android.dll` directly — the reference may be transitive. Skipping assemblies based on direct reference checks can break user code. (Postmortem `#64`) |
@@ -56,11 +59,44 @@ and merge conflicts.
 
 ---
 
+## Naming (JNI / Interop-Aware)
+
+| Check | What to look for |
+|-------|-----------------|
+| **Disambiguate Java vs C# names** | Terms like `FullName`, `Name`, or `ReferenceType` are ambiguous in a JNI interop context. When both Java and C# interpretations exist, prefer a prefix (`JavaFullName`, `ManagedFullName`) or add doc comments that make the intent explicit. |
+| **Named constants for string lengths** | `n.Length - 7` should be `n.Length - "Invoker".Length`. Magic numbers for string suffix lengths (e.g., `"Invoker"`, `"_jni"`) are fragile and unreadable. |
+| **`KeyedCollection` for name-indexed lists** | When a `List<T>` is frequently searched by a name property, consider `KeyedCollection<string, T>` or `Dictionary<string, T>` for O(1) lookups. |
+
+---
+
+## JNI Interop Patterns (`external/Java.Interop/`, `src/Mono.Android/`)
+
+| Check | What to look for |
+|-------|-----------------|
+| **JNI reference lifecycle** | Every `JniObjectReference` must be properly disposed via `try`/`finally` or `using`. Local references are cleaned up by the JVM at JNI frame boundaries, but explicit cleanup prevents local-reference-table exhaustion in loops. |
+| **Use `JniTransition` for exception marshaling** | Native callbacks into managed code should use `JniTransition` to properly handle exception marshaling between Java and C#. |
+| **`JniPeerMembers` caching** | Method and field IDs should be accessed via `JniPeerMembers` for efficient caching. Don't look up method IDs on every call. |
+| **`[Register]` attribute correctness** | `[Register]` attributes must match the Java method signature exactly. Mismatches cause runtime `NoSuchMethodError`. |
+| **Trimmer/NativeAOT-aware reflection** | Reflection over managed types called from Java requires `[DynamicallyAccessedMembers]` annotations. `Type.GetType()` with assembly-qualified names breaks under trimming — prefer direct type references or typemap lookups. |
+
+---
+
+## Downstream Impact (Shared Java.Interop Types)
+
+| Check | What to look for |
+|-------|-----------------|
+| **Shared types affect every consumer** | Changes to `JniPeerMembers`, `JavaObject`, `JniRuntime`, `JniTypeManager`, and other types under `external/Java.Interop/src/` affect Mono.Android and every downstream .NET Android app. Validate API-shape changes and keep binary-compatibility in mind. |
+| **Port, don't rewrite** | If working code for the same task already exists in `external/Java.Interop/` (or vice versa in `src/Mono.Android/`), port it rather than writing new logic. Existing code has real-world edge cases already handled. |
+| **Consider startup-time impact** | Java.Interop core runs during every app startup. Extra allocations, type loading, or reflection in hot startup paths are expensive across billions of app launches. |
+
+---
+
 ## Performance (Repo-Specific)
 
 | Check | What to look for |
 |-------|-----------------|
 | **XmlReader over LINQ XML** | For forward-only XML parsing (manifests, config files), prefer `XmlReader` — it's streaming and allocation-free. `XElement`/`XDocument` builds a full DOM tree. |
+| **SDK manifest parsing stays streaming** | Android SDK repository manifests can be large; keep `external/xamarin-android-tools/` manifest parsing on streaming `XmlReader`-style paths unless there is measured evidence a DOM is acceptable. |
 | **p/invoke over process spawn** | For single syscalls like `chmod`, use `[DllImport("libc")]` instead of spawning a child process. Process creation is orders of magnitude more expensive. |
 | **Use `Files.CopyIfStringChanged()`** | Don't write to a file if the content hasn't changed — it breaks incremental builds by updating timestamps. (Postmortem `#53`) |
 | **Don't remove caches without measurement** | If a cache (like `TypeDefinitionCache`) had a measured perf win, removing it requires proving the replacement provides equivalent caching. (Postmortem `#57`) |

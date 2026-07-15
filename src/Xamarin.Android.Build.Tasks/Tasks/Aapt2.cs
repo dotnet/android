@@ -2,20 +2,14 @@
 #nullable enable
 
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
-using System.Xml;
-using System.Xml.Linq;
 using System.Text;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
-using ThreadingTasks = System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
@@ -192,9 +186,9 @@ namespace Xamarin.Android.Tasks {
 				if (level.Contains ("error") || (line != 0 && !file.IsNullOrEmpty ())) {
 					var errorCode = GetErrorCodeForFile (message, file);
 					if (manifestError)
-						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile?.ItemSpec ?? "", 0);
+						LogCodedError (errorCode, AndroidManifestFile?.ItemSpec ?? "", 0, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')));
 					else
-						LogCodedError (errorCode, AddAdditionalErrorText (errorCode, message), file, line);
+						LogCodedError (errorCode, file, line, AddAdditionalErrorText (errorCode, message));
 					return true;
 				}
 			}

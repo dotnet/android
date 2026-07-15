@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 				assm.MainModule.Types.Add (iface);
 
 				// Create implementing class
-				var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
+				var jlo = assm.MainModule.ImportReference (android.MainModule.GetType ("Java.Lang.Object"));
 				var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
 				impl.Interfaces.Add (new InterfaceImplementation (iface));
 
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Build.Tests
 				assm.MainModule.Types.Add (iface);
 
 				// Create implementing class
-				var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
+				var jlo = assm.MainModule.ImportReference (android.MainModule.GetType ("Java.Lang.Object"));
 				var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
 				impl.Interfaces.Add (new InterfaceImplementation (iface));
 

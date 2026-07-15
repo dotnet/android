@@ -15,6 +15,44 @@ an [MSBuild ItemGroup](/visualstudio/msbuild/itemgroup-element-msbuild).
 > [!NOTE]
 > In .NET for Android there is technically no distinction between an application and a bindings project, so build items will work in both. In practice it is highly recommended to create separate application and bindings projects. Build items that are primarily used in bindings projects are documented in the [MSBuild bindings project items](../binding-libs/msbuild-reference/build-items.md) reference guide.
 
+## ApplicationArtifact
+
+`@(ApplicationArtifact)` contains the final application artifact files produced
+by package, signing, and publish targets. This item group can be used by
+custom MSBuild targets to discover APK and Android App Bundle outputs without
+recalculating the final file names. .NET for Android populates this item group
+with Android-specific artifacts, and other .NET mobile platforms can use the
+same item name for their final application artifacts.
+
+Each item includes the following metadata:
+
+- `%(PackageFormat)`: `apk` or `aab`.
+- `%(Signed)`: `true` when the package is signed.
+- `%(PackageId)`: The resolved Android package name.
+- `%(Abi)`: The Android ABI for a per-ABI APK output. This metadata is only
+  set for per-ABI APKs.
+
+MSBuild also provides well-known metadata for each item. For example,
+`%(Filename)%(Extension)` is the package file name and `%(FullPath)` is the
+full package path.
+
+Use the [`GetApplicationArtifacts`](build-targets.md#getapplicationartifacts)
+target when another target needs to query the application artifacts directly.
+Targets appended to `$(GetApplicationArtifactsDependsOn)` run after .NET for
+Android populates this item group, so they can update the existing items with
+additional metadata before `GetApplicationArtifacts` or `Publish` returns them.
+
+For example:
+
+```xml
+<Target Name="WriteApplicationArtifacts" AfterTargets="Publish">
+  <WriteLinesToFile
+      File="$(PublishDir)application-artifacts.txt"
+      Lines="@(ApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
+      Overwrite="true" />
+</Target>
+```
+
 ## AndroidAdditionalJavaManifest
 
 `<AndroidAdditionalJavaManifest>` is used in conjunction with

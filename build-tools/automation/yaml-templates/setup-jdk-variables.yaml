@@ -7,11 +7,11 @@ steps:
     $agentOS="$(Agent.OS)"
     $agentArch="$(Agent.OSArchitecture)" -eq "ARM64" ? "arm64" : "$(Agent.OSArchitecture)"
     $jdkMajorVersion="${{ parameters.jdkMajorVersion }}"
-    $xaPrepareJdkPath="$env:HOME/android-toolchain/jdk-$jdkMajorVersion"
+    $xaJdkPath="$env:HOME/android-toolchain/jdk-$jdkMajorVersion"
     if ("$agentOS" -eq "Windows_NT") {
-      $xaPrepareJdkPath="$env:USERPROFILE\android-toolchain\jdk-$jdkMajorVersion"
+      $xaJdkPath="$env:USERPROFILE\android-toolchain\jdk-$jdkMajorVersion"
     }
-    $jdkHomePath=$xaPrepareJdkPath
+    $jdkHomePath=$xaJdkPath
     if ("${{ parameters.useAgentJdkPath }}" -eq "true") {
       $jdkHomeVarName="JAVA_HOME_${jdkMajorVersion}_${agentArch}"
       $jdkHomePath=(Get-Item -Path "env:$jdkHomeVarName").Value

@@ -120,15 +120,6 @@ namespace Xamarin.Android.JniEnv
 			o.WriteLine ("\t\tpublic unsafe JniNativeInterfaceInvoker (JniNativeInterfaceStruct* p)");
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t\tJniEnv = *p;");
-
-			foreach (var e in JNIEnvEntries) {
-				if (e.Delegate == null)
-					continue;
-				if (!e.Prebind)
-					continue;
-				o.WriteLine ("\t\t\t{0}", Initialize (e, ""));
-			}
-
 			o.WriteLine ("\t\t}");
 			o.WriteLine ();
 
@@ -136,16 +127,12 @@ namespace Xamarin.Android.JniEnv
 				if (e.Delegate == null)
 					continue;
 				o.WriteLine ();
-				if (e.Prebind)
-					o.WriteLine ("\t\tpublic readonly {0} {1};\n", e.Delegate, e.Name);
-				else {
-					o.WriteLine ("\t\t{0} _{1};", e.Delegate, e.Name);
-					o.WriteLine ("\t\tpublic {0} {1} {{", e.Delegate, e.Name);
-					o.WriteLine ("\t\t\tget {");
-					o.WriteLine ("\t\t\t\tif (_{0} == null)\n\t\t\t\t\t{1}", e.Name, Initialize (e, "_"));
-					o.WriteLine ("\t\t\t\treturn _{0};\n\t\t\t}}", e.Name);
-					o.WriteLine ("\t\t}");
-				}
+				o.WriteLine ("\t\t{0} _{1};", e.Delegate, e.Name);
+				o.WriteLine ("\t\tpublic {0} {1} {{", e.Delegate, e.Name);
+				o.WriteLine ("\t\t\tget {");
+				o.WriteLine ("\t\t\t\tif (_{0} == null)\n\t\t\t\t\t{1}", e.Name, Initialize (e, "_"));
+				o.WriteLine ("\t\t\t\treturn _{0};\n\t\t\t}}", e.Name);
+				o.WriteLine ("\t\t}");
 			}
 
 			o.WriteLine ("\t}");
@@ -519,9 +506,6 @@ namespace Xamarin.Android.JniEnv
 
 		public TypeInfo ReturnType;
 		public ParamInfo [] Parameters;
-
-		// If true, then we initialize the binding on the static ctor, we dont lazy-define it
-		public bool Prebind;
 
 		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
 		public bool CustomWrapper;

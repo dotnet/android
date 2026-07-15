@@ -10,7 +10,7 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041;IL3050</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
@@ -294,7 +294,6 @@
     <Compile Include="Android.Views\LayoutInflater.cs" />
     <Compile Include="Android.Views\MotionEvent.cs" />
     <Compile Include="Android.Views\View.cs" />
-    <Compile Include="Android.Views\ViewTreeObserver.cs" />
     <Compile Include="Android.Views\Window.cs" />
     <Compile Include="Android.Views.Accessibility\AccessibilityEvent.cs" />
     <Compile Include="Android.Views.Accessibility\AccessibilityManager.cs" />
@@ -368,10 +367,10 @@
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />
-    <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapTypeManager.cs" />
+    <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapValueManager.cs" />
     <Compile Include="Org.Apache.Http.Impl.Conn\DefaultClientConnection.cs" />
     <Compile Include="Org.Apache.Http.Impl.Cookie\BasicClientCookie.cs" />
     <Compile Include="System.Drawing/PointConverter.cs" />
@@ -395,7 +394,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

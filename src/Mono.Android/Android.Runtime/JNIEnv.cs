@@ -14,6 +14,7 @@ using System.Text;
 using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime {
 	public static partial class JNIEnv {
@@ -26,14 +27,11 @@ namespace Android.Runtime {
 
 		static Array ArrayCreateInstance (Type elementType, int length)
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				if (RuntimeFeature.IsCoreClrRuntime) {
-					// CoreCLR runtime type loader can construct any T[] dynamically.
-					// IsDynamicCodeSupported is a [FeatureGuard] so this branch is
-					// dead-coded under PublishAot.
-					return Array.CreateInstance (elementType, length);
-				}
+			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				return Array.CreateInstance (elementType, length);
+			}
 
+			if (RuntimeFeature.TrimmableTypeMap) {
 				if (RuntimeFeature.IsNativeAotRuntime) {
 					// NativeAOT: resolve via per-rank typemap + generated array proxy.
 					if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, additionalRank: 1, out var arrayProxy)) {
@@ -41,18 +39,29 @@ namespace Android.Runtime {
 					}
 				}
 
+				int arrayRank = GetArrayRank (elementType, out var leafElementType);
 				throw new NotSupportedException (
-					$"No TrimmableTypeMap array proxy entry for element type '{elementType}'. " +
-					$"Array lookups use the element type within the per-rank __ArrayMapRank{GetArrayRank (elementType)} typemap group; " +
+					$"No TrimmableTypeMap array proxy entry for element type '{elementType}' " +
+					$"(leaf element type '{leafElementType}', rank {arrayRank}). " +
+					$"Array lookups use the leaf element type within the per-rank __ArrayMapRank{arrayRank} typemap group; " +
 					$"ensure the mapping is emitted for that rank (for example by increasing _AndroidTrimmableTypeMapMaxArrayRank) or report an issue.");
 			}
 
-			#pragma warning disable IL3050 // legacy fallback path
-			return Array.CreateInstance (elementType, length);
-			#pragma warning restore IL3050
+			if (RuntimeFeature.ManagedTypeMap) {
+				return ArrayCreateInstanceWithSuppression (elementType, length);
+
+				[UnconditionalSuppressMessage ("Trimming", "IL3050:RequiresDynamicCode",
+					Justification = "Temporarily suppressed for the \"ManagedTypeMap\".")]
+				Array ArrayCreateInstanceWithSuppression (Type elementType, int length)
+				{
+					return Array.CreateInstance (elementType, length);
+				}
+			}
+
+			throw new NotSupportedException ($"It is not possible to create an array with element type '{elementType}'.");
 		}
 
-		static int GetArrayRank (Type elementType)
+		static int GetArrayRank (Type elementType, out Type leafElementType)
 		{
 			int rank = 1;
 			while (elementType.IsSZArray) {
@@ -63,6 +72,7 @@ namespace Android.Runtime {
 				}
 				elementType = nestedElementType;
 			}
+			leafElementType = elementType;
 			return rank;
 		}
 
@@ -304,10 +314,7 @@ namespace Android.Runtime {
 				}
 				sig = sig.AddArrayRank (rank);
 
-				JniObjectReference local_ref = JniEnvironment.Types.FindClass (sig.Name);
-				IntPtr global_ref = local_ref.NewGlobalRef ().Handle;
-				JniObjectReference.Dispose (ref local_ref);
-				return global_ref;
+				return FindClass (sig.Name);
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
@@ -436,7 +443,7 @@ namespace Android.Runtime {
 				return NewObject (jclass, jmethod, p);
 		}
 
-		public static string GetClassNameFromInstance (IntPtr jobject)
+		public static string? GetClassNameFromInstance (IntPtr jobject)
 		{
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
@@ -489,6 +496,8 @@ namespace Android.Runtime {
 				if (RuntimeFeature.IsMonoRuntime) {
 					ret = monovm_typemap_managed_to_java (type, mvidptr);
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
+					if (type.FullName is null)
+						return null;
 					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
@@ -698,7 +707,7 @@ namespace Android.Runtime {
 					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
 					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
 					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type t) =>
+					static object? GetObject (IntPtr e, Type? t) =>
 						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
@@ -720,7 +729,7 @@ namespace Android.Runtime {
 			}
 
 			if (array != IntPtr.Zero) {
-				string type = GetClassNameFromInstance (array);
+				string? type = GetClassNameFromInstance (array);
 				if (type == null || type.Length < 1 || type [0] != '[')
 					throw new InvalidOperationException ("Unsupported java array type: " + type);
 

@@ -37,7 +37,7 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///         // or: null;                                                // no activation
 ///         // or: throw new NotSupportedException(...);                // open generic
 ///
-///     // JniName / TargetType / InvokerType are supplied by the base JavaPeerProxy constructor.
+///     // JniName / TargetType are supplied by the base JavaPeerProxy constructor.
 ///
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
@@ -731,22 +731,20 @@ sealed class TypeMapAssemblyEmitter
 		if (useNonGenericBase) {
 			proxyBaseType = _javaPeerProxyNonGenericRef;
 			baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 					rt => rt.Void (),
 					p => {
 						p.AddParameter ().Type ().String ();
-						p.AddParameter ().Type ().Type (_systemTypeRef, false);
 						p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					}));
 		} else {
 			var genericProxyBase = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
 			proxyBaseType = genericProxyBase;
 			baseCtorRef = _pe.AddMemberRef (genericProxyBase, ".ctor",
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
 					rt => rt.Void (),
 					p => {
 						p.AddParameter ().Type ().String ();
-						p.AddParameter ().Type ().Type (_systemTypeRef, false);
 					}));
 		}
 
@@ -762,8 +760,9 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor — pass the resolved JNI name, (for generic-definition base) target type, and
-		// optional invoker type to the base proxy constructor.
+		// .ctor — pass the resolved JNI name and (for proxies using the non-generic
+		// base, i.e. open generic definitions and interfaces) the target type
+		// to the base proxy constructor.
 		var selfAttrCtorDef = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
@@ -771,18 +770,12 @@ sealed class TypeMapAssemblyEmitter
 				encoder.OpCode (ILOpCode.Ldarg_0);
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
 				if (useNonGenericBase) {
-					// Non-generic base ctor signature: (string, Type, Type?). Push the
+					// Non-generic base ctor signature: (string, Type). Push the
 					// target type (open-generic definition or interface) as the second argument.
 					encoder.LoadToken (targetTypeRef);
 					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
 				}
-				if (proxy.InvokerType != null) {
-					encoder.LoadToken (_pe.ResolveTypeRef (proxy.InvokerType));
-					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				} else {
-					encoder.OpCode (ILOpCode.Ldnull);
-				}
-				encoder.Call (baseCtorRef, parameterCount: useNonGenericBase ? 3 : 2, isInstance: true);
+				encoder.Call (baseCtorRef, parameterCount: useNonGenericBase ? 2 : 1, isInstance: true);
 				encoder.Return ();
 			});
 
@@ -1205,14 +1198,38 @@ sealed class TypeMapAssemblyEmitter
 					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
 			});
 
-		// Callback member reference: uses MCW n_* types (sbyte for boolean)
+		// Callback member reference: mirror the real MCW n_* method's signature. JNI boolean and char
+		// are ambiguous (bool/sbyte, char/ushort) across generator versions, so when we could read the
+		// real n_* method's signature (NuGet binding implementation assemblies, e.g. AndroidX) we use it
+		// exactly. When we couldn't — framework callbacks, because the generator scans the compile-time
+		// *reference* assemblies (Microsoft.Android.Ref) which strip the private static n_* methods — we
+		// fall back to the blittable encoding (sbyte/ushort). That is correct for those callbacks because
+		// framework bindings are always produced by the current (post-#1296) generator.
+		var capturedParameterTypeNames = uco.CallbackParameterTypeNames;
+		var capturedReturnTypeName = uco.CallbackReturnTypeName;
+		bool hasCapturedCallbackSignature = capturedParameterTypeNames is not null &&
+			capturedReturnTypeName is not null && capturedParameterTypeNames.Count == jniParams.Count;
+
 		Action<BlobEncoder> encodeCallbackSig = sig => sig.MethodSignature ().Parameters (paramCount,
-			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind); },
+			rt => {
+				if (isVoid) {
+					rt.Void ();
+				} else if (hasCapturedCallbackSignature && capturedReturnTypeName is not null) {
+					JniSignatureHelper.EncodeClrTypeName (rt.Type (), capturedReturnTypeName);
+				} else {
+					JniSignatureHelper.EncodeClrTypeForCallback (rt.Type (), returnKind);
+				}
+			},
 			p => {
 				p.AddParameter ().Type ().IntPtr ();
 				p.AddParameter ().Type ().IntPtr ();
-				for (int j = 0; j < jniParams.Count; j++)
-					JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+				for (int j = 0; j < jniParams.Count; j++) {
+					if (hasCapturedCallbackSignature && capturedParameterTypeNames is not null) {
+						JniSignatureHelper.EncodeClrTypeName (p.AddParameter ().Type (), capturedParameterTypeNames [j]);
+					} else {
+						JniSignatureHelper.EncodeClrTypeForCallback (p.AddParameter ().Type (), jniParams [j]);
+					}
+				}
 			});
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
@@ -1612,12 +1629,14 @@ sealed class TypeMapAssemblyEmitter
 			return ExpandRankOneTypes (rankOneObjectTypes, proxy.Rank);
 		}
 
-		var rankOneTypes = new RuntimeTypeSpec [] {
+		List<RuntimeTypeSpec> rankOneTypes = [
 			AddSzArrayRank (elementType, 1),
 			new GenericRuntimeTypeSpec (_javaArrayOpenRef, elementType),
 			new GenericRuntimeTypeSpec (_javaPrimitiveArrayOpenRef, elementType),
-			new NamedRuntimeTypeSpec (proxy.Primitive.ConcreteArrayType),
-		};
+		];
+		foreach (var concreteArrayType in proxy.Primitive.ConcreteArrayTypes) {
+			rankOneTypes.Add (new NamedRuntimeTypeSpec (concreteArrayType));
+		}
 
 		return ExpandRankOneTypes (rankOneTypes, proxy.Rank);
 	}

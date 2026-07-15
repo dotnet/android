@@ -481,38 +481,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				if (runtime == AndroidRuntime.NativeAOT) {
-					// NativeAOT currently (Jun 2026) produces 4 `ILC : AOT analysis warning IL3050`
-					// warnings: two distinct warnings (the reflection-backed ManagedTypeManager
-					// generic ctor and JNINativeWrapper.CreateDelegate), each surfaced twice in the
-					// MSBuild summary (once per publish target context). #11753 replaced the JNIEnv
-					// array path with JavaArrayProxy, removing the previous JNIEnv.MakeArrayType
-					// warning. Even though this test expects no warnings and the above likely make
-					// the app not work correctly at run time, it is still worth running this test
-					// under NativeAOT to test for the absence of other warnings.
-					int numberOfExpectedWarnings = 4;
-
-					// MSBuild prints a "    N Warning(s)" summary line near the end of the build; parse N so the
-					// assertion can report the actual count instead of a bare "Expected: True But was: False".
-					var warningSummaryLine = b.LastBuildOutput.LastOrDefault (x => x.TrimEnd ().EndsWith ("Warning(s)", StringComparison.Ordinal));
-					int actualNumberOfWarnings = -1;
-					if (warningSummaryLine != null) {
-						var summary = warningSummaryLine.Trim ();
-						var firstSpace = summary.IndexOf (' ');
-						if (firstSpace > 0) {
-							int.TryParse (summary.Substring (0, firstSpace), out actualNumberOfWarnings);
-						}
-					}
-
-					Assert.AreEqual (numberOfExpectedWarnings, actualNumberOfWarnings,
-						$"{b.BuildLogFile} should have exactly {numberOfExpectedWarnings} MSBuild warnings for NativeAOT, but found {actualNumberOfWarnings}.");
-
-					const string expectedWarningIL3050 = "ILC : AOT analysis warning IL3050:";
-					var warnings = b.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal)).Where (x => x.Contains (expectedWarningIL3050, StringComparison.Ordinal));
-					Assert.IsTrue (warnings.Count () == numberOfExpectedWarnings, $"Expected {numberOfExpectedWarnings} 'IL3050' warnings, found {warnings.Count ()}");
-				} else {
-					b.AssertHasNoWarnings ();
-				}
+				b.AssertHasNoWarnings ();
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
@@ -562,6 +531,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (Get_BuildHasTrimmerWarningsData))]
 		public void BuildHasTrimmerWarnings (AndroidRuntime runtime, string properties, string [] codes, bool isRelease, int? totalWarnings = null)
 		{
+			const int maxWarningLinesToShow = 25;
+
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -601,10 +572,39 @@ namespace Xamarin.Android.Build.Tests
 				b.AssertHasNoWarnings ();
 			} else {
 				totalWarnings ??= codes.Length;
-				Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
+
+				string [] buildOutput = b.LastBuildOutput.ToArray ();
+				string warningSummaryLine = buildOutput.LastOrDefault (line => line.Contains ("Warning(s)", StringComparison.Ordinal)) ?? "";
+				var actualWarnings = GetWarningCount (warningSummaryLine);
+
+				var allWarningLines = buildOutput
+					.Where (line => line.Contains (": warning ", StringComparison.OrdinalIgnoreCase))
+					.Take (maxWarningLinesToShow)
+					.ToArray ();
+				Assert.AreEqual (
+					totalWarnings.Value,
+					actualWarnings,
+					$"{b.BuildLogFile} should have {totalWarnings} warnings. Summary line: '{warningSummaryLine}'. " +
+					$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
+				);
 				foreach (var code in codes) {
-					Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, code), $"Should receive {code} warning");
+					Assert.True (
+						StringAssertEx.ContainsText (buildOutput, code),
+						$"{b.BuildLogFile} should contain warning {code}. Summary line: '{warningSummaryLine}'. " +
+						$"Warnings found ({allWarningLines.Length} shown):{Environment.NewLine}{string.Join (Environment.NewLine, allWarningLines)}"
+					);
 				}
+			}
+
+			static int GetWarningCount (string warningSummaryLine)
+			{
+				string [] tokens = warningSummaryLine.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+				for (int i = 1; i < tokens.Length; i++) {
+					if (tokens [i] == "Warning(s)" && int.TryParse (tokens [i - 1], out var warningCount)) {
+						return warningCount;
+					}
+				}
+				return -1;
 			}
 		}
 
@@ -1594,6 +1594,15 @@ namespace UnamedProject
 			if (!string.IsNullOrEmpty (rid)) {
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
+			// User-authored AndroidJavaSource (Bind != true) has no managed peer and is absent from the
+			// acw-map, so R8.GetUserJavaTypes () must emit an explicit -keep for it; otherwise shrinking
+			// removes it from classes.dex (which regressed multidex on the trimmable NativeAOT path).
+			const string userJavaType = "MyKeptJavaType";
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, $"{userJavaType}.java") {
+				TextContent = () => $"public class {userJavaType} {{ }}",
+				Encoding = Encoding.ASCII,
+				Metadata = { { "Bind", "False" } },
+			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}{runtime}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
@@ -1605,9 +1614,24 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
-				FileAssert.Exists (proguardProjectPrimary);
-				Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
+				IEnumerable<string> proguardProjectConfigurations = [Path.Combine (intermediate, "proguard",
+					runtime == AndroidRuntime.NativeAOT ? "proguard_project_references.cfg" : "proguard_project_primary.cfg")];
+				if (runtime == AndroidRuntime.NativeAOT && string.IsNullOrEmpty (rid)) {
+					proguardProjectConfigurations = Directory.GetFiles (intermediate, "proguard_project_references.cfg", SearchOption.AllDirectories);
+				}
+				foreach (var proguardProjectConfiguration in proguardProjectConfigurations) {
+					FileAssert.Exists (proguardProjectConfiguration);
+					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectConfiguration), $"-keep class {proj.JavaPackageName}.MainActivity"),
+						$"`{proj.JavaPackageName}.MainActivity` should exist in `{proguardProjectConfiguration}`!");
+				}
+
+				// The user AndroidJavaSource keep is emitted into proguard_project_primary.cfg on every
+				// runtime (search recursively to cover the per-RID NativeAOT inner builds).
+				var primaryConfigs = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath),
+					"proguard_project_primary.cfg", SearchOption.AllDirectories);
+				Assert.IsNotEmpty (primaryConfigs, "`proguard_project_primary.cfg` should have been generated.");
+				Assert.IsTrue (primaryConfigs.Any (f => StringAssertEx.ContainsText (File.ReadAllLines (f), $"-keep class {userJavaType}")),
+					$"`{userJavaType}` should be kept in a `proguard_project_primary.cfg`!");
 
 				var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
 				FileAssert.Exists (aapt_rules);

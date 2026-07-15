@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Prepare" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+  </PropertyGroup>
+  <UsingTask AssemblyFile="$(_TopDir)\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.JdkInfo" />
+  <Target Name="Prepare">
+    <Exec Command="git submodule update --init --recursive" WorkingDirectory="$(_TopDir)" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\build-tools\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.sln"
+        Targets="Restore"
+    />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\..\build-tools\Java.Interop.BootstrapTasks\Java.Interop.BootstrapTasks.sln"
+        Targets="Build"
+    />
+    <PropertyGroup>
+      <_MaxJdk>$(MaxJdkVersion)</_MaxJdk>
+      <_MaxJdk Condition=" '$(_MaxJdk)' == '' ">$(JI_MAX_JDK)</_MaxJdk>
+      <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME_17_X64)' != '' And Exists($(JAVA_HOME_17_X64)) ">$(JAVA_HOME_17_X64)</JdksRoot>
+      <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME_11_X64)' != '' And Exists($(JAVA_HOME_11_X64)) ">$(JAVA_HOME_11_X64)</JdksRoot>
+      <!--
+        Fall back to $JAVA_HOME. The JAVA_HOME_*_X64 env vars are set by
+        Azure Pipelines on x64 hosted images only, so on arm64 macOS/Linux
+        agents JdksRoot would otherwise remain empty and JdkInfo would pick
+        the newest system JDK - which may be too new for our Gradle version.
+      -->
+      <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME)' != '' And Exists('$(JAVA_HOME)') ">$(JAVA_HOME)</JdksRoot>
+    </PropertyGroup>
+    <JdkInfo
+        JdksRoot="$(JdksRoot)"
+        MakeFragmentFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.mk"
+        MinimumJdkVersion="11"
+        MaximumJdkVersion="$(_MaxJdk)"
+        DotnetToolPath="$(DotnetToolPath)"
+        PropertyFile="$(_TopDir)\bin\Build$(Configuration)\JdkInfo.props">
+      <Output TaskParameter="JavaHomePath" PropertyName="_JavaSdkDirectory" />
+    </JdkInfo>
+  </Target>
+</Project>

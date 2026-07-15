@@ -8,6 +8,7 @@ using Java.Interop.Tools.TypeNameMappings;
 namespace Microsoft.Android.Runtime;
 
 [UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
+[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Temporary suppression for Java.Interop reflection manager base.")]
 class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -45,6 +46,7 @@ class ManagedTypeManager : JniRuntime.ReflectionJniTypeManager {
 	[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+	[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "JniNativeMethodRegistration[] registration path will be migrated to the blittable RegisterNatives overload in a future change.")]
 	public override void RegisterNativeMembers (
 			JniType nativeClass,
 			Type type,

@@ -44,7 +44,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNativeFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectNonEmptyDirectories" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CollectRuntimeConfigFilesForArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.CompressAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.CompressAssemblies" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.ComputeHash" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertResourcesCases" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ConvertCustomView" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -165,6 +166,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidGenerateLayoutBindings Condition=" '$(AndroidGenerateLayoutBindings)' == '' ">False</AndroidGenerateLayoutBindings>
 	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
+	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' ">3</_AndroidAssemblyStoreCompressionLevel>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
 	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
@@ -324,6 +326,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore>$(AndroidUseAssemblyStore)</_AndroidUseAssemblyStore>
+  <!-- The assembly store loading mechanism is dictated by the runtime and MUST NOT be overridden
+       (see the CoreCLR block below). MonoVM only supports the classic assembly store, which is
+       located at runtime by scanning the APK. -->
+  <_AndroidDlopenAssemblyStore>false</_AndroidDlopenAssemblyStore>
 </PropertyGroup>
 
 <!-- For CoreCLR assembly stores are always on, individual assembly entries in the APK aren't supported.
@@ -331,6 +337,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' == 'true' ">true</_AndroidUseAssemblyStore>
   <_AndroidUseAssemblyStore Condition="'$(EmbedAssembliesIntoApk)' != 'true' ">false</_AndroidUseAssemblyStore>
+  <!-- CoreCLR's native host ONLY supports the dlopen()-based assembly store: the store is wrapped as
+       a real shared library whose payload is exposed via the `_assembly_store` dynamic symbol,
+       and the host resolves it with dlopen()+dlsym() (there is no ZIP-scanning fallback). This value
+       is intentionally hardcoded and MUST NOT be overridden. -->
+  <_AndroidDlopenAssemblyStore>true</_AndroidDlopenAssemblyStore>
 </PropertyGroup>
 
 <PropertyGroup>
@@ -346,10 +357,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' and '$(_AndroidUseMarshalMethods)' == 'True' and '$(_AndroidRuntime)' != 'MonoVM' ">True</_AndroidUseManagedMarshalMethodsLookup>
   <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' ">False</_AndroidUseManagedMarshalMethodsLookup>
-
-  <!-- Native runtime linking during app build -->
-  <_AndroidEnableNativeRuntimeLinking Condition=" '$(_AndroidRuntime)' != 'CoreCLR' ">false</_AndroidEnableNativeRuntimeLinking>
-  <_AndroidEnableNativeRuntimeLinking Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And '$(_AndroidRuntime)' == 'CoreCLR' ">false</_AndroidEnableNativeRuntimeLinking>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -993,6 +1000,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="_AndroidTrimmableTypeMapMaxArrayRank=$(_AndroidTrimmableTypeMapMaxArrayRank)" />
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
+		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
 	</ItemGroup>
 	<WriteLinesToFile
 			File="$(_AndroidBuildPropertiesCache)"
@@ -2150,7 +2158,7 @@ because xbuild doesn't support framework reference assemblies.
        This dependency chain should be addressed in a separate PR. -->
   <CollectAssemblyFilesToCompress
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
-      AssemblyCompressionDirectory="$(IntermediateOutputPath)android\lz4\"
+      AssemblyCompressionDirectory="$(IntermediateOutputPath)android\zstd\"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       EnableCompression="$(AndroidEnableAssemblyCompression)"
       IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
@@ -2165,8 +2173,8 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <!--
-  LZ4 compress all compressable assemblies. Note this is an incremental MSBuild target.
-  @(AssembliesToCmpress) will only contain assemblies that have changed since the last build.
+  Zstd compresses all compressible assemblies. Note this is an incremental MSBuild target.
+  @(_AssembliesToCompress) will only contain assemblies that have changed since the last build.
 -->
 <Target Name="_CompressAssemblies"
     DependsOnTargets="_CollectAssembliesToCompress"
@@ -2175,7 +2183,8 @@ because xbuild doesn't support framework reference assemblies.
     Condition="'$(EmbedAssembliesIntoApk)' == 'True' ">
 
     <CompressAssemblies
-        AssembliesToCompress="@(_AssembliesToCompress)">
+        AssembliesToCompress="@(_AssembliesToCompress)"
+        CompressionLevel="$(_AndroidAssemblyStoreCompressionLevel)">
       <Output TaskParameter="FailedToCompressAssembliesOutput" ItemName="_FailedToCompressAssemblies" />
     </CompressAssemblies>
 </Target>
@@ -2226,6 +2235,17 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="AssembliesToAddToArchive" ItemName="_BuildApkAssembliesToAddToArchive" />
   </CreateAssemblyStore>
 
+  <!-- The dlopen()-based assembly-store layout is dictated by the runtime and MUST NOT be overridden:
+       CoreCLR's host resolves the store only via dlopen()+dlsym() (there is no ZIP-scanning fallback),
+       while MonoVM only supports the classic ZIP-scanned store. An accidental override (e.g. from a
+       later import) would abort the app at startup, so fail fast here where the value is consumed. -->
+  <Error
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidDlopenAssemblyStore)' != 'true' "
+      Text="Internal error: _AndroidDlopenAssemblyStore must be 'true' for the CoreCLR runtime, but was '$(_AndroidDlopenAssemblyStore)'. This property is dictated by the runtime and must not be overridden." />
+  <Error
+      Condition=" '$(_AndroidRuntime)' != 'CoreCLR' and '$(_AndroidDlopenAssemblyStore)' != 'false' "
+      Text="Internal error: _AndroidDlopenAssemblyStore must be 'false' for the '$(_AndroidRuntime)' runtime, but was '$(_AndroidDlopenAssemblyStore)'. This property is dictated by the runtime and must not be overridden." />
+
   <WrapAssembliesAsSharedLibraries
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -2234,6 +2254,7 @@ because xbuild doesn't support framework reference assemblies.
       ResolvedAssemblies="@(_BuildApkAssembliesToAddToArchive)"
       SupportedAbis="@(_BuildTargetAbis)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
+      UseDlopenAssemblyStore="$(_AndroidDlopenAssemblyStore)"
       RuntimePackLibraryDirectories="@(_RuntimePackLibraryDirectory)">
     <Output TaskParameter="WrappedAssemblies" ItemName="FilesToAddToArchive" />
   </WrapAssembliesAsSharedLibraries>
@@ -2677,6 +2698,55 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
   <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
 </Target>
+
+<Target Name="_CollectApplicationArtifacts"
+    Condition=" '$(AndroidApplication)' == 'true' "
+    DependsOnTargets="_ValidateAndroidPackageProperties">
+  <ItemGroup>
+    <ApplicationArtifact Remove="@(ApplicationArtifact)" />
+    <ApplicationArtifact
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And Exists('$(ApkFile)') "
+        Include="$(ApkFile)">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>false</Signed>
+    </ApplicationArtifact>
+    <ApplicationArtifact
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' And Exists('$(OutDir)$(_AndroidPackage)-%(_BuildTargetAbis.Identity).apk') "
+        Include="@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity).apk')">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>false</Signed>
+      <Abi>%(_BuildTargetAbis.Identity)</Abi>
+    </ApplicationArtifact>
+    <ApplicationArtifact Condition="Exists('$(ApkFileSigned)')" Include="$(ApkFileSigned)">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>true</Signed>
+    </ApplicationArtifact>
+    <ApplicationArtifact
+        Condition=" '$(AndroidPackageFormat)' != 'aab' And '$(AndroidCreatePackagePerAbi)' == 'true' And Exists('$(OutDir)$(_AndroidPackage)-%(_BuildTargetAbis.Identity)-Signed.apk') "
+        Include="@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity)-Signed.apk')">
+      <PackageFormat>apk</PackageFormat>
+      <Signed>true</Signed>
+      <Abi>%(_BuildTargetAbis.Identity)</Abi>
+    </ApplicationArtifact>
+    <ApplicationArtifact Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFile)') " Include="$(_AabFile)">
+      <PackageFormat>aab</PackageFormat>
+      <Signed>false</Signed>
+    </ApplicationArtifact>
+    <ApplicationArtifact Condition=" '$(AndroidPackageFormat)' == 'aab' And Exists('$(_AabFileSigned)') " Include="$(_AabFileSigned)">
+      <PackageFormat>aab</PackageFormat>
+      <Signed>true</Signed>
+    </ApplicationArtifact>
+    <ApplicationArtifact
+        Update="@(ApplicationArtifact)"
+        PackageId="$(_AndroidPackage)" />
+  </ItemGroup>
+</Target>
+
+<Target Name="GetApplicationArtifacts"
+    DependsOnTargets="
+      Build;
+      $(GetApplicationArtifactsDependsOn)"
+    Returns="@(ApplicationArtifact)" />
 
 <Target Name="SignAndroidPackage" DependsOnTargets="$(SignAndroidPackageDependsOn)">
 </Target>

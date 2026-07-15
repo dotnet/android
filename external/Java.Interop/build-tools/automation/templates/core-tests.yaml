@@ -1,0 +1,90 @@
+parameters:
+  condition: succeeded()
+  runNativeTests: false
+  runNativeDotnetTests: false
+  platformName:
+  nativeAotRid:
+
+steps:
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: generator (${{ parameters.platformName }})
+    testAssemblyName: generator-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Java.Interop.Tools.JavaCallableWrappers (${{ parameters.platformName }})
+    testAssemblyName: Java.Interop.Tools.JavaCallableWrappers-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Xamarin.Android.Tools.ApiXmlAdjuster (${{ parameters.platformName }})
+    testAssemblyName: Xamarin.Android.Tools.ApiXmlAdjuster-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Xamarin.Android.Tools.JavaTypeSystem (${{ parameters.platformName }})
+    testAssemblyName: Java.Interop.Tools.JavaTypeSystem-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Xamarin.Android.Tools.Bytecode (${{ parameters.platformName }})
+    testAssemblyName: Xamarin.Android.Tools.Bytecode-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Java.Interop.Tools.Generator (${{ parameters.platformName }})
+    testAssemblyName: Java.Interop.Tools.Generator-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Java.Interop.Tools.JavaSource (${{ parameters.platformName }})
+    testAssemblyName: Java.Interop.Tools.JavaSource-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Xamarin.SourceWriter (${{ parameters.platformName }})
+    testAssemblyName: Xamarin.SourceWriter-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Java.Interop.Tools.Maven (${{ parameters.platformName }})
+    testAssemblyName: Java.Interop.Tools.Maven-Tests
+
+- template: run-dotnet-test.yaml
+  parameters:
+    testRunTitle: Java.Interop ($(DotNetTargetFramework) - ${{ parameters.platformName }})
+    testAssemblyName: Java.Interop-Tests
+    condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+    retryCount: 1
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: java-source-utils'
+  inputs:
+    command: build
+    arguments: -c $(Build.Configuration) tools/java-source-utils/java-source-utils.csproj -t:RunTests
+    workingDirectory: external/Java.Interop
+  continueOnError: true
+
+- powershell: >
+    dotnet publish -c $(Build.Configuration) -r ${{ parameters.nativeAotRid }}
+    samples/Hello-NativeAOTFromJNI/Hello-NativeAOTFromJNI.csproj
+  displayName: 'Tests: publish Hello-NativeAOTFromJNI'
+  workingDirectory: external/Java.Interop
+  continueOnError: true
+
+- powershell: >
+    dotnet build -c $(Build.Configuration) -r ${{ parameters.nativeAotRid }}
+    -t:RunJavaSample
+    samples/Hello-NativeAOTFromJNI/Hello-NativeAOTFromJNI.csproj
+  displayName: 'Tests: run Hello-NativeAOTFromJNI'
+  workingDirectory: external/Java.Interop
+  continueOnError: true
+
+- task: PublishTestResults@2
+  displayName: Publish JUnit Test Results
+  inputs:
+    testResultsFormat: JUnit
+    testResultsFiles: 'external/Java.Interop/tools/java-source-utils/build/test-results/**/TEST-*.xml'
+    testRunTitle: java-source-utils (${{ parameters.platformName }})
+  continueOnError: true

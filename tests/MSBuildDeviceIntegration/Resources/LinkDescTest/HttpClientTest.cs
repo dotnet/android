@@ -1,7 +1,7 @@
 using System;
 using System.Text;
-using System.Net;
 using System.Net.Http;
+using Xamarin.Android.NetTests;
 
 public class HttpClientTest
 {
@@ -9,18 +9,15 @@ public class HttpClientTest
 	public static string Post ()
 	{
 		try {
-			var client = new HttpClient ();
-			var data = new StringContent ("{\"foo\": \"bar\" }", Encoding.UTF8, "application/json");
-			var response = client.PostAsync ("https://httpbin.org/post", data).Result;
-			switch (response.StatusCode) {
- 				case HttpStatusCode.InternalServerError:
- 				case HttpStatusCode.BadGateway:
- 				case HttpStatusCode.ServiceUnavailable:
- 				case HttpStatusCode.GatewayTimeout:
- 					return $"[IGNORE] {nameof (HttpClientTest)}.{nameof (Post)} {response.StatusCode}";
- 			}
+			using var server = LocalHttpServer.Start ();
+			using var client = new HttpClient {
+				BaseAddress = server.Uri,
+			};
+			using var data = new StringContent ("{\"foo\": \"bar\" }", Encoding.UTF8, "application/json");
+			using var response = client.PostAsync ("/post", data).Result;
 			response.EnsureSuccessStatusCode ();
-			var json = response.Content.ReadAsStringAsync ().Result;
+			server.AssertNoUnhandledExceptions ();
+
 			return $"[PASS] {nameof (HttpClientTest)}.{nameof (Post)}";
 		} catch (Exception ex) {
 			return $"[FAIL] {nameof (HttpClientTest)}.{nameof (Post)} FAILED: {ex}";

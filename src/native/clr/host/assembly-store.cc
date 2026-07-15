@@ -1,17 +1,39 @@
+#include <cstring>
 #include <string>
-
-#if defined (HAVE_LZ4)
-#include <lz4.h>
-#endif
 
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
+#include <runtime-base/crc32.hh>
 #include <runtime-base/util.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/timing-internal.hh>
+#include <runtime-base/zstd.hh>
 
 using namespace xamarin::android;
+
+namespace {
+	// The assembly store index contains two entries per assembly: one hashed from the name with its
+	// file extension (e.g. `Foo.dll`) and one from the name without it (e.g. `Foo`). The names section,
+	// however, stores only the full name, so a requested name matches a stored name if it is either
+	// equal to it or equal to it with the final extension removed.
+	[[gnu::always_inline]]
+	auto name_matches (std::string_view const& requested, std::string_view const& stored) noexcept -> bool
+	{
+		if (requested == stored) {
+			return true;
+		}
+
+		size_t last_slash = stored.find_last_of ('/');
+		size_t name_start = last_slash == std::string_view::npos ? 0 : last_slash + 1;
+		size_t last_dot = stored.find_last_of ('.');
+		if (last_dot != std::string_view::npos && last_dot > name_start) {
+			return requested == stored.substr (0, last_dot);
+		}
+
+		return false;
+	}
+}
 
 [[gnu::always_inline]]
 void AssemblyStore::set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept
@@ -26,7 +48,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	uint8_t *assembly_data = nullptr;
 	uint32_t assembly_data_size = 0;
 
-#if defined (HAVE_LZ4) && defined (RELEASE)
+#if defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store"sv, name);
@@ -114,20 +136,20 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			}
 
 			const char *data_start = pointer_add<const char*>(e.image_data, sizeof(CompressedAssemblyHeader));
-			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(data_buffer), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
+			size_t ret = ZSTD_decompress (data_buffer, cad.uncompressed_file_size, data_start, assembly_data_size);
 
-			if (ret < 0) {
+			if (ZSTD_isError (ret)) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
-						"Decompression of assembly {} failed with code {}"sv,
+						"Decompression of assembly {} failed: {}"sv,
 						name,
-						ret
+						ZSTD_getErrorName (ret)
 					)
 				);
 			}
 
-			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
+			if (ret != cad.uncompressed_file_size) {
 				Helpers::abort_application (
 					LOG_ASSEMBLY,
 					std::format (
@@ -147,7 +169,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 		set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
 	} else
-#endif // def HAVE_LZ4 && def RELEASE
+#endif // def RELEASE
 	{
 		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store"sv, name);
 
@@ -181,20 +203,29 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 }
 
 [[gnu::always_inline]]
-auto AssemblyStore::find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*
+auto AssemblyStore::find_assembly_store_entry (std::string_view const& name, hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept -> const AssemblyStoreIndexEntry*
 {
-	auto equal = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
+	// Entries are sorted by `name_hash`, so all entries sharing `hash` are contiguous. CRC32 is a
+	// 32-bit hash, so collisions are possible (though very unlikely); walk the entire run of entries
+	// with a matching hash and compare the actual assembly name to find the correct one.
 	auto less_than = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
-	ssize_t idx = Search::binary_search<AssemblyStoreIndexEntry, equal, less_than> (hash, entries, entry_count);
-	if (idx >= 0) {
-		return &entries[idx];
+	size_t idx = Search::lower_bound<AssemblyStoreIndexEntry, hash_t, less_than> (hash, entries, entry_count);
+
+	while (idx < entry_count && entries[idx].name_hash == hash) {
+		AssemblyStoreIndexEntry const& entry = entries[idx];
+		if (entry.descriptor_index < assembly_store.assembly_count &&
+		    name_matches (name, assembly_store_names[entry.descriptor_index])) {
+			return &entry;
+		}
+		idx++;
 	}
+
 	return nullptr;
 }
 
 auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
-	hash_t name_hash = xxhash::hash (name.data (), name.length ());
+	hash_t name_hash = crc32_hash (name);
 
 	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.
@@ -204,7 +235,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		}
 	}
 
-	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
+	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name, name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) [[unlikely]] {
 		size = 0;
 		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, name, name_hash);
@@ -228,7 +259,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		);
 	}
 
-	AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
+	const AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
 	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
 
 	if (assembly_runtime_info.image_data == nullptr) {
@@ -243,10 +274,10 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 		log_debug (
 			LOG_ASSEMBLY,
 			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'"sv,
-			static_cast<void*>(assembly_runtime_info.image_data),
-			static_cast<void*>(assembly_runtime_info.debug_info_data),
-			static_cast<void*>(assembly_runtime_info.config_data),
-			static_cast<void*>(assembly_runtime_info.descriptor),
+			static_cast<const void*>(assembly_runtime_info.image_data),
+			static_cast<const void*>(assembly_runtime_info.debug_info_data),
+			static_cast<const void*>(assembly_runtime_info.config_data),
+			static_cast<const void*>(assembly_runtime_info.descriptor),
 			assembly_runtime_info.descriptor->data_size,
 			assembly_runtime_info.descriptor->debug_data_size,
 			assembly_runtime_info.descriptor->config_data_size,
@@ -259,28 +290,9 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	return assembly_data;
 }
 
-void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_view const& store_path, uint32_t offset, uint32_t size) noexcept
+void AssemblyStore::configure_from_payload (const void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept
 {
-	detail::mmap_info assembly_store_map = Util::mmap_file (fd, offset, size, store_path);
-
-	auto [payload_start, payload_size] = Util::get_wrapper_dso_payload_pointer_and_size (assembly_store_map, store_path);
-	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}"sv, payload_start, payload_size);
-	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
-
-	auto get_full_store_path = [&apk_path, &store_path]() -> std::string {
-		std::string full_store_path;
-
-		if (!apk_path.empty ()) {
-			full_store_path.append (apk_path);
-			// store path will be relative, to the apk
-			full_store_path.append ("!/"sv);
-			full_store_path.append (store_path);
-		} else {
-			full_store_path.append (store_path);
-		}
-
-		return full_store_path;
-	};
+	auto header = static_cast<const AssemblyStoreHeader*>(payload_start);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
 		Helpers::abort_application (
@@ -306,11 +318,26 @@ void AssemblyStore::map (int fd, std::string_view const& apk_path, std::string_v
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
 
-	assembly_store.data_start = static_cast<uint8_t*>(payload_start);
+	assembly_store.data_start = static_cast<const uint8_t*>(payload_start);
 	assembly_store.assembly_count = header->entry_count;
 	assembly_store.index_entry_count = header->index_entry_count;
-	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
-	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
+	assembly_store.assemblies = reinterpret_cast<const AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
+	assembly_store_hashes = reinterpret_cast<const AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
-	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}"sv, get_full_store_path ());
+	// Build a lookup of assembly names indexed by descriptor index, used to disambiguate CRC32 hash
+	// collisions during lookup. The names section follows the descriptor table and consists of
+	// `entry_count` length-prefixed (uint32 length followed by the UTF-8 bytes) records, stored in
+	// descriptor-index order. `delete[]` guards against a leak should the (single) store ever be
+	// re-mapped; `assembly_store_names` is nullptr on first call, for which it is a no-op.
+	const uint8_t *names_cursor = assembly_store.data_start + header_size + header->index_size +
+		(static_cast<size_t>(header->entry_count) * sizeof (AssemblyStoreEntryDescriptor));
+	delete[] assembly_store_names;
+	assembly_store_names = new std::string_view[header->entry_count];
+	for (uint32_t i = 0; i < header->entry_count; i++) {
+		uint32_t name_length;
+		memcpy (&name_length, names_cursor, sizeof (name_length));
+		names_cursor += sizeof (name_length);
+		assembly_store_names[i] = std::string_view (reinterpret_cast<const char*>(names_cursor), name_length);
+		names_cursor += name_length;
+	}
 }

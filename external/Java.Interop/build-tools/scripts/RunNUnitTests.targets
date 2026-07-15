@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="RunTests" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import
+      Condition=" Exists('..\..\bin\Build$(Configuration)\PackagePaths.props') "
+      Project="..\..\bin\Build$(Configuration)\PackagePaths.props"
+  />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <_TopDir>$(MSBuildThisFileDirectory)..\..</_TopDir>
+    <_Runtime Condition=" '$(RUNTIME)' != '' ">$(RUNTIME)</_Runtime>
+    <_Runtime Condition=" '$(RUNTIME)' == '' And '$(OS)' != 'Windows_NT' ">mono --debug</_Runtime>
+    <_NUnit>$(_Runtime) $(PkgNUnit_ConsoleRunner)/tools/nunit3-console.exe</_NUnit>
+    <_Run Condition=" '$(RUN)' != '' ">--run=&quot;$(RUN)&quot;</_Run>
+  </PropertyGroup>
+  <Import
+      Condition=" Exists('..\..\bin\Build$(Configuration)\JdkInfo.props') "
+      Project="..\..\bin\Build$(Configuration)\JdkInfo.props"
+  />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.SetEnvironmentVariable" />
+  <ItemGroup>
+    <_TestAssembly Include="$(_TopDir)\bin\Test$(Configuration)\*-*Tests.dll" Condition=" '$(TestAssembly)' == '' " />
+    <_TestAssembly Include="$(TestAssembly)" Condition=" '$(TestAssembly)' != '' " />
+  </ItemGroup>
+  <Target Name="RunTests"
+      Outputs="$(_TopDir)\TestResult-%(_TestAssembly.Filename).xml">
+    <SetEnvironmentVariable Name="ANDROID_SDK_PATH"      Value="$(AndroidSdkDirectory)" Condition=" '$(AndroidSdkDirectory)' != '' " />
+    <SetEnvironmentVariable Name="MONO_TRACE_LISTENER"   Value="Console.Out" />
+    <SetEnvironmentVariable Name="JAVA_INTEROP_GREF_LOG" Value="bin\Test$(Configuration)\g-%(_TestAssembly.Filename).txt" />
+    <SetEnvironmentVariable Name="JAVA_INTEROP_LREF_LOG" Value="bin\Test$(Configuration)\l-%(_TestAssembly.Filename).txt" />
+    <SetEnvironmentVariable Name="JI_JVM_PATH"           Value="$(JdkJvmPath)" />
+    <Exec
+        Command="$(_NUnit) $(NUNIT_EXTRA) %(_TestAssembly.Identity) $(_Run) --result=&quot;TestResult-%(Filename).xml&quot; --output=&quot;bin\Test$(Configuration)\TestOutput-%(Filename).txt&quot;"
+        WorkingDirectory="$(_TopDir)"
+        ContinueOnError="ErrorAndContinue"
+    />
+    <MSBuild
+        Condition=" '$(SkipJSUTests)' != 'true' "
+        Projects="$(MSBuildThisFileDirectory)..\..\tools\java-source-utils\java-source-utils.csproj"
+        Targets="RunTests"
+    />
+  </Target>
+</Project>

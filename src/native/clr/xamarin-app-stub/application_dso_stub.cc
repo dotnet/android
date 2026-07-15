@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include <xamarin-app.hh>
-#include <shared/xxhash.hh>
 
 // This file MUST have "valid" values everywhere - the DSO it is compiled into is loaded by the
 // designer on desktop.
@@ -20,7 +19,6 @@ const TypeMap type_map = {
 	.managed_to_java = managed_to_java,
 };
 
-const bool typemap_use_hashes = true;
 const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
 const TypeMapAssembly type_map_unique_assemblies[] = {};
 const char type_map_assembly_names[] = {};
@@ -55,14 +53,13 @@ const ApplicationConfig application_config = {
 	.jni_add_native_method_registration_attribute_present = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
-	.number_of_runtime_properties = 3,
+	.number_of_runtime_properties = 1,
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
 	.number_of_dso_cache_entries = 2,
-	.number_of_aot_cache_entries = 2,
 	.number_of_shared_libraries = 2,
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
@@ -71,6 +68,7 @@ const ApplicationConfig application_config = {
 	.jni_remapping_replacement_method_index_entry_count = 2,
 	.android_package_name = android_package_name,
 	.managed_marshal_methods_lookup_enabled = false,
+	.have_assembly_store = false,
 };
 
 // TODO: migrate to std::string_view for these two
@@ -105,13 +103,12 @@ AssemblyStoreRuntimeData assembly_store = {
 	.assemblies = nullptr,
 };
 
-constexpr char fake_dso_name[] = "libaot-Some.Assembly.dll.so";
-constexpr char fake_dso_name2[] = "libaot-Another.Assembly.dll.so";
+constexpr char fake_dso_name[] = "libSome.Library.so";
+constexpr char fake_dso_name2[] = "libAnother.Library.so";
 
 DSOCacheEntry dso_cache[] = {
 	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
+		.hash = xamarin::android::crc32_hash (fake_dso_name),
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 1,
@@ -119,8 +116,7 @@ DSOCacheEntry dso_cache[] = {
 	},
 
 	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
+		.hash = xamarin::android::crc32_hash (fake_dso_name2),
 		.ignore = true,
 		.is_jni_library = false,
 		.name_index = 2,
@@ -134,29 +130,7 @@ const uint dso_jni_preloads_idx[1] = {
 	0
 };
 
-DSOCacheEntry aot_dso_cache[] = {
-	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
-		.ignore = true,
-		.is_jni_library = true,
-		.name_index = 3,
-		.handle = nullptr,
-	},
-
-	{
-		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
-		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
-		.ignore = true,
-		.is_jni_library = false,
-		.name_index = 4,
-		.handle = nullptr,
-	},
-};
-
 const char dso_names_data[] = {};
-
-DSOApkEntry dso_apk_entries[2] {};
 
 //
 // Support for marshal methods
@@ -241,50 +215,6 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 			.str = "some/other/java/type",
 		},
 		.replacement = "another/replacement/java/type",
-	},
-};
-
-constexpr char prop_test_string_key[] = "test_string";
-constexpr char prop_test_integer_key[] = "test_integer";
-constexpr char prop_test_boolean_key[] = "test_boolean";
-
-const RuntimeProperty runtime_properties[] = {
-	{
-		.key_index = 0,
-		.value_index = 10,
-		.value_size = 10,
-	},
-
-	{
-		.key_index = 20,
-		.value_index = 25,
-		.value_size = 5,
-	},
-
-	{
-		.key_index = 30,
-		.value_index = 33,
-		.value_size = 7,
-	},
-};
-
-
-const char runtime_properties_data[] = {};
-
-const RuntimePropertyIndexEntry runtime_property_index[] = {
-	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_string_key, sizeof(prop_test_string_key) - 1),
-		.index = 0,
-	},
-
-	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_integer_key, sizeof(prop_test_integer_key) - 1),
-		.index = 1,
-	},
-
-	{
-		.key_hash = xamarin::android::xxhash::hash (prop_test_boolean_key, sizeof(prop_test_boolean_key) - 1),
-		.index = 2,
 	},
 };
 

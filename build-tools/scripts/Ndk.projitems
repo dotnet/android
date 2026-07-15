@@ -23,8 +23,8 @@
       <ApiLevel>$(AndroidNdkApiLevel_ArmV7a)</ApiLevel>
       <AndroidRID>android-arm</AndroidRID>
       <SupportMonoVM>True</SupportMonoVM>
-      <SupportCoreCLR>False</SupportCoreCLR>
-      <SupportNativeAOT>False</SupportNativeAOT>
+      <SupportCoreCLR>True</SupportCoreCLR>
+      <SupportNativeAOT>True</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
 
     <AndroidSupportedTargetJitAbi

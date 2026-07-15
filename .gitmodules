@@ -6,14 +6,6 @@
     path = external/constexpr-xxh3
     url = https://github.com/chys87/constexpr-xxh3.git
     branch = main
-[submodule "external/debugger-libs"]
-    path = external/debugger-libs
-    url = https://github.com/mono/debugger-libs
-    branch = main
-[submodule "external/Java.Interop"]
-    path = external/Java.Interop
-    url = https://github.com/dotnet/java-interop
-    branch = main
 [submodule "external/libunwind"]
     path = external/libunwind
     url = https://github.com/libunwind/libunwind.git
@@ -26,10 +18,6 @@
     path = external/robin-map
     url = https://github.com/xamarin/robin-map
     branch = master
-[submodule "external/xamarin-android-tools"]
-    path = external/xamarin-android-tools
-    url = https://github.com/dotnet/android-tools
-    branch = main
 [submodule "external/xxHash"]
     path = external/xxHash
     url = https://github.com/Cyan4973/xxHash.git

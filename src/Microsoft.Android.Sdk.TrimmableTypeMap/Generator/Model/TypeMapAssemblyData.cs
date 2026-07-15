@@ -119,7 +119,7 @@ sealed record ArrayProxyData
 /// </summary>
 sealed record PrimitiveArrayProxyData
 {
-	public required TypeRefData ConcreteArrayType { get; init; }
+	public IReadOnlyList<TypeRefData> ConcreteArrayTypes { get; init; } = [];
 }
 
 /// <summary>
@@ -326,6 +326,20 @@ sealed record UcoMethodData
 	/// JNI method signature, e.g., "(Landroid/os/Bundle;)V". Used to determine CLR parameter types.
 	/// </summary>
 	public required string JniSignature { get; init; }
+
+	/// <summary>
+	/// CLR type-name strings for the real <c>n_*</c> callback's JNI parameters (excluding the leading
+	/// jnienv/self IntPtr pair), captured from metadata. When present, the callback MemberRef is
+	/// emitted to mirror these exactly (correctly distinguishing bool/sbyte and char/ushort). Null
+	/// when the <c>n_*</c> signature was not resolved.
+	/// </summary>
+	public IReadOnlyList<string>? CallbackParameterTypeNames { get; init; }
+
+	/// <summary>
+	/// CLR return type-name string for the real <c>n_*</c> callback, captured from metadata.
+	/// Null when the <c>n_*</c> signature was not resolved.
+	/// </summary>
+	public string? CallbackReturnTypeName { get; init; }
 
 	/// <summary>
 	/// Optional metadata for wrappers that dispatch directly to the managed target

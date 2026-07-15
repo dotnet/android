@@ -1,0 +1,4 @@
+# Gradle build outputs - rebuilt from source on every test build.
+.gradle/
+build/
+classes/

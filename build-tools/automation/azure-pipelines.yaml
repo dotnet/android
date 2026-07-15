@@ -99,6 +99,29 @@ extends:
       parameters:
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
+    - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
+      parameters:
+        # The internal Xamarin.Android pipeline uses 1ES Pipeline Templates, which
+        # require Windows jobs to run on a 1ES-hosted pool. macOS is fine on the
+        # hosted Azure Pipelines pool as long as `os: macOS` is set (which is now
+        # the template default).
+        windowsPool:
+          name: MAUI-1ESPT
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
+
+    - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
+      parameters:
+        use1ESTemplate: true
+        # The internal Xamarin.Android pipeline uses 1ES Pipeline Templates, which
+        # require Windows jobs to run on a 1ES-hosted pool. macOS is fine on the
+        # hosted Azure Pipelines pool as long as `os: macOS` is set (which is now
+        # the template default).
+        windowsPool:
+          name: MAUI-1ESPT
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
+
     - stage: maui_tests
       displayName: MAUI Tests
       dependsOn: mac_build
@@ -274,7 +297,7 @@ extends:
           timeoutInMinutes: 120
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v4.yml@yaml-templates
+      - template: nuget-msi-convert/job/v5.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
           dependsOn: sign_net_mac_win
@@ -375,7 +398,7 @@ extends:
             Write-Host "##vso[task.setvariable variable=ReleaseDropPrefix]$dropPrefix"
           displayName: Set variable ReleaseDropPrefix
 
-        # Download nugets drop created by nuget-msi-convert/job/v4.yml and publish to maestro
+        # Download nugets drop created by nuget-msi-convert/job/v5.yml and publish to maestro
         - task: ms-vscs-artifact.build-tasks.artifactDropDownloadTask-1.artifactDropDownloadTask@1
           displayName: Download $(ReleaseDropPrefix)/nugets
           inputs:

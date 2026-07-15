@@ -70,7 +70,7 @@ namespace Xamarin.Android.Tasks
 				if (classRewrite == null) {
 					continue;
 				}
-				if (!TryReadClassFromTo (classRewrite!, out var from, out var to)) {
+				if (!TryReadClassFromTo (classRewrite, out var from, out var to)) {
 					Logger (TraceLevel.Verbose, $"No from or to! {classRewrite}");
 					continue;
 				}

@@ -114,6 +114,23 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_AliasGroup_MonoAndroidPeerSortsFirst ()
+		{
+			// Java.Interop first proves Mono.Android still becomes alias [0], matching runtime lookup.
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Java.Interop") with { IsFromJniTypeSignature = true },
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android"),
+			};
+
+			var model = BuildModel (peers, "MonoAndroid");
+
+			Assert.Equal ("java/lang/Object[0]", model.Entries [0].MapKey);
+			Assert.Contains ("Java.Lang.Object", model.Entries [0].ProxyTypeReference);
+			Assert.Equal ("java/lang/Object[1]", model.Entries [1].MapKey);
+			Assert.Contains ("Java.Interop.JavaObject", model.Entries [1].ProxyTypeReference);
+		}
+
+		[Fact]
 		public void Build_AliasWithMixedActivation_PrimaryNoActivation_AliasHasActivation ()
 		{
 			var peers = new List<JavaPeerInfo> {
@@ -343,6 +360,27 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
 			Assert.Single (model.Associations);
+		}
+
+		[Fact]
+		public void Build_ConcreteSelfPeerWithoutActivation_CreatesProxyAndAssociation ()
+		{
+			// A concrete type that supplies its own Java peer ([JniTypeSignature(GenerateJavaPeer=false)],
+			// modeled here as DoNotGenerateAcw=true with no activation ctor / invoker) is constructed
+			// managed-side via `new`. Its managed→Java JNI name must be resolvable, otherwise the runtime
+			// falls back to the generic mono.android.runtime.JavaObject peer and throws ArrayStoreException
+			// when the instance is stored into a typed Java array (e.g. CrossReferenceBridge[]).
+			var peer = MakeMcwPeer ("net/dot/jni/test/CrossReferenceBridge", "Java.InteropTests.CrossReferenceBridge", "Java.Interop-Tests")
+				with { DoNotGenerateAcw = true };
+			var model = BuildModel (new [] { peer }, "MyTypeMap");
+
+			var proxy = Assert.Single (model.ProxyTypes);
+			Assert.Equal ("net/dot/jni/test/CrossReferenceBridge", proxy.JniName);
+			Assert.Equal ("Java.InteropTests.CrossReferenceBridge", proxy.TargetType.ManagedTypeName);
+			Assert.False (proxy.HasActivation);
+
+			var association = Assert.Single (model.Associations);
+			Assert.Contains ("Java.InteropTests.CrossReferenceBridge, Java.Interop-Tests", association.SourceTypeReference);
 		}
 
 		[Fact]
@@ -1107,17 +1145,27 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_EmitArrayEntries_AliasGroup_Skipped ()
+		public void Build_EmitArrayEntries_AliasGroup_EmitsPerManagedType ()
 		{
-			// Alias groups (multiple peers sharing one JNI name) would produce duplicate
-			// JNI array keys; deferred pending an alias-aware design.
 			var peers = new List<JavaPeerInfo> {
-				MakeMcwPeer ("test/Dup", "Test.First", "App"),
-				MakeMcwPeer ("test/Dup", "Test.Second", "App"),
+				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Java.Interop")
+					with { IsFrameworkAssembly = true, GenerateArrayEntries = false },
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android")
+					with { IsFrameworkAssembly = true, GenerateArrayEntries = true },
 			};
 			var model = BuildModelWithArrays (peers);
 
-			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
+			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
+			Assert.Equal (3, arrayEntries.Count);
+			Assert.Contains (arrayEntries, e =>
+				e.MapKey == "Java.Lang.Object, Mono.Android" &&
+				e.AnchorRank == 1 &&
+				e.ProxyTypeReference == "_TypeMap.ArrayProxies.Java_Lang_Object_ArrayProxy1, TestTypeMap");
+			Assert.Contains (arrayEntries, e =>
+				e.MapKey == "Java.Lang.Object, Mono.Android" &&
+				e.AnchorRank == 2 &&
+				e.ProxyTypeReference == "_TypeMap.ArrayProxies.Java_Lang_Object_ArrayProxy2, TestTypeMap");
+			Assert.DoesNotContain (arrayEntries, e => e.MapKey == "Java.Interop.JavaObject, Java.Interop");
 		}
 
 		[Theory]
@@ -1149,7 +1197,7 @@ public class ModelBuilderTests : FixtureTestBase
 			var primitiveEntries = model.Entries
 				.Where (e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null)
 				.ToList ();
-			Assert.Equal (24, primitiveEntries.Count); // 8 primitive keywords × 3 ranks
+			Assert.Equal (36, primitiveEntries.Count);
 
 			var sbyteRank1 = primitiveEntries.Single (e => e.MapKey == "System.SByte, System.Runtime" && e.AnchorRank == 1);
 			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
@@ -1167,6 +1215,24 @@ public class ModelBuilderTests : FixtureTestBase
 			Assert.Contains (model.Associations, a =>
 				a.SourceTypeReference == "Java.Interop.JavaSByteArray, Java.Interop" &&
 				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
+
+			foreach (var (mapKey, proxyName, arrayTypeReference, concreteArrayTypeReference) in new [] {
+				("System.Byte, System.Runtime", "Byte", "System.Byte[], System.Runtime", "Java.Interop.JavaSByteArray, Java.Interop"),
+				("System.UInt16, System.Runtime", "UInt16", "System.UInt16[], System.Runtime", "Java.Interop.JavaInt16Array, Java.Interop"),
+				("System.UInt32, System.Runtime", "UInt32", "System.UInt32[], System.Runtime", "Java.Interop.JavaInt32Array, Java.Interop"),
+				("System.UInt64, System.Runtime", "UInt64", "System.UInt64[], System.Runtime", "Java.Interop.JavaInt64Array, Java.Interop"),
+			}) {
+				var rank1 = primitiveEntries.Single (e => e.MapKey == mapKey && e.AnchorRank == 1);
+				Assert.Equal ($"_TypeMap.ArrayProxies.Primitive_{proxyName}_ArrayProxy1, _Java.Interop.TypeMap", rank1.ProxyTypeReference);
+				var rank2 = primitiveEntries.Single (e => e.MapKey == mapKey && e.AnchorRank == 2);
+				Assert.Equal ($"_TypeMap.ArrayProxies.Primitive_{proxyName}_ArrayProxy2, _Java.Interop.TypeMap", rank2.TargetTypeReference);
+				Assert.Contains (model.Associations, a =>
+					a.SourceTypeReference == arrayTypeReference &&
+					a.AliasProxyTypeReference == rank1.ProxyTypeReference);
+				Assert.DoesNotContain (model.Associations, a =>
+					a.SourceTypeReference == concreteArrayTypeReference &&
+					a.AliasProxyTypeReference == rank1.ProxyTypeReference);
+			}
 		}
 
 		[Fact]
@@ -1256,6 +1322,34 @@ public class ModelBuilderTests : FixtureTestBase
 				Assert.DoesNotContain ("__ArrayMapRank1", typeRefNames);
 				Assert.DoesNotContain ("__ArrayMapRank2", typeRefNames);
 				Assert.DoesNotContain ("__ArrayMapRank3", typeRefNames);
+			});
+		}
+
+		[Fact]
+		public void FullPipeline_PrimitiveAliasArrayEntries_EmitWithoutConcreteArrayType ()
+		{
+			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
+			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Java.Interop.TypeMap");
+
+			EmitAndVerify (model, "_Java.Interop.TypeMap", (pe, reader) => {
+				var typeDefNames = reader.TypeDefinitions
+					.Select (h => reader.GetString (reader.GetTypeDefinition (h).Name))
+					.ToHashSet (StringComparer.Ordinal);
+				Assert.Contains ("Primitive_Byte_ArrayProxy1", typeDefNames);
+				Assert.Contains ("Primitive_Byte_ArrayProxy2", typeDefNames);
+				Assert.Contains ("Primitive_UInt32_ArrayProxy1", typeDefNames);
+
+				var assocAttrs = ReadAllTypeMapAssociationAttributeBlobs (reader);
+				Assert.Contains (assocAttrs, a =>
+					a.sourceRef == "System.Byte[], System.Runtime" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Primitive_Byte_ArrayProxy1, _Java.Interop.TypeMap");
+				Assert.Contains (assocAttrs, a =>
+					a.sourceRef == "System.UInt32[], System.Runtime" &&
+					a.proxyRef == "_TypeMap.ArrayProxies.Primitive_UInt32_ArrayProxy1, _Java.Interop.TypeMap");
+				Assert.DoesNotContain (assocAttrs, a =>
+					a.sourceRef == "Java.Interop.JavaSByteArray, Java.Interop" &&
+					a.proxyRef is not null &&
+					a.proxyRef.Contains ("Primitive_Byte", StringComparison.Ordinal));
 			});
 		}
 

@@ -154,7 +154,11 @@ public class BootAndroidEmulatorTests : BaseTest
 		};
 
 		Assert.IsFalse (task.Execute (), "Task should fail");
-		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Should have XA0145 timeout error");
+		var error = errors.FirstOrDefault (e => e.Code == "XA0145");
+		Assert.IsNotNull (error, "Should have XA0145 timeout error");
+		var message = error?.Message ?? "";
+		StringAssert.Contains ("Pixel_6_API_33", message, "AVD name should be substituted into the message");
+		Assert.IsFalse (message.Contains ("{0}") || message.Contains ("{1}"), "Message placeholders should be substituted");
 	}
 
 	[Test]
@@ -217,10 +221,10 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
 		var bootOptions = task.LastBootOptions;
 		Assert.IsNotNull (bootOptions, "Boot options should be captured");
-		Assert.IsNotNull (bootOptions.AdditionalArgs, "AdditionalArgs should not be null");
+		Assert.IsNotNull (bootOptions?.AdditionalArgs, "AdditionalArgs should not be null");
 		CollectionAssert.AreEqual (
 			new[] { "-no-snapshot-load", "-gpu", "auto" },
-			bootOptions.AdditionalArgs,
+			bootOptions?.AdditionalArgs,
 			"Extra arguments should be parsed and passed to options");
 	}
 
@@ -291,8 +295,8 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.IsFalse (task.Execute (), "Task should fail");
 		var error = errors.FirstOrDefault (e => e.Code == "XA0144");
 		Assert.IsNotNull (error, "Unknown errors should map to XA0144");
-		StringAssert.Contains ("Unknown", error.Message, "Error kind should be included in the message");
-		StringAssert.Contains ("Some unexpected error occurred", error.Message, "Error message should be included");
+		StringAssert.Contains ("Unknown", error?.Message, "Error kind should be included in the message");
+		StringAssert.Contains ("Some unexpected error occurred", error?.Message, "Error message should be included");
 	}
 
 	[Test]
@@ -330,6 +334,10 @@ public class BootAndroidEmulatorTests : BaseTest
 		task.BootTimeoutSeconds = 0;
 
 		Assert.IsFalse (task.Execute (), "Task should fail with zero timeout");
-		Assert.IsTrue (errors.Any (e => e.Code == "XA0145"), "Invalid timeout should produce XA0145 error");
+		var error = errors.FirstOrDefault (e => e.Code == "XA0145");
+		Assert.IsNotNull (error, "Invalid timeout should produce XA0145 error");
+		var message = error?.Message ?? "";
+		StringAssert.Contains ("Pixel_6_API_33", message, "AVD name should be substituted into the message");
+		Assert.IsFalse (message.Contains ("{0}") || message.Contains ("{1}"), "Message placeholders should be substituted");
 	}
 }

@@ -20,20 +20,6 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class InstallAndRunTests : DeviceTest
 	{
-		// When running on CI we often see failures where the test fails to spot the "Displayed:" line
-		// because time between when we start logging and when the application actually is launched
-		// by the emulator is longer than the timeout we specify (usually 30s). Use this constant as the
-		// default timeout for all the activity start monitoring calls, adjust per-test as necessary.
-		//
-		// Sometimes emulators, for whatever reason, launch the app after a delay of up to 100s and the
-		// logcat is filled with time-consuming Java exceptions unrelated to our test. We need to account
-		// for that. Most of the tests used 30s as the activity start timeout, so let's give the emulator
-		// up to 2 minutes to gather all its ducks in the row + 30 "standard" seconds for our test app
-		// to start.
-		//
-		// It is recommended that no test waiting for the "Displayed:" message waits shorter than this
-		public const int ActivityStartTimeoutInSeconds = 150;
-
 		static ProjectBuilder builder;
 		static XamarinAndroidApplicationProject proj;
 
@@ -1151,12 +1137,16 @@ namespace Library1 {
 					new BuildItem.Source ("HttpClientTest.cs") {
 						TextContent = () => getResource("HttpClientTest")
 					},
+					new BuildItem.Source ("LocalTestServers.cs") {
+						TextContent = () => File.ReadAllText (Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", "Xamarin.Android.Net", "LocalTestServers.cs"))
+					},
 					new BuildItem.Source ("PreserveTest.cs") {
 						TextContent = () => getResource("PreserveTest")
 					},
 				},
 			};
 			lib2.SetRuntime (runtime);
+			lib2.SetProperty ("LangVersion", "8.0");
 
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
@@ -1191,6 +1181,16 @@ namespace Library1 {
 </linker>
 ",
 					},
+					new BuildItem ("AndroidResource", "Resources\\xml\\network_security_config.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<network-security-config>
+  <domain-config cleartextTrafficPermitted=""true"">
+    <domain>localhost</domain>
+    <domain>127.0.0.1</domain>
+  </domain-config>
+</network-security-config>
+",
+					},
 				},
 			};
 			proj.SetRuntime (runtime);
@@ -1202,6 +1202,7 @@ namespace Library1 {
 				Version = "2.0.3",
 			});
 
+			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:networkSecurityConfig=\"@xml/network_security_config\" ");
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MainActivityReplacement.cs")))
 				proj.MainActivity = sr.ReadToEnd ();
@@ -1368,23 +1369,14 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void AppWithStyleableUsageRuns ([Values] bool isRelease,	[Values] bool linkResources, [Values] bool useStringTypeMaps, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AppWithStyleableUsageRuns ([Values] bool isRelease, [Values] bool linkResources, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			// Not all combinations are valid, ignore those that aren't
-			if (runtime == AndroidRuntime.MonoVM && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is used only in CoreCLR and NativeAOT apps");
-			}
-
-			if (runtime != AndroidRuntime.MonoVM && isRelease && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is available only in Debug CoreCLR builds");
-			}
-
 			// TODO: fix this for NativeAOT
-			if (runtime == AndroidRuntime.NativeAOT && isRelease && !useStringTypeMaps) {
+			if (runtime == AndroidRuntime.NativeAOT && isRelease) {
 				// This configuration currently fails with a long stack trace, the gist of it is:
 				//
 				//  AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
@@ -1403,7 +1395,7 @@ using System.Runtime.Serialization.Json;
 				//  DOTNET  :  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
 				//  DOTNET  :  ---> System.IO
 				//  eruns_nativeaot: No implementation found for void mono.android.Runtime.propagateUncaughtException(java.lang.Thread, java.lang.Throwable) (tried Java_mono_android_Runtime_propagateUncaughtException and Java_mono_android_Runtime_propagateUncaughtException__Ljava_lang_Thread_2Ljava_lang_Throwable_2) - is the library loaded, e.g. System.loadLibrary?
-				Assert.Ignore ("NativeAOT is broken without string-based typemaps");
+				Assert.Ignore ("NativeAOT type mapping fails");
 			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -1508,15 +1500,7 @@ namespace Styleable.Library {
 
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
-			Dictionary<string, string>? environmentVariables = null;
-			if (runtime == AndroidRuntime.CoreCLR && !isRelease && useStringTypeMaps) {
-				// The variable must have content to enable string-based typemaps
-				environmentVariables = new (StringComparer.Ordinal) {
-					{"CI_TYPEMAP_DEBUG_USE_STRINGS", "yes"}
-				};
-			}
-
-			RunProjectAndAssert (proj, builder, environmentVariables: environmentVariables);
+			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
@@ -2529,12 +2513,19 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
 		}
 
-		[Test]
-		[TestCase ("run", AndroidRuntime.CoreCLR)]
-		[TestCase ("test", AndroidRuntime.CoreCLR)]
-		public void DotNetNewAndroidTest (string mode, AndroidRuntime runtime)
+		public enum MSTestPackageChannel
 		{
-			var templateName = $"DotNetNewAndroidTest_{mode}_{runtime}";
+			Stable,
+			Nightly,
+		}
+
+		[Test]
+		[TestCase ("run", MSTestPackageChannel.Nightly)]
+		[TestCase ("test", MSTestPackageChannel.Stable)]
+		[TestCase ("test", MSTestPackageChannel.Nightly)]
+		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
+		{
+			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -2543,22 +2534,21 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
-			// Override the MSTest version from the template with the version used by our build
-			var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
-			var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
-			var doc = XDocument.Load (csprojPath);
-			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
-			var msTestRef = doc.Descendants (ns + "PackageReference")
-				.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
-			Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
-			msTestRef.SetAttributeValue ("Version", msTestVersion);
-			doc.Save (csprojPath);
+			var buildParameters = new List<string> ();
 
-			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
-			var buildParameters = new List<string> {
-				$"UseMonoRuntime={useMonoRuntime}",
-				"RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json",
-			};
+			if (msTestPackageChannel == MSTestPackageChannel.Nightly) {
+				// Override the stable template version with the version used by our build.
+				var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
+				var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
+				var doc = XDocument.Load (csprojPath);
+				var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+				var msTestRef = doc.Descendants (ns + "PackageReference")
+					.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
+				Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
+				msTestRef.SetAttributeValue ("Version", msTestVersion);
+				doc.Save (csprojPath);
+				buildParameters.Add ("RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json");
+			}
 
 			// Build and assert 0 warnings
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");

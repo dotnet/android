@@ -1,0 +1,11 @@
+// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/class[@name='MyClass']/method[@name='AbstractMethod' and count(parameter)=0]"
+[Register ("AbstractMethod", "()V", "GetAbstractMethodHandler")]
+public override unsafe void AbstractMethod ()
+{
+	const string __id = "AbstractMethod.()V";
+	try {
+		_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+	} finally {
+	}
+}
+

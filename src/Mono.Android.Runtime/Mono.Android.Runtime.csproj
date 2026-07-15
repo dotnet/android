@@ -1,5 +1,4 @@
 <Project>
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
@@ -11,12 +10,22 @@
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateRepositoryUrlAttribute>false</GenerateRepositoryUrlAttribute>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
+    <IsTrimmable>true</IsTrimmable>
     <NoStdLib>true</NoStdLib>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <SignAssembly>true</SignAssembly>
+    <AssemblyTitle>Mono.Android.Runtime.dll</AssemblyTitle>
+    <Product>.NET for Android</Product>
+    <Company>Microsoft Corporation</Company>
+    <_MonoAndroidRuntimeInternalsVisibleToPublicKey>0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf16cbd2b2b47a62762f273df9cb2795ceccdf77d10bf508e69e7a362ea7a45455bbf3ac955e1f2e2814f144e5d817efc4c6502cc012df310783348304e3ae38573c6d658c234025821fda87a0be8a0d504df564e2c93b2b878925f42503e9d54dfef9f9586d9e6f38a305769587b1de01f6c0410328b2c9733db</_MonoAndroidRuntimeInternalsVisibleToPublicKey>
 
     <!-- Ignore "unused member" warnings from code that originates from Mono.CodeGeneration -->
     <NoWarn>$(NoWarn);CS0169;CS0414;CS0649</NoWarn>
@@ -43,8 +52,24 @@
     </BuildDependsOn>
   </PropertyGroup>
 
+  <Target Name="_SetGeneratedAssemblyInfoProperties"
+      DependsOnTargets="GetXAVersionInfo"
+      BeforeTargets="GetAssemblyAttributes">
+    <PropertyGroup>
+      <InformationalVersion>$(AndroidPackVersion).$(PackVersionCommitCount); git-rev-head:$(XAVersionHash); git-branch:$(XAVersionBranch)</InformationalVersion>
+      <TargetPlatformIdentifier>Android</TargetPlatformIdentifier>
+      <TargetPlatformVersion>$(AndroidApiLevel).0</TargetPlatformVersion>
+      <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel).0</SupportedOSPlatformVersion>
+    </PropertyGroup>
+  </Target>
+
   <ItemGroup>
-    <Compile Include="$(IntermediateOutputPath)AssemblyInfo.cs" />
+    <InternalsVisibleTo Include="Mono.Android" Key="$(_MonoAndroidRuntimeInternalsVisibleToPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Android.Runtime.NativeAOT" Key="$(_MonoAndroidRuntimeInternalsVisibleToPublicKey)" />
+    <InternalsVisibleTo Include="Mono.Android.NET-Tests" Key="$(_MonoAndroidRuntimeInternalsVisibleToPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\Mono.Android\Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\LogCategories.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\LogLevel.cs" />

@@ -108,10 +108,6 @@ Overridable MSBuild properties include:
     If not specified, we'll attempt to use a default based on e.g. the
     `JAVA_HOME` environment variable and other "known" directories.
 
-  * `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
-    the number of CPU cores used when **make**(1) executes. By default this uses
-    `-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
-
   * `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
     Valid values include:
 

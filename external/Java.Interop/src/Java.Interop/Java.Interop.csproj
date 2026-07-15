@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <XAConfigPath>..\..\bin\Build$(Configuration)\XAConfig.props</XAConfigPath>
+  </PropertyGroup>
+  <Import Condition="Exists ('$(XAConfigPath)')" Project="$(XAConfigPath)" />
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(ProductSnkPath)</AssemblyOriginatorKeyFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
+  <PropertyGroup>
+    <DefineConstants>INTEROP;$(JavaInteropDefineConstants)</DefineConstants>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
+    <OutputPath>$(ToolOutputFullPath)</OutputPath>
+    <DocumentationFile>$(ToolOutputFullPath)Java.Interop.xml</DocumentationFile>
+    <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
+    <Version>$(JICoreLibVersion)</Version>
+    <Standalone Condition=" '$(Standalone)' == '' ">true</Standalone>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Standalone)' == 'True' ">
+    <DefineConstants Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS;$(DefineConstants)</DefineConstants>
+    <DefineConstants Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">FEATURE_JNIENVIRONMENT_JI_PINVOKES;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Standalone)' != 'True' ">
+    <DefineConstants>FEATURE_JNIENVIRONMENT_JI_PINVOKES;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Java.Interop\JniLocationException.cs" />
+  </ItemGroup>
+  <PropertyGroup>
+    <BuildDependsOn>
+      BuildJniEnvironment_g_cs;
+      BuildInteropJar;
+      $(BuildDependsOn)
+    </BuildDependsOn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="Java.Interop\JavaPrimitiveArrays.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JavaPrimitiveArrays.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniBuiltinMarshalers.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniBuiltinMarshalers.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniPeerMembers.JniInstanceMethods_Invoke.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniMarshal.SafeInvoke.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniMarshal.SafeInvoke.cs</LastGenOutput>
+    </None>
+    <None Include="Java.Interop\JniPeerMembers.JniFields.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>JniPeerMembers.JniFields.cs</LastGenOutput>
+    </None>
+    <None Include="Documentation\Java.Interop\IJavaPeerable.xml" />
+    <None Include="Documentation\Java.Interop\JniManagedPeerStates.xml" />
+    <None Include="Documentation\Java.Interop\JniEnvironment.References.xml" />
+    <ProjectReference Include="..\..\build-tools\jnienv-gen\jnienv-gen.csproj"
+        ReferenceOutputAssembly="false"
+        SkipGetTargetFrameworkProperties="$(_JniEnvSkipGetTargetFrameworkProperties)"
+        AdditionalProperties="$(_JniEnvAdditionalProperties)"
+    />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JavaPrimitiveArrays.cs">
+      <DependentUpon>JavaPrimitiveArrays.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniBuiltinMarshalers.cs">
+      <DependentUpon>JniBuiltinMarshalers.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniPeerMembers.JniFields.cs">
+      <DependentUpon>JniPeerMembers.JniFields.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniPeerMembers.JniInstanceMethods_Invoke.cs">
+      <DependentUpon>JniPeerMembers.JniInstanceMethods_Invoke.tt</DependentUpon>
+    </Compile>
+    <Compile Condition=" '$(EnableDefaultCompileItems)' == 'true' " Update="Java.Interop\JniMarshal.SafeInvoke.cs">
+      <DependentUpon>JniMarshal.SafeInvoke.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+  <Import Project="Java.Interop.targets" />
+</Project>
