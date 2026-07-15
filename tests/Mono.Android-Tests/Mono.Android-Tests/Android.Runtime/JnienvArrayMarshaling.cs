@@ -246,10 +246,6 @@ namespace Android.RuntimeTests {
 		[Category ("NativeAOTTrimmable")]
 		public void GetArray_NullableByteArrayArray ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("Test only relevant for the trimmable typemap path.");
-			}
-
 			var values = new [] {
 				new byte? [] { 1, null, 200 },
 				new byte? [] { 255, 128 },
@@ -261,6 +257,33 @@ namespace Android.RuntimeTests {
 				Assert.AreEqual (values.Length, copy.Length);
 				for (int i = 0; i < values.Length; i++) {
 					AssertArrays ($"GetArray<byte?[]>[{i}]", copy [i], values [i]);
+				}
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetArray_NullableByteArrayArrayArray ()
+		{
+			var values = new [] {
+				new [] {
+					new byte? [] { 1, null, 200 },
+					new byte? [] { 255, 128 },
+				},
+				new [] {
+					new byte? [] { null, 42 },
+				},
+			};
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[[[Ljava/lang/Byte;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<byte?[][]> (array.Handle);
+				Assert.AreEqual (values.Length, copy.Length);
+				for (int i = 0; i < values.Length; i++) {
+					Assert.AreEqual (values [i].Length, copy [i].Length);
+					for (int j = 0; j < values [i].Length; j++) {
+						AssertArrays ($"GetArray<byte?[][]>[{i}][{j}]", copy [i][j], values [i][j]);
+					}
 				}
 			}
 		}
