@@ -971,7 +971,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>Neplatná úroveň komprese AssemblyStore {0}. Hodnota musí být od {1} do {2}.</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level

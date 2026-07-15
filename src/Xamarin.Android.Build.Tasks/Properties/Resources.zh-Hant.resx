@@ -971,7 +971,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>無效的 AssemblyStore 壓縮等級 '{0}'。值必須介於 {1} 和 {2} 之間。</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level

@@ -971,7 +971,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>Ungültiger AssemblyStore-Komprimierungsgrad „{0}“. Der Wert muss zwischen {1} und {2} liegen.</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level
