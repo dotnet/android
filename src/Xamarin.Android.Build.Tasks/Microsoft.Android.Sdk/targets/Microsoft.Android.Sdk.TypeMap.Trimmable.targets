@@ -141,13 +141,15 @@
            merger path; manifestmerger.jar merges these downstream in the _ManifestMerger target. -->
       <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
 
-      <!-- When a pre-generated Mono.Android typemap is shipped, index Mono.Android for resolution
-           but don't rescan it: pass it as a pre-generated assembly so the generated root references
-           the shipped _Mono.Android.TypeMap under Java.Lang.Object instead. -->
+      <!-- When a pre-generated framework typemap set is shipped, index Mono.Android and Java.Interop
+           for resolution but don't rescan them: pass them as pre-generated assemblies so the generated
+           root references the shipped _Mono.Android.TypeMap / _Java.Interop.TypeMap under
+           Java.Lang.Object instead. Both are pre-generated together so their cross-assembly aliases
+           (e.g. java/lang/Object) are coordinated rather than colliding in the merged universe. -->
       <_PreGeneratedTypeMapAssemblyInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' "
           Include="@(_TypeMapInputAssemblies)" KeepDuplicates="false" />
       <_PreGeneratedTypeMapAssemblyInput Remove="@(_PreGeneratedTypeMapAssemblyInput)"
-          Condition=" '%(Filename)' != 'Mono.Android' " />
+          Condition=" '%(Filename)' != 'Mono.Android' and '%(Filename)' != 'Java.Interop' " />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
@@ -245,10 +247,11 @@
     <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
       <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesFromList" />
     </ReadLinesFromFile>
-    <!-- Include the pre-generated Mono.Android typemap so it is linked/published and loadable at
-         runtime (the generated root references it via TypeMapAssemblyTarget<Java.Lang.Object>). -->
+    <!-- Include the pre-generated framework typemaps (Mono.Android + Java.Interop) so they are
+         linked/published and loadable at runtime (the generated root references them via
+         TypeMapAssemblyTarget<Java.Lang.Object>). -->
     <ItemGroup Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
-      <_GeneratedTypeMapAssembliesFromList Include="$(_PreGeneratedMonoAndroidTypeMapAssembly)" />
+      <_GeneratedTypeMapAssembliesFromList Include="$(_PreGeneratedTypeMapDir)*.TypeMap.dll" />
     </ItemGroup>
   </Target>
 

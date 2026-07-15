@@ -25,14 +25,19 @@
 
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
       BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
-      Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
+      Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
       Outputs="$(_PreBuiltTypeMapAssembly)">
     <ItemGroup>
+      <!-- Scan Mono.Android and Java.Interop TOGETHER so their cross-assembly aliases (e.g.
+           java/lang/Object mapped by both Java.Lang.Object and Java.Interop.JavaObject) are
+           coordinated into a single primary + aliases, instead of colliding as duplicate keys in
+           the merged Java.Lang.Object universe at runtime. -->
       <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
-      <!-- Reference-only framework assemblies needed to resolve Mono.Android's base types.
+      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
+      <!-- Reference-only framework assemblies needed to resolve base types.
            These are NOT scanned for peers; only @(_PreBuiltTypeMapInput) is. -->
       <_PreBuiltTypeMapFramework Include="$(_MonoAndroidNETDefaultOutDir)*.dll"
-          Exclude="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
+          Exclude="@(_PreBuiltTypeMapInput)" />
     </ItemGroup>
     <MakeDir Directories="$(_PreBuiltTypeMapOutputDir);$(_PreBuiltTypeMapJavaDir)" />
     <GenerateTrimmableTypeMap
@@ -44,6 +49,7 @@
         AcwMapOutputFile="$(_PreBuiltTypeMapAcwMap)"
         TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
         ForceSharedTypemapUniverse="true"
+        MaxArrayRank="3"
         GenerateRootAssembly="false" />
   </Target>
 
@@ -79,7 +85,8 @@
       BeforeTargets="_GenerateXASdkContent"
       DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMap;_CompilePreBuiltMonoAndroidTypeMapJcwJar">
     <ItemGroup>
-      <FilesToPackage Include="$(_PreBuiltTypeMapAssembly)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
+      <_PreBuiltTypeMapAllAssemblies Include="$(_PreBuiltTypeMapOutputDir)*.TypeMap.dll" />
+      <FilesToPackage Include="@(_PreBuiltTypeMapAllAssemblies)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
       <FilesToPackage Include="$(_PreBuiltTypeMapJcwJar)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
       <FilesToPackage Include="$(_PreBuiltTypeMapAcwMap)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
     </ItemGroup>

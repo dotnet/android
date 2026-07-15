@@ -142,6 +142,9 @@ public sealed class RootTypeMapAssemblyGenerator
 				pe.Metadata.GetOrAddString ("Java.Lang"),
 				pe.Metadata.GetOrAddString ("Object"));
 			EmitSharedUniverseAssemblyTargetAttributes (pe, javaLangObjectHandle, sharedFrameworkTypeMapNames!);
+			// The pre-generated framework typemaps also emit __ArrayMapRank{N} array universes; the
+			// app-build root must reference those so framework array types resolve at runtime.
+			EmitArrayAssemblyTargetAttributes (pe, sharedFrameworkTypeMapNames!, maxArrayRank);
 		}
 
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
