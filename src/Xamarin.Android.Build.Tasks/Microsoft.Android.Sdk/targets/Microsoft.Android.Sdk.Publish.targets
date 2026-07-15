@@ -39,6 +39,7 @@ This file contains the implementation for 'dotnet publish'.
       <_ApplicationArtifactForPublish Include="@(ApplicationArtifact)" />
       <_ApplicationArtifactPublishCopy
           Include="@(_ApplicationArtifactForPublish->'$(PublishDir)%(Filename)%(Extension)')">
+        <!-- Keep this metadata in sync with _CollectApplicationArtifacts. -->
         <PackageFormat>%(_ApplicationArtifactForPublish.PackageFormat)</PackageFormat>
         <Signed>%(_ApplicationArtifactForPublish.Signed)</Signed>
         <PackageId>%(_ApplicationArtifactForPublish.PackageId)</PackageId>

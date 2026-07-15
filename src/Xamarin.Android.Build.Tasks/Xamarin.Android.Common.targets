@@ -2742,7 +2742,7 @@ because xbuild doesn't support framework reference assemblies.
     </ApplicationArtifact>
     <ApplicationArtifact
         Update="@(ApplicationArtifact)">
-      <PackageId>$(_ApplicationArtifactApplicationId)</PackageId>
+      <PackageId>$([MSBuild]::ValueOrDefault('$(_ApplicationArtifactApplicationId)', '$(_AndroidPackage)'))</PackageId>
       <ApplicationId>$(_ApplicationArtifactApplicationId)</ApplicationId>
       <ApplicationTitle>$(_ApplicationArtifactApplicationTitle)</ApplicationTitle>
       <ApplicationName>$(_ApplicationArtifactApplicationTitle)</ApplicationName>
