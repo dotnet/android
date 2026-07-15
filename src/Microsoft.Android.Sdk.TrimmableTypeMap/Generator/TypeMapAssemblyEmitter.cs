@@ -78,7 +78,7 @@ sealed class TypeMapAssemblyEmitter
 
 	AssemblyReferenceHandle _javaInteropRef;
 
-	TypeReferenceHandle _javaPeerProxyNonGenericRef;
+	TypeReferenceHandle _javaPeerProxyRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
@@ -271,7 +271,7 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeReferences ()
 	{
 		var metadata = _pe.Metadata;
-		_javaPeerProxyNonGenericRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
@@ -414,17 +414,17 @@ sealed class TypeMapAssemblyEmitter
 				}));
 
 		// JavaPeerProxy.ShouldSkipActivation(IntPtr) -> bool (static method)
-		_shouldSkipActivationRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "ShouldSkipActivation",
+		_shouldSkipActivationRef = _pe.AddMemberRef (_javaPeerProxyRef, "ShouldSkipActivation",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Boolean (),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
 
-		_getActivationPeerRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "GetActivationPeer",
+		_getActivationPeerRef = _pe.AddMemberRef (_javaPeerProxyRef, "GetActivationPeer",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Type ().Type (_iJavaPeerableRef, false),
 				p => { p.AddParameter ().Type ().IntPtr (); }));
 
-		_setActivationPeerReferenceRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "SetActivationPeerReference",
+		_setActivationPeerReferenceRef = _pe.AddMemberRef (_javaPeerProxyRef, "SetActivationPeerReference",
 			sig => sig.MethodSignature ().Parameters (2,
 				rt => rt.Void (),
 				p => {
@@ -432,7 +432,7 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().IntPtr ();
 				}));
 
-		_markActivationPeerReplaceableRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, "MarkActivationPeerReplaceable",
+		_markActivationPeerReplaceableRef = _pe.AddMemberRef (_javaPeerProxyRef, "MarkActivationPeerReplaceable",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().IntPtr ()));
@@ -660,13 +660,13 @@ sealed class TypeMapAssemblyEmitter
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
-		// All proxies derive from the non-generic `JavaPeerProxy` abstract base, which takes
-		// `targetType` as a ctor parameter. This keeps TargetType correct for every shape:
-		// concrete peers, open generic definitions (whose T isn't available via the
-		// TypeMapLazyDictionary loader), and interfaces (which have no constructors). Peers are
-		// activated from their generated CreateInstance / InvokerType, never by reflecting over T.
-		var proxyBaseType = (EntityHandle) _javaPeerProxyNonGenericRef;
-		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
+		// Every proxy derives from the `JavaPeerProxy` abstract base, which takes `targetType`
+		// as a ctor parameter. This keeps TargetType correct for every shape: concrete peers,
+		// open generic definitions (whose T isn't available via the TypeMapLazyDictionary loader),
+		// and interfaces (which have no constructors). Peers are activated from their generated
+		// CreateInstance / InvokerType, never by reflecting over the target type.
+		var proxyBaseType = (EntityHandle) _javaPeerProxyRef;
+		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
