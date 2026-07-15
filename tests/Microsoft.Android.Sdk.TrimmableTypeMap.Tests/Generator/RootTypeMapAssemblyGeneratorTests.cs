@@ -12,11 +12,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 {
 
-	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null, int maxArrayRank = 0)
+	static MemoryStream GenerateRootAssembly (IReadOnlyList<string> perAssemblyNames, bool useSharedTypemapUniverse = false, string? assemblyName = null, int maxArrayRank = 0, IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
 		var stream = new MemoryStream ();
 		var generator = new RootTypeMapAssemblyGenerator (new Version (11, 0, 0, 0));
-		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName, maxArrayRank: maxArrayRank);
+		generator.Generate (perAssemblyNames, useSharedTypemapUniverse, stream, assemblyName, maxArrayRank: maxArrayRank, sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames);
 		stream.Position = 0;
 		return stream;
 	}
@@ -178,6 +178,58 @@ public class RootTypeMapAssemblyGeneratorTests : FixtureTestBase
 			("_App.TypeMap", "Mono.Android"),
 			("_Mono.Android.TypeMap", "Mono.Android"),
 		}, targetAttributes);
+	}
+
+	// Issue #10792: a pre-generated framework typemap (e.g. _Mono.Android.TypeMap, built at SDK
+	// build time) always uses Java.Lang.Object as its universe anchor. The root must reference it
+	// under that anchor (resolution scope "Mono.Android") regardless of the app's universe mode.
+
+	[Fact]
+	public void Generate_MergedMode_SharedFrameworkTypeMap_ReferencedUnderJavaLangObject ()
+	{
+		using var stream = GenerateRootAssembly (
+			[ "_App.TypeMap" ],
+			useSharedTypemapUniverse: true,
+			sharedFrameworkTypeMapNames: [ "_Mono.Android.TypeMap" ]);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargets (reader);
+
+		// Both the app typemap (shared mode) and the framework typemap anchor on Java.Lang.Object.
+		Assert.Contains (("_App.TypeMap", "Mono.Android"), targetAttributes);
+		Assert.Contains (("_Mono.Android.TypeMap", "Mono.Android"), targetAttributes);
+	}
+
+	[Fact]
+	public void Generate_AggregateMode_SharedFrameworkTypeMap_AppUsesOwnAnchorFrameworkUsesJavaLangObject ()
+	{
+		using var stream = GenerateRootAssembly (
+			[ "_App.TypeMap" ],
+			useSharedTypemapUniverse: false,
+			sharedFrameworkTypeMapNames: [ "_Mono.Android.TypeMap" ]);
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var targetAttributes = GetTypeMapAssemblyTargetAttributeTargets (reader);
+
+		// App typemap keeps its own per-assembly __TypeMapAnchor universe; the pre-generated
+		// framework typemap is referenced under Java.Lang.Object (scope "Mono.Android").
+		Assert.Contains (("_App.TypeMap", "_App.TypeMap"), targetAttributes);
+		Assert.Contains (("_Mono.Android.TypeMap", "Mono.Android"), targetAttributes);
+	}
+
+	[Theory]
+	[InlineData (true)]
+	[InlineData (false)]
+	public void Generate_WithSharedFrameworkTypeMap_ProducesValidPE (bool useSharedTypemapUniverse)
+	{
+		using var stream = GenerateRootAssembly (
+			[ "_App.TypeMap" ],
+			useSharedTypemapUniverse,
+			sharedFrameworkTypeMapNames: [ "_Mono.Android.TypeMap" ]);
+		using var pe = new PEReader (stream);
+		Assert.True (pe.HasMetadata);
 	}
 
 	[Theory]

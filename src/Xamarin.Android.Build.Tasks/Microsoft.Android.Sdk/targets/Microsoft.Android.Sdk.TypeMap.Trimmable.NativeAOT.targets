@@ -197,14 +197,40 @@
     </ItemGroup>
   </Target>
 
+  <!-- When the pre-generated Mono.Android typemap is used, Mono.Android is excluded from the app
+       scan so its ACW entries are missing from acw-map.txt. Build a SEPARATE merged map (app map +
+       pre-built mono.android-acw-map.txt) for the keep-rule generator, so R8 keeps the pre-built
+       JCWs instead of shrinking them out of classes.dex. Regenerated wholesale (Overwrite="true")
+       from both inputs each time they change — never appended in place — so it is deterministic and
+       leaves the app's acw-map.txt untouched. -->
+  <Target Name="_MergePreGeneratedMonoAndroidAcwMapForKeepRules"
+      Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Inputs="$(IntermediateOutputPath)acw-map.txt;$(_PreGeneratedMonoAndroidTypeMapAcwMap)"
+      Outputs="$(_TrimmableTypeMapKeepRulesAcwMapFile)">
+    <ReadLinesFromFile File="$(IntermediateOutputPath)acw-map.txt">
+      <Output TaskParameter="Lines" ItemName="_MergedKeepRulesAcwMapLines" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$(_PreGeneratedMonoAndroidTypeMapAcwMap)" Condition=" Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') ">
+      <Output TaskParameter="Lines" ItemName="_MergedKeepRulesAcwMapLines" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile
+        File="$(_TrimmableTypeMapKeepRulesAcwMapFile)"
+        Lines="@(_MergedKeepRulesAcwMapLines)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_TrimmableTypeMapKeepRulesAcwMapFile)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_GenerateTrimmableTypeMapProguardConfiguration"
-      DependsOnTargets="_WriteTrimmableNativeAotProguardConfigurationInputs;_CollectTrimmableNativeAotDgmlFiles"
+      DependsOnTargets="_WriteTrimmableNativeAotProguardConfigurationInputs;_CollectTrimmableNativeAotDgmlFiles;_MergePreGeneratedMonoAndroidAcwMapForKeepRules"
       Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="$(_TrimmableNativeAotProguardConfigurationInputsStamp);@(_TrimmableNativeAotDgmlFiles);$(IntermediateOutputPath)acw-map.txt"
+      Inputs="$(_TrimmableNativeAotProguardConfigurationInputsStamp);@(_TrimmableNativeAotDgmlFiles);$(_TrimmableTypeMapKeepRulesAcwMapFile)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateNativeAotProguardConfiguration
         NativeAotDgmlFiles="@(_TrimmableNativeAotDgmlFiles)"
-        AcwMapFile="$(IntermediateOutputPath)acw-map.txt"
+        AcwMapFile="$(_TrimmableTypeMapKeepRulesAcwMapFile)"
         TrimJavaCallableWrappers="$(_AndroidTrimmableTypemapTrimJavaCode)"
         OutputFile="$(_ProguardProjectConfiguration)" />
     <ItemGroup>

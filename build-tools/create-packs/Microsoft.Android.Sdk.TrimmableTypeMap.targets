@@ -1,0 +1,105 @@
+<!--
+  Pre-generates the trimmable type map for Mono.Android at SDK build time (issue #10792).
+
+  App builds otherwise rescan the ~8000 Mono.Android types on every (Debug) build. Instead we
+  scan Mono.Android once here and ship the resulting _Mono.Android.TypeMap.dll (and, later, the
+  Java Callable Wrapper jar) in the SDK pack. The typemap always anchors on Java.Lang.Object
+  (ForceSharedTypemapUniverse=true) so a single artifact serves both app-build universe modes:
+  merged (Release) and aggregate (Debug). The root _Microsoft.Android.TypeMaps assembly is NOT
+  generated here (GenerateRootAssembly=false) — the app build emits it and references this
+  pre-generated typemap under Java.Lang.Object.
+-->
+<Project>
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" />
+
+  <PropertyGroup>
+    <_PreBuiltTypeMapPackSubDir>data\prebuilt-typemap</_PreBuiltTypeMapPackSubDir>
+    <_PreBuiltTypeMapOutputDir>$(MicrosoftAndroidSdkPackDir)$(_PreBuiltTypeMapPackSubDir)\</_PreBuiltTypeMapOutputDir>
+    <!-- Intermediate (not packaged): generated JCW .java and compiled .class files. -->
+    <_PreBuiltTypeMapIntDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'obj', 'prebuilt-typemap'))</_PreBuiltTypeMapIntDir>
+    <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapIntDir)java\</_PreBuiltTypeMapJavaDir>
+    <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
+    <_PreBuiltTypeMapJavaInteropAssembly>$(_PreBuiltTypeMapOutputDir)_Java.Interop.TypeMap.dll</_PreBuiltTypeMapJavaInteropAssembly>
+    <_PreBuiltTypeMapAcwMap>$(_PreBuiltTypeMapOutputDir)mono.android-acw-map.txt</_PreBuiltTypeMapAcwMap>
+    <!--
+      Array-map rank baked into the pre-generated framework typemaps. This MUST match the app
+      build's effective MaxArrayRank when it consumes these artifacts, otherwise array entries land
+      in different universes (main vs __ArrayMapRank{N}) and the runtime throws BadImageFormatException.
+      The app-build value comes from _AndroidTrimmableTypeMapMaxArrayRank (see
+      Microsoft.Android.Sdk.TypeMap.Trimmable.targets), whose NativeAOT default is 3; pre-generation
+      only runs for that shape, so we hardcode the same value here.
+    -->
+    <_PreBuiltTypeMapMaxArrayRank>3</_PreBuiltTypeMapMaxArrayRank>
+  </PropertyGroup>
+
+  <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
+      BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
+      Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
+      Outputs="$(_PreBuiltTypeMapAssembly);$(_PreBuiltTypeMapJavaInteropAssembly)">
+    <ItemGroup>
+      <!-- Scan Mono.Android and Java.Interop TOGETHER so their cross-assembly aliases (e.g.
+           java/lang/Object mapped by both Java.Lang.Object and Java.Interop.JavaObject) are
+           coordinated into a single primary + aliases, instead of colliding as duplicate keys in
+           the merged Java.Lang.Object universe at runtime. -->
+      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll" />
+      <_PreBuiltTypeMapInput Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll" />
+      <!-- Reference-only framework assemblies needed to resolve base types.
+           These are NOT scanned for peers; only @(_PreBuiltTypeMapInput) is. -->
+      <_PreBuiltTypeMapFramework Include="$(_MonoAndroidNETDefaultOutDir)*.dll"
+          Exclude="@(_PreBuiltTypeMapInput)" />
+    </ItemGroup>
+    <MakeDir Directories="$(_PreBuiltTypeMapOutputDir);$(_PreBuiltTypeMapJavaDir)" />
+    <GenerateTrimmableTypeMap
+        ResolvedAssemblies="@(_PreBuiltTypeMapInput)"
+        ResolvedFrameworkAssemblies="@(_PreBuiltTypeMapFramework)"
+        FrameworkAssemblyNames="@(_PreBuiltTypeMapFramework->'%(Filename)')"
+        OutputDirectory="$(_PreBuiltTypeMapOutputDir)"
+        JavaSourceOutputDirectory="$(_PreBuiltTypeMapJavaDir)"
+        AcwMapOutputFile="$(_PreBuiltTypeMapAcwMap)"
+        TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
+        ForceSharedTypemapUniverse="true"
+        MaxArrayRank="$(_PreBuiltTypeMapMaxArrayRank)"
+        GenerateRootAssembly="false" />
+  </Target>
+
+  <PropertyGroup>
+    <_PreBuiltTypeMapJcwJar>$(_PreBuiltTypeMapOutputDir)mono.android-typemaps.jar</_PreBuiltTypeMapJcwJar>
+    <_PreBuiltTypeMapJcwClassesDir>$(_PreBuiltTypeMapIntDir)jcw-classes\</_PreBuiltTypeMapJcwClassesDir>
+    <_PreBuiltTypeMapJcwSourceList>$(_PreBuiltTypeMapIntDir)jcw-sources.txt</_PreBuiltTypeMapJcwSourceList>
+    <_PreBuiltTypeMapAndroidJar>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\android.jar</_PreBuiltTypeMapAndroidJar>
+    <_PreBuiltTypeMapMonoAndroidJar>$(_MonoAndroidNETDefaultOutDir)mono.android.jar</_PreBuiltTypeMapMonoAndroidJar>
+    <_PreBuiltTypeMapRuntimeJar>$(MicrosoftAndroidSdkOutDir)java_runtime.jar</_PreBuiltTypeMapRuntimeJar>
+  </PropertyGroup>
+
+  <!-- Compile the pre-generated Java Callable Wrappers into a jar shipped in the pack. The app
+       build adds this jar to its dex inputs instead of re-generating and re-compiling the
+       Mono.Android JCWs. Classpath mirrors build-tools/scripts/JavaCallableWrappers.targets:
+       android.jar + mono.android.jar + java_runtime.jar. -->
+  <Target Name="_CompilePreBuiltMonoAndroidTypeMapJcwJar"
+      BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
+      DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMap"
+      Inputs="$(_PreBuiltTypeMapAssembly)"
+      Outputs="$(_PreBuiltTypeMapJcwJar)">
+    <ItemGroup>
+      <_PreBuiltTypeMapJavaFile Include="$(_PreBuiltTypeMapJavaDir)**\*.java" />
+    </ItemGroup>
+    <RemoveDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
+    <MakeDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
+    <WriteLinesToFile File="$(_PreBuiltTypeMapJcwSourceList)" Lines="@(_PreBuiltTypeMapJavaFile)" Overwrite="true" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source $(JavacSourceVersion) -target $(JavacTargetVersion) -nowarn -d &quot;$(_PreBuiltTypeMapJcwClassesDir.TrimEnd('\'))&quot; -classpath &quot;$(_PreBuiltTypeMapAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapMonoAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapRuntimeJar)&quot; @&quot;$(_PreBuiltTypeMapJcwSourceList)&quot;" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(_PreBuiltTypeMapJcwJar)&quot; -C &quot;$(_PreBuiltTypeMapJcwClassesDir.TrimEnd('\'))&quot; ." />
+  </Target>
+
+  <Target Name="_AddPreBuiltMonoAndroidTypeMapToPackage"
+      BeforeTargets="_GenerateXASdkContent"
+      DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMap;_CompilePreBuiltMonoAndroidTypeMapJcwJar">
+    <ItemGroup>
+      <_PreBuiltTypeMapAllAssemblies Include="$(_PreBuiltTypeMapOutputDir)*.TypeMap.dll" />
+      <FilesToPackage Include="@(_PreBuiltTypeMapAllAssemblies)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
+      <FilesToPackage Include="$(_PreBuiltTypeMapJcwJar)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
+      <FilesToPackage Include="$(_PreBuiltTypeMapAcwMap)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

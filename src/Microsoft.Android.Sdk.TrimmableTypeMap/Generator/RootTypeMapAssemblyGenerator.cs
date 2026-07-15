@@ -80,7 +80,16 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// sentinels. Must match the value passed to the per-assembly generators. 0 means
 	/// no array sentinels were emitted; the loader passes <c>null</c> for array maps.
 	/// </param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, int maxArrayRank = 0)
+	/// <param name="sharedFrameworkTypeMapNames">
+	/// Names of pre-generated framework per-assembly typemaps (e.g. <c>_Mono.Android.TypeMap</c>,
+	/// produced at SDK build time, issue #10792) that always use <c>Java.Lang.Object</c> as their
+	/// universe anchor regardless of <paramref name="useSharedTypemapUniverse"/>. They are emitted as
+	/// <c>[assembly: TypeMapAssemblyTarget&lt;Java.Lang.Object&gt;("name")]</c> so the runtime loads
+	/// them into the <c>Java.Lang.Object</c> universe: in shared mode they merge into the single
+	/// app universe; in aggregate mode the loader adds the <c>Java.Lang.Object</c> universe alongside
+	/// the app's per-assembly universes.
+	/// </param>
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, int maxArrayRank = 0, IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -125,6 +134,19 @@ public sealed class RootTypeMapAssemblyGenerator
 		}
 		EmitArrayAssemblyTargetAttributes (pe, perAssemblyTypeMapNames, maxArrayRank);
 
+		// Pre-generated framework typemaps (e.g. _Mono.Android.TypeMap) always live in the
+		// Java.Lang.Object universe, so reference them under that anchor regardless of mode.
+		bool hasSharedFrameworkUniverse = sharedFrameworkTypeMapNames is { Count: > 0 };
+		if (hasSharedFrameworkUniverse) {
+			var javaLangObjectHandle = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+				pe.Metadata.GetOrAddString ("Java.Lang"),
+				pe.Metadata.GetOrAddString ("Object"));
+			EmitSharedUniverseAssemblyTargetAttributes (pe, javaLangObjectHandle, sharedFrameworkTypeMapNames!);
+			// The pre-generated framework typemaps also emit __ArrayMapRank{N} array universes; the
+			// app-build root must reference those so framework array types resolve at runtime.
+			EmitArrayAssemblyTargetAttributes (pe, sharedFrameworkTypeMapNames!, maxArrayRank);
+		}
+
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
 		// in each per-assembly typemap DLL when aggregate universes or array maps are used).
@@ -135,7 +157,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
 		// Emit TypeMapLoader class with Initialize() method
-		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, maxArrayRank, assemblyName);
+		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, maxArrayRank, assemblyName, hasSharedFrameworkUniverse);
 
 		pe.WritePE (stream);
 	}
@@ -201,7 +223,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
 	}
 
-	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, int maxArrayRank, string assemblyName)
+	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, int maxArrayRank, string assemblyName, bool hasSharedFrameworkUniverse = false)
 	{
 		var metadata = pe.Metadata;
 
@@ -240,6 +262,9 @@ public sealed class RootTypeMapAssemblyGenerator
 		var externalDictArrayTypeSpec = MakeIReadOnlyDictArrayTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 
 		if (useSharedTypemapUniverse) {
+			// Single Java.Lang.Object universe. Pre-generated framework typemaps (if any) also
+			// anchor on Java.Lang.Object, so GetOrCreateExternalTypeMapping<Java.Lang.Object>()
+			// already merges them in via their TypeMapAssemblyTarget attributes — no extra universe.
 			if (maxArrayRank > 0) {
 				var initializeRef = AddInitializeSingleWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 				EmitInitializeWithSingleTypeMap (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef,
@@ -251,13 +276,21 @@ public sealed class RootTypeMapAssemblyGenerator
 		} else {
 			var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 			if (maxArrayRank > 0) {
+				if (hasSharedFrameworkUniverse) {
+					// Debug + array maps (NativeAOT) combined with a pre-generated shared framework
+					// universe is not yet wired: the array-map aggregation is built per-assembly and
+					// would need an extra Java.Lang.Object array-map slot. Tracked by
+					// https://github.com/dotnet/android/issues/12128. The app build avoids reaching
+					// here by falling back to scanning the framework assemblies for this combination.
+					throw new NotSupportedException ("Pre-generated framework typemaps are not yet supported together with aggregate array maps (maxArrayRank > 0). See https://github.com/dotnet/android/issues/12128.");
+				}
 				var initializeRef = AddInitializeAggregateWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 				EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
 					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, externalDictArrayTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, maxArrayRank, assemblyName);
 			} else {
 				var initializeRef = AddInitializeAggregateNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 				EmitInitializeWithAggregateTypeMapNoArrays (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
-					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName);
+					initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName, hasSharedFrameworkUniverse);
 			}
 		}
 	}
@@ -348,18 +381,30 @@ public sealed class RootTypeMapAssemblyGenerator
 		MemberReferenceHandle initializeRef,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle proxyDictTypeSpec,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef,
-		string assemblyName)
+		string assemblyName,
+		bool hasSharedFrameworkUniverse = false)
 	{
-		var count = perAssemblyTypeMapNames.Count;
+		// When a pre-generated framework typemap is present (e.g. _Mono.Android.TypeMap), it lives in
+		// the Java.Lang.Object universe. Emit it as universe [0] (via
+		// GetOrCreate*TypeMapping<Java.Lang.Object>()), followed by the app's per-assembly universes.
+		var count = perAssemblyTypeMapNames.Count + (hasSharedFrameworkUniverse ? 1 : 0);
 
 		var getExternalSpecs = new EntityHandle [count];
 		var getProxySpecs = new EntityHandle [count];
-		for (int i = 0; i < count; i++) {
+		int offset = 0;
+		if (hasSharedFrameworkUniverse) {
+			var javaLangObjectRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+				pe.Metadata.GetOrAddString ("Java.Lang"), pe.Metadata.GetOrAddString ("Object"));
+			getExternalSpecs [0] = MakeGenericMethodSpec (pe, getExternalMemberRef, javaLangObjectRef);
+			getProxySpecs [0] = MakeGenericMethodSpec (pe, getProxyMemberRef, javaLangObjectRef);
+			offset = 1;
+		}
+		for (int i = 0; i < perAssemblyTypeMapNames.Count; i++) {
 			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
 			var perAsmAnchorRef = pe.Metadata.AddTypeReference (asmRef,
 				default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
-			getExternalSpecs [i] = MakeGenericMethodSpec (pe, getExternalMemberRef, perAsmAnchorRef);
-			getProxySpecs [i] = MakeGenericMethodSpec (pe, getProxyMemberRef, perAsmAnchorRef);
+			getExternalSpecs [offset + i] = MakeGenericMethodSpec (pe, getExternalMemberRef, perAsmAnchorRef);
+			getProxySpecs [offset + i] = MakeGenericMethodSpec (pe, getProxyMemberRef, perAsmAnchorRef);
 		}
 
 		pe.EmitBody ("Initialize",

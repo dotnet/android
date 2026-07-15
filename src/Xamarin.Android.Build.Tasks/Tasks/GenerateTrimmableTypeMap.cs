@@ -113,6 +113,24 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
+
+	// When false, the per-assembly typemap DLLs (and JCWs) are emitted but the root
+	// _Microsoft.Android.TypeMaps assembly is not. Used for SDK-build-time pre-generation of
+	// framework typemaps (e.g. Mono.Android, issue #10792); the app build emits the root, which
+	// references the pre-generated per-assembly typemaps alongside the app's own.
+	public bool GenerateRootAssembly { get; set; } = true;
+
+	// When true, forces the shared (Java.Lang.Object) typemap universe regardless of Debug.
+	// Set for SDK-build-time pre-generation of framework typemaps (issue #10792) so they always
+	// anchor on Java.Lang.Object and can be consumed by both app-build universe modes.
+	public bool ForceSharedTypemapUniverse { get; set; }
+
+	// Framework assemblies whose typemap is pre-generated at SDK build time (issue #10792), e.g.
+	// Mono.Android. On the app build these are indexed for base-type resolution but NOT scanned for
+	// peers; instead their pre-generated per-assembly typemap (_<Name>.TypeMap) is referenced by the
+	// generated root assembly under the Java.Lang.Object universe.
+	public ITaskItem [] PreGeneratedTypeMapAssemblies { get; set; } = [];
+
 	public bool CleanJavaSourceOutputDirectory { get; set; }
 
 	[Output]
@@ -130,11 +148,21 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var frameworkAssemblyPaths = new HashSet<string> (
 			ResolvedFrameworkAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
 			StringComparer.OrdinalIgnoreCase);
+		// Assemblies whose typemap is pre-generated: index them for resolution but don't scan for
+		// peers, and reference their pre-generated _<Name>.TypeMap from the root under Java.Lang.Object.
+		var preGeneratedAssemblyPaths = new HashSet<string> (
+			PreGeneratedTypeMapAssemblies.Select (i => Path.GetFullPath (i.ItemSpec)),
+			StringComparer.OrdinalIgnoreCase);
+		var sharedFrameworkTypeMapNames = PreGeneratedTypeMapAssemblies
+			.Select (i => $"_{Path.GetFileNameWithoutExtension (i.ItemSpec)}.TypeMap")
+			.Distinct (StringComparer.Ordinal)
+			.ToList ();
 		var assemblyInputs = ResolvedAssemblies
 			.GroupBy (i => Path.GetFullPath (i.ItemSpec), StringComparer.OrdinalIgnoreCase)
 			.Select (g => (
 				Path: g.Key,
-				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem)))
+				IsFrameworkAssembly: frameworkAssemblyPaths.Contains (g.Key) || g.Any (IsFrameworkAssemblyItem),
+				ScanForPeers: !preGeneratedAssemblyPaths.Contains (g.Key)))
 			.ToList ();
 		var frameworkAssemblyNames = new HashSet<string> (DefaultFrameworkAssemblyNames, StringComparer.OrdinalIgnoreCase);
 		foreach (var assemblyName in FrameworkAssemblyNames) {
@@ -169,12 +197,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		var assemblies = new List<AssemblyInput> ();
 		TrimmableTypeMapResult? result = null;
 		try {
-			foreach (var (path, isFrameworkAssembly) in assemblyInputs) {
+			foreach (var (path, isFrameworkAssembly, scanForPeers) in assemblyInputs) {
 				var peReader = new PEReader (File.OpenRead (path));
 				peReaders.Add (peReader);
 				var mdReader = peReader.GetMetadataReader ();
 				var assemblyName = mdReader.GetString (mdReader.GetAssemblyDefinition ().Name);
-				assemblies.Add (new AssemblyInput (assemblyName, path, peReader));
+				assemblies.Add (new AssemblyInput (assemblyName, path, peReader, scanForPeers));
 				if (isFrameworkAssembly) {
 					frameworkAssemblyNames.Add (assemblyName);
 				}
@@ -210,12 +238,14 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				assemblies,
 				systemRuntimeVersion,
 				frameworkAssemblyNames,
-				useSharedTypemapUniverse: !Debug,
+				useSharedTypemapUniverse: ForceSharedTypemapUniverse || !Debug,
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
 				maxArrayRank: MaxArrayRank,
-				generateTypeMapAssemblies: GenerateTypeMapAssemblies);
+				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
+				generateRootAssembly: GenerateRootAssembly,
+				sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames);
 
 			if (GenerateTypeMapAssemblies) {
 				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
