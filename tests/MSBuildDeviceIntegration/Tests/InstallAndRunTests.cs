@@ -704,9 +704,18 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
 			string cacheFileToCorrupt = cacheFiles.First ();
+			string ValidFileHash () => RunAdbCommand (
+				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
+			).Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault () ?? "";
+
+			string validHash = ValidFileHash ();
+			Assert.That (validHash, Is.Not.Empty, $"Should be able to hash the persisted cache file '{cacheFileToCorrupt}'.");
+
 			RunAdbCommand (
 				$"shell run-as {app.PackageName} dd if=/dev/zero of={cacheFileToCorrupt} bs=1 count=1 conv=notrunc"
 			);
+			Assert.That (ValidFileHash (), Is.Not.EqualTo (validHash), "Corrupting the cache file should change its contents.");
+
 			ClearAdbLogcat ();
 			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
 			Assert.IsTrue (
@@ -718,6 +727,16 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				),
 				"Second launch should succeed."
 			);
+
+			// A corrupted entry must be rejected (footer hash mismatch) and re-decompressed, which
+			// re-persists a byte-identical file. Verify the *exact* corrupted file is healed rather
+			// than merely checking that some other valid entry is still mapped.
+			bool rewritten = false;
+			for (int attempt = 0; attempt < 40 && !rewritten; attempt++) {
+				Thread.Sleep (250);
+				rewritten = ValidFileHash () == validHash;
+			}
+			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
 
 			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
 				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);

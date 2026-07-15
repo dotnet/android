@@ -6,6 +6,7 @@
 #include <mutex>
 #include <string>
 
+#include <dirent.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/mman.h>
@@ -253,6 +254,32 @@ namespace {
 			return true;
 		}
 
+		// Best-effort removal of staging files left behind by a previous process whose writer was
+		// killed (e.g. by Android) between creating a `.tmp.<pid>` file and renaming it into place.
+		// Such files are never reclaimed otherwise and would accumulate outside the queue bound.
+		void remove_stale_temp_files (std::string const& dir) noexcept
+		{
+			DIR *handle = opendir (dir.c_str ());
+			if (handle == nullptr) {
+				return;
+			}
+
+			std::string prefix = dir;
+			prefix.append ("/");
+			for (dirent *entry = readdir (handle); entry != nullptr; entry = readdir (handle)) {
+				std::string_view name { entry->d_name };
+				if (name.find (".tmp."sv) == std::string_view::npos) {
+					continue;
+				}
+
+				std::string path = prefix;
+				path.append (name);
+				unlink (path.c_str ());
+			}
+
+			closedir (handle);
+		}
+
 		void ensure_initialized (uint64_t assembly_store_id) noexcept
 		{
 			if (initialized) {
@@ -301,6 +328,8 @@ namespace {
 			if (!ensure_directory (cache_dir)) {
 				return;
 			}
+
+			remove_stale_temp_files (cache_dir);
 
 			if (compressed_assembly_count > 0) {
 				tracking.reset (new (std::nothrow) uint8_t*[compressed_assembly_count]());
