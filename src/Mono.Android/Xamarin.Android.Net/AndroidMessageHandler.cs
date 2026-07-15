@@ -164,7 +164,7 @@ namespace Xamarin.Android.Net
 		///   </description></item>
 		/// </list>
 		/// </remarks>
-		internal sealed class CancellationAwareResponseStream : Stream
+		sealed class CancellationAwareResponseStream : Stream
 		{
 			readonly Stream stream;
 			readonly HttpURLConnection httpConnection;
@@ -178,7 +178,7 @@ namespace Xamarin.Android.Net
 			bool disposeRequested;   // Dispose() called: reject new operations; close once the last one unwinds
 			bool disposed;           // DisposeCore() has run (exactly once)
 
-			internal CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
+			public CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
 			{
 				this.stream = stream ?? throw new ArgumentNullException (nameof (stream));
 				this.httpConnection = httpConnection ?? throw new ArgumentNullException (nameof (httpConnection));
@@ -290,25 +290,11 @@ namespace Xamarin.Android.Net
 
 			/// <summary>
 			/// Void counterpart of <see cref="RunOperation{T}"/>, for operations that return no value.
+			/// Delegates to the generic overload so the BeginUse/try/finally/EndUse bracket lives in exactly
+			/// one place.
 			/// </summary>
-			async Task RunOperation (Func<CancellationToken, Task> operation, CancellationToken callerToken, string canceledMessage)
-			{
-				BeginUse ();
-				CancellationTokenSource? linkedCts = null;
-				try {
-					CancellationToken abortToken = GetAbortToken (callerToken, out linkedCts);
-					using (abortToken.Register (RequestDisconnect)) {
-						try {
-							await operation (abortToken).ConfigureAwait (false);
-						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortToken)) {
-							throw new System.OperationCanceledException (canceledMessage, ex, abortToken);
-						}
-					}
-				} finally {
-					linkedCts?.Dispose ();
-					EndUse ();
-				}
-			}
+			Task RunOperation (Func<CancellationToken, Task> operation, CancellationToken callerToken, string canceledMessage) =>
+				RunOperation<bool> (async abortToken => { await operation (abortToken).ConfigureAwait (false); return true; }, callerToken, canceledMessage);
 
 			/// <summary>
 			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}"/> for the synchronous
