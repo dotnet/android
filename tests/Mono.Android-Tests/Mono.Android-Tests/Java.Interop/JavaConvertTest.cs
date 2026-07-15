@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 using Android.App;
 using Android.Content;
 using Android.Runtime;
+using Java.Interop;
 
 using NUnit.Framework;
 
@@ -114,6 +116,81 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void ValueManagerGenericDictionaryConversions ()
+		{
+			AssertValueManagerDictionaryByType<int, string> (42, "forty-two", typeof (IDictionary<int, string>));
+			AssertValueManagerDictionaryByType<int?, double?> (7, 3.5, typeof (JavaDictionary<int?, double?>));
+
+			using (var value = new MyIntent ())
+				AssertValueManagerDictionary<string, MyIntent> ("intent", value);
+
+			using (var key = new MyIntent ())
+				AssertValueManagerJavaDictionary<MyIntent, long?> (key, 64);
+		}
+
+		[Test]
+		public void ValueManagerNonGenericDictionaryConversionPreservesCachedPeer ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ("answer", 42);
+				var reference = new JniObjectReference (source.Handle);
+				var actual = JniEnvironment.Runtime.ValueManager.GetValue (
+					ref reference, JniObjectReferenceOptions.Copy, typeof (IDictionary));
+
+				Assert.AreSame (source, actual);
+				Assert.AreEqual (42, ((IDictionary) actual) ["answer"]);
+			}
+		}
+
+		[Test]
+		public void ValueManagerGenericDictionaryConversionPreservesAssignableCachedPeer ()
+		{
+			using (var source = new JavaDictionary<int, string> { { 42, "forty-two" } }) {
+				var actual = JniEnvironment.Runtime.ValueManager.GetValue<JavaDictionary<int, string>> (source.Handle);
+
+				Assert.AreSame (source, actual);
+			}
+		}
+
+		static void AssertValueManagerDictionaryByType<TKey, TValue> (TKey key, TValue value, Type targetType)
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add (key, value);
+				var reference = new JniObjectReference (source.Handle);
+				var actual = JniEnvironment.Runtime.ValueManager.GetValue (
+					ref reference, JniObjectReferenceOptions.Copy, targetType);
+
+				Assert.AreEqual (typeof (JavaDictionary<TKey, TValue>), actual.GetType ());
+				using (var dictionary = (JavaDictionary<TKey, TValue>) actual)
+					Assert.AreEqual (value, dictionary [key]);
+			}
+		}
+
+		static void AssertValueManagerDictionary<TKey, TValue> (TKey key, TValue value)
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add (key, value);
+				var actual = JniEnvironment.Runtime.ValueManager.GetValue<IDictionary<TKey, TValue>> (source.Handle);
+
+				Assert.AreEqual (typeof (JavaDictionary<TKey, TValue>), actual.GetType ());
+				using (var dictionary = (JavaDictionary<TKey, TValue>) actual)
+					Assert.AreEqual (value, dictionary [key]);
+			}
+		}
+
+		static void AssertValueManagerJavaDictionary<TKey, TValue> (TKey key, TValue value)
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add (key, value);
+				var actual = JniEnvironment.Runtime.ValueManager.GetValue<JavaDictionary<TKey, TValue>> (source.Handle);
+
+				Assert.AreEqual (typeof (JavaDictionary<TKey, TValue>), actual.GetType ());
+				using (actual)
+					Assert.AreEqual (value, actual [key]);
+			}
+		}
+
+		[Test]
 		public void MarshalInt23Array ()
 		{
 			using (var values = new JavaList<int[]>(
@@ -140,4 +217,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-

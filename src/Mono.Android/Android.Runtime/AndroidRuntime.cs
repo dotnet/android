@@ -609,6 +609,38 @@ namespace Android.Runtime {
 
 		Dictionary<IntPtr, IdentityHashTargets>         instances       = new Dictionary<IntPtr, IdentityHashTargets> ();
 
+		protected override object? GetValueCore (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? targetType = null)
+		{
+			if (JavaConvert.IsGenericDictionary (targetType))
+				return JavaConvert.FromObjectReference (ref reference, options, targetType);
+
+			return base.GetValueCore (ref reference, options, targetType);
+		}
+
+		[return: MaybeNull]
+		protected override T GetValueCore<[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T> (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? targetType = null)
+		{
+			if (targetType != null && !typeof (T).IsAssignableFrom (targetType))
+				return base.GetValueCore<T> (ref reference, options, targetType);
+
+			var requestedType = targetType ?? typeof (T);
+			if (JavaConvert.IsGenericDictionary (requestedType)) {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+				return (T) JavaConvert.FromObjectReference (ref reference, options, requestedType);
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+			}
+
+			return base.GetValueCore<T> (ref reference, options, targetType);
+		}
+
 		public override void WaitForGCBridgeProcessing ()
 		{
 			if (!AndroidRuntimeInternal.BridgeProcessing)
