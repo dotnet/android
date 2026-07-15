@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -125,11 +124,9 @@ namespace Java.Interop
 	/// </summary>
 	/// <typeparam name="T">The target .NET peer type this proxy represents.</typeparam>
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-	public abstract class JavaPeerProxy<[DynamicallyAccessedMembers (Constructors)] T>
+	public abstract class JavaPeerProxy<T>
 		: JavaPeerProxy where T : class, IJavaPeerable
 	{
-		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
 		protected JavaPeerProxy (string jniName)
 			: base (jniName, typeof (T))
 		{
