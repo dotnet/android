@@ -24,6 +24,7 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
       Condition=" '$(AndroidApplication)' == 'true' and '$(Configuration)' == 'Debug' and '$(PublishReadyToRun)' == 'true' "
       BeforeTargets="_PrepareForReadyToRunCompilation">
     <ItemGroup>
+      <!-- Runtime-pack managed assemblies are the stable framework and Android SDK implementation set. -->
       <_AndroidDebugReadyToRunFrameworkAssembly Include="@(RuntimePackAsset)"
           Condition=" '%(RuntimePackAsset.AssetType)' == 'runtime' and '%(RuntimePackAsset.Extension)' == '.dll' " />
       <_AndroidDebugReadyToRunExcludedAssembly Include="@(ResolvedFileToPublish->WithMetadataValue('PostprocessAssembly', 'true'))" />

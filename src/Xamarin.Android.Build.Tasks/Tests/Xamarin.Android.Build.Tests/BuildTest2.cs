@@ -82,30 +82,22 @@ namespace Xamarin.Android.Build.Tests
 			var assemblyDirectory = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", abi);
 			var frameworkAssembly = Path.Combine (assemblyDirectory, "System.Private.CoreLib.dll");
 			var userAssembly = Path.Combine (assemblyDirectory, $"{proj.ProjectName}.dll");
-			FileAssert.Exists (frameworkAssembly);
-			FileAssert.Exists (userAssembly);
-
-			using (var stream = File.OpenRead (frameworkAssembly))
-			using (var peReader = new System.Reflection.PortableExecutable.PEReader (stream)) {
-				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
-					"System.Private.CoreLib.dll should be a ReadyToRun image.");
-			}
-			using (var stream = File.OpenRead (userAssembly))
-			using (var peReader = new System.Reflection.PortableExecutable.PEReader (stream)) {
-				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size == 0,
-					$"{proj.ProjectName}.dll should remain IL.");
-			}
+			AssertReadyToRun (frameworkAssembly, expected: true, "System.Private.CoreLib.dll should be a ReadyToRun image.");
+			AssertReadyToRun (userAssembly, expected: false, $"{proj.ProjectName}.dll should remain IL.");
 
 			proj.MainActivity += Environment.NewLine + "// Force an incremental C# rebuild.";
 			proj.Touch ("MainActivity.cs");
 			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
 			Assert.IsTrue (b.Output.IsTargetSkipped ("_CreateR2RImages"),
 				"Changing a user assembly should not rerun crossgen2.");
-			FileAssert.Exists (frameworkAssembly);
-			using (var stream = File.OpenRead (frameworkAssembly))
-			using (var peReader = new System.Reflection.PortableExecutable.PEReader (stream)) {
-				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
-					"Cached System.Private.CoreLib.dll should remain a ReadyToRun image.");
+			AssertReadyToRun (frameworkAssembly, expected: true, "Cached System.Private.CoreLib.dll should remain a ReadyToRun image.");
+
+			static void AssertReadyToRun (string assembly, bool expected, string message)
+			{
+				FileAssert.Exists (assembly);
+				using var stream = File.OpenRead (assembly);
+				using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+				Assert.AreEqual (expected, peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0, message);
 			}
 		}
 
