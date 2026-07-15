@@ -34,14 +34,15 @@ namespace Java.InteropTests
 			Assert.AreEqual (expectedFallback, fallbacks [1]);
 		}
 
-		[Test]
+		[TestCase (typeof (byte?[][]), "[[Ljava/lang/Byte;")]
+		[TestCase (typeof (byte?[][][]), "[[[Ljava/lang/Byte;")]
 		[Category ("NativeAOTTrimmable")]
-		public void GetTypeSignature_NullableByteArrayArray_ReturnsJavaLangByte ()
+		public void GetTypeSignature_NullableByteJaggedArray_ReturnsJavaLangByte (Type type, string expected)
 		{
 			using var manager = new TestableTrimmableTypeMapTypeManager ();
-			var signature = manager.GetTypeSignature (typeof (byte?[][]));
+			var signature = manager.GetTypeSignature (type);
 
-			Assert.AreEqual ("[[Ljava/lang/Byte;", signature.Name);
+			Assert.AreEqual (expected, signature.Name);
 		}
 
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:

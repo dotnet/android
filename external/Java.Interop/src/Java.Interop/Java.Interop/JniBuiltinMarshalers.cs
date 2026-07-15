@@ -93,7 +93,7 @@ namespace Java.Interop {
 				signature = GetCachedTypeSignature (ref __BooleanNullableTypeSignature, "java/lang/Boolean");
 				return true;
 			}
-			if (type == typeof (SByte?)) {
+			if (type == typeof (Byte?) || type == typeof (SByte?)) {
 				signature = GetCachedTypeSignature (ref __SByteNullableTypeSignature, "java/lang/Byte");
 				return true;
 			}
