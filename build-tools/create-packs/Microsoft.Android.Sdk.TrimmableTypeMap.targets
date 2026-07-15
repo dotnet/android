@@ -16,7 +16,9 @@
   <PropertyGroup>
     <_PreBuiltTypeMapPackSubDir>data\prebuilt-typemap</_PreBuiltTypeMapPackSubDir>
     <_PreBuiltTypeMapOutputDir>$(MicrosoftAndroidSdkPackDir)$(_PreBuiltTypeMapPackSubDir)\</_PreBuiltTypeMapOutputDir>
-    <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapOutputDir)java\</_PreBuiltTypeMapJavaDir>
+    <!-- Intermediate (not packaged): generated JCW .java and compiled .class files. -->
+    <_PreBuiltTypeMapIntDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'obj', 'prebuilt-typemap'))</_PreBuiltTypeMapIntDir>
+    <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapIntDir)java\</_PreBuiltTypeMapJavaDir>
     <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
   </PropertyGroup>
 
@@ -45,7 +47,8 @@
 
   <PropertyGroup>
     <_PreBuiltTypeMapJcwJar>$(_PreBuiltTypeMapOutputDir)mono.android-typemaps.jar</_PreBuiltTypeMapJcwJar>
-    <_PreBuiltTypeMapJcwClassesDir>$(_PreBuiltTypeMapOutputDir)jcw-classes\</_PreBuiltTypeMapJcwClassesDir>
+    <_PreBuiltTypeMapJcwClassesDir>$(_PreBuiltTypeMapIntDir)jcw-classes\</_PreBuiltTypeMapJcwClassesDir>
+    <_PreBuiltTypeMapJcwSourceList>$(_PreBuiltTypeMapIntDir)jcw-sources.txt</_PreBuiltTypeMapJcwSourceList>
     <_PreBuiltTypeMapAndroidJar>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\android.jar</_PreBuiltTypeMapAndroidJar>
     <_PreBuiltTypeMapMonoAndroidJar>$(_MonoAndroidNETDefaultOutDir)mono.android.jar</_PreBuiltTypeMapMonoAndroidJar>
     <_PreBuiltTypeMapRuntimeJar>$(MicrosoftAndroidSdkOutDir)java_runtime.jar</_PreBuiltTypeMapRuntimeJar>
@@ -65,8 +68,8 @@
     </ItemGroup>
     <RemoveDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
     <MakeDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
-    <WriteLinesToFile File="$(_PreBuiltTypeMapOutputDir)jcw-sources.txt" Lines="@(_PreBuiltTypeMapJavaFile)" Overwrite="true" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -source $(JavacSourceVersion) -target $(JavacTargetVersion) -nowarn -d &quot;$(_PreBuiltTypeMapJcwClassesDir.TrimEnd('\'))&quot; -classpath &quot;$(_PreBuiltTypeMapAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapMonoAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapRuntimeJar)&quot; @&quot;$(_PreBuiltTypeMapOutputDir)jcw-sources.txt&quot;" />
+    <WriteLinesToFile File="$(_PreBuiltTypeMapJcwSourceList)" Lines="@(_PreBuiltTypeMapJavaFile)" Overwrite="true" />
+    <Exec Command="&quot;$(JavaCPath)&quot; -source $(JavacSourceVersion) -target $(JavacTargetVersion) -nowarn -d &quot;$(_PreBuiltTypeMapJcwClassesDir.TrimEnd('\'))&quot; -classpath &quot;$(_PreBuiltTypeMapAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapMonoAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapRuntimeJar)&quot; @&quot;$(_PreBuiltTypeMapJcwSourceList)&quot;" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(_PreBuiltTypeMapJcwJar)&quot; -C &quot;$(_PreBuiltTypeMapJcwClassesDir.TrimEnd('\'))&quot; ." />
   </Target>
 

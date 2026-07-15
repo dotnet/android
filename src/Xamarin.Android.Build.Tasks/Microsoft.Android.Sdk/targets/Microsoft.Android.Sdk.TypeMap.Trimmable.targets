@@ -61,6 +61,18 @@
     </IncrementalCleanDependsOn>
   </PropertyGroup>
 
+  <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). When present,
+       the app build skips scanning Mono.Android (its ~8000 types) and instead references the
+       pre-built _Mono.Android.TypeMap.dll (Java.Lang.Object universe) + dexes the pre-compiled
+       JCW jar. Opt out with $(_AndroidUsePreGeneratedMonoAndroidTypeMap)=false. -->
+  <PropertyGroup>
+    <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
+    <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
+    <_PreGeneratedMonoAndroidTypeMapJar>$(_PreGeneratedTypeMapDir)mono.android-typemaps.jar</_PreGeneratedMonoAndroidTypeMapJar>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+  </PropertyGroup>
+
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
         Value="true" Trim="true" />
@@ -127,12 +139,21 @@
       <!-- Library (.aar) manifests to merge into the app manifest. Only on the legacy manifest
            merger path; manifestmerger.jar merges these downstream in the _ManifestMerger target. -->
       <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
+
+      <!-- When a pre-generated Mono.Android typemap is shipped, index Mono.Android for resolution
+           but don't rescan it: pass it as a pre-generated assembly so the generated root references
+           the shipped _Mono.Android.TypeMap under Java.Lang.Object instead. -->
+      <_PreGeneratedTypeMapAssemblyInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' "
+          Include="@(_TypeMapInputAssemblies)" KeepDuplicates="false" />
+      <_PreGeneratedTypeMapAssemblyInput Remove="@(_PreGeneratedTypeMapAssemblyInput)"
+          Condition=" '%(Filename)' != 'Mono.Android' " />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         ResolvedFrameworkAssemblies="@(_TypeMapFrameworkAssemblies)"
         FrameworkAssemblyNames="@(_TypeMapFrameworkAssemblies->'%(Filename)')"
+        PreGeneratedTypeMapAssemblies="@(_PreGeneratedTypeMapAssemblyInput)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
@@ -211,7 +232,17 @@
     <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
       <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesFromList" />
     </ReadLinesFromFile>
+    <!-- Include the pre-generated Mono.Android typemap so it is linked/published and loadable at
+         runtime (the generated root references it via TypeMapAssemblyTarget<Java.Lang.Object>). -->
+    <ItemGroup Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
+      <_GeneratedTypeMapAssembliesFromList Include="$(_PreGeneratedMonoAndroidTypeMapAssembly)" />
+    </ItemGroup>
   </Target>
+
+  <!-- Dex the pre-compiled Mono.Android JCW jar instead of regenerating/compiling those JCWs. -->
+  <ItemGroup Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
+    <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidTypeMapJar)" />
+  </ItemGroup>
 
   <!--
     The TypeMap generator has dynamic outputs: the set of generated assemblies
