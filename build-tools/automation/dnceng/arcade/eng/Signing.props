@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <EnableDefaultArtifacts>false</EnableDefaultArtifacts>
+    <UseDotNetCertificate>false</UseDotNetCertificate>
+  </PropertyGroup>
+
+  <Import Project="$(AndroidSignList)" Condition="Exists('$(AndroidSignList)')" />
+
+  <ItemGroup>
+    <StrongNameSignInfo Remove="@(StrongNameSignInfo)" />
+    <ItemsToSign Include="$(ArtifactsShippingPackagesDir)\*.nupkg" />
+
+    <FileSignInfo Include="@(Skip)" CertificateName="None" />
+    <FileSignInfo Include="@(ThirdParty)" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="@(ThirdPartyScript)" CertificateName="3PartyScriptsSHA2" />
+    <FileSignInfo Include="@(MacDeveloperSign)" CertificateName="MacDeveloperVNext" />
+    <FileSignInfo Include="@(MacDeveloperSignHarden)" CertificateName="MacDeveloperVNextHarden" />
+
+    <FileExtensionSignInfo Remove=".jar;.msi;.nupkg" />
+    <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJARSHA2" />
+    <FileExtensionSignInfo Include=".msi" CertificateName="Microsoft400" />
+    <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
+
+    <ItemsToSkip3rdPartyCheck Include="@(FirstParty)" />
+  </ItemGroup>
+</Project>
