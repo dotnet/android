@@ -107,7 +107,7 @@ and aligned to a byte boundary.
 The header is a fixed-size structure at the beginning of each assembly store file:
 
 - **MAGIC** (`uint32_t`) - Magic value `0x41424158` ("XABA" in little-endian)
-- **FORMAT_VERSION** (`uint32_t`) - Store format version number (includes ABI and 64-bit flags)
+- **FORMAT_VERSION** (`uint32_t`) - Store format version number (includes ABI and 64-bit flags). Version `3` is used by MonoVM applications and version `4` by CoreCLR applications (see [Hash table format](#hash-table-format))
 - **ENTRY_COUNT** (`uint32_t`) - Number of assemblies in the store
 - **INDEX_ENTRY_COUNT** (`uint32_t`) - Number of entries in the index (typically `ENTRY_COUNT * 2`)
 - **INDEX_SIZE** (`uint32_t`) - Index size in bytes
@@ -116,7 +116,7 @@ The header is a fixed-size structure at the beginning of each assembly store fil
 
 Variable-size section containing hash-based lookup entries for assembly names. Contains `INDEX_ENTRY_COUNT` entries (typically `ENTRY_COUNT * 2` entries to handle assembly names both with and without file extensions):
 
-- **NAME_HASH** (`hash_t`) - xxHash of the assembly name (`uint32_t` on 32-bit platforms, `uint64_t` on 64-bit platforms)
+- **NAME_HASH** (`hash_t`) - Hash of the assembly name. For CoreCLR applications this is always a `uint32_t` CRC32 hash regardless of platform bitness. For MonoVM applications it is an xxHash (`uint32_t` on 32-bit platforms, `uint64_t` on 64-bit platforms)
 - **DESCRIPTOR_INDEX** (`uint32_t`) - Index into the assembly descriptor array
 - **IGNORE** (`uint8_t`) - If set to any value other than 0, the assembly should be ignored during loading
 
@@ -225,12 +225,29 @@ The index contains entries for assembly name lookups, with each entry formatted 
 
 Each entry contains the assembly name hash. In case of satellite assemblies, 
 the assembly culture (e.g. `en/` or `fr/`) is treated as part of the assembly 
-name, thus resulting in a unique hash. The hash value is obtained using the
-[xxHash](https://cyan4973.github.io/xxHash/) algorithm and is
+name, thus resulting in a unique hash. The hash is
 calculated **without** including the `.dll` extension. This is done
 for runtime efficiency as the vast majority of runtime requests to load
 an assembly do not include the `.dll` suffix, thus saving us time of
 appending it in order to generate the hash for index lookup. 
+
+The hashing algorithm depends on the runtime the application targets:
+
+ - **CoreCLR** (store format version `4`): the hash is a 32-bit
+   [CRC32](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)
+   value, used on both 32-bit and 64-bit platforms.
+ - **MonoVM** (store format version `3`): the hash is obtained using the
+   [xxHash](https://cyan4973.github.io/xxHash/) algorithm and is
+   platform-specific (32-bit on 32-bit platforms, 64-bit on 64-bit
+   platforms).
+
+Because the CoreCLR hash is only 32 bits wide, hash collisions between
+two different assembly names are possible (albeit extremely unlikely).
+The index entries are sorted by hash, so all entries sharing a hash are
+contiguous; at runtime the loader walks the entire run of entries with a
+matching hash and compares the requested name against the actual assembly
+name (recovered from the [ASSEMBLY_NAMES](#assembly_names) section) to
+select the correct entry.
 
 Each entry is represented by the following structure:
 
@@ -245,8 +262,9 @@ struct AssemblyStoreIndexEntry
 
 Individual fields have the following meanings:
 
- - `name_hash`: the platform-specific hash of the assembly's name
-   **without** the `.dll` suffix (32-bit hash on 32-bit platforms, 
+ - `name_hash`: the hash of the assembly's name **without** the `.dll`
+   suffix. For CoreCLR this is always a 32-bit CRC32 hash; for MonoVM
+   it is a platform-specific xxHash (32-bit hash on 32-bit platforms,
    64-bit hash on 64-bit platforms)
  - `descriptor_index`: index into assembly store [Assembly descriptor table](#assembly-descriptor-table)
    describing the assembly.
@@ -282,7 +300,7 @@ struct [[gnu::packed]] AssemblyStoreIndexEntry final
 };
 ```
 
-This structure represents an entry in the Assembly Store index. The `name_hash` field is either a 32-bit or 64-bit hash depending on the target platform architecture (`xamarin::android::hash_t` is `uint32_t` on 32-bit platforms and `XXH64_hash_t` on 64-bit platforms).
+This structure represents an entry in the Assembly Store index. In the CoreCLR native header ([`xamarin-app.hh`](../../src/native/clr/include/xamarin-app.hh)), `xamarin::android::hash_t` is defined as `uint32_t`, so `name_hash` holds the 32-bit CRC32 hash of the assembly name on all platforms. MonoVM stores instead use a platform-specific xxHash (`uint32_t` on 32-bit platforms and `XXH64_hash_t` on 64-bit platforms).
 
 ## AssemblyStoreEntryDescriptor
 
