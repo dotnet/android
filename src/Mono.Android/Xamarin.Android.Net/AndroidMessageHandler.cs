@@ -203,20 +203,24 @@ namespace Xamarin.Android.Net
 					bool disposeNow;
 					lock (stateLock) {
 						disposeRequested = true;
-						// Only close here if no read is in flight. If one is, that read owns the close and
-						// runs DisposeCore() from EndUse() once it has unwound -- closing now would race it.
+						// Only close here if no operation is in flight. If one is, that operation owns the
+						// close and runs DisposeCore() from EndUse() once it has unwound -- closing now would
+						// race it.
 						disposeNow = inUseCount == 0 && !disposed;
 						if (disposeNow)
 							disposed = true;
 					}
 
-					// Abort any parked operation so it unwinds promptly and then closes itself. This only
-					// closes the socket, never the managed stream, so it cannot collide with the operation.
-					// No-op when nothing is in flight.
-					abortCts.Cancel ();
-
-					if (disposeNow)
+					if (disposeNow) {
+						// Nothing is in flight (disposeRequested, set under the lock, now blocks new
+						// operations), so there is no parked operation to abort -- close directly.
 						DisposeCore ();
+					} else {
+						// An operation is parked. Abort it so it unwinds promptly and then closes the stream
+						// itself (EndUse -> DisposeCore). Cancelling only disconnects the socket, never the
+						// managed stream, so it cannot collide with the operation.
+						abortCts.Cancel ();
+					}
 				}
 
 				base.Dispose (disposing);
