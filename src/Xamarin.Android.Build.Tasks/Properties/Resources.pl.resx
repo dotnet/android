@@ -971,7 +971,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>Nieprawidłowy poziom kompresji AssemblyStore "„{0}”. Wartość musi mieścić się w zakresie od{1} do {2}.</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level
