@@ -109,6 +109,23 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_ReferenceOnlyAssembly_EmitsNoPeers ()
+	{
+		// A reference-only assembly (ScanForPeers: false) is indexed for base-type resolution but
+		// its peers are not emitted — used on the app build for Mono.Android, whose typemap is
+		// pre-generated at SDK build time (issue #10792).
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute (
+			[new AssemblyInput ("TestFixtures", "", peReader, ScanForPeers: false)],
+			new Version (11, 0),
+			new HashSet<string> ());
+
+		Assert.Empty (result.GeneratedAssemblies);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.DoesNotContain (result.GeneratedAssemblies, a => a.Name == "_TestFixtures.TypeMap");
+	}
+
+	[Fact]
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();
