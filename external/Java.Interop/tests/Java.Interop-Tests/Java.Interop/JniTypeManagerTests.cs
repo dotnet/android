@@ -34,6 +34,7 @@ namespace Java.InteropTests
 
 			AssertGetJniTypeInfoForType (typeof (float?),      "java/lang/Float",      true,   0);
 			AssertGetJniTypeInfoForType (typeof (byte?),       "java/lang/Byte",       true,   0);
+			AssertGetJniTypeInfoForType (typeof (byte?[]),     "[Ljava/lang/Byte;",    true,   1);
 			AssertGetJniTypeInfoForType (typeof (byte?[][]),   "[[Ljava/lang/Byte;",   true,   2);
 			AssertGetJniTypeInfoForType (typeof (byte?[][][]), "[[[Ljava/lang/Byte;",  true,   3);
 
