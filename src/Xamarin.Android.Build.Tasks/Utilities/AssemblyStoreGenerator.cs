@@ -55,8 +55,8 @@ partial class AssemblyStoreGenerator
 	const uint ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian, must match the BUNDLED_ASSEMBLIES_BLOB_MAGIC native constant
 
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_32BIT = 0x00000003;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_64BIT = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_32BIT = 0x00000004;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT = 0x00000004;
 

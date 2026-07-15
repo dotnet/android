@@ -74,7 +74,6 @@ namespace {
 		enum class WriteResult
 		{
 			Succeeded,
-			Skipped,
 			Failed,
 		};
 
@@ -122,7 +121,8 @@ namespace {
 		auto write_cache_file (WriteRequest const& req) noexcept -> WriteResult
 		{
 			std::string tmp_path = req.path;
-			tmp_path.append (".tmp"sv);
+			tmp_path.append (".tmp."sv);
+			tmp_path.append (std::to_string (getpid ()));
 
 			int fd;
 			do {
@@ -153,13 +153,6 @@ namespace {
 
 			if (rename_result != 0) {
 				error = errno;
-				// Another process can publish the shared, content-identical temp
-				// file first. Its rename consumes the temp path, so this writer
-				// has nothing left to publish.
-				if (error == ENOENT) {
-					return WriteResult::Skipped;
-				}
-
 				log_file_error ("publish"sv, req.path, error);
 				unlink (tmp_path.c_str ());
 				return WriteResult::Failed;

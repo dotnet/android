@@ -695,7 +695,10 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Thread.Sleep (250);
 				cacheFiles = RunAdbCommand (
 					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
-				).Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+				)
+					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
+					.ToArray ();
 			}
 			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
 
