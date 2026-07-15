@@ -70,14 +70,16 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
+			const string rid = "android-x64";
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("RuntimeIdentifier", "android-x64");
+			proj.SetProperty ("RuntimeIdentifier", rid);
 
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-			var assemblyDirectory = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "x86_64");
+			var abi = MonoAndroidHelper.RidToAbi (rid);
+			var assemblyDirectory = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", abi);
 			var frameworkAssembly = Path.Combine (assemblyDirectory, "System.Private.CoreLib.dll");
 			var userAssembly = Path.Combine (assemblyDirectory, $"{proj.ProjectName}.dll");
 			FileAssert.Exists (frameworkAssembly);
@@ -99,6 +101,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
 			Assert.IsTrue (b.Output.IsTargetSkipped ("_CreateR2RImages"),
 				"Changing a user assembly should not rerun crossgen2.");
+			FileAssert.Exists (frameworkAssembly);
+			using (var stream = File.OpenRead (frameworkAssembly))
+			using (var peReader = new System.Reflection.PortableExecutable.PEReader (stream)) {
+				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					"Cached System.Private.CoreLib.dll should remain a ReadyToRun image.");
+			}
 		}
 
 		[Test]
