@@ -36,7 +36,8 @@ public class TrimmableTypeMapGenerator
 		string? packageNamingPolicy = null,
 		int maxArrayRank = 0,
 		bool generateTypeMapAssemblies = true,
-		bool generateRootAssembly = true)
+		bool generateRootAssembly = true,
+		IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
@@ -57,7 +58,7 @@ public class TrimmableTypeMapGenerator
 		PropagateCannotRegisterToDescendants (allPeers);
 
 		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, generateRootAssembly)
+			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank, generateRootAssembly, sharedFrameworkTypeMapNames)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -181,7 +182,8 @@ public class TrimmableTypeMapGenerator
 		Version systemRuntimeVersion,
 		bool useSharedTypemapUniverse,
 		int maxArrayRank,
-		bool generateRootAssembly = true)
+		bool generateRootAssembly = true,
+		IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -224,7 +226,7 @@ public class TrimmableTypeMapGenerator
 		if (generateRootAssembly) {
 			var rootStream = new MemoryStream ();
 			var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-			rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank);
+			rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank, sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames);
 			rootStream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
 			logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);
