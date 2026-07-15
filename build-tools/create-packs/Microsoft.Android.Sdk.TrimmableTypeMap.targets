@@ -20,6 +20,7 @@
     <_PreBuiltTypeMapIntDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'obj', 'prebuilt-typemap'))</_PreBuiltTypeMapIntDir>
     <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapIntDir)java\</_PreBuiltTypeMapJavaDir>
     <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
+    <_PreBuiltTypeMapAcwMap>$(_PreBuiltTypeMapOutputDir)mono.android-acw-map.txt</_PreBuiltTypeMapAcwMap>
   </PropertyGroup>
 
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
@@ -40,6 +41,7 @@
         FrameworkAssemblyNames="@(_PreBuiltTypeMapFramework->'%(Filename)')"
         OutputDirectory="$(_PreBuiltTypeMapOutputDir)"
         JavaSourceOutputDirectory="$(_PreBuiltTypeMapJavaDir)"
+        AcwMapOutputFile="$(_PreBuiltTypeMapAcwMap)"
         TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
         ForceSharedTypemapUniverse="true"
         GenerateRootAssembly="false" />
@@ -79,6 +81,7 @@
     <ItemGroup>
       <FilesToPackage Include="$(_PreBuiltTypeMapAssembly)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
       <FilesToPackage Include="$(_PreBuiltTypeMapJcwJar)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
+      <FilesToPackage Include="$(_PreBuiltTypeMapAcwMap)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
     </ItemGroup>
   </Target>
 

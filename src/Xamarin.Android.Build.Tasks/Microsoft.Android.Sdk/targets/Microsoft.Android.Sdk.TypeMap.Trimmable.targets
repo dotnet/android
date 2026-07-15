@@ -69,6 +69,7 @@
     <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
     <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
     <_PreGeneratedMonoAndroidTypeMapJar>$(_PreGeneratedTypeMapDir)mono.android-typemaps.jar</_PreGeneratedMonoAndroidTypeMapJar>
+    <_PreGeneratedMonoAndroidTypeMapAcwMap>$(_PreGeneratedTypeMapDir)mono.android-acw-map.txt</_PreGeneratedMonoAndroidTypeMapAcwMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
   </PropertyGroup>
@@ -183,6 +184,18 @@
       <Output TaskParameter="DeletedJavaFiles" ItemName="_DeletedJavaFiles" />
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
     </GenerateTrimmableTypeMap>
+
+    <!-- Merge the pre-generated Mono.Android ACW map into the app's acw-map.txt so R8 keep rules
+         are emitted for the pre-built JCWs (Mono.Android is excluded from the app scan, so its ACW
+         entries would otherwise be absent and R8 would shrink the JCWs out of classes.dex). -->
+    <ReadLinesFromFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') "
+        File="$(_PreGeneratedMonoAndroidTypeMapAcwMap)">
+      <Output TaskParameter="Lines" ItemName="_PreGeneratedAcwMapLines" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '@(_PreGeneratedAcwMapLines->Count())' != '0' "
+        File="$(IntermediateOutputPath)acw-map.txt"
+        Lines="@(_PreGeneratedAcwMapLines)"
+        Overwrite="false" />
 
     <!-- Mirror any Java sources the generator deleted into the android/src copies so a
          removed type does not leave a stale .java (and stale .class) behind. Busting the
