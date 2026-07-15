@@ -60,7 +60,7 @@ public class LinkNativeRuntime : AsyncTask
 	void LinkRuntime (ITaskItem abiItem)
 	{
 		string abi = abiItem.ItemSpec;
-		Log.LogDebugMessage ($"LinkRuntime ({abi})");
+		LogDebugMessage ($"LinkRuntime ({abi})");
 		ITaskItem outputRuntime = GetFirstAbiItem (OutputRuntimes, "_UnifiedNativeRuntime", abi);
 		string soname = Path.GetFileNameWithoutExtension (outputRuntime.ItemSpec);
 		if (soname.StartsWith ("lib", StringComparison.OrdinalIgnoreCase)) {
