@@ -340,7 +340,7 @@ stages:
         - task: UseDotNet@2
           displayName: Install .NET SDK for Arcade signing
           inputs:
-            version: $(DotNetSdkVersion).x
+            version: 11.0.x
             includePreviewVersions: true
 
         - pwsh: |
