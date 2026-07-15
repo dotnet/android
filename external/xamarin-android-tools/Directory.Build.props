@@ -10,9 +10,11 @@
   <PropertyGroup>
     <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>
     <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
+    <!-- This feed may be needed for packages from future .NET SDK updates.
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-2b2a06c8/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
+    -->
     <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
