@@ -65,7 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			public bool   assembly_store_decompression_cache_enabled;
 		}
 
-		const uint ApplicationConfigFieldCount_CoreCLR = 20;
+		const uint ApplicationConfigFieldCount_CoreCLR = 21;
 
 		// This must be identical to the ApplicationConfig structure in src/native/mono/xamarin-app-stub/xamarin-app.hh
 		public sealed class ApplicationConfig_MonoVM : IApplicationConfig
@@ -409,7 +409,7 @@ namespace Xamarin.Android.Build.Tests
 						ret.have_assembly_store = ConvertFieldToBool ("have_assembly_store", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 21: // assembly_store_decompression_cache_enabled: bool / .byte
+					case 20: // assembly_store_decompression_cache_enabled: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.assembly_store_decompression_cache_enabled = ConvertFieldToBool ("assembly_store_decompression_cache_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
