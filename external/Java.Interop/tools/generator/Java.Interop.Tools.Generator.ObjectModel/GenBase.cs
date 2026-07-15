@@ -339,36 +339,29 @@ namespace MonoDroid.Generation
 				}
 			}
 
-			// Process property getter/setter methods for ApiRemovedSince fixup
+			// A property accessor can correspond to a standalone method in a base class
+			// when the accessor types differ. Compare the underlying Java methods.
 			foreach (var prop in Properties) {
-				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
-					var baseProp = bt.Properties.FirstOrDefault (p => p.Name == prop.Name && p.Type == prop.Type);
-					if (baseProp == null) {
+				foreach (var m in new [] { prop.Getter, prop.Setter }) {
+					if (m == null || m.ApiRemovedSince == 0) {
 						continue;
 					}
 
-					bool shouldBreak = false;
-					if (prop.Getter != null && prop.Getter.ApiRemovedSince > 0 && baseProp.Getter != null && baseProp.Getter.ApiRemovedSince == 0) {
-						if (baseProp.Getter.Visibility == prop.Getter.Visibility &&
-							ParameterList.Equals (baseProp.Getter.Parameters, prop.Getter.Parameters) &&
-							baseProp.Getter.RetVal.FullName == prop.Getter.RetVal.FullName) {
-							// If a "removed" property getter overrides a "not removed" getter, the method was
-							// likely moved to a base class, so don't mark it as removed.
-							prop.Getter.ApiRemovedSince = default;
-							shouldBreak = true;
+					for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
+						var bm = bt.GetAllMethods ().FirstOrDefault (mm =>
+							mm.ApiRemovedSince == 0 &&
+							mm.JavaName == m.JavaName &&
+							mm.Visibility == m.Visibility &&
+							((m == prop.Getter &&
+								mm.RetVal.FullName == m.RetVal.FullName &&
+								ParameterList.Equals (mm.Parameters, m.Parameters)) ||
+							(m == prop.Setter &&
+								(ParameterList.Equals (mm.Parameters, m.Parameters) ||
+									(mm.Parameters.Count == 1 && mm.Parameters [0].Symbol is GenericTypeParameter)))));
+						if (bm != null) {
+							m.ApiRemovedSince = default;
+							break;
 						}
-					}
-					if (prop.Setter != null && prop.Setter.ApiRemovedSince > 0 && baseProp.Setter != null && baseProp.Setter.ApiRemovedSince == 0) {
-						if (baseProp.Setter.Visibility == prop.Setter.Visibility &&
-							ParameterList.Equals (baseProp.Setter.Parameters, prop.Setter.Parameters)) {
-							// If a "removed" property setter overrides a "not removed" setter, the method was
-							// likely moved to a base class, so don't mark it as removed.
-							prop.Setter.ApiRemovedSince = default;
-							shouldBreak = true;
-						}
-					}
-					if (shouldBreak) {
-						break;
 					}
 				}
 			}
