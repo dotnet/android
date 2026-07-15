@@ -172,11 +172,10 @@ namespace Xamarin.Android.Net
 			// Fired to abort a parked read when Dispose() (or a linked caller token) requests cancellation.
 			readonly CancellationTokenSource abortCts = new CancellationTokenSource ();
 
-			// Guards the draining state machine (inUseCount / disposeRequested / disposed).
+			// Guards the draining state machine (inUseCount / disposeRequested).
 			readonly object stateLock = new object ();
-			int inUseCount;          // reads/copies currently in flight (normally 0 or 1)
-			bool disposeRequested;   // Dispose() called: reject new reads; close once the last read unwinds
-			bool disposed;           // DisposeCore() has run (exactly once)
+			int inUseCount;          // operations (read/write/copy/flush) currently in flight (normally 0 or 1)
+			bool disposeRequested;   // Dispose() called: reject new operations; close once the last one unwinds
 
 			internal CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
 			{
@@ -200,26 +199,30 @@ namespace Xamarin.Android.Net
 			protected override void Dispose (bool disposing)
 			{
 				if (disposing) {
-					bool disposeNow;
+					bool firstRequest, disposeNow = false;
 					lock (stateLock) {
+						// Detect the false->true transition so a second Dispose() (Stream.Dispose is
+						// idempotent by contract) neither aborts nor tears down again.
+						firstRequest = !disposeRequested;
 						disposeRequested = true;
 						// Only close here if no operation is in flight. If one is, that operation owns the
 						// close and runs DisposeCore() from EndUse() once it has unwound -- closing now would
 						// race it.
-						disposeNow = inUseCount == 0 && !disposed;
-						if (disposeNow)
-							disposed = true;
+						if (firstRequest)
+							disposeNow = inUseCount == 0;
 					}
 
-					if (disposeNow) {
-						// Nothing is in flight (disposeRequested, set under the lock, now blocks new
-						// operations), so there is no parked operation to abort -- close directly.
-						DisposeCore ();
-					} else {
-						// An operation is parked. Abort it so it unwinds promptly and then closes the stream
-						// itself (EndUse -> DisposeCore). Cancelling only disconnects the socket, never the
-						// managed stream, so it cannot collide with the operation.
-						abortCts.Cancel ();
+					if (firstRequest) {
+						if (disposeNow) {
+							// Nothing is in flight (disposeRequested, set under the lock, now blocks new
+							// operations), so there is no parked operation to abort -- close directly.
+							DisposeCore ();
+						} else {
+							// An operation is parked. Abort it so it unwinds promptly and then closes the
+							// stream itself (EndUse -> DisposeCore). Cancelling only disconnects the socket,
+							// never the managed stream, so it cannot collide with the operation.
+							abortCts.Cancel ();
+						}
 					}
 				}
 
@@ -227,13 +230,11 @@ namespace Xamarin.Android.Net
 			}
 
 			public override void Flush () =>
-				RunOperation (() => { stream.Flush (); return true; }, "Response body flush was canceled.");
+				RunOperation (() => stream.Flush (), "Response body flush was canceled.");
 
 			public override Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken) =>
-				RunOperationAsync (async abortToken => {
-					await stream.CopyToAsync (destination, bufferSize, abortToken).ConfigureAwait (false);
-					return true;
-				}, cancellationToken, "Response body read was canceled.").AsTask ();
+				RunOperation (abortToken => new ValueTask (stream.CopyToAsync (destination, bufferSize, abortToken)), cancellationToken, "Response body read was canceled.")
+					.AsTask ();
 
 			public override int Read (byte[] buffer, int offset, int count) =>
 				RunOperation (() => stream.Read (buffer, offset, count), "Response body read was canceled.");
@@ -242,7 +243,7 @@ namespace Xamarin.Android.Net
 
 			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
 			public override ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default) =>
-				RunOperationAsync (abortToken => stream.ReadAsync (buffer, abortToken), cancellationToken, "Response body read was canceled.");
+				RunOperation (abortToken => stream.ReadAsync (buffer, abortToken), cancellationToken, "Response body read was canceled.");
 
 			public override long Seek (long offset, SeekOrigin origin)
 			{
@@ -257,23 +258,20 @@ namespace Xamarin.Android.Net
 			}
 
 			public override void Write (byte[] buffer, int offset, int count) =>
-				RunOperation (() => { stream.Write (buffer, offset, count); return true; }, "Response body write was canceled.");
+				RunOperation (() => stream.Write (buffer, offset, count), "Response body write was canceled.");
 
 			public override Task WriteAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => WriteAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
 
 			public override ValueTask WriteAsync (ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) =>
-				new ValueTask (RunOperationAsync (async abortToken => {
-					await stream.WriteAsync (buffer, abortToken).ConfigureAwait (false);
-					return true;
-				}, cancellationToken, "Response body write was canceled.").AsTask ());
+				RunOperation (abortToken => stream.WriteAsync (buffer, abortToken), cancellationToken, "Response body write was canceled.");
 
 			/// <summary>
-			/// Runs an asynchronous inner-stream operation inside the drain-safety bracket: it counts as
-			/// in-flight (<c>BeginUse</c>/<c>EndUse</c>), observes an abort token linked with the caller's
-			/// token, registers <c>RequestDisconnect</c> to abort the parked operation on cancellation, and
-			/// maps a cancellation-caused transport exception to <see cref="OperationCanceledException"/>.
+			/// Runs an inner-stream operation inside the drain-safety bracket: it counts as in-flight
+			/// (<c>BeginUse</c>/<c>EndUse</c>), observes an abort token linked with the caller's token,
+			/// registers <c>RequestDisconnect</c> to abort the parked operation on cancellation, and maps a
+			/// cancellation-caused transport exception to <see cref="OperationCanceledException"/>.
 			/// </summary>
-			async ValueTask<T> RunOperationAsync<T> (Func<CancellationToken, ValueTask<T>> operation, CancellationToken callerToken, string canceledMessage)
+			async ValueTask<T> RunOperation<T> (Func<CancellationToken, ValueTask<T>> operation, CancellationToken callerToken, string canceledMessage)
 			{
 				BeginUse ();
 				CancellationTokenSource? linkedCts = null;
@@ -293,28 +291,50 @@ namespace Xamarin.Android.Net
 			}
 
 			/// <summary>
-			/// Synchronous counterpart of <see cref="RunOperationAsync{T}"/>. The synchronous
-			/// <see cref="Stream"/> API carries no caller token, so only our internal abort token (fired by
-			/// <c>Dispose</c>) is observed.
+			/// Void counterpart of <see cref="RunOperation{T}"/>, for operations that return no value.
 			/// </summary>
-			T RunOperation<T> (Func<T> operation, string canceledMessage)
+			async ValueTask RunOperation (Func<CancellationToken, ValueTask> operation, CancellationToken callerToken, string canceledMessage)
 			{
 				BeginUse ();
+				CancellationTokenSource? linkedCts = null;
 				try {
-					using (abortCts.Token.Register (RequestDisconnect)) {
+					CancellationToken abortToken = GetAbortToken (callerToken, out linkedCts);
+					using (abortToken.Register (RequestDisconnect)) {
 						try {
-							return operation ();
-						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortCts.Token)) {
-							throw new System.OperationCanceledException (canceledMessage, ex, abortCts.Token);
+							await operation (abortToken).ConfigureAwait (false);
+						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortToken)) {
+							throw new System.OperationCanceledException (canceledMessage, ex, abortToken);
 						}
 					}
 				} finally {
+					linkedCts?.Dispose ();
 					EndUse ();
 				}
 			}
 
 			/// <summary>
-			/// The token a read should observe: our internal abort token (fired by <c>Dispose</c>) linked
+			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}"/> for the synchronous
+			/// <see cref="Stream"/> overrides, which carry no caller token.
+			/// </summary>
+			/// <remarks>
+			/// <c>GetAwaiter().GetResult()</c> does not block here: <paramref name="operation"/> runs to
+			/// completion synchronously inside the bracket, so no <c>await</c> ever suspends and the task is
+			/// already complete when its result is read.
+			/// </remarks>
+			T RunOperation<T> (Func<T> operation, string canceledMessage) =>
+				RunOperation (abortToken => new ValueTask<T> (operation ()), CancellationToken.None, canceledMessage)
+					.GetAwaiter ().GetResult ();
+
+			/// <summary>
+			/// Synchronous, void wrapper over the void <see cref="RunOperation(Func{CancellationToken,ValueTask},CancellationToken,string)"/>.
+			/// See <see cref="RunOperation{T}(Func{T},string)"/> for why <c>GetAwaiter().GetResult()</c> does
+			/// not block.
+			/// </summary>
+			void RunOperation (Action operation, string canceledMessage) =>
+				RunOperation (abortToken => { operation (); return ValueTask.CompletedTask; }, CancellationToken.None, canceledMessage)
+					.GetAwaiter ().GetResult ();
+
+			/// <summary>
 			/// with the caller's token when they passed a cancelable one. The linked source, when created, is
 			/// returned via <paramref name="linkedCts"/> so the caller disposes it after the read. Reached
 			/// only between <c>BeginUse()</c> and <c>EndUse()</c>, so <c>abortCts</c> is guaranteed alive
@@ -357,9 +377,9 @@ namespace Xamarin.Android.Net
 				bool shouldDispose;
 				lock (stateLock) {
 					inUseCount--;
-					shouldDispose = disposeRequested && inUseCount == 0 && !disposed;
-					if (shouldDispose)
-						disposed = true;
+					// Only the operation that brings inUseCount back to 0 after a dispose request tears down;
+					// exactly one operation observes that transition, so no separate "done" flag is needed.
+					shouldDispose = disposeRequested && inUseCount == 0;
 				}
 
 				if (shouldDispose)
@@ -382,11 +402,12 @@ namespace Xamarin.Android.Net
 				});
 
 			/// <summary>
-			/// The actual teardown. Runs exactly once (guarded by <c>disposed</c>) and only when no read is in
-			/// flight, so calling <c>Close()</c> on the Java stream here cannot trigger the "Unbalanced
-			/// enter/exit" drain-read race described above. This is always reached: whenever <c>Dispose()</c>
-			/// sets <c>disposeRequested</c>, either <c>Dispose()</c> runs it (no read in flight) or the last
-			/// <c>EndUse()</c> does (once the final read unwinds) -- so the stream and socket are never leaked.
+			/// The actual teardown. Runs exactly once and only when no operation is in flight, so calling
+			/// <c>Close()</c> on the Java stream here cannot trigger the "Unbalanced enter/exit" drain-read
+			/// race described above. It is always reached exactly once: when <c>Dispose()</c> first sets
+			/// <c>disposeRequested</c>, either <c>Dispose()</c> runs it (nothing in flight) or the unique
+			/// <c>EndUse()</c> that returns <c>inUseCount</c> to 0 does (once the final operation unwinds) --
+			/// so the stream and socket are never leaked and never closed twice.
 			/// </summary>
 			void DisposeCore ()
 			{
