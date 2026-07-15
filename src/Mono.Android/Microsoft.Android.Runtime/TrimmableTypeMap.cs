@@ -42,8 +42,7 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe and optional
-	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
+	/// Initializes the singleton with a single merged typemap universe.
 	/// </summary>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type> typeMap,
@@ -53,10 +52,10 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe and optional
-	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
+	/// Initializes the singleton with a single merged typemap universe and the per-rank array
+	/// dictionaries emitted by the current generator.
 	/// </summary>
-	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
+	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); retained for compatibility with the current generated typemap format.</param>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type> typeMap,
 		IReadOnlyDictionary<Type, Type> proxyMap,
@@ -491,15 +490,6 @@ public class TrimmableTypeMap
 		}
 
 		return targetType.IsAssignableFrom (proxyTargetType);
-	}
-
-	/// <summary>
-	/// Gets the container factory for a type from its proxy attribute.
-	/// Used for AOT-safe array/collection/dictionary creation.
-	/// </summary>
-	internal JavaPeerContainerFactory? GetContainerFactory (Type type)
-	{
-		return GetProxyForManagedType (type)?.GetContainerFactory ();
 	}
 
 	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>

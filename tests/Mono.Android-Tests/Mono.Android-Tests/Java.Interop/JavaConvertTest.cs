@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using Android.App;
 using Android.Content;
@@ -127,6 +128,99 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void FromJniHandle_IListNullableInt32 ()
+		{
+			using (var source = new JavaList<int?> ()) {
+				source.Add (1);
+				source.Add (null);
+				source.Add (3);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<int?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (typeof (JavaList<int?>), converted.GetType ());
+
+					var list = (IList<int?>) converted;
+					Assert.AreEqual (3, list.Count);
+					Assert.AreEqual ((int?) 1, list [0]);
+					Assert.IsNull (list [1]);
+					Assert.AreEqual ((int?) 3, list [2]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[Test]
+		public void FromJniHandle_IDictionaryNullableInt32String ()
+		{
+			using (var source = new JavaDictionary<int?, string> ()) {
+				source.Add (1, "one");
+				source.Add (null, "null");
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int?, string>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (typeof (JavaDictionary<int?, string>), converted.GetType ());
+
+					var dictionary = (IDictionary<int?, string>) converted;
+					Assert.AreEqual ("one", dictionary [1]);
+					Assert.AreEqual ("null", dictionary [null]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		// The non-generic source and assertions intentionally avoid referencing
+		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
+		// ValueTypeFactory<T>.CreateDictionaryWithKey<TKey>'s generic-virtual dispatch.
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryInt32Int64 ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("This test validates value/value dictionary rooting on the trimmable typemap path.");
+			}
+
+			using (var source = new JavaDictionary ()) {
+				source.Add (1, 100L);
+				source.Add (2, 200L);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int, long>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var dictionary = (IDictionary<int, long>) converted;
+					Assert.AreEqual (100L, dictionary [1]);
+					Assert.AreEqual (200L, dictionary [2]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		// Regression: byte-element collections must stay supported on the trimmable typemap path
+		// (ValueTypeFactory maps byte alongside sbyte). byte marshals to java.lang.Byte bitwise, so
+		// values above 127 round-trip through the signed Java byte.
+		[Test]
+		public void FromJniHandle_IListByte ()
+		{
+			using (var source = new JavaList<byte> ()) {
+				source.Add ((byte) 1);
+				source.Add ((byte) 200);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IList<byte>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (typeof (JavaList<byte>), converted.GetType ());
+
+					var list = (IList<byte>) converted;
+					Assert.AreEqual (2, list.Count);
+					Assert.AreEqual ((byte) 1, list [0]);
+					Assert.AreEqual ((byte) 200, list [1]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		static Java.Util.ArrayList CreateList (params int[][] items)
 		{
 			var list = new Java.Util.ArrayList ();
@@ -138,6 +232,23 @@ namespace Java.InteropTests
 			}
 			return list;
 		}
+
+		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle, JniHandleOwnership transfer)
+		{
+			var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
+			Assert.IsNotNull (javaConvert);
+
+			var method = javaConvert.GetMethod (
+				"FromJniHandle",
+				BindingFlags.Public | BindingFlags.Static,
+				binder: null,
+				types: new [] { typeof (IntPtr), typeof (JniHandleOwnership), typeof (Type) },
+				modifiers: null);
+			Assert.IsNotNull (method);
+
+			var value = method.Invoke (null, new object [] { handle, transfer, targetType });
+			Assert.IsNotNull (value);
+			return value;
+		}
 	}
 }
-
