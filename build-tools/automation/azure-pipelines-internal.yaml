@@ -56,7 +56,7 @@ variables:
 - name: _BuildConfig
   value: Release
 - name: ArcadeDotNetSdkVersion
-  value: 11.0
+  value: 11.0.100-preview.7.26355.102
 - name: DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE
   value: 'true'
 - name: DOTNET_SDK_VULNERABILITY_CHECK_DISABLE
@@ -342,7 +342,7 @@ stages:
         - task: UseDotNet@2
           displayName: Install .NET SDK for Arcade signing
           inputs:
-            version: $(ArcadeDotNetSdkVersion).x
+            version: $(ArcadeDotNetSdkVersion)
             includePreviewVersions: true
 
         - pwsh: |
@@ -350,10 +350,12 @@ stages:
             $artifacts = "$(Build.SourcesDirectory)\android\artifacts"
             $shipping = Join-Path $artifacts "packages\Release\Shipping"
             $logs = Join-Path $artifacts "log\Release"
+            $signingLogs = "$(Build.StagingDirectory)\signing-logs"
 
             Remove-Item $artifacts -Recurse -Force -ErrorAction Ignore
             New-Item $shipping -ItemType Directory -Force | Out-Null
             New-Item $logs -ItemType Directory -Force | Out-Null
+            New-Item $signingLogs -ItemType Directory -Force | Out-Null
 
             $packages = @(Get-ChildItem $unsigned -Filter "*.nupkg" -File -Recurse)
             if ($packages.Count -eq 0) {
@@ -424,7 +426,7 @@ stages:
               -sign `
               -ci `
               -warnAsError:$false `
-              -excludeCIBinarylog `
+              -binaryLogName "$(Build.StagingDirectory)\signing-logs\sign-nugets.binlog" `
               @properties
           displayName: Sign prebuilt NuGet packages with Arcade
           env:
@@ -457,6 +459,7 @@ stages:
               -sign `
               -ci `
               -warnAsError:$false `
+              -binaryLogName "$(Build.StagingDirectory)\signing-logs\workload-msis.binlog" `
               @properties
           displayName: Build and sign workload MSIs with Arcade
           env:
@@ -504,10 +507,10 @@ stages:
 
         - task: PublishPipelineArtifact@1
           displayName: Publish signing logs
-          condition: succeededOrFailed()
+          condition: always()
           inputs:
             artifactName: signing-logs-$(System.StageAttempt)-$(System.JobAttempt)
-            targetPath: $(Build.SourcesDirectory)\android\artifacts\log\Release
+            targetPath: $(Build.StagingDirectory)\signing-logs
 
 # MSBuild Tests Stage
 - stage: msbuild_dotnet
