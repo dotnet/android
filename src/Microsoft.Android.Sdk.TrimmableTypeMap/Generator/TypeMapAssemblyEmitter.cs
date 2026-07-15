@@ -78,7 +78,6 @@ sealed class TypeMapAssemblyEmitter
 
 	AssemblyReferenceHandle _javaInteropRef;
 
-	TypeReferenceHandle _javaPeerProxyRef;
 	TypeReferenceHandle _javaPeerProxyNonGenericRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
@@ -272,8 +271,6 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeReferences ()
 	{
 		var metadata = _pe.Metadata;
-		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
 		_javaPeerProxyNonGenericRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
@@ -663,40 +660,19 @@ sealed class TypeMapAssemblyEmitter
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
-		// Open generic definitions derive from the non-generic `JavaPeerProxy` abstract base.
-		// Using `JavaPeerProxy<T>` with an open T would force the CLR to resolve a generic
-		// argument that isn't available via the TypeMapLazyDictionary loader, and using a
-		// placeholder like `Java.Lang.Object` leaks an incorrect TargetType into the typemap.
-		// The non-generic base takes `targetType` as a ctor parameter, so we can pass the real
-		// open-generic type token (a TypeRef, not a closed TypeSpec) and keep TargetType correct.
-		//
-		// Interface peers also use the non-generic base: `JavaPeerProxy<T>` annotates T with
-		// [DynamicallyAccessedMembers(PublicConstructors|NonPublicConstructors)], and closing it
-		// over an interface (which has no constructors) makes ILC fail to load the type
-		// (TypeLoadException: "Failed to load type 'JavaPeerProxy`1<ISomeInterface>'"). The peer is
-		// still activated from its InvokerType in CreateInstance, so behaviour is unchanged.
-		bool useNonGenericBase = proxy.IsGenericDefinition || proxy.IsInterface;
-		EntityHandle proxyBaseType;
-		MemberReferenceHandle baseCtorRef;
-		if (useNonGenericBase) {
-			proxyBaseType = _javaPeerProxyNonGenericRef;
-			baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-					rt => rt.Void (),
-					p => {
-						p.AddParameter ().Type ().String ();
-						p.AddParameter ().Type ().Type (_systemTypeRef, false);
-					}));
-		} else {
-			var genericProxyBase = _pe.MakeGenericTypeSpec (_javaPeerProxyRef, targetTypeRef);
-			proxyBaseType = genericProxyBase;
-			baseCtorRef = _pe.AddMemberRef (genericProxyBase, ".ctor",
-				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-					rt => rt.Void (),
-					p => {
-						p.AddParameter ().Type ().String ();
-					}));
-		}
+		// All proxies derive from the non-generic `JavaPeerProxy` abstract base, which takes
+		// `targetType` as a ctor parameter. This keeps TargetType correct for every shape:
+		// concrete peers, open generic definitions (whose T isn't available via the
+		// TypeMapLazyDictionary loader), and interfaces (which have no constructors). Peers are
+		// activated from their generated CreateInstance / InvokerType, never by reflecting over T.
+		var proxyBaseType = (EntityHandle) _javaPeerProxyNonGenericRef;
+		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyNonGenericRef, ".ctor",
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+				rt => rt.Void (),
+				p => {
+					p.AddParameter ().Type ().String ();
+					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+				}));
 
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
@@ -710,22 +686,16 @@ sealed class TypeMapAssemblyEmitter
 			metadata.AddInterfaceImplementation (typeDefHandle, _iAndroidCallableWrapperRef);
 		}
 
-		// .ctor — pass the resolved JNI name and (for proxies using the non-generic
-		// base, i.e. open generic definitions and interfaces) the target type
-		// to the base proxy constructor.
+		// .ctor — pass the resolved JNI name and the target type to the base proxy constructor.
 		var selfAttrCtorDef = _pe.EmitBody (".ctor",
 			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
 			encoder => {
 				encoder.OpCode (ILOpCode.Ldarg_0);
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
-				if (useNonGenericBase) {
-					// Non-generic base ctor signature: (string, Type). Push the
-					// target type (open-generic definition or interface) as the second argument.
-					encoder.LoadToken (targetTypeRef);
-					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				}
-				encoder.Call (baseCtorRef, parameterCount: useNonGenericBase ? 2 : 1, isInstance: true);
+				encoder.LoadToken (targetTypeRef);
+				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
+				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
 				encoder.Return ();
 			});
 

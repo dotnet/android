@@ -117,19 +117,4 @@ namespace Java.Interop
 				|| (state & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
 		}
 	}
-
-	/// <summary>
-	/// Generic base for generated proxy types. Provides <see cref="JavaPeerProxy.TargetType"/>
-	/// automatically from the type parameter.
-	/// </summary>
-	/// <typeparam name="T">The target .NET peer type this proxy represents.</typeparam>
-	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-	public abstract class JavaPeerProxy<T>
-		: JavaPeerProxy where T : class, IJavaPeerable
-	{
-		protected JavaPeerProxy (string jniName)
-			: base (jniName, typeof (T))
-		{
-		}
-	}
 }

@@ -2353,8 +2353,6 @@ Java.Interop.JavaPeerProxy
 Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType) -> void
 Java.Interop.JavaPeerProxy.JniName.get -> string!
 Java.Interop.JavaPeerProxy.TargetType.get -> System.Type!
-Java.Interop.JavaPeerProxy<T>
-Java.Interop.JavaPeerProxy<T>.JavaPeerProxy(string! jniName) -> void
 Java.Lang.ICharSequence.GetChars(int srcBegin, int srcEnd, char[]! dst, int dstBegin) -> void
 Java.Lang.IllegalCallerException
 Java.Lang.IllegalCallerException.IllegalCallerException() -> void
