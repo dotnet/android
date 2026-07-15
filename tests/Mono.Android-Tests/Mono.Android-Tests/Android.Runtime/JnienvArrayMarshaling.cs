@@ -176,6 +176,74 @@ namespace Android.RuntimeTests {
 			}
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NewAndGetArray_SByteJaggedArrays (bool generic)
+		{
+			AssertArrayRoundTrip (new sbyte[]{sbyte.MinValue, -1, 0, sbyte.MaxValue}, generic);
+			AssertArrayRoundTrip (new [] {
+				new sbyte[]{sbyte.MinValue, -1},
+				new sbyte[]{0, sbyte.MaxValue},
+			}, generic);
+			AssertArrayRoundTrip (new [] {
+				new [] {
+					new sbyte[]{sbyte.MinValue, -1},
+					new sbyte[]{0, sbyte.MaxValue},
+				},
+				new [] {
+					new sbyte[]{sbyte.MaxValue, 0},
+					new sbyte[]{-1, sbyte.MinValue},
+				},
+			}, generic);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NewAndGetArray_ByteJaggedArraysPreserveHighBits (bool generic)
+		{
+			AssertArrayRoundTrip (new byte[]{0, 127, 128, byte.MaxValue}, generic);
+			AssertArrayRoundTrip (new [] {
+				new byte[]{0, 127},
+				new byte[]{128, byte.MaxValue},
+			}, generic);
+			AssertArrayRoundTrip (new [] {
+				new [] {
+					new byte[]{0, 127},
+					new byte[]{128, byte.MaxValue},
+				},
+				new [] {
+					new byte[]{byte.MaxValue, 128},
+					new byte[]{127, 0},
+				},
+			}, generic);
+		}
+
+		static void AssertArrayRoundTrip<T> (T[] expected, bool generic)
+		{
+			int rank = 1;
+			Type elementType = typeof (T);
+			while (elementType.IsArray) {
+				rank++;
+				elementType = elementType.GetElementType ();
+			}
+
+			IntPtr array = generic ? JNIEnv.NewArray<T> (expected) : JNIEnv.NewArray ((Array) expected);
+
+			try {
+				Assert.AreEqual (new string ('[', rank) + "B", JNIEnv.GetClassNameFromInstance (array));
+				if (generic)
+					JNIEnv.CopyArray<T> (expected, array);
+				else
+					JNIEnv.CopyArray (expected, typeof (T), array);
+				Array actual = generic
+					? JNIEnv.GetArray<T> (array)
+					: JNIEnv.GetArray (array, JniHandleOwnership.DoNotTransfer, typeof (T));
+				Assert.AreEqual (expected, actual);
+			} finally {
+				JNIEnv.DeleteLocalRef (array);
+			}
+		}
+
 		[Test]
 		public void GetArray_JavaLangByteArrayToSystemByteArray ()
 		{
