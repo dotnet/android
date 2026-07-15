@@ -12,6 +12,9 @@ namespace Xamarin.Android.Build.Tests;
 
 public class MavenDownloadTests
 {
+	// Internal CI cannot resolve Maven Central directly; the public mirror provides the same artifacts anonymously.
+	const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
+
 	[Test]
 	public async Task MissingVersionMetadata ()
 	{
@@ -161,7 +164,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4")],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4", DotNetPublicMaven)],
 			};
 
 			await task.RunTaskAsync ();
@@ -172,7 +175,8 @@ public class MavenDownloadTests
 			var output_item = task.ResolvedAndroidMavenLibraries! [0];
 
 			Assert.AreEqual ("com.google.auto.value:auto-value-annotations:1.10.4", output_item.GetMetadata ("JavaArtifact"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom"), output_item.GetMetadata ("Manifest"));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom")));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
