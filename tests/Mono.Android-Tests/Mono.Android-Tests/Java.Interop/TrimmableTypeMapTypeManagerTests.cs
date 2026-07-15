@@ -15,8 +15,8 @@ namespace Java.InteropTests
 	public class TrimmableTypeMapTypeManagerTests
 	{
 		// Test subclass that allows instantiation without full TrimmableTypeMap initialization.
-		// GetStaticMethodFallbackTypesCore does not use TrimmableTypeMap.Instance, so the test
-		// can run without an initialized TrimmableTypeMap singleton.
+		// Built-in type-signature and static-method fallback lookups do not use
+		// TrimmableTypeMap.Instance, so those tests can run without an initialized singleton.
 		sealed class TestableTrimmableTypeMapTypeManager : TrimmableTypeMapTypeManager
 		{
 		}
@@ -32,6 +32,16 @@ namespace Java.InteropTests
 			Assert.AreEqual (2, fallbacks.Count);
 			Assert.AreEqual (expectedDesugar, fallbacks [0]);
 			Assert.AreEqual (expectedFallback, fallbacks [1]);
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetTypeSignature_NullableByteArrayArray_ReturnsJavaLangByte ()
+		{
+			using var manager = new TestableTrimmableTypeMapTypeManager ();
+			var signature = manager.GetTypeSignature (typeof (byte?[][]));
+
+			Assert.AreEqual ("[[Ljava/lang/Byte;", signature.Name);
 		}
 
 		// Verifies the generic-type-definition fallback in GetProxyForManagedType:
@@ -288,6 +298,75 @@ namespace Java.InteropTests
 			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (sbyte[][]));
 			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>));
 			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
+		}
+
+		// Regression: the runtime replacement (BuildRuntimeArrayTypes) must return the full set of array
+		// and wrapper types, not just T[]. The TryGetArrayProxy_* tests above only cover the legacy
+		// generated-proxy path, and the marshaling round-trip tests only need T[]. This is a pure
+		// function, so it runs on every config.
+		[Test]
+		public void BuildRuntimeArrayTypes_ReferenceLeaf_ReturnsProxyContract ()
+		{
+			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (Java.Lang.Object), rank: 1);
+			CollectionAssert.AreEquivalent (
+				new [] {
+					typeof (JavaObjectArray<Java.Lang.Object>),
+					typeof (Java.Interop.JavaArray<Java.Lang.Object>),
+					typeof (Java.Lang.Object[]),
+				},
+				rank1);
+
+			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (Java.Lang.Object), rank: 2);
+			CollectionAssert.AreEquivalent (
+				new [] {
+					typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>),
+					typeof (JavaObjectArray<Java.Lang.Object>[]),
+					typeof (JavaObjectArray<Java.Interop.JavaArray<Java.Lang.Object>>),
+					typeof (Java.Interop.JavaArray<Java.Lang.Object>[]),
+					typeof (JavaObjectArray<Java.Lang.Object[]>),
+					typeof (Java.Lang.Object[][]),
+				},
+				rank2);
+		}
+
+		[Test]
+		public void BuildRuntimeArrayTypes_PrimitiveLeaf_ReturnsProxyContract ()
+		{
+			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 1);
+			CollectionAssert.AreEquivalent (
+				new [] {
+					typeof (sbyte[]),
+					typeof (Java.Interop.JavaArray<sbyte>),
+					typeof (JavaPrimitiveArray<sbyte>),
+					typeof (JavaSByteArray),
+				},
+				rank1);
+
+			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 2);
+			CollectionAssert.AreEquivalent (
+				new [] {
+					typeof (JavaObjectArray<sbyte[]>),
+					typeof (sbyte[][]),
+					typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>),
+					typeof (Java.Interop.JavaArray<sbyte>[]),
+					typeof (JavaObjectArray<JavaPrimitiveArray<sbyte>>),
+					typeof (JavaPrimitiveArray<sbyte>[]),
+					typeof (JavaObjectArray<JavaSByteArray>),
+					typeof (JavaSByteArray[]),
+				},
+				rank2);
+		}
+
+		[Test]
+		public void BuildRuntimeArrayTypes_NullablePrimitiveLeaf_ReturnsVector ()
+		{
+			// Nullable primitives have no array proxy and no AOT-safe Java.Interop array wrapper, so the
+			// fallback returns just the exact rooted vector (int?[]) rather than an unrooted value generic.
+			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 1);
+			CollectionAssert.AreEquivalent (new [] { typeof (int?[]) }, rank1);
+
+			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 2);
+			CollectionAssert.AreEquivalent (new [] { typeof (int?[][]) }, rank2);
 		}
 
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
