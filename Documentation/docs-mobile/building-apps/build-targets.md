@@ -109,6 +109,14 @@ existing items with additional metadata before this target or the `Publish`
 target returns them. Replacing `$(GetApplicationArtifactsDependsOn)` does not
 remove the required `Build` dependency.
 
+Common application metadata is read from the final merged
+**AndroidManifest.xml** before the artifacts are collected. Final manifest
+values take precedence over corresponding project properties, including when a
+custom manifest overrides generated values or
+`$(GenerateApplicationManifest)` is `false`. An `android:label` resource
+reference such as `@string/app_name` remains a resource reference; no locale is
+selected when the metadata is returned.
+
 Call this target directly when a CI job or custom tool needs the build output
 artifact paths:
 
@@ -168,7 +176,9 @@ Builds the application, copies final APK and Android App Bundle files to
 `$(PublishDir)`, and returns the
 [`@(ApplicationArtifact)`](build-items.md#applicationartifact) item group.
 Returned items use the copied publish-directory paths and preserve artifact
-metadata such as `%(PackageFormat)`, `%(Signed)`, `%(PackageId)`, and `%(Abi)`.
+metadata such as `%(PackageFormat)`, `%(Signed)`, `%(PackageId)`, `%(Abi)`,
+`%(ApplicationId)`, `%(ApplicationTitle)`, `%(ApplicationName)`,
+`%(ApplicationDisplayVersion)`, and `%(ApplicationVersion)`.
 
 `Publish` first runs `GetApplicationArtifacts`, which builds the project and
 populates `@(ApplicationArtifact)` with the platform-produced artifacts. Targets

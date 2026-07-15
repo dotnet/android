@@ -43,6 +43,11 @@ This file contains the implementation for 'dotnet publish'.
         <Signed>%(_ApplicationArtifactForPublish.Signed)</Signed>
         <PackageId>%(_ApplicationArtifactForPublish.PackageId)</PackageId>
         <Abi Condition=" '%(_ApplicationArtifactForPublish.Abi)' != '' ">%(_ApplicationArtifactForPublish.Abi)</Abi>
+        <ApplicationId>%(_ApplicationArtifactForPublish.ApplicationId)</ApplicationId>
+        <ApplicationTitle>%(_ApplicationArtifactForPublish.ApplicationTitle)</ApplicationTitle>
+        <ApplicationName>%(_ApplicationArtifactForPublish.ApplicationName)</ApplicationName>
+        <ApplicationDisplayVersion>%(_ApplicationArtifactForPublish.ApplicationDisplayVersion)</ApplicationDisplayVersion>
+        <ApplicationVersion>%(_ApplicationArtifactForPublish.ApplicationVersion)</ApplicationVersion>
       </_ApplicationArtifactPublishCopy>
       <ApplicationArtifact Remove="@(ApplicationArtifact)" />
       <ApplicationArtifact Include="@(_ApplicationArtifactPublishCopy)" />
