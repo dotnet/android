@@ -522,15 +522,15 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("TypeMapAttribute`1"));
 
 		// 2-arg: TypeMap(string jniName, Type proxyType) — unconditional.
-		_typeMapAttrCtorRef2Arg = AddTypeMapAttr2ArgCtorRef (_anchorTypeHandle);
+		_typeMapAttrCtorRef2Arg = AddTypeMapAttr2ArgCtorRef ();
 
 		// 3-arg: TypeMap(string jniName, Type proxyType, Type targetType) — trimmable.
-		_typeMapAttrCtorRef3Arg = AddTypeMapAttr3ArgCtorRef (_anchorTypeHandle);
+		_typeMapAttrCtorRef3Arg = AddTypeMapAttr3ArgCtorRef ();
 	}
 
-	MemberReferenceHandle AddTypeMapAttr2ArgCtorRef (EntityHandle anchor)
+	MemberReferenceHandle AddTypeMapAttr2ArgCtorRef ()
 	{
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, anchor);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, _anchorTypeHandle);
 		return _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
@@ -540,9 +540,9 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	MemberReferenceHandle AddTypeMapAttr3ArgCtorRef (EntityHandle anchor)
+	MemberReferenceHandle AddTypeMapAttr3ArgCtorRef ()
 	{
-		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, anchor);
+		var closedAttrTypeSpec = _pe.MakeGenericTypeSpec (_typeMapAttrOpenRef, _anchorTypeHandle);
 		return _pe.AddMemberRef (closedAttrTypeSpec, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
