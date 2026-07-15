@@ -2346,14 +2346,9 @@ Java.Interop.BaseExportAttribute
 Java.Interop.BaseExportAttribute.BaseExportAttribute() -> void
 Java.Interop.IAndroidCallableWrapper
 Java.Interop.IAndroidCallableWrapper.RegisterNatives(Java.Interop.JniType! nativeClass) -> void
-Java.Interop.JavaArrayProxy
-Java.Interop.JavaArrayProxy.JavaArrayProxy() -> void
 Java.Interop.JavaPeerAliasesAttribute
 Java.Interop.JavaPeerAliasesAttribute.Aliases.get -> string![]!
 Java.Interop.JavaPeerAliasesAttribute.JavaPeerAliasesAttribute(params string![]! aliases) -> void
-Java.Interop.JavaPeerContainerFactory
-Java.Interop.JavaPeerContainerFactory.JavaPeerContainerFactory() -> void
-Java.Interop.JavaPeerContainerFactory<T>
 Java.Interop.JavaPeerProxy
 Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType) -> void
 Java.Interop.JavaPeerProxy.JniName.get -> string!
@@ -2452,8 +2447,6 @@ abstract Android.OS.Storage.Operations.Sources.OperationSource.ToString() -> str
 abstract Android.OS.Storage.Operations.Targets.OperationTarget.ToString() -> string!
 abstract Android.Service.Messaging.AlternativeMessageTransportService.OnMessageUpgradeRequested(Android.Net.Uri! contentUri, Java.Util.Functions.IConsumer! upgradeStatus) -> void
 abstract Android.Views.BlurRegion.Copy() -> Android.Views.BlurRegion!
-abstract Java.Interop.JavaArrayProxy.CreateManagedArray(int length) -> System.Array!
-abstract Java.Interop.JavaArrayProxy.GetArrayTypes() -> System.Type![]!
 abstract Java.Interop.JavaPeerProxy.CreateInstance(nint handle, Android.Runtime.JniHandleOwnership transfer) -> Java.Interop.IJavaPeerable?
 abstract Java.Util.Spliterators.AbstractSpliterator.TryAdvance(Java.Util.Functions.IConsumer? action) -> bool
 const Android.App.ActivityManager.AppTask.WindowingLayerNormalApp = Android.App.ActivityManagerAppTaskWindowingLayer.NormalApp -> Android.App.ActivityManagerAppTaskWindowingLayer
@@ -4145,7 +4138,6 @@ override Android.Widget.PhotoPicker.PhotoPickerSelectionParams.Builder.JniPeerMe
 override Android.Widget.PhotoPicker.PhotoPickerSelectionParams.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Java.Interop.JavaPeerProxy<T>.GetContainerFactory() -> Java.Interop.JavaPeerContainerFactory?
 override Java.Lang.IllegalCallerException.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Java.Lang.IllegalCallerException.ThresholdClass.get -> nint
 override Java.Lang.IllegalCallerException.ThresholdType.get -> System.Type!
@@ -4383,7 +4375,6 @@ static Android.Views.View.RegisterCalledFromWrongThreadListener(Android.Views.Vi
 static Android.Views.View.UnregisterCalledFromWrongThreadListener(Android.Views.View.ICalledFromWrongThreadListener! listener) -> void
 static Android.Widget.PhotoPicker.PhotoPickerSelectionParams.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.Creator.get -> Android.OS.IParcelableCreator!
-static Java.Interop.JavaPeerContainerFactory.Create<T>() -> Java.Interop.JavaPeerContainerFactory!
 static Java.Interop.JavaPeerProxy.GetActivationPeer(nint jniSelf) -> Java.Interop.IJavaPeerable?
 static Java.Interop.JavaPeerProxy.MarkActivationPeerReplaceable(nint jniSelf) -> void
 static Java.Interop.JavaPeerProxy.SetActivationPeerReference(Java.Interop.IJavaPeerable! peer, nint jniSelf) -> void
@@ -4453,10 +4444,7 @@ static Javax.Xml.Parsers.DocumentBuilderFactory.NewDefaultNSInstance() -> Javax.
 static Javax.Xml.Parsers.DocumentBuilderFactory.NewNSInstance() -> Javax.Xml.Parsers.DocumentBuilderFactory?
 static Javax.Xml.Parsers.DocumentBuilderFactory.NewNSInstance(string? factoryClassName, Java.Lang.ClassLoader? classLoader) -> Javax.Xml.Parsers.DocumentBuilderFactory?
 static Microsoft.Android.Runtime.TrimmableTypeMap.Initialize(System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! typeMap, System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Type!>! proxyMap) -> void
-static Microsoft.Android.Runtime.TrimmableTypeMap.Initialize(System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! typeMap, System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Type!>! proxyMap, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>?[]![]? arrayMapsByUniverseAndRank) -> void
-static Microsoft.Android.Runtime.TrimmableTypeMap.Initialize(System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>! typeMap, System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Type!>! proxyMap, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>?[]? arrayMapsByRank) -> void
 static Microsoft.Android.Runtime.TrimmableTypeMap.Initialize(System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>![]! typeMaps, System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Type!>![]! proxyMaps) -> void
-static Microsoft.Android.Runtime.TrimmableTypeMap.Initialize(System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>![]! typeMaps, System.Collections.Generic.IReadOnlyDictionary<System.Type!, System.Type!>![]! proxyMaps, System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>?[]![]? arrayMapsByUniverseAndRank) -> void
 virtual Android.App.Activity.OnHandoffActivityDataRequested(Android.App.HandoffActivityDataRequestInfo! requestInfo) -> Android.App.HandoffActivityData?
 virtual Android.App.ActivityManager.AppTask.MoveTaskTo(Android.App.TaskLocation! location, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
 virtual Android.App.ActivityManager.AppTask.RequestWindowingLayer(int layer, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
@@ -4702,7 +4690,6 @@ virtual Android.Views.WindowManagerLayoutParams.SetKeyboardCaptureEnabled(bool e
 virtual Android.Webkit.WebChromeClient.FileChooserParams.PermissionMode.get -> int
 virtual Android.Widget.RemoteViews.SetAppWidgetEventTag(int viewId, int tag) -> void
 virtual Android.Widget.RemoteViews.SetViewPadding(int viewId, float left, float top, float right, float bottom, int units) -> void
-virtual Java.Interop.JavaPeerProxy.GetContainerFactory() -> Java.Interop.JavaPeerContainerFactory?
 virtual Java.Nio.CharBuffer.GetChars(int srcBegin, int srcEnd, char[]! dst, int dstBegin) -> void
 virtual Javax.Net.Ssl.ExtendedSSLSession.StatusResponses.get -> System.Collections.Generic.IList<byte[]!>?
 virtual Javax.Net.Ssl.SSLParameters.GetNamedGroups() -> string![]?

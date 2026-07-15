@@ -50,11 +50,6 @@
     <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) (the extracted library .aar
          AndroidManifest.xml files) that the legacy manifest merger merges into the app manifest. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports</_GenerateTrimmableTypeMapDependsOn>
-    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
-         dynamic code is unavailable, so array creation uses the typemap path;
-         defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
-    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and ('$(PublishAot)' == 'true' or '$(DynamicCodeSupport)' == 'false') ">3</_AndroidTrimmableTypeMapMaxArrayRank>
-    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
       $(IncrementalCleanDependsOn);
@@ -150,7 +145,6 @@
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
-        MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"

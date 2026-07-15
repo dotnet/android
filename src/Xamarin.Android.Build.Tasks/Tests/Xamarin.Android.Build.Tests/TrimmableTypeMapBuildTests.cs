@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
@@ -310,31 +309,6 @@ namespace Xamarin.Android.Build.Tests {
 			builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 		}
 
-		[Test]
-		public void Build_WithTrimmableTypeMap_ArrayRankChangeRegeneratesTypeMap ()
-		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
-			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "0");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
-			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
-
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second build should have succeeded.");
-			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
-
-			proj.SetProperty ("_AndroidTrimmableTypeMapMaxArrayRank", "3");
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Array rank change build should have succeeded.");
-			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
-		}
 
 		[Test]
 		public void Build_WithTrimmableTypeMap_DoesNotHitCopyIfChangedMismatch ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
@@ -526,9 +500,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (
 				dynamicCodeSupportProperty.GetBoolean (),
 				"trimmable typemap builds should honor explicit DynamicCodeSupport=false.");
-			Assert.IsTrue (
-				dynamicCodeDisabledTrimmable.LinkedTypeMapAssembliesContainArrayRankSentinels,
-				"trimmable typemap builds should emit array typemap sentinels when dynamic code is disabled.");
 		}
 
 		[Test]
@@ -872,10 +843,7 @@ namespace UnnamedProject {
 			Assert.IsTrue (builder.Build (proj), $"{typemapImplementation} build should have succeeded.");
 
 			var runtimeConfigPath = FindOutputFile (builder, proj, $"{proj.ProjectName}.runtimeconfig.json");
-			var linkedAssemblyDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
-			return new DynamicCodeSupportProfile (
-				File.ReadAllText (runtimeConfigPath),
-				TypeMapAssembliesContainType (linkedAssemblyDirectory, "__ArrayMapRank1"));
+			return new DynamicCodeSupportProfile (File.ReadAllText (runtimeConfigPath));
 		}
 
 		ISet<string> ReadPackagedManagedAssemblyNames (string apkPath, AndroidTargetArch targetArch)
@@ -930,22 +898,6 @@ namespace UnnamedProject {
 			return files [0];
 		}
 
-		bool TypeMapAssembliesContainType (string directory, string typeName)
-		{
-			if (!Directory.Exists (directory)) {
-				return false;
-			}
-
-			foreach (var file in Directory.EnumerateFiles (directory, "*.dll", SearchOption.TopDirectoryOnly).Where (IsTypeMapAssemblyPath)) {
-				using var assembly = AssemblyDefinition.ReadAssembly (file);
-				if (assembly.Modules.SelectMany (m => m.Types).Any (type => type.Name == typeName)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
 		bool IsTypeMapAssemblyPath (string file)
 		{
 			return IsTypeMapAssemblyName (Path.GetFileName (file));
@@ -973,8 +925,6 @@ namespace UnnamedProject {
 			return SHA256.HashData (stream);
 		}
 
-		sealed record DynamicCodeSupportProfile (
-			string RuntimeConfig,
-			bool LinkedTypeMapAssembliesContainArrayRankSentinels);
+		sealed record DynamicCodeSupportProfile (string RuntimeConfig);
 	}
 }

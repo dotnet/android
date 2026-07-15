@@ -80,7 +80,6 @@ sealed class TypeMapAssemblyEmitter
 
 	TypeReferenceHandle _javaPeerProxyRef;
 	TypeReferenceHandle _javaPeerProxyNonGenericRef;
-	TypeReferenceHandle _javaArrayProxyRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
@@ -89,9 +88,6 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _iAndroidCallableWrapperRef;
 	TypeReferenceHandle _jniEnvRef;
 	TypeReferenceHandle _javaLangObjectRef;
-	TypeReferenceHandle _javaObjectArrayOpenRef;
-	TypeReferenceHandle _javaArrayOpenRef;
-	TypeReferenceHandle _javaPrimitiveArrayOpenRef;
 	TypeReferenceHandle _systemTypeRef;
 	TypeReferenceHandle _systemArrayRef;
 	TypeReferenceHandle _runtimeTypeHandleRef;
@@ -119,7 +115,6 @@ sealed class TypeMapAssemblyEmitter
 	BlobHandle _ucoAttrBlobHandle;
 	MemberReferenceHandle _typeMapAttrCtorRef2Arg;
 	MemberReferenceHandle _typeMapAttrCtorRef3Arg;
-	MemberReferenceHandle _javaArrayProxyCtorRef;
 	MemberReferenceHandle _typeMapAssociationAttrCtorRef;
 	TypeReferenceHandle _typeMapAssociationAttrOpenRef;
 
@@ -146,10 +141,6 @@ sealed class TypeMapAssemblyEmitter
 	EntityHandle _anchorTypeHandle;
 
 	ExportMethodDispatchEmitter? _exportMethodDispatchEmitter;
-
-	// Per-rank array sentinel TypeDefs, 0-indexed by (rank - 1). Empty when array entries
-	// aren't emitted.
-	EntityHandle [] _rankAnchorHandles = [];
 
 	// Per-anchor TypeMap<TGroup> ctor refs, lazily built.
 	readonly Dictionary<EntityHandle, MemberReferenceHandle> _typeMapAttr2ArgCtorRefByAnchor = new ();
@@ -208,7 +199,6 @@ sealed class TypeMapAssemblyEmitter
 		} else {
 			EmitAnchorType ();
 		}
-		EmitRankSentinels (model);
 		EmitMemberReferences ();
 
 		// Track wrapper targets → handles for RegisterNatives.
@@ -220,10 +210,6 @@ sealed class TypeMapAssemblyEmitter
 
 		foreach (var holder in model.AliasHolders) {
 			EmitAliasHolderType (holder);
-		}
-
-		foreach (var arrayProxy in model.ArrayProxyTypes) {
-			EmitArrayProxyType (arrayProxy);
 		}
 
 		foreach (var entry in model.Entries) {
@@ -290,8 +276,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy`1"));
 		_javaPeerProxyNonGenericRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
-		_javaArrayProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaArrayProxy"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -300,12 +284,6 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("JNIEnv"));
 		_javaLangObjectRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Lang"), metadata.GetOrAddString ("Object"));
-		_javaObjectArrayOpenRef = metadata.AddTypeReference (_javaInteropRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaObjectArray`1"));
-		_javaArrayOpenRef = metadata.AddTypeReference (_javaInteropRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaArray`1"));
-		_javaPrimitiveArrayOpenRef = metadata.AddTypeReference (_javaInteropRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPrimitiveArray`1"));
 		_jniObjectReferenceRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniObjectReference"));
 		_jniObjectReferenceTypeRef = metadata.AddTypeReference (_javaInteropRef,
@@ -373,31 +351,6 @@ sealed class TypeMapAssemblyEmitter
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 	}
 
-	/// <summary>
-	/// Emits <c>__ArrayMapRank{N}</c> classes used as group type parameters
-	/// for array <c>TypeMap&lt;T&gt;</c> entries. Each per-assembly typemap owns its
-	/// rank anchors so array maps stay scoped to the generated assembly.
-	/// </summary>
-	void EmitRankSentinels (TypeMapAssemblyData model)
-	{
-		if (model.MaxArrayRank <= 0) {
-			return;
-		}
-
-		_rankAnchorHandles = new EntityHandle [model.MaxArrayRank];
-		var objectRef = _pe.Metadata.AddTypeReference (_pe.SystemRuntimeRef,
-			_pe.Metadata.GetOrAddString ("System"), _pe.Metadata.GetOrAddString ("Object"));
-		for (int i = 0; i < model.MaxArrayRank; i++) {
-			_rankAnchorHandles [i] = _pe.Metadata.AddTypeDefinition (
-				TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.Class,
-				default,
-				_pe.Metadata.GetOrAddString ($"__ArrayMapRank{i + 1}"),
-				objectRef,
-				MetadataTokens.FieldDefinitionHandle (_pe.Metadata.GetRowCount (TableIndex.Field) + 1),
-				MetadataTokens.MethodDefinitionHandle (_pe.Metadata.GetRowCount (TableIndex.MethodDef) + 1));
-		}
-	}
-
 	void EmitMemberReferences ()
 	{
 		_getTypeFromHandleRef = _pe.AddMemberRef (_systemTypeRef, "GetTypeFromHandle",
@@ -414,9 +367,6 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().String ()));
-
-		_javaArrayProxyCtorRef = _pe.AddMemberRef (_javaArrayProxyRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
 
 		// JniObjectReference..ctor(IntPtr handle, JniObjectReferenceType type)
 		// Note: The C# constructor has a default parameter (type = Invalid), but in IL there is only
@@ -827,69 +777,6 @@ sealed class TypeMapAssemblyEmitter
 
 		// Apply [JavaPeerAliases("key[0]", "key[1]", ...)] to the type
 		EmitJavaPeerAliasesAttribute (typeDefHandle, holder.AliasKeys);
-	}
-
-	void EmitArrayProxyType (ArrayProxyData proxy)
-	{
-		var metadata = _pe.Metadata;
-		var typeDefHandle = metadata.AddTypeDefinition (
-			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
-			metadata.GetOrAddString (proxy.Namespace),
-			metadata.GetOrAddString (proxy.TypeName),
-			_javaArrayProxyRef,
-			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
-			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
-
-		var selfAttrCtorDef = _pe.EmitBody (".ctor",
-			MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }),
-			encoder => {
-				encoder.OpCode (ILOpCode.Ldarg_0);
-				encoder.Call (_javaArrayProxyCtorRef, parameterCount: 0, isInstance: true);
-				encoder.Return ();
-			});
-
-		metadata.AddCustomAttribute (typeDefHandle, selfAttrCtorDef, _pe.BuildAttributeBlob (b => { }));
-
-		EmitArrayProxyGetArrayTypes (proxy);
-		EmitArrayProxyCreateManagedArray (proxy);
-	}
-
-	void EmitArrayProxyGetArrayTypes (ArrayProxyData proxy)
-	{
-		var arrayTypes = GetArrayProxyTypes (proxy);
-		_pe.EmitBody ("GetArrayTypes",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
-				rt => rt.Type ().SZArray ().Type (_systemTypeRef, false),
-				p => { }),
-			encoder => {
-				encoder.LoadConstantI4 (arrayTypes.Count);
-				encoder.NewArray (_systemTypeRef);
-				for (int i = 0; i < arrayTypes.Count; i++) {
-					encoder.OpCode (ILOpCode.Dup);
-					encoder.LoadConstantI4 (i);
-					encoder.LoadToken (ResolveRuntimeTypeSpec (arrayTypes [i]));
-					encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-					encoder.OpCode (ILOpCode.Stelem_ref);
-				}
-				encoder.Return (returnsValue: true);
-			});
-	}
-
-	void EmitArrayProxyCreateManagedArray (ArrayProxyData proxy)
-	{
-		var elementType = AddSzArrayRank (new NamedRuntimeTypeSpec (proxy.ElementType), proxy.Rank - 1);
-		_pe.EmitBody ("CreateManagedArray",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
-				rt => rt.Type ().Type (_systemArrayRef, false),
-				p => p.AddParameter ().Type ().Int32 ()),
-			encoder => {
-				encoder.LoadArgument (1);
-				encoder.NewArray (ResolveRuntimeTypeSpec (elementType));
-				encoder.Return (returnsValue: true);
-			});
 	}
 
 	void EmitJavaPeerAliasesAttributeCtorRef ()
@@ -1617,62 +1504,6 @@ sealed class TypeMapAssemblyEmitter
 		encoder.CastClass (managedTypeHandle);
 	}
 
-	IReadOnlyList<RuntimeTypeSpec> GetArrayProxyTypes (ArrayProxyData proxy)
-	{
-		var elementType = new NamedRuntimeTypeSpec (proxy.ElementType);
-		if (proxy.Primitive is null) {
-			var rankOneObjectTypes = new RuntimeTypeSpec [] {
-				new GenericRuntimeTypeSpec (_javaObjectArrayOpenRef, elementType),
-				new GenericRuntimeTypeSpec (_javaArrayOpenRef, elementType),
-				AddSzArrayRank (elementType, 1),
-			};
-			return ExpandRankOneTypes (rankOneObjectTypes, proxy.Rank);
-		}
-
-		List<RuntimeTypeSpec> rankOneTypes = [
-			AddSzArrayRank (elementType, 1),
-			new GenericRuntimeTypeSpec (_javaArrayOpenRef, elementType),
-			new GenericRuntimeTypeSpec (_javaPrimitiveArrayOpenRef, elementType),
-		];
-		foreach (var concreteArrayType in proxy.Primitive.ConcreteArrayTypes) {
-			rankOneTypes.Add (new NamedRuntimeTypeSpec (concreteArrayType));
-		}
-
-		return ExpandRankOneTypes (rankOneTypes, proxy.Rank);
-	}
-
-	IReadOnlyList<RuntimeTypeSpec> ExpandRankOneTypes (IReadOnlyList<RuntimeTypeSpec> rankOneTypes, int rank)
-	{
-		if (rank == 1) {
-			return rankOneTypes;
-		}
-
-		var result = new List<RuntimeTypeSpec> (rankOneTypes.Count * 2);
-		foreach (var type in rankOneTypes) {
-			result.Add (MakeNestedJavaObjectArrayType (type, rank - 1));
-			result.Add (AddSzArrayRank (type, rank - 1));
-		}
-		return result;
-	}
-
-	static RuntimeTypeSpec AddSzArrayRank (RuntimeTypeSpec elementType, int rank)
-	{
-		var result = elementType;
-		for (int i = 0; i < rank; i++) {
-			result = new SzArrayRuntimeTypeSpec (result);
-		}
-		return result;
-	}
-
-	RuntimeTypeSpec MakeNestedJavaObjectArrayType (RuntimeTypeSpec elementType, int rank)
-	{
-		var result = elementType;
-		for (int i = 0; i < rank; i++) {
-			result = new GenericRuntimeTypeSpec (_javaObjectArrayOpenRef, result);
-		}
-		return result;
-	}
-
 	EntityHandle ResolveRuntimeTypeSpec (RuntimeTypeSpec type)
 	{
 		if (type is NamedRuntimeTypeSpec namedType) {
@@ -1965,22 +1796,7 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitTypeMapAttribute (TypeMapAttributeData entry)
 	{
-		MemberReferenceHandle ctorRef;
-		if (entry.AnchorRank is int rank) {
-			if (entry.IsUnconditional) {
-				throw new InvalidOperationException (
-					$"Rank-anchored TypeMap entries must be conditional (3-arg). Entry '{entry.MapKey}' rank={rank}.");
-			}
-			int anchorIndex = rank - 1;
-			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length) {
-				throw new InvalidOperationException (
-					$"No rank-{rank} anchor available for entry '{entry.MapKey}'. " +
-					$"Ensure TypeMapAssemblyData.MaxArrayRank was >= {rank} before emit.");
-			}
-			ctorRef = GetOrAddTypeMapAttr3ArgCtorRef (_rankAnchorHandles [anchorIndex]);
-		} else {
-			ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
-		}
+		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
 
 		var blob = _pe.BuildAttributeBlob (b => {
 			b.WriteSerializedString (entry.MapKey);
@@ -1998,15 +1814,6 @@ sealed class TypeMapAssemblyEmitter
 	void EmitTypeMapAssociationAttribute (TypeMapAssociationData assoc)
 	{
 		var ctorRef = _typeMapAssociationAttrCtorRef;
-		if (assoc.AnchorRank is int rank) {
-			int anchorIndex = rank - 1;
-			if ((uint)anchorIndex >= (uint)_rankAnchorHandles.Length) {
-				throw new InvalidOperationException (
-					$"No rank-{rank} anchor available for association '{assoc.SourceTypeReference}'. " +
-					$"Ensure TypeMapAssemblyData.MaxArrayRank was >= {rank} before emit.");
-			}
-			ctorRef = GetOrAddTypeMapAssociationAttrCtorRef (_rankAnchorHandles [anchorIndex]);
-		}
 
 		var blob = _pe.BuildAttributeBlob (b => {
 			b.WriteSerializedString (assoc.SourceTypeReference);
