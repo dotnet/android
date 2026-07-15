@@ -70,7 +70,6 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			const string rid = "android-x64";
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("RuntimeIdentifier", rid);
