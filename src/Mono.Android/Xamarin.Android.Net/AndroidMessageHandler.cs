@@ -226,74 +226,23 @@ namespace Xamarin.Android.Net
 				base.Dispose (disposing);
 			}
 
-			public override void Flush ()
-			{
-				BeginUse ();
-				try {
-					using (abortCts.Token.Register (RequestDisconnect)) {
-						stream.Flush ();
-					}
-				} finally {
-					EndUse ();
-				}
-			}
+			public override void Flush () =>
+				RunOperation (() => { stream.Flush (); return true; }, "Response body flush was canceled.");
 
-			public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
-			{
-				BeginUse ();
-				CancellationTokenSource? linkedCts = null;
-				try {
-					CancellationToken abortToken = GetAbortToken (cancellationToken, out linkedCts);
-					using (abortToken.Register (RequestDisconnect)) {
-						try {
-							await stream.CopyToAsync (destination, bufferSize, abortToken).ConfigureAwait (false);
-						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortToken)) {
-							throw new System.OperationCanceledException ("Response body read was canceled.", ex, abortToken);
-						}
-					}
-				} finally {
-					linkedCts?.Dispose ();
-					EndUse ();
-				}
-			}
+			public override Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken) =>
+				RunOperationAsync (async abortToken => {
+					await stream.CopyToAsync (destination, bufferSize, abortToken).ConfigureAwait (false);
+					return true;
+				}, cancellationToken, "Response body read was canceled.").AsTask ();
 
-			public override int Read (byte[] buffer, int offset, int count)
-			{
-				BeginUse ();
-				try {
-					using (abortCts.Token.Register (RequestDisconnect)) {
-						try {
-							return stream.Read (buffer, offset, count);
-						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortCts.Token)) {
-							throw new System.OperationCanceledException ("Response body read was canceled.", ex, abortCts.Token);
-						}
-					}
-				} finally {
-					EndUse ();
-				}
-			}
+			public override int Read (byte[] buffer, int offset, int count) =>
+				RunOperation (() => stream.Read (buffer, offset, count), "Response body read was canceled.");
 
 			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
 
 			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
-			public override async ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
-			{
-				BeginUse ();
-				CancellationTokenSource? linkedCts = null;
-				try {
-					CancellationToken abortToken = GetAbortToken (cancellationToken, out linkedCts);
-					using (abortToken.Register (RequestDisconnect)) {
-						try {
-							return await stream.ReadAsync (buffer, abortToken).ConfigureAwait (false);
-						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortToken)) {
-							throw new System.OperationCanceledException ("Response body read was canceled.", ex, abortToken);
-						}
-					}
-				} finally {
-					linkedCts?.Dispose ();
-					EndUse ();
-				}
-			}
+			public override ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+				RunOperationAsync (abortToken => stream.ReadAsync (buffer, abortToken), cancellationToken, "Response body read was canceled.");
 
 			public override long Seek (long offset, SeekOrigin origin)
 			{
@@ -307,39 +256,59 @@ namespace Xamarin.Android.Net
 				stream.SetLength (value);
 			}
 
-			public override void Write (byte[] buffer, int offset, int count)
+			public override void Write (byte[] buffer, int offset, int count) =>
+				RunOperation (() => { stream.Write (buffer, offset, count); return true; }, "Response body write was canceled.");
+
+			public override Task WriteAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => WriteAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+
+			public override ValueTask WriteAsync (ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) =>
+				new ValueTask (RunOperationAsync (async abortToken => {
+					await stream.WriteAsync (buffer, abortToken).ConfigureAwait (false);
+					return true;
+				}, cancellationToken, "Response body write was canceled.").AsTask ());
+
+			/// <summary>
+			/// Runs an asynchronous inner-stream operation inside the drain-safety bracket: it counts as
+			/// in-flight (<c>BeginUse</c>/<c>EndUse</c>), observes an abort token linked with the caller's
+			/// token, registers <c>RequestDisconnect</c> to abort the parked operation on cancellation, and
+			/// maps a cancellation-caused transport exception to <see cref="OperationCanceledException"/>.
+			/// </summary>
+			async ValueTask<T> RunOperationAsync<T> (Func<CancellationToken, ValueTask<T>> operation, CancellationToken callerToken, string canceledMessage)
+			{
+				BeginUse ();
+				CancellationTokenSource? linkedCts = null;
+				try {
+					CancellationToken abortToken = GetAbortToken (callerToken, out linkedCts);
+					using (abortToken.Register (RequestDisconnect)) {
+						try {
+							return await operation (abortToken).ConfigureAwait (false);
+						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortToken)) {
+							throw new System.OperationCanceledException (canceledMessage, ex, abortToken);
+						}
+					}
+				} finally {
+					linkedCts?.Dispose ();
+					EndUse ();
+				}
+			}
+
+			/// <summary>
+			/// Synchronous counterpart of <see cref="RunOperationAsync{T}"/>. The synchronous
+			/// <see cref="Stream"/> API carries no caller token, so only our internal abort token (fired by
+			/// <c>Dispose</c>) is observed.
+			/// </summary>
+			T RunOperation<T> (Func<T> operation, string canceledMessage)
 			{
 				BeginUse ();
 				try {
 					using (abortCts.Token.Register (RequestDisconnect)) {
 						try {
-							stream.Write (buffer, offset, count);
+							return operation ();
 						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortCts.Token)) {
-							throw new System.OperationCanceledException ("Response body write was canceled.", ex, abortCts.Token);
+							throw new System.OperationCanceledException (canceledMessage, ex, abortCts.Token);
 						}
 					}
 				} finally {
-					EndUse ();
-				}
-			}
-
-			public override Task WriteAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => WriteAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
-
-			public override async ValueTask WriteAsync (ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
-			{
-				BeginUse ();
-				CancellationTokenSource? linkedCts = null;
-				try {
-					CancellationToken abortToken = GetAbortToken (cancellationToken, out linkedCts);
-					using (abortToken.Register (RequestDisconnect)) {
-						try {
-							await stream.WriteAsync (buffer, abortToken).ConfigureAwait (false);
-						} catch (Exception ex) when (ShouldMapToCancellation (ex, abortToken)) {
-							throw new System.OperationCanceledException ("Response body write was canceled.", ex, abortToken);
-						}
-					}
-				} finally {
-					linkedCts?.Dispose ();
 					EndUse ();
 				}
 			}
