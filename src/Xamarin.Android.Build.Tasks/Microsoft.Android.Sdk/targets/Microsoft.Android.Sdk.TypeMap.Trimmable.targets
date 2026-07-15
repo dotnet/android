@@ -74,8 +74,17 @@
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <!-- Debug + array maps (aggregate universe with maxArrayRank > 0, i.e. Debug NativeAOT) is not
          yet supported for pre-generated framework typemaps; fall back to scanning normally so the
-         build still succeeds (without the pre-generation speedup) instead of failing. -->
+         build still succeeds (without the pre-generation speedup) instead of failing. Tracked by
+         https://github.com/dotnet/android/issues/12128. -->
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '$(AndroidIncludeDebugSymbols)' == 'true' and '$(_AndroidTrimmableTypeMapMaxArrayRank)' != '0' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <!-- ACW map fed to the R8/proguard keep-rule generation. Normally this is the app's own
+         acw-map.txt. When the pre-generated Mono.Android typemap is used, Mono.Android is excluded
+         from the app scan, so its ACW entries are absent from acw-map.txt; the keep rules must
+         instead read a merge of the app map and the pre-built mono.android-acw-map.txt. We write
+         that merge to a SEPARATE file (rather than appending to acw-map.txt) so the app's acw-map.txt
+         stays byte-stable across builds and its own incremental checks keep working. -->
+    <_TrimmableTypeMapKeepRulesAcwMapFile>$(IntermediateOutputPath)acw-map.txt</_TrimmableTypeMapKeepRulesAcwMapFile>
+    <_TrimmableTypeMapKeepRulesAcwMapFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(IntermediateOutputPath)acw-map.prebuilt-merged.txt</_TrimmableTypeMapKeepRulesAcwMapFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -190,18 +199,6 @@
       <Output TaskParameter="DeletedJavaFiles" ItemName="_DeletedJavaFiles" />
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
     </GenerateTrimmableTypeMap>
-
-    <!-- Merge the pre-generated Mono.Android ACW map into the app's acw-map.txt so R8 keep rules
-         are emitted for the pre-built JCWs (Mono.Android is excluded from the app scan, so its ACW
-         entries would otherwise be absent and R8 would shrink the JCWs out of classes.dex). -->
-    <ReadLinesFromFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') "
-        File="$(_PreGeneratedMonoAndroidTypeMapAcwMap)">
-      <Output TaskParameter="Lines" ItemName="_PreGeneratedAcwMapLines" />
-    </ReadLinesFromFile>
-    <WriteLinesToFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '@(_PreGeneratedAcwMapLines->Count())' != '0' "
-        File="$(IntermediateOutputPath)acw-map.txt"
-        Lines="@(_PreGeneratedAcwMapLines)"
-        Overwrite="false" />
 
     <!-- Mirror any Java sources the generator deleted into the android/src copies so a
          removed type does not leave a stale .java (and stale .class) behind. Busting the

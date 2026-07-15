@@ -279,8 +279,10 @@ public sealed class RootTypeMapAssemblyGenerator
 				if (hasSharedFrameworkUniverse) {
 					// Debug + array maps (NativeAOT) combined with a pre-generated shared framework
 					// universe is not yet wired: the array-map aggregation is built per-assembly and
-					// would need an extra Java.Lang.Object array-map slot. Tracked as follow-up.
-					throw new NotSupportedException ("Pre-generated framework typemaps are not yet supported together with aggregate array maps (maxArrayRank > 0).");
+					// would need an extra Java.Lang.Object array-map slot. Tracked by
+					// https://github.com/dotnet/android/issues/12128. The app build avoids reaching
+					// here by falling back to scanning the framework assemblies for this combination.
+					throw new NotSupportedException ("Pre-generated framework typemaps are not yet supported together with aggregate array maps (maxArrayRank > 0). See https://github.com/dotnet/android/issues/12128.");
 				}
 				var initializeRef = AddInitializeAggregateWithArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 				EmitInitializeWithAggregateTypeMap (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
