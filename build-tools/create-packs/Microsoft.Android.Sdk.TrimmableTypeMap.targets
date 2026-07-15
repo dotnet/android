@@ -14,14 +14,14 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateTrimmableTypeMap" AssemblyFile="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
-    <_PreBuiltTypeMapDir>$(IntermediateOutputPath)prebuilt-typemap\</_PreBuiltTypeMapDir>
-    <_PreBuiltTypeMapOutputDir>$(_PreBuiltTypeMapDir)typemap\</_PreBuiltTypeMapOutputDir>
-    <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapDir)java\</_PreBuiltTypeMapJavaDir>
+    <_PreBuiltTypeMapPackSubDir>data\prebuilt-typemap</_PreBuiltTypeMapPackSubDir>
+    <_PreBuiltTypeMapOutputDir>$(MicrosoftAndroidSdkPackDir)$(_PreBuiltTypeMapPackSubDir)\</_PreBuiltTypeMapOutputDir>
+    <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapOutputDir)java\</_PreBuiltTypeMapJavaDir>
     <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
   </PropertyGroup>
 
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
-      BeforeTargets="_GenerateXASdkContent"
+      BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
       Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
       Outputs="$(_PreBuiltTypeMapAssembly)">
     <ItemGroup>
@@ -47,7 +47,7 @@
       BeforeTargets="_GenerateXASdkContent"
       DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMap">
     <ItemGroup>
-      <FilesToPackage Include="$(_PreBuiltTypeMapAssembly)" TargetPath="data\prebuilt-typemap" />
+      <FilesToPackage Include="$(_PreBuiltTypeMapAssembly)" TargetPath="$(_PreBuiltTypeMapPackSubDir)" />
     </ItemGroup>
   </Target>
 
