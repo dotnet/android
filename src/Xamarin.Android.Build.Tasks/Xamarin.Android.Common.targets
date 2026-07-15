@@ -1479,22 +1479,10 @@ because xbuild doesn't support framework reference assemblies.
      _RunAotForAllRIDs (which dispatches inner builds that AOT from linked/) sees the updated
      assemblies and re-AOTs them. When marshal methods are NOT enabled (NativeAOT, CoreCLR, etc.),
      write to afterlink/ so linked/ stays unchanged and IlcCompile incrementalism is preserved. -->
-<Target Name="_GetAfterILLinkAdditionalStepsInputs"
-    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
-    Condition="'$(PublishTrimmed)' == 'true' and ('$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' == 'NativeAOT')">
-  <ItemGroup>
-    <_AfterILLinkAdditionalStepsInputs Remove="@(_AfterILLinkAdditionalStepsInputs)" />
-    <_AfterILLinkAdditionalStepsInputs Include="$(_AndroidLinkFlag)"
-        Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' != 'NativeAOT' " />
-    <_AfterILLinkAdditionalStepsInputs Include="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-        Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidRuntime)' == 'NativeAOT' " />
-  </ItemGroup>
-</Target>
-
 <Target Name="_RunAfterILLinkAdditionalSteps"
-    DependsOnTargets="_GetAfterILLinkAdditionalStepsInputs"
-    Condition="'$(PublishTrimmed)' == 'true' and ('$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' == 'NativeAOT')"
-    Inputs="@(_AfterILLinkAdditionalStepsInputs)"
+    DependsOnTargets="_LinkAssembliesNoShrinkInputs"
+    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'"
+    Inputs="$(_AndroidLinkFlag)"
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <MakeDir Directories="$(_AfterILLinkOutputDir)" Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " />
   <ItemGroup>
@@ -1533,7 +1521,7 @@ because xbuild doesn't support framework reference assemblies.
      so no redirection is needed, but the target still runs to trigger _RunAfterILLinkAdditionalSteps. -->
 <Target Name="_AfterILLinkAdditionalSteps"
     DependsOnTargets="_RunAfterILLinkAdditionalSteps"
-    Condition="'$(PublishTrimmed)' == 'true' and ('$(_AndroidTypeMapImplementation)' != 'trimmable' or '$(_AndroidRuntime)' == 'NativeAOT')">
+    Condition="'$(PublishTrimmed)' == 'true' and '$(_AndroidTypeMapImplementation)' != 'trimmable'">
   <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
     <_OrigResolvedAssemblies Include="@(ResolvedAssemblies)" />
     <ResolvedAssemblies Remove="@(ResolvedAssemblies)" />
