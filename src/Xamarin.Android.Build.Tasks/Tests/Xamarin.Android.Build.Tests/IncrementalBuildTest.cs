@@ -1847,6 +1847,9 @@ namespace Lib2
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			if (IgnoreOnNativeAot (runtime, "the trimmable typemap (the NativeAOT default) generates the typemap at compile time, so `_RunAfterILLinkAdditionalSteps` is intentionally skipped and no `afterlink/` output is produced.")) {
+				return;
+			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
