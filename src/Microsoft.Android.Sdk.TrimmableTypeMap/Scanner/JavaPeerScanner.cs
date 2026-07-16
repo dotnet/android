@@ -32,12 +32,14 @@ public sealed class JavaPeerScanner : IDisposable
 	readonly ITrimmableTypeMapLogger? logger;
 	readonly HashedPackageNamingPolicy packageNamingPolicy;
 	readonly HashSet<string> frameworkAssemblyNames;
+	readonly bool errorOnCustomJavaObject;
 
-	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null, HashSet<string>? frameworkAssemblyNames = null)
+	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null, HashSet<string>? frameworkAssemblyNames = null, bool errorOnCustomJavaObject = false)
 	{
 		this.packageNamingPolicy = ParsePackageNamingPolicy (packageNamingPolicy);
 		this.logger = logger;
 		this.frameworkAssemblyNames = frameworkAssemblyNames ?? new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		this.errorOnCustomJavaObject = errorOnCustomJavaObject;
 	}
 
 	/// <summary>
@@ -338,6 +340,17 @@ public sealed class JavaPeerScanner : IDisposable
 				if (ExtendsJavaPeer (typeDef, index)) {
 					(jniName, compatJniName) = ComputeAutoJniNames (typeDef, index);
 				} else {
+					// A managed class that implements Android.Runtime.IJavaObject but does not
+					// derive from a Java peer (Java.Lang.Object / Java.Lang.Throwable) cannot be
+					// marshaled to Java. Mirror the legacy XAJavaTypeScanner XA4212 diagnostic,
+					// which the managed/llvm-ir typemap paths raise via GenerateJavaStubs.
+					if (IsCustomJavaObject (typeDef, index)) {
+						if (errorOnCustomJavaObject) {
+							logger?.LogCustomJavaObjectError (fullName);
+						} else {
+							logger?.LogCustomJavaObjectWarning (fullName);
+						}
+					}
 					continue;
 				}
 			}
@@ -2150,6 +2163,100 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	readonly Dictionary<string, bool> extendsJavaPeerCache = new (StringComparer.Ordinal);
+
+	const string IJavaObjectFullName = "Android.Runtime.IJavaObject";
+
+	readonly Dictionary<string, bool> implementsIJavaObjectCache = new (StringComparer.Ordinal);
+
+	/// <summary>
+	/// Determines whether a type is a "custom" Java object: a managed class that implements
+	/// Android.Runtime.IJavaObject but does not derive from a Java peer (Java.Lang.Object /
+	/// Java.Lang.Throwable). Such types cannot be marshaled and produce XA4212. Interfaces and
+	/// System.Exception subclasses are excluded, matching the legacy XAJavaTypeScanner.
+	/// </summary>
+	bool IsCustomJavaObject (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		if ((typeDef.Attributes & TypeAttributes.Interface) != 0) {
+			return false;
+		}
+		if (IsSubclassOfSystemException (typeDef, index)) {
+			return false;
+		}
+		return ImplementsIJavaObject (typeDef, index);
+	}
+
+	/// <summary>
+	/// Check whether a type implements Android.Runtime.IJavaObject, directly or through an
+	/// interface that extends it, or via a base class. Results are cached; false-before-recurse
+	/// prevents cycles.
+	/// </summary>
+	bool ImplementsIJavaObject (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var fullName = MetadataTypeNameResolver.GetFullName (typeDef, index.Reader);
+		var key = $"{index.AssemblyName}:{fullName}";
+
+		if (implementsIJavaObjectCache.TryGetValue (key, out var cached)) {
+			return cached;
+		}
+
+		// Mark as false to prevent cycles, then compute
+		implementsIJavaObjectCache [key] = false;
+
+		foreach (var implHandle in typeDef.GetInterfaceImplementations ()) {
+			var impl = index.Reader.GetInterfaceImplementation (implHandle);
+			var resolved = ResolveEntityHandle (impl.Interface, index);
+			if (resolved is null) {
+				continue;
+			}
+
+			if (resolved.ManagedTypeName == IJavaObjectFullName) {
+				implementsIJavaObjectCache [key] = true;
+				return true;
+			}
+
+			// Recurse into the interface's own base interfaces
+			if (TryResolveType (resolved.ManagedTypeName, resolved.AssemblyName, out var ifaceHandle, out var ifaceIndex)) {
+				var ifaceDef = ifaceIndex.Reader.GetTypeDefinition (ifaceHandle);
+				if (ImplementsIJavaObject (ifaceDef, ifaceIndex)) {
+					implementsIJavaObjectCache [key] = true;
+					return true;
+				}
+			}
+		}
+
+		// Walk the base class chain
+		var baseInfo = GetBaseTypeInfo (typeDef, index);
+		if (baseInfo is not null &&
+		    TryResolveType (baseInfo.ManagedTypeName, baseInfo.AssemblyName, out var baseHandle, out var baseIndex)) {
+			var baseDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+			if (ImplementsIJavaObject (baseDef, baseIndex)) {
+				implementsIJavaObjectCache [key] = true;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Walk the base type chain to determine whether the type derives from System.Exception.
+	/// </summary>
+	bool IsSubclassOfSystemException (TypeDefinition typeDef, AssemblyIndex index)
+	{
+		var baseInfo = GetBaseTypeInfo (typeDef, index);
+		int guard = 0;
+		while (baseInfo is not null && guard++ < 256) {
+			if (baseInfo.ManagedTypeName == "System.Exception") {
+				return true;
+			}
+			if (!TryResolveType (baseInfo.ManagedTypeName, baseInfo.AssemblyName, out var baseHandle, out var baseIndex)) {
+				return false;
+			}
+			var baseDef = baseIndex.Reader.GetTypeDefinition (baseHandle);
+			baseInfo = GetBaseTypeInfo (baseDef, baseIndex);
+		}
+		return false;
+	}
 
 	/// <summary>
 	/// Check if a type extends a known Java peer (has [Register] or component attribute)
