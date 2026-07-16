@@ -911,6 +911,7 @@ because xbuild doesn't support framework reference assemblies.
 		CheckIssues="$(AndroidLintCheckIssues)"
 		ConfigFiles="@(AndroidLintConfig)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)"
+		SourceDirectories="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)"
 		IntermediateOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
@@ -1927,7 +1928,7 @@ because xbuild doesn't support framework reference assemblies.
     <!-- Additional Java source directories compiled in place (e.g. the trimmable type map's
          generated Java Callable Wrappers, which are no longer copied into android/src). Track
          their *.java as _CompileJava inputs so edits/additions/removals trigger recompilation. -->
-    <_JavaStubFiles Include="@(_AdditionalJavaStubDirectory->'%(Identity)**\*.java')" />
+    <_JavaStubFiles Include="%(_AdditionalJavaStubDirectory.Identity)**\*.java" />
     <FileWrites Include="@(_JavaStubFiles)" />
   </ItemGroup>
 </Target>
