@@ -1719,7 +1719,11 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
-				var customAppContent = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "com", "foxsports", "test", "CustomApp.java"));
+				var customAppJavaDirectory = runtime == AndroidRuntime.NativeAOT ?
+					Path.Combine ("typemap", "java") :
+					Path.Combine ("android", "src");
+				var customAppJava = b.Output.GetIntermediaryPath (Path.Combine (customAppJavaDirectory, "com", "foxsports", "test", "CustomApp.java"));
+				var customAppContent = File.ReadAllText (customAppJava);
 				Assert.IsTrue (customAppContent.Contains ("extends android.support.multidex.MultiDexApplication"),
 					"Custom App class should have inherited from android.support.multidex.MultiDexApplication.");
 			}
