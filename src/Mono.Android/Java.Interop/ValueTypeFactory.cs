@@ -135,9 +135,11 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 		IntPtr handle,
 		JniHandleOwnership transfer)
 	{
-		Debug.Assert (typeof (TExemplar).IsGenericType && typeof (TExemplar) != typeof (TExemplar).GetGenericTypeDefinition ());
+		var exemplarType = typeof (TExemplar);
+		Debug.Assert (exemplarType.IsGenericType && !exemplarType.IsGenericTypeDefinition);
 
-		var dictionaryType = typeof (TExemplar).GetGenericTypeDefinition ().MakeGenericType (arguments);
+		var definition = exemplarType.GetGenericTypeDefinition ();
+		var dictionaryType = definition.MakeGenericType (arguments);
 		var instance = Activator.CreateInstance (
 			dictionaryType,
 			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,

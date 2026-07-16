@@ -40,7 +40,7 @@ static class SafeJavaCollectionFactory
 	internal const DynamicallyAccessedMemberTypes Constructors =
 		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	/// <summary>Binding flags matching the public activation constructor of the Java collection wrappers.</summary>
+	/// <summary>Binding flags used to find the activation constructor of the Java collection wrappers.</summary>
 	const BindingFlags ActivationConstructorBinding = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
 	internal static bool TryGetFromJniHandleConverter (
@@ -102,6 +102,9 @@ static class SafeJavaCollectionFactory
 			"requirement that JavaList<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the wrapper " +
 			"reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation goes " +
 			"through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
+		Justification = "The dynamically constructed JavaList<elementType> rides the JavaList<IJavaPeerable> canonical template whose activation constructor is rooted by the " +
+			"concrete-literal branch. Only the known JavaList<T> activation constructor is invoked here.")]
 	static bool TryCreateListFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
 		if (genericDefinition != typeof (IList<>) && genericDefinition != typeof (JavaList<>)) {
@@ -140,6 +143,9 @@ static class SafeJavaCollectionFactory
 			"requirement that JavaCollection<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the " +
 			"wrapper reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation " +
 			"goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
+		Justification = "The dynamically constructed JavaCollection<elementType> rides the JavaCollection<IJavaPeerable> canonical template whose activation constructor is rooted " +
+			"by the concrete-literal branch. Only the known JavaCollection<T> activation constructor is invoked here.")]
 	static bool TryCreateCollectionFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
 		if (genericDefinition != typeof (ICollection<>) && genericDefinition != typeof (JavaCollection<>)) {
@@ -178,6 +184,9 @@ static class SafeJavaCollectionFactory
 			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element parameters. That requirement exists only for the " +
 			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path the wrapper never activates its " +
 			"elements — element peer creation goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
+		Justification = "The dynamically constructed JavaDictionary<keyType,valueType> rides the JavaDictionary<IJavaPeerable,IJavaPeerable> canonical template whose activation " +
+			"constructor is rooted by the concrete-literal branch. Only the known JavaDictionary<TKey,TValue> activation constructor is invoked here.")]
 	static bool TryCreateDictionaryFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
 		if (genericDefinition != typeof (IDictionary<,>) && genericDefinition != typeof (JavaDictionary<,>)) {
