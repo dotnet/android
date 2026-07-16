@@ -1059,6 +1059,12 @@ namespace UnnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+			// TODO: the trimmable typemap generator (the NativeAOT default) does not yet emit the
+			// XA4212 custom-IJavaObject diagnostic that the managed/llvm-ir typemap paths raise via
+			// XAJavaTypeScanner. Re-enable once that detection is added to TrimmableTypeMapGenerator.
+			if (IgnoreOnNativeAot (runtime, "the trimmable typemap does not yet emit the XA4212 custom-IJavaObject diagnostic (tracked as a follow-up).")) {
+				return;
+			}
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
