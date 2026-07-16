@@ -139,8 +139,8 @@ namespace Xamarin.Android.NetTests
 			await AssertReadAbortedPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
-		// EXPERIMENT 1: token flowed to ReadAsync, cancel ONLY (no Dispose).
-		// Does aborting via the read's own token unwind the parked read cleanly?
+		// Token-only cancellation must disconnect the transport and unwind the parked read without
+		// requiring the response to be disposed.
 		[Test]
 		public async Task ResponseHeadersReadTokenPassedToReadCancelOnlyUnwindsCleanly ()
 		{
@@ -162,8 +162,8 @@ namespace Xamarin.Android.NetTests
 			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
-		// EXPERIMENT 2: token flowed to ReadAsync, then cancel AND dispose fire CONCURRENTLY
-		// from the same cancellation (the real gRPC shape). Must not crash the process.
+		// Concurrent caller cancellation and response disposal (the gRPC cancellation shape) must
+		// coalesce their disconnect request and never race stream disposal or crash the process.
 		[Test]
 		public async Task ResponseHeadersReadTokenPassedToReadCancelAndDisposeConcurrentlyDoesNotCrash ()
 		{
