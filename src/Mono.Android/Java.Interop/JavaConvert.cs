@@ -74,11 +74,13 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 
-			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.TrimmableTypeMap) {
-					if (SafeContainerConverterFactory.TryCreateConverter (target, out var collectionConverter))
-						return collectionConverter;
-				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+			if (RuntimeFeature.TrimmableTypeMap) {
+				// The trimmable typemap owns all Java collection construction (generic and non-generic)
+				// without runtime code generation.
+				if (SafeContainerConverterFactory.TryCreateConverter (target, out var collectionConverter))
+					return collectionConverter;
+			} else if (target.IsGenericType && !target.IsGenericTypeDefinition) {
+				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
 					if (factoryConverter != null)
 						return factoryConverter;
