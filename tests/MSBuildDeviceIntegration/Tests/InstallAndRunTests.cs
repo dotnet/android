@@ -2463,38 +2463,6 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void AppStartsWithManagedMarshalMethodsLookupEnabled ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// TODO: Segfaults on Mono currently
-			if (runtime == AndroidRuntime.MonoVM) {
-				Assert.Ignore ("MonoVM segfaults in this test.");
-			}
-
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidUseMarshalMethods", "true");
-			proj.SetProperty ("_AndroidUseManagedMarshalMethodsLookup", "true");
-
-			using var builder = CreateApkBuilder ();
-			builder.Save (proj);
-
-			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
-
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
-			Assert.IsTrue (didLaunch, "Activity should have started.");
-		}
-
-		[Test]
 		public void StartAndroidActivityRespectsAndroidDeviceUserId ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();

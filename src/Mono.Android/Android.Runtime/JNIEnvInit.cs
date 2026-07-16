@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 using Java.Interop;
@@ -34,7 +33,6 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
-			public bool            managedMarshalMethodsLookupEnabled;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          registerJniNativesFn;
 		}
@@ -145,11 +143,6 @@ namespace Android.Runtime
 			JniRuntime.SetCurrent (androidRuntime);
 			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
 
-			if (args->managedMarshalMethodsLookupEnabled) {
-				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
-				xamarin_app_init (args->env, getFunctionPointer);
-			}
-
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
 			if (!RuntimeFeature.TrimmableTypeMap) {
@@ -162,10 +155,6 @@ namespace Android.Runtime
 			IntPtr GetRegisterJniNativesFnPtr () =>
 				(IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 		}
-
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The AndroidTypeManager branch is only reached when RuntimeFeature.TrimmableTypeMap is false; the linker substitutes the feature switch and trims this branch in trimmable apps.")]
 		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)

@@ -355,8 +355,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 
-  <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' and '$(_AndroidUseMarshalMethods)' == 'True' and '$(_AndroidRuntime)' != 'MonoVM' ">True</_AndroidUseManagedMarshalMethodsLookup>
-  <_AndroidUseManagedMarshalMethodsLookup Condition=" '$(_AndroidUseManagedMarshalMethodsLookup)' == '' ">False</_AndroidUseManagedMarshalMethodsLookup>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -1810,7 +1808,6 @@ because xbuild doesn't support framework reference assemblies.
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"
       AndroidRuntime="$(_AndroidRuntime)"
@@ -1821,7 +1818,6 @@ because xbuild doesn't support framework reference assemblies.
   <GenerateNativeMarshalMethodSources
       AndroidRuntime="$(_AndroidRuntime)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-      EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
       MonoComponents="@(_MonoComponent)"
       EnvironmentOutputDirectory="$(IntermediateOutputPath)android"

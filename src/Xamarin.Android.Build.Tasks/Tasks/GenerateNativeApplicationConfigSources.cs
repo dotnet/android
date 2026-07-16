@@ -58,7 +58,6 @@ namespace Xamarin.Android.Tasks
 		public string AndroidRuntime { get; set; } = "";
 
 		public bool EnableMarshalMethods { get; set; }
-		public bool EnableManagedMarshalMethodsLookup { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? BoundExceptionType { get; set; }
@@ -283,7 +282,6 @@ namespace Xamarin.Android.Tasks
 					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
 					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 					MarshalMethodsEnabled = EnableMarshalMethods,
-					ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 					HaveAssemblyStore = UseAssemblyStore,
 				};
@@ -313,7 +311,6 @@ namespace Xamarin.Android.Tasks
 					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
 					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 					MarshalMethodsEnabled = EnableMarshalMethods,
-					ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				};
 			}

@@ -85,7 +85,6 @@
 
     <RewriteMarshalMethods
         Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
         Environments="@(_EnvironmentFiles)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)">
     </RewriteMarshalMethods>

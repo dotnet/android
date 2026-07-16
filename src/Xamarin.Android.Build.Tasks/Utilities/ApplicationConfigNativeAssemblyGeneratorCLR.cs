@@ -195,7 +195,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
 	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 	public bool MarshalMethodsEnabled { get; set; }
-	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
 	public bool HaveAssemblyStore { get; set; }
 
@@ -267,7 +266,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 			marshal_methods_enabled = MarshalMethodsEnabled,
-			managed_marshal_methods_lookup_enabled = ManagedMarshalMethodsLookupEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,

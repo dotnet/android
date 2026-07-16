@@ -322,7 +322,6 @@
     <Compile Include="Java.Interop\JavaPeerContainerFactory.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
-    <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\SafeArrayFactory.cs" />
     <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
