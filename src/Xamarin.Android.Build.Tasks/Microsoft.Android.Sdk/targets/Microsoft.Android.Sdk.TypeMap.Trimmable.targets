@@ -50,10 +50,12 @@
     <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) (the extracted library .aar
          AndroidManifest.xml files) that the legacy manifest merger merges into the app manifest. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports</_GenerateTrimmableTypeMapDependsOn>
-    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. Defaults to 3 when
-         dynamic code is unavailable, so array creation uses the typemap path;
-         defaults to 0 otherwise, where dynamic code can use Array.CreateInstance directly. -->
-    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' and ('$(PublishAot)' == 'true' or '$(DynamicCodeSupport)' == 'false') ">3</_AndroidTrimmableTypeMapMaxArrayRank>
+    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. The runtime no longer consults the
+         generated array proxies: array and collection creation now goes through the AOT-safe
+         SafeArrayFactory / ValueTypeFactory (TrimmableTypeMap.TryGetArrayProxy has no callers). The
+         generated proxies are therefore dead code that only bloats NativeAOT ILC compilation (and
+         made ILC time out on multi-ABI builds). Default to 0 (no array-proxy emission) on every
+         runtime; still overridable via $(_AndroidTrimmableTypeMapMaxArrayRank) if needed. -->
     <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
