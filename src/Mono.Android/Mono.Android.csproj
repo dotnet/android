@@ -319,7 +319,6 @@
     <Compile Include="Java.Interop\JavaLibraryReferenceAttribute.cs" />
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
-    <Compile Include="Java.Interop\JavaPeerContainerFactory.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
     <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />

@@ -34,7 +34,7 @@ public sealed class JavaPeerScanner : IDisposable
 	readonly HashSet<string> frameworkAssemblyNames;
 	readonly bool errorOnCustomJavaObject;
 
-	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null, HashSet<string>? frameworkAssemblyNames = null, bool errorOnCustomJavaObject = false)
+	public JavaPeerScanner (string? packageNamingPolicy = null, ITrimmableTypeMapLogger? logger = null, HashSet<string>? frameworkAssemblyNames = null, bool errorOnCustomJavaObject = true)
 	{
 		this.packageNamingPolicy = ParsePackageNamingPolicy (packageNamingPolicy);
 		this.logger = logger;
@@ -188,31 +188,7 @@ public sealed class JavaPeerScanner : IDisposable
 			ScanAssembly (index, resultsByQualifiedName);
 		}
 		ForceUnconditionalCrossReferences (resultsByQualifiedName, assemblyCache);
-		MarkFrameworkArrayEntryPeers (resultsByQualifiedName.Values);
 		return new List<JavaPeerInfo> (resultsByQualifiedName.Values);
-	}
-
-	void MarkFrameworkArrayEntryPeers (IEnumerable<JavaPeerInfo> peers)
-	{
-		var referencedFrameworkTypes = new HashSet<string> (StringComparer.Ordinal);
-		foreach (var index in assemblyCache.Values) {
-			if (frameworkAssemblyNames.Contains (index.AssemblyName)) {
-				continue;
-			}
-			foreach (var referencedTypeNames in index.ReferencedTypeNamesByAssembly) {
-				if (frameworkAssemblyNames.Contains (referencedTypeNames.Key)) {
-					referencedFrameworkTypes.UnionWith (referencedTypeNames.Value);
-				}
-			}
-		}
-
-		foreach (var peer in peers) {
-			if (!peer.IsFrameworkAssembly) {
-				continue;
-			}
-
-			peer.GenerateArrayEntries = referencedFrameworkTypes.Contains (peer.ManagedTypeName);
-		}
 	}
 
 	/// <summary>
@@ -407,7 +383,6 @@ public sealed class JavaPeerScanner : IDisposable
 				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
 				IsFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName),
-				GenerateArrayEntries = !frameworkAssemblyNames.Contains (index.AssemblyName),
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
 				IsInterface = isInterface,
@@ -2179,10 +2154,13 @@ public sealed class JavaPeerScanner : IDisposable
 		if ((typeDef.Attributes & TypeAttributes.Interface) != 0) {
 			return false;
 		}
+		if (!ImplementsIJavaObject (typeDef, index)) {
+			return false;
+		}
 		if (IsSubclassOfSystemException (typeDef, index)) {
 			return false;
 		}
-		return ImplementsIJavaObject (typeDef, index);
+		return true;
 	}
 
 	/// <summary>

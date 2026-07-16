@@ -41,16 +41,6 @@ sealed class TypeMapAssemblyData
 	/// </summary>
 	public List<AliasHolderData> AliasHolders { get; } = new ();
 
-	/// <summary>
-	/// Array proxy types to emit — one per JNI element name and rank.
-	/// </summary>
-	public List<ArrayProxyData> ArrayProxyTypes { get; } = new ();
-
-	/// <summary>
-	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
-	/// sentinel TypeDefs and <c>TypeMap</c> entries. 0 disables.
-	/// </summary>
-	public int MaxArrayRank { get; set; }
 
 	/// <summary>
 	/// Assembly names that need [IgnoresAccessChecksTo] for cross-assembly n_* calls.
@@ -68,8 +58,8 @@ sealed class TypeMapAssemblyData
 sealed record TypeMapAttributeData
 {
 	/// <summary>
-	/// Type map key, e.g., "android/app/Activity" for peer entries or
-	/// "Android.App.Activity, Mono.Android" for array proxy entries.
+	/// Type map key — the JNI name, e.g., "android/app/Activity", or an indexed alias
+	/// key such as "java/util/Collection[0]".
 	/// </summary>
 	public required string MapKey { get; init; }
 
@@ -91,35 +81,6 @@ sealed record TypeMapAttributeData
 	/// </summary>
 	public bool IsUnconditional => TargetTypeReference == null;
 
-	/// <summary>
-	/// 1-based array rank when this entry should use a <c>__ArrayMapRank{value}</c>
-	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
-	/// </summary>
-	public int? AnchorRank { get; init; }
-}
-
-/// <summary>
-/// A generated array proxy type used by per-rank array TypeMap entries.
-/// </summary>
-sealed record ArrayProxyData
-{
-	public required string TypeName { get; init; }
-
-	public string Namespace { get; init; } = "_TypeMap.ArrayProxies";
-
-	public required TypeRefData ElementType { get; init; }
-
-	public required int Rank { get; init; }
-
-	public PrimitiveArrayProxyData? Primitive { get; init; }
-}
-
-/// <summary>
-/// Additional primitive array metadata for <see cref="ArrayProxyData"/>.
-/// </summary>
-sealed record PrimitiveArrayProxyData
-{
-	public IReadOnlyList<TypeRefData> ConcreteArrayTypes { get; init; } = [];
 }
 
 /// <summary>
@@ -172,16 +133,6 @@ sealed class JavaPeerProxyData
 	/// True if this is an open generic type definition. CreateInstance throws NotSupportedException.
 	/// </summary>
 	public bool IsGenericDefinition { get; init; }
-
-	/// <summary>
-	/// True if the proxied peer type is a Java interface. Interfaces have no constructors, so
-	/// the proxy must derive from the non-generic <c>JavaPeerProxy</c> base instead of
-	/// <c>JavaPeerProxy&lt;T&gt;</c>: closing the generic (whose <c>T</c> is annotated with
-	/// <c>[DynamicallyAccessedMembers(PublicConstructors|NonPublicConstructors)]</c>) over an
-	/// interface makes ILC fail to load the type (TypeLoadException). Instances are still created
-	/// from <see cref="InvokerType"/> in CreateInstance.
-	/// </summary>
-	public bool IsInterface { get; init; }
 
 	/// <summary>
 	/// True when the Java stub must not call RegisterNatives from a static initializer because
@@ -523,11 +474,6 @@ sealed record TypeMapAssociationData
 	/// </summary>
 	public required string AliasProxyTypeReference { get; init; }
 
-	/// <summary>
-	/// 1-based array rank when this association should use a <c>__ArrayMapRank{value}</c>
-	/// sentinel as its <c>TGroup</c> instead of the default model anchor.
-	/// </summary>
-	public int? AnchorRank { get; init; }
 }
 
 /// <summary>

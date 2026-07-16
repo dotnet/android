@@ -34,17 +34,12 @@ public class TrimmableTypeMapGenerator
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
-		int maxArrayRank = 0,
 		bool generateTypeMapAssemblies = true,
-		bool errorOnCustomJavaObject = false)
+		bool errorOnCustomJavaObject = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
-		if (maxArrayRank < 0) {
-			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
-		}
-
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames, errorOnCustomJavaObject);
 		if (allPeers.Count == 0) {
 			logger.LogNoJavaPeerTypesFound ();
@@ -57,7 +52,7 @@ public class TrimmableTypeMapGenerator
 		PropagateCannotRegisterToDescendants (allPeers);
 
 		var generatedAssemblies = generateTypeMapAssemblies
-			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse, maxArrayRank)
+			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse)
 			: [];
 		var jcwPeers = allPeers.Where (ShouldGenerateJcw).ToList ();
 		logger.LogGeneratingJcwFilesInfo (jcwPeers.Count, allPeers.Count);
@@ -168,7 +163,7 @@ public class TrimmableTypeMapGenerator
 		IReadOnlyList<AssemblyInput> assemblies,
 		string? packageNamingPolicy,
 		HashSet<string> frameworkAssemblyNames,
-		bool errorOnCustomJavaObject = false)
+		bool errorOnCustomJavaObject = true)
 	{
 		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger, frameworkAssemblyNames, errorOnCustomJavaObject);
 		var peers = scanner.Scan (assemblies);
@@ -180,8 +175,7 @@ public class TrimmableTypeMapGenerator
 	List<GeneratedAssembly> GenerateTypeMapAssemblies (
 		List<JavaPeerInfo> allPeers,
 		Version systemRuntimeVersion,
-		bool useSharedTypemapUniverse,
-		int maxArrayRank)
+		bool useSharedTypemapUniverse)
 	{
 		List<(string AssemblyName, List<JavaPeerInfo> Peers)> peersByAssembly;
 
@@ -210,14 +204,14 @@ public class TrimmableTypeMapGenerator
 			string typeMapAssemblyName = $"_{assemblyName}.TypeMap";
 			perAssemblyNames.Add (typeMapAssemblyName);
 			var stream = new MemoryStream ();
-			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse, maxArrayRank);
+			generator.Generate (peers, stream, typeMapAssemblyName, useSharedTypemapUniverse);
 			stream.Position = 0;
 			generatedAssemblies.Add (new GeneratedAssembly (typeMapAssemblyName, stream));
 			logger.LogGeneratedTypeMapAssemblyInfo (typeMapAssemblyName, peers.Count);
 		}
 		var rootStream = new MemoryStream ();
 		var rootGenerator = new RootTypeMapAssemblyGenerator (systemRuntimeVersion);
-		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream, maxArrayRank: maxArrayRank);
+		rootGenerator.Generate (perAssemblyNames, useSharedTypemapUniverse, rootStream);
 		rootStream.Position = 0;
 		generatedAssemblies.Add (new GeneratedAssembly ("_Microsoft.Android.TypeMaps", rootStream));
 		logger.LogGeneratedRootTypeMapInfo (perAssemblyNames.Count);

@@ -52,7 +52,7 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
-			warnings?.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
+			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
 			warnings?.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 	}
