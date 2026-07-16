@@ -1,11 +1,9 @@
 #pragma once
 
-#include <atomic>
+#include <pthread.h>
+#include <semaphore.h>
+
 #include <jni.h>
-#include <thread>
-#include <semaphore>
-#include <shared_mutex>
-#include <unordered_map>
 
 #include <shared/cpp-util.hh>
 
@@ -72,8 +70,14 @@ namespace xamarin::android {
 			GCBridge::bridge_processing_started_callback = bridge_processing_started;
 			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
 
-			bridge_processing_thread = std::thread { GCBridge::bridge_processing };
-			bridge_processing_thread.detach ();
+			int ret = sem_init (&shared_args_semaphore, 0, 0);
+			abort_unless (ret == 0, "Failed to initialize GC bridge semaphore");
+
+			ret = pthread_create (&bridge_processing_thread, nullptr, GCBridge::bridge_processing_thread_entry, nullptr);
+			abort_unless (ret == 0, "Failed to create GC bridge processing thread");
+
+			ret = pthread_detach (bridge_processing_thread);
+			abort_unless (ret == 0, "Failed to detach GC bridge processing thread");
 
 			return mark_cross_references;
 		}
@@ -81,10 +85,9 @@ namespace xamarin::android {
 		static void trigger_java_gc (JNIEnv *env) noexcept;
 
 	private:
-		static inline std::thread bridge_processing_thread {};
-
-		static inline std::binary_semaphore shared_args_semaphore{0};
-		static inline std::atomic<MarkCrossReferencesArgs*> shared_args;
+		static inline pthread_t bridge_processing_thread {};
+		static inline sem_t shared_args_semaphore {};
+		static inline MarkCrossReferencesArgs *shared_args = nullptr;
 
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
@@ -93,6 +96,7 @@ namespace xamarin::android {
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
 
 		static void bridge_processing () noexcept;
+		static auto bridge_processing_thread_entry (void *arg) noexcept -> void*;
 		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
 		
 		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;

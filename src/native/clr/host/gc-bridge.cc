@@ -1,3 +1,5 @@
+#include <cerrno>
+
 #include <host/gc-bridge.hh>
 #include <host/bridge-processing.hh>
 #include <host/os-bridge.hh>
@@ -55,8 +57,9 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
 	log_mark_cross_references_args_if_enabled (args);
 
-	shared_args.store (args);
-	shared_args_semaphore.release ();
+	__atomic_store_n (&shared_args, args, __ATOMIC_RELEASE);
+	int ret = sem_post (&shared_args_semaphore);
+	abort_unless (ret == 0, "Failed to release GC bridge semaphore");
 }
 
 void GCBridge::bridge_processing () noexcept
@@ -66,8 +69,13 @@ void GCBridge::bridge_processing () noexcept
 
 	while (true) {
 		// wait until mark cross references args are set by the GC callback
-		shared_args_semaphore.acquire ();
-		MarkCrossReferencesArgs *args = shared_args.load ();
+		int ret;
+		do {
+			ret = sem_wait (&shared_args_semaphore);
+		} while (ret == -1 && errno == EINTR);
+		abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
+
+		MarkCrossReferencesArgs *args = __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
 
 		bridge_processing_started_callback (args);
 
@@ -76,6 +84,12 @@ void GCBridge::bridge_processing () noexcept
 
 		bridge_processing_finished_callback (args);
 	}
+}
+
+auto GCBridge::bridge_processing_thread_entry ([[maybe_unused]] void *arg) noexcept -> void*
+{
+	bridge_processing ();
+	return nullptr;
 }
 
 [[gnu::always_inline]]
