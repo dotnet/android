@@ -9,6 +9,7 @@
   <ItemGroup>
     <StrongNameSignInfo Remove="@(StrongNameSignInfo)" />
     <ItemsToSign Include="$(ArtifactsShippingPackagesDir)\*.nupkg" />
+    <ItemsToSign Include="$(ArtifactsDir)workload-msi\msi\*.msi" Condition="'$(SignWorkloadMsis)' == 'true'" />
 
     <FileSignInfo Include="@(Skip)" CertificateName="None" />
     <FileSignInfo Include="@(ThirdParty)" CertificateName="3PartySHA2" />

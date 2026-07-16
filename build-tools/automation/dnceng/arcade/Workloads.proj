@@ -159,9 +159,6 @@
       <Output TaskParameter="SwixProjects" ItemName="_SwixProjects" />
     </CreateVisualStudioWorkload>
     <ItemGroup>
-      <FilesToSign Include="$(OutputPath)**\*.msi">
-        <Authenticode>Microsoft400</Authenticode>
-      </FilesToSign>
       <_WorkloadOutputLines Include="&lt;Project&gt;" />
       <_WorkloadOutputLines Include="  &lt;ItemGroup&gt;" />
       <_WorkloadOutputLines Include="@(_WorkloadMsis->'    &lt;_WorkloadMsis Include=&quot;%(Identity)&quot; PackageProject=&quot;%(PackageProject)&quot; /&gt;')" />

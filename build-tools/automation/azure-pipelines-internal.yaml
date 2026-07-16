@@ -459,6 +459,7 @@ stages:
               "/p:RestoreConfigFile=$(Build.SourcesDirectory)\android\NuGet.config",
               "/p:OfficialBuildId=$(_BuildOfficialId)",
               "/p:DotNetSignType=$(_SignType)",
+              "/p:SignWorkloadMsis=true",
               "/p:MicroBuildOverridePluginDirectory=$(Agent.TempDirectory)\MicroBuild\Plugins",
               "/p:RepositoryName=dotnet/android"
             )
