@@ -93,9 +93,10 @@ void BridgeProcessingShared::prepare_for_java_collection () noexcept
 	}
 
 	// With cross references processed, the temporary peer list can be released
-	for (const auto& [scc, temporary_peer] : temporary_peers) {
-		env->DeleteLocalRef (temporary_peer);
+	for (const auto &entry : temporary_peers) {
+		env->DeleteLocalRef (entry.second);
 	}
+	temporary_peers.clear ();
 
 	// Switch global to weak references
 	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
@@ -113,7 +114,11 @@ void BridgeProcessingShared::prepare_scc_for_java_collection (size_t scc_index, 
 {
 	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
 	if (scc.Count == 0) {
-		temporary_peers [scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		jobject temporary_peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		abort_unless (temporary_peer != nullptr, "Failed to create GC bridge temporary peer");
+
+		bool inserted = temporary_peers.emplace (scc_index, temporary_peer).second;
+		abort_unless (inserted, "Temporary peer must not already exist");
 		return;
 	}
 
@@ -133,7 +138,8 @@ CrossReferenceTarget BridgeProcessingShared::select_cross_reference_target (size
 
 	if (scc.Count == 0) {
 		const auto temporary_peer = temporary_peers.find (scc_index);
-		abort_unless (temporary_peer != temporary_peers.end(), "Temporary peer must be found in the map");
+		abort_unless (temporary_peer != temporary_peers.end (), "Temporary peer must be found in the map");
+		abort_unless (temporary_peer->second != nullptr, "Temporary peer must not be null");
 		return { .is_temporary_peer = true, .temporary_peer = temporary_peer->second };
 	}
 

@@ -1,8 +1,20 @@
 #pragma once
 
+#include <cstddef>
 #include <jni.h>
 #include <string_view>
-#include <unordered_map>
+
+// robin_map's no-exceptions fallback leaves its numeric_cast error message unused.
+#if defined (__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif // __clang__
+
+#include <tsl/robin_map.h>
+
+#if defined (__clang__)
+#pragma clang diagnostic pop
+#endif // __clang__
 
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
@@ -23,6 +35,8 @@ struct CrossReferenceTarget
 
 class BridgeProcessingShared
 {
+	using temporary_peer_map = tsl::robin_map<size_t, jobject>;
+
 public:
 	explicit BridgeProcessingShared (MarkCrossReferencesArgs *args) noexcept;
 	static void initialize_on_runtime_init (JNIEnv *jniEnv, jclass runtimeClass) noexcept;
@@ -30,7 +44,7 @@ public:
 private:
 	JNIEnv* env;
 	MarkCrossReferencesArgs *cross_refs;
-	std::unordered_map<size_t, jobject> temporary_peers;
+	temporary_peer_map temporary_peers;
 
 	static inline jclass GCUserPeer_class = nullptr;
 	static inline jmethodID GCUserPeer_ctor = nullptr;
