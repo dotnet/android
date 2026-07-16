@@ -167,7 +167,7 @@
     <MSBuild
         Projects="%(_WorkloadMsis.PackageProject)"
         Targets="Restore;Pack"
-        Properties="OutputPath=$(MsiNuGetOutputPath);BundledNETCoreAppTargetFramework=$(BundledNETCoreAppTargetFramework)" />
+        Properties="OutputPath=$(MsiNuGetOutputPath);PackageOutputPath=$(MsiNuGetOutputPath);BundledNETCoreAppTargetFramework=$(BundledNETCoreAppTargetFramework)" />
     <ItemGroup>
       <_PackProjects Include="@(_SwixProjects)" Condition="'%(PackageType)' == 'msi-pack'"
           ManifestOutputPath="$(PackManifestOutputPath)"
