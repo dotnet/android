@@ -339,27 +339,23 @@ stages:
           inputs:
             version: 8.0.x
 
-        - pwsh: |
-            $signingLogs = "$(Build.StagingDirectory)\signing-logs"
-            New-Item $signingLogs -ItemType Directory -Force | Out-Null
-
-            & "$(Build.SourcesDirectory)\android\eng\install-dotnet.ps1" -configuration Release
-            if ($LASTEXITCODE -ne 0) {
-              exit $LASTEXITCODE
-            }
-
-            Write-Host "##vso[task.prependpath]$(Build.SourcesDirectory)\android\bin\Release\dotnet"
-          displayName: Install tracked .NET SDK for Arcade signing
+        - task: UseDotNet@2
+          displayName: Install .NET SDK for Arcade signing
+          inputs:
+            version: $(DotNetSdkVersion).x
+            includePreviewVersions: true
 
         - pwsh: |
             $unsigned = "$(Build.StagingDirectory)\unsigned"
             $artifacts = "$(Build.SourcesDirectory)\android\artifacts"
             $shipping = Join-Path $artifacts "packages\Release\Shipping"
             $logs = Join-Path $artifacts "log\Release"
+            $signingLogs = "$(Build.StagingDirectory)\signing-logs"
 
             Remove-Item $artifacts -Recurse -Force -ErrorAction Ignore
             New-Item $shipping -ItemType Directory -Force | Out-Null
             New-Item $logs -ItemType Directory -Force | Out-Null
+            New-Item $signingLogs -ItemType Directory -Force | Out-Null
 
             $packages = @(Get-ChildItem $unsigned -Filter "*.nupkg" -File -Recurse)
             if ($packages.Count -eq 0) {
