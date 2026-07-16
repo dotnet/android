@@ -1602,27 +1602,28 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (true, "LowercaseMD5", "", runtime);
-				AddTestData (true, "LowercaseCrc64", "", runtime);
-				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime);
+				AddTestData (true, "LowercaseMD5", "", runtime, true);
+				AddTestData (true, "LowercaseCrc64", "", runtime, false);
+				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime, false);
 			}
 
 			return ret;
 
-			void AddTestData (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime)
+			void AddTestData (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 			{
 				ret.Add (new object[] {
 					useInterpreter,
 					packageNamingPolicy,
 					diagnosticConfiguration,
-					runtime
+					runtime,
+					enableCrashReport,
 				});
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
-		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime)
+		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 		{
 			// NativeAOT supports neither the interpreter nor debug builds, but what we test here is
 			// environment file creation and contents, and that's relevant to NativeAOT too
@@ -1650,6 +1651,7 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
+			proj.SetProperty ("EnableCrashReport", enableCrashReport.ToString ());
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			if (!string.IsNullOrEmpty (diagnosticConfiguration))
@@ -1665,6 +1667,8 @@ namespace UnnamedProject
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
+				if (enableCrashReport)
+					values.Add ("DOTNET_EnableCrashReport=1");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
