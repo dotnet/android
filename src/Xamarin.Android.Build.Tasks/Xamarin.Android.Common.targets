@@ -911,6 +911,7 @@ because xbuild doesn't support framework reference assemblies.
 		CheckIssues="$(AndroidLintCheckIssues)"
 		ConfigFiles="@(AndroidLintConfig)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)"
+		SourceDirectories="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)"
 		IntermediateOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
