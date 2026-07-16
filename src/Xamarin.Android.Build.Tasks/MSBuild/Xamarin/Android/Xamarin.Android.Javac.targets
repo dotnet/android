@@ -163,6 +163,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
         ClassesZip="$(_AndroidIntermediateClassesZip)"
         StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
+        AdditionalStubSourceDirectories="@(_AdditionalJavaStubDirectory)"
         JavaSourceFiles="@(_JavaSource)"
         ToolPath="$(JavacToolPath)"
         ToolExe="$(JavacToolExe)"

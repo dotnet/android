@@ -50,24 +50,24 @@
     <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) (the extracted library .aar
          AndroidManifest.xml files) that the legacy manifest merger merges into the app manifest. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports</_GenerateTrimmableTypeMapDependsOn>
-    <!-- Max array rank for __ArrayMapRank{N} sentinel emission. The runtime no longer consults the
-         generated array proxies: array and collection creation now goes through the AOT-safe
-         SafeArrayFactory / ValueTypeFactory (TrimmableTypeMap.TryGetArrayProxy has no callers). The
-         generated proxies are therefore dead code that only bloats NativeAOT ILC compilation (and
-         made ILC time out on multi-ABI builds). Default to 0 (no array-proxy emission) on every
-         runtime; still overridable via $(_AndroidTrimmableTypeMapMaxArrayRank) if needed. -->
-    <_AndroidTrimmableTypeMapMaxArrayRank Condition=" '$(_AndroidTrimmableTypeMapMaxArrayRank)' == '' ">0</_AndroidTrimmableTypeMapMaxArrayRank>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
       $(IncrementalCleanDependsOn);
     </IncrementalCleanDependsOn>
   </PropertyGroup>
 
+  <!-- Compile the generator's Java Callable Wrappers in place from their output directory
+       instead of copying every .java into android/src (which was hundreds of per-file copies).
+       This is a static ItemGroup so the directory is registered even on incremental builds where
+       _GenerateJavaStubs is skipped; _CompileJava globs it via _FindJavaStubFiles for
+       incrementality and compiles it via the Javac AdditionalStubSourceDirectories parameter. -->
+  <ItemGroup>
+    <_AdditionalJavaStubDirectory Include="$([MSBuild]::EnsureTrailingSlash('$(_TypeMapJavaStubsSourceDirectory)'))" />
+  </ItemGroup>
+
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap"
         Value="true" Trim="true" />
-    <RuntimeHostConfigurationOption Include="Java.Interop.RuntimeFeature.ManagedPeerNativeRegistration"
-        Value="false" Trim="true" />
     <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
         Value="$(_TypeMapAssemblyName)" />
     <!-- [Export] metadata is still needed at compile time, but the legacy runtime helper
@@ -154,7 +154,6 @@
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
-        MaxArrayRank="$(_AndroidTrimmableTypeMapMaxArrayRank)"
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
@@ -167,15 +166,10 @@
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
     </GenerateTrimmableTypeMap>
 
-    <!-- Mirror any Java sources the generator deleted into the android/src copies so a
-         removed type does not leave a stale .java (and stale .class) behind. Busting the
-         Java compile stamp forces _CompileJava to drop the corresponding class output. -->
-    <ItemGroup>
-      <_DeletedCopiedJavaFiles Remove="@(_DeletedCopiedJavaFiles)" />
-      <_DeletedCopiedJavaFiles Include="@(_DeletedJavaFiles->'$(IntermediateOutputPath)android/src/%(RelativePath)')" />
-    </ItemGroup>
-    <Delete Files="@(_DeletedCopiedJavaFiles)" />
-    <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedCopiedJavaFiles->Count())' != '0' " />
+    <!-- If the generator removed a Java source, bust the Java compile stamp so _CompileJava
+         re-runs (it fully cleans its class output each run, dropping the stale .class). The
+         JCWs are compiled in place, so there are no android/src copies to delete. -->
+    <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedJavaFiles->Count())' != '0' " />
 
     <!-- Touch only the stamp: it is the target's sole Output and incremental sentinel.
          The generated TypeMap DLLs and the assemblies list are written via CopyIfStreamChanged
@@ -185,7 +179,6 @@
 
     <ItemGroup>
       <FileWrites Remove="@(_DeletedJavaFiles)" />
-      <FileWrites Remove="@(_DeletedCopiedJavaFiles)" />
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
@@ -238,18 +231,15 @@
     </ReadLinesFromFile>
     <ItemGroup>
       <_TypeMapJavaFilesForFileWrites Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
-      <!-- For CoreCLR + PublishTrimmed the JCWs copied into android/src come from the post-trim
-           `linked-java` directory. _GeneratePostTrimTrimmableTypeMapJavaSources is now incremental,
-           so re-emit its outputs here too; otherwise IncrementalClean deletes linked-java (and its
-           android/src copies) on builds where post-trim is skipped. The glob is empty for
-           configurations that have no post-trim pass. -->
+      <!-- For CoreCLR + PublishTrimmed the JCWs come from the post-trim `linked-java` directory.
+           _GeneratePostTrimTrimmableTypeMapJavaSources is now incremental, so re-emit its outputs
+           here too; otherwise IncrementalClean deletes linked-java on builds where post-trim is
+           skipped. The glob is empty for configurations that have no post-trim pass. -->
       <_TypeMapPostTrimJavaFilesForFileWrites Include="$(_PostTrimTypeMapJavaOutputDirectory)/**/*.java" />
 
       <FileWrites Include="@(_GeneratedTypeMapAssembliesForFileWrites)" />
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites)" />
-      <FileWrites Include="@(_TypeMapJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
       <FileWrites Include="@(_TypeMapPostTrimJavaFilesForFileWrites)" />
-      <FileWrites Include="@(_TypeMapPostTrimJavaFilesForFileWrites->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
       <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" Condition="Exists('$(_PostTrimTrimmableTypeMapJavaStamp)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
@@ -375,14 +365,9 @@
       Inputs="$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
-    <ItemGroup>
-      <_TypeMapJavaFiles Include="$(_TypeMapJavaStubsSourceDirectory)/**/*.java" />
-    </ItemGroup>
-    <Copy SourceFiles="@(_TypeMapJavaFiles)" DestinationFolder="$(IntermediateOutputPath)android/src/%(RecursiveDir)" SkipUnchangedFiles="true" />
-
-    <ItemGroup>
-      <FileWrites Include="@(_TypeMapJavaFiles->'$(IntermediateOutputPath)android/src/%(RecursiveDir)%(Filename)%(Extension)')" />
-    </ItemGroup>
+    <!-- The generated Java Callable Wrappers are compiled in place from
+         @(_AdditionalJavaStubDirectory) (see _CompileJava / _FindJavaStubFiles); they are no
+         longer copied into android/src. -->
 
     <!-- NativeAOT bootstrap Java sources depend on environment files, so include them as inputs -->
     <GenerateNativeAotBootstrapSources

@@ -265,44 +265,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		public void TryGetArrayProxy_ObjectLeaf_ReturnsAllRankTypes ()
-		{
-			AssumeTrimmableTypeMapEnabled ();
-			AssumeGeneratedArrayProxiesEnabled ();
-
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 1, out var objectArrayProxy));
-			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Lang.Object>));
-			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>));
-			CollectionAssert.Contains (objectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[]));
-
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (Java.Lang.Object), additionalRank: 2, out var jaggedObjectArrayProxy));
-			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>));
-			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<Java.Lang.Object>[]));
-			CollectionAssert.Contains (jaggedObjectArrayProxy.GetArrayTypes (), typeof (Java.Lang.Object[][]));
-		}
-
-		[Test]
-		public void TryGetArrayProxy_PrimitiveLeaf_ReturnsAllRankTypes ()
-		{
-			AssumeTrimmableTypeMapEnabled ();
-			AssumeGeneratedArrayProxiesEnabled ();
-
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 1, out var sbyteArrayProxy));
-			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (sbyte[]));
-			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (Java.Interop.JavaArray<sbyte>));
-			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (JavaPrimitiveArray<sbyte>));
-			CollectionAssert.Contains (sbyteArrayProxy.GetArrayTypes (), typeof (JavaSByteArray));
-
-			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetArrayProxy (typeof (sbyte), additionalRank: 2, out var jaggedSbyteArrayProxy));
-			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (sbyte[][]));
-			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<Java.Interop.JavaArray<sbyte>>));
-			CollectionAssert.Contains (jaggedSbyteArrayProxy.GetArrayTypes (), typeof (JavaObjectArray<JavaSByteArray>));
-		}
-
 		// Regression: the runtime replacement (BuildRuntimeArrayTypes) must return the full set of array
-		// and wrapper types, not just T[]. The TryGetArrayProxy_* tests above only cover the legacy
-		// generated-proxy path, and the marshaling round-trip tests only need T[]. This is a pure
+		// and wrapper types, not just T[]. The marshaling round-trip tests only need T[]. This is a pure
 		// function, so it runs on every config.
 		[Test]
 		public void BuildRuntimeArrayTypes_ReferenceLeaf_ReturnsProxyContract ()
@@ -390,13 +354,6 @@ namespace Java.InteropTests
 			var fallbacks = manager.GetStaticMethodFallbackTypes (jniSimpleReference);
 			Assert.IsNotNull (fallbacks);
 			return fallbacks ?? throw new InvalidOperationException ("Expected fallback types.");
-		}
-
-		static void AssumeGeneratedArrayProxiesEnabled ()
-		{
-			if (!RuntimeFeature.IsNativeAotRuntime && System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-				Assert.Ignore ("Generated array proxies are only emitted when dynamic code is unavailable.");
-			}
 		}
 
 		static void AssumeTrimmableTypeMapEnabled ()
