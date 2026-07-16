@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -27,9 +26,9 @@ namespace Java.Interop;
 /// The per-container factories therefore split construction into explicit, non-overlapping paths:
 /// </para>
 /// <list type="bullet">
-/// <item><description>reference element arguments ride the <c>__Canon</c> template via
-/// <see cref="SafeContainerTypeFactory.MakeGenericType{T}(Type[])"/> plus
-/// <see cref="SafeContainerTypeFactory.CreateInstance(Type, object?[])"/>;</description></item>
+/// <item><description>reference element arguments ride the <c>__Canon</c> template: each factory reflectively
+/// closes its wrapper definition and invokes the activation constructor, which is kept alive by a concrete-literal
+/// <c>IJavaPeerable</c> rooting branch inside the same factory;</description></item>
 /// <item><description>mapped primitive/nullable arguments go through <see cref="ValueTypeFactory"/>,
 /// which roots the exact instantiation with a direct <c>new</c>;</description></item>
 /// <item><description>any other value type throws <see cref="NotSupportedException"/> (no reflection
@@ -41,15 +40,22 @@ static class SafeJavaCollectionFactory
 	internal const DynamicallyAccessedMemberTypes Constructors =
 		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	static readonly SafeContainerTypeFactory ListFactory = new JavaListTypeFactory ();
-	static readonly SafeContainerTypeFactory CollectionFactory = new JavaCollectionTypeFactory ();
-	static readonly SafeContainerTypeFactory DictionaryFactory = new JavaDictionaryTypeFactory ();
+	/// <summary>Binding flags matching the public activation constructor of the Java collection wrappers.</summary>
+	internal const BindingFlags ActivationConstructorBinding = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
 	internal static bool TryCreateConverter (
 		Type targetType,
 		[NotNullWhen (true)] out Func<IntPtr, JniHandleOwnership, object?>? converter)
 	{
 		ArgumentNullException.ThrowIfNull (targetType);
+
+		// Reject open and partially-open constructed types (e.g. IList<>, IDictionary<T,int>). These have
+		// ContainsGenericParameters == true and would produce an open wrapper from MakeGenericType (), whose
+		// activation would throw ArgumentException. Fail cleanly here rather than crash during construction.
+		if (targetType.ContainsGenericParameters) {
+			converter = null;
+			return false;
+		}
 
 		if (targetType.IsGenericType && !targetType.IsGenericTypeDefinition) {
 			var genericDefinition = targetType.GetGenericTypeDefinition ();
@@ -78,9 +84,9 @@ static class SafeJavaCollectionFactory
 		}
 
 		object? result;
-		if (ListFactory.TryCreateFromJniHandle (genericDefinition, arguments, handle, transfer, out result)
-			|| CollectionFactory.TryCreateFromJniHandle (genericDefinition, arguments, handle, transfer, out result)
-			|| DictionaryFactory.TryCreateFromJniHandle (genericDefinition, arguments, handle, transfer, out result)) {
+		if (JavaListTypeFactory.TryCreateFromJniHandle (genericDefinition, arguments, handle, transfer, out result)
+			|| JavaCollectionTypeFactory.TryCreateFromJniHandle (genericDefinition, arguments, handle, transfer, out result)
+			|| JavaDictionaryTypeFactory.TryCreateFromJniHandle (genericDefinition, arguments, handle, transfer, out result)) {
 			return result;
 		}
 
@@ -88,99 +94,19 @@ static class SafeJavaCollectionFactory
 	}
 }
 
-/// <summary>
-/// Base class for the per-container factories. One factory owns a single Java collection container
-/// so that the reference-vs-value construction paths stay explicit and statically analyzable
-/// (correctness over reuse). The reflection-based construction helpers live here (rather than being
-/// shared through <see cref="SafeJavaCollectionFactory"/>) so their trimming/AOT suppressions are
-/// scoped to the factories that actually build the wrapper types.
-/// </summary>
-abstract class SafeContainerTypeFactory
+/// <summary>Builds <see cref="JavaList{T}"/> (and <see cref="IList{T}"/>) wrappers for the trimmable typemap.</summary>
+static class JavaListTypeFactory
 {
-	/// <summary>
-	/// Constructs the managed wrapper for a Java collection handle.
-	/// </summary>
-	/// <returns>
-	/// <see langword="false"/> when <paramref name="genericDefinition"/> is not this factory's container,
-	/// so callers can chain the factories with <c>||</c>. <see langword="true"/> (and <paramref name="result"/>
-	/// set) once the matching container is constructed; an unsupported (non-primitive) value-type argument
-	/// throws instead of falling through.
-	/// </returns>
-	public abstract bool TryCreateFromJniHandle (
-		Type genericDefinition,
-		Type[] arguments,
-		IntPtr handle,
-		JniHandleOwnership transfer,
-		out object? result);
-
-	/// <summary>
-	/// Closes the generic definition of the reference-type collection wrapper <typeparamref name="T"/>
-	/// over <paramref name="arguments"/>.
-	/// </summary>
-	/// <typeparam name="T">
-	/// A concrete reference-argument instantiation of the wrapper (for example
-	/// <c>JavaList&lt;IJavaPeerable&gt;</c>). Its <see cref="DynamicallyAccessedMembersAttribute"/> roots the
-	/// wrapper's constructors on the <c>__Canon</c> template, which every reference-argument instantiation
-	/// (such as <c>JavaList&lt;string&gt;</c>) shares. This makes the AOT safety of the construction obvious:
-	/// the exact template the runtime resolves for <paramref name="arguments"/> is the one already rooted here.
-	/// </typeparam>
-	/// <param name="arguments">The reference-type generic arguments to close the definition over.</param>
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "NativeAOT's Type.MakeGenericType() is annotated because arbitrary constructed generics can lack a runtime template. " +
-			"This helper only closes the generic definition of the reference-argument wrapper T (e.g. JavaList<IJavaPeerable>) over reference-type arguments, " +
-			"which all canonicalize to the same __Canon template that T already roots. Value-type arguments never reach this helper; " +
-			"they are rejected or built by ValueTypeFactory, which roots the exact instantiation.")]
+		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+			"elementType is always a reference type here (value types are diverted to ValueTypeFactory above), so JavaList<elementType> canonicalizes to the " +
+			"JavaList<__Canon> template whose activation constructor is rooted by the reflective JavaList<IJavaPeerable> anchor in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
-		Justification = "IL2055 is raised because the runtime arguments cannot be statically proven to satisfy the DynamicallyAccessedMembers(Constructors) " +
-			"requirement that the wrapper (e.g. JavaList<[DAM(Constructors)] TElement>) places on its element type parameter. That requirement exists for the " +
-			"dynamic-code path, where the wrapper reflectively activates element peers from their constructors. On the trimmable typemap path taken here the wrapper " +
-			"never activates its elements: element peer creation goes through JavaConvert and the typemap's registered activation constructors, so the unmet element " +
-			"requirement is never exercised. The wrapper's own constructor is separately rooted by the DynamicallyAccessedMembers(Constructors) annotation on T.")]
-	protected static Type MakeGenericType<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] T> (Type[] arguments)
-	{
-		Debug.Assert (typeof (T).IsGenericType && typeof (T) != typeof (T).GetGenericTypeDefinition ());
-		foreach (var argument in arguments) {
-			Debug.Assert (!argument.IsValueType);
-		}
-
-		return typeof (T).GetGenericTypeDefinition ().MakeGenericType (arguments);
-	}
-
-	/// <summary>
-	/// Activates <paramref name="collectionType"/> using its <c>(IntPtr, JniHandleOwnership)</c> constructor.
-	/// </summary>
-	/// <remarks>
-	/// <paramref name="collectionType"/> is intentionally not annotated with
-	/// <see cref="DynamicallyAccessedMembersAttribute"/>: the only supported callers construct it with
-	/// <see cref="MakeGenericType{T}(Type[])"/>, whose <c>T</c> already roots the wrapper constructors on the
-	/// <c>__Canon</c> template. The suppressions below capture that guarantee rather than a static annotation.
-	/// </remarks>
-	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "Activator.CreateInstance() targets only collection wrapper types produced by the per-container factories. " +
-			"Reference-argument wrappers use NativeAOT's canonical generic construction rooted by MakeGenericType<T>, " +
-			"and exact value-type wrappers are rooted by ValueTypeFactory<T>.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
-		Justification = "collectionType is a JavaList<T>, JavaCollection<T>, or JavaDictionary<TKey,TValue> produced by MakeGenericType<T>, " +
-			"whose T (a reference-argument wrapper instantiation) roots the wrapper constructors on the __Canon template. " +
-			"Only that activation constructor is invoked here.")]
-	protected static object CreateInstance (Type collectionType, params object?[] arguments)
-	{
-		var instance = Activator.CreateInstance (
-			collectionType,
-			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-			binder: null,
-			args: arguments,
-			culture: CultureInfo.InvariantCulture);
-		if (instance == null) {
-			throw new InvalidOperationException ($"Unable to create an instance of collection type '{collectionType}'.");
-		}
-		return instance;
-	}
-}
-
-sealed class JavaListTypeFactory : SafeContainerTypeFactory
-{
-	public override bool TryCreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
+		Justification = "IL2055 fires because MakeGenericType () cannot statically prove the runtime elementType satisfies the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that JavaList<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the wrapper " +
+			"reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation goes " +
+			"through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	public static bool TryCreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
 		if (genericDefinition != typeof (IList<>) && genericDefinition != typeof (JavaList<>)) {
 			result = null;
@@ -196,14 +122,33 @@ sealed class JavaListTypeFactory : SafeContainerTypeFactory
 			return true;
 		}
 
-		result = CreateInstance (MakeGenericType<JavaList<IJavaPeerable>> ([elementType]), handle, transfer);
+		if (elementType == typeof (IJavaPeerable)) {
+			// Concrete-literal rooting branch. Taken only when marshaling the JavaList<IJavaPeerable> shape itself
+			// (uncommon), its main purpose is to keep the reflection metadata + invoke stub of the (IntPtr,
+			// JniHandleOwnership) constructor on the JavaList<__Canon> template alive for the trimmer/ILC. The else
+			// branch reuses that same canonical constructor for every other JavaList<referenceType>.
+			result = Activator.CreateInstance (typeof (JavaList<IJavaPeerable>), SafeJavaCollectionFactory.ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		} else {
+			var listType = typeof (JavaList<>).MakeGenericType (elementType);
+			result = Activator.CreateInstance (listType, SafeJavaCollectionFactory.ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		}
 		return true;
 	}
 }
 
-sealed class JavaCollectionTypeFactory : SafeContainerTypeFactory
+/// <summary>Builds <see cref="JavaCollection{T}"/> (and <see cref="ICollection{T}"/>) wrappers for the trimmable typemap.</summary>
+static class JavaCollectionTypeFactory
 {
-	public override bool TryCreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
+	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
+		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+			"elementType is always a reference type here (value types are diverted to ValueTypeFactory above), so JavaCollection<elementType> canonicalizes to the " +
+			"JavaCollection<__Canon> template whose activation constructor is rooted by the reflective JavaCollection<IJavaPeerable> anchor in the other branch.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
+		Justification = "IL2055 fires because MakeGenericType () cannot statically prove the runtime elementType satisfies the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that JavaCollection<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the " +
+			"wrapper reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation " +
+			"goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	public static bool TryCreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
 		if (genericDefinition != typeof (ICollection<>) && genericDefinition != typeof (JavaCollection<>)) {
 			result = null;
@@ -219,14 +164,33 @@ sealed class JavaCollectionTypeFactory : SafeContainerTypeFactory
 			return true;
 		}
 
-		result = CreateInstance (MakeGenericType<JavaCollection<IJavaPeerable>> ([elementType]), handle, transfer);
+		if (elementType == typeof (IJavaPeerable)) {
+			// Concrete-literal rooting branch. Taken only when marshaling the JavaCollection<IJavaPeerable> shape
+			// itself (uncommon), its main purpose is to keep the reflection metadata + invoke stub of the (IntPtr,
+			// JniHandleOwnership) constructor on the JavaCollection<__Canon> template alive for the trimmer/ILC. The
+			// else branch reuses that same canonical constructor for every other JavaCollection<referenceType>.
+			result = Activator.CreateInstance (typeof (JavaCollection<IJavaPeerable>), SafeJavaCollectionFactory.ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		} else {
+			var collectionType = typeof (JavaCollection<>).MakeGenericType (elementType);
+			result = Activator.CreateInstance (collectionType, SafeJavaCollectionFactory.ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		}
 		return true;
 	}
 }
 
-sealed class JavaDictionaryTypeFactory : SafeContainerTypeFactory
+/// <summary>Builds <see cref="JavaDictionary{K,V}"/> (and <see cref="IDictionary{TKey,TValue}"/>) wrappers for the trimmable typemap.</summary>
+static class JavaDictionaryTypeFactory
 {
-	public override bool TryCreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
+	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
+		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+			"The reflective branch is reached only when both arguments are reference types, so JavaDictionary<keyType,valueType> canonicalizes to the " +
+			"JavaDictionary<__Canon,__Canon> template whose activation constructor is rooted by the reflective JavaDictionary<IJavaPeerable,IJavaPeerable> anchor in the other branch.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
+		Justification = "IL2055 fires because MakeGenericType () cannot statically prove the runtime keyType/valueType satisfy the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element parameters. That requirement exists only for the " +
+			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path the wrapper never activates its " +
+			"elements — element peer creation goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	public static bool TryCreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
 		if (genericDefinition != typeof (IDictionary<,>) && genericDefinition != typeof (JavaDictionary<,>)) {
 			result = null;
@@ -258,7 +222,16 @@ sealed class JavaDictionaryTypeFactory : SafeContainerTypeFactory
 		}
 
 		// Both arguments are reference types: JavaDictionary<TKey,TValue> rides the __Canon template.
-		result = CreateInstance (MakeGenericType<JavaDictionary<IJavaPeerable, IJavaPeerable>> ([keyType, valueType]), handle, transfer);
+		if (keyType == typeof (IJavaPeerable) && valueType == typeof (IJavaPeerable)) {
+			// Concrete-literal rooting branch. Taken only when marshaling the JavaDictionary<IJavaPeerable,
+			// IJavaPeerable> shape itself (uncommon), its main purpose is to keep the reflection metadata + invoke stub
+			// of the (IntPtr, JniHandleOwnership) constructor on the JavaDictionary<__Canon,__Canon> template alive for
+			// the trimmer/ILC. The else branch reuses that same canonical constructor for every other reference pair.
+			result = Activator.CreateInstance (typeof (JavaDictionary<IJavaPeerable, IJavaPeerable>), SafeJavaCollectionFactory.ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		} else {
+			var dictionaryType = typeof (JavaDictionary<,>).MakeGenericType (keyType, valueType);
+			result = Activator.CreateInstance (dictionaryType, SafeJavaCollectionFactory.ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		}
 		return true;
 	}
 
