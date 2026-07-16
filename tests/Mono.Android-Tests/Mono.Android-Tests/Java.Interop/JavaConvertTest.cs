@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 
 using Android.App;
 using Android.Content;
@@ -221,6 +222,27 @@ namespace Java.InteropTests
 			}
 		}
 
+		[TestCase (typeof (IList<DateTime>))]
+		[TestCase (typeof (JavaList<DateTime>))]
+		[TestCase (typeof (ICollection<DateTime>))]
+		[TestCase (typeof (JavaCollection<DateTime>))]
+		[TestCase (typeof (IDictionary<DateTime, string>))]
+		[TestCase (typeof (JavaDictionary<DateTime, string>))]
+		[TestCase (typeof (IDictionary<string, DateTime>))]
+		[TestCase (typeof (JavaDictionary<string, DateTime>))]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_UnsupportedValueTypeThrows (Type targetType)
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("This test validates unsupported value-type container arguments on the trimmable typemap path.");
+			}
+
+			using (var source = new JavaList ()) {
+				Assert.Throws<NotSupportedException> (() =>
+					InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer));
+			}
+		}
+
 		static Java.Util.ArrayList CreateList (params int[][] items)
 		{
 			var list = new Java.Util.ArrayList ();
@@ -246,7 +268,13 @@ namespace Java.InteropTests
 				modifiers: null);
 			Assert.IsNotNull (method);
 
-			var value = method.Invoke (null, new object [] { handle, transfer, targetType });
+			object value;
+			try {
+				value = method.Invoke (null, new object [] { handle, transfer, targetType });
+			} catch (TargetInvocationException e) when (e.InnerException != null) {
+				ExceptionDispatchInfo.Capture (e.InnerException).Throw ();
+				throw;
+			}
 			Assert.IsNotNull (value);
 			return value;
 		}

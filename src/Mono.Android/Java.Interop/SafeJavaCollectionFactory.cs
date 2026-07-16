@@ -9,222 +9,236 @@ using Android.Runtime;
 
 namespace Java.Interop;
 
+/// <summary>
+/// Produces the Java-handle-to-managed converters used by the trimmable typemap when the marshaling
+/// target is a Java collection wrapper (<see cref="JavaList{T}"/>, <see cref="JavaCollection{T}"/>,
+/// <see cref="JavaDictionary{K,V}"/>, or the <see cref="IList{T}"/>/<see cref="ICollection{T}"/>/
+/// <see cref="IDictionary{TKey,TValue}"/> interfaces they implement).
+/// </summary>
+/// <remarks>
+/// NativeAOT's <see cref="Type.MakeGenericType(Type[])"/> path eventually calls
+/// <c>ExecutionEnvironment.TryGetConstructedGenericTypeForComponents()</c>, then
+/// <c>TypeBuilder.TryBuildGenericType()</c>. The builder looks for a template by canonical form:
+/// reference type arguments canonicalize to <c>__Canon</c>, while value-type arguments stay
+/// value-specific. Consequently, <c>JavaList&lt;string&gt;</c> can share the <c>JavaList&lt;__Canon&gt;</c>
+/// template, but <c>JavaList&lt;int&gt;</c> and <c>JavaList&lt;int?&gt;</c> need exact rooted instantiations.
+/// <para>
+/// The per-container construction therefore splits into explicit, non-overlapping paths:
+/// </para>
+/// <list type="bullet">
+/// <item><description>reference element arguments ride the <c>__Canon</c> template: the wrapper definition is
+/// reflectively closed and its activation constructor invoked, kept alive by a concrete-literal
+/// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
+/// <item><description>mapped primitive/nullable arguments go through <see cref="ValueTypeFactory"/>,
+/// which roots the exact instantiation with a direct <c>new</c>;</description></item>
+/// <item><description>any other value type throws <see cref="NotSupportedException"/> (no reflection
+/// fallback is AOT-safe).</description></item>
+/// </list>
+/// </remarks>
 static class SafeJavaCollectionFactory
 {
 	internal const DynamicallyAccessedMemberTypes Constructors =
 		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-	// NativeAOT's MakeGenericType() path eventually calls
-	// ExecutionEnvironment.TryGetConstructedGenericTypeForComponents(), then TypeBuilder.TryBuildGenericType().
-	// The builder looks for a template by canonical form: reference type arguments canonicalize to __Canon,
-	// while value-type arguments stay value-specific. Consequently, JavaList<string> can share the
-	// JavaList<__Canon> template, but JavaList<int> and JavaList<int?> need exact rooted instantiations.
-	//
-	// These factories intentionally root the exact primitive/nullable Java collection instantiations through
-	// direct generic type references and constructors instead of asking MakeGenericType() to invent them.
-	// The shared ValueTypeFactory map also roots the exact array vectors for these same value types.
+	/// <summary>Binding flags used to find the activation constructor of the Java collection wrappers.</summary>
+	const BindingFlags ActivationConstructorBinding = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
 	internal static bool TryGetFromJniHandleConverter (
 		Type targetType,
 		[NotNullWhen (true)] out Func<IntPtr, JniHandleOwnership, object?>? converter)
 	{
-		if (targetType == null)
-			throw new ArgumentNullException (nameof (targetType));
+		ArgumentNullException.ThrowIfNull (targetType);
 
-		if (!TryGetCollectionShape (targetType, out var shape)) {
+		// Reject open and partially-open constructed types (e.g. IList<>, IDictionary<T,int>). These have
+		// ContainsGenericParameters == true and would produce an open wrapper from MakeGenericType (), whose
+		// activation would throw ArgumentException. Fail cleanly here rather than crash during construction.
+		if (targetType.ContainsGenericParameters) {
 			converter = null;
 			return false;
 		}
 
-		if (!IsSupportedCollectionShape (shape)) {
-			converter = null;
-			return false;
-		}
-
-		// Capture the parsed shape so GetGenericArguments() runs once when the converter is
-		// selected, rather than once for the support gate and again for every conversion.
-		converter = (handle, transfer) => CreateFromJniHandle (shape, handle, transfer);
-		return true;
-	}
-
-	static bool IsSupportedCollectionShape (CollectionShape shape)
-	{
-		// Unsupported value-type arguments are rejected before any MakeGenericType() call:
-		// those would need an exact unrooted instantiation, whereas reference and mapped
-		// primitive/nullable arguments are all AOT-safe.
-		foreach (var argument in shape.Arguments) {
-			if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
-				return false;
+		if (targetType.IsGenericType && !targetType.IsGenericTypeDefinition) {
+			var genericDefinition = targetType.GetGenericTypeDefinition ();
+			if (IsKnownContainerDefinition (genericDefinition)) {
+				// Capture the parsed arguments so GetGenericArguments () runs once when the converter is
+				// selected, rather than again for every conversion.
+				var arguments = targetType.GetGenericArguments ();
+				converter = (handle, transfer) => CreateFromJniHandle (genericDefinition, arguments, handle, transfer);
+				return true;
 			}
 		}
 
-		return true;
+		converter = null;
+		return false;
 	}
 
-	static object? CreateFromJniHandle (
-		CollectionShape shape,
-		IntPtr handle,
-		JniHandleOwnership transfer)
+	static bool IsKnownContainerDefinition (Type genericDefinition)
+		=> genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)
+			|| genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)
+			|| genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>);
+
+	static object? CreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
 			return null;
 		}
 
-		if (TryCreateFromMappedValueTypeFactories (shape, handle, transfer, out var collection)) {
-			return collection;
+		object? result;
+		if (TryCreateListFromJniHandle (genericDefinition, arguments, handle, transfer, out result)
+			|| TryCreateCollectionFromJniHandle (genericDefinition, arguments, handle, transfer, out result)
+			|| TryCreateDictionaryFromJniHandle (genericDefinition, arguments, handle, transfer, out result)) {
+			return result;
 		}
 
-		return CreateInstance (GetClosedCollectionType (shape), handle, transfer);
-	}
-
-	static bool TryGetCollectionShape (Type targetType, out CollectionShape shape)
-	{
-		if (!targetType.IsGenericType || targetType.IsGenericTypeDefinition) {
-			shape = default;
-			return false;
-		}
-
-		var genericDefinition = targetType.GetGenericTypeDefinition ();
-		if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
-			shape = new CollectionShape (JavaCollectionKind.List, targetType.GetGenericArguments ());
-			return true;
-		}
-
-		if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
-			shape = new CollectionShape (JavaCollectionKind.Collection, targetType.GetGenericArguments ());
-			return true;
-		}
-
-		if (genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>)) {
-			shape = new CollectionShape (JavaCollectionKind.Dictionary, targetType.GetGenericArguments ());
-			return true;
-		}
-
-		shape = default;
-		return false;
-	}
-
-	static bool TryCreateFromMappedValueTypeFactories (
-		CollectionShape shape,
-		IntPtr handle,
-		JniHandleOwnership transfer,
-		[NotNullWhen (true)] out object? collection)
-	{
-		if (shape.Kind == JavaCollectionKind.Dictionary) {
-			// Null when the argument is not a supported value type; the direct null checks below let the
-			// compiler track the non-null flow (an intermediate bool would not, producing CS8602/CS8604).
-			TryGetValueTypeFactory (shape.Arguments [0], out var keyFactory);
-			TryGetValueTypeFactory (shape.Arguments [1], out var valueFactory);
-
-			if (keyFactory != null && valueFactory != null) {
-				collection = keyFactory.CreateDictionary (valueFactory, handle, transfer);
-				return true;
-			}
-
-			// Mixed dictionaries are safe only when the other side is a reference type. If it is an
-			// unsupported value type, MakeGenericType() would need an exact unrooted instantiation.
-			if (keyFactory != null && !shape.Arguments [1].IsValueType) {
-				collection = keyFactory.CreateDictionaryWithReferenceValue (shape.Arguments [1], handle, transfer);
-				return true;
-			}
-
-			if (valueFactory != null && !shape.Arguments [0].IsValueType) {
-				collection = valueFactory.CreateDictionaryWithReferenceKey (shape.Arguments [0], handle, transfer);
-				return true;
-			}
-
-			collection = null;
-			return false;
-		}
-
-		if (TryGetValueTypeFactory (shape.Arguments [0], out var factory)) {
-			collection = shape.Kind == JavaCollectionKind.List
-				? factory.CreateList (handle, transfer)
-				: factory.CreateCollection (handle, transfer);
-			return true;
-		}
-
-		collection = null;
-		return false;
-	}
-
-	static bool TryGetValueTypeFactory (Type type, [NotNullWhen (true)] out ValueTypeFactory? factory)
-	{
-		if (type.IsValueType) {
-			return ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (type, out factory);
-		}
-
-		factory = null;
-		return false;
-	}
-
-	[return: DynamicallyAccessedMembers (Constructors)]
-	static Type GetClosedCollectionType (CollectionShape shape)
-	{
-		return shape.Kind switch {
-			JavaCollectionKind.List => MakeGenericType (typeof (JavaList<>), shape.Arguments),
-			JavaCollectionKind.Collection => MakeGenericType (typeof (JavaCollection<>), shape.Arguments),
-			JavaCollectionKind.Dictionary => MakeGenericType (typeof (JavaDictionary<,>), shape.Arguments),
-			_ => throw new InvalidOperationException ($"Unsupported Java collection kind '{shape.Kind}'."),
-		};
+		throw new NotSupportedException ($"Unsupported Java container type with generic definition '{genericDefinition}'.");
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "NativeAOT's Type.MakeGenericType() is annotated because arbitrary constructed generics can lack a runtime template. " +
-			"Callers of this helper restrict the shape to Android.Runtime Java collection wrappers. Reference arguments use NativeAOT's __Canon generic templates. " +
-			"Value-type arguments are either rejected or handled by explicit primitive/nullable factories that root the exact instantiation. " +
-			"Mixed reference/value dictionaries additionally root JavaDictionary<__Canon,T> or JavaDictionary<T,__Canon> through dedicated type tokens.")]
+		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+			"elementType is always a reference type here (value types are diverted to ValueTypeFactory above), so JavaList<elementType> canonicalizes to the " +
+			"JavaList<__Canon> template whose activation constructor is rooted by the reflective JavaList<IJavaPeerable> anchor in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
-		Justification = "The generic type definitions are known Java collection wrappers, not arbitrary user types. " +
-			"The constructed wrapper constructors are preserved by the return annotation and by the explicit value-type factory references. " +
-			"The generic element arguments are not activated by this helper; element peer creation still goes through the normal JavaConvert/trimmable typemap path.")]
-	[return: DynamicallyAccessedMembers (Constructors)]
-	internal static Type MakeGenericType (
-		[DynamicallyAccessedMembers (Constructors)]
-		Type genericTypeDefinition,
-		Type[] arguments)
+		Justification = "IL2055 fires because MakeGenericType () cannot statically prove the runtime elementType satisfies the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that JavaList<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the wrapper " +
+			"reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation goes " +
+			"through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
+		Justification = "The dynamically constructed JavaList<elementType> rides the JavaList<IJavaPeerable> canonical template whose activation constructor is rooted by the " +
+			"concrete-literal branch. Only the known JavaList<T> activation constructor is invoked here.")]
+	static bool TryCreateListFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
-		return genericTypeDefinition.MakeGenericType (arguments);
+		if (genericDefinition != typeof (IList<>) && genericDefinition != typeof (JavaList<>)) {
+			result = null;
+			return false;
+		}
+
+		var elementType = arguments [0];
+		if (elementType.IsValueType) {
+			if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var valueFactory)) {
+				throw new NotSupportedException ($"'JavaList<{elementType}>' is not available on the trimmable typemap: only reference and mapped primitive element types are supported.");
+			}
+			result = valueFactory.CreateList (handle, transfer);
+			return true;
+		}
+
+		if (elementType == typeof (IJavaPeerable)) {
+			// Concrete-literal rooting branch. Taken only when marshaling the JavaList<IJavaPeerable> shape itself
+			// (uncommon), its main purpose is to keep the reflection metadata + invoke stub of the (IntPtr,
+			// JniHandleOwnership) constructor on the JavaList<__Canon> template alive for the trimmer/ILC. The else
+			// branch reuses that same canonical constructor for every other JavaList<referenceType>.
+			result = Activator.CreateInstance (typeof (JavaList<IJavaPeerable>), ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		} else {
+			var listType = typeof (JavaList<>).MakeGenericType (elementType);
+			result = Activator.CreateInstance (listType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		}
+		return true;
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "Activator.CreateInstance() targets only collection wrapper types produced by SafeJavaCollectionFactory. " +
-			"Reference-only wrappers use NativeAOT's canonical generic construction, exact value-type wrappers are rooted by ValueTypeFactory<T>, " +
-			"and mixed dictionaries root their reference/value canonical shapes with dedicated type tokens.")]
+		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+			"elementType is always a reference type here (value types are diverted to ValueTypeFactory above), so JavaCollection<elementType> canonicalizes to the " +
+			"JavaCollection<__Canon> template whose activation constructor is rooted by the reflective JavaCollection<IJavaPeerable> anchor in the other branch.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
+		Justification = "IL2055 fires because MakeGenericType () cannot statically prove the runtime elementType satisfies the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that JavaCollection<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the " +
+			"wrapper reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation " +
+			"goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
-		Justification = "The collection type is annotated with DynamicallyAccessedMembers(Constructors) by GetClosedCollectionType/MakeGenericType. " +
-			"Only the known JavaList<T>, JavaCollection<T>, and JavaDictionary<TKey,TValue> constructors are invoked here.")]
-	internal static object CreateInstance ([DynamicallyAccessedMembers (Constructors)] Type collectionType, params object?[] arguments)
+		Justification = "The dynamically constructed JavaCollection<elementType> rides the JavaCollection<IJavaPeerable> canonical template whose activation constructor is rooted " +
+			"by the concrete-literal branch. Only the known JavaCollection<T> activation constructor is invoked here.")]
+	static bool TryCreateCollectionFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
 	{
-		var instance = Activator.CreateInstance (
-			collectionType,
-			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-			binder: null,
-			args: arguments,
-			culture: CultureInfo.InvariantCulture);
-		if (instance == null) {
-			throw new InvalidOperationException ($"Unable to create an instance of collection type '{collectionType}'.");
-		}
-		return instance;
-	}
-
-	readonly struct CollectionShape
-	{
-		public CollectionShape (JavaCollectionKind kind, Type[] arguments)
-		{
-			Kind = kind;
-			Arguments = arguments;
+		if (genericDefinition != typeof (ICollection<>) && genericDefinition != typeof (JavaCollection<>)) {
+			result = null;
+			return false;
 		}
 
-		public JavaCollectionKind Kind { get; }
+		var elementType = arguments [0];
+		if (elementType.IsValueType) {
+			if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var valueFactory)) {
+				throw new NotSupportedException ($"'JavaCollection<{elementType}>' is not available on the trimmable typemap: only reference and mapped primitive element types are supported.");
+			}
+			result = valueFactory.CreateCollection (handle, transfer);
+			return true;
+		}
 
-		public Type[] Arguments { get; }
+		if (elementType == typeof (IJavaPeerable)) {
+			// Concrete-literal rooting branch. Taken only when marshaling the JavaCollection<IJavaPeerable> shape
+			// itself (uncommon), its main purpose is to keep the reflection metadata + invoke stub of the (IntPtr,
+			// JniHandleOwnership) constructor on the JavaCollection<__Canon> template alive for the trimmer/ILC. The
+			// else branch reuses that same canonical constructor for every other JavaCollection<referenceType>.
+			result = Activator.CreateInstance (typeof (JavaCollection<IJavaPeerable>), ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		} else {
+			var collectionType = typeof (JavaCollection<>).MakeGenericType (elementType);
+			result = Activator.CreateInstance (collectionType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		}
+		return true;
 	}
 
-	enum JavaCollectionKind {
-		List,
-		Collection,
-		Dictionary,
+	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
+		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+			"The reflective branch is reached only when both arguments are reference types, so JavaDictionary<keyType,valueType> canonicalizes to the " +
+			"JavaDictionary<__Canon,__Canon> template whose activation constructor is rooted by the reflective JavaDictionary<IJavaPeerable,IJavaPeerable> anchor in the other branch.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
+		Justification = "IL2055 fires because MakeGenericType () cannot statically prove the runtime keyType/valueType satisfy the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element parameters. That requirement exists only for the " +
+			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path the wrapper never activates its " +
+			"elements — element peer creation goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
+		Justification = "The dynamically constructed JavaDictionary<keyType,valueType> rides the JavaDictionary<IJavaPeerable,IJavaPeerable> canonical template whose activation " +
+			"constructor is rooted by the concrete-literal branch. Only the known JavaDictionary<TKey,TValue> activation constructor is invoked here.")]
+	static bool TryCreateDictionaryFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
+	{
+		if (genericDefinition != typeof (IDictionary<,>) && genericDefinition != typeof (JavaDictionary<,>)) {
+			result = null;
+			return false;
+		}
+
+		var keyType = arguments [0];
+		var valueType = arguments [1];
+
+		// A value-type argument is only AOT-safe when it is a mapped primitive/nullable; anything else
+		// (a custom struct) has no rooted instantiation and must not fall back to reflection. Validate both
+		// arguments up front so the construction paths below only deal with reference or mapped-primitive types.
+		EnsureReferenceOrPrimitive (keyType);
+		EnsureReferenceOrPrimitive (valueType);
+
+		if (TryGetPrimitiveValueTypeFactory (keyType, out var keyFactory)) {
+			// The key is a mapped primitive. A value/value dictionary uses the full rooted cross-product;
+			// a value/reference dictionary roots JavaDictionary<value,__Canon> via the value factory's token.
+			result = TryGetPrimitiveValueTypeFactory (valueType, out var valueFactory)
+				? keyFactory.CreateDictionary (valueFactory, handle, transfer)
+				: keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
+			return true;
+		}
+
+		if (TryGetPrimitiveValueTypeFactory (valueType, out var referenceKeyValueFactory)) {
+			// The key is a reference type and the value is a mapped primitive: root JavaDictionary<__Canon,value>.
+			result = referenceKeyValueFactory.CreateDictionaryWithReferenceKey (keyType, handle, transfer);
+			return true;
+		}
+
+		// Both arguments are reference types: JavaDictionary<TKey,TValue> rides the __Canon template.
+		if (keyType == typeof (IJavaPeerable) && valueType == typeof (IJavaPeerable)) {
+			// Concrete-literal rooting branch. Taken only when marshaling the JavaDictionary<IJavaPeerable,
+			// IJavaPeerable> shape itself (uncommon), its main purpose is to keep the reflection metadata + invoke stub
+			// of the (IntPtr, JniHandleOwnership) constructor on the JavaDictionary<__Canon,__Canon> template alive for
+			// the trimmer/ILC. The else branch reuses that same canonical constructor for every other reference pair.
+			result = Activator.CreateInstance (typeof (JavaDictionary<IJavaPeerable, IJavaPeerable>), ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		} else {
+			var dictionaryType = typeof (JavaDictionary<,>).MakeGenericType (keyType, valueType);
+			result = Activator.CreateInstance (dictionaryType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		}
+		return true;
 	}
 
+	static void EnsureReferenceOrPrimitive (Type argument)
+	{
+		if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
+			throw new NotSupportedException ($"'JavaDictionary' with value-type argument '{argument}' is not available on the trimmable typemap: only reference and mapped primitive arguments are supported.");
+		}
+	}
+
+	static bool TryGetPrimitiveValueTypeFactory (Type argument, [NotNullWhen (true)] out ValueTypeFactory? factory)
+		=> ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (argument, out factory);
 }
