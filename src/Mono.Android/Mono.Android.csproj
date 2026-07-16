@@ -325,7 +325,7 @@
     <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\SafeArrayFactory.cs" />
-    <Compile Include="Java.Interop\SafeContainerConverterFactory.cs" />
+    <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
     <Compile Include="Java.Interop\ValueTypeFactory.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />

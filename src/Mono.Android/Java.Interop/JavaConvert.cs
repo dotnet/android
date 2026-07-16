@@ -77,7 +77,7 @@ namespace Java.Interop {
 			if (RuntimeFeature.TrimmableTypeMap) {
 				// The trimmable typemap owns all Java collection construction (generic and non-generic)
 				// without runtime code generation.
-				if (SafeContainerConverterFactory.TryCreateConverter (target, out var collectionConverter))
+				if (SafeJavaCollectionFactory.TryCreateConverter (target, out var collectionConverter))
 					return collectionConverter;
 			} else if (target.IsGenericType && !target.IsGenericTypeDefinition) {
 				if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
