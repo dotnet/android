@@ -189,12 +189,6 @@
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
       <!-- Custom steps that run after MarkStep -->
       <!-- Custom steps that run after CleanStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
-      />
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml"
           Exclude="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml" />
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml"

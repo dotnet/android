@@ -38,9 +38,6 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (true, "llvm-ir", runtime);
 				AddTestData (false, "llvm-ir", runtime);
-				AddTestData (true, "managed", runtime);
-				// NOTE: TypeMappingStep is not yet setup for Debug mode
-				//AddTestData (false, "managed", runtime);
 			}
 
 			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
