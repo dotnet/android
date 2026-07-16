@@ -16,6 +16,7 @@
     <ArtifactsShippingPackagesDir>$(ArtifactsPackagesDir)Shipping\</ArtifactsShippingPackagesDir>
     <ArtifactsLogDir>$(_ArtifactsDir)log\Release\</ArtifactsLogDir>
     <WorkloadMsiLogDirectory>$(ArtifactsLogDir)workload-msi</WorkloadMsiLogDirectory>
+    <IntermediateOutputPath>$(_ArtifactsDir)obj\Release\</IntermediateOutputPath>
     <OutputPath>$(_ArtifactsDir)workload-msi\</OutputPath>
     <VsmanProject>$(MSBuildThisFileDirectory)vsman\Workload.vsmanproj</VsmanProject>
     <ManifestOutputPath>$(ArtifactsShippingPackagesDir)\manifests</ManifestOutputPath>
