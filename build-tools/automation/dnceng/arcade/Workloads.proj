@@ -18,6 +18,7 @@
     <WorkloadMsiLogDirectory>$(ArtifactsLogDir)workload-msi</WorkloadMsiLogDirectory>
     <IntermediateOutputPath>$(_ArtifactsDir)obj\Release\</IntermediateOutputPath>
     <OutputPath>$(_ArtifactsDir)workload-msi\</OutputPath>
+    <WorkloadOutputsProps>$(IntermediateOutputPath)WorkloadOutputs.props</WorkloadOutputsProps>
     <VsmanProject>$(MSBuildThisFileDirectory)vsman\Workload.vsmanproj</VsmanProject>
     <ManifestOutputPath>$(ArtifactsShippingPackagesDir)\manifests</ManifestOutputPath>
     <PreviewManifestOutputPath>$(ArtifactsShippingPackagesDir)\manifests-pre</PreviewManifestOutputPath>
@@ -41,6 +42,7 @@
   </PropertyGroup>
 
   <Import Project="$(WorkloadMsiGenProps)" Condition="Exists('$(WorkloadMsiGenProps)')" />
+  <Import Project="$(WorkloadOutputsProps)" Condition="Exists('$(WorkloadOutputsProps)')" />
 
   <PropertyGroup>
     <CreateWorkloadPackGroups Condition="'$(CreateWorkloadPackGroups)' == ''">false</CreateWorkloadPackGroups>
@@ -160,10 +162,19 @@
       <FilesToSign Include="$(OutputPath)**\*.msi">
         <Authenticode>Microsoft400</Authenticode>
       </FilesToSign>
+      <_WorkloadOutputLines Include="&lt;Project&gt;" />
+      <_WorkloadOutputLines Include="  &lt;ItemGroup&gt;" />
+      <_WorkloadOutputLines Include="@(_WorkloadMsis->'    &lt;_WorkloadMsis Include=&quot;%(Identity)&quot; PackageProject=&quot;%(PackageProject)&quot; /&gt;')" />
+      <_WorkloadOutputLines Include="@(_SwixProjects->'    &lt;_SwixProjects Include=&quot;%(Identity)&quot; PackageType=&quot;%(PackageType)&quot; IsPreview=&quot;%(IsPreview)&quot; /&gt;')" />
+      <_WorkloadOutputLines Include="  &lt;/ItemGroup&gt;" />
+      <_WorkloadOutputLines Include="&lt;/Project&gt;" />
     </ItemGroup>
+    <WriteLinesToFile File="$(WorkloadOutputsProps)" Lines="@(_WorkloadOutputLines)" Overwrite="true" />
   </Target>
 
-  <Target Name="_CreateInsertionArtifacts" AfterTargets="SignFiles">
+  <Target Name="_CreateInsertionArtifacts" DependsOnTargets="_FindMSBuild">
+    <Error Condition="'@(_WorkloadMsis)' == ''" Text="No persisted workload MSI outputs were found." />
+    <Error Condition="'@(_SwixProjects)' == ''" Text="No persisted workload insertion projects were found." />
     <MSBuild
         Projects="%(_WorkloadMsis.PackageProject)"
         Targets="Restore;Pack"

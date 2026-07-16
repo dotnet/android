@@ -482,6 +482,38 @@ stages:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
         - pwsh: |
+            $properties = @(
+              "/p:RepositoryEngineeringDir=$(ArcadeAdapterRoot)\eng\",
+              "/p:AndroidRepoRoot=$(Build.SourcesDirectory)\android",
+              "/p:AndroidSignList=$(AndroidSignList)",
+              "/p:ArtifactsDir=$(Build.SourcesDirectory)\android\artifacts\",
+              "/p:NuGetPackageRoot=$(Build.SourcesDirectory)\android\.packages\",
+              "/p:RestorePackagesPath=$(Build.SourcesDirectory)\android\.packages\",
+              "/p:RestoreConfigFile=$(Build.SourcesDirectory)\android\NuGet.config",
+              "/p:OfficialBuildId=$(_BuildOfficialId)",
+              "/p:DotNetSignType=$(_SignType)",
+              "/p:MicroBuildOverridePluginDirectory=$(Agent.TempDirectory)\MicroBuild\Plugins",
+              "/p:RepositoryName=dotnet/android"
+            )
+
+            & "$(ArcadeAdapterRoot)\eng\common\build.ps1" `
+              -configuration Release `
+              -msbuildEngine dotnet `
+              -projects "$(ArcadeAdapterRoot)\Workloads.proj" `
+              -sign `
+              -ci `
+              -warnAsError:$false `
+              -binaryLogName "$(Build.StagingDirectory)\signing-logs\sign-msi-nugets.binlog" `
+              @properties
+          displayName: Sign workload MSI NuGet packages with Arcade
+          env:
+            BUILD_REPOSITORY_NAME: dotnet/android
+            BUILD_REPOSITORY_URI: https://github.com/dotnet/android
+            NUGET_CONFIG: $(Build.SourcesDirectory)\android\NuGet.config
+            NUGET_PACKAGES: $(Build.SourcesDirectory)\android\.packages
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+        - pwsh: |
             $shipping = "$(Build.SourcesDirectory)\android\artifacts\packages\Release\Shipping"
             $inputNames = @(Get-Content "$(Build.StagingDirectory)\unsigned-package-names.json" -Raw | ConvertFrom-Json)
             foreach ($name in $inputNames) {
