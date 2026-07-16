@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -61,14 +60,10 @@ static class SafeJavaCollectionFactory
 				converter = (handle, transfer) => CreateFromJniHandle (genericDefinition, arguments, handle, transfer);
 				return true;
 			}
-
-			converter = null;
-			return false;
 		}
 
-		// Non-generic wrappers and raw collection interfaces construct their peer directly (no reflection)
-		// through the existing FromJniHandle helpers, which also reuse an already-registered managed peer.
-		return TryCreateNonGenericConverter (targetType, out converter);
+		converter = null;
+		return false;
 	}
 
 	static bool IsKnownContainerDefinition (Type genericDefinition)
@@ -90,30 +85,6 @@ static class SafeJavaCollectionFactory
 		}
 
 		throw new NotSupportedException ($"Unsupported Java container type with generic definition '{genericDefinition}'.");
-	}
-
-	static bool TryCreateNonGenericConverter (
-		Type targetType,
-		[NotNullWhen (true)] out Func<IntPtr, JniHandleOwnership, object?>? converter)
-	{
-		// Order mirrors the historical JavaConvert fallback: dictionary, then list, then collection.
-		if (typeof (IDictionary).IsAssignableFrom (targetType)) {
-			converter = static (handle, transfer) => JavaDictionary.FromJniHandle (handle, transfer);
-			return true;
-		}
-
-		if (typeof (IList).IsAssignableFrom (targetType)) {
-			converter = static (handle, transfer) => JavaList.FromJniHandle (handle, transfer);
-			return true;
-		}
-
-		if (typeof (ICollection).IsAssignableFrom (targetType)) {
-			converter = static (handle, transfer) => JavaCollection.FromJniHandle (handle, transfer);
-			return true;
-		}
-
-		converter = null;
-		return false;
 	}
 }
 
@@ -160,9 +131,11 @@ abstract class SafeContainerTypeFactory
 			"which all canonicalize to the same __Canon template that T already roots. Value-type arguments never reach this helper; " +
 			"they are rejected or built by ValueTypeFactory, which roots the exact instantiation.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
-		Justification = "The generic type definition comes from a known Java collection wrapper T, not an arbitrary user type, and the arguments are reference types. " +
-			"The constructed wrapper shares the __Canon template of T, whose constructors are rooted by the DynamicallyAccessedMembers(Constructors) annotation on T. " +
-			"The generic element arguments are not activated by this helper; element peer creation still goes through the normal JavaConvert/trimmable typemap path.")]
+		Justification = "IL2055 is raised because the runtime arguments cannot be statically proven to satisfy the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that the wrapper (e.g. JavaList<[DAM(Constructors)] TElement>) places on its element type parameter. That requirement exists for the " +
+			"dynamic-code path, where the wrapper reflectively activates element peers from their constructors. On the trimmable typemap path taken here the wrapper " +
+			"never activates its elements: element peer creation goes through JavaConvert and the typemap's registered activation constructors, so the unmet element " +
+			"requirement is never exercised. The wrapper's own constructor is separately rooted by the DynamicallyAccessedMembers(Constructors) annotation on T.")]
 	protected static Type MakeGenericType<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] T> (Type[] arguments)
 	{
 		Debug.Assert (typeof (T).IsGenericType && typeof (T) != typeof (T).GetGenericTypeDefinition ());

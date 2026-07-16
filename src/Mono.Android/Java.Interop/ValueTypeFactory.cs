@@ -122,8 +122,11 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 			"The reference argument canonicalizes to __Canon and T stays value-specific, so the result shares the JavaDictionary<IJavaPeerable, T> / JavaDictionary<T, IJavaPeerable> " +
 			"template that TExemplar already roots.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
-		Justification = "The generic definition comes from the known JavaDictionary<,> wrapper via TExemplar, not an arbitrary user type. " +
-			"The wrapper constructors are rooted by the DynamicallyAccessedMembers(Constructors) annotation on TExemplar.")]
+		Justification = "IL2055 is raised because the runtime key/value arguments cannot be statically proven to satisfy the DynamicallyAccessedMembers(Constructors) " +
+			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element type parameters. That requirement exists for the " +
+			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path taken here the wrapper never " +
+			"activates its elements: element peer creation goes through JavaConvert and the typemap's registered activation constructors, so the unmet element requirement is " +
+			"never exercised. The wrapper's own constructor is separately rooted by the DynamicallyAccessedMembers(Constructors) annotation on TExemplar.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The constructed dictionary type rides the TExemplar canonical template whose constructors are rooted by DynamicallyAccessedMembers(Constructors). " +
 			"Only the known JavaDictionary<TKey,TValue> constructor is invoked here.")]
