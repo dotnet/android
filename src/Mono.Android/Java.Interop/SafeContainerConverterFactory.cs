@@ -9,7 +9,7 @@ using Android.Runtime;
 
 namespace Java.Interop;
 
-static class SafeJavaCollectionFactory
+static class SafeContainerConverterFactory
 {
 	internal const DynamicallyAccessedMemberTypes Constructors =
 		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -24,7 +24,7 @@ static class SafeJavaCollectionFactory
 	// direct generic type references and constructors instead of asking MakeGenericType() to invent them.
 	// The shared ValueTypeFactory map also roots the exact array vectors for these same value types.
 
-	internal static bool TryGetFromJniHandleConverter (
+	internal static bool TryCreateConverter (
 		Type targetType,
 		[NotNullWhen (true)] out Func<IntPtr, JniHandleOwnership, object?>? converter)
 	{
@@ -188,7 +188,7 @@ static class SafeJavaCollectionFactory
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "Activator.CreateInstance() targets only collection wrapper types produced by SafeJavaCollectionFactory. " +
+		Justification = "Activator.CreateInstance() targets only collection wrapper types produced by SafeContainerConverterFactory. " +
 			"Reference-only wrappers use NativeAOT's canonical generic construction, exact value-type wrappers are rooted by ValueTypeFactory<T>, " +
 			"and mixed dictionaries root their reference/value canonical shapes with dedicated type tokens.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",

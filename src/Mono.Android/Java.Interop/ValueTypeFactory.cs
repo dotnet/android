@@ -53,13 +53,13 @@ abstract class ValueTypeFactory
 
 	internal abstract IDictionary CreateDictionaryWithReferenceValue (Type valueType, IntPtr handle, JniHandleOwnership transfer);
 
-	internal abstract IDictionary CreateDictionaryWithKey<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] TKey> (
+	internal abstract IDictionary CreateDictionaryWithKey<[DynamicallyAccessedMembers (SafeContainerConverterFactory.Constructors)] TKey> (
 		ValueTypeFactory<TKey> keyFactory,
 		IntPtr handle,
 		JniHandleOwnership transfer);
 }
 
-sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] T> : ValueTypeFactory
+sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeContainerConverterFactory.Constructors)] T> : ValueTypeFactory
 {
 	// These tokens root the mixed reference/value dictionary canonical shapes. For example,
 	// JavaDictionary<string,int> canonicalizes like JavaDictionary<__Canon,int>, so
@@ -98,18 +98,18 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 	internal override IDictionary CreateDictionaryWithReferenceKey (Type keyType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		_ = ReferenceKeyDictionaryType;
-		var dictionaryType = SafeJavaCollectionFactory.MakeGenericType (typeof (JavaDictionary<,>), [keyType, typeof (T)]);
-		return (IDictionary) SafeJavaCollectionFactory.CreateInstance (dictionaryType, handle, transfer);
+		var dictionaryType = SafeContainerConverterFactory.MakeGenericType (typeof (JavaDictionary<,>), [keyType, typeof (T)]);
+		return (IDictionary) SafeContainerConverterFactory.CreateInstance (dictionaryType, handle, transfer);
 	}
 
 	internal override IDictionary CreateDictionaryWithReferenceValue (Type valueType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		_ = ReferenceValueDictionaryType;
-		var dictionaryType = SafeJavaCollectionFactory.MakeGenericType (typeof (JavaDictionary<,>), [typeof (T), valueType]);
-		return (IDictionary) SafeJavaCollectionFactory.CreateInstance (dictionaryType, handle, transfer);
+		var dictionaryType = SafeContainerConverterFactory.MakeGenericType (typeof (JavaDictionary<,>), [typeof (T), valueType]);
+		return (IDictionary) SafeContainerConverterFactory.CreateInstance (dictionaryType, handle, transfer);
 	}
 
-	internal override IDictionary CreateDictionaryWithKey<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] TKey> (
+	internal override IDictionary CreateDictionaryWithKey<[DynamicallyAccessedMembers (SafeContainerConverterFactory.Constructors)] TKey> (
 		ValueTypeFactory<TKey> keyFactory,
 		IntPtr handle,
 		JniHandleOwnership transfer)
