@@ -373,7 +373,19 @@ stages:
             if (-not $signList) {
               throw "The build did not publish SignList.xml."
             }
-            Write-Host "##vso[task.setvariable variable=AndroidSignList]$($signList.FullName)"
+
+            [xml] $arcadeSignList = Get-Content $signList.FullName
+            foreach ($item in $arcadeSignList.SelectNodes("/Project/ItemGroup/*[@Include]")) {
+              $include = $item.GetAttribute("Include")
+              if ($item.LocalName -eq "MacDeveloperSign" -or $item.LocalName -eq "MacDeveloperSignHarden") {
+                $include = [IO.Path]::GetFileName($include.Replace("/", "\"))
+              }
+              $include = $include.Replace("%", "%25").Replace("*", "%2A").Replace("?", "%3F").Replace(";", "%3B")
+              $item.SetAttribute("Include", $include)
+            }
+            $arcadeSignListPath = "$(Build.StagingDirectory)\ArcadeSignList.xml"
+            $arcadeSignList.Save($arcadeSignListPath)
+            Write-Host "##vso[task.setvariable variable=AndroidSignList]$arcadeSignListPath"
 
             $signVerify = Get-ChildItem $unsigned -Filter "SignVerifyIgnore.txt" -File -Recurse | Select-Object -First 1
             if (-not $signVerify) {
