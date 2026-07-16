@@ -55,6 +55,8 @@ variables:
     value: test
 - name: _BuildConfig
   value: Release
+- name: _BuildOfficialId
+  value: $[ format('{0}.{1}', format('{0:yyyyMMdd}', pipeline.startTime), counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)) ]
 - name: DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE
   value: 'true'
 - name: DOTNET_SDK_VULNERABILITY_CHECK_DISABLE
@@ -414,7 +416,7 @@ stages:
               "/p:NuGetPackageRoot=$(Build.SourcesDirectory)\android\.packages\",
               "/p:RestorePackagesPath=$(Build.SourcesDirectory)\android\.packages\",
               "/p:RestoreConfigFile=$(Build.SourcesDirectory)\android\NuGet.config",
-              "/p:OfficialBuildId=$(Build.BuildNumber)",
+              "/p:OfficialBuildId=$(_BuildOfficialId)",
               "/p:DotNetSignType=$(_SignType)",
               "/p:MicroBuildOverridePluginDirectory=$(Agent.TempDirectory)\MicroBuild\Plugins",
               "/p:RepositoryName=dotnet/android"
@@ -447,7 +449,7 @@ stages:
               "/p:NuGetPackageRoot=$(Build.SourcesDirectory)\android\.packages\",
               "/p:RestorePackagesPath=$(Build.SourcesDirectory)\android\.packages\",
               "/p:RestoreConfigFile=$(Build.SourcesDirectory)\android\NuGet.config",
-              "/p:OfficialBuildId=$(Build.BuildNumber)",
+              "/p:OfficialBuildId=$(_BuildOfficialId)",
               "/p:DotNetSignType=$(_SignType)",
               "/p:MicroBuildOverridePluginDirectory=$(Agent.TempDirectory)\MicroBuild\Plugins",
               "/p:RepositoryName=dotnet/android"
