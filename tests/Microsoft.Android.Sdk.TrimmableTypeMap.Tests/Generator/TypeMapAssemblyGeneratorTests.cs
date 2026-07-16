@@ -187,7 +187,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_ProxyType_UsesGenericJavaPeerProxyBase ()
+	public void Generate_ProxyType_UsesJavaPeerProxyBase ()
 	{
 		var peers = ScanFixtures ();
 		using var stream = GenerateAssembly (peers);
@@ -199,39 +199,22 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 
 		Assert.NotEmpty (proxyTypes);
+		// Every proxy — concrete class, interface, or open generic definition — derives from
+		// the `JavaPeerProxy` base (a plain TypeReference), taking `targetType` as a ctor parameter.
 		Assert.All (proxyTypes, proxyType => {
-			switch (proxyType.BaseType.Kind) {
-			case HandleKind.TypeSpecification:
-				// Concrete (constructible) target types derive from the closed `JavaPeerProxy<T>`.
-				var baseTypeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) proxyType.BaseType);
-				var baseTypeName = baseTypeSpec.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
-				Assert.StartsWith ("Java.Interop.JavaPeerProxy`1<", baseTypeName, StringComparison.Ordinal);
-				break;
-			case HandleKind.TypeReference:
-				// Open generic definitions and interfaces derive from the non-generic `JavaPeerProxy`.
-				var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
-				Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
-				Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
-				break;
-			default:
-				Assert.Fail ($"Unexpected BaseType handle kind: {proxyType.BaseType.Kind}");
-				break;
-			}
+			Assert.Equal (HandleKind.TypeReference, proxyType.BaseType.Kind);
+			var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
+			Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
+			Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
 		});
-
-		var objectProxy = proxyTypes.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
-		var objectProxyBaseType = reader.GetTypeSpecification ((TypeSpecificationHandle) objectProxy.BaseType);
-		Assert.Equal ("Java.Interop.JavaPeerProxy`1<Java.Lang.Object>",
-			objectProxyBaseType.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null));
 	}
 
 	[Fact]
-	public void Generate_InterfaceProxyType_UsesNonGenericJavaPeerProxyBase ()
+	public void Generate_InterfaceProxyType_UsesJavaPeerProxyBase ()
 	{
-		// JavaPeerProxy<T> annotates T with [DynamicallyAccessedMembers(Constructors)]. Closing it
-		// over an interface (which has no constructors) makes ILC fail to load the closed generic
-		// type ("Failed to load type 'JavaPeerProxy`1<ISomeInterface>'"). Interface proxies must
-		// therefore derive from the non-generic JavaPeerProxy base (a plain TypeReference).
+		// Interface proxies derive from the `JavaPeerProxy` base (a plain TypeReference), like
+		// every other proxy. Interfaces have no constructors and are activated from their
+		// InvokerType in CreateInstance.
 		var peers = ScanFixtures ();
 		using var stream = GenerateAssembly (peers);
 		using var pe = new PEReader (stream);
@@ -249,16 +232,15 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	// Regression test: decode the emitted proxy `.ctor` *body* (not just member presence)
-	// and verify it chains to the correct base constructor. Concrete (constructible) proxies
-	// derive from `JavaPeerProxy<T>` and call the single-arg base ctor `(string)`; interface
-	// and open-generic proxies derive from the non-generic `JavaPeerProxy` and call the
-	// two-arg base ctor `(string, Type)` — pushing the target type via `Type.GetTypeFromHandle`.
-	// A base-ctor arity/token mismatch here would pass metadata inspection but blow up as an
-	// InvalidProgramException/TypeLoadException on the CoreCLR device legs, so assert it directly.
+	// and verify it chains to the correct base constructor. Every proxy derives from
+	// `JavaPeerProxy` and calls the two-arg base ctor `(string, Type)` — pushing the target
+	// type via `Type.GetTypeFromHandle`. A base-ctor arity/token mismatch here would pass
+	// metadata inspection but blow up as an InvalidProgramException/TypeLoadException on the
+	// CoreCLR device legs, so assert it directly.
 	[Theory]
-	[InlineData ("Java_Lang_Object_Proxy", 1, false)]              // concrete class -> generic base (string)
-	[InlineData ("Android_Views_IOnClickListener_Proxy", 2, true)] // interface -> non-generic base (string, Type)
-	[InlineData ("MyApp_Generic_GenericHolder_1_Proxy", 2, true)]  // open generic -> non-generic base (string, Type)
+	[InlineData ("Java_Lang_Object_Proxy", 2, true)]              // concrete class -> base ctor (string, Type)
+	[InlineData ("Android_Views_IOnClickListener_Proxy", 2, true)] // interface -> base ctor (string, Type)
+	[InlineData ("MyApp_Generic_GenericHolder_1_Proxy", 2, true)]  // open generic -> base ctor (string, Type)
 	public void Generate_ProxyCtor_ChainsToExpectedBaseConstructor (string proxyTypeName, int expectedBaseCtorArity, bool expectsGetTypeFromHandle)
 	{
 		var peers = ScanFixtures ();
