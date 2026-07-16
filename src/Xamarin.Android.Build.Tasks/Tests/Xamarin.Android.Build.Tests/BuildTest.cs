@@ -1602,7 +1602,7 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (true, "LowercaseMD5", "", runtime, true);
+				AddTestData (true, "LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
 				AddTestData (true, "LowercaseCrc64", "", runtime, false);
 				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime, false);
 			}

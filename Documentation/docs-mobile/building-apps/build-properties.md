@@ -1574,8 +1574,8 @@ rebuild times.
 ## EnableCrashReport
 
 A boolean property that sets the `DOTNET_EnableCrashReport` environment
-variable to `1` when using the CoreCLR runtime. This enables crash report
-generation at application startup.
+variable to `1` when using the CoreCLR or NativeAOT runtime. This enables
+crash report generation at application startup.
 
 This property is `False` by default and is ignored when `$(UseMonoRuntime)`
 is `True`.
