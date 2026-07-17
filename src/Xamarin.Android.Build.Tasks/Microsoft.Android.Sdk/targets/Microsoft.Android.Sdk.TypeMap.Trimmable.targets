@@ -157,6 +157,7 @@
         ManifestPlaceholders="$(AndroidManifestPlaceholders)"
         CheckedBuild="$(_AndroidCheckedBuild)"
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
+        ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
         AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
         ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
