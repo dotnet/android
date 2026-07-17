@@ -28,6 +28,7 @@ set(CLR_SOURCES_PATH "../../clr")
 
 set(XAMARIN_MONODROID_SOURCES
   bridge-processing.cc
+  cxx-unwind-shims.c
   host.cc
   host-environment.cc
   host-jni.cc
@@ -143,6 +144,7 @@ xa_add_include_directories(${XAMARIN_NAOT_ANDROID_LIB})
 
 target_link_options(${XAMARIN_NAOT_ANDROID_LIB}
   PRIVATE
+  -unwindlib=none
   -Wl,--version-script,${CMAKE_SOURCE_DIR}/nativeaot/libnaot-android.map.txt
   -Wl,--no-undefined-version
 )

@@ -354,7 +354,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       </_NativeAotCrtEndFiles>
       <_NativeAotLibSearchPaths Include="$(_NativeAotRuntimePackNativeDir)" />
       <_NativeAotCompilerRtLibs Include="$(_NativeAotRuntimePackNativeDir)/libclang_rt.builtins-$(_NdkAbi)-android.a" />
-      <_NativeAotCompilerRtLibs Include="$(_NativeAotRuntimePackNativeDir)/libunwind.a" />
     </ItemGroup>
 
     <!-- CRT and toolchain items from NDK -->
@@ -368,7 +367,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotLibSearchPaths Include="$(_NdkApiSysrootDir)" />
       <_NativeAotLibSearchPaths Include="$(_NdkSysrootDir)" />
       <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/libclang_rt.builtins-$(_NdkAbi)-android.a" />
-      <_NativeAotCompilerRtLibs Include="$(_NdkClangResourceDir)/**/$(_NdkAbi)/libunwind.a" />
     </ItemGroup>
 
     <!-- Common items (same regardless of linker source) -->

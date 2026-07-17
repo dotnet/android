@@ -55,6 +55,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Build (proj),
 				"Build should succeed without NDK (workload linker is the default)."
 			);
+			AssertUsesLibcxxWithoutLibunwind (builder, "android-arm64");
 		}
 
 		[Test]
@@ -73,6 +74,7 @@ namespace Xamarin.Android.Build.Tests
 				}),
 				"Build should succeed with NDK linker."
 			);
+			AssertUsesLibcxxWithoutLibunwind (builder, "android-arm64");
 		}
 
 		[Test]
@@ -92,6 +94,7 @@ namespace Xamarin.Android.Build.Tests
 				]),
 				"android-arm build should succeed with NDK linker."
 			);
+			AssertUsesLibcxxWithoutLibunwind (builder, "android-arm");
 		}
 
 		[Test]
@@ -110,6 +113,19 @@ namespace Xamarin.Android.Build.Tests
 				}),
 				"Build should fail without NDK when workload linker is disabled."
 			);
+		}
+
+		void AssertUsesLibcxxWithoutLibunwind (ProjectBuilder builder, string runtimeIdentifier)
+		{
+			var intermediate = builder.Output.GetIntermediaryPath (runtimeIdentifier);
+			var responseFiles = Directory.GetFiles (intermediate, "ld.lib*.rsp", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (responseFiles, $"{intermediate} should contain a native linker response file.");
+
+			foreach (var responseFile in responseFiles) {
+				var response = File.ReadAllText (responseFile);
+				StringAssert.Contains ("libc++abi.a", response, $"{responseFile} should link libc++abi.");
+				StringAssert.DoesNotContain ("libunwind.a", response, $"{responseFile} should not link the NDK unwinder.");
+			}
 		}
 	}
 }
