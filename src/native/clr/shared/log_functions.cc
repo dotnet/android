@@ -191,12 +191,4 @@ namespace xamarin::android {
 		va_end (args);
 	}
 
-	void
-	log_fatalf (LogCategories category, const char *format, ...) noexcept
-	{
-		va_list args;
-		va_start (args, format);
-		log_writev (category, LogLevel::Fatal, format, args);
-		va_end (args);
-	}
 }
