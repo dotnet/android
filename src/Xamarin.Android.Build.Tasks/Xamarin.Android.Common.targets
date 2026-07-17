@@ -911,6 +911,7 @@ because xbuild doesn't support framework reference assemblies.
 		CheckIssues="$(AndroidLintCheckIssues)"
 		ConfigFiles="@(AndroidLintConfig)"
 		ResourceDirectories="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)"
+		SourceDirectories="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)"
 		IntermediateOutputPath="$(IntermediateOutputPath)"
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
@@ -997,7 +998,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
 		<_PropertyCacheItems Include="_AndroidTypeMapImplementation=$(_AndroidTypeMapImplementation)" />
-		<_PropertyCacheItems Include="_AndroidTrimmableTypeMapMaxArrayRank=$(_AndroidTrimmableTypeMapMaxArrayRank)" />
 		<_PropertyCacheItems Include="_AndroidUseMarshalMethods=$(_AndroidUseMarshalMethods)" />
 		<_PropertyCacheItems Include="_AndroidJcwCodegenTarget=$(_AndroidJcwCodegenTarget)" />
 		<_PropertyCacheItems Include="_AndroidAssemblyStoreCompressionLevel=$(_AndroidAssemblyStoreCompressionLevel)" />
@@ -1925,6 +1925,10 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
   <ItemGroup>
     <_JavaStubFiles Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java" />
+    <!-- Additional Java source directories compiled in place (e.g. the trimmable type map's
+         generated Java Callable Wrappers, which are no longer copied into android/src). Track
+         their *.java as _CompileJava inputs so edits/additions/removals trigger recompilation. -->
+    <_JavaStubFiles Include="%(_AdditionalJavaStubDirectory.Identity)**\*.java" />
     <FileWrites Include="@(_JavaStubFiles)" />
   </ItemGroup>
 </Target>

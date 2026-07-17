@@ -316,11 +316,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
 	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
+	jstring_wrapper &cache_dir = applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX];
 	HostEnvironment::setup_environment (
 		language,
 		files_dir,
-		applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]
+		cache_dir
 	);
+	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 

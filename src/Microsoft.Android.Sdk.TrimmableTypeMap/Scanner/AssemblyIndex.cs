@@ -35,11 +35,6 @@ sealed class AssemblyIndex : IDisposable
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
 	/// <summary>
-	/// Type references grouped by referenced assembly name.
-	/// </summary>
-	public Dictionary<string, HashSet<string>> ReferencedTypeNamesByAssembly { get; } = new (StringComparer.OrdinalIgnoreCase);
-
-	/// <summary>
 	/// Type-forwarded or otherwise exported types declared by this assembly.
 	/// </summary>
 	public HashSet<string> ExportedTypeNames { get; } = new (StringComparer.Ordinal);
@@ -82,14 +77,6 @@ sealed class AssemblyIndex : IDisposable
 		// the common case where the attribute is neither imported nor declared here.
 		foreach (var trHandle in Reader.TypeReferences) {
 			var typeReference = Reader.GetTypeReference (trHandle);
-			if (TryGetTypeReferenceAssemblyName (typeReference, out var assemblyName)) {
-				if (!ReferencedTypeNamesByAssembly.TryGetValue (assemblyName, out var typeNames)) {
-					typeNames = new HashSet<string> (StringComparer.Ordinal);
-					ReferencedTypeNamesByAssembly [assemblyName] = typeNames;
-				}
-				typeNames.Add (MetadataTypeNameResolver.GetTypeFromReference (Reader, trHandle, rawTypeKind: 0));
-			}
-
 			if (IsTypeReferenceMatch (typeReference, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
 				MayUseJniAddNativeMethodRegistrationAttribute = true;
 			}
@@ -136,22 +123,6 @@ sealed class AssemblyIndex : IDisposable
 			var ns = Reader.GetString (exportedType.Namespace);
 			return MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 		}
-	}
-
-	bool TryGetTypeReferenceAssemblyName (TypeReference typeReference, [NotNullWhen (true)] out string? assemblyName)
-	{
-		var scope = typeReference.ResolutionScope;
-		while (scope.Kind == HandleKind.TypeReference) {
-			scope = Reader.GetTypeReference ((TypeReferenceHandle) scope).ResolutionScope;
-		}
-		if (scope.Kind == HandleKind.AssemblyReference) {
-			var assemblyReference = Reader.GetAssemblyReference ((AssemblyReferenceHandle) scope);
-			assemblyName = Reader.GetString (assemblyReference.Name);
-			return true;
-		}
-
-		assemblyName = null;
-		return false;
 	}
 
 	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)

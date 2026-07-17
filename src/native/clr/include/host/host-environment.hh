@@ -39,6 +39,12 @@ namespace xamarin::android {
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
+		static void set_variable_if_unset (std::string_view const& name, jstring_wrapper &value) noexcept
+		{
+			Util::set_environment_variable_if_unset (name, value);
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
 		static void set_system_property (const char *name, const char *value) noexcept
 		{
 			// TODO: should we **actually** try to set the system property here? Would that even work? Needs testing
