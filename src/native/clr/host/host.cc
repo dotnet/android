@@ -316,17 +316,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
 	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
+	jstring_wrapper &cache_dir = applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX];
 	HostEnvironment::setup_environment (
 		language,
 		files_dir,
-		applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]
+		cache_dir
 	);
+	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
+	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());

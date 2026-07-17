@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <RootNamespace>Microsoft.Android.Build.BaseTasks.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
