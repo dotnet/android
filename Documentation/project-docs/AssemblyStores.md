@@ -111,6 +111,7 @@ The header is a fixed-size structure at the beginning of each assembly store fil
 - **ENTRY_COUNT** (`uint32_t`) - Number of assemblies in the store
 - **INDEX_ENTRY_COUNT** (`uint32_t`) - Number of entries in the index (typically `ENTRY_COUNT * 2`)
 - **INDEX_SIZE** (`uint32_t`) - Index size in bytes
+- **CONTENT_ID** (`uint64_t`) - Deterministic xxHash3 of everything after the header
 
 ## [INDEX]
 
@@ -168,6 +169,7 @@ All kinds of stores share the following header format:
         uint32_t entry_count;
         uint32_t index_entry_count;
         uint32_t index_size; // index size in bytes
+        uint64_t content_id;
     };
 
 Individual fields have the following meanings:
@@ -179,6 +181,7 @@ Individual fields have the following meanings:
    table, see below)
  - `index_entry_count`: number of entries in the index
  - `index_size`: index size in bytes
+ - `content_id`: deterministic xxHash3 of the index, descriptors, names, and assembly data
  
 ## Assembly descriptor table
 
@@ -284,6 +287,7 @@ struct [[gnu::packed]] AssemblyStoreHeader final
     uint32_t entry_count;
     uint32_t index_entry_count;
     uint32_t index_size; // index size in bytes
+    uint64_t content_id;
 };
 ```
 

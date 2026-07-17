@@ -50,4 +50,5 @@ sealed class ApplicationConfigCLR
 	public uint   jni_remapping_replacement_method_index_entry_count;
 	public string android_package_name = String.Empty;
 	public bool   have_assembly_store;
+	public bool   assembly_store_decompression_cache_enabled;
 }

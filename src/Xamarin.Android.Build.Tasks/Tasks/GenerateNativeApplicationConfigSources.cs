@@ -58,6 +58,7 @@ namespace Xamarin.Android.Tasks
 		public string AndroidRuntime { get; set; } = "";
 
 		public bool EnableMarshalMethods { get; set; }
+		public bool AndroidEnableAssemblyStoreDecompressionCache { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? BoundExceptionType { get; set; }
@@ -284,6 +285,7 @@ namespace Xamarin.Android.Tasks
 					MarshalMethodsEnabled = EnableMarshalMethods,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 					HaveAssemblyStore = UseAssemblyStore,
+					AssemblyStoreDecompressionCacheEnabled = AndroidEnableAssemblyStoreDecompressionCache,
 				};
 			} else {
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, Log) {
