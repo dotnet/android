@@ -11,9 +11,9 @@
 #include <unistd.h>
 
 #include <shared/helpers.hh>
-#if !defined(XA_HOST_MONOVM)
-#include <shared/log_types.hh>
-#endif
+namespace xamarin::android {
+	void log_errorf (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+}
 
 #if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
@@ -208,11 +208,7 @@ namespace xamarin::android {
 			}
 
 			if (!can_access (start_index)) {
-#if defined(XA_HOST_MONOVM)
-				log_error (LOG_DEFAULT, "Cannot convert string to integer, index {} is out of range", start_index);
-#else
 				log_errorf (LOG_DEFAULT, "Cannot convert string to integer, index %zu is out of range", start_index);
-#endif
 				return false;
 			}
 
@@ -236,9 +232,6 @@ namespace xamarin::android {
 			}
 
 			if (out_of_range || errno == ERANGE) {
-#if defined(XA_HOST_MONOVM)
-				log_error (LOG_DEFAULT, "Value {} is out of range of this type ({}..{})", reinterpret_cast<char*>(s), static_cast<int64_t>(min), static_cast<uint64_t>(max));
-#else
 				log_errorf (
 					LOG_DEFAULT,
 					"Value %s is out of range of this type (%lld..%llu)",
@@ -246,25 +239,16 @@ namespace xamarin::android {
 					static_cast<long long>(static_cast<int64_t>(min)),
 					static_cast<unsigned long long>(static_cast<uint64_t>(max))
 				);
-#endif
 				return false;
 			}
 
 			if (endp == s) {
-#if defined(XA_HOST_MONOVM)
-				log_error (LOG_DEFAULT, "Value {} does not represent a base {} integer", reinterpret_cast<char*>(s), base);
-#else
 				log_errorf (LOG_DEFAULT, "Value %s does not represent a base %d integer", reinterpret_cast<char*>(s), base);
-#endif
 				return false;
 			}
 
 			if (*endp != '\0') {
-#if defined(XA_HOST_MONOVM)
-				log_error (LOG_DEFAULT, "Value {} has non-numeric characters at the end", reinterpret_cast<char*>(s));
-#else
 				log_errorf (LOG_DEFAULT, "Value %s has non-numeric characters at the end", reinterpret_cast<char*>(s));
-#endif
 				return false;
 			}
 
