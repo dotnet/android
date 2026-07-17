@@ -139,7 +139,7 @@ namespace xamarin::android {
 		{
 			struct stat sbuf;
 			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
-				log_warn (LOG_ASSEMBLY, "Failed to stat file '{}': {}", file_name, std::strerror (errno));
+				log_warnf (LOG_ASSEMBLY, "Failed to stat file '%s': %s", optional_string (file_name), std::strerror (errno));
 				return std::nullopt;
 			}
 
@@ -154,18 +154,30 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_environment_variable (const char *name, const char *value) noexcept
 		{
-			log_debug (LOG_DEFAULT, "Setting environment variable {} = '{}'", optional_string (name), optional_string (value));
+			log_debugf (LOG_DEFAULT, "Setting environment variable %s = '%s'", optional_string (name), optional_string (value));
 			if (::setenv (name, value, 1) < 0) {
-				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to set environment variable '%s': %s", optional_string (name), ::strerror (errno));
 			}
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_environment_variable_if_unset (std::string_view const& name, jstring_wrapper& value) noexcept
 		{
-			log_debug (LOG_DEFAULT, "Setting environment variable {} = '{}' if unset", name, value.get_string_view ());
+			log_debugf (
+				LOG_DEFAULT,
+				"Setting environment variable %.*s = '%s' if unset",
+				static_cast<int>(name.length ()),
+				name.data (),
+				optional_string (value.get_cstr ())
+			);
 			if (::setenv (name.data (), value.get_cstr (), 0) < 0) {
-				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
+				log_warnf (
+					LOG_DEFAULT,
+					"Failed to set environment variable '%.*s': %s",
+					static_cast<int>(name.length ()),
+					name.data (),
+					::strerror (errno)
+				);
 			}
 		}
 
@@ -187,7 +199,14 @@ namespace xamarin::android {
 			if (createDirectory) {
 				int rv = create_directory (value.get_cstr (), mode);
 				if (rv < 0 && errno != EEXIST) {
-					log_warn (LOG_DEFAULT, "Failed to create directory '{}' for environment variable '{}'. {}", value.get_string_view (), name, strerror (errno));
+					log_warnf (
+						LOG_DEFAULT,
+						"Failed to create directory '%s' for environment variable '%.*s'. %s",
+						optional_string (value.get_cstr ()),
+						static_cast<int>(name.length ()),
+						name.data (),
+						strerror (errno)
+					);
 				}
 			}
 			set_environment_variable (name, value);
@@ -217,14 +236,14 @@ namespace xamarin::android {
 			mmap_info.area		  = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
 			if (mmap_info.area == MAP_FAILED) {
-				Helpers::abort_application (
+				Helpers::abort_applicationf (
 					LOG_ASSEMBLY,
-					std::format (
-						"Could not mmap APK fd {}: {}; File={}",
-						fd,
-						strerror (errno),
-						filename
-					)
+					std::source_location::current (),
+					"Could not mmap APK fd %d: %s; File=%.*s",
+					fd,
+					strerror (errno),
+					static_cast<int>(filename.length ()),
+					filename.data ()
 				);
 			}
 
@@ -232,9 +251,9 @@ namespace xamarin::android {
 			file_info.area = pointer_add (mmap_info.area, offsetFromPage);
 			file_info.size = size;
 
-			log_info (
+			log_infof (
 				LOG_ASSEMBLY,
-				"  mmap_start: {:<8p}; mmap_end: {:<8p}	 mmap_len: {:<12}  file_start: {:<8p}  file_end: {:<8p}	 file_len: {:<12}	  apk descriptor: {}  file: {}",
+				"  mmap_start: %p; mmap_end: %p\t mmap_len: %zu  file_start: %p  file_end: %p\t file_len: %zu\t  apk descriptor: %d  file: %.*s",
 				mmap_info.area,
 				pointer_add (mmap_info.area, mmap_info.size),
 				mmap_info.size,
@@ -242,7 +261,8 @@ namespace xamarin::android {
 				pointer_add (file_info.area, file_info.size),
 				file_info.size,
 				fd,
-				filename
+				static_cast<int>(filename.length ()),
+				filename.data ()
 			);
 
 			return file_info;
@@ -265,7 +285,12 @@ namespace xamarin::android {
 					elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
 					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
 					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-						log_debug (LOG_ASSEMBLY, "Not an ELF image: {}", file_name);
+						log_debugf (
+							LOG_ASSEMBLY,
+							"Not an ELF image: %.*s",
+							static_cast<int>(file_name.length ()),
+							file_name.data ()
+						);
 						// Not an ELF image, just return what we mmapped before
 						return { map_info.area, map_info.size };
 				}
