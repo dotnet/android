@@ -11,44 +11,39 @@
 
 using namespace xamarin::android;
 
-namespace {
-	sem_t shared_args_semaphore {};
-	MarkCrossReferencesArgs *shared_args = nullptr;
+void GCBridge::initialize_shared_args_semaphore () noexcept
+{
+	int ret = sem_init (&shared_args_semaphore, 0, 0);
+	abort_unless (ret == 0, "Failed to initialize GC bridge semaphore");
+}
 
-	void initialize_shared_args_semaphore () noexcept
-	{
-		int ret = sem_init (&shared_args_semaphore, 0, 0);
-		abort_unless (ret == 0, "Failed to initialize GC bridge semaphore");
-	}
+void GCBridge::start_bridge_processing_thread () noexcept
+{
+	pthread_t thread {};
+	int ret = pthread_create (&thread, nullptr, bridge_processing_thread_entry, nullptr);
+	abort_unless (ret == 0, "Failed to create GC bridge processing thread");
 
-	void start_bridge_processing_thread (void *(*thread_entry)(void*)) noexcept
-	{
-		pthread_t thread {};
-		int ret = pthread_create (&thread, nullptr, thread_entry, nullptr);
-		abort_unless (ret == 0, "Failed to create GC bridge processing thread");
+	ret = pthread_detach (thread);
+	abort_unless (ret == 0, "Failed to detach GC bridge processing thread");
+}
 
-		ret = pthread_detach (thread);
-		abort_unless (ret == 0, "Failed to detach GC bridge processing thread");
-	}
+void GCBridge::publish_shared_args (MarkCrossReferencesArgs *args) noexcept
+{
+	__atomic_store_n (&shared_args, args, __ATOMIC_RELEASE);
 
-	void publish_shared_args (MarkCrossReferencesArgs *args) noexcept
-	{
-		__atomic_store_n (&shared_args, args, __ATOMIC_RELEASE);
+	int ret = sem_post (&shared_args_semaphore);
+	abort_unless (ret == 0, "Failed to release GC bridge semaphore");
+}
 
-		int ret = sem_post (&shared_args_semaphore);
-		abort_unless (ret == 0, "Failed to release GC bridge semaphore");
-	}
+auto GCBridge::wait_for_shared_args () noexcept -> MarkCrossReferencesArgs*
+{
+	int ret;
+	do {
+		ret = sem_wait (&shared_args_semaphore);
+	} while (ret == -1 && errno == EINTR);
+	abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
 
-	auto wait_for_shared_args () noexcept -> MarkCrossReferencesArgs*
-	{
-		int ret;
-		do {
-			ret = sem_wait (&shared_args_semaphore);
-		} while (ret == -1 && errno == EINTR);
-		abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
-
-		return __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
-	}
+	return __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
 }
 
 void GCBridge::initialize_on_onload (JNIEnv *env) noexcept
@@ -91,7 +86,7 @@ BridgeProcessingFtn GCBridge::initialize_callback (
 	bridge_processing_finished_callback = bridge_processing_finished;
 
 	initialize_shared_args_semaphore ();
-	start_bridge_processing_thread (bridge_processing_thread_entry);
+	start_bridge_processing_thread ();
 
 	return mark_cross_references;
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <semaphore.h>
+
 #include <jni.h>
 
 #include <shared/cpp-util.hh>
@@ -62,11 +64,19 @@ namespace xamarin::android {
 		static void trigger_java_gc (JNIEnv *env) noexcept;
 
 	private:
+		static inline sem_t shared_args_semaphore {};
+		static inline MarkCrossReferencesArgs *shared_args = nullptr;
+
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
 
 		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
+
+		static void initialize_shared_args_semaphore () noexcept;
+		static void start_bridge_processing_thread () noexcept;
+		static void publish_shared_args (MarkCrossReferencesArgs *args) noexcept;
+		static auto wait_for_shared_args () noexcept -> MarkCrossReferencesArgs*;
 
 		static void bridge_processing () noexcept;
 		static auto bridge_processing_thread_entry (void *arg) noexcept -> void*;
