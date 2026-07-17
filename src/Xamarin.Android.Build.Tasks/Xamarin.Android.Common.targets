@@ -1606,6 +1606,10 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="UsesLibraries"       ItemName="AndroidExternalJavaLibrary" />
     <Output TaskParameter="UseEmbeddedDex"      PropertyName="_UseEmbeddedDex" />
     <Output TaskParameter="IsTestOnly"          PropertyName="_AndroidIsTestOnlyPackage" />
+    <Output TaskParameter="PackageName"         PropertyName="_ApplicationArtifactApplicationId" />
+    <Output TaskParameter="ApplicationLabel"    PropertyName="_ApplicationArtifactApplicationTitle" />
+    <Output TaskParameter="VersionName"         PropertyName="_ApplicationArtifactApplicationDisplayVersion" />
+    <Output TaskParameter="VersionCode"         PropertyName="_ApplicationArtifactApplicationVersion" />
   </ReadAndroidManifest>
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
@@ -2708,7 +2712,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CollectApplicationArtifacts"
     Condition=" '$(AndroidApplication)' == 'true' "
-    DependsOnTargets="_ValidateAndroidPackageProperties">
+    DependsOnTargets="_ValidateAndroidPackageProperties;_ReadAndroidManifest">
   <ItemGroup>
     <ApplicationArtifact Remove="@(ApplicationArtifact)" />
     <ApplicationArtifact
@@ -2744,8 +2748,14 @@ because xbuild doesn't support framework reference assemblies.
       <Signed>true</Signed>
     </ApplicationArtifact>
     <ApplicationArtifact
-        Update="@(ApplicationArtifact)"
-        PackageId="$(_AndroidPackage)" />
+        Update="@(ApplicationArtifact)">
+      <PackageId>$([MSBuild]::ValueOrDefault('$(_ApplicationArtifactApplicationId)', '$(_AndroidPackage)'))</PackageId>
+      <ApplicationId>$(_ApplicationArtifactApplicationId)</ApplicationId>
+      <ApplicationTitle>$(_ApplicationArtifactApplicationTitle)</ApplicationTitle>
+      <ApplicationName>$(_ApplicationArtifactApplicationTitle)</ApplicationName>
+      <ApplicationDisplayVersion>$(_ApplicationArtifactApplicationDisplayVersion)</ApplicationDisplayVersion>
+      <ApplicationVersion>$(_ApplicationArtifactApplicationVersion)</ApplicationVersion>
+    </ApplicationArtifact>
   </ItemGroup>
 </Target>
 
