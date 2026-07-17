@@ -14,8 +14,9 @@ namespace Java.Interop {
 
 		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (JavaProxyObject));
 		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();
+		static              bool                                            nativeMethodsRegistered;
 
-		static unsafe JavaProxyObject ()
+		static unsafe void RegisterNativeMethods ()
 		{
 			using (var proxyType = new JniType ("net/dot/jni/internal/JavaProxyObject"u8)) {
 				Span<JniNativeMethod> methods = stackalloc JniNativeMethod [3];
@@ -31,6 +32,7 @@ namespace Java.Interop {
 					JniEnvironment.Types.RegisterNatives (proxyType.PeerReference, methods);
 				}
 			}
+			nativeMethodsRegistered = true;
 		}
 
 		public override JniPeerMembers JniPeerMembers {
@@ -76,6 +78,9 @@ namespace Java.Interop {
 			lock (CachedValues) {
 				if (CachedValues.TryGetValue (value, out var proxy))
 					return proxy;
+				// Register before JavaObject's constructor allocates the Java peer.
+				if (!nativeMethodsRegistered)
+					RegisterNativeMethods ();
 				proxy = new JavaProxyObject (value);
 				CachedValues.Add (value, proxy);
 				return proxy;
