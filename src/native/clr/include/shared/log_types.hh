@@ -54,7 +54,6 @@ namespace xamarin::android {
 	void log_infof (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
 	void log_warnf (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
 	void log_errorf (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
-	void log_fatalf (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
 
 	[[gnu::always_inline]]
 	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
