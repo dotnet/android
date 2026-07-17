@@ -140,6 +140,17 @@ namespace xamarin::android::detail {
 
 		return sig.substr (name_start, name_end - name_start);
 	}
+
+	static_assert (get_function_name ("void ordinary_function()") == std::string_view { "ordinary_function" });
+	static_assert (get_function_name ("void example::Widget::method(int)") == std::string_view { "Widget::method" });
+	static_assert (get_function_name ("void example::Widget<int>::method()") == std::string_view { "Widget<int>::method" });
+	static_assert (get_function_name ("void example::Widget<T>::method(U) [with T = int; U = long int]") == std::string_view { "Widget<T>::method" });
+	static_assert (get_function_name ("void example::Widget::method()::<lambda(int)>::operator()(int) const") == std::string_view { "<lambda(int)>::operator()" });
+	static_assert (get_function_name ("bool operator==(const Value&, const Value&)") == std::string_view { "operator==" });
+	static_assert (get_function_name ("bool example::Value::operator==(const Value&) const") == std::string_view { "Value::operator==" });
+	static_assert (get_function_name ("void malformed(") == std::string_view { "malformed(" });
+	static_assert (get_function_name (nullptr) == std::string_view { "<unknown function>" });
+	static_assert (get_function_name ("") == std::string_view { "<unknown function>" });
 }
 
 template<std::invocable<> F>
