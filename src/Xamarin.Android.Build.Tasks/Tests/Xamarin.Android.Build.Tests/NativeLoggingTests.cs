@@ -22,7 +22,7 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (outputDirectory);
 
 			var compiler = Environment.GetEnvironmentVariable ("CXX");
-			if (string.IsNullOrEmpty (compiler)) {
+			if (compiler.IsNullOrEmpty ()) {
 				compiler = "clang++";
 			}
 
