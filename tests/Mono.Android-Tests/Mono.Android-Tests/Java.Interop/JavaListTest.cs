@@ -13,7 +13,19 @@ namespace Java.InteropTests
 		JavaList list;
 
 		[SetUp]
-		public void Setup () => list = new T ();
+		public void Setup ()
+		{
+			// Note: originally this was just `list = new T ();` but this doesn't work with NativeAOT due to how
+			// NUnit creates the `JavaListTest<T>` instance via reflection. The `new()` constraint cannot be respected
+			// under NativeAOT and so this would fail. Given we have just 2 cases, we can simply switch on them and
+			// call the ctors directly.
+			list = typeof (T) switch
+			{
+				Type t when t == typeof (JavaList) => new JavaList (),
+				Type t when t == typeof (JavaList<string>) => new JavaList<string> (),
+				_ => throw new NotSupportedException ($"Unexpected fixture type '{typeof (T)}'."),
+			};
+		}
 
 		[Test]
 		public void Add ()

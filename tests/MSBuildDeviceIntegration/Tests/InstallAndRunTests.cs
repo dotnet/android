@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
@@ -1550,6 +1551,10 @@ namespace Styleable.Library {
 				return;
 			}
 
+			if (IgnoreOnNativeAot (runtime, "the legacy resource-designer fix (FixLegacyResourceDesignerStep, which emits XA8000 for the unresolved SkiaSharp @styleable/SKCanvasView) is intentionally not run on the trimmable typemap path, which is the NativeAOT default.")) {
+				return;
+			}
+
 			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "SkiaSharpCanvasTest")) {
 				IsRelease = isRelease,
 				PackageReferences = {
@@ -2122,6 +2127,68 @@ MONO_GC_PARAMS=bridge-implementation=new",
 						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
 				);
 			}
+		}
+
+		[Test]
+		public void CoreClrCrashReportUsesCacheDirectory ([Values] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (CoreClrCrashReportUsesCacheDirectory),
+				RootNamespace = nameof (CoreClrCrashReportUsesCacheDirectory),
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+				OtherBuildItems = {
+					new BuildItem ("AndroidEnvironment", "env.txt") {
+						TextContent = () => "DOTNET_EnableCrashReport=1",
+					},
+				},
+			};
+			if (isRelease) {
+				// Release apps only need to be debuggable here so that run-as can retrieve the crash report.
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+				proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			}
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+		var crashReportRootPath = Environment.GetEnvironmentVariable ("DOTNET_CrashReportRootPath");
+		var crashReportDirectory = crashReportRootPath == null
+			? null
+			: System.IO.Path.Combine (crashReportRootPath, ".dotnet", "crash-reports");
+		Console.WriteLine ("DOTNET_CrashReportRootPath=" + crashReportRootPath);
+		Console.WriteLine ("CacheDir=" + CacheDir.AbsolutePath);
+		Console.WriteLine ("CrashReportDirectory=" + crashReportDirectory);
+		Console.WriteLine ("#CRASH-REPORT-ROOT-PATH-VALID#" +
+			(crashReportRootPath == CacheDir.AbsolutePath && System.IO.Directory.Exists (crashReportDirectory)));
+		Console.WriteLine ("#CRASH-REPORT-FAILFAST#");
+		Console.Out.Flush ();
+		Environment.FailFast ("MSBuildDeviceIntegration crash report test");
+		""");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "App should have installed.");
+			RunAdbCommand ($"shell run-as {proj.PackageName} rm -rf cache/.dotnet");
+			RunProjectAndAssert (proj, builder);
+
+			const string reportDirectory = "cache/.dotnet/crash-reports";
+			string crashReportPath = "";
+			WaitFor (
+				TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds),
+				() => {
+					var output = RunAdbCommand ($"shell run-as {proj.PackageName} find {reportDirectory} -type f -name '*.crashreport.json'").Trim ();
+					crashReportPath = output
+						.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+						.FirstOrDefault (path => path.EndsWith (".crashreport.json", StringComparison.Ordinal));
+					return !string.IsNullOrEmpty (crashReportPath);
+				},
+				intervalInMS: 1000
+			);
+			Assert.IsNotEmpty (crashReportPath, $"CoreCLR did not create a crash report in {reportDirectory}.");
+
+			var crashReportJson = RunAdbCommand ($"exec-out run-as {proj.PackageName} cat {crashReportPath}");
+			var localCrashReport = Path.Combine (Root, builder.ProjectDirectory, "crashreport.json");
+			File.WriteAllText (localCrashReport, crashReportJson);
+			TestContext.AddTestAttachment (localCrashReport);
+
+			using var crashReport = JsonDocument.Parse (File.ReadAllText (localCrashReport));
+			Assert.AreEqual (JsonValueKind.Object, crashReport.RootElement.ValueKind, "CoreCLR crash report should contain a JSON object.");
 		}
 
 		[Test]

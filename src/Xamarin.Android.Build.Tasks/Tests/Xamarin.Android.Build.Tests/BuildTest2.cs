@@ -153,6 +153,10 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
+				return;
+			}
+
 			var proj = forms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
@@ -1544,6 +1548,36 @@ namespace UnamedProject
 			}
 		}
 
+		[Test]
+		public void NativeAotKeepsRuntimeAcwJavaTypesUnderR8 ()
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: isRelease)) {
+				return;
+			}
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				LinkTool = "r8",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+				FileAssert.Exists (dexFile);
+
+				// Regression test: the trimmable NativeAOT path generates its ACW keep rules from the
+				// ILC DGML into proguard_project_references.cfg. If that file is not passed to R8, R8
+				// tree-shakes the runtime ACW/JCW classes out of classes.dex and the app crashes at
+				// startup inside JavaInteropRuntime.init with a ClassNotFoundException for the
+				// UncaughtExceptionMarshaler Java Callable Wrapper. The JCW class name is CRC-hashed
+				// (e.g. `scrc64...UncaughtExceptionMarshaler`), so match on the type name suffix.
+				Assert.IsTrue (DexUtils.ContainsClass ("UncaughtExceptionMarshaler;", dexFile, AndroidSdkPath),
+					$"`{dexFile}` should include the UncaughtExceptionMarshaler ACW kept by the generated NativeAOT ProGuard rules.");
+			}
+		}
+
 		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
 			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
@@ -1685,7 +1719,11 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
-				var customAppContent = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "com", "foxsports", "test", "CustomApp.java"));
+				var customAppJavaDirectory = runtime == AndroidRuntime.NativeAOT ?
+					Path.Combine ("typemap", "java") :
+					Path.Combine ("android", "src");
+				var customAppJava = b.Output.GetIntermediaryPath (Path.Combine (customAppJavaDirectory, "com", "foxsports", "test", "CustomApp.java"));
+				var customAppContent = File.ReadAllText (customAppJava);
 				Assert.IsTrue (customAppContent.Contains ("extends android.support.multidex.MultiDexApplication"),
 					"Custom App class should have inherited from android.support.multidex.MultiDexApplication.");
 			}

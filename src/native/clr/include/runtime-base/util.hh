@@ -161,6 +161,15 @@ namespace xamarin::android {
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
+		static void set_environment_variable_if_unset (std::string_view const& name, jstring_wrapper& value) noexcept
+		{
+			log_debug (LOG_DEFAULT, "Setting environment variable {} = '{}' if unset", name, value.get_string_view ());
+			if (::setenv (name.data (), value.get_cstr (), 0) < 0) {
+				log_warn (LOG_DEFAULT, "Failed to set environment variable '{}': {}", name, ::strerror (errno));
+			}
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
 		static void set_environment_variable (std::string_view const& name, jstring_wrapper& value) noexcept
 		{
 			set_environment_variable (name.data (), value.get_cstr ());

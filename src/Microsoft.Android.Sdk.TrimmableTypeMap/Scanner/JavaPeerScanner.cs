@@ -186,31 +186,7 @@ public sealed class JavaPeerScanner : IDisposable
 			ScanAssembly (index, resultsByQualifiedName);
 		}
 		ForceUnconditionalCrossReferences (resultsByQualifiedName, assemblyCache);
-		MarkFrameworkArrayEntryPeers (resultsByQualifiedName.Values);
 		return new List<JavaPeerInfo> (resultsByQualifiedName.Values);
-	}
-
-	void MarkFrameworkArrayEntryPeers (IEnumerable<JavaPeerInfo> peers)
-	{
-		var referencedFrameworkTypes = new HashSet<string> (StringComparer.Ordinal);
-		foreach (var index in assemblyCache.Values) {
-			if (frameworkAssemblyNames.Contains (index.AssemblyName)) {
-				continue;
-			}
-			foreach (var referencedTypeNames in index.ReferencedTypeNamesByAssembly) {
-				if (frameworkAssemblyNames.Contains (referencedTypeNames.Key)) {
-					referencedFrameworkTypes.UnionWith (referencedTypeNames.Value);
-				}
-			}
-		}
-
-		foreach (var peer in peers) {
-			if (!peer.IsFrameworkAssembly) {
-				continue;
-			}
-
-			peer.GenerateArrayEntries = referencedFrameworkTypes.Contains (peer.ManagedTypeName);
-		}
 	}
 
 	/// <summary>
@@ -394,7 +370,6 @@ public sealed class JavaPeerScanner : IDisposable
 				ManagedTypeShortName = ExtractShortName (fullName),
 				AssemblyName = index.AssemblyName,
 				IsFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName),
-				GenerateArrayEntries = !frameworkAssemblyNames.Contains (index.AssemblyName),
 				BaseJavaName = baseJavaName,
 				ImplementedInterfaceJavaNames = implementedInterfaces,
 				IsInterface = isInterface,
