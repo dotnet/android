@@ -375,14 +375,65 @@ stages:
             }
 
             [xml] $arcadeSignList = Get-Content $signList.FullName
-            foreach ($item in $arcadeSignList.SelectNodes("/Project/ItemGroup/*[@Include]")) {
-              $include = $item.GetAttribute("Include")
-              if ($item.LocalName -eq "MacDeveloperSign" -or $item.LocalName -eq "MacDeveloperSignHarden") {
-                $include = [IO.Path]::GetFileName($include.Replace("/", "\"))
+            $packageEntries = foreach ($package in $packages) {
+              $archive = [IO.Compression.ZipFile]::OpenRead($package.FullName)
+              try {
+                foreach ($entry in $archive.Entries) {
+                  [pscustomobject]@{
+                    FullName = $entry.FullName.Replace("\", "/")
+                    Name = $entry.Name
+                  }
+                }
+              } finally {
+                $archive.Dispose()
               }
-              $include = $include.Replace("%", "%25").Replace("*", "%2A").Replace("?", "%3F").Replace(";", "%3B")
-              $item.SetAttribute("Include", $include)
             }
+
+            foreach ($item in @($arcadeSignList.SelectNodes("/Project/ItemGroup/*[@Include]"))) {
+              $include = $item.GetAttribute("Include").Replace("\", "/")
+              if ($include.Contains("*") -or $include.Contains("?")) {
+                $matchedEntries = if ($include.Contains("/")) {
+                  @($packageEntries | Where-Object { $_.FullName -like $include -or $_.FullName -like "*/$include" })
+                } else {
+                  @($packageEntries | Where-Object { $_.Name -like $include })
+                }
+                $names = @($matchedEntries.Name | Where-Object { $_ } | Sort-Object -Unique)
+                if ($names.Count -eq 0) {
+                  throw "Signing pattern '$include' did not match any package entries."
+                }
+                foreach ($name in $names) {
+                  $expandedItem = $item.Clone()
+                  $escapedName = $name.Replace("%", "%25").Replace(";", "%3B")
+                  $expandedItem.SetAttribute("Include", $escapedName)
+                  [void] $item.ParentNode.InsertBefore($expandedItem, $item)
+                }
+                [void] $item.ParentNode.RemoveChild($item)
+              } else {
+                if ($item.LocalName -eq "MacDeveloperSign" -or $item.LocalName -eq "MacDeveloperSignHarden") {
+                  $include = [IO.Path]::GetFileName($include)
+                }
+                $include = $include.Replace("%", "%25").Replace(";", "%3B")
+                $item.SetAttribute("Include", $include)
+              }
+            }
+
+            $skipNames = @($arcadeSignList.SelectNodes("/Project/ItemGroup/Skip") | ForEach-Object Include)
+            foreach ($item in @($arcadeSignList.SelectNodes("/Project/ItemGroup/MacDeveloperSign | /Project/ItemGroup/MacDeveloperSignHarden"))) {
+              if ($item.GetAttribute("Include") -in $skipNames) {
+                [void] $item.ParentNode.RemoveChild($item)
+              }
+            }
+
+            $certificatesByName = @{}
+            foreach ($item in $arcadeSignList.SelectNodes("/Project/ItemGroup/ThirdParty | /Project/ItemGroup/ThirdPartyScript | /Project/ItemGroup/MacDeveloperSign | /Project/ItemGroup/MacDeveloperSignHarden")) {
+              $name = $item.GetAttribute("Include")
+              $certificateGroup = $item.LocalName
+              if ($certificatesByName.ContainsKey($name) -and $certificatesByName[$name] -ne $certificateGroup) {
+                throw "Signing entry '$name' is assigned to both '$($certificatesByName[$name])' and '$certificateGroup'."
+              }
+              $certificatesByName[$name] = $certificateGroup
+            }
+
             $arcadeSignListPath = "$(Build.StagingDirectory)\ArcadeSignList.xml"
             $arcadeSignList.Save($arcadeSignListPath)
             Write-Host "##vso[task.setvariable variable=AndroidSignList]$arcadeSignListPath"

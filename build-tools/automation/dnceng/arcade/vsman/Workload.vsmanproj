@@ -28,7 +28,7 @@
     <ManifestDropName Condition="'$(ManifestNameSuffix)' == ''">$(ManifestDropNameRoot)/$(ManifestBuildNumber)</ManifestDropName>
     <ManifestDropName Condition="'$(ManifestNameSuffix)' != ''">$(ManifestDropNameRoot)/$(ManifestNameSuffix)/$(ManifestBuildNumber)</ManifestDropName>
     <ManifestPublishUrl>https://vsdrop.corp.microsoft.com/file/v1/$(ManifestDropName);</ManifestPublishUrl>
-    <ManifestIntermediateOutputPath>$(OutputPath)\obj\$(MSBuildProject)</ManifestIntermediateOutputPath>
+    <ManifestIntermediateOutputPath>$(OutputPath)\obj\$(MSBuildProjectName)</ManifestIntermediateOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
