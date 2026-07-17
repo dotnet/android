@@ -51,4 +51,5 @@ sealed class ApplicationConfigCLR
 	public string android_package_name = String.Empty;
 	public bool   managed_marshal_methods_lookup_enabled;
 	public bool   have_assembly_store;
+	public bool   assembly_store_decompression_cache_enabled;
 }

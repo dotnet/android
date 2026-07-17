@@ -663,6 +663,98 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
+		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
+				IsRelease = true,
+			};
+			app.SetRuntime (AndroidRuntime.CoreCLR);
+			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
+			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+
+			using var appBuilder = CreateApkBuilder ();
+			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-first-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"First launch should succeed."
+			);
+
+			string [] cacheFiles = [];
+			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
+				Thread.Sleep (250);
+				cacheFiles = RunAdbCommand (
+					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
+				)
+					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
+					.ToArray ();
+			}
+			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
+
+			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			string cacheFileToCorrupt = cacheFiles.First ();
+			string ValidFileHash () => RunAdbCommand (
+				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
+			).Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault () ?? "";
+
+			string validHash = ValidFileHash ();
+			Assert.That (validHash, Is.Not.Empty, $"Should be able to hash the persisted cache file '{cacheFileToCorrupt}'.");
+
+			RunAdbCommand (
+				$"shell run-as {app.PackageName} dd if=/dev/zero of={cacheFileToCorrupt} bs=1 count=1 conv=notrunc"
+			);
+			Assert.That (ValidFileHash (), Is.Not.EqualTo (validHash), "Corrupting the cache file should change its contents.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-second-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"Second launch should succeed."
+			);
+
+			// A corrupted entry must be rejected (footer hash mismatch) and re-decompressed, which
+			// re-persists a byte-identical file. Verify the *exact* corrupted file is healed rather
+			// than merely checking that some other valid entry is still mapped.
+			bool rewritten = false;
+			for (int attempt = 0; attempt < 40 && !rewritten; attempt++) {
+				Thread.Sleep (250);
+				rewritten = ValidFileHash () == validHash;
+			}
+			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
+
+			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
+				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+			Assert.IsNotEmpty (pids, "The application process should be running after the second launch.");
+			var maps = new StringBuilder ();
+			foreach (string pid in pids) {
+				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
+			}
+			StringAssert.Contains (
+				"/code_cache/decompressed-assembly-cache-v1/",
+				maps.ToString (),
+				"The second launch should map persisted decompressed assemblies."
+			);
+		}
+
+		[Test]
 		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1554,6 +1646,10 @@ namespace Styleable.Library {
 				return;
 			}
 
+			if (IgnoreOnNativeAot (runtime, "the legacy resource-designer fix (FixLegacyResourceDesignerStep, which emits XA8000 for the unresolved SkiaSharp @styleable/SKCanvasView) is intentionally not run on the trimmable typemap path, which is the NativeAOT default.")) {
+				return;
+			}
+
 			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "SkiaSharpCanvasTest")) {
 				IsRelease = isRelease,
 				PackageReferences = {
@@ -1857,10 +1953,11 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		// .NET 10 NativeAOT was experimental and is not covered by previous-version compatibility tests.
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework,
-				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;

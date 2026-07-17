@@ -118,6 +118,12 @@ Overridable MSBuild properties include:
      assemblies placed in the APK will be compressed in `Release` builds. `Debug`
      builds are not affected.
 
+  * `$(AndroidEnableAssemblyStoreDecompressionCache)`: Defaults to `False`. When
+     enabled for a CoreCLR `Release` build, decompressed assemblies are cached in
+     the app's Android code-cache directory and mapped from there on subsequent
+     launches. The cache consumes additional on-device storage and is rebuilt
+     after app or platform updates.
+
 ## Options suitable for local development
 
 ### Native runtime (`src/native`)
