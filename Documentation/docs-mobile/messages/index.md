@@ -203,7 +203,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA4229: Unrecognized \`TransformFile\` root element: {element}.
 + XA4230: Error parsing XML: {exception}
 + [XA4231](xa4231.md): The Android class parser value 'jar2xml' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'class-parse'.
-+ [XA4232](xa4232.md): The Android code generation target 'XamarinAndroid' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.
++ [XA4232](xa4232.md): The Android code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.
 + [XA4234](xa4234.md): '<{item}>' item '{itemspec}' is missing required attribute '{name}'.
 + [XA4235](xa4235.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id'.
 + [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}

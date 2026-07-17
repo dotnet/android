@@ -43,8 +43,9 @@ will always be used.
 
 ### `<AndroidCodegenTarget>`
 
-`XamarinAndroid` is no longer a valid option for `<AndroidCodegenTarget>`.  `XAJavaInterop1`
-is now the default and only supported option.
+`XamarinAndroid` and `JavaInterop1` are no longer valid options for
+`<AndroidCodegenTarget>`. `XAJavaInterop1` is now the default and only
+supported option.
 
 If you have hand-bound code in your `Additions` files that interacts with the generated binding 
 plumbing (which is rare), it may need to be updated to be compatible with `XAJavaInterop1`.

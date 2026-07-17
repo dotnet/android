@@ -88,7 +88,7 @@ will not be supported.
 supported.
 
 `$(AndroidCodegenTarget)` will be `XAJavaInterop1` by default.
-`XamarinAndroid` will not be supported.
+`XamarinAndroid` and `JavaInterop1` will not be supported.
 
 `$(AndroidManifest)` will default to `AndroidManifest.xml` in the root
 of projects as `Properties\AssemblyInfo.cs` is no longer used in
