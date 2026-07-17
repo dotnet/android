@@ -15,12 +15,14 @@ namespace Java.Interop {
 		static  readonly    JniPeerMembers                                  _members        = new JniPeerMembers (JniTypeName, typeof (JavaProxyObject));
 		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();
 
-		[JniAddNativeMethodRegistrationAttribute]
-		static void RegisterNativeMembers (JniNativeMethodRegistrationArguments args)
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "JavaProxyObject is only used by reflection-based JniRuntime.JniValueManager implementations.")]
+		static JavaProxyObject ()
 		{
-			args.Registrations.Add (new JniNativeMethodRegistration ("equals",   "(Ljava/lang/Object;)Z", new EqualsMarshalMethod (Equals)));
-			args.Registrations.Add (new JniNativeMethodRegistration ("hashCode", "()I",                   new GetHashCodeMarshalMethod (GetHashCode)));
-			args.Registrations.Add (new JniNativeMethodRegistration ("toString", "()Ljava/lang/String;",  new ToStringMarshalMethod (ToString)));
+			_members.JniPeerType.RegisterNativeMethods (
+					new JniNativeMethodRegistration ("equals",   "(Ljava/lang/Object;)Z", new EqualsMarshalMethod (Equals)),
+					new JniNativeMethodRegistration ("hashCode", "()I",                   new GetHashCodeMarshalMethod (GetHashCode)),
+					new JniNativeMethodRegistration ("toString", "()Ljava/lang/String;",  new ToStringMarshalMethod (ToString))
+			);
 		}
 
 		public override JniPeerMembers JniPeerMembers {
