@@ -8,6 +8,8 @@
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- NUnit and generated type-map assemblies are not trim-warning-clean. -->
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>net.dot.jni.referenceleaktests</ApplicationId>
@@ -27,6 +29,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+    <TrimmerRootAssembly Include="JniReferenceLeakTests" RootMode="All" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(PublishAot)' == 'true' ">
+    <IlcGenerateCompleteTypeMetadata>true</IlcGenerateCompleteTypeMetadata>
+    <IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(PublishAot)' == 'true' ">
+    <RdXmlFile Include="NativeAOT.rd.xml" />
   </ItemGroup>
 
   <ItemGroup>

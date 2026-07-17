@@ -147,8 +147,26 @@ stages:
         testName: JniReferenceLeakTests-CoreCLR
         project: tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
         extraBuildArgs: -p:UseMonoRuntime=false
-        artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/JniReferenceLeakTests-Signed.apk
+        artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/net.dot.jni.referenceleaktests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-JniReferenceLeakTests-CoreCLR
+
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: JniReferenceLeakTests-CoreCLRTrimmable
+        project: tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
+        extraBuildArgs: -p:_AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/net.dot.jni.referenceleaktests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-JniReferenceLeakTests-CoreCLRTrimmable
+
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: JniReferenceLeakTests-NativeAOT
+        project: tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
+        extraBuildArgs: -p:PublishAot=true
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/net.dot.jni.referenceleaktests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-JniReferenceLeakTests-NativeAOT
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:

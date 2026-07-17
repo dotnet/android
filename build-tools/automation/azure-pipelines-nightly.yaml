@@ -152,7 +152,7 @@ stages:
         testName: JniReferenceLeakTests-$(avdApiLevel)
         project: tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
         extraBuildArgs: -p:UseMonoRuntime=false -p:TestAvdApiLevel=$(avdApiLevel) -p:TestAvdAbi=$(avdAbi) -p:TestAvdType=$(avdType)
-        artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/JniReferenceLeakTests-Signed.apk
+        artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/net.dot.jni.referenceleaktests-Signed.apk
         artifactFolder: JniReferenceLeakTests-$(avdApiLevel)
 
     # Also run in Release so full trimming (TrimMode=full, Release-only) is
@@ -166,7 +166,7 @@ stages:
         testName: JniReferenceLeakTests-Release-$(avdApiLevel)
         project: tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj
         extraBuildArgs: -p:UseMonoRuntime=false -p:TestAvdApiLevel=$(avdApiLevel) -p:TestAvdAbi=$(avdAbi) -p:TestAvdType=$(avdType)
-        artifactSource: bin/TestRelease/$(DotNetTargetFramework)-android/JniReferenceLeakTests-Signed.apk
+        artifactSource: bin/TestRelease/$(DotNetTargetFramework)-android/net.dot.jni.referenceleaktests-Signed.apk
         artifactFolder: JniReferenceLeakTests-Release-$(avdApiLevel)
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
