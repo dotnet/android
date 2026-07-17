@@ -36,6 +36,12 @@ public class CommandLineToolsResolverTests
 	}
 
 	[Test]
+	public void CommandLineTool_NullPath_Throws ()
+	{
+		Assert.Throws<ArgumentNullException> (() => new CommandLineTool (null));
+	}
+
+	[Test]
 	public void FindCommandLineTool_LatestHasHigherPackageRevision_SelectsLatest ()
 	{
 		CreateCommandLineTool ("19.0", "sdkmanager", "19.0");
@@ -334,6 +340,21 @@ public class CommandLineToolsResolverTests
 			(_, _, _) => Task.CompletedTask));
 
 		Assert.That (exception?.Message, Does.Contain ("without installing sdkmanager"));
+	}
+
+	[Test]
+	public void EnsureLatestCommandLineToolsAsync_Disposed_Throws ()
+	{
+		using var manager = CreateSdkManager ();
+		manager.Dispose ();
+
+		Assert.ThrowsAsync<ObjectDisposedException> (() => manager.EnsureLatestCommandLineToolsAsync (
+			SdkDirectory,
+			new ProgressCollector (),
+			CancellationToken.None,
+			(_, _, _) => Task.CompletedTask,
+			_ => CreatePackageList ("22.0"),
+			(_, _, _) => Task.CompletedTask));
 	}
 
 	[Test]

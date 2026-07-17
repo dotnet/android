@@ -84,6 +84,7 @@ public partial class SdkManager
 		Func<CancellationToken, Task<(IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available)>> listAsync,
 		Func<IEnumerable<string>, bool, CancellationToken, Task> installAsync)
 	{
+		ThrowIfDisposed ();
 		cancellationToken.ThrowIfCancellationRequested ();
 		AndroidSdkPath = targetPath;
 

@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+
 namespace Xamarin.Android.Tools;
 
 /// <summary>Information about an installed Android SDK command-line tool.</summary>
@@ -18,8 +20,12 @@ public sealed class CommandLineTool
 	/// <summary>Creates information for a resolved Android SDK command-line tool.</summary>
 	/// <param name="path">The full path to the requested executable.</param>
 	/// <param name="revision">The installed command-line tools revision, when available.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="path"/> is <see langword="null"/>.</exception>
 	public CommandLineTool (string path, string? revision = null)
 	{
+		if (path is null)
+			throw new ArgumentNullException (nameof (path));
+
 		Path = path;
 		Revision = revision;
 	}
