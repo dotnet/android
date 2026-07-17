@@ -1,4 +1,5 @@
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 #include <android/set_abort_message.h>
 
