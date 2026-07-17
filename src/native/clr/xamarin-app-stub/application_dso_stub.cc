@@ -69,6 +69,7 @@ const ApplicationConfig application_config = {
 	.android_package_name = android_package_name,
 	.managed_marshal_methods_lookup_enabled = false,
 	.have_assembly_store = false,
+	.assembly_store_decompression_cache_enabled = false,
 };
 
 // TODO: migrate to std::string_view for these two

@@ -1571,6 +1571,15 @@ MSBuild property also controls what
 will be embedded into the `.apk` or `.aab`, which can impact deployment and
 rebuild times.
 
+## EnableCrashReport
+
+A boolean property that sets the `DOTNET_EnableCrashReport` environment
+variable to `1` when using the CoreCLR or NativeAOT runtime. This enables
+crash report generation at application startup.
+
+This property is `False` by default and is ignored when `$(UseMonoRuntime)`
+is `True`.
+
 ## EnableDiagnostics
 
 Synonym for the [`$(AndroidEnableProfiler)`](#androidenableprofiler)

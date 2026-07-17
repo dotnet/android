@@ -167,6 +167,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' ">3</_AndroidAssemblyStoreCompressionLevel>
+	<AndroidEnableAssemblyStoreDecompressionCache Condition=" '$(AndroidEnableAssemblyStoreDecompressionCache)' == '' ">False</AndroidEnableAssemblyStoreDecompressionCache>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
 	<_AndroidCheckedBuild Condition=" '$(_AndroidCheckedBuild)' == '' "></_AndroidCheckedBuild>
 
@@ -1605,6 +1606,10 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="UsesLibraries"       ItemName="AndroidExternalJavaLibrary" />
     <Output TaskParameter="UseEmbeddedDex"      PropertyName="_UseEmbeddedDex" />
     <Output TaskParameter="IsTestOnly"          PropertyName="_AndroidIsTestOnlyPackage" />
+    <Output TaskParameter="PackageName"         PropertyName="_ApplicationArtifactApplicationId" />
+    <Output TaskParameter="ApplicationLabel"    PropertyName="_ApplicationArtifactApplicationTitle" />
+    <Output TaskParameter="VersionName"         PropertyName="_ApplicationArtifactApplicationDisplayVersion" />
+    <Output TaskParameter="VersionCode"         PropertyName="_ApplicationArtifactApplicationVersion" />
   </ReadAndroidManifest>
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
@@ -1650,6 +1655,7 @@ because xbuild doesn't support framework reference assemblies.
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_DiagnosticPorts=$(DiagnosticConfiguration)" Condition=" '$(DiagnosticConfiguration)' != '' " />
+    <_GeneratedAndroidEnvironment Include="DOTNET_EnableCrashReport=1" Condition=" '$(EnableCrashReport)' == 'true' and '$(UseMonoRuntime)' != 'true' " />
     <!-- RuntimeEnvironmentVariable items come from 'dotnet run -e NAME=VALUE' -->
     <_GeneratedAndroidEnvironment Include="@(RuntimeEnvironmentVariable->'%(Identity)=%(Value)')" />
   </ItemGroup>
@@ -1809,6 +1815,7 @@ because xbuild doesn't support framework reference assemblies.
       BoundExceptionType="$(AndroidBoundExceptionType)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
+      AndroidEnableAssemblyStoreDecompressionCache="$(AndroidEnableAssemblyStoreDecompressionCache)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
@@ -2705,7 +2712,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CollectApplicationArtifacts"
     Condition=" '$(AndroidApplication)' == 'true' "
-    DependsOnTargets="_ValidateAndroidPackageProperties">
+    DependsOnTargets="_ValidateAndroidPackageProperties;_ReadAndroidManifest">
   <ItemGroup>
     <ApplicationArtifact Remove="@(ApplicationArtifact)" />
     <ApplicationArtifact
@@ -2741,8 +2748,14 @@ because xbuild doesn't support framework reference assemblies.
       <Signed>true</Signed>
     </ApplicationArtifact>
     <ApplicationArtifact
-        Update="@(ApplicationArtifact)"
-        PackageId="$(_AndroidPackage)" />
+        Update="@(ApplicationArtifact)">
+      <PackageId>$([MSBuild]::ValueOrDefault('$(_ApplicationArtifactApplicationId)', '$(_AndroidPackage)'))</PackageId>
+      <ApplicationId>$(_ApplicationArtifactApplicationId)</ApplicationId>
+      <ApplicationTitle>$(_ApplicationArtifactApplicationTitle)</ApplicationTitle>
+      <ApplicationName>$(_ApplicationArtifactApplicationTitle)</ApplicationName>
+      <ApplicationDisplayVersion>$(_ApplicationArtifactApplicationDisplayVersion)</ApplicationDisplayVersion>
+      <ApplicationVersion>$(_ApplicationArtifactApplicationVersion)</ApplicationVersion>
+    </ApplicationArtifact>
   </ItemGroup>
 </Target>
 
