@@ -29,7 +29,7 @@ namespace Java.Interop;
 /// <item><description>reference element arguments ride the <c>__Canon</c> template: the wrapper definition is
 /// reflectively closed and its activation constructor invoked, kept alive by a concrete-literal
 /// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
-/// <item><description>mapped primitive/nullable arguments go through <see cref="ValueTypeFactory"/>,
+/// <item><description>supported value-type arguments go through <see cref="ValueTypeFactory"/>,
 /// which roots the exact instantiation with a direct <c>new</c>;</description></item>
 /// <item><description>any other value type throws <see cref="NotSupportedException"/> (no reflection
 /// fallback is AOT-safe).</description></item>
@@ -114,8 +114,8 @@ static class SafeJavaCollectionFactory
 
 		var elementType = arguments [0];
 		if (elementType.IsValueType) {
-			if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var valueFactory)) {
-				throw new NotSupportedException ($"'JavaList<{elementType}>' is not available on the trimmable typemap: only reference and mapped primitive element types are supported.");
+			if (!ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (elementType, out var valueFactory)) {
+				throw new NotSupportedException ($"'JavaList<{elementType}>' is not available on the trimmable typemap: only reference and explicitly supported value types are supported.");
 			}
 			result = valueFactory.CreateList (handle, transfer);
 			return true;
@@ -155,8 +155,8 @@ static class SafeJavaCollectionFactory
 
 		var elementType = arguments [0];
 		if (elementType.IsValueType) {
-			if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var valueFactory)) {
-				throw new NotSupportedException ($"'JavaCollection<{elementType}>' is not available on the trimmable typemap: only reference and mapped primitive element types are supported.");
+			if (!ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (elementType, out var valueFactory)) {
+				throw new NotSupportedException ($"'JavaCollection<{elementType}>' is not available on the trimmable typemap: only reference and explicitly supported value types are supported.");
 			}
 			result = valueFactory.CreateCollection (handle, transfer);
 			return true;
@@ -197,23 +197,23 @@ static class SafeJavaCollectionFactory
 		var keyType = arguments [0];
 		var valueType = arguments [1];
 
-		// A value-type argument is only AOT-safe when it is a mapped primitive/nullable; anything else
+		// A value-type argument is only AOT-safe when it is explicitly supported; anything else
 		// (a custom struct) has no rooted instantiation and must not fall back to reflection. Validate both
-		// arguments up front so the construction paths below only deal with reference or mapped-primitive types.
-		EnsureReferenceOrPrimitive (keyType);
-		EnsureReferenceOrPrimitive (valueType);
+		// arguments up front so the construction paths below only deal with reference or supported value types.
+		EnsureReferenceOrSupportedValueType (keyType);
+		EnsureReferenceOrSupportedValueType (valueType);
 
-		if (TryGetPrimitiveValueTypeFactory (keyType, out var keyFactory)) {
-			// The key is a mapped primitive. A value/value dictionary uses the full rooted cross-product;
+		if (TryGetSupportedValueTypeFactory (keyType, out var keyFactory)) {
+			// The key is a supported value type. A value/value dictionary uses the full rooted cross-product;
 			// a value/reference dictionary roots JavaDictionary<value,__Canon> via the value factory's token.
-			result = TryGetPrimitiveValueTypeFactory (valueType, out var valueFactory)
+			result = TryGetSupportedValueTypeFactory (valueType, out var valueFactory)
 				? keyFactory.CreateDictionary (valueFactory, handle, transfer)
 				: keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
 			return true;
 		}
 
-		if (TryGetPrimitiveValueTypeFactory (valueType, out var referenceKeyValueFactory)) {
-			// The key is a reference type and the value is a mapped primitive: root JavaDictionary<__Canon,value>.
+		if (TryGetSupportedValueTypeFactory (valueType, out var referenceKeyValueFactory)) {
+			// The key is a reference type and the value is supported: root JavaDictionary<__Canon,value>.
 			result = referenceKeyValueFactory.CreateDictionaryWithReferenceKey (keyType, handle, transfer);
 			return true;
 		}
@@ -232,13 +232,13 @@ static class SafeJavaCollectionFactory
 		return true;
 	}
 
-	static void EnsureReferenceOrPrimitive (Type argument)
+	static void EnsureReferenceOrSupportedValueType (Type argument)
 	{
-		if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
-			throw new NotSupportedException ($"'JavaDictionary' with value-type argument '{argument}' is not available on the trimmable typemap: only reference and mapped primitive arguments are supported.");
+		if (argument.IsValueType && !ValueTypeFactory.SupportedValueTypeFactories.ContainsKey (argument)) {
+			throw new NotSupportedException ($"'JavaDictionary' with value-type argument '{argument}' is not available on the trimmable typemap: only reference and explicitly supported value types are supported.");
 		}
 	}
 
-	static bool TryGetPrimitiveValueTypeFactory (Type argument, [NotNullWhen (true)] out ValueTypeFactory? factory)
-		=> ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (argument, out factory);
+	static bool TryGetSupportedValueTypeFactory (Type argument, [NotNullWhen (true)] out ValueTypeFactory? factory)
+		=> ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (argument, out factory);
 }

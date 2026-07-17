@@ -222,14 +222,36 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestCase (typeof (IList<DateTime>))]
-		[TestCase (typeof (JavaList<DateTime>))]
-		[TestCase (typeof (ICollection<DateTime>))]
-		[TestCase (typeof (JavaCollection<DateTime>))]
-		[TestCase (typeof (IDictionary<DateTime, string>))]
-		[TestCase (typeof (JavaDictionary<DateTime, string>))]
-		[TestCase (typeof (IDictionary<string, DateTime>))]
-		[TestCase (typeof (JavaDictionary<string, DateTime>))]
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_DateTimeContainers ()
+		{
+			AssertSupportedValueTypeContainers<DateTime> ();
+			AssertSupportedValueTypeContainers<DateTime?> ();
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_DateTimeOffsetContainers ()
+		{
+			AssertSupportedValueTypeContainers<DateTimeOffset> ();
+			AssertSupportedValueTypeContainers<DateTimeOffset?> ();
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_TimeSpanContainers ()
+		{
+			AssertSupportedValueTypeContainers<TimeSpan> ();
+			AssertSupportedValueTypeContainers<TimeSpan?> ();
+		}
+
+		// The Type-based JavaConvert entry point handles closed Java peer targets before consulting
+		// SafeJavaCollectionFactory, while interface targets require the factory to construct the wrapper.
+		[TestCase (typeof (IList<UnsupportedValueType>))]
+		[TestCase (typeof (ICollection<UnsupportedValueType>))]
+		[TestCase (typeof (IDictionary<UnsupportedValueType, string>))]
+		[TestCase (typeof (IDictionary<string, UnsupportedValueType>))]
 		[Category ("NativeAOTTrimmable")]
 		public void FromJniHandle_UnsupportedValueTypeThrows (Type targetType)
 		{
@@ -241,6 +263,39 @@ namespace Java.InteropTests
 				Assert.Throws<NotSupportedException> (() =>
 					InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer));
 			}
+		}
+
+		static void AssertSupportedValueTypeContainers<T> ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("This test validates supported value-type container rooting on the trimmable typemap path.");
+			}
+
+			using (var source = new JavaList ()) {
+				AssertFromJniHandleConvertsTo (typeof (IList<T>), source.Handle);
+				AssertFromJniHandleConvertsTo (typeof (ICollection<T>), source.Handle);
+			}
+
+			using (var source = new JavaDictionary ()) {
+				AssertFromJniHandleConvertsTo (typeof (IDictionary<T, string>), source.Handle);
+				AssertFromJniHandleConvertsTo (typeof (IDictionary<string, T>), source.Handle);
+				AssertFromJniHandleConvertsTo (typeof (IDictionary<T, int>), source.Handle);
+				AssertFromJniHandleConvertsTo (typeof (IDictionary<int, T>), source.Handle);
+			}
+		}
+
+		static void AssertFromJniHandleConvertsTo (Type targetType, IntPtr handle)
+		{
+			var converted = InvokeJavaConvertFromJniHandle (targetType, handle, JniHandleOwnership.DoNotTransfer);
+			try {
+				Assert.IsTrue (targetType.IsInstanceOfType (converted), $"Expected conversion to produce an instance of '{targetType}', but got '{converted.GetType ()}'.");
+			} finally {
+				(converted as IDisposable)?.Dispose ();
+			}
+		}
+
+		readonly struct UnsupportedValueType
+		{
 		}
 
 		static Java.Util.ArrayList CreateList (params int[][] items)

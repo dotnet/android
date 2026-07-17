@@ -13,7 +13,7 @@ static class SafeArrayFactory
 	//
 	// Value-type element arrays are different: value types do not collapse to __Canon, so an exact
 	// vector EEType/template must be available. ValueTypeFactory roots typeof(T[]), new T[length],
-	// and the matching Java collection wrapper instantiations in one shared primitive map.
+	// and the matching Java collection wrapper instantiations in one shared supported-value-type map.
 
 	internal static bool TryGetArrayType (Type elementType, int rank, [NotNullWhen (true)] out Type? arrayType)
 	{
@@ -54,7 +54,7 @@ static class SafeArrayFactory
 		if (elementType == null)
 			throw new ArgumentNullException (nameof (elementType));
 
-		if (rank == 1 && ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
+		if (rank == 1 && ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (elementType, out var factory)) {
 			array = factory.CreateArray (length);
 			return true;
 		}
@@ -76,7 +76,7 @@ static class SafeArrayFactory
 	static bool TryGetVectorType (Type elementType, [NotNullWhen (true)] out Type? vectorType)
 	{
 		if (elementType.IsValueType) {
-			if (ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
+			if (ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (elementType, out var factory)) {
 				vectorType = factory.ArrayType;
 				return true;
 			}
@@ -119,7 +119,7 @@ static class SafeArrayFactory
 		Justification = "Array.CreateInstanceFromArrayType() immediately asks for the array TypeHandle and allocates via RuntimeAugments.NewArray(). " +
 			"SafeArrayFactory only passes NativeAOT-buildable reference-array canonical shapes here: either arrays whose original element type is a reference type, " +
 			"or outer jagged array wrappers whose element is already an array reference type. " +
-			"First-rank primitive/nullable value vectors are allocated directly by ValueTypeFactory<T>.CreateArray() before reaching this helper.")]
+			"First-rank supported value-type vectors are allocated directly by ValueTypeFactory<T>.CreateArray() before reaching this helper.")]
 	static Array CreateInstanceFromArrayType (Type arrayType, int length)
 	{
 		return Array.CreateInstanceFromArrayType (arrayType, length);
