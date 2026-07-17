@@ -1,8 +1,5 @@
 #pragma once
 
-#include <pthread.h>
-#include <semaphore.h>
-
 #include <jni.h>
 
 #include <shared/cpp-util.hh>
@@ -60,35 +57,11 @@ namespace xamarin::android {
 
 		static BridgeProcessingFtn initialize_callback (
 			BridgeProcessingStartedFtn bridge_processing_started,
-			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept
-		{
-			abort_if_invalid_pointer_argument (bridge_processing_started, "bridge_processing_started");
-			abort_if_invalid_pointer_argument (bridge_processing_finished, "bridge_processing_finished");
-			abort_unless (GCBridge::bridge_processing_started_callback == nullptr, "GC bridge processing started callback is already set");
-			abort_unless (GCBridge::bridge_processing_finished_callback == nullptr, "GC bridge processing finished callback is already set");
-
-			GCBridge::bridge_processing_started_callback = bridge_processing_started;
-			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
-
-			int ret = sem_init (&shared_args_semaphore, 0, 0);
-			abort_unless (ret == 0, "Failed to initialize GC bridge semaphore");
-
-			ret = pthread_create (&bridge_processing_thread, nullptr, GCBridge::bridge_processing_thread_entry, nullptr);
-			abort_unless (ret == 0, "Failed to create GC bridge processing thread");
-
-			ret = pthread_detach (bridge_processing_thread);
-			abort_unless (ret == 0, "Failed to detach GC bridge processing thread");
-
-			return mark_cross_references;
-		}
+			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept;
 
 		static void trigger_java_gc (JNIEnv *env) noexcept;
 
 	private:
-		static inline pthread_t bridge_processing_thread {};
-		static inline sem_t shared_args_semaphore {};
-		static inline MarkCrossReferencesArgs *shared_args = nullptr;
-
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
 
