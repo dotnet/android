@@ -137,6 +137,7 @@ struct CompressedAssemblyDescriptor
 //  [ENTRY_COUNT]        uint; number of entries in the store
 //  [INDEX_ENTRY_COUNT]  uint; number of entries in the index
 //  [INDEX_SIZE]         uint; index size in bytes
+//  [CONTENT_ID]         ulong: deterministic hash of everything after the header
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
 //  [NAME_HASH]          uint; CRC32 of the assembly name
@@ -168,6 +169,7 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 	uint32_t entry_count;
 	uint32_t index_entry_count;
 	uint32_t index_size; // index size in bytes
+	uint64_t content_id;
 };
 
 struct [[gnu::packed]] AssemblyStoreIndexEntry final
@@ -232,6 +234,7 @@ struct ApplicationConfig
 	const char *android_package_name;
 	bool managed_marshal_methods_lookup_enabled;
 	bool have_assembly_store;
+	bool assembly_store_decompression_cache_enabled;
 };
 
 struct DSOCacheEntry

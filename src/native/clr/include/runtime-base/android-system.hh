@@ -91,6 +91,16 @@ namespace xamarin::android {
 			return native_libraries_dir;
 		}
 #else
+		static auto get_app_code_cache_dir () noexcept -> std::string const&
+		{
+			return app_code_cache_dir;
+		}
+
+		static void set_app_code_cache_dir (jstring_wrapper& code_cache_dir) noexcept
+		{
+			app_code_cache_dir.assign (code_cache_dir.get_cstr ());
+		}
+
 		static auto get_native_libraries_dir () noexcept -> std::string const&
 		{
 			return native_libraries_dir;
@@ -186,6 +196,7 @@ namespace xamarin::android {
 #else
 		static inline std::string primary_override_dir;
 		static inline std::string native_libraries_dir;
+		static inline std::string app_code_cache_dir;
 
 #if defined (DEBUG)
 		static inline std::unordered_map<std::string, std::string> bundled_properties;
