@@ -39,11 +39,29 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public bool IsTestOnly { get; set; } = false;
 
+		[Output]
+		public string? PackageName { get; set; }
+
+		[Output]
+		public string? ApplicationLabel { get; set; }
+
+		[Output]
+		public string? VersionName { get; set; }
+
+		[Output]
+		public string? VersionCode { get; set; }
+
 		public override bool RunTask ()
 		{
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
 			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
-			var app = manifest.Document.Element ("manifest")?.Element ("application");
+			var root = manifest.Document.Element ("manifest");
+			var app = root?.Element ("application");
+
+			PackageName = root?.Attribute ("package")?.Value;
+			VersionName = root?.Attribute (androidNs + "versionName")?.Value;
+			VersionCode = root?.Attribute (androidNs + "versionCode")?.Value;
+			ApplicationLabel = app?.Attribute (androidNs + "label")?.Value;
 
 			if (app != null) {
 				string? text = app.Attribute (androidNs + "extractNativeLibs")?.Value;
