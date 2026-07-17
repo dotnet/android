@@ -38,6 +38,7 @@
     <AndroidClassParser>class-parse</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
+    <!-- PublishAot projects can use CoreCLR for Debug builds, so select the typemap independently of _AndroidRuntime. -->
     <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' and '$(PublishAot)' == 'true' ">trimmable</_AndroidTypeMapImplementation>
     <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' ">llvm-ir</_AndroidTypeMapImplementation>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
