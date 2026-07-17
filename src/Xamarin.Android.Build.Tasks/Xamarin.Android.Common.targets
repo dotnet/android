@@ -3008,7 +3008,7 @@ because xbuild doesn't support framework reference assemblies.
     <AndroidError Code="XA4232"
         ResourceName="XA4232"
         FormatArguments="$(_AndroidJcwCodegenTarget)"
-        Condition=" '$(_AndroidJcwCodegenTarget)' == 'JavaInterop1' " />
+        Condition=" '$(_AndroidJcwCodegenTarget)' == 'XamarinAndroid' or '$(_AndroidJcwCodegenTarget)' == 'JavaInterop1' " />
   </Target>
 
   <Target Name="_ValidateAndroidTypeMapImplementation"
