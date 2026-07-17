@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.IO;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
