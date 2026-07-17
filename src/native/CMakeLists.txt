@@ -225,7 +225,10 @@ file(REAL_PATH "../../" REPO_ROOT_DIR)
 set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
 set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
-set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+
+if(IS_MONO_RUNTIME)
+  set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+endif()
 
 #
 # Include directories
@@ -259,7 +262,6 @@ if(IS_CLR_RUNTIME)
         ${TARGET}
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
-        ${ROBIN_MAP_DIR}/include
         ${RUNTIME_INCLUDE_DIR}
      )
   endmacro()
@@ -274,7 +276,6 @@ elseif(IS_NAOT_RUNTIME)
         ${XA_RUNTIME_INCLUDE_DIR}
         ${RUNTIME_INCLUDE_DIR}
         ${CLR_INCLUDE_DIR}
-        ${ROBIN_MAP_DIR}/include
      )
   endmacro()
 else()

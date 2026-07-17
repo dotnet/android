@@ -4,18 +4,6 @@
 #include <jni.h>
 #include <string_view>
 
-// robin_map's no-exceptions fallback leaves its numeric_cast error message unused.
-#if defined (__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#endif // __clang__
-
-#include <tsl/robin_map.h>
-
-#if defined (__clang__)
-#pragma clang diagnostic pop
-#endif // __clang__
-
 #include <host/gc-bridge.hh>
 #include <host/os-bridge.hh>
 #include <shared/cpp-util.hh>
@@ -33,10 +21,40 @@ struct CrossReferenceTarget
 	void mark_refs_added_if_needed () noexcept;
 };
 
+class TemporaryPeerMap
+{
+public:
+	explicit TemporaryPeerMap (JNIEnv *env, MarkCrossReferencesArgs *cross_refs) noexcept;
+	~TemporaryPeerMap () noexcept;
+
+	static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
+
+	void add (StronglyConnectedComponent &scc) noexcept;
+	bool has_temporary_peer (const StronglyConnectedComponent &scc) const noexcept;
+	jobject get (const StronglyConnectedComponent &scc) const noexcept;
+
+private:
+	// Count is unsigned, so encode the temporary peer index as ~index. This stores the same bit
+	// pattern as -(index + 1), giving us a sign bit marker while preserving index 0.
+	// The destructor resets every marker before returning cross_refs to the runtime.
+	static constexpr size_t temporary_peer_index_sign_bit = ~(~size_t { 0 } >> 1);
+
+	static bool is_temporary_peer_index (size_t count) noexcept;
+	static size_t encode_temporary_peer_index (size_t index) noexcept;
+	static size_t decode_temporary_peer_index (size_t count) noexcept;
+
+	static inline jclass peer_class = nullptr;
+	static inline jmethodID peer_ctor = nullptr;
+
+	JNIEnv *env;
+	MarkCrossReferencesArgs *cross_refs;
+	jobject *peers {};
+	size_t count {};
+	size_t capacity {};
+};
+
 class BridgeProcessingShared
 {
-	using temporary_peer_map = tsl::robin_map<size_t, jobject>;
-
 public:
 	explicit BridgeProcessingShared (MarkCrossReferencesArgs *args) noexcept;
 	static void initialize_on_runtime_init (JNIEnv *jniEnv, jclass runtimeClass) noexcept;
@@ -44,10 +62,6 @@ public:
 private:
 	JNIEnv* env;
 	MarkCrossReferencesArgs *cross_refs;
-	temporary_peer_map temporary_peers;
-
-	static inline jclass GCUserPeer_class = nullptr;
-	static inline jmethodID GCUserPeer_ctor = nullptr;
 
 	// Cached `mono.android.IGCUserPeer` interface and its methods. The method IDs are looked up
 	// once from the interface class and are valid for virtual dispatch on every implementing peer,
@@ -57,12 +71,13 @@ private:
 	static inline jmethodID IGCUserPeer_monodroidClearReferences = nullptr;
 
 	void prepare_for_java_collection () noexcept;
-	void prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc) noexcept;
+	void prepare_sccs_and_cross_references_for_java_collection () noexcept;
+	void prepare_scc_for_java_collection (size_t scc_index, const StronglyConnectedComponent &scc, TemporaryPeerMap &temporary_peers) noexcept;
 	void take_weak_global_ref (const HandleContext &context) noexcept;
 
 	void add_circular_references (const StronglyConnectedComponent &scc) noexcept;
-	void add_cross_reference (size_t source_index, size_t dest_index) noexcept;
-	CrossReferenceTarget select_cross_reference_target (size_t scc_index) noexcept;
+	void add_cross_reference (size_t source_index, size_t dest_index, TemporaryPeerMap &temporary_peers) noexcept;
+	CrossReferenceTarget select_cross_reference_target (size_t scc_index, TemporaryPeerMap &temporary_peers) noexcept;
 	bool add_reference (jobject from, jobject to) noexcept;
 
 	void cleanup_after_java_collection () noexcept;
