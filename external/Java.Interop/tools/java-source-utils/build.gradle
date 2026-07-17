@@ -34,7 +34,7 @@ dependencies {
     implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.18.0'
 
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 application {
