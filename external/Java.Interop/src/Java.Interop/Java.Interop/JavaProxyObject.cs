@@ -16,20 +16,22 @@ namespace Java.Interop {
 		static  readonly    ConditionalWeakTable<object, JavaProxyObject>   CachedValues    = new ConditionalWeakTable<object, JavaProxyObject> ();
 		static              bool                                            nativeMethodsRegistered;
 
-		static unsafe void RegisterNativeMethods ()
+		static void RegisterNativeMethods ()
 		{
-			using (var proxyType = new JniType ("net/dot/jni/internal/JavaProxyObject"u8)) {
-				Span<JniNativeMethod> methods = stackalloc JniNativeMethod [3];
-				fixed (byte* equalsName = "equals"u8, equalsSignature = "(Ljava/lang/Object;)Z"u8)
-				fixed (byte* hashCodeName = "hashCode"u8, hashCodeSignature = "()I"u8)
-				fixed (byte* toStringName = "toString"u8, toStringSignature = "()Ljava/lang/String;"u8) {
-					methods [0] = new JniNativeMethod (equalsName, equalsSignature,
-						(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, byte>) &Equals);
-					methods [1] = new JniNativeMethod (hashCodeName, hashCodeSignature,
-						(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &GetHashCode);
-					methods [2] = new JniNativeMethod (toStringName, toStringSignature,
-						(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr>) &ToString);
-					JniEnvironment.Types.RegisterNatives (proxyType.PeerReference, methods);
+			unsafe {
+				using (var proxyType = new JniType ("net/dot/jni/internal/JavaProxyObject"u8)) {
+					Span<JniNativeMethod> methods = stackalloc JniNativeMethod [3];
+					fixed (byte* equalsName = "equals"u8, equalsSignature = "(Ljava/lang/Object;)Z"u8)
+					fixed (byte* hashCodeName = "hashCode"u8, hashCodeSignature = "()I"u8)
+					fixed (byte* toStringName = "toString"u8, toStringSignature = "()Ljava/lang/String;"u8) {
+						methods [0] = new JniNativeMethod (equalsName, equalsSignature,
+							(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, byte>) &Equals);
+						methods [1] = new JniNativeMethod (hashCodeName, hashCodeSignature,
+							(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &GetHashCode);
+						methods [2] = new JniNativeMethod (toStringName, toStringSignature,
+							(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr>) &ToString);
+						JniEnvironment.Types.RegisterNatives (proxyType.PeerReference, methods);
+					}
 				}
 			}
 			nativeMethodsRegistered = true;
