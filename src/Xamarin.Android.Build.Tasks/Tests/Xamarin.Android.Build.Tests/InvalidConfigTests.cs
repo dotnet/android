@@ -44,5 +44,25 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void JavaInterop1JcwCodegenTargetIsUnsupported ([Values (AndroidRuntime.MonoVM, AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = runtime == AndroidRuntime.NativeAOT,
+			};
+			if (runtime == AndroidRuntime.MonoVM) {
+				project.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
+			}
+			project.SetRuntime (runtime);
+			project.SetProperty ("_AndroidJcwCodegenTarget", "JavaInterop1");
+			using (var builder = CreateApkBuilder ()) {
+				builder.Target = "_CheckForInvalidConfigurationAndPlatform";
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (project), "Build should have failed.");
+				StringAssertEx.Contains ("error XA4232:", builder.LastBuildOutput, "Build should fail with XA4232.");
+				StringAssertEx.Contains ("_AndroidJcwCodegenTarget", builder.LastBuildOutput, "Error should identify the unsupported property.");
+			}
+		}
+
 	}
 }
