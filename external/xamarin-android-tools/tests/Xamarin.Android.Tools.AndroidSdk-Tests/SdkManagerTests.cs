@@ -149,7 +149,7 @@ public class SdkManagerTests
 	}
 
 	[Test]
-	public void ParseSdkManagerList_ParsesInstalledAndAvailable ()
+	public void ParseSdkManagerList_ParsesInstalledAvailableAndUpdates ()
 	{
 		var output = @"Installed packages:
   Path                 | Version | Description                    | Location
@@ -166,14 +166,15 @@ Available Packages:
   system-images;android-35;google_apis;arm64-v8a | 14 | Google APIs ARM 64 v8a System Image
 
 Available Updates:
-  Path         | Installed | Available
-  platform-tools | 35.0.2  | 36.0.0
+  ID             | Installed | Available
+  -------        | --------- | ---------
+  platform-tools | 35.0.2    | 36.0.0
 ";
 
 		var (installed, available) = SdkManager.ParseSdkManagerList (output);
 
 		Assert.AreEqual (3, installed.Count, "Should have 3 installed packages");
-		Assert.AreEqual (3, available.Count, "Should have 3 available packages");
+		Assert.AreEqual (4, available.Count, "Should have 3 available packages and 1 update");
 
 		var platformTools = installed.FirstOrDefault (p => p.Path == "platform-tools");
 		Assert.IsNotNull (platformTools);
@@ -184,6 +185,11 @@ Available Updates:
 		Assert.IsNotNull (buildTools36);
 		Assert.AreEqual ("36.0.0", buildTools36!.Version);
 		Assert.IsFalse (buildTools36.IsInstalled);
+
+		var platformToolsUpdate = available.FirstOrDefault (p => p.Path == "platform-tools");
+		Assert.IsNotNull (platformToolsUpdate);
+		Assert.AreEqual ("36.0.0", platformToolsUpdate!.Version);
+		Assert.IsFalse (platformToolsUpdate.IsInstalled);
 	}
 
 	[Test]

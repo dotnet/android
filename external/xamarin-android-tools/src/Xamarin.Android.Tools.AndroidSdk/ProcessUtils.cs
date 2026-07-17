@@ -246,7 +246,8 @@ namespace Xamarin.Android.Tools
 
 		/// <summary>
 		/// Searches for a cmdline-tools binary in the SDK.
-		/// Prefers the "latest" symlink, then the highest versioned directory.
+		/// Selects the highest installed revision reported by source.properties,
+		/// with deterministic directory-name fallback when metadata is unavailable.
 		/// </summary>
 		/// <param name="sdkPath">Root path to the Android SDK.</param>
 		/// <param name="toolName">Tool binary name without extension (e.g., "avdmanager").</param>
@@ -254,51 +255,12 @@ namespace Xamarin.Android.Tools
 		/// <param name="logger">Optional logger for diagnostic messages.</param>
 		internal static string? FindCmdlineTool (string sdkPath, string toolName, string extension, Action<TraceLevel, string>? logger = null)
 		{
-			var cmdlineToolsDir = Path.Combine (sdkPath, "cmdline-tools");
-
-			if (Directory.Exists (cmdlineToolsDir)) {
-				// Prefer "latest" symlink first — it's the SDK's own recommended default
-				var latestPath = Path.Combine (cmdlineToolsDir, "latest", "bin", toolName + extension);
-				if (File.Exists (latestPath))
-					return latestPath;
-
-				try {
-					var subdirs = new List<(string name, Version version, bool isPreRelease)> ();
-					foreach (var dir in Directory.GetDirectories (cmdlineToolsDir)) {
-						var name = Path.GetFileName (dir);
-						if (string.IsNullOrEmpty (name) || name == "latest")
-							continue;
-						// Strip pre-release suffixes (e.g., "5.0-rc1" → "5.0") before parsing
-						var versionStr = name;
-						var dashIndex = name.IndexOf ('-');
-						var isPreRelease = dashIndex >= 0;
-						if (isPreRelease)
-							versionStr = name.Substring (0, dashIndex);
-						Version.TryParse (versionStr, out var v);
-						subdirs.Add ((name, v ?? new Version (0, 0), isPreRelease));
-					}
-					// Sort by version descending, then prefer stable (non-prerelease) over prerelease
-					subdirs.Sort ((a, b) => {
-						var cmp = b.version.CompareTo (a.version);
-						if (cmp != 0) return cmp;
-						if (a.isPreRelease != b.isPreRelease)
-							return a.isPreRelease ? 1 : -1; // stable first
-						return string.Compare (a.name, b.name, StringComparison.Ordinal);
-					});
-
-					foreach (var (name, _, _) in subdirs) {
-						var toolPath = Path.Combine (cmdlineToolsDir, name, "bin", toolName + extension);
-						if (File.Exists (toolPath))
-							return toolPath;
-					}
-				} catch (IOException ex) {
-					logger?.Invoke (TraceLevel.Warning, $"FindCmdlineTool: IO error enumerating {cmdlineToolsDir}: {ex.Message}");
-				} catch (UnauthorizedAccessException ex) {
-					logger?.Invoke (TraceLevel.Warning, $"FindCmdlineTool: Permission denied on {cmdlineToolsDir}: {ex.Message}");
-				}
-			}
-
-			return null;
+			return CommandLineToolsResolver.Find (
+				sdkPath,
+				toolName,
+				extension,
+				includeLegacy: false,
+				logger: logger)?.Path;
 		}
 
 		internal static IEnumerable<string> FindExecutablesInPath (string executable)
