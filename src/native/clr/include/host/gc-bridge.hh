@@ -79,6 +79,9 @@ namespace xamarin::android {
 
 	private:
 		static inline sem_t shared_args_semaphore {};
+		// JavaMarshal serializes bridge rounds: it does not publish another argument block until
+		// bridge_processing_finished_callback has completed. This is therefore a single-slot
+		// handoff; the semaphore signals availability but does not queue distinct argument blocks.
 		static inline MarkCrossReferencesArgs *shared_args = nullptr;
 
 		static inline jobject Runtime_instance = nullptr;
