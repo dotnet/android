@@ -81,10 +81,7 @@ include build-tools/scripts/runtime-helpers.mk
 
 .PHONY: prepare
 prepare: install-dotnet
-	$(call SYSTEM_DOTNET_BINLOG,prepare-bootstrap) Xamarin.Android.BootstrapTasks.sln
-	$(call SYSTEM_DOTNET_BINLOG,prepare-workloads) src/workloads/workloads.csproj
-	$(call DOTNET_BINLOG,prepare-java.interop) $(SOLUTION) -t:PrepareJavaInterop
-	$(call SYSTEM_DOTNET_BINLOG,prepare-build-tools-inventory) build-tools/build-tools-inventory/build-tools-inventory.proj
+	$(call SYSTEM_DOTNET_BINLOG,prepare) build-tools/scripts/Prepare.proj -t:Prepare
 
 .PHONY: install-dotnet
 install-dotnet:
