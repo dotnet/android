@@ -27,6 +27,11 @@ public:
 	explicit TemporaryPeerMap (JNIEnv *env, MarkCrossReferencesArgs *cross_refs) noexcept;
 	~TemporaryPeerMap () noexcept;
 
+	TemporaryPeerMap (const TemporaryPeerMap&) = delete;
+	TemporaryPeerMap& operator= (const TemporaryPeerMap&) = delete;
+	TemporaryPeerMap (TemporaryPeerMap&&) = delete;
+	TemporaryPeerMap& operator= (TemporaryPeerMap&&) = delete;
+
 	static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
 
 	void add (StronglyConnectedComponent &scc) noexcept;
