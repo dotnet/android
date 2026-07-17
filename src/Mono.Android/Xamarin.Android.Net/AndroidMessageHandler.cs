@@ -1324,8 +1324,10 @@ namespace Xamarin.Android.Net
 				case HttpStatusCode.Moved:             // 301
 				case HttpStatusCode.Redirect:          // 302
 				case HttpStatusCode.SeeOther:          // 303
-					redirectState.MethodChanged = redirectState.Method != HttpMethod.Get;
-					redirectState.Method = HttpMethod.Get;
+					if (redirectState.Method != HttpMethod.Get && redirectState.Method != HttpMethod.Head) {
+						redirectState.MethodChanged = true;
+						redirectState.Method = HttpMethod.Get;
+					}
 					break;
 
 				case HttpStatusCode.NotModified:       // 304

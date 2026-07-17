@@ -1,61 +1,75 @@
-# .NET for Android Pipeline - Public Build
-# This pipeline runs on the public dnceng instance for PRs from forks (contributors).
-# Internal branches use the DevDiv pipeline (azure-pipelines.yaml)
+# .NET for Android Pipeline - Internal Build
+#
+# This pipeline runs on the dnceng *internal* instance
+# (https://dev.azure.com/dnceng/internal). It is a mirror of the public
+# pipeline (azure-pipelines-public.yaml): same stage layout and step
+# templates, but retargeted to internal (non-"-open") 1ES pools.
+#
+# CI builds run for pushes to the branches listed below. PR validation for
+# the internal Azure Repos Git mirror is configured through build-validation
+# branch policies for main, release/*, and feature/*. Azure Repos does not
+# support YAML `pr` triggers.
+#
+# Signing is intentionally NOT enabled yet. We will eventually release &
+# sign from here; when we do, convert this to `extends` the 1ES
+# `MicroBuild.1ES.Official.yml` template and flip the `use1ESTemplate`
+# parameters below to `true` (see azure-pipelines.yaml for reference).
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
-trigger: none
-
-pr:
+trigger:
   branches:
     include:
     - main
     - release/*
     - feature/*
 
-parameters:
-- name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
-  default: true
-- name: skipTests                      # Skip all test stages (builds only). Default 'false' so PRs run the full test matrix.
-  displayName: Skip Tests
-  type: string
-  default: 'false'
-  values:
-  - 'true'
-  - 'false'
+# Azure Repos PR validation is configured through branch policies, not YAML.
+pr: none
 
-# Repository resources
+# Repository resources - checkout android-tools to force multi-repo checkout behavior
+# NOTE: `endpoint` values below are GitHub service connections in the
+# dnceng/internal project. Confirm the connection name(s) available there.
 resources:
   repositories:
+  - repository: android-tools
+    type: github
+    name: dotnet/android-tools
+    endpoint: internal
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
-    endpoint: public
+    endpoint: internal
     ref: net11.0
 
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
-# Override for public pipeline
+# Override for internal pipeline
 - name: DefaultJavaSdkMajorVersion
   value: 21
-# Override pool images for public Microsoft-hosted agents
+# Override pool images for internal (non-"-open") dnceng agents.
+# Confirm these pool/image names exist in the dnceng/internal project.
+# Match the public pipeline's Mac image (Apple Silicon). Using the x64
+# "macOS-15" image here breaks NativeAOT JNI samples: .NET builds an
+# osx-arm64 .dylib but the image's default JDK is x64, so java's dlopen()
+# fails with UnsatisfiedLinkError (architecture mismatch).
+- name: HostedMacImage
+  value: macOS-15-arm64
 - name: LinuxPoolImage
   value: ubuntu-22.04
-- name: NetCorePublicPoolName
-  value: NetCore-Public
-- name: WindowsPoolImageNetCorePublic
-  value: windows.vs2022.amd64.open
-- name: LinuxPoolImageNetCorePublic
-  value: build.Ubuntu.2204.amd64.open
-# Skip tests when explicitly requested; otherwise run full PR test matrix.
+- name: NetCoreInternalPoolName
+  value: NetCore1ESPool-Internal
+- name: WindowsPoolImageNetCoreInternal
+  value: windows.vs2022.amd64
+- name: LinuxPoolImageNetCoreInternal
+  value: build.ubuntu.2204.amd64
+# Skip tests when explicitly requested; otherwise run full test matrix.
 - name: SkipTestStages
-  ${{ if eq(parameters.skipTests, 'true') }}:
-    value: true
-  ${{ else }}:
-    value: false
+  value: false
 
-# Public builds don't use 1ES templates - just plain stages
+# Internal builds don't (yet) use 1ES templates - just plain stages
 stages:
 # macOS Build Stage
 - stage: mac_build
@@ -63,10 +77,10 @@ stages:
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
+    # dnceng/internal has no AcesShared pool, so use hosted macOS images
     pool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
       os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -75,13 +89,12 @@ stages:
     steps:
     - checkout: self
       path: s/android
-      submodules: recursive
       persistCredentials: false
 
     # Checkout a second repo to force multi-repo checkout behavior
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: maui
-      path: s/maui
+    - checkout: android-tools
+      path: s/android-tools
 
     - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
@@ -101,13 +114,12 @@ stages:
   - job: win_build_test
     displayName: Windows > Build & Smoke Test
     pool:
-      name: $(NetCorePublicPoolName)
+      name: $(NetCoreInternalPoolName)
       demands:
-      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      - ImageOverride -equals $(WindowsPoolImageNetCoreInternal)
     timeoutInMinutes: 240
     steps:
     - checkout: self
-      submodules: recursive
       persistCredentials: false
 
     - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml
@@ -123,9 +135,9 @@ stages:
   - job: linux_build_create_sdk_pack
     displayName: Linux > Build
     pool:
-      name: $(NetCorePublicPoolName)
+      name: $(NetCoreInternalPoolName)
       demands:
-      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+      - ImageOverride -equals $(LinuxPoolImageNetCoreInternal)
     timeoutInMinutes: 240
     workspace:
       clean: all
@@ -135,12 +147,11 @@ stages:
     steps:
     - checkout: self
       path: s/android
-      submodules: recursive
       persistCredentials: false
 
     # Checkout a second repo to force multi-repo checkout behavior
-    - checkout: maui
-      path: s/maui
+    - checkout: android-tools
+      path: s/android-tools
 
     - script: |
         sudo apt-get update
@@ -158,13 +169,13 @@ stages:
 - ${{ if ne(variables.SkipTestStages, 'true') }}:
   - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml
     parameters:
-      macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+      macTestAgentsUseCleanImages: true
       use1ESTemplate: false
 
 # Linux Tests Stage
 - stage: linux_tests
   displayName: Linux Tests
-  dependsOn: 
+  dependsOn:
   - mac_build
   - linux_build
   condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
@@ -172,9 +183,9 @@ stages:
   - job: linux_tests_smoke_1
     displayName: Linux > Tests > MSBuild 1
     pool:
-      name: $(NetCorePublicPoolName)
+      name: $(NetCoreInternalPoolName)
       demands:
-      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+      - ImageOverride -equals $(LinuxPoolImageNetCoreInternal)
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -206,9 +217,9 @@ stages:
   - job: linux_tests_smoke_2
     displayName: Linux > Tests > MSBuild 2
     pool:
-      name: $(NetCorePublicPoolName)
+      name: $(NetCoreInternalPoolName)
       demands:
-      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+      - ImageOverride -equals $(LinuxPoolImageNetCoreInternal)
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -269,10 +280,10 @@ stages:
     strategy:
       parallel: 10
     displayName: macOS > Tests > MSBuild
+    # dnceng/internal has no AcesShared pool, so use hosted macOS images
     pool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
       os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -310,9 +321,9 @@ stages:
       parallel: 8
     displayName: Windows > Tests > MSBuild
     pool:
-      name: $(NetCorePublicPoolName)
+      name: $(NetCoreInternalPoolName)
       demands:
-      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      - ImageOverride -equals $(WindowsPoolImageNetCoreInternal)
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     steps:
@@ -361,7 +372,7 @@ stages:
     strategy:
       parallel: 12
     displayName: "macOS > Tests > MSBuild+Emulator"
-    # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
+    # Emulator jobs need the hosted image that can boot Android emulators
     pool:
       name: Azure Pipelines
       vmImage: $(HostedMacImageWithEmulator)
@@ -412,28 +423,12 @@ stages:
 - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
   parameters:
     windowsPool:
-      name: $(NetCorePublicPoolName)
+      name: $(NetCoreInternalPoolName)
       demands:
-      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
-      os: windows
+      - ImageOverride -equals $(WindowsPoolImageNetCoreInternal)
     macPool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
-      os: macOS
-
-# Android Tools Tests Stage
-- template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
-  parameters:
-    windowsPool:
-      name: $(NetCorePublicPoolName)
-      demands:
-      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
-      os: windows
-    macPool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      name: Azure Pipelines
+      vmImage: $(HostedMacImage)
       os: macOS
 
 # MAUI Tests Stage
@@ -445,9 +440,9 @@ stages:
   - job: maui_tests_integration
     displayName: MAUI Integration
     pool:
-      name: $(NetCorePublicPoolName)
+      name: $(NetCoreInternalPoolName)
       demands:
-      - ImageOverride -equals 1es-windows-2022-open
+      - ImageOverride -equals 1es-windows-2022
       os: windows
     timeoutInMinutes: 180
     workspace:
@@ -471,12 +466,7 @@ stages:
 
     # Restore ~/.gradle/caches between runs so MAUI's Gradle resolution
     # for android-gradle-plugin/sdklib/ddmlib is not gated on the
-    # dotnet-public-maven Maven feed every build. The dnceng-public Maven
-    # feed periodically rate-limits ('exceeding usage of resource Concurrency
-    # in namespace IPAddress', HTTP 500), which deterministically fails
-    # MAUI's ./build.ps1 --target=dotnet-pack.
-    # Adapted from upstream dotnet/maui, which adopted the pattern from us:
-    # https://github.com/dotnet/maui/blob/net11.0/eng/pipelines/common/cache-gradle.yml
+    # Maven feed every build.
     - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
       parameters:
         xaSourcePath: $(Build.SourcesDirectory)/android
@@ -526,8 +516,7 @@ stages:
     - task: NodeTool@0
       displayName: Install Node.js
       # MAUI's TypeScript build steps for the BlazorWebView project shell out
-      # to node.exe; the dnceng-public windows.vs2022.amd64.open image does
-      # not preinstall Node, so install it explicitly.
+      # to node.exe; install it explicitly.
       inputs:
         versionSpec: '20.x'
 
@@ -549,13 +538,6 @@ stages:
         Write-Host "##vso[task.setvariable variable=ANDROID_HOME]$sdk"
         Write-Host "##vso[task.setvariable variable=ANDROID_SDK_ROOT]$sdk"
       displayName: Point ANDROID_HOME at xa-prepare SDK
-      # androidsdk.csproj's install path follows Configuration.props rules:
-      # ANDROID_SDK_ROOT if it exists, otherwise %HOME%\android-toolchain\sdk.
-      # On the 1es-windows-2022-open image, ANDROID_SDK_ROOT is preset to
-      # the agent's preinstalled SDK (e.g. C:\Program Files (x86)\Android\android-sdk),
-      # so xa-prepare ends up extending that location with the requested
-      # API levels. Whichever path it picked, MAUI's build needs the same
-      # ANDROID_HOME / ANDROID_SDK_ROOT so it sees API 37, etc.
 
     - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Pack .NET Maui

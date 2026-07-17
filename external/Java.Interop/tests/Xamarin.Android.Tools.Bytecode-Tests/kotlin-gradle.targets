@@ -24,6 +24,17 @@
   <PropertyGroup>
     <_KotlinGradleProjectDir>$(MSBuildThisFileDirectory)kotlin-gradle</_KotlinGradleProjectDir>
     <_TestKotlinGradleOutputDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\classes'))</_TestKotlinGradleOutputDir>
+    <!--
+        This target is imported by two projects (Xamarin.Android.Tools.Bytecode-Tests
+        and generator-Tests) that build in parallel during the solution build. Gradle is
+        launched in no-daemon mode, which still forks a short-lived "single-use daemon"
+        to honour the build's JVM settings. When both invocations share the default Gradle
+        user home (~/.gradle) they race over the same daemon registry and loopback ports,
+        which manifests as "Timeout waiting to connect to the Gradle daemon" on slower CI
+        agents. Point GRADLE_USER_HOME at each project's own obj/ directory so the two
+        daemons are fully isolated; it also gets cleaned up with the rest of obj/.
+    -->
+    <_KotlinGradleUserHome Condition=" '$(_KotlinGradleUserHome)' == '' ">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\.gradle'))</_KotlinGradleUserHome>
   </PropertyGroup>
 
   <Target Name="BuildKotlinGradleProject"
@@ -31,7 +42,7 @@
         Inputs="@(TestKotlinGradleSource)"
         Outputs="@(TestKotlinGradleOutput)">
     <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
-          EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)" />
+          EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome);GRADLE_USER_HOME=$(_KotlinGradleUserHome)" />
   </Target>
 
 </Project>

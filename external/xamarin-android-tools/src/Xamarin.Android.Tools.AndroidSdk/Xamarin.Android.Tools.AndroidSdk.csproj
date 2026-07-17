@@ -11,7 +11,9 @@
     <Title>Xamarin.Android.Tools</Title>
     <Authors>Xamarin</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/dotnet/android-tools</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/dotnet/android/tree/main/external/xamarin-android-tools</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/dotnet/android</RepositoryUrl>
     <Description>Xamarin tools for interacting with the Android SDK.</Description>
     <Copyright>Copyright © Xamarin 2011-2016</Copyright>
     <PackageTags>Xamarin;Xamarin.Android</PackageTags>

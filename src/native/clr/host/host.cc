@@ -5,6 +5,8 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <vector>
 #include <unistd.h>
 
 #include <android/looper.h>
@@ -26,66 +28,14 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
-#include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
-#include <shared/xxhash.hh>
 
 using namespace xamarin::android;
 
 void Host::clr_error_writer (const char *message) noexcept
 {
 	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
-}
-
-size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, [[maybe_unused]] void *contract_context) noexcept
-{
-	// NOTE: this code was tested locally, but it's **not** used by CoreCLR yet, so there's been no
-	// "live" testing.
-	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)"sv, optional_string (key));
-	if (application_config.number_of_runtime_properties == 0) [[unlikely]] {
-		log_debug (LOG_DEFAULT, "No runtime properties defined"sv);
-		return 0;
-	}
-
-	// value_buffer_size must have enough space for at least 1 character + the terminating NUL
-	if (key == nullptr || value_buffer == nullptr || value_buffer_size <= 1) [[unlikely]] {
-		log_warn (
-			LOG_DEFAULT,
-			"runtime property retrieval API called with invalid arguments. key == {:p}; value_buffer == {:p}; value_buffer_size == {}"sv,
-			static_cast<const void*>(key),
-			static_cast<void*>(value_buffer),
-			value_buffer_size
-		);
-		return 0;
-	}
-
-	hash_t key_hash = xxhash::hash (key, strlen (key));
-
-	auto equal = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash == key; };
-	auto less_than = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash < key; };
-	ssize_t idx = Search::binary_search<RuntimePropertyIndexEntry, equal, less_than> (key_hash, runtime_property_index, application_config.number_of_runtime_properties);
-	if (idx < 0) {
-		log_debug (LOG_DEFAULT, "Runtime property '{}' not found"sv, key);
-		return 0;
-	}
-
-	RuntimePropertyIndexEntry const& idx_entry = runtime_property_index[idx];
-	RuntimeProperty const& prop = runtime_properties[idx_entry.index];
-
-	// `value_size` includes the terminating NUL
-	if (prop.value_size > value_buffer_size) {
-		log_warn (
-			LOG_DEFAULT,
-			"Value of property '{}' is longer than available buffer space. Need {}b, available {}b"sv,
-			key,
-			prop.value_size,
-			value_buffer_size
-		);
-	}
-
-	strncpy (value_buffer, &runtime_properties_data[prop.value_index], value_buffer_size);
-	return std::min (static_cast<size_t>(prop.value_size - 1), value_buffer_size - 1);
 }
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
@@ -312,10 +262,9 @@ void Host::preload_jni_libraries () noexcept
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Preloading JNI shared library: {} (entry's index: {}; real name hash: {:x}; name hash: {:x})",
+			"Preloading JNI shared library: {} (entry's index: {}; name hash: {:x})",
 			dso_name,
 			entry_index,
-			entry.real_name_hash,
 			entry.hash
 		);
 
@@ -367,17 +316,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
 	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
+	jstring_wrapper &cache_dir = applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX];
 	HostEnvironment::setup_environment (
 		language,
 		files_dir,
-		applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]
+		cache_dir
 	);
+	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
+	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
@@ -398,12 +350,41 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
 	// of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+
+	const char **prop_names = init_runtime_property_names;
+	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
+	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+
+	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
+	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
+	// opens those files from disk so `Assembly.Location` is populated and
+	// `StackTraceSymbols` can find sibling `.pdb` files for runtime-rendered
+	// managed stack traces (file/line).
+	if constexpr (Constants::is_debug_build) {
+		// Storage must outlive `coreclr_initialize`; function-local statics
+		// give us process lifetime without polluting global namespace.
+		static std::string fastdev_tpa_list;
+		static std::vector<const char*> fastdev_prop_names;
+		static std::vector<const char*> fastdev_prop_values;
+
+		if (FastDevAssemblies::build_tpa_list (fastdev_tpa_list)) {
+			fastdev_prop_names.assign (prop_names, prop_names + prop_count);
+			fastdev_prop_values.assign (prop_values, prop_values + prop_count);
+			fastdev_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
+			fastdev_prop_values.push_back (fastdev_tpa_list.c_str ());
+
+			prop_names = fastdev_prop_names.data ();
+			prop_values = fastdev_prop_values.data ();
+			prop_count = static_cast<int>(fastdev_prop_names.size ());
+		}
+	}
+
 	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
-		(int)application_config.number_of_runtime_properties,
-		init_runtime_property_names,
-		const_cast<const char**>(init_runtime_property_values),
+		prop_count,
+		prop_names,
+		prop_values,
 		&clr_host,
 		&domain_id
 	);

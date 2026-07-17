@@ -36,7 +36,6 @@ sealed class ApplicationConfigCLR
 	public uint   number_of_assemblies_in_apk;
 	public uint   bundled_assembly_name_width;
 	public uint   number_of_dso_cache_entries;
-	public uint   number_of_aot_cache_entries;
 	public uint   number_of_shared_libraries;
 
 	[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
@@ -52,4 +51,5 @@ sealed class ApplicationConfigCLR
 	public string android_package_name = String.Empty;
 	public bool   managed_marshal_methods_lookup_enabled;
 	public bool   have_assembly_store;
+	public bool   assembly_store_decompression_cache_enabled;
 }

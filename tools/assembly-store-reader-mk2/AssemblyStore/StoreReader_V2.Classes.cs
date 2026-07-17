@@ -8,8 +8,6 @@ partial class StoreReader_V2
 {
 	sealed class Header
 	{
-		public const uint NativeSize = 5 * sizeof (uint);
-
 		public readonly uint magic;
 		public readonly uint version;
 		public readonly uint entry_count;
@@ -17,19 +15,27 @@ partial class StoreReader_V2
 
 		// Index size in bytes
 		public readonly uint index_size;
+		public readonly ulong content_id;
 
-		public Header (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size)
+		public uint NativeSize => (uint)(5 * sizeof (uint) + ((version & ASSEMBLY_STORE_FORMAT_NUMBER_MASK) >= 4 ? sizeof (ulong) : 0));
+
+		public Header (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size, ulong content_id)
 		{
 			this.magic = magic;
 			this.version = version;
 			this.entry_count = entry_count;
 			this.index_entry_count = index_entry_count;
 			this.index_size = index_size;
+			this.content_id = content_id;
 		}
 	}
 
 	sealed class IndexEntry
 	{
+		// We treat `bool` as `byte` here, since that's what gets written to the binary.
+		public const uint NativeSize32 = 2 * sizeof (uint) + sizeof (byte);
+		public const uint NativeSize64 = sizeof (ulong) + sizeof (uint) + sizeof (byte);
+
 		public readonly ulong name_hash;
 		public readonly uint  descriptor_index;
 		public readonly bool  ignore;

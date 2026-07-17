@@ -13,7 +13,10 @@ partial class StoreReader_V2 : AssemblyStoreReader
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000003;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT = 0x00000004;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_MASK  = 0xF0000000;
+	const uint ASSEMBLY_STORE_FORMAT_NUMBER_MASK   = 0x0000FFFF;
 
 	const uint ASSEMBLY_STORE_ABI_AARCH64          = 0x00010000;
 	const uint ASSEMBLY_STORE_ABI_ARM              = 0x00020000;
@@ -79,6 +82,10 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			ASSEMBLY_STORE_FORMAT_VERSION_64BIT | ASSEMBLY_STORE_ABI_X64,
 			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_ARM,
 			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_X86,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT | ASSEMBLY_STORE_ABI_AARCH64,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT | ASSEMBLY_STORE_ABI_X64,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT | ASSEMBLY_STORE_ABI_ARM,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT | ASSEMBLY_STORE_ABI_X86,
 		};
 	}
 
@@ -124,8 +131,9 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		uint entry_count       = reader.ReadUInt32 ();
 		uint index_entry_count = reader.ReadUInt32 ();
 		uint index_size        = reader.ReadUInt32 ();
+		ulong content_id        = (version & ASSEMBLY_STORE_FORMAT_NUMBER_MASK) >= 4 ? reader.ReadUInt64 () : 0;
 
-		header = new Header (magic, version, entry_count, index_entry_count, index_size);
+		header = new Header (magic, version, entry_count, index_entry_count, index_size, content_id);
 		return true;
 	}
 
@@ -147,16 +155,19 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		AssemblyCount = header.entry_count;
 		IndexEntryCount = header.index_entry_count;
 
-		StoreStream.Seek ((long)elfOffset + Header.NativeSize, SeekOrigin.Begin);
+		StoreStream.Seek ((long)elfOffset + header.NativeSize, SeekOrigin.Begin);
 		using var reader = CreateReader ();
 
+		uint indexEntrySize = GetIndexEntrySize ();
 		var index = new List<IndexEntry> ();
 		for (uint i = 0; i < header.index_entry_count; i++) {
 			ulong name_hash;
-			if (Is64Bit) {
+			if (indexEntrySize == IndexEntry.NativeSize64) {
 				name_hash = reader.ReadUInt64 ();
-			} else {
+			} else if (indexEntrySize == IndexEntry.NativeSize32) {
 				name_hash = (ulong)reader.ReadUInt32 ();
+			} else {
+				throw new InvalidOperationException ($"Assembly store '{StorePath}' index entry size {indexEntrySize} is not supported.");
 			}
 
 			uint descriptor_index = reader.ReadUInt32 ();
@@ -213,5 +224,18 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			storeItems.Add (item);
 		}
 		Assemblies = storeItems.AsReadOnly ();
+
+		uint GetIndexEntrySize ()
+		{
+			if (header.index_entry_count == 0) {
+				return 0;
+			}
+
+			if (header.index_size % header.index_entry_count != 0) {
+				throw new InvalidOperationException ($"Assembly store '{StorePath}' index is corrupted: index size {header.index_size} is not evenly divisible by entry count {header.index_entry_count}.");
+			}
+
+			return header.index_size / header.index_entry_count;
+		}
 	}
 }

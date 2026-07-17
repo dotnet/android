@@ -32,19 +32,7 @@ namespace Android.Runtime {
 			}
 
 			if (RuntimeFeature.TrimmableTypeMap) {
-				if (RuntimeFeature.IsNativeAotRuntime) {
-					// NativeAOT: resolve via per-rank typemap + generated array proxy.
-					if (TrimmableTypeMap.Instance.TryGetArrayProxy (elementType, additionalRank: 1, out var arrayProxy)) {
-						return arrayProxy.CreateManagedArray (length);
-					}
-				}
-
-				int arrayRank = GetArrayRank (elementType, out var leafElementType);
-				throw new NotSupportedException (
-					$"No TrimmableTypeMap array proxy entry for element type '{elementType}' " +
-					$"(leaf element type '{leafElementType}', rank {arrayRank}). " +
-					$"Array lookups use the leaf element type within the per-rank __ArrayMapRank{arrayRank} typemap group; " +
-					$"ensure the mapping is emitted for that rank (for example by increasing _AndroidTrimmableTypeMapMaxArrayRank) or report an issue.");
+				return SafeArrayFactory.CreateInstance (elementType, rank: 1, length);
 			}
 
 			if (RuntimeFeature.ManagedTypeMap) {
@@ -59,21 +47,6 @@ namespace Android.Runtime {
 			}
 
 			throw new NotSupportedException ($"It is not possible to create an array with element type '{elementType}'.");
-		}
-
-		static int GetArrayRank (Type elementType, out Type leafElementType)
-		{
-			int rank = 1;
-			while (elementType.IsSZArray) {
-				rank++;
-				var nestedElementType = elementType.GetElementType ();
-				if (nestedElementType is null) {
-					break;
-				}
-				elementType = nestedElementType;
-			}
-			leafElementType = elementType;
-			return rank;
 		}
 
 		internal static IntPtr IdentityHash (IntPtr v)
@@ -613,9 +586,28 @@ namespace Android.Runtime {
 
 		static IntPtr FindArrayClassByElementType (Type elementType)
 		{
+			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassName (elementType);
+			if (boxedPrimitiveJniClassName != null) {
+				return FindClass ("[L" + boxedPrimitiveJniClassName + ";");
+			}
+
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
 			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
 			return FindClass (typeSignature.Name);
+		}
+
+		static string? GetBoxedPrimitiveJniClassName (Type type)
+		{
+			if (type == typeof (bool?))   return "java/lang/Boolean";
+			if (type == typeof (byte?))   return "java/lang/Byte";
+			if (type == typeof (sbyte?))  return "java/lang/Byte";
+			if (type == typeof (char?))   return "java/lang/Character";
+			if (type == typeof (short?))  return "java/lang/Short";
+			if (type == typeof (int?))    return "java/lang/Integer";
+			if (type == typeof (long?))   return "java/lang/Long";
+			if (type == typeof (float?))  return "java/lang/Float";
+			if (type == typeof (double?)) return "java/lang/Double";
+			return null;
 		}
 
 		public static void CopyArray (IntPtr src, bool[] dest)
@@ -692,6 +684,15 @@ namespace Android.Runtime {
 					_GetDoubleArrayRegion (source, index, 1, r);
 					return r [0];
 				} },
+				{ typeof (bool?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (bool?)) },
+				{ typeof (byte?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (byte?)) },
+				{ typeof (sbyte?),  (type, source, index) => GetNullableArrayElement (source, index, typeof (sbyte?)) },
+				{ typeof (char?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (char?)) },
+				{ typeof (short?),  (type, source, index) => GetNullableArrayElement (source, index, typeof (short?)) },
+				{ typeof (int?),    (type, source, index) => GetNullableArrayElement (source, index, typeof (int?)) },
+				{ typeof (long?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (long?)) },
+				{ typeof (float?),  (type, source, index) => GetNullableArrayElement (source, index, typeof (float?)) },
+				{ typeof (double?), (type, source, index) => GetNullableArrayElement (source, index, typeof (double?)) },
 				{ typeof (string), (type, source, index) => {
 					IntPtr elem = GetObjectArrayElement (source, index);
 					if (type == typeof (Java.Lang.String))
@@ -715,6 +716,12 @@ namespace Android.Runtime {
 					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type);
 				} },
 			};
+		}
+
+		static object? GetNullableArrayElement (IntPtr source, int index, [DynamicallyAccessedMembers (Constructors)] Type targetType)
+		{
+			IntPtr elem = GetObjectArrayElement (source, index);
+			return JavaConvert.FromJniHandle (elem, JniHandleOwnership.TransferLocalRef, targetType);
 		}
 
 		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type? elementType, IntPtr array)
@@ -921,6 +928,15 @@ namespace Android.Runtime {
 				{ typeof (long),        (source, dest) => CopyArray ((long[]) source, dest) },
 				{ typeof (float),       (source, dest) => CopyArray ((float[]) source, dest) },
 				{ typeof (double),      (source, dest) => CopyArray ((double[]) source, dest) },
+				{ typeof (bool?),       (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (byte?),       (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (sbyte?),      (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (char?),       (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (short?),      (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (int?),        (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (long?),       (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (float?),      (source, dest) => CopyManagedObjectArray (source, dest) },
+				{ typeof (double?),     (source, dest) => CopyManagedObjectArray (source, dest) },
 				{ typeof (string),      (source, dest) => {
 					var s = source as string[];
 					if (s != null) {
@@ -948,6 +964,23 @@ namespace Android.Runtime {
 					}
 				} },
 			};
+		}
+
+		static void CopyManagedObjectArray (Array source, IntPtr dest)
+		{
+			// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
+			// closure per element (this runs once per array element for both NewObjectArray and the
+			// nullable-primitive CopyManagedToNativeArray entries).
+			for (int i = 0; i < source.Length; i++) {
+				object? value = source.GetValue (i);
+				IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+				try {
+					SetObjectArrayElement (dest, i, lref);
+				} finally {
+					DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
+			}
 		}
 
 		public static void CopyArray (Array source, Type elementType, IntPtr dest)
@@ -1053,6 +1086,15 @@ namespace Android.Runtime {
 					CopyArray (source, r);
 					return r;
 				} },
+				{ typeof (bool?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (byte?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (sbyte?),  (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (char?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (short?),  (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (int?),    (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (long?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (float?),  (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
+				{ typeof (double?), (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
 				{ typeof (string), (type, source, len) => {
 					if (type != null && typeof (Java.Lang.Object).IsAssignableFrom (type)) {
 						var r = new Java.Lang.String [len];
@@ -1075,6 +1117,16 @@ namespace Android.Runtime {
 					return r;
 				} },
 			};
+		}
+
+		static Array CreateManagedArrayFromObjectArray (Type? elementType, IntPtr source, int len)
+		{
+			if (elementType == null)
+				throw new ArgumentNullException (nameof (elementType));
+
+			var r = ArrayCreateInstance (elementType, len);
+			CopyArray (source, r, elementType);
+			return r;
 		}
 
 		static Array? _GetArray (IntPtr array_ptr, Type? element_type)
@@ -1329,10 +1381,47 @@ namespace Android.Runtime {
 				{ typeof (long),          (source) => NewArray ((long[]) source) },
 				{ typeof (float),         (source) => NewArray ((float[]) source) },
 				{ typeof (double),        (source) => NewArray ((double[]) source) },
+				{ typeof (bool?),         (source) => NewObjectArray (source, typeof (bool?)) },
+				{ typeof (byte?),         (source) => NewObjectArray (source, typeof (byte?)) },
+				{ typeof (sbyte?),        (source) => NewObjectArray (source, typeof (sbyte?)) },
+				{ typeof (char?),         (source) => NewObjectArray (source, typeof (char?)) },
+				{ typeof (short?),        (source) => NewObjectArray (source, typeof (short?)) },
+				{ typeof (int?),          (source) => NewObjectArray (source, typeof (int?)) },
+				{ typeof (long?),         (source) => NewObjectArray (source, typeof (long?)) },
+				{ typeof (float?),        (source) => NewObjectArray (source, typeof (float?)) },
+				{ typeof (double?),       (source) => NewObjectArray (source, typeof (double?)) },
 				{ typeof (string),        (source) => NewArray ((string[]) source) },
 				{ typeof (IJavaObject),   (source) => NewArray ((IJavaObject[]) source) },
 				{ typeof (Array),         (source) => NewArray (source) },
 			};
+		}
+
+		static IntPtr NewObjectArray (Array value, Type elementType)
+		{
+			IntPtr grefArrayElementClass = FindObjectArrayElementClass (elementType);
+			try {
+				IntPtr array = IntPtr.Zero;
+				try {
+					array = NewObjectArray (value.Length, grefArrayElementClass, IntPtr.Zero);
+					CopyManagedObjectArray (value, array);
+					return array;
+				} catch {
+					DeleteLocalRef (array);
+					throw;
+				}
+			} finally {
+				DeleteGlobalRef (grefArrayElementClass);
+			}
+		}
+
+		static IntPtr FindObjectArrayElementClass (Type elementType)
+		{
+			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassName (elementType);
+			if (boxedPrimitiveJniClassName != null) {
+				return FindClass (boxedPrimitiveJniClassName);
+			}
+
+			return FindClass (elementType);
 		}
 
 		public static IntPtr NewArray (Array value, Type? elementType = null)
@@ -1444,6 +1533,15 @@ namespace Android.Runtime {
 					var _value = new[]{(double) value!};
 					_SetDoubleArrayRegion (dest, index, _value.Length, _value);
 				} },
+				{ typeof (bool?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (byte?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (sbyte?),  (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (char?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (short?),  (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (int?),    (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (long?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (float?),  (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
+				{ typeof (double?), (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
 				{ typeof (string), (dest, index, value) => {
 					IntPtr s = NewString (value!.ToString ());
 					try {
@@ -1461,6 +1559,19 @@ namespace Android.Runtime {
 					JNIEnv.DeleteLocalRef (_v);
 				} },
 			};
+		}
+
+		static void SetObjectArrayElementFromManagedValue (IntPtr dest, int index, object? value)
+		{
+			// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
+			// closure on every element set (this runs once per element on the SetArrayItem path).
+			IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+			try {
+				SetObjectArrayElement (dest, index, lref);
+			} finally {
+				DeleteLocalRef (lref);
+				GC.KeepAlive (value);
+			}
 		}
 
 		static unsafe void _SetBooleanArrayRegion (IntPtr array, int start, int length, bool[] buffer)
