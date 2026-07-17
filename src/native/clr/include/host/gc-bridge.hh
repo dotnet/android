@@ -59,7 +59,21 @@ namespace xamarin::android {
 
 		static BridgeProcessingFtn initialize_callback (
 			BridgeProcessingStartedFtn bridge_processing_started,
-			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept;
+			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept
+		{
+			abort_if_invalid_pointer_argument (bridge_processing_started, "bridge_processing_started");
+			abort_if_invalid_pointer_argument (bridge_processing_finished, "bridge_processing_finished");
+			abort_unless (GCBridge::bridge_processing_started_callback == nullptr, "GC bridge processing started callback is already set");
+			abort_unless (GCBridge::bridge_processing_finished_callback == nullptr, "GC bridge processing finished callback is already set");
+
+			GCBridge::bridge_processing_started_callback = bridge_processing_started;
+			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
+
+			initialize_shared_args_semaphore ();
+			start_bridge_processing_thread ();
+
+			return mark_cross_references;
+		}
 
 		static void trigger_java_gc (JNIEnv *env) noexcept;
 

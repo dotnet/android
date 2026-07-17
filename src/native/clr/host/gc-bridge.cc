@@ -73,24 +73,6 @@ void GCBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noe
 	BridgeProcessing::initialize_on_runtime_init (env, runtimeClass);
 }
 
-BridgeProcessingFtn GCBridge::initialize_callback (
-	BridgeProcessingStartedFtn bridge_processing_started,
-	BridgeProcessingFinishedFtn bridge_processing_finished) noexcept
-{
-	abort_if_invalid_pointer_argument (bridge_processing_started, "bridge_processing_started");
-	abort_if_invalid_pointer_argument (bridge_processing_finished, "bridge_processing_finished");
-	abort_unless (bridge_processing_started_callback == nullptr, "GC bridge processing started callback is already set");
-	abort_unless (bridge_processing_finished_callback == nullptr, "GC bridge processing finished callback is already set");
-
-	bridge_processing_started_callback = bridge_processing_started;
-	bridge_processing_finished_callback = bridge_processing_finished;
-
-	initialize_shared_args_semaphore ();
-	start_bridge_processing_thread ();
-
-	return mark_cross_references;
-}
-
 void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
 {
 	abort_if_invalid_pointer_argument (env, "env");
