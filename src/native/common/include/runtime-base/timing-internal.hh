@@ -260,11 +260,7 @@ namespace xamarin::android {
 					// likely we'll run out of memory way, way, way before that happens
 					size_t old_size = events.capacity ();
 					events.reserve (old_size << 1);
-#if defined(XA_HOST_MONOVM)
-					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}"sv, old_size, events.capacity ());
-#else
 					log_warnf (LOG_TIMING, "Reallocated timing event buffer from %zu to %zu", old_size, events.capacity ());
-#endif
 				}
 			}
 
@@ -382,11 +378,7 @@ namespace xamarin::android {
 		{
 			struct timespec t;
 			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
-#if defined(XA_HOST_MONOVM)
-				log_warn (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: {}"sv, optional_string (strerror (errno)));
-#else
 				log_warnf (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: %s", optional_string (strerror (errno)));
-#endif
 				return {}; // Results will be nonsensical, but no point in aborting the app
 			}
 			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
@@ -502,19 +494,11 @@ namespace xamarin::android {
 					return;
 			}
 
-#if defined(XA_HOST_MONOVM)
-			log_warn (
-				LOG_TIMING,
-				"Unknown event kind '{}' logged"sv,
-				static_cast<std::underlying_type_t<decltype(kind)>>(kind)
-			);
-#else
 			log_warnf (
 				LOG_TIMING,
 				"Unknown event kind '%u' logged",
 				static_cast<unsigned int>(kind)
 			);
-#endif
 			append_desc ("unknown event kind"sv);
 		}
 
@@ -526,11 +510,7 @@ namespace xamarin::android {
 		auto is_valid_event_index (size_t index, std::source_location sloc = std::source_location::current ()) const noexcept -> bool
 		{
 			if (index >= events.capacity ()) [[unlikely]] {
-#if defined(XA_HOST_MONOVM)
-				log_warn (LOG_TIMING, "Invalid event index passed to method '{}'"sv, sloc.function_name ());
-#else
 				log_warnf (LOG_TIMING, "Invalid event index passed to method '%s'", optional_string (sloc.function_name ()));
-#endif
 				return false;
 			}
 
