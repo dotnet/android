@@ -261,9 +261,9 @@ namespace xamarin::android {
 					size_t old_size = events.capacity ();
 					events.reserve (old_size << 1);
 #if defined(XA_HOST_MONOVM)
-					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}"sv, old_size, events.size ());
+					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}"sv, old_size, events.capacity ());
 #else
-					log_warnf (LOG_TIMING, "Reallocated timing event buffer from %zu to %zu", old_size, events.size ());
+					log_warnf (LOG_TIMING, "Reallocated timing event buffer from %zu to %zu", old_size, events.capacity ());
 #endif
 				}
 			}
