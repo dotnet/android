@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
@@ -659,6 +660,98 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
+				IsRelease = true,
+			};
+			app.SetRuntime (AndroidRuntime.CoreCLR);
+			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
+			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+
+			using var appBuilder = CreateApkBuilder ();
+			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-first-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"First launch should succeed."
+			);
+
+			string [] cacheFiles = [];
+			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
+				Thread.Sleep (250);
+				cacheFiles = RunAdbCommand (
+					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
+				)
+					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
+					.ToArray ();
+			}
+			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
+
+			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			string cacheFileToCorrupt = cacheFiles.First ();
+			string ValidFileHash () => RunAdbCommand (
+				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
+			).Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault () ?? "";
+
+			string validHash = ValidFileHash ();
+			Assert.That (validHash, Is.Not.Empty, $"Should be able to hash the persisted cache file '{cacheFileToCorrupt}'.");
+
+			RunAdbCommand (
+				$"shell run-as {app.PackageName} dd if=/dev/zero of={cacheFileToCorrupt} bs=1 count=1 conv=notrunc"
+			);
+			Assert.That (ValidFileHash (), Is.Not.EqualTo (validHash), "Corrupting the cache file should change its contents.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-second-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"Second launch should succeed."
+			);
+
+			// A corrupted entry must be rejected (footer hash mismatch) and re-decompressed, which
+			// re-persists a byte-identical file. Verify the *exact* corrupted file is healed rather
+			// than merely checking that some other valid entry is still mapped.
+			bool rewritten = false;
+			for (int attempt = 0; attempt < 40 && !rewritten; attempt++) {
+				Thread.Sleep (250);
+				rewritten = ValidFileHash () == validHash;
+			}
+			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
+
+			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
+				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+			Assert.IsNotEmpty (pids, "The application process should be running after the second launch.");
+			var maps = new StringBuilder ();
+			foreach (string pid in pids) {
+				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
+			}
+			StringAssert.Contains (
+				"/code_cache/decompressed-assembly-cache-v1/",
+				maps.ToString (),
+				"The second launch should map persisted decompressed assemblies."
+			);
 		}
 
 		[Test]
@@ -1553,6 +1646,10 @@ namespace Styleable.Library {
 				return;
 			}
 
+			if (IgnoreOnNativeAot (runtime, "the legacy resource-designer fix (FixLegacyResourceDesignerStep, which emits XA8000 for the unresolved SkiaSharp @styleable/SKCanvasView) is intentionally not run on the trimmable typemap path, which is the NativeAOT default.")) {
+				return;
+			}
+
 			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "SkiaSharpCanvasTest")) {
 				IsRelease = isRelease,
 				PackageReferences = {
@@ -1856,10 +1953,11 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		// .NET 10 NativeAOT was experimental and is not covered by previous-version compatibility tests.
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework,
-				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -2125,6 +2223,68 @@ MONO_GC_PARAMS=bridge-implementation=new",
 						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
 				);
 			}
+		}
+
+		[Test]
+		public void CoreClrCrashReportUsesCacheDirectory ([Values] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (CoreClrCrashReportUsesCacheDirectory),
+				RootNamespace = nameof (CoreClrCrashReportUsesCacheDirectory),
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+				OtherBuildItems = {
+					new BuildItem ("AndroidEnvironment", "env.txt") {
+						TextContent = () => "DOTNET_EnableCrashReport=1",
+					},
+				},
+			};
+			if (isRelease) {
+				// Release apps only need to be debuggable here so that run-as can retrieve the crash report.
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+				proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			}
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+		var crashReportRootPath = Environment.GetEnvironmentVariable ("DOTNET_CrashReportRootPath");
+		var crashReportDirectory = crashReportRootPath == null
+			? null
+			: System.IO.Path.Combine (crashReportRootPath, ".dotnet", "crash-reports");
+		Console.WriteLine ("DOTNET_CrashReportRootPath=" + crashReportRootPath);
+		Console.WriteLine ("CacheDir=" + CacheDir.AbsolutePath);
+		Console.WriteLine ("CrashReportDirectory=" + crashReportDirectory);
+		Console.WriteLine ("#CRASH-REPORT-ROOT-PATH-VALID#" +
+			(crashReportRootPath == CacheDir.AbsolutePath && System.IO.Directory.Exists (crashReportDirectory)));
+		Console.WriteLine ("#CRASH-REPORT-FAILFAST#");
+		Console.Out.Flush ();
+		Environment.FailFast ("MSBuildDeviceIntegration crash report test");
+		""");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "App should have installed.");
+			RunAdbCommand ($"shell run-as {proj.PackageName} rm -rf cache/.dotnet");
+			RunProjectAndAssert (proj, builder);
+
+			const string reportDirectory = "cache/.dotnet/crash-reports";
+			string crashReportPath = "";
+			WaitFor (
+				TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds),
+				() => {
+					var output = RunAdbCommand ($"shell run-as {proj.PackageName} find {reportDirectory} -type f -name '*.crashreport.json'").Trim ();
+					crashReportPath = output
+						.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+						.FirstOrDefault (path => path.EndsWith (".crashreport.json", StringComparison.Ordinal));
+					return !string.IsNullOrEmpty (crashReportPath);
+				},
+				intervalInMS: 1000
+			);
+			Assert.IsNotEmpty (crashReportPath, $"CoreCLR did not create a crash report in {reportDirectory}.");
+
+			var crashReportJson = RunAdbCommand ($"exec-out run-as {proj.PackageName} cat {crashReportPath}");
+			var localCrashReport = Path.Combine (Root, builder.ProjectDirectory, "crashreport.json");
+			File.WriteAllText (localCrashReport, crashReportJson);
+			TestContext.AddTestAttachment (localCrashReport);
+
+			using var crashReport = JsonDocument.Parse (File.ReadAllText (localCrashReport));
+			Assert.AreEqual (JsonValueKind.Object, crashReport.RootElement.ValueKind, "CoreCLR crash report should contain a JSON object.");
 		}
 
 		[Test]

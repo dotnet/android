@@ -102,13 +102,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool EmbedAssemblies { get; set; }
 	public string? PackageNamingPolicy { get; set; }
 
-	/// <summary>
-	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
-	/// sentinels and <c>TypeMap</c> entries. 0 disables. Set via
-	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
-	/// </summary>
-	public int MaxArrayRank { get; set; }
-
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -214,7 +207,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
-				maxArrayRank: MaxArrayRank,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies);
 
 			if (GenerateTypeMapAssemblies) {
