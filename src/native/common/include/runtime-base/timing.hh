@@ -85,6 +85,7 @@ namespace xamarin::android
 
 			using namespace std::literals;
 			auto interval = seq->end - seq->start; // nanoseconds
+#if defined(XA_HOST_MONOVM)
 			auto text = std::format (
 				"{}; elapsed: {}:{}::{}"sv,
 				message == nullptr ? ""sv : message,
@@ -94,6 +95,17 @@ namespace xamarin::android
 			);
 
 			log_write (LOG_TIMING, level, text.c_str ());
+#else
+			log_writef (
+				LOG_TIMING,
+				level,
+				"%s; elapsed: %llu:%llu::%llu",
+				optional_string (message, ""),
+				static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::seconds>(interval).count ()),
+				static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::milliseconds>(interval).count ()),
+				static_cast<unsigned long long>((interval % 1ms).count ())
+			);
+#endif
 		}
 
 	private:
