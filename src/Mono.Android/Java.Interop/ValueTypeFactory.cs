@@ -15,35 +15,29 @@ abstract class ValueTypeFactory
 {
 	// NativeAOT's MakeGenericType() and MakeArrayType() paths use canonical templates.
 	// Reference types collapse to __Canon, but value types stay value-specific. This map
-	// intentionally roots each supported value shape through direct typeof(T), typeof(T[]),
+	// intentionally roots each primitive/nullable value shape through direct typeof(T), typeof(T[]),
 	// new T[length], and Java collection wrapper constructor references.
 	// `byte` is included alongside `sbyte` (both marshal to java.lang.Byte bitwise) so that
 	// byte-element collections keep working on the trimmable path, matching the reflection paths.
-	internal static readonly Dictionary<Type, ValueTypeFactory> SupportedValueTypeFactories = new () {
-		{ typeof (bool),            new ValueTypeFactory<bool> () },
-		{ typeof (byte),            new ValueTypeFactory<byte> () },
-		{ typeof (sbyte),           new ValueTypeFactory<sbyte> () },
-		{ typeof (char),            new ValueTypeFactory<char> () },
-		{ typeof (short),           new ValueTypeFactory<short> () },
-		{ typeof (int),             new ValueTypeFactory<int> () },
-		{ typeof (long),            new ValueTypeFactory<long> () },
-		{ typeof (float),           new ValueTypeFactory<float> () },
-		{ typeof (double),          new ValueTypeFactory<double> () },
-		{ typeof (DateTime),        new ValueTypeFactory<DateTime> () },
-		{ typeof (DateTimeOffset),  new ValueTypeFactory<DateTimeOffset> () },
-		{ typeof (TimeSpan),        new ValueTypeFactory<TimeSpan> () },
-		{ typeof (bool?),           new ValueTypeFactory<bool?> () },
-		{ typeof (byte?),           new ValueTypeFactory<byte?> () },
-		{ typeof (sbyte?),          new ValueTypeFactory<sbyte?> () },
-		{ typeof (char?),           new ValueTypeFactory<char?> () },
-		{ typeof (short?),          new ValueTypeFactory<short?> () },
-		{ typeof (int?),            new ValueTypeFactory<int?> () },
-		{ typeof (long?),           new ValueTypeFactory<long?> () },
-		{ typeof (float?),          new ValueTypeFactory<float?> () },
-		{ typeof (double?),         new ValueTypeFactory<double?> () },
-		{ typeof (DateTime?),       new ValueTypeFactory<DateTime?> () },
-		{ typeof (DateTimeOffset?), new ValueTypeFactory<DateTimeOffset?> () },
-		{ typeof (TimeSpan?),       new ValueTypeFactory<TimeSpan?> () },
+	internal static readonly Dictionary<Type, ValueTypeFactory> PrimitiveTypeFactories = new () {
+		{ typeof (bool),    new ValueTypeFactory<bool> () },
+		{ typeof (byte),    new ValueTypeFactory<byte> () },
+		{ typeof (sbyte),   new ValueTypeFactory<sbyte> () },
+		{ typeof (char),    new ValueTypeFactory<char> () },
+		{ typeof (short),   new ValueTypeFactory<short> () },
+		{ typeof (int),     new ValueTypeFactory<int> () },
+		{ typeof (long),    new ValueTypeFactory<long> () },
+		{ typeof (float),   new ValueTypeFactory<float> () },
+		{ typeof (double),  new ValueTypeFactory<double> () },
+		{ typeof (bool?),   new ValueTypeFactory<bool?> () },
+		{ typeof (byte?),   new ValueTypeFactory<byte?> () },
+		{ typeof (sbyte?),  new ValueTypeFactory<sbyte?> () },
+		{ typeof (char?),   new ValueTypeFactory<char?> () },
+		{ typeof (short?),  new ValueTypeFactory<short?> () },
+		{ typeof (int?),    new ValueTypeFactory<int?> () },
+		{ typeof (long?),   new ValueTypeFactory<long?> () },
+		{ typeof (float?),  new ValueTypeFactory<float?> () },
+		{ typeof (double?), new ValueTypeFactory<double?> () },
 	};
 
 	public abstract Type ValueType { get; }
@@ -165,11 +159,11 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 	{
 		// Value/value dictionaries need no dedicated rooting token (unlike the mixed reference/value
 		// cases): the full JavaDictionary<TKey, T> cross-product is statically rooted by NativeAOT.
-		// Every ValueTypeFactory<X> is constructed in SupportedValueTypeFactories, CreateDictionary is a
+		// Every ValueTypeFactory<X> is constructed in PrimitiveTypeFactories, CreateDictionary is a
 		// virtual call reachable for all of them (so CreateDictionaryWithKey<X> is instantiated for
 		// every key type X), and this override is a generic virtual method — so NativeAOT's GVM
 		// dependency analysis emits ValueTypeFactory<Y>.CreateDictionaryWithKey<X> (hence
-		// new JavaDictionary<X, Y>()) for every (X, Y) pair in the fixed supported-value-type set.
+		// new JavaDictionary<X, Y>()) for every (X, Y) pair in the fixed primitive/nullable set.
 		return new JavaDictionary<TKey, T> (handle, transfer);
 	}
 }

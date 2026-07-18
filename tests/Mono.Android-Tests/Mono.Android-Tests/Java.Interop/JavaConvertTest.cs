@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 
 using Android.App;
 using Android.Content;
@@ -222,75 +221,30 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestCase (typeof (IList<DateTime>), false)]
+		[TestCase (typeof (ICollection<DateTime>), false)]
+		[TestCase (typeof (IDictionary<DateTime, string>), true)]
+		[TestCase (typeof (IDictionary<string, DateTime>), true)]
+		[TestCase (typeof (IList<UnsupportedValueType>), false)]
+		[TestCase (typeof (ICollection<UnsupportedValueType>), false)]
+		[TestCase (typeof (IDictionary<UnsupportedValueType, string>), true)]
+		[TestCase (typeof (IDictionary<string, UnsupportedValueType>), true)]
 		[Category ("NativeAOTTrimmable")]
-		public void FromJniHandle_DateTimeContainers ()
-		{
-			AssertSupportedValueTypeContainers<DateTime> ();
-			AssertSupportedValueTypeContainers<DateTime?> ();
-		}
-
-		[Test]
-		[Category ("NativeAOTTrimmable")]
-		public void FromJniHandle_DateTimeOffsetContainers ()
-		{
-			AssertSupportedValueTypeContainers<DateTimeOffset> ();
-			AssertSupportedValueTypeContainers<DateTimeOffset?> ();
-		}
-
-		[Test]
-		[Category ("NativeAOTTrimmable")]
-		public void FromJniHandle_TimeSpanContainers ()
-		{
-			AssertSupportedValueTypeContainers<TimeSpan> ();
-			AssertSupportedValueTypeContainers<TimeSpan?> ();
-		}
-
-		// The Type-based JavaConvert entry point handles closed Java peer targets before consulting
-		// SafeJavaCollectionFactory, while interface targets require the factory to construct the wrapper.
-		[TestCase (typeof (IList<UnsupportedValueType>))]
-		[TestCase (typeof (ICollection<UnsupportedValueType>))]
-		[TestCase (typeof (IDictionary<UnsupportedValueType, string>))]
-		[TestCase (typeof (IDictionary<string, UnsupportedValueType>))]
-		[Category ("NativeAOTTrimmable")]
-		public void FromJniHandle_UnsupportedValueTypeThrows (Type targetType)
+		public void FromJniHandle_UnsupportedValueTypeUsesUntypedFallback (Type targetType, bool dictionary)
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates unsupported value-type container arguments on the trimmable typemap path.");
+				Assert.Ignore ("This test validates unsupported value-type container fallback on the trimmable typemap path.");
 			}
 
-			using (var source = new JavaList ()) {
-				Assert.Throws<NotSupportedException> (() =>
-					InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer));
-			}
-		}
-
-		static void AssertSupportedValueTypeContainers<T> ()
-		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates supported value-type container rooting on the trimmable typemap path.");
-			}
-
-			using (var source = new JavaList ()) {
-				AssertFromJniHandleConvertsTo (typeof (IList<T>), source.Handle);
-				AssertFromJniHandleConvertsTo (typeof (ICollection<T>), source.Handle);
-			}
-
-			using (var source = new JavaDictionary ()) {
-				AssertFromJniHandleConvertsTo (typeof (IDictionary<T, string>), source.Handle);
-				AssertFromJniHandleConvertsTo (typeof (IDictionary<string, T>), source.Handle);
-				AssertFromJniHandleConvertsTo (typeof (IDictionary<T, int>), source.Handle);
-				AssertFromJniHandleConvertsTo (typeof (IDictionary<int, T>), source.Handle);
-			}
-		}
-
-		static void AssertFromJniHandleConvertsTo (Type targetType, IntPtr handle)
-		{
-			var converted = InvokeJavaConvertFromJniHandle (targetType, handle, JniHandleOwnership.DoNotTransfer);
-			try {
-				Assert.IsTrue (targetType.IsInstanceOfType (converted), $"Expected conversion to produce an instance of '{targetType}', but got '{converted.GetType ()}'.");
-			} finally {
-				(converted as IDisposable)?.Dispose ();
+			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
+			using (source) {
+				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (dictionary ? typeof (JavaDictionary) : typeof (JavaList), converted.GetType ());
+					Assert.IsFalse (targetType.IsInstanceOfType (converted));
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
 			}
 		}
 
@@ -323,13 +277,7 @@ namespace Java.InteropTests
 				modifiers: null);
 			Assert.IsNotNull (method);
 
-			object value;
-			try {
-				value = method.Invoke (null, new object [] { handle, transfer, targetType });
-			} catch (TargetInvocationException e) when (e.InnerException != null) {
-				ExceptionDispatchInfo.Capture (e.InnerException).Throw ();
-				throw;
-			}
+			var value = method.Invoke (null, new object [] { handle, transfer, targetType });
 			Assert.IsNotNull (value);
 			return value;
 		}

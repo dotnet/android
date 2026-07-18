@@ -29,10 +29,10 @@ namespace Java.Interop;
 /// <item><description>reference element arguments ride the <c>__Canon</c> template: the wrapper definition is
 /// reflectively closed and its activation constructor invoked, kept alive by a concrete-literal
 /// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
-/// <item><description>supported value-type arguments go through <see cref="ValueTypeFactory"/>,
+/// <item><description>primitive/nullable value-type arguments go through <see cref="ValueTypeFactory"/>,
 /// which roots the exact instantiation with a direct <c>new</c>;</description></item>
-/// <item><description>any other value type throws <see cref="NotSupportedException"/> (no reflection
-/// fallback is AOT-safe).</description></item>
+/// <item><description>other value types are not handled here, preserving <see cref="JavaConvert"/>'s
+/// existing untyped collection fallback.</description></item>
 /// </list>
 /// </remarks>
 static class SafeJavaCollectionFactory
@@ -63,6 +63,10 @@ static class SafeJavaCollectionFactory
 				// Capture the parsed arguments so GetGenericArguments () runs once when the converter is
 				// selected, rather than again for every conversion.
 				var arguments = targetType.GetGenericArguments ();
+				if (!AreSupportedCollectionArguments (arguments)) {
+					converter = null;
+					return false;
+				}
 				converter = (handle, transfer) => CreateFromJniHandle (genericDefinition, arguments, handle, transfer);
 				return true;
 			}
@@ -76,6 +80,17 @@ static class SafeJavaCollectionFactory
 		=> genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)
 			|| genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)
 			|| genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>);
+
+	static bool AreSupportedCollectionArguments (Type[] arguments)
+	{
+		foreach (var argument in arguments) {
+			if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 	static object? CreateFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer)
 	{
@@ -114,9 +129,7 @@ static class SafeJavaCollectionFactory
 
 		var elementType = arguments [0];
 		if (elementType.IsValueType) {
-			if (!ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (elementType, out var valueFactory)) {
-				throw new NotSupportedException ($"'JavaList<{elementType}>' is not available on the trimmable typemap: only reference and explicitly supported value types are supported.");
-			}
+			var valueFactory = ValueTypeFactory.PrimitiveTypeFactories [elementType];
 			result = valueFactory.CreateList (handle, transfer);
 			return true;
 		}
@@ -155,9 +168,7 @@ static class SafeJavaCollectionFactory
 
 		var elementType = arguments [0];
 		if (elementType.IsValueType) {
-			if (!ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (elementType, out var valueFactory)) {
-				throw new NotSupportedException ($"'JavaCollection<{elementType}>' is not available on the trimmable typemap: only reference and explicitly supported value types are supported.");
-			}
+			var valueFactory = ValueTypeFactory.PrimitiveTypeFactories [elementType];
 			result = valueFactory.CreateCollection (handle, transfer);
 			return true;
 		}
@@ -197,24 +208,19 @@ static class SafeJavaCollectionFactory
 		var keyType = arguments [0];
 		var valueType = arguments [1];
 
-		// A value-type argument is only AOT-safe when it is explicitly supported; anything else
-		// (a custom struct) has no rooted instantiation and must not fall back to reflection. Validate both
-		// arguments up front so the construction paths below only deal with reference or supported value types.
-		EnsureReferenceOrSupportedValueType (keyType);
-		EnsureReferenceOrSupportedValueType (valueType);
-
-		if (TryGetSupportedValueTypeFactory (keyType, out var keyFactory)) {
-			// The key is a supported value type. A value/value dictionary uses the full rooted cross-product;
+		if (keyType.IsValueType) {
+			var keyFactory = ValueTypeFactory.PrimitiveTypeFactories [keyType];
+			// The key is a primitive/nullable value type. A value/value dictionary uses the full rooted cross-product;
 			// a value/reference dictionary roots JavaDictionary<value,__Canon> via the value factory's token.
-			result = TryGetSupportedValueTypeFactory (valueType, out var valueFactory)
-				? keyFactory.CreateDictionary (valueFactory, handle, transfer)
+			result = valueType.IsValueType
+				? keyFactory.CreateDictionary (ValueTypeFactory.PrimitiveTypeFactories [valueType], handle, transfer)
 				: keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
 			return true;
 		}
 
-		if (TryGetSupportedValueTypeFactory (valueType, out var referenceKeyValueFactory)) {
-			// The key is a reference type and the value is supported: root JavaDictionary<__Canon,value>.
-			result = referenceKeyValueFactory.CreateDictionaryWithReferenceKey (keyType, handle, transfer);
+		if (valueType.IsValueType) {
+			// The key is a reference type and the value is primitive/nullable: root JavaDictionary<__Canon,value>.
+			result = ValueTypeFactory.PrimitiveTypeFactories [valueType].CreateDictionaryWithReferenceKey (keyType, handle, transfer);
 			return true;
 		}
 
@@ -231,14 +237,4 @@ static class SafeJavaCollectionFactory
 		}
 		return true;
 	}
-
-	static void EnsureReferenceOrSupportedValueType (Type argument)
-	{
-		if (argument.IsValueType && !ValueTypeFactory.SupportedValueTypeFactories.ContainsKey (argument)) {
-			throw new NotSupportedException ($"'JavaDictionary' with value-type argument '{argument}' is not available on the trimmable typemap: only reference and explicitly supported value types are supported.");
-		}
-	}
-
-	static bool TryGetSupportedValueTypeFactory (Type argument, [NotNullWhen (true)] out ValueTypeFactory? factory)
-		=> ValueTypeFactory.SupportedValueTypeFactories.TryGetValue (argument, out factory);
 }
