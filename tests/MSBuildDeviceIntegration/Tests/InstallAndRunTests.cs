@@ -754,16 +754,11 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		[Test]
 		public void IncrementalReleaseBuildUpdatesCompressedAssemblyStore ()
 		{
-			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
-			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
-				return;
-			}
-
 			string payload = "initial";
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "incrementalstore")) {
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "incrementalstore")) {
 				IsRelease = true,
 			};
-			app.SetRuntime (runtime);
+			app.SetRuntime (AndroidRuntime.CoreCLR);
 			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			app.SetDefaultTargetDevice ();
 			app.MainActivity = app.DefaultMainActivity.Replace (
