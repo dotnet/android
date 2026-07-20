@@ -232,7 +232,6 @@ struct ApplicationConfig
 	uint32_t jni_remapping_replacement_type_count;
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	const char *android_package_name;
-	bool managed_marshal_methods_lookup_enabled;
 	bool have_assembly_store;
 	bool assembly_store_decompression_cache_enabled;
 };
