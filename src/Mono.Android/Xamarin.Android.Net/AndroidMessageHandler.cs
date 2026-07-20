@@ -104,16 +104,90 @@ namespace Xamarin.Android.Net
 			}
 		}
 
+		/// <summary>
+		/// Wraps the response body stream (a <see cref="BufferedStream"/> over the Java
+		/// <see cref="HttpURLConnection"/>'s okhttp <c>InputStream</c>) so that disposing the
+		/// <see cref="HttpResponseMessage"/> while a body read is still in flight on another thread does not
+		/// corrupt the native stream.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// The problem this solves (https://github.com/dotnet/android/issues/12106):
+		/// <see cref="HttpResponseMessage.Dispose()"/> can be called from any thread while a read is parked.
+		/// This is how gRPC (and <c>HttpContent.ReadAsByteArrayAsync</c>, etc.) tear down a streaming call:
+		/// they dispose the response rather than cancelling the individual read. <c>Dispose()</c> disposes the
+		/// content, which calls <c>Close()</c> on this stream, which calls <c>Close()</c> on the Java
+		/// <c>InputStream</c>.
+		/// </para>
+		/// <para>
+		/// okhttp implements <c>InputStream.close()</c> on a chunked/fixed-length body by *draining* it: it
+		/// issues another <c>read()</c> so the connection can be reused. okhttp's <c>AsyncTimeout</c> keeps a
+		/// process-global list of active timeout nodes that each read enters and exits. If the drain-read runs
+		/// while the original read is still parked in <c>AsyncTimeout.enter()</c>, the node is entered twice
+		/// and okhttp throws "java.lang.IllegalStateException: Unbalanced enter/exit", crashing the process.
+		/// </para>
+		/// <para>
+		/// The invariant that avoids it: NEVER call <c>Close()</c> on the underlying stream while a read is in
+		/// flight. Note that a managed <see cref="CancellationToken"/> cannot by itself interrupt the blocking
+		/// Java read; only <c>HttpURLConnection.Disconnect()</c> (closing the socket) makes a parked read throw
+		/// and unwind.
+		/// </para>
+		/// <para>
+		/// The "drain, then close" scheme implemented below mirrors the idiomatic Java/OkHttp pattern, where
+		/// the reader thread owns <c>close()</c> (via try-with-resources) and a separate thread only *signals*
+		/// cancellation via <c>Call.cancel()</c>/<c>HttpURLConnection.disconnect()</c> -- it never closes the
+		/// stream:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>
+		///     Every read/write/copy/flush brackets itself with <c>BeginUse()</c>/<c>EndUse()</c>, so we
+		///     always know whether an inner-stream operation is in flight (<c>inUseCount</c>) and whether
+		///     <c>Dispose()</c> has been requested (<c>disposeRequested</c>).
+		///   </description></item>
+		///   <item><description>
+		///     The stream's <c>Dispose()</c> never closes the underlying stream while an operation is in flight. It records
+		///     the request, cancels <c>abortCts</c> for exception mapping, and requests a background disconnect
+		///     to abort the parked operation. That operation then unwinds on its own thread and, as the last
+		///     one out, performs the close there
+		///     (<c>EndUse</c> -> <c>DisposeCore</c>). <c>Dispose()</c> closes directly only when nothing is in
+		///     flight. The stream's <c>Dispose()</c> therefore never waits for an in-flight operation to unwind.
+		///     <see cref="AndroidHttpResponseMessage.Dispose()"/> synchronously calls <c>Disconnect()</c> as an
+		///     idempotent backstop, but likewise does not wait for the operation to finish.
+		///   </description></item>
+		///   <item><description>
+		///     Cancellation (from <c>Dispose()</c> or the caller's own token) is turned into a background
+		///     <c>HttpURLConnection.Disconnect()</c> -- see <c>RequestDisconnect</c> for why it must be
+		///     backgrounded.
+		///   </description></item>
+		///   <item><description>
+		///     We intentionally do NOT <c>Dispose()</c> the <see cref="HttpURLConnection"/> Java peer.
+		///     Deleting its JNI global reference can race a still-unwinding native read and crash;
+		///     <c>Disconnect()</c> already releases the socket and the peer is reclaimed on finalization.
+		///     Avoiding peer disposal is what keeps this scheme free of any cross-thread handshake.
+		///   </description></item>
+		/// </list>
+		/// </remarks>
 		sealed class CancellationAwareResponseStream : Stream
 		{
 			readonly Stream stream;
 			readonly HttpURLConnection httpConnection;
-			int streamDisposed;
+			readonly Action requestDisconnect;
+
+			// Canceled by Dispose() so an in-flight operation can map the transport failure to cancellation.
+			readonly CancellationTokenSource abortCts = new CancellationTokenSource ();
+
+			// Guards the draining state machine (inUseCount / disposeRequested / disposed).
+			readonly object stateLock = new object ();
+			int inUseCount;          // operations (read/write/copy/flush) currently in flight (normally 0 or 1)
+			int disconnectRequested; // coalesces caller cancellation and Dispose() into one background disconnect
+			bool disposeRequested;   // Dispose() called: reject new operations; close once the last one unwinds
+			bool disposed;           // DisposeCore() has run (exactly once)
 
 			public CancellationAwareResponseStream (Stream stream, HttpURLConnection httpConnection)
 			{
 				this.stream = stream ?? throw new ArgumentNullException (nameof (stream));
 				this.httpConnection = httpConnection ?? throw new ArgumentNullException (nameof (httpConnection));
+				requestDisconnect = RequestDisconnect;
 			}
 
 			public override bool CanRead => stream.CanRead;
@@ -123,85 +197,277 @@ namespace Xamarin.Android.Net
 
 			public override long Position {
 				get => stream.Position;
-				set => stream.Position = value;
+				set {
+					ThrowIfDisposed ();
+					stream.Position = value;
+				}
 			}
 
 			protected override void Dispose (bool disposing)
 			{
 				if (disposing) {
-					DisposeStream ();
+					bool abortInFlight;
+					bool disposeNow;
+					lock (stateLock) {
+						bool firstDisposeRequest = !disposeRequested;
+						disposeRequested = true;
+						// Only close here if no operation is in flight. If one is, that operation owns the
+						// close and runs DisposeCore() from EndUse() once it has unwound -- closing now would
+						// race it. '!disposed' also makes a second Dispose() a no-op.
+						abortInFlight = firstDisposeRequest && inUseCount != 0;
+						disposeNow = inUseCount == 0 && !disposed;
+						if (disposeNow)
+							disposed = true;
+					}
+
+					if (disposeNow) {
+						// Nothing is in flight (disposeRequested, set under the lock, now blocks new
+						// operations), so there is no parked operation to abort -- close directly.
+						DisposeCore ();
+					} else if (abortInFlight) {
+						// An operation is parked. Abort it so it unwinds promptly and then closes the stream
+						// itself (EndUse -> DisposeCore). The abort only disconnects the socket, never the
+						// managed stream, so it cannot collide with the operation.
+						abortCts.Cancel ();
+						RequestDisconnect ();
+					}
 				}
 
 				base.Dispose (disposing);
 			}
 
-			public override void Flush () => stream.Flush ();
+			public override void Flush () =>
+				RunOperation (() => stream.Flush (), "Response body flush was canceled.");
 
-			public override async Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken)
-			{
-				cancellationToken.ThrowIfCancellationRequested ();
+			public override Task CopyToAsync (Stream destination, int bufferSize, CancellationToken cancellationToken) =>
+				RunOperation (callerToken => stream.CopyToAsync (destination, bufferSize, callerToken), cancellationToken, "Response body read was canceled.");
 
-				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
-					try {
-						await stream.CopyToAsync (destination, bufferSize, cancellationToken).ConfigureAwait (false);
-					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
-						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
-					}
-				}
-			}
+			public override int Read (byte[] buffer, int offset, int count) =>
+				RunOperation (() => stream.Read (buffer, offset, count), "Response body read was canceled.");
 
-			public override int Read (byte[] buffer, int offset, int count) => stream.Read (buffer, offset, count);
-
-			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) => ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
+			public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+				ReadAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
 
 			// StreamContent uses this overload on modern runtimes, so the wrapper must handle its ValueTask-based contract.
 			public override async ValueTask<int> ReadAsync (Memory<byte> buffer, CancellationToken cancellationToken = default)
 			{
-				cancellationToken.ThrowIfCancellationRequested ();
+				BeginUse ();
+				try {
+					cancellationToken.ThrowIfCancellationRequested ();
 
-				using (cancellationToken.Register (QueueAbortRead, useSynchronizationContext: false)) {
-					try {
-						return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
-					} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
-						throw new System.OperationCanceledException ("Response body read was canceled.", ex, cancellationToken);
+					// This is the streaming hot path. Register only the caller token needed to interrupt
+					// the blocking Java read, and await the inner ValueTask directly. Dispose() uses the
+					// stream-lifetime abort token and calls RequestDisconnect() itself.
+					using (cancellationToken.Register (requestDisconnect, useSynchronizationContext: false)) {
+						try {
+							return await stream.ReadAsync (buffer, cancellationToken).ConfigureAwait (false);
+						} catch (Exception ex) when (ShouldMapOperationToCancellation (ex, cancellationToken)) {
+							throw new System.OperationCanceledException ("Response body read was canceled.", ex, GetCanceledToken (cancellationToken));
+						}
 					}
+				} finally {
+					EndUse ();
 				}
 			}
 
-			public override long Seek (long offset, SeekOrigin origin) => stream.Seek (offset, origin);
+			public override long Seek (long offset, SeekOrigin origin)
+			{
+				ThrowIfDisposed ();
+				return stream.Seek (offset, origin);
+			}
 
-			public override void SetLength (long value) => stream.SetLength (value);
+			public override void SetLength (long value)
+			{
+				ThrowIfDisposed ();
+				stream.SetLength (value);
+			}
 
-			public override void Write (byte[] buffer, int offset, int count) => stream.Write (buffer, offset, count);
+			public override void Write (byte[] buffer, int offset, int count) =>
+				RunOperation (() => stream.Write (buffer, offset, count), "Response body write was canceled.");
 
-			void QueueAbortRead () =>
-				Task.Run (AbortRead).ContinueWith (
-					task => Logger.Log (LogLevel.Info, LOG_APP, $"Response body cancellation exception: {task.Exception}"),
-					CancellationToken.None,
-					TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-					TaskScheduler.Default);
+			public override Task WriteAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+				WriteAsync (buffer.AsMemory (offset, count), cancellationToken).AsTask ();
 
-			void AbortRead ()
+			public override async ValueTask WriteAsync (ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+			{
+				BeginUse ();
+				try {
+					cancellationToken.ThrowIfCancellationRequested ();
+					using (cancellationToken.Register (requestDisconnect, useSynchronizationContext: false)) {
+						try {
+							await stream.WriteAsync (buffer, cancellationToken).ConfigureAwait (false);
+						} catch (Exception ex) when (ShouldMapOperationToCancellation (ex, cancellationToken)) {
+							throw new System.OperationCanceledException ("Response body write was canceled.", ex, GetCanceledToken (cancellationToken));
+						}
+					}
+				} finally {
+					EndUse ();
+				}
+			}
+
+			/// <summary>
+			/// Runs an inner-stream operation inside the drain-safety bracket: it counts as in-flight
+			/// (<c>BeginUse</c>/<c>EndUse</c>), registers the caller token to abort a parked operation, and
+			/// maps a caller- or dispose-caused transport exception to <see cref="OperationCanceledException"/>.
+			/// </summary>
+			async Task<T> RunOperation<T> (Func<CancellationToken, Task<T>> operation, CancellationToken callerToken, string canceledMessage)
+			{
+				BeginUse ();
+				try {
+					callerToken.ThrowIfCancellationRequested ();
+					using (callerToken.Register (requestDisconnect, useSynchronizationContext: false)) {
+						try {
+							return await operation (callerToken).ConfigureAwait (false);
+						} catch (Exception ex) when (ShouldMapOperationToCancellation (ex, callerToken)) {
+							throw new System.OperationCanceledException (canceledMessage, ex, GetCanceledToken (callerToken));
+						}
+					}
+				} finally {
+					EndUse ();
+				}
+			}
+
+			/// <summary>
+			/// Void counterpart of <see cref="RunOperation{T}"/>, for operations that return no value.
+			/// Delegates to the generic overload so the BeginUse/try/finally/EndUse bracket lives in exactly
+			/// one place.
+			/// </summary>
+			Task RunOperation (Func<CancellationToken, Task> operation, CancellationToken callerToken, string canceledMessage) =>
+				RunOperation<bool> (async operationToken => { await operation (operationToken).ConfigureAwait (false); return true; }, callerToken, canceledMessage);
+
+			/// <summary>
+			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}"/> for the synchronous
+			/// <see cref="Stream"/> overrides, which carry no caller token. It uses the drain-safety bracket
+			/// directly rather than allocating a completed task.
+			/// </summary>
+			T RunOperation<T> (Func<T> operation, string canceledMessage)
+			{
+				BeginUse ();
+				try {
+					try {
+						return operation ();
+					} catch (Exception ex) when (ShouldMapToCancellation (ex, abortCts.Token)) {
+						throw new System.OperationCanceledException (canceledMessage, ex, abortCts.Token);
+					}
+				} finally {
+					EndUse ();
+				}
+			}
+
+			/// <summary>
+			/// Synchronous, void counterpart of <see cref="RunOperation{T}(Func{T},string)"/>.
+			/// </summary>
+			void RunOperation (Action operation, string canceledMessage) =>
+				RunOperation<bool> (() => { operation (); return true; }, canceledMessage);
+
+			/// <summary>
+			/// Returns the token that caused an operation to be aborted. The caller's token wins when caller
+			/// cancellation races response disposal; otherwise this returns the stream-lifetime token canceled
+			/// by <see cref="Dispose(bool)"/>.
+			/// </summary>
+			CancellationToken GetCanceledToken (CancellationToken callerToken)
+			{
+				if (callerToken.IsCancellationRequested)
+					return callerToken;
+				return abortCts.Token;
+			}
+
+			bool ShouldMapOperationToCancellation (Exception ex, CancellationToken callerToken) =>
+				ShouldMapToCancellation (ex, callerToken) || ShouldMapToCancellation (ex, abortCts.Token);
+
+			/// <summary>
+			/// Start of an inner-stream operation (read/write/copy/flush). Throws if <c>Dispose()</c> has been
+			/// requested so that operations started after (or racing) <c>Dispose()</c> observe
+			/// <see cref="ObjectDisposedException"/>, per the <see cref="Stream"/> contract.
+			/// </summary>
+			void BeginUse ()
+			{
+				lock (stateLock) {
+					if (disposeRequested)
+						throw new ObjectDisposedException (nameof (CancellationAwareResponseStream));
+
+					inUseCount++;
+				}
+			}
+
+			/// <summary>
+			/// End of an inner-stream operation. If <c>Dispose()</c> was requested while this was the last
+			/// in-flight operation, close here -- on the operation's own thread, after it has fully unwound --
+			/// which is the only point at which closing the underlying Java stream cannot collide with an
+			/// operation.
+			/// </summary>
+			void EndUse ()
+			{
+				bool shouldDispose;
+				lock (stateLock) {
+					inUseCount--;
+					shouldDispose = disposeRequested && inUseCount == 0 && !disposed;
+					if (shouldDispose)
+						disposed = true;
+				}
+
+				if (shouldDispose)
+					DisposeCore ();
+			}
+
+			/// <summary>
+			/// Aborts a parked read by disconnecting the socket. Dispatched to a background thread so
+			/// <see cref="CancellationTokenSource.Cancel()"/> runs registered callbacks synchronously on the
+			/// caller -- which in the motivating gRPC scenario may be the UI thread -- without making that
+			/// cancellation callback perform the disconnect itself. <c>Disconnect()</c> is allowed on the UI
+			/// thread, but queueing it keeps cancellation responsive.
+			/// </summary>
+			void RequestDisconnect ()
+			{
+				if (Interlocked.Exchange (ref disconnectRequested, 1) != 0)
+					return;
+
+				Task.Run (() => {
+					try {
+						httpConnection.Disconnect ();
+					} catch (Exception ex) {
+						Logger.Log (LogLevel.Info, LOG_APP, $"Disconnection exception: {ex}");
+					}
+				});
+			}
+
+			/// <summary>
+			/// The actual teardown. Runs exactly once (guarded by <c>disposed</c>) and only when no operation
+			/// is in flight, so calling <c>Close()</c> on the Java stream here cannot trigger the "Unbalanced
+			/// enter/exit" drain-read race described above. It is always reached: when <c>Dispose()</c> sets
+			/// <c>disposeRequested</c>, either <c>Dispose()</c> runs it (nothing in flight) or the last
+			/// <c>EndUse()</c> does (once the final operation unwinds) -- so the stream and socket are never
+			/// leaked.
+			/// </summary>
+			void DisposeCore ()
 			{
 				try {
+					stream.Dispose ();
+				} catch (Exception ex) {
+					Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
+				}
+
+				try {
+					// Release the socket. We deliberately do not Dispose() the HttpURLConnection Java peer:
+					// deleting its JNI global reference can race a still-unwinding native read and crash. The
+					// peer is reclaimed on finalization.
 					httpConnection.Disconnect ();
 				} catch (Exception ex) {
 					Logger.Log (LogLevel.Info, LOG_APP, $"Disconnection exception: {ex}");
 				}
 
-				try {
-					DisposeStream ();
-				} catch (Exception ex) {
-					Logger.Log (LogLevel.Info, LOG_APP, $"Response stream close exception: {ex}");
+				// 'abortCts' is intentionally not disposed: Dispose() calls abortCts.Cancel() outside the
+				// lock, so disposing it here would race that Cancel() (and a double Dispose()) and throw
+				// ObjectDisposedException. It holds no timer or unmanaged resource, so the GC reclaims it.
+			}
+
+			void ThrowIfDisposed ()
+			{
+				lock (stateLock) {
+					if (disposeRequested)
+						throw new ObjectDisposedException (nameof (CancellationAwareResponseStream));
 				}
 			}
-
-			void DisposeStream ()
-			{
-				if (Interlocked.Exchange (ref streamDisposed, 1) == 0)
-					stream.Dispose ();
-			}
-
 		}
 
 		static bool ShouldMapToCancellation (Exception ex, CancellationToken cancellationToken)
