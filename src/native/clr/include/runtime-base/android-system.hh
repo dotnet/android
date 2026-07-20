@@ -85,12 +85,7 @@ namespace xamarin::android {
 #endif
 		}
 
-#if defined (XA_HOST_NATIVEAOT)
-		static auto get_native_libraries_dir () noexcept -> const char*
-		{
-			return native_libraries_dir;
-		}
-#else
+#if !defined (XA_HOST_NATIVEAOT)
 		static auto get_app_code_cache_dir () noexcept -> std::string const&
 		{
 			return app_code_cache_dir;
@@ -192,7 +187,6 @@ namespace xamarin::android {
 		static inline bool embedded_dso_mode_enabled = false;
 #if defined (XA_HOST_NATIVEAOT)
 		static inline char primary_override_dir[Constants::SENSIBLE_PATH_MAX] {};
-		static inline char native_libraries_dir[Constants::SENSIBLE_PATH_MAX] {};
 #else
 		static inline std::string primary_override_dir;
 		static inline std::string native_libraries_dir;

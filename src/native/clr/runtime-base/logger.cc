@@ -112,6 +112,11 @@ Logger::init_reference_logging (std::string_view const& override_dir) noexcept
 			);
 		}
 	}
+
+	std::free (gref_file);
+	gref_file = nullptr;
+	std::free (lref_file);
+	lref_file = nullptr;
 }
 
 [[gnu::always_inline]] bool
