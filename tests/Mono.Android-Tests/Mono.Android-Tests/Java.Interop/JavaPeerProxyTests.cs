@@ -19,15 +19,6 @@ namespace Java.InteropTests
 			Assert.AreEqual ("custom/ExplicitName", proxy.JniName);
 			Assert.AreEqual (typeof (ProxyTestPeer), proxy.TargetType);
 		}
-
-		[Test]
-		public void GenericConstructor_StoresJniNameAndTargetType ()
-		{
-			var proxy = new GenericProxy ();
-
-			Assert.AreEqual ("custom/GenericProxy", proxy.JniName);
-			Assert.AreEqual (typeof (ProxyTestPeer), proxy.TargetType);
-		}
 	}
 
 	[Register ("test/ProxyTestPeer", DoNotGenerateAcw = true)]
@@ -47,16 +38,6 @@ namespace Java.InteropTests
 	{
 		public ExplicitNameProxy ()
 			: base ("custom/ExplicitName", typeof (ProxyTestPeer))
-		{
-		}
-
-		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
-	}
-
-	sealed class GenericProxy : JavaPeerProxy<ProxyTestPeer>
-	{
-		public GenericProxy ()
-			: base ("custom/GenericProxy")
 		{
 		}
 

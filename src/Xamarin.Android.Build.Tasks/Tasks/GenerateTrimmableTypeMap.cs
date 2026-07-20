@@ -57,6 +57,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedWarning ("XA4257", Properties.Resources.XA4257, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
+		public void LogCustomJavaObjectError (string managedTypeName) =>
+			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
+		public void LogCustomJavaObjectWarning (string managedTypeName) =>
+			log.LogWarning ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 	}
 
 	public override string TaskPrefix => "GTT";
@@ -102,18 +106,18 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool EmbedAssemblies { get; set; }
 	public string? PackageNamingPolicy { get; set; }
 
-	/// <summary>
-	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
-	/// sentinels and <c>TypeMap</c> entries. 0 disables. Set via
-	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
-	/// </summary>
-	public int MaxArrayRank { get; set; }
-
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
 	public bool CleanJavaSourceOutputDirectory { get; set; }
+
+	/// <summary>
+	/// When true (the default, from <c>$(AndroidErrorOnCustomJavaObject)</c>), a managed class
+	/// that implements <c>Android.Runtime.IJavaObject</c> without deriving from a Java peer is
+	/// reported as the XA4212 error; otherwise it is reported as a warning.
+	/// </summary>
+	public bool ErrorOnCustomJavaObject { get; set; } = true;
 
 	[Output]
 	public ITaskItem [] GeneratedAssemblies { get; set; } = [];
@@ -214,8 +218,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
-				maxArrayRank: MaxArrayRank,
-				generateTypeMapAssemblies: GenerateTypeMapAssemblies);
+				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
+				errorOnCustomJavaObject: ErrorOnCustomJavaObject);
 
 			if (GenerateTypeMapAssemblies) {
 				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());

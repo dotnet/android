@@ -5,6 +5,8 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <vector>
 #include <unistd.h>
 
 #include <android/looper.h>
@@ -314,17 +316,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
 	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
+	jstring_wrapper &cache_dir = applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX];
 	HostEnvironment::setup_environment (
 		language,
 		files_dir,
-		applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]
+		cache_dir
 	);
+	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
+	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
@@ -345,12 +350,41 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
 	// of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+
+	const char **prop_names = init_runtime_property_names;
+	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
+	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+
+	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
+	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
+	// opens those files from disk so `Assembly.Location` is populated and
+	// `StackTraceSymbols` can find sibling `.pdb` files for runtime-rendered
+	// managed stack traces (file/line).
+	if constexpr (Constants::is_debug_build) {
+		// Storage must outlive `coreclr_initialize`; function-local statics
+		// give us process lifetime without polluting global namespace.
+		static std::string fastdev_tpa_list;
+		static std::vector<const char*> fastdev_prop_names;
+		static std::vector<const char*> fastdev_prop_values;
+
+		if (FastDevAssemblies::build_tpa_list (fastdev_tpa_list)) {
+			fastdev_prop_names.assign (prop_names, prop_names + prop_count);
+			fastdev_prop_values.assign (prop_values, prop_values + prop_count);
+			fastdev_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
+			fastdev_prop_values.push_back (fastdev_tpa_list.c_str ());
+
+			prop_names = fastdev_prop_names.data ();
+			prop_values = fastdev_prop_values.data ();
+			prop_count = static_cast<int>(fastdev_prop_names.size ());
+		}
+	}
+
 	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
-		(int)application_config.number_of_runtime_properties,
-		init_runtime_property_names,
-		const_cast<const char**>(init_runtime_property_values),
+		prop_count,
+		prop_names,
+		prop_values,
 		&clr_host,
 		&domain_id
 	);
@@ -397,9 +431,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
-	init.managedMarshalMethodsLookupEnabled             = application_config.managed_marshal_methods_lookup_enabled;
-	abort_unless (!init.marshalMethodsEnabled || init.managedMarshalMethodsLookupEnabled,
-		"Managed marshal methods lookup must be enabled if marshal methods are enabled");
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

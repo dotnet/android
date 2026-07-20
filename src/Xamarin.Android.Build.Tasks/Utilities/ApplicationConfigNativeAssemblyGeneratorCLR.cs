@@ -195,9 +195,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
 	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 	public bool MarshalMethodsEnabled { get; set; }
-	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
 	public bool HaveAssemblyStore { get; set; }
+	public bool AssemblyStoreDecompressionCacheEnabled { get; set; }
 
 	public ApplicationConfigNativeAssemblyGeneratorCLR (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties,
 		IDictionary<string, string>? runtimeProperties, TaskLoggingHelper log)
@@ -267,7 +267,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 			marshal_methods_enabled = MarshalMethodsEnabled,
-			managed_marshal_methods_lookup_enabled = ManagedMarshalMethodsLookupEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
@@ -284,6 +283,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
 			android_package_name = AndroidPackageName,
 			have_assembly_store = HaveAssemblyStore,
+			assembly_store_decompression_cache_enabled = AssemblyStoreDecompressionCacheEnabled,
 		};
 		application_config = new StructureInstance<ApplicationConfigCLR> (applicationConfigStructureInfo, app_cfg);
 		module.AddGlobalVariable ("application_config", application_config);

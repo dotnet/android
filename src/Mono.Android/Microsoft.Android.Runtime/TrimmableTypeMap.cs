@@ -14,14 +14,13 @@ namespace Microsoft.Android.Runtime;
 
 /// <summary>
 /// Central type map for the trimmable typemap path. Owns the ITypeMap
-/// and provides peer creation, invoker resolution, container factories, and native
+/// and provides peer creation, invoker resolution, and native
 /// method registration. All proxy attribute access is encapsulated here.
 /// </summary>
 public class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
-	static readonly JavaArrayProxy s_noArrayProxySentinel = new MissingJavaArrayProxy ();
 	static TrimmableTypeMap? s_instance;
 	static bool s_nativeMethodsRegistered;
 	static JniMethodInfo? s_classGetInterfacesMethod;
@@ -32,7 +31,6 @@ public class TrimmableTypeMap
 
 	readonly ITypeMap _typeMap;
 	readonly ConcurrentDictionary<Type, JavaPeerProxy> _proxyCache = new ();
-	readonly ConcurrentDictionary<Type, JavaArrayProxy> _arrayProxyCache = new ();
 	readonly ConcurrentDictionary<string, JavaPeerProxy[]> _jniProxyCache = new (StringComparer.Ordinal);
 	readonly ConcurrentDictionary<(string ClassName, Type TargetType), JavaPeerProxy> _interfaceProxyCache = new ();
 
@@ -42,64 +40,23 @@ public class TrimmableTypeMap
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe and optional
-	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
+	/// Initializes the singleton with a single merged typemap universe.
 	/// </summary>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type> typeMap,
 		IReadOnlyDictionary<Type, Type> proxyMap)
 	{
-		Initialize (typeMap, proxyMap, arrayMapsByRank: null);
-	}
-
-	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe and optional
-	/// per-rank array dictionaries (consulted by <c>JNIEnv.ArrayCreateInstance</c> under NativeAOT).
-	/// </summary>
-	/// <param name="arrayMapsByRank">0-indexed by (rank - 1); null when no array entries were emitted.</param>
-	public static void Initialize (
-		IReadOnlyDictionary<string, Type> typeMap,
-		IReadOnlyDictionary<Type, Type> proxyMap,
-		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
-	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByRank));
+		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap));
 	}
 
 	/// <summary>
-	/// Initializes the singleton with a single merged typemap universe and per-assembly array maps.
-	/// </summary>
-	public static void Initialize (
-		IReadOnlyDictionary<string, Type> typeMap,
-		IReadOnlyDictionary<Type, Type> proxyMap,
-		IReadOnlyDictionary<string, Type>?[][]? arrayMapsByUniverseAndRank)
-	{
-		ArgumentNullException.ThrowIfNull (typeMap);
-		ArgumentNullException.ThrowIfNull (proxyMap);
-		InitializeCore (new SingleUniverseTypeMap (typeMap, proxyMap, arrayMapsByUniverseAndRank));
-	}
-
-	/// <summary>
-	/// Initializes the singleton with multiple per-assembly typemap universes and optional
-	/// per-universe array dictionaries.
+	/// Initializes the singleton with multiple per-assembly typemap universes.
 	/// </summary>
 	public static void Initialize (
 		IReadOnlyDictionary<string, Type>[] typeMaps,
 		IReadOnlyDictionary<Type, Type>[] proxyMaps)
-	{
-		Initialize (typeMaps, proxyMaps, arrayMapsByUniverseAndRank: null);
-	}
-
-	/// <summary>
-	/// Initializes the singleton with multiple per-assembly typemap universes and optional
-	/// per-universe array dictionaries.
-	/// </summary>
-	/// <param name="arrayMapsByUniverseAndRank">Array maps indexed by universe, then by 0-based rank.</param>
-	public static void Initialize (
-		IReadOnlyDictionary<string, Type>[] typeMaps,
-		IReadOnlyDictionary<Type, Type>[] proxyMaps,
-		IReadOnlyDictionary<string, Type>?[][]? arrayMapsByUniverseAndRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMaps);
 		ArgumentNullException.ThrowIfNull (proxyMaps);
@@ -109,13 +66,10 @@ public class TrimmableTypeMap
 		if (typeMaps.Length != proxyMaps.Length) {
 			throw new ArgumentException ($"typeMaps.Length ({typeMaps.Length}) must equal proxyMaps.Length ({proxyMaps.Length}).", nameof (proxyMaps));
 		}
-		if (arrayMapsByUniverseAndRank is not null && arrayMapsByUniverseAndRank.Length != typeMaps.Length) {
-			throw new ArgumentException ($"arrayMapsByUniverseAndRank.Length ({arrayMapsByUniverseAndRank.Length}) must equal typeMaps.Length ({typeMaps.Length}).", nameof (arrayMapsByUniverseAndRank));
-		}
 
 		var universes = new SingleUniverseTypeMap [typeMaps.Length];
 		for (int i = 0; i < typeMaps.Length; i++) {
-			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i], arrayMapsByUniverseAndRank? [i]);
+			universes [i] = new SingleUniverseTypeMap (typeMaps [i], proxyMaps [i]);
 		}
 		InitializeCore (new AggregateTypeMap (universes));
 	}
@@ -493,81 +447,6 @@ public class TrimmableTypeMap
 		return targetType.IsAssignableFrom (proxyTargetType);
 	}
 
-	/// <summary>
-	/// Gets the container factory for a type from its proxy attribute.
-	/// Used for AOT-safe array/collection/dictionary creation.
-	/// </summary>
-	internal JavaPeerContainerFactory? GetContainerFactory (Type type)
-	{
-		return GetProxyForManagedType (type)?.GetContainerFactory ();
-	}
-
-	/// <summary>Lookup of the generated array proxy after adding array rank to the given element type.</summary>
-	internal bool TryGetArrayProxy (Type elementType, int additionalRank, [NotNullWhen (true)] out JavaArrayProxy? arrayProxy)
-	{
-		ArgumentOutOfRangeException.ThrowIfNegativeOrZero (additionalRank);
-
-		var leafType = elementType;
-		int rankIndex = additionalRank - 1;
-		while (leafType.IsArray) {
-			if (!leafType.IsSZArray) {
-				arrayProxy = null;
-				return false;
-			}
-			var next = leafType.GetElementType ();
-			if (next is null) {
-				arrayProxy = null;
-				return false;
-			}
-			leafType = next;
-			rankIndex++;
-		}
-
-		if (!TryGetManagedTypeKey (leafType, out var managedTypeKey)) {
-			arrayProxy = null;
-			return false;
-		}
-
-		if (_typeMap.TryGetArrayProxyType (managedTypeKey, rankIndex, out var proxyType)) {
-			var proxy = _arrayProxyCache.GetOrAdd (proxyType, static type =>
-				type.GetCustomAttribute<JavaArrayProxy> (inherit: false) ?? s_noArrayProxySentinel);
-			if (!ReferenceEquals (proxy, s_noArrayProxySentinel)) {
-				arrayProxy = proxy;
-				return true;
-			}
-		}
-
-		arrayProxy = null;
-		return false;
-	}
-
-	static bool TryGetManagedTypeKey (Type type, [NotNullWhen (true)] out string? key)
-	{
-		var fullName = type.FullName;
-		if (fullName is null) {
-			key = null;
-			return false;
-		}
-
-		var assemblyName = GetAssemblyNameForManagedTypeKey (type);
-		if (assemblyName is null) {
-			key = null;
-			return false;
-		}
-
-		key = $"{fullName}, {assemblyName}";
-		return true;
-	}
-
-	static string? GetAssemblyNameForManagedTypeKey (Type type)
-	{
-		if (type.IsPrimitive || type == typeof (string)) {
-			return "System.Runtime";
-		}
-
-		return type.Assembly.GetName ().Name;
-	}
-
 	[UnmanagedCallersOnly]
 	static void OnRegisterNatives (IntPtr jnienv, IntPtr klass, IntPtr nativeClassHandle)
 	{
@@ -609,13 +488,6 @@ public class TrimmableTypeMap
 		}
 
 		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
-	}
-
-	sealed class MissingJavaArrayProxy : JavaArrayProxy
-	{
-		public override Type[] GetArrayTypes () => [];
-
-		public override Array CreateManagedArray (int length) => throw new NotSupportedException ();
 	}
 
 }

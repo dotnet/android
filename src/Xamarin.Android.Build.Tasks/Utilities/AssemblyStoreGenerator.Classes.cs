@@ -5,7 +5,7 @@ partial class AssemblyStoreGenerator
 {
 	sealed class AssemblyStoreHeader
 	{
-		public const uint NativeSize = 5 * sizeof (uint);
+		public const uint NativeSize = 5 * sizeof (uint) + sizeof (ulong);
 
 		public readonly uint magic = ASSEMBLY_STORE_MAGIC;
 		public readonly uint version;
@@ -14,17 +14,19 @@ partial class AssemblyStoreGenerator
 
 		// Index size in bytes
 		public readonly uint index_size;
+		public readonly ulong content_id;
 
-		public AssemblyStoreHeader (uint version, uint entry_count, uint index_entry_count, uint index_size)
+		public AssemblyStoreHeader (uint version, uint entry_count, uint index_entry_count, uint index_size, ulong content_id)
 		{
 			this.version = version;
 			this.entry_count = entry_count;
 			this.index_entry_count = index_entry_count;
 			this.index_size = index_size;
+			this.content_id = content_id;
 		}
 #if XABT_TESTS
-		public AssemblyStoreHeader (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size)
-			: this (version, entry_count, index_entry_count, index_size)
+		public AssemblyStoreHeader (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size, ulong content_id)
+			: this (version, entry_count, index_entry_count, index_size, content_id)
 		{
 			this.magic = magic;
 		}

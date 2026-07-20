@@ -18,7 +18,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT_V4 = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT_V4 = 0x00000004;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_MASK  = 0xF0000000;
-	const uint ASSEMBLY_STORE_FORMAT_REVISION_MASK = 0x0000FFFF;
+	const uint ASSEMBLY_STORE_FORMAT_NUMBER_MASK   = 0x0000FFFF;
 
 	const uint ASSEMBLY_STORE_ABI_AARCH64          = 0x00010000;
 	const uint ASSEMBLY_STORE_ABI_ARM              = 0x00020000;
@@ -140,8 +140,9 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		uint entry_count       = reader.ReadUInt32 ();
 		uint index_entry_count = reader.ReadUInt32 ();
 		uint index_size        = reader.ReadUInt32 ();
+		ulong content_id        = (version & ASSEMBLY_STORE_FORMAT_NUMBER_MASK) >= 4 ? reader.ReadUInt64 () : 0;
 
-		header = new Header (magic, version, entry_count, index_entry_count, index_size);
+		header = new Header (magic, version, entry_count, index_entry_count, index_size, content_id);
 		return true;
 	}
 
@@ -163,7 +164,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		AssemblyCount = header.entry_count;
 		IndexEntryCount = header.index_entry_count;
 
-		StoreStream.Seek ((long)elfOffset + Header.NativeSize, SeekOrigin.Begin);
+		StoreStream.Seek ((long)elfOffset + header.NativeSize, SeekOrigin.Begin);
 		using var reader = CreateReader ();
 
 		uint indexEntrySize = GetIndexEntrySize ();
