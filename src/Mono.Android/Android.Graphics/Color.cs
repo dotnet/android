@@ -275,9 +275,9 @@ namespace Android.Graphics
 			ColorObject.RGBToHSV (red, green, blue, hsv);
 		}
 
-		/// <summary>Gets a fully transparent <see cref="Color" /> (ARGB #00000000).</summary>
-		public static Color Transparent { get { return new Color (0x000000); } }
-		/// <summary>Gets a <see cref="Color" /> with the ARGB value #FFF0F8FF (Alice blue).</summary>
+		/// <summary>Gets a fully transparent <see cref="Color"/> (ARGB #00000000).</summary>
+		public static Color Transparent { get { return new Color (0x00000000); } }
+		/// <summary>Gets a <see cref="Color"/> with the ARGB value #FFF0F8FF (alice blue).</summary>
 		public static Color AliceBlue { get { return new Color (0xFFF0F8FF); } }
 		/// <summary>Gets a <see cref="Color" /> with the ARGB value #FFFAEBD7 (antique white).</summary>
 		public static Color AntiqueWhite { get { return new Color (0xFFFAEBD7); } }
