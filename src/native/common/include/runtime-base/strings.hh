@@ -11,9 +11,7 @@
 #include <unistd.h>
 
 #include <shared/helpers.hh>
-namespace xamarin::android {
-	void log_errorf (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
-}
+#include <shared/log_functions.hh>
 
 #if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
