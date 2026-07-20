@@ -145,12 +145,14 @@ namespace Xamarin.Android.Net
 		///     <c>Dispose()</c> has been requested (<c>disposeRequested</c>).
 		///   </description></item>
 		///   <item><description>
-		///     <c>Dispose()</c> never closes the underlying stream while an operation is in flight. It records
+		///     The stream's <c>Dispose()</c> never closes the underlying stream while an operation is in flight. It records
 		///     the request, cancels <c>abortCts</c> for exception mapping, and requests a background disconnect
 		///     to abort the parked operation. That operation then unwinds on its own thread and, as the last
 		///     one out, performs the close there
 		///     (<c>EndUse</c> -> <c>DisposeCore</c>). <c>Dispose()</c> closes directly only when nothing is in
-		///     flight. <c>Dispose()</c> therefore never blocks.
+		///     flight. The stream's <c>Dispose()</c> therefore never waits for an in-flight operation to unwind.
+		///     <see cref="AndroidHttpResponseMessage.Dispose()"/> synchronously calls <c>Disconnect()</c> as an
+		///     idempotent backstop, but likewise does not wait for the operation to finish.
 		///   </description></item>
 		///   <item><description>
 		///     Cancellation (from <c>Dispose()</c> or the caller's own token) is turned into a background
@@ -355,19 +357,8 @@ namespace Xamarin.Android.Net
 			/// <summary>
 			/// Synchronous, void counterpart of <see cref="RunOperation{T}(Func{T},string)"/>.
 			/// </summary>
-			void RunOperation (Action operation, string canceledMessage)
-			{
-				BeginUse ();
-				try {
-					try {
-						operation ();
-					} catch (Exception ex) when (ShouldMapToCancellation (ex, abortCts.Token)) {
-						throw new System.OperationCanceledException (canceledMessage, ex, abortCts.Token);
-					}
-				} finally {
-					EndUse ();
-				}
-			}
+			void RunOperation (Action operation, string canceledMessage) =>
+				RunOperation<bool> (() => { operation (); return true; }, canceledMessage);
 
 			/// <summary>
 			/// Returns the token that caused an operation to be aborted. The caller's token wins when caller
@@ -420,10 +411,11 @@ namespace Xamarin.Android.Net
 			}
 
 			/// <summary>
-			/// Aborts a parked read by disconnecting the socket. Dispatched to a background thread because
+			/// Aborts a parked read by disconnecting the socket. Dispatched to a background thread so
 			/// <see cref="CancellationTokenSource.Cancel()"/> runs registered callbacks synchronously on the
-			/// caller -- which in the motivating gRPC scenario is the UI thread -- and
-			/// <c>HttpURLConnection.Disconnect()</c> performs socket I/O that must not run there.
+			/// caller -- which in the motivating gRPC scenario may be the UI thread -- without making that
+			/// cancellation callback perform the disconnect itself. <c>Disconnect()</c> is allowed on the UI
+			/// thread, but queueing it keeps cancellation responsive.
 			/// </summary>
 			void RequestDisconnect ()
 			{

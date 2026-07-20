@@ -42,8 +42,9 @@ namespace Xamarin.Android.Net
 		protected override void Dispose (bool disposing)
 		{
 			// Dispose the content first (base.Dispose). For a streaming response the content is a
-			// CancellationAwareResponseStream, which safely aborts any in-flight read and closes the
-			// underlying stream + connection itself (see AndroidMessageHandler.CancellationAwareResponseStream).
+			// CancellationAwareResponseStream, which safely requests that any in-flight read be aborted and
+			// defers closing the underlying stream until that read unwinds (see
+			// AndroidMessageHandler.CancellationAwareResponseStream).
 			base.Dispose (disposing);
 
 			if (javaUrl != null) {
@@ -54,13 +55,14 @@ namespace Xamarin.Android.Net
 				// Release the connection with Disconnect(), never Dispose(), on the Java peer:
 				//  * Disconnect() closes the socket and aborts any in-flight read. It is the backstop for
 				//    non-streaming responses (e.g. the buffered StringContent error paths) whose content does
-				//    not own the connection; for a streaming response the content already disconnected via
-				//    base.Dispose above, and Disconnect() is idempotent.
+				//    not own the connection. For a streaming response, base.Dispose() either disconnected
+				//    directly or queued a disconnect; this idempotent call ensures a parked read is aborted
+				//    before Dispose() returns.
 				//  * Disposing the peer (deleting its JNI global reference) could race a body read still
 				//    unwinding on another thread and crash; the peer is reclaimed on finalization.
-				// This runs synchronously on the disposing thread (which may be the UI thread, e.g. gRPC
-				// cancelling from a UI callback): closing a socket is fast and, unlike connect/read/write,
-				// does not trigger NetworkOnMainThreadException.
+				// This backstop runs synchronously on the disposing thread, which may be the UI thread.
+				// Disconnect() closes the socket without waiting for the body operation to unwind and, unlike
+				// connect/read/write, does not trigger NetworkOnMainThreadException.
 				try {
 					httpConnection.Disconnect ();
 				} catch (Exception ex) {
