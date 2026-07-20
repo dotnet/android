@@ -1,10 +1,11 @@
-#if NET11_0_OR_GREATER
 using System;
-using System.Buffers;
 using System.IO;
 
+#if NET11_0_OR_GREATER
+using System.Buffers;
 using K4os.Compression.LZ4;
 using ZstandardDecoder = System.IO.Compression.ZstandardDecoder;
+#endif // NET11_0_OR_GREATER
 
 namespace Xamarin.Android.AssemblyStore;
 
@@ -18,7 +19,10 @@ public static class AssemblyCompression
 {
 	const uint Lz4Magic = 0x5A4C4158; // 'XALZ', little-endian
 	const uint ZstandardMagic = 0x535A4158; // 'XAZS', little-endian
+
+#if NET11_0_OR_GREATER
 	const int HeaderSize = 3 * sizeof (uint);
+	const uint MaximumUncompressedAssemblySize = 512 * 1024 * 1024;
 
 	static readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 
@@ -35,34 +39,19 @@ public static class AssemblyCompression
 		}
 
 		long start = input.Position;
-		if (input.Length - start < sizeof (uint)) {
-			format = default;
+		if (!TryReadFormat (input, out format)) {
 			return false;
-		}
-
-		using var reader = new BinaryReader (input, System.Text.Encoding.UTF8, leaveOpen: true);
-		uint magic = reader.ReadUInt32 ();
-		switch (magic) {
-			case Lz4Magic:
-				format = AssemblyCompressionFormat.Lz4;
-				break;
-			case ZstandardMagic:
-				format = AssemblyCompressionFormat.Zstandard;
-				break;
-			default:
-				input.Seek (start, SeekOrigin.Begin);
-				format = default;
-				return false;
 		}
 
 		if (input.Length - start < HeaderSize) {
 			throw new InvalidDataException ($"Truncated {format} assembly header");
 		}
 
+		using var reader = new BinaryReader (input, System.Text.Encoding.UTF8, leaveOpen: true);
 		reader.ReadUInt32 (); // descriptor index
 		uint uncompressedLength = reader.ReadUInt32 ();
-		if (uncompressedLength > Int32.MaxValue) {
-			throw new InvalidDataException ($"{format} assembly expands to an unsupported size of {uncompressedLength} bytes");
+		if (uncompressedLength > MaximumUncompressedAssemblySize) {
+			throw new InvalidDataException ($"{format} assembly expands to an unsupported size of {uncompressedLength} bytes (maximum {MaximumUncompressedAssemblySize} bytes)");
 		}
 
 		long compressedLength = input.Length - input.Position;
@@ -122,5 +111,43 @@ public static class AssemblyCompression
 			totalRead += read;
 		}
 	}
+#endif // NET11_0_OR_GREATER
+
+	internal static bool IsCompressed (Stream input)
+	{
+		ArgumentNullException.ThrowIfNull (input);
+
+		if (!input.CanRead || !input.CanSeek) {
+			throw new ArgumentException ("Input stream must be readable and seekable", nameof (input));
+		}
+
+		long start = input.Position;
+		bool compressed = TryReadFormat (input, out _);
+		input.Seek (start, SeekOrigin.Begin);
+		return compressed;
+	}
+
+	static bool TryReadFormat (Stream input, out AssemblyCompressionFormat format)
+	{
+		long start = input.Position;
+		if (input.Length - start < sizeof (uint)) {
+			format = default;
+			return false;
+		}
+
+		using var reader = new BinaryReader (input, System.Text.Encoding.UTF8, leaveOpen: true);
+		uint magic = reader.ReadUInt32 ();
+		switch (magic) {
+			case Lz4Magic:
+				format = AssemblyCompressionFormat.Lz4;
+				return true;
+			case ZstandardMagic:
+				format = AssemblyCompressionFormat.Zstandard;
+				return true;
+			default:
+				input.Seek (start, SeekOrigin.Begin);
+				format = default;
+				return false;
+		}
+	}
 }
-#endif

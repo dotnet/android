@@ -126,10 +126,13 @@ public class AssemblyStoreExplorer
 
 	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenArchive (FileInfo fi, IList<string> paths)
 	{
-		using var zip = ZipArchive.Open (fi.FullName, FileMode.Open);
-		(IList<AssemblyStoreExplorer>? explorers, string? errorMessage, bool pathsFound) = TryLoad (fi, zip, paths);
-		if (pathsFound) {
-			return (explorers, errorMessage);
+		string? errorMessage;
+		using (var zip = ZipArchive.Open (fi.FullName, FileMode.Open)) {
+			(IList<AssemblyStoreExplorer>? explorers, string? loadError, bool pathsFound) = TryLoad (fi, zip, paths);
+			if (pathsFound) {
+				return (explorers, loadError);
+			}
+			errorMessage = loadError;
 		}
 
 		(IList<AssemblyStoreExplorer>? legacyExplorers, string? legacyError) = OpenV1 (fi.FullName);

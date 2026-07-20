@@ -4,10 +4,14 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
+#if NET11_0_OR_GREATER
 using K4os.Compression.LZ4;
+#endif // NET11_0_OR_GREATER
 using NUnit.Framework;
 using Xamarin.Android.Tools;
+#if NET11_0_OR_GREATER
 using ZstandardEncoder = System.IO.Compression.ZstandardEncoder;
+#endif // NET11_0_OR_GREATER
 
 namespace Xamarin.Android.AssemblyStore.Tests;
 
@@ -16,6 +20,7 @@ public class AssemblyStoreTests
 {
 	static readonly byte[] assemblyData = "Synthetic managed assembly"u8.ToArray ();
 
+#if NET11_0_OR_GREATER
 	[TestCase (AssemblyCompressionFormat.Lz4)]
 	[TestCase (AssemblyCompressionFormat.Zstandard)]
 	public void DecompressesBothCompressionFormats (AssemblyCompressionFormat format)
@@ -37,6 +42,25 @@ public class AssemblyStoreTests
 		Assert.IsFalse (AssemblyCompression.TryDecompress (input, output, out _));
 		Assert.AreEqual (0, input.Position);
 		Assert.AreEqual (0, output.Length);
+	}
+
+	[Test]
+	public void RejectsUnreasonableUncompressedLength ()
+	{
+		using var input = new MemoryStream ();
+		using (var writer = new BinaryWriter (input, System.Text.Encoding.UTF8, leaveOpen: true)) {
+			writer.Write (0x5A4C4158u);
+			writer.Write (0u);
+			writer.Write (1024u * 1024 * 1024);
+			writer.Write ((byte)0);
+		}
+		input.Seek (0, SeekOrigin.Begin);
+		using var output = new MemoryStream ();
+
+		InvalidDataException? exception = Assert.Throws<InvalidDataException> (
+			() => AssemblyCompression.TryDecompress (input, output, out _)
+		);
+		Assert.That (exception?.Message, Does.Contain ("unsupported size"));
 	}
 
 	[TestCase (AssemblyCompressionFormat.Lz4, "base_assemblies.blob")]
@@ -103,6 +127,7 @@ public class AssemblyStoreTests
 			Directory.Delete (directory, recursive: true);
 		}
 	}
+#endif // NET11_0_OR_GREATER
 
 	[TestCase (2u, "lib/arm64-v8a/libassemblies.arm64-v8a.blob.so")]
 	[TestCase (3u, "lib/arm64-v8a/libassembly-store.so")]
@@ -129,7 +154,7 @@ public class AssemblyStoreTests
 			IList<AssemblyStoreItem>? items = explorer.Find ("Test.dll", AndroidTargetArch.Arm64);
 			Assert.IsNotNull (items);
 			AssemblyStoreItem item = RequireSingle (items, "v2 store item");
-			using Stream image = explorer.ReadImageData (item) ??
+			using Stream image = explorer.ReadImageData (item, uncompressIfNeeded: true) ??
 				throw new InvalidOperationException ("V2 store image was not returned");
 			using var output = new MemoryStream ();
 			image.CopyTo (output);
@@ -162,6 +187,7 @@ public class AssemblyStoreTests
 		}
 	}
 
+#if NET11_0_OR_GREATER
 	static MemoryStream CreateCompressedAssembly (AssemblyCompressionFormat format, byte[] data)
 	{
 		byte[] compressed;
@@ -193,6 +219,7 @@ public class AssemblyStoreTests
 		output.Seek (0, SeekOrigin.Begin);
 		return output;
 	}
+#endif // NET11_0_OR_GREATER
 
 	static void CreateV1StoreSet (string indexStorePath, byte[] image, byte[]? commonImage = null)
 	{

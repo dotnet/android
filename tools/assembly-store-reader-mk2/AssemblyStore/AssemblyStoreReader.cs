@@ -100,9 +100,13 @@ abstract class AssemblyStoreReader
 		output.Dispose ();
 		stream.Seek (0, SeekOrigin.Begin);
 		return stream;
-#else
+#else // !NET11_0_OR_GREATER
+		if (!AssemblyCompression.IsCompressed (stream)) {
+			return stream;
+		}
+
 		stream.Dispose ();
 		throw new NotSupportedException ("Assembly decompression requires .NET 11 or later");
-#endif
+#endif // !NET11_0_OR_GREATER
 	}
 }
