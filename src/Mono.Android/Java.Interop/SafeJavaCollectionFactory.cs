@@ -120,7 +120,7 @@ static class SafeJavaCollectionFactory
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The dynamically constructed JavaList<elementType> rides the JavaList<IJavaPeerable> canonical template whose activation constructor is rooted by the " +
 			"concrete-literal branch. Only the known JavaList<T> activation constructor is invoked here.")]
-	static bool TryCreateListFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
+	static bool TryCreateListFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out object? result)
 	{
 		if (genericDefinition != typeof (IList<>) && genericDefinition != typeof (JavaList<>)) {
 			result = null;
@@ -144,6 +144,9 @@ static class SafeJavaCollectionFactory
 			var listType = typeof (JavaList<>).MakeGenericType (elementType);
 			result = Activator.CreateInstance (listType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
 		}
+		if (result == null) {
+			throw new InvalidOperationException ($"Unable to create a JavaList instance for element type '{elementType}'.");
+		}
 		return true;
 	}
 
@@ -159,7 +162,7 @@ static class SafeJavaCollectionFactory
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The dynamically constructed JavaCollection<elementType> rides the JavaCollection<IJavaPeerable> canonical template whose activation constructor is rooted " +
 			"by the concrete-literal branch. Only the known JavaCollection<T> activation constructor is invoked here.")]
-	static bool TryCreateCollectionFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
+	static bool TryCreateCollectionFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out object? result)
 	{
 		if (genericDefinition != typeof (ICollection<>) && genericDefinition != typeof (JavaCollection<>)) {
 			result = null;
@@ -183,6 +186,9 @@ static class SafeJavaCollectionFactory
 			var collectionType = typeof (JavaCollection<>).MakeGenericType (elementType);
 			result = Activator.CreateInstance (collectionType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
 		}
+		if (result == null) {
+			throw new InvalidOperationException ($"Unable to create a JavaCollection instance for element type '{elementType}'.");
+		}
 		return true;
 	}
 
@@ -198,7 +204,7 @@ static class SafeJavaCollectionFactory
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The dynamically constructed JavaDictionary<keyType,valueType> rides the JavaDictionary<IJavaPeerable,IJavaPeerable> canonical template whose activation " +
 			"constructor is rooted by the concrete-literal branch. Only the known JavaDictionary<TKey,TValue> activation constructor is invoked here.")]
-	static bool TryCreateDictionaryFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, out object? result)
+	static bool TryCreateDictionaryFromJniHandle (Type genericDefinition, Type[] arguments, IntPtr handle, JniHandleOwnership transfer, [NotNullWhen (true)] out object? result)
 	{
 		if (genericDefinition != typeof (IDictionary<,>) && genericDefinition != typeof (JavaDictionary<,>)) {
 			result = null;
@@ -234,6 +240,9 @@ static class SafeJavaCollectionFactory
 		} else {
 			var dictionaryType = typeof (JavaDictionary<,>).MakeGenericType (keyType, valueType);
 			result = Activator.CreateInstance (dictionaryType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
+		}
+		if (result == null) {
+			throw new InvalidOperationException ($"Unable to create a JavaDictionary instance for key type '{keyType}' and value type '{valueType}'.");
 		}
 		return true;
 	}
