@@ -259,6 +259,17 @@ static class JniSignatureHelper
 	}
 
 	/// <summary>
+	/// Converts a JNI type name to a Java binary type name.
+	/// JNI and Java binary names use '$' for nested classes, but JNI uses '/' for packages.
+	/// e.g., "android/app/Activity" → "android.app.Activity"
+	/// e.g., "android/view/View$OnClickListener" → "android.view.View$OnClickListener"
+	/// </summary>
+	internal static string JniNameToJavaBinaryName (string jniName)
+	{
+		return jniName.Replace ('/', '.');
+	}
+
+	/// <summary>
 	/// Extracts the Java package name from a JNI type name.
 	/// e.g., "com/example/MainActivity" \u2192 "com.example"
 	/// Returns null for types without a package.

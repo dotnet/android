@@ -208,7 +208,7 @@ static class AssemblyLevelElementBuilder
 
 		foreach (var peer in allPeers) {
 			if (peer.ManagedTypeName == managedName) {
-				app.SetAttributeValue (AndroidNs + xmlAttrName, peer.JavaName.Replace ('/', '.'));
+				app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
 				return;
 			}
 		}
