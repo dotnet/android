@@ -17,5 +17,9 @@ public enum SdkBootstrapPhase
 	/// <summary>Extracting the archive.</summary>
 	Extracting,
 	/// <summary>Bootstrap completed successfully.</summary>
-	Complete
+	Complete,
+	/// <summary>Checking Google's package catalog for a newer command-line tools revision.</summary>
+	CheckingForUpdates,
+	/// <summary>Installing the current command-line tools package.</summary>
+	Installing
 }
