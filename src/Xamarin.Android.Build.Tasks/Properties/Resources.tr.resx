@@ -603,6 +603,11 @@ AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriy
   <data name="XA4213" xml:space="preserve">
     <value>'{0}' türü, genel bir varsayılan oluşturucu sağlamalıdır</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>`{0}` yönetilen türü birden çok derlemede var: {1}. Lütfen bu derlemelerde yönetilen tür adlarını aynı olmayacak şekilde yeniden düzenleyin.</value>
     <comment>{0} - The managed type name

@@ -603,6 +603,11 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
   <data name="XA4213" xml:space="preserve">
     <value>El tipo "{0}" debe proporcionar un constructor predeterminado público.</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>El tipo "{0}" administrado existe en varios ensamblados: {1}. Refactorice los nombres de los tipos administrados en estos ensamblados para que no sean idénticos.</value>
     <comment>{0} - The managed type name

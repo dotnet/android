@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdarg>
 #include <cstdio>
+#include <string_view>
 
 #include <jni.h>
 
@@ -57,7 +59,8 @@ namespace xamarin::android {
 
 	private:
 		static void _write_stack_trace (FILE *to, const char *const from, LogCategories = LOG_NONE) noexcept;
-		static void log_it (LogCategories category, std::string const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept;
+		static void log_it (LogCategories category, std::string_view const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept;
+		static void log_itf (LogCategories category, FILE *to, const char *const from, bool logcat_enabled, const char *format, ...) noexcept __attribute__ ((format (printf, 5, 6)));
 
 	private:
 		static inline JavaVM *jvm = nullptr;

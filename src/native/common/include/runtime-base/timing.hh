@@ -85,15 +85,15 @@ namespace xamarin::android
 
 			using namespace std::literals;
 			auto interval = seq->end - seq->start; // nanoseconds
-			auto text = std::format (
-				"{}; elapsed: {}:{}::{}"sv,
-				message == nullptr ? ""sv : message,
-				static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::seconds>(interval).count ())),
-				static_cast<uint64_t>((std::chrono::duration_cast<std::chrono::milliseconds>(interval)).count ()),
-				static_cast<uint64_t>((interval % 1ms).count ())
+			log_writef (
+				LOG_TIMING,
+				level,
+				"%s; elapsed: %llu:%llu::%llu",
+				optional_string (message, ""),
+				static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::seconds>(interval).count ()),
+				static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::milliseconds>(interval).count ()),
+				static_cast<unsigned long long>((interval % 1ms).count ())
 			);
-
-			log_write (LOG_TIMING, level, text.c_str ());
 		}
 
 	private:

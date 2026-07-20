@@ -1,11 +1,8 @@
 #pragma once
 
-#include <atomic>
+#include <semaphore.h>
+
 #include <jni.h>
-#include <thread>
-#include <semaphore>
-#include <shared_mutex>
-#include <unordered_map>
 
 #include <shared/cpp-util.hh>
 
@@ -72,8 +69,8 @@ namespace xamarin::android {
 			GCBridge::bridge_processing_started_callback = bridge_processing_started;
 			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
 
-			bridge_processing_thread = std::thread { GCBridge::bridge_processing };
-			bridge_processing_thread.detach ();
+			initialize_shared_args_semaphore ();
+			start_bridge_processing_thread ();
 
 			return mark_cross_references;
 		}
@@ -81,10 +78,11 @@ namespace xamarin::android {
 		static void trigger_java_gc (JNIEnv *env) noexcept;
 
 	private:
-		static inline std::thread bridge_processing_thread {};
-
-		static inline std::binary_semaphore shared_args_semaphore{0};
-		static inline std::atomic<MarkCrossReferencesArgs*> shared_args;
+		static inline sem_t shared_args_semaphore {};
+		// JavaMarshal serializes bridge rounds: it does not publish another argument block until
+		// bridge_processing_finished_callback has completed. This is therefore a single-slot
+		// handoff; the semaphore signals availability but does not queue distinct argument blocks.
+		static inline MarkCrossReferencesArgs *shared_args = nullptr;
 
 		static inline jobject Runtime_instance = nullptr;
 		static inline jmethodID Runtime_gc = nullptr;
@@ -92,7 +90,13 @@ namespace xamarin::android {
 		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
 		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
 
+		static void initialize_shared_args_semaphore () noexcept;
+		static void start_bridge_processing_thread () noexcept;
+		static void publish_shared_args (MarkCrossReferencesArgs *args) noexcept;
+		static auto wait_for_shared_args () noexcept -> MarkCrossReferencesArgs*;
+
 		static void bridge_processing () noexcept;
+		static auto bridge_processing_thread_entry (void *arg) noexcept -> void*;
 		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
 		
 		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;

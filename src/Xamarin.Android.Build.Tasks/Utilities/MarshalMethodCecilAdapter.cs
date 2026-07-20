@@ -61,17 +61,16 @@ class MarshalMethodCecilAdapter
 			var methods = new List<MarshalMethodEntryObject> (group.Value.Count);
 
 			foreach (var method in group.Value) {
-				var entry = CreateEntry (method, state.ManagedMarshalMethodsLookupInfo);
+				var entry = CreateEntry (method);
 				methods.Add (entry);
 			}
 
 			obj.MarshalMethods.Add (group.Key, methods);
 		}
-
 		return obj;
 	}
 
-	static MarshalMethodEntryObject CreateEntry (MarshalMethodEntry entry, ManagedMarshalMethodsLookupInfo? info)
+	static MarshalMethodEntryObject CreateEntry (MarshalMethodEntry entry)
 	{
 		var obj = new MarshalMethodEntryObject (
 			declaringType: CreateDeclaringType (entry.DeclaringType),
@@ -83,14 +82,6 @@ class MarshalMethodCecilAdapter
 			nativeCallback: CreateMethod (entry.NativeCallback),
 			registeredMethod: CreateMethodBase (entry.RegisteredMethod)
 		);
-
-		if (info is not null) {
-			(uint assemblyIndex, uint classIndex, uint methodIndex) = info.GetIndex (entry.NativeCallback);
-
-			obj.NativeCallback.AssemblyIndex = assemblyIndex;
-			obj.NativeCallback.ClassIndex = classIndex;
-			obj.NativeCallback.MethodIndex = methodIndex;
-		}
 
 		return obj;
 	}
@@ -244,10 +235,6 @@ class MarshalMethodEntryMethodObject : MarshalMethodEntryMethodBaseObject
 	public MarshalMethodEntryTypeObject DeclaringType { get; }
 	public uint MetadataToken { get; }
 	public List<MarshalMethodEntryMethodParameterObject> Parameters { get; }
-
-	public uint? AssemblyIndex { get; set; }
-	public uint? ClassIndex { get; set; }
-	public uint? MethodIndex { get; set; }
 
 	public bool HasParameters => Parameters.Count > 0;
 

@@ -603,6 +603,11 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
   <data name="XA4213" xml:space="preserve">
     <value>Typ „{0}” musi dostarczać publiczny konstruktor domyślny</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>Typ zarządzany „{0}” istnieje w wielu zestawach: {1}. Wykonaj refaktoryzację nazw typów zarządzanych w tych zestawach, aby nie były identyczne.</value>
     <comment>{0} - The managed type name

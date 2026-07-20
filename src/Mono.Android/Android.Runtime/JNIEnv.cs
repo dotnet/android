@@ -35,17 +35,6 @@ namespace Android.Runtime {
 				return SafeArrayFactory.CreateInstance (elementType, rank: 1, length);
 			}
 
-			if (RuntimeFeature.ManagedTypeMap) {
-				return ArrayCreateInstanceWithSuppression (elementType, length);
-
-				[UnconditionalSuppressMessage ("Trimming", "IL3050:RequiresDynamicCode",
-					Justification = "Temporarily suppressed for the \"ManagedTypeMap\".")]
-				Array ArrayCreateInstanceWithSuppression (Type elementType, int length)
-				{
-					return Array.CreateInstance (elementType, length);
-				}
-			}
-
 			throw new NotSupportedException ($"It is not possible to create an array with element type '{elementType}'.");
 		}
 
