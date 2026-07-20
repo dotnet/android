@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Xamarin.Android.AssemblyStore
+namespace Xamarin.Android.AssemblyStore.V1
 {
 	class AssemblyStoreHashEntry
 	{

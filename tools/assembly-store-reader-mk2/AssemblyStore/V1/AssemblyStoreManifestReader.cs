@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Xamarin.Android.AssemblyStore
+namespace Xamarin.Android.AssemblyStore.V1
 {
 	class AssemblyStoreManifestReader
 	{

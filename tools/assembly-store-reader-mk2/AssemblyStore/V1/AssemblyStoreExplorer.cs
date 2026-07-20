@@ -4,7 +4,7 @@ using System.IO;
 
 using Xamarin.Tools.Zip;
 
-namespace Xamarin.Android.AssemblyStore
+namespace Xamarin.Android.AssemblyStore.V1
 {
 	class AssemblyStoreExplorer
 	{

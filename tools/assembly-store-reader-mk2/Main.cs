@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 using Mono.Options;
@@ -92,11 +91,6 @@ class App
 		}
 
 		string inputFile = theRest[0];
-		(FileFormat format, FileInfo? info) = Utils.DetectFileFormat (inputFile);
-		if (info == null) {
-			return WriteErrorAndReturn ($"File '{inputFile}' does not exist.");
-		}
-
 		(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (inputFile);
 		if (explorers == null) {
 			return WriteErrorAndReturn (errorMessage ?? "Unknown error");

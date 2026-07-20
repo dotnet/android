@@ -11,10 +11,12 @@ namespace Xamarin.Android.AssemblyStore;
 partial class StoreReader_V2 : AssemblyStoreReader
 {
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000003;
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT = 0x00000004;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V2 = 0x80000002;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V2 = 0x00000002;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V3 = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V3 = 0x00000003;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT_V4 = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT_V4 = 0x00000004;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_MASK  = 0xF0000000;
 	const uint ASSEMBLY_STORE_FORMAT_NUMBER_MASK   = 0x0000FFFF;
 
@@ -38,38 +40,40 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 	static StoreReader_V2 ()
 	{
-		var paths = new List<string> {
-			GetArchPath (AndroidTargetArch.Arm64),
-			GetArchPath (AndroidTargetArch.Arm),
-			GetArchPath (AndroidTargetArch.X86_64),
-			GetArchPath (AndroidTargetArch.X86),
-		};
+		var paths = new List<string> ();
+		AddArchPaths (paths, AndroidTargetArch.Arm64);
+		AddArchPaths (paths, AndroidTargetArch.Arm);
+		AddArchPaths (paths, AndroidTargetArch.X86_64);
+		AddArchPaths (paths, AndroidTargetArch.X86);
 		ApkPaths = paths.AsReadOnly ();
 		AabBasePaths = ApkPaths;
 
 		const string AabBaseDir = "base";
-		paths = new List<string> {
-			GetArchPath (AndroidTargetArch.Arm64, AabBaseDir),
-			GetArchPath (AndroidTargetArch.Arm, AabBaseDir),
-			GetArchPath (AndroidTargetArch.X86_64, AabBaseDir),
-			GetArchPath (AndroidTargetArch.X86, AabBaseDir),
-		};
+		paths = new List<string> ();
+		AddArchPaths (paths, AndroidTargetArch.Arm64, AabBaseDir);
+		AddArchPaths (paths, AndroidTargetArch.Arm, AabBaseDir);
+		AddArchPaths (paths, AndroidTargetArch.X86_64, AabBaseDir);
+		AddArchPaths (paths, AndroidTargetArch.X86, AabBaseDir);
 		AabPaths = paths.AsReadOnly ();
 
-		string GetArchPath (AndroidTargetArch arch, string? root = null)
+		void AddArchPaths (List<string> targetPaths, AndroidTargetArch arch, string? root = null)
+		{
+			string abi = MonoAndroidHelper.ArchToAbi (arch);
+			targetPaths.Add (GetArchPath (abi, "libassembly-store.so", root));
+			targetPaths.Add (GetArchPath (abi, $"libassemblies.{abi}.blob.so", root));
+		}
+
+		string GetArchPath (string abi, string fileName, string? root)
 		{
 			const string LibDirName = "lib";
-
-			string abi = MonoAndroidHelper.ArchToAbi (arch);
-			var parts = new List <string> ();
+			var parts = new List<string> ();
 			if (!String.IsNullOrEmpty (root)) {
 				parts.Add (LibDirName);
 			} else {
 				root = LibDirName;
 			}
 			parts.Add (abi);
-			parts.Add ("libassembly-store.so");
-
+			parts.Add (fileName);
 			return MonoAndroidHelper.MakeZipArchivePath (root, parts);
 		}
 	}
@@ -78,14 +82,18 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		: base (store, path)
 	{
 		supportedVersions = new HashSet<uint> {
-			ASSEMBLY_STORE_FORMAT_VERSION_64BIT | ASSEMBLY_STORE_ABI_AARCH64,
-			ASSEMBLY_STORE_FORMAT_VERSION_64BIT | ASSEMBLY_STORE_ABI_X64,
-			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_ARM,
-			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_X86,
-			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT | ASSEMBLY_STORE_ABI_AARCH64,
-			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT | ASSEMBLY_STORE_ABI_X64,
-			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT | ASSEMBLY_STORE_ABI_ARM,
-			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT | ASSEMBLY_STORE_ABI_X86,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V2 | ASSEMBLY_STORE_ABI_AARCH64,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V2 | ASSEMBLY_STORE_ABI_X64,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V2 | ASSEMBLY_STORE_ABI_ARM,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V2 | ASSEMBLY_STORE_ABI_X86,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V3 | ASSEMBLY_STORE_ABI_AARCH64,
+			ASSEMBLY_STORE_FORMAT_VERSION_64BIT_V3 | ASSEMBLY_STORE_ABI_X64,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V3 | ASSEMBLY_STORE_ABI_ARM,
+			ASSEMBLY_STORE_FORMAT_VERSION_32BIT_V3 | ASSEMBLY_STORE_ABI_X86,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT_V4 | ASSEMBLY_STORE_ABI_AARCH64,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT_V4 | ASSEMBLY_STORE_ABI_X64,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT_V4 | ASSEMBLY_STORE_ABI_ARM,
+			ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT_V4 | ASSEMBLY_STORE_ABI_X86,
 		};
 	}
 
@@ -99,7 +107,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		uint magic = reader.ReadUInt32 ();
 		if (magic == Utils.ELF_MAGIC) {
 			ELFPayloadError error;
-			(elfOffset, _, error) = Utils.FindELFPayloadSectionOffsetAndSize (StoreStream);
+			(elfOffset, _, error) = Utils.FindELFPayloadOffsetAndSize (StoreStream);
 
 			if (error != ELFPayloadError.None) {
 				string message = error switch {
@@ -107,7 +115,8 @@ partial class StoreReader_V2 : AssemblyStoreReader
 					ELFPayloadError.LoadFailed       => $"Store '{StorePath}' could not be loaded",
 					ELFPayloadError.NotSharedLibrary => $"Store '{StorePath}' is not a shared ELF library",
 					ELFPayloadError.NotLittleEndian  => $"Store '{StorePath}' is not a little-endian ELF image",
-					ELFPayloadError.NoPayloadSection => $"Store '{StorePath}' does not contain the 'payload' section",
+					ELFPayloadError.InvalidPayloadSymbol => $"Store '{StorePath}' has an invalid '_assembly_store' symbol",
+					ELFPayloadError.NoPayloadSection     => $"Store '{StorePath}' does not contain the 'payload' section",
 					_                                => $"Unknown ELF payload section error for store '{StorePath}': {error}"
 				};
 				Log.Debug (message);
@@ -162,16 +171,25 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		var index = new List<IndexEntry> ();
 		for (uint i = 0; i < header.index_entry_count; i++) {
 			ulong name_hash;
+			bool hasIgnoreFlag;
 			if (indexEntrySize == IndexEntry.NativeSize64) {
 				name_hash = reader.ReadUInt64 ();
+				hasIgnoreFlag = true;
 			} else if (indexEntrySize == IndexEntry.NativeSize32) {
 				name_hash = (ulong)reader.ReadUInt32 ();
+				hasIgnoreFlag = true;
+			} else if (indexEntrySize == IndexEntry.NativeSize64_V2) {
+				name_hash = reader.ReadUInt64 ();
+				hasIgnoreFlag = false;
+			} else if (indexEntrySize == IndexEntry.NativeSize32_V2) {
+				name_hash = (ulong)reader.ReadUInt32 ();
+				hasIgnoreFlag = false;
 			} else {
 				throw new InvalidOperationException ($"Assembly store '{StorePath}' index entry size {indexEntrySize} is not supported.");
 			}
 
 			uint descriptor_index = reader.ReadUInt32 ();
-			bool ignore = reader.ReadByte () != 0;
+			bool ignore = hasIgnoreFlag && reader.ReadByte () != 0;
 			index.Add (new IndexEntry (name_hash, descriptor_index, ignore));
 		}
 

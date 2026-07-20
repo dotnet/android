@@ -10,6 +10,8 @@ namespace Xamarin.Android.AssemblyStore;
 
 static class Utils
 {
+	const string AssemblyStorePayloadSymbol = "_assembly_store";
+
 	static readonly string[] aabZipEntries = {
 		"base/manifest/AndroidManifest.xml",
 		"BundleConfig.pb",
@@ -30,6 +32,9 @@ static class Utils
 	public static readonly ArrayPool<byte> BytePool = ArrayPool<byte>.Shared;
 
 	public static (ulong offset, ulong size, ELFPayloadError error) FindELFPayloadSectionOffsetAndSize (Stream stream)
+		=> FindELFPayloadOffsetAndSize (stream);
+
+	public static (ulong offset, ulong size, ELFPayloadError error) FindELFPayloadOffsetAndSize (Stream stream)
 	{
 		stream.Seek (0, SeekOrigin.Begin);
 		Class elfClass = ELFReader.CheckELFType (stream);
@@ -47,6 +52,15 @@ static class Utils
 
 		if (elf.Endianess != ELFSharp.Endianess.LittleEndian) {
 			return ReturnError (elf, ELFPayloadError.NotLittleEndian);
+		}
+
+		if (TryGetPayloadSymbolOffsetAndSize (elf, out ulong symbolOffset, out ulong symbolSize, out bool symbolFound)) {
+			elf.Dispose ();
+			return (symbolOffset, symbolSize, ELFPayloadError.None);
+		}
+
+		if (symbolFound) {
+			return ReturnError (elf, ELFPayloadError.InvalidPayloadSymbol);
 		}
 
 		if (!elf.TryGetSection ("payload", out ISection? payloadSection)) {
@@ -75,6 +89,90 @@ static class Utils
 		elf.Dispose ();
 		return (offset, size, ELFPayloadError.None);
 
+		bool TryGetPayloadSymbolOffsetAndSize (IELF image, out ulong payloadOffset, out ulong payloadSize, out bool payloadSymbolFound)
+		{
+			payloadOffset = 0;
+			payloadSize = 0;
+			payloadSymbolFound = false;
+
+			if (!image.TryGetSection (".dynsym", out ISection? section) || section is not ISymbolTable symbols) {
+				return false;
+			}
+
+			foreach (ISymbolEntry symbol in symbols.Entries) {
+				if (String.CompareOrdinal (symbol.Name, AssemblyStorePayloadSymbol) != 0) {
+					continue;
+				}
+
+				payloadSymbolFound = true;
+				return symbol switch {
+					SymbolEntry<ulong> symbol64 => TryGetOffsetAndSize64 (symbol64, out payloadOffset, out payloadSize),
+					SymbolEntry<uint> symbol32  => TryGetOffsetAndSize32 (symbol32, out payloadOffset, out payloadSize),
+					_                           => false,
+				};
+			}
+
+			return false;
+		}
+
+		bool TryGetOffsetAndSize64 (SymbolEntry<ulong> symbol, out ulong payloadOffset, out ulong payloadSize)
+		{
+			payloadOffset = 0;
+			payloadSize = 0;
+
+			if (symbol.PointedSection is not Section<ulong> section || symbol.Value < section.LoadAddress) {
+				return false;
+			}
+
+			ulong sectionOffset = symbol.Value - section.LoadAddress;
+			if (sectionOffset >= section.Size) {
+				return false;
+			}
+
+			ulong availableSize = section.Size - sectionOffset;
+			if (symbol.Size > availableSize) {
+				return false;
+			}
+
+			payloadOffset = section.Offset + sectionOffset;
+			if (symbol.Size == 0) {
+				Log.Debug ($"ELF symbol '{AssemblyStorePayloadSymbol}' has size 0; using the remaining {availableSize} bytes in section '{section.Name}'");
+				payloadSize = availableSize;
+			} else {
+				payloadSize = symbol.Size;
+			}
+			return true;
+		}
+
+		bool TryGetOffsetAndSize32 (SymbolEntry<uint> symbol, out ulong payloadOffset, out ulong payloadSize)
+		{
+			payloadOffset = 0;
+			payloadSize = 0;
+
+			if (symbol.PointedSection is not Section<uint> section || symbol.Value < section.LoadAddress) {
+				return false;
+			}
+
+			uint sectionOffset = symbol.Value - section.LoadAddress;
+			if (sectionOffset >= section.Size) {
+				return false;
+			}
+
+			uint availableSize = section.Size - sectionOffset;
+			if (symbol.Size > availableSize) {
+				return false;
+			}
+
+			payloadOffset = (ulong)section.Offset + sectionOffset;
+			if (symbol.Size == 0) {
+				Log.Debug ($"ELF symbol '{AssemblyStorePayloadSymbol}' has size 0; using the remaining {availableSize} bytes in section '{section.Name}'");
+				payloadSize = availableSize;
+			} else {
+				payloadSize = symbol.Size;
+			}
+			return true;
+		}
+
 		(ulong offset, ulong size) GetOffsetAndSize64 (Section<ulong> payload)
 		{
 			return (payload.Offset, payload.Size);
@@ -102,6 +200,9 @@ static class Utils
 		var info = new FileInfo (path);
 		if (!info.Exists) {
 			return (FileFormat.Unknown, null);
+		}
+		if (info.Length < sizeof (uint)) {
+			return (FileFormat.Unknown, info);
 		}
 
 		using var reader = new BinaryReader (info.OpenRead ());
