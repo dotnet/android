@@ -151,9 +151,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fastdevtools", "tools\fastd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Build.Tasks", "src\Microsoft.Android.Build.Tasks\Microsoft.Android.Build.Tasks.csproj", "{4E5C5846-CBFD-4695-B1F0-D48DEC0AF50B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyStore.Tests", "tools\assembly-store-reader-mk2\AssemblyStore.Tests\AssemblyStore.Tests.csproj", "{34FEC4BE-168E-460A-B049-94AA4627CE83}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyStore.Tests", ".github\skills\read-assembly-store\tests\AssemblyStore.Tests\AssemblyStore.Tests.csproj", "{34FEC4BE-168E-460A-B049-94AA4627CE83}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyStore", "tools\assembly-store-reader-mk2\AssemblyStore\AssemblyStore.csproj", "{19DA4CD1-21A7-49FE-9431-4A8DF69A186B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblyStore", ".github\skills\read-assembly-store\src\AssemblyStore\AssemblyStore.csproj", "{19DA4CD1-21A7-49FE-9431-4A8DF69A186B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -108,7 +108,7 @@ steps:
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
   parameters:
     command: test
-    project: tools/assembly-store-reader-mk2/AssemblyStore.Tests/AssemblyStore.Tests.csproj
+    project: .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj
     arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/assembly-store-tests
     displayName: Test AssemblyStore.Tests $(XA.Build.Configuration)
 

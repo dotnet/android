@@ -1,6 +1,6 @@
 #!/usr/bin/env dotnet
 #:property TargetFramework=net11.0
-#:project ../../../../tools/assembly-store-reader-mk2/AssemblyStore/AssemblyStore.csproj
+#:project ../src/AssemblyStore/AssemblyStore.csproj
 #:package Mono.Options@6.12.0.148
 
 using System;

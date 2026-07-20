@@ -1,6 +1,6 @@
 #!/usr/bin/env dotnet
 #:property TargetFramework=net11.0
-#:project ../../../../tools/assembly-store-reader-mk2/AssemblyStore/AssemblyStore.csproj
+#:project ../../read-assembly-store/src/AssemblyStore/AssemblyStore.csproj
 
 using System;
 using System.Collections.Generic;

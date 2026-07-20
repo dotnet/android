@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\..\..\..\Configuration.props" />
 
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
@@ -19,10 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
+    <Compile Include="..\..\..\..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+    <ProjectReference Include="..\..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
 </Project>
