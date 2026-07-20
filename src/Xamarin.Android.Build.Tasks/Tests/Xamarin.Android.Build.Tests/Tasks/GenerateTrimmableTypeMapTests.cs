@@ -254,7 +254,8 @@ namespace Xamarin.Android.Build.Tests {
 				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
 				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
 				    <Node Id="3" Label="Type metadata: [My.Assembly]Duplicate.Type" />
-				    <Node Id="4" Label="Unrelated node" />
+				    <Node Id="4" Label="Type metadata: [Xamarin.AndroidX.Activity]AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture" />
+				    <Node Id="5" Label="Unrelated node" />
 				  </Nodes>
 				</DirectedGraph>
 				""");
@@ -262,6 +263,7 @@ namespace Xamarin.Android.Build.Tests {
 				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
 				Android.App.Activity, Mono.Android;android.app.Activity
 				Duplicate.Type, My.Assembly;my.app.Duplicate
+				AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture, Xamarin.AndroidX.Activity;androidx.activity.result.contract.ActivityResultContracts$TakePicture
 				Duplicate.Type;wrong.Duplicate
 				Other.Type;other.Type
 				""");
@@ -279,6 +281,7 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
 			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
 			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
+			StringAssert.Contains ("-keep class androidx.activity.result.contract.ActivityResultContracts$TakePicture { *; }", proguard);
 			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
 			StringAssert.DoesNotContain ("other.Type", proguard);
 		}

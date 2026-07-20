@@ -15,7 +15,8 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///   Line 2: ManagedKey;JavaKey
 ///   Line 3: CompatJniName;JavaKey
 ///
-/// Java keys use dots (not slashes): e.g., "android.app.Activity"
+/// Java keys use dots for packages and preserve '$' for nested classes:
+/// e.g., "android.app.Activity" and "android.view.View$OnClickListener".
 /// </summary>
 public static class AcwMapWriter
 {
@@ -28,10 +29,10 @@ public static class AcwMapWriter
 	public static void Write (TextWriter writer, IEnumerable<JavaPeerInfo> peers)
 	{
 		foreach (var peer in peers.OrderBy (p => p.ManagedTypeName, StringComparer.Ordinal)) {
-			string javaKey = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			string javaKey = peer.JavaName.Replace ('/', '.');
 			string managedKey = peer.ManagedTypeName;
 			string partialAsmQualifiedName = $"{managedKey}, {peer.AssemblyName}";
-			string compatJniName = JniSignatureHelper.JniNameToJavaName (peer.CompatJniName);
+			string compatJniName = peer.CompatJniName.Replace ('/', '.');
 
 			// Line 1: PartialAssemblyQualifiedName;JavaKey
 			writer.Write (partialAsmQualifiedName);
