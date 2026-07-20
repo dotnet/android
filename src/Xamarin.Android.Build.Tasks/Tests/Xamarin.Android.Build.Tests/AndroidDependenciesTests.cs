@@ -19,7 +19,6 @@ namespace Xamarin.Android.Build.Tests
 	public class AndroidDependenciesTests : BaseTest
 	{
 		[Test]
-		[Ignore ("Flaky test that intermittently fails when downloading the Android SDK/JDK over the network in CI. See: https://github.com/dotnet/android/issues/11973")]
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
 		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
