@@ -585,6 +585,41 @@ namespace Java.InteropTests {
 		protected   override    bool                    UsesProxy           {get {return true;}}
 
 		[Test]
+		public unsafe void ProxyObjectMethodsDelegateToManagedValue ()
+		{
+			var value       = new ProxyValue (42);
+			var equalValue  = new ProxyValue (42);
+			var otherValue  = new ProxyValue (43);
+			var valueState  = marshaler.CreateGenericObjectReferenceArgumentState (value);
+			var equalState  = marshaler.CreateGenericObjectReferenceArgumentState (equalValue);
+			var otherState  = marshaler.CreateGenericObjectReferenceArgumentState (otherValue);
+
+			try {
+				using (var proxyType = new JniType ("net/dot/jni/internal/JavaProxyObject")) {
+					var equals   = proxyType.GetInstanceMethod ("equals", "(Ljava/lang/Object;)Z");
+					var hashCode = proxyType.GetInstanceMethod ("hashCode", "()I");
+					var toString = proxyType.GetInstanceMethod ("toString", "()Ljava/lang/String;");
+					var args     = stackalloc JniArgumentValue [1];
+
+					args [0] = new JniArgumentValue (equalState.ReferenceValue);
+					Assert.IsTrue (JniEnvironment.InstanceMethods.CallBooleanMethod (valueState.ReferenceValue, equals, args));
+
+					args [0] = new JniArgumentValue (otherState.ReferenceValue);
+					Assert.IsFalse (JniEnvironment.InstanceMethods.CallBooleanMethod (valueState.ReferenceValue, equals, args));
+
+					Assert.AreEqual (value.GetHashCode (), JniEnvironment.InstanceMethods.CallIntMethod (valueState.ReferenceValue, hashCode));
+
+					var proxyString = JniEnvironment.InstanceMethods.CallObjectMethod (valueState.ReferenceValue, toString);
+					Assert.AreEqual (value.ToString (), JniEnvironment.Strings.ToString (ref proxyString, JniObjectReferenceOptions.CopyAndDispose));
+				}
+			} finally {
+				marshaler.DestroyGenericArgumentState (otherValue, ref otherState);
+				marshaler.DestroyGenericArgumentState (equalValue, ref equalState);
+				marshaler.DestroyGenericArgumentState (value, ref valueState);
+			}
+		}
+
+		[Test]
 		public void SpecificTypesAreUsed ()
 		{
 			// As a "GREF optimization", the JniValueMarshaler<object> implementation
@@ -598,6 +633,31 @@ namespace Java.InteropTests {
 			s       = marshaler.CreateGenericObjectReferenceArgumentState (value);
 			Assert.AreEqual ("net/dot/jni/internal/JavaProxyObject",    JniEnvironment.Types.GetJniTypeNameFromInstance (s.ReferenceValue));
 			marshaler.DestroyGenericArgumentState (value, ref s);
+		}
+
+		sealed class ProxyValue {
+
+			readonly int value;
+
+			public ProxyValue (int value)
+			{
+				this.value = value;
+			}
+
+			public override bool Equals (object obj)
+			{
+				return obj is ProxyValue other && value == other.value;
+			}
+
+			public override int GetHashCode ()
+			{
+				return value;
+			}
+
+			public override string ToString ()
+			{
+				return $"ProxyValue({value})";
+			}
 		}
 	}
 
