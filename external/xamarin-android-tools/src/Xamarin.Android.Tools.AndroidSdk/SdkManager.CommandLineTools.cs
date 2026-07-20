@@ -21,11 +21,6 @@ public partial class SdkManager
 	/// The selected executable and revision, or <see langword="null"/> when no compatible
 	/// <c>sdkmanager</c> is installed.
 	/// </returns>
-	/// <remarks>
-	/// The legacy <c>tools/bin/sdkmanager</c> location remains supported because it uses
-	/// the same package-management command contract. Other command-line tools do not use
-	/// this legacy fallback.
-	/// </remarks>
 	public CommandLineTool? FindSdkManager ()
 	{
 		var sdkPath = AndroidSdkPath;
@@ -37,7 +32,6 @@ public partial class SdkManager
 			sdkPath,
 			"sdkmanager",
 			extension,
-			includeLegacy: true,
 			logger: logger);
 	}
 

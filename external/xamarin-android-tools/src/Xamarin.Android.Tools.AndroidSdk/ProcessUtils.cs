@@ -259,7 +259,6 @@ namespace Xamarin.Android.Tools
 				sdkPath,
 				toolName,
 				extension,
-				includeLegacy: false,
 				logger: logger)?.Path;
 		}
 

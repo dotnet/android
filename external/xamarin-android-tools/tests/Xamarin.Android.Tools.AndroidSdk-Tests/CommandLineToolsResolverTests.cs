@@ -115,10 +115,10 @@ public class CommandLineToolsResolverTests
 	[Test]
 	public void FindCommandLineTool_StableAndPrereleaseHaveSameCoreRevision_PrefersStable ()
 	{
-		var expectedSdkManager = CreateCommandLineTool ("stable", "sdkmanager", "22.0.0");
-		var expectedAvdManager = CreateCommandLineTool ("stable", "avdmanager", "22.0.0");
-		CreateCommandLineTool ("preview", "sdkmanager", "22.0.0 rc1");
-		CreateCommandLineTool ("preview", "avdmanager", "22.0.0 rc1");
+		var expectedSdkManager = CreateCommandLineTool ("stable", "sdkmanager", "22.0");
+		var expectedAvdManager = CreateCommandLineTool ("stable", "avdmanager", "22.0");
+		CreateCommandLineTool ("preview", "sdkmanager", "22.0 rc1");
+		CreateCommandLineTool ("preview", "avdmanager", "22.0 rc1");
 
 		using var manager = CreateSdkManager ();
 
@@ -131,29 +131,12 @@ public class CommandLineToolsResolverTests
 	[Test]
 	public void FindCommandLineTool_PrereleaseRevisionsHaveNumericSuffix_SelectsHighest ()
 	{
-		CreateCommandLineTool ("rc2", "sdkmanager", "22.0.0 rc2");
-		var expectedSdkManager = CreateCommandLineTool ("rc10", "sdkmanager", "22.0.0 rc10");
+		CreateCommandLineTool ("rc2", "sdkmanager", "22.0 rc2");
+		var expectedSdkManager = CreateCommandLineTool ("rc10", "sdkmanager", "22.0 rc10");
 
 		using var manager = CreateSdkManager ();
 
 		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
-	}
-
-	[Test]
-	public void FindCommandLineTool_LegacyToolsDirectory_UsedOnlyForSdkManager ()
-	{
-		var legacyDirectory = Path.Combine (SdkDirectory, "tools", "bin");
-		Directory.CreateDirectory (legacyDirectory);
-		var expectedSdkManager = Path.Combine (legacyDirectory, "sdkmanager" + ExecutableExtension);
-		File.WriteAllText (expectedSdkManager, "");
-		File.WriteAllText (Path.Combine (legacyDirectory, "avdmanager" + ExecutableExtension), "");
-
-		using var manager = CreateSdkManager ();
-
-		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
-		Assert.That (
-			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
-			Is.Null);
 	}
 
 	[Test]
@@ -230,7 +213,7 @@ public class CommandLineToolsResolverTests
 	[Test]
 	public async Task EnsureLatestCommandLineToolsAsync_CurrentManager_DoesNotInstall ()
 	{
-		CreateCommandLineTool ("latest", "sdkmanager", "22.0.0");
+		CreateCommandLineTool ("latest", "sdkmanager", "22.0");
 		var bootstrapCalls = 0;
 		var installCalls = 0;
 		var progress = new ProgressCollector ();
@@ -250,7 +233,7 @@ public class CommandLineToolsResolverTests
 				return Task.CompletedTask;
 			});
 
-		Assert.That (selected.Revision, Is.EqualTo ("22.0.0"));
+		Assert.That (selected.Revision, Is.EqualTo ("22.0"));
 		Assert.That (bootstrapCalls, Is.Zero);
 		Assert.That (installCalls, Is.Zero);
 		Assert.That (progress.Phases, Does.Not.Contain (SdkBootstrapPhase.Installing));

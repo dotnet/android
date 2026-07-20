@@ -268,28 +268,6 @@ Available Updates:
 	}
 
 	[Test]
-	public void FindSdkManagerPath_LegacyToolsDir_Found ()
-	{
-		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-test-{Guid.NewGuid ()}");
-		try {
-			var binDir = Path.Combine (sdkDir, "tools", "bin");
-			Directory.CreateDirectory (binDir);
-
-			var sdkManagerName = OS.IsWindows ? "sdkmanager.bat" : "sdkmanager";
-			File.WriteAllText (Path.Combine (binDir, sdkManagerName), "#!/bin/sh\necho test");
-
-			manager.AndroidSdkPath = sdkDir;
-			var result = manager.FindSdkManagerPath ();
-
-			Assert.IsNotNull (result, "Should find sdkmanager in legacy tools/bin");
-		}
-		finally {
-			if (Directory.Exists (sdkDir))
-				Directory.Delete (sdkDir, recursive: true);
-		}
-	}
-
-	[Test]
 	public void FindSdkManagerPath_NoSdkManager_ReturnsNull ()
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk-test-{Guid.NewGuid ()}");

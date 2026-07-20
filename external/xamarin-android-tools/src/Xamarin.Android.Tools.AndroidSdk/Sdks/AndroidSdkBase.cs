@@ -13,8 +13,6 @@ namespace Xamarin.Android.Tools
 		const int MinimumCompatibleNDKMajorVersion = 16;
 		const int MaximumCompatibleNDKMajorVersion = 28;
 
-		static readonly char[] SourcePropertiesKeyValueSplit = new char[] { '=' };
-
 		// Per https://developer.android.com/studio/command-line/variables#envar
 		#pragma warning disable CS0618 // ANDROID_SDK_ROOT is obsolete but still needed for compat
 		protected static readonly string[] AndroidSdkEnvVars = {EnvironmentVariableNames.AndroidHome, EnvironmentVariableNames.AndroidSdkRoot};
@@ -213,28 +211,17 @@ namespace Xamarin.Android.Tools
 					return;
 				}
 
-				foreach (string line in File.ReadLines (propsFilePath)) {
-					string[] parts = line.Split (SourcePropertiesKeyValueSplit, 2, StringSplitOptions.RemoveEmptyEntries);
-					if (parts.Length != 2) {
-						continue;
-					}
+				if (!SourceProperties.TryGetProperty (propsFilePath, "Pkg.Revision", out var revision) ||
+					!Version.TryParse (revision, out var ndkVer) ||
+					ndkInstances.ContainsKey (ndkVer))
+					return;
 
-					if (String.Compare ("Pkg.Revision", parts[0].Trim (), StringComparison.Ordinal) != 0) {
-						continue;
-					}
-
-					if (!Version.TryParse (parts[1].Trim (), out Version? ndkVer) || ndkVer == null || ndkInstances.ContainsKey (ndkVer)) {
-						continue;
-					}
-
-					if (ndkVer.Major < MinimumCompatibleNDKMajorVersion || ndkVer.Major > MaximumCompatibleNDKMajorVersion) {
-						Logger (TraceLevel.Verbose, $"Skipping NDK in '{path}': version {ndkVer} is out of the accepted range (major version must be between {MinimumCompatibleNDKMajorVersion} and {MaximumCompatibleNDKMajorVersion}");
-						continue;
-					}
-
-					ndkInstances.Add (ndkVer, path);
+				if (ndkVer.Major < MinimumCompatibleNDKMajorVersion || ndkVer.Major > MaximumCompatibleNDKMajorVersion) {
+					Logger (TraceLevel.Verbose, $"Skipping NDK in '{path}': version {ndkVer} is out of the accepted range (major version must be between {MinimumCompatibleNDKMajorVersion} and {MaximumCompatibleNDKMajorVersion}");
 					return;
 				}
+
+				ndkInstances.Add (ndkVer, path);
 			}
 		}
 
@@ -326,4 +313,3 @@ namespace Xamarin.Android.Tools
 		}
 	}
 }
-

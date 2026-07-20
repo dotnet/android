@@ -16,7 +16,6 @@ static class CommandLineToolsResolver
 		string sdkPath,
 		string toolName,
 		string extension,
-		bool includeLegacy,
 		Action<TraceLevel, string>? logger = null)
 	{
 		var cmdlineToolsDir = Path.Combine (sdkPath, "cmdline-tools");
@@ -32,15 +31,7 @@ static class CommandLineToolsResolver
 			}
 		}
 
-		if (!includeLegacy)
-			return null;
-
-		var legacyPath = Path.Combine (sdkPath, "tools", "bin", toolName + extension);
-		if (!File.Exists (legacyPath))
-			return null;
-
-		logger?.Invoke (TraceLevel.Verbose, $"Selected legacy command-line tool '{legacyPath}'.");
-		return new CommandLineTool (legacyPath);
+		return null;
 	}
 
 	internal static bool TryParseRevision (string? value, out ParsedRevision revision)
@@ -68,12 +59,7 @@ static class CommandLineToolsResolver
 		if (!Version.TryParse (versionText, out var parsedVersion))
 			return false;
 
-		var normalizedVersion = new Version (
-			parsedVersion.Major,
-			Math.Max (parsedVersion.Minor, 0),
-			Math.Max (parsedVersion.Build, 0),
-			Math.Max (parsedVersion.Revision, 0));
-		revision = new ParsedRevision (normalizedVersion, prerelease);
+		revision = new ParsedRevision (parsedVersion, prerelease);
 		return true;
 	}
 
@@ -137,22 +123,8 @@ static class CommandLineToolsResolver
 	{
 		revision = null;
 		var sourceProperties = Path.Combine (directory, "source.properties");
-		if (!File.Exists (sourceProperties))
-			return false;
-
 		try {
-			foreach (var line in File.ReadLines (sourceProperties)) {
-				var separator = line.IndexOf ('=');
-				if (separator < 0)
-					continue;
-
-				var propertyName = line.Substring (0, separator).Trim ();
-				if (!string.Equals (propertyName, PackageRevisionProperty, StringComparison.Ordinal))
-					continue;
-
-				revision = line.Substring (separator + 1).Trim ();
-				return true;
-			}
+			return SourceProperties.TryGetProperty (sourceProperties, PackageRevisionProperty, out revision);
 		} catch (IOException ex) {
 			logger?.Invoke (TraceLevel.Warning, $"Could not read '{sourceProperties}': {ex.Message}");
 		} catch (UnauthorizedAccessException ex) {
