@@ -219,13 +219,13 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
   make prepare && make all CONFIGURATION=Release
   ./dotnet-local.sh build -t:Install -c Release \
       tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
-      -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
+      -p:_AndroidTypeMapImplementation=<llvm-ir|trimmable> \
       -p:UseMonoRuntime=<true|false>
   (
       cd tests/Mono.Android-Tests/Mono.Android-Tests
       ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
           --report-trx --results-directory ../../../bin/TestRelease/TestResults \
-          -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
+          -p:_AndroidTypeMapImplementation=<llvm-ir|trimmable> \
           -p:UseMonoRuntime=<true|false>
   )
   ```

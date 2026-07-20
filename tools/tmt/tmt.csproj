@@ -16,7 +16,8 @@
 
   <ItemGroup>
     <Compile Include="../../src/Xamarin.Android.Build.Tasks/Utilities/TypeMapHelper.cs" />
-    <Compile Include="..\assembly-store-reader\AssemblyStore*.cs" />
+    <Compile Include="..\assembly-store-reader-mk2\AssemblyStore\V1\*.cs" />
+    <Compile Include="..\assembly-store-reader-mk2\AssemblyStore\AssemblyCompression.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,7 @@
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
   </ItemGroup>
   <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />
 </Project>

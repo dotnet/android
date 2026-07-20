@@ -603,6 +603,11 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
   <data name="XA4213" xml:space="preserve">
     <value>The type '{0}' must provide a public default constructor</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.</value>
     <comment>{0} - The managed type name

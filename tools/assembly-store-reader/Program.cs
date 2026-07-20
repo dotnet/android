@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 
 using Mono.Options;
+using Xamarin.Android.AssemblyStore.V1;
 
 namespace Xamarin.Android.AssemblyStore
 {

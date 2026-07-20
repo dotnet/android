@@ -329,6 +329,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
+	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
@@ -430,9 +431,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
-	init.managedMarshalMethodsLookupEnabled             = application_config.managed_marshal_methods_lookup_enabled;
-	abort_unless (!init.marshalMethodsEnabled || init.managedMarshalMethodsLookupEnabled,
-		"Managed marshal methods lookup must be enabled if marshal methods are enabled");
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

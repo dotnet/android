@@ -138,13 +138,6 @@ abort_if_negative_integer_argument (int arg, const char *arg_name, std::source_l
 	);
 }
 
-// Helper to use in "printf debugging". Normally not used in code anywhere. No code should be shipped with any
-// of the calls present.
-force_inline inline void pd_log_location (std::source_location sloc = std::source_location::current ()) noexcept
-{
-	log_warn (LOG_DEFAULT, "loc: {}:{} ('{}')", sloc.file_name (), sloc.line (), sloc.function_name ());
-}
-
 namespace xamarin::android
 {
 	template <typename T>

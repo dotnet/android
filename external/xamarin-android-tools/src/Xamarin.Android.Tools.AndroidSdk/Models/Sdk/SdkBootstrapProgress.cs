@@ -3,5 +3,5 @@
 
 namespace Xamarin.Android.Tools;
 
-/// <summary>Progress information for SDK bootstrap operations.</summary>
+/// <summary>Progress information for SDK bootstrap and command-line tools refresh operations.</summary>
 public record SdkBootstrapProgress (SdkBootstrapPhase Phase, int PercentComplete = -1, string Message = "");

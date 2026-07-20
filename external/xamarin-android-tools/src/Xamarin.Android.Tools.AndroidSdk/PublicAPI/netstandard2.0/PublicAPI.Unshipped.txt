@@ -38,6 +38,10 @@ Xamarin.Android.Tools.AdbRunner.WaitForDeviceAsync(string? serial = null, System
 Xamarin.Android.Tools.ChecksumType
 Xamarin.Android.Tools.ChecksumType.Sha1 = 0 -> Xamarin.Android.Tools.ChecksumType
 Xamarin.Android.Tools.ChecksumType.Sha256 = 1 -> Xamarin.Android.Tools.ChecksumType
+Xamarin.Android.Tools.CommandLineTool
+Xamarin.Android.Tools.CommandLineTool.CommandLineTool(string! path, string? revision = null) -> void
+Xamarin.Android.Tools.CommandLineTool.Path.get -> string!
+Xamarin.Android.Tools.CommandLineTool.Revision.get -> string?
 Xamarin.Android.Tools.JdkInstallPhase
 Xamarin.Android.Tools.JdkInstallPhase.Complete = 4 -> Xamarin.Android.Tools.JdkInstallPhase
 Xamarin.Android.Tools.JdkInstallPhase.Downloading = 0 -> Xamarin.Android.Tools.JdkInstallPhase
@@ -69,9 +73,11 @@ Xamarin.Android.Tools.JdkVersionInfo.MajorVersion.get -> int
 Xamarin.Android.Tools.JdkVersionInfo.ResolvedUrl.get -> string?
 Xamarin.Android.Tools.JdkVersionInfo.Size.get -> long
 Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapPhase.CheckingForUpdates = 5 -> Xamarin.Android.Tools.SdkBootstrapPhase
 Xamarin.Android.Tools.SdkBootstrapPhase.Complete = 4 -> Xamarin.Android.Tools.SdkBootstrapPhase
 Xamarin.Android.Tools.SdkBootstrapPhase.Downloading = 1 -> Xamarin.Android.Tools.SdkBootstrapPhase
 Xamarin.Android.Tools.SdkBootstrapPhase.Extracting = 3 -> Xamarin.Android.Tools.SdkBootstrapPhase
+Xamarin.Android.Tools.SdkBootstrapPhase.Installing = 6 -> Xamarin.Android.Tools.SdkBootstrapPhase
 Xamarin.Android.Tools.SdkBootstrapPhase.ReadingManifest = 0 -> Xamarin.Android.Tools.SdkBootstrapPhase
 Xamarin.Android.Tools.SdkBootstrapPhase.Verifying = 2 -> Xamarin.Android.Tools.SdkBootstrapPhase
 Xamarin.Android.Tools.SdkBootstrapProgress
@@ -98,6 +104,8 @@ Xamarin.Android.Tools.SdkManager.AndroidSdkPath.set -> void
 Xamarin.Android.Tools.SdkManager.AreLicensesAccepted() -> bool
 Xamarin.Android.Tools.SdkManager.BootstrapAsync(string! targetPath, System.IProgress<Xamarin.Android.Tools.SdkBootstrapProgress!>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Xamarin.Android.Tools.SdkManager.Dispose() -> void
+Xamarin.Android.Tools.SdkManager.EnsureLatestCommandLineToolsAsync(string! targetPath, System.IProgress<Xamarin.Android.Tools.SdkBootstrapProgress!>? progress = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Xamarin.Android.Tools.CommandLineTool!>!
+Xamarin.Android.Tools.SdkManager.FindSdkManager() -> Xamarin.Android.Tools.CommandLineTool?
 Xamarin.Android.Tools.SdkManager.FindSdkManagerPath() -> string?
 Xamarin.Android.Tools.SdkManager.GetPendingLicensesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.SdkLicense!>!>!
 Xamarin.Android.Tools.SdkManager.InstallAsync(System.Collections.Generic.IEnumerable<string!>! packages, bool acceptLicenses = true, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

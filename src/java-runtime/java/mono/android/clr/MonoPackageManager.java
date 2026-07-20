@@ -52,6 +52,7 @@ public class MonoPackageManager {
 				String language     = locale.getLanguage () + "-" + locale.getCountry ();
 				String filesDir     = context.getFilesDir ().getAbsolutePath ();
 				String cacheDir     = context.getCacheDir ().getAbsolutePath ();
+				String codeCacheDir = context.getCodeCacheDir ().getAbsolutePath ();
 				String dataDir      = getNativeLibraryPath (context);
 				ClassLoader loader  = context.getClassLoader ();
 				String runtimeDir   = getNativeLibraryPath (runtimePackage);
@@ -66,7 +67,7 @@ public class MonoPackageManager {
 				//
 				// Should the order change here, src/native/clr/include/constants.hh must be updated accordingly
 				//
-				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
+				String[] appDirs = new String[] {filesDir, cacheDir, dataDir, codeCacheDir};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
 
 				System.loadLibrary("monodroid");
