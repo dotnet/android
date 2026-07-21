@@ -65,7 +65,7 @@ Tool 'dotnet-trace' was successfully installed.
 
 Run the following commands to create a memory dump of the app:
 
-1. `dotnet build -c Release -p:AndroidEnableProfiler=true .\MyApp.csproj`
+1. `dotnet build -c Release -p:EnableDiagnostics=true .\MyApp.csproj`
 2. `adb install .\bin\Release\net11.0-android\MyApp-Signed.apk`
 3. `dotnet-dsrouter android`
 4. `adb shell setprop debug.mono.profile '127.0.0.1:9000,nosuspend'`
@@ -122,20 +122,19 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 
 ### Running `dotnet-dsrouter` Separately
 
-> **NOTE:** The following section describes the approach before
-> `dotnet-trace` 9.0.621003. Running `dotnet-dsrouter` separately can
-> be useful for viewing its log messages when troubleshooting.
+Running `dotnet-dsrouter` separately provides finer control over its
+options and can be useful for viewing its log messages when troubleshooting.
 
 For profiling an Android application running on an Android *emulator*:
 
 ```sh
 $ dotnet-dsrouter android-emu
 How to connect current dotnet-dsrouter pid=1234 with android emulator and diagnostics tooling.
-Start an application on android emulator with ONE of the following environment variables set:
+Build and run your application on android emulator such as:
 [Default Tracing]
-DOTNET_DiagnosticPorts=10.0.2.2:9000,nosuspend,connect
+dotnet build -t:Run -c Release -p:DiagnosticAddress=10.0.2.2 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=false -p:DiagnosticListenMode=connect
 [Startup Tracing]
-DOTNET_DiagnosticPorts=10.0.2.2:9000,suspend,connect
+dotnet build -t:Run -c Release -p:DiagnosticAddress=10.0.2.2 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
 Run diagnotic tool connecting application on android emulator through dotnet-dsrouter pid=1234:
 dotnet-trace collect -p 1234
 See https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter for additional details and examples.
@@ -153,11 +152,11 @@ For profiling an Android application running on an Android *device*:
 $ adb reverse tcp:9000 tcp:9001
 $ dotnet-dsrouter android
 How to connect current dotnet-dsrouter pid=1234 with android device and diagnostics tooling.
-Start an application on android device with ONE of the following environment variables set:
+Build and run your application on android device such as:
 [Default Tracing]
-DOTNET_DiagnosticPorts=127.0.0.1:9000,nosuspend,connect
+dotnet build -t:Run -c Release -p:DiagnosticAddress=127.0.0.1 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=false -p:DiagnosticListenMode=connect
 [Startup Tracing]
-DOTNET_DiagnosticPorts=127.0.0.1:9000,suspend,connect
+dotnet build -t:Run -c Release -p:DiagnosticAddress=127.0.0.1 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
 Run diagnotic tool connecting application on android device through dotnet-dsrouter pid=1234:
 dotnet-trace collect -p 1234
 ...
@@ -165,11 +164,11 @@ dotnet-trace collect -p 1234
 
 ### Android System Properties
 
-Note the log message that `dotnet-dsrouter` prints that mentions
-`$DOTNET_DiagnosticPorts`. `$DOTNET_DiagnosticPorts` is an environment
-variable that could be defined in an `@(AndroidEnvironment)` file, but
-it is simpler to use the `debug.mono.profile` Android system property.
-Android system properties can be used without rebuilding the app.
+The `$(DiagnosticAddress)`, `$(DiagnosticPort)`, `$(DiagnosticSuspend)`,
+and `$(DiagnosticListenMode)` MSBuild properties configure the
+`$DOTNET_DiagnosticPorts` environment variable packaged in the application.
+Alternatively, the `debug.mono.profile` Android system property can configure
+diagnostics without rebuilding the app.
 
 For emulators, `$DOTNET_DiagnosticPorts` should specify an IP address
 of 10.0.2.2:
@@ -230,13 +229,20 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 
 ### Running the .NET for Android Application
 
-`$(AndroidEnableProfiler)` must be set to `true` as it includes the
-Mono diagnostic component in the application. This component is the
-`libmono-component-diagnostics_tracing.so` native library.
+`$(EnableDiagnostics)` must be set to `true` to include the Mono diagnostic
+component, `libmono-component-diagnostics_tracing.so`, in the application.
+`$(AndroidEnableProfiler)` is an equivalent property retained for backwards
+compatibility.
 
 ```sh
-$ dotnet build -f net8.0-android -t:Run -c Release -p:AndroidEnableProfiler=true
+$ dotnet build -f net8.0-android -t:Run -c Release -p:EnableDiagnostics=true
 ```
+
+Setting any of the `$(DiagnosticAddress)`, `$(DiagnosticPort)`,
+`$(DiagnosticSuspend)`, or `$(DiagnosticListenMode)` properties implicitly
+enables the diagnostic component, so `-p:EnableDiagnostics=true` is not needed
+with the `dotnet-dsrouter` commands shown above.
+
 *NOTE: `-f net8.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
 
 Once the application is installed and started, `dotnet-trace` should show something similar to:
