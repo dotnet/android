@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools
 {
@@ -87,12 +88,12 @@ namespace Xamarin.ProjectTools
 			const int killTimeoutMilliseconds = 30 * 1000;
 
 			using (var p = ExecuteProcess (args)) {
-				using var stderrCompleted = new ManualResetEventSlim (false);
-				using var stdoutCompleted = new ManualResetEventSlim (false);
+				var stderrCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+				var stdoutCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 
 				p.ErrorDataReceived += (sender, e) => {
 					if (e.Data == null) {
-						stderrCompleted.Set ();
+						stderrCompleted.TrySetResult (true);
 					} else {
 						lock (locker)
 							procOutput.AppendLine (e.Data);
@@ -100,7 +101,7 @@ namespace Xamarin.ProjectTools
 				};
 				p.OutputDataReceived += (sender, e) => {
 					if (e.Data == null) {
-						stdoutCompleted.Set ();
+						stdoutCompleted.TrySetResult (true);
 					} else {
 						lock (locker)
 							procOutput.AppendLine (e.Data);
@@ -121,10 +122,10 @@ namespace Xamarin.ProjectTools
 					}
 				}
 
-				if (!stdoutCompleted.Wait (streamDrainTimeoutMilliseconds)) {
+				if (!stdoutCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
 					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
-				if (!stderrCompleted.Wait (streamDrainTimeoutMilliseconds)) {
+				if (!stderrCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
 					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
 
