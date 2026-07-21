@@ -253,7 +253,7 @@ namespace xamarin::android {
 
 			log_infof (
 				LOG_ASSEMBLY,
-				"  mmap_start: %p; mmap_end: %p\t mmap_len: %zu  file_start: %p  file_end: %p\t file_len: %zu\t  apk descriptor: %d  file: %.*s",
+				"  mmap_start: %-8p; mmap_end: %-8p\t mmap_len: %-12zu  file_start: %-8p  file_end: %-8p\t file_len: %-12zu\t  apk descriptor: %d  file: %.*s",
 				mmap_info.area,
 				pointer_add (mmap_info.area, mmap_info.size),
 				mmap_info.size,
