@@ -21,6 +21,23 @@ when the diff contains interop markers (`JniObjectReference`, `JniPeerMembers`,
 
 ---
 
+## Java Type Names
+
+Determine the required representation at each changed call site:
+
+| Representation | Nested-class example | Typical consumers |
+|----------------|----------------------|-------------------|
+| **JNI internal name** | `android/view/View$OnClickListener` | JNI registration, descriptors after removing `L`/`;`, runtime JNI lookup |
+| **Java binary name** | `android.view.View$OnClickListener` | `Class.forName`, Android manifests, ACW maps, ProGuard/R8 class rules |
+| **Java source name** | `android.view.View.OnClickListener` | Generated `.java` type references such as `extends`, `implements`, parameters, and return types |
+| **Managed nested type name** | `Android.Views.View+IOnClickListener` | Managed metadata and assembly-qualified names |
+
+- Read conversion helpers instead of trusting their names, and compare their full behavior with any inline logic they replace.
+- Trace serialized names to the final consumer; correctness is per call site.
+- Preserve `$` for binary-name consumers. Replace it with `.` only for Java source names.
+
+---
+
 ## P/Invoke & Marshaling Checks
 
 | Check | What to look for |
