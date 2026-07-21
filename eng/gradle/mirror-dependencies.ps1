@@ -127,7 +127,8 @@ function Invoke-Mirror($logPath) {
         Sort-Object -Unique
     if ($urls.Count -eq 0) { return 0 }
     $token = Get-AzDevOpsToken
-    $headers = @{ Authorization = "Bearer $token" }
+    $basicCredential = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$token"))
+    $headers = @{ Authorization = "Basic $basicCredential" }
     $ok = 0; $fail = 0
     foreach ($u in $urls) {
         try {
@@ -202,7 +203,7 @@ try {
     for ($i = 1; $i -le $MaxIterations; $i++) {
         Write-Host "`n=== iteration $i ===" -ForegroundColor Green
         $log = Join-Path ([IO.Path]::GetTempPath()) "gradle-mirror-iter-$i.log"
-        & $gradlew $Task --no-daemon --refresh-dependencies *>&1 | Tee-Object -FilePath $log | Out-Null
+        & $gradlew $Task --no-daemon --no-configuration-cache --refresh-dependencies *>&1 | Tee-Object -FilePath $log | Out-Null
         if (Select-String -Path $log -Pattern 'BUILD SUCCESSFUL' -SimpleMatch -Quiet) {
             Write-Host "`nBUILD SUCCESSFUL after $i iteration(s). The feed now has the packages CI needs." -ForegroundColor Green
             return
