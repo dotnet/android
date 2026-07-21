@@ -380,7 +380,7 @@ namespace Xamarin.Android.Build.Tests
 					proc.OutputDataReceived += (sender, e) => {
 						if (e.Data != null) {
 							sw.WriteLine (e.Data);
-							if (action (e.Data)) {
+							if (!didActionSucceed && action (e.Data)) {
 								didActionSucceed = true;
 							}
 						} else {
@@ -402,15 +402,16 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		internal static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
+		static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
 		{
 			bool didActionSucceed = false;
 			using (var sr = new StringReader (output ?? "")) {
 				string line = sr.ReadLine ();
 				while (line != null) {
 					logcatOutput.WriteLine (line);
-					if (!didActionSucceed && action (line)) {
+					if (action (line)) {
 						didActionSucceed = true;
+						break;
 					}
 					line = sr.ReadLine ();
 				}
