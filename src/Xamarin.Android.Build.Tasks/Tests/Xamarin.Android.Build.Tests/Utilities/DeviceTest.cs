@@ -366,7 +366,7 @@ namespace Xamarin.Android.Build.Tests
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 
-			int didActionSucceed = 0;
+			bool didActionSucceed = false;
 			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
 				// Process already-buffered logcat lines first so startup messages emitted before
@@ -381,7 +381,7 @@ namespace Xamarin.Android.Build.Tests
 						if (e.Data != null) {
 							sw.WriteLine (e.Data);
 							if (action (e.Data)) {
-								Interlocked.Exchange (ref didActionSucceed, 1);
+								didActionSucceed = true;
 							}
 						} else {
 							stdout_done.Set ();
@@ -389,7 +389,7 @@ namespace Xamarin.Android.Build.Tests
 					};
 					proc.BeginOutputReadLine ();
 					TimeSpan time = TimeSpan.FromSeconds (timeout);
-					while (!stdout_done.IsSet && Volatile.Read (ref didActionSucceed) == 0 && time.TotalMilliseconds > 0) {
+					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
 						proc.WaitForExit (10);
 						time -= TimeSpan.FromMilliseconds (10);
 					}
@@ -397,7 +397,7 @@ namespace Xamarin.Android.Build.Tests
 					proc.WaitForExit ();
 					stdout_done.Wait ();
 					sw.Flush ();
-					return Volatile.Read (ref didActionSucceed) == 1;
+					return didActionSucceed;
 				}
 			}
 		}
