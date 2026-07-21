@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -319,12 +320,23 @@ namespace Android.Runtime {
 	[RequiresUnreferencedCode ("This type manager is reflection-backed and is not trimming-compatible.")]
 	class AndroidTypeManager : JniRuntime.ReflectionJniTypeManager {
 		bool jniAddNativeMethodRegistrationAttributePresent;
+		readonly ConcurrentDictionary<Type, JniTypeSignature> typeSignatures = new ();
 
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
+		}
+
+		protected override JniTypeSignature GetTypeSignatureCore (Type type)
+		{
+			if (typeSignatures.TryGetValue (type, out var signature)) {
+				return signature;
+			}
+
+			signature = base.GetTypeSignatureCore (type);
+			return typeSignatures.GetOrAdd (type, signature);
 		}
 
 		protected override IEnumerable<Type> GetTypesForSimpleReference (string jniSimpleReference)
