@@ -183,6 +183,20 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Activity_NestedClass_PreservesBinaryName ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/Outer$NestedActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var activity = doc.Root?.Element ("application")?.Element ("activity");
+
+		Assert.Equal ("com.example.app.Outer$NestedActivity", (string?) activity?.Attribute (AttName));
+	}
+
+	[Fact]
 	public void Activity_WithProperties ()
 	{
 		var gen = CreateDefaultGenerator ();

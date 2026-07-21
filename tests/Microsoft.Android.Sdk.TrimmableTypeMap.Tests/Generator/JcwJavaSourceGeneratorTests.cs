@@ -44,6 +44,15 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		}
 
 		[Theory]
+		[InlineData ("android/app/Activity", "android.app.Activity")]
+		[InlineData ("java/lang/Object", "java.lang.Object")]
+		[InlineData ("android/view/View$OnClickListener", "android.view.View$OnClickListener")]
+		public void JniNameToJavaBinaryName_ConvertsCorrectly (string jniName, string expected)
+		{
+			Assert.Equal (expected, JniSignatureHelper.JniNameToJavaBinaryName (jniName));
+		}
+
+		[Theory]
 		[InlineData ("com/example/MainActivity", "com.example")]
 		[InlineData ("java/lang/Object", "java.lang")]
 		[InlineData ("TopLevelClass", null)]

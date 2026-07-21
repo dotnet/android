@@ -502,9 +502,7 @@ public class TrimmableTypeMapGenerator
 
 	static void AddJniLookupNames (Dictionary<string, List<JavaPeerInfo>> peersByDotName, string jniName, JavaPeerInfo peer)
 	{
-		var simpleName = JniSignatureHelper.GetJavaSimpleName (jniName);
-		var packageName = JniSignatureHelper.GetJavaPackageName (jniName);
-		var manifestName = packageName.IsNullOrEmpty () ? simpleName : packageName + "." + simpleName;
+		var manifestName = JniSignatureHelper.JniNameToJavaBinaryName (jniName);
 		AddPeerByDotName (peersByDotName, manifestName, peer);
 
 		var javaSourceName = JniSignatureHelper.JniNameToJavaName (jniName);
