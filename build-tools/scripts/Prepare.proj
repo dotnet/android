@@ -19,14 +19,23 @@
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
         Condition=" '$(HostOS)' == 'Windows' And $(AndroidToolchainDirectory.Contains (' '))"
     />
+    <!-- Restore out of process so generated NuGet props exist before MSBuild evaluates each project. -->
+    <Exec
+        Command="dotnet restore &quot;$(_TopDir)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj&quot; -p:Configuration=$(Configuration)"
+        WorkingDirectory="$(_TopDir)"
+    />
     <MSBuild
         Projects="$(_TopDir)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj"
-        Targets="Restore;Build"
+        Targets="Build"
         Properties="Configuration=$(Configuration)"
+    />
+    <Exec
+        Command="dotnet restore &quot;$(_TopDir)\src\workloads\workloads.csproj&quot; -p:Configuration=$(Configuration)"
+        WorkingDirectory="$(_TopDir)"
     />
     <MSBuild
         Projects="$(_TopDir)\src\workloads\workloads.csproj"
-        Targets="Restore;Build"
+        Targets="Build"
         Properties="Configuration=$(Configuration)"
     />
     <CallTarget Targets="PrepareJavaInterop" />
