@@ -102,6 +102,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void IncompatiblePlatformTargetAndRuntimeIdentifiersFailsBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.TargetFrameworks = proj.TargetFramework;
+			proj.RemoveProperty ("TargetFramework");
+			proj.SetProperty ("Platforms", "AnyCPU;x64");
+			proj.SetProperty (KnownProperties.RuntimeIdentifiers, "android-arm64");
+
+			using var b = CreateApkBuilder ();
+			b.Target = "Build";
+			b.ThrowOnBuildFailure = false;
+			Assert.IsFalse (b.Build (proj, parameters: new [] { "Platform=x64" }), "Build should have failed.");
+			StringAssertEx.Contains ("NETSDK1032", b.LastBuildOutput);
+		}
+
+		[Test]
 		public void BuildBasicApplicationThenMoveIt ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
