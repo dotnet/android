@@ -436,7 +436,7 @@ void StartLogcat ()
 
 async Task WaitForAppExitAsync ()
 {
-	while (!cts!.Token.IsCancellationRequested) {
+	while (!cts.Token.IsCancellationRequested) {
 		// Check if app is still running
 		var pid = await GetAppPidAsync ();
 		if (pid == null || pid != logcatPid) {
