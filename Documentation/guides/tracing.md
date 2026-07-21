@@ -135,7 +135,7 @@ Build and run your application on android emulator such as:
 dotnet build -t:Run -c Release -p:DiagnosticAddress=10.0.2.2 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=false -p:DiagnosticListenMode=connect
 [Startup Tracing]
 dotnet build -t:Run -c Release -p:DiagnosticAddress=10.0.2.2 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
-Run diagnotic tool connecting application on android emulator through dotnet-dsrouter pid=1234:
+Run diagnostic tool connecting application on android emulator through dotnet-dsrouter pid=1234:
 dotnet-trace collect -p 1234
 See https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter for additional details and examples.
 
@@ -157,7 +157,7 @@ Build and run your application on android device such as:
 dotnet build -t:Run -c Release -p:DiagnosticAddress=127.0.0.1 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=false -p:DiagnosticListenMode=connect
 [Startup Tracing]
 dotnet build -t:Run -c Release -p:DiagnosticAddress=127.0.0.1 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
-Run diagnotic tool connecting application on android device through dotnet-dsrouter pid=1234:
+Run diagnostic tool connecting application on android device through dotnet-dsrouter pid=1234:
 dotnet-trace collect -p 1234
 ...
 ```
