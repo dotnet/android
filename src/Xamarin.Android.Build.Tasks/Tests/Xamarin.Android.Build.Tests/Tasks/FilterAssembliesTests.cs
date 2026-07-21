@@ -37,7 +37,15 @@ namespace Xamarin.Android.Build.Tests
 		static string GetPackageUrl (string packageId, string version)
 		{
 			var lowercaseId = packageId.ToLowerInvariant ();
-			return $"{DotNetPublicPackageBaseAddress}/{lowercaseId}/{version}/{lowercaseId}.{version}.nupkg";
+			var lowercaseVersion = version.ToLowerInvariant ();
+			return $"{DotNetPublicPackageBaseAddress}/{lowercaseId}/{lowercaseVersion}/{lowercaseId}.{lowercaseVersion}.nupkg";
+		}
+
+		[Test]
+		public void PackageUrlIsLowercase ()
+		{
+			var actual = GetPackageUrl ("Package.ID", "1.0.0-RC1");
+			Assert.AreEqual ($"{DotNetPublicPackageBaseAddress}/package.id/1.0.0-rc1/package.id.1.0.0-rc1.nupkg", actual);
 		}
 
 		async Task<string []> GetAssembliesFromNuGet (string url, string filename, string path)
