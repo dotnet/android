@@ -604,7 +604,7 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
     <value>Le type '{0}' doit fournir un constructeur public par défaut</value>
   </data>
   <data name="XA4212" xml:space="preserve">
-    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <value>Le type `{0}` implémente `Android.Runtime.IJavaObject` mais n’hérite pas de `Java.Lang.Object` ni de `Java.Lang.Throwable`. Cela n’est pas recommandé.</value>
     <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
 {0} - The managed type name</comment>
   </data>

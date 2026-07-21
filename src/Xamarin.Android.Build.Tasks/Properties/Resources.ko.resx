@@ -604,7 +604,7 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
     <value>'{0}' 형식은 public 기본 생성자를 제공해야 합니다.</value>
   </data>
   <data name="XA4212" xml:space="preserve">
-    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <value>형식 `{0}`은(는) `Android.Runtime.IJavaObject`를 구현하지만 `Java.Lang.Object` 또는 `Java.Lang.Throwable`을 상속하지 않습니다. 이 길이는 지원되지 않습니다.</value>
     <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
 {0} - The managed type name</comment>
   </data>

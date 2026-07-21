@@ -604,7 +604,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>类型 "{0}" 必须提供公共的默认构造函数</value>
   </data>
   <data name="XA4212" xml:space="preserve">
-    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <value>类型 `{0}` 实现了 `Android.Runtime.IJavaObject`，但未继承 `Java.Lang.Object` 或 `Java.Lang.Throwable`。这不受支持。</value>
     <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
 {0} - The managed type name</comment>
   </data>
