@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -33,7 +34,7 @@ namespace Xamarin.ProjectTools
 		/// <param name="args">command arguments</param>
 		/// <param name="workingDirectory">optional working directory</param>
 		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
-		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
+		protected virtual Process ExecuteProcess (string [] args, string workingDirectory = null)
 		{
 			var p = new Process ();
 			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
@@ -81,29 +82,74 @@ namespace Xamarin.ProjectTools
 			var locker = new Lock ();
 			var procOutput = new StringBuilder ();
 			bool succeeded;
+			int timeoutMilliseconds = (int) TimeSpan.FromMinutes (15).TotalMilliseconds;
+			int streamDrainTimeoutMilliseconds = (int) TimeSpan.FromSeconds (30).TotalMilliseconds;
+			int killTimeoutMilliseconds = (int) TimeSpan.FromSeconds (30).TotalMilliseconds;
 
 			using (var p = ExecuteProcess (args)) {
+				using var stderrCompleted = new ManualResetEventSlim (false);
+				using var stdoutCompleted = new ManualResetEventSlim (false);
+
 				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null)
+					if (e.Data == null) {
+						stderrCompleted.Set ();
+					} else {
 						lock (locker)
 							procOutput.AppendLine (e.Data);
+					}
 				};
 				p.OutputDataReceived += (sender, e) => {
-					if (e.Data != null)
+					if (e.Data == null) {
+						stdoutCompleted.Set ();
+					} else {
 						lock (locker)
 							procOutput.AppendLine (e.Data);
+					}
 				};
 
 				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
-				bool completed = p.WaitForExit ((int) new TimeSpan (0, 15, 0).TotalMilliseconds);
+
+				bool completed = p.WaitForExit (timeoutMilliseconds);
+				if (!completed) {
+					procOutput.AppendLine ($"Process timed out after {TimeSpan.FromMilliseconds (timeoutMilliseconds)}.");
+					TryKillProcess (p, procOutput);
+					completed = p.WaitForExit (killTimeoutMilliseconds);
+					if (!completed) {
+						procOutput.AppendLine ($"Process did not exit within {TimeSpan.FromMilliseconds (killTimeoutMilliseconds)} after kill request.");
+					}
+				}
+
+				bool stdoutDrained = stdoutCompleted.Wait (streamDrainTimeoutMilliseconds);
+				bool stderrDrained = stderrCompleted.Wait (streamDrainTimeoutMilliseconds);
+				if (!stdoutDrained) {
+					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {TimeSpan.FromMilliseconds (streamDrainTimeoutMilliseconds)}.");
+				}
+				if (!stderrDrained) {
+					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {TimeSpan.FromMilliseconds (streamDrainTimeoutMilliseconds)}.");
+				}
+
 				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine ($"Exit Code: {p.ExitCode}");
+				procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <not available>");
 			}
 
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
 			return succeeded;
+		}
+
+		static void TryKillProcess (Process process, StringBuilder procOutput)
+		{
+			try {
+				process.Kill (entireProcessTree: true);
+				procOutput.AppendLine ("Issued kill request for process tree.");
+			} catch (InvalidOperationException) {
+				// Process has already exited.
+			} catch (Win32Exception ex) {
+				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+			} catch (NotSupportedException ex) {
+				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+			}
 		}
 
 		public bool New (string template, string output = null)
