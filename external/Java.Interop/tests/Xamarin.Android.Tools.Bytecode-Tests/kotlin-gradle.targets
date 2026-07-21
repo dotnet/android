@@ -24,6 +24,7 @@
   <PropertyGroup>
     <_KotlinGradleProjectDir>$(MSBuildThisFileDirectory)kotlin-gradle</_KotlinGradleProjectDir>
     <_TestKotlinGradleOutputDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\classes'))</_TestKotlinGradleOutputDir>
+    <_TestKotlinGradleBuildDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\build'))</_TestKotlinGradleBuildDir>
     <!--
         This target is imported by two projects (Xamarin.Android.Tools.Bytecode-Tests
         and generator-Tests) that build in parallel during the solution build. Gradle is
@@ -41,7 +42,7 @@
         BeforeTargets="BeforeCompile"
         Inputs="@(TestKotlinGradleSource)"
         Outputs="@(TestKotlinGradleOutput)">
-    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
+    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinBuildDir=&quot;$(_TestKotlinGradleBuildDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
           EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome);GRADLE_USER_HOME=$(_KotlinGradleUserHome)" />
   </Target>
 
