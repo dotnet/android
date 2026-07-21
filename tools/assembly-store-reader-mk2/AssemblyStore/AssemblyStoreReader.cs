@@ -31,12 +31,7 @@ abstract class AssemblyStoreReader
 
 	public static AssemblyStoreReader? Create (Stream store, string path)
 	{
-		AssemblyStoreReader? reader = MakeReaderReady (new StoreReader_V1 (store, path));
-		if (reader != null) {
-			return reader;
-		}
-
-		reader = MakeReaderReady (new StoreReader_V2 (store, path));
+		AssemblyStoreReader? reader = MakeReaderReady (new StoreReader_V2 (store, path));
 		if (reader != null) {
 			return reader;
 		}
@@ -60,28 +55,58 @@ abstract class AssemblyStoreReader
 	protected abstract void Prepare ();
 	protected abstract ulong GetStoreStartDataOffset ();
 
-	public Stream ReadEntryImageData (AssemblyStoreItem entry, bool uncompressIfNeeded = false)
+	public virtual Stream ReadEntryImageData (AssemblyStoreItem entry, bool uncompressIfNeeded = false)
 	{
 		ulong startOffset = GetStoreStartDataOffset ();
-		StoreStream.Seek ((uint)startOffset + entry.DataOffset, SeekOrigin.Begin);
+		StoreStream.Seek (checked ((long)startOffset + entry.DataOffset), SeekOrigin.Begin);
 		var stream = new MemoryStream ();
-
-		if (uncompressIfNeeded) {
-			throw new NotImplementedException ();
-		}
 
 		const long BufferSize = 65535;
 		byte[] buffer = Utils.BytePool.Rent ((int)BufferSize);
-		long remainingToRead = entry.DataSize;
+		try {
+			long remainingToRead = entry.DataSize;
+			while (remainingToRead > 0) {
+				int nread = StoreStream.Read (buffer, 0, (int)Math.Min (BufferSize, remainingToRead));
+				if (nread == 0) {
+					throw new EndOfStreamException ($"Unexpected end of assembly store '{StorePath}' while reading '{entry.Name}'");
+				}
 
-		while (remainingToRead > 0) {
-			int nread = StoreStream.Read (buffer, 0, (int)Math.Min (BufferSize, remainingToRead));
-			stream.Write (buffer, 0, nread);
-			remainingToRead -= (long)nread;
+				stream.Write (buffer, 0, nread);
+				remainingToRead -= nread;
+			}
+		} finally {
+			Utils.BytePool.Return (buffer);
 		}
+
 		stream.Flush ();
 		stream.Seek (0, SeekOrigin.Begin);
+		return UncompressIfNeeded (stream, uncompressIfNeeded);
+	}
 
+	protected static Stream UncompressIfNeeded (MemoryStream stream, bool uncompressIfNeeded)
+	{
+		if (!uncompressIfNeeded) {
+			return stream;
+		}
+
+#if NET11_0_OR_GREATER
+		var output = new MemoryStream ();
+		if (AssemblyCompression.TryDecompress (stream, output, out _)) {
+			stream.Dispose ();
+			output.Seek (0, SeekOrigin.Begin);
+			return output;
+		}
+
+		output.Dispose ();
+		stream.Seek (0, SeekOrigin.Begin);
 		return stream;
+#else // !NET11_0_OR_GREATER
+		if (!AssemblyCompression.IsCompressed (stream)) {
+			return stream;
+		}
+
+		stream.Dispose ();
+		throw new NotSupportedException ("Assembly decompression requires .NET 11 or later");
+#endif // !NET11_0_OR_GREATER
 	}
 }

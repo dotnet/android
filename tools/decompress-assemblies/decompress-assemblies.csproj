@@ -17,7 +17,12 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <Compile Include="..\assembly-store-reader\AssemblyStore*.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\assembly-store-reader-mk2\AssemblyStore\AssemblyStore.csproj" />
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
 
   <ItemGroup>

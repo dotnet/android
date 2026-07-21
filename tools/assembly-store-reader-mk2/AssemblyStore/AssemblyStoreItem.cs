@@ -4,7 +4,7 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.AssemblyStore;
 
-abstract class AssemblyStoreItem
+public abstract class AssemblyStoreItem
 {
 	public string Name                  { get; }
 	public IList<ulong> Hashes          { get; }

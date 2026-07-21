@@ -34,12 +34,13 @@ public class TrimmableTypeMapGenerator
 		ManifestConfig? manifestConfig = null,
 		XDocument? manifestTemplate = null,
 		string? packageNamingPolicy = null,
-		bool generateTypeMapAssemblies = true)
+		bool generateTypeMapAssemblies = true,
+		bool errorOnCustomJavaObject = true)
 	{
 		_ = assemblies ?? throw new ArgumentNullException (nameof (assemblies));
 		_ = systemRuntimeVersion ?? throw new ArgumentNullException (nameof (systemRuntimeVersion));
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
-		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames);
+		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames, errorOnCustomJavaObject);
 		if (allPeers.Count == 0) {
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
@@ -161,9 +162,10 @@ public class TrimmableTypeMapGenerator
 	(List<JavaPeerInfo> peers, AssemblyManifestInfo manifestInfo) ScanAssemblies (
 		IReadOnlyList<AssemblyInput> assemblies,
 		string? packageNamingPolicy,
-		HashSet<string> frameworkAssemblyNames)
+		HashSet<string> frameworkAssemblyNames,
+		bool errorOnCustomJavaObject = true)
 	{
-		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger, frameworkAssemblyNames);
+		using var scanner = new JavaPeerScanner (packageNamingPolicy, logger, frameworkAssemblyNames, errorOnCustomJavaObject);
 		var peers = scanner.Scan (assemblies);
 		var manifestInfo = scanner.ScanAssemblyManifestInfo ();
 		logger.LogJavaPeerScanInfo (assemblies.Count, peers.Count);

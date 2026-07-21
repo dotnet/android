@@ -603,6 +603,11 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA4213" xml:space="preserve">
     <value>類型 '{0}' 必須提供公用預設建構函式</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>受控類型 `{0}` 存在於多個組件: {1}。請重構這些組件中的受控類型名稱，以免其重複。</value>
     <comment>{0} - The managed type name

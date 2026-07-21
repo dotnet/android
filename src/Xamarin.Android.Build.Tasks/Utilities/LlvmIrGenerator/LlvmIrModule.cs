@@ -681,7 +681,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"{t} must be a class or a struct");
 			}
 
-			// TODO: check if already there
 			if (structures.TryGetValue (t, out StructureInfo sinfo)) {
 				return (StructureInfo)sinfo;
 			}

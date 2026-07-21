@@ -42,6 +42,8 @@ updates:
       interval: "weekly"
   - package-ecosystem: "gradle"
     directories:
+      - "/external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
+      - "/external/Java.Interop/tools/java-source-utils"
       - "/src/r8"
       - "/src/manifestmerger"
       - "/src/proguard-android"

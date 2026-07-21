@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>2026 Microsoft Corporation</Copyright>
+    <TargetFrameworks>$(DotNetStableTargetFramework);$(DotNetTargetFramework)</TargetFrameworks>
+    <AssemblyName>Xamarin.Android.AssemblyStore</AssemblyName>
+    <RootNamespace>Xamarin.Android.AssemblyStore</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
+    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+  </ItemGroup>
+</Project>

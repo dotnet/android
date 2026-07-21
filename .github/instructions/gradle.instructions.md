@@ -49,10 +49,11 @@ az login   # one-time, corp account with MFA satisfied
 pwsh ./eng/gradle/mirror-dependencies.ps1 `
     -ProjectDir <path-to-failing-gradle-project> `
     -Task <gradle-task-CI-runs> `
+    -GradleWrapper <path-to-wrapper-CI-runs> `
     -AndroidHome <path-to-Android-SDK>   # required for any com.android.* project
 ```
 
-The mirror must run in the project that actually needs the new package — a sibling project's build won't trigger a mirror for someone else's deps. Typical convergence is 2-5 iterations as the resolver walks the dep graph breadth-first.
+The mirror must run in the project that actually needs the new package — a sibling project's build won't trigger a mirror for someone else's deps. If that project uses a different Gradle wrapper in CI, pass the same wrapper with `-GradleWrapper`; Kotlin and other plugins publish Gradle-version-specific variants. Typical convergence is 2-5 iterations as the resolver walks the dep graph breadth-first.
 
 After it succeeds, just re-run the failed CI job. No PR edits needed — the packages are now anonymous-readable forever.
 

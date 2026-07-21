@@ -35,6 +35,7 @@
     <Compile Remove="Resources\ApacheHttpClient.cs" />
     <Compile Remove="Expected\**" />
     <Compile Include="..\..\..\..\tools\assembly-store-reader-mk2\AssemblyStore\*.cs" />
+    <Compile Include="..\..\..\..\tools\assembly-store-reader-mk2\AssemblyStore\V1\*.cs" />
     <Content Include="Expected\GenerateDesignerFileExpected.cs">
       <Link>..\Expected\GenerateDesignerFileExpected.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

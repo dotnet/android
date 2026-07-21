@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,38 +12,6 @@ namespace Xamarin.Android.Tools;
 
 public partial class SdkManager
 {
-	public string? FindSdkManagerPath ()
-	{
-		if (string.IsNullOrEmpty (AndroidSdkPath))
-			return null;
-
-		var ext = OS.IsWindows ? ".bat" : string.Empty;
-		var cmdlineToolsDir = Path.Combine (AndroidSdkPath, "cmdline-tools");
-
-		if (Directory.Exists (cmdlineToolsDir)) {
-			try {
-				// Versioned dirs sorted descending, then "latest" as fallback
-				var searchDirs = Directory.GetDirectories (cmdlineToolsDir)
-					.Select (Path.GetFileName)
-					.Where (n => n != "latest" && !string.IsNullOrEmpty (n))
-					.OrderByDescending (n => Version.TryParse (n, out var v) ? v : new Version (0, 0))
-					.Append ("latest");
-
-				foreach (var dir in searchDirs) {
-					var toolPath = Path.Combine (cmdlineToolsDir, dir!, "bin", "sdkmanager" + ext);
-					if (File.Exists (toolPath))
-						return toolPath;
-				}
-			} catch (Exception ex) {
-				logger (TraceLevel.Verbose, $"Error enumerating cmdline-tools directories: {ex.Message}");
-			}
-		}
-
-		// Legacy fallback: tools/bin/sdkmanager
-		var legacyPath = Path.Combine (AndroidSdkPath, "tools", "bin", "sdkmanager" + ext);
-		return File.Exists (legacyPath) ? legacyPath : null;
-	}
-
 	public async Task<(IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available)> ListAsync (CancellationToken cancellationToken = default)
 	{
 		var sdkManagerPath = RequireSdkManagerPath ();
@@ -110,19 +77,23 @@ public partial class SdkManager
 		var installed = new List<SdkPackage> ();
 		var available = new List<SdkPackage> ();
 		List<SdkPackage>? target = null;
+		var parsingUpdates = false;
 
 		foreach (var line in output.Split (new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
 			var trimmed = line.Trim ();
 
-			if (trimmed.Contains ("Installed packages:")) { target = installed; continue; }
-			if (trimmed.Contains ("Available Packages:")) { target = available; continue; }
-			if (trimmed.Contains ("Available Updates:")) { target = null; continue; }
+			if (trimmed.Contains ("Installed packages:")) { target = installed; parsingUpdates = false; continue; }
+			if (trimmed.Contains ("Available Packages:")) { target = available; parsingUpdates = false; continue; }
+			if (trimmed.Contains ("Available Updates:")) { target = available; parsingUpdates = true; continue; }
 
 			if (target is null || trimmed.StartsWith ("Path", StringComparison.Ordinal) || trimmed.StartsWith ("---", StringComparison.Ordinal))
 				continue;
 
 			var parts = trimmed.Split ('|');
-			if (parts.Length < 2)
+			if (parsingUpdates && string.Equals (parts [0].Trim (), "ID", StringComparison.Ordinal))
+				continue;
+			var versionIndex = parsingUpdates ? 2 : 1;
+			if (parts.Length <= versionIndex)
 				continue;
 
 			var path = parts[0].Trim ();
@@ -131,8 +102,8 @@ public partial class SdkManager
 
 			target.Add (new SdkPackage (
 				path,
-				Version: parts[1].Trim (),
-				Description: parts.Length > 2 ? parts[2].Trim () : null,
+				Version: parts[versionIndex].Trim (),
+				Description: !parsingUpdates && parts.Length > 2 ? parts[2].Trim () : null,
 				IsInstalled: target == installed
 			));
 		}

@@ -67,8 +67,8 @@ const ApplicationConfig application_config = {
 	.jni_remapping_replacement_type_count = 2,
 	.jni_remapping_replacement_method_index_entry_count = 2,
 	.android_package_name = android_package_name,
-	.managed_marshal_methods_lookup_enabled = false,
 	.have_assembly_store = false,
+	.assembly_store_decompression_cache_enabled = false,
 };
 
 // TODO: migrate to std::string_view for these two
