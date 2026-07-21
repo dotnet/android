@@ -2542,12 +2542,14 @@ public class FacebookSdk {{
 						Metadata = {
 							{ "Version", "17.0.2" },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.GetMavenRepository ("Central") },
 						},
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
 						Metadata = {
 							{ "Version", "17.0.2" },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.GetMavenRepository ("Central") },
 						},
 					},
 				},

@@ -8,6 +8,7 @@ namespace Java.Interop.Tools.Maven_Tests.Extensions;
 
 class MavenProjectResolver : IProjectResolver
 {
+	const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
 	readonly IMavenRepository repository;
 
 	public MavenProjectResolver (IMavenRepository repository)
@@ -19,9 +20,14 @@ class MavenProjectResolver : IProjectResolver
 	{
 		var cache_path = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "dotnet-android", "MavenCacheDirectory");
 
-		Central = new MavenProjectResolver (new CachedMavenRepository (cache_path, MavenRepository.Central));
-		Google = new MavenProjectResolver (new CachedMavenRepository (cache_path, MavenRepository.Google));
+		Central = new MavenProjectResolver (new CachedMavenRepository (cache_path, GetRepository (MavenRepository.Central, "central")));
+		Google = new MavenProjectResolver (new CachedMavenRepository (cache_path, GetRepository (MavenRepository.Google, "google")));
 	}
+
+	static MavenRepository GetRepository (MavenRepository localRepository, string name) =>
+		string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase)
+			? new MavenRepository (DotNetPublicMaven, name)
+			: localRepository;
 
 	public Project Resolve (Artifact artifact)
 	{

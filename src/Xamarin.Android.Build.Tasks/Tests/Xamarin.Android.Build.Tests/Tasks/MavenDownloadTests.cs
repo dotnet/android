@@ -7,14 +7,12 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.ProjectTools;
 using Task = System.Threading.Tasks.Task;
 namespace Xamarin.Android.Build.Tests;
 
 public class MavenDownloadTests
 {
-	// Internal CI cannot resolve Maven Central directly; the public mirror provides the same artifacts anonymously.
-	const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
-
 	[Test]
 	public async Task MissingVersionMetadata ()
 	{
@@ -94,7 +92,7 @@ public class MavenDownloadTests
 	public async Task InsecureHttpRepository_AllowedWithOptIn ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-		var item = CreateMavenTaskItem ("com.example:dummy", "1.0.0", "http://repo.example.com/maven2/");
+		var item = CreateMavenTaskItem ("com.example:dummy", "1.0.0", "http://127.0.0.1:1/maven2/");
 		item.SetMetadata ("AllowInsecureHttp", "true");
 
 		var task = new MavenDownload {
@@ -113,6 +111,9 @@ public class MavenDownloadTests
 	[Test]
 	public async Task UnknownArtifact ()
 	{
+		if (TestEnvironment.IsRunningOnCI)
+			Assert.Ignore ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
+
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
@@ -129,6 +130,9 @@ public class MavenDownloadTests
 	[Test]
 	public async Task UnknownPom ()
 	{
+		if (TestEnvironment.IsRunningOnCI)
+			Assert.Ignore ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
+
 		var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 
 		try {
@@ -141,7 +145,10 @@ public class MavenDownloadTests
 
 			// Create the dummy jar so we bypass that step and try to download the dummy pom
 			var dummy_jar = Path.Combine (temp_cache_dir, "central", "com.example", "dummy", "1.0.0", "dummy-1.0.0.jar");
-			Directory.CreateDirectory (Path.GetDirectoryName (dummy_jar)!);
+			var dummy_jar_directory = Path.GetDirectoryName (dummy_jar);
+			if (dummy_jar_directory is null)
+				throw new InvalidOperationException ($"Could not determine the directory for '{dummy_jar}'.");
+			Directory.CreateDirectory (dummy_jar_directory);
 
 			using (File.Create (dummy_jar)) { }
 
@@ -164,7 +171,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4", DotNetPublicMaven)],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4", TestEnvironment.GetMavenRepository ("Central"))],
 			};
 
 			await task.RunTaskAsync ();
@@ -172,7 +179,10 @@ public class MavenDownloadTests
 			Assert.AreEqual (0, engine.Errors.Count);
 			Assert.AreEqual (1, task.ResolvedAndroidMavenLibraries?.Length);
 
-			var output_item = task.ResolvedAndroidMavenLibraries! [0];
+			var output_items = task.ResolvedAndroidMavenLibraries;
+			if (output_items is null)
+				throw new InvalidOperationException ("MavenDownload did not produce resolved libraries.");
+			var output_item = output_items [0];
 
 			Assert.AreEqual ("com.google.auto.value:auto-value-annotations:1.10.4", output_item.GetMetadata ("JavaArtifact"));
 			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
@@ -192,7 +202,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("androidx.core:core", "1.12.0", "Google")],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("androidx.core:core", "1.12.0", TestEnvironment.GetMavenRepository ("Google"))],
 			};
 
 			await task.RunTaskAsync ();
@@ -200,10 +210,14 @@ public class MavenDownloadTests
 			Assert.AreEqual (0, engine.Errors.Count);
 			Assert.AreEqual (1, task.ResolvedAndroidMavenLibraries?.Length);
 
-			var output_item = task.ResolvedAndroidMavenLibraries! [0];
+			var output_items = task.ResolvedAndroidMavenLibraries;
+			if (output_items is null)
+				throw new InvalidOperationException ("MavenDownload did not produce resolved libraries.");
+			var output_item = output_items [0];
 
 			Assert.AreEqual ("androidx.core:core:1.12.0", output_item.GetMetadata ("JavaArtifact"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "google", "androidx.core", "core", "1.12.0", "core-1.12.0.pom"), output_item.GetMetadata ("Manifest"));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("androidx.core", "core", "1.12.0", "core-1.12.0.pom")));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
@@ -221,7 +235,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("com.facebook.react:react-android", "0.76.1", artifactFilename: "react-android-0.76.1.module")],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("com.facebook.react:react-android", "0.76.1", TestEnvironment.GetMavenRepository ("Central"), artifactFilename: "react-android-0.76.1.module")],
 			};
 
 			await task.RunTaskAsync ();
@@ -229,11 +243,15 @@ public class MavenDownloadTests
 			Assert.AreEqual (0, engine.Errors.Count);
 			Assert.AreEqual (1, task.ResolvedAndroidMavenLibraries?.Length);
 
-			var output_item = task.ResolvedAndroidMavenLibraries! [0];
+			var output_items = task.ResolvedAndroidMavenLibraries;
+			if (output_items is null)
+				throw new InvalidOperationException ("MavenDownload did not produce resolved libraries.");
+			var output_item = output_items [0];
 
 			Assert.AreEqual ("com.facebook.react:react-android:0.76.1", output_item.GetMetadata ("JavaArtifact"));
 			Assert.True (output_item.ItemSpec.EndsWith (Path.Combine ("0.76.1", "react-android-0.76.1.module"), StringComparison.OrdinalIgnoreCase));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.facebook.react", "react-android", "0.76.1", "react-android-0.76.1.pom"), output_item.GetMetadata ("Manifest"));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("com.facebook.react", "react-android", "0.76.1", "react-android-0.76.1.pom")));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}

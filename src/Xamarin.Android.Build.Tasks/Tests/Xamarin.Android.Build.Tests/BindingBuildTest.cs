@@ -1011,6 +1011,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
 			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
 			item.Metadata.Add ("Version", "1.10.4");
+			item.Metadata.Add ("Repository", TestEnvironment.GetMavenRepository ("Central"));
 
 			var proj = new XamarinAndroidBindingProject {
 				IsRelease = isRelease,
@@ -1039,7 +1040,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.GetMavenRepository ("Google"));
 
 			var proj = new XamarinAndroidBindingProject {
 				IsRelease = isRelease,
@@ -1068,7 +1069,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google"  VerifyDependencies="false"/>
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.GetMavenRepository ("Google"));
 			item.Metadata.Add ("VerifyDependencies", "false");
 			item.Metadata.Add ("Bind", "false");
 
@@ -1097,7 +1098,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.GetMavenRepository ("Google"));
 			item.Metadata.Add ("Bind", "false");
 
 			// Dependency fulfilled by <PackageReference>
@@ -1109,7 +1110,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// Dependency fulfilled by <AndroidMavenLibrary>
 			var annotations_experimental_androidlib = new BuildItem ("AndroidMavenLibrary", "androidx.annotation:annotation-experimental");
 			annotations_experimental_androidlib.Metadata.Add ("Version", "1.3.0");
-			annotations_experimental_androidlib.Metadata.Add ("Repository", "Google");
+			annotations_experimental_androidlib.Metadata.Add ("Repository", TestEnvironment.GetMavenRepository ("Google"));
 			annotations_experimental_androidlib.Metadata.Add ("Bind", "false");
 			annotations_experimental_androidlib.Metadata.Add ("VerifyDependencies", "false");
 

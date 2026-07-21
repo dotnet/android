@@ -20,6 +20,14 @@ namespace Xamarin.ProjectTools
 	/// <seealso cref="FileSystemUtils"/>
 	public static class TestEnvironment
 	{
+		const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
+		static readonly string [] publicMavenRepositories = {
+			"https://repo1.maven.org/maven2/",
+			"https://repo.maven.apache.org/maven2/",
+			"https://maven.google.com/",
+			"https://dl.google.com/android/maven2/",
+		};
+
 		[DllImport ("libc")]
 		static extern int uname (IntPtr buf);
 
@@ -65,6 +73,25 @@ namespace Xamarin.ProjectTools
 			get {
 				return !IsWindows && !IsMacOS;
 			}
+		}
+
+		public static bool IsRunningOnCI =>
+			string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase);
+
+		public static string GetMavenRepository (string repository) =>
+			IsRunningOnCI ? DotNetPublicMaven : repository;
+
+		public static string GetTestDownloadUrl (string url)
+		{
+			if (!IsRunningOnCI)
+				return url;
+
+			foreach (var repository in publicMavenRepositories) {
+				if (url.StartsWith (repository, StringComparison.OrdinalIgnoreCase))
+					return $"{DotNetPublicMaven}/{url.Substring (repository.Length)}";
+			}
+
+			return url;
 		}
 
 		/// <summary>
@@ -196,4 +223,3 @@ namespace Xamarin.ProjectTools
 		public static bool IsUsingJdk11 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("11.0");
 	}
 }
-

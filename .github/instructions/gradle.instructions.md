@@ -57,6 +57,16 @@ The mirror must run in the project that actually needs the new package — a sib
 
 After it succeeds, just re-run the failed CI job. No PR edits needed — the packages are now anonymous-readable forever.
 
+Tests that resolve Maven files without Gradle can seed coordinates directly:
+
+```powershell
+pwsh ./eng/gradle/mirror-dependencies.ps1 `
+    -MavenArtifact 'androidx.core:core:1.12.0'
+```
+
+This attempts the coordinate's POM, JAR, AAR, and Gradle module metadata. Append
+the exact filename as a fourth segment for a nonstandard payload.
+
 ## Don'ts
 
 - Don't hard-code Maven repo URLs in `build.gradle` / `settings.gradle`; use the shared file.

@@ -37,7 +37,7 @@ namespace Xamarin.ProjectTools
 			Directory.CreateDirectory (ProjectDirectory);
 			gradleCLI.Init (ProjectDirectory);
 			var settingsFile = Path.Combine (ProjectDirectory, "settings.gradle.kts");
-			File.WriteAllText (settingsFile, settings_gradle_kts_content);
+			File.WriteAllText (settingsFile, GetSettingsGradleKtsContent ());
 			File.WriteAllText (BuildFilePath, GetBuildGradleKtsContent ());
 			foreach (var module in Modules) {
 				module.Create ();
@@ -45,8 +45,9 @@ namespace Xamarin.ProjectTools
 			}
 			File.AppendAllText (Path.Combine (ProjectDirectory, "gradle.properties"), "android.useAndroidX=true");
 
-			// Update Gradle wrapper version if specified
-			if (!string.IsNullOrEmpty (GradleVersion)) {
+			// The repository wrapper used by Init has already populated its distribution in CI.
+			// Keep that generated wrapper version there rather than downloading another distribution.
+			if (!string.IsNullOrEmpty (GradleVersion) && !TestEnvironment.IsRunningOnCI) {
 				var wrapperPropertiesPath = Path.Combine (ProjectDirectory, "gradle", "wrapper", "gradle-wrapper.properties");
 				if (File.Exists (wrapperPropertiesPath)) {
 					var content = File.ReadAllText (wrapperPropertiesPath);
@@ -100,23 +101,24 @@ plugins {{
     id(""com.android.library"") version ""{AgpVersion}"" apply false
 }}
 ";
-		const string settings_gradle_kts_content =
-@"
+		string GetSettingsGradleKtsContent ()
+		{
+			var gradleConfigurationDirectory = Path.Combine (XABuildPaths.TopDirectory, "eng", "gradle").Replace ('\\', '/');
+
+			return $$"""
+// See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
+    apply(from = "{{gradleConfigurationDirectory}}/plugin-repositories.gradle", to = this)
+}
+if (System.getenv("ANDROID_MIRROR_MAVEN_DEPENDENCIES") == "true") {
+    apply(from = "{{gradleConfigurationDirectory}}/credential-provider.gradle")
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
+    apply(from = "{{gradleConfigurationDirectory}}/dependency-repositories.gradle", to = this)
 }
-";
+""";
+		}
 
 	}
 }

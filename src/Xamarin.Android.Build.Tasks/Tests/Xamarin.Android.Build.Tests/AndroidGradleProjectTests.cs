@@ -598,6 +598,9 @@ public class Foo {{
 		[TestCaseSource (nameof (GetAgpGradleVersionTestData))]
 		public void BindLibraryWithMultipleGradleVersions (string agpVersion, string gradleVersion, int compileSdk)
 		{
+			if (TestEnvironment.IsRunningOnCI)
+				Assert.Ignore ("Alternate Gradle distributions are not downloaded from public services in CI.");
+
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion, gradleVersion, compileSdk: compileSdk);
 			var gradleModule = gradleProject.Modules.First ();
 			var moduleName = gradleModule.Name;

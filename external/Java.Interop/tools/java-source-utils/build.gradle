@@ -22,12 +22,6 @@ java {
     targetCompatibility = ext.javaTargetVer
 }
 
-repositories {
-    // Use maven central for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    mavenCentral()
-}
-
 dependencies {
     // This dependency is used by the application.
     implementation 'com.github.javaparser:javaparser-core:3.28.2'
