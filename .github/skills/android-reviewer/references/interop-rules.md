@@ -1,9 +1,8 @@
 # Managed ↔ Native Interop Review Rules
 
-Rules for the boundary between C# and C/C++ code — P/Invoke declarations, JNI
-bindings, and shared structs. Load when both managed and native files change, or
-when the diff contains interop markers (`JniObjectReference`, `JniPeerMembers`,
-`DllImport`, `[Register]`, `JNIEnv`, `[MarshalAs]`, `[StructLayout]`).
+Rules for managed/native boundaries and Java/JNI name handling. Load for interop
+markers, Java/JNI name conversions, or changes under Java.Interop, Mono.Android,
+native runtime, or TrimmableTypeMap paths.
 
 ---
 

@@ -62,7 +62,7 @@ Review the CI results. **Never post ✅ LGTM if any required CI check is failing
 
 ### 5. Load review rules
 
-Based on the file types identified in step 2, read the appropriate rule files from this skill's `references/` directory.
+Based on the changed files and diff content identified in step 2, read the appropriate rule files from this skill's `references/` directory.
 
 **Always load:**
 - `references/repo-conventions.md` — Formatting, style, and patterns specific to this repository.
