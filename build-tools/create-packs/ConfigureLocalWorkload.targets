@@ -82,7 +82,7 @@
       <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' ">$(_LocalSdkFeatureBandPrefix)00</_LocalSdkFeatureBand>
       <_LocalSdkPrerelease>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `(?&lt;=-)[^+]+`))</_LocalSdkPrerelease>
       <_LocalSdkPrereleaseFeatureBand>$([System.Text.RegularExpressions.Regex]::Match($(_LocalSdkPrerelease), `^[^.]+(\.[^.]+)?`))</_LocalSdkPrereleaseFeatureBand>
-      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkPrerelease)' != '' and !$(_LocalSdkPrerelease.Contains('dev')) and !$(_LocalSdkPrerelease.Contains('ci')) and !$(_LocalSdkPrerelease.Contains('rtm')) ">$(_LocalSdkFeatureBand)-$(_LocalSdkPrereleaseFeatureBand)</_LocalSdkFeatureBand>
+      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' and '$(_LocalSdkPrerelease)' != '' and !$(_LocalSdkPrerelease.Contains('dev')) and !$(_LocalSdkPrerelease.Contains('ci')) and !$(_LocalSdkPrerelease.Contains('rtm')) ">$(_LocalSdkFeatureBand)-$(_LocalSdkPrereleaseFeatureBand)</_LocalSdkFeatureBand>
     </PropertyGroup>
 
     <Error Condition=" '$(_LocalSdkFeatureBand)' == '' " Text="Failed to determine the SDK feature band from NETCoreSdkVersion '$(NETCoreSdkVersion)'." />
