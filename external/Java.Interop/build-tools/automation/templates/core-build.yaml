@@ -2,6 +2,12 @@ parameters:
   condition: succeeded()
 
 steps:
+- pwsh: |
+    $gradle = Get-Command gradle -CommandType Application -ErrorAction Stop | Select-Object -First 1
+    Write-Host "Using preinstalled Gradle: $($gradle.Source)"
+    Write-Host "##vso[task.setvariable variable=GradleWPath]$($gradle.Source)"
+  displayName: Use preinstalled Gradle
+
 - task: DotNetCoreCLI@2
   displayName: Prepare Solution
   inputs:
