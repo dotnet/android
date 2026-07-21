@@ -34,7 +34,7 @@ namespace Xamarin.ProjectTools
 		/// <param name="args">command arguments</param>
 		/// <param name="workingDirectory">optional working directory</param>
 		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
-		protected virtual Process ExecuteProcess (string [] args, string workingDirectory = null)
+		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
 		{
 			var p = new Process ();
 			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
@@ -82,9 +82,9 @@ namespace Xamarin.ProjectTools
 			var locker = new Lock ();
 			var procOutput = new StringBuilder ();
 			bool succeeded;
-			int timeoutMilliseconds = (int) TimeSpan.FromMinutes (15).TotalMilliseconds;
-			int streamDrainTimeoutMilliseconds = (int) TimeSpan.FromSeconds (30).TotalMilliseconds;
-			int killTimeoutMilliseconds = (int) TimeSpan.FromSeconds (30).TotalMilliseconds;
+			const int timeoutMilliseconds = 15 * 60 * 1000;
+			const int streamDrainTimeoutMilliseconds = 30 * 1000;
+			const int killTimeoutMilliseconds = 30 * 1000;
 
 			using (var p = ExecuteProcess (args)) {
 				using var stderrCompleted = new ManualResetEventSlim (false);
@@ -113,21 +113,19 @@ namespace Xamarin.ProjectTools
 
 				bool completed = p.WaitForExit (timeoutMilliseconds);
 				if (!completed) {
-					procOutput.AppendLine ($"Process timed out after {TimeSpan.FromMilliseconds (timeoutMilliseconds)}.");
+					procOutput.AppendLine ($"Process timed out after {timeoutMilliseconds}ms.");
 					TryKillProcess (p, procOutput);
 					completed = p.WaitForExit (killTimeoutMilliseconds);
 					if (!completed) {
-						procOutput.AppendLine ($"Process did not exit within {TimeSpan.FromMilliseconds (killTimeoutMilliseconds)} after kill request.");
+						procOutput.AppendLine ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
 					}
 				}
 
-				bool stdoutDrained = stdoutCompleted.Wait (streamDrainTimeoutMilliseconds);
-				bool stderrDrained = stderrCompleted.Wait (streamDrainTimeoutMilliseconds);
-				if (!stdoutDrained) {
-					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {TimeSpan.FromMilliseconds (streamDrainTimeoutMilliseconds)}.");
+				if (!stdoutCompleted.Wait (streamDrainTimeoutMilliseconds)) {
+					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
-				if (!stderrDrained) {
-					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {TimeSpan.FromMilliseconds (streamDrainTimeoutMilliseconds)}.");
+				if (!stderrCompleted.Wait (streamDrainTimeoutMilliseconds)) {
+					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
 
 				succeeded = completed && p.ExitCode == 0;
@@ -141,6 +139,9 @@ namespace Xamarin.ProjectTools
 		static void TryKillProcess (Process process, StringBuilder procOutput)
 		{
 			try {
+				if (process.HasExited) {
+					return;
+				}
 				process.Kill (entireProcessTree: true);
 				procOutput.AppendLine ("Issued kill request for process tree.");
 			} catch (InvalidOperationException) {
