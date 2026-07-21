@@ -63,26 +63,54 @@ static class SafeJavaCollectionFactory
 				// Capture the parsed arguments so GetGenericArguments () runs once when the converter is
 				// selected, rather than again for every conversion.
 				var arguments = targetType.GetGenericArguments ();
-				if (!AreSupportedCollectionArguments (arguments)) {
-					converter = GetUntypedFromJniHandleConverter (genericDefinition);
-					return true;
-				}
-
 				if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
 					var elementType = arguments [0];
-					converter = (handle, transfer) => CreateListFromJniHandle (elementType, handle, transfer);
+					if (elementType.IsValueType) {
+						if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var listFactory)) {
+							converter = GetUntypedFromJniHandleConverter (genericDefinition);
+							return true;
+						}
+						converter = (handle, transfer) => handle == IntPtr.Zero ? null : listFactory.CreateList (handle, transfer);
+						return true;
+					}
+					converter = (handle, transfer) => CreateReferenceListFromJniHandle (elementType, handle, transfer);
 					return true;
 				}
 
 				if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
 					var elementType = arguments [0];
-					converter = (handle, transfer) => CreateCollectionFromJniHandle (elementType, handle, transfer);
+					if (elementType.IsValueType) {
+						if (!ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var collectionFactory)) {
+							converter = GetUntypedFromJniHandleConverter (genericDefinition);
+							return true;
+						}
+						converter = (handle, transfer) => handle == IntPtr.Zero ? null : collectionFactory.CreateCollection (handle, transfer);
+						return true;
+					}
+					converter = (handle, transfer) => CreateReferenceCollectionFromJniHandle (elementType, handle, transfer);
 					return true;
 				}
 
 				var keyType = arguments [0];
 				var valueType = arguments [1];
-				converter = (handle, transfer) => CreateDictionaryFromJniHandle (keyType, valueType, handle, transfer);
+				ValueTypeFactory? keyFactory = null;
+				ValueTypeFactory? valueFactory = null;
+				if ((keyType.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (keyType, out keyFactory))
+						|| (valueType.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (valueType, out valueFactory))) {
+					converter = GetUntypedFromJniHandleConverter (genericDefinition);
+					return true;
+				}
+				if (keyFactory != null) {
+					converter = valueFactory != null
+						? (handle, transfer) => handle == IntPtr.Zero ? null : keyFactory.CreateDictionary (valueFactory, handle, transfer)
+						: (handle, transfer) => handle == IntPtr.Zero ? null : keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
+					return true;
+				}
+				if (valueFactory != null) {
+					converter = (handle, transfer) => handle == IntPtr.Zero ? null : valueFactory.CreateDictionaryWithReferenceKey (keyType, handle, transfer);
+					return true;
+				}
+				converter = (handle, transfer) => CreateReferenceDictionaryFromJniHandle (keyType, valueType, handle, transfer);
 				return true;
 			}
 		}
@@ -95,17 +123,6 @@ static class SafeJavaCollectionFactory
 		=> genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)
 			|| genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)
 			|| genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>);
-
-	static bool AreSupportedCollectionArguments (Type[] arguments)
-	{
-		foreach (var argument in arguments) {
-			if (argument.IsValueType && !ValueTypeFactory.PrimitiveTypeFactories.ContainsKey (argument)) {
-				return false;
-			}
-		}
-
-		return true;
-	}
 
 	static Func<IntPtr, JniHandleOwnership, object?> GetUntypedFromJniHandleConverter (Type genericDefinition)
 	{
@@ -128,15 +145,10 @@ static class SafeJavaCollectionFactory
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The dynamically constructed JavaList<elementType> rides the JavaList<IJavaPeerable> canonical template whose activation constructor is rooted by the " +
 			"concrete-literal branch. Only the known JavaList<T> activation constructor is invoked here.")]
-	static object? CreateListFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
+	static object? CreateReferenceListFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
 			return null;
-		}
-
-		if (elementType.IsValueType) {
-			var valueFactory = ValueTypeFactory.PrimitiveTypeFactories [elementType];
-			return valueFactory.CreateList (handle, transfer);
 		}
 
 		if (elementType == typeof (IJavaPeerable)) {
@@ -167,15 +179,10 @@ static class SafeJavaCollectionFactory
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The dynamically constructed JavaCollection<elementType> rides the JavaCollection<IJavaPeerable> canonical template whose activation constructor is rooted " +
 			"by the concrete-literal branch. Only the known JavaCollection<T> activation constructor is invoked here.")]
-	static object? CreateCollectionFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
+	static object? CreateReferenceCollectionFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
 			return null;
-		}
-
-		if (elementType.IsValueType) {
-			var valueFactory = ValueTypeFactory.PrimitiveTypeFactories [elementType];
-			return valueFactory.CreateCollection (handle, transfer);
 		}
 
 		if (elementType == typeof (IJavaPeerable)) {
@@ -206,24 +213,10 @@ static class SafeJavaCollectionFactory
 	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
 		Justification = "The dynamically constructed JavaDictionary<keyType,valueType> rides the JavaDictionary<IJavaPeerable,IJavaPeerable> canonical template whose activation " +
 			"constructor is rooted by the concrete-literal branch. Only the known JavaDictionary<TKey,TValue> activation constructor is invoked here.")]
-	static object? CreateDictionaryFromJniHandle (Type keyType, Type valueType, IntPtr handle, JniHandleOwnership transfer)
+	static object? CreateReferenceDictionaryFromJniHandle (Type keyType, Type valueType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
 			return null;
-		}
-
-		if (keyType.IsValueType) {
-			var keyFactory = ValueTypeFactory.PrimitiveTypeFactories [keyType];
-			// The key is a primitive/nullable value type. A value/value dictionary uses the full rooted cross-product;
-			// a value/reference dictionary roots JavaDictionary<value,__Canon> via the value factory's token.
-			return valueType.IsValueType
-				? keyFactory.CreateDictionary (ValueTypeFactory.PrimitiveTypeFactories [valueType], handle, transfer)
-				: keyFactory.CreateDictionaryWithReferenceValue (valueType, handle, transfer);
-		}
-
-		if (valueType.IsValueType) {
-			// The key is a reference type and the value is primitive/nullable: root JavaDictionary<__Canon,value>.
-			return ValueTypeFactory.PrimitiveTypeFactories [valueType].CreateDictionaryWithReferenceKey (keyType, handle, transfer);
 		}
 
 		// Both arguments are reference types: JavaDictionary<TKey,TValue> rides the __Canon template.
