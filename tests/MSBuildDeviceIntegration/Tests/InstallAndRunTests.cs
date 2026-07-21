@@ -759,7 +759,12 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				IsRelease = true,
 			};
 			app.SetRuntime (AndroidRuntime.CoreCLR);
-			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			app.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
+			app.SetProperty ("AndroidPackageFormat", "apk");
+			app.SetProperty ("EmbedAssembliesIntoApk", "true");
+			app.SetProperty ("PublishTrimmed", "true");
+			app.SetProperty ("AndroidLinkMode", "SdkOnly");
+			app.SetProperty ("TrimMode", "partial");
 			app.SetDefaultTargetDevice ();
 			app.MainActivity = app.DefaultMainActivity.Replace (
 				"base.OnCreate (savedInstanceState);",
