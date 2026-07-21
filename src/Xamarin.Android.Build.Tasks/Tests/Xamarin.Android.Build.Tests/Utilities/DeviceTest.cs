@@ -366,15 +366,22 @@ namespace Xamarin.Android.Build.Tests
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 
-			bool didActionSucceed = false;
+			int didActionSucceed = 0;
 			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
+				// Process already-buffered logcat lines first so startup messages emitted before
+				// this monitor starts are still visible to tests.
+				if (TryMatchLogcatOutput (RunAdbCommand ("logcat -d"), sw, action)) {
+					sw.Flush ();
+					return true;
+				}
+
 				using (var proc = Process.Start (info)) {
 					proc.OutputDataReceived += (sender, e) => {
 						if (e.Data != null) {
 							sw.WriteLine (e.Data);
 							if (action (e.Data)) {
-								didActionSucceed = true;
+								Interlocked.Exchange (ref didActionSucceed, 1);
 							}
 						} else {
 							stdout_done.Set ();
@@ -382,7 +389,7 @@ namespace Xamarin.Android.Build.Tests
 					};
 					proc.BeginOutputReadLine ();
 					TimeSpan time = TimeSpan.FromSeconds (timeout);
-					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
+					while (!stdout_done.IsSet && Volatile.Read (ref didActionSucceed) == 0 && time.TotalMilliseconds > 0) {
 						proc.WaitForExit (10);
 						time -= TimeSpan.FromMilliseconds (10);
 					}
@@ -390,9 +397,25 @@ namespace Xamarin.Android.Build.Tests
 					proc.WaitForExit ();
 					stdout_done.Wait ();
 					sw.Flush ();
-					return didActionSucceed;
+					return Volatile.Read (ref didActionSucceed) == 1;
 				}
 			}
+		}
+
+		internal static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
+		{
+			bool didActionSucceed = false;
+			using (var sr = new StringReader (output ?? "")) {
+				string line = sr.ReadLine ();
+				while (line != null) {
+					logcatOutput.WriteLine (line);
+					if (!didActionSucceed && action (line)) {
+						didActionSucceed = true;
+					}
+					line = sr.ReadLine ();
+				}
+			}
+			return didActionSucceed;
 		}
 
 		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 120)
