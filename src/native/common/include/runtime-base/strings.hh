@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include <shared/helpers.hh>
+#include <shared/log_functions.hh>
 
 #if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
@@ -205,7 +206,7 @@ namespace xamarin::android {
 			}
 
 			if (!can_access (start_index)) {
-				log_error (LOG_DEFAULT, "Cannot convert string to integer, index {} is out of range", start_index);
+				log_errorf (LOG_DEFAULT, "Cannot convert string to integer, index %zu is out of range", start_index);
 				return false;
 			}
 
@@ -229,17 +230,23 @@ namespace xamarin::android {
 			}
 
 			if (out_of_range || errno == ERANGE) {
-				log_error (LOG_DEFAULT, "Value {} is out of range of this type ({}..{})", reinterpret_cast<char*>(s), static_cast<int64_t>(min), static_cast<uint64_t>(max));
+				log_errorf (
+					LOG_DEFAULT,
+					"Value %s is out of range of this type (%lld..%llu)",
+					reinterpret_cast<char*>(s),
+					static_cast<long long>(static_cast<int64_t>(min)),
+					static_cast<unsigned long long>(static_cast<uint64_t>(max))
+				);
 				return false;
 			}
 
 			if (endp == s) {
-				log_error (LOG_DEFAULT, "Value {} does not represent a base {} integer", reinterpret_cast<char*>(s), base);
+				log_errorf (LOG_DEFAULT, "Value %s does not represent a base %d integer", reinterpret_cast<char*>(s), base);
 				return false;
 			}
 
 			if (*endp != '\0') {
-				log_error (LOG_DEFAULT, "Value {} has non-numeric characters at the end", reinterpret_cast<char*>(s));
+				log_errorf (LOG_DEFAULT, "Value %s has non-numeric characters at the end", reinterpret_cast<char*>(s));
 				return false;
 			}
 

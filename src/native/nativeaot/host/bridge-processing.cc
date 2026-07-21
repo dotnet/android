@@ -18,13 +18,16 @@ void BridgeProcessing::naot_initialize_on_runtime_init (JNIEnv *env) noexcept
 	GCUserPeerable_jiAddManagedReference = env->GetMethodID (GCUserPeerable_class, "jiAddManagedReference", "(Ljava/lang/Object;)V");
 	GCUserPeerable_jiClearManagedReferences = env->GetMethodID (GCUserPeerable_class, "jiClearManagedReferences", "()V");
 
+	constexpr char ABSENT[] = "absent";
+	constexpr char PRESENT[] = "present";
+
 	if (GCUserPeerable_jiAddManagedReference == nullptr || GCUserPeerable_jiClearManagedReferences == nullptr) [[unlikely]] {
 		Helpers::abort_applicationf (
 			LOG_DEFAULT,
 			std::source_location::current (),
 			"Failed to find GCUserPeerable method(s): jiAddManagedReference (%s); jiClearManagedReferences (%s)",
-			GCUserPeerable_jiAddManagedReference == nullptr ? "absent" : "present",
-			GCUserPeerable_jiClearManagedReferences == nullptr ? "absent" : "present"
+			GCUserPeerable_jiAddManagedReference == nullptr ? ABSENT : PRESENT,
+			GCUserPeerable_jiClearManagedReferences == nullptr ? ABSENT : PRESENT
 		);
 	}
 }

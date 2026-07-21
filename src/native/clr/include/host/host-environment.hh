@@ -48,7 +48,7 @@ namespace xamarin::android {
 		static void set_system_property (const char *name, const char *value) noexcept
 		{
 			// TODO: should we **actually** try to set the system property here? Would that even work? Needs testing
-			log_debug (LOG_DEFAULT, " System property {} = '{}'", optional_string (name), optional_string (value));
+			log_debugf (LOG_DEFAULT, " System property %s = '%s'", optional_string (name), optional_string (value));
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
@@ -94,10 +94,10 @@ namespace xamarin::android {
 			static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
 			Util::path_combine (dir, home.get_string_view (), relative_path);
 
-			log_debug (LOG_DEFAULT, "Creating XDG directory: {}"sv, optional_string (dir.get ()));
+			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", optional_string (dir.get ()));
 			int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
-				log_warn (LOG_DEFAULT, "Failed to create XDG directory {}. {}"sv, optional_string (dir.get ()), strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", optional_string (dir.get ()), strerror (errno));
 			}
 
 			if (!environment_variable_name.empty ()) {

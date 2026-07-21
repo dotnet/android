@@ -4,7 +4,7 @@
 #include <android/set_abort_message.h>
 
 #include <shared/helpers.hh>
-#include <shared/log_types.hh>
+#include <shared/log_functions.hh>
 
 using namespace xamarin::android;
 

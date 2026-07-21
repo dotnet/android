@@ -5,9 +5,8 @@
 
 #include <android/log.h>
 
-#include "java-interop-logger.h"
-#include <shared/log_level.hh>
 #include <constants.hh>
+#include <shared/log_functions.hh>
 
 using namespace xamarin::android;
 
