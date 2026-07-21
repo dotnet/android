@@ -142,7 +142,7 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 		var dictionaryType = definition.MakeGenericType (arguments);
 		var instance = Activator.CreateInstance (
 			dictionaryType,
-			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+			SafeJavaCollectionFactory.ActivationConstructorBinding,
 			binder: null,
 			args: [handle, transfer],
 			culture: CultureInfo.InvariantCulture);

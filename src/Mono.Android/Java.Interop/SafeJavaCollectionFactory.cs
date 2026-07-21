@@ -41,7 +41,7 @@ static class SafeJavaCollectionFactory
 		DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 	/// <summary>Binding flags used to find the activation constructor of the Java collection wrappers.</summary>
-	const BindingFlags ActivationConstructorBinding = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+	internal const BindingFlags ActivationConstructorBinding = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
 	internal static bool TryGetFromJniHandleConverter (
 		Type targetType,
