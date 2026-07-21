@@ -78,16 +78,21 @@
   <Target Name="InstallManifestAndDependencies"
       DependsOnTargets="_GetDefaultPackageVersion">
     <PropertyGroup>
-      <!-- NOTE: place the local sdk-manifests folder under the SDK's full feature band (which includes any preview
-           suffix, e.g. "10.0.400-preview.0") so that SdkDirectoryWorkloadManifestProvider, which probes
+      <!-- NOTE: place the local sdk-manifests folder under the installed SDK's full feature band (which includes
+           any preview suffix, e.g. "10.0.400-preview.0") so that SdkDirectoryWorkloadManifestProvider, which probes
            sdk-manifests/<SdkFeatureBand.ToString()>/ when DOTNETSDK_WORKLOAD_MANIFEST_ROOTS is set, can discover
-           our manifests on prerelease SDKs. This affects both `dotnet workload install android-deps` below and
-           later `dotnet-local.cmd new android` template lookups. -->
-      <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetPreviewVersionBand)\</_LocalSdkManifestsFolder>
+           our manifests. Use NETCoreSdkVersion rather than the SDK package version because stabilized SDK builds
+           can retain a prerelease package version while installing an SDK with a stable product version. -->
+      <_LocalSdkFeatureBand>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `^\d+\.\d+\.\d`))00</_LocalSdkFeatureBand>
+      <_LocalSdkPrerelease>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `(?&lt;=-)[^+]+`))</_LocalSdkPrerelease>
+      <_LocalSdkPrereleaseFeatureBand>$([System.Text.RegularExpressions.Regex]::Match($(_LocalSdkPrerelease), `^[^.]+(\.[^.]+)?`))</_LocalSdkPrereleaseFeatureBand>
+      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkPrerelease)' != '' and !$(_LocalSdkPrerelease.Contains('dev')) and !$(_LocalSdkPrerelease.Contains('ci')) and !$(_LocalSdkPrerelease.Contains('rtm')) ">$(_LocalSdkFeatureBand)-$(_LocalSdkPrereleaseFeatureBand)</_LocalSdkFeatureBand>
+      <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(_LocalSdkFeatureBand)\</_LocalSdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
       <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
     </PropertyGroup>
 
+    <Error Condition=" '$(_LocalSdkFeatureBand)' == '' " Text="Failed to determine the SDK feature band from NETCoreSdkVersion '$(NETCoreSdkVersion)'." />
     <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj"
