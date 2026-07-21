@@ -31,8 +31,8 @@ namespace Java.Interop;
 /// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
 /// <item><description>primitive/nullable value-type arguments go through <see cref="ValueTypeFactory"/>,
 /// which roots the exact instantiation with a direct <c>new</c>;</description></item>
-/// <item><description>other value types are not handled here, preserving <see cref="JavaConvert"/>'s
-/// existing untyped collection fallback.</description></item>
+/// <item><description>other value types use the corresponding untyped collection wrapper because
+/// their exact generic instantiations are not rooted.</description></item>
 /// </list>
 /// </remarks>
 static class SafeJavaCollectionFactory
@@ -64,8 +64,8 @@ static class SafeJavaCollectionFactory
 				// selected, rather than again for every conversion.
 				var arguments = targetType.GetGenericArguments ();
 				if (!AreSupportedCollectionArguments (arguments)) {
-					converter = null;
-					return false;
+					converter = GetUntypedFromJniHandleConverter (genericDefinition);
+					return true;
 				}
 
 				if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
@@ -105,6 +105,15 @@ static class SafeJavaCollectionFactory
 		}
 
 		return true;
+	}
+
+	static Func<IntPtr, JniHandleOwnership, object?> GetUntypedFromJniHandleConverter (Type genericDefinition)
+	{
+		if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>))
+			return (handle, transfer) => JavaList.FromJniHandle (handle, transfer);
+		if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>))
+			return (handle, transfer) => JavaCollection.FromJniHandle (handle, transfer);
+		return (handle, transfer) => JavaDictionary.FromJniHandle (handle, transfer);
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
