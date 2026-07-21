@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.ProjectTools;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
 namespace Xamarin.Android.Build.Tests
@@ -370,6 +371,7 @@ namespace Xamarin.Android.Build.Tests
 			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
 				using (var proc = Process.Start (info)) {
+					Exception? callbackException = null;
 					proc.OutputDataReceived += (sender, e) => {
 						if (e.Data != null) {
 							sw.WriteLine (e.Data);
@@ -381,16 +383,28 @@ namespace Xamarin.Android.Build.Tests
 						}
 					};
 					proc.BeginOutputReadLine ();
-					onMonitoringStarted?.Invoke ();
-					TimeSpan time = TimeSpan.FromSeconds (timeout);
-					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
-						proc.WaitForExit (10);
-						time -= TimeSpan.FromMilliseconds (10);
+					try {
+						onMonitoringStarted?.Invoke ();
+					} catch (Exception ex) {
+						callbackException = ex;
 					}
-					proc.Kill ();
-					proc.WaitForExit ();
-					stdout_done.Wait ();
-					sw.Flush ();
+					try {
+						TimeSpan time = TimeSpan.FromSeconds (timeout);
+						while (!stdout_done.IsSet && !didActionSucceed && callbackException == null && time.TotalMilliseconds > 0) {
+							proc.WaitForExit (10);
+							time -= TimeSpan.FromMilliseconds (10);
+						}
+					} finally {
+						if (!proc.HasExited) {
+							proc.Kill ();
+						}
+						proc.WaitForExit ();
+						stdout_done.Wait ();
+						sw.Flush ();
+					}
+					if (callbackException != null) {
+						ExceptionDispatchInfo.Capture (callbackException).Throw ();
+					}
 					return didActionSucceed;
 				}
 			}
