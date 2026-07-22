@@ -166,8 +166,12 @@ namespace Xamarin.Android.Tasks
 		}
 
 		/// <summary>
-		/// HACK: aapt2 is creating zip entries on Windows such as `assets\subfolder/asset2.txt`
+		/// Rewrites zip entry names that use backslash path separators to use forward slashes.
 		/// </summary>
+		/// <remarks>
+		/// aapt2 creates zip entries on Windows with mixed separators such as `assets\subfolder/asset2.txt`,
+		/// which must be normalized to forward slashes for a valid archive.
+		/// </remarks>
 		public void FixupWindowsPathSeparators (Action<string, string> onRename)
 		{
 			bool modified = false;
