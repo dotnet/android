@@ -13,9 +13,10 @@
     This script does that by running the requested gradle build in a loop:
       1. Run gradle with RUNNINGONCI=true so it points at the dnceng feed.
       2. Parse any 'Could not GET' URLs out of the build log.
-      3. Re-fetch each failing URL with an Azure DevOps OAuth bearer token
-         (obtained via `az account get-access-token`). The feed's upstream
-         connector then pulls the package and caches it for anonymous reads.
+      3. Re-fetch each failing URL with an Azure DevOps OAuth token using Basic
+         authentication (obtained via `az account get-access-token`). The
+         feed's upstream connector then pulls the package and caches it for
+         anonymous reads.
       4. Repeat until the build succeeds or no more 401s appear.
 
     After the loop converges, no PR edits are needed — just re-run the failing
@@ -196,14 +197,13 @@ if ($AndroidHome) { Write-Host "ANDROID_HOME: $AndroidHome" }
 
 if ($AndroidHome) { $env:ANDROID_HOME = $AndroidHome }
 $env:RUNNINGONCI = 'true'
-$env:ANDROID_MIRROR_MAVEN_DEPENDENCIES = 'true'
 
 Push-Location $projectDirAbs
 try {
     for ($i = 1; $i -le $MaxIterations; $i++) {
         Write-Host "`n=== iteration $i ===" -ForegroundColor Green
         $log = Join-Path ([IO.Path]::GetTempPath()) "gradle-mirror-iter-$i.log"
-        & $gradlew $Task --no-daemon --no-configuration-cache --refresh-dependencies *>&1 | Tee-Object -FilePath $log | Out-Null
+        & $gradlew $Task --no-daemon --refresh-dependencies *>&1 | Tee-Object -FilePath $log | Out-Null
         if (Select-String -Path $log -Pattern 'BUILD SUCCESSFUL' -SimpleMatch -Quiet) {
             Write-Host "`nBUILD SUCCESSFUL after $i iteration(s). The feed now has the packages CI needs." -ForegroundColor Green
             return

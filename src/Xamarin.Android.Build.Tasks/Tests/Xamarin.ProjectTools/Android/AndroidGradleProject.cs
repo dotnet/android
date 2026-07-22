@@ -110,9 +110,6 @@ plugins {{
 pluginManagement {
     apply(from = "{{gradleConfigurationDirectory}}/plugin-repositories.gradle", to = this)
 }
-if (System.getenv("ANDROID_MIRROR_MAVEN_DEPENDENCIES") == "true") {
-    apply(from = "{{gradleConfigurationDirectory}}/credential-provider.gradle")
-}
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     apply(from = "{{gradleConfigurationDirectory}}/dependency-repositories.gradle", to = this)
