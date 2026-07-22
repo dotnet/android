@@ -10,6 +10,8 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   <!-- Default property values for CoreCLR -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>CoreCLR</_AndroidRuntimePackRuntime>
+    <!-- PublishAot projects use CoreCLR for inner-loop builds, which must not invoke ILC. -->
+    <NativeCompilationDuringPublish Condition=" '$(NativeCompilationDuringPublish)' == '' ">false</NativeCompilationDuringPublish>
   </PropertyGroup>
   <!-- Properties for $(OutputType)=Exe (Android Applications) -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
