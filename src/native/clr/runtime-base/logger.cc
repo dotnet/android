@@ -193,14 +193,12 @@ Logger::init_logging_categories () noexcept
 			auto file_name = segment.at (offset);
 
 			if (!file_name.has_value ()) {
-				std::string_view error = to_string (file_name.error ());
 				log_warnf (
 					LOG_DEFAULT,
-					"Unable to set path to %.*s log file: %.*s",
+					"Unable to set path to %.*s log file: %s",
 					static_cast<int>(file_kind.length ()),
 					file_kind.data (),
-					static_cast<int>(error.length ()),
-					error.data ()
+					to_string (file_name.error ())
 				);
 				return {};
 			}
