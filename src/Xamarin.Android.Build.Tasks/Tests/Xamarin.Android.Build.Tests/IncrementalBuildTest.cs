@@ -1330,6 +1330,27 @@ namespace Lib2
 		}
 
 		[Test]
+		public void CoreClrFastDeploymentRebuildsApkAfterAssemblyChange ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				EmbedAssembliesIntoApk = false,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+				proj.MainActivity += Environment.NewLine + "// comment";
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildApkFastDev"), "`_BuildApkFastDev` should *not* be skipped!");
+			}
+		}
+
+		[Test]
 		public void GenerateJavaStubsAndAssembly ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

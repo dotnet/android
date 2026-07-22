@@ -2355,6 +2355,7 @@ because xbuild doesn't support framework reference assemblies.
 		;$(_AndroidBuildPropertiesCache)
 		;$(_AdbPropertiesCache)
 		;$(_PackagedResources)
+		;@(_ApplicationSharedLibrary)
 	</_BuildApkFastDevStaticInputs>
 </PropertyGroup>
 
