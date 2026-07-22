@@ -1,9 +1,12 @@
 #include <sys/types.h>
 #include <dirent.h>
+#include <dlfcn.h>
 
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <string>
+#include <vector>
 #include <unistd.h>
 
 #include <android/looper.h>
@@ -25,67 +28,14 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
-#include <runtime-base/search.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
-#include <shared/xxhash.hh>
-#include <startup/zip.hh>
 
 using namespace xamarin::android;
 
 void Host::clr_error_writer (const char *message) noexcept
 {
 	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
-}
-
-size_t Host::clr_get_runtime_property (const char *key, char *value_buffer, size_t value_buffer_size, [[maybe_unused]] void *contract_context) noexcept
-{
-	// NOTE: this code was tested locally, but it's **not** used by CoreCLR yet, so there's been no
-	// "live" testing.
-	log_debug (LOG_DEFAULT, "clr_get_runtime_property (\"{}\"...)"sv, optional_string (key));
-	if (application_config.number_of_runtime_properties == 0) [[unlikely]] {
-		log_debug (LOG_DEFAULT, "No runtime properties defined"sv);
-		return 0;
-	}
-
-	// value_buffer_size must have enough space for at least 1 character + the terminating NUL
-	if (key == nullptr || value_buffer == nullptr || value_buffer_size <= 1) [[unlikely]] {
-		log_warn (
-			LOG_DEFAULT,
-			"runtime property retrieval API called with invalid arguments. key == {:p}; value_buffer == {:p}; value_buffer_size == {}"sv,
-			static_cast<const void*>(key),
-			static_cast<void*>(value_buffer),
-			value_buffer_size
-		);
-		return 0;
-	}
-
-	hash_t key_hash = xxhash::hash (key, strlen (key));
-
-	auto equal = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash == key; };
-	auto less_than = [](RuntimePropertyIndexEntry const& entry, hash_t key) -> bool { return entry.key_hash < key; };
-	ssize_t idx = Search::binary_search<RuntimePropertyIndexEntry, equal, less_than> (key_hash, runtime_property_index, application_config.number_of_runtime_properties);
-	if (idx < 0) {
-		log_debug (LOG_DEFAULT, "Runtime property '{}' not found"sv, key);
-		return 0;
-	}
-
-	RuntimePropertyIndexEntry const& idx_entry = runtime_property_index[idx];
-	RuntimeProperty const& prop = runtime_properties[idx_entry.index];
-
-	// `value_size` includes the terminating NUL
-	if (prop.value_size > value_buffer_size) {
-		log_warn (
-			LOG_DEFAULT,
-			"Value of property '{}' is longer than available buffer space. Need {}b, available {}b"sv,
-			key,
-			prop.value_size,
-			value_buffer_size
-		);
-	}
-
-	strncpy (value_buffer, &runtime_properties_data[prop.value_index], value_buffer_size);
-	return std::min (static_cast<size_t>(prop.value_size - 1), value_buffer_size - 1);
 }
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
@@ -134,38 +84,6 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 	*data_start = AssemblyStore::open_assembly (path, *size);
 
 	return log_and_return (path, *data_start, *size);
-}
-
-auto Host::zip_scan_callback (std::string_view const& apk_path, int apk_fd, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, uint32_t offset, uint32_t size) -> bool
-{
-	log_debug (LOG_ASSEMBLY, "zip entry: {}"sv, entry_name.get ());
-	if (!found_assembly_store) {
-		found_assembly_store = Zip::assembly_store_file_path.compare (0, entry_name.length (), entry_name.get ()) == 0;
-		if (found_assembly_store) {
-			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}': {}"sv, apk_path, Zip::assembly_store_file_path);
-			AssemblyStore::map (apk_fd, apk_path, Zip::assembly_store_file_path, offset, size);
-			return false; // This will make the scanner keep the APK open
-		}
-	}
-
-	if (!AndroidSystem::is_embedded_dso_mode_enabled () || !entry_name.starts_with (Zip::lib_prefix) || !entry_name.ends_with (Constants::dso_suffix)) {
-		return false;
-	}
-
-	log_debug (LOG_ASSEMBLY, "Found shared library in '{}': {}"sv, apk_path, entry_name.get ());
-	std::string_view lib_name { entry_name.get () + Zip::lib_prefix.length () };
-	hash_t name_hash = xxhash::hash (lib_name.data (), lib_name.length ());
-	log_debug (LOG_ASSEMBLY, "Library name is: {}; hash == 0x{:x}", lib_name, name_hash);
-
-	DSOApkEntry *apk_entry = MonodroidDl::find_dso_apk_entry (name_hash);
-	if (apk_entry == nullptr) {
-		return false;
-	}
-
-	log_debug (LOG_ASSEMBLY, "Found matching DSO APK entry");
-	apk_entry->fd = apk_fd;
-	apk_entry->offset = offset;
-	return false;
 }
 
 [[gnu::always_inline]]
@@ -221,80 +139,60 @@ void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
 			}
 
 			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}/{}'"sv, native_lib_dir, Constants::assembly_store_file_name);
-			int store_fd = openat (dir_fd, cur->d_name, O_RDONLY);
-			if (store_fd < 0) {
-				Helpers::abort_application (
-					LOG_ASSEMBLY,
-					std::format (
-						"Unable to open assembly store '{}/{}' for reading. {}"sv,
-						native_lib_dir,
-						Constants::assembly_store_file_name,
-						std::strerror (errno)
-					)
-				);
-			}
 
-			auto file_size = Util::get_file_size_at (dir_fd, cur->d_name);
-			if (!file_size) {
-				// get_file_size_at logged errno for us
-				Helpers::abort_application (
-					LOG_ASSEMBLY,
-					std::format (
-						"Unable to map assembly store '{}/{}'"sv,
-						native_lib_dir,
-						Constants::assembly_store_file_name
-					)
-				);
-			}
-
-			AssemblyStore::map (store_fd, cur->d_name, 0, static_cast<uint32_t>(file_size.value ()));
-			close (store_fd);
+			std::string store_path = native_lib_dir;
+			store_path.append ("/"sv);
+			store_path.append (cur->d_name);
+			map_assembly_store_via_dlopen (store_path.c_str ());
 			break; // we've found all we need
 		}
 	} while (true);
 	closedir (lib_dir);
 }
 
-void Host::gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks)
+void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
 {
+	if (!application_config.have_assembly_store) {
+		log_debug (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery"sv);
+		return;
+	}
+
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		scan_filesystem_for_assemblies_and_libraries ();
 		return;
 	}
 
-	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
-	bool got_split_config_abi_apk = false;
-	std::string_view base_apk{};
+	// The assembly store is wrapped as a real shared library whose payload is exposed via the
+	// `_assembly_store` dynamic symbol, so the dynamic linker has already located and mapped
+	// it out of the APK for us. We resolve the payload with dlopen()+dlsym() instead of parsing the
+	// APK ZIP central directory ourselves.
+	map_assembly_store_via_dlopen (Constants::assembly_store_file_name.data ());
+}
 
-	for (int64_t i = 0; i < apk_count; i++) {
-		std::string_view apk_file = runtimeApks [static_cast<size_t>(i)].get_string_view ();
-
-		if (have_split_apks) {
-			bool scan_apk = false;
-
-			// With split configs we need to scan only the abi apk, because both the assembly stores and the runtime
-			// configuration blob **should be** in `lib/{ARCH}`, which in turn lives in the split config APK
-			if (!got_split_config_abi_apk && apk_file.ends_with (Constants::split_config_abi_apk_name.data ())) {
-				got_split_config_abi_apk = scan_apk = true;
-			} else if (base_apk.empty () && apk_file.ends_with (Constants::base_apk_name)) {
-				base_apk = apk_file;
-			}
-
-			if (!scan_apk) {
-				continue;
-			}
-		}
-
-		Zip::scan_archive (apk_file, zip_scan_callback);
+void Host::map_assembly_store_via_dlopen (const char *store_path) noexcept
+{
+	// RTLD_LOCAL: we only dlsym() our own handle, so there's no need to add the store's symbols to
+	// the global lookup scope (RTLD_GLOBAL would just add linker bookkeeping).
+	void *handle = ::dlopen (store_path, RTLD_NOW | RTLD_LOCAL);
+	if (handle == nullptr) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format ("Unable to dlopen() assembly store '{}': {}"sv, optional_string (store_path), optional_string (::dlerror ()))
+		);
 	}
 
-	// This apparently can happen now... It seems that sometimes (when and why? No idea) when AAB format is used, bundletool
-	// won't put the native libraries in a separate split config file, but it will instead put **all** of the ABIs
-	// in base.apk
-	if (have_split_apks && !got_split_config_abi_apk) {
-		abort_unless (!base_apk.empty (), "Split config APKs are used, but no ABI config was found and no base.apk was encountered.");
-		Zip::scan_archive (base_apk, zip_scan_callback);
+	// NOTE: intentionally not calling dlclose() - we keep the store mapped for the lifetime of the app.
+	void *payload = ::dlsym (handle, DLOPEN_ASSEMBLY_STORE_SYMBOL.data ());
+	if (payload == nullptr) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			std::format ("Assembly store '{}' does not export the '{}' symbol"sv, optional_string (store_path), DLOPEN_ASSEMBLY_STORE_SYMBOL)
+		);
 	}
+
+	log_debug (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: {:p} ({})"sv, payload, optional_string (store_path));
+	AssemblyStore::configure_from_payload (payload, [store_path]() -> std::string { return std::string { store_path }; });
+	found_assembly_store = true;
 }
 
 [[gnu::always_inline]]
@@ -364,10 +262,9 @@ void Host::preload_jni_libraries () noexcept
 
 		log_debug (
 			LOG_ASSEMBLY,
-			"Preloading JNI shared library: {} (entry's index: {}; real name hash: {:x}; name hash: {:x})",
+			"Preloading JNI shared library: {} (entry's index: {}; name hash: {:x})",
 			dso_name,
 			entry_index,
-			entry.real_name_hash,
 			entry.hash
 		);
 
@@ -419,17 +316,20 @@ void Host::Java_mono_android_Runtime_initInternal (
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
 	jstring_wrapper &files_dir = applicationDirs[Constants::APP_DIRS_FILES_DIR_INDEX];
+	jstring_wrapper &cache_dir = applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX];
 	HostEnvironment::setup_environment (
 		language,
 		files_dir,
-		applicationDirs[Constants::APP_DIRS_CACHE_DIR_INDEX]
+		cache_dir
 	);
+	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
 
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
+	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
@@ -450,12 +350,41 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
 	// of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+
+	const char **prop_names = init_runtime_property_names;
+	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
+	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+
+	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
+	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
+	// opens those files from disk so `Assembly.Location` is populated and
+	// `StackTraceSymbols` can find sibling `.pdb` files for runtime-rendered
+	// managed stack traces (file/line).
+	if constexpr (Constants::is_debug_build) {
+		// Storage must outlive `coreclr_initialize`; function-local statics
+		// give us process lifetime without polluting global namespace.
+		static std::string fastdev_tpa_list;
+		static std::vector<const char*> fastdev_prop_names;
+		static std::vector<const char*> fastdev_prop_values;
+
+		if (FastDevAssemblies::build_tpa_list (fastdev_tpa_list)) {
+			fastdev_prop_names.assign (prop_names, prop_names + prop_count);
+			fastdev_prop_values.assign (prop_values, prop_values + prop_count);
+			fastdev_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
+			fastdev_prop_values.push_back (fastdev_tpa_list.c_str ());
+
+			prop_names = fastdev_prop_names.data ();
+			prop_values = fastdev_prop_values.data ();
+			prop_count = static_cast<int>(fastdev_prop_names.size ());
+		}
+	}
+
 	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
-		(int)application_config.number_of_runtime_properties,
-		init_runtime_property_names,
-		const_cast<const char**>(init_runtime_property_values),
+		prop_count,
+		prop_names,
+		prop_values,
 		&clr_host,
 		&domain_id
 	);
@@ -502,9 +431,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
-	init.managedMarshalMethodsLookupEnabled             = application_config.managed_marshal_methods_lookup_enabled;
-	abort_unless (!init.marshalMethodsEnabled || init.managedMarshalMethodsLookupEnabled,
-		"Managed marshal methods lookup must be enabled if marshal methods are enabled");
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

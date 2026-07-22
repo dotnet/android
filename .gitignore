@@ -3,7 +3,6 @@
 *.user
 bin
 Configuration.Override.props
-Configuration.OperatingSystem.props
 obj
 packages
 .DS_Store
@@ -31,8 +30,6 @@ Novell
 *.keystore
 /omnisharp.json
 src/native/CMakePresets.json
-src/native/clr/pinvoke-override/generate-pinvoke-tables
-src/native/clr/pinvoke-override/pinvoke-tables.include.generated
 src/native/mono/pinvoke-override/generate-pinvoke-tables
 src/native/mono/pinvoke-override/pinvoke-tables.include.generated
 dotnet-install.ps1

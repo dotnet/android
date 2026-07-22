@@ -156,11 +156,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		}
 
 		// Example `SourceFile`:
-		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/bin/TestRelease/TestResult-Mono.Android_Tests.xml
+		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/bin/TestRelease/TestResult-Mono.Android.NET_Tests.xml
 		// Example `DestinationFolder`:
 		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/
 		// Example `adb logcat`:
-		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/bin/TestRelease/logcat-Release-Mono.Android_Tests.txt
+		//   /Users/builder/jenkins/workspace/xamarin-android-pr-builder-release/xamarin-android/bin/TestRelease/logcat-Release-Mono.Android.NET_Tests.txt
 		//
 		// We need to extract the "base" test name from `SourceFile`, and use that to construct `logcatPath`
 		static void GetTestCaseInfo (string sourceFile, string destinationFolder, string config, string flavor, Action<string> logDebugMessage, out string testSuiteName, out string testCaseName, out string logcatPath)

@@ -9,7 +9,7 @@ namespace Android.Runtime
 {
 	public class XmlReaderResourceParser : XmlReaderPullParser, IXmlResourceParser
 	{
-		public static IntPtr ToLocalJniHandle (XmlReader? value)
+		public new static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
@@ -28,14 +28,13 @@ namespace Android.Runtime
 			this.r = r;
 		}
 	
-		#region IXmlResourceParser implementation
+		// IXmlResourceParser implementation
 		public void Close ()
 		{
 			r.Close ();
 		}
-		#endregion
 	
-		#region IAttributeSet implementation
+		// IAttributeSet implementation
 		public bool GetAttributeBooleanValue (int index, bool defaultValue)
 		{
 			return index < AttributeCount ? XmlConvert.ToBoolean (GetAttributeValue (index)) : defaultValue;
@@ -121,7 +120,6 @@ namespace Android.Runtime
 		public int StyleAttribute {
 			get { return GetAttributeResourceValue (null, "style", 0); }
 		}
-		#endregion
 	}
 
 	public class XmlReaderPullParser : Java.Lang.Object, IXmlPullParser
@@ -145,7 +143,7 @@ namespace Android.Runtime
 			this.r = r;
 		}
 	
-		#region IXmlPullParser implementation
+		// IXmlPullParser implementation
 		public void DefineEntityReplacementText (string? entityName, string? replacementText)
 		{
 			throw new NotSupportedException ();
@@ -197,8 +195,10 @@ namespace Android.Runtime
 			return false;
 		}
 	
-		public string? GetNamespace (string prefix)
+		public string? GetNamespace (string? prefix)
 		{
+			if (prefix == null)
+				return null;
 			return r.LookupNamespace (prefix);
 		}
 	
@@ -222,7 +222,7 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 	
-		public char[] GetTextCharacters (int[] holderForStartAndLength)
+		public char[] GetTextCharacters (int[]? holderForStartAndLength)
 		{
 			throw new NotSupportedException ();
 		}
@@ -481,7 +481,5 @@ namespace Android.Runtime
 				return r.Value;
 			}
 		}
-		#endregion
 	}
 }
-

@@ -69,6 +69,59 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		/// <summary>
+		/// Probes the Android package manager service the same way `bundletool build-apks
+		/// --connected-device` (which runs `pm list features`) and `adb install` do. On CI the
+		/// emulator's system_server sometimes wedges while `adb shell echo OK` still succeeds, so
+		/// <see cref="IsDeviceAttached"/> reports the device as healthy even though every subsequent
+		/// build/install fails deep inside a test with a cryptic
+		/// "Failure calling service package: Broken pipe" (XABAS0000). Retries a few times so a
+		/// momentary hiccup does not trigger an unnecessary emulator restart.
+		/// </summary>
+		protected static bool IsPackageManagerResponsive (out string diagnostic)
+		{
+			string output = "";
+			for (int attempt = 0; attempt < 3; attempt++) {
+				output = (RunAdbCommand ("shell pm list features", timeout: 30) ?? "").Trim ();
+				bool broken = output.Contains ("Failure calling service", StringComparison.OrdinalIgnoreCase) ||
+					output.Contains ("Broken pipe", StringComparison.OrdinalIgnoreCase) ||
+					output.Contains ("Can't find service", StringComparison.OrdinalIgnoreCase);
+				// A responsive package service always lists the framework's own features.
+				if (!broken && output.Contains ("feature:", StringComparison.OrdinalIgnoreCase)) {
+					diagnostic = output;
+					return true;
+				}
+				WaitFor ((int) TimeSpan.FromSeconds (2).TotalMilliseconds);
+			}
+			diagnostic = output;
+			return false;
+		}
+
+		/// <summary>
+		/// Fails fast, with a clear reason, when the emulator's package manager service is
+		/// unusable — instead of letting the app build/install fail cryptically later and
+		/// reporting an emulator crash as N unrelated test failures. Attempts one emulator
+		/// restart first; if the service is still broken the run is marked inconclusive
+		/// (an infrastructure problem, not a product regression).
+		/// </summary>
+		protected void AssertPackageManagerResponsive ()
+		{
+			if (IsPackageManagerResponsive (out _)) {
+				return;
+			}
+
+			TestContext.Out.WriteLine ("Android package manager service is unresponsive; restarting the emulator.");
+			RestartDevice ();
+			AssertHasDevices ();
+
+			if (!IsPackageManagerResponsive (out string diagnostic)) {
+				Assert.Inconclusive (
+					"Android package manager service is unresponsive even after restarting the emulator " +
+					"(system_server likely crashed). Skipping so an emulator failure is not reported as a test failure. " +
+					$"Last 'adb shell pm list features' output: {diagnostic}");
+			}
+		}
+
 		[OneTimeSetUp]
 		public void DeviceSetup ()
 		{
@@ -125,6 +178,11 @@ namespace Xamarin.Android.Build.Tests
 				RestartDevice ();
 				AssertHasDevices ();
 			}
+
+			// `adb shell echo OK` can succeed while the package manager service is wedged, so
+			// verify it is responsive before a test wastes time building/installing an app that
+			// would otherwise fail with a cryptic "Failure calling service package" error.
+			AssertPackageManagerResponsive ();
 
 			// We want to start with a clean logcat buffer for each test
 			ClearAdbLogcat ();
@@ -297,7 +355,7 @@ namespace Xamarin.Android.Build.Tests
 			return stopwatch.Elapsed;
 		}
 
-		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15)
+		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15, Action? onMonitoringStarted = null)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
@@ -311,11 +369,18 @@ namespace Xamarin.Android.Build.Tests
 			bool didActionSucceed = false;
 			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
+				// Process already-buffered logcat lines first so startup messages emitted before
+				// this monitor starts are still visible to tests.
+				if (TryMatchLogcatOutput (RunAdbCommand ("logcat -d"), sw, action)) {
+					sw.Flush ();
+					return true;
+				}
+
 				using (var proc = Process.Start (info)) {
 					proc.OutputDataReceived += (sender, e) => {
 						if (e.Data != null) {
 							sw.WriteLine (e.Data);
-							if (action (e.Data)) {
+							if (!didActionSucceed && action (e.Data)) {
 								didActionSucceed = true;
 							}
 						} else {
@@ -323,18 +388,41 @@ namespace Xamarin.Android.Build.Tests
 						}
 					};
 					proc.BeginOutputReadLine ();
-					TimeSpan time = TimeSpan.FromSeconds (timeout);
-					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
-						proc.WaitForExit (10);
-						time -= TimeSpan.FromMilliseconds (10);
+					try {
+						onMonitoringStarted?.Invoke ();
+						TimeSpan time = TimeSpan.FromSeconds (timeout);
+						while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
+							proc.WaitForExit (10);
+							time -= TimeSpan.FromMilliseconds (10);
+						}
+					} finally {
+						if (!proc.HasExited) {
+							proc.Kill ();
+						}
+						proc.WaitForExit ();
+						stdout_done.Wait ();
+						sw.Flush ();
 					}
-					proc.Kill ();
-					proc.WaitForExit ();
-					stdout_done.Wait ();
-					sw.Flush ();
 					return didActionSucceed;
 				}
 			}
+		}
+
+		static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
+		{
+			bool didActionSucceed = false;
+			using (var sr = new StringReader (output ?? "")) {
+				string line = sr.ReadLine ();
+				while (line != null) {
+					logcatOutput.WriteLine (line);
+					if (action (line)) {
+						didActionSucceed = true;
+						break;
+					}
+					line = sr.ReadLine ();
+				}
+			}
+			return didActionSucceed;
 		}
 
 		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 120)

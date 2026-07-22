@@ -61,9 +61,7 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 | constexpr-xxh3 | https://github.com/chys87/constexpr-xxh3 | `external/constexpr-xxh3/LICENSE` |
 | robin-map | https://github.com/xamarin/robin-map (fork of https://github.com/Tessil/robin-map) | `external/robin-map/LICENSE` |
 | libunwind | https://github.com/libunwind/libunwind | `external/libunwind/LICENSE` |
-| xamarin-android-tools | https://github.com/dotnet/android-tools | (not a third-party dep) |
 | android-api-docs | https://github.com/dotnet/android-api-docs | (not a third-party dep) |
-| debugger-libs | https://github.com/mono/debugger-libs | (not a third-party dep — internal) |
 
 #### Vendored Source (`src-ThirdParty/`)
 List contents of `src-ThirdParty/` directory. Current vendored code and license sources:
@@ -73,7 +71,6 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | `android-platform-tools-base/` | android/platform/tools/base | https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE (Apache 2.0) |
 | `bionic/` | google/bionic | https://android.googlesource.com/platform/bionic/ (Apache 2.0) |
 | `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
-| `NUnitLite/` | nunit/nunitlite | https://github.com/nunit/nunitlite/ (MIT) |
 | `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
 
 Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.

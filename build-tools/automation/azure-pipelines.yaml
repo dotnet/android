@@ -100,6 +100,27 @@ extends:
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
     - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
+      parameters:
+        # The internal Xamarin.Android pipeline uses 1ES Pipeline Templates, which
+        # require Windows jobs to run on a 1ES-hosted pool. macOS is fine on the
+        # hosted Azure Pipelines pool as long as `os: macOS` is set (which is now
+        # the template default).
+        windowsPool:
+          name: MAUI-1ESPT
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
+
+    - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
+      parameters:
+        use1ESTemplate: true
+        # The internal Xamarin.Android pipeline uses 1ES Pipeline Templates, which
+        # require Windows jobs to run on a 1ES-hosted pool. macOS is fine on the
+        # hosted Azure Pipelines pool as long as `os: macOS` is set (which is now
+        # the template default).
+        windowsPool:
+          name: MAUI-1ESPT
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
 
     - stage: maui_tests
       displayName: MAUI Tests
@@ -386,9 +407,9 @@ extends:
             destinationPath: $(Build.StagingDirectory)\nuget-signed
 
         - task: DotNetCoreCLI@2
-          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
+          displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
           inputs:
-            projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
+            projects: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
             arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 

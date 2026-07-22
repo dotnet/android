@@ -200,6 +200,73 @@ namespace Xamarin.Android.Build.Tests
 			b.Dispose ();
 		}
 
+		[Test]
+		public void FastDeploymentStrategyCanBeChanged ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeployment_strategy_change",
+			};
+			proj.MainActivity = proj.DefaultMainActivity;
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
+			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				Assert.IsTrue (builder.Install (proj), "FastDeploy2 install should have succeeded.");
+
+				string assemblyPath = $"files/.__override__/{DeviceAbi}/UnnamedProject.dll";
+				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
+				RunAdbCommand ($"shell run-as {proj.PackageName} sh -c 'echo preserved > files/fastdeploy-strategy-marker'");
+				Assert.IsTrue (builder.Clean (proj), "clean should have succeeded.");
+
+				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
+				proj.Touch ("MainActivity.cs");
+				proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy");
+				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "FastDeploy install should have succeeded after FastDeploy2.");
+				Assert.AreEqual ("regular", GetOverrideFileKind (proj.PackageName, assemblyPath));
+				Assert.AreEqual ("preserved", RunAdbCommand ($"shell run-as {proj.PackageName} cat files/fastdeploy-strategy-marker").Trim ());
+
+				proj.MainActivity = proj.MainActivity.Replace ("CLICKS", "Clicks");
+				proj.Touch ("MainActivity.cs");
+				proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
+				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "FastDeploy2 install should have succeeded after FastDeploy.");
+				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
+				Assert.AreEqual ("preserved", RunAdbCommand ($"shell run-as {proj.PackageName} cat files/fastdeploy-strategy-marker").Trim ());
+
+				Assert.IsTrue (builder.Uninstall (proj), "uninstall should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void FastDeploy2RestoresMissingRemoteDirectory ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeploy2_restore_remote",
+			};
+			proj.MainActivity = proj.DefaultMainActivity;
+			proj.SetDefaultTargetDevice ();
+			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				Assert.IsTrue (builder.Install (proj), "initial install should have succeeded.");
+
+				string remoteDirectory = $"/data/local/tmp/fastdeploy2/{proj.PackageName}/0/{DeviceAbi}";
+				RunAdbCommand ($"shell rm -rf {remoteDirectory}");
+
+				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
+				proj.Touch ("MainActivity.cs");
+				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "fresh deployment fallback should have succeeded.");
+
+				string assemblyPath = $"files/.__override__/{DeviceAbi}/UnnamedProject.dll";
+				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
+				Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {remoteDirectory}/UnnamedProject.dll; then echo exists; else echo missing; fi").Trim ());
+				Assert.IsTrue (builder.Uninstall (proj), "uninstall should have succeeded.");
+			}
+		}
+
+		string GetOverrideFileKind (string packageName, string path)
+		{
+			return RunAdbCommand ($"shell run-as {packageName} sh -c 'if test -L {path}; then echo symlink; elif test -f {path}; then echo regular; else echo missing; fi'").Trim ();
+		}
+
 		#pragma warning disable 414
 		static object [] SkipFastDevAlreadyInstalledResourcesSource = new object [] {
 			new object[] { Array.Empty<Package> (), null },

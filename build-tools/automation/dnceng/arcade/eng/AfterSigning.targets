@@ -1,0 +1,7 @@
+<Project>
+  <Target Name="CreateWorkloadInsertionArtifacts" BeforeTargets="Build">
+    <MSBuild
+        Projects="$(RepositoryEngineeringDir)..\Workloads.proj"
+        Targets="_CreateInsertionArtifacts" />
+  </Target>
+</Project>

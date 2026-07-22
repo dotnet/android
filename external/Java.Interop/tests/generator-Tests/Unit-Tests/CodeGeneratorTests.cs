@@ -1564,6 +1564,123 @@ namespace generatortests
 		}
 
 		[Test]
+		public void UnsupportedOSPlatformIgnoresPropertySetterMovedToStandaloneBaseMethod ()
+		{
+			var xml = @$"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.example' jni-name='com/example'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='Base' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setValue' bridge='false' managedName='SetRawValue' native='false' propertyName='RawValue' return='void' static='false' synchronized='false' synthetic='false' visibility='public'>
+			         <parameter name='value' type='java.lang.Object' />
+			       </method>
+			     </class>
+			    <class abstract='false' deprecated='not deprecated' extends='com.example.Base' extends-generic-aware='com.example.Base' final='false' name='Derived' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='getValue' bridge='false' native='false' return='java.lang.Object' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setValue' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='15'>
+			         <parameter name='value' type='java.lang.Object' />
+			       </method>
+			     </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "Derived");
+			var property = klass.Properties.Single (p => p.Name == "Value");
+			var actual = GetGeneratedTypeOutput (klass);
+
+			Assert.IsNotNull (property.Setter, "The removed setter must be tested as a property accessor.");
+			StringAssert.Contains ("public virtual unsafe Java.Lang.Object Value {", actual);
+			StringAssert.Contains ("set {", actual);
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
+		}
+
+		[Test]
+		public void UnsupportedOSPlatformIgnoresSpecializedGenericBasePropertySetter ()
+		{
+			var xml = @$"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='android.widget' jni-name='android/widget'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Adapter' static='false' visibility='public' />
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='ListAdapter' static='false' visibility='public'>
+			       <implements name='android.widget.Adapter' name-generic-aware='android.widget.Adapter' />
+			     </interface>
+			    <class abstract='true' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='AdapterView' static='false' visibility='public'>
+			       <typeParameters>
+			         <typeParameter name='T' interfaceBounds='android.widget.Adapter'>
+			           <genericConstraints>
+			             <genericConstraint type='android.widget.Adapter' />
+			           </genericConstraints>
+			         </typeParameter>
+			       </typeParameters>
+			       <method abstract='true' deprecated='not deprecated' final='false' name='getAdapter' bridge='false' native='false' return='T' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <method abstract='true' deprecated='not deprecated' final='false' name='setAdapter' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public'>
+			         <parameter name='value' type='T' />
+			       </method>
+			     </class>
+			    <class abstract='false' deprecated='not deprecated' extends='android.widget.AdapterView' extends-generic-aware='android.widget.AdapterView&lt;android.widget.ListAdapter&gt;' final='false' name='GridView' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='getAdapter' bridge='false' native='false' return='android.widget.ListAdapter' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setAdapter' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='15'>
+			         <parameter name='value' type='android.widget.ListAdapter' />
+			       </method>
+			     </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "GridView");
+			var property = klass.Properties.Single (p => p.Name == "Adapter");
+			var actual = GetGeneratedTypeOutput (klass);
+
+			Assert.IsNotNull (property.Setter, "The specialized setter must be tested as a property accessor.");
+			StringAssert.Contains ("set {", actual);
+			StringAssert.DoesNotContain ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
+		}
+
+		[Test]
+		public void UnsupportedOSPlatformPreservesPropertySetterForDifferentGenericBaseParameter ()
+		{
+			var xml = @$"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='true' name='String' static='false' visibility='public' />
+			  </package>
+			  <package name='com.example' jni-name='com/example'>
+			    <interface abstract='true' deprecated='not deprecated' final='false' name='Container' static='false' visibility='public'>
+			       <typeParameters>
+			         <typeParameter name='E' />
+			       </typeParameters>
+			     </interface>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='Base' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setValue' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public'>
+			         <parameter name='value' type='com.example.Container&lt;java.lang.String&gt;' />
+			       </method>
+			     </class>
+			    <class abstract='false' deprecated='not deprecated' extends='com.example.Base' extends-generic-aware='com.example.Base' final='false' name='Derived' static='false' visibility='public'>
+			       <method abstract='false' deprecated='not deprecated' final='false' name='getValue' bridge='false' native='false' return='java.lang.String' static='false' synchronized='false' synthetic='false' visibility='public' />
+			       <method abstract='false' deprecated='not deprecated' final='false' name='setValue' bridge='false' native='false' return='void' static='false' synchronized='false' synthetic='false' visibility='public' removed-since='15'>
+			         <parameter name='value' type='java.lang.String' />
+			       </method>
+			     </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var baseSetter = gens.Single (g => g.Name == "Base").GetAllMethods ().Single (m => m.JavaName == "setValue");
+			var klass = gens.Single (g => g.Name == "Derived");
+			var property = klass.Properties.Single (p => p.Name == "Value");
+			var actual = GetGeneratedTypeOutput (klass);
+
+			Assert.IsTrue (baseSetter.Parameters [0].IsGeneric, $"Expected a concrete generic parameter, but found {baseSetter.Parameters [0].Symbol.GetType ().FullName}.");
+			Assert.IsNotNull (property.Setter, "The removed setter must be tested as a property accessor.");
+			StringAssert.Contains ("set {", actual);
+			StringAssert.Contains ("[global::System.Runtime.Versioning.UnsupportedOSPlatformAttribute (\"android15.0\")]", actual);
+		}
+
+		[Test]
 		public void StringPropertyOverride ([Values ("true", "false")] string final)
 		{
 			var xml = @$"<api>

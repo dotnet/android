@@ -108,10 +108,6 @@ Overridable MSBuild properties include:
     If not specified, we'll attempt to use a default based on e.g. the
     `JAVA_HOME` environment variable and other "known" directories.
 
-  * `$(MakeConcurrency)`: **make**(1) parameters to use intended to influence
-    the number of CPU cores used when **make**(1) executes. By default this uses
-    `-jCOUNT`, where `COUNT` is obtained from `sysctl hw.ncpu`.
-
   * `$(MonoSgenBridgeVersion)`: The Mono SGEN Bridge version to support.
     Valid values include:
 
@@ -121,6 +117,12 @@ Overridable MSBuild properties include:
   * `$(AndroidEnableAssemblyCompression)`: Defaults to `True`. When enabled, all the
      assemblies placed in the APK will be compressed in `Release` builds. `Debug`
      builds are not affected.
+
+  * `$(AndroidEnableAssemblyStoreDecompressionCache)`: Defaults to `False`. When
+     enabled for a CoreCLR `Release` build, decompressed assemblies are cached in
+     the app's Android code-cache directory and mapped from there on subsequent
+     launches. The cache consumes additional on-device storage and is rebuilt
+     after app or platform updates.
 
 ## Options suitable for local development
 

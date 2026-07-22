@@ -58,7 +58,7 @@ Over time we have found some limitations to the format, such as being able
 to specify if the Java constant field should be removed. Additionally, since the
 format only specifies constants that *SHOULD* be mapped, we cannot use this
 to track constants that we have examined and determined *SHOULD NOT* be mapped.
-This has led to various blacklists and tooling of varying success to prevent
+This has led to various block lists and tooling of varying success to prevent
 us from needing to continually re-audit those constants.
 
 There is now a "v2" version of defining constants. This is a line-level change

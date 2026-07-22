@@ -24,8 +24,8 @@ Overridable MSBuild properties include:
 * `$(JarPath)`: Path to the `jar` command-line tool, by default set to `jar`.
   * It may be desirable to override these on Windows, depending on your `PATH`.
 * `$(UtilityOutputFullPath)`: Directory to place various utilities such as
-    [`class-parse`](tools/class-parse), [`generator`](tools/generator),
-    and [`logcat-parse`](tools/logcat-parse). This value should be a full path.
+    [`class-parse`](tools/class-parse) and [`generator`](tools/generator).
+    This value should be a full path.
     By default this is `$(MSBuildThisFileDirectory)bin/$(Configuration)`.
 
 ## **make**(1) variables
@@ -46,4 +46,3 @@ The following **make**(1) variables may be specified:
     invocations.
 * `$(MSBUILD)`: The MSBuild build tool to execute for builds.
     Default value is `xbuild`.
-

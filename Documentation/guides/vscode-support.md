@@ -111,10 +111,9 @@ in `.vscode/tasks.json`.
     // in vscode.
     "id": "project",
     "type": "pickString",
-    "default": "samples/HelloWorld/HelloWorld/HelloWorld.csproj",
+    "default": "samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj",
     "description": "Pick the Project you want to build.",
     "options": [
-        "samples/HelloWorld/HelloWorld/HelloWorld.csproj",
         "samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj",
         "samples/VSAndroidApp/VSAndroidApp.csproj"
     ]
@@ -123,6 +122,5 @@ in `.vscode/tasks.json`.
 
 you can add your own projects here and they will run with the .NET for Android
 you have built locally.
-
 
 

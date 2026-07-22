@@ -4,7 +4,7 @@
     <Company>Microsoft Corporation</Company>
     <Copyright>2020 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
-    <TargetFrameworks>$(DotNetStableTargetFramework)</TargetFrameworks>
+    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/typemap-tool</OutputPath>
     <OutputType>Exe</OutputType>
@@ -16,7 +16,8 @@
 
   <ItemGroup>
     <Compile Include="../../src/Xamarin.Android.Build.Tasks/Utilities/TypeMapHelper.cs" />
-    <Compile Include="..\assembly-store-reader\AssemblyStore*.cs" />
+    <Compile Include="..\assembly-store-reader-mk2\AssemblyStore\V1\*.cs" />
+    <Compile Include="..\assembly-store-reader-mk2\AssemblyStore\AssemblyCompression.cs" />
   </ItemGroup>
 
   <ItemGroup>

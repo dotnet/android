@@ -24,14 +24,9 @@ parameters:
   - 'true'
   - 'false'
 
-# Repository resources - checkout android-tools to force multi-repo checkout behavior
+# Repository resources
 resources:
   repositories:
-  - repository: android-tools
-    type: github
-    name: dotnet/android-tools
-    endpoint: public
-    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -45,8 +40,6 @@ variables:
 - name: DefaultJavaSdkMajorVersion
   value: 21
 # Override pool images for public Microsoft-hosted agents
-- name: HostedMacImage
-  value: macOS-15
 - name: LinuxPoolImage
   value: ubuntu-22.04
 - name: NetCorePublicPoolName
@@ -82,12 +75,13 @@ stages:
     steps:
     - checkout: self
       path: s/android
+      submodules: recursive
       persistCredentials: false
 
     # Checkout a second repo to force multi-repo checkout behavior
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: android-tools
-      path: s/android-tools
+    - checkout: maui
+      path: s/maui
 
     - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
@@ -113,6 +107,7 @@ stages:
     timeoutInMinutes: 240
     steps:
     - checkout: self
+      submodules: recursive
       persistCredentials: false
 
     - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml
@@ -140,11 +135,12 @@ stages:
     steps:
     - checkout: self
       path: s/android
+      submodules: recursive
       persistCredentials: false
 
     # Checkout a second repo to force multi-repo checkout behavior
-    - checkout: android-tools
-      path: s/android-tools
+    - checkout: maui
+      path: s/maui
 
     - script: |
         sudo apt-get update
@@ -419,6 +415,21 @@ stages:
       name: $(NetCorePublicPoolName)
       demands:
       - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      os: windows
+    macPool:
+      name: AcesShared
+      demands:
+      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+      os: macOS
+
+# Android Tools Tests Stage
+- template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
+  parameters:
+    windowsPool:
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      os: windows
     macPool:
       name: AcesShared
       demands:

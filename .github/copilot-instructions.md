@@ -18,6 +18,17 @@
 - **Run tests:** `dotnet-local.cmd test bin/TestDebug/net9.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
 - **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net9.0/MSBuildDeviceIntegration.dll`
 
+### external/xamarin-android-tools/
+
+The in-tree Android tools libraries include SDK/JDK discovery (`AndroidSdkInfo`, `JdkInfo`, SDK manifest parsing, `AdbRunner`, `EmulatorRunner`) and MSBuild task infrastructure (`AndroidTask`, `AndroidToolTask`, `AsyncTask`, `Files`, `ProcessUtils`, `FileUtil`, `MemoryStreamPool`). They target `netstandard2.0` and/or modern .NET, so verify API availability across all target frameworks before using newer BCL APIs. Prefer `ANDROID_HOME` for new Android SDK environment handling; `ANDROID_SDK_ROOT` is deprecated and should only remain for compatibility.
+
+Useful focused checks:
+```sh
+dotnet build external/xamarin-android-tools/Xamarin.Android.Tools.sln
+dotnet test external/xamarin-android-tools/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+dotnet test external/xamarin-android-tools/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+```
+
 ## Critical Rules
 
 **Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
@@ -208,13 +219,13 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
   make prepare && make all CONFIGURATION=Release
   ./dotnet-local.sh build -t:Install -c Release \
       tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
-      -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
+      -p:_AndroidTypeMapImplementation=<llvm-ir|trimmable> \
       -p:UseMonoRuntime=<true|false>
   (
       cd tests/Mono.Android-Tests/Mono.Android-Tests
       ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
           --report-trx --results-directory ../../../bin/TestRelease/TestResults \
-          -p:_AndroidTypeMapImplementation=<llvm-ir|managed|trimmable> \
+          -p:_AndroidTypeMapImplementation=<llvm-ir|trimmable> \
           -p:UseMonoRuntime=<true|false>
   )
   ```

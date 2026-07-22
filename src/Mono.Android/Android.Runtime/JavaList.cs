@@ -498,7 +498,7 @@ namespace Android.Runtime {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IList));
 			if (inst == null)
 				inst = new JavaList (handle, transfer);
 			else
@@ -585,7 +585,7 @@ namespace Android.Runtime {
 			return true;
 		}
 		
-		public virtual bool Equals (Java.Lang.Object obj)
+		public virtual new bool Equals (Java.Lang.Object obj)
 		{
 			var collection = obj as JavaList;
 			if (collection == null || Count != collection.Count)
@@ -785,7 +785,7 @@ namespace Android.Runtime {
 
 		// C#'s IList<T> allows nulls but is not annotated as MaybeNull.
 		[MaybeNull]
-		public T this [int index] {
+		public new T this [int index] {
 			[return: MaybeNull]
 #pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member because of nullability attributes.
 			get {
@@ -879,7 +879,7 @@ namespace Android.Runtime {
 			return GetEnumerator ()!;
 		}
 
-		public IEnumerator<T?> GetEnumerator ()
+		public new IEnumerator<T?> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());
 		}
@@ -960,7 +960,7 @@ namespace Android.Runtime {
 			return true;
 		}
 		
-		public static IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;

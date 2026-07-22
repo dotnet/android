@@ -3,13 +3,24 @@
   <!-- NuGet Package Versions -->
   <ItemGroup>
     <PackageReference Update="Microsoft.Win32.Registry"                     Version="5.0.0" />
-    <PackageReference Update="System.CodeDom"                               Version="10.0.8" />
+    <PackageReference Update="System.CodeDom"                               Version="10.0.10" />
     <PackageReference Update="Irony"                                        Version="1.5.3" />
   </ItemGroup>
 
   <!-- Embed Source Link information in PDBs for every project in the repo. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <!--
+      SourceLink is a build-time only package (PrivateAssets="All"), but in 10.x its dependency
+      Microsoft.Build.Tasks.Git pulls System.IO.Hashing in as a *runtime* asset (e.g. 10.0.300 -> 10.0.8).
+      Projects that reference System.IO.Hashing only transitively would then ship that version into the
+      SDK pack's `tools/` directory, where it collides with the $(SystemIOHashingPackageVersion) assembly the build
+      tasks are compiled against (System.IO.Hashing bumps its AssemblyVersion every patch), producing a
+      MissingMethodException (XACRP7000) on System.IO.Hashing.Crc64.Hash at build
+      time. Exclude SourceLink's runtime assets so it can never contribute a floating System.IO.Hashing;
+      source linking is unaffected (it runs via SourceLink's build assets). Mirrors the same pin in
+      external/Java.Interop/Directory.Build.targets.
+    -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <!-- Automatically add NRT attribute support for netstandard2.0 projects using NRT -->

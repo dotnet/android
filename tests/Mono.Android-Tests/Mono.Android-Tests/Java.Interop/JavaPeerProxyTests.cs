@@ -18,17 +18,6 @@ namespace Java.InteropTests
 
 			Assert.AreEqual ("custom/ExplicitName", proxy.JniName);
 			Assert.AreEqual (typeof (ProxyTestPeer), proxy.TargetType);
-			Assert.IsNull (proxy.InvokerType);
-		}
-
-		[Test]
-		public void Constructor_StoresInvokerType ()
-		{
-			var proxy = new InvokerProxy ();
-
-			Assert.AreEqual ("custom/InvokerProxy", proxy.JniName);
-			Assert.AreEqual (typeof (ProxyTestPeer), proxy.TargetType);
-			Assert.AreEqual (typeof (ProxyTestPeerInvoker), proxy.InvokerType);
 		}
 	}
 
@@ -45,32 +34,10 @@ namespace Java.InteropTests
 		}
 	}
 
-	sealed class ProxyTestPeerInvoker : Java.Lang.Object
-	{
-		public ProxyTestPeerInvoker ()
-		{
-		}
-
-		public ProxyTestPeerInvoker (IntPtr handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
-		{
-		}
-	}
-
 	sealed class ExplicitNameProxy : JavaPeerProxy
 	{
 		public ExplicitNameProxy ()
-			: base ("custom/ExplicitName", typeof (ProxyTestPeer), invokerType: null)
-		{
-		}
-
-		public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
-	}
-
-	sealed class InvokerProxy : JavaPeerProxy<ProxyTestPeer>
-	{
-		public InvokerProxy ()
-			: base ("custom/InvokerProxy", typeof (ProxyTestPeerInvoker))
+			: base ("custom/ExplicitName", typeof (ProxyTestPeer))
 		{
 		}
 

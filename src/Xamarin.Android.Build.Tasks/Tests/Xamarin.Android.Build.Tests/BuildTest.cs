@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -33,10 +34,6 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "Test Me",
 				RootNamespace = "Test.Me",
 				EnableDefaultItems = true,
-				ExtraNuGetConfigSources = {
-					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
-					"https://api.nuget.org/v3/index.json",
-				},
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.7.1.3" },
 					// Using * here, so we explicitly get newer packages
@@ -137,6 +134,9 @@ namespace Xamarin.Android.Build.Tests
 			if (isRelease) {
 				expectedFiles.Add ($"{proj.PackageName}.aab");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.aab");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					expectedFiles.Add ("mapping.txt");
+				}
 			} else {
 				expectedFiles.Add ($"{proj.PackageName}.apk");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.apk.idsig");
@@ -210,6 +210,207 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		// target, isRelease, packageFormat, withExtensionHook, perAbi
+		[TestCase ("GetApplicationArtifacts", false, "apk", false, false)]
+		[TestCase ("Publish",                 false, "apk", false, false)]
+		[TestCase ("GetApplicationArtifacts", true,  "aab", false, false)]
+		[TestCase ("GetApplicationArtifacts", false, "apk", true,  false)]
+		[TestCase ("Publish",                 false, "apk", true,  false)]
+		[TestCase ("GetApplicationArtifacts", true,  "apk", false, true)]
+		public void DotNetBuildReturnsApplicationArtifacts (string target, bool isRelease, string packageFormat, bool withExtensionHook, bool perAbi)
+		{
+			const string applicationTitle = "Application Artifact Test";
+			const string applicationDisplayVersion = "3.2.1";
+			const string applicationVersion = "321";
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+			};
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("ApplicationId", proj.PackageName);
+			proj.SetProperty ("ApplicationTitle", applicationTitle);
+			proj.SetProperty ("ApplicationDisplayVersion", applicationDisplayVersion);
+			proj.SetProperty ("ApplicationVersion", applicationVersion);
+			proj.AndroidManifest = proj.AndroidManifest
+				.Replace ("package=\"${PACKAGENAME}\"", "")
+				.Replace ("android:label=\"${PROJECT_NAME}\"", "")
+				.Replace ("android:versionName=\"1.0\"", "")
+				.Replace ("android:versionCode=\"1\"", "");
+			if (packageFormat == "aab") {
+				// Disable fast deployment for AABs to avoid XA0119.
+				proj.EmbedAssembliesIntoApk = true;
+			}
+			if (perAbi) {
+				proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, true);
+				proj.SetProperty (proj.ReleaseProperties, KnownProperties.RunAOTCompilation, false);
+				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
+				proj.Imports.Add (new Import (() => "ApplicationArtifactPerAbi.targets") {
+					TextContent = () => """
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="_CreateApplicationArtifactTestPerAbiFiles" BeforeTargets="_CollectApplicationArtifacts">
+    <Touch
+        Files="@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity).apk');@(_BuildTargetAbis->'$(OutDir)$(_AndroidPackage)-%(Identity)-Signed.apk')"
+        AlwaysCreate="true" />
+  </Target>
+</Project>
+"""
+				});
+			}
+			if (withExtensionHook) {
+				// Validate that $(GetApplicationArtifactsDependsOn) runs *after* _CollectApplicationArtifacts,
+				// so MAUI-style extension targets can enrich the items the platform already produced.
+				// If the order regresses, `Update` will have nothing to update and the metadata won't appear.
+				proj.Imports.Add (new Import (() => "ApplicationArtifacts.targets") {
+					TextContent = () => """
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <GetApplicationArtifactsDependsOn>$(GetApplicationArtifactsDependsOn);_AddExtensionArtifactMetadata</GetApplicationArtifactsDependsOn>
+  </PropertyGroup>
+  <Target Name="_AddExtensionArtifactMetadata">
+    <Error Condition=" '@(ApplicationArtifact)' == '' " Text="Expected ApplicationArtifact items before extension metadata augmentation." />
+    <ItemGroup>
+      <ApplicationArtifact
+          Update="@(ApplicationArtifact)"
+          ApplicationTitle="Extended Application Title"
+          ApplicationName="Extended Application Name"
+          MauiArtifact="true" />
+    </ItemGroup>
+  </Target>
+</Project>
+"""
+				});
+			}
+
+			using var builder = CreateDllBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath)) {
+				Verbosity = "minimal",
+			};
+			var msbuildArgs = new List<string> { $"-getTargetResult:{target}" };
+			if (isRelease) {
+				msbuildArgs.Add ("-c:Release");
+			}
+			Assert.IsTrue (
+				dotnet.Build (target: target, msbuildArguments: msbuildArgs.ToArray ()),
+				$"`dotnet build -t:{target} -getTargetResult:{target}` should succeed");
+
+			var items = ReadApplicationArtifactTargetResultItems (dotnet.ProcessLogFile, target);
+			var expectedApplicationTitle = withExtensionHook ? "Extended Application Title" : applicationTitle;
+			var expectedApplicationName = withExtensionHook ? "Extended Application Name" : applicationTitle;
+			var expectedMauiArtifact = withExtensionHook ? "true" : "";
+
+			if (packageFormat == "aab") {
+				// AAB produces: unsigned aab + signed aab + signed universal APK from the bundle.
+				Assert.AreEqual (3, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.aab", "aab", "false", proj.PackageName, "", expectedApplicationTitle, expectedApplicationName, applicationDisplayVersion, applicationVersion, expectedMauiArtifact);
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.aab", "aab", "true", proj.PackageName, "", expectedApplicationTitle, expectedApplicationName, applicationDisplayVersion, applicationVersion, expectedMauiArtifact);
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "", expectedApplicationTitle, expectedApplicationName, applicationDisplayVersion, applicationVersion, expectedMauiArtifact);
+			} else {
+				Assert.AreEqual (perAbi ? 6 : 2, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}.apk", "apk", "false", proj.PackageName, "", expectedApplicationTitle, expectedApplicationName, applicationDisplayVersion, applicationVersion, expectedMauiArtifact);
+				AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-Signed.apk", "apk", "true", proj.PackageName, "", expectedApplicationTitle, expectedApplicationName, applicationDisplayVersion, applicationVersion, expectedMauiArtifact);
+				if (perAbi) {
+					foreach (var abi in new [] { "arm64-v8a", "x86_64" }) {
+						AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-{abi}.apk", "apk", "false", proj.PackageName, abi, expectedApplicationTitle, expectedApplicationName, applicationDisplayVersion, applicationVersion, expectedMauiArtifact);
+						AssertApplicationArtifactTargetResultItem (items, $"{proj.PackageName}-{abi}-Signed.apk", "apk", "true", proj.PackageName, abi, expectedApplicationTitle, expectedApplicationName, applicationDisplayVersion, applicationVersion, expectedMauiArtifact);
+					}
+				}
+			}
+		}
+
+		[Test]
+		[TestCase ("GetApplicationArtifacts", true,  "Manifest Application")]
+		[TestCase ("GetApplicationArtifacts", true,  "@string/app_name")]
+		[TestCase ("Publish",                 false, "@string/app_name")]
+		public void ApplicationArtifactsUseFinalManifestMetadata (string target, bool generateApplicationManifest, string applicationLabel)
+		{
+			const string packageName = "com.example.manifestmetadata";
+			const string versionName = "9.8.7";
+			const string versionCode = "987";
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+			};
+			proj.SetProperty ("GenerateApplicationManifest", generateApplicationManifest.ToString ());
+			proj.SetProperty ("ApplicationId", "com.example.property");
+			proj.SetProperty ("ApplicationTitle", "Property Application");
+			proj.SetProperty ("ApplicationDisplayVersion", "1.2.3");
+			proj.SetProperty ("ApplicationVersion", "123");
+			proj.AndroidManifest = proj.AndroidManifest
+				.Replace ("package=\"${PACKAGENAME}\"", $"package=\"{packageName}\"")
+				.Replace ("android:label=\"${PROJECT_NAME}\"", $"android:label=\"{applicationLabel}\"")
+				.Replace ("android:versionName=\"1.0\"", $"android:versionName=\"{versionName}\"")
+				.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
+
+			using var builder = CreateDllBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath)) {
+				Verbosity = "minimal",
+			};
+			Assert.IsTrue (
+				dotnet.Build (target: target, msbuildArguments: new [] { $"-getTargetResult:{target}" }),
+				$"`dotnet build -t:{target} -getTargetResult:{target}` should succeed");
+
+			var items = ReadApplicationArtifactTargetResultItems (dotnet.ProcessLogFile, target);
+			Assert.AreEqual (2, items.Count, $"Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+			AssertApplicationArtifactTargetResultItem (items, $"{packageName}.apk", "apk", "false", packageName, "", applicationLabel, applicationLabel, versionName, versionCode, "");
+			AssertApplicationArtifactTargetResultItem (items, $"{packageName}-Signed.apk", "apk", "true", packageName, "", applicationLabel, applicationLabel, versionName, versionCode, "");
+		}
+
+		static List<Dictionary<string, string>> ReadApplicationArtifactTargetResultItems (string processLogFile, string target)
+		{
+			var output = File.ReadAllText (processLogFile);
+			var jsonStart = output.IndexOf ('{');
+			var jsonEnd = output.LastIndexOf ('}');
+			Assert.GreaterOrEqual (jsonStart, 0, $"Could not find JSON target result in {processLogFile}.{Environment.NewLine}{output}");
+			Assert.Greater (jsonEnd, jsonStart, $"Could not find complete JSON target result in {processLogFile}.{Environment.NewLine}{output}");
+
+			using var document = JsonDocument.Parse (output.Substring (jsonStart, jsonEnd - jsonStart + 1));
+			var targetResult = document.RootElement
+				.GetProperty ("TargetResults")
+				.GetProperty (target);
+			Assert.AreEqual ("Success", targetResult.GetProperty ("Result").GetString (), $"Target {target} should succeed.");
+
+			var items = new List<Dictionary<string, string>> ();
+			foreach (var item in targetResult.GetProperty ("Items").EnumerateArray ()) {
+				var metadata = new Dictionary<string, string> (StringComparer.Ordinal);
+				foreach (var property in item.EnumerateObject ()) {
+					metadata.Add (property.Name, property.Value.GetString () ?? "");
+				}
+				items.Add (metadata);
+			}
+			return items;
+		}
+
+		static void AssertApplicationArtifactTargetResultItem (List<Dictionary<string, string>> items, string fileName, string packageFormat, string signed, string applicationId, string abi, string applicationTitle, string applicationName, string applicationDisplayVersion, string applicationVersion, string mauiArtifact)
+		{
+			var matches = items.Where (item =>
+				GetTargetResultMetadata (item, "Filename") + GetTargetResultMetadata (item, "Extension") == fileName &&
+				GetTargetResultMetadata (item, "PackageFormat") == packageFormat &&
+				GetTargetResultMetadata (item, "Signed") == signed &&
+				GetTargetResultMetadata (item, "PackageId") == applicationId &&
+				GetTargetResultMetadata (item, "Abi") == abi &&
+				GetTargetResultMetadata (item, "ApplicationId") == applicationId &&
+				GetTargetResultMetadata (item, "ApplicationTitle") == applicationTitle &&
+				GetTargetResultMetadata (item, "ApplicationName") == applicationName &&
+				GetTargetResultMetadata (item, "ApplicationDisplayVersion") == applicationDisplayVersion &&
+				GetTargetResultMetadata (item, "ApplicationVersion") == applicationVersion &&
+				GetTargetResultMetadata (item, "MauiArtifact") == mauiArtifact).ToList ();
+			Assert.AreEqual (1, matches.Count, $"Expected application artifact item '{fileName}|{packageFormat}|{signed}|{applicationId}|{abi}|{applicationTitle}|{applicationName}|{applicationDisplayVersion}|{applicationVersion}|{mauiArtifact}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+		}
+
+		static string GetTargetResultMetadata (Dictionary<string, string> item, string name)
+		{
+			return item.TryGetValue (name, out var value) ? value : "";
+		}
+
+		static string FormatApplicationArtifactTargetResultItems (List<Dictionary<string, string>> items)
+		{
+			return string.Join (Environment.NewLine, items.Select (item =>
+				$"{GetTargetResultMetadata (item, "Identity")}|{GetTargetResultMetadata (item, "Filename")}{GetTargetResultMetadata (item, "Extension")}|{GetTargetResultMetadata (item, "PackageFormat")}|{GetTargetResultMetadata (item, "Signed")}|{GetTargetResultMetadata (item, "PackageId")}|{GetTargetResultMetadata (item, "Abi")}|{GetTargetResultMetadata (item, "ApplicationId")}|{GetTargetResultMetadata (item, "ApplicationTitle")}|{GetTargetResultMetadata (item, "ApplicationName")}|{GetTargetResultMetadata (item, "ApplicationDisplayVersion")}|{GetTargetResultMetadata (item, "ApplicationVersion")}|{GetTargetResultMetadata (item, "MauiArtifact")}"));
+		}
 
 
 		[Test]
@@ -655,7 +856,7 @@ public class Test
 				IsRelease = isRelease,
 				AotAssemblies = aotAssemblies,
 				LinkTool = linkTool,
-				References = { new BuildItem ("ProjectReference", $"..\\{folderName}Library1\\Library1.csproj") },
+				References = { new BuildItem ("ProjectReference", $"..\\{TestName}Library1\\Library1.csproj") },
 			};
 			proj.SetRuntime (runtime);
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "Hello (World).jar") { BinaryContent = () => Convert.FromBase64String (@"
@@ -1376,6 +1577,13 @@ public class MyWorker : Worker
 			});
 			proj.PackageReferences.Add (KnownPackages.AndroidXWorkRuntime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
+			// Xamarin.Forms 5.0.0.2622 transitively pulls old Xamarin.AndroidX.Fragment (1.5.5) and
+			// Xamarin.Google.Android.Material (1.4.0.2) that were compiled before the AndroidX.Collection
+			// KMP split and carry dangling type references to AndroidX.Collection.SimpleArrayMap in the now
+			// type-less Xamarin.AndroidX.Collection facade. NativeAOT/ILC resolves those references eagerly
+			// while building vtables and fails to load the type. Reference a current Material (which depends
+			// on Fragment 1.6.2.1) so both resolve to Xamarin.AndroidX.Collection.Jvm.
+			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
@@ -1479,27 +1687,28 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (true, "LowercaseMD5", "", runtime);
-				AddTestData (true, "LowercaseCrc64", "", runtime);
-				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime);
+				AddTestData (true, "LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
+				AddTestData (true, "LowercaseCrc64", "", runtime, false);
+				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime, false);
 			}
 
 			return ret;
 
-			void AddTestData (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime)
+			void AddTestData (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 			{
 				ret.Add (new object[] {
 					useInterpreter,
 					packageNamingPolicy,
 					diagnosticConfiguration,
-					runtime
+					runtime,
+					enableCrashReport,
 				});
 			}
 		}
 
 		[Test]
 		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
-		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime)
+		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 		{
 			// NativeAOT supports neither the interpreter nor debug builds, but what we test here is
 			// environment file creation and contents, and that's relevant to NativeAOT too
@@ -1527,6 +1736,7 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
+			proj.SetProperty ("EnableCrashReport", enableCrashReport.ToString ());
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
 			if (!string.IsNullOrEmpty (diagnosticConfiguration))
@@ -1542,6 +1752,8 @@ namespace UnnamedProject
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
+				if (enableCrashReport)
+					values.Add ("DOTNET_EnableCrashReport=1");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
@@ -1794,20 +2006,7 @@ namespace UnnamedProject
 				StringAssertEx.Contains ("error XA4310", builder.LastBuildOutput, "Error should be XA4310");
 				StringAssertEx.Contains ("`DoesNotExist`", builder.LastBuildOutput, "Error should include the name of the nonexistent file");
 
-				if (runtime != AndroidRuntime.NativeAOT) {
-					builder.AssertHasNoWarnings ();
-					return;
-				}
-
-				// NativeAOT currently (Nov 2025) produces the following warning
-				//  warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
-				string expectedWarning = "warning IL3053:";
-				Assert.IsNotNull (
-					builder.LastBuildOutput
-					  .SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-					  .FirstOrDefault (x => x.Contains (expectedWarning)),
-					$"Build output should contain '{expectedWarning}'."
-				);
+				builder.AssertHasNoWarnings ();
 			}
 		}
 
@@ -1819,6 +2018,9 @@ namespace UnnamedProject
 
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			if (IgnoreOnNativeAot (runtime, "the trimmable typemap generates additional Java Callable Wrappers that trip XA0102 lint warnings (e.g. CustomX509TrustManager, MissingApplicationIcon). Tracked by https://github.com/dotnet/android/issues/11774.")) {
 				return;
 			}
 

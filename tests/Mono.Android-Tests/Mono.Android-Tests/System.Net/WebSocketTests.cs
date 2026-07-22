@@ -4,20 +4,23 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Xamarin.Android.NetTests;
+
 namespace System.NetTests
 {
 	[TestFixture]
 	public class WebSocketTests
 	{
 		[Test, Category ("InetAccess")]
-		[Ignore ("echo.websocket.org is not available anymore")]
 		public void TestSocketConnection()
 		{
 			string testMessage = "This is a test!";
 			var messageBytes = CustomWebSocket.GetBytes (testMessage);
 			CustomWebSocket.BytesSize = messageBytes.Length;
-			var result = CustomWebSocket.Connect ("ws://echo.websocket.org", messageBytes).Result;
+			using var server = LocalWebSocketServer.Start ();
+			var result = CustomWebSocket.Connect (server.Url, messageBytes).Result;
 			Assert.AreEqual (result, testMessage, $"Socket test failed. Expected: {testMessage}, Received: {result}");
+			server.AssertNoUnhandledExceptions ();
 		}
 	}
 

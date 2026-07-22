@@ -1,0 +1,218 @@
+<Project DefaultTargets="Restore;Build">
+  <PropertyGroup>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+    <AndroidRepoRoot Condition="'$(AndroidRepoRoot)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..', '..'))</AndroidRepoRoot>
+  </PropertyGroup>
+
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <_ArtifactsDir>$([MSBuild]::EnsureTrailingSlash('$(ArtifactsDir)'))</_ArtifactsDir>
+    <ArtifactsPackagesDir>$(_ArtifactsDir)packages\Release\</ArtifactsPackagesDir>
+    <ArtifactsShippingPackagesDir>$(ArtifactsPackagesDir)Shipping\</ArtifactsShippingPackagesDir>
+    <ArtifactsLogDir>$(_ArtifactsDir)log\Release\</ArtifactsLogDir>
+    <WorkloadMsiLogDirectory>$(ArtifactsLogDir)workload-msi</WorkloadMsiLogDirectory>
+    <IntermediateOutputPath>$(_ArtifactsDir)obj\Release\</IntermediateOutputPath>
+    <OutputPath>$(_ArtifactsDir)workload-msi\</OutputPath>
+    <WorkloadOutputsProps>$(IntermediateOutputPath)WorkloadOutputs.props</WorkloadOutputsProps>
+    <VsmanProject>$(MSBuildThisFileDirectory)vsman\Workload.vsmanproj</VsmanProject>
+    <ManifestOutputPath>$(ArtifactsShippingPackagesDir)\manifests</ManifestOutputPath>
+    <PreviewManifestOutputPath>$(ArtifactsShippingPackagesDir)\manifests-pre</PreviewManifestOutputPath>
+    <PackManifestOutputPath>$(ArtifactsShippingPackagesDir)\manifests-packs</PackManifestOutputPath>
+    <MsiNuGetOutputPath>$(ArtifactsShippingPackagesDir)</MsiNuGetOutputPath>
+    <NuGetPackagePath Condition="'$(NuGetPackagePath)' == ''">$(ArtifactsShippingPackagesDir)</NuGetPackagePath>
+    <WorkloadMsiGenProps Condition="'$(WorkloadMsiGenProps)' == ''">$(ArtifactsShippingPackagesDir)\vs-workload.props</WorkloadMsiGenProps>
+    <ArcadePackageVersion>11.0.0-beta.26325.102</ArcadePackageVersion>
+    <SwixBuildPackageVersion>1.1.922</SwixBuildPackageVersion>
+    <MicrosoftWixToolsetSdkVersion>6.0.3-dotnet.4</MicrosoftWixToolsetSdkVersion>
+    <WixHeatPackageVersion>6.0.3-dotnet.4</WixHeatPackageVersion>
+    <WixExtensionsPackageVersion>6.0.3-dotnet.4</WixExtensionsPackageVersion>
+    <VSWherePackageVersion>3.1.7</VSWherePackageVersion>
+    <BundledNETCoreAppTargetFramework Condition="'$(BundledNETCoreAppTargetFramework)' == ''">net$(BundledNETCoreAppTargetFrameworkVersion)</BundledNETCoreAppTargetFramework>
+    <DropBuildNumber Condition="'$(BUILD_SOURCEVERSIONSHORT)' == ''">$(BUILD_BUILDID)</DropBuildNumber>
+    <DropBuildNumber Condition="'$(BUILD_SOURCEVERSIONSHORT)' != ''">$(BUILD_SOURCEVERSIONSHORT)/$(BUILD_BUILDID)</DropBuildNumber>
+    <SwixTargetsPath>$(PkgMicrosoft_VisualStudioEng_MicroBuild_Plugins_SwixBuild)\build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets</SwixTargetsPath>
+    <WixExe>$(PkgMicrosoft_Wix)\tools\net6.0\any\wix.exe</WixExe>
+    <HeatExe>$(PkgMicrosoft_WixToolset_Heat)\tools\net472\x64\heat.exe</HeatExe>
+    <WixExtensionsDir>wixext6</WixExtensionsDir>
+  </PropertyGroup>
+
+  <Import Project="$(WorkloadMsiGenProps)" Condition="Exists('$(WorkloadMsiGenProps)')" />
+  <Import Project="$(WorkloadOutputsProps)" Condition="Exists('$(WorkloadOutputsProps)')" />
+
+  <PropertyGroup>
+    <CreateWorkloadPackGroups Condition="'$(CreateWorkloadPackGroups)' == ''">false</CreateWorkloadPackGroups>
+    <SkipRedundantMsiCreation Condition="'$(SkipRedundantMsiCreation)' == ''">false</SkipRedundantMsiCreation>
+    <IsOutOfSupportInVisualStudio Condition="'$(IsOutOfSupportInVisualStudio)' == ''">false</IsOutOfSupportInVisualStudio>
+    <EnableSideBySideManifests Condition="'$(EnableSideBySideManifests)' == ''">false</EnableSideBySideManifests>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Installers" Version="$(ArcadePackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Workloads" Version="$(ArcadePackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild" Version="$(SwixBuildPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Wix" Version="$(MicrosoftWixToolsetSdkVersion)" ExcludeAssets="all" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WixToolset.Heat" Version="$(WixHeatPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WixToolset.Dependency.wixext" Version="$(WixExtensionsPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WixToolset.Util.wixext" Version="$(WixExtensionsPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.WixToolset.UI.wixext" Version="$(WixExtensionsPackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="vswhere" Version="$(VSWherePackageVersion)" GeneratePathProperty="true" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <WixExtensions Include="$(PkgMicrosoft_WixToolset_UI_wixext)\$(WixExtensionsDir)\WixToolset.UI.wixext.dll" />
+    <WixExtensions Include="$(PkgMicrosoft_WixToolset_Dependency_wixext)\$(WixExtensionsDir)\WixToolset.Dependency.wixext.dll" />
+    <WixExtensions Include="$(PkgMicrosoft_WixToolset_Util_wixext)\$(WixExtensionsDir)\WixToolset.Util.wixext.dll" />
+  </ItemGroup>
+
+  <UsingTask TaskName="GenerateCurrentVersion" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Installers)\tools\net\Microsoft.DotNet.Build.Tasks.Installers.dll" />
+  <UsingTask TaskName="GenerateMsiVersion" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Installers)\tools\net\Microsoft.DotNet.Build.Tasks.Installers.dll" />
+  <UsingTask TaskName="CreateVisualStudioWorkload" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Workloads)\tools\net\Microsoft.DotNet.Build.Tasks.Workloads.dll" />
+
+  <Target Name="_SetStableMsiVersions">
+    <ItemGroup>
+      <WorkloadPackages Condition="'%(WorkloadPackages.Identity)' == '%(Identity)' and '%(WorkloadPackages.MsiVersion)' == ''">
+        <_PreviewMatch>$([System.Text.RegularExpressions.Regex]::Match(%(WorkloadPackages.Identity), `\-(preview|rc|ci.+).\d+`))</_PreviewMatch>
+        <_NuGetVersion>$([System.Version]::Parse('%(WorkloadPackages.Version)').Major).$([System.Version]::Parse('%(WorkloadPackages.Version)').Minor).$([System.Version]::Parse('%(WorkloadPackages.Version)').Build)</_NuGetVersion>
+      </WorkloadPackages>
+      <WorkloadPackages Condition="'%(WorkloadPackages.Identity)' == '%(Identity)' and '%(WorkloadPackages.MsiVersion)' == '' and ('%(WorkloadPackages._PreviewMatch)' == '' or '%(WorkloadPackages.UseNuGetVersionAsMsiVersion)' == 'true')">
+        <MsiVersion>%(WorkloadPackages._NuGetVersion)</MsiVersion>
+      </WorkloadPackages>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_SetPreviewMsiVersions" Outputs="%(WorkloadPackages.Identity)">
+    <PropertyGroup>
+      <VersionPadding Condition="'$(VersionPadding)' == ''">5</VersionPadding>
+      <VersionComparisonDate Condition="'$(VersionComparisonDate)' == ''">1996-04-01</VersionComparisonDate>
+    </PropertyGroup>
+    <GenerateCurrentVersion
+        SeedDate="$([System.DateTime]::UtcNow.ToString(yyyy-MM-dd))"
+        OfficialBuildId="$([System.DateTime]::UtcNow.ToString(yyyyMMdd)).$([System.Version]::Parse('%(WorkloadPackages.Version)').Revision)"
+        ComparisonDate="$(VersionComparisonDate)"
+        Padding="$(VersionPadding)">
+      <Output TaskParameter="GeneratedVersion" PropertyName="_BuildNumberMajor" />
+      <Output TaskParameter="GeneratedRevision" PropertyName="_BuildNumberMinor" />
+    </GenerateCurrentVersion>
+    <GenerateMsiVersion
+        Major="$([System.Version]::Parse('%(WorkloadPackages.Version)').Major)"
+        Minor="$([System.Version]::Parse('%(WorkloadPackages.Version)').Minor)"
+        Patch="$([System.Version]::Parse('%(WorkloadPackages.Version)').Build)"
+        BuildNumberMajor="$(_BuildNumberMajor)"
+        BuildNumberMinor="$(_BuildNumberMinor)">
+      <Output TaskParameter="MsiVersion" PropertyName="_GeneratedMsiVersion" />
+    </GenerateMsiVersion>
+    <ItemGroup>
+      <WorkloadPackages Condition="'%(WorkloadPackages.Identity)' == '%(Identity)' and '%(WorkloadPackages.MsiVersion)' == ''">
+        <MsiVersion>$(_GeneratedMsiVersion)</MsiVersion>
+      </WorkloadPackages>
+    </ItemGroup>
+    <PropertyGroup>
+      <_GeneratedMsiVersion />
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_FindMSBuild">
+    <PropertyGroup>
+      <_VSWherePath>$([MSBuild]::NormalizePath('$(Pkgvswhere)', 'tools', 'vswhere.exe'))</_VSWherePath>
+    </PropertyGroup>
+    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild"
+        ConsoleToMsBuild="true"
+        StandardErrorImportance="high">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_VSInstallDirectory" />
+    </Exec>
+    <PropertyGroup>
+      <_DesktopMSBuildPath>$(_VSInstallDirectory)\MSBuild\Current\Bin\MSBuild.exe</_DesktopMSBuildPath>
+    </PropertyGroup>
+    <Error Condition="'$(_VSInstallDirectory)' == ''" Text="Could not locate a Visual Studio installation with MSBuild." />
+    <Error Condition="!Exists('$(_DesktopMSBuildPath)')" Text="Desktop MSBuild was not found at '$(_DesktopMSBuildPath)'." />
+    <MakeDir Directories="$(WorkloadMsiLogDirectory)" />
+    <Exec
+        Command="&quot;$(_DesktopMSBuildPath)&quot; &quot;$(VsmanProject)&quot; /nologo /v:minimal /nr:false /t:Restore /p:SwixBuildTargets=&quot;$(SwixTargetsPath)&quot; /p:WorkloadMsiGenProps=&quot;$(WorkloadMsiGenProps)&quot; /p:RestoreConfigFile=&quot;$(RestoreConfigFile)&quot; -bl:&quot;$(WorkloadMsiLogDirectory)\vsman-restore.binlog&quot;"
+        WorkingDirectory="$(MSBuildThisFileDirectory)vsman" />
+  </Target>
+
+  <Target Name="_GenerateAndSignMsis"
+      DependsOnTargets="_SetStableMsiVersions;_SetPreviewMsiVersions;_FindMSBuild"
+      BeforeTargets="SignFiles">
+    <CreateVisualStudioWorkload
+        AllowMissingPacks="true"
+        BaseIntermediateOutputPath="$(IntermediateOutputPath)"
+        BaseOutputPath="$(OutputPath)"
+        ComponentResources="@(ComponentResources)"
+        CreateWorkloadPackGroups="$(CreateWorkloadPackGroups)"
+        EnableSideBySideManifests="$(EnableSideBySideManifests)"
+        HeatExe="$(HeatExe)"
+        IsOutOfSupportInVisualStudio="$(IsOutOfSupportInVisualStudio)"
+        PackageSource="$(NuGetPackagePath)"
+        ShortNames="@(ShortNames)"
+        SkipRedundantMsiCreation="$(SkipRedundantMsiCreation)"
+        WixExe="$(WixExe)"
+        WixExtensions="@(WixExtensions)"
+        WorkloadManifestPackageFiles="@(WorkloadPackages)">
+      <Output TaskParameter="Msis" ItemName="_WorkloadMsis" />
+      <Output TaskParameter="SwixProjects" ItemName="_SwixProjects" />
+    </CreateVisualStudioWorkload>
+    <ItemGroup>
+      <_WorkloadOutputLines Include="&lt;Project&gt;" />
+      <_WorkloadOutputLines Include="  &lt;ItemGroup&gt;" />
+      <_WorkloadOutputLines Include="@(_WorkloadMsis->'    &lt;_WorkloadMsis Include=&quot;%(Identity)&quot; PackageProject=&quot;%(PackageProject)&quot; /&gt;')" />
+      <_WorkloadOutputLines Include="@(_SwixProjects->'    &lt;_SwixProjects Include=&quot;%(Identity)&quot; PackageType=&quot;%(PackageType)&quot; IsPreview=&quot;%(IsPreview)&quot; /&gt;')" />
+      <_WorkloadOutputLines Include="  &lt;/ItemGroup&gt;" />
+      <_WorkloadOutputLines Include="&lt;/Project&gt;" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(WorkloadOutputsProps)" Lines="@(_WorkloadOutputLines)" Overwrite="true" />
+  </Target>
+
+  <Target Name="_CreateInsertionArtifacts" DependsOnTargets="_FindMSBuild">
+    <Error Condition="'@(_WorkloadMsis)' == ''" Text="No persisted workload MSI outputs were found." />
+    <Error Condition="'@(_SwixProjects)' == ''" Text="No persisted workload insertion projects were found." />
+    <MSBuild
+        Projects="%(_WorkloadMsis.PackageProject)"
+        Targets="Restore;Pack"
+        Properties="OutputPath=$(MsiNuGetOutputPath);PackageOutputPath=$(MsiNuGetOutputPath);BundledNETCoreAppTargetFramework=$(BundledNETCoreAppTargetFramework)" />
+    <ItemGroup>
+      <_PackProjects Include="@(_SwixProjects)" Condition="'%(PackageType)' == 'msi-pack'"
+          ManifestOutputPath="$(PackManifestOutputPath)"
+          LogGroup="packs"
+          ZipFile="Workload.VSDrop.$(TargetName).packs.zip" />
+      <_ComponentProjects Include="@(_SwixProjects)" Condition="'%(PackageType)' == 'msi-manifest' or '%(PackageType)' == 'manifest-package-group' or ('%(PackageType)' == 'component' and '%(IsPreview)' != 'true')"
+          ManifestOutputPath="$(ManifestOutputPath)"
+          LogGroup="components"
+          ZipFile="Workload.VSDrop.$(TargetName).components.zip" />
+      <_PreviewComponentProjects Include="@(_SwixProjects)" Condition="'%(PackageType)' == 'msi-manifest' or '%(PackageType)' == 'manifest-package-group' or ('%(PackageType)' == 'component' and '%(IsPreview)' == 'true')"
+          ManifestOutputPath="$(PreviewManifestOutputPath)"
+          LogGroup="components-pre"
+          ZipFile="Workload.VSDrop.$(TargetName)-pre.components.zip" />
+      <_InsertionProjects Include="@(_PackProjects);@(_ComponentProjects);@(_PreviewComponentProjects)" />
+    </ItemGroup>
+    <Exec Command="&quot;$(_DesktopMSBuildPath)&quot; &quot;%(_InsertionProjects.Identity)&quot; /nologo /v:minimal /nr:false /p:SwixBuildTargets=&quot;$(SwixTargetsPath)&quot; /p:ManifestOutputPath=&quot;%(_InsertionProjects.ManifestOutputPath)&quot; -bl:&quot;$(WorkloadMsiLogDirectory)\swix-%(_InsertionProjects.LogGroup)-%(_InsertionProjects.Filename).binlog&quot;" />
+    <ItemGroup>
+      <_Drop Include="%(_InsertionProjects.ZipFile)" SourceDirectory="%(ManifestOutputPath)" />
+      <_DropMetadata Include="$(ManifestBuildVersion);$(BUILD_REPOSITORY_NAME);$(BUILD_SOURCEBRANCH)" />
+    </ItemGroup>
+    <WriteLinesToFile File="%(_Drop.SourceDirectory)\.metadata" Lines="@(_DropMetadata)" Overwrite="true" />
+    <ZipDirectory Overwrite="true" SourceDirectory="%(_Drop.SourceDirectory)" DestinationFile="$(ArtifactsShippingPackagesDir)\%(_Drop.Identity)" />
+    <PropertyGroup>
+      <_VsmanArguments>&quot;$(_DesktopMSBuildPath)&quot; &quot;$(VsmanProject)&quot; /nologo /v:normal /nr:false /t:GenerateSetupManifest /p:SwixBuildTargets=&quot;$(SwixTargetsPath)&quot; /p:WorkloadMsiGenProps=&quot;$(WorkloadMsiGenProps)&quot;</_VsmanArguments>
+    </PropertyGroup>
+    <Exec Command="$(_VsmanArguments) /p:ManifestOutputPath=&quot;$(ManifestOutputPath)&quot; /p:TargetName=&quot;$(TargetName).components&quot; /p:ManifestBuildNumber=&quot;$(DropBuildNumber)/vs-components&quot; -bl:&quot;$(WorkloadMsiLogDirectory)\vsman-components.binlog&quot;" WorkingDirectory="$(MSBuildThisFileDirectory)vsman" />
+    <Exec Command="$(_VsmanArguments) /p:ManifestOutputPath=&quot;$(PreviewManifestOutputPath)&quot; /p:TargetName=&quot;$(TargetName).components.pre&quot; /p:ManifestBuildNumber=&quot;$(DropBuildNumber)/vs-components&quot; -bl:&quot;$(WorkloadMsiLogDirectory)\vsman-components-pre.binlog&quot;" WorkingDirectory="$(MSBuildThisFileDirectory)vsman" />
+    <ItemGroup>
+      <_PreviewManifests Include="$(PreviewManifestOutputPath)\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_PreviewManifests)" DestinationFolder="$(ManifestOutputPath)" />
+    <Exec Command="$(_VsmanArguments) /p:ManifestOutputPath=&quot;$(PackManifestOutputPath)&quot; /p:TargetName=&quot;$(TargetName).packs&quot; /p:ManifestBuildNumber=&quot;$(DropBuildNumber)/vs-packs&quot; -bl:&quot;$(WorkloadMsiLogDirectory)\vsman-packs.binlog&quot;" WorkingDirectory="$(MSBuildThisFileDirectory)vsman" />
+  </Target>
+
+  <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />
+
+  <PropertyGroup>
+    <BuildDependsOn>_GenerateAndSignMsis;AfterBuild</BuildDependsOn>
+  </PropertyGroup>
+</Project>

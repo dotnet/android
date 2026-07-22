@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -6,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Xamarin.ProjectTools
 {
@@ -81,29 +83,75 @@ namespace Xamarin.ProjectTools
 			var locker = new Lock ();
 			var procOutput = new StringBuilder ();
 			bool succeeded;
+			const int timeoutMilliseconds = 15 * 60 * 1000;
+			const int streamDrainTimeoutMilliseconds = 30 * 1000;
+			const int killTimeoutMilliseconds = 30 * 1000;
 
 			using (var p = ExecuteProcess (args)) {
+				var stderrCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+				var stdoutCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+
 				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null)
+					if (e.Data == null) {
+						stderrCompleted.TrySetResult (true);
+					} else {
 						lock (locker)
 							procOutput.AppendLine (e.Data);
+					}
 				};
 				p.OutputDataReceived += (sender, e) => {
-					if (e.Data != null)
+					if (e.Data == null) {
+						stdoutCompleted.TrySetResult (true);
+					} else {
 						lock (locker)
 							procOutput.AppendLine (e.Data);
+					}
 				};
 
 				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
-				bool completed = p.WaitForExit ((int) new TimeSpan (0, 15, 0).TotalMilliseconds);
+
+				bool completed = p.WaitForExit (timeoutMilliseconds);
+				if (!completed) {
+					procOutput.AppendLine ($"Process timed out after {timeoutMilliseconds}ms.");
+					TryKillProcess (p, procOutput);
+					completed = p.WaitForExit (killTimeoutMilliseconds);
+					if (!completed) {
+						procOutput.AppendLine ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
+					}
+				}
+
+				if (!stdoutCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
+					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
+				}
+				if (!stderrCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
+					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
+				}
+
 				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine ($"Exit Code: {p.ExitCode}");
+				procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <not available>");
 			}
 
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
 			return succeeded;
+		}
+
+		static void TryKillProcess (Process process, StringBuilder procOutput)
+		{
+			try {
+				if (process.HasExited) {
+					return;
+				}
+				process.Kill (entireProcessTree: true);
+				procOutput.AppendLine ("Issued kill request for process tree.");
+			} catch (InvalidOperationException) {
+				// Process has already exited.
+			} catch (Win32Exception ex) {
+				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+			} catch (NotSupportedException ex) {
+				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+			}
 		}
 
 		public bool New (string template, string output = null)
@@ -116,27 +164,27 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Restore (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Restore (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("restore", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("restore", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
-		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
-			var arguments = GetDefaultCommandLineArgs ("publish", target, runtimeIdentifier, parameters);
+			var arguments = GetDefaultCommandLineArgs ("publish", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
 
@@ -236,7 +284,7 @@ namespace Xamarin.ProjectTools
 
 		public bool IsTargetSkipped (string target, bool defaultIfNotUsed = false) => BuildOutput.IsTargetSkipped (LastBuildOutput, target, defaultIfNotUsed);
 
-		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
 			string testDir = string.IsNullOrEmpty (ProjectDirectory) ? Path.GetDirectoryName (projectOrSolution) : ProjectDirectory;
 			if (string.IsNullOrEmpty (BuildLogFile))
@@ -268,6 +316,9 @@ namespace Xamarin.ProjectTools
 				foreach (var parameter in parameters) {
 					arguments.Add ($"/p:{parameter}");
 				}
+			}
+			if (msbuildArguments != null) {
+				arguments.AddRange (msbuildArguments);
 			}
 			if (!string.IsNullOrEmpty (runtimeIdentifier)) {
 				// NOTE: that this one has to be -r, /r does not appear to work

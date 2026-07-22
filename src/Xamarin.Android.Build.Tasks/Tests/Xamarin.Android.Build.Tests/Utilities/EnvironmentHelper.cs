@@ -53,7 +53,6 @@ namespace Xamarin.Android.Build.Tests
 			public uint   number_of_assemblies_in_apk;
 			public uint   bundled_assembly_name_width;
 			public uint   number_of_dso_cache_entries;
-			public uint   number_of_aot_cache_entries;
 			public uint   number_of_shared_libraries;
 			public uint   android_runtime_jnienv_class_token;
 			public uint   jnienv_initialize_method_token;
@@ -61,7 +60,8 @@ namespace Xamarin.Android.Build.Tests
 			public uint   jni_remapping_replacement_type_count;
 			public uint   jni_remapping_replacement_method_index_entry_count;
 			public string android_package_name = String.Empty;
-			public bool   managed_marshal_methods_lookup_enabled;
+			public bool   have_assembly_store;
+			public bool   assembly_store_decompression_cache_enabled;
 		}
 
 		const uint ApplicationConfigFieldCount_CoreCLR = 20;
@@ -95,7 +95,6 @@ namespace Xamarin.Android.Build.Tests
 			public uint   jni_remapping_replacement_method_index_entry_count;
 			public uint   mono_components_mask;
 			public string android_package_name = String.Empty;
-			public bool   managed_marshal_methods_lookup_enabled;
 		}
 
 		// This is shared between MonoVM and CoreCLR hosts, not used by NativeAOT
@@ -103,7 +102,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			// Hardcoded, by design - we want to know if there are any changes in the
 			// native assembly layout.
-			public const uint NativeSize_CoreCLR = 32;
+			public const uint NativeSize_CoreCLR = 24;
 			public const uint NativeSize_MonoVM = 40;
 
 			public ulong hash;
@@ -129,7 +128,7 @@ namespace Xamarin.Android.Build.Tests
 			public string SourceFile;
 		}
 
-		const uint ApplicationConfigFieldCount_MonoVM = 27;
+		const uint ApplicationConfigFieldCount_MonoVM = 26;
 
 		const string ApplicationConfigSymbolName = "application_config";
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
@@ -181,13 +180,13 @@ namespace Xamarin.Android.Build.Tests
 			"app_system_properties",
 			"app_system_property_contents",
 			"format_tag",
+			"init_runtime_property_names",
+			"init_runtime_property_values",
 			"java_to_managed_hashes",
 			"java_to_managed_map",
 			"java_type_count",
 			"managed_to_java_map",
 			"managed_to_java_map_module_count",
-			"runtime_properties",
-			"runtime_properties_data",
 			AppEnvironmentVariableContentsSymbolName,
 			AppEnvironmentVariablesSymbolName,
 			ApplicationConfigSymbolName,
@@ -363,49 +362,49 @@ namespace Xamarin.Android.Build.Tests
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 11: // number_of_aot_cache_entries: uint32_t / .word | .long
-						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
-						ret.number_of_aot_cache_entries = ConvertFieldToUInt32 ("number_of_aot_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
-						break;
-
-					case 12: // number_of_shared_libraries: uint32_t / .word | .long
+					case 11: // number_of_shared_libraries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_shared_libraries = ConvertFieldToUInt32 ("number_of_shared_libraries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 13: // android_runtime_jnienv_class_token: uint32_t / .word | .long
+					case 12: // android_runtime_jnienv_class_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.android_runtime_jnienv_class_token = ConvertFieldToUInt32 ("android_runtime_jnienv_class_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 14: // jnienv_initialize_method_token: uint32_t / .word | .long
+					case 13: // jnienv_initialize_method_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jnienv_initialize_method_token = ConvertFieldToUInt32 ("jnienv_initialize_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 15: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
+					case 14: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jnienv_registerjninatives_method_token = ConvertFieldToUInt32 ("jnienv_registerjninatives_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 16: // jni_remapping_replacement_type_count: uint32_t / .word | .long
+					case 15: // jni_remapping_replacement_type_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jni_remapping_replacement_type_count = ConvertFieldToUInt32 ("jni_remapping_replacement_type_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 17: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
+					case 16: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jni_remapping_replacement_method_index_entry_count = ConvertFieldToUInt32 ("jni_remapping_replacement_method_index_entry_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 18: // android_package_name: string / [pointer type]
+					case 17: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
 
-					case 19: // managed_marshal_methods_lookup_enabled: bool / .byte
+					case 18: // have_assembly_store: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.managed_marshal_methods_lookup_enabled = ConvertFieldToBool ("managed_marshal_methods_lookup_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						ret.have_assembly_store = ConvertFieldToBool ("have_assembly_store", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 19: // assembly_store_decompression_cache_enabled: bool / .byte
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.assembly_store_decompression_cache_enabled = ConvertFieldToBool ("assembly_store_decompression_cache_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 				}
 				fieldCount++;
@@ -574,11 +573,6 @@ namespace Xamarin.Android.Build.Tests
 					case 25: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						pointers.Add (field [1].Trim ());
-						break;
-
-					case 26: // managed_marshal_methods_lookup_enabled: bool / .byte
-						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.managed_marshal_methods_lookup_enabled = ConvertFieldToBool ("managed_marshal_methods_lookup_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 				}
 				fieldCount++;
@@ -771,6 +765,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (firstAppConfig.environment_variable_count, secondAppConfig.environment_variable_count, $"Field 'environment_variable_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.system_property_count, secondAppConfig.system_property_count, $"Field 'system_property_count' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 			Assert.AreEqual (firstAppConfig.android_package_name, secondAppConfig.android_package_name, $"Field 'android_package_name' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
+			Assert.AreEqual (firstAppConfig.have_assembly_store, secondAppConfig.have_assembly_store, $"Field 'have_assembly_store' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
+			Assert.AreEqual (firstAppConfig.assembly_store_decompression_cache_enabled, secondAppConfig.assembly_store_decompression_cache_enabled, $"Field 'assembly_store_decompression_cache_enabled' has different value in environment file '{secondEnvFile}' than in environment file '{firstEnvFile}'");
 		}
 
 		static void AssertApplicationConfigIsIdentical (ApplicationConfig_MonoVM firstAppConfig, string firstEnvFile, ApplicationConfig_MonoVM secondAppConfig, string secondEnvFile)
@@ -1135,13 +1131,9 @@ namespace Xamarin.Android.Build.Tests
 				string value;
 				int index = i;
 
-				// uint64_t hash
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
-				ulong hash = ConvertFieldToUInt64 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
-
-				// uint64_t real_name_hash
-				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt64Types);
-				ulong real_name_hash = ConvertFieldToUInt64 ("real_name_hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				// uint32_t hash
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
+				ulong hash = ConvertFieldToUInt32 ("hash", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
 				// bool ignore
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, ".byte");
@@ -1161,6 +1153,12 @@ namespace Xamarin.Android.Build.Tests
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index++, expectedUInt32Types);
 				uint name_index = ConvertFieldToUInt32 ("name_index", envFile.Path, parser.SourceFilePath, lineNumber, value);
 
+				// padding, 4 bytes
+				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, ".zero");
+				uint padding2 = ConvertFieldToUInt32 ("padding2", envFile.Path, parser.SourceFilePath, lineNumber, value);
+				Assert.IsTrue (padding2 == 4, $"Padding field #2 at index {index} of symbol '{dsoCache.Name}' should have had a value of 4, instead it was set to {padding2}");
+				index++;
+
 				// void* handle
 				(lineNumber, value) = ReadNextArrayIndex (envFile, parser, dsoCache, index, expectedUInt64Types);
 				ulong handle = ConvertFieldToUInt64 ("handle", envFile.Path, parser.SourceFilePath, lineNumber, value);
@@ -1170,7 +1168,6 @@ namespace Xamarin.Android.Build.Tests
 				ret.Add (
 					new DSOCacheEntry64 {
 						hash = hash,
-						real_name_hash = real_name_hash,
 						ignore = ignore,
 						is_jni_library = is_jni_library,
 						name = name,
@@ -1313,20 +1310,16 @@ namespace Xamarin.Android.Build.Tests
 			return fv;
 		}
 
-		// Integers are parsed as signed, since llc will always output signed integers.
+		// These fields are always uint32_t/uint64_t and the generator (LlvmIrGenerator/MonoAndroidHelper.CultureInvariantToString)
+		// writes them via uint/ulong.ToString(), which is always an unsigned decimal representation - there's no signed form to
+		// account for here, so parse directly as unsigned.
 		static bool TryParseInteger (string value, out uint fv)
 		{
 			if (value.StartsWith ("0x", StringComparison.Ordinal)) {
 				return UInt32.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
 			}
 
-			fv = 0;
-			if (!Int32.TryParse (value, out int signedFV)) {
-				return false;
-			}
-
-			fv = (uint)signedFV;
-			return true;
+			return UInt32.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out fv);
 		}
 
 		static bool TryParseInteger (string value, out ulong fv)
@@ -1335,13 +1328,7 @@ namespace Xamarin.Android.Build.Tests
 				return UInt64.TryParse (value.Substring (2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out fv);
 			}
 
-			fv = 0;
-			if (!Int64.TryParse (value, out long signedFV)) {
-				return false;
-			}
-
-			fv = (ulong)signedFV;
-			return true;
+			return UInt64.TryParse (value, NumberStyles.None, CultureInfo.InvariantCulture, out fv);
 		}
 
 		static bool TryParseInteger (string value, out byte fv)

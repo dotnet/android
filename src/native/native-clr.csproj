@@ -7,9 +7,11 @@
     <OutputType>Exe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-    <!-- HACK HACK: until CoreCLR exists for all the targets, work only with arm64 -->
-    <AndroidSupportedTargetAotAbis>arm64:x86_64</AndroidSupportedTargetAotAbis>
-    <AndroidSupportedTargetJitAbis>arm64-v8a:x86_64</AndroidSupportedTargetJitAbis>
+    <!-- CoreCLR is built for every ABI that has a shipping android CoreCLR runtime pack.
+         armeabi-v7a (android-arm) requires the microsoft.netcore.app.runtime.android-arm
+         pack from dotnet/runtime; x86 (android-x86) has no CoreCLR runtime pack. -->
+    <AndroidSupportedTargetAotAbis>armeabi-v7a:arm64:x86_64</AndroidSupportedTargetAotAbis>
+    <AndroidSupportedTargetJitAbis>armeabi-v7a:arm64-v8a:x86_64</AndroidSupportedTargetJitAbis>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

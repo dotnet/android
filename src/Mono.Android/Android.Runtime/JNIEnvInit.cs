@@ -34,7 +34,6 @@ namespace Android.Runtime
 			public bool            jniRemappingInUse;
 			public bool            marshalMethodsEnabled;
 			public IntPtr          grefGCUserPeerable;
-			public bool            managedMarshalMethodsLookupEnabled;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          registerJniNativesFn;
 		}
@@ -58,16 +57,11 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
+		[RequiresUnreferencedCode ("Uses reflection to access System.StartupHookProvider.")]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
-			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
-			static Type TypeGetType (string typeName) =>
-				Type.GetType (typeName, throwOnError: false);
-
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
-			var type = TypeGetType (typeName);
+			var type = Type.GetType (typeName, throwOnError: false);
 			if (type == null) {
 				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
 				               LogCategories.Default,
@@ -150,41 +144,41 @@ namespace Android.Runtime
 			JniRuntime.SetCurrent (androidRuntime);
 			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
 
-			if (args->managedMarshalMethodsLookupEnabled) {
-				delegate* unmanaged <int, int, int, IntPtr*, void> getFunctionPointer = &ManagedMarshalMethodsLookupTable.GetFunctionPointer;
-				xamarin_app_init (args->env, getFunctionPointer);
-			}
-
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
 			if (!RuntimeFeature.TrimmableTypeMap) {
-				args->registerJniNativesFn = (IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
+				args->registerJniNativesFn = GetRegisterJniNativesFnPtr ();
 			}
 			RunStartupHooksIfNeeded ();
 			SetSynchronizationContext ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This method is never used with the trimmable type map.")]
+			IntPtr GetRegisterJniNativesFnPtr () =>
+				(IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 		}
 
-		[LibraryImport (RuntimeConstants.InternalDllName)]
-		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		private static unsafe partial void xamarin_app_init (IntPtr env, delegate* unmanaged <int, int, int, IntPtr*, void> get_function_pointer);
-
+		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The AndroidTypeManager branch is only reached when RuntimeFeature.TrimmableTypeMap is false; the linker substitutes the feature switch and trims this branch in trimmable apps.")]
 		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
 		{
 			if (RuntimeFeature.TrimmableTypeMap) {
 				return new TrimmableTypeMapTypeManager ();
 			}
 
-			if (RuntimeFeature.IsNativeAotRuntime || RuntimeFeature.ManagedTypeMap) {
-				return new ManagedTypeManager ();
-			}
+			return CreateAndroidTypeManager (args);
 
-			return new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This type manager won't be used in Native AOT builds.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This type manager won't be used in Native AOT builds.")]
+			static JniRuntime.JniTypeManager CreateAndroidTypeManager (JnienvInitializeArgs args) => new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
 		}
 
 		internal static JniRuntime.JniValueManager CreateValueManager ()
 		{
+			if (RuntimeFeature.TrimmableTypeMap) {
+				return new TrimmableTypeMapValueManager ();
+			}
+
 			if (RuntimeFeature.IsMonoRuntime) {
-				return new AndroidValueManager ();
+				return CreateAndroidValueManager ();
 			}
 
 			if (RuntimeFeature.IsCoreClrRuntime) {
@@ -199,10 +193,11 @@ namespace Android.Runtime
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
 			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
-			JniRuntime.JniValueManager CreateJavaMarshalValueManager ()
-			{
-				return new JavaMarshalValueManager ();
-			}
+			JniRuntime.JniValueManager CreateJavaMarshalValueManager () => new JavaMarshalValueManager ();
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono value manager is preserved by the MarkJavaObjects trimmer step.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
+			JniRuntime.JniValueManager CreateAndroidValueManager () => new AndroidValueManager ();
 		}
 
 		static void InitializeCommonState (JnienvInitializeArgs args)

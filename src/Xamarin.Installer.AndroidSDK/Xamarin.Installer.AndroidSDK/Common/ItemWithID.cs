@@ -6,6 +6,9 @@
 //
 //  All rights reserved.
 //
+
+#nullable enable
+
 using System;
 
 namespace Xamarin.Installer.AndroidSDK.Common
@@ -32,7 +35,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			ID = id;
 		}
 
-		public bool Equals (ItemWithID other)
+		public bool Equals (ItemWithID? other)
 		{
 			if (other == null)
 				return false;
@@ -46,7 +49,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			return true;
 		}
 
-		public override bool Equals (object obj)
+		public override bool Equals (object? obj)
 		{
 			return Equals (obj as ItemWithID);
 		}

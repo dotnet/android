@@ -361,7 +361,7 @@ namespace Android.Runtime {
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IDictionary));
 			if (inst == null)
 				inst = new JavaDictionary (handle, transfer);
 			else
@@ -518,11 +518,11 @@ namespace Android.Runtime {
 			}
 		}
 
-		public ICollection<K> Keys {
+		public new ICollection<K> Keys {
 			get { return new JavaSet<K> (GetKeys (), JniHandleOwnership.TransferLocalRef); }
 		}
 
-		public ICollection<V> Values {
+		public new ICollection<V> Values {
 			get { return new JavaCollection<V> (GetValues (), JniHandleOwnership.TransferLocalRef); }
 		}
 
@@ -588,7 +588,7 @@ namespace Android.Runtime {
 			return GetEnumerator ();
 		}
 
-		public IEnumerator<KeyValuePair<K, V>> GetEnumerator ()
+		public new IEnumerator<KeyValuePair<K, V>> GetEnumerator ()
 		{
 			foreach (K key in Keys)
 #pragma warning disable CS8604 // Possible null reference argument.
@@ -640,12 +640,12 @@ namespace Android.Runtime {
 			return ContainsKey (key);
 		}
 		
-		public static IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
+			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IDictionary<K, V>));
 			if (inst == null)
 				inst = new JavaDictionary<K, V> (handle, transfer);
 			else

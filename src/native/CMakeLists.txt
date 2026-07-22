@@ -177,9 +177,11 @@ if(IS_CLR_RUNTIME)
       set(LOCAL_CORECLR_CONFIG Release)
     endif()
 
+    set(RUNTIME_DIR_ARM    "${LOCAL_CORECLR_PATH}/${CLR_PACKAGE_NAME_STEM}-arm/${LOCAL_CORECLR_CONFIG}/runtimes/android-arm")
     set(RUNTIME_DIR_ARM64  "${LOCAL_CORECLR_PATH}/${CLR_PACKAGE_NAME_STEM}-arm64/${LOCAL_CORECLR_CONFIG}/runtimes/android-arm64")
     set(RUNTIME_DIR_X86_64 "${LOCAL_CORECLR_PATH}/${CLR_PACKAGE_NAME_STEM}-x64/${LOCAL_CORECLR_CONFIG}/runtimes/android-x64")
   else()
+    set(RUNTIME_DIR_ARM    "${CORECLR_APP_RUNTIME_DIR_ARM}")
     set(RUNTIME_DIR_ARM64  "${CORECLR_APP_RUNTIME_DIR_ARM64}")
     set(RUNTIME_DIR_X86_64 "${CORECLR_APP_RUNTIME_DIR_X86_64}")
   endif()
@@ -223,7 +225,10 @@ file(REAL_PATH "../../" REPO_ROOT_DIR)
 set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
 set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
-set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+
+if(IS_MONO_RUNTIME)
+  set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+endif()
 
 #
 # Include directories
@@ -246,7 +251,6 @@ endif()
 
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
 set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
-set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
 
 include_directories(common/include)
 
@@ -258,8 +262,6 @@ if(IS_CLR_RUNTIME)
         ${TARGET}
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
-        ${EXTERNAL_DIR}
-        ${CONSTEXPR_XXH3_DIR}
         ${RUNTIME_INCLUDE_DIR}
      )
   endmacro()
@@ -273,7 +275,6 @@ elseif(IS_NAOT_RUNTIME)
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
         ${RUNTIME_INCLUDE_DIR}
-        ${CONSTEXPR_XXH3_DIR}
         ${CLR_INCLUDE_DIR}
      )
   endmacro()
@@ -649,7 +650,6 @@ else()
 
   if (IS_MONO_RUNTIME OR IS_CLR_RUNTIME)
     add_subdirectory(common/libunwind)
-    add_subdirectory(common/lz4)
     add_subdirectory(common/runtime-base)
 
     add_subdirectory(${SOURCES_PREFIX}/runtime-base)
@@ -678,7 +678,6 @@ else()
   if (IS_CLR_RUNTIME)
     add_subdirectory(clr/pinvoke-override)
     add_subdirectory(clr/host)
-    add_subdirectory(clr/startup)
   endif()
 
   if (IS_NAOT_RUNTIME)

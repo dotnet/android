@@ -2,17 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using K4os.Compression.LZ4;
 using Mono.Cecil;
 using Xamarin.Android.AssemblyStore;
+using Xamarin.Android.AssemblyStore.V1;
 using Xamarin.Tools.Zip;
 
 namespace tmt
 {
 	class ApkManagedTypeResolver : ManagedTypeResolver
 	{
-		const uint CompressedDataMagic = 0x5A4C4158; // 'XALZ', little-endian
-
 		readonly Dictionary<string, ZipEntry>? individualAssemblies;
 		readonly Dictionary<string, AssemblyStoreAssembly>? blobAssemblies;
 		readonly ZipArchive apk;
@@ -129,41 +127,14 @@ namespace tmt
 
 		protected override AssemblyDefinition ReadAssembly (string assemblyPath)
 		{
-			byte[]? assemblyBytes = null;
 			Stream stream = GetAssemblyStream (assemblyPath);
-
-			//
-			// LZ4 compressed assembly header format:
-			//   uint magic;                 // 0x5A4C4158; 'XALZ', little-endian
-			//   uint descriptor_index;      // Index into an internal assembly descriptor table
-			//   uint uncompressed_length;   // Size of assembly, uncompressed
-			//
-			using var reader = new BinaryReader (stream);
-			uint magic = reader.ReadUInt32 ();
-			if (magic == CompressedDataMagic) {
-				reader.ReadUInt32 (); // descriptor index, ignore
-				uint decompressedLength = reader.ReadUInt32 ();
-
-				int inputLength = (int)(stream.Length - 12);
-				byte[] sourceBytes = Utilities.BytePool.Rent (inputLength);
-				reader.Read (sourceBytes, 0, inputLength);
-
-				assemblyBytes = Utilities.BytePool.Rent ((int)decompressedLength);
-				int decoded = LZ4Codec.Decode (sourceBytes, 0, inputLength, assemblyBytes, 0, (int)decompressedLength);
-				if (decoded != (int)decompressedLength) {
-					throw new InvalidOperationException ($"Failed to decompress LZ4 data of {assemblyPath} (decoded: {decoded})");
-				}
-				Utilities.BytePool.Return (sourceBytes);
-			}
-
-
-			if (assemblyBytes != null) {
-				stream.Close ();
+			var decompressed = new MemoryStream ();
+			if (AssemblyCompression.TryDecompress (stream, decompressed, out _)) {
 				stream.Dispose ();
-				stream = new MemoryStream ();
-				stream.Write (assemblyBytes, 0, assemblyBytes.Length);
-				Utilities.BytePool.Return (assemblyBytes);
-				stream.Seek (0, SeekOrigin.Begin);
+				decompressed.Seek (0, SeekOrigin.Begin);
+				stream = decompressed;
+			} else {
+				decompressed.Dispose ();
 			}
 
 			return AssemblyDefinition.ReadAssembly (stream);

@@ -1,6 +1,7 @@
 parameters:
   condition: succeeded()
   runNativeTests: false
+  runNativeDotnetTests: false
   platformName:
   nativeAotRid:
 
@@ -14,11 +15,6 @@ steps:
   parameters:
     testRunTitle: Java.Interop.Tools.JavaCallableWrappers (${{ parameters.platformName }})
     testAssemblyName: Java.Interop.Tools.JavaCallableWrappers-Tests
-
-- template: run-dotnet-test.yaml
-  parameters:
-    testRunTitle: logcat-parse (${{ parameters.platformName }})
-    testAssemblyName: logcat-parse-Tests
 
 - template: run-dotnet-test.yaml
   parameters:

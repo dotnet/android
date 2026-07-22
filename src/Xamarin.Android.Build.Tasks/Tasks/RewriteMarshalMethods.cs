@@ -19,8 +19,7 @@ namespace Xamarin.Android.Tasks;
 /// 1. Retrieves marshal method classifications from the build pipeline state
 /// 2. Parses environment files to determine exception transition behavior
 /// 3. Rewrites assemblies to replace dynamic registration with static marshal methods
-/// 4. Optionally builds managed lookup tables for runtime marshal method resolution
-/// 5. Reports statistics on marshal method generation and any fallback to dynamic registration
+/// 4. Reports statistics on marshal method generation and any fallback to dynamic registration
 /// 
 /// The rewriting process creates native callback wrappers for methods that have non-blittable
 /// parameters or return types, ensuring compatibility with the [UnmanagedCallersOnly] attribute
@@ -32,13 +31,6 @@ public class RewriteMarshalMethods : AndroidTask
 	/// Gets the task prefix used for logging and error messages.
 	/// </summary>
 	public override string TaskPrefix => "RMM";
-
-	/// <summary>
-	/// Gets or sets whether to enable managed marshal methods lookup tables.
-	/// When enabled, generates runtime lookup structures that allow dynamic resolution
-	/// of marshal methods without string comparisons, improving runtime performance.
-	/// </summary>
-	public bool EnableManagedMarshalMethodsLookup { get; set; }
 
 	/// <summary>
 	/// Gets or sets the environment files to parse for configuration settings.
@@ -69,12 +61,8 @@ public class RewriteMarshalMethods : AndroidTask
 	/// 3. For each target architecture:
 	///    - Rewrite assemblies to use marshal methods
 	///    - Add special case methods (e.g., TypeManager methods)
-	///    - Optionally build managed lookup tables
 	/// 4. Report statistics on marshal method generation
 	/// 5. Log warnings for methods that must fall back to dynamic registration
-	/// 
-	/// The task handles the ordering dependency between special case methods and managed
-	/// lookup tables - special cases must be added first so they appear in the lookup tables.
 	/// </remarks>
 	public override bool RunTask ()
 	{
@@ -104,19 +92,8 @@ public class RewriteMarshalMethods : AndroidTask
 				return false;
 			}
 
-			// Handle the ordering dependency between special case methods and managed lookup tables
-			if (!EnableManagedMarshalMethodsLookup) {
-				// Standard path: rewrite first, then add special cases
-				RewriteMethods (state, brokenExceptionTransitionsEnabled);
-				state.Classifier.AddSpecialCaseMethods ();
-			} else {
-				// Managed lookup path: add special cases first so they appear in lookup tables
-				// We need to run `AddSpecialCaseMethods` before `RewriteMarshalMethods` so that we can see the special case
-				// methods (such as TypeManager.n_Activate_mm) when generating the managed lookup tables.
-				state.Classifier.AddSpecialCaseMethods ();
-				state.ManagedMarshalMethodsLookupInfo = new ManagedMarshalMethodsLookupInfo (Log);
-				RewriteMethods (state, brokenExceptionTransitionsEnabled);
-			}
+			RewriteMethods (state, brokenExceptionTransitionsEnabled);
+			state.Classifier.AddSpecialCaseMethods ();
 
 			// Report statistics on marshal method generation
 			Log.LogDebugMessage ($"[{state.TargetArch}] Number of generated marshal methods: {state.Classifier.MarshalMethods.Count}");
@@ -152,7 +129,6 @@ public class RewriteMarshalMethods : AndroidTask
 	/// - Adding [UnmanagedCallersOnly] attributes to native callbacks
 	/// - Generating wrapper methods for non-blittable types
 	/// - Modifying assembly references and imports
-	/// - Building managed lookup table entries
 	/// </remarks>
 	void RewriteMethods (NativeCodeGenState state, bool brokenExceptionTransitionsEnabled)
 	{
@@ -160,7 +136,7 @@ public class RewriteMarshalMethods : AndroidTask
 			return;
 		}
 
-		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver, state.ManagedMarshalMethodsLookupInfo);
+		var rewriter = new MarshalMethodsAssemblyRewriter (Log, state.TargetArch, state.Classifier, state.Resolver);
 		rewriter.Rewrite (brokenExceptionTransitionsEnabled);
 	}
 }

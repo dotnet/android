@@ -1207,6 +1207,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported..
+        /// </summary>
+        public static string XA4212 {
+            get {
+                return ResourceManager.GetString("XA4212", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
         /// </summary>
         public static string XA4214 {
@@ -2031,6 +2040,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA5303 {
             get {
                 return ResourceManager.GetString("XA5303", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid AssemblyStore compression level &apos;{0}&apos;. The value must be between {1} and {2}..
+        /// </summary>
+        public static string XA5304 {
+            get {
+                return ResourceManager.GetString("XA5304", resourceCulture);
             }
         }
         

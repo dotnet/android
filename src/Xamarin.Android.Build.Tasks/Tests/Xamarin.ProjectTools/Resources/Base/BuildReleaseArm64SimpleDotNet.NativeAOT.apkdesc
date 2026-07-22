@@ -5,10 +5,10 @@
       "Size": 3124
     },
     "classes.dex": {
-      "Size": 22016
+      "Size": 22804
     },
     "lib/arm64-v8a/libUnnamedProject.so": {
-      "Size": 5411456
+      "Size": 5747648
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -35,5 +35,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2286363
+  "PackageSize": 2401051
 }

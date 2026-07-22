@@ -1131,6 +1131,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4212" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Тип `{0}` реализует `Android.Runtime.IJavaObject`, но не наследует `Java.Lang.Object` или `Java.Lang.Throwable`. Такая конструкция не поддерживается.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA4213" ItemType="0;.resx" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The type '{0}' must provide a public default constructor]]></Val>
@@ -1988,6 +1997,15 @@
           <Val><![CDATA[Failed to parse 'DescriptorIndex' metadata value '{0}' for assembly '{1}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Не удалось проанализировать значение метаданных DescriptorIndex "{0}" для сборки "{1}".]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA5304" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Недопустимый уровень сжатия AssemblyStore {0}. Значение должно составлять от {1} до {2}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

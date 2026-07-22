@@ -12,7 +12,7 @@
 #include <shared/xxhash.hh>
 
 static constexpr uint64_t FORMAT_TAG = 0x00035E6972616D58; // 'Xmari^XY' where XY is the format version
-static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
+static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x535A4158; // 'XAZS', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 
 // The highest bit of assembly store version is a 64-bit ABI flag
@@ -34,7 +34,7 @@ static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00040000;
 #endif
 
 // Increase whenever an incompatible change is made to the assembly store format
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 3 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 4 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
 
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
@@ -145,6 +145,7 @@ struct XamarinAndroidBundledAssembly
 //  [ENTRY_COUNT]        uint; number of entries in the store
 //  [INDEX_ENTRY_COUNT]  uint; number of entries in the index
 //  [INDEX_SIZE]         uint; index size in bytes
+//  [CONTENT_ID]         ulong: deterministic hash of everything after the header
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
 //  [NAME_HASH]          uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
@@ -176,6 +177,7 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 	uint32_t entry_count;
 	uint32_t index_entry_count;
 	uint32_t index_size; // index size in bytes
+	uint64_t content_id;
 };
 
 struct [[gnu::packed]] AssemblyStoreIndexEntry final
@@ -254,7 +256,6 @@ struct ApplicationConfig
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
-	bool managed_marshal_methods_lookup_enabled;
 };
 
 struct DSOApkEntry

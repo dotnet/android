@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -42,15 +41,13 @@ namespace Java.Interop
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public abstract class JavaPeerProxy : Attribute
 	{
-		protected JavaPeerProxy (
-			string jniName,
-			Type targetType,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type? invokerType)
+		protected JavaPeerProxy (string jniName, Type targetType)
 		{
-			JniName = jniName ?? throw new ArgumentNullException (nameof (jniName));
-			TargetType = targetType ?? throw new ArgumentNullException (nameof (targetType));
-			InvokerType = invokerType;
+			ArgumentNullException.ThrowIfNull (jniName);
+			ArgumentNullException.ThrowIfNull (targetType);
+
+			JniName = jniName;
+			TargetType = targetType;
 		}
 
 		/// <summary>
@@ -71,20 +68,6 @@ namespace Java.Interop
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
 		public Type TargetType { get; }
-
-		/// <summary>
-		/// Gets the invoker type for interfaces and abstract classes.
-		/// Returns null for concrete types that can be directly instantiated.
-		/// </summary>
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		public Type? InvokerType { get; }
-
-		/// <summary>
-		/// Gets a factory for creating containers (arrays, collections) of the target type.
-		/// Enables AOT-safe creation of generic collections without <c>MakeGenericType()</c>.
-		/// </summary>
-		/// <returns>A factory for creating containers of the target type, or null if not supported.</returns>
-		public virtual JavaPeerContainerFactory? GetContainerFactory () => null;
 
 		/// <summary>
 		/// Returns <see langword="true"/> when the UCO constructor callback should skip
@@ -133,62 +116,5 @@ namespace Java.Interop
 			return (state & JniManagedPeerStates.Activatable) == JniManagedPeerStates.Activatable
 				|| (state & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
 		}
-	}
-
-	/// <summary>
-	/// Generic base for generated proxy types. Provides <see cref="JavaPeerProxy.TargetType"/>
-	/// and <see cref="JavaPeerProxy.GetContainerFactory"/> automatically from the type parameter.
-	/// </summary>
-	/// <typeparam name="T">The target .NET peer type this proxy represents.</typeparam>
-	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
-	public abstract class JavaPeerProxy<
-		// TODO (https://github.com/dotnet/android/issues/10794): Remove this DAM annotation
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-		T
-	> : JavaPeerProxy where T : class, IJavaPeerable
-	{
-		protected JavaPeerProxy (
-			string jniName,
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			Type? invokerType) : base (jniName, typeof (T), invokerType)
-		{
-		}
-
-		public override JavaPeerContainerFactory GetContainerFactory ()
-			=> JavaPeerContainerFactory<T>.Instance;
-	}
-
-	/// <summary>
-	/// Base attribute class for generated array-proxy types that enable AOT-safe construction
-	/// of managed arrays for a specific element type and rank, without
-	/// <see cref="Array.CreateInstance(Type, int)"/> or other reflection-based allocation.
-	/// </summary>
-	/// <remarks>
-	/// Like <see cref="JavaPeerProxy"/>, each generated array proxy is applied to its own holder
-	/// type (self-application pattern), so the runtime can retrieve it via
-	/// <c>GetCustomAttribute&lt;JavaArrayProxy&gt;()</c> and invoke it without
-	/// <c>Activator.CreateInstance()</c>. The per-rank TypeMap groups
-	/// (<c>__ArrayMapRank{N}</c>) map a JNI name to the holder type carrying this attribute;
-	/// <c>TrimmableTypeMap.TryGetArrayProxy</c> resolves the holder and returns the attribute.
-	/// </remarks>
-	[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-	public abstract class JavaArrayProxy : Attribute
-	{
-		/// <summary>
-		/// Gets the .NET array and wrapper types associated with this proxy (for example
-		/// <c>T[]</c>, <c>JavaArray&lt;T&gt;</c>, and the matching <c>JavaObjectArray&lt;T&gt;</c> /
-		/// <c>JavaPrimitiveArray&lt;T&gt;</c> wrappers). Emitting these <see cref="Type"/> tokens
-		/// roots the types so the trimmer/ILC keeps them available for marshaling.
-		/// </summary>
-		/// <returns>The array and wrapper types handled by this proxy.</returns>
-		public abstract Type[] GetArrayTypes ();
-
-		/// <summary>
-		/// Creates a new managed array of this proxy's element type and rank using a rooted
-		/// <c>newarr</c>, which is AOT-safe unlike <see cref="Array.CreateInstance(Type, int)"/>.
-		/// </summary>
-		/// <param name="length">The length of the outermost array dimension.</param>
-		/// <returns>A new array of the proxy's element type with the requested length.</returns>
-		public abstract Array CreateManagedArray (int length);
 	}
 }

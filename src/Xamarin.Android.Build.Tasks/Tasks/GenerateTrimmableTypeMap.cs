@@ -44,6 +44,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogMessage (MessageImportance.Low, $"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			log.LogCodedWarning ("XA4250", Properties.Resources.XA4250, javaTypeName);
+		public void LogLibraryManifestMergeWarning (string message) =>
+			log.LogCodedWarning ("XA4302", Properties.Resources.XA4302, message);
+		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
+			log.LogCodedWarning ("XA1010", Properties.Resources.XA1010, placeholders);
 		public void LogUnresolvableJavaPeerSkippedWarning (
 			string managedTypeName,
 			string assemblyName,
@@ -53,6 +57,10 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedWarning ("XA4257", Properties.Resources.XA4257, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
+		public void LogCustomJavaObjectError (string managedTypeName) =>
+			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
+		public void LogCustomJavaObjectWarning (string managedTypeName) =>
+			log.LogWarning ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 	}
 
 	public override string TaskPrefix => "GTT";
@@ -79,6 +87,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	public string? MergedAndroidManifestOutput { get; set; }
 
+	/// <summary>
+	/// Absolute paths to extracted library (.aar) <c>AndroidManifest.xml</c> documents that must be
+	/// merged into the application manifest. Only populated on the legacy manifest-merger path;
+	/// <c>manifestmerger.jar</c> handles this downstream in the <c>_ManifestMerger</c> target.
+	/// </summary>
+	public string []? MergedManifestDocuments { get; set; }
+
 	public string? PackageName { get; set; }
 	public string? ApplicationLabel { get; set; }
 	public string? VersionCode { get; set; }
@@ -91,18 +106,18 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool EmbedAssemblies { get; set; }
 	public string? PackageNamingPolicy { get; set; }
 
-	/// <summary>
-	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
-	/// sentinels and <c>TypeMap</c> entries. 0 disables. Set via
-	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
-	/// </summary>
-	public int MaxArrayRank { get; set; }
-
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public bool GenerateTypeMapAssemblies { get; set; } = true;
 	public bool CleanJavaSourceOutputDirectory { get; set; }
+
+	/// <summary>
+	/// When true (the default, from <c>$(AndroidErrorOnCustomJavaObject)</c>), a managed class
+	/// that implements <c>Android.Runtime.IJavaObject</c> without deriving from a Java peer is
+	/// reported as the XA4212 error; otherwise it is reported as a warning.
+	/// </summary>
+	public bool ErrorOnCustomJavaObject { get; set; } = true;
 
 	[Output]
 	public ITaskItem [] GeneratedAssemblies { get; set; } = [];
@@ -184,7 +199,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					EmbedAssemblies: EmbedAssemblies,
 					ManifestPlaceholders: ManifestPlaceholders,
 					CheckedBuild: CheckedBuild,
-					ApplicationJavaClass: ApplicationJavaClass);
+					ApplicationJavaClass: ApplicationJavaClass,
+					LibraryManifests: MergedManifestDocuments);
 			}
 
 			var generator = new TrimmableTypeMapGenerator (new MSBuildTrimmableTypeMapLogger (Log));
@@ -202,8 +218,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
-				maxArrayRank: MaxArrayRank,
-				generateTypeMapAssemblies: GenerateTypeMapAssemblies);
+				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
+				errorOnCustomJavaObject: ErrorOnCustomJavaObject);
 
 			if (GenerateTypeMapAssemblies) {
 				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());

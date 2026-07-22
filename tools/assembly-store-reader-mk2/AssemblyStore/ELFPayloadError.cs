@@ -7,5 +7,6 @@ enum ELFPayloadError
 	LoadFailed,
 	NotSharedLibrary,
 	NotLittleEndian,
+	InvalidPayloadSymbol,
 	NoPayloadSection,
 }

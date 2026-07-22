@@ -490,8 +490,8 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				CreateNoWindow = true,
 			};
-			using var proc = Process.Start (psi);
-			string stdout = proc!.StandardOutput.ReadToEnd ();
+			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{apksignerExe}'.");
+			string stdout = proc.StandardOutput.ReadToEnd ();
 			string stderr = proc.StandardError.ReadToEnd ();
 			proc.WaitForExit ();
 			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
@@ -624,6 +624,34 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			// MonoVM supports all the combinations
+			return false;
+		}
+
+		// NativeAOT trims with ILC and does not emit illink's `obj/<config>/<rid>/linked/` output.
+		// Tests that inspect the `linked/` directory (e.g. to verify trimming or type-map behavior)
+		// therefore cannot run as-is on NativeAOT.
+		// TODO: add DGML-based counterparts to verify these behaviors on NativeAOT (follow-up issue).
+		protected bool IgnoreNativeAotLinkedAssemblyChecks (AndroidRuntime runtime)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
+				return true;
+			}
+
+			return false;
+		}
+
+		// Some behaviors differ fundamentally between NativeAOT (ILC) and CoreCLR/MonoVM
+		// (e.g. ILC does not run illink, and the trimmable typemap uses CRC-only package naming),
+		// so certain test cases cannot apply as-is on NativeAOT. Use this to skip such a case
+		// with an explicit reason.
+		protected bool IgnoreOnNativeAot (AndroidRuntime runtime, string reason)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ($"NativeAOT: {reason}");
+				return true;
+			}
+
 			return false;
 		}
 

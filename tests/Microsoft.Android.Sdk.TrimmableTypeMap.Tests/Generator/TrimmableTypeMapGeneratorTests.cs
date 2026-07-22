@@ -36,6 +36,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 			logMessages.Add ($"Rooting manifest-referenced type '{javaTypeName}' ({managedTypeName}) as unconditional.");
 		public void LogManifestReferencedTypeNotFoundWarning (string javaTypeName) =>
 			warnings?.Add ($"Manifest-referenced type '{javaTypeName}' was not found in any scanned assembly. It may be a framework type.");
+		public void LogLibraryManifestMergeWarning (string message) =>
+			warnings?.Add (message);
+		public void LogInvalidManifestPlaceholderWarning (string placeholders) =>
+			warnings?.Add ($"Invalid $(AndroidManifestPlaceholders) '{placeholders}'.");
 		public void LogUnresolvableJavaPeerSkippedWarning (
 			string managedTypeName,
 			string assemblyName,
@@ -47,6 +51,10 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 				$"'{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
+		public void LogCustomJavaObjectError (string managedTypeName) =>
+			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
+		public void LogCustomJavaObjectWarning (string managedTypeName) =>
+			warnings?.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 	}
 
 	[Fact]

@@ -1,9 +1,8 @@
 # Managed ↔ Native Interop Review Rules
 
-Rules for the boundary between C# and C/C++ code — P/Invoke declarations, JNI
-bindings, and shared structs. Load when both managed and native files change, or
-when the diff contains interop markers (`JniObjectReference`, `JniPeerMembers`,
-`DllImport`, `[Register]`, `JNIEnv`, `[MarshalAs]`, `[StructLayout]`).
+Rules for managed/native boundaries and Java/JNI name handling. Load for interop
+markers, Java/JNI name conversions, or changes under Java.Interop, Mono.Android,
+native runtime, or TrimmableTypeMap paths.
 
 ---
 
@@ -18,6 +17,23 @@ when the diff contains interop markers (`JniObjectReference`, `JniPeerMembers`,
 | **`JniTransition` for native callbacks** | Entry points from Java into managed code should use `JniTransition` to properly handle exception marshaling. Without it, managed exceptions propagate into the JVM as undefined behavior. |
 | **Exception checking after JNI calls** | After JNI calls that can throw (most of them), check for pending Java exceptions via `JniEnvironment.Errors.ExceptionOccurred()` or rely on the built-in checking in `JniPeerMembers` wrappers. Don't ignore JNI error return codes. |
 | **Thread-local JNI environments** | JNI environments are thread-local. Use `JniEnvironment.Current` to access the current thread's environment. Never cache a `JNIEnv*` across threads. |
+
+---
+
+## Java Type Names
+
+Determine the required representation at each changed call site:
+
+| Representation | Nested-class example | Typical consumers |
+|----------------|----------------------|-------------------|
+| **JNI internal name** | `android/view/View$OnClickListener` | JNI registration, descriptors after removing `L`/`;`, runtime JNI lookup |
+| **Java binary name** | `android.view.View$OnClickListener` | `Class.forName`, Android manifests, ACW maps, ProGuard/R8 class rules |
+| **Java source name** | `android.view.View.OnClickListener` | Generated `.java` type references such as `extends`, `implements`, parameters, and return types |
+| **Managed nested type name** | `Android.Views.View+IOnClickListener` | Managed metadata and assembly-qualified names |
+
+- Read conversion helpers instead of trusting their names, and compare their full behavior with any inline logic they replace.
+- Trace serialized names to the final consumer; correctness is per call site.
+- Preserve `$` for binary-name consumers. Replace it with `.` only for Java source names.
 
 ---
 

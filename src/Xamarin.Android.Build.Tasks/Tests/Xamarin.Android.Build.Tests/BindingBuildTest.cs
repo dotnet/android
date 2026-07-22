@@ -125,20 +125,6 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
 				}
 
-				//TODO: see https://github.com/dotnet/msbuild/issues/6609
-				if (false) {
-					//A list of properties we check exist in binding projects
-					var properties = new [] {
-						"AndroidSdkBuildToolsVersion",
-						"AndroidSdkPlatformToolsVersion",
-						"AndroidSdkToolsVersion",
-						"AndroidNdkVersion",
-					};
-					foreach (var property in properties) {
-						Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, property + " = "), $"$({property}) should be set!");
-					}
-				}
-
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should be skipped on second build!");
@@ -831,6 +817,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (IgnoreOnNativeAot (runtime, "R8 shrinks bound library Java types out of classes.dex on the trimmable typemap path (missing proguard keeps). Tracked by https://github.com/dotnet/android/issues/11774.")) {
 				return;
 			}
 			var path = Path.Combine ("temp", TestName);

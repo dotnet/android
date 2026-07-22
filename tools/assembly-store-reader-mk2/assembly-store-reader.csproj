@@ -8,7 +8,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/assembly-store-reader</OutputPath>
     <OutputType>Exe</OutputType>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.AssemblyStoreReader</RootNamespace>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -17,16 +17,18 @@
   <ItemGroup>
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="AssemblyStore\**\*.cs" />
+    <Compile Remove="AssemblyStore.Tests\**\*.cs" />
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="AssemblyStore\AssemblyStore.csproj" />
     <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
 

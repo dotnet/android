@@ -55,6 +55,22 @@ public class AcwMapWriterTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Write_NestedJniClass_PreservesDollarSign ()
+	{
+		var peer = MakeMcwPeer (
+			"androidx/activity/result/contract/ActivityResultContracts$TakePicture",
+			"AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture",
+			"Xamarin.AndroidX.Activity");
+
+		var lines = WriteLines (new [] { peer });
+
+		Assert.Equal (3, lines.Length);
+		Assert.Equal ("AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture, Xamarin.AndroidX.Activity;androidx.activity.result.contract.ActivityResultContracts$TakePicture", lines [0]);
+		Assert.Equal ("AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture;androidx.activity.result.contract.ActivityResultContracts$TakePicture", lines [1]);
+		Assert.Equal ("androidx.activity.result.contract.ActivityResultContracts$TakePicture;androidx.activity.result.contract.ActivityResultContracts$TakePicture", lines [2]);
+	}
+
+	[Fact]
 	public void Write_MultipleTypes_OrderedByManagedName ()
 	{
 		var peers = new [] {

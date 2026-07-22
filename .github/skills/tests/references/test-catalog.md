@@ -20,9 +20,9 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 | Test Area | Project | Command |
 |-----------|---------|---------|
+| **assembly store reader** | `tools/assembly-store-reader-mk2/AssemblyStore.Tests/` | `dotnet test tools/assembly-store-reader-mk2/AssemblyStore.Tests/AssemblyStore.Tests.csproj -v minimal` |
 | **trimmable type map** (unit) | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | `dotnet test tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj -v minimal` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
-| **logcat** | `external/Java.Interop/tests/logcat-parse-Tests/` | `dotnet test external/Java.Interop/tests/logcat-parse-Tests/logcat-parse-Tests.csproj -v minimal` |
 | **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
 | **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
 | **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
@@ -187,7 +187,6 @@ Device: **No** (runs on host JVM via `TestJVM`)
 | **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | Bytecode analysis |
 | **api xml adjuster** | `external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | API XML adjustment |
 | **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | Source code generation |
-| **logcat** | `external/Java.Interop/tests/logcat-parse-Tests/` | Logcat parser |
 
 Run these tests with `dotnet test` from each test project directory listed above.
 
@@ -207,5 +206,6 @@ Run these tests with `dotnet test` from each test project directory listed above
 | Test Area | Tier | Assembly / Project | Notes |
 |-----------|------|--------------------|-------|
 | **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
+| **assembly store reader** | **Standalone** | `tools/assembly-store-reader-mk2/AssemblyStore.Tests/` | Legacy/current store layouts and LZ4/Zstd decompression |
 | **api compatibility** | N/A | `tests/api-compatibility/` | Not a test runner — reference data for API surface checks |
 | **android sdk tools** | **Standalone** | `external/xamarin-android-tools/tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |

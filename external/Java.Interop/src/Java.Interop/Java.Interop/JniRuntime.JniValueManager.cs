@@ -310,7 +310,7 @@ namespace Java.Interop
 			public JniValueMarshaler<T> GetValueMarshaler<T> () => GetValueMarshalerCore<T> ();
 			protected abstract JniValueMarshaler<T> GetValueMarshalerCore<T> ();
 
-			internal JniObjectReference CreateLocalObjectReferenceArgument (Type type, object? value)
+			public JniObjectReference CreateLocalObjectReferenceArgument (Type type, object? value)
 			{
 				EnsureNotDisposed ();
 

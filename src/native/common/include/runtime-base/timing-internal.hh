@@ -260,7 +260,7 @@ namespace xamarin::android {
 					// likely we'll run out of memory way, way, way before that happens
 					size_t old_size = events.capacity ();
 					events.reserve (old_size << 1);
-					log_warn (LOG_TIMING, "Reallocated timing event buffer from {} to {}"sv, old_size, events.size ());
+					log_warnf (LOG_TIMING, "Reallocated timing event buffer from %zu to %zu", old_size, events.capacity ());
 				}
 			}
 
@@ -378,7 +378,7 @@ namespace xamarin::android {
 		{
 			struct timespec t;
 			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
-				log_warn (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: {}"sv, optional_string (strerror (errno)));
+				log_warnf (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: %s", optional_string (strerror (errno)));
 				return {}; // Results will be nonsensical, but no point in aborting the app
 			}
 			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
@@ -430,7 +430,7 @@ namespace xamarin::android {
 
 			switch (kind) {
 				case TimingEventKind::AssemblyDecompression:
-					append_desc ("LZ4 decompression time for "sv);
+					append_desc ("Zstd decompression time for "sv);
 					return;
 
 				case TimingEventKind::AssemblyLoad:
@@ -494,10 +494,10 @@ namespace xamarin::android {
 					return;
 			}
 
-			log_warn (
+			log_warnf (
 				LOG_TIMING,
-				"Unknown event kind '{}' logged"sv,
-				static_cast<std::underlying_type_t<decltype(kind)>>(kind)
+				"Unknown event kind '%u' logged",
+				static_cast<unsigned int>(kind)
 			);
 			append_desc ("unknown event kind"sv);
 		}
@@ -510,7 +510,7 @@ namespace xamarin::android {
 		auto is_valid_event_index (size_t index, std::source_location sloc = std::source_location::current ()) const noexcept -> bool
 		{
 			if (index >= events.capacity ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "Invalid event index passed to method '{}'"sv, sloc.function_name ());
+				log_warnf (LOG_TIMING, "Invalid event index passed to method '%s'", optional_string (sloc.function_name ()));
 				return false;
 			}
 

@@ -12,7 +12,7 @@
 #include "platform-compat.hh"
 #include "xamarin-app.hh"
 #include <shared/xxhash.hh>
-#include <runtime-base/search.hh>
+#include <runtime-base/search-xxhash.hh>
 #include <runtime-base/strings.hh>
 #include "util.hh"
 
@@ -101,7 +101,7 @@ namespace xamarin::android::internal {
 
 		force_inline static ssize_t find_index (hash_t hash) noexcept
 		{
-			ssize_t idx = Search::binary_search (hash, assembly_image_cache_hashes, number_of_cache_index_entries);
+			ssize_t idx = SearchXxHash::binary_search (hash, assembly_image_cache_hashes, number_of_cache_index_entries);
 			return idx >= 0 ? static_cast<ssize_t>(assembly_image_cache_indices[idx]) : -1z;
 
 		}

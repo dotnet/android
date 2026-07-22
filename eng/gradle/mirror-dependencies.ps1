@@ -11,7 +11,7 @@
     so a developer has to authenticate locally once to seed the feed.
 
     This script does that by running the requested gradle build in a loop:
-      1. Run gradle with RunningOnCI=true so it points at the dnceng feed.
+      1. Run gradle with RUNNINGONCI=true so it points at the dnceng feed.
       2. Parse any 'Could not GET' URLs out of the build log.
       3. Re-fetch each failing URL with an Azure DevOps OAuth bearer token
          (obtained via `az account get-access-token`). The feed's upstream
@@ -30,6 +30,12 @@
     Gradle task(s) to run. Should be one that resolves the new dependency
     graph (e.g. 'assembleDebug', 'build', 'extractProguardFiles').
 
+.PARAMETER GradleWrapper
+    Optional path to the Gradle wrapper used by CI for this project, relative
+    to the repository root or absolute. Defaults to build-tools/gradle/gradlew.
+    Use this when a subproject has its own wrapper so Gradle resolves the same
+    dependency variants that CI requests.
+
 .PARAMETER AndroidHome
     Optional path to the Android SDK. Required when the gradle build needs it
     (any project using the com.android.* plugins). Defaults to the value of
@@ -47,6 +53,12 @@
 
 .EXAMPLE
     pwsh ./eng/gradle/mirror-dependencies.ps1 -ProjectDir src/proguard-android -Task extractProguardFiles
+
+.EXAMPLE
+    pwsh ./eng/gradle/mirror-dependencies.ps1 `
+        -ProjectDir external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle `
+        -Task classes `
+        -GradleWrapper external/Java.Interop/build-tools/gradle/gradlew.bat
 #>
 [CmdletBinding()]
 param(
@@ -56,6 +68,8 @@ param(
     [Parameter(Mandatory=$true)]
     [string] $Task,
 
+    [string] $GradleWrapper,
+
     [string] $AndroidHome = $env:ANDROID_HOME,
 
     [int] $MaxIterations = 15
@@ -64,12 +78,19 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '../..') | Select-Object -ExpandProperty Path
 $projectDirAbs = Resolve-Path (Join-Path $repoRoot $ProjectDir) -ErrorAction Stop | Select-Object -ExpandProperty Path
-$gradlew = if ($IsWindows -or $env:OS -eq 'Windows_NT') {
-    Join-Path $repoRoot 'build-tools/gradle/gradlew.bat'
+$defaultGradleWrapper = if ($IsWindows -or $env:OS -eq 'Windows_NT') {
+    'build-tools/gradle/gradlew.bat'
 } else {
-    Join-Path $repoRoot 'build-tools/gradle/gradlew'
+    'build-tools/gradle/gradlew'
 }
-if (-not (Test-Path $gradlew)) { throw "gradlew not found at $gradlew" }
+$gradleWrapperPath = if ([string]::IsNullOrEmpty($GradleWrapper)) {
+    Join-Path $repoRoot $defaultGradleWrapper
+} elseif ([IO.Path]::IsPathRooted($GradleWrapper)) {
+    $GradleWrapper
+} else {
+    Join-Path $repoRoot $GradleWrapper
+}
+$gradlew = Resolve-Path $gradleWrapperPath -ErrorAction Stop | Select-Object -ExpandProperty Path
 
 # Azure DevOps resource id — same for every AzDO tenant.
 $azDevOpsResource = '499b84ac-1321-427f-aa17-267ca6975798'
@@ -107,13 +128,15 @@ function Invoke-Mirror($logPath) {
 Write-Host "Repo root:    $repoRoot"
 Write-Host "Project:      $projectDirAbs"
 Write-Host "Task:         $Task"
+Write-Host "Gradle:       $gradlew"
 if ($AndroidHome) { Write-Host "ANDROID_HOME: $AndroidHome" }
 
 # Verify az is available and authenticated up front so we fail fast.
 Get-AzDevOpsToken | Out-Null
 
 if ($AndroidHome) { $env:ANDROID_HOME = $AndroidHome }
-$env:RunningOnCI = 'true'
+$env:RUNNINGONCI = 'true'
+$env:ANDROID_MIRROR_MAVEN_DEPENDENCIES = 'true'
 
 Push-Location $projectDirAbs
 try {

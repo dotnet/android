@@ -3,8 +3,8 @@ pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
 
-plugins {
-    id 'com.microsoft.azure.artifacts.credprovider' version '1.1.1'
+if (System.getenv('ANDROID_MIRROR_MAVEN_DEPENDENCIES') == 'true') {
+    apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
 }
 
 dependencyResolutionManagement {

@@ -15,9 +15,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\assembly-store-reader-mk2\AssemblyStore\V1\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" />
-    <PackageReference Include="K4os.Compression.LZ4" Version="$(LZ4PackageVersion)" />
   </ItemGroup>
 
   <Import Project="$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets" Condition="Exists('$(XAPackagesDir)\Xamarin.LibZipSharp.$(LibZipSharpVersion)\build\Xamarin.LibZipSharp.targets')" />

@@ -35,11 +35,6 @@ sealed class AssemblyIndex : IDisposable
 	public Dictionary<TypeDefinitionHandle, TypeAttributeInfo> AttributesByType { get; } = new ();
 
 	/// <summary>
-	/// Type references grouped by referenced assembly name.
-	/// </summary>
-	public Dictionary<string, HashSet<string>> ReferencedTypeNamesByAssembly { get; } = new (StringComparer.OrdinalIgnoreCase);
-
-	/// <summary>
 	/// Type-forwarded or otherwise exported types declared by this assembly.
 	/// </summary>
 	public HashSet<string> ExportedTypeNames { get; } = new (StringComparer.Ordinal);
@@ -82,14 +77,6 @@ sealed class AssemblyIndex : IDisposable
 		// the common case where the attribute is neither imported nor declared here.
 		foreach (var trHandle in Reader.TypeReferences) {
 			var typeReference = Reader.GetTypeReference (trHandle);
-			if (TryGetTypeReferenceAssemblyName (typeReference, out var assemblyName)) {
-				if (!ReferencedTypeNamesByAssembly.TryGetValue (assemblyName, out var typeNames)) {
-					typeNames = new HashSet<string> (StringComparer.Ordinal);
-					ReferencedTypeNamesByAssembly [assemblyName] = typeNames;
-				}
-				typeNames.Add (MetadataTypeNameResolver.GetTypeFromReference (Reader, trHandle, rawTypeKind: 0));
-			}
-
 			if (IsTypeReferenceMatch (typeReference, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
 				MayUseJniAddNativeMethodRegistrationAttribute = true;
 			}
@@ -138,22 +125,6 @@ sealed class AssemblyIndex : IDisposable
 		}
 	}
 
-	bool TryGetTypeReferenceAssemblyName (TypeReference typeReference, [NotNullWhen (true)] out string? assemblyName)
-	{
-		var scope = typeReference.ResolutionScope;
-		while (scope.Kind == HandleKind.TypeReference) {
-			scope = Reader.GetTypeReference ((TypeReferenceHandle) scope).ResolutionScope;
-		}
-		if (scope.Kind == HandleKind.AssemblyReference) {
-			var assemblyReference = Reader.GetAssemblyReference ((AssemblyReferenceHandle) scope);
-			assemblyName = Reader.GetString (assemblyReference.Name);
-			return true;
-		}
-
-		assemblyName = null;
-		return false;
-	}
-
 	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)
 	{
 		RegisterInfo? registerInfo = null;
@@ -164,6 +135,7 @@ sealed class AssemblyIndex : IDisposable
 		// with the wrong AttributeName.
 		List<IntentFilterInfo>? intentFilters = null;
 		List<MetaDataInfo>? metaData = null;
+		Dictionary<string, object?>? layoutProperties = null;
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
@@ -214,6 +186,8 @@ sealed class AssemblyIndex : IDisposable
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
 				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
+			} else if (attrName == "LayoutAttribute") {
+				layoutProperties = ParseLayoutAttribute (ca);
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
 				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
 				var name = TryGetNameProperty (ca);
@@ -231,6 +205,9 @@ sealed class AssemblyIndex : IDisposable
 			}
 			if (metaData is not null) {
 				attrInfo.MetaData.AddRange (metaData);
+			}
+			if (layoutProperties is not null) {
+				attrInfo.LayoutProperties = layoutProperties;
 			}
 		}
 
@@ -423,6 +400,18 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		return null;
+	}
+
+	Dictionary<string, object?> ParseLayoutAttribute (CustomAttribute ca)
+	{
+		var value = DecodeAttribute (ca);
+		var properties = new Dictionary<string, object?> (StringComparer.Ordinal);
+		foreach (var named in value.NamedArguments) {
+			if (named.Name is not null) {
+				properties [named.Name] = named.Value;
+			}
+		}
+		return properties;
 	}
 
 	IntentFilterInfo ParseIntentFilterAttribute (CustomAttribute ca)
@@ -712,6 +701,12 @@ class TypeAttributeInfo (string attributeName)
 	/// Metadata entries declared on this type via [MetaData] attributes.
 	/// </summary>
 	public List<MetaDataInfo> MetaData { get; } = [];
+
+	/// <summary>
+	/// Named property values from a [Layout] attribute on this type, or null if none.
+	/// Maps to the &lt;layout&gt; child element of the component in the manifest.
+	/// </summary>
+	public Dictionary<string, object?>? LayoutProperties { get; set; }
 }
 
 sealed class ApplicationAttributeInfo () : TypeAttributeInfo ("ApplicationAttribute")

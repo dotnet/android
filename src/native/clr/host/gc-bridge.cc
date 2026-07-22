@@ -1,3 +1,7 @@
+#include <cerrno>
+#include <pthread.h>
+#include <semaphore.h>
+
 #include <host/gc-bridge.hh>
 #include <host/bridge-processing.hh>
 #include <host/os-bridge.hh>
@@ -6,6 +10,41 @@
 #include <shared/helpers.hh>
 
 using namespace xamarin::android;
+
+void GCBridge::initialize_shared_args_semaphore () noexcept
+{
+	int ret = sem_init (&shared_args_semaphore, 0, 0);
+	abort_unless (ret == 0, "Failed to initialize GC bridge semaphore");
+}
+
+void GCBridge::start_bridge_processing_thread () noexcept
+{
+	pthread_t thread {};
+	int ret = pthread_create (&thread, nullptr, bridge_processing_thread_entry, nullptr);
+	abort_unless (ret == 0, "Failed to create GC bridge processing thread");
+
+	ret = pthread_detach (thread);
+	abort_unless (ret == 0, "Failed to detach GC bridge processing thread");
+}
+
+void GCBridge::publish_shared_args (MarkCrossReferencesArgs *args) noexcept
+{
+	__atomic_store_n (&shared_args, args, __ATOMIC_RELEASE);
+
+	int ret = sem_post (&shared_args_semaphore);
+	abort_unless (ret == 0, "Failed to release GC bridge semaphore");
+}
+
+auto GCBridge::wait_for_shared_args () noexcept -> MarkCrossReferencesArgs*
+{
+	int ret;
+	do {
+		ret = sem_wait (&shared_args_semaphore);
+	} while (ret == -1 && errno == EINTR);
+	abort_unless (ret == 0, "Failed to acquire GC bridge semaphore");
+
+	return __atomic_load_n (&shared_args, __ATOMIC_ACQUIRE);
+}
 
 void GCBridge::initialize_on_onload (JNIEnv *env) noexcept
 {
@@ -55,8 +94,7 @@ void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept
 	abort_unless (args->CrossReferences != nullptr || args->CrossReferenceCount == 0, "CrossReferences must not be null if CrossReferenceCount is greater than 0");
 	log_mark_cross_references_args_if_enabled (args);
 
-	shared_args.store (args);
-	shared_args_semaphore.release ();
+	publish_shared_args (args);
 }
 
 void GCBridge::bridge_processing () noexcept
@@ -66,8 +104,7 @@ void GCBridge::bridge_processing () noexcept
 
 	while (true) {
 		// wait until mark cross references args are set by the GC callback
-		shared_args_semaphore.acquire ();
-		MarkCrossReferencesArgs *args = shared_args.load ();
+		MarkCrossReferencesArgs *args = wait_for_shared_args ();
 
 		bridge_processing_started_callback (args);
 
@@ -76,6 +113,12 @@ void GCBridge::bridge_processing () noexcept
 
 		bridge_processing_finished_callback (args);
 	}
+}
+
+auto GCBridge::bridge_processing_thread_entry ([[maybe_unused]] void *arg) noexcept -> void*
+{
+	bridge_processing ();
+	return nullptr;
 }
 
 [[gnu::always_inline]]
@@ -120,6 +163,7 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
 		log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
 		free (class_name);
+		env->DeleteLocalRef (java_class);
 	} else {
 		log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
 	}

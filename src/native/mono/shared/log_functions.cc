@@ -1,10 +1,10 @@
 #include <array>
+#include <cstdarg>
 #include <strings.h>
 
 #include <android/log.h>
 
-#include "java-interop-logger.h"
-#include <shared/log_level.hh>
+#include <shared/log_functions.hh>
 
 // Must match the same ordering as LogCategories
 static constexpr std::array<const char*, 12> log_names = {
@@ -102,19 +102,81 @@ static constexpr android_LogPriority loglevel_map[] = {
 
 static constexpr size_t loglevel_map_max_index = (sizeof(loglevel_map) / sizeof(android_LogPriority)) - 1;
 
+static auto
+priority_for_level (xamarin::android::LogLevel level) noexcept -> android_LogPriority
+{
+	size_t map_index = static_cast<size_t>(level);
+	if (map_index > loglevel_map_max_index) {
+		return DEFAULT_PRIORITY;
+	}
+
+	return loglevel_map[map_index];
+}
+
 namespace xamarin::android {
 	void
 	log_write (LogCategories category, LogLevel level, const char *message) noexcept
 	{
-		size_t map_index = static_cast<size_t>(level);
-		android_LogPriority priority;
+		__android_log_write (priority_for_level (level), CATEGORY_NAME (category), message);
+	}
 
-		if (map_index > loglevel_map_max_index) {
-			priority = DEFAULT_PRIORITY;
-		} else {
-			priority = loglevel_map[map_index];
+	void
+	log_writev (LogCategories category, LogLevel level, const char *format, va_list args) noexcept
+	{
+		const char *safe_format = format == nullptr ? "<null>" : format;
+		__android_log_vprint (priority_for_level (level), CATEGORY_NAME (category), safe_format, args);
+	}
+
+	void
+	log_writef (LogCategories category, LogLevel level, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, level, format, args);
+		va_end (args);
+	}
+
+	void
+	log_debugf (LogCategories category, const char *format, ...) noexcept
+	{
+		if ((log_categories & category) == 0) {
+			return;
 		}
 
-		__android_log_write (priority, CATEGORY_NAME (category), message);
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Debug, format, args);
+		va_end (args);
+	}
+
+	void
+	log_infof (LogCategories category, const char *format, ...) noexcept
+	{
+		if ((log_categories & category) == 0) {
+			return;
+		}
+
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Info, format, args);
+		va_end (args);
+	}
+
+	void
+	log_warnf (LogCategories category, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Warn, format, args);
+		va_end (args);
+	}
+
+	void
+	log_errorf (LogCategories category, const char *format, ...) noexcept
+	{
+		va_list args;
+		va_start (args, format);
+		log_writev (category, LogLevel::Error, format, args);
+		va_end (args);
 	}
 }

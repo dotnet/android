@@ -176,7 +176,7 @@ static class AssemblyLevelElementBuilder
 		XElement app,
 		Dictionary<string, object?> properties,
 		IReadOnlyList<JavaPeerInfo> allPeers,
-		Action<string>? warn = null)
+		Action<int, string>? warn = null)
 	{
 		PropertyMapper.ApplyMappings (app, properties, PropertyMapper.ApplicationPropertyMappings, skipExisting: true);
 
@@ -191,7 +191,7 @@ static class AssemblyLevelElementBuilder
 		IReadOnlyList<JavaPeerInfo> allPeers,
 		string propertyName,
 		string xmlAttrName,
-		Action<string>? warn)
+		Action<int, string>? warn)
 	{
 		if (app.Attribute (AndroidNs + xmlAttrName) is not null) {
 			return;
@@ -208,12 +208,13 @@ static class AssemblyLevelElementBuilder
 
 		foreach (var peer in allPeers) {
 			if (peer.ManagedTypeName == managedName) {
-				app.SetAttributeValue (AndroidNs + xmlAttrName, peer.JavaName.Replace ('/', '.'));
+				app.SetAttributeValue (AndroidNs + xmlAttrName, JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName));
 				return;
 			}
 		}
 
-		warn?.Invoke ($"Could not resolve {propertyName} type '{managedName}' to a Java peer for android:{xmlAttrName}.");
+		// Code 0 = no XA code assigned; the caller may silently ignore it.
+		warn?.Invoke (0, $"Could not resolve {propertyName} type '{managedName}' to a Java peer for android:{xmlAttrName}.");
 	}
 
 	internal static void AddInternetPermission (XElement manifest)

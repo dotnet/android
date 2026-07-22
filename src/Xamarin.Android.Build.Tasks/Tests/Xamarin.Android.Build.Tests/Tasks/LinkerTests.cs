@@ -72,7 +72,7 @@ namespace Xamarin.Android.Build.Tests
 				assm.MainModule.Types.Add (iface);
 
 				// Create implementing class
-				var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
+				var jlo = assm.MainModule.ImportReference (android.MainModule.GetType ("Java.Lang.Object"));
 				var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
 				impl.Interfaces.Add (new InterfaceImplementation (iface));
 
@@ -131,7 +131,7 @@ namespace Xamarin.Android.Build.Tests
 				assm.MainModule.Types.Add (iface);
 
 				// Create implementing class
-				var jlo = assm.MainModule.Import (android.MainModule.GetType ("Java.Lang.Object"));
+				var jlo = assm.MainModule.ImportReference (android.MainModule.GetType ("Java.Lang.Object"));
 				var impl = new TypeDefinition ("MyNamespace", "MyClass", TypeAttributes.Public, jlo);
 				impl.Interfaces.Add (new InterfaceImplementation (iface));
 
@@ -395,6 +395,10 @@ $@"			var myButton = new AttributedButtonStub (this);
 				return;
 			}
 
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
+				return;
+			}
+
 			if (runtime == AndroidRuntime.CoreCLR && isRelease && !setAndroidAddKeepAlivesTrue && setLinkModeNone && shouldAddKeepAlives) {
 				// This currently fails with the following exception:
 				//
@@ -512,6 +516,10 @@ namespace UnnamedProject {
 				return;
 			}
 
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
+				return;
+			}
+
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
 			proj.SetRuntime (runtime);
 			proj.AddReferences ("System.Net.Http");
@@ -547,6 +555,9 @@ namespace UnnamedProject {
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
 			var proj = new XamarinAndroidApplicationProject { IsRelease = isRelease };
@@ -586,6 +597,10 @@ namespace UnnamedProject {
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
 				return;
 			}
 
@@ -732,6 +747,10 @@ public abstract class MyRunner {
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (IgnoreOnNativeAot (runtime, "ILC does not run illink, so the obsolete-PreserveAttribute IL6001 warning is not emitted.")) {
 				return;
 			}
 

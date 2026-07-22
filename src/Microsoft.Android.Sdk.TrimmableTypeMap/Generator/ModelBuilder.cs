@@ -16,17 +16,6 @@ static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
 
-	static readonly PrimitiveArrayProxyInfo [] PrimitiveArrayProxies = [
-		new ("Z", "Boolean", "System.Boolean", "Java.Interop.JavaBooleanArray"),
-		new ("B", "SByte", "System.SByte", "Java.Interop.JavaSByteArray"),
-		new ("C", "Char", "System.Char", "Java.Interop.JavaCharArray"),
-		new ("S", "Int16", "System.Int16", "Java.Interop.JavaInt16Array"),
-		new ("I", "Int32", "System.Int32", "Java.Interop.JavaInt32Array"),
-		new ("J", "Int64", "System.Int64", "Java.Interop.JavaInt64Array"),
-		new ("F", "Single", "System.Single", "Java.Interop.JavaSingleArray"),
-		new ("D", "Double", "System.Double", "Java.Interop.JavaDoubleArray"),
-	];
-
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
 		"java/lang/Class",
@@ -47,11 +36,7 @@ static class ModelBuilder
 	/// <param name="peers">Scanned Java peer types (typically from a single input assembly).</param>
 	/// <param name="outputPath">Output .dll path — used to derive assembly/module names if not specified.</param>
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
-	/// <param name="maxArrayRank">
-	/// Emit per-rank array <c>TypeMap</c> entries + <c>__ArrayMapRank{N}</c> sentinels
-	/// for ranks 1..<paramref name="maxArrayRank"/>. 0 disables array entry emission.
-	/// </param>
-	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null, int maxArrayRank = 0)
+	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
 		if (peers is null) {
 			throw new ArgumentNullException (nameof (peers));
@@ -59,16 +44,11 @@ static class ModelBuilder
 		if (outputPath is null) {
 			throw new ArgumentNullException (nameof (outputPath));
 		}
-		if (maxArrayRank < 0) {
-			throw new ArgumentOutOfRangeException (nameof (maxArrayRank), maxArrayRank, "Must be >= 0.");
-		}
-
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
 
 		var model = new TypeMapAssemblyData {
 			AssemblyName = assemblyName,
 			ModuleName = Path.GetFileName (outputPath),
-			MaxArrayRank = maxArrayRank,
 		};
 
 		// Invoker types are NOT emitted as separate proxies or TypeMap entries.
@@ -98,20 +78,11 @@ static class ModelBuilder
 			string jniName = kvp.Key;
 			var peersForName = kvp.Value;
 
-			// Sort aliases by managed type name for deterministic proxy naming
 			if (peersForName.Count > 1) {
-				peersForName.Sort ((a, b) => StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName));
+				peersForName.Sort (CompareAliasesForRuntimeResolution);
 			}
 
 			EmitPeers (model, jniName, peersForName, assemblyName, usedProxyNames);
-
-			if (maxArrayRank > 0) {
-				EmitArrayEntries (model, jniName, peersForName, maxArrayRank);
-			}
-		}
-
-		if (maxArrayRank > 0 && string.Equals (assemblyName, "_Java.Interop.TypeMap", StringComparison.Ordinal)) {
-			EmitPrimitiveArrayEntries (model, maxArrayRank);
 		}
 
 		BuildNativeRegistrations (model);
@@ -137,6 +108,19 @@ static class ModelBuilder
 		return model;
 	}
 
+	static int CompareAliasesForRuntimeResolution (JavaPeerInfo a, JavaPeerInfo b)
+	{
+		// Keep alias [0] aligned with the native java→managed map, which processes Mono.Android first.
+		bool aMonoAndroid = string.Equals (a.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+		bool bMonoAndroid = string.Equals (b.AssemblyName, "Mono.Android", StringComparison.Ordinal);
+		if (aMonoAndroid != bMonoAndroid) {
+			return aMonoAndroid ? -1 : 1;
+		}
+
+		int result = StringComparer.Ordinal.Compare (a.ManagedTypeName, b.ManagedTypeName);
+		return result != 0 ? result : StringComparer.Ordinal.Compare (a.AssemblyName, b.AssemblyName);
+	}
+
 	static void EmitPeers (TypeMapAssemblyData model, string jniName,
 		List<JavaPeerInfo> peersForName, string assemblyName, HashSet<string> usedProxyNames)
 	{
@@ -145,7 +129,14 @@ static class ModelBuilder
 		if (!isAliasGroup) {
 			// Single peer — no aliases needed, emit directly with the base JNI name
 			var peer = peersForName [0];
-			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null;
+			// A concrete type that supplies its own Java peer ([JniTypeSignature(GenerateJavaPeer=false)]
+			// or an MCW binding without an activation ctor) is constructed managed-side via `new`, so its
+			// managed→Java JNI name must still be resolvable in order to instantiate the correct Java class.
+			// Such types have neither an activation ctor nor an invoker; without a proxy + association they
+			// fall back to the generic mono.android.runtime.JavaObject peer and throw ArrayStoreException
+			// when stored into a typed Java array (e.g. CrossReferenceBridge[]).
+			bool needsManagedToJavaName = peer.DoNotGenerateAcw && !peer.IsInterface && !peer.IsAbstract;
+			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null || needsManagedToJavaName;
 			bool isAcw = !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Count > 0;
 
 			JavaPeerProxyData? proxy = null;
@@ -273,15 +264,6 @@ static class ModelBuilder
 		return builder.ToString ();
 	}
 
-	static string ManagedTypeNameToArrayProxyTypeName (string managedTypeName, int rank)
-	{
-		var builder = new StringBuilder (managedTypeName.Length + 20);
-		AppendSafeManagedTypeName (builder, managedTypeName);
-		builder.Append ("_ArrayProxy");
-		builder.Append (rank);
-		return builder.ToString ();
-	}
-
 	static void AppendSafeManagedTypeName (StringBuilder builder, string managedTypeName)
 	{
 		for (int i = 0; i < managedTypeName.Length; i++) {
@@ -318,7 +300,6 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
-			IsInterface = peer.IsInterface,
 			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 
@@ -364,6 +345,8 @@ static class ModelBuilder
 					AssemblyName = !mm.DeclaringAssemblyName.IsNullOrEmpty () ? mm.DeclaringAssemblyName : peer.AssemblyName,
 				},
 				JniSignature = mm.JniSignature,
+				CallbackParameterTypeNames = mm.NativeCallbackParameterTypeNames,
+				CallbackReturnTypeName = mm.NativeCallbackReturnTypeName,
 				ExportMethodDispatch = (mm.IsExport || mm.CallManagedMethodDirectly) ? new ExportMethodDispatchData {
 					ManagedMethodName = mm.ManagedMethodName,
 					ParameterTypes = mm.ManagedParameterTypes,
@@ -528,179 +511,4 @@ static class ModelBuilder
 	static string AssemblyQualify (string typeName, string assemblyName)
 		=> $"{typeName}, {assemblyName}";
 
-	static string AddArrayRank (string typeReference, int rank)
-	{
-		if (rank == 0) {
-			return typeReference;
-		}
-
-		int assemblySeparator = typeReference.LastIndexOf (", ", StringComparison.Ordinal);
-		if (assemblySeparator < 0) {
-			throw new InvalidOperationException ($"Assembly-qualified type reference '{typeReference}' does not contain an assembly name.");
-		}
-
-		return typeReference.Substring (0, assemblySeparator) + Brackets (rank) + typeReference.Substring (assemblySeparator);
-	}
-
-	static string MakeGenericTypeReference (string openTypeName, string openTypeAssembly, string argumentTypeReference)
-		=> $"{openTypeName}[[{argumentTypeReference}]], {openTypeAssembly}";
-
-	static string MakeNestedJavaObjectArrayTypeReference (string elementTypeReference, int rank)
-	{
-		var result = elementTypeReference;
-		for (int i = 0; i < rank; i++) {
-			result = MakeGenericTypeReference ("Java.Interop.JavaObjectArray`1", "Java.Interop", result);
-		}
-		return result;
-	}
-
-	static IReadOnlyList<string> GetArrayTypeReferences (ArrayProxyData proxy)
-	{
-		var elementType = AssemblyQualify (proxy.ElementType.ManagedTypeName, proxy.ElementType.AssemblyName);
-		if (proxy.Primitive is null) {
-			var rankOneTypes = new [] {
-				MakeGenericTypeReference ("Java.Interop.JavaObjectArray`1", "Java.Interop", elementType),
-				MakeGenericTypeReference ("Java.Interop.JavaArray`1", "Java.Interop", elementType),
-				AddArrayRank (elementType, 1),
-			};
-			return ExpandRankOneTypes (rankOneTypes, proxy.Rank);
-		}
-
-		var rankOnePrimitiveTypes = new [] {
-			AddArrayRank (elementType, 1),
-			MakeGenericTypeReference ("Java.Interop.JavaArray`1", "Java.Interop", elementType),
-			MakeGenericTypeReference ("Java.Interop.JavaPrimitiveArray`1", "Java.Interop", elementType),
-			AssemblyQualify (proxy.Primitive.ConcreteArrayType.ManagedTypeName, proxy.Primitive.ConcreteArrayType.AssemblyName),
-		};
-		return ExpandRankOneTypes (rankOnePrimitiveTypes, proxy.Rank);
-	}
-
-	static IReadOnlyList<string> ExpandRankOneTypes (IReadOnlyList<string> rankOneTypes, int rank)
-	{
-		if (rank == 1) {
-			return rankOneTypes;
-		}
-
-		var result = new List<string> (rankOneTypes.Count * 2);
-		foreach (var type in rankOneTypes) {
-			result.Add (MakeNestedJavaObjectArrayTypeReference (type, rank - 1));
-			result.Add (AddArrayRank (type, rank - 1));
-		}
-		return result;
-	}
-
-	static void AddArrayProxyAssociations (TypeMapAssemblyData model, ArrayProxyData proxy, string proxyReference)
-	{
-		foreach (var typeReference in GetArrayTypeReferences (proxy)) {
-			model.Associations.Add (new TypeMapAssociationData {
-				SourceTypeReference = typeReference,
-				AliasProxyTypeReference = proxyReference,
-				AnchorRank = proxy.Rank,
-			});
-		}
-	}
-
-	static string GetArrayProxyMapKey (TypeRefData elementType)
-		=> AssemblyQualify (elementType.ManagedTypeName, elementType.AssemblyName);
-
-	/// <summary>
-	/// Emits per-rank array TypeMap entries for one peer, anchored to the per-assembly
-	/// <c>__ArrayMapRank{N}</c> sentinels. Keys are managed element type names (rank is encoded
-	/// by the sentinel anchor, not by JNI array prefixes). Skips open generics and alias groups.
-	/// </summary>
-	static void EmitArrayEntries (TypeMapAssemblyData model, string jniName, List<JavaPeerInfo> peersForName, int maxArrayRank)
-	{
-		if (peersForName.Count != 1) {
-			return;
-		}
-
-		var peer = peersForName [0];
-		if (!peer.GenerateArrayEntries) {
-			return;
-		}
-		if (peer.IsGenericDefinition) {
-			return;
-		}
-		if (jniName.Length == 1 && IsJniPrimitiveKeyword (jniName [0])) {
-			return;
-		}
-
-		for (int rank = 1; rank <= maxArrayRank; rank++) {
-			var proxy = new ArrayProxyData {
-				TypeName = ManagedTypeNameToArrayProxyTypeName (peer.ManagedTypeName, rank),
-				ElementType = new TypeRefData {
-					ManagedTypeName = peer.ManagedTypeName,
-					AssemblyName = peer.AssemblyName,
-				},
-				Rank = rank,
-			};
-			model.ArrayProxyTypes.Add (proxy);
-
-			var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
-			model.Entries.Add (new TypeMapAttributeData {
-				MapKey = GetArrayProxyMapKey (proxy.ElementType),
-				ProxyTypeReference = proxyReference,
-				TargetTypeReference = proxyReference,
-				AnchorRank = rank,
-			});
-			AddArrayProxyAssociations (model, proxy, proxyReference);
-		}
-	}
-
-	static void EmitPrimitiveArrayEntries (TypeMapAssemblyData model, int maxArrayRank)
-	{
-		foreach (var primitive in PrimitiveArrayProxies) {
-			for (int rank = 1; rank <= maxArrayRank; rank++) {
-				var proxy = new ArrayProxyData {
-					TypeName = $"Primitive_{primitive.Name}_ArrayProxy{rank}",
-					ElementType = new TypeRefData {
-						ManagedTypeName = primitive.ManagedTypeName,
-						AssemblyName = "System.Runtime",
-					},
-					Rank = rank,
-					Primitive = new PrimitiveArrayProxyData {
-						ConcreteArrayType = new TypeRefData {
-							ManagedTypeName = primitive.ConcreteArrayTypeName,
-							AssemblyName = "Java.Interop",
-						},
-					},
-				};
-				model.ArrayProxyTypes.Add (proxy);
-				var proxyReference = AssemblyQualify ($"{proxy.Namespace}.{proxy.TypeName}", model.AssemblyName);
-				model.Entries.Add (new TypeMapAttributeData {
-					MapKey = GetArrayProxyMapKey (proxy.ElementType),
-					ProxyTypeReference = proxyReference,
-					TargetTypeReference = proxyReference,
-					AnchorRank = rank,
-				});
-				AddArrayProxyAssociations (model, proxy, proxyReference);
-			}
-		}
-	}
-
-	static string Brackets (int rank) => rank switch {
-		1 => "[]",
-		2 => "[][]",
-		3 => "[][][]",
-		_ => BuildBrackets (rank),
-	};
-
-	static string BuildBrackets (int rank)
-	{
-		var sb = new StringBuilder (rank * 2);
-		for (int i = 0; i < rank; i++) {
-			sb.Append ("[]");
-		}
-		return sb.ToString ();
-	}
-
-	static bool IsJniPrimitiveKeyword (char c)
-		=> c == 'Z' || c == 'B' || c == 'C' || c == 'S' || c == 'I'
-			|| c == 'J' || c == 'F' || c == 'D' || c == 'V';
-
-	readonly record struct PrimitiveArrayProxyInfo (
-		string JniName,
-		string Name,
-		string ManagedTypeName,
-		string ConcreteArrayTypeName);
 }

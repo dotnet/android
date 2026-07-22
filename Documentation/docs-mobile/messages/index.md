@@ -264,6 +264,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5301](xa5301.md): Failed to generate Java type for class: {managedType} due to MAX_PATH: {exception}
 + [XA5302](xa5302.md): Two processes may be building this project at once. Lock file exists at path: {path}
 + [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
++ [XA5304](xa5304.md): Invalid AssemblyStore compression level '{level}'. The value must be between {min} and {max}.
 
 ## XA6xxx: Internal tools
 

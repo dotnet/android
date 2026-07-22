@@ -26,6 +26,7 @@
    <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
     <Compile Include="..\..\tools\assembly-store-reader-mk2\AssemblyStore\*.cs" />
+    <Compile Include="..\..\tools\assembly-store-reader-mk2\AssemblyStore\V1\*.cs" />
     <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
   <ItemGroup>
@@ -55,9 +56,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj" />
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj" />
-    <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj" />
   </ItemGroup>
 
 </Project>

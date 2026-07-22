@@ -70,7 +70,7 @@ code generation. It would be nice to remove this requirement.
 e.g. translating `java.io.InputStream` to `System.IO.Stream` (and back),
 and there's no facility for additional types to participate in *any* of this.
 
-It's a big, monolithic, ball of mud.
+It's a big, monolithic, tangled mess.
 
 ## Proposed Java.Interop Architecture
 

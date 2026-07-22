@@ -12,8 +12,8 @@ All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-re
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
-plugins {
-    id 'com.microsoft.azure.artifacts.credprovider' version '1.1.1'
+if (System.getenv('ANDROID_MIRROR_MAVEN_DEPENDENCIES') == 'true') {
+    apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
 }
 dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
@@ -25,12 +25,17 @@ rootProject.name = '<project>'
 
 ## CI vs local
 
-Both files switch on `System.getenv('RunningOnCI')` (or `RUNNINGONCI` — AzDO uppercases env vars on Linux/macOS agents):
+Both files switch on `System.getenv('RUNNINGONCI')`. Azure DevOps exports the
+`RunningOnCI` pipeline variable under this normalized environment-variable name.
 
-- **`RunningOnCI=true`** (Azure DevOps, set in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
+- **`RUNNINGONCI=true`** (Azure DevOps, sourced from `RunningOnCI` in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
 - **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()` for plugins, `google()` + `mavenCentral()` for deps. No credentials needed.
 
-Test the CI path locally: `$env:RunningOnCI='true'` (PowerShell) or `RunningOnCI=true ...` (bash).
+CI reads cached packages from the mirror anonymously. The Azure Artifacts
+credential provider is loaded only when `ANDROID_MIRROR_MAVEN_DEPENDENCIES=true`;
+`mirror-dependencies.ps1` sets this while seeding uncached packages.
+
+Test the CI path locally: `$env:RUNNINGONCI='true'` (PowerShell) or `RUNNINGONCI=true ...` (bash).
 
 ## When CI fails 401 on a Dependabot bump
 
@@ -44,15 +49,15 @@ az login   # one-time, corp account with MFA satisfied
 pwsh ./eng/gradle/mirror-dependencies.ps1 `
     -ProjectDir <path-to-failing-gradle-project> `
     -Task <gradle-task-CI-runs> `
+    -GradleWrapper <path-to-wrapper-CI-runs> `
     -AndroidHome <path-to-Android-SDK>   # required for any com.android.* project
 ```
 
-The mirror must run in the project that actually needs the new package — a sibling project's build won't trigger a mirror for someone else's deps. Typical convergence is 2-5 iterations as the resolver walks the dep graph breadth-first.
+The mirror must run in the project that actually needs the new package — a sibling project's build won't trigger a mirror for someone else's deps. If that project uses a different Gradle wrapper in CI, pass the same wrapper with `-GradleWrapper`; Kotlin and other plugins publish Gradle-version-specific variants. Typical convergence is 2-5 iterations as the resolver walks the dep graph breadth-first.
 
 After it succeeds, just re-run the failed CI job. No PR edits needed — the packages are now anonymous-readable forever.
 
 ## Don'ts
 
 - Don't hard-code Maven repo URLs in `build.gradle` / `settings.gradle`; use the shared file.
-- Don't wrap `plugins {}` in `if (...)` — Gradle rejects it.
 - Don't use modern `plugins { id 'com.android.application' version '...' }` DSL without confirming the plugin is in `dotnet-public-maven`; prefer `buildscript { ... } / apply plugin: '...'` when in doubt.

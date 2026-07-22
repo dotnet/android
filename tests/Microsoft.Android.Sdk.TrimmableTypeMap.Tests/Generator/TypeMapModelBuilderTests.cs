@@ -16,12 +16,6 @@ public class ModelBuilderTests : FixtureTestBase
 		return ModelBuilder.Build (peers, outputPath, assemblyName);
 	}
 
-	static TypeMapAssemblyData BuildModelWithArrays (IReadOnlyList<JavaPeerInfo> peers, string? assemblyName = null, int maxArrayRank = 3)
-	{
-		var outputPath = Path.Combine (Path.GetTempPath (), (assemblyName ?? "TestTypeMap") + ".dll");
-		return ModelBuilder.Build (peers, outputPath, assemblyName, maxArrayRank);
-	}
-
 	public class BasicStructure
 	{
 		[Fact]
@@ -111,6 +105,23 @@ public class ModelBuilderTests : FixtureTestBase
 			// One alias holder with 3 keys
 			Assert.Single (model.AliasHolders);
 			Assert.Equal (3, model.AliasHolders [0].AliasKeys.Count);
+		}
+
+		[Fact]
+		public void Build_AliasGroup_MonoAndroidPeerSortsFirst ()
+		{
+			// Java.Interop first proves Mono.Android still becomes alias [0], matching runtime lookup.
+			var peers = new List<JavaPeerInfo> {
+				MakeMcwPeer ("java/lang/Object", "Java.Interop.JavaObject", "Java.Interop") with { IsFromJniTypeSignature = true },
+				MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Mono.Android"),
+			};
+
+			var model = BuildModel (peers, "MonoAndroid");
+
+			Assert.Equal ("java/lang/Object[0]", model.Entries [0].MapKey);
+			Assert.Contains ("Java.Lang.Object", model.Entries [0].ProxyTypeReference);
+			Assert.Equal ("java/lang/Object[1]", model.Entries [1].MapKey);
+			Assert.Contains ("Java.Interop.JavaObject", model.Entries [1].ProxyTypeReference);
 		}
 
 		[Fact]
@@ -343,6 +354,27 @@ public class ModelBuilderTests : FixtureTestBase
 			var model = BuildModel (new [] { peer }, "MyTypeMap");
 
 			Assert.Single (model.Associations);
+		}
+
+		[Fact]
+		public void Build_ConcreteSelfPeerWithoutActivation_CreatesProxyAndAssociation ()
+		{
+			// A concrete type that supplies its own Java peer ([JniTypeSignature(GenerateJavaPeer=false)],
+			// modeled here as DoNotGenerateAcw=true with no activation ctor / invoker) is constructed
+			// managed-side via `new`. Its managed→Java JNI name must be resolvable, otherwise the runtime
+			// falls back to the generic mono.android.runtime.JavaObject peer and throws ArrayStoreException
+			// when the instance is stored into a typed Java array (e.g. CrossReferenceBridge[]).
+			var peer = MakeMcwPeer ("net/dot/jni/test/CrossReferenceBridge", "Java.InteropTests.CrossReferenceBridge", "Java.Interop-Tests")
+				with { DoNotGenerateAcw = true };
+			var model = BuildModel (new [] { peer }, "MyTypeMap");
+
+			var proxy = Assert.Single (model.ProxyTypes);
+			Assert.Equal ("net/dot/jni/test/CrossReferenceBridge", proxy.JniName);
+			Assert.Equal ("Java.InteropTests.CrossReferenceBridge", proxy.TargetType.ManagedTypeName);
+			Assert.False (proxy.HasActivation);
+
+			var association = Assert.Single (model.Associations);
+			Assert.Contains ("Java.InteropTests.CrossReferenceBridge, Java.Interop-Tests", association.SourceTypeReference);
 		}
 
 		[Fact]
@@ -687,8 +719,8 @@ public class ModelBuilderTests : FixtureTestBase
 		{
 			// Generic definitions must still get a TypeMapAssociation entry so managed→proxy
 			// lookup works for the open generic definition. Their proxy derives from the
-			// non-generic `JavaPeerProxy` base, so the CLR can load the proxy without
-			// resolving an open generic argument.
+			// `JavaPeerProxy` base and receives the target type as a ctor argument, so the CLR
+			// can load the proxy without resolving an open generic argument.
 			var peer = FindFixtureByJavaName ("my/app/GenericHolder");
 			Assert.True (peer.IsGenericDefinition);
 
@@ -943,357 +975,7 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 	}
 
-	public class ArrayEntries
-	{
-		[Fact]
-		public void Build_DefaultEmitArrayEntriesFalse_NoArrayEntries ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var model = BuildModel (new [] { peer });
 
-			Assert.Equal (0, model.MaxArrayRank);
-			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_SetsMaxArrayRank ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var model = BuildModelWithArrays (new [] { peer });
-
-			Assert.Equal (3, model.MaxArrayRank);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_HonoursMaxArrayRank ()
-		{
-			// Caller can ask for fewer or more ranks than the default. Verifies the
-			// $(_AndroidTrimmableTypeMapMaxArrayRank) MSBuild property's effect.
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-
-			var model5 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 5);
-			Assert.Equal (5, model5.MaxArrayRank);
-			var rank5Entries = model5.Entries.Where (e => e.AnchorRank is not null).ToList ();
-			Assert.Equal (5, rank5Entries.Count);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).ProxyTypeReference);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy5, TestTypeMap", rank5Entries.Single (e => e.AnchorRank == 5).TargetTypeReference);
-
-			var model1 = BuildModelWithArrays (new [] { peer }, maxArrayRank: 1);
-			Assert.Equal (1, model1.MaxArrayRank);
-			Assert.Single (model1.Entries, e => e.AnchorRank is not null);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_EmitsRanks1Through3 ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var model = BuildModelWithArrays (new [] { peer });
-
-			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
-			Assert.Equal (3, arrayEntries.Count);
-			Assert.Equal (new int? [] { 1, 2, 3 }, arrayEntries.Select (e => e.AnchorRank).ToArray ());
-			Assert.All (arrayEntries, e => Assert.Equal ("Foo.Bar, App", e.MapKey));
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_KeyIsManagedElementTypeName ()
-		{
-			// No managed->JNI lookup is needed at runtime — the key is the managed element type name
-			// and rank is encoded by which sentinel anchor (TGroup) the entry uses.
-			var peer = MakeMcwPeer ("java/lang/String", "System.String", "System.Runtime");
-			var model = BuildModelWithArrays (new [] { peer });
-
-			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
-			Assert.All (arrayEntries, e => Assert.Equal ("System.String, System.Runtime", e.MapKey));
-			Assert.All (arrayEntries, e => Assert.False (e.MapKey.StartsWith ("[", StringComparison.Ordinal)));
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_MapToGeneratedArrayProxy ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var model = BuildModelWithArrays (new [] { peer });
-
-			var rank1 = model.Entries.Single (e => e.AnchorRank == 1);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.ProxyTypeReference);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap", rank1.TargetTypeReference);
-			var rank2 = model.Entries.Single (e => e.AnchorRank == 2);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.ProxyTypeReference);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap", rank2.TargetTypeReference);
-			var rank3 = model.Entries.Single (e => e.AnchorRank == 3);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.ProxyTypeReference);
-			Assert.Equal ("_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, TestTypeMap", rank3.TargetTypeReference);
-
-			Assert.Equal (3, model.ArrayProxyTypes.Count);
-			Assert.Equal ("Foo_Bar_ArrayProxy1", model.ArrayProxyTypes [0].TypeName);
-			Assert.Equal ("Foo_Bar_ArrayProxy2", model.ArrayProxyTypes [1].TypeName);
-			Assert.Equal ("Foo_Bar_ArrayProxy3", model.ArrayProxyTypes [2].TypeName);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_AssociationsMatchGetArrayTypes ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var model = BuildModelWithArrays (new [] { peer });
-
-			var rank1Proxy = "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, TestTypeMap";
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop" &&
-				a.AliasProxyTypeReference == rank1Proxy);
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Java.Interop.JavaArray`1[[Foo.Bar, App]], Java.Interop" &&
-				a.AliasProxyTypeReference == rank1Proxy);
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Foo.Bar[], App" &&
-				a.AliasProxyTypeReference == rank1Proxy);
-
-			var rank2Proxy = "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, TestTypeMap";
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Java.Interop.JavaObjectArray`1[[Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop]], Java.Interop" &&
-				a.AliasProxyTypeReference == rank2Proxy);
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Java.Interop.JavaArray`1[[Foo.Bar, App]][], Java.Interop" &&
-				a.AliasProxyTypeReference == rank2Proxy);
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Foo.Bar[][], App" &&
-				a.AliasProxyTypeReference == rank2Proxy);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_AllConditional ()
-		{
-			// 2-arg unconditional makes no sense for arrays — the trim conditioning on the
-			// generated array proxy is the whole point.
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var model = BuildModelWithArrays (new [] { peer });
-
-			foreach (var entry in model.Entries.Where (e => e.AnchorRank is not null)) {
-				Assert.False (entry.IsUnconditional);
-				Assert.NotNull (entry.TargetTypeReference);
-			}
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_OpenGenericPeer_Skipped ()
-		{
-			// typeof(JavaList<>[]) is not a valid IL token.
-			var openGeneric = MakeMcwPeer ("java/util/ArrayList", "Android.Runtime.JavaList`1", "Mono.Android")
-				with { IsGenericDefinition = true };
-			var model = BuildModelWithArrays (new [] { openGeneric });
-
-			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_FrameworkPeer_Skipped ()
-		{
-			var frameworkPeer = MakeMcwPeer ("android/widget/Button", "Android.Widget.Button", "Mono.Android")
-				with { IsFrameworkAssembly = true, GenerateArrayEntries = false };
-			var model = BuildModelWithArrays (new [] { frameworkPeer });
-
-			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_ReferencedFrameworkPeer_Emitted ()
-		{
-			var frameworkPeer = MakeMcwPeer ("android/widget/Button", "Android.Widget.Button", "Mono.Android")
-				with { IsFrameworkAssembly = true, GenerateArrayEntries = true };
-			var model = BuildModelWithArrays (new [] { frameworkPeer });
-
-			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
-			Assert.Equal (3, arrayEntries.Count);
-			Assert.All (arrayEntries, e => Assert.Equal ("Android.Widget.Button, Mono.Android", e.MapKey));
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_AliasGroup_Skipped ()
-		{
-			// Alias groups (multiple peers sharing one JNI name) would produce duplicate
-			// JNI array keys; deferred pending an alias-aware design.
-			var peers = new List<JavaPeerInfo> {
-				MakeMcwPeer ("test/Dup", "Test.First", "App"),
-				MakeMcwPeer ("test/Dup", "Test.Second", "App"),
-			};
-			var model = BuildModelWithArrays (peers);
-
-			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
-		}
-
-		[Theory]
-		[InlineData ("Z")]
-		[InlineData ("B")]
-		[InlineData ("C")]
-		[InlineData ("S")]
-		[InlineData ("I")]
-		[InlineData ("J")]
-		[InlineData ("F")]
-		[InlineData ("D")]
-		public void Build_EmitArrayEntries_PrimitiveJniKeyword_Skipped (string jniKeyword)
-		{
-			// Primitive JNI keyword keys are handled by the legacy
-			// JniRuntime.JniTypeManager.GetPrimitiveArrayTypesForSimpleReference path.
-			// Emitting array entries here would shadow that built-in handling.
-			var peer = MakeMcwPeer (jniKeyword, "FakePrimitive.Wrapper", "App");
-			var model = BuildModelWithArrays (new [] { peer });
-
-			Assert.DoesNotContain (model.Entries, e => e.AnchorRank is not null);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_PrimitiveEntries_SynthesizedForJavaInteropAssembly ()
-		{
-			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
-			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Java.Interop.TypeMap");
-
-			var primitiveEntries = model.Entries
-				.Where (e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null)
-				.ToList ();
-			Assert.Equal (24, primitiveEntries.Count); // 8 primitive keywords × 3 ranks
-
-			var sbyteRank1 = primitiveEntries.Single (e => e.MapKey == "System.SByte, System.Runtime" && e.AnchorRank == 1);
-			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.ProxyTypeReference);
-			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy1, _Java.Interop.TypeMap", sbyteRank1.TargetTypeReference);
-			Assert.False (sbyteRank1.IsUnconditional);
-
-			var sbyteRank2 = primitiveEntries.Single (e => e.MapKey == "System.SByte, System.Runtime" && e.AnchorRank == 2);
-			Assert.Equal ("_TypeMap.ArrayProxies.Primitive_SByte_ArrayProxy2, _Java.Interop.TypeMap", sbyteRank2.TargetTypeReference);
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Java.Interop.JavaArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
-				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Java.Interop.JavaPrimitiveArray`1[[System.SByte, System.Runtime]], Java.Interop" &&
-				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
-			Assert.Contains (model.Associations, a =>
-				a.SourceTypeReference == "Java.Interop.JavaSByteArray, Java.Interop" &&
-				a.AliasProxyTypeReference == sbyteRank1.ProxyTypeReference);
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_PrimitiveEntries_NotDuplicatedInOtherAssemblies ()
-		{
-			var peer = MakeMcwPeer ("java/lang/Object", "Java.Lang.Object", "Java.Interop");
-			var model = BuildModelWithArrays (new [] { peer }, assemblyName: "_Mono.Android.TypeMap");
-
-			Assert.DoesNotContain (model.Entries, e => e.MapKey.StartsWith ("System.", StringComparison.Ordinal) && e.AnchorRank is not null);
-			Assert.DoesNotContain (model.Associations, a => a.SourceTypeReference == "System.SByte[], System.Runtime");
-		}
-
-		[Fact]
-		public void Build_EmitArrayEntries_MultiplePeers_GetIndependentTrios ()
-		{
-			var peers = new List<JavaPeerInfo> {
-				MakeMcwPeer ("foo/A", "Foo.A", "App"),
-				MakeMcwPeer ("foo/B", "Foo.B", "App"),
-			};
-			var model = BuildModelWithArrays (peers);
-
-			var arrayEntries = model.Entries.Where (e => e.AnchorRank is not null).ToList ();
-			Assert.Equal (6, arrayEntries.Count);   // 2 peers × 3 ranks
-
-			foreach (var managedKey in new [] { "Foo.A, App", "Foo.B, App" }) {
-				var perPeer = arrayEntries.Where (e => e.MapKey == managedKey).OrderBy (e => e.AnchorRank).ToList ();
-				Assert.Equal (3, perPeer.Count);
-				Assert.Equal (new int? [] { 1, 2, 3 }, perPeer.Select (e => e.AnchorRank).ToArray ());
-			}
-		}
-	}
-
-	public class ArrayEntriesPeBlob
-	{
-		[Fact]
-		public void FullPipeline_ArrayEntries_DefinesInternalRankAnchors ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var outputPath = Path.Combine (Path.GetTempPath (), "ArrSentinels.dll");
-			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrSentinels", maxArrayRank: 3);
-			Assert.Equal (3, model.MaxArrayRank);
-
-			EmitAndVerify (model, "ArrSentinels", (pe, reader) => {
-				var typeDefNames = reader.TypeDefinitions
-					.Select (h => reader.GetString (reader.GetTypeDefinition (h).Name))
-					.ToHashSet (StringComparer.Ordinal);
-				Assert.Contains ("__ArrayMapRank1", typeDefNames);
-				Assert.Contains ("__ArrayMapRank2", typeDefNames);
-				Assert.Contains ("__ArrayMapRank3", typeDefNames);
-
-				var rankTypeDefs = reader.TypeDefinitions
-					.Select (h => reader.GetTypeDefinition (h))
-					.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
-					.ToList ();
-				Assert.All (rankTypeDefs, t => Assert.Equal (
-					System.Reflection.TypeAttributes.NotPublic,
-					t.Attributes & System.Reflection.TypeAttributes.VisibilityMask));
-
-				var rankTypeRefs = reader.TypeReferences
-					.Select (h => reader.GetTypeReference (h))
-					.Where (t => reader.GetString (t.Name).StartsWith ("__ArrayMapRank", StringComparison.Ordinal))
-					.Select (t => reader.GetString (t.Name))
-					.ToHashSet (StringComparer.Ordinal);
-				Assert.Empty (rankTypeRefs);
-			});
-		}
-
-		[Fact]
-		public void FullPipeline_NoArrayEntries_DoesNotReferenceRankAnchors ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var outputPath = Path.Combine (Path.GetTempPath (), "NoArrSentinels.dll");
-			var model = ModelBuilder.Build (new [] { peer }, outputPath, "NoArrSentinels");
-			Assert.Equal (0, model.MaxArrayRank);
-
-			EmitAndVerify (model, "NoArrSentinels", (pe, reader) => {
-				var typeDefNames = reader.TypeDefinitions
-					.Select (h => reader.GetString (reader.GetTypeDefinition (h).Name))
-					.ToHashSet (StringComparer.Ordinal);
-				Assert.DoesNotContain ("__ArrayMapRank1", typeDefNames);
-				Assert.DoesNotContain ("__ArrayMapRank2", typeDefNames);
-				Assert.DoesNotContain ("__ArrayMapRank3", typeDefNames);
-
-				var typeRefNames = reader.TypeReferences
-					.Select (h => reader.GetString (reader.GetTypeReference (h).Name))
-					.ToHashSet (StringComparer.Ordinal);
-				Assert.DoesNotContain ("__ArrayMapRank1", typeRefNames);
-				Assert.DoesNotContain ("__ArrayMapRank2", typeRefNames);
-				Assert.DoesNotContain ("__ArrayMapRank3", typeRefNames);
-			});
-		}
-
-		[Fact]
-		public void FullPipeline_ArrayEntries_AttributeBlobsRoundTrip ()
-		{
-			var peer = MakeMcwPeer ("foo/Bar", "Foo.Bar", "App");
-			var outputPath = Path.Combine (Path.GetTempPath (), "ArrBlobs.dll");
-			var model = ModelBuilder.Build (new [] { peer }, outputPath, "ArrBlobs", maxArrayRank: 3);
-
-			EmitAndVerify (model, "ArrBlobs", (pe, reader) => {
-				var arrayAttrs = ReadAllTypeMapAttributeBlobs (reader)
-					.Select (a => (managedName: a.mapKey, a.proxyRef, a.targetRef))
-					.ToList ();
-
-				// Three array entries should round-trip with the same managed key + generated array proxy refs.
-				Assert.Contains (arrayAttrs, a => a.managedName == "Foo.Bar, App" &&
-					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs" &&
-					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
-				Assert.Contains (arrayAttrs, a => a.managedName == "Foo.Bar, App" &&
-					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs" &&
-					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy2, ArrBlobs");
-				Assert.Contains (arrayAttrs, a => a.managedName == "Foo.Bar, App" &&
-					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs" &&
-					a.targetRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy3, ArrBlobs");
-
-				var assocAttrs = ReadAllTypeMapAssociationAttributeBlobs (reader);
-				Assert.Contains (assocAttrs, a =>
-					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
-					a.sourceRef == "Java.Interop.JavaArray`1[[Foo.Bar, App]], Java.Interop" &&
-					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
-				Assert.Contains (assocAttrs, a =>
-					a.groupName.Contains ("__ArrayMapRank1", StringComparison.Ordinal) &&
-					a.sourceRef == "Java.Interop.JavaObjectArray`1[[Foo.Bar, App]], Java.Interop" &&
-					a.proxyRef == "_TypeMap.ArrayProxies.Foo_Bar_ArrayProxy1, ArrBlobs");
-			});
-		}
-	}
 
 	static void EmitAndVerify (TypeMapAssemblyData model, string assemblyName, Action<PEReader, MetadataReader> verify)
 	{
@@ -1371,35 +1053,6 @@ public class ModelBuilderTests : FixtureTestBase
 			}
 
 			result.Add ((mapKey, proxyRef, targetRef));
-		}
-		return result;
-	}
-
-	static List<(string groupName, string? sourceRef, string? proxyRef)> ReadAllTypeMapAssociationAttributeBlobs (MetadataReader reader)
-	{
-		var result = new List<(string, string?, string?)> ();
-		var asmAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
-		foreach (var attrHandle in asmAttrs) {
-			var attr = reader.GetCustomAttribute (attrHandle);
-			if (attr.Constructor.Kind != HandleKind.MemberReference)
-				continue;
-
-			var ctor = reader.GetMemberReference ((MemberReferenceHandle) attr.Constructor);
-			if (ctor.Parent.Kind != HandleKind.TypeSpecification)
-				continue;
-
-			var parent = reader.GetTypeSpecification ((TypeSpecificationHandle) ctor.Parent);
-			var parentName = parent.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
-			if (!parentName.StartsWith ("System.Runtime.InteropServices.TypeMapAssociationAttribute`1", StringComparison.Ordinal)) {
-				continue;
-			}
-
-			var blobReader = reader.GetBlobReader (attr.Value);
-			ushort prolog = blobReader.ReadUInt16 ();
-			if (prolog != 1)
-				continue;
-
-			result.Add ((parentName, blobReader.ReadSerializedString (), blobReader.ReadSerializedString ()));
 		}
 		return result;
 	}
