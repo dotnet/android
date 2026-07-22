@@ -36,7 +36,7 @@ namespace xamarin::android {
 		index_out_of_range,
 	};
 
-	static inline auto to_string (string_segment_error error) -> const char*
+	static constexpr auto to_string (string_segment_error error) -> const char*
 	{
 		switch (error) {
 			case string_segment_error::index_out_of_range:
