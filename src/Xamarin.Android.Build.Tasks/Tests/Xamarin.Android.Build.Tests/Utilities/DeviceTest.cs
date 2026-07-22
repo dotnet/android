@@ -355,7 +355,7 @@ namespace Xamarin.Android.Build.Tests
 			return stopwatch.Elapsed;
 		}
 
-		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15)
+		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15, Action? onMonitoringStarted = null)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
@@ -388,15 +388,21 @@ namespace Xamarin.Android.Build.Tests
 						}
 					};
 					proc.BeginOutputReadLine ();
-					TimeSpan time = TimeSpan.FromSeconds (timeout);
-					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
-						proc.WaitForExit (10);
-						time -= TimeSpan.FromMilliseconds (10);
+					try {
+						onMonitoringStarted?.Invoke ();
+						TimeSpan time = TimeSpan.FromSeconds (timeout);
+						while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
+							proc.WaitForExit (10);
+							time -= TimeSpan.FromMilliseconds (10);
+						}
+					} finally {
+						if (!proc.HasExited) {
+							proc.Kill ();
+						}
+						proc.WaitForExit ();
+						stdout_done.Wait ();
+						sw.Flush ();
 					}
-					proc.Kill ();
-					proc.WaitForExit ();
-					stdout_done.Wait ();
-					sw.Flush ();
 					return didActionSucceed;
 				}
 			}

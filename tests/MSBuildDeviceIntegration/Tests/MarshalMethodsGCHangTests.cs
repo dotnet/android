@@ -114,13 +114,15 @@ public class MainActivity : Activity
 
 		using var apkBuilder = CreateApkBuilder ();
 		Assert.True (apkBuilder.Install (proj), "Project should have installed.");
-		RunProjectAndAssert (proj, apkBuilder);
+		ClearAdbLogcat ();
 
 		const string expectedLogcatOutput = "XXX:OnStart done";
 		Assert.IsTrue (
 			MonitorAdbLogcat (
 				InstallAndRunTests.CreateLineChecker (expectedLogcatOutput),
-				logcatFilePath: Path.Combine (Root, apkBuilder.ProjectDirectory, "startup-logcat.log"), timeout: 60
+				logcatFilePath: Path.Combine (Root, apkBuilder.ProjectDirectory, "startup-logcat.log"),
+				timeout: 60,
+				onMonitoringStarted: () => StartActivityAndAssert (proj)
 			),
 			$"Output did not contain {expectedLogcatOutput}!"
 		);
