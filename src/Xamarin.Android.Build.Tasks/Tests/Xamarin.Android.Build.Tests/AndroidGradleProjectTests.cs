@@ -510,7 +510,7 @@ android {{
 dependencies {{
     implementation(""androidx.appcompat:appcompat:1.6.1"")
     implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:latest.release"")
+    implementation(""com.facebook.android:facebook-android-sdk:18.3.0"")
 }}
 ";
 			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {

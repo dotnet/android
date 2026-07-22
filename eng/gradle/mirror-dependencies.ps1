@@ -12,7 +12,7 @@
 
     This script does that by running the requested gradle build in a loop:
       1. Run gradle with RUNNINGONCI=true so it points at the dnceng feed.
-      2. Parse any 'Could not GET' URLs out of the build log.
+      2. Parse any 'Could not GET/HEAD' URLs out of the build log.
       3. Re-fetch each failing URL with an Azure DevOps OAuth token using Basic
          authentication (obtained via `az account get-access-token`). The
          feed's upstream connector then pulls the package and caches it for
@@ -122,9 +122,9 @@ function Get-AzDevOpsToken {
 }
 
 function Invoke-Mirror($logPath) {
-    $urls = Select-String -Path $logPath -Pattern "Could not GET 'https://pkgs\.dev\.azure\.com/dnceng/[^']+'" -AllMatches |
+    $urls = Select-String -Path $logPath -Pattern "Could not (?:GET|HEAD) '(https://pkgs\.dev\.azure\.com/dnceng/[^']+)'" -AllMatches |
         ForEach-Object { $_.Matches } |
-        ForEach-Object { $_.Value -replace "^Could not GET '", "" -replace "'$", "" } |
+        ForEach-Object { $_.Groups[1].Value } |
         Sort-Object -Unique
     if ($urls.Count -eq 0) { return 0 }
     $token = Get-AzDevOpsToken
