@@ -2526,9 +2526,6 @@ public class FacebookSdk {{
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				ExtraNuGetConfigSources = {
-					"https://api.nuget.org/v3/index.json",
-				},
 				OtherBuildItems = {
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
 						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",

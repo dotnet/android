@@ -34,10 +34,6 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "Test Me",
 				RootNamespace = "Test.Me",
 				EnableDefaultItems = true,
-				ExtraNuGetConfigSources = {
-					// Microsoft.AspNetCore.Components.WebView is not in dotnet-public
-					"https://api.nuget.org/v3/index.json",
-				},
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.7.1.3" },
 					// Using * here, so we explicitly get newer packages
