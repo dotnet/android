@@ -14,6 +14,8 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class FilterAssembliesTests : BaseTest
 	{
+		const string DotNetPublicPackageBaseAddress = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2";
+
 		string tempDirectory;
 
 		[SetUp]
@@ -31,6 +33,20 @@ namespace Xamarin.Android.Build.Tests
 
 		Task<string> DownloadFromNuGet (string url, string filename = "") =>
 			Task.Factory.StartNew (() => new DownloadedCache ().GetAsFile (url, filename));
+
+		static string GetPackageUrl (string packageId, string version)
+		{
+			var lowercaseId = packageId.ToLowerInvariant ();
+			var lowercaseVersion = version.ToLowerInvariant ();
+			return $"{DotNetPublicPackageBaseAddress}/{lowercaseId}/{lowercaseVersion}/{lowercaseId}.{lowercaseVersion}.nupkg";
+		}
+
+		[Test]
+		public void PackageUrlIsLowercase ()
+		{
+			var actual = GetPackageUrl ("Package.ID", "1.0.0-RC1");
+			Assert.AreEqual ($"{DotNetPublicPackageBaseAddress}/package.id/1.0.0-rc1/package.id.1.0.0-rc1.nupkg", actual);
+		}
 
 		async Task<string []> GetAssembliesFromNuGet (string url, string filename, string path)
 		{
@@ -65,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 		public async Task CircleImageView ()
 		{
 			var assemblies = await GetAssembliesFromNuGet (
-				"https://www.nuget.org/api/v2/package/Refractored.Controls.CircleImageView/1.0.1",
+				GetPackageUrl ("Refractored.Controls.CircleImageView", "1.0.1"),
 				"Refractored.Controls.CircleImageView.1.0.1.nupkg",
 				"lib/MonoAndroid10/");
 			var actual = Run (assemblies);
@@ -77,7 +93,7 @@ namespace Xamarin.Android.Build.Tests
 		public async Task XamarinForms ()
 		{
 			var assemblies = await GetAssembliesFromNuGet (
-				"https://www.nuget.org/api/v2/package/Xamarin.Forms/3.6.0.220655",
+				GetPackageUrl ("Xamarin.Forms", "3.6.0.220655"),
 				"Xamarin.Forms.3.6.0.220655.nupkg",
 				"lib/MonoAndroid90/");
 			var actual = Run (assemblies);
@@ -93,7 +109,7 @@ namespace Xamarin.Android.Build.Tests
 		public async Task GuavaListenableFuture ()
 		{
 			var assemblies = await GetAssembliesFromNuGet (
-				"https://www.nuget.org/api/v2/package/Xamarin.Google.Guava.ListenableFuture/1.0.0",
+				GetPackageUrl ("Xamarin.Google.Guava.ListenableFuture", "1.0.0"),
 				"Xamarin.Google.Guava.ListenableFuture.1.0.0.nupkg",
 				"lib/MonoAndroid50/");
 			var actual = Run (assemblies);
