@@ -2355,14 +2355,13 @@ because xbuild doesn't support framework reference assemblies.
 		;$(_AndroidBuildPropertiesCache)
 		;$(_AdbPropertiesCache)
 		;$(_PackagedResources)
-		;@(_ApplicationSharedLibrary)
 	</_BuildApkFastDevStaticInputs>
 </PropertyGroup>
 
 <Target Name="_BuildApkFastDev"
 		Condition=" '$(EmbedAssembliesIntoApk)' != 'True' "
 		DependsOnTargets="_PrepareBuildApk"
-		Inputs="$(_BuildApkFastDevStaticInputs)"
+		Inputs="$(_BuildApkFastDevStaticInputs);@(_ApplicationSharedLibrary)"
 		Outputs="$(_BuildApkEmbedOutputs)">
 
   <PropertyGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">

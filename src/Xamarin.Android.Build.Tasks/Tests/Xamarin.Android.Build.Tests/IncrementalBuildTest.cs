@@ -1340,12 +1340,14 @@ namespace Lib2
 				EmbedAssembliesIntoApk = false,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.MainActivity = proj.DefaultMainActivity;
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 
 				proj.MainActivity += Environment.NewLine + "// comment";
 				proj.Touch ("MainActivity.cs");
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvik"), "`_CompileToDalvik` should be skipped!");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_BuildApkFastDev"), "`_BuildApkFastDev` should *not* be skipped!");
 			}
 		}
