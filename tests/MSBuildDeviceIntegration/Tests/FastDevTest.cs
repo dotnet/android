@@ -183,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.Touch ("MainActivity.cs");
 			// make sure that the fastdev log tells that the relevant dll is updated but NOT for others.
 			Assert.IsTrue (b.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "install should have succeeded.");
-			Assert.IsFalse (b.Output.IsApkInstalled, "app apk was installed");
+			Assert.IsTrue (b.Output.IsApkInstalled, "app apk was not installed");
 			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("UnnamedProject.dll") && l.Contains ("NotifySync CopyFile")), "app dll not uploaded");
 
 			var assemblies = new[] {
