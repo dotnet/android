@@ -2519,4 +2519,3 @@ SOFTWARE.
 
 =========================================================
 END OF xamarin/LibZipSharp NOTICES AND INFORMATION
-
