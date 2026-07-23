@@ -84,7 +84,7 @@ public class MainActivity : Activity
 ";
 
 	[Test]
-	[Ignore ("Marshal methods are not yet working on CoreCLR")]
+	[Ignore ("Marshal methods are not yet working on CoreCLR: https://github.com/dotnet/android/issues/12206")]
 	public void MarshalMethodsAppRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const bool isRelease = true;
