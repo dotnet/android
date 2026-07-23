@@ -37,7 +37,7 @@ public class FindTypeMapObjectsStep : BaseStep, IAssemblyModifierPipelineStep
 
 		var xml = new TypeMapObjectsXmlFile {
 			AssemblyName = assembly.Name.Name,
-			AssemblyFullName = Debug ? assembly.Name.FullName : null,
+			AssemblyFullName = Debug ? TypeMapCecilAdapter.GetRuntimeAssemblyFullName (assembly.Name) : null,
 			AssemblyMvid = assembly.MainModule.Mvid,
 		};
 

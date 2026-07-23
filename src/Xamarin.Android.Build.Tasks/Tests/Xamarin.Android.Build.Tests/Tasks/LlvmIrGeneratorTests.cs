@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Utilities;
+using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
 using Xamarin.Android.Tools;
 
@@ -78,6 +80,17 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.That (output, Does.Not.Contain ("% )"), "Generated LLVM IR should not contain 'ptr noundef % )' pattern");
 			Assert.That (output, Does.Not.Contain ("%\t)"), "Generated LLVM IR should not contain 'ptr noundef %\\t)' pattern");
 			Assert.That (output, Does.Contain ("@test_function"), "Generated LLVM IR should contain the function name");
+		}
+
+		[Test]
+		public void TypeMapAssemblyFullNameUsesRuntimeEscaping ()
+		{
+			var assemblyName = new AssemblyNameDefinition ("Comma,Name", new Version (1, 2, 3, 4));
+
+			Assert.That (
+				TypeMapCecilAdapter.GetRuntimeAssemblyFullName (assemblyName),
+				Is.EqualTo (@"Comma\,Name, Version=1.2.3.4, Culture=neutral, PublicKeyToken=null")
+			);
 		}
 	}
 }
