@@ -328,7 +328,7 @@ auto TypeMapper::managed_to_java (const char *typeName, const char *assemblyFull
 	const char *ret = managed_to_java_release (typeName, mvid);
 #else
 	if (assemblyFullName == nullptr) [[unlikely]] {
-		log_warn (LOG_ASSEMBLY, "typemap: assembly name not specified in typemap_managed_to_java"sv);
+		log_warn (LOG_ASSEMBLY, "typemap: assembly full name not specified in typemap_managed_to_java"sv);
 		return nullptr;
 	}
 	const char *ret = managed_to_java_debug (typeName, assemblyFullName);
