@@ -83,7 +83,7 @@ namespace Microsoft.Android.Build.Tasks
 		public static string ToLongPath (string fullPath)
 		{
 			// On non-Windows platforms, return the path unchanged
-			if (Path.DirectorySeparatorChar != '\\') {
+			if (Path.DirectorySeparatorChar != '\\' || fullPath.StartsWith (LongPathPrefix, StringComparison.Ordinal)) {
 				return fullPath;
 			}
 			return LongPathPrefix + fullPath;
