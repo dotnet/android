@@ -510,7 +510,7 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		return;
 	}
 
-	OSBridge::gref_logf (
+	OSBridge::_monodroid_gref_logf (
 		"take_global_ref wref=0x%" PRIxPTR " -> handle=0x%" PRIxPTR "\n",
 		reinterpret_cast<uintptr_t> (weak),
 		reinterpret_cast<uintptr_t> (handle)
@@ -524,7 +524,7 @@ void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 		return;
 	}
 
-	OSBridge::gref_logf (
+	OSBridge::_monodroid_gref_logf (
 		"handle 0x%" PRIxPTR "/W; was collected by a Java GC",
 		reinterpret_cast<uintptr_t> (weak)
 	);
@@ -537,7 +537,7 @@ void BridgeProcessingShared::log_take_weak_global_ref (jobject handle) noexcept
 		return;
 	}
 
-	OSBridge::gref_logf ("take_weak_global_ref handle=0x%" PRIxPTR "\n", reinterpret_cast<uintptr_t> (handle));
+	OSBridge::_monodroid_gref_logf ("take_weak_global_ref handle=0x%" PRIxPTR "\n", reinterpret_cast<uintptr_t> (handle));
 }
 
 [[gnu::always_inline]]

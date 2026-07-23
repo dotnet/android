@@ -139,7 +139,7 @@ void OSBridge::_monodroid_gref_log (const char *message) noexcept
 	fflush (Logger::gref_log ());
 }
 
-void OSBridge::gref_logf (const char *format, ...) noexcept
+void OSBridge::_monodroid_gref_logf (const char *format, ...) noexcept
 {
 	const char *safe_format = format == nullptr ? "<null>" : format;
 	va_list args;
