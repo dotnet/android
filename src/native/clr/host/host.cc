@@ -557,12 +557,12 @@ void Host::propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrow
 void Host::notify_time_zone_changed () noexcept
 {
 	if (jnienv_notify_time_zone_changed == nullptr) {
-		log_warn (LOG_DEFAULT, "notify_time_zone_changed called before JNIEnvInit.NotifyTimeZoneChanged was initialized"sv);
+		log_warnf (LOG_DEFAULT, "notify_time_zone_changed called before JNIEnvInit.NotifyTimeZoneChanged was initialized");
 		return;
 	}
 
 	int32_t result = jnienv_notify_time_zone_changed ();
 	if (result != 0) {
-		log_warn (LOG_DEFAULT, "JNIEnvInit.NotifyTimeZoneChanged failed with result {}"sv, result);
+		log_warnf (LOG_DEFAULT, "JNIEnvInit.NotifyTimeZoneChanged failed with result %d", result);
 	}
 }
