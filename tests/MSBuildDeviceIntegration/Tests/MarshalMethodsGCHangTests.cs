@@ -84,6 +84,7 @@ public class MainActivity : Activity
 ";
 
 	[Test]
+	[Ignore ("Marshal methods are only supported with MonoVM")]
 	public void MarshalMethodsAppRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const bool isRelease = true;
