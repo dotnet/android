@@ -218,6 +218,18 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
+  - template: /build-tools/automation/yaml-templates/run-emulator-tests.yaml
+    parameters:
+      jobName: TimeZoneChangeTests
+      jobTimeout: 120
+      use1ESTemplate: false
+      testSteps:
+      - template: run-nunit-tests.yaml
+        parameters:
+          testRunTitle: TimeZoneChangeTests On Device - macOS
+          testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+          dotNetTestExtraArgs: --filter "Name=TimeZoneChangeClearsCachedTimeZoneInfo"
+
 
 # Localization test jobs
 - stage: test_locals
