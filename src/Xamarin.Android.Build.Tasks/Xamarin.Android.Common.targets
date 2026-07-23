@@ -1651,7 +1651,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
   <ItemGroup>
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
-    <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
+    <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_DiagnosticPorts=$(DiagnosticConfiguration)" Condition=" '$(DiagnosticConfiguration)' != '' " />
     <_GeneratedAndroidEnvironment Include="DOTNET_EnableCrashReport=1" Condition=" '$(EnableCrashReport)' == 'true' and '$(UseMonoRuntime)' != 'true' " />
     <!-- RuntimeEnvironmentVariable items come from 'dotnet run -e NAME=VALUE' -->
