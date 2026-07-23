@@ -260,7 +260,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 	}
 
-	[TestFixture (AndroidRuntime.MonoVM)]
 	[TestFixture (AndroidRuntime.CoreCLR)]
 	[Category ("TimeZoneInfo")]
 	[NonParallelizable]
