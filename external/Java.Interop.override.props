@@ -8,7 +8,7 @@
   <Import Project="$(MSBuildThisFileDirectory)..\eng\Versions.props" />
 
   <PropertyGroup>
-    <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
+    <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)..</XamarinAndroidToolsDirectory>
     <Standalone>True</Standalone>
     <_XamarinAndroidCecilVersion>$(MonoCecilVersion)</_XamarinAndroidCecilVersion>
     <RestoreAdditionalProjectSources>

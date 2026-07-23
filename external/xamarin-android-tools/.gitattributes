@@ -1,5 +1,0 @@
-*.Designer.cs	eol=crlf
-*.resx	text
-*.xlf	text
-
-.github/workflows/*.lock.yml linguist-generated=true merge=ours

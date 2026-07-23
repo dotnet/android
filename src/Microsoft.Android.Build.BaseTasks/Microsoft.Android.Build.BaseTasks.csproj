@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="MSBuildReferences.projitems" />
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\LongBranchNames.props" />
+  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Microsoft.Android.Build.Tasks</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <AssemblyName>$(VendorPrefix)Microsoft.Android.Build.BaseTasks$(VendorSuffix)</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
+    <PackageOutputPath>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
+    <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
+    <GitThisAssembly>false</GitThisAssembly>
+    <GitDefaultBranch>main</GitDefaultBranch>
+    <SourceLinkGitHubPackageVersion>10.0.300</SourceLinkGitHubPackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitInfo" Version="3.6.1" PrivateAssets="all" />
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+  </ItemGroup>
+
+  <Target Name="_GetXAVersionInfo"
+      Condition=" '$(IsPacking)' == 'true' "
+      BeforeTargets="SetVersion"
+      DependsOnTargets="GetXAVersionInfo">
+    <PropertyGroup>
+      <PackageVersionSuffix Condition="$(XAVersionBranch.StartsWith('release/'))">-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
+      <PackageVersionSuffix Condition="!$(XAVersionBranch.StartsWith('release/'))">-ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</PackageVersionSuffix>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion;GenerateNuspec" DependsOnTargets="GitVersion">
+    <PropertyGroup>
+      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
+      <PackageVersion>$(Version)$(PackageVersionSuffix)</PackageVersion>
+      <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+</Project>

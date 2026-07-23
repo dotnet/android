@@ -8,7 +8,7 @@ General C# guidance applicable to any .NET repository.
 
 | Check | What to look for |
 |-------|-----------------|
-| **Oldest TFM must compile** | Code under `external/xamarin-android-tools/` may target `netstandard2.0` and modern .NET. Verify every API and overload against the oldest target framework; common traps include cancellation-token overloads such as `HttpContent.ReadAsStringAsync(CancellationToken)`, modern `ProcessStartInfo.ArgumentList` usage without the existing fallback helpers, and newer language/BCL features that need `#if` guards or polyfills. |
+| **Oldest TFM must compile** | Code under `src/Microsoft.Android.Build.BaseTasks/` and `src/Xamarin.Android.Tools.AndroidSdk/` may target `netstandard2.0` and modern .NET. Verify every API and overload against the oldest target framework; common traps include cancellation-token overloads such as `HttpContent.ReadAsStringAsync(CancellationToken)`, modern `ProcessStartInfo.ArgumentList` usage without the existing fallback helpers, and newer language/BCL features that need `#if` guards or polyfills. |
 | **Prefer existing compatibility helpers** | Use repository helpers such as `ProcessUtils`, `FileUtil`, and nullable extension methods instead of direct modern-BCL calls when they provide `netstandard2.0` fallbacks or better annotations. |
 
 ---

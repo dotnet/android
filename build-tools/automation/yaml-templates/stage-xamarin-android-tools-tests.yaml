@@ -1,7 +1,6 @@
 # xamarin-android-tools tests stage
 #
-# Builds Xamarin.Android.Tools and runs its unit tests from the in-tree
-# external/xamarin-android-tools sources.
+# Builds the in-tree Android tools projects and runs their unit tests.
 #
 # This stage does not pack a NuGet or publish binaries because dotnet/android's
 # product build produces the shipping assemblies. Only logs and test results are
@@ -48,7 +47,6 @@ stages:
   condition: ${{ parameters.condition }}
   variables:
     DotNetCoreVersion: $(DotNetSdkVersion).x
-    XatSourceDirectory: $(System.DefaultWorkingDirectory)/external/xamarin-android-tools
     XatBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=$(DotNetSdkVersion)
   jobs:
 
@@ -78,17 +76,26 @@ stages:
         version: $(DotNetCoreVersion)
 
     - task: DotNetCoreCLI@2
-      displayName: Build Xamarin.Android.Tools.sln
+      displayName: Build Android tools projects
       inputs:
         command: build
-        projects: $(XatSourceDirectory)/Xamarin.Android.Tools.sln
+        projects: |
+          $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
+          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
+          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
+          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
 
     - task: DotNetCoreCLI@2
       displayName: Run Tests
       inputs:
         command: test
-        projects: $(XatSourceDirectory)/bin/TestDebug/**/*-Tests.dll
+        projects: |
+          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: --no-build -c Debug $(XatBuildProperties)
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
@@ -124,17 +131,26 @@ stages:
         version: $(DotNetCoreVersion)
 
     - task: DotNetCoreCLI@2
-      displayName: Build Xamarin.Android.Tools.sln
+      displayName: Build Android tools projects
       inputs:
         command: build
-        projects: $(XatSourceDirectory)/Xamarin.Android.Tools.sln
+        projects: |
+          $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
+          $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
+          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
+          $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
 
     - task: DotNetCoreCLI@2
       displayName: Run Tests
       inputs:
         command: test
-        projects: $(XatSourceDirectory)/bin/TestDebug/**/*-Tests.dll
+        projects: |
+          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        arguments: --no-build -c Debug $(XatBuildProperties)
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1

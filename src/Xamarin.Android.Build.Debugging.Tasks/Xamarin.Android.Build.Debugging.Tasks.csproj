@@ -17,7 +17,7 @@
     <AssemblyOriginatorKeyFile>product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+  <Import Project="..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
 
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
 
@@ -65,8 +65,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
     <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
-    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
-    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+    <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>
 
   <Target Name="_SetAssemblyVersion"
