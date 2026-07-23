@@ -79,8 +79,10 @@ namespace Xamarin.Android.Tasks
 							switch (e) {
 								case DirectoryNotFoundException:
 									if (OS.IsWindows) {
-										fullPath = Files.ToLongPath (fullPath.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-										Log.LogDebugMessage ("Trying long path: " + fullPath);
+										if (!fullPath.StartsWith (Files.LongPathPrefix, StringComparison.Ordinal)) {
+											fullPath = Files.ToLongPath (fullPath.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+											Log.LogDebugMessage ("Trying long path: " + fullPath);
+										}
 										break;
 									}
 									throw;
