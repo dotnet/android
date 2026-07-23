@@ -14,13 +14,11 @@ static TypeMapEntry managed_to_java[] = {};
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 const TypeMap type_map = {
 	.entry_count = 0,
-	.unique_assemblies_count = 0,
 	.java_to_managed = java_to_managed,
 	.managed_to_java = managed_to_java,
 };
 
 const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
-const TypeMapAssembly type_map_unique_assemblies[] = {};
 const char type_map_assembly_names[] = {};
 const char type_map_managed_type_names[] = {};
 const char type_map_java_type_names[] = {};

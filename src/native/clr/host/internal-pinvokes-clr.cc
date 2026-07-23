@@ -9,9 +9,13 @@
 
 using namespace xamarin::android;
 
-const char* clr_typemap_managed_to_java (const char *typeName, const uint8_t *mvid) noexcept
+const char* clr_typemap_managed_to_java (const char *typeName, const char *assemblyFullName, const uint8_t *mvid) noexcept
 {
+#if defined(RELEASE)
 	return TypeMapper::managed_to_java (typeName, mvid);
+#else
+	return TypeMapper::managed_to_java (typeName, assemblyFullName);
+#endif
 }
 
 bool clr_typemap_java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept

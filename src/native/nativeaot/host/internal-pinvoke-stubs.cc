@@ -18,6 +18,7 @@ namespace {
 
 const char* clr_typemap_managed_to_java (
 	[[maybe_unused]] const char *typeName,
+	[[maybe_unused]] const char *assemblyFullName,
 	[[maybe_unused]] const uint8_t *mvid) noexcept
 {
 	pinvoke_unreachable ();

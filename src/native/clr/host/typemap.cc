@@ -150,26 +150,14 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 }
 
 [[gnu::always_inline, gnu::flatten]]
-auto TypeMapper::managed_to_java_debug (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
 	dynamic_local_path_string full_type_name;
 	full_type_name.append (typeName);
+	full_type_name.append (", "sv);
+	full_type_name.append (assemblyFullName);
 
-	auto equal = [](TypeMapAssembly const& entry, const uint8_t *key) -> bool { return memcmp (entry.module_uuid, key, sizeof(entry.module_uuid)) == 0; };
-	auto less_than = [](TypeMapAssembly const& entry, const uint8_t *key) -> bool { return memcmp (entry.module_uuid, key, sizeof(entry.module_uuid)) < 0; };
-	ssize_t idx = Search::binary_search<TypeMapAssembly, const uint8_t*, equal, less_than> (mvid, type_map_unique_assemblies, type_map.unique_assemblies_count);
-
-	if (idx >= 0) [[likely]] {
-		TypeMapAssembly const& assm = type_map_unique_assemblies[idx];
-		full_type_name.append (", "sv);
-
-		// We explicitly trust the build process here, with regards to validity of offsets
-		full_type_name.append (&type_map_assembly_names[assm.name_offset], assm.name_length);
-	} else {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to look up assembly name for type '{}', trying without it."sv, typeName);
-	}
-
-	idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 
 	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
 }
@@ -320,7 +308,11 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 #endif // def RELEASE
 
 [[gnu::flatten]]
+#if defined(RELEASE)
 auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+#else
+auto TypeMapper::managed_to_java (const char *typeName, const char *assemblyFullName) noexcept -> const char*
+#endif
 {
 	log_debug (LOG_ASSEMBLY, "managed_to_java: looking up type '{}'"sv, optional_string (typeName));
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -332,14 +324,15 @@ auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noe
 		return nullptr;
 	}
 
-	auto do_map = [&typeName, &mvid]() -> const char* {
 #if defined(RELEASE)
-		return managed_to_java_release (typeName, mvid);
+	const char *ret = managed_to_java_release (typeName, mvid);
 #else
-		return managed_to_java_debug (typeName, mvid);
+	if (assemblyFullName == nullptr) [[unlikely]] {
+		log_warn (LOG_ASSEMBLY, "typemap: assembly name not specified in typemap_managed_to_java"sv);
+		return nullptr;
+	}
+	const char *ret = managed_to_java_debug (typeName, assemblyFullName);
 #endif
-	};
-	const char *ret = do_map ();
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event ();
