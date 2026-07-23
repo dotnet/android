@@ -2163,9 +2163,6 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				}
 			};
 			proj.SetRuntime (runtime);
-			if (!isRelease) {
-				proj.SetProperty ("UseInterpreter", "true");
-			}
 			proj.SetProperty ("DiagnosticAddress", "127.0.0.1");
 			proj.SetProperty ("DiagnosticPort", "9000");
 			proj.SetProperty ("DiagnosticSuspend", "false");
@@ -2215,7 +2212,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					logcatOutput,
 					"The Environment variable \"DOTNET_DiagnosticPorts\" was not set to expected value \"127.0.0.1:9000,connect,nosuspend\"."
 			);
-			// NOTE: set when $(UseInterpreter) is true
+			// NOTE: set when the debug version of libmonodroid.so is used
 			if (!isRelease) {
 				StringAssert.Contains (
 						"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",

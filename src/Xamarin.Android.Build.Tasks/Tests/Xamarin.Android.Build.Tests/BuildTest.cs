@@ -1748,7 +1748,7 @@ namespace UnnamedProject
 				var values = new List<string> {
 					"mono.enable_assembly_preload=0",
 				};
-				if (useInterpreter)
+				if (!isRelease)
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
