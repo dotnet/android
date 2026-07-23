@@ -5,8 +5,6 @@
     <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
     <GitThisAssembly>false</GitThisAssembly>
     <GitDefaultBranch>main</GitDefaultBranch>
-    <!-- Preserve the version used by the former standalone build. Directory.Build.targets excludes its runtime assets. -->
-    <SourceLinkGitHubPackageVersion>10.0.300</SourceLinkGitHubPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
