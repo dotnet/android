@@ -310,14 +310,18 @@ namespace Xamarin.Android.Build.Tests
 		[OneTimeTearDown]
 		protected override void AfterAllTests ()
 		{
-			if (proj != null) {
-				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
-			}
-			if (!string.IsNullOrEmpty (originalTimeZone)) {
-				SetTimeZone (originalTimeZone);
-			}
-			if (!string.IsNullOrEmpty (originalAutoTimeZone)) {
-				RunAdbCommand ($"shell settings put global auto_time_zone {originalAutoTimeZone}");
+			try {
+				if (proj != null) {
+					RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+				}
+				if (!string.IsNullOrEmpty (originalTimeZone)) {
+					SetTimeZone (originalTimeZone);
+				}
+				if (!string.IsNullOrEmpty (originalAutoTimeZone)) {
+					RunAdbCommand ($"shell settings put global auto_time_zone {originalAutoTimeZone}");
+				}
+			} finally {
+				base.AfterAllTests ();
 			}
 		}
 
