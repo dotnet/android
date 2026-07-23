@@ -79,6 +79,7 @@ namespace Xamarin.Android.Tasks
 							switch (e) {
 								case DirectoryNotFoundException:
 									if (OS.IsWindows) {
+										// .NET Framework rejects \\?\ paths with a trailing directory separator.
 										fullPath = Files.ToLongPath (fullPath.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 										Log.LogDebugMessage ("Trying long path: " + fullPath);
 										break;
