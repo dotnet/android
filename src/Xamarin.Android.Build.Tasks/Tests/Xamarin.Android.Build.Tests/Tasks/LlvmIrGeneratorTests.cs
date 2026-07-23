@@ -92,5 +92,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				Is.EqualTo (@"Comma\,Name, Version=1.2.3.4, Culture=neutral, PublicKeyToken=null")
 			);
 		}
+
+		[Test]
+		public void TypeMapAssemblyFullNameMatchesStrongNamedRuntimeAssembly ()
+		{
+			string assemblyPath = typeof (TypeMapCecilAdapter).Assembly.Location;
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			string? runtimeFullName = System.Reflection.AssemblyName.GetAssemblyName (assemblyPath).FullName;
+
+			Assert.That (runtimeFullName, Does.Not.EndWith ("PublicKeyToken=null"));
+			Assert.That (TypeMapCecilAdapter.GetRuntimeAssemblyFullName (assembly.Name), Is.EqualTo (runtimeFullName));
+		}
 	}
 }

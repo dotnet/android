@@ -182,6 +182,10 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// in a callback during code generation
 
 		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
+			if (String.IsNullOrEmpty (entry.AssemblyFullName)) {
+				throw new InvalidOperationException ($"Internal error: assembly full name is missing for managed type '{entry.ManagedName}'.");
+			}
+
 			if (!entry.ManagedName.EndsWith (entry.AssemblyName, StringComparison.Ordinal)) {
 				throw new InvalidOperationException ($"Internal error: managed type name '{entry.ManagedName}' does not end with assembly name '{entry.AssemblyName}'.");
 			}
