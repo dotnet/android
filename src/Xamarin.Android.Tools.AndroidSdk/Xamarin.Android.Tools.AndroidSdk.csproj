@@ -57,10 +57,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
-    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
-    <AdditionalFiles Include="PublicAPI/net10.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
-    <AdditionalFiles Include="PublicAPI/net10.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
   <Target Name="GetFilesToSign" BeforeTargets="SignFiles" Condition=" '$(Configuration)' == 'Release' Or '$(Configuration)' == 'ReleaseWindows'">
