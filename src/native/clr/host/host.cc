@@ -485,7 +485,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 		internal_timing.end_event (); // total init time
 	}
 
-	// Managed initialization can load assemblies and DSOs, so enable locking only after it returns.
 	MonodroidState::mark_startup_done ();
 }
 
