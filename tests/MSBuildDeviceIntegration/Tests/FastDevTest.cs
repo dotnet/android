@@ -39,6 +39,49 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void FastDeployUpdatesTypeMapAfterAssemblyEdit ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeploy_typemap",
+			};
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${AFTER_ONCREATE}", "StartActivity (new Android.Content.Intent (this, typeof (SecondActivity)));")
+				.Replace ("//${AFTER_MAINACTIVITY}", """
+					[Activity (Label = "Fast Deploy Result")]
+					public sealed class SecondActivity : Activity
+					{
+					}
+					""");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Initial install should have succeeded.");
+			AssertSecondActivityStarts ("initial-launch.log");
+
+			proj.MainActivity += "// Incremental C# edit.";
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental install should have succeeded.");
+			AssertSecondActivityStarts ("incremental-launch.log");
+			Assert.IsTrue (builder.Uninstall (proj), "Uninstall should have succeeded.");
+
+			void AssertSecondActivityStarts (string logFileName)
+			{
+				ClearAdbLogcat ();
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+				Assert.IsTrue (
+					WaitForActivityToStart (
+						proj.PackageName,
+						"SecondActivity",
+						Path.Combine (Root, builder.ProjectDirectory, logFileName),
+						ActivityStartTimeoutInSeconds
+					),
+					"SecondActivity should have started."
+				);
+			}
+		}
+
+		[Test]
 		public void TargetsSkipped ([Values(false, true)] bool useManagedResourceGenerator)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -140,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.Touch ("MainActivity.cs");
 			// make sure that the fastdev log tells that the relevant dll is updated but NOT for others.
 			Assert.IsTrue (b.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "install should have succeeded.");
-			Assert.IsFalse (b.Output.IsApkInstalled, "app apk was installed");
+			Assert.IsTrue (b.Output.IsApkInstalled, "app apk was not installed");
 			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("UnnamedProject.dll") && l.Contains ("NotifySync CopyFile")), "app dll not uploaded");
 
 			var assemblies = new[] {
