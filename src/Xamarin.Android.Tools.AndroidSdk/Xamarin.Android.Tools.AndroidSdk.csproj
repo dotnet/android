@@ -3,6 +3,7 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\build-tools\scripts\LongBranchNames.props" />
   <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
+  <Import Project="..\..\build-tools\scripts\Xamarin.Android.Tools.Versioning.targets" />
 
   <PropertyGroup>
     <AndroidToolsDisableMultiTargeting Condition=" '$(AndroidToolsDisableMultiTargeting)' == '' ">true</AndroidToolsDisableMultiTargeting>
@@ -25,11 +26,6 @@
     <Copyright>Copyright © Xamarin 2011-2016</Copyright>
     <PackageTags>Xamarin;Xamarin.Android</PackageTags>
     <AssemblyName>$(VendorPrefix)Xamarin.Android.Tools.AndroidSdk$(VendorSuffix)</AssemblyName>
-    <PackageOutputPath>$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\</PackageOutputPath>
-    <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
-    <GitThisAssembly>false</GitThisAssembly>
-    <GitDefaultBranch>main</GitDefaultBranch>
-    <SourceLinkGitHubPackageVersion>10.0.300</SourceLinkGitHubPackageVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -47,7 +43,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="3.6.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="1.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -70,24 +65,6 @@
         <Authenticode>Microsoft400</Authenticode>
       </FilesToSign>
     </ItemGroup>
-  </Target>
-
-  <Target Name="_GetXAVersionInfo"
-      Condition=" '$(IsPacking)' == 'true' "
-      BeforeTargets="SetVersion"
-      DependsOnTargets="GetXAVersionInfo">
-    <PropertyGroup>
-      <PackageVersionSuffix Condition="$(XAVersionBranch.StartsWith('release/'))">-preview.$(PackVersionCommitCount)</PackageVersionSuffix>
-      <PackageVersionSuffix Condition="!$(XAVersionBranch.StartsWith('release/'))">-ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</PackageVersionSuffix>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="SetVersion" BeforeTargets="GetAssemblyVersion;GetPackageVersion;GenerateNuspec" DependsOnTargets="GitVersion">
-    <PropertyGroup>
-      <Version>$(GitSemVerMajor).$(GitSemVerMinor).$(GitSemVerPatch)</Version>
-      <PackageVersion>$(Version)$(PackageVersionSuffix)</PackageVersion>
-      <InformationalVersion>$(Version); git-rev-head:$(GitCommit); git-branch:$(GitBranch)</InformationalVersion>
-    </PropertyGroup>
   </Target>
 
   <ItemGroup>
