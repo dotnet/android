@@ -69,6 +69,9 @@ android.useAndroidX=true
 			}
 		}
 
+		/// <summary>
+		/// Copies the repository wrapper so generated projects do not depend on <c>gradle init</c> or a CI distribution download.
+		/// </summary>
 		void CopyGradleWrapper ()
 		{
 			var sourceDirectory = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "gradle");
