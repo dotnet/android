@@ -72,14 +72,14 @@ namespace Xamarin.Android.Tasks
 							// only do the set writable on the second attempt
 							if (retryCount == 1)
 								Files.SetDirectoryWriteable (fullPath);
-							Directory.Delete (fullPath, true);
+							DeleteDirectory (fullPath, true);
 							temporaryRemovedDirectories.Add (directory);
 							break;
 						} catch (Exception e) {
 							switch (e) {
 								case DirectoryNotFoundException:
 									if (OS.IsWindows) {
-										fullPath = Files.ToLongPath (fullPath);
+										fullPath = Files.ToLongPath (fullPath.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 										Log.LogDebugMessage ("Trying long path: " + fullPath);
 										break;
 									}
@@ -108,6 +108,9 @@ namespace Xamarin.Android.Tasks
 
 			return !Log.HasLoggedErrors;
 		}
+
+		// This is needed for tests.
+		internal Action<string, bool> DeleteDirectory { get; set; } = Directory.Delete;
 
 		[Required]
 		public ITaskItem [] Directories { get; set; } = [];
