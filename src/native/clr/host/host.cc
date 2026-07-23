@@ -561,8 +561,5 @@ void Host::notify_time_zone_changed () noexcept
 		return;
 	}
 
-	int32_t result = jnienv_notify_time_zone_changed ();
-	if (result != 0) {
-		log_warnf (LOG_DEFAULT, "JNIEnvInit.NotifyTimeZoneChanged failed with result %d", result);
-	}
+	jnienv_notify_time_zone_changed ();
 }

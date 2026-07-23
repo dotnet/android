@@ -58,14 +58,12 @@ namespace Android.Runtime
 		}
 
 		[UnmanagedCallersOnly]
-		static int NotifyTimeZoneChanged ()
+		static void NotifyTimeZoneChanged ()
 		{
 			try {
 				AndroidEnvironment.NotifyTimeZoneChanged ();
-				return 0;
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "MonoAndroid", $"Exception while clearing time-zone caches: {e}");
-				return -1;
 			}
 		}
 
@@ -158,7 +156,7 @@ namespace Android.Runtime
 			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
-			args->notifyTimeZoneChangedFn = (IntPtr)(delegate* unmanaged<int>)&NotifyTimeZoneChanged;
+			args->notifyTimeZoneChangedFn = (IntPtr)(delegate* unmanaged<void>)&NotifyTimeZoneChanged;
 
 			if (!RuntimeFeature.TrimmableTypeMap) {
 				args->registerJniNativesFn = GetRegisterJniNativesFnPtr ();
