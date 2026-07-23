@@ -82,8 +82,6 @@ stages:
         projects: |
           $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
           $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
-          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
           $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
@@ -95,7 +93,7 @@ stages:
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: --no-build -c Debug $(XatBuildProperties)
+        arguments: -c Debug $(XatBuildProperties)
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
@@ -137,8 +135,6 @@ stages:
         projects: |
           $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
           $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
-          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
           $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
@@ -150,7 +146,7 @@ stages:
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: --no-build -c Debug $(XatBuildProperties)
+        arguments: -c Debug $(XatBuildProperties)
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
