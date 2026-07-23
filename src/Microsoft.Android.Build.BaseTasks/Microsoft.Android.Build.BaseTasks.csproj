@@ -16,7 +16,6 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
-    <NoWarn>$(NoWarn);CA1305</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

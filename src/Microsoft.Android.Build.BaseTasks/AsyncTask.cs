@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Utilities;
@@ -125,13 +126,13 @@ namespace Microsoft.Android.Build.Tasks
 			=> LogMessage (message, importance: MessageImportance.Normal);
 
 		public void LogMessage (string message, params object [] messageArgs)
-			=> LogMessage (string.Format (message, messageArgs));
+			=> LogMessage (string.Format (CultureInfo.CurrentCulture, message, messageArgs));
 
 		public void LogDebugMessage (string message)
 			=> LogMessage (message, importance: MessageImportance.Low);
 
 		public void LogDebugMessage (string message, params object [] messageArgs)
-			=> LogMessage (string.Format (message, messageArgs), importance: MessageImportance.Low);
+			=> LogMessage (string.Format (CultureInfo.CurrentCulture, message, messageArgs), importance: MessageImportance.Low);
 
 		public void LogMessage (string message, MessageImportance importance = MessageImportance.Normal)
 		{
@@ -259,7 +260,7 @@ namespace Microsoft.Android.Build.Tasks
 		// Returns the message verbatim when there are no arguments, so pre-formatted messages
 		// that contain literal '{' or '}' characters are not passed through string.Format.
 		static string FormatMessage (string message, object [] messageArgs)
-			=> messageArgs is null || messageArgs.Length == 0 ? message : string.Format (message, messageArgs);
+			=> messageArgs is null || messageArgs.Length == 0 ? message : string.Format (CultureInfo.CurrentCulture, message, messageArgs);
 
 		public void LogCustomBuildEvent (CustomBuildEventArgs e)
 		{

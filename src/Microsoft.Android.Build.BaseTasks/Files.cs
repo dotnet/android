@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -405,7 +406,7 @@ namespace Microsoft.Android.Build.Tasks
 			try {
 				using (var zip = ZipArchive.Open (stream)) {
 					foreach (var item in zip) {
-						hashes += String.Format ("{0}{1}", item.FullName, item.CRC);
+						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
 					}
 				}
 			} catch {
@@ -425,7 +426,7 @@ namespace Microsoft.Android.Build.Tasks
 
 				using (var zip = ReadZipFile (filename)) {
 					foreach (var item in zip) {
-						hashes += String.Format ("{0}{1}", item.FullName, item.CRC);
+						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
 					}
 				}
 			} catch {

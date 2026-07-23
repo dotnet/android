@@ -70,7 +70,7 @@ $
 
 		protected static string QuoteString (string value)
 		{
-			return string.Format ("\"{0}\"", value);
+			return "\"" + value + "\"";
 		}
 	}
 }
