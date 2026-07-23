@@ -41,6 +41,25 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void CreateCopiesGradleWrapper ()
+		{
+			AndroidGradleProject.CreateDefault (GradleTestProjectDir, agpVersion: "9.1.1", gradleVersion: null);
+
+			var sourceDirectory = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "gradle");
+			var expectedFiles = new [] {
+				"gradlew",
+				"gradlew.bat",
+				Path.Combine ("gradle", "wrapper", "gradle-wrapper.jar"),
+				Path.Combine ("gradle", "wrapper", "gradle-wrapper.properties"),
+			};
+			foreach (var relativePath in expectedFiles) {
+				var source = Path.Combine (sourceDirectory, relativePath);
+				var destination = Path.Combine (GradleTestProjectDir, relativePath);
+				Assert.That (File.ReadAllBytes (destination), Is.EqualTo (File.ReadAllBytes (source)), destination);
+			}
+		}
+
+		[Test]
 		public void BuildApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
