@@ -42,9 +42,13 @@ namespace Xamarin.ProjectTools
 				File.AppendAllText (settingsFile, $"{Environment.NewLine}include(\":{module.Name}\")");
 			}
 			File.WriteAllText (Path.Combine (ProjectDirectory, "gradle.properties"), """
+# Exercise Gradle configuration-cache compatibility.
 org.gradle.configuration-cache=true
+# Build independent modules concurrently.
 org.gradle.parallel=true
+# Reuse task outputs across test builds.
 org.gradle.caching=true
+# Required by the AndroidX dependencies used by generated modules.
 android.useAndroidX=true
 """);
 
