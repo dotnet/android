@@ -2212,14 +2212,12 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					logcatOutput,
 					"The Environment variable \"DOTNET_DiagnosticPorts\" was not set to expected value \"127.0.0.1:9000,connect,nosuspend\"."
 			);
-			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
-			if (!isRelease) {
-				StringAssert.Contains (
-						"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",
-						logcatOutput,
-						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
-				);
-			}
+			// NOTE: set when $(UseInterpreter) is true, which is not the default for CoreCLR
+			StringAssert.DoesNotContain (
+					"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",
+					logcatOutput,
+					"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was unexpectedly set."
+			);
 		}
 
 		[Test]
