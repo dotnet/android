@@ -80,7 +80,6 @@ stages:
       inputs:
         command: build
         projects: |
-          $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
           $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
           $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
@@ -133,7 +132,6 @@ stages:
       inputs:
         command: build
         projects: |
-          $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
           $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
           $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
