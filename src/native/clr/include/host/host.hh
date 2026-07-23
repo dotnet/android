@@ -22,6 +22,7 @@ namespace xamarin::android {
 		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
 		static void Java_mono_android_Runtime_registerNatives (JNIEnv *env, jclass nativeClass) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
+		static void notify_time_zone_changed () noexcept;
 
 		static auto get_timing () -> std::shared_ptr<Timing>
 		{
@@ -58,6 +59,7 @@ namespace xamarin::android {
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
+		static inline jnienv_notify_time_zone_changed_fn jnienv_notify_time_zone_changed = nullptr;
 
 		static inline jclass java_TimeZone = nullptr;
 

@@ -259,4 +259,113 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (logLine.Contains (expectedLogcatOutput), $"Line '{logLine}' did not contain '{expectedLogcatOutput}'");
 		}
 	}
+
+	[TestFixture (AndroidRuntime.MonoVM)]
+	[TestFixture (AndroidRuntime.CoreCLR)]
+	[Category ("TimeZoneInfo")]
+	[NonParallelizable]
+	public class TimeZoneChangeTests : DeviceTest
+	{
+		const string InitialTimeZone = "America/New_York";
+		const string ChangedTimeZone = "America/Los_Angeles";
+
+		readonly AndroidRuntime runtime;
+		ProjectBuilder builder;
+		XamarinAndroidApplicationProject proj;
+		string originalAutoTimeZone;
+		string originalTimeZone;
+
+		public TimeZoneChangeTests (AndroidRuntime runtime)
+		{
+			this.runtime = runtime;
+		}
+
+		[OneTimeSetUp]
+		public void BeforeAllTests ()
+		{
+			AssertHasDevices ();
+
+			originalAutoTimeZone = RunAdbCommand ("shell settings get global auto_time_zone").Trim ();
+			originalTimeZone = RunAdbCommand ("shell getprop persist.sys.timezone").Trim ();
+			RunAdbCommand ("shell settings put global auto_time_zone 0");
+			SetTimeZone (InitialTimeZone);
+
+			proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, "TimeZoneChangeTests"));
+			proj.SetRuntime (runtime);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				if (button == null) {
+					throw new InvalidOperationException ("Could not find the test button.");
+				}
+
+				Console.WriteLine ($"TimeZoneChangeTests.Initial={TimeZoneInfo.Local.Id}");
+				button.Click += delegate {
+					Console.WriteLine ($"TimeZoneChangeTests.Changed={TimeZoneInfo.Local.Id}");
+				};
+			""");
+
+			builder = CreateApkBuilder (Path.Combine ("temp", TestName));
+			builder.BuildLogFile = "timezone-change-install.log";
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+		}
+
+		[OneTimeTearDown]
+		protected override void AfterAllTests ()
+		{
+			if (proj != null) {
+				RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+			}
+			if (!string.IsNullOrEmpty (originalTimeZone)) {
+				SetTimeZone (originalTimeZone);
+			}
+			if (!string.IsNullOrEmpty (originalAutoTimeZone)) {
+				RunAdbCommand ($"shell settings put global auto_time_zone {originalAutoTimeZone}");
+			}
+		}
+
+		[Test]
+		public void TimeZoneChangeClearsCachedTimeZoneInfo ()
+		{
+			ClearAdbLogcat ();
+			StartActivityAndAssert (proj);
+
+			string initialLog = $"TimeZoneChangeTests.Initial={InitialTimeZone}";
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => line.Contains (initialLog),
+					Path.Combine (Root, builder.ProjectDirectory, "timezone-change-initial.log"),
+					45
+				),
+				$"App output did not contain '{initialLog}'"
+			);
+
+			ClearAdbLogcat ();
+			SetTimeZone (ChangedTimeZone);
+			Thread.Sleep (1000);
+			Assert.IsTrue (ClickButton (proj.PackageName, "myButton", "HELLO WORLD, CLICK ME!"), "Test button should have been clicked.");
+
+			string changedLog = $"TimeZoneChangeTests.Changed={ChangedTimeZone}";
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => line.Contains (changedLog),
+					Path.Combine (Root, builder.ProjectDirectory, "timezone-change-updated.log"),
+					45
+				),
+				$"App output did not contain '{changedLog}'"
+			);
+		}
+
+		static void SetTimeZone (string timeZone)
+		{
+			string deviceTimeZone = "";
+			for (int attempt = 0; attempt < 5; attempt++) {
+				RunAdbCommand ($"shell cmd alarm set-timezone \"{timeZone}\"");
+				deviceTimeZone = RunAdbCommand ("shell getprop persist.sys.timezone").Trim ();
+				if (deviceTimeZone == timeZone) {
+					break;
+				}
+			}
+
+			Assert.AreEqual (timeZone, deviceTimeZone, $"The command to set the device timezone to {timeZone} failed. Current device timezone is {deviceTimeZone}");
+		}
+	}
 }

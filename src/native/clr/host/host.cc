@@ -477,7 +477,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// trimmable typemap path (the method is trimmed; registration is handled in managed code).
 	jnienv_register_jni_natives = init.registerJniNativesFn;
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
+	jnienv_notify_time_zone_changed = init.notifyTimeZoneChangedFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
+	abort_unless (jnienv_notify_time_zone_changed != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the NotifyTimeZoneChanged method.");
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (); // native to managed
@@ -550,4 +552,17 @@ void Host::propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrow
 	}
 
 	jnienv_propagate_uncaught_exception (env, javaThread, javaException);
+}
+
+void Host::notify_time_zone_changed () noexcept
+{
+	if (jnienv_notify_time_zone_changed == nullptr) {
+		log_warn (LOG_DEFAULT, "notify_time_zone_changed called before JNIEnvInit.NotifyTimeZoneChanged was initialized"sv);
+		return;
+	}
+
+	int32_t result = jnienv_notify_time_zone_changed ();
+	if (result != 0) {
+		log_warn (LOG_DEFAULT, "JNIEnvInit.NotifyTimeZoneChanged failed with result {}"sv, result);
+	}
 }
