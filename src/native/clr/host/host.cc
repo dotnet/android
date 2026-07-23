@@ -28,6 +28,7 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
+#include <runtime-base/monodroid-state.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
 
@@ -483,6 +484,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 		internal_timing.end_event (); // native to managed
 		internal_timing.end_event (); // total init time
 	}
+
+	// Managed initialization can load assemblies and DSOs, so enable locking only after it returns.
+	MonodroidState::mark_startup_done ();
 }
 
 void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
