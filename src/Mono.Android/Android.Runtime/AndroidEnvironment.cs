@@ -220,7 +220,7 @@ namespace Android.Runtime {
 
 		// This is invoked by libmonodroid.so.
 		// DO NOT REMOVE
-		static void NotifyTimeZoneChanged ()
+		internal static void NotifyTimeZoneChanged ()
 		{
 			var thread            = Thread.CurrentThread;
 			var timeZoneClearInfo = new[]{

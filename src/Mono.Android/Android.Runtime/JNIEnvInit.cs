@@ -36,6 +36,7 @@ namespace Android.Runtime
 			public IntPtr          grefGCUserPeerable;
 			public IntPtr          propagateUncaughtExceptionFn;
 			public IntPtr          registerJniNativesFn;
+			public IntPtr          notifyTimeZoneChangedFn;
 		}
 #pragma warning restore 0649
 
@@ -54,6 +55,16 @@ namespace Android.Runtime
 		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
 		{
 			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
+		}
+
+		[UnmanagedCallersOnly]
+		static void NotifyTimeZoneChanged ()
+		{
+			try {
+				AndroidEnvironment.NotifyTimeZoneChanged ();
+			} catch (Exception e) {
+				Logger.Log (LogLevel.Error, "MonoAndroid", $"Exception while clearing time-zone caches: {e}");
+			}
 		}
 
 		[UnmanagedCallersOnly]
@@ -145,6 +156,7 @@ namespace Android.Runtime
 			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
 
 			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+			args->notifyTimeZoneChangedFn = (IntPtr)(delegate* unmanaged<void>)&NotifyTimeZoneChanged;
 
 			if (!RuntimeFeature.TrimmableTypeMap) {
 				args->registerJniNativesFn = GetRegisterJniNativesFnPtr ();
