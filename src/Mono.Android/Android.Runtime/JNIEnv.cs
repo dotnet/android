@@ -441,11 +441,9 @@ namespace Android.Runtime {
 				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
 			}
 
-			// These typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
-			bool useAssemblyFullName = RuntimeFeature.IsCoreClrRuntime && RuntimeFeature.ManagedToJavaUsesAssemblyFullName;
-
 			byte[]? mvid_data = null;
-			if (!useAssemblyFullName) {
+			// The Debug CoreCLR typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
+			if (!RuntimeFeature.IsCoreClrRuntime || !RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
 				if (mvid_bytes == null)
 					mvid_bytes = new byte[16];
 
@@ -466,7 +464,7 @@ namespace Android.Runtime {
 					if (type.FullName is null)
 						return null;
 					string? assemblyFullName = null;
-					if (useAssemblyFullName) {
+					if (RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
 						assemblyFullName = type.Assembly.FullName;
 						if (assemblyFullName is null)
 							return null;
