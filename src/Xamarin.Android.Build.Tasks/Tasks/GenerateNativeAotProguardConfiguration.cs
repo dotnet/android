@@ -24,9 +24,9 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 	public string OutputFile { get; set; } = "";
 
 	// When false, the ILC DGML is not consulted (it may not have been generated at all) and a
-	// -keep rule is emitted for every Java Callable Wrapper in the ACW map, so R8 keeps them all
-	// instead of shrinking the unused ones. This trades a small amount of dex size for skipping the
-	// very large DGML files and the DGML parsing/scan, which dominate NativeAOT build time.
+	// -keep rule is emitted for every Java type in the ACW map, so R8 keeps them all instead of
+	// shrinking the unused ones. Large binding closures can add several MB of compressed DEX, but
+	// this avoids generating and processing the very large ILC dependency graph.
 	public bool TrimJavaCallableWrappers { get; set; } = true;
 
 	public override bool RunTask ()
@@ -56,7 +56,7 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 			retainedTypeKeys = LoadRetainedTypeKeysFromDgml ();
 		}
 
-		// A null retainedTypeKeys means "keep every ACW" (Java trimming disabled).
+		// A null retainedTypeKeys means "keep every Java type in the ACW map" (Java trimming disabled).
 		var javaTypes = LoadJavaTypesFromAcwMap (retainedTypeKeys);
 
 		using var writer = new StringWriter ();
@@ -69,7 +69,7 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 		if (TrimJavaCallableWrappers) {
 			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT trimmable typemap ProGuard rules from {1} DGML file(s).", javaTypes.Count, NativeAotDgmlFiles.Length);
 		} else {
-			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT ProGuard rules keeping all ACWs (Java Callable Wrapper trimming is disabled).", javaTypes.Count);
+			Log.LogMessage (MessageImportance.Low, "Generated {0} NativeAOT ProGuard rules keeping every Java type in the ACW map (Java trimming is disabled).", javaTypes.Count);
 		}
 		return !Log.HasLoggedErrors;
 	}
@@ -101,7 +101,18 @@ public class GenerateNativeAotProguardConfiguration : AndroidTask
 				XmlResolver = null,
 			});
 
+			bool readingNodes = false;
 			while (reader.Read ()) {
+				if (reader.NodeType == XmlNodeType.Element && reader.LocalName == "Nodes") {
+					readingNodes = true;
+					continue;
+				}
+				if (reader.NodeType == XmlNodeType.EndElement && reader.LocalName == "Nodes") {
+					break;
+				}
+				if (!readingNodes) {
+					continue;
+				}
 				if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "Node") {
 					continue;
 				}
