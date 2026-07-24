@@ -29,9 +29,9 @@
     <ProjectReference Include="..\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
     <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
     <ProjectReference Include="..\Xamarin.Installer.Common\Xamarin.Installer.Common.csproj" />
-    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>
-  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+  <Import Project="..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <ItemGroup>
     <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" GeneratePathProperty="true" />
