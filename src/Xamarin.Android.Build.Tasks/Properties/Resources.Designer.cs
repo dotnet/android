@@ -61,7 +61,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}.
+        ///   Looks up a localized string similar to Ignoring directory &apos;{0}&apos; as it does not exist!.
+        /// </summary>
+        public static string Aapt2IgnoringDirectory {
+            get {
+                return ResourceManager.GetString("Aapt2IgnoringDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///
         ///This error is likely caused by an issue with the AndroidManifest.xml file or an Android manifest generation attribute in a source code file..
         /// </summary>
