@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
@@ -51,6 +52,12 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Gets a value indicating whether the current platform is Windows.
 		/// </summary>
+		/// <remarks>
+		/// <see cref="SupportedOSPlatformGuardAttribute"/> teaches the platform-compatibility
+		/// analyzer (CA1416) that this property is a <c>windows</c> guard, so callers can use it
+		/// instead of <see cref="OperatingSystem.IsWindows"/>.
+		/// </remarks>
+		[SupportedOSPlatformGuard ("windows")]
 		public static bool IsWindows {
 			get {
 				return Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -60,6 +67,7 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Gets a value indicating whether the current platform is macOS.
 		/// </summary>
+		[SupportedOSPlatformGuard ("macos")]
 		public static bool IsMacOS {
 			get {
 				return IsDarwin ();
@@ -69,6 +77,7 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Gets a value indicating whether the current platform is Linux.
 		/// </summary>
+		[SupportedOSPlatformGuard ("linux")]
 		public static bool IsLinux {
 			get {
 				return !IsWindows && !IsMacOS;
