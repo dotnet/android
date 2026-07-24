@@ -92,6 +92,9 @@ namespace Xamarin.Android.Build.Tests {
 			var javaFilesList = Path.Combine (typemapDirectory, "java-files.txt");
 			Assert.IsNotEmpty (javaFiles, "First build should have generated pre-trim Java sources.");
 			FileAssert.Exists (javaFilesList, "First build should have persisted the pre-trim Java file list.");
+			foreach (var path in File.ReadAllLines (javaFilesList)) {
+				Assert.IsTrue (Path.IsPathFullyQualified (path), $"The persisted Java path should be fully qualified: {path}");
+			}
 			File.Delete (javaFilesList);
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
@@ -123,6 +126,9 @@ namespace Xamarin.Android.Build.Tests {
 			var linkedJavaFilesList = Path.Combine (typemapDirectory, "linked-java-files.txt");
 			Assert.IsNotEmpty (linkedJavaFiles, "First build should have generated post-trim Java sources.");
 			FileAssert.Exists (linkedJavaFilesList, "First build should have persisted the post-trim Java file list.");
+			foreach (var path in File.ReadAllLines (linkedJavaFilesList)) {
+				Assert.IsTrue (Path.IsPathFullyQualified (path), $"The persisted linked Java path should be fully qualified: {path}");
+			}
 			File.Delete (linkedJavaFilesList);
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Migration rebuild should have succeeded.");

@@ -27,6 +27,7 @@
     <_TypeMapJavaFilesList>$(_TypeMapOutputDirectory)java-files.txt</_TypeMapJavaFilesList>
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_OuterIntermediateOutputPath)' != '' ">$(IntermediateOutputPath)</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_PostTrimTypeMapJavaBaseOutputDir)' == '' ">$(_TypeMapBaseOutputDir)</_PostTrimTypeMapJavaBaseOutputDir>
+    <_PostTrimTypeMapJavaBaseOutputDir>$(_PostTrimTypeMapJavaBaseOutputDir.Replace('\','/'))</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaOutputDirectory>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
     <_PostTrimTypeMapJavaFilesList>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java-files.txt</_PostTrimTypeMapJavaFilesList>
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
@@ -179,7 +180,7 @@
 
     <WriteLinesToFile
         File="$(_TypeMapJavaFilesList)"
-        Lines="@(_GeneratedJavaFiles)"
+        Lines="@(_GeneratedJavaFiles->'%(FullPath)')"
         Overwrite="true"
         WriteOnlyWhenDifferent="true" />
 

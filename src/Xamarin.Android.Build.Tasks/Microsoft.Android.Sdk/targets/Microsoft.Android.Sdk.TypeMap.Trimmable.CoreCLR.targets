@@ -85,7 +85,7 @@
     <ItemGroup>
       <_ActualPostTrimJavaFile Include="$(_PostTrimTypeMapJavaOutputDirectory)/**/*.java" />
       <_MissingPostTrimJavaFile Include="@(_ExpectedPostTrimJavaFile)" Condition="!Exists('%(_ExpectedPostTrimJavaFile.Identity)')" />
-      <_UnexpectedPostTrimJavaFile Include="@(_ActualPostTrimJavaFile)" Exclude="@(_ExpectedPostTrimJavaFile)" />
+      <_UnexpectedPostTrimJavaFile Include="@(_ActualPostTrimJavaFile->'%(FullPath)')" Exclude="@(_ExpectedPostTrimJavaFile)" />
     </ItemGroup>
     <Delete
         Files="$(_PostTrimTrimmableTypeMapJavaStamp)"
@@ -124,7 +124,7 @@
 
     <WriteLinesToFile
         File="$(_PostTrimTypeMapJavaFilesList)"
-        Lines="@(_PostTrimGeneratedJavaFiles)"
+        Lines="@(_PostTrimGeneratedJavaFiles->'%(FullPath)')"
         Overwrite="true"
         WriteOnlyWhenDifferent="true" />
 
