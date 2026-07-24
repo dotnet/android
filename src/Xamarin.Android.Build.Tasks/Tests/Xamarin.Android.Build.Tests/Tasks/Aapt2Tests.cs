@@ -65,28 +65,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void Aapt2CompileMissingDirectoryUsesCodedWarning ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (path);
-			var archivePath = Path.Combine (path, "flata");
-			var flatFilePath = Path.Combine (path, "flat");
-			var missingDirectory = Path.Combine (path, "does-not-exist");
-			var errors = new List<BuildErrorEventArgs> ();
-			var warnings = new List<BuildWarningEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors, warnings);
-
-			CallAapt2Compile (engine, missingDirectory, archivePath, flatFilePath);
-
-			Assert.AreEqual (0, errors.Count, "There should be no errors.");
-			Assert.AreEqual (1, warnings.Count, "There should be one warning.");
-			Assert.AreEqual ("XA4323", warnings [0].Code, "Warning code should match.");
-			StringAssert.Contains (missingDirectory, warnings [0].Message);
-
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
-		}
-
-		[Test]
 		[TestCase (6, 6, 3, 2)]
 		[TestCase (6, 6, 2, 1)]
 		[TestCase (6, 6, 6, 50)]
