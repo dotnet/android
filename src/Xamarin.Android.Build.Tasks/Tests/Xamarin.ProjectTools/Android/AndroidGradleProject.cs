@@ -88,7 +88,7 @@ android.useAndroidX=true
 				var source = Path.Combine (sourceDirectory, relativePath);
 				var destination = Path.Combine (destinationDirectory, Path.GetFileName (relativePath));
 				File.Copy (source, destination, overwrite: true);
-				if (!TestEnvironment.IsWindows) {
+				if (!OperatingSystem.IsWindows ()) {
 					File.SetUnixFileMode (destination, File.GetUnixFileMode (source));
 				}
 			}
