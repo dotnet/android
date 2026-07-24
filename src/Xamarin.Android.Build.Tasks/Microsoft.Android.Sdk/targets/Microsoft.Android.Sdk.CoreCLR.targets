@@ -34,6 +34,10 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
         Value="false"
         Trim="true"
     />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.ManagedToJavaUsesAssemblyFullName"
+        Value="$(AndroidIncludeDebugSymbols)"
+        Trim="true"
+    />
   </ItemGroup>
 
   <Target Name="_CLRUseLocalRuntimePacks" AfterTargets="ResolveFrameworkReferences"

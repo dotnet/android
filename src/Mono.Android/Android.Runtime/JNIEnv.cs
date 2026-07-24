@@ -460,7 +460,13 @@ namespace Android.Runtime {
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
 					if (type.FullName is null)
 						return null;
-					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
+					string? assemblyFullName = null;
+					if (RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
+						assemblyFullName = type.Assembly.FullName;
+						if (assemblyFullName is null)
+							return null;
+					}
+					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}
