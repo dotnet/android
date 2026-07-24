@@ -258,8 +258,8 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllBytes (staleCompiledClass, []);
 
 			// Force the post-trim Java generation to re-run by removing its stamp (without a source
-			// change, which would trigger an unrelated incremental CrossGen rebuild). It wipes and
-			// regenerates linked-java (dropping the stale JCW); the JCWs are compiled in place, so
+			// change, which would trigger an unrelated incremental CrossGen rebuild). It updates
+			// linked-java in place (dropping the stale JCW); the JCWs are compiled in place, so
 			// busting the compile stamp must drop the stale .class too.
 			var postTrimStamp = builder.Output.GetIntermediaryPath (Path.Combine ("stamp", "_GeneratePostTrimTrimmableTypeMapJavaSources.stamp"));
 			FileAssert.Exists (postTrimStamp, "First build should have written the post-trim Java stamp.");
@@ -296,6 +296,96 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op rebuild should have succeeded.");
 			builder.Output.AssertTargetIsSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
 			builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+
+			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			FileAssert.Exists (acwMap, "First build should have generated the post-trim ACW map.");
+			var linkedJava = Directory.GetFiles (
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java")),
+				"*.java",
+				SearchOption.AllDirectories).First ();
+			File.Delete (acwMap);
+			File.Delete (linkedJava);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Missing-output recovery build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			FileAssert.Exists (acwMap, "Post-trim generation should restore a missing ACW map even when linked assemblies are unchanged.");
+			FileAssert.Exists (linkedJava, "Post-trim generation should restore a missing linked Java source even when linked assemblies are unchanged.");
+			Assert.That (new FileInfo (acwMap).Length, Is.GreaterThan (0), "The restored ACW map should contain the linked mappings.");
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_PublishTrimmed_IncrementalChangesAvoidUnnecessaryJavaWork ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var linkedJavaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java"));
+			var linkedJavaBefore = Directory.GetFiles (linkedJavaDirectory, "*.java", SearchOption.AllDirectories)
+				.ToDictionary (
+					path => Path.GetRelativePath (linkedJavaDirectory, path),
+					path => (Hash: ComputeFileHash (path), WriteTime: File.GetLastWriteTimeUtc (path)),
+					StringComparer.Ordinal);
+			Assert.IsNotEmpty (linkedJavaBefore, "First build should have generated post-trim Java sources.");
+
+			var updatedMainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"System.Console.WriteLine (\"Managed-only incremental change.\");");
+			Assert.AreNotEqual (proj.DefaultMainActivity, updatedMainActivity, "Test setup should update the managed MainActivity body.");
+			proj.MainActivity = updatedMainActivity;
+			proj.Touch ("MainActivity.cs");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Managed-only rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+
+			var linkedJavaAfter = Directory.GetFiles (linkedJavaDirectory, "*.java", SearchOption.AllDirectories)
+				.ToDictionary (
+					path => Path.GetRelativePath (linkedJavaDirectory, path),
+					path => (Hash: ComputeFileHash (path), WriteTime: File.GetLastWriteTimeUtc (path)),
+					StringComparer.Ordinal);
+			CollectionAssert.AreEquivalent (linkedJavaBefore.Keys, linkedJavaAfter.Keys, "A managed method-body change should not alter the JCW set.");
+			foreach (var pair in linkedJavaBefore) {
+				var current = linkedJavaAfter [pair.Key];
+				Assert.IsTrue (pair.Value.Hash.SequenceEqual (current.Hash), $"{pair.Key} content should be unchanged.");
+				Assert.AreEqual (pair.Value.WriteTime, current.WriteTime, $"{pair.Key} timestamp should remain stable.");
+			}
+
+			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			var applicationRegistration = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", "net", "dot", "android", "ApplicationRegistration.java"));
+			var postTrimAcwMap = ComputeFileHash (acwMap);
+			var postTrimApplicationRegistration = ComputeFileHash (applicationRegistration);
+
+			var updatedManifest = proj.AndroidManifest.Replace (
+				"</manifest>",
+				"<uses-permission android:name=\"android.permission.CAMERA\" /></manifest>");
+			Assert.AreNotEqual (proj.AndroidManifest, updatedManifest, "Test setup should update AndroidManifest.xml.");
+			proj.AndroidManifest = updatedManifest;
+			proj.Touch ("Properties\\AndroidManifest.xml");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Manifest-only rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateJavaStubs");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+			Assert.IsTrue (postTrimAcwMap.SequenceEqual (ComputeFileHash (acwMap)), "The pre-trim pass should not overwrite the linked acw-map.txt.");
+			Assert.IsTrue (
+				postTrimApplicationRegistration.SequenceEqual (ComputeFileHash (applicationRegistration)),
+				"The pre-trim pass should not overwrite the linked ApplicationRegistration.java.");
+
+			var mergedManifest = builder.Output.GetIntermediaryPath (Path.Combine ("android", "AndroidManifest.xml"));
+			StringAssert.Contains ("android.permission.CAMERA", File.ReadAllText (mergedManifest), "The manifest-only change should flow into the packaged manifest.");
 		}
 
 

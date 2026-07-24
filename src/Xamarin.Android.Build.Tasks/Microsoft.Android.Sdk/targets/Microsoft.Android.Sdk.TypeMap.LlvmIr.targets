@@ -282,17 +282,30 @@
     Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
     so R2R images are generated from the already-modified assemblies.
   -->
-  <Target Name="_PostTrimmingPipeline"
-      AfterTargets="ILLink"
+  <Target Name="_CollectPostTrimmingAssemblies"
       Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
+      <_PostTrimmingAssembly Remove="@(_PostTrimmingAssembly)" />
       <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_PostTrimmingPipeline"
+      AfterTargets="ILLink"
+      DependsOnTargets="_CollectPostTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' "
+      Inputs="@(_PostTrimmingAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Outputs="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp">
     <PostTrimmingPipeline
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
         Deterministic="$(Deterministic)" />
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
+    <Touch Files="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" />
+    </ItemGroup>
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
@@ -304,6 +317,7 @@
     </PropertyGroup>
     <ItemGroup>
       <_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
+      <_PropertyCacheItems Include="Deterministic=$(Deterministic)" />
     </ItemGroup>
   </Target>
 

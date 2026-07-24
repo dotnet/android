@@ -1861,6 +1861,9 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_RunAfterILLinkAdditionalSteps");
 				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					b.Output.AssertTargetIsNotSkipped ("_PostTrimmingPipeline");
+				}
 
 				// Verify afterlink/ output directory was created with per-ABI subdirectories containing assemblies
 				var afterlinkDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "afterlink");
@@ -1876,6 +1879,9 @@ namespace Lib2
 				b.Output.AssertTargetIsSkipped ("_RunAfterILLinkAdditionalSteps");
 				// The outer target must always run to update assembly itemgroups for downstream targets
 				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					b.Output.AssertTargetIsSkipped ("_PostTrimmingPipeline");
+				}
 			}
 		}
 

@@ -27,11 +27,17 @@
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_OuterIntermediateOutputPath)' != '' ">$(IntermediateOutputPath)</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_PostTrimTypeMapJavaBaseOutputDir)' == '' ">$(_TypeMapBaseOutputDir)</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaOutputDirectory>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
+    <_PostTrimTypeMapJavaFilesList>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java-files.txt</_PostTrimTypeMapJavaFilesList>
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifiers)' != '' ">$([System.String]::Copy('$(RuntimeIdentifiers)').Split(';')[0])</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(_PostTrimTypeMapFirstRuntimeIdentifier)' == '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' ">$(_PostTrimTypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_TypeMapJavaStubsSourceDirectory Condition=" '$(_TypeMapJavaStubsSourceDirectory)' == '' ">$(_TypeMapJavaOutputDirectory)</_TypeMapJavaStubsSourceDirectory>
     <_PostTrimTrimmableTypeMapJavaStamp>$(_PostTrimTypeMapJavaBaseOutputDir)stamp/_GeneratePostTrimTrimmableTypeMapJavaSources.stamp</_PostTrimTrimmableTypeMapJavaStamp>
+    <!-- CoreCLR trimmed builds regenerate these files from the linked assemblies. Keep the
+         pre-trim pass from overwriting those final post-trim outputs when only an unrelated
+         generator input (for example AndroidManifest.xml) changes. -->
+    <_PreTrimTypeMapAcwMapOutputFile Condition=" '$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true' ">$(IntermediateOutputPath)acw-map.txt</_PreTrimTypeMapAcwMapOutputFile>
+    <_PreTrimTypeMapApplicationRegistrationOutputFile Condition=" '$(_AndroidRuntime)' != 'CoreCLR' or '$(PublishTrimmed)' != 'true' ">$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java</_PreTrimTypeMapApplicationRegistrationOutputFile>
     <!-- Stamp file touched on every _GenerateTrimmableTypeMap run. It is a stable
          incremental sentinel: the generated TypeMap DLLs are only rewritten when their
          content changes (CopyIfStreamChanged), so their timestamps cannot be used as
@@ -159,8 +165,8 @@
         ApplicationJavaClass="$(AndroidApplicationJavaClass)"
         ErrorOnCustomJavaObject="$(AndroidErrorOnCustomJavaObject)"
         GeneratedAssembliesListFile="$(_TypeMapAssembliesListFile)"
-        AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
-        ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
+        AcwMapOutputFile="$(_PreTrimTypeMapAcwMapOutputFile)"
+        ApplicationRegistrationOutputFile="$(_PreTrimTypeMapApplicationRegistrationOutputFile)">
       <Output TaskParameter="GeneratedAssemblies" ItemName="_GeneratedTypeMapAssemblies" />
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedJavaFiles" />
       <Output TaskParameter="DeletedJavaFiles" ItemName="_DeletedJavaFiles" />
@@ -185,8 +191,8 @@
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
-      <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
-      <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
+      <FileWrites Include="$(_PreTrimTypeMapAcwMapOutputFile)" Condition=" '$(_PreTrimTypeMapAcwMapOutputFile)' != '' " />
+      <FileWrites Include="$(_PreTrimTypeMapApplicationRegistrationOutputFile)" Condition=" '$(_PreTrimTypeMapApplicationRegistrationOutputFile)' != '' " />
     </ItemGroup>
   </Target>
 
@@ -241,6 +247,7 @@
       <FileWrites Include="@(_GeneratedTypeMapAssembliesForFileWrites)" />
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites)" />
       <FileWrites Include="@(_TypeMapPostTrimJavaFilesForFileWrites)" />
+      <FileWrites Include="$(_PostTrimTypeMapJavaFilesList)" Condition="Exists('$(_PostTrimTypeMapJavaFilesList)')" />
       <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" Condition="Exists('$(_PostTrimTrimmableTypeMapJavaStamp)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
@@ -351,19 +358,18 @@
   <!--
     _GenerateJavaStubs: overrides the legacy target from BuildOrder.targets.
     In the trimmable path, TypeMap generation already happened in _GenerateTrimmableTypeMap,
-    so this target only handles JCW file copying, manifest, assembly store setup, and native config.
+    so this target only handles the manifest, assembly store setup, and native config.
     We keep the name _GenerateJavaStubs because BuildOrder.targets references it.
 
-    Inputs uses the TypeMap output stamp as a focused sentinel — _GenerateTrimmableTypeMap
-    touches it whenever any of its own inputs (assemblies, manifest, etc.) change, and is
-    skipped (leaving the stamp stable) on no-op builds. The Copy below then updates
-    android/src only for Java sources whose content changed.
+    Inputs uses both generator stamps. The pre-trim stamp covers the generated manifest and
+    other shared outputs, while _TrimmableJavaSourceStamp covers the selected JCW set (the
+    post-trim stamp for trimmed CoreCLR builds). Both remain stable on no-op builds.
     We keep _GetGenerateJavaStubsInputs in DependsOnTargets so that downstream targets
     (_GetGeneratePackageManagerJavaInputs) can still read @(_GenerateJavaStubsInputs).
   -->
   <Target Name="_GenerateJavaStubs"
       DependsOnTargets="_SetLatestTargetFrameworkVersion;_PrepareAssemblies;_GetGenerateJavaStubsInputs;_DefineBuildTargetAbis;_PrepareNativeAssemblySources"
-      Inputs="$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
+      Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
       Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
     <!-- The generated Java Callable Wrappers are compiled in place from
