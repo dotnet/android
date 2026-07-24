@@ -4,8 +4,7 @@
 
 #include <android/log.h>
 
-#include "java-interop-logger.h"
-#include <shared/log_level.hh>
+#include <shared/log_functions.hh>
 
 // Must match the same ordering as LogCategories
 static constexpr std::array<const char*, 12> log_names = {

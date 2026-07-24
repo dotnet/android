@@ -2212,7 +2212,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					logcatOutput,
 					"The Environment variable \"DOTNET_DiagnosticPorts\" was not set to expected value \"127.0.0.1:9000,connect,nosuspend\"."
 			);
-			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
+			// NOTE: set when $(AndroidIncludeDebugSymbols) is true
 			if (!isRelease) {
 				StringAssert.Contains (
 						"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",
@@ -2527,9 +2527,6 @@ public class FacebookSdk {{
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				ExtraNuGetConfigSources = {
-					"https://api.nuget.org/v3/index.json",
-				},
 				OtherBuildItems = {
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
 						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",

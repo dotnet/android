@@ -221,6 +221,58 @@ namespace Java.InteropTests
 			}
 		}
 
+		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
+		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
+		[TestCase (typeof (IList<string>), typeof (JavaList<>), false)]
+		[TestCase (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
+		[TestCase (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]
+		public void FromJniHandle_ReferenceArgumentsUseCanonicalTemplate (Type targetType, Type expectedWrapperDefinition, bool dictionary)
+		{
+			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
+			using (source) {
+				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (expectedWrapperDefinition, convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (targetType.GetGenericArguments (), convertedType.GetGenericArguments ());
+					Assert.IsTrue (targetType.IsInstanceOfType (converted));
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[TestCase (typeof (IList<DateTime>), false)]
+		[TestCase (typeof (ICollection<DateTime>), false)]
+		[TestCase (typeof (IDictionary<DateTime, string>), true)]
+		[TestCase (typeof (IDictionary<string, DateTime>), true)]
+		[TestCase (typeof (IList<UnsupportedValueType>), false)]
+		[TestCase (typeof (ICollection<UnsupportedValueType>), false)]
+		[TestCase (typeof (IDictionary<UnsupportedValueType, string>), true)]
+		[TestCase (typeof (IDictionary<string, UnsupportedValueType>), true)]
+		[Category ("NativeAOTTrimmable")]
+		public void FromJniHandle_UnsupportedValueTypeUsesUntypedFallback (Type targetType, bool dictionary)
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("This test validates unsupported value-type container fallback on the trimmable typemap path.");
+			}
+
+			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
+			using (source) {
+				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					Assert.AreEqual (dictionary ? typeof (JavaDictionary) : typeof (JavaList), converted.GetType ());
+					Assert.IsFalse (targetType.IsInstanceOfType (converted));
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		readonly struct UnsupportedValueType
+		{
+		}
+
 		static Java.Util.ArrayList CreateList (params int[][] items)
 		{
 			var list = new Java.Util.ArrayList ();
