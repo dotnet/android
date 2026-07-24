@@ -139,6 +139,28 @@ void OSBridge::_monodroid_gref_log (const char *message) noexcept
 	fflush (Logger::gref_log ());
 }
 
+void OSBridge::_monodroid_gref_logf (const char *format, ...) noexcept
+{
+	const char *safe_format = format == nullptr ? "<null>" : format;
+	va_list args;
+	va_start (args, format);
+
+	if (Logger::gref_to_logcat () && (log_categories & LOG_GREF) != 0) {
+		va_list logcat_args;
+		va_copy (logcat_args, args);
+		log_writev (LOG_GREF, LogLevel::Debug, safe_format, logcat_args);
+		va_end (logcat_args);
+	}
+
+	FILE *gref_log = Logger::gref_log ();
+	if (gref_log != nullptr) {
+		vfprintf (gref_log, safe_format, args);
+		fflush (gref_log);
+	}
+
+	va_end (args);
+}
+
 [[gnu::always_inline, gnu::flatten]]
 void OSBridge::log_it (LogCategories category, std::string_view const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept
 {
