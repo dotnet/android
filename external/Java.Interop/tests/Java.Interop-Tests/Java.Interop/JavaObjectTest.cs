@@ -43,6 +43,7 @@ namespace Java.InteropTests
 		}
 #endif  // !NO_GC_BRIDGE_SUPPORT
 
+#if !__ANDROID__
 		[Test]
 		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void UnregisterFromRuntime ()
@@ -63,6 +64,7 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref l);
 			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
+#endif // !__ANDROID__
 
 		[Test]
 		public void RegisterWithVM_PermitsAliases ()
