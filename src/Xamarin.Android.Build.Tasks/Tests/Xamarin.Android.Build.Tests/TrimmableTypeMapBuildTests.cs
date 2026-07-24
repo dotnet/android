@@ -61,8 +61,76 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
+			if (isRelease && runtime == AndroidRuntime.CoreCLR) {
+				builder.Output.AssertTargetIsSkipped ("_RemoveRegisterAttributeCoreClr");
+			}
+			if (isRelease && runtime == AndroidRuntime.NativeAOT) {
+				builder.Output.AssertTargetIsNotSkipped ("_RemoveRegisterAttributeNativeAot");
+			}
 			foreach (var typemapDll in typemapDlls) {
 				FileAssert.Exists (typemapDll, $"No-op builds should preserve generated typemap assembly {typemapDll} when _GenerateTrimmableTypeMap is skipped.");
+			}
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_MissingJavaListPreservesGeneratedJava ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var javaDirectory = Path.Combine (typemapDirectory, "java");
+			var javaFiles = Directory.GetFiles (javaDirectory, "*.java", SearchOption.AllDirectories);
+			var javaFilesList = Path.Combine (typemapDirectory, "java-files.txt");
+			Assert.IsNotEmpty (javaFiles, "First build should have generated pre-trim Java sources.");
+			FileAssert.Exists (javaFilesList, "First build should have persisted the pre-trim Java file list.");
+			File.Delete (javaFilesList);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+			foreach (var javaFile in javaFiles) {
+				FileAssert.Exists (javaFile, $"IncrementalClean should preserve {javaFile} when upgrading an obj directory without java-files.txt.");
+			}
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_PublishTrimmed_MissingLinkedJavaListRegenerates ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var linkedJavaDirectory = Path.Combine (typemapDirectory, "linked-java");
+			var linkedJavaFiles = Directory.GetFiles (linkedJavaDirectory, "*.java", SearchOption.AllDirectories);
+			var linkedJavaFilesList = Path.Combine (typemapDirectory, "linked-java-files.txt");
+			Assert.IsNotEmpty (linkedJavaFiles, "First build should have generated post-trim Java sources.");
+			FileAssert.Exists (linkedJavaFilesList, "First build should have persisted the post-trim Java file list.");
+			File.Delete (linkedJavaFilesList);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Migration rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+			FileAssert.Exists (linkedJavaFilesList, "Post-trim generation should recreate linked-java-files.txt.");
+			foreach (var javaFile in linkedJavaFiles) {
+				FileAssert.Exists (javaFile, $"IncrementalClean should preserve {javaFile} until post-trim generation recreates its list.");
 			}
 		}
 
@@ -346,6 +414,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Managed-only rebuild should have succeeded.");
 			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsNotSkipped ("_RemoveRegisterAttributeCoreClr");
 			builder.Output.AssertTargetIsSkipped ("_CompileJava");
 			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
 
@@ -377,6 +446,7 @@ namespace Xamarin.Android.Build.Tests {
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
 			builder.Output.AssertTargetIsSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateJavaStubs");
+			builder.Output.AssertTargetIsSkipped ("_RemoveRegisterAttributeCoreClr");
 			builder.Output.AssertTargetIsSkipped ("_CompileJava");
 			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
 			Assert.IsTrue (postTrimAcwMap.SequenceEqual (ComputeFileHash (acwMap)), "The pre-trim pass should not overwrite the linked acw-map.txt.");

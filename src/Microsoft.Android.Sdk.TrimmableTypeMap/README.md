@@ -141,12 +141,30 @@ suppressed so a partial result cannot delete the last known-good output set.
 The set of generated assemblies and JCWs is data-dependent, so a build that
 *skips* `_GenerateTrimmableTypeMap` never executes the `ItemGroup` that registers
 those files in `@(FileWrites)`. `_RecordTrimmableTypeMapFileWrites` re-reads the
-generated outputs from `typemap-assemblies.txt` (and globs the JCWs) and
-re-emits them — plus the stamp — into `@(FileWrites)` *before* MSBuild's
-`IncrementalClean`, so the outputs are not seen as orphaned and deleted between
-incremental builds.
+generated outputs from `typemap-assemblies.txt`, `java-files.txt`, and
+`linked-java-files.txt`, then re-emits them — plus the stamps — into
+`@(FileWrites)` *before* MSBuild's `IncrementalClean`. This avoids recursively
+globbing both Java trees on every no-op build. When upgrading an existing
+`obj` directory that predates either Java list, the record target temporarily
+falls back to the corresponding directory glob so the old outputs survive
+`IncrementalClean` long enough for generation to backfill the list.
 
-### 5. The generator does not run in design-time builds, and runs once
+### 5. CoreCLR skips unchanged shrunk-assembly copies
+
+CoreCLR packages managed assemblies, so `_RemoveRegisterAttributeCoreClr`
+copies the resolved assembly set into the shrunk/package locations. The target
+uses the resolved assemblies, assembly-set hash, build properties, and project
+imports as inputs and a stamp as its output. Missing destination assemblies
+invalidate the stamp. Projects with `*.dll.config` files retain the previous
+always-run behavior until those files can be modeled as a reliable one-to-one
+transform.
+
+NativeAOT keeps a separate always-run `_RemoveRegisterAttributeNativeAot`
+target. Its project-local destination remap must execute on every build so a
+skipped target cannot point `_ShrunkAssemblies` back into the shared runtime
+pack and reintroduce cross-build races.
+
+### 6. The generator does not run in design-time builds, and runs once
 
 `_GenerateTrimmableTypeMap` is gated on `'$(DesignTimeBuild)' != 'true'`: in a
 design-time build, project references may resolve to target paths that are not

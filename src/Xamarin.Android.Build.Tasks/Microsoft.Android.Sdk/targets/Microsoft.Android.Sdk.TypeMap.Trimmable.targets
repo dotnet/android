@@ -24,6 +24,7 @@
     <_TypeMapOutputDirectory>$(_TypeMapBaseOutputDir)typemap/</_TypeMapOutputDirectory>
     <_TypeMapJavaOutputDirectory>$(_TypeMapBaseOutputDir)typemap/java</_TypeMapJavaOutputDirectory>
     <_TypeMapAssembliesListFile>$(_TypeMapOutputDirectory)typemap-assemblies.txt</_TypeMapAssembliesListFile>
+    <_TypeMapJavaFilesList>$(_TypeMapOutputDirectory)java-files.txt</_TypeMapJavaFilesList>
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_OuterIntermediateOutputPath)' != '' ">$(IntermediateOutputPath)</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaBaseOutputDir Condition=" '$(_PostTrimTypeMapJavaBaseOutputDir)' == '' ">$(_TypeMapBaseOutputDir)</_PostTrimTypeMapJavaBaseOutputDir>
     <_PostTrimTypeMapJavaOutputDirectory>$(_PostTrimTypeMapJavaBaseOutputDir)typemap/linked-java</_PostTrimTypeMapJavaOutputDirectory>
@@ -44,6 +45,9 @@
          Outputs without making the target run on every build. The stamp is always
          touched, so the target is correctly skipped when none of its Inputs changed. -->
     <_TrimmableTypeMapOutputStamp>$(_TypeMapOutputDirectory)_GenerateTrimmableTypeMap.stamp</_TrimmableTypeMapOutputStamp>
+    <_TrimmableRemoveRegisterFlag>$(_AndroidStampDirectory)_RemoveRegisterAttribute.stamp</_TrimmableRemoveRegisterFlag>
+    <_TrimmableRemoveRegisterTarget Condition=" '$(_AndroidRuntime)' == 'CoreCLR' ">_RemoveRegisterAttributeCoreClr</_TrimmableRemoveRegisterTarget>
+    <_TrimmableRemoveRegisterTarget Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">_RemoveRegisterAttributeNativeAot</_TrimmableRemoveRegisterTarget>
     <!-- Sentinel for _GenerateJavaStubs: the post-trim Java stamp when JCWs are regenerated
          from the linked assemblies (CoreCLR + PublishTrimmed), otherwise the generator stamp.
          Both are touched only when their producing target actually runs, so _GenerateJavaStubs
@@ -173,6 +177,12 @@
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
     </GenerateTrimmableTypeMap>
 
+    <WriteLinesToFile
+        File="$(_TypeMapJavaFilesList)"
+        Lines="@(_GeneratedJavaFiles)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+
     <!-- If the generator removed a Java source, bust the Java compile stamp so _CompileJava
          re-runs (it fully cleans its class output each run, dropping the stale .class). The
          JCWs are compiled in place, so there are no android/src copies to delete. -->
@@ -189,6 +199,7 @@
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TypeMapJavaFilesList)" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" />
       <FileWrites Include="$(_PreTrimTypeMapAcwMapOutputFile)" Condition=" '$(_PreTrimTypeMapAcwMapOutputFile)' != '' " />
@@ -236,13 +247,25 @@
     <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
       <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesForFileWrites" />
     </ReadLinesFromFile>
+    <ReadLinesFromFile
+        File="$(_TypeMapJavaFilesList)"
+        Condition="Exists('$(_TypeMapJavaFilesList)')">
+      <Output TaskParameter="Lines" ItemName="_TypeMapJavaFilesForFileWrites" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile
+        File="$(_PostTrimTypeMapJavaFilesList)"
+        Condition="Exists('$(_PostTrimTypeMapJavaFilesList)')">
+      <Output TaskParameter="Lines" ItemName="_TypeMapPostTrimJavaFilesForFileWrites" />
+    </ReadLinesFromFile>
     <ItemGroup>
-      <_TypeMapJavaFilesForFileWrites Include="$(_TypeMapJavaOutputDirectory)/**/*.java" />
-      <!-- For CoreCLR + PublishTrimmed the JCWs come from the post-trim `linked-java` directory.
-           _GeneratePostTrimTrimmableTypeMapJavaSources is now incremental, so re-emit its outputs
-           here too; otherwise IncrementalClean deletes linked-java on builds where post-trim is
-           skipped. The glob is empty for configurations that have no post-trim pass. -->
-      <_TypeMapPostTrimJavaFilesForFileWrites Include="$(_PostTrimTypeMapJavaOutputDirectory)/**/*.java" />
+      <!-- Backfill FileWrites from the directory when upgrading an existing obj tree that
+           predates java-files.txt and skips _GenerateTrimmableTypeMap on its first no-op build. -->
+      <_TypeMapJavaFilesForFileWrites
+          Include="$(_TypeMapJavaOutputDirectory)/**/*.java"
+          Condition="!Exists('$(_TypeMapJavaFilesList)')" />
+      <_TypeMapPostTrimJavaFilesForFileWrites
+          Include="$(_PostTrimTypeMapJavaOutputDirectory)/**/*.java"
+          Condition="!Exists('$(_PostTrimTypeMapJavaFilesList)')" />
 
       <FileWrites Include="@(_GeneratedTypeMapAssembliesForFileWrites)" />
       <FileWrites Include="@(_TypeMapJavaFilesForFileWrites)" />
@@ -250,6 +273,7 @@
       <FileWrites Include="$(_PostTrimTypeMapJavaFilesList)" Condition="Exists('$(_PostTrimTypeMapJavaFilesList)')" />
       <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" Condition="Exists('$(_PostTrimTrimmableTypeMapJavaStamp)')" />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
+      <FileWrites Include="$(_TypeMapJavaFilesList)" Condition="Exists('$(_TypeMapJavaFilesList)')" />
       <FileWrites Include="$(_TrimmableTypeMapOutputStamp)" Condition="Exists('$(_TrimmableTypeMapOutputStamp)')" />
       <FileWrites Include="$(_TypeMapBaseOutputDir)AndroidManifest.xml" Condition="Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml')" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" Condition="Exists('$(IntermediateOutputPath)AndroidManifest.xml')" />
@@ -335,9 +359,53 @@
     CoreCLR (and any other trimmable runtime) keeps the base behavior because it still
     packages the managed assemblies and therefore needs the shrunk copies in place.
   -->
-  <Target Name="_RemoveRegisterAttribute"
-      DependsOnTargets="_PrepareAssemblies"
+  <Target Name="_PrepareTrimmableRemoveRegisterAttribute"
+      DependsOnTargets="_PrepareAssemblies;_PrepareTrimmableTypeMapAssemblies"
       Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'">
+    <ItemGroup>
+      <_TrimmableResolvedAssemblyConfigInput Remove="@(_TrimmableResolvedAssemblyConfigInput)" />
+      <_TrimmableResolvedAssemblyConfigInput Include="@(_ResolvedAssemblies->'%(Identity).config')" />
+      <_TrimmableResolvedAssemblyConfigInput Remove="@(_TrimmableResolvedAssemblyConfigInput)" Condition="!Exists('%(_TrimmableResolvedAssemblyConfigInput.Identity)')" />
+      <_MissingTrimmableShrunkAssembly Remove="@(_MissingTrimmableShrunkAssembly)" />
+      <_MissingTrimmableShrunkAssembly
+          Include="@(_ShrunkAssemblies)"
+          Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and !Exists('%(_ShrunkAssemblies.Identity)') " />
+    </ItemGroup>
+    <Delete
+        Files="$(_TrimmableRemoveRegisterFlag)"
+        Condition=" '@(_MissingTrimmableShrunkAssembly->Count())' != '0' " />
+    <PropertyGroup>
+      <!-- Keep config-file projects on the previous always-run path until source/destination
+           config files can be modeled as a reliable one-to-one incremental transform. -->
+      <_TrimmableRemoveRegisterAlwaysRunInput
+          Condition=" '@(_TrimmableResolvedAssemblyConfigInput->Count())' != '0' ">$(IntermediateOutputPath)__always_copy_trimmable_assembly_configs__</_TrimmableRemoveRegisterAlwaysRunInput>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_RemoveRegisterAttribute"
+      DependsOnTargets="_PrepareTrimmableRemoveRegisterAttribute;$(_TrimmableRemoveRegisterTarget)"
+      Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'" />
+
+  <Target Name="_RemoveRegisterAttributeCoreClr"
+      Condition=" '$(_AndroidRuntime)' == 'CoreCLR' "
+      Inputs="@(_ResolvedAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_TrimmableRemoveRegisterAlwaysRunInput)"
+      Outputs="$(_TrimmableRemoveRegisterFlag)">
+    <CopyIfChanged
+      SourceFiles="@(_ResolvedAssemblies)"
+      DestinationFiles="@(_ShrunkAssemblies)" />
+    <CopyIfChanged
+      SourceFiles="@(_ResolvedAssemblies->'%(Identity).config')"
+      DestinationFiles="@(_ShrunkAssemblies->'%(Identity).config')" />
+    <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
+    <Touch Files="$(_TrimmableRemoveRegisterFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_TrimmableRemoveRegisterFlag)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RemoveRegisterAttributeNativeAot"
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">
     <ItemGroup Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">
       <_ShrunkAssemblies Remove="@(_ShrunkAssemblies)" />
       <_ShrunkAssemblies Include="@(_ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)shrunk\%(DestinationSubPath)')" />

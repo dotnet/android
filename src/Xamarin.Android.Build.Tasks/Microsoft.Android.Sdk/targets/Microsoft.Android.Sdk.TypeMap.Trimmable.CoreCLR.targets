@@ -14,9 +14,9 @@
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
       BeforeTargets="PrepareForILLink;_RunILLink"
-      DependsOnTargets="_GenerateTrimmableTypeMap">
+      DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
-      <ManagedAssemblyToLink Include="$(_TypeMapOutputDirectory)*.dll">
+      <ManagedAssemblyToLink Include="@(_GeneratedTypeMapAssembliesFromList)">
         <DestinationSubPath>%(Filename)%(Extension)</DestinationSubPath>
         <IsTrimmable>true</IsTrimmable>
       </ManagedAssemblyToLink>
