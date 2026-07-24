@@ -65,12 +65,45 @@
     </ItemGroup>
   </Target>
 
+  <!-- The stamp is the timestamp sentinel because generated files use content-based writes and
+       can legitimately be older than their inputs. If IncrementalClean or a manual cleanup removes
+       a real output but leaves the stamp, invalidate the stamp so the producer restores the complete
+       post-trim output set instead of letting _GenerateJavaStubs create an empty acw-map placeholder. -->
+  <Target Name="_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
+      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+    <ItemGroup>
+      <_ExpectedPostTrimJavaFile Remove="@(_ExpectedPostTrimJavaFile)" />
+      <_ActualPostTrimJavaFile Remove="@(_ActualPostTrimJavaFile)" />
+      <_MissingPostTrimJavaFile Remove="@(_MissingPostTrimJavaFile)" />
+      <_UnexpectedPostTrimJavaFile Remove="@(_UnexpectedPostTrimJavaFile)" />
+    </ItemGroup>
+    <ReadLinesFromFile
+        File="$(_PostTrimTypeMapJavaFilesList)"
+        Condition="Exists('$(_PostTrimTypeMapJavaFilesList)')">
+      <Output TaskParameter="Lines" ItemName="_ExpectedPostTrimJavaFile" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_ActualPostTrimJavaFile Include="$(_PostTrimTypeMapJavaOutputDirectory)/**/*.java" />
+      <_MissingPostTrimJavaFile Include="@(_ExpectedPostTrimJavaFile)" Condition="!Exists('%(_ExpectedPostTrimJavaFile.Identity)')" />
+      <_UnexpectedPostTrimJavaFile Include="@(_ActualPostTrimJavaFile)" Exclude="@(_ExpectedPostTrimJavaFile)" />
+    </ItemGroup>
+    <Delete
+        Files="$(_PostTrimTrimmableTypeMapJavaStamp)"
+        Condition="Exists('$(_PostTrimTrimmableTypeMapJavaStamp)') and (!Exists('$(_PostTrimTypeMapJavaOutputDirectory)') or !Exists('$(_PostTrimTypeMapJavaFilesList)') or '@(_MissingPostTrimJavaFile->Count())' != '0' or '@(_UnexpectedPostTrimJavaFile->Count())' != '0' or !Exists('$(IntermediateOutputPath)acw-map.txt') or !Exists('$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java'))" />
+    <ItemGroup>
+      <_ExpectedPostTrimJavaFile Remove="@(_ExpectedPostTrimJavaFile)" />
+      <_ActualPostTrimJavaFile Remove="@(_ActualPostTrimJavaFile)" />
+      <_MissingPostTrimJavaFile Remove="@(_MissingPostTrimJavaFile)" />
+      <_UnexpectedPostTrimJavaFile Remove="@(_UnexpectedPostTrimJavaFile)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
       Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
-      DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs"
+      DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs;_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
       AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
-      Inputs="@(_PostTrimTrimmableTypeMapInputAssemblies)"
+      Inputs="@(_PostTrimTrimmableTypeMapInputAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_PostTrimTrimmableTypeMapJavaStamp)">
 
     <GenerateTrimmableTypeMap
@@ -82,37 +115,37 @@
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
         PackageNamingPolicy="$(_TrimmableTypeMapPackageNamingPolicy)"
         GenerateTypeMapAssemblies="false"
-        CleanJavaSourceOutputDirectory="true"
+        CleanJavaSourceOutputDirectory="false"
         AcwMapOutputFile="$(IntermediateOutputPath)acw-map.txt"
         ApplicationRegistrationOutputFile="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java">
       <Output TaskParameter="GeneratedJavaFiles" ItemName="_PostTrimGeneratedJavaFiles" />
       <Output TaskParameter="DeletedJavaFiles" ItemName="_PostTrimDeletedJavaFiles" />
     </GenerateTrimmableTypeMap>
 
-    <!-- Mirror any JCWs the post-trim pass no longer produces (e.g. trimmed-away types) into
-         the android/src copies so a stale .java (and stale .class) is not left behind. Busting
-         the Java compile stamp forces _CompileJava to drop the corresponding class output. -->
-    <ItemGroup>
-      <_PostTrimDeletedCopiedJavaFiles Remove="@(_PostTrimDeletedCopiedJavaFiles)" />
-      <_PostTrimDeletedCopiedJavaFiles Include="@(_PostTrimDeletedJavaFiles->'$(IntermediateOutputPath)android/src/%(RelativePath)')" />
-    </ItemGroup>
-    <Delete Files="@(_PostTrimDeletedCopiedJavaFiles)" />
-    <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_PostTrimDeletedCopiedJavaFiles->Count())' != '0' " />
+    <WriteLinesToFile
+        File="$(_PostTrimTypeMapJavaFilesList)"
+        Lines="@(_PostTrimGeneratedJavaFiles)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+
+    <!-- The task updates linked-java in place, preserving timestamps for unchanged JCWs, and
+         reports any sources it pruned (e.g. trimmed-away types). Busting the Java compile stamp
+         for removals forces _CompileJava to drop the corresponding class output. -->
+    <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_PostTrimDeletedJavaFiles->Count())' != '0' " />
 
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_PostTrimTrimmableTypeMapJavaStamp)'))" />
     <Touch Files="$(_PostTrimTrimmableTypeMapJavaStamp)" AlwaysCreate="true" />
 
     <ItemGroup>
       <FileWrites Remove="@(_PostTrimDeletedJavaFiles)" />
-      <FileWrites Remove="@(_PostTrimDeletedCopiedJavaFiles)" />
       <FileWrites Include="@(_PostTrimGeneratedJavaFiles)" />
+      <FileWrites Include="$(_PostTrimTypeMapJavaFilesList)" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
       <FileWrites Include="$(_PostTrimTrimmableTypeMapJavaStamp)" />
       <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
       <_PostTrimGeneratedJavaFiles Remove="@(_PostTrimGeneratedJavaFiles)" />
       <_PostTrimDeletedJavaFiles Remove="@(_PostTrimDeletedJavaFiles)" />
-      <_PostTrimDeletedCopiedJavaFiles Remove="@(_PostTrimDeletedCopiedJavaFiles)" />
     </ItemGroup>
   </Target>
   <!-- After ILLink trims per-assembly _X.TypeMap assemblies whose target Java binding was unused,

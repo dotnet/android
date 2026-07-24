@@ -36,15 +36,14 @@ CoreCompile
 _ReadGeneratedTrimmableTypeMapAssemblies    (reads typemap-assemblies.txt)
 _PrepareTrimmableNativeConfigAssemblies     (feeds _GeneratePackageManagerJava)
 _PrepareTrimmableTypeMapAssemblies          (feeds packaging / assembly store)
-_CollectTrimmableTypeMapJavaFiles           (globs the JCW *.java)
-_GenerateJavaStubs                          (copies JCWs into android/src, manifest, acw-map)
+_GenerateJavaStubs                          (prepares manifest and native config)
    └─► _CompileJava ─► _CompileToDalvik ─► packaging
 ```
 
 `_GenerateJavaStubs` **overrides** the legacy target of the same name from
-`BuildOrder.targets`; in the trimmable path the JCWs already exist, so this
-target only copies them into `$(IntermediateOutputPath)android/src` and wires up
-the manifest, `acw-map.txt`, and native config.
+`BuildOrder.targets`; in the trimmable path the JCWs already exist and are
+compiled in place from the generator output directory. This target wires up
+the manifest and native config.
 
 For `CoreCLR` + `PublishTrimmed=true`, a second pass
 (`_GeneratePostTrimTrimmableTypeMapJavaSources`, in the CoreCLR targets)
@@ -64,8 +63,8 @@ reliable timestamp sentinel.
 `_GenerateTrimmableTypeMap` declares:
 
 ```xml
-Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
-Outputs="$(_TypeMapOutputDirectory)$(_TypeMapAssemblyName).dll;$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)"
+Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);...;$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
+Outputs="$(_TrimmableTypeMapOutputStamp)"
 ```
 
 The generated TypeMap DLLs are written with `Files.CopyIfStreamChanged`, so an
@@ -76,7 +75,7 @@ it on every build. To avoid this, the target unconditionally `Touch`es a
 dedicated stamp:
 
 ```xml
-<Touch Files="@(_GeneratedTypeMapAssemblies);$(_TypeMapAssembliesListFile);$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
+<Touch Files="$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
 ```
 
 so the stamp is always newer than the inputs after a run, and the target is
@@ -86,54 +85,56 @@ correctly **skipped** when none of the inputs changed.
 > inputs — including `@(PrivateSdkAssemblies)` and `@(FrameworkAssemblies)` —
 > otherwise a change in one of them would not trigger regeneration.
 
-### 2. `_GenerateJavaStubs` keys off the stamp
+### 2. `_GenerateJavaStubs` keys off both producer stamps
 
 ```xml
-Inputs="$(_TrimmableTypeMapOutputStamp);@(_EnvironmentFiles)"
+Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
 Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp"
 ```
 
-The stamp captures "the generator ran because its inputs changed" and is left
-stable when the generator is skipped, so the JCW copy into `android/src` only
-re-runs when something relevant actually changed. The copy uses
-`SkipUnchangedFiles="true"` so unchanged JCWs do not churn downstream Java
-compilation. For `CoreCLR` + `PublishTrimmed`, the JCWs are sourced from the
-`linked-java` directory produced by `_GeneratePostTrimTrimmableTypeMapJavaSources`,
-which is itself incremental; the stamp remains the sentinel so a no-op build
-still skips `_GenerateJavaStubs`.
+The pre-trim stamp covers the generated manifest and other shared outputs. For
+`CoreCLR` + `PublishTrimmed`, `_TrimmableJavaSourceStamp` is the post-trim stamp
+and covers the linked JCW set. Both remain stable when their producer is
+skipped, so a no-op build still skips `_GenerateJavaStubs` while a manifest-only
+change is not lost just because the linked assemblies stayed unchanged.
+
+The pre-trim CoreCLR pass deliberately does not write the final `acw-map.txt`
+or `ApplicationRegistration.java` in trimmed builds. Those files are owned by
+the post-trim pass; sharing their paths allowed a manifest-only pre-trim run to
+overwrite the linked versions while the post-trim target remained up-to-date.
 
 ### 3. Stale generated Java sources are pruned (both passes)
 
 When a managed type is removed — or trimmed away on the `PublishTrimmed` path —
-its JCW must not linger in `android/src`, where it would otherwise be compiled
-and packaged. Both generator passes report the JCWs they no longer produce as
-`DeletedJavaFiles` (with `RelativePath` metadata), and the owning target mirrors
-each deletion into the `android/src` copy and, if anything was deleted, deletes
-`$(_AndroidCompileJavaStampFile)` so `_CompileJava` re-runs and drops the stale
-`.class` outputs:
+its JCW must not linger in the generator directory, where it would otherwise
+be compiled and packaged. Both generator passes report the JCWs they no longer
+produce as `DeletedJavaFiles` (with `RelativePath` metadata). If anything was
+deleted, the owning target deletes `$(_AndroidCompileJavaStampFile)` so
+`_CompileJava` re-runs and drops the stale `.class` outputs:
 
 ```xml
-<Delete Files="@(_DeletedCopiedJavaFiles)" />
-<Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedCopiedJavaFiles->Count())' != '0' " />
+<Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedJavaFiles->Count())' != '0' " />
 ```
 
-The two passes compute the deleted set differently because of how each manages
-its output directory:
+Both passes update their output directories in place:
 
 - **Pre-trim** (`_GenerateTrimmableTypeMap`, writing `typemap/java`): the task
   scans the output directory and deletes any `*.java` the current pass did not
   produce.
 - **Post-trim** (`_GeneratePostTrimTrimmableTypeMapJavaSources`, writing
-  `typemap/linked-java` with `CleanJavaSourceOutputDirectory=true`): the
-  directory is wiped before regeneration, so the task snapshots the previous
-  `*.java` set *before* the wipe and reports `previous − regenerated`. This keeps
-  the deletion precise — only files the generator itself previously produced are
-  ever removed from `android/src`, never unrelated sources such as
-  `ApplicationRegistration.java`.
+  `typemap/linked-java`): the task updates files by content and prunes stale
+  `*.java` files in place. Unchanged JCWs keep their timestamps, so a managed
+  method-body change does not force `javac` and D8 to rebuild identical Java
+  output.
 
-The invariant is two-directional: **`android/src` contains exactly the JCWs the
-active pass produces** — no missing files (copied via `_GenerateJavaStubs`) and
-no stale files (pruned via `DeletedJavaFiles`).
+The invariant is two-directional: the active generator directory contains
+exactly the JCWs that should be compiled — no missing files and no stale files.
+The post-trim pass persists its expected Java paths in
+`typemap/linked-java-files.txt`. Before using the post-trim stamp, an always-run
+validation target compares that list with the files on disk and invalidates the
+stamp if a source is missing or unexpected, or if the ACW map or application
+registration source is missing. If generation logs an error, stale pruning is
+suppressed so a partial result cannot delete the last known-good output set.
 
 ### 4. Dynamic `FileWrites` are re-emitted on no-op builds
 
