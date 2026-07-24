@@ -323,7 +323,7 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
-		[Ignore ("Fails on CoreCLR: https://github.com/dotnet/android/issues/10973")]
+		[Category ("JNIObjectArray")]
 		public void GetObjectArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -338,8 +338,8 @@ namespace Android.RuntimeTests {
 						JniHandleOwnership.TransferLocalRef)) {
 				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
 				Assert.AreEqual (3, values.Length);
-				Assert.IsTrue (object.ReferenceEquals (values [0], Application.Context));
-				Assert.IsTrue (values [1] is int);
+				Assert.AreSame (Application.Context, values [0], $"Expected existing Context peer, got {values [0]?.GetType ()}.");
+				Assert.IsInstanceOf<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}

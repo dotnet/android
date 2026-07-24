@@ -52,8 +52,6 @@
       Inputs="$(MSBuildThisFile);$(_AndroidSrcDir)\source.properties;$(_JavaSourceUtilsJar)"
       Outputs="$(_AndroidJavadocXml)">
     <ItemGroup>
-      <_Doclink Include="--doc-copyright" />
-      <_Doclink Include="$(MSBuildThisFileDirectory)javadoc-copyright.xml" />
       <_Doclink Include="--doc-url-prefix" />
       <_Doclink Include="https://developer.android.com/reference" />
       <_Doclink Include="--doc-url-style" />
