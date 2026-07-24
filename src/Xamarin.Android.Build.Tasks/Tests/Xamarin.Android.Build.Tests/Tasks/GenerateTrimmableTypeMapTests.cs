@@ -257,6 +257,9 @@ namespace Xamarin.Android.Build.Tests {
 				    <Node Id="4" Label="Type metadata: [Xamarin.AndroidX.Activity]AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture" />
 				    <Node Id="5" Label="Unrelated node" />
 				  </Nodes>
+				  <Links>
+				    <Node Id="6" Label="Type metadata: [Other.Assembly]Other.Type" />
+				  </Links>
 				</DirectedGraph>
 				""");
 			File.WriteAllText (acwMapFile, """
