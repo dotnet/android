@@ -2695,7 +2695,7 @@ because xbuild doesn't support framework reference assemblies.
     Inputs="$(_AppBundleIntermediate);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(AndroidBundleToolJarPath);$(_UniversalApkAapt2ToolPath);$(_ApkKeyStore);$(_UniversalApkAlwaysRunInput)"
     Outputs="$(OutDir)$(_AndroidPackage)-Signed.apk"
   >
-  <!-- Delete the existing files or bundetool will fail. -->
+  <!-- Delete the existing files or bundletool will fail. -->
   <Delete Files="$(_UniversalApkSetIntermediate);$(OutDir)$(_AndroidPackage)*-Signed.apk" />
   <BuildApkSet
       ToolPath="$(JavaToolPath)"
