@@ -441,38 +441,39 @@ namespace Android.Runtime {
 				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
 			}
 
-			IntPtr ret;
-			if (RuntimeFeature.IsCoreClrRuntime && RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
-				// These typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
-				if (type.FullName is null)
-					return null;
-				string? assemblyFullName = type.Assembly.FullName;
-				if (assemblyFullName is null)
-					return null;
-				ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, IntPtr.Zero);
-			} else {
+			// These typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
+			bool useAssemblyFullName = RuntimeFeature.IsCoreClrRuntime && RuntimeFeature.ManagedToJavaUsesAssemblyFullName;
+
+			byte[]? mvid_data = null;
+			if (!useAssemblyFullName) {
 				if (mvid_bytes == null)
 					mvid_bytes = new byte[16];
 
 				var mvid = new Span<byte>(mvid_bytes);
-				byte[]? mvid_data = null;
 				if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
 					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
 					mvid_data = type.Module.ModuleVersionId.ToByteArray ();
 				} else {
 					mvid_data = mvid_bytes;
 				}
+			}
 
-				fixed (byte* mvidptr = mvid_data) {
-					if (RuntimeFeature.IsMonoRuntime) {
-						ret = monovm_typemap_managed_to_java (type, mvidptr);
-					} else if (RuntimeFeature.IsCoreClrRuntime) {
-						if (type.FullName is null)
+			IntPtr ret;
+			fixed (byte* mvidptr = mvid_data) {
+				if (RuntimeFeature.IsMonoRuntime) {
+					ret = monovm_typemap_managed_to_java (type, mvidptr);
+				} else if (RuntimeFeature.IsCoreClrRuntime) {
+					if (type.FullName is null)
+						return null;
+					string? assemblyFullName = null;
+					if (useAssemblyFullName) {
+						assemblyFullName = type.Assembly.FullName;
+						if (assemblyFullName is null)
 							return null;
-						ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, null, (IntPtr)mvidptr);
-					} else {
-						throw new NotSupportedException ("Internal error: unknown runtime not supported");
 					}
+					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, (IntPtr)mvidptr);
+				} else {
+					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}
 			}
 
