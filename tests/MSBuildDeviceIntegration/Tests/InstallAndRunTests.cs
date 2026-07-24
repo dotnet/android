@@ -752,6 +752,72 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
+		public void IncrementalReleaseBuildUpdatesCompressedAssemblyStore ()
+		{
+			string payload = "initial";
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "incrementalstore")) {
+				IsRelease = true,
+			};
+			app.SetRuntime (AndroidRuntime.CoreCLR);
+			app.SetRuntimeIdentifiers (new [] { "arm64-v8a", "x86_64" });
+			app.SetProperty ("AndroidPackageFormat", "apk");
+			app.SetProperty ("EmbedAssembliesIntoApk", "true");
+			app.SetProperty ("PublishTrimmed", "true");
+			app.SetProperty ("AndroidLinkMode", "SdkOnly");
+			app.SetProperty ("TrimMode", "partial");
+			app.SetDefaultTargetDevice ();
+			app.MainActivity = app.DefaultMainActivity.Replace (
+				"base.OnCreate (savedInstanceState);",
+				"base.OnCreate (savedInstanceState);" + Environment.NewLine + "\t\tConsole.WriteLine (Payload.Value);"
+			);
+			app.Sources.Add (new BuildItem.Source ("Payload.cs") {
+				TextContent = () => $$"""
+					namespace UnnamedProject;
+
+					public static class Payload
+					{
+						public static string Value => "{{payload}}";
+					}
+					""",
+			});
+
+			using var appBuilder = CreateApkBuilder ();
+			Assert.IsTrue (appBuilder.Install (app), "The initial install should succeed.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "initial-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"The initial Release build should launch."
+			);
+
+			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			payload = new string ('x', 64 * 1024);
+			app.Touch ("Payload.cs");
+			Assert.IsTrue (
+				appBuilder.Install (app, doNotCleanupOnUpdate: true, saveProject: false),
+				"The incremental install should succeed."
+			);
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "incremental-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"The incrementally rebuilt app should launch without a compressed assembly size mismatch."
+			);
+		}
+
+		[Test]
 		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
