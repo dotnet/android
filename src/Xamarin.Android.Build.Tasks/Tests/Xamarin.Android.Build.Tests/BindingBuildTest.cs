@@ -625,7 +625,7 @@ namespace Foo {
 				Assert.IsTrue (xml.Contains ("<param name=\"name\">name to display.</param>"), "param `name` documentation not imported!");
 				Assert.IsTrue (xml.Contains ("Includes a https://developer.android.com/test.html element."), "{@docRoot} value was not replaced!");
 				Assert.IsTrue (xml.Contains ("<a href=\"https://developer.android.com/reference/com/xamarin/android/test/msbuildtest/JavaSourceJarTest#greet(java.lang.String,%20java.util.Date)\" title=\"Reference documentation\">"), "Java documentation URL was not imported!");
-				Assert.IsTrue (xml.Contains ("<a href=\"https://developers.google.com/terms/site-policies\" title=\"Android Open Source Project\">Android Open Source Project</a>"), "Copyright file was not imported!");
+				Assert.IsTrue (xml.Contains ("Java source documentation test notice."), "Copyright file was not imported!");
 			}
 		}
 
