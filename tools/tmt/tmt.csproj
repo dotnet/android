@@ -16,8 +16,8 @@
 
   <ItemGroup>
     <Compile Include="../../src/Xamarin.Android.Build.Tasks/Utilities/TypeMapHelper.cs" />
-    <Compile Include="..\assembly-store-reader-mk2\AssemblyStore\V1\*.cs" />
-    <Compile Include="..\assembly-store-reader-mk2\AssemblyStore\AssemblyCompression.cs" />
+    <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\V1\*.cs" />
+    <Compile Include="..\..\.github\skills\read-assembly-store\src\AssemblyStore\AssemblyCompression.cs" />
   </ItemGroup>
 
   <ItemGroup>

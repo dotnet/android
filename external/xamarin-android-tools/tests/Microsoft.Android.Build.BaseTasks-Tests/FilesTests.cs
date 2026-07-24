@@ -41,6 +41,21 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
+		public void ToLongPathIsIdempotent ()
+		{
+			if (!IsWindows) {
+				Assert.Ignore ("Long path prefixes only apply on Windows.");
+				return;
+			}
+
+			var path = Path.GetFullPath (tempDir);
+			var longPath = Files.ToLongPath (path);
+
+			Assert.AreEqual (Files.LongPathPrefix + path, longPath, "Long path prefix should be added.");
+			Assert.AreEqual (longPath, Files.ToLongPath (longPath), "Long path prefix should not be added twice.");
+		}
+
+		[Test]
 		public void CopyIfStringChanged ()
 		{
 			Directory.CreateDirectory (tempDir);
