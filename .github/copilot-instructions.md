@@ -198,6 +198,7 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
 - **Error messages:** Must come from `Properties.Resources` (e.g., `Properties.Resources.XA0143`) for localization support. Add new messages to the English `Resources.resx` file.
+- **New warning/error codes:** Use `Log.LogCodedWarning("XA####", ...)` / `Log.LogCodedError("XA####", ...)` (not uncoded `LogWarning(...)`) and add/update docs in `Documentation/docs-mobile/messages/xa####.md`, `Documentation/docs-mobile/messages/index.md`, and `Documentation/docs-mobile/TOC.yml`.
 - **Error code lifecycle:** When removing functionality that used an `XA####` code, either repurpose the code or remove it from `Resources.resx` and `Resources.Designer.cs`. Don't leave orphaned codes.
 - **Logging in `AsyncTask`:** Use the thread-safe helpers (`LogCodedError()`, `LogMessage()`, `LogCodedWarning()`, `LogDebugMessage()`) instead of `Log.*`. The `Log` property is marked `[Obsolete]` on `AsyncTask` because calling `Log.LogMessage` directly from a background thread can hang Visual Studio.
 
