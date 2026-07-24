@@ -12,9 +12,6 @@ All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-re
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
-if (System.getenv('ANDROID_MIRROR_MAVEN_DEPENDENCIES') == 'true') {
-    apply from: "${rootDir}/../../eng/gradle/credential-provider.gradle"
-}
 dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
@@ -31,9 +28,9 @@ Both files switch on `System.getenv('RUNNINGONCI')`. Azure DevOps exports the
 - **`RUNNINGONCI=true`** (Azure DevOps, sourced from `RunningOnCI` in `build-tools/automation/yaml-templates/variables.yaml`) → dnceng `dotnet-public-maven` feed (CFSClean isolation, https://aka.ms/1es/netiso/CFS). Anonymous read of cached packages.
 - **unset** (local, Dependabot, GitHub Actions) → `google()` + `mavenCentral()` + `gradlePluginPortal()` for plugins, `google()` + `mavenCentral()` for deps. No credentials needed.
 
-CI reads cached packages from the mirror anonymously. The Azure Artifacts
-credential provider is loaded only when `ANDROID_MIRROR_MAVEN_DEPENDENCIES=true`;
-`mirror-dependencies.ps1` sets this while seeding uncached packages.
+CI reads cached packages from the mirror anonymously. `mirror-dependencies.ps1`
+runs the same anonymous Gradle resolution, then seeds each missing URL with an
+authenticated HTTP request until the build succeeds.
 
 Test the CI path locally: `$env:RUNNINGONCI='true'` (PowerShell) or `RUNNINGONCI=true ...` (bash).
 
@@ -41,7 +38,7 @@ Test the CI path locally: `$env:RUNNINGONCI='true'` (PowerShell) or `RUNNINGONCI
 
 The new package isn't cached in the dnceng `dotnet-public-maven` feed yet. CI agents only do anonymous reads, so someone has to authenticate once locally to make the feed pull the package (and its transitive deps) from upstream.
 
-Use the helper script — it runs the build, parses any 401 URLs out of the log, re-fetches each one with an Azure DevOps bearer token (so the feed mirrors it), and loops until the build succeeds:
+Use the helper script — it runs the build, parses any 401 URLs out of the log, re-fetches each one with an Azure DevOps OAuth token using Basic authentication (so the feed mirrors it), and loops until the build succeeds:
 
 ```powershell
 az login   # one-time, corp account with MFA satisfied
@@ -56,6 +53,16 @@ pwsh ./eng/gradle/mirror-dependencies.ps1 `
 The mirror must run in the project that actually needs the new package — a sibling project's build won't trigger a mirror for someone else's deps. If that project uses a different Gradle wrapper in CI, pass the same wrapper with `-GradleWrapper`; Kotlin and other plugins publish Gradle-version-specific variants. Typical convergence is 2-5 iterations as the resolver walks the dep graph breadth-first.
 
 After it succeeds, just re-run the failed CI job. No PR edits needed — the packages are now anonymous-readable forever.
+
+Tests that resolve Maven files without Gradle can seed coordinates directly:
+
+```powershell
+pwsh ./eng/gradle/mirror-dependencies.ps1 `
+    -MavenArtifact 'androidx.core:core:1.12.0'
+```
+
+This attempts the coordinate's POM, JAR, AAR, and Gradle module metadata. Append
+the exact filename as a fourth segment for a nonstandard payload.
 
 ## Don'ts
 

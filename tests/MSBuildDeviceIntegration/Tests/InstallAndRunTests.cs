@@ -2477,6 +2477,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				return;
 			}
 
+			const string facebookVersion = "18.3.0";
 			var moduleName = "Library";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
 			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
@@ -2495,7 +2496,7 @@ android {{
 dependencies {{
     implementation(""androidx.appcompat:appcompat:1.7.0"")
     implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:17.0.2"")
+    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
 }}
 ";
 			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
@@ -2537,14 +2538,16 @@ public class FacebookSdk {{
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.GetMavenRepository ("Central") },
 						},
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.GetMavenRepository ("Central") },
 						},
 					},
 				},

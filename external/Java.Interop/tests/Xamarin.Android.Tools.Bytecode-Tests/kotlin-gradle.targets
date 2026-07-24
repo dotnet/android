@@ -2,10 +2,9 @@
 
   <!--
       Shared MSBuild target for compiling the real Kotlin/Gradle fixture in
-      tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/ using the shared
-      Gradle wrapper from build-tools/gradle. The wrapper downloads Gradle +
-      Kotlin on first run, so the resulting .class files do not need to be
-      committed to source control.
+      tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/ using the Gradle
+      executable configured by GradleWPath. Gradle downloads Kotlin on first run,
+      so the resulting .class files do not need to be committed to source control.
 
       This file is imported by any test project that embeds the resulting
       .class files as resources (Bytecode-Tests and generator-Tests). Each
@@ -24,6 +23,7 @@
   <PropertyGroup>
     <_KotlinGradleProjectDir>$(MSBuildThisFileDirectory)kotlin-gradle</_KotlinGradleProjectDir>
     <_TestKotlinGradleOutputDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\classes'))</_TestKotlinGradleOutputDir>
+    <_TestKotlinGradleBuildDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\build'))</_TestKotlinGradleBuildDir>
     <!--
         This target is imported by two projects (Xamarin.Android.Tools.Bytecode-Tests
         and generator-Tests) that build in parallel during the solution build. Gradle is
@@ -41,7 +41,7 @@
         BeforeTargets="BeforeCompile"
         Inputs="@(TestKotlinGradleSource)"
         Outputs="@(TestKotlinGradleOutput)">
-    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
+    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinBuildDir=&quot;$(_TestKotlinGradleBuildDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
           EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome);GRADLE_USER_HOME=$(_KotlinGradleUserHome)" />
   </Target>
 
