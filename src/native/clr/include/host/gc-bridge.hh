@@ -10,7 +10,6 @@ struct JniObjectReferenceControlBlock
 {
 	jobject handle;
 	int handle_type;
-	jobject weak_handle;
 	int refs_added;
 };
 

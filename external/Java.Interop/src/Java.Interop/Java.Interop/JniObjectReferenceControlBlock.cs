@@ -6,7 +6,6 @@ namespace Java.Interop;
 internal struct JniObjectReferenceControlBlock {
 	public	IntPtr  handle;
 	public  int     handle_type;
-	public  IntPtr  weak_handle;
 	public  int     refs_added;
 
 	public  static  readonly    int Size    = Marshal.SizeOf<JniObjectReferenceControlBlock>();
