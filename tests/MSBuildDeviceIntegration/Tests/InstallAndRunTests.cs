@@ -2566,7 +2566,8 @@ public class FacebookSdk {{
 					},
 					new Package {
 						Id = "Xamarin.Google.Android.InstallReferrer",
-						Version = "1.1.2.6",
+						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
+						Version = "2.2.0.8",
 					},
 					new Package {
 						Id = "Xamarin.AndroidX.Core.Core.Ktx",
