@@ -11,15 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Build.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.ProjectTools", "src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj", "{2DD1EE75-6D8D-4653-A800-0A24367F7F38}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{385E71CC-BAE5-488B-805E-ACAE55F01DF5}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSBuildDeviceIntegration", "tests\MSBuildDeviceIntegration\MSBuildDeviceIntegration.csproj", "{16DB2680-399B-4111-AA26-6CDBBFA334D8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "vswhere", "tools\vswhere\vswhere.csproj", "{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Build.BaseTasks", "external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj", "{3DE17662-DCD6-4F49-AF06-D39AACC8649A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Build.BaseTasks", "src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj", "{3DE17662-DCD6-4F49-AF06-D39AACC8649A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Sdk.Analysis", "src\Microsoft.Android.Sdk.Analysis\Microsoft.Android.Sdk.Analysis.csproj", "{0D00DD34-3E94-4166-9DEE-12355E4C98A0}"
 EndProject
@@ -85,8 +83,6 @@ Global
 		{2DD1EE75-6D8D-4653-A800-0A24367F7F38} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{16DB2680-399B-4111-AA26-6CDBBFA334D8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{DBDC804F-8406-4F5E-83C6-720CB0CB6C6F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{3DE17662-DCD6-4F49-AF06-D39AACC8649A} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
-		{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157} = {385E71CC-BAE5-488B-805E-ACAE55F01DF5}
 		{B54CE553-1105-45BE-ABC2-2D8ABC4B1099} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
