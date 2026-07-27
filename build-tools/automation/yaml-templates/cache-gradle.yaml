@@ -18,7 +18,7 @@
 # See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
 
 parameters:
-  xaSourcePath: $(System.DefaultWorkingDirectory)
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
 
 steps:
 - script: |
