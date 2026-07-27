@@ -1,16 +1,30 @@
 # Shared Gradle dependency cache template
 # Caches Gradle downloads between pipeline runs to avoid transient network
-# failures when resolving Maven dependencies.
+# failures when resolving Maven dependencies or when downloading the Gradle
+# distribution itself.
+#
+# Two caches are used, because they have different invalidation rules:
+#
+#   * $HOME/.gradle/caches        - resolved Maven dependencies. Keyed on the
+#                                   Gradle build files that declare them.
+#   * $HOME/.gradle/wrapper/dists - the Gradle distribution .zip downloaded by
+#                                   the Gradle wrapper. Keyed only on
+#                                   gradle-wrapper.properties.
+#
+# Without the second cache every agent re-downloads the distribution from
+# services.gradle.org (which redirects to github.com). A transient HTTP 5xx
+# there fails `gradlew` for every Gradle test running on that agent.
 #
 # See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
 
 parameters:
-  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+  xaSourcePath: $(System.DefaultWorkingDirectory)
 
 steps:
 - script: |
     git log -1 --format=%H external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
     echo "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$HOME/.gradle/caches"
+    echo "##vso[task.setvariable variable=GRADLE_DISTS_DIR]$HOME/.gradle/wrapper/dists"
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: prepare Gradle cache variables
   condition: ne(variables['Agent.OS'], 'Windows_NT')
@@ -19,6 +33,8 @@ steps:
     git log -1 --format=%H external/Java.Interop > $(Agent.TempDirectory)/java-interop-submodule-hash.txt
     $gradleCacheDir = Join-Path $env:USERPROFILE ".gradle\caches"
     Write-Host "##vso[task.setvariable variable=GRADLE_CACHE_DIR]$gradleCacheDir"
+    $gradleDistsDir = Join-Path $env:USERPROFILE ".gradle\wrapper\dists"
+    Write-Host "##vso[task.setvariable variable=GRADLE_DISTS_DIR]$gradleDistsDir"
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: prepare Gradle cache variables
   condition: eq(variables['Agent.OS'], 'Windows_NT')
@@ -30,3 +46,11 @@ steps:
     restoreKeys: |
       "gradle" | "v1" | "$(Agent.OS)"
     path: $(GRADLE_CACHE_DIR)
+
+- task: Cache@2
+  displayName: cache Gradle distributions
+  inputs:
+    key: '"gradle-dists" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties'
+    restoreKeys: |
+      "gradle-dists" | "v1" | "$(Agent.OS)"
+    path: $(GRADLE_DISTS_DIR)
