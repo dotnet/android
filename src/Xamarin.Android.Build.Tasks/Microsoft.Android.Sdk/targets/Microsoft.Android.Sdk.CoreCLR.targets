@@ -7,6 +7,8 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
 -->
 <Project>
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateMibcProfile" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <!-- Default property values for CoreCLR -->
   <PropertyGroup>
     <_AndroidRuntimePackRuntime>CoreCLR</_AndroidRuntimePackRuntime>
@@ -47,6 +49,71 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
       <ResolvedRuntimePack
           PackageDirectory="$(_DotnetRuntimeRepo)/artifacts/bin/microsoft.netcore.app.runtime.$(RuntimeIdentifier)/$(_DotNetRuntimeConfiguration)"
           Condition=" '%(ResolvedRuntimePack.FrameworkName)' == 'Microsoft.NETCore.App' And Exists('$(_DotnetRuntimeRepo)/artifacts/bin/microsoft.netcore.app.runtime.$(RuntimeIdentifier)/$(_DotNetRuntimeConfiguration)') " />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    The crossgen2 "partial" switch restricts ReadyToRun compilation to the methods found in the
+    profile data passed via "mibc".  That is a good trade for framework assemblies, but it means
+    none of the application's own code gets precompiled unless it appears in a profile.
+
+    Generate a MIBC profile naming the methods of the main app assembly so that it is
+    ReadyToRun compiled, while the rest of the app remains partially compiled.
+
+    Everything below deliberately sticks to public MSBuild names.  `ILLink` and
+    `CreateReadyToRunImages` bracket the window where the trimmed assembly exists but crossgen2
+    has not run yet, and `@(PublishReadyToRunPgoFiles)` is the supported way to hand a profile to
+    crossgen2; `_PrepareForReadyToRunCompilation` copies it into its own private item group.
+
+    `$(_AndroidReadyToRunMainAssembly)` decides whether the profile is generated, in order:
+
+      1. An explicit `true` or `false` always wins.
+      2. Otherwise off when the app supplies its own `@(PublishReadyToRunPgoFiles)`.
+      3. Otherwise on when crossgen2 is running in partial mode.
+
+    An app that supplies its own profile, e.g. one recorded from a real startup trace with
+    `dotnet-pgo`, has already said exactly what it wants compiled, and the whole point of partial
+    mode is to compile only that.  Naming every method of the app assembly on top of it would
+    swamp that profile, so leave those builds alone.  Note this deliberately keys off the public
+    item: MAUI's own framework profiles go into `@(_ReadyToRunPgoFiles)`, so they do not
+    suppress this.
+  -->
+  <!-- $(TargetName) and $(IntermediateOutputPath) are not final until well after this file is
+       evaluated, so both the profile path and the main assembly are computed inside a target. -->
+  <Target Name="_AndroidGenerateMibcProfileInputs">
+    <PropertyGroup>
+      <_AndroidMibcProfile>$(IntermediateOutputPath)$(TargetName).mibc</_AndroidMibcProfile>
+      <!--
+        The main app assembly exactly as crossgen2 will see it.  ILLink writes the trimmed
+        assembly to $(IntermediateLinkDir), and this runs after it.  Without trimming
+        ($(AndroidLinkMode) of `None`, an explicit $(PublishTrimmed) of `false`, or
+        $(RunILLink) of `false`) ILLink never runs and crossgen2 compiles the compiler output
+        instead.  This mirrors when ILLink actually runs rather than probing for the trimmed
+        file, so a stale `linked` directory from an earlier build cannot be picked up.
+      -->
+      <_AndroidMibcMainAssembly Condition=" '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' ">$(IntermediateLinkDir)$(TargetName)$(TargetExt)</_AndroidMibcMainAssembly>
+      <_AndroidMibcMainAssembly Condition=" '$(_AndroidMibcMainAssembly)' == '' ">@(IntermediateAssembly->'%(FullPath)')</_AndroidMibcMainAssembly>
+    </PropertyGroup>
+  </Target>
+
+  <!-- The decision is inline rather than resolved into a property by the target above, because
+       MSBuild evaluates a target's Condition *before* building its DependsOnTargets, so a
+       Condition can never read a property one of them sets. -->
+  <Target Name="_AndroidGenerateMibcProfile"
+      AfterTargets="ILLink"
+      BeforeTargets="CreateReadyToRunImages"
+      DependsOnTargets="_AndroidGenerateMibcProfileInputs"
+      Condition=" '$(PublishReadyToRun)' == 'true' and '$(_AndroidReadyToRunMainAssembly)' != 'false' and ('$(_AndroidReadyToRunMainAssembly)' == 'true' or ($(PublishReadyToRunCrossgen2ExtraArgs.Contains('--partial')) and '@(PublishReadyToRunPgoFiles->Count())' == '0')) "
+      Inputs="$(_AndroidMibcMainAssembly)"
+      Outputs="$(_AndroidMibcProfile)">
+    <GenerateMibcProfile
+        MainAssembly="$(_AndroidMibcMainAssembly)"
+        OutputFile="$(_AndroidMibcProfile)" />
+    <!-- MSBuild still evaluates ItemGroup/PropertyGroup elements of a target skipped as up to
+         date, so @(PublishReadyToRunPgoFiles) is populated on incremental builds too. -->
+    <ItemGroup Condition=" Exists('$(_AndroidMibcProfile)') ">
+      <PublishReadyToRunPgoFiles Include="$(_AndroidMibcProfile)" />
+      <FileWrites Include="$(_AndroidMibcProfile)" />
     </ItemGroup>
   </Target>
 </Project>
