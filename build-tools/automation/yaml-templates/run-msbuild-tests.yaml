@@ -43,12 +43,6 @@ jobs:
       commit: ${{ parameters.commit }}
       use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-  # AndroidGradleProjectTests invoke the Gradle wrapper, which downloads the
-  # Gradle distribution and Maven dependencies on first use.
-  - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
-    parameters:
-      xaSourcePath: ${{ parameters.xaSourcePath }}
-
   - task: DownloadPipelineArtifact@2
     inputs:
       artifactName: $(TestAssembliesArtifactName)

@@ -290,6 +290,12 @@ stages:
         installTestSlicer: true
         use1ESTemplate: false
 
+    # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
+    # Gradle distribution and Maven dependencies on first use.
+    - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -335,6 +341,12 @@ stages:
         useAgentJdkPath: false
         installTestSlicer: true
         use1ESTemplate: false
+
+    # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
+    # Gradle distribution and Maven dependencies on first use.
+    - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)
 
     - task: DownloadPipelineArtifact@2
       inputs:
