@@ -42,11 +42,13 @@
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
   </ItemGroup>
 
-  <!-- Some of tests included in the files below fail on CoreCLR. This is PROBABLY caused by managed typemaps, which 
-       will be replaced at some point by a different implementation. Until then, these tests can remain disabled. -->
-  <!-- TODO: put these back when new typemap implementation is available -->
-  <ItemGroup>
+  <!-- AndroidValueManager is the MonoVM value manager; CoreCLR and NativeAOT use different implementations. -->
+  <ItemGroup Condition=" '$(UseMonoRuntime)' != 'true' ">
     <Compile Remove="Java.InteropTests\AndroidValueManagerContractTests.cs" />
+  </ItemGroup>
+
+  <!-- ReflectionJniValueManager is unsupported by the trimmable typemap value manager. See dotnet/android#12221. -->
+  <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
   </ItemGroup>
 

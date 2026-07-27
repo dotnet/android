@@ -24,6 +24,8 @@
   <PropertyGroup>
     <_KotlinGradleProjectDir>$(MSBuildThisFileDirectory)kotlin-gradle</_KotlinGradleProjectDir>
     <_TestKotlinGradleOutputDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\classes'))</_TestKotlinGradleOutputDir>
+    <_TestKotlinGradleBuildDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\build'))</_TestKotlinGradleBuildDir>
+    <_TestKotlinGradleProjectCacheDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\project-cache'))</_TestKotlinGradleProjectCacheDir>
     <!--
         This target is imported by two projects (Xamarin.Android.Tools.Bytecode-Tests
         and generator-Tests) that build in parallel during the solution build. Gradle is
@@ -32,7 +34,9 @@
         user home (~/.gradle) they race over the same daemon registry and loopback ports,
         which manifests as "Timeout waiting to connect to the Gradle daemon" on slower CI
         agents. Point GRADLE_USER_HOME at each project's own obj/ directory so the two
-        daemons are fully isolated; it also gets cleaned up with the rest of obj/.
+        daemons are fully isolated. The Gradle build and project-cache directories also
+        contain mutable state, so keep those in the importing project's obj/ directory.
+        This also ensures all generated state is removed by Clean.
     -->
     <_KotlinGradleUserHome Condition=" '$(_KotlinGradleUserHome)' == '' ">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)kotlin-gradle\.gradle'))</_KotlinGradleUserHome>
   </PropertyGroup>
@@ -41,7 +45,7 @@
         BeforeTargets="BeforeCompile"
         Inputs="@(TestKotlinGradleSource)"
         Outputs="@(TestKotlinGradleOutput)">
-    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
+    <Exec Command="&quot;$(GradleWPath)&quot; $(GradleArgs) --project-cache-dir &quot;$(_TestKotlinGradleProjectCacheDir)&quot; -p &quot;$(_KotlinGradleProjectDir)&quot; -PkotlinBuildDir=&quot;$(_TestKotlinGradleBuildDir)&quot; -PkotlinClassesDir=&quot;$(_TestKotlinGradleOutputDir)&quot; classes"
           EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome);GRADLE_USER_HOME=$(_KotlinGradleUserHome)" />
   </Target>
 

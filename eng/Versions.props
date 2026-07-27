@@ -15,7 +15,7 @@
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest110100preview4PackageVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>11.0.100-preview.7.26365.101</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26365.101</MicrosoftDotNetCecilPackageVersion>
-    <MSTestPackageVersion>4.4.0-preview.26367.7</MSTestPackageVersion>
+    <MSTestPackageVersion>4.4.0-preview.26376.8</MSTestPackageVersion>
     <SystemIOHashingPackageVersion>10.0.10</SystemIOHashingPackageVersion>
     <SystemReflectionMetadataPackageVersion>11.0.0-preview.1.26104.118</SystemReflectionMetadataPackageVersion>
     <!-- Previous .NET Android version -->
@@ -44,6 +44,6 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>37.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.7</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
   </PropertyGroup>
 </Project>

@@ -1687,17 +1687,16 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (true, "LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
-				AddTestData (true, "LowercaseCrc64", "", runtime, false);
-				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime, false);
+				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
+				AddTestData ("LowercaseCrc64", "", runtime, false);
+				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, false);
 			}
 
 			return ret;
 
-			void AddTestData (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 			{
 				ret.Add (new object[] {
-					useInterpreter,
 					packageNamingPolicy,
 					diagnosticConfiguration,
 					runtime,
@@ -1708,34 +1707,23 @@ namespace UnnamedProject
 
 		[Test]
 		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
-		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 		{
-			// NativeAOT supports neither the interpreter nor debug builds, but what we test here is
-			// environment file creation and contents, and that's relevant to NativeAOT too
+			// NativeAOT does not support debug builds, but environment file creation and contents are relevant to NativeAOT too.
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			if (runtime == AndroidRuntime.NativeAOT) {
-				if (packageNamingPolicy == "LowercaseMD5") {
-					Assert.Ignore ("NativeAOT does not support the 'LowercaseMD5' package naming policy.");
-					return;
-				}
-
-				// TODO: investigate and fix this. For some reason, `DOTNET_MODIFIABLE_ASSEMBLIES=Debug` is not
-				// in the environment variables file
-				if (useInterpreter && packageNamingPolicy == "LowercaseCrc64" && diagnosticConfiguration == "") {
-					Assert.Ignore ("NativeAOT doesn't put the DOTNET_MODIFIABLE_ASSEMBLIES=Debug variable in the environment file.");
-					return;
-				}
+			if (runtime == AndroidRuntime.NativeAOT && packageNamingPolicy == "LowercaseMD5") {
+				Assert.Ignore ("NativeAOT does not support the 'LowercaseMD5' package naming policy.");
+				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
 			proj.SetProperty ("EnableCrashReport", enableCrashReport.ToString ());
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
@@ -1748,7 +1736,7 @@ namespace UnnamedProject
 				var values = new List<string> {
 					"mono.enable_assembly_preload=0",
 				};
-				if (useInterpreter)
+				if (!isRelease)
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");

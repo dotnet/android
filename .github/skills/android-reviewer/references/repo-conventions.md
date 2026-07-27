@@ -40,13 +40,13 @@ and merge conflicts.
 | Check | What to look for |
 |-------|-----------------|
 | **Use existing utilities** | Check `MonoAndroidHelper`, `FileUtil`, `PathUtil`, `ITaskItemExtensions`, and other utilities before writing new helpers. Duplicating existing logic is the most expensive AI pattern. |
-| **Use Android tools utilities** | In `external/xamarin-android-tools/`, process execution should go through `ProcessUtils`, file extraction/download/checksum/path helpers through `FileUtil`, and repeated buffers/streams through `ObjectPool<T>` or `MemoryStreamPool` where applicable. |
+| **Use Android tools utilities** | In the shared Android tooling under `src/`, process execution should go through `ProcessUtils`, file extraction/download/checksum/path helpers through `FileUtil`, and repeated buffers/streams through `ObjectPool<T>` or `MemoryStreamPool` where applicable. |
 | **`Log.LogDebugMessage` for diagnostics** | Use `Log.LogDebugMessage(…)` for verbose/debug output, not `Console.WriteLine` or `Debug.WriteLine`. Don't spam logcat with messages that fire on every type lookup miss. (Postmortem `#9`) |
-| **Android tools logger delegate** | SDK/JDK discovery helpers in `external/xamarin-android-tools/` commonly use `Action<TraceLevel, string>? logger` (see `AndroidSdkInfo.DefaultConsoleLogger`) so callers can route diagnostics into MSBuild or IDE logs. Don't replace this with `Console.WriteLine` or `Debug.WriteLine`. |
+| **Android tools logger delegate** | SDK/JDK discovery helpers in `src/Xamarin.Android.Tools.AndroidSdk/` commonly use `Action<TraceLevel, string>? logger` (see `AndroidSdkInfo.DefaultConsoleLogger`) so callers can route diagnostics into MSBuild or IDE logs. Don't replace this with `Console.WriteLine` or `Debug.WriteLine`. |
 | **Return `IReadOnlyList<T>`** | Public methods should return `IReadOnlyList<T>` or `IReadOnlyCollection<T>` instead of mutable `List<T>`. |
 | **Prefer C# pattern matching** | Use `is`, `switch` expressions, and property patterns instead of `if`/`else` type-check chains. |
 | **Structured args, not string interpolation** | Process arguments should be `IEnumerable<string>` or use `ArgumentList`, not a single interpolated string. |
-| **Android SDK environment variables** | In `external/xamarin-android-tools/`, use `EnvironmentVariableNames.AndroidHome`/`ANDROID_HOME` for new SDK-root behavior. `ANDROID_SDK_ROOT` is deprecated by Android and should only be read for backward compatibility. |
+| **Android SDK environment variables** | In `src/Xamarin.Android.Tools.AndroidSdk/`, use `EnvironmentVariableNames.AndroidHome`/`ANDROID_HOME` for new SDK-root behavior. `ANDROID_SDK_ROOT` is deprecated by Android and should only be read for backward compatibility. |
 | **Method names must reflect behavior** | If `CreateFoo()` sometimes returns an existing instance, rename it `GetOrCreateFoo()` or `GetFoo()`. (Postmortem `#4`) |
 | **Choose collision-proof names** | Types and constants that could collide with user code or Android concepts need disambiguating prefixes (e.g., `__Xamarin.Android.Resource.Designer` with a `__` prefix). (Postmortem `#2`) |
 | **Don't assume transitive assembly references** | An assembly containing an `Activity` subclass does not necessarily reference `Mono.Android.dll` directly — the reference may be transitive. Skipping assemblies based on direct reference checks can break user code. (Postmortem `#64`) |
@@ -96,7 +96,7 @@ and merge conflicts.
 | Check | What to look for |
 |-------|-----------------|
 | **XmlReader over LINQ XML** | For forward-only XML parsing (manifests, config files), prefer `XmlReader` — it's streaming and allocation-free. `XElement`/`XDocument` builds a full DOM tree. |
-| **SDK manifest parsing stays streaming** | Android SDK repository manifests can be large; keep `external/xamarin-android-tools/` manifest parsing on streaming `XmlReader`-style paths unless there is measured evidence a DOM is acceptable. |
+| **SDK manifest parsing stays streaming** | Android SDK repository manifests can be large; keep `src/Xamarin.Android.Tools.AndroidSdk/` manifest parsing on streaming `XmlReader`-style paths unless there is measured evidence a DOM is acceptable. |
 | **p/invoke over process spawn** | For single syscalls like `chmod`, use `[DllImport("libc")]` instead of spawning a child process. Process creation is orders of magnitude more expensive. |
 | **Use `Files.CopyIfStringChanged()`** | Don't write to a file if the content hasn't changed — it breaks incremental builds by updating timestamps. (Postmortem `#53`) |
 | **Don't remove caches without measurement** | If a cache (like `TypeDefinitionCache`) had a measured perf win, removing it requires proving the replacement provides equivalent caching. (Postmortem `#57`) |
