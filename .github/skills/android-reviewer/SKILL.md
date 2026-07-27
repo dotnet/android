@@ -9,7 +9,7 @@ description: >-
 
 # Android PR Reviewer
 
-Review PRs against guidelines distilled from past reviews by senior maintainers of dotnet/android, including the in-tree shared tooling under `external/xamarin-android-tools/`.
+Review PRs against guidelines distilled from past reviews by senior maintainers of dotnet/android, including the in-tree shared Android tooling under `src/`.
 
 ## Review Mindset
 
@@ -70,7 +70,7 @@ Based on the changed files and diff content identified in step 2, read the appro
 
 **Conditionally load based on changed file types:**
 - `references/csharp-rules.md` — When any `.cs` files changed. Covers nullable, async, error handling, performance, and code organization.
-- `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/` or `external/xamarin-android-tools/src/Microsoft.Android.Build.BaseTasks/`).
+- `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/` or `src/Microsoft.Android.Build.BaseTasks/`).
 - `references/native-rules.md` — When `.c`, `.cpp`, `.h`, or `.hpp` files changed. Covers memory management, C++ best practices, symbol visibility, and platform-specific code.
 - `references/interop-rules.md` — When interop markers or Java/JNI name conversions appear, or files under `external/Java.Interop/`, `src/Mono.Android/`, `src/native/`, or `src/Microsoft.Android.Sdk.TrimmableTypeMap/` change.
 - `references/testing-rules.md` — When test files changed (e.g., files under `tests/`, `**/Tests/`, or test project directories).

@@ -7,7 +7,8 @@
 - `src/Xamarin.Android.Build.Tasks/` - MSBuild tasks for Android apps  
 - `src/native/` - Native runtime (MonoVM/CoreCLR/NativeAOT)
 - `external/Java.Interop/` - JNI bindings and Java-to-.NET interop
-- `external/xamarin-android-tools/` - Shared SDK tooling: `AndroidTask`/`AsyncTask` base classes, `AdbRunner`, `EmulatorRunner`, NRT extensions (`IsNullOrEmpty()`, `IsNullOrWhiteSpace()`), `CreateTaskLogger`, and SDK info utilities
+- `src/Microsoft.Android.Build.BaseTasks/` - Shared MSBuild task infrastructure: `AndroidTask`, `AsyncTask`, NRT extensions, and common file/process utilities
+- `src/Xamarin.Android.Tools.AndroidSdk/` - Shared Android SDK/JDK discovery, `AdbRunner`, `EmulatorRunner`, and SDK info utilities
 - `tests/` - NUnit tests, integration tests, device tests
 
 **Build System:** MSBuild + .NET Arcade SDK + CMake (native)
@@ -18,15 +19,16 @@
 - **Run tests:** `dotnet-local.cmd test bin/TestDebug/net9.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
 - **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net9.0/MSBuildDeviceIntegration.dll`
 
-### external/xamarin-android-tools/
+### Shared Android tooling
 
 The in-tree Android tools libraries include SDK/JDK discovery (`AndroidSdkInfo`, `JdkInfo`, SDK manifest parsing, `AdbRunner`, `EmulatorRunner`) and MSBuild task infrastructure (`AndroidTask`, `AndroidToolTask`, `AsyncTask`, `Files`, `ProcessUtils`, `FileUtil`, `MemoryStreamPool`). They target `netstandard2.0` and/or modern .NET, so verify API availability across all target frameworks before using newer BCL APIs. Prefer `ANDROID_HOME` for new Android SDK environment handling; `ANDROID_SDK_ROOT` is deprecated and should only remain for compatibility.
 
 Useful focused checks:
 ```sh
-dotnet build external/xamarin-android-tools/Xamarin.Android.Tools.sln
-dotnet test external/xamarin-android-tools/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-dotnet test external/xamarin-android-tools/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+dotnet build src/Microsoft.Android.Build.BaseTasks/Microsoft.Android.Build.BaseTasks.csproj
+dotnet build src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
+dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0
+dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
 ```
 
 ## Critical Rules
