@@ -155,9 +155,14 @@ CoreCLR packages managed assemblies, so `_RemoveRegisterAttributeCoreClr`
 copies the resolved assembly set into the shrunk/package locations. The target
 uses the resolved assemblies, assembly-set hash, build properties, and project
 imports as inputs and a stamp as its output. Missing destination assemblies
-invalidate the stamp. Projects with `*.dll.config` files retain the previous
-always-run behavior until those files can be modeled as a reliable one-to-one
-transform.
+invalidate the stamp.
+
+`*.dll.config` files are deliberately *not* copied alongside the shrunk
+assemblies. .NET for Android does not support assembly configuration files (see
+[OneDotNet.md](../../Documentation/guides/OneDotNet.md)): the `config_data`
+field carried by the assembly store is never handed to the runtime — it only
+appears in a `log_debug` message — so copying the files added an unavoidable
+always-run step for no observable behavior.
 
 NativeAOT keeps a separate always-run `_RemoveRegisterAttributeNativeAot`
 target. Its project-local destination remap must execute on every build so a

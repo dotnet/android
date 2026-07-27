@@ -359,14 +359,17 @@
 
     CoreCLR (and any other trimmable runtime) keeps the base behavior because it still
     packages the managed assemblies and therefore needs the shrunk copies in place.
+
+    Unlike the base target, `*.dll.config` files are not copied next to the shrunk
+    assemblies. Assembly configuration files are not supported by .NET for Android
+    (see Documentation/guides/OneDotNet.md); the assembly store's `config_data` is
+    never handed to the runtime, so the copy only forced this target to run on every
+    build.
   -->
   <Target Name="_PrepareTrimmableRemoveRegisterAttribute"
       DependsOnTargets="_PrepareAssemblies;_PrepareTrimmableTypeMapAssemblies"
       Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'">
     <ItemGroup>
-      <_TrimmableResolvedAssemblyConfigInput Remove="@(_TrimmableResolvedAssemblyConfigInput)" />
-      <_TrimmableResolvedAssemblyConfigInput Include="@(_ResolvedAssemblies->'%(Identity).config')" />
-      <_TrimmableResolvedAssemblyConfigInput Remove="@(_TrimmableResolvedAssemblyConfigInput)" Condition="!Exists('%(_TrimmableResolvedAssemblyConfigInput.Identity)')" />
       <_MissingTrimmableShrunkAssembly Remove="@(_MissingTrimmableShrunkAssembly)" />
       <_MissingTrimmableShrunkAssembly
           Include="@(_ShrunkAssemblies)"
@@ -375,12 +378,6 @@
     <Delete
         Files="$(_TrimmableRemoveRegisterFlag)"
         Condition=" '@(_MissingTrimmableShrunkAssembly->Count())' != '0' " />
-    <PropertyGroup>
-      <!-- Keep config-file projects on the previous always-run path until source/destination
-           config files can be modeled as a reliable one-to-one incremental transform. -->
-      <_TrimmableRemoveRegisterAlwaysRunInput
-          Condition=" '@(_TrimmableResolvedAssemblyConfigInput->Count())' != '0' ">$(IntermediateOutputPath)__always_copy_trimmable_assembly_configs__</_TrimmableRemoveRegisterAlwaysRunInput>
-    </PropertyGroup>
   </Target>
 
   <Target Name="_RemoveRegisterAttribute"
@@ -389,14 +386,11 @@
 
   <Target Name="_RemoveRegisterAttributeCoreClr"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' "
-      Inputs="@(_ResolvedAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(_TrimmableRemoveRegisterAlwaysRunInput)"
+      Inputs="@(_ResolvedAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_TrimmableRemoveRegisterFlag)">
     <CopyIfChanged
       SourceFiles="@(_ResolvedAssemblies)"
       DestinationFiles="@(_ShrunkAssemblies)" />
-    <CopyIfChanged
-      SourceFiles="@(_ResolvedAssemblies->'%(Identity).config')"
-      DestinationFiles="@(_ShrunkAssemblies->'%(Identity).config')" />
     <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
     <MakeDir Directories="$(_AndroidStampDirectory)" />
     <Touch Files="$(_TrimmableRemoveRegisterFlag)" AlwaysCreate="true" />
@@ -418,9 +412,6 @@
     <CopyIfChanged
       SourceFiles="@(_ResolvedAssemblies)"
       DestinationFiles="@(_ShrunkAssemblies)" />
-    <CopyIfChanged
-      SourceFiles="@(_ResolvedAssemblies->'%(Identity).config')"
-      DestinationFiles="@(_ShrunkAssemblies->'%(Identity).config')" />
     <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
   </Target>
 
