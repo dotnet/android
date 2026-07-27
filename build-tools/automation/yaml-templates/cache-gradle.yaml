@@ -50,7 +50,9 @@ steps:
 - task: Cache@2
   displayName: cache Gradle distributions
   inputs:
+    # No `restoreKeys` fallback: a partial restore would bring back a
+    # distribution the wrapper cannot use, and Cache@2 would then save the old
+    # and new distributions together under the new key, growing the cache on
+    # every version bump. An exact-key miss re-downloads only the new version.
     key: '"gradle-dists" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties'
-    restoreKeys: |
-      "gradle-dists" | "v1" | "$(Agent.OS)"
     path: $(GRADLE_DISTS_DIR)
