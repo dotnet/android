@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop;
 
+[StructLayout (LayoutKind.Sequential)]
 internal struct JniObjectReferenceControlBlock {
 	public	IntPtr  handle;
 	public  int     handle_type;
