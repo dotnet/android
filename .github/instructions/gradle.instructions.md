@@ -1,5 +1,5 @@
 ---
-applyTo: "**/*.gradle"
+applyTo: "**/*.gradle,**/*.gradle.kts"
 ---
 
 # Gradle conventions
@@ -9,6 +9,7 @@ All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-re
 ## settings.gradle template
 
 ```groovy
+// See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
 }
@@ -16,6 +17,24 @@ dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
 rootProject.name = '<project>'
+```
+
+Adjust the `../..` depth to reach the repo root from that project; it is not
+always two levels (e.g. `external/Java.Interop/tools/java-source-utils` uses
+four).
+
+Kotlin DSL (`settings.gradle.kts`) applies the same two Groovy files, but passes
+the receiver as `to = this`:
+
+```kotlin
+// See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
+pluginManagement {
+    apply(from = "$rootDir/../../eng/gradle/plugin-repositories.gradle", to = this)
+}
+dependencyResolutionManagement {
+    apply(from = "$rootDir/../../eng/gradle/dependency-repositories.gradle", to = this)
+}
+rootProject.name = "<project>"
 ```
 
 `build.gradle` files must not declare their own `repositories { ... }`.
@@ -64,7 +83,31 @@ pwsh ./eng/gradle/mirror-dependencies.ps1 `
 This attempts the coordinate's POM, JAR, AAR, and Gradle module metadata. Append
 the exact filename as a fourth segment for a nonstandard payload.
 
+## Tests
+
+Tests must not reach the public internet on CI; everything routes through the
+mirror. Two mechanisms in `Xamarin.ProjectTools` handle this, both keyed off
+`TestEnvironment.IsRunningOnCI` (i.e. `RUNNINGONCI`), so local runs are
+unaffected:
+
+- **Generated Gradle projects** — `AndroidGradleProject` writes a
+  `settings.gradle.kts` that applies the same two shared config files by
+  absolute path, and copies the repository wrapper from `build-tools/gradle`
+  instead of running `gradle init`. Don't reintroduce `google()` /
+  `mavenCentral()` into generated projects, and don't let a generated project
+  download its own Gradle distribution on CI.
+- **Non-Gradle Maven downloads** — `TestEnvironment.GetMavenRepository(...)`
+  swaps a named repository (`"Central"`, `"Google"`) for the feed, and
+  `TestEnvironment.GetTestDownloadUrl(...)` rewrites a public Maven URL to its
+  feed equivalent. `DownloadedCache` applies the latter automatically.
+
+When a test needs a coordinate the feed hasn't cached, seed it with
+`-MavenArtifact` above rather than pointing the test at a public repository.
+
 ## Don'ts
 
 - Don't hard-code Maven repo URLs in `build.gradle` / `settings.gradle`; use the shared file.
 - Don't use modern `plugins { id 'com.android.application' version '...' }` DSL without confirming the plugin is in `dotnet-public-maven`; prefer `buildscript { ... } / apply plugin: '...'` when in doubt.
+- Don't add a Gradle credential provider or any authenticated repository to a
+  build. CI resolves anonymously; authentication belongs only in
+  `mirror-dependencies.ps1`, which seeds the feed over plain HTTP.
