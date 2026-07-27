@@ -871,6 +871,10 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>Ignoring directory '{0}' as it does not exist!</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
