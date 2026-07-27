@@ -141,7 +141,7 @@ void OSBridge::_monodroid_gref_log (const char *message) noexcept
 
 void OSBridge::_monodroid_gref_logf (const char *format, ...) noexcept
 {
-	const char *safe_format = format == nullptr ? "<null>" : format;
+	const char *safe_format = optional_string (format);
 	va_list args;
 	va_start (args, format);
 
@@ -184,7 +184,7 @@ void OSBridge::log_it (LogCategories category, std::string_view const& line, FIL
 
 void OSBridge::log_itf (LogCategories category, FILE *to, const char *const from, bool logcat_enabled, const char *format, ...) noexcept
 {
-	const char *safe_format = format == nullptr ? "<null>" : format;
+	const char *safe_format = optional_string (format);
 	char *line = nullptr;
 	va_list args;
 	va_start (args, format);
