@@ -51,9 +51,3 @@ JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[may
 {
 	Host::propagate_uncaught_exception (env, javaThread, javaException);
 }
-
-JNIEXPORT void
-JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
-{
-	// TODO: implement or remove
-}

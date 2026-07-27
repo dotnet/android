@@ -7,13 +7,12 @@ public class PreserveTest
 	public static string MethodsArePreserved ()
 	{
 		try {
-			// See src/monodroid/jni/timezones.cc for usage
-			var androidEnvironment = Type.GetType ("Android.Runtime.AndroidEnvironment, Mono.Android", throwOnError: true);
-			var notifyTimeZoneChanged = androidEnvironment.GetMethod ("NotifyTimeZoneChanged", BindingFlags.Static | BindingFlags.NonPublic);
-			if (notifyTimeZoneChanged == null) {
-				return $"[FAIL] {nameof (PreserveTest)}.{nameof (MethodsArePreserved)} FAILED: {nameof (notifyTimeZoneChanged)} is null)";
+			// See src/Microsoft.Android.Sdk.ILLink/PreserveLists/Mono.Android.xml
+			var javaLangObject = Type.GetType ("Java.Lang.Object, Mono.Android", throwOnError: true);
+			var setHandleOnDeserialized = javaLangObject.GetMethod ("SetHandleOnDeserialized", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+			if (setHandleOnDeserialized == null) {
+				return $"[FAIL] {nameof (PreserveTest)}.{nameof (MethodsArePreserved)} FAILED: {nameof (setHandleOnDeserialized)} is null)";
 			}
-			notifyTimeZoneChanged.Invoke (null, null);
 			return $"[PASS] {nameof (PreserveTest)}.{nameof (MethodsArePreserved)}";
 		} catch (Exception ex) {
 			return $"[FAIL] {nameof (PreserveTest)}.{nameof (MethodsArePreserved)} FAILED: {ex}";
