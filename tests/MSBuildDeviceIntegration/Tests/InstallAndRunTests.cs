@@ -2679,6 +2679,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[TestCase ("test", MSTestPackageChannel.Nightly)]
 		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
 		{
+			if (mode == "test")
+				Assert.Ignore ("`dotnet test` fails with a duplicate `Microsoft.NETCore.App` runtime pack: https://github.com/dotnet/android/issues/12254");
+
 			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
