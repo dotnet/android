@@ -39,15 +39,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeployUpdatesTypeMapAfterAssemblyEdit ()
+		[TestCase ("FastDeploy")]
+		[TestCase ("FastDeploy2")]
+		public void FastDeployUpdatesTypeMapAfterAssemblyEdit (string strategy)
 		{
 			const string logcatMessage = "FAST_DEPLOY_TYPEMAP_TEST_MESSAGE";
 
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeploy_typemap",
+				PackageName = $"com.xamarin.fastdeploy_typemap_{strategy.ToLowerInvariant ()}",
 			};
 			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy");
+			proj.SetProperty ("_AndroidFastDevStrategy", strategy);
 
 			// Fast deployment only syncs managed assemblies, so anything that changes the set of
 			// Java-callable types has to go through a new .apk: new Java stubs, a new .dex, a new
