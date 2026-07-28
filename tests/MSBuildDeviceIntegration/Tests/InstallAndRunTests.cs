@@ -96,6 +96,73 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void PublishReadyToRunPartial ([Values] bool isComposite)
+		{
+			const string logcatMessage = "R2R_PARTIAL_TEST_ONCREATE";
+
+			var rid = MonoAndroidHelper.AbiToRid (DeviceAbi);
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, $"r2rpartial{isComposite}")) {
+				IsRelease = true, // Enables ReadyToRun by default
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
+			// "--partial" restricts crossgen2 to the methods in the profile, "--map" makes it
+			// write a listing of everything it compiled.
+			proj.SetProperty ("PublishReadyToRunCrossgen2ExtraArgs", "--partial;--map");
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{logcatMessage}\");");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+
+			var assemblyName = proj.ProjectName;
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+
+			// _AndroidGenerateMibcProfile should have written a profile for the app assembly.
+			var mibc = Directory.GetFiles (intermediate, $"{assemblyName}.mibc", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (mibc, $"{assemblyName}.mibc should have been generated!");
+
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, true);
+			var apkEntry = $"assemblies/{DeviceAbi}/{assemblyName}.dll";
+			Assert.IsTrue (helper.Exists (apkEntry), $"{assemblyName}.dll should exist in apk!");
+
+			using (var stream = helper.ReadEntry (apkEntry, MonoAndroidHelper.AbiToTargetArch (DeviceAbi))) {
+				Assert.IsNotNull (stream, $"{apkEntry} should be readable from the apk!");
+				stream.Position = 0;
+				using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+			}
+
+			// The crossgen2 map lists every method that made it into the R2R image.  Without the
+			// generated profile, "--partial" would leave the app's own code out entirely.  The
+			// file is named after the app assembly, or after the composite image in a composite
+			// build.
+			var maps = Directory.GetFiles (intermediate, "*.map", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (maps, "crossgen2 should have written a .map file!");
+			// e.g. "0x000108C0 | 0x000100 | 0 | .text | UnnamedProject_UnnamedProject_MainActivity__OnCreate  (MethodWithGCInfo)"
+			var symbol = $"{assemblyName}_{assemblyName}_MainActivity__OnCreate  (MethodWithGCInfo)";
+			Assert.IsTrue (maps.Any (m => File.ReadAllText (m).Contains (symbol)),
+				$"MainActivity.OnCreate() should be ReadyToRun compiled! Looked for '{symbol}' in: {string.Join (", ", maps)}");
+
+			// A partially ReadyToRun compiled app must still start and run its managed code.
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (logcatMessage),
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45),
+				$"Output did not contain {logcatMessage}! MainActivity.OnCreate() should have run.");
+			Assert.IsTrue (builder.Uninstall (proj), "Project should have uninstalled.");
+		}
+
+		[Test]
 		public void TrimmableTypeMapInheritedVirtualOverrideUsesCorrectUco ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const string expectedLogcatOutput = "UCO_OVERRIDE_REUSE_RESULTS 107:211:1:1:405:1:0";
