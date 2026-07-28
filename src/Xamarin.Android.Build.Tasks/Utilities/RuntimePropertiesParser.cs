@@ -25,7 +25,7 @@ class RuntimePropertiesParser
 		var ret = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
 		AddConfigProperties (projectRuntimeConfigFilePath, ret, required: true);
 
-		if (!String.IsNullOrEmpty (projectRuntimeConfigDevFilePath) && File.Exists (projectRuntimeConfigDevFilePath)) {
+		if (!projectRuntimeConfigDevFilePath.IsNullOrEmpty () && File.Exists (projectRuntimeConfigDevFilePath)) {
 			// Values from the dev file win, matching `hostfxr`
 			AddConfigProperties (projectRuntimeConfigDevFilePath, ret, required: false);
 		}
