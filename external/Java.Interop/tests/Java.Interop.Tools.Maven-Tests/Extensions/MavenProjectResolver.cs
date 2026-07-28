@@ -8,6 +8,10 @@ namespace Java.Interop.Tools.Maven_Tests.Extensions;
 
 class MavenProjectResolver : IProjectResolver
 {
+	// These tests resolve through the dnceng `dotnet-public-maven` feed unconditionally,
+	// including locally, so a local run exercises the same URLs as CI. CI agents are
+	// network-isolated and can only reach this feed, so an artifact the mirror does not
+	// have must fail everywhere rather than only on CI.
 	const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
 	readonly IMavenRepository repository;
 
@@ -20,14 +24,9 @@ class MavenProjectResolver : IProjectResolver
 	{
 		var cache_path = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "dotnet-android", "MavenCacheDirectory");
 
-		Central = new MavenProjectResolver (new CachedMavenRepository (cache_path, GetRepository (MavenRepository.Central, "central")));
-		Google = new MavenProjectResolver (new CachedMavenRepository (cache_path, GetRepository (MavenRepository.Google, "google")));
+		Central = new MavenProjectResolver (new CachedMavenRepository (cache_path, new MavenRepository (DotNetPublicMaven, "central")));
+		Google = new MavenProjectResolver (new CachedMavenRepository (cache_path, new MavenRepository (DotNetPublicMaven, "google")));
 	}
-
-	static MavenRepository GetRepository (MavenRepository localRepository, string name) =>
-		string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase)
-			? new MavenRepository (DotNetPublicMaven, name)
-			: localRepository;
 
 	public Project Resolve (Artifact artifact)
 	{
