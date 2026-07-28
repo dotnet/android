@@ -46,6 +46,30 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy");
+
+			// Whenever the set of Java-callable types changes, the Java stubs, the typemap, the native
+			// libraries embedding it, and the .apk containing them all have to be regenerated.
+			var typeMapTargets = new [] {
+				"_GenerateJavaStubs",
+				"_CompileJava",
+				"_CompileToDalvik",
+				"_CompileNativeAssemblySources",
+				"_CreateApplicationSharedLibraries",
+				"_BuildApkFastDev",
+				"_Sign",
+			};
+
+			using var builder = CreateApkBuilder ();
+
+			// 1. Initial build and deployment, with only MainActivity.
+			Assert.IsTrue (builder.Install (proj), "Initial install should have succeeded.");
+			foreach (var target in typeMapTargets) {
+				builder.Output.AssertTargetIsNotSkipped (target, occurrence: 1);
+			}
+			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been installed by the initial build.");
+			AssertActivityStarts ("MainActivity", "initial-launch.log");
+
+			// 2. A C#-only change that adds a new Java-callable type, so the type map *must* be updated.
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", "StartActivity (new Android.Content.Intent (this, typeof (SecondActivity)));")
 				.Replace ("//${AFTER_MAINACTIVITY}", """
@@ -54,29 +78,30 @@ namespace Xamarin.Android.Build.Tests
 					{
 					}
 					""");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Initial install should have succeeded.");
-			AssertSecondActivityStarts ("initial-launch.log");
-
-			proj.MainActivity += "// Incremental C# edit.";
 			proj.Touch ("MainActivity.cs");
 			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental install should have succeeded.");
-			AssertSecondActivityStarts ("incremental-launch.log");
+
+			builder.Output.AssertTargetIsNotSkipped ("CoreCompile", occurrence: 2);
+			foreach (var target in typeMapTargets) {
+				builder.Output.AssertTargetIsNotSkipped (target, occurrence: 2);
+			}
+			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been reinstalled after adding a new activity.");
+			AssertActivityStarts ("SecondActivity", "incremental-launch.log");
+
 			Assert.IsTrue (builder.Uninstall (proj), "Uninstall should have succeeded.");
 
-			void AssertSecondActivityStarts (string logFileName)
+			void AssertActivityStarts (string activityName, string logFileName)
 			{
 				ClearAdbLogcat ();
 				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
 				Assert.IsTrue (
 					WaitForActivityToStart (
 						proj.PackageName,
-						"SecondActivity",
+						activityName,
 						Path.Combine (Root, builder.ProjectDirectory, logFileName),
 						ActivityStartTimeoutInSeconds
 					),
-					"SecondActivity should have started."
+					$"{activityName} should have started."
 				);
 			}
 		}
