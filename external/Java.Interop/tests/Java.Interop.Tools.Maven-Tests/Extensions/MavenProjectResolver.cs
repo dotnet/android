@@ -8,10 +8,7 @@ namespace Java.Interop.Tools.Maven_Tests.Extensions;
 
 class MavenProjectResolver : IProjectResolver
 {
-	// These tests resolve through the dnceng `dotnet-public-maven` feed unconditionally,
-	// including locally, so a local run exercises the same URLs as CI. CI agents are
-	// network-isolated and can only reach this feed, so an artifact the mirror does not
-	// have must fail everywhere rather than only on CI.
+	// Deliberately not gated on RUNNINGONCI: local runs must hit the same feed CI does.
 	const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
 	readonly IMavenRepository repository;
 
