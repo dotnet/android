@@ -41,14 +41,17 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void FastDeployUpdatesTypeMapAfterAssemblyEdit ()
 		{
+			const string logcatMessage = "FAST_DEPLOY_TYPEMAP_TEST_MESSAGE";
+
 			var proj = new XamarinAndroidApplicationProject {
 				PackageName = "com.xamarin.fastdeploy_typemap",
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy");
 
-			// Whenever the set of Java-callable types changes, the Java stubs, the typemap, the native
-			// libraries embedding it, and the .apk containing them all have to be regenerated.
+			// Fast deployment only syncs managed assemblies, so anything that changes the set of
+			// Java-callable types has to go through a new .apk: new Java stubs, a new .dex, a new
+			// type map inside libxamarin-app.so, and therefore a new signed package.
 			var typeMapTargets = new [] {
 				"_GenerateJavaStubs",
 				"_CompileJava",
@@ -63,9 +66,6 @@ namespace Xamarin.Android.Build.Tests
 
 			// 1. Initial build and deployment, with only MainActivity.
 			Assert.IsTrue (builder.Install (proj), "Initial install should have succeeded.");
-			foreach (var target in typeMapTargets) {
-				builder.Output.AssertTargetIsNotSkipped (target, occurrence: 1);
-			}
 			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been installed by the initial build.");
 			AssertActivityStarts ("MainActivity", "initial-launch.log");
 
@@ -76,17 +76,47 @@ namespace Xamarin.Android.Build.Tests
 					[Activity (Label = "Fast Deploy Result")]
 					public sealed class SecondActivity : Activity
 					{
+						protected override void OnCreate (Bundle bundle)
+						{
+							base.OnCreate (bundle);
+							//${SECOND_ACTIVITY_ONCREATE}
+						}
 					}
 					""");
 			proj.Touch ("MainActivity.cs");
-			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental install should have succeeded.");
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Install of the new activity should have succeeded.");
 
 			builder.Output.AssertTargetIsNotSkipped ("CoreCompile", occurrence: 2);
 			foreach (var target in typeMapTargets) {
 				builder.Output.AssertTargetIsNotSkipped (target, occurrence: 2);
 			}
 			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been reinstalled after adding a new activity.");
-			AssertActivityStarts ("SecondActivity", "incremental-launch.log");
+			AssertActivityStarts ("SecondActivity", "new-activity-launch.log");
+
+			// 3. A C#-only change that leaves the Java-callable types alone. The type map is unchanged,
+			// so the .apk is neither rebuilt nor reinstalled and only the assembly is fast deployed.
+			proj.MainActivity = proj.MainActivity.Replace ("//${SECOND_ACTIVITY_ONCREATE}", $"Console.WriteLine (\"{logcatMessage}\");");
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental install should have succeeded.");
+
+			builder.Output.AssertTargetIsNotSkipped ("CoreCompile", occurrence: 3);
+			foreach (var target in new [] { "_CompileNativeAssemblySources", "_CreateApplicationSharedLibraries", "_BuildApkFastDev", "_Sign" }) {
+				builder.Output.AssertTargetIsSkipped (target, occurrence: 3);
+			}
+			Assert.IsFalse (builder.Output.IsApkInstalled, "The .apk should not be reinstalled for a C#-only change.");
+
+			ClearAdbLogcat ();
+			Assert.IsTrue (
+				MonitorAdbLogcat (
+					line => line.Contains (logcatMessage),
+					Path.Combine (Root, builder.ProjectDirectory, "incremental-launch.log"),
+					ActivityStartTimeoutInSeconds,
+					onMonitoringStarted: () => {
+						AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+					}
+				),
+				$"`{logcatMessage}` should have been logged by the fast deployed assembly."
+			);
 
 			Assert.IsTrue (builder.Uninstall (proj), "Uninstall should have succeeded.");
 
