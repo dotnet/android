@@ -850,7 +850,7 @@ class MemTest {
 			};
 			proj.SetRuntime (runtime);
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			using (var b = CreateApkBuilder ()) {
 				b.Verbosity = LoggerVerbosity.Detailed;

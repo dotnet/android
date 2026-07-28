@@ -21,13 +21,17 @@ namespace Xamarin.ProjectTools
 	/// <seealso cref="FileSystemUtils"/>
 	public static class TestEnvironment
 	{
-		const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
-		static readonly string [] publicMavenRepositories = {
-			"https://repo1.maven.org/maven2/",
-			"https://repo.maven.apache.org/maven2/",
-			"https://maven.google.com/",
-			"https://dl.google.com/android/maven2/",
-		};
+		/// <summary>
+		/// The dnceng <c>dotnet-public-maven</c> feed, which mirrors both Maven Central and
+		/// Google Maven and is readable anonymously.
+		/// </summary>
+		/// <remarks>
+		/// Tests download through this feed unconditionally, including locally, so that a local
+		/// run exercises exactly the same URLs as CI. CI agents are network-isolated and can only
+		/// reach this feed, so an artifact the mirror does not have must fail everywhere rather
+		/// than only on CI.
+		/// </remarks>
+		public const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
 
 		[DllImport ("libc")]
 		static extern int uname (IntPtr buf);
@@ -86,22 +90,6 @@ namespace Xamarin.ProjectTools
 
 		public static bool IsRunningOnCI =>
 			string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase);
-
-		public static string GetMavenRepository (string repository) =>
-			IsRunningOnCI ? DotNetPublicMaven : repository;
-
-		public static string GetTestDownloadUrl (string url)
-		{
-			if (!IsRunningOnCI)
-				return url;
-
-			foreach (var repository in publicMavenRepositories) {
-				if (url.StartsWith (repository, StringComparison.OrdinalIgnoreCase))
-					return $"{DotNetPublicMaven}/{url.Substring (repository.Length)}";
-			}
-
-			return url;
-		}
 
 		/// <summary>
 		/// The MonoAndroid reference assemblies directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net8.0/<br/>

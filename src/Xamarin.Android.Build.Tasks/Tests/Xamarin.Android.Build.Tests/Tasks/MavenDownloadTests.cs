@@ -171,7 +171,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4", TestEnvironment.GetMavenRepository ("Central"))],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4", TestEnvironment.DotNetPublicMaven)],
 			};
 
 			await task.RunTaskAsync ();
@@ -202,7 +202,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("androidx.core:core", "1.12.0", TestEnvironment.GetMavenRepository ("Google"))],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("androidx.core:core", "1.12.0", TestEnvironment.DotNetPublicMaven)],
 			};
 
 			await task.RunTaskAsync ();
@@ -235,7 +235,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("com.facebook.react:react-android", "0.76.1", TestEnvironment.GetMavenRepository ("Central"), artifactFilename: "react-android-0.76.1.module")],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("com.facebook.react:react-android", "0.76.1", TestEnvironment.DotNetPublicMaven, artifactFilename: "react-android-0.76.1.module")],
 			};
 
 			await task.RunTaskAsync ();
@@ -255,6 +255,28 @@ public class MavenDownloadTests
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
+	}
+
+	// The tests below route every download through TestEnvironment.DotNetPublicMaven, so the
+	// "Central"/"Google" shorthands are never exercised there. Cover them directly instead --
+	// this needs no network, so it also runs under CI's network isolation.
+	[TestCase ("Central", "central")]
+	[TestCase ("central", "central")]
+	[TestCase ("Google", "google")]
+	[TestCase ("google", "google")]
+	public void KnownRepositoryShorthand (string metadata, string expectedName)
+	{
+		var repository = MavenDownload.GetKnownRepository (metadata);
+
+		Assert.IsNotNull (repository);
+		Assert.AreEqual (expectedName, repository?.Name);
+	}
+
+	[TestCase ("bad-repo")]
+	[TestCase ("https://repo1.maven.org/maven2/")]
+	public void UnknownRepositoryShorthand (string metadata)
+	{
+		Assert.IsNull (MavenDownload.GetKnownRepository (metadata));
 	}
 
 	ITaskItem CreateMavenTaskItem (string name, string? version, string? repository = null, string? artifactFilename = null)

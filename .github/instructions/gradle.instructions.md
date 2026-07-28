@@ -86,9 +86,9 @@ the exact filename as a fourth segment for a nonstandard payload.
 ## Tests
 
 Tests must not reach the public internet on CI; everything routes through the
-mirror. Two mechanisms in `Xamarin.ProjectTools` handle this, both keyed off
-`TestEnvironment.IsRunningOnCI` (i.e. `RUNNINGONCI`), so local runs are
-unaffected:
+mirror. Two mechanisms in `Xamarin.ProjectTools` handle this, and both apply
+unconditionally — local runs hit the same URLs as CI, so a package the mirror
+lacks fails everywhere instead of only on CI:
 
 - **Generated Gradle projects** — `AndroidGradleProject` writes a
   `settings.gradle.kts` that applies the same two shared config files by
@@ -96,10 +96,12 @@ unaffected:
   instead of running `gradle init`. Don't reintroduce `google()` /
   `mavenCentral()` into generated projects, and don't let a generated project
   download its own Gradle distribution on CI.
-- **Non-Gradle Maven downloads** — `TestEnvironment.GetMavenRepository(...)`
-  swaps a named repository (`"Central"`, `"Google"`) for the feed, and
-  `TestEnvironment.GetTestDownloadUrl(...)` rewrites a public Maven URL to its
-  feed equivalent. `DownloadedCache` applies the latter automatically.
+- **Non-Gradle Maven downloads** — use `TestEnvironment.DotNetPublicMaven` as
+  the base URL, both for `WebContent` on a `BuildItem` and for `Repository`
+  metadata on an `<AndroidMavenLibrary>`. Don't write a `repo1.maven.org` or
+  `maven.google.com` URL into a test, and don't use the `"Central"` / `"Google"`
+  shorthands there — those are covered without network by
+  `MavenDownloadTests.KnownRepositoryShorthand`.
 
 When a test needs a coordinate the feed hasn't cached, seed it with
 `-MavenArtifact` above rather than pointing the test at a public repository.
