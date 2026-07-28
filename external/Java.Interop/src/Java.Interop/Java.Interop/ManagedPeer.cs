@@ -105,6 +105,15 @@ namespace Java.Interop {
 
 				var typeSig = new JniTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (r_self));
 				var type    = GetTypeFromSignature (runtime.TypeManager, typeSig);
+				if (InteropEventSource.IsEnabled ()) {
+					var managedObjectHashCode = self != null ? RuntimeHelpers.GetHashCode (self) : 0;
+					InteropEventSource.JavaWrapperCreated (
+						type.FullName,
+						typeSig.SimpleReference,
+						runtime.ValueManager.GetJniIdentityHashCode (r_self),
+						managedObjectHashCode,
+						runtime.GetType ().FullName);
+				}
 
 				if (type.IsGenericTypeDefinition) {
 					throw new NotSupportedException (

@@ -78,6 +78,9 @@ namespace Java.Interop
 
 				peer.SetPeerReference (newRef);
 				peer.SetJniIdentityHashCode (JniSystem.IdentityHashCode (newRef));
+				if (!peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable) && InteropEventSource.IsEnabled ()) {
+					EmitJavaWrapperCreatedEvent (peer, newRef);
+				}
 
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
@@ -92,6 +95,34 @@ namespace Java.Interop
 				if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
 					AddPeer (peer);
 				}
+			}
+
+			void EmitDotNetWrapperCreatedEvent (IJavaPeerable peer)
+			{
+				JniObjectReference reference = peer.PeerReference;
+				var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+				InteropEventSource.DotNetWrapperCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer),
+					GetRuntimeMode ());
+			}
+
+			void EmitJavaWrapperCreatedEvent (IJavaPeerable peer, JniObjectReference reference)
+			{
+				var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+				InteropEventSource.JavaWrapperCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer),
+					GetRuntimeMode ());
+			}
+
+			string GetRuntimeMode ()
+			{
+				return Runtime.GetType ().FullName ?? "Unknown";
 			}
 
 			// This base method implementation is NOT reachable in trimmable typemap - it is featureswitch guarded
@@ -143,6 +174,9 @@ namespace Java.Interop
 							JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
 				}
 				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+				if (InteropEventSource.IsEnabled ()) {
+					EmitDotNetWrapperCreatedEvent (peer);
+				}
 				return peer;
 			}
 

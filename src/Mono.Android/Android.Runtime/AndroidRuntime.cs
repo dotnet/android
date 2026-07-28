@@ -626,6 +626,16 @@ namespace Android.Runtime {
 				return null;
 
 			var peer        = Java.Interop.TypeManager.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
+			if (peer != null && InteropEventSource.IsEnabled ()) {
+				var peerReference = peer.PeerReference;
+				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
+				InteropEventSource.DotNetWrapperCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer),
+					"MonoVM");
+			}
 			JniObjectReference.Dispose (ref reference, options);
 			return peer;
 		}

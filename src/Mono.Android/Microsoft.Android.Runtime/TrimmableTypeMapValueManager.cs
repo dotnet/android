@@ -100,6 +100,15 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		peer.SetPeerReference (newRef);
 		peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (newRef));
+		if (!peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable) && InteropEventSource.IsEnabled ()) {
+			var javaType = newRef.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (newRef) : null;
+			InteropEventSource.JavaWrapperCreated (
+				peer.GetType ().FullName,
+				javaType,
+				peer.JniIdentityHashCode,
+				RuntimeHelpers.GetHashCode (peer),
+				GetRuntimeMode ());
+		}
 
 		var o = Runtime.ObjectReferenceManager;
 		if (o.LogGlobalReferenceMessages) {
@@ -130,8 +139,19 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		try {
 			var resolvedTargetType = ResolvePeerType (targetType);
-			return TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
+			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
 				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
+			if (peer != null && InteropEventSource.IsEnabled ()) {
+				var peerReference = peer.PeerReference;
+				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
+				InteropEventSource.DotNetWrapperCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer),
+					GetRuntimeMode ());
+			}
+			return peer;
 		} finally {
 			JniObjectReference.Dispose (ref reference, transfer);
 		}
@@ -217,6 +237,20 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 			// Compatible classes mean a proxy/activation gap.
 			return false;
+		}
+
+		static string GetRuntimeMode ()
+		{
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				return "NativeAOT";
+			}
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				return "CoreCLR";
+			}
+			if (RuntimeFeature.IsMonoRuntime) {
+				return "MonoVM";
+			}
+			return "Unknown";
 		}
 
 	}

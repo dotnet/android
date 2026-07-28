@@ -192,6 +192,9 @@ static class JavaMarshalRegisteredPeers
 				ReferenceTrackingHandle peer = peers [i];
 				IJavaPeerable? target = peer.Target;
 				if (ReferenceEquals (value, target)) {
+					if (InteropEventSource.IsEnabled ()) {
+						EmitJavaWrapperReleasedDotNetReference (value);
+					}
 					peers.RemoveAt (i);
 					peer.Dispose ();
 				}
@@ -232,6 +235,9 @@ static class JavaMarshalRegisteredPeers
 					RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 					value.GetType ().ToString ());
 		}
+		if (InteropEventSource.IsEnabled ()) {
+			EmitDotNetWrapperReleasedJavaReference (value, h);
+		}
 		value.SetPeerReference (new JniObjectReference ());
 		JniObjectReference.Dispose (ref h);
 		value.Finalized ();
@@ -253,6 +259,84 @@ static class JavaMarshalRegisteredPeers
 			}
 			return peers;
 		}
+	}
+
+	static void EmitJavaWrapperReleasedDotNetReference (IJavaPeerable peer)
+	{
+		JniObjectReference reference = peer.PeerReference;
+		var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+		InteropEventSource.JavaWrapperReleasedDotNetReference (
+			peer.GetType ().FullName,
+			javaType,
+			peer.JniIdentityHashCode,
+			RuntimeHelpers.GetHashCode (peer),
+			GetRuntimeMode ());
+	}
+
+	static void EmitDotNetWrapperReleasedJavaReference (IJavaPeerable peer, JniObjectReference reference)
+	{
+		var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+		InteropEventSource.DotNetWrapperReleasedJavaReference (
+			peer.GetType ().FullName,
+			javaType,
+			peer.JniIdentityHashCode,
+			RuntimeHelpers.GetHashCode (peer),
+			GetRuntimeMode ());
+	}
+
+	unsafe static void EmitReachabilityEventIfEnabled (HandleContext* context, GCHandle handle, int componentIndex, int contextIndex, bool isCollected)
+	{
+		if (!InteropEventSource.IsEnabled ()) {
+			return;
+		}
+
+		IJavaPeerable? peer = handle.Target as IJavaPeerable;
+		string? managedType = peer?.GetType ().FullName;
+		int managedObjectHashCode = peer != null ? RuntimeHelpers.GetHashCode (peer) : 0;
+		string? javaType = null;
+		if (context->controlBlock != IntPtr.Zero) {
+			IntPtr javaHandle = ((JniObjectReferenceControlBlock*) context->controlBlock)->handle;
+			if (javaHandle != IntPtr.Zero) {
+				javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (javaHandle, JniObjectReferenceType.Global));
+			}
+		}
+
+		if (isCollected) {
+			InteropEventSource.JavaObjectOnlyReachableFromDotNet (
+				managedType,
+				javaType,
+				context->PeerIdentityHashCode,
+				managedObjectHashCode,
+				GetRuntimeMode (),
+				componentIndex,
+				contextIndex,
+				(long) (nint) context);
+			return;
+		}
+
+		InteropEventSource.DotNetObjectOnlyReachableFromJava (
+			managedType,
+			javaType,
+			context->PeerIdentityHashCode,
+			managedObjectHashCode,
+			GetRuntimeMode (),
+			componentIndex,
+			contextIndex,
+			(long) (nint) context);
+	}
+
+	static string GetRuntimeMode ()
+	{
+		if (RuntimeFeature.IsNativeAotRuntime) {
+			return "NativeAOT";
+		}
+		if (RuntimeFeature.IsCoreClrRuntime) {
+			return "CoreCLR";
+		}
+		if (RuntimeFeature.IsMonoRuntime) {
+			return "MonoVM";
+		}
+		return "Unknown";
 	}
 
 	unsafe struct ReferenceTrackingHandle : IDisposable
@@ -437,24 +521,30 @@ static class JavaMarshalRegisteredPeers
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
 			for (int j = 0; (nuint)j < component.Count; j++) {
-				ProcessContext ((HandleContext*)component.Contexts [j]);
+				ProcessContext ((HandleContext*)component.Contexts [j], i, j);
 			}
 		}
 
 #pragma warning restore CA1416
 
-		void ProcessContext (HandleContext* context)
+		void ProcessContext (HandleContext* context, int componentIndex, int contextIndex)
 		{
 			if (context == null) {
 				throw new ArgumentNullException (nameof (context), "HandleContext should never be null.");
 			}
 
-			// Ignore contexts which were not collected
-			if (!context->IsCollected) {
+			bool isCollected = context->IsCollected;
+			if (!isCollected && !InteropEventSource.IsEnabled ()) {
 				return;
 			}
 
 			GCHandle handle = HandleContext.GetAssociatedGCHandle (context);
+			EmitReachabilityEventIfEnabled (context, handle, componentIndex, contextIndex, isCollected);
+
+			// Ignore contexts which were not collected
+			if (!isCollected) {
+				return;
+			}
 
 			// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
 			// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
