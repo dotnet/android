@@ -65,9 +65,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			using var builder = CreateApkBuilder ();
-			// `IsApkInstalled` looks for the "Installed Package" message that `FastDeploy` logs via
-			// `LogDebugMessageWithTiming()`, which is `MessageImportance.Low` and therefore invisible
-			// at the default `Normal` verbosity.
+			// `IsApkInstalled` requires detailed verbosity, see its documentation.
 			builder.Verbosity = LoggerVerbosity.Detailed;
 
 			// 1. Initial build and deployment, with only MainActivity.
