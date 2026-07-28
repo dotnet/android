@@ -871,6 +871,10 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>Ignoring directory '{0}' as it does not exist!</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Brak katalogu łańcuchów narzędzi zestawu Android NDK „{0}”. Zainstaluj zestaw Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
