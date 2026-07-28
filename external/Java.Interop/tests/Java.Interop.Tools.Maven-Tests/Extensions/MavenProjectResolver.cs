@@ -8,7 +8,7 @@ namespace Java.Interop.Tools.Maven_Tests.Extensions;
 
 class MavenProjectResolver : IProjectResolver
 {
-	// Deliberately not gated on RUNNINGONCI: local runs must hit the same feed CI does.
+	// Used locally too, so local runs download from the same feed as CI.
 	const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
 	readonly IMavenRepository repository;
 
