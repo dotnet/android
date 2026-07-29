@@ -13,6 +13,7 @@ static class RuntimeFeature
 	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
 	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
+	const bool WaitForGCBridgeProcessingEnabledByDefault = true;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -50,4 +51,10 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}")]
 	internal static bool ManagedToJavaUsesAssemblyFullName { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}", out bool isEnabled) ? isEnabled : ManagedToJavaUsesAssemblyFullNameEnabledByDefault;
+
+	// When disabled, the trimmer can remove the GC bridge barrier and every
+	// WaitForGCBridgeProcessing() call site becomes an empty method body.
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (WaitForGCBridgeProcessing)}")]
+	internal static bool WaitForGCBridgeProcessing { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (WaitForGCBridgeProcessing)}", out bool isEnabled) ? isEnabled : WaitForGCBridgeProcessingEnabledByDefault;
 }

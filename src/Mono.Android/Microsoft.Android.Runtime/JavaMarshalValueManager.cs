@@ -23,12 +23,13 @@ sealed class JavaMarshalValueManager : JniRuntime.ReflectionJniValueManager
 
 	public override void WaitForGCBridgeProcessing ()
 	{
-		// Intentionally empty. The Mono runtime's own implementation acknowledges this
-		// pattern is fundamentally flawed (see FIXME in sgen-bridge.c): a thread that
-		// passes the check can still race with bridge processing that starts immediately
-		// after. The wait cannot prevent the race, only reduce its window. On CoreCLR,
-		// JNI wrapper threads hold their own handle copies via JniObjectReference, so
-		// they are not affected by the bridge swapping control_block handles.
+		// Note the caveat from https://github.com/dotnet/android/pull/11119, which removed
+		// this wait: it cannot actually prevent the race it appears to guard, only shrink
+		// the window, and CoreCLR's JNI wrapper threads hold their own handle copies via
+		// JniObjectReference so they do not observe the bridge swapping control_block
+		// handles. It is restored purely to match Mono's observable blocking semantics --
+		// it was measured to be performance-neutral. See JavaMarshalRegisteredPeers.
+		JavaMarshalRegisteredPeers.WaitForBridgeProcessing ();
 	}
 
 	public override void CollectPeers ()
