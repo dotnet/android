@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -24,13 +23,16 @@ namespace Xamarin.Android.Tasks
 		{
 			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
-			var doc = manifest.Document;
 
-			var instrumentation = doc?.Root?.Element ("instrumentation")
-				?? throw new InvalidOperationException ("No <instrumentation> element found in AndroidManifest.xml.");
+			var instrumentation = manifest.Document?.Root?.Element ("instrumentation");
+			if (instrumentation == null) {
+				Log.LogCodedError ("XA1043", Properties.Resources.XA1043, ManifestFile);
+				return !Log.HasLoggedErrors;
+			}
+
 			InstrumentationName = instrumentation.Attribute (androidNs + "name")?.Value;
-			if (string.IsNullOrEmpty (InstrumentationName))
-				throw new InvalidOperationException ("The <instrumentation> element in AndroidManifest.xml is missing the android:name attribute.");
+			if (InstrumentationName.IsNullOrEmpty ())
+				Log.LogCodedError ("XA1042", Properties.Resources.XA1042, ManifestFile);
 
 			return !Log.HasLoggedErrors;
 		}

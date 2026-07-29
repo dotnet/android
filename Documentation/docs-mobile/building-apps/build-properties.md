@@ -688,9 +688,35 @@ A string property that specifies the Android
 [instrumentation](https://developer.android.com/reference/android/app/Instrumentation)
 runner class name to use when launching the application via `dotnet run`.
 
-When [`$(EnableMSTestRunner)`](#enablemstestrunner) is `true` and this property
-is not set, the instrumentation runner class name is automatically resolved from
-the generated `AndroidManifest.xml` in the intermediate output.
+When this property is not set, `dotnet run` resolves what to launch from the
+generated `AndroidManifest.xml` in the intermediate output:
+
+* If [`$(AndroidUseInstrumentation)`](#androiduseinstrumentation) is `true`, the
+  first `<instrumentation/>` element is used.
+* Otherwise the launchable `<activity/>` is preferred, and the first
+  `<instrumentation/>` element is used when the app declares no launchable
+  activity. This makes it possible to `dotnet run` an app whose only entry point
+  is an `Android.App.Instrumentation` subclass, such as a
+  [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) host.
+
+If the app declares neither, the build fails with
+[XA1043](../messages/xa1043.md).
+
+When an instrumentation is launched, `dotnet run` runs
+`adb shell am instrument -w -r` and exits with a non-zero exit code if the
+instrumentation crashes or calls `Instrumentation.Finish()` with
+`Result.Canceled`.
+
+Any arguments after `--` are forwarded to the instrumentation as `am instrument`
+extras. Arguments of the form `KEY=VALUE` become `-e KEY VALUE`, and all
+remaining arguments are joined into a single `-e args "..."` extra:
+
+```dotnetcli
+dotnet run -- --filter *MyBenchmark*
+```
+
+is delivered to `Instrumentation.OnCreate(Bundle?)` as
+`arguments.GetString("args")`.
 
 Introduced in .NET 11.
 
@@ -1252,6 +1278,24 @@ which does have this feature enabled in a project that does not, you will
 get a `XA1034` build error.
 
 Added in .NET 8.
+
+## AndroidUseInstrumentation
+
+A boolean property that indicates the application is launched through its
+`<instrumentation/>` element rather than an `<activity/>`, such as a test or
+[BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) host.
+
+When `true`, `dotnet run` resolves
+[`$(AndroidInstrumentation)`](#androidinstrumentation) from the generated
+`AndroidManifest.xml` and launches it with `adb shell am instrument`, even if
+the app also declares a launchable activity.
+
+The default value is `true` when
+[`$(EnableMSTestRunner)`](#enablemstestrunner) is `true`, and `false` otherwise.
+Note that an app with no launchable `<activity/>` launches through its
+`<instrumentation/>` regardless of this property.
+
+Introduced in .NET 11.
 
 ## AndroidUseInterpreter
 

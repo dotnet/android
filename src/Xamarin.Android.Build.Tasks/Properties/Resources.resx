@@ -1074,6 +1074,18 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element. Set the $(AndroidLaunchActivity) or $(AndroidInstrumentation) MSBuild property to specify one.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.

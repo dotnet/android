@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Microsoft.Testing.Extensions;
 using Mono.Options;
 using Xamarin.Android.Tools;
@@ -91,7 +92,7 @@ async Task<int> RunAsync (string[] args)
 		return 1;
 	}
 
-	if (remaining.Count > 0 && !isDotnetTestMode) {
+	if (remaining.Count > 0 && !isDotnetTestMode && string.IsNullOrEmpty (instrumentation)) {
 		Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
@@ -115,7 +116,12 @@ async Task<int> RunAsync (string[] args)
 		Console.WriteLine ("Examples:");
 		Console.WriteLine ($"  {Name} -p com.example.myapp -c com.example.myapp.MainActivity");
 		Console.WriteLine ($"  {Name} -p com.example.myapp -i com.example.myapp.TestInstrumentation");
+		Console.WriteLine ($"  {Name} -p com.example.myapp -i com.example.myapp.Benchmarks --filter *MyBench*");
 		Console.WriteLine ($"  {Name} --adb /path/to/adb -p com.example.myapp -c com.example.myapp.MainActivity");
+		Console.WriteLine ();
+		Console.WriteLine ("When --instrument is used, any unrecognized arguments are forwarded to");
+		Console.WriteLine ("'am instrument' as extras: KEY=VALUE becomes '-e KEY VALUE', and everything");
+		Console.WriteLine ("else is joined into a single '-e args \"...\"' extra.");
 		Console.WriteLine ();
 		Console.WriteLine ("Press Ctrl+C while running to stop the Android application and exit.");
 		return 0;
@@ -184,7 +190,7 @@ async Task<int> RunAsync (string[] args)
 			return await RunDotnetTestAsync (remaining);
 
 		if (isInstrumentMode)
-			return await RunInstrumentationAsync ();
+			return await RunInstrumentationAsync (remaining);
 
 		return await RunAppAsync ();
 	} finally {
@@ -215,11 +221,13 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	}
 }
 
-async Task<int> RunInstrumentationAsync ()
+async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 {
-	// Build the am instrument command
+	// '-w' waits for the run to complete; '-r' prints raw INSTRUMENTATION_STATUS
+	// blocks as they arrive instead of buffering everything until the end.
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var cmdArgs = $"shell am instrument -w{userArg} {package}/{instrumentation}";
+	var extraArgs = BuildInstrumentationExtras (instrumentationArgs);
+	var cmdArgs = $"shell am instrument -w -r{userArg}{extraArgs} {package}/{instrumentation}";
 
 	if (verbose)
 		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
@@ -229,27 +237,32 @@ async Task<int> RunInstrumentationAsync ()
 	using var instrumentProcess = new Process { StartInfo = psi };
 
 	var locker = new Lock ();
+	var output = new StringBuilder ();
 
 	instrumentProcess.OutputDataReceived += (s, e) => {
 		if (e.Data != null)
-			lock (locker)
+			lock (locker) {
+				output.AppendLine (e.Data);
 				Console.WriteLine (e.Data);
+			}
 	};
 
 	instrumentProcess.ErrorDataReceived += (s, e) => {
 		if (e.Data != null)
-			lock (locker)
+			lock (locker) {
+				output.AppendLine (e.Data);
 				Console.Error.WriteLine (e.Data);
+			}
 	};
 
 	instrumentProcess.Start ();
 	instrumentProcess.BeginOutputReadLine ();
 	instrumentProcess.BeginErrorReadLine ();
 
-	// Also start logcat in the background for additional debug output
-	logcatPid = await GetAppPidAsync ();
-	if (logcatPid != null)
-		StartLogcat ();
+	// Also stream logcat in the background, which is where Console output from the
+	// app ends up. The app process does not exist yet when `am instrument` starts,
+	// so poll for it rather than giving up after a single `pidof`.
+	var logcatTask = StartLogcatWhenAppStartsAsync ();
 
 	// Wait for instrumentation to complete or Ctrl+C
 	try {
@@ -263,6 +276,8 @@ async Task<int> RunInstrumentationAsync ()
 			return 1;
 		}
 	} finally {
+		cts.Cancel ();
+		await logcatTask;
 		// Clean up logcat
 		try {
 			if (logcatProcess != null && !logcatProcess.HasExited) {
@@ -281,7 +296,119 @@ async Task<int> RunInstrumentationAsync ()
 		return 1;
 	}
 
+	// `am instrument` exits 0 even when the instrumentation crashes or reports
+	// failure, so inspect what it printed to decide the exit code.
+	var failure = GetInstrumentationFailure (output.ToString ());
+	if (failure != null) {
+		Console.Error.WriteLine ($"Error: {failure}");
+		return 1;
+	}
+
 	return 0;
+}
+
+/// <summary>
+/// Translates trailing `dotnet run -- ARGS` into `am instrument` extras.
+/// `KEY=VALUE` arguments become `-e KEY VALUE`; everything else is joined and
+/// passed as a single `-e args "..."` extra.
+/// </summary>
+string BuildInstrumentationExtras (List<string> instrumentationArgs)
+{
+	if (instrumentationArgs.Count == 0)
+		return "";
+
+	var builder = new StringBuilder ();
+	var positional = new List<string> ();
+
+	foreach (var arg in instrumentationArgs) {
+		var eqIndex = arg.IndexOf ('=');
+		if (eqIndex > 0 && !arg.StartsWith ("-", StringComparison.Ordinal) && IsBundleKey (arg.AsSpan (0, eqIndex))) {
+			builder.Append (" -e ").Append (arg.Substring (0, eqIndex)).Append (' ')
+				.Append (QuoteForDeviceShell (arg.Substring (eqIndex + 1)));
+		} else {
+			positional.Add (arg);
+		}
+	}
+
+	if (positional.Count > 0)
+		builder.Append (" -e args ").Append (QuoteForDeviceShell (string.Join (" ", positional)));
+
+	return builder.ToString ();
+
+	static bool IsBundleKey (ReadOnlySpan<char> key)
+	{
+		foreach (var c in key) {
+			if (!char.IsLetterOrDigit (c) && c != '_' && c != '.')
+				return false;
+		}
+		return key.Length > 0;
+	}
+}
+
+/// <summary>
+/// Wraps a value in single quotes so the shell on the device treats it as a
+/// single token, no matter what `adb shell` does to the surrounding arguments.
+/// </summary>
+static string QuoteForDeviceShell (string value) =>
+	"'" + value.Replace ("'", "'\\''") + "'";
+
+/// <summary>
+/// Inspects `am instrument` output for signs that the instrumentation crashed or
+/// reported failure. Returns a human readable reason, or <c>null</c> on success.
+/// </summary>
+static string? GetInstrumentationFailure (string output)
+{
+	if (output.Contains ("INSTRUMENTATION_FAILED", StringComparison.Ordinal))
+		return "The instrumentation failed to start. See the output above for details.";
+
+	string? shortMsg = null, longMsg = null;
+	int? code = null;
+	foreach (var rawLine in output.Split ('\n')) {
+		var line = rawLine.TrimEnd ('\r');
+		if (line.StartsWith ("INSTRUMENTATION_RESULT: shortMsg=", StringComparison.Ordinal))
+			shortMsg = line.Substring ("INSTRUMENTATION_RESULT: shortMsg=".Length).Trim ();
+		else if (line.StartsWith ("INSTRUMENTATION_RESULT: longMsg=", StringComparison.Ordinal))
+			longMsg = line.Substring ("INSTRUMENTATION_RESULT: longMsg=".Length).Trim ();
+		else if (line.StartsWith ("INSTRUMENTATION_CODE: ", StringComparison.Ordinal)) {
+			if (int.TryParse (line.Substring ("INSTRUMENTATION_CODE: ".Length).Trim (), out int parsed))
+				code = parsed;
+		}
+	}
+
+	if (longMsg != null || shortMsg != null)
+		return $"The application crashed: {longMsg ?? shortMsg}";
+
+	// Activity.RESULT_CANCELED (0) is what Instrumentation.Finish() reports on failure.
+	if (code == 0)
+		return "The instrumentation reported failure (INSTRUMENTATION_CODE: 0).";
+
+	if (code == null)
+		return "The instrumentation did not complete. It may have crashed before calling Finish().";
+
+	return null;
+}
+
+/// <summary>
+/// Polls for the application process and starts streaming logcat once it appears.
+/// </summary>
+async Task StartLogcatWhenAppStartsAsync ()
+{
+	try {
+		while (!cts.Token.IsCancellationRequested) {
+			var pid = await GetAppPidAsync ();
+			if (pid != null) {
+				logcatPid = pid;
+				StartLogcat ();
+				return;
+			}
+			await Task.Delay (250, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
+		}
+	} catch (OperationCanceledException) {
+		// The instrumentation finished (or was cancelled) before the app process was seen
+	} catch (Exception ex) {
+		if (verbose)
+			Console.Error.WriteLine ($"Error starting logcat: {ex.Message}");
+	}
 }
 
 async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
