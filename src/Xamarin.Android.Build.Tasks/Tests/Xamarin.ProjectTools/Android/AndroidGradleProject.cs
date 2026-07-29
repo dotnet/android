@@ -13,8 +13,6 @@ namespace Xamarin.ProjectTools
 
 		public string BuildFilePath => Path.Combine (ProjectDirectory, "build.gradle.kts");
 
-		GradleCLI gradleCLI = new GradleCLI ();
-
 		public AndroidGradleProject (string directory)
 		{
 			ProjectDirectory = directory;
@@ -23,15 +21,49 @@ namespace Xamarin.ProjectTools
 		public void Create ()
 		{
 			Directory.CreateDirectory (ProjectDirectory);
-			gradleCLI.Init (ProjectDirectory);
+			CopyGradleWrapper ();
 			var settingsFile = Path.Combine (ProjectDirectory, "settings.gradle.kts");
-			File.WriteAllText (settingsFile, settings_gradle_kts_content);
+			File.WriteAllText (settingsFile, GetSettingsGradleKtsContent ());
 			File.WriteAllText (BuildFilePath, build_gradle_kts_content);
 			foreach (var module in Modules) {
 				module.Create ();
 				File.AppendAllText (settingsFile, $"{Environment.NewLine}include(\":{module.Name}\")");
 			}
-			File.AppendAllText (Path.Combine (ProjectDirectory, "gradle.properties"), "android.useAndroidX=true");
+			File.WriteAllText (Path.Combine (ProjectDirectory, "gradle.properties"), """
+# Exercise Gradle configuration-cache compatibility.
+org.gradle.configuration-cache=true
+# Build independent modules concurrently.
+org.gradle.parallel=true
+# Reuse task outputs across test builds.
+org.gradle.caching=true
+# Required by the AndroidX dependencies used by generated modules.
+android.useAndroidX=true
+""");
+		}
+
+		/// <summary>
+		/// Copies the repository wrapper so generated projects do not depend on <c>gradle init</c> or a CI distribution download.
+		/// </summary>
+		void CopyGradleWrapper ()
+		{
+			var sourceDirectory = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "gradle");
+			var destinationWrapperDirectory = Path.Combine (ProjectDirectory, "gradle", "wrapper");
+			Directory.CreateDirectory (destinationWrapperDirectory);
+
+			CopyFile ("gradlew", ProjectDirectory);
+			CopyFile ("gradlew.bat", ProjectDirectory);
+			CopyFile (Path.Combine ("gradle", "wrapper", "gradle-wrapper.jar"), destinationWrapperDirectory);
+			CopyFile (Path.Combine ("gradle", "wrapper", "gradle-wrapper.properties"), destinationWrapperDirectory);
+
+			void CopyFile (string relativePath, string destinationDirectory)
+			{
+				var source = Path.Combine (sourceDirectory, relativePath);
+				var destination = Path.Combine (destinationDirectory, Path.GetFileName (relativePath));
+				File.Copy (source, destination, overwrite: true);
+				if (!TestEnvironment.IsWindows) {
+					File.SetUnixFileMode (destination, File.GetUnixFileMode (source));
+				}
+			}
 		}
 
 		public static AndroidGradleProject CreateDefault (string projectDir, bool isApplication = false)
@@ -54,23 +86,21 @@ plugins {
     id(""com.android.library"") version ""8.5.0"" apply false
 }
 ";
-		const string settings_gradle_kts_content =
-@"
+		string GetSettingsGradleKtsContent ()
+		{
+			var gradleConfigurationDirectory = Path.Combine (XABuildPaths.TopDirectory, "eng", "gradle").Replace ('\\', '/');
+
+			return $$"""
+// See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
+    apply(from = "{{gradleConfigurationDirectory}}/plugin-repositories.gradle", to = this)
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
+    apply(from = "{{gradleConfigurationDirectory}}/dependency-repositories.gradle", to = this)
 }
-";
+""";
+		}
 
 	}
 }

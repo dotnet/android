@@ -1619,6 +1619,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 		[Test]
 		public void GradleFBProj ([Values (false, true)] bool isRelease)
 		{
+			const string facebookVersion = "18.3.0";
 			var moduleName = "Library";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
 			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
@@ -1637,7 +1638,7 @@ android {{
 dependencies {{
     implementation(""androidx.appcompat:appcompat:1.7.0"")
     implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:17.0.2"")
+    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
 }}
 ";
 			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
@@ -1682,14 +1683,16 @@ public class FacebookSdk {{
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.DotNetPublicMaven },
 						},
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.DotNetPublicMaven },
 						},
 					},
 				},
@@ -1708,7 +1711,8 @@ public class FacebookSdk {{
 					},
 					new Package {
 						Id = "Xamarin.Google.Android.InstallReferrer",
-						Version = "1.1.2.6",
+						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
+						Version = "2.2.0.8",
 					},
 					new Package {
 						Id = "Xamarin.AndroidX.Core.Core.Ktx",

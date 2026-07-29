@@ -178,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder ()) {
@@ -195,7 +195,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			proj.MetadataXml = @"
 				<metadata>
@@ -575,7 +575,7 @@ namespace Foo {
 				AndroidClassParser = classParser
 			};
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded.");
@@ -765,7 +765,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				AndroidClassParser = "class-parse",
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("fragment-1.2.2.aar") {
-						WebContent = "https://maven.google.com/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
 					}
 				},
 				MetadataXml = @"<metadata><remove-node path=""/api/package[@name='androidx.fragment.app']/interface[@name='FragmentManager.OpGenerator']"" /></metadata>"
@@ -805,7 +805,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					// repackaged.jar
 					new AndroidItem.AndroidLibrary ("emoji2-1.4.0.aar") {
 						MetadataValues = "Bind=false",
-						WebContent = "https://maven.google.com/androidx/emoji2/emoji2/1.4.0/emoji2-1.4.0.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/emoji2/emoji2/1.4.0/emoji2-1.4.0.aar",
 					},
 				},
 			};
@@ -820,7 +820,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					// repackaged.jar
 					new AndroidItem.AndroidLibrary ("connect-client-1.1.0-alpha07.aar") {
 						MetadataValues = "Bind=false",
-						WebContent = "https://maven.google.com/androidx/health/connect/connect-client/1.1.0-alpha07/connect-client-1.1.0-alpha07.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/health/connect/connect-client/1.1.0-alpha07/connect-client-1.1.0-alpha07.aar",
 					},
 				},
 			};
@@ -844,6 +844,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
 			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
 			item.Metadata.Add ("Version", "1.10.4");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 
 			var proj = new XamarinAndroidBindingProject {
 				Jars = { item }
@@ -865,7 +866,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 
 			var proj = new XamarinAndroidBindingProject {
 				Jars = { item }
@@ -887,7 +888,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google"  VerifyDependencies="false"/>
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 			item.Metadata.Add ("VerifyDependencies", "false");
 			item.Metadata.Add ("Bind", "false");
 
@@ -909,7 +910,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 			item.Metadata.Add ("Bind", "false");
 
 			// Dependency fulfilled by <PackageReference>
@@ -921,7 +922,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// Dependency fulfilled by <AndroidMavenLibrary>
 			var annotations_experimental_androidlib = new BuildItem ("AndroidMavenLibrary", "androidx.annotation:annotation-experimental");
 			annotations_experimental_androidlib.Metadata.Add ("Version", "1.3.0");
-			annotations_experimental_androidlib.Metadata.Add ("Repository", "Google");
+			annotations_experimental_androidlib.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 			annotations_experimental_androidlib.Metadata.Add ("Bind", "false");
 			annotations_experimental_androidlib.Metadata.Add ("VerifyDependencies", "false");
 
