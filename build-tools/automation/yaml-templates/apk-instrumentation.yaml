@@ -83,6 +83,10 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
+    # 'dotnet run' deploys to the device with an in-process MSBuild, which skips the
+    # MSBuildForwardingApp that normally sets DOTNET_HOST_PATH. Without it, MSBuild
+    # cannot launch task hosts (MSB4221 on ILLink's ComputeManagedAssemblies).
+    $env:DOTNET_HOST_PATH = $dotnetPath
     & $dotnetPath run --project $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }} 2>&1 | Tee-Object -Variable runOutput
     $runExitCode = $LASTEXITCODE
     Pop-Location
