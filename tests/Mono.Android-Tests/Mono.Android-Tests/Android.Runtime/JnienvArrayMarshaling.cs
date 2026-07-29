@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 using Android.App;
 using Android.Content;
 using Android.Graphics;
 using Android.Runtime;
 using Android.Views;
+
+using Java.Interop;
 
 using NUnit.Framework;
 
@@ -330,20 +334,76 @@ namespace Android.RuntimeTests {
 				object[] data = JNIEnv.GetObjectArray (byteArray.Handle, new[]{typeof (byte), typeof (byte), typeof (byte)});
 				AssertArrays ("GetObjectArray", data, (object) 1, (object) 2, (object) 3);
 			}
+			var context = Application.Context;
 			using (var objectArray =
 					new Java.Lang.Object (
 							JNIEnv.NewArray (
-								new Java.Lang.Object[]{Application.Context, 42L, "string"},
+								new Java.Lang.Object[]{context, 42L, "string"},
 								typeof (Java.Lang.Object)),
 						JniHandleOwnership.TransferLocalRef)) {
 				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
 				Assert.AreEqual (3, values.Length);
-				Assert.AreSame (Application.Context, values [0], $"Expected existing Context peer, got {values [0]?.GetType ()}.");
+				// Deliberately not `Assert.AreSame()`: this intermittently fails on CoreCLR
+				// (dotnet/android#10973), and both peers render identically, so the default
+				// message tells us nothing. Only build the diagnostic when it actually fails.
+				if (!ReferenceEquals (context, values [0]))
+					Assert.Fail (DescribeContextPeerMismatch (context, values [0]));
 				Assert.IsInstanceOf<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}
 		}
+
+		// `GetObjectArray()` should hand back the *same* managed peer that `Application.Context`
+		// holds, because `JniValueManager.GetPeer()` peeks the registry before creating a new peer.
+		// When that fails, the Java instance is the same but the managed peers differ, so dump
+		// enough of the registry to tell *why* they disagree: whether the entry was replaced by a
+		// second `AddPeer()`, evicted entirely, or its weak reference was cleared.
+		static string DescribeContextPeerMismatch (Context expected, object actual)
+		{
+			var sb = new StringBuilder ();
+			sb.AppendLine ("Expected `Application.Context` and `GetObjectArray ()[0]` to be the same managed peer.");
+			AppendPeer (sb, "expected (Application.Context)", expected);
+			AppendPeer (sb, "actual   (GetObjectArray ()[0])", actual);
+
+			// Did `Application.Context` itself change after we captured it?
+			sb.AppendLine ($"  Application.Context still == expected: {ReferenceEquals (Application.Context, expected)}");
+
+			if (actual is IJavaPeerable actualPeer && expected.PeerReference.IsValid && actualPeer.PeerReference.IsValid)
+				sb.AppendLine ($"  IsSameObject (expected, actual): {JniEnvironment.Types.IsSameObject (expected.PeerReference, actualPeer.PeerReference)}");
+
+			var manager = JniRuntime.CurrentRuntime.ValueManager;
+
+			// If this returns `actual`, the registry entry was replaced out from under
+			// `Application.Context`; if it returns null, the entry was evicted or collected.
+			var peeked = expected.PeerReference.IsValid ? manager.PeekPeer (expected.PeerReference) : null;
+			sb.AppendLine ($"  PeekPeer (expected.PeerReference) => {Describe (peeked)}");
+			sb.AppendLine ($"    is expected: {ReferenceEquals (peeked, expected)}; is actual: {ReferenceEquals (peeked, actual)}");
+
+			sb.AppendLine ($"  Surfaced peers with JniIdentityHashCode=0x{expected.JniIdentityHashCode:x}:");
+			foreach (var info in manager.GetSurfacedPeers ()) {
+				if (info.JniIdentityHashCode != expected.JniIdentityHashCode)
+					continue;
+				info.SurfacedPeer.TryGetTarget (out var target);
+				sb.AppendLine ($"    {Describe (target)} (is expected: {ReferenceEquals (target, expected)}; is actual: {ReferenceEquals (target, actual)})");
+			}
+			return sb.ToString ();
+		}
+
+		static void AppendPeer (StringBuilder sb, string label, object value)
+		{
+			sb.AppendLine ($"  {label}: {Describe (value)}");
+			if (value is not IJavaPeerable peer)
+				return;
+			sb.AppendLine ($"    JniIdentityHashCode=0x{peer.JniIdentityHashCode:x} PeerReference={peer.PeerReference} JniManagedPeerState={peer.JniManagedPeerState}");
+		}
+
+		// The Java-side `toString()` is identical for every peer over the same instance, so
+		// identify peers by their *managed* hash code instead.
+		static string Describe (object value)
+			=> value == null
+				? "<null>"
+				: $"{value.GetType ().FullName}@managed-0x{RuntimeHelpers.GetHashCode (value):x}";
 
 		[Test]
 		public void NewArray_Int32ArrayArray ()
