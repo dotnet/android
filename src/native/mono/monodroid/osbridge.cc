@@ -1035,6 +1035,15 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 
 	gc_cleanup_after_java_collection (env, num_sccs, sccs);
 	set_bridge_processing_field (domains_list, 0);
+
+	// GC bridge gref churn instrumentation (dotnet/runtime#131370): one line per round.
+	// Every peer is flipped strong->weak in prepare (NewWeakGlobalRef + DeleteGlobalRef) and
+	// weak->strong in cleanup (NewGlobalRef + DeleteWeakGlobalRef): 4 JNI global-ref ops per peer.
+	int churn_peers = 0;
+	for (int i = 0; i < num_sccs; i++)
+		churn_peers += sccs [i]->num_objs;
+	log_warn (LOG_GC, "GCBRIDGE_CHURN runtime=mono sccs={} peers={} xrefs={} jni_transitions={}",
+		num_sccs, churn_peers, num_xrefs, churn_peers * 4);
 }
 
 void

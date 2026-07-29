@@ -165,6 +165,17 @@ void BridgeProcessingShared::process () noexcept
 	GCBridge::trigger_java_gc (env);
 	cleanup_after_java_collection ();
 	log_gc_summary ();
+
+	// GC bridge gref churn instrumentation (dotnet/runtime#131370): one line per round.
+	// Every peer is flipped strong->weak in prepare (NewWeakGlobalRef + DeleteGlobalRef) and
+	// weak->strong in cleanup (NewGlobalRef + DeleteWeakGlobalRef): 4 JNI global-ref ops per peer.
+	size_t churn_peers = 0;
+	for (size_t i = 0; i < cross_refs->ComponentCount; i++) {
+		churn_peers = Helpers::add_with_overflow_check<size_t> (churn_peers, cross_refs->Components [i].Count);
+	}
+	log_warnf (LOG_GC, "GCBRIDGE_CHURN runtime=coreclr sccs=%zu peers=%zu xrefs=%zu jni_transitions=%zu",
+		static_cast<size_t> (cross_refs->ComponentCount), churn_peers,
+		static_cast<size_t> (cross_refs->CrossReferenceCount), churn_peers * 4);
 }
 
 void BridgeProcessingShared::prepare_for_java_collection () noexcept
