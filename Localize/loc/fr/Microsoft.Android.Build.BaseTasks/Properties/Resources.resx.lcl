@@ -13,7 +13,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unhandled exception: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Exception non prise en charge{0}]]></Val>
+            <Val><![CDATA[Exception non prise en charge : {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
