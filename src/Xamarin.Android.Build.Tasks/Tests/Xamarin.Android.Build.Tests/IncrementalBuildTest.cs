@@ -1390,6 +1390,32 @@ namespace Lib2
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
 				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
+
+				if (!isRelease && runtime == AndroidRuntime.CoreCLR) {
+					string projectDirectory = Path.Combine (Root, b.ProjectDirectory);
+					string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi));
+					string typemap = Path.Combine (intermediate, "android", $"typemaps.{abi}.ll");
+					string apk = Directory.GetFiles (Path.Combine (projectDirectory, proj.OutputPath), "*-Signed.apk", SearchOption.AllDirectories).Single ();
+					DateTime typemapWriteTime = File.GetLastWriteTimeUtc (typemap);
+					DateTime apkWriteTime = File.GetLastWriteTimeUtc (apk);
+					string typemapHash = Files.HashFile (typemap);
+					string apkHash = Files.HashFile (apk);
+
+					// Change managed code without changing any Java type mappings.
+					proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
+					proj.Touch ("MainActivity.cs");
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "fourth build should have succeeded.");
+
+					b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+					b.Output.AssertTargetIsSkipped ("_CompileNativeAssemblySources");
+					b.Output.AssertTargetIsSkipped ("_CreateApplicationSharedLibraries");
+					b.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
+					b.Output.AssertTargetIsSkipped ("_Sign");
+					Assert.AreEqual (typemapWriteTime, File.GetLastWriteTimeUtc (typemap), $"{typemap} should not be rewritten when its mappings have not changed.");
+					Assert.AreEqual (typemapHash, Files.HashFile (typemap), $"{typemap} contents should not change.");
+					Assert.AreEqual (apkWriteTime, File.GetLastWriteTimeUtc (apk), $"{apk} should not be rewritten for an incremental C# change.");
+					Assert.AreEqual (apkHash, Files.HashFile (apk), $"{apk} contents should not change.");
+				}
 			}
 		}
 

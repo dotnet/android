@@ -441,16 +441,19 @@ namespace Android.Runtime {
 				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
 			}
 
-			if (mvid_bytes == null)
-				mvid_bytes = new byte[16];
-
-			var mvid = new Span<byte>(mvid_bytes);
 			byte[]? mvid_data = null;
-			if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
-				mvid_data = type.Module.ModuleVersionId.ToByteArray ();
-			} else {
-				mvid_data = mvid_bytes;
+			// The Debug CoreCLR typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
+			if (!RuntimeFeature.IsCoreClrRuntime || !RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
+				if (mvid_bytes == null)
+					mvid_bytes = new byte[16];
+
+				var mvid = new Span<byte>(mvid_bytes);
+				if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
+					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
+					mvid_data = type.Module.ModuleVersionId.ToByteArray ();
+				} else {
+					mvid_data = mvid_bytes;
+				}
 			}
 
 			IntPtr ret;
@@ -460,7 +463,8 @@ namespace Android.Runtime {
 				} else if (RuntimeFeature.IsCoreClrRuntime) {
 					if (type.FullName is null)
 						return null;
-					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, (IntPtr)mvidptr);
+					string? assemblyFullName = RuntimeFeature.ManagedToJavaUsesAssemblyFullName ? type.Assembly.FullName : null;
+					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, (IntPtr)mvidptr);
 				} else {
 					throw new NotSupportedException ("Internal error: unknown runtime not supported");
 				}
