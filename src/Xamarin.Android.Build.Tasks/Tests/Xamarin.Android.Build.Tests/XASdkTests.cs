@@ -114,7 +114,7 @@ namespace Xamarin.Android.Build.Tests
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					},
 					new AndroidItem.AndroidLibrary ("sub\\directory\\bar.aar") {
-						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 					},
 					new AndroidItem.AndroidJavaSource ("JavaSourceTest.java") {
 						Encoding = Encoding.ASCII,
@@ -146,12 +146,12 @@ public class JavaSourceTest {
 				BinaryContent = () => [],
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.LibraryProjectZip ("..\\baz.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 				MetadataValues = "Bind=false",
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
 				Update = () => "nopack.aar",
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 				MetadataValues = "Pack=false;Bind=false",
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {

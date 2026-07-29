@@ -2,10 +2,9 @@
 
   <!--
       Shared MSBuild target for compiling the real Kotlin/Gradle fixture in
-      tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/ using the shared
-      Gradle wrapper from build-tools/gradle. The wrapper downloads Gradle +
-      Kotlin on first run, so the resulting .class files do not need to be
-      committed to source control.
+      tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/ using the Gradle
+      executable configured by GradleWPath. Gradle downloads Kotlin on first run,
+      so the resulting .class files do not need to be committed to source control.
 
       This file is imported by any test project that embeds the resulting
       .class files as resources (Bytecode-Tests and generator-Tests). Each

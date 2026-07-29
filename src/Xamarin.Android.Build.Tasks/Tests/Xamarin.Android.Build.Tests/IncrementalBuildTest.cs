@@ -1167,7 +1167,7 @@ namespace Lib2
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
-					WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+					WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 				};
 				proj.OtherBuildItems.Add (aar);
 
