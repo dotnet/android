@@ -6,6 +6,18 @@
   </PropertyGroup>
   <ItemGroup>
     <AndroidJavaLibrary Include="$(_JavaInteropTestsJarFile)" />
+    <!--
+      BuildTestJarFile writes the test JAR into Jars\ inside the project directory,
+      so the .NET Android SDK's default @(AndroidLibrary) glob (**\*.jar, which
+      defaults to %(Bind)=true) picks it up on any evaluation that happens after the
+      JAR exists on disk - e.g. the second MSBuild submission that 'dotnet test' and
+      'dotnet run' make when deploying to a device. That would bind our own test JAR,
+      generating Net.Dot.Jni.Test.* sources that fail to compile (CS0108/CS0114/CS0436),
+      which is fatal here because this project sets TreatWarningsAsErrors=true.
+      The JAR is already included above as @(AndroidJavaLibrary), which packages it
+      without binding it. See dotnet/android#12254.
+    -->
+    <AndroidLibrary Remove="Jars\**\*.jar" />
   </ItemGroup>
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <ItemDefinitionGroup>
