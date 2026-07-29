@@ -705,7 +705,9 @@ If the app declares neither, the build fails with
 When an instrumentation is launched, `dotnet run` runs
 `adb shell am instrument -w -r` and exits with a non-zero exit code if the
 instrumentation crashes or calls `Instrumentation.Finish()` with
-`Result.Canceled`.
+`Result.Canceled`. Setting [`$(WaitForExit)`](#waitforexit) to `false` drops the
+`-w`, so `dotnet run` returns as soon as the instrumentation is started and no
+results are reported.
 
 Any arguments after `--` are forwarded to the instrumentation as `am instrument`
 extras. Arguments of the form `KEY=VALUE` become `-e KEY VALUE`, and all
@@ -1841,7 +1843,22 @@ When `$(WaitForExit)` not `false` (the default), `dotnet run` will:
 * Force-stop the application when Ctrl+C is pressed
 
 When `$(WaitForExit)` is `false`, `dotnet run` will simply launch the
-application using `adb shell am start` and return immediately without
-waiting for the application to exit or streaming any output.
+application and return immediately without waiting for the application to exit
+or streaming any output.
+
+This property also controls whether `adb shell am instrument` is passed `-w`
+when the application is launched through its
+[`$(AndroidInstrumentation)`](#androidinstrumentation):
+
+| `$(WaitForExit)` | Launching an `<activity/>`   | Launching an `<instrumentation/>`   |
+| ---------------- | ---------------------------- | ----------------------------------- |
+| `true` (default) | `adb shell am start -S -W`   | `adb shell am instrument -w -r`     |
+| `false`          | `adb shell am start -S`      | `adb shell am instrument -r`        |
+
+Because `adb shell am instrument` only reports results once the instrumentation
+completes, `$(WaitForExit)` must not be `false` if you need the instrumentation's
+output or a meaningful exit code. This matters for scenarios such as running
+tests or a [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) host,
+which is why `dotnet test` always uses the default.
 
 Introduced in .NET 11.
