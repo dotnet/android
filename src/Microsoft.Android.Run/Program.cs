@@ -225,12 +225,16 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 {
 	// '-w' waits for the run to complete; '-r' prints raw INSTRUMENTATION_STATUS
 	// blocks as they arrive instead of buffering everything until the end.
-	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var extraArgs = BuildInstrumentationExtras (instrumentationArgs);
-	var cmdArgs = $"shell am instrument -w -r{userArg}{extraArgs} {package}/{instrumentation}";
+	var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
+	if (!string.IsNullOrEmpty (deviceUserId)) {
+		cmdArgs.Add ("--user");
+		cmdArgs.Add (deviceUserId);
+	}
+	cmdArgs.AddRange (BuildInstrumentationExtras (instrumentationArgs));
+	cmdArgs.Add ($"{package}/{instrumentation}");
 
 	if (verbose)
-		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
+		Console.WriteLine ($"Running instrumentation: adb {string.Join (" ", cmdArgs)}");
 
 	// Run instrumentation with streaming output
 	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
@@ -317,28 +321,32 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 /// `KEY=VALUE` arguments become `-e KEY VALUE`; everything else is joined and
 /// passed as a single `-e args "..."` extra.
 /// </summary>
-string BuildInstrumentationExtras (List<string> instrumentationArgs)
+List<string> BuildInstrumentationExtras (List<string> instrumentationArgs)
 {
+	var result = new List<string> ();
 	if (instrumentationArgs.Count == 0)
-		return "";
+		return result;
 
-	var builder = new StringBuilder ();
 	var positional = new List<string> ();
 
 	foreach (var arg in instrumentationArgs) {
 		var eqIndex = arg.IndexOf ('=');
 		if (eqIndex > 0 && !arg.StartsWith ("-", StringComparison.Ordinal) && IsBundleKey (arg.AsSpan (0, eqIndex))) {
-			builder.Append (" -e ").Append (arg.Substring (0, eqIndex)).Append (' ')
-				.Append (QuoteForDeviceShell (arg.Substring (eqIndex + 1)));
+			result.Add ("-e");
+			result.Add (arg.Substring (0, eqIndex));
+			result.Add (QuoteForDeviceShell (arg.Substring (eqIndex + 1)));
 		} else {
 			positional.Add (arg);
 		}
 	}
 
-	if (positional.Count > 0)
-		builder.Append (" -e args ").Append (QuoteForDeviceShell (string.Join (" ", positional)));
+	if (positional.Count > 0) {
+		result.Add ("-e");
+		result.Add ("args");
+		result.Add (QuoteForDeviceShell (string.Join (" ", positional)));
+	}
 
-	return builder.ToString ();
+	return result;
 
 	static bool IsBundleKey (ReadOnlySpan<char> key)
 	{
@@ -352,7 +360,10 @@ string BuildInstrumentationExtras (List<string> instrumentationArgs)
 
 /// <summary>
 /// Wraps a value in single quotes so the shell on the device treats it as a
-/// single token, no matter what `adb shell` does to the surrounding arguments.
+/// single token. `adb shell` deliberately does not escape the arguments it
+/// forwards, it just joins them with spaces (like `ssh`), so quoting for the
+/// device shell is up to the caller. The surrounding quoting needed to survive
+/// the *local* command line is handled by <see cref="ProcessStartInfo.ArgumentList"/>.
 /// </summary>
 static string QuoteForDeviceShell (string value) =>
 	"'" + value.Replace ("'", "'\\''") + "'";
