@@ -297,8 +297,13 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	}
 
 	// `am instrument` exits 0 even when the instrumentation crashes or reports
-	// failure, so inspect what it printed to decide the exit code.
-	var failure = GetInstrumentationFailure (output.ToString ());
+	// failure, so inspect what it printed to decide the exit code. `WaitForExitAsync`
+	// has already drained both readers, but read under the same lock for clarity.
+	string capturedOutput;
+	lock (locker)
+		capturedOutput = output.ToString ();
+
+	var failure = GetInstrumentationFailure (capturedOutput);
 	if (failure != null) {
 		Console.Error.WriteLine ($"Error: {failure}");
 		return 1;

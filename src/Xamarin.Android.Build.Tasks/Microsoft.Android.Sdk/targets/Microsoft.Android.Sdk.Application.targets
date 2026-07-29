@@ -121,6 +121,7 @@ This file contains targets specific for Android application projects.
     -->
     <GetAndroidInstrumentationName
         Condition=" '$(AndroidLaunchActivity)' == '' and '$(AndroidInstrumentation)' == '' "
+        NoLaunchableActivity="true"
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="InstrumentationName" PropertyName="AndroidInstrumentation" />
     </GetAndroidInstrumentationName>

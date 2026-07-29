@@ -16,6 +16,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ManifestFile { get; set; } = "";
 
+		/// <summary>
+		/// Set when the application was already found to have no launchable
+		/// &lt;activity&gt;, in which case a missing &lt;instrumentation&gt; element
+		/// means there is nothing at all to launch and XA1043 is reported.
+		/// Otherwise a missing &lt;instrumentation&gt; is reported as XA1048.
+		/// </summary>
+		public bool NoLaunchableActivity { get; set; }
+
 		[Output]
 		public string? InstrumentationName { get; set; }
 
@@ -26,7 +34,11 @@ namespace Xamarin.Android.Tasks
 
 			var instrumentation = manifest.Document?.Root?.Element ("instrumentation");
 			if (instrumentation == null) {
-				Log.LogCodedError ("XA1043", Properties.Resources.XA1043, ManifestFile);
+				if (NoLaunchableActivity) {
+					Log.LogCodedError ("XA1043", Properties.Resources.XA1043, ManifestFile);
+				} else {
+					Log.LogCodedError ("XA1048", Properties.Resources.XA1048, ManifestFile);
+				}
 				return !Log.HasLoggedErrors;
 			}
 

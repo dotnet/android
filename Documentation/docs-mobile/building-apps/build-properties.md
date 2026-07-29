@@ -700,7 +700,9 @@ generated `AndroidManifest.xml` in the intermediate output:
   [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) host.
 
 If the app declares neither, the build fails with
-[XA1043](../messages/xa1043.md).
+[XA1043](../messages/xa1043.md). If `$(AndroidUseInstrumentation)` is `true` but
+the app declares no `<instrumentation/>`, the build fails with
+[XA1048](../messages/xa1048.md).
 
 When an instrumentation is launched, `dotnet run` runs
 `adb shell am instrument -w -r` and exits with a non-zero exit code if the

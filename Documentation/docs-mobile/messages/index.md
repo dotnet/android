@@ -158,6 +158,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
 + [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
 + [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
++ [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 
 ## XA2xxx: Linker
 
