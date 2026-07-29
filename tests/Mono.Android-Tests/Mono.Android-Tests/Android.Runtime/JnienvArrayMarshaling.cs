@@ -330,28 +330,59 @@ namespace Android.RuntimeTests {
 		[Category ("JNIObjectArray")]
 		public void GetObjectArray ()
 		{
+			var context = Application.Context;
+			// Sample the registry at each step, so a failure says *when* `Application.Context`
+			// stopped being the registered peer rather than only that it did.
+			var atEntry = ProbeContextPeer (context);
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
 				object[] data = JNIEnv.GetObjectArray (byteArray.Handle, new[]{typeof (byte), typeof (byte), typeof (byte)});
 				AssertArrays ("GetObjectArray", data, (object) 1, (object) 2, (object) 3);
 			}
-			var context = Application.Context;
+			var beforeNewArray = ProbeContextPeer (context);
 			using (var objectArray =
 					new Java.Lang.Object (
 							JNIEnv.NewArray (
 								new Java.Lang.Object[]{context, 42L, "string"},
 								typeof (Java.Lang.Object)),
 						JniHandleOwnership.TransferLocalRef)) {
+				var afterNewArray = ProbeContextPeer (context);
 				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
 				Assert.AreEqual (3, values.Length);
 				// Deliberately not `Assert.AreSame()`: this intermittently fails on CoreCLR
 				// (dotnet/android#10973), and both peers render identically, so the default
 				// message tells us nothing. Only build the diagnostic when it actually fails.
 				if (!ReferenceEquals (context, values [0]))
-					Assert.Fail (DescribeContextPeerMismatch (context, values [0]));
+					Assert.Fail (DescribeContextPeerMismatch (context, values [0], atEntry, beforeNewArray, afterNewArray));
 				Assert.IsInstanceOf<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}
+		}
+
+		// What the registry reports for `Application.Context` at one point in time. Records a
+		// description rather than the peer itself: retaining the peer would keep it alive and
+		// could perturb the very GC behaviour being investigated.
+		readonly struct PeerProbe {
+
+			readonly bool   isExpected;
+			readonly string description;
+
+			public PeerProbe (bool isExpected, string description)
+			{
+				this.isExpected  = isExpected;
+				this.description = description;
+			}
+
+			public override string ToString ()
+				=> $"{description} (is expected: {isExpected})";
+		}
+
+		static PeerProbe ProbeContextPeer (Context expected)
+		{
+			if (!expected.PeerReference.IsValid)
+				return new PeerProbe (false, "<invalid PeerReference>");
+			var peeked = JniRuntime.CurrentRuntime.ValueManager.PeekPeer (expected.PeerReference);
+			return new PeerProbe (ReferenceEquals (peeked, expected), Describe (peeked));
 		}
 
 		// `GetObjectArray()` should hand back the *same* managed peer that `Application.Context`
@@ -359,12 +390,19 @@ namespace Android.RuntimeTests {
 		// When that fails, the Java instance is the same but the managed peers differ, so dump
 		// enough of the registry to tell *why* they disagree: whether the entry was replaced by a
 		// second `AddPeer()`, evicted entirely, or its weak reference was cleared.
-		static string DescribeContextPeerMismatch (Context expected, object actual)
+		static string DescribeContextPeerMismatch (Context expected, object actual, PeerProbe atEntry, PeerProbe beforeNewArray, PeerProbe afterNewArray)
 		{
 			var sb = new StringBuilder ();
 			sb.AppendLine ("Expected `Application.Context` and `GetObjectArray ()[0]` to be the same managed peer.");
 			AppendPeer (sb, "expected (Application.Context)", expected);
 			AppendPeer (sb, "actual   (GetObjectArray ()[0])", actual);
+
+			// The registry over time. If the peer was already wrong `atEntry`, something evicted
+			// or replaced it *before* this test ran and the marshaling is only the messenger.
+			sb.AppendLine ("  PeekPeer (Application.Context) over time:");
+			sb.AppendLine ($"    at test entry:      {atEntry}");
+			sb.AppendLine ($"    before NewArray:    {beforeNewArray}");
+			sb.AppendLine ($"    after NewArray:     {afterNewArray}");
 
 			// Did `Application.Context` itself change after we captured it?
 			sb.AppendLine ($"  Application.Context still == expected: {ReferenceEquals (Application.Context, expected)}");
