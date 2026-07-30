@@ -404,9 +404,12 @@ namespace Android.RuntimeTests {
 			sb.AppendLine ($"    before NewArray:    {beforeNewArray}");
 			sb.AppendLine ($"    after NewArray:     {afterNewArray}");
 			sb.AppendLine ($"  Registry first diverged: {ContextPeerWatchAttribute.DivergedAfter ?? "<not observed>"}");
-			// Set by JavaMarshalRegisteredPeers.CollectPeers() when it evicts a registration
-			// whose managed peer is still alive -- the suspected cause of the miss above.
-			sb.AppendLine ($"  Live peers evicted by CollectPeers(): {AppContext.GetData ("Microsoft.Android.Runtime.LivePeerEvictions") ?? "<none>"}");
+			// Set by JavaMarshalRegisteredPeers: the registry can only disagree with a cached
+			// `Application.Context` if a second managed peer was created for the same Java
+			// instance, so report how that happened.
+			sb.AppendLine ($"  CollectPeers() evicted live peers:  {AppContext.GetData ("Microsoft.Android.Runtime.LivePeerEvictions") ?? "<none>"}");
+			sb.AppendLine ($"  AddPeer() replaced registrations:   {AppContext.GetData ("Microsoft.Android.Runtime.PeerReplacements") ?? "<none>"}");
+			sb.AppendLine ($"  AddPeer() appended duplicates:      {AppContext.GetData ("Microsoft.Android.Runtime.PeerDuplicateAppends") ?? "<none>"}");
 
 			// Did `Application.Context` itself change after we captured it?
 			sb.AppendLine ($"  Application.Context still == expected: {ReferenceEquals (Application.Context, expected)}");

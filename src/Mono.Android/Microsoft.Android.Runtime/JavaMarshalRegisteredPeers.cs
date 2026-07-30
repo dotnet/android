@@ -60,21 +60,26 @@ static class JavaMarshalRegisteredPeers
 	}
 
 	/// <summary>
-	/// Diagnostic for dotnet/android#10973. A context reaches <see cref="CollectedContexts"/>
-	/// only because the GC bridge reported its peer as collected, so the peer's weak reference
-	/// should already be cleared by the time we evict it. If it is *not* -- i.e. the managed
-	/// peer is still alive, possibly strongly held by something like
-	/// <c>Application.Context</c> -- then we are about to drop a live registration, which is
-	/// what makes <c>JniValueManager.PeekPeer()</c> subsequently miss and hand out a second
-	/// peer for the same Java instance.
+	/// Diagnostics for dotnet/android#10973. The registry only ever disagrees with a cached
+	/// reference such as <c>Application.Context</c> if a *second* managed peer is created for
+	/// the same Java instance. Record the two places <see cref="AddPeer"/> observes that -- an
+	/// existing entry being replaced, and a second entry being appended because the existing
+	/// one's weak reference was cleared -- so a failing test can report which happened, to
+	/// whom, and how often.
 	///
-	/// Published via <see cref="AppContext"/> so tests in other assemblies can report it
-	/// without needing <c>InternalsVisibleTo</c>. Recording only; the eviction still happens,
-	/// so this does not mask the bug it is measuring.
+	/// Published via <see cref="AppContext"/> so tests in other assemblies can read them
+	/// without needing <c>InternalsVisibleTo</c>. Recording only: behaviour is unchanged.
 	/// </summary>
 	internal const string LiveEvictionsKey = "Microsoft.Android.Runtime.LivePeerEvictions";
+	internal const string ReplacementsKey = "Microsoft.Android.Runtime.PeerReplacements";
+	internal const string DuplicateAppendsKey = "Microsoft.Android.Runtime.PeerDuplicateAppends";
 
 	static int liveEvictions;
+	static int replacements;
+	static int duplicateAppends;
+
+	static string Id (IJavaPeerable peer)
+		=> $"{peer.GetType ().FullName}@managed-0x{RuntimeHelpers.GetHashCode (peer).ToString ("x", CultureInfo.InvariantCulture)}/{peer.PeerReference}";
 
 	static void RecordIfLive (int key, ReferenceTrackingHandle peer)
 	{
@@ -83,9 +88,24 @@ static class JavaMarshalRegisteredPeers
 
 		int count = Interlocked.Increment (ref liveEvictions);
 		AppContext.SetData (LiveEvictionsKey,
-				$"{count} (most recent: JniIdentityHashCode=0x{key.ToString ("x", CultureInfo.InvariantCulture)} " +
-				$"Type={live.GetType ().FullName} Instance=0x{RuntimeHelpers.GetHashCode (live).ToString ("x", CultureInfo.InvariantCulture)})");
+				$"{count} (most recent: key=0x{key.ToString ("x", CultureInfo.InvariantCulture)} {Id (live)})");
 		GC.KeepAlive (live);
+	}
+
+	static void RecordReplacement (int key, IJavaPeerable replaced, IJavaPeerable replacement)
+	{
+		int count = Interlocked.Increment (ref replacements);
+		AppContext.SetData (ReplacementsKey,
+				$"{count} (most recent: key=0x{key.ToString ("x", CultureInfo.InvariantCulture)} " +
+				$"replaced {Id (replaced)} with {Id (replacement)})");
+	}
+
+	static void RecordDuplicateAppend (int key, IJavaPeerable value, int existing)
+	{
+		int count = Interlocked.Increment (ref duplicateAppends);
+		AppContext.SetData (DuplicateAppendsKey,
+				$"{count} (most recent: key=0x{key.ToString ("x", CultureInfo.InvariantCulture)} " +
+				$"appended {Id (value)} alongside {existing} existing entr{(existing == 1 ? "y" : "ies")})");
 	}
 
 	public static void CollectPeers ()
@@ -152,6 +172,7 @@ static class JavaMarshalRegisteredPeers
 				if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
 					continue;
 				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
+					RecordReplacement (key, target, value);
 					peer.Dispose ();
 					peers [i] = new ReferenceTrackingHandle (value);
 				} else {
@@ -161,6 +182,7 @@ static class JavaMarshalRegisteredPeers
 				return;
 			}
 
+			RecordDuplicateAppend (key, value, peers.Count);
 			peers.Add (new ReferenceTrackingHandle (value));
 		}
 	}
