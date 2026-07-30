@@ -1000,6 +1000,57 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				$"Output did not contain {expectedLogcatOutput}!");
 		}
 
+		[Test]
+		public void RuntimeConfigDevJsonIsApplied ()
+		{
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR)) {
+				IsRelease = false,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+
+			// The .NET SDK writes these two switches into `*.runtimeconfig.dev.json` for `Debug` builds and
+			// nowhere else. `hostfxr` layers that file over `*.runtimeconfig.json` at startup, but .NET for
+			// Android bakes the properties into the app at build time, so seeing them here proves the dev
+			// file was picked up. Asking for `$(StartupHookSupport)` to be `false` also proves the dev file
+			// wins over `*.runtimeconfig.json`.
+			//
+			// The SDK we currently build against sets `$(GenerateRuntimeConfigDevFile)` to `false` for
+			// `net6.0`+, so it does not emit the file and leaves `$(ProjectRuntimeConfigDevFilePath)` empty.
+			// Write the file and point the property at it ourselves. Both of these can be dropped once we
+			// pick up an SDK containing https://github.com/dotnet/sdk/pull/53715.
+			const string devFileName = "runtimeconfig.dev.json";
+			proj.OtherBuildItems.Add (new BuildItem ("None", devFileName) {
+				TextContent = () => """
+					{
+					  "runtimeOptions": {
+					    "configProperties": {
+					      "System.Reflection.Metadata.MetadataUpdater.IsSupported": true,
+					      "System.StartupHookProvider.IsSupported": true
+					    }
+					  }
+					}
+					""",
+			});
+			proj.SetProperty ("ProjectRuntimeConfigDevFilePath", $"$(MSBuildProjectDirectory)/{devFileName}");
+			proj.SetProperty ("StartupHookSupport", "false");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+@"			AppContext.TryGetSwitch (""System.StartupHookProvider.IsSupported"", out bool startupHookProvider);
+			AppContext.TryGetSwitch (""System.Reflection.Metadata.MetadataUpdater.IsSupported"", out bool metadataUpdater);
+			Console.WriteLine (""# runtimeconfig.dev.json: StartupHookProvider={0}; MetadataUpdater={1}"",
+				startupHookProvider, metadataUpdater);
+");
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			RunProjectAndAssert (proj, builder);
+
+			const string expectedLogcatOutput = "# runtimeconfig.dev.json: StartupHookProvider=True; MetadataUpdater=True";
+			Assert.IsTrue (
+				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "runtimeconfig-logcat.log"), timeout: 60),
+				$"Output did not contain {expectedLogcatOutput}!");
+		}
 
 		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
 		{

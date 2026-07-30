@@ -61,6 +61,7 @@ namespace Xamarin.Android.Tasks
 		public bool AndroidEnableAssemblyStoreDecompressionCache { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
+		public string? ProjectRuntimeConfigDevFilePath { get; set; }
 		public string? BoundExceptionType { get; set; }
 
 		public string? PackageNamingPolicy { get; set; }
@@ -266,7 +267,7 @@ namespace Xamarin.Android.Tasks
 			LLVMIR.LlvmIrComposer appConfigAsmGen;
 
 			if (TargetsCLR) {
-				Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath);
+				Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGeneratorCLR (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
 					UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
 					AndroidPackageName = AndroidPackageName,
