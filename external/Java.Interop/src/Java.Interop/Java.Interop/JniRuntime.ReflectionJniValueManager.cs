@@ -78,8 +78,8 @@ namespace Java.Interop
 
 				peer.SetPeerReference (newRef);
 				peer.SetJniIdentityHashCode (JniSystem.IdentityHashCode (newRef));
-				if (!peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable) && InteropEventSource.IsEnabled ()) {
-					EmitJavaWrapperCreatedEvent (peer, newRef);
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+					EmitJavaPeerCreatedEvent (peer, newRef);
 				}
 
 				var o = Runtime.ObjectReferenceManager;
@@ -97,32 +97,25 @@ namespace Java.Interop
 				}
 			}
 
-			void EmitDotNetWrapperCreatedEvent (IJavaPeerable peer)
+			void EmitManagedPeerCreatedEvent (IJavaPeerable peer)
 			{
 				JniObjectReference reference = peer.PeerReference;
 				var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
-				InteropEventSource.DotNetWrapperCreated (
+				InteropEventSource.ManagedPeerCreated (
 					peer.GetType ().FullName,
 					javaType,
 					peer.JniIdentityHashCode,
-					RuntimeHelpers.GetHashCode (peer),
-					GetRuntimeMode ());
+					RuntimeHelpers.GetHashCode (peer));
 			}
 
-			void EmitJavaWrapperCreatedEvent (IJavaPeerable peer, JniObjectReference reference)
+			void EmitJavaPeerCreatedEvent (IJavaPeerable peer, JniObjectReference reference)
 			{
 				var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
-				InteropEventSource.JavaWrapperCreated (
+				InteropEventSource.JavaPeerCreated (
 					peer.GetType ().FullName,
 					javaType,
 					peer.JniIdentityHashCode,
-					RuntimeHelpers.GetHashCode (peer),
-					GetRuntimeMode ());
-			}
-
-			string GetRuntimeMode ()
-			{
-				return Runtime.GetType ().FullName ?? "Unknown";
+					RuntimeHelpers.GetHashCode (peer));
 			}
 
 			// This base method implementation is NOT reachable in trimmable typemap - it is featureswitch guarded
@@ -174,8 +167,8 @@ namespace Java.Interop
 							JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
 				}
 				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-				if (InteropEventSource.IsEnabled ()) {
-					EmitDotNetWrapperCreatedEvent (peer);
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+					EmitManagedPeerCreatedEvent (peer);
 				}
 				return peer;
 			}

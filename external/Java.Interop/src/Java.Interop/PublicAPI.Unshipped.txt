@@ -117,11 +117,3 @@ override Java.Interop.JniRuntime.ReflectionJniTypeManager.GetTypesForSimpleRefer
 override Java.Interop.JniRuntime.ReflectionJniTypeManager.RegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, string? methods) -> void
 override Java.Interop.JniRuntime.ReflectionJniTypeManager.RegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, System.ReadOnlySpan<char> methods) -> void
 virtual Java.Interop.JniRuntime.ReflectionJniValueManager.TryConstructPeer(Java.Interop.IJavaPeerable! self, ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type! type) -> bool
-static Java.Interop.InteropEventSource.DotNetObjectOnlyReachableFromJava(string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, string? runtimeMode, int componentIndex, int contextIndex, long contextPointer) -> void
-static Java.Interop.InteropEventSource.DotNetWrapperCreated(string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, string? runtimeMode) -> void
-static Java.Interop.InteropEventSource.DotNetWrapperReleasedJavaReference(string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, string? runtimeMode) -> void
-static Java.Interop.InteropEventSource.IsEnabled() -> bool
-static Java.Interop.InteropEventSource.JavaObjectOnlyReachableFromDotNet(string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, string? runtimeMode, int componentIndex, int contextIndex, long contextPointer) -> void
-static Java.Interop.InteropEventSource.JavaWrapperCreated(string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, string? runtimeMode) -> void
-static Java.Interop.InteropEventSource.JavaWrapperReleasedDotNetReference(string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, string? runtimeMode) -> void
-Java.Interop.InteropEventSource

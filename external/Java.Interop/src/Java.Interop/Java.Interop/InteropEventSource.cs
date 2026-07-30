@@ -1,118 +1,128 @@
 #nullable enable
 
+using System;
 using System.Diagnostics.Tracing;
 
+#if INSIDE_MONO_ANDROID_RUNTIME
+namespace Microsoft.Android.Runtime
+#else
 namespace Java.Interop
+#endif
 {
-	public static class InteropEventSource
+	internal static class InteropEventSource
 	{
+#if INSIDE_MONO_ANDROID_RUNTIME
+		internal const string ProviderName = "Microsoft.Android.Runtime";
+#else
 		internal const string ProviderName = "Java.Interop";
+#endif
 		const string UnknownValue = "Unknown";
+		const string RuntimeFeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
+
+		internal static class Keywords
+		{
+			public const EventKeywords PeerLifecycle = (EventKeywords) 0x1;
+			public const EventKeywords Reachability = (EventKeywords) 0x2;
+		}
 
 		static readonly InteropEventSourceImplementation source = new InteropEventSourceImplementation ();
 
-		public static bool IsEnabled ()
+		internal static bool IsEnabled (EventKeywords keywords)
 		{
-			return source.IsEnabled ();
+			return source.IsEnabled (EventLevel.Informational, keywords);
 		}
 
-		public static void DotNetWrapperCreated (
+		internal static void ManagedPeerCreated (
 				string? managedType,
 				string? javaType,
 				int jniIdentityHashCode,
-				int managedObjectHashCode,
-				string? runtimeMode)
+				int managedObjectHashCode)
 		{
-			source.DotNetWrapperCreated (
+			source.ManagedPeerCreated (
 				GetPayloadValue (managedType),
 				GetPayloadValue (javaType),
 				jniIdentityHashCode,
 				managedObjectHashCode,
-				GetPayloadValue (runtimeMode));
+				GetRuntimeFlavor ());
 		}
 
-		public static void JavaWrapperCreated (
+		internal static void JavaPeerCreated (
 				string? managedType,
 				string? javaType,
 				int jniIdentityHashCode,
-				int managedObjectHashCode,
-				string? runtimeMode)
+				int managedObjectHashCode)
 		{
-			source.JavaWrapperCreated (
+			source.JavaPeerCreated (
 				GetPayloadValue (managedType),
 				GetPayloadValue (javaType),
 				jniIdentityHashCode,
 				managedObjectHashCode,
-				GetPayloadValue (runtimeMode));
+				GetRuntimeFlavor ());
 		}
 
-		public static void DotNetWrapperReleasedJavaReference (
+		internal static void ManagedPeerReleasedJavaPeer (
 				string? managedType,
 				string? javaType,
 				int jniIdentityHashCode,
-				int managedObjectHashCode,
-				string? runtimeMode)
+				int managedObjectHashCode)
 		{
-			source.DotNetWrapperReleasedJavaReference (
+			source.ManagedPeerReleasedJavaPeer (
 				GetPayloadValue (managedType),
 				GetPayloadValue (javaType),
 				jniIdentityHashCode,
 				managedObjectHashCode,
-				GetPayloadValue (runtimeMode));
+				GetRuntimeFlavor ());
 		}
 
-		public static void JavaWrapperReleasedDotNetReference (
+		internal static void JavaPeerReleasedManagedPeer (
 				string? managedType,
 				string? javaType,
 				int jniIdentityHashCode,
-				int managedObjectHashCode,
-				string? runtimeMode)
+				int managedObjectHashCode)
 		{
-			source.JavaWrapperReleasedDotNetReference (
+			source.JavaPeerReleasedManagedPeer (
 				GetPayloadValue (managedType),
 				GetPayloadValue (javaType),
 				jniIdentityHashCode,
 				managedObjectHashCode,
-				GetPayloadValue (runtimeMode));
+				GetRuntimeFlavor ());
 		}
 
-		public static void DotNetObjectOnlyReachableFromJava (
+		internal static void ManagedPeerOnlyReachableFromJavaPeer (
 				string? managedType,
 				string? javaType,
 				int jniIdentityHashCode,
 				int managedObjectHashCode,
-				string? runtimeMode,
 				int componentIndex,
 				int contextIndex,
 				long contextPointer)
 		{
-			source.DotNetObjectOnlyReachableFromJava (
+			source.ManagedPeerOnlyReachableFromJavaPeer (
 				GetPayloadValue (managedType),
 				GetPayloadValue (javaType),
 				jniIdentityHashCode,
 				managedObjectHashCode,
-				GetPayloadValue (runtimeMode),
+				GetRuntimeFlavor (),
 				componentIndex,
 				contextIndex,
 				contextPointer);
 		}
 
-		public static void JavaObjectOnlyReachableFromDotNet (
+		internal static void JavaPeerOnlyReachableFromManagedPeer (
 				string? managedType,
 				string? javaType,
 				int jniIdentityHashCode,
 				int managedObjectHashCode,
-				string? runtimeMode,
 				int componentIndex,
 				int contextIndex,
 				long contextPointer)
 		{
-			source.JavaObjectOnlyReachableFromDotNet (
+			source.JavaPeerOnlyReachableFromManagedPeer (
 				GetPayloadValue (managedType),
 				GetPayloadValue (javaType),
 				jniIdentityHashCode,
 				managedObjectHashCode,
-				GetPayloadValue (runtimeMode),
+				GetRuntimeFlavor (),
 				componentIndex,
 				contextIndex,
 				contextPointer);
@@ -123,49 +133,62 @@ namespace Java.Interop
 			return value ?? UnknownValue;
 		}
 
+		static string GetRuntimeFlavor ()
+		{
+			if (IsRuntimeFeatureEnabled ("IsNativeAotRuntime")) {
+				return "NativeAOT";
+			}
+			if (IsRuntimeFeatureEnabled ("IsCoreClrRuntime")) {
+				return "CoreCLR";
+			}
+			if (IsRuntimeFeatureEnabled ("IsMonoRuntime")) {
+				return "MonoVM";
+			}
+			return UnknownValue;
+		}
+
+		static bool IsRuntimeFeatureEnabled (string feature)
+		{
+			return AppContext.TryGetSwitch ($"{RuntimeFeatureSwitchPrefix}{feature}", out bool isEnabled) && isEnabled;
+		}
+
 		[EventSource (Name = ProviderName)]
 		sealed class InteropEventSourceImplementation : EventSource
 		{
-			public static class Keywords
+			[Event (1, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+			public void ManagedPeerCreated (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
 			{
-				public const EventKeywords WrapperLifecycle = (EventKeywords) 0x1;
-				public const EventKeywords Reachability = (EventKeywords) 0x2;
+				WriteEvent (1, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
 			}
 
-			[Event (1, Level = EventLevel.Informational, Keywords = Keywords.WrapperLifecycle)]
-			public void DotNetWrapperCreated (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeMode)
+			[Event (2, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+			public void JavaPeerCreated (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
 			{
-				WriteEvent (1, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeMode);
+				WriteEvent (2, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
 			}
 
-			[Event (2, Level = EventLevel.Informational, Keywords = Keywords.WrapperLifecycle)]
-			public void JavaWrapperCreated (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeMode)
+			[Event (3, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+			public void ManagedPeerReleasedJavaPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
 			{
-				WriteEvent (2, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeMode);
+				WriteEvent (3, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
 			}
 
-			[Event (3, Level = EventLevel.Informational, Keywords = Keywords.WrapperLifecycle)]
-			public void DotNetWrapperReleasedJavaReference (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeMode)
+			[Event (4, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+			public void JavaPeerReleasedManagedPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
 			{
-				WriteEvent (3, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeMode);
-			}
-
-			[Event (4, Level = EventLevel.Informational, Keywords = Keywords.WrapperLifecycle)]
-			public void JavaWrapperReleasedDotNetReference (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeMode)
-			{
-				WriteEvent (4, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeMode);
+				WriteEvent (4, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
 			}
 
 			[Event (5, Level = EventLevel.Informational, Keywords = Keywords.Reachability)]
-			public void DotNetObjectOnlyReachableFromJava (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeMode, int componentIndex, int contextIndex, long contextPointer)
+			public void ManagedPeerOnlyReachableFromJavaPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor, int componentIndex, int contextIndex, long contextPointer)
 			{
-				WriteEvent (5, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeMode, componentIndex, contextIndex, contextPointer);
+				WriteEvent (5, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor, componentIndex, contextIndex, contextPointer);
 			}
 
 			[Event (6, Level = EventLevel.Informational, Keywords = Keywords.Reachability)]
-			public void JavaObjectOnlyReachableFromDotNet (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeMode, int componentIndex, int contextIndex, long contextPointer)
+			public void JavaPeerOnlyReachableFromManagedPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor, int componentIndex, int contextIndex, long contextPointer)
 			{
-				WriteEvent (6, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeMode, componentIndex, contextIndex, contextPointer);
+				WriteEvent (6, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor, componentIndex, contextIndex, contextPointer);
 			}
 		}
 	}

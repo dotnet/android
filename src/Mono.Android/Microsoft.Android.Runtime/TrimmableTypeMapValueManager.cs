@@ -100,14 +100,13 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		peer.SetPeerReference (newRef);
 		peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (newRef));
-		if (!peer.JniManagedPeerState.HasFlag (JniManagedPeerStates.Activatable) && InteropEventSource.IsEnabled ()) {
+		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
 			var javaType = newRef.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (newRef) : null;
-			InteropEventSource.JavaWrapperCreated (
+			InteropEventSource.JavaPeerCreated (
 				peer.GetType ().FullName,
 				javaType,
 				peer.JniIdentityHashCode,
-				RuntimeHelpers.GetHashCode (peer),
-				GetRuntimeMode ());
+				RuntimeHelpers.GetHashCode (peer));
 		}
 
 		var o = Runtime.ObjectReferenceManager;
@@ -141,15 +140,14 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			var resolvedTargetType = ResolvePeerType (targetType);
 			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
 				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
-			if (peer != null && InteropEventSource.IsEnabled ()) {
+			if (peer != null && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
 				var peerReference = peer.PeerReference;
 				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
-				InteropEventSource.DotNetWrapperCreated (
+				InteropEventSource.ManagedPeerCreated (
 					peer.GetType ().FullName,
 					javaType,
 					peer.JniIdentityHashCode,
-					RuntimeHelpers.GetHashCode (peer),
-					GetRuntimeMode ());
+					RuntimeHelpers.GetHashCode (peer));
 			}
 			return peer;
 		} finally {
@@ -237,20 +235,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 			// Compatible classes mean a proxy/activation gap.
 			return false;
-		}
-
-		static string GetRuntimeMode ()
-		{
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				return "NativeAOT";
-			}
-			if (RuntimeFeature.IsCoreClrRuntime) {
-				return "CoreCLR";
-			}
-			if (RuntimeFeature.IsMonoRuntime) {
-				return "MonoVM";
-			}
-			return "Unknown";
 		}
 
 	}

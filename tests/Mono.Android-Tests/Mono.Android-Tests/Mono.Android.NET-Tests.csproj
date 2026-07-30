@@ -21,6 +21,7 @@
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>
+    <_AndroidEnableInteropEventSource>true</_AndroidEnableInteropEventSource>
   </PropertyGroup>
 
   <!--

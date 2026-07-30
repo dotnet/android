@@ -20,13 +20,13 @@ namespace Java.InteropTests
 				using (var instance = new Java.Lang.Object ()) {
 				}
 
-				Assert.IsTrue (listener.EventNames.Contains ("JavaWrapperCreated"), "Expected JavaWrapperCreated event.");
-				Assert.IsTrue (listener.EventNames.Contains ("DotNetWrapperReleasedJavaReference"), "Expected DotNetWrapperReleasedJavaReference event.");
+				Assert.IsTrue (listener.EventNames.Contains ("JavaPeerCreated"), "Expected JavaPeerCreated event.");
+				Assert.IsTrue (listener.EventNames.Contains ("ManagedPeerReleasedJavaPeer"), "Expected ManagedPeerReleasedJavaPeer event.");
 			}
 		}
 
 		[Test]
-		public void WrappingRawJavaInstance_EmitsDotNetWrapperCreated ()
+		public void WrappingRawJavaInstance_EmitsManagedPeerCreated ()
 		{
 			using (var listener = new CapturingEventListener ()) {
 				IntPtr klass = JNIEnv.FindClass ("java/lang/Object");
@@ -45,7 +45,7 @@ namespace Java.InteropTests
 					JNIEnv.DeleteLocalRef (klass);
 				}
 
-				Assert.IsTrue (listener.EventNames.Contains ("DotNetWrapperCreated"), "Expected DotNetWrapperCreated event.");
+				Assert.IsTrue (listener.EventNames.Contains ("ManagedPeerCreated"), "Expected ManagedPeerCreated event.");
 			}
 		}
 
@@ -55,7 +55,7 @@ namespace Java.InteropTests
 
 			protected override void OnEventSourceCreated (EventSource eventSource)
 			{
-				if (eventSource.Name == "Java.Interop") {
+				if (eventSource.Name == "Java.Interop" || eventSource.Name == "Microsoft.Android.Runtime") {
 					EnableEvents (eventSource, EventLevel.Verbose, EventKeywords.All);
 				}
 			}

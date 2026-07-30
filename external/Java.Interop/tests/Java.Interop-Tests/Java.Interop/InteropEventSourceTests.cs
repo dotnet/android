@@ -18,18 +18,18 @@ namespace Java.InteropTests
 		public void WrapperLifecycleEvents_HaveExpectedPayload ()
 		{
 			using (var listener = new CapturingEventListener ()) {
-				InteropEventSource.DotNetWrapperCreated ("Managed.Type", "java/type", 1, 2, "CoreCLR");
-				InteropEventSource.JavaWrapperCreated ("Managed.Type", "java/type", 3, 4, "CoreCLR");
-				InteropEventSource.DotNetWrapperReleasedJavaReference ("Managed.Type", "java/type", 5, 6, "CoreCLR");
-				InteropEventSource.JavaWrapperReleasedDotNetReference ("Managed.Type", "java/type", 7, 8, "CoreCLR");
+				InteropEventSource.ManagedPeerCreated ("Managed.Type", "java/type", 1, 2);
+				InteropEventSource.JavaPeerCreated ("Managed.Type", "java/type", 3, 4);
+				InteropEventSource.ManagedPeerReleasedJavaPeer ("Managed.Type", "java/type", 5, 6);
+				InteropEventSource.JavaPeerReleasedManagedPeer ("Managed.Type", "java/type", 7, 8);
 
 				var lifecycleEvents = listener.Events.Where (e => e.EventId is >= 1 and <= 4).ToArray ();
 				Assert.AreEqual (4, lifecycleEvents.Length, "Expected all lifecycle events to be emitted.");
 
-				AssertEventPayload (lifecycleEvents [0], "DotNetWrapperCreated", "Managed.Type", "java/type", 1, 2, "CoreCLR");
-				AssertEventPayload (lifecycleEvents [1], "JavaWrapperCreated", "Managed.Type", "java/type", 3, 4, "CoreCLR");
-				AssertEventPayload (lifecycleEvents [2], "DotNetWrapperReleasedJavaReference", "Managed.Type", "java/type", 5, 6, "CoreCLR");
-				AssertEventPayload (lifecycleEvents [3], "JavaWrapperReleasedDotNetReference", "Managed.Type", "java/type", 7, 8, "CoreCLR");
+				AssertEventPayload (lifecycleEvents [0], "ManagedPeerCreated", "Managed.Type", "java/type", 1, 2, "Unknown");
+				AssertEventPayload (lifecycleEvents [1], "JavaPeerCreated", "Managed.Type", "java/type", 3, 4, "Unknown");
+				AssertEventPayload (lifecycleEvents [2], "ManagedPeerReleasedJavaPeer", "Managed.Type", "java/type", 5, 6, "Unknown");
+				AssertEventPayload (lifecycleEvents [3], "JavaPeerReleasedManagedPeer", "Managed.Type", "java/type", 7, 8, "Unknown");
 			}
 		}
 
@@ -37,46 +37,46 @@ namespace Java.InteropTests
 		public void ReachabilityEvents_HaveExpectedPayload ()
 		{
 			using (var listener = new CapturingEventListener ()) {
-				InteropEventSource.DotNetObjectOnlyReachableFromJava ("Managed.Type", "java/type", 11, 12, "NativeAOT", 2, 3, 16);
-				InteropEventSource.JavaObjectOnlyReachableFromDotNet ("Managed.Type", "java/type", 21, 22, "NativeAOT", 4, 5, 32);
+				InteropEventSource.ManagedPeerOnlyReachableFromJavaPeer ("Managed.Type", "java/type", 11, 12, 2, 3, 16);
+				InteropEventSource.JavaPeerOnlyReachableFromManagedPeer ("Managed.Type", "java/type", 21, 22, 4, 5, 32);
 
 				var reachabilityEvents = listener.Events.Where (e => e.EventId is >= 5 and <= 6).ToArray ();
 				Assert.AreEqual (2, reachabilityEvents.Length, "Expected both reachability events to be emitted.");
 
-				AssertReachabilityPayload (reachabilityEvents [0], "DotNetObjectOnlyReachableFromJava", "Managed.Type", "java/type", 11, 12, "NativeAOT", 2, 3, 16L);
-				AssertReachabilityPayload (reachabilityEvents [1], "JavaObjectOnlyReachableFromDotNet", "Managed.Type", "java/type", 21, 22, "NativeAOT", 4, 5, 32L);
+				AssertReachabilityPayload (reachabilityEvents [0], "ManagedPeerOnlyReachableFromJavaPeer", "Managed.Type", "java/type", 11, 12, "Unknown", 2, 3, 16L);
+				AssertReachabilityPayload (reachabilityEvents [1], "JavaPeerOnlyReachableFromManagedPeer", "Managed.Type", "java/type", 21, 22, "Unknown", 4, 5, 32L);
 			}
 		}
 
 		[Test]
 		public void CallsWithoutListener_DoNotThrow ()
 		{
-			Assert.DoesNotThrow (() => InteropEventSource.DotNetWrapperCreated ("Managed.Type", "java/type", 1, 2, "MonoVM"));
-			Assert.DoesNotThrow (() => InteropEventSource.JavaWrapperCreated ("Managed.Type", "java/type", 1, 2, "MonoVM"));
-			Assert.DoesNotThrow (() => InteropEventSource.DotNetWrapperReleasedJavaReference ("Managed.Type", "java/type", 1, 2, "MonoVM"));
-			Assert.DoesNotThrow (() => InteropEventSource.JavaWrapperReleasedDotNetReference ("Managed.Type", "java/type", 1, 2, "MonoVM"));
-			Assert.DoesNotThrow (() => InteropEventSource.DotNetObjectOnlyReachableFromJava ("Managed.Type", "java/type", 1, 2, "MonoVM", 1, 1, 1));
-			Assert.DoesNotThrow (() => InteropEventSource.JavaObjectOnlyReachableFromDotNet ("Managed.Type", "java/type", 1, 2, "MonoVM", 1, 1, 1));
+			Assert.DoesNotThrow (() => InteropEventSource.ManagedPeerCreated ("Managed.Type", "java/type", 1, 2));
+			Assert.DoesNotThrow (() => InteropEventSource.JavaPeerCreated ("Managed.Type", "java/type", 1, 2));
+			Assert.DoesNotThrow (() => InteropEventSource.ManagedPeerReleasedJavaPeer ("Managed.Type", "java/type", 1, 2));
+			Assert.DoesNotThrow (() => InteropEventSource.JavaPeerReleasedManagedPeer ("Managed.Type", "java/type", 1, 2));
+			Assert.DoesNotThrow (() => InteropEventSource.ManagedPeerOnlyReachableFromJavaPeer ("Managed.Type", "java/type", 1, 2, 1, 1, 1));
+			Assert.DoesNotThrow (() => InteropEventSource.JavaPeerOnlyReachableFromManagedPeer ("Managed.Type", "java/type", 1, 2, 1, 1, 1));
 		}
 
-		static void AssertEventPayload (CapturedEvent captured, string eventName, string managedType, string javaType, int jniHash, int managedHash, string runtimeMode)
+		static void AssertEventPayload (CapturedEvent captured, string eventName, string managedType, string javaType, int jniHash, int managedHash, string runtimeFlavor)
 		{
 			Assert.AreEqual (eventName, captured.EventName);
 			Assert.AreEqual (managedType, captured.Payload [0]);
 			Assert.AreEqual (javaType, captured.Payload [1]);
 			Assert.AreEqual (jniHash, captured.Payload [2]);
 			Assert.AreEqual (managedHash, captured.Payload [3]);
-			Assert.AreEqual (runtimeMode, captured.Payload [4]);
+			Assert.AreEqual (runtimeFlavor, captured.Payload [4]);
 		}
 
-		static void AssertReachabilityPayload (CapturedEvent captured, string eventName, string managedType, string javaType, int jniHash, int managedHash, string runtimeMode, int componentIndex, int contextIndex, long contextPointer)
+		static void AssertReachabilityPayload (CapturedEvent captured, string eventName, string managedType, string javaType, int jniHash, int managedHash, string runtimeFlavor, int componentIndex, int contextIndex, long contextPointer)
 		{
 			Assert.AreEqual (eventName, captured.EventName);
 			Assert.AreEqual (managedType, captured.Payload [0]);
 			Assert.AreEqual (javaType, captured.Payload [1]);
 			Assert.AreEqual (jniHash, captured.Payload [2]);
 			Assert.AreEqual (managedHash, captured.Payload [3]);
-			Assert.AreEqual (runtimeMode, captured.Payload [4]);
+			Assert.AreEqual (runtimeFlavor, captured.Payload [4]);
 			Assert.AreEqual (componentIndex, captured.Payload [5]);
 			Assert.AreEqual (contextIndex, captured.Payload [6]);
 			Assert.AreEqual (contextPointer, captured.Payload [7]);

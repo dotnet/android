@@ -183,6 +183,7 @@ static class JavaMarshalRegisteredPeers
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
 
+		bool removed = false;
 		lock (RegisteredInstances) {
 			int key = value.JniIdentityHashCode;
 			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
@@ -192,16 +193,18 @@ static class JavaMarshalRegisteredPeers
 				ReferenceTrackingHandle peer = peers [i];
 				IJavaPeerable? target = peer.Target;
 				if (ReferenceEquals (value, target)) {
-					if (InteropEventSource.IsEnabled ()) {
-						EmitJavaWrapperReleasedDotNetReference (value);
-					}
 					peers.RemoveAt (i);
 					peer.Dispose ();
+					removed = true;
 				}
 				GC.KeepAlive (target);
 			}
 			if (peers.Count == 0)
 				RegisteredInstances.Remove (key);
+		}
+
+		if (removed && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+			EmitJavaPeerReleasedManagedPeer (value);
 		}
 	}
 
@@ -235,8 +238,8 @@ static class JavaMarshalRegisteredPeers
 					RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 					value.GetType ().ToString ());
 		}
-		if (InteropEventSource.IsEnabled ()) {
-			EmitDotNetWrapperReleasedJavaReference (value, h);
+		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+			EmitManagedPeerReleasedJavaPeer (value, h);
 		}
 		value.SetPeerReference (new JniObjectReference ());
 		JniObjectReference.Dispose (ref h);
@@ -261,32 +264,30 @@ static class JavaMarshalRegisteredPeers
 		}
 	}
 
-	static void EmitJavaWrapperReleasedDotNetReference (IJavaPeerable peer)
+	static void EmitJavaPeerReleasedManagedPeer (IJavaPeerable peer)
 	{
 		JniObjectReference reference = peer.PeerReference;
 		var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
-		InteropEventSource.JavaWrapperReleasedDotNetReference (
+		InteropEventSource.JavaPeerReleasedManagedPeer (
 			peer.GetType ().FullName,
 			javaType,
 			peer.JniIdentityHashCode,
-			RuntimeHelpers.GetHashCode (peer),
-			GetRuntimeMode ());
+			RuntimeHelpers.GetHashCode (peer));
 	}
 
-	static void EmitDotNetWrapperReleasedJavaReference (IJavaPeerable peer, JniObjectReference reference)
+	static void EmitManagedPeerReleasedJavaPeer (IJavaPeerable peer, JniObjectReference reference)
 	{
 		var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
-		InteropEventSource.DotNetWrapperReleasedJavaReference (
+		InteropEventSource.ManagedPeerReleasedJavaPeer (
 			peer.GetType ().FullName,
 			javaType,
 			peer.JniIdentityHashCode,
-			RuntimeHelpers.GetHashCode (peer),
-			GetRuntimeMode ());
+			RuntimeHelpers.GetHashCode (peer));
 	}
 
 	unsafe static void EmitReachabilityEventIfEnabled (HandleContext* context, GCHandle handle, int componentIndex, int contextIndex, bool isCollected)
 	{
-		if (!InteropEventSource.IsEnabled ()) {
+		if (!RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.Reachability)) {
 			return;
 		}
 
@@ -302,41 +303,25 @@ static class JavaMarshalRegisteredPeers
 		}
 
 		if (isCollected) {
-			InteropEventSource.JavaObjectOnlyReachableFromDotNet (
+			InteropEventSource.JavaPeerOnlyReachableFromManagedPeer (
 				managedType,
 				javaType,
 				context->PeerIdentityHashCode,
 				managedObjectHashCode,
-				GetRuntimeMode (),
 				componentIndex,
 				contextIndex,
 				(long) (nint) context);
 			return;
 		}
 
-		InteropEventSource.DotNetObjectOnlyReachableFromJava (
+		InteropEventSource.ManagedPeerOnlyReachableFromJavaPeer (
 			managedType,
 			javaType,
 			context->PeerIdentityHashCode,
 			managedObjectHashCode,
-			GetRuntimeMode (),
 			componentIndex,
 			contextIndex,
 			(long) (nint) context);
-	}
-
-	static string GetRuntimeMode ()
-	{
-		if (RuntimeFeature.IsNativeAotRuntime) {
-			return "NativeAOT";
-		}
-		if (RuntimeFeature.IsCoreClrRuntime) {
-			return "CoreCLR";
-		}
-		if (RuntimeFeature.IsMonoRuntime) {
-			return "MonoVM";
-		}
-		return "Unknown";
 	}
 
 	unsafe struct ReferenceTrackingHandle : IDisposable
@@ -534,7 +519,7 @@ static class JavaMarshalRegisteredPeers
 			}
 
 			bool isCollected = context->IsCollected;
-			if (!isCollected && !InteropEventSource.IsEnabled ()) {
+			if (!isCollected && !RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.Reachability)) {
 				return;
 			}
 

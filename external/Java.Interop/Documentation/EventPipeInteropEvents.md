@@ -1,19 +1,20 @@
 # Java.Interop EventPipe interop events
 
-The .NET ↔ Java interop layer emits EventPipe events through a single provider:
+The .NET ↔ Java interop layer emits EventPipe events through two providers:
 
-- **Provider name:** `Java.Interop`
+- `Java.Interop` emits events from the shared Java interop layer.
+- `Microsoft.Android.Runtime` emits events from the Android runtime layer.
 
 ## Event catalog
 
 | Event ID | Event name | Meaning |
 |---|---|---|
-| 1 | `DotNetWrapperCreated` | A managed wrapper for a Java object was created. |
-| 2 | `JavaWrapperCreated` | A Java wrapper for a managed object was created. |
-| 3 | `DotNetWrapperReleasedJavaReference` | A managed wrapper released its Java reference. |
-| 4 | `JavaWrapperReleasedDotNetReference` | A Java wrapper released its managed reference. |
-| 5 | `DotNetObjectOnlyReachableFromJava` | A managed object is only reachable from Java during bridge processing. |
-| 6 | `JavaObjectOnlyReachableFromDotNet` | A Java object is only reachable from .NET during bridge processing. |
+| 1 | `ManagedPeerCreated` | A managed peer for a Java peer was created. |
+| 2 | `JavaPeerCreated` | A Java peer for a managed peer was created. |
+| 3 | `ManagedPeerReleasedJavaPeer` | A managed peer released its Java peer. |
+| 4 | `JavaPeerReleasedManagedPeer` | A Java peer released its managed peer. |
+| 5 | `ManagedPeerOnlyReachableFromJavaPeer` | A managed peer is only reachable from its Java peer during bridge processing. |
+| 6 | `JavaPeerOnlyReachableFromManagedPeer` | A Java peer is only reachable from its managed peer during bridge processing. |
 
 ## Payload schema
 
@@ -23,7 +24,7 @@ All events contain:
 - `javaType` (`string`)
 - `jniIdentityHashCode` (`int`)
 - `managedObjectHashCode` (`int`)
-- `runtimeMode` (`string`)
+- `runtimeFlavor` (`string`): `MonoVM`, `CoreCLR`, `NativeAOT`, or `Unknown`
 
 Reachability events (`5`, `6`) additionally contain:
 
@@ -31,12 +32,24 @@ Reachability events (`5`, `6`) additionally contain:
 - `contextIndex` (`int`)
 - `contextPointer` (`long`)
 
-## Collecting events
+## Enabling events
 
-Use `dotnet-trace` to capture the provider:
+Interop events are disabled by default so that unused instrumentation can be removed by trimming. Enable them in the application project:
 
-```bash
-dotnet-trace collect --process-id <pid> --providers Java.Interop:0x3:4
+```xml
+<PropertyGroup>
+  <_AndroidEnableInteropEventSource>true</_AndroidEnableInteropEventSource>
+</PropertyGroup>
 ```
 
-`0x3` enables both wrapper lifecycle and reachability keywords, and `4` enables informational-level events.
+## Collecting events
+
+Use `dotnet-trace` to capture both providers:
+
+```bash
+dotnet-trace collect --process-id <pid> --providers Java.Interop:0x3:4,Microsoft.Android.Runtime:0x3:4
+```
+
+`0x3` enables both peer lifecycle and reachability keywords, and `4` enables informational-level events.
+
+These structured events supplement the existing text-based global and local JNI reference logs; they do not replace them.
