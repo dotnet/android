@@ -93,7 +93,7 @@ namespace Java.Lang {
 		/// <param name="group">The thread group to which the new thread belongs.</param>
 		/// <param name="runHandler">The delegate to execute on the new thread.</param>
 		/// <param name="threadName">The name of the new thread.</param>
-		/// <param name="stackSize">The desired stack size for the new thread, or <c>0</c> to use the default.</param>
+		/// <param name="stackSize">The desired stack size, in bytes, for the new thread, or <c>0</c> to use the default.</param>
 		/// <seealso href="https://developer.android.com/reference/java/lang/Thread#Thread(java.lang.ThreadGroup,%20java.lang.Runnable,%20java.lang.String,%20long)">Android documentation for <c>java.lang.Thread</c></seealso>
 		public Thread (ThreadGroup group, Action runHandler, string threadName, long stackSize) : this (group, new RunnableImplementor (runHandler), threadName, stackSize) {}
 	}
