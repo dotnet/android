@@ -55,15 +55,46 @@ namespace Java.Lang {
 			}
 		}
 
+		/// <summary>
+		/// Initializes a new <see cref="Thread"/> that runs the specified <paramref name="runHandler"/> when started.
+		/// </summary>
+		/// <param name="runHandler">The delegate to execute on the new thread.</param>
+		/// <seealso href="https://developer.android.com/reference/java/lang/Thread#Thread(java.lang.Runnable)">Android documentation for <c>java.lang.Thread</c></seealso>
 		public Thread (Action runHandler) : this (new RunnableImplementor (runHandler)) {}
 
+		/// <summary>
+		/// Initializes a new <see cref="Thread"/> with the specified name that runs the specified <paramref name="runHandler"/> when started.
+		/// </summary>
+		/// <param name="runHandler">The delegate to execute on the new thread.</param>
+		/// <param name="threadName">The name of the new thread.</param>
+		/// <seealso href="https://developer.android.com/reference/java/lang/Thread#Thread(java.lang.Runnable,%20java.lang.String)">Android documentation for <c>java.lang.Thread</c></seealso>
 		public Thread (Action runHandler, string threadName) : this (new RunnableImplementor (runHandler), threadName) {}
 
+		/// <summary>
+		/// Initializes a new <see cref="Thread"/> in the specified thread group that runs the specified <paramref name="runHandler"/> when started.
+		/// </summary>
+		/// <param name="group">The thread group to which the new thread belongs.</param>
+		/// <param name="runHandler">The delegate to execute on the new thread.</param>
+		/// <seealso href="https://developer.android.com/reference/java/lang/Thread#Thread(java.lang.ThreadGroup,%20java.lang.Runnable)">Android documentation for <c>java.lang.Thread</c></seealso>
 		public Thread (ThreadGroup group, Action runHandler) : this (group, new RunnableImplementor (runHandler)) {}
 
+		/// <summary>
+		/// Initializes a new <see cref="Thread"/> in the specified thread group with the specified name that runs the specified <paramref name="runHandler"/> when started.
+		/// </summary>
+		/// <param name="group">The thread group to which the new thread belongs.</param>
+		/// <param name="runHandler">The delegate to execute on the new thread.</param>
+		/// <param name="threadName">The name of the new thread.</param>
+		/// <seealso href="https://developer.android.com/reference/java/lang/Thread#Thread(java.lang.ThreadGroup,%20java.lang.Runnable,%20java.lang.String)">Android documentation for <c>java.lang.Thread</c></seealso>
 		public Thread (ThreadGroup group, Action runHandler, string threadName) : this (group, new RunnableImplementor (runHandler), threadName) {}
 
+		/// <summary>
+		/// Initializes a new <see cref="Thread"/> in the specified thread group with the specified name and stack size that runs the specified <paramref name="runHandler"/> when started.
+		/// </summary>
+		/// <param name="group">The thread group to which the new thread belongs.</param>
+		/// <param name="runHandler">The delegate to execute on the new thread.</param>
+		/// <param name="threadName">The name of the new thread.</param>
+		/// <param name="stackSize">The desired stack size, in bytes, for the new thread, or <c>0</c> to use the default.</param>
+		/// <seealso href="https://developer.android.com/reference/java/lang/Thread#Thread(java.lang.ThreadGroup,%20java.lang.Runnable,%20java.lang.String,%20long)">Android documentation for <c>java.lang.Thread</c></seealso>
 		public Thread (ThreadGroup group, Action runHandler, string threadName, long stackSize) : this (group, new RunnableImplementor (runHandler), threadName, stackSize) {}
 	}
 }
-
