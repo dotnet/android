@@ -102,4 +102,32 @@ public class RuntimePropertiesParserTests : BaseTest
 
 		Assert.AreEqual ("false", properties ["System.StartupHookProvider.IsSupported"]);
 	}
+
+	[Test]
+	public void ConfigWithoutConfigPropertiesStillGetsDevProperties ()
+	{
+		// A project that sets no feature switches gets a `*.runtimeconfig.json` without `configProperties`
+		File.WriteAllText (runtimeConfigPath, """
+			{
+			  "runtimeOptions": {
+			    "tfm": "net11.0"
+			  }
+			}
+			""");
+		File.WriteAllText (runtimeConfigDevPath, """
+			{
+			  "runtimeOptions": {
+			    "configProperties": {
+			      "System.Reflection.Metadata.MetadataUpdater.IsSupported": true,
+			      "System.StartupHookProvider.IsSupported": true
+			    }
+			  }
+			}
+			""");
+
+		var properties = Parse (runtimeConfigPath, runtimeConfigDevPath);
+
+		Assert.AreEqual ("true", properties ["System.Reflection.Metadata.MetadataUpdater.IsSupported"], "Hot Reload should be enabled by the dev file.");
+		Assert.AreEqual ("true", properties ["System.StartupHookProvider.IsSupported"], "Startup hooks should be enabled by the dev file.");
+	}
 }
