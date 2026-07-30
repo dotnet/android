@@ -11,44 +11,82 @@ parameters:
   condition: succeeded()
 
 steps:
-  # WORKAROUND: 'dotnet test' currently fails to deploy to a device (dotnet/android#12254),
-  # so drive the instrumentation with 'dotnet run' instead. A single 'dotnet run' builds,
-  # installs and runs, so there is no separate build step.
+  # Build and install the APK to the device.
   #
-  # We do not lose the test report by doing so: the on-device test runner writes its
-  # own TRX (tests/TestRunner.Core/TestInstrumentation.cs) and reports the location
-  # back through the instrumentation bundle as
-  # 'INSTRUMENTATION_RESULT: resultsPath=<device path>'. 'dotnet run' invokes
-  # 'adb shell am instrument -w', which prints that bundle, so we can scrape the path
-  # and pull the TRX to where PublishTestResults expects it.
+  # Retry the install up to 3 times: the emulator/ADB connection occasionally
+  # drops mid-install (XAGCPU7000 "device offline") and a retry usually recovers.
+  # If every attempt fails, continueOnError: false fails the lane immediately -
+  # there is no point running the tests against a device where the app was never
+  # installed (that only wastes CI time and produces a misleading
+  # INSTRUMENTATION_FAILED). See dotnet/android#11830.
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    configuration: ${{ parameters.buildConfiguration }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    displayName: build ${{ parameters.testName }}
+    project: ${{ parameters.project }}
+    arguments: >-
+      -t:Install
+      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/build-${{ parameters.testName }}.binlog
+      -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
+    condition: ${{ parameters.condition }}
+    retryCountOnTaskFailure: 3
+    continueOnError: false
+
+  # WORKAROUND: neither 'dotnet test' nor 'dotnet run' can be used to start the
+  # tests right now.
+  #
+  # 'dotnet test' fails to deploy to a device (dotnet/android#12254). 'dotnet run'
+  # gets further, but both of them deploy from a *second* MSBuild submission that
+  # does not go through 'Build'. _CollectJavaSourceForBinding and _CompileBindingJava
+  # only run as part of 'Build', so that second pass re-runs _CompileJava without the
+  # binding classes jar on javac's classpath and fails with XAJVC0000 'cannot find
+  # symbol'.
+  #
+  # The install above is a real 'Build', so it is correct. All that is left is to
+  # start the instrumentation, which is exactly what Microsoft.Android.Run does:
+  #   adb shell am instrument -w -r <package>/<instrumentation>
+  # (src/Microsoft.Android.Run/AndroidTestAdapter.cs). Do that directly and skip the
+  # second MSBuild pass entirely.
+  #
+  # The on-device runner writes its own TRX (tests/TestRunner.Core/TestInstrumentation.cs)
+  # and reports it back as 'INSTRUMENTATION_RESULT: resultsPath=<device path>', so we
+  # scrape that and pull the TRX to where PublishTestResults expects it.
   #
   # Revert to 'dotnet test' once the SDK fix flows in.
 - powershell: |
     $ErrorActionPreference = "Continue"
-    $projectDir = Split-Path -Parent "${{ parameters.project }}"
-    $projectFile = Split-Path -Leaf "${{ parameters.project }}"
+    $projectDir = Join-Path "${{ parameters.xaSourcePath }}" (Split-Path -Parent "${{ parameters.project }}")
     $resultsDir = "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
     New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
-    Push-Location $projectDir
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
-        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}/dotnet"
-    } else {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.buildConfiguration }}\dotnet"
-        $env:PATH = "${DOTNET_ROOT};$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
+
+    # The <instrumentation/> element is generated into the manifest at build time
+    # from the [Instrumentation] attribute, so read the built manifest, not the
+    # one in the project.
+    $manifest = Get-ChildItem -Path (Join-Path $projectDir "obj/${{ parameters.configuration }}") -Recurse -Filter AndroidManifest.xml -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -replace '\\','/' -match '/android/manifest/AndroidManifest.xml$' } |
+        Select-Object -First 1
+    if (-not $manifest) {
+        Write-Host "##vso[task.logissue type=error]Could not find a generated AndroidManifest.xml under '$projectDir/obj/${{ parameters.configuration }}'."
+        exit 1
     }
-    # 'dotnet run' deploys to the device with an in-process MSBuild, which skips the
-    # MSBuildForwardingApp that normally sets DOTNET_HOST_PATH. Without it, MSBuild
-    # cannot launch task hosts (MSB4221 on ILLink's ComputeManagedAssemblies).
-    $env:DOTNET_HOST_PATH = $dotnetPath
-    & $dotnetPath run --project $projectFile -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }} 2>&1 | Tee-Object -Variable runOutput
+    Write-Host "Using manifest: $($manifest.FullName)"
+    [xml]$xml = Get-Content $manifest.FullName
+    $ns = "http://schemas.android.com/apk/res/android"
+    $package = $xml.manifest.package
+    $instrumentation = $xml.manifest.instrumentation | Select-Object -First 1
+    if (-not $package -or -not $instrumentation) {
+        Write-Host "##vso[task.logissue type=error]Manifest '$($manifest.FullName)' has no package and/or <instrumentation/> element."
+        exit 1
+    }
+    $runner = $instrumentation.GetAttribute("name", $ns)
+    Write-Host "Running $package/$runner"
+    & adb shell am instrument -w -r "$package/$runner" 2>&1 | Tee-Object -Variable runOutput
     $runExitCode = $LASTEXITCODE
-    Pop-Location
+
     $match = $runOutput | Select-String -Pattern 'INSTRUMENTATION_RESULT:\s*resultsPath=(.+)$' | Select-Object -Last 1
     if (-not $match) {
-        Write-Host "##vso[task.logissue type=error]Instrumentation did not report a resultsPath; no TRX to publish. 'dotnet run' exited with $runExitCode."
+        Write-Host "##vso[task.logissue type=error]Instrumentation did not report a resultsPath; no TRX to publish. 'am instrument' exited with $runExitCode."
         exit 1
     }
     $devicePath = $match.Matches[0].Groups[1].Value.Trim()
@@ -59,6 +97,7 @@ steps:
         Write-Host "##vso[task.logissue type=error]Failed to pull TRX from device path '$devicePath'."
         exit 1
     }
+    if ($runOutput -match 'INSTRUMENTATION_FAILED') { exit 1 }
     exit $runExitCode
   displayName: run ${{ parameters.testName }}
   condition: ${{ parameters.condition }}
