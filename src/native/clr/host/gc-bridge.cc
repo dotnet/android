@@ -24,6 +24,15 @@
 
 using namespace xamarin::android;
 
+// APerformanceHint_notifyWorkloadSpike() ships in Android 16 (API 36), newer than the NDK headers
+// this builds against, so declare it here as a weak reference. libandroid resolves it at load time
+// on API 36+; on older platforms it stays null, and it is likewise null under the NativeAOT host
+// (which does not link libandroid). Being weak, it does not trip the linker's --no-undefined, exactly
+// like the ADPF symbols weak-linked via __ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__. Its ABI is frozen
+// (see the NDK header's stable-API notice), so this local declaration is safe.
+extern "C" int APerformanceHint_notifyWorkloadSpike (
+	APerformanceHintSession *session, bool cpu, bool gpu, const char *debugName) __attribute__((weak));
+
 namespace {
 	// The CoreCLR GC bridge runs the explicit ART GC (Runtime.gc()) synchronously on a dedicated
 	// pthread that is idle >99% of the time. When it wakes, Android's schedutil DVFS governor sees a
@@ -49,6 +58,21 @@ namespace {
 	constexpr int64_t GCBridgeHintTargetDurationNs = 4'000'000; // 4 ms
 
 	APerformanceHintSession *gc_bridge_hint_session = nullptr;
+
+	// The bridge GC is a rare, one-off CPU spike on an otherwise-idle thread, so reporting its
+	// duration *after* the fact (via reportActualWorkDuration below) is too late to speed up that same
+	// collection: the DVFS governor takes ~200ms to ramp, far longer than the ~10ms GC. ADPF's
+	// APerformanceHint_notifyWorkloadSpike() exists for exactly this case -- it tells the framework a
+	// sudden spike is imminent so it pre-boosts the core *before* the work starts. We call it just
+	// before each Runtime.gc(). Rate-limited per app by the framework, but the bridge fires at most
+	// once every several seconds, well within budget.
+	//   notifyWorkloadSpike (NDK): https://developer.android.com/ndk/reference/group/a-performance-hint
+
+	// notifyWorkloadSpike was added in Android 16 (API 36), newer than the NDK this builds against, so
+	// it is not declared in <android/performance_hint.h> and there is no __ANDROID_API_*__ macro for it
+	// to gate on. Instead we weak-link it (below) and null-check at the call site: libandroid only
+	// exports the symbol on API 36+, so a non-null pointer *is* the availability test -- more precise
+	// than an OS-version proxy.
 
 	auto monotonic_now_ns () noexcept -> int64_t
 	{
@@ -94,6 +118,11 @@ namespace {
 		// close it from, so this is a deliberate process-lifetime retention, not a leak.
 		gc_bridge_hint_session = session;
 		log_infof (LOG_DEFAULT, "GC bridge boost: ADPF hint session created (target=%" PRId64 " ns)", GCBridgeHintTargetDurationNs);
+
+		// Log once whether the Android 16 (API 36) spike pre-boost resolved on this platform; the
+		// per-GC path null-checks the weak symbol directly.
+		log_infof (LOG_DEFAULT, "GC bridge boost: workload-spike pre-boost %s",
+			APerformanceHint_notifyWorkloadSpike != nullptr ? "available" : "unavailable");
 	}
 
 	// Report the just-finished bridge GC duration so ADPF keeps boosting this thread's core. Only ever
@@ -203,6 +232,13 @@ void GCBridge::bridge_processing () noexcept
 
 		BridgeProcessing bridge_processing {args};
 		if (gc_bridge_hint_session != nullptr) [[likely]] {
+			// Tell ADPF a CPU workload spike is imminent so it pre-ramps this thread's core *before*
+			// the GC starts, instead of the governor lagging ~200ms behind the ~10ms burst. The weak
+			// symbol is null (a no-op) on platforms without the API; see its declaration above.
+			if (APerformanceHint_notifyWorkloadSpike != nullptr) {
+				APerformanceHint_notifyWorkloadSpike (gc_bridge_hint_session, /* cpu */ true, /* gpu */ false, "gc-bridge");
+			}
+
 			// Time the explicit bridge GC and report it to ADPF so the platform keeps this thread's
 			// carrier core clocked up for the rare, latency-sensitive collection.
 			int64_t start_ns = monotonic_now_ns ();
