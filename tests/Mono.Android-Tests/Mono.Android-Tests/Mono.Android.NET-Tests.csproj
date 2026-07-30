@@ -129,6 +129,7 @@
     <Compile Include="Android.OS\BundleTest.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
+    <Compile Include="Android.Runtime\ContextPeerWatch.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
     <Compile Include="Android.Runtime\JavaCollectionTest.cs" />
     <Compile Include="Android.Runtime\JnienvArrayMarshaling.cs" />
