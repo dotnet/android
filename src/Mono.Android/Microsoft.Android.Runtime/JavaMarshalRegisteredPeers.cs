@@ -171,11 +171,34 @@ static class JavaMarshalRegisteredPeers
 					continue;
 				if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
 					continue;
-				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
+				// JNIEnv.NewObject/JNIEnv.CreateInstance() compatibility.
+				// When two MCWs are created for one Java instance [0], we want the 2nd
+				// MCW to replace the 1st, as the 2nd is the one the dev created; the
+				// 1st is an implicit intermediary.
+				//
+				// Meanwhile, a new "replaceable" instance must *not* replace an existing
+				// "replaceable" instance; see dotnet/android#9862. Doing so orphans any
+				// already-cached reference to the existing peer -- notably
+				// `Application.Context`, which caches the peer it first sees and never
+				// re-reads it -- so `PeekPeer()` then hands out a different peer for the
+				// same Java instance; see dotnet/android#10973.
+				//
+				// This mirrors `AndroidRuntime.JavaObjectValueManager`; MonoVM has always
+				// had the second condition, which is why this only ever fails on CoreCLR.
+				//
+				// [0]: If a Java ctor invokes an overridden virtual method, we transition
+				// into managed code w/o a registered instance, and thus create an
+				// "intermediary" via the (IntPtr, JniHandleOwnership) .ctor.
+				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) &&
+						!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
 					RecordReplacement (key, target, value);
 					peer.Dispose ();
 					peers [i] = new ReferenceTrackingHandle (value);
-				} else {
+				} else if (JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages) {
+					// Now a normal startup path rather than a rare one, and the arguments
+					// below are evaluated eagerly -- including two JNI round-trips for
+					// `GetJniTypeNameFromInstance()` -- even though
+					// `WriteGlobalReferenceLine()` discards them when logging is off.
 					WarnNotReplacing (key, value, target);
 				}
 				GC.KeepAlive (target);
