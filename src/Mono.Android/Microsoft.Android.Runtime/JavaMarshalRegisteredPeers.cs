@@ -73,10 +73,16 @@ static class JavaMarshalRegisteredPeers
 	internal const string LiveEvictionsKey = "Microsoft.Android.Runtime.LivePeerEvictions";
 	internal const string ReplacementsKey = "Microsoft.Android.Runtime.PeerReplacements";
 	internal const string DuplicateAppendsKey = "Microsoft.Android.Runtime.PeerDuplicateAppends";
+	internal const string NotReplacedKey = "Microsoft.Android.Runtime.PeerNotReplaced";
+	internal const string RemovedKey = "Microsoft.Android.Runtime.PeerRemoved";
+	internal const string DeadEvictionsKey = "Microsoft.Android.Runtime.DeadPeerEvictions";
 
 	static int liveEvictions;
+	static int deadEvictions;
 	static int replacements;
 	static int duplicateAppends;
+	static int notReplaced;
+	static int removed;
 
 	static string Id (IJavaPeerable peer)
 		=> $"{peer.GetType ().FullName}@managed-0x{RuntimeHelpers.GetHashCode (peer).ToString ("x", CultureInfo.InvariantCulture)}/{peer.PeerReference}";
@@ -108,6 +114,30 @@ static class JavaMarshalRegisteredPeers
 				$"appended {Id (value)} alongside {existing} existing entr{(existing == 1 ? "y" : "ies")})");
 	}
 
+	// The peer that registers *first* wins, so this also records the registration order:
+	// `kept` was registered before `rejected` ever reached AddPeer().
+	static void RecordNotReplaced (int key, IJavaPeerable kept, IJavaPeerable rejected)
+	{
+		int count = Interlocked.Increment (ref notReplaced);
+		AppContext.SetData (NotReplacedKey,
+				$"{count} (most recent: key=0x{key.ToString ("x", CultureInfo.InvariantCulture)} " +
+				$"kept {Id (kept)}, did not register {Id (rejected)})");
+	}
+
+	static void RecordRemoved (int key, IJavaPeerable value)
+	{
+		int count = Interlocked.Increment (ref removed);
+		AppContext.SetData (RemovedKey,
+				$"{count} (most recent: key=0x{key.ToString ("x", CultureInfo.InvariantCulture)} {Id (value)})");
+	}
+
+	static void RecordDeadEviction (int key)
+	{
+		int count = Interlocked.Increment (ref deadEvictions);
+		AppContext.SetData (DeadEvictionsKey,
+				$"{count} (most recent: key=0x{key.ToString ("x", CultureInfo.InvariantCulture)})");
+	}
+
 	public static void CollectPeers ()
 	{
 		unsafe {
@@ -132,6 +162,7 @@ static class JavaMarshalRegisteredPeers
 					var peer = peers [i];
 					if (peer.BelongsToContext (context)) {
 						RecordIfLive (key, peer);
+						RecordDeadEviction (key);
 						peers.RemoveAt (i);
 					}
 				}
@@ -194,12 +225,15 @@ static class JavaMarshalRegisteredPeers
 					RecordReplacement (key, target, value);
 					peer.Dispose ();
 					peers [i] = new ReferenceTrackingHandle (value);
-				} else if (JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages) {
-					// Now a normal startup path rather than a rare one, and the arguments
-					// below are evaluated eagerly -- including two JNI round-trips for
-					// `GetJniTypeNameFromInstance()` -- even though
-					// `WriteGlobalReferenceLine()` discards them when logging is off.
-					WarnNotReplacing (key, value, target);
+				} else {
+					RecordNotReplaced (key, target, value);
+					if (JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages) {
+						// Now a normal startup path rather than a rare one, and the
+						// arguments below are evaluated eagerly -- including two JNI
+						// round-trips for `GetJniTypeNameFromInstance()` -- even though
+						// `WriteGlobalReferenceLine()` discards them when logging is off.
+						WarnNotReplacing (key, value, target);
+					}
 				}
 				GC.KeepAlive (target);
 				return;
@@ -268,6 +302,7 @@ static class JavaMarshalRegisteredPeers
 				ReferenceTrackingHandle peer = peers [i];
 				IJavaPeerable? target = peer.Target;
 				if (ReferenceEquals (value, target)) {
+					RecordRemoved (key, value);
 					peers.RemoveAt (i);
 					peer.Dispose ();
 				}

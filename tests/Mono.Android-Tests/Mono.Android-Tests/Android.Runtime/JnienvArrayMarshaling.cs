@@ -408,8 +408,12 @@ namespace Android.RuntimeTests {
 			// `Application.Context` if a second managed peer was created for the same Java
 			// instance, so report how that happened.
 			sb.AppendLine ($"  CollectPeers() evicted live peers:  {AppContext.GetData ("Microsoft.Android.Runtime.LivePeerEvictions") ?? "<none>"}");
+			sb.AppendLine ($"  CollectPeers() evictions (total):   {AppContext.GetData ("Microsoft.Android.Runtime.DeadPeerEvictions") ?? "<none>"}");
 			sb.AppendLine ($"  AddPeer() replaced registrations:   {AppContext.GetData ("Microsoft.Android.Runtime.PeerReplacements") ?? "<none>"}");
 			sb.AppendLine ($"  AddPeer() appended duplicates:      {AppContext.GetData ("Microsoft.Android.Runtime.PeerDuplicateAppends") ?? "<none>"}");
+			// Which peer registered *first* -- the kept one -- and which was turned away.
+			sb.AppendLine ($"  AddPeer() declined to replace:      {AppContext.GetData ("Microsoft.Android.Runtime.PeerNotReplaced") ?? "<none>"}");
+			sb.AppendLine ($"  RemovePeer() removals:              {AppContext.GetData ("Microsoft.Android.Runtime.PeerRemoved") ?? "<none>"}");
 
 			// Did `Application.Context` itself change after we captured it?
 			sb.AppendLine ($"  Application.Context still == expected: {ReferenceEquals (Application.Context, expected)}");
