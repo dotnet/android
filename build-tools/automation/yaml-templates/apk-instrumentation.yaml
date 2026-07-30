@@ -11,6 +11,22 @@ parameters:
   condition: succeeded()
 
 steps:
+  # Each APK lane builds the same project again with different settings
+  # (_AndroidTypeMapImplementation, UseMonoRuntime) in a shared workspace, and
+  # `-t:Clean` does not remove enough for the next lane to start fresh. Wipe the
+  # obj/bin folders under tests/ outright. Only tests/** is touched, so the
+  # repo-root bin/ (which holds the built SDK) is left alone.
+- powershell: |
+    $roots = Get-ChildItem -Path "${{ parameters.xaSourcePath }}/tests" -Directory -Recurse -Force -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -eq 'obj' -or $_.Name -eq 'bin' }
+    foreach ($r in $roots) {
+        Write-Host "Removing $($r.FullName)"
+        Remove-Item -LiteralPath $r.FullName -Recurse -Force -ErrorAction SilentlyContinue
+    }
+  displayName: clean tests obj/bin before ${{ parameters.testName }}
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+
   # WORKAROUND: 'dotnet test' currently fails to deploy to a device (dotnet/android#12254),
   # so drive the instrumentation with 'dotnet run' instead. A single 'dotnet run' builds,
   # installs and runs, so there is no separate build step.
@@ -121,13 +137,3 @@ steps:
     testResultsFiles: ${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults/${{ parameters.testName }}.trx
     testRunTitle: ${{ parameters.testName }}
   condition: ${{ parameters.condition }}
-
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-  parameters:
-    configuration: ${{ parameters.buildConfiguration }}
-    xaSourcePath: ${{ parameters.xaSourcePath }}
-    project: ${{ parameters.project }}
-    arguments: -t:Clean -c ${{ parameters.configuration }} --no-restore ${{ parameters.extraBuildArgs }}
-    displayName: Clean ${{ parameters.testName }}
-    condition: ${{ parameters.condition }}
-    continueOnError: false
