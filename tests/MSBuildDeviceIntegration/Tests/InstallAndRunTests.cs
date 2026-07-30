@@ -2826,6 +2826,149 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			}
 		}
 
+		/// <summary>
+		/// An app whose only entry point is an `Android.App.Instrumentation` subclass that
+		/// runs BenchmarkDotNet in-process. There is no `<activity/>`, so `dotnet run` has to
+		/// resolve `$(AndroidInstrumentation)` from the generated `AndroidManifest.xml`.
+		/// </summary>
+		const string BenchmarkDotNetInstrumentationSource = """
+			using System;
+			using System.IO;
+			using BenchmarkDotNet.Attributes;
+			using BenchmarkDotNet.Columns;
+			using BenchmarkDotNet.Configs;
+			using BenchmarkDotNet.Jobs;
+			using BenchmarkDotNet.Loggers;
+			using BenchmarkDotNet.Running;
+			using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
+
+			namespace ${ROOT_NAMESPACE}
+			{
+				public class SampleBenchmarks
+				{
+					[Benchmark]
+					public int Sum ()
+					{
+						int total = 0;
+						for (int i = 0; i < 1000; i++)
+							total += i;
+						return total;
+					}
+				}
+
+				[Instrumentation (Name = "${JAVA_PACKAGENAME}.BenchmarkInstrumentation")]
+				public class BenchmarkInstrumentation : Instrumentation
+				{
+					protected BenchmarkInstrumentation (IntPtr handle, Android.Runtime.JniHandleOwnership ownership)
+						: base (handle, ownership) { }
+
+					public override void OnCreate (Bundle? arguments)
+					{
+						base.OnCreate (arguments);
+						Console.WriteLine ($"BENCHMARK_ARGS args={arguments?.GetString ("args")} greeting={arguments?.GetString ("greeting")}");
+						Start ();
+					}
+
+					public override void OnStart ()
+					{
+						base.OnStart ();
+						var results = new Bundle ();
+						try {
+							var artifacts = Path.Combine (
+								Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath (),
+								"BenchmarkDotNet.Artifacts");
+							// BenchmarkDotNet cannot spawn child processes on Android, so run in-process.
+							// Job.Dry keeps the run to a single iteration.
+							var config = ManualConfig.CreateEmpty ()
+								.AddJob (Job.Dry.WithToolchain (InProcessNoEmitToolchain.Instance))
+								.AddLogger (ConsoleLogger.Default)
+								.AddColumnProvider (DefaultColumnProviders.Instance)
+								.WithArtifactsPath (artifacts)
+								.WithOptions (ConfigOptions.DisableOptimizationsValidator);
+							var summary = BenchmarkRunner.Run<SampleBenchmarks> (config);
+							Console.WriteLine ($"BENCHMARKS_COMPLETE reports={summary.Reports.Length}");
+							results.PutInt ("reports", summary.Reports.Length);
+							Finish (Result.Ok, results);
+						} catch (Exception ex) {
+							Console.WriteLine ($"BENCHMARKS_FAILED {ex}");
+							results.PutString ("error", ex.ToString ());
+							Finish (Result.Canceled, results);
+						}
+					}
+				}
+			}
+			""";
+
+		[Test]
+		public void DotNetRunBenchmarkDotNet ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (DotNetRunBenchmarkDotNet),
+				RootNamespace = nameof (DotNetRunBenchmarkDotNet),
+				IsRelease = false,
+			};
+			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.15.8" });
+
+			// Enable verbose output from Microsoft.Android.Run for debugging
+			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+
+			// Replace MainActivity.cs, so the app declares an <instrumentation> and no <activity>
+			proj.MainActivity = BenchmarkDotNetInstrumentationSource;
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Arguments after `--` are forwarded to `am instrument` as extras:
+			// `greeting=hello` becomes `-e greeting hello`, and `--custom-flag` is
+			// collected into a single `-e args "..."` extra.
+			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine (e.Data);
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine ($"STDERR: {e.Data}");
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (10).TotalMilliseconds);
+			if (!completed) {
+				try { process.Kill (entireProcessTree: true); } catch { }
+			} else {
+				// Ensure async output events are fully drained
+				process.WaitForExit ();
+			}
+
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
+
+			var outputText = output.ToString ();
+
+			// `Console.WriteLine` from the app lands in logcat, which `dotnet run` streams
+			StringAssert.Contains ("BENCHMARK_ARGS args=--custom-flag greeting=hello", outputText,
+				$"The instrumentation should receive the arguments passed after `--`. See {logPath} for details.");
+			StringAssert.Contains ("BENCHMARKS_COMPLETE reports=1", outputText,
+				$"BenchmarkDotNet should have produced 1 report. See {logPath} for details.");
+			StringAssert.Contains ("INSTRUMENTATION_CODE: -1", outputText,
+				$"The instrumentation should have finished with Result.Ok. See {logPath} for details.");
+			Assert.AreEqual (0, process.ExitCode, $"`dotnet run` should succeed. See {logPath} for details.");
+		}
+
 		static int ParseInstrumentationResult (string output, string key)
 		{
 			// Parses lines like: INSTRUMENTATION_RESULT: passed=1
