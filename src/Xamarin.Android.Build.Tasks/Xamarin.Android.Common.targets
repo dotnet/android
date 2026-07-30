@@ -1814,6 +1814,7 @@ because xbuild doesn't support framework reference assemblies.
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       UseAssemblyStore="$(_AndroidUseAssemblyStore)"
       AndroidEnableAssemblyStoreDecompressionCache="$(AndroidEnableAssemblyStoreDecompressionCache)"
+      GCBridgeThreadBoost="$(_AndroidGCBridgeThreadBoost)"
       EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
       CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
       TargetsCLR="$(_AndroidUseCLR)"

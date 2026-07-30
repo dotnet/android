@@ -225,6 +225,7 @@ struct ApplicationConfig
 	const char *android_package_name;
 	bool have_assembly_store;
 	bool assembly_store_decompression_cache_enabled;
+	bool gc_bridge_thread_boost_enabled;
 };
 
 struct DSOCacheEntry

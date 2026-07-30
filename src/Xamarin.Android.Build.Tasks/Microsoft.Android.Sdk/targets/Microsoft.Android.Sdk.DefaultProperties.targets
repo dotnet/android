@@ -45,6 +45,10 @@
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
     <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">llvm-ir</_AndroidTypeMapImplementation>
+    <!-- Boost the CoreCLR GC bridge thread's CPU frequency during the rare, latency-sensitive bridge
+         GC (via an ADPF performance-hint session) so the DVFS governor does not underclock its core.
+         Private/unsupported; default on. See dotnet/runtime#131370. -->
+    <_AndroidGCBridgeThreadBoost Condition=" '$(_AndroidGCBridgeThreadBoost)' == '' ">true</_AndroidGCBridgeThreadBoost>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>

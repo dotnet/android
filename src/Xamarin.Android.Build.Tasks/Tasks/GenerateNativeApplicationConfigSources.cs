@@ -59,6 +59,7 @@ namespace Xamarin.Android.Tasks
 
 		public bool EnableMarshalMethods { get; set; }
 		public bool AndroidEnableAssemblyStoreDecompressionCache { get; set; }
+		public bool GCBridgeThreadBoost { get; set; } = true;
 		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
 		public string? BoundExceptionType { get; set; }
@@ -286,6 +287,7 @@ namespace Xamarin.Android.Tasks
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 					HaveAssemblyStore = UseAssemblyStore,
 					AssemblyStoreDecompressionCacheEnabled = AndroidEnableAssemblyStoreDecompressionCache,
+					GCBridgeThreadBoostEnabled = GCBridgeThreadBoost,
 				};
 			} else {
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, Log) {
