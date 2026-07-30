@@ -6,6 +6,12 @@
     <MonoAndroidResourcePrefix Condition=" '$(MonoAndroidResourcePrefix)' == '' ">Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
     <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
+    <!--
+      Apps that launch through an <instrumentation> instead of an <activity>, such as test
+      or benchmark hosts. $(EnableMSTestRunner) opts in automatically.
+    -->
+    <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' and '$(EnableMSTestRunner)' == 'true' ">true</AndroidUseInstrumentation>
+    <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' ">false</AndroidUseInstrumentation>
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
     <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">true</AndroidUseDesignerAssembly>

@@ -23,6 +23,7 @@ class TypeMapObjectsXmlFile
 	static readonly TypeMapObjectsXmlFile unscanned = new TypeMapObjectsXmlFile { WasScanned = false };
 
 	public string? AssemblyName { get; set; }
+	public string? AssemblyFullName { get; set; }
 	public Guid AssemblyMvid { get; set; } = Guid.Empty;
 	public bool FoundJniNativeRegistration { get; set; }
 	public List<TypeMapDebugEntry> JavaToManagedDebugEntries { get; } = [];
@@ -57,6 +58,7 @@ class TypeMapObjectsXmlFile
 		xml.WriteStartElement ("api");
 		xml.WriteAttributeString ("type", HasDebugEntries ? "debug" : "release");
 		xml.WriteAttributeStringIfNotDefault ("assembly-name", AssemblyName);
+		xml.WriteAttributeStringIfNotDefault ("assembly-full-name", AssemblyFullName);
 
 		if (AssemblyMvid != Guid.Empty) {
 			xml.WriteAttributeString ("mvid", AssemblyMvid.ToString ("N"));
@@ -183,6 +185,7 @@ class TypeMapObjectsXmlFile
 			throw new InvalidOperationException ($"Missing required attribute 'type' in '{filename}'");
 
 		var assemblyName = reader.GetAttribute ("assembly-name");
+		var assemblyFullName = reader.GetAttribute ("assembly-full-name");
 		var mvidValue = reader.GetAttribute ("mvid");
 		var mvid = mvidValue.IsNullOrWhiteSpace () ? Guid.Empty : Guid.Parse (mvidValue);
 		var foundJniNativeRegistration = GetAttributeOrDefault (reader, "found-jni-native-registration", false);
@@ -190,6 +193,7 @@ class TypeMapObjectsXmlFile
 		var file = new TypeMapObjectsXmlFile {
 			WasScanned = true,
 			AssemblyName = assemblyName,
+			AssemblyFullName = assemblyFullName,
 			AssemblyMvid = mvid,
 			FoundJniNativeRegistration = foundJniNativeRegistration,
 		};
@@ -205,6 +209,7 @@ class TypeMapObjectsXmlFile
 	static void ImportDebugData (XmlReader reader, TypeMapObjectsXmlFile file)
 	{
 		var assemblyName = file.AssemblyName ?? string.Empty;
+		var assemblyFullName = file.AssemblyFullName ?? string.Empty;
 		var isMonoAndroid = assemblyName == "Mono.Android";
 
 		while (reader.Read ()) {
@@ -212,9 +217,9 @@ class TypeMapObjectsXmlFile
 				continue;
 
 			if (reader.Name == "java-to-managed")
-				ReadDebugEntries (reader, file.JavaToManagedDebugEntries, assemblyName, isMonoAndroid);
+				ReadDebugEntries (reader, file.JavaToManagedDebugEntries, assemblyName, assemblyFullName, isMonoAndroid);
 			else if (reader.Name == "managed-to-java")
-				ReadDebugEntries (reader, file.ManagedToJavaDebugEntries, assemblyName, isMonoAndroid);
+				ReadDebugEntries (reader, file.ManagedToJavaDebugEntries, assemblyName, assemblyFullName, isMonoAndroid);
 		}
 	}
 
@@ -268,7 +273,7 @@ class TypeMapObjectsXmlFile
 		File.Create (destination).Dispose ();
 	}
 
-	static TypeMapDebugEntry FromDebugEntryXml (XmlReader reader, string assemblyName, bool isMonoAndroid)
+	static TypeMapDebugEntry FromDebugEntryXml (XmlReader reader, string assemblyName, string assemblyFullName, bool isMonoAndroid)
 	{
 		return new TypeMapDebugEntry {
 			JavaName = reader.GetAttribute ("java-name") ?? string.Empty,
@@ -278,6 +283,7 @@ class TypeMapObjectsXmlFile
 			IsInvoker = GetAttributeOrDefault (reader, "is-invoker", false),
 			IsMonoAndroid = isMonoAndroid,
 			AssemblyName = assemblyName,
+			AssemblyFullName = assemblyFullName,
 		};
 	}
 
@@ -301,7 +307,7 @@ class TypeMapObjectsXmlFile
 		return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 	}
 
-	static void ReadDebugEntries (XmlReader reader, List<TypeMapDebugEntry> entries, string assemblyName, bool isMonoAndroid)
+	static void ReadDebugEntries (XmlReader reader, List<TypeMapDebugEntry> entries, string assemblyName, string assemblyFullName, bool isMonoAndroid)
 	{
 		if (reader.IsEmptyElement)
 			return;
@@ -313,7 +319,7 @@ class TypeMapObjectsXmlFile
 				return;
 
 			if (reader.NodeType == XmlNodeType.Element && reader.Name == "entry")
-				entries.Add (FromDebugEntryXml (reader, assemblyName, isMonoAndroid));
+				entries.Add (FromDebugEntryXml (reader, assemblyName, assemblyFullName, isMonoAndroid));
 		}
 	}
 

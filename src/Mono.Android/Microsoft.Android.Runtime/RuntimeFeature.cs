@@ -14,6 +14,7 @@ static class RuntimeFeature
 	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
 	const bool InteropEventSourceEnabledByDefault = false;
+	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 	const string StartupHookProviderSwitch = "System.StartupHookProvider.IsSupported";
@@ -55,4 +56,9 @@ static class RuntimeFeature
 	{
 		return InteropEventSource && global::Microsoft.Android.Runtime.InteropEventSource.IsEnabled (keywords);
 	}
+
+	// Enabled for Debug builds, whose string-based typemaps support Fast Deployment without embedding assembly MVIDs.
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}")]
+	internal static bool ManagedToJavaUsesAssemblyFullName { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}", out bool isEnabled) ? isEnabled : ManagedToJavaUsesAssemblyFullNameEnabledByDefault;
 }

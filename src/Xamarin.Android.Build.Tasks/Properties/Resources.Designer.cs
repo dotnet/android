@@ -964,7 +964,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &lt;instrumentation&gt; element in AndroidManifest.xml is missing the android:name attribute..
+        ///   Looks up a localized string similar to The &lt;instrumentation&gt; element in &apos;{0}&apos; is missing the android:name attribute..
         /// </summary>
         public static string XA1042 {
             get {
@@ -973,7 +973,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No &lt;instrumentation&gt; element found in AndroidManifest.xml..
+        ///   Looks up a localized string similar to Could not determine what to launch: &apos;{0}&apos; does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element. Set the $(AndroidLaunchActivity) or $(AndroidInstrumentation) MSBuild property to specify one..
         /// </summary>
         public static string XA1043 {
             get {
@@ -1014,6 +1014,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1047 {
             get {
                 return ResourceManager.GetString("XA1047", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; does not contain an &lt;instrumentation&gt; element. Add an Android.App.Instrumentation subclass to the application, or set the $(AndroidInstrumentation) MSBuild property to the name of one..
+        /// </summary>
+        public static string XA1048 {
+            get {
+                return ResourceManager.GetString("XA1048", resourceCulture);
             }
         }
         

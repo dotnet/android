@@ -96,6 +96,73 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void PublishReadyToRunPartial ([Values] bool isComposite)
+		{
+			const string logcatMessage = "R2R_PARTIAL_TEST_ONCREATE";
+
+			var rid = MonoAndroidHelper.AbiToRid (DeviceAbi);
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, $"r2rpartial{isComposite}")) {
+				IsRelease = true, // Enables ReadyToRun by default
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
+			// "--partial" restricts crossgen2 to the methods in the profile, "--map" makes it
+			// write a listing of everything it compiled.
+			proj.SetProperty ("PublishReadyToRunCrossgen2ExtraArgs", "--partial;--map");
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{logcatMessage}\");");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+
+			var assemblyName = proj.ProjectName;
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+
+			// _AndroidGenerateMibcProfile should have written a profile for the app assembly.
+			var mibc = Directory.GetFiles (intermediate, $"{assemblyName}.mibc", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (mibc, $"{assemblyName}.mibc should have been generated!");
+
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, true);
+			var apkEntry = $"assemblies/{DeviceAbi}/{assemblyName}.dll";
+			Assert.IsTrue (helper.Exists (apkEntry), $"{assemblyName}.dll should exist in apk!");
+
+			using (var stream = helper.ReadEntry (apkEntry, MonoAndroidHelper.AbiToTargetArch (DeviceAbi))) {
+				Assert.IsNotNull (stream, $"{apkEntry} should be readable from the apk!");
+				stream.Position = 0;
+				using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+			}
+
+			// The crossgen2 map lists every method that made it into the R2R image.  Without the
+			// generated profile, "--partial" would leave the app's own code out entirely.  The
+			// file is named after the app assembly, or after the composite image in a composite
+			// build.
+			var maps = Directory.GetFiles (intermediate, "*.map", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (maps, "crossgen2 should have written a .map file!");
+			// e.g. "0x000108C0 | 0x000100 | 0 | .text | UnnamedProject_UnnamedProject_MainActivity__OnCreate  (MethodWithGCInfo)"
+			var symbol = $"{assemblyName}_{assemblyName}_MainActivity__OnCreate  (MethodWithGCInfo)";
+			Assert.IsTrue (maps.Any (m => File.ReadAllText (m).Contains (symbol)),
+				$"MainActivity.OnCreate() should be ReadyToRun compiled! Looked for '{symbol}' in: {string.Join (", ", maps)}");
+
+			// A partially ReadyToRun compiled app must still start and run its managed code.
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (logcatMessage),
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45),
+				$"Output did not contain {logcatMessage}! MainActivity.OnCreate() should have run.");
+			Assert.IsTrue (builder.Uninstall (proj), "Project should have uninstalled.");
+		}
+
+		[Test]
 		public void TrimmableTypeMapInheritedVirtualOverrideUsesCorrectUco ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const string expectedLogcatOutput = "UCO_OVERRIDE_REUSE_RESULTS 107:211:1:1:405:1:0";
@@ -2477,6 +2544,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				return;
 			}
 
+			const string facebookVersion = "18.3.0";
 			var moduleName = "Library";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
 			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
@@ -2495,7 +2563,7 @@ android {{
 dependencies {{
     implementation(""androidx.appcompat:appcompat:1.7.0"")
     implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:17.0.2"")
+    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
 }}
 ";
 			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
@@ -2537,14 +2605,16 @@ public class FacebookSdk {{
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.DotNetPublicMaven },
 						},
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.DotNetPublicMaven },
 						},
 					},
 				},
@@ -2563,7 +2633,8 @@ public class FacebookSdk {{
 					},
 					new Package {
 						Id = "Xamarin.Google.Android.InstallReferrer",
-						Version = "1.1.2.6",
+						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
+						Version = "2.2.0.8",
 					},
 					new Package {
 						Id = "Xamarin.AndroidX.Core.Core.Ktx",
@@ -2753,6 +2824,149 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				var resultSummary = trxDoc.Root?.Element (trxNs + "ResultSummary");
 				Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxFiles [0]}");
 			}
+		}
+
+		/// <summary>
+		/// An app whose only entry point is an `Android.App.Instrumentation` subclass that
+		/// runs BenchmarkDotNet in-process. There is no `<activity/>`, so `dotnet run` has to
+		/// resolve `$(AndroidInstrumentation)` from the generated `AndroidManifest.xml`.
+		/// </summary>
+		const string BenchmarkDotNetInstrumentationSource = """
+			using System;
+			using System.IO;
+			using BenchmarkDotNet.Attributes;
+			using BenchmarkDotNet.Columns;
+			using BenchmarkDotNet.Configs;
+			using BenchmarkDotNet.Jobs;
+			using BenchmarkDotNet.Loggers;
+			using BenchmarkDotNet.Running;
+			using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
+
+			namespace ${ROOT_NAMESPACE}
+			{
+				public class SampleBenchmarks
+				{
+					[Benchmark]
+					public int Sum ()
+					{
+						int total = 0;
+						for (int i = 0; i < 1000; i++)
+							total += i;
+						return total;
+					}
+				}
+
+				[Instrumentation (Name = "${JAVA_PACKAGENAME}.BenchmarkInstrumentation")]
+				public class BenchmarkInstrumentation : Instrumentation
+				{
+					protected BenchmarkInstrumentation (IntPtr handle, Android.Runtime.JniHandleOwnership ownership)
+						: base (handle, ownership) { }
+
+					public override void OnCreate (Bundle? arguments)
+					{
+						base.OnCreate (arguments);
+						Console.WriteLine ($"BENCHMARK_ARGS args={arguments?.GetString ("args")} greeting={arguments?.GetString ("greeting")}");
+						Start ();
+					}
+
+					public override void OnStart ()
+					{
+						base.OnStart ();
+						var results = new Bundle ();
+						try {
+							var artifacts = Path.Combine (
+								Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath (),
+								"BenchmarkDotNet.Artifacts");
+							// BenchmarkDotNet cannot spawn child processes on Android, so run in-process.
+							// Job.Dry keeps the run to a single iteration.
+							var config = ManualConfig.CreateEmpty ()
+								.AddJob (Job.Dry.WithToolchain (InProcessNoEmitToolchain.Instance))
+								.AddLogger (ConsoleLogger.Default)
+								.AddColumnProvider (DefaultColumnProviders.Instance)
+								.WithArtifactsPath (artifacts)
+								.WithOptions (ConfigOptions.DisableOptimizationsValidator);
+							var summary = BenchmarkRunner.Run<SampleBenchmarks> (config);
+							Console.WriteLine ($"BENCHMARKS_COMPLETE reports={summary.Reports.Length}");
+							results.PutInt ("reports", summary.Reports.Length);
+							Finish (Result.Ok, results);
+						} catch (Exception ex) {
+							Console.WriteLine ($"BENCHMARKS_FAILED {ex}");
+							results.PutString ("error", ex.ToString ());
+							Finish (Result.Canceled, results);
+						}
+					}
+				}
+			}
+			""";
+
+		[Test]
+		public void DotNetRunBenchmarkDotNet ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (DotNetRunBenchmarkDotNet),
+				RootNamespace = nameof (DotNetRunBenchmarkDotNet),
+				IsRelease = false,
+			};
+			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.15.8" });
+
+			// Enable verbose output from Microsoft.Android.Run for debugging
+			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+
+			// Replace MainActivity.cs, so the app declares an <instrumentation> and no <activity>
+			proj.MainActivity = BenchmarkDotNetInstrumentationSource;
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Arguments after `--` are forwarded to `am instrument` as extras:
+			// `greeting=hello` becomes `-e greeting hello`, and `--custom-flag` is
+			// collected into a single `-e args "..."` extra.
+			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine (e.Data);
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine ($"STDERR: {e.Data}");
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (10).TotalMilliseconds);
+			if (!completed) {
+				try { process.Kill (entireProcessTree: true); } catch { }
+			} else {
+				// Ensure async output events are fully drained
+				process.WaitForExit ();
+			}
+
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
+
+			var outputText = output.ToString ();
+
+			// `Console.WriteLine` from the app lands in logcat, which `dotnet run` streams
+			StringAssert.Contains ("BENCHMARK_ARGS args=--custom-flag greeting=hello", outputText,
+				$"The instrumentation should receive the arguments passed after `--`. See {logPath} for details.");
+			StringAssert.Contains ("BENCHMARKS_COMPLETE reports=1", outputText,
+				$"BenchmarkDotNet should have produced 1 report. See {logPath} for details.");
+			StringAssert.Contains ("INSTRUMENTATION_CODE: -1", outputText,
+				$"The instrumentation should have finished with Result.Ok. See {logPath} for details.");
+			Assert.AreEqual (0, process.ExitCode, $"`dotnet run` should succeed. See {logPath} for details.");
 		}
 
 		static int ParseInstrumentationResult (string output, string key)
