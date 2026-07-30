@@ -203,7 +203,7 @@ static class JavaMarshalRegisteredPeers
 				RegisteredInstances.Remove (key);
 		}
 
-		if (removed && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+		if (removed && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 			EmitJavaPeerReleasedManagedPeer (value);
 		}
 	}
@@ -238,7 +238,7 @@ static class JavaMarshalRegisteredPeers
 					RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 					value.GetType ().ToString ());
 		}
-		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 			EmitManagedPeerReleasedJavaPeer (value, h);
 		}
 		value.SetPeerReference (new JniObjectReference ());
@@ -287,7 +287,7 @@ static class JavaMarshalRegisteredPeers
 
 	unsafe static void EmitReachabilityEventIfEnabled (HandleContext* context, GCHandle handle, int componentIndex, int contextIndex, bool isCollected)
 	{
-		if (!RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.Reachability)) {
+		if (!RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.ReachabilityKeyword)) {
 			return;
 		}
 
@@ -295,11 +295,9 @@ static class JavaMarshalRegisteredPeers
 		string? managedType = peer?.GetType ().FullName;
 		int managedObjectHashCode = peer != null ? RuntimeHelpers.GetHashCode (peer) : 0;
 		string? javaType = null;
-		if (context->controlBlock != IntPtr.Zero) {
-			IntPtr javaHandle = ((JniObjectReferenceControlBlock*) context->controlBlock)->handle;
-			if (javaHandle != IntPtr.Zero) {
-				javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (javaHandle, JniObjectReferenceType.Global));
-			}
+		JniObjectReference javaPeerReference = context->JavaPeerReference;
+		if (javaPeerReference.IsValid) {
+			javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (javaPeerReference);
 		}
 
 		if (isCollected) {
@@ -370,6 +368,19 @@ static class JavaMarshalRegisteredPeers
 		IntPtr controlBlock;
 
 		public int PeerIdentityHashCode => identityHashCode;
+		public JniObjectReference JavaPeerReference
+		{
+			get {
+				if (controlBlock == IntPtr.Zero) {
+					return new JniObjectReference ();
+				}
+
+				IntPtr javaHandle = ((JniObjectReferenceControlBlock*) controlBlock)->handle;
+				return javaHandle == IntPtr.Zero
+					? new JniObjectReference ()
+					: new JniObjectReference (javaHandle, JniObjectReferenceType.Global);
+			}
+		}
 		public bool IsCollected
 		{
 			get
@@ -519,7 +530,7 @@ static class JavaMarshalRegisteredPeers
 			}
 
 			bool isCollected = context->IsCollected;
-			if (!isCollected && !RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.Reachability)) {
+			if (!isCollected && !RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.ReachabilityKeyword)) {
 				return;
 			}
 

@@ -100,7 +100,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		peer.SetPeerReference (newRef);
 		peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (newRef));
-		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 			var javaType = newRef.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (newRef) : null;
 			InteropEventSource.JavaPeerCreated (
 				peer.GetType ().FullName,
@@ -140,7 +140,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			var resolvedTargetType = ResolvePeerType (targetType);
 			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
 				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
-			if (peer != null && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+			if (peer != null && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 				var peerReference = peer.PeerReference;
 				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
 				InteropEventSource.ManagedPeerCreated (

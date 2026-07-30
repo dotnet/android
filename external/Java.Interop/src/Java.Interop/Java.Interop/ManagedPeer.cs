@@ -106,7 +106,7 @@ namespace Java.Interop {
 
 				var typeSig = new JniTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (r_self));
 				var type    = GetTypeFromSignature (runtime.TypeManager, typeSig);
-				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 					var managedObjectHashCode = self != null ? RuntimeHelpers.GetHashCode (self) : 0;
 					InteropEventSource.JavaPeerCreated (
 						type.FullName,

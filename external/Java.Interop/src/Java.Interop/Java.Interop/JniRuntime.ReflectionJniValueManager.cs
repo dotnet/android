@@ -78,7 +78,7 @@ namespace Java.Interop
 
 				peer.SetPeerReference (newRef);
 				peer.SetJniIdentityHashCode (JniSystem.IdentityHashCode (newRef));
-				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 					EmitJavaPeerCreatedEvent (peer, newRef);
 				}
 
@@ -167,7 +167,7 @@ namespace Java.Interop
 							JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
 				}
 				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
-				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 					EmitManagedPeerCreatedEvent (peer);
 				}
 				return peer;

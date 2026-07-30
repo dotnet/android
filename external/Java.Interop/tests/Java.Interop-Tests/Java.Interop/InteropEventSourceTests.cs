@@ -15,7 +15,7 @@ namespace Java.InteropTests
 	public class InteropEventSourceTests
 	{
 		[Test]
-		public void WrapperLifecycleEvents_HaveExpectedPayload ()
+		public void PeerLifecycleEvents_HaveExpectedPayload ()
 		{
 			using (var listener = new CapturingEventListener ()) {
 				InteropEventSource.ManagedPeerCreated ("Managed.Type", "java/type", 1, 2);

@@ -626,7 +626,7 @@ namespace Android.Runtime {
 				return null;
 
 			var peer        = Java.Interop.TypeManager.CreateInstance (reference.Handle, JniHandleOwnership.DoNotTransfer, targetType) as IJavaPeerable;
-			if (peer != null && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.Keywords.PeerLifecycle)) {
+			if (peer != null && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
 				var peerReference = peer.PeerReference;
 				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
 				InteropEventSource.ManagedPeerCreated (

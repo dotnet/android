@@ -19,11 +19,8 @@ namespace Java.Interop
 		const string UnknownValue = "Unknown";
 		const string RuntimeFeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
 
-		internal static class Keywords
-		{
-			public const EventKeywords PeerLifecycle = (EventKeywords) 0x1;
-			public const EventKeywords Reachability = (EventKeywords) 0x2;
-		}
+		internal const EventKeywords PeerLifecycleKeyword = (EventKeywords) 0x1;
+		internal const EventKeywords ReachabilityKeyword = (EventKeywords) 0x2;
 
 		static readonly InteropEventSourceImplementation source = new InteropEventSourceImplementation ();
 
@@ -155,6 +152,12 @@ namespace Java.Interop
 		[EventSource (Name = ProviderName)]
 		sealed class InteropEventSourceImplementation : EventSource
 		{
+			public static class Keywords
+			{
+				public const EventKeywords PeerLifecycle = PeerLifecycleKeyword;
+				public const EventKeywords Reachability = ReachabilityKeyword;
+			}
+
 			[Event (1, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
 			public void ManagedPeerCreated (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
 			{
