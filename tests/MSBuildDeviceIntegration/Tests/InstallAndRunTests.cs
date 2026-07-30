@@ -934,6 +934,38 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 
+		[Test]
+		public void RuntimeConfigDevJsonIsApplied ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false,
+			};
+			proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+
+			// For `Debug` builds the .NET SDK writes these two switches into `*.runtimeconfig.dev.json`
+			// and nowhere else. `hostfxr` layers that file over `*.runtimeconfig.json` at startup, but
+			// .NET for Android bakes the properties into the app at build time, so seeing them here
+			// proves the dev file was picked up. Asking for `$(StartupHookSupport)` to be `false` also
+			// proves the dev file wins over `*.runtimeconfig.json`.
+			proj.SetProperty ("StartupHookSupport", "false");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+@"			AppContext.TryGetSwitch (""System.StartupHookProvider.IsSupported"", out bool startupHookProvider);
+			AppContext.TryGetSwitch (""System.Reflection.Metadata.MetadataUpdater.IsSupported"", out bool metadataUpdater);
+			Console.WriteLine (""# runtimeconfig.dev.json: StartupHookProvider={0}; MetadataUpdater={1}"",
+				startupHookProvider, metadataUpdater);
+");
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			RunProjectAndAssert (proj, builder);
+
+			const string expectedLogcatOutput = "# runtimeconfig.dev.json: StartupHookProvider=True; MetadataUpdater=True";
+			Assert.IsTrue (
+				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "runtimeconfig-logcat.log"), timeout: 60),
+				$"Output did not contain {expectedLogcatOutput}!");
+		}
+
 		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
 		{
 			// On .NET 6, `adb logcat` output may be line-wrapped in unexpected ways.
@@ -2647,6 +2679,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[TestCase ("test", MSTestPackageChannel.Nightly)]
 		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
 		{
+			if (mode == "test")
+				Assert.Ignore ("`dotnet test` fails with a duplicate `Microsoft.NETCore.App` runtime pack: https://github.com/dotnet/android/issues/12254");
+
 			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
