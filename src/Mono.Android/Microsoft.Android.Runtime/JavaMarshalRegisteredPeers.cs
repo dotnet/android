@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
+using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
@@ -58,6 +59,35 @@ static class JavaMarshalRegisteredPeers
 		}
 	}
 
+	/// <summary>
+	/// Diagnostic for dotnet/android#10973. A context reaches <see cref="CollectedContexts"/>
+	/// only because the GC bridge reported its peer as collected, so the peer's weak reference
+	/// should already be cleared by the time we evict it. If it is *not* -- i.e. the managed
+	/// peer is still alive, possibly strongly held by something like
+	/// <c>Application.Context</c> -- then we are about to drop a live registration, which is
+	/// what makes <c>JniValueManager.PeekPeer()</c> subsequently miss and hand out a second
+	/// peer for the same Java instance.
+	///
+	/// Published via <see cref="AppContext"/> so tests in other assemblies can report it
+	/// without needing <c>InternalsVisibleTo</c>. Recording only; the eviction still happens,
+	/// so this does not mask the bug it is measuring.
+	/// </summary>
+	internal const string LiveEvictionsKey = "Microsoft.Android.Runtime.LivePeerEvictions";
+
+	static int liveEvictions;
+
+	static void RecordIfLive (int key, ReferenceTrackingHandle peer)
+	{
+		if (peer.Target is not IJavaPeerable live)
+			return;
+
+		int count = Interlocked.Increment (ref liveEvictions);
+		AppContext.SetData (LiveEvictionsKey,
+				$"{count} (most recent: JniIdentityHashCode=0x{key.ToString ("x", CultureInfo.InvariantCulture)} " +
+				$"Type={live.GetType ().FullName} Instance=0x{RuntimeHelpers.GetHashCode (live).ToString ("x", CultureInfo.InvariantCulture)})");
+		GC.KeepAlive (live);
+	}
+
 	public static void CollectPeers ()
 	{
 		unsafe {
@@ -81,6 +111,7 @@ static class JavaMarshalRegisteredPeers
 				for (int i = peers.Count - 1; i >= 0; i--) {
 					var peer = peers [i];
 					if (peer.BelongsToContext (context)) {
+						RecordIfLive (key, peer);
 						peers.RemoveAt (i);
 					}
 				}

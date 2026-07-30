@@ -404,6 +404,9 @@ namespace Android.RuntimeTests {
 			sb.AppendLine ($"    before NewArray:    {beforeNewArray}");
 			sb.AppendLine ($"    after NewArray:     {afterNewArray}");
 			sb.AppendLine ($"  Registry first diverged: {ContextPeerWatchAttribute.DivergedAfter ?? "<not observed>"}");
+			// Set by JavaMarshalRegisteredPeers.CollectPeers() when it evicts a registration
+			// whose managed peer is still alive -- the suspected cause of the miss above.
+			sb.AppendLine ($"  Live peers evicted by CollectPeers(): {AppContext.GetData ("Microsoft.Android.Runtime.LivePeerEvictions") ?? "<none>"}");
 
 			// Did `Application.Context` itself change after we captured it?
 			sb.AppendLine ($"  Application.Context still == expected: {ReferenceEquals (Application.Context, expected)}");
