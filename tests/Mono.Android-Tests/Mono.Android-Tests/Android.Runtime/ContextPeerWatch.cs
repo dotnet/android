@@ -21,16 +21,24 @@ namespace Android.RuntimeTests {
 	public sealed class ContextPeerWatchAttribute : Attribute, ITestAction {
 
 		// Only the *first* divergence is interesting; later tests just observe the same
-		// already-broken registry.
+		// already-broken registry. Prefixed with "before"/"after" so a divergence that is
+		// already present when the very first test starts -- i.e. one that happened during
+		// app startup -- is distinguishable from one a test body caused.
 		public static string DivergedAfter;
 
 		public ActionTargets Targets => ActionTargets.Test;
 
 		public void BeforeTest (ITest test)
 		{
+			Check (test, "before");
 		}
 
 		public void AfterTest (ITest test)
+		{
+			Check (test, "after");
+		}
+
+		static void Check (ITest test, string when)
 		{
 			if (DivergedAfter != null)
 				return;
@@ -44,7 +52,7 @@ namespace Android.RuntimeTests {
 			// often does not itself perturb the behaviour under investigation.
 			var peeked = JniRuntime.CurrentRuntime.ValueManager.PeekPeer (context.PeerReference);
 			if (!ReferenceEquals (peeked, context))
-				DivergedAfter = test.FullName;
+				DivergedAfter = $"{when} {test.FullName}";
 		}
 	}
 }

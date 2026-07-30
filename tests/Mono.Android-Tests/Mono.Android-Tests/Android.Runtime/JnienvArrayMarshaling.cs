@@ -403,7 +403,7 @@ namespace Android.RuntimeTests {
 			sb.AppendLine ($"    at test entry:      {atEntry}");
 			sb.AppendLine ($"    before NewArray:    {beforeNewArray}");
 			sb.AppendLine ($"    after NewArray:     {afterNewArray}");
-			sb.AppendLine ($"  Registry first diverged after test: {ContextPeerWatchAttribute.DivergedAfter ?? "<not observed>"}");
+			sb.AppendLine ($"  Registry first diverged: {ContextPeerWatchAttribute.DivergedAfter ?? "<not observed>"}");
 
 			// Did `Application.Context` itself change after we captured it?
 			sb.AppendLine ($"  Application.Context still == expected: {ReferenceEquals (Application.Context, expected)}");
