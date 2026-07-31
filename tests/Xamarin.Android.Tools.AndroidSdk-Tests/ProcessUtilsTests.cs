@@ -179,6 +179,23 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		/// <summary>
+		/// Whitespace detection matches the BCL's <c>PasteArguments</c>, which uses
+		/// <see cref="char.IsWhiteSpace(char)"/> rather than just space and tab. Quoting an
+		/// argument is always safe, so erring towards quoting keeps the two implementations
+		/// in agreement.
+		/// </summary>
+		[TestCase ("a\rb")]
+		[TestCase ("a\fb")]
+		[TestCase ("a\nb")]
+		[TestCase ("a\vb")]
+		[TestCase ("a\u00a0b")]
+		public void JoinArguments_AllWhitespaceIsQuoted (string argument)
+		{
+			var joined = ProcessUtils.JoinArguments (argument);
+			Assert.AreEqual ($"\"{argument}\"", joined);
+		}
+
+		/// <summary>
 		/// Minimal implementation of the <c>CommandLineToArgvW</c> parsing rules, used to verify
 		/// that <see cref="ProcessUtils.JoinArguments"/> round-trips.
 		/// </summary>

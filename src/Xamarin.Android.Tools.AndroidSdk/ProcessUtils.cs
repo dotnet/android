@@ -205,8 +205,6 @@ namespace Xamarin.Android.Tools
 			return psi;
 		}
 
-		static readonly char [] CharsRequiringQuotes = { ' ', '\t', '"', '\n', '\v' };
-
 		/// <summary>
 		/// Joins <paramref name="args"/> into a single command line suitable for
 		/// <see cref="ProcessStartInfo.Arguments"/>.
@@ -237,7 +235,7 @@ namespace Xamarin.Android.Tools
 				return;
 			}
 
-			if (argument.IndexOfAny (CharsRequiringQuotes) < 0) {
+			if (ContainsNoWhitespaceOrQuotes (argument)) {
 				sb.Append (argument);
 				return;
 			}
@@ -264,6 +262,16 @@ namespace Xamarin.Android.Tools
 				}
 			}
 			sb.Append ('"');
+		}
+
+		static bool ContainsNoWhitespaceOrQuotes (string s)
+		{
+			for (int i = 0; i < s.Length; i++) {
+				char c = s [i];
+				if (char.IsWhiteSpace (c) || c == '"')
+					return false;
+			}
+			return true;
 		}
 
 		/// <summary>

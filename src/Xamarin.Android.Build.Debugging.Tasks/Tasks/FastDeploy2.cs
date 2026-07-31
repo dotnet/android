@@ -736,7 +736,12 @@ namespace Xamarin.Android.Tasks
 			var psi = ProcessUtils.CreateProcessStartInfo (adb, adbArguments.ToArray ());
 			psi.WindowStyle = ProcessWindowStyle.Hidden;
 
-			LogDiagnostic ($"adb command: {psi.FileName} {string.Join (" ", adbArguments)}");
+			// psi.Arguments holds the exact, correctly quoted command line whenever ProcessUtils
+			// joined the arguments itself; it is empty when it used ProcessStartInfo.ArgumentList.
+			string commandLine = !string.IsNullOrEmpty (psi.Arguments)
+				? psi.Arguments
+				: string.Join (" ", adbArguments.Select (a => $"[{a}]"));
+			LogDiagnostic ($"adb command: {psi.FileName} {commandLine}");
 
 			using var stdout = new StringWriter ();
 			using var stderr = new StringWriter ();
