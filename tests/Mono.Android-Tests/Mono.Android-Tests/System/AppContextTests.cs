@@ -85,8 +85,9 @@ namespace SystemTests
 				return;
 			}
 
-			// .NET always terminates `AppContext.BaseDirectory` with a directory separator.
-			string expected = filesDir.AbsolutePath + "/";
+			// .NET always terminates `AppContext.BaseDirectory` with a directory separator. Android
+			// does not return one today, but normalize instead of assuming it never will.
+			string expected = filesDir.AbsolutePath.TrimEnd ('/') + "/";
 			Assert.AreEqual (expected, AppContext.BaseDirectory);
 		}
 	}

@@ -368,8 +368,10 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// string for us since assemblies are read straight out of the APK. Point it at the application's
 	// files directory, the same value MonoVM has always used. `.NET` terminates the base directory
 	// with a directory separator, so we do too.
-	// Storage must outlive `coreclr_initialize`, hence the function-local static.
-	static std::string app_context_base_directory { files_dir.get_cstr () };
+	// Storage must outlive `coreclr_initialize`, hence the function-local static. Assign on every
+	// call rather than relying on the initializer, which would only ever see the first `files_dir`.
+	static std::string app_context_base_directory;
+	app_context_base_directory.assign (files_dir.get_cstr ());
 	if (!app_context_base_directory.ends_with ('/')) {
 		app_context_base_directory.push_back ('/');
 	}
