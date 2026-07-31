@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using Java.Interop.Tools.JavaCallableWrappers;
+using Microsoft.Android.Build.Tasks;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -65,20 +66,6 @@ internal static class ScannerHashingHelper
 
 	static string ToHexString (ReadOnlySpan<byte> hash)
 	{
-		const int maxStackCharLength = 128;
-		int charLength = hash.Length * 2;
-		Span<char> chars = charLength <= maxStackCharLength
-			? stackalloc char [charLength]
-			: new char [charLength];
-
-		for (int i = 0, j = 0; i < hash.Length; i += 1, j += 2) {
-			byte b = hash [i];
-			chars [j] = GetHexValue (b / 16);
-			chars [j + 1] = GetHexValue (b % 16);
-		}
-
-		return ((ReadOnlySpan<char>) chars).ToString ();
+		return HexUtilities.ToHexString (hash, upperCase: false);
 	}
-
-	static char GetHexValue (int value) => (char) (value < 10 ? value + '0' : value - 10 + 'a');
 }

@@ -9,6 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
+using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
@@ -470,6 +471,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteType (GeneratorWriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo, LlvmIrGlobalVariable? globalVariable = null)
 		{
+			// Fast path: a basic scalar type (`byte`, `uint`, ...) can never be a structure instance,
+			// an array or a string blob, so skip the reflection-heavy probing below.  Arrays and string
+			// blobs are written one element at a time, so this runs millions of times for a typical
+			// application and `Type.IsPrimitive`/`Type.IsArray` dominate the generator otherwise.
+			if (basicTypeMap.ContainsKey (type)) {
+				WriteBasicType (context, type, out typeInfo);
+				return;
+			}
+
 			if (IsStructureInstance (type)) {
 				if (value == null) {
 					throw new ArgumentException ($"must not be null for structure instances ({type})", nameof (value));
@@ -514,6 +524,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			irType = GetIRType (context, type, out size, out isPointer);
+			typeInfo = new LlvmTypeInfo (
+				isPointer: isPointer,
+				isAggregate: false,
+				isStructure: false,
+				size: size,
+				maxFieldAlignment: size
+			);
+			context.Output.Write (irType);
+		}
+
+		void WriteBasicType (GeneratorWriteContext context, Type type, out LlvmTypeInfo typeInfo)
+		{
+			string irType = GetIRType (context, type, out ulong size, out bool isPointer);
 			typeInfo = new LlvmTypeInfo (
 				isPointer: isPointer,
 				isAggregate: false,
@@ -886,17 +909,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteArrayValueEnd (context);
 		}
 
-		static readonly string[] ByteTypeAndValueStrings = CreateByteTypeAndValueStrings ();
-
-		static string[] CreateByteTypeAndValueStrings ()
-		{
-			var ret = new string [256];
-			for (int i = 0; i < ret.Length; i++) {
-				ret [i] = $"i8 u0x{i.ToString ("x2", CultureInfo.InvariantCulture)}";
-			}
-			return ret;
-		}
-
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
 		{
 			// The stride determines how many elements are written on a single line before a newline is added.
@@ -957,11 +969,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteByteTypeAndValue (byte v)
 			{
-				// String blobs are always `i8` arrays written in hexadecimal, and they can contain
-				// millions of entries.  Going through WriteType()/WriteValue() here would perform
-				// reflection and allocate a handful of strings *per byte*, so use a lookup table of
-				// the 256 possible renderings instead.
-				context.Output.Write (ByteTypeAndValueStrings [v]);
+				// String blobs are `i8` arrays written in hexadecimal and can contain millions of
+				// entries.  WriteValue() would box the byte and allocate two strings per element, so
+				// write the type and the two hex digits directly.
+				context.Output.Write ("i8 u0x");
+				context.Output.Write (HexUtilities.GetHexValue (v >> 4, upperCase: false));
+				context.Output.Write (HexUtilities.GetHexValue (v & 0x0f, upperCase: false));
 			}
 		}
 
