@@ -916,7 +916,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			// end of the line.
 
 			// `Rent()` may return a larger array than requested, so use its actual length as the capacity.
-			char[] chunk = ArrayPool<char>.Shared.Rent (4096);
+			char [] chunk = ArrayPool<char>.Shared.Rent (4096);
 			int chunkCapacity = chunk.Length;
 			int chunkUsed = 0;
 
@@ -942,11 +942,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			void WriteByte (byte b)
 			{
 				// `"` and `\` must always be escaped, as must anything outside of the printable ASCII range.
-				if (b != (byte)'"' && b != (byte)'\\' && b >= 32 && b < 127) {
+				if (b != (byte) '"' && b != (byte) '\\' && b >= 32 && b < 127) {
 					if (chunkUsed == chunkCapacity) {
 						Flush ();
 					}
-					chunk[chunkUsed++] = (char)b;
+					chunk [chunkUsed++] = (char) b;
 					return;
 				}
 
@@ -954,7 +954,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					Flush ();
 				}
 
-				chunk[chunkUsed++] = '\\';
+				chunk [chunkUsed++] = '\\';
 				HexUtilities.WriteHex (chunk.AsSpan (chunkUsed), b, upperCase: true);
 				chunkUsed += 2;
 			}
