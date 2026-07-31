@@ -12,8 +12,7 @@ namespace Microsoft.Android.Build.Tasks
 	/// reference <c>Microsoft.Android.Build.BaseTasks</c>.  It is therefore <c>internal</c>, so the
 	/// two copies do not collide in assemblies referencing both.
 	/// </remarks>
-	static class HexUtilities
-	{
+	static class HexUtilities	{
 		/// <summary>
 		/// Convert a value in the <c>0..15</c> range to its hexadecimal digit.
 		/// </summary>

@@ -9,6 +9,8 @@
     <OutputPath>$(TestOutputDirectory)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RollForward>Major</RollForward>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
@@ -17,11 +19,6 @@
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- HexUtilities is `internal`, so link in the source to test it. -->
-    <Compile Include="..\..\src\Microsoft.Android.Build.BaseTasks\HexUtilities.cs" Link="HexUtilities.cs" />
   </ItemGroup>
 
   <ItemGroup>
