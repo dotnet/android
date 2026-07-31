@@ -28,8 +28,8 @@ to check.
 
 The reference files are located
 in `src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base`
-directory. During the test run, we save `.apkdesc` files, with
-current sizes. These files can be used a new reference. They
+directory. During the test run, we save `.apkdesc` files with
+current sizes. These files can be used as a new reference. They
 are named like this:
 
     .../Base/BuildReleaseArm64SimpleDotNet.CoreCLR.apkdesc

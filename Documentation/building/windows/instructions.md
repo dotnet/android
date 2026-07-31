@@ -126,9 +126,9 @@ and path for the proper version of `dotnet`.
 
 All NUnit-based unit tests can be executed via
 
-    dotnet-local.cmd build Xamarin.Android.sln /t:RunNunitTests
+    dotnet-local.cmd build Xamarin.Android.sln /t:RunNUnitTests
 
-### Listing Nunit Tests
+### Listing NUnit Tests
 
 In order to get a list of the tests you can use the `ListNUnitTests` target
 
@@ -136,11 +136,11 @@ In order to get a list of the tests you can use the `ListNUnitTests` target
 
 This will produce a list of the tests in all of the test assemblies.
 
-### Running Specific Nunit Tests
+### Running Specific NUnit Tests
 
 You can run then a single (or a group) of tests using the `$(TEST)` MSBuild property.
 
-    dotnet-local.cmd build Xamarin.Android.sln /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    dotnet-local.cmd build Xamarin.Android.sln /t:RunNUnitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
 
 ## Running On-Device Tests
 
