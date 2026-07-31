@@ -16,11 +16,9 @@ namespace Xamarin.Android.Tasks;
 class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 {
 	// From host_runtime_contract.h in dotnet/runtime
-	const string HOST_PROPERTY_RUNTIME_CONTRACT = "HOST_RUNTIME_CONTRACT";
-	const string HOST_PROPERTY_BUNDLE_PROBE     = "BUNDLE_PROBE";
-	const string HOST_PROPERTY_PINVOKE_OVERRIDE = "PINVOKE_OVERRIDE";
-
-	// Set by `hostfxr` on other platforms, by our native runtime here
+	const string HOST_PROPERTY_RUNTIME_CONTRACT   = "HOST_RUNTIME_CONTRACT";
+	const string HOST_PROPERTY_BUNDLE_PROBE       = "BUNDLE_PROBE";
+	const string HOST_PROPERTY_PINVOKE_OVERRIDE   = "PINVOKE_OVERRIDE";
 	const string HOST_PROPERTY_RUNTIME_IDENTIFIER = "RUNTIME_IDENTIFIER";
 
 	sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
