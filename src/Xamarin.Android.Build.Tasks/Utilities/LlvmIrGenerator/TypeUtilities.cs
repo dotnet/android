@@ -61,24 +61,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		/// <summary>
-		/// Determines whether a structure member represents an LLVM IR structure.
-		/// </summary>
-		/// <param name="smi">The structure member info to check.</param>
-		/// <param name="cache">The LLVM IR type cache.</param>
-		/// <returns>true if the member represents an IR structure; otherwise, false.</returns>
-		public static bool IsIRStruct (this StructureMemberInfo smi, LlvmIrTypeCache cache)
-		{
-			Type type = smi.MemberType;
-
-			// type.IsStructure() handles checks for primitive types, enums etc
-			return
-				type != typeof(string) &&
-				!smi.Info.IsInlineArray (cache) &&
-				!smi.Info.IsNativePointer (cache) &&
-				(type.IsStructure () || type.IsClass);
-		}
-
-		/// <summary>
 		/// Gets the data provider for a type if it has a NativeAssemblerStructContextDataProviderAttribute.
 		/// </summary>
 		/// <param name="t">The type to get the data provider for.</param>
