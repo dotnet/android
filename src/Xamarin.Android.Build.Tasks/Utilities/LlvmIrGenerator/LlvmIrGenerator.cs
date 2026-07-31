@@ -255,7 +255,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.NumberFormat = gv.NumberFormat;
 
 				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
-					if (!context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
+					if (context.EmitComments && !context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
 						context.Output.WriteLine ();
 						context.Output.Write (context.CurrentIndent);
 						WriteComment (context, groupDelimiter.Comment);

@@ -21,8 +21,19 @@ abstract class LlvmIrFunctionBodyItem
 	public bool SkipInOutput { get; protected set; }
 	public string? Comment   { get; set; }
 
+	/// <summary>
+	/// Whether the item consists of nothing but a comment.  Such items produce no output at
+	/// all when <see cref="GeneratorWriteContext.EmitComments" /> is <c>false</c>, as opposed
+	/// to items which merely carry a trailing comment alongside real content.
+	/// </summary>
+	protected virtual bool IsCommentOnly => false;
+
 	public void Write (GeneratorWriteContext context, LlvmIrGenerator generator)
 	{
+		if (IsCommentOnly && !context.EmitComments) {
+			return;
+		}
+
 		DoWrite (context, generator);
 		if (context.EmitComments && !String.IsNullOrEmpty (Comment)) {
 			context.Output.Write (' ');
@@ -126,6 +137,8 @@ class LlvmIrFunctionLabelItem : LlvmIrFunctionLocalItem
 class LlvmIrFunctionBodyComment : LlvmIrFunctionBodyItem
 {
 	public string Text     { get; }
+
+	protected override bool IsCommentOnly => true;
 
 	public LlvmIrFunctionBodyComment (string comment)
 	{

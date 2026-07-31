@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public void Generate (LlvmIrModule module, AndroidTargetArch arch, StreamWriter output, string fileName)
 		{
 			if (!constructed) {
-				throw new InvalidOperationException ($"Internal error: module not constructed yet. Was Constrict () called?");
+				throw new InvalidOperationException ($"Internal error: module not constructed yet. Was Construct () called?");
 			}
 
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
