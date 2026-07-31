@@ -442,7 +442,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			if (memberInfo.IsIRStruct (context.TypeCache)) {
+			if (memberInfo.IsIRStruct) {
 				var sim = new GeneratorStructureInstance (context.Module.GetStructureInfo (memberInfo.MemberType), memberInfo.GetValue (si.Obj));
 				WriteStructureType (context, sim, out typeInfo);
 				return;
@@ -718,7 +718,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point. Field {smi.Info.Name} in structure {structInstance.Info.Name}");
 			}
 
-			if (smi.IsIRStruct (context.TypeCache)) {
+			if (smi.IsIRStruct) {
 				StructureInfo si = context.Module.GetStructureInfo (smi.MemberType);
 				WriteValue (context, typeof(GeneratorStructureInstance), new GeneratorStructureInstance (si, value));
 				return;

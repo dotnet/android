@@ -92,7 +92,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				// do NOT want to store any members while doing that, as the struct should have been mapped by the composer previously.
 				// The presence of strings/buffers is important at the generation time as it is used to decide whether we need separate stream writers for them and
 				// if the owning structure does **not** have any of those, the generated code would be invalid
-				if (info.IsIRStruct (cache)) {
+				if (info.IsIRStruct) {
 					GatherMembers (info.MemberType, module, storeMembers: false);
 				}
 			}
