@@ -886,11 +886,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteArrayValueEnd (context);
 		}
 
+		static readonly string[] ByteTypeAndValueStrings = CreateByteTypeAndValueStrings ();
+
+		static string[] CreateByteTypeAndValueStrings ()
+		{
+			var ret = new string [256];
+			for (int i = 0; i < ret.Length; i++) {
+				ret [i] = $"i8 u0x{i.ToString ("x2", CultureInfo.InvariantCulture)}";
+			}
+			return ret;
+		}
+
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
 		{
 			// The stride determines how many elements are written on a single line before a newline is added.
 			const uint stride = 16;
-			Type elementType = typeof(byte);
 
 			LlvmIrVariableNumberFormat oldNumberFormat = context.NumberFormat;
 			context.NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal;
@@ -947,10 +957,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteByteTypeAndValue (byte v)
 			{
-				WriteType (context, elementType, v, out _);
-
-				context.Output.Write (' ');
-				WriteValue (context, elementType, v);
+				// String blobs are always `i8` arrays written in hexadecimal, and they can contain
+				// millions of entries.  Going through WriteType()/WriteValue() here would perform
+				// reflection and allocate a handful of strings *per byte*, so use a lookup table of
+				// the 256 possible renderings instead.
+				context.Output.Write (ByteTypeAndValueStrings [v]);
 			}
 		}
 
