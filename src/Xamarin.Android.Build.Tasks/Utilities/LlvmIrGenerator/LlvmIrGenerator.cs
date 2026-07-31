@@ -955,7 +955,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				chunk [chunkUsed++] = '\\';
-				HexUtilities.WriteHex (chunk.AsSpan (chunkUsed), b, upperCase: true);
+				HexUtilities.WriteHex (chunk.AsSpan (chunkUsed, 2), b, upperCase: true);
 				chunkUsed += 2;
 			}
 
