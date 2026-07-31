@@ -1748,6 +1748,9 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
     <_GeneratePackageManagerJavaInputs Include="$(_XARemapMembersFilePath)" Condition=" '@(_AndroidRemapMembers->Count())' != '0' " />
+    <!-- `configProperties` from these files are baked into the generated native application config -->
+    <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigFilePath)" Condition="Exists('$(ProjectRuntimeConfigFilePath)')" />
+    <_GeneratePackageManagerJavaInputs Include="$(ProjectRuntimeConfigDevFilePath)" Condition="Exists('$(ProjectRuntimeConfigDevFilePath)')" />
   </ItemGroup>
 </Target>
 
@@ -1819,6 +1822,7 @@ because xbuild doesn't support framework reference assemblies.
       TargetsCLR="$(_AndroidUseCLR)"
       AndroidRuntime="$(_AndroidRuntime)"
       ProjectRuntimeConfigFilePath="$(ProjectRuntimeConfigFilePath)"
+      ProjectRuntimeConfigDevFilePath="$(ProjectRuntimeConfigDevFilePath)"
       >
   </GenerateNativeApplicationConfigSources>
 
