@@ -20,6 +20,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	const string HOST_PROPERTY_BUNDLE_PROBE     = "BUNDLE_PROBE";
 	const string HOST_PROPERTY_PINVOKE_OVERRIDE = "PINVOKE_OVERRIDE";
 
+	// Set by our native runtime, which is the only place that knows the ABI it was built for
+	const string HOST_PROPERTY_RUNTIME_IDENTIFIER = "RUNTIME_IDENTIFIER";
+
 	sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override string GetComment (object data, string fieldName)
@@ -223,6 +226,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// these mustn't be there, they would break our host contract
 		this.runtimeProperties.Remove (HOST_PROPERTY_PINVOKE_OVERRIDE);
 		this.runtimeProperties.Remove (HOST_PROPERTY_BUNDLE_PROBE);
+
+		// The native runtime appends this one, with the value matching the ABI it was built for,
+		// so we must not pass a second (potentially wrong) copy to `coreclr_initialize`.
+		this.runtimeProperties.Remove (HOST_PROPERTY_RUNTIME_IDENTIFIER);
 	}
 
 	protected override void Construct (LlvmIrModule module)
