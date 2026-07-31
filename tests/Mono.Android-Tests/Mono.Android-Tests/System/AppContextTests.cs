@@ -70,5 +70,24 @@ namespace SystemTests
 				Assert.Fail($"Unknown member type: {members [0]}");
 			}
 		}
+
+		// `AppContext.BaseDirectory` is backed by the `APP_CONTEXT_BASE_DIRECTORY` host property,
+		// which every runtime must set to `Context.getFilesDir()`. When it is left unset, the
+		// `AppContext.GetBaseDirectoryCore()` fallback returns something useless on Android:
+		// the empty string on CoreCLR (assemblies are embedded, so `Assembly.Location` is empty)
+		// and `/system/bin/` on NativeAOT (that is where `app_process64` lives).
+		[Test]
+		public void BaseDirectoryIsFilesDir ()
+		{
+			var filesDir = Android.App.Application.Context.FilesDir;
+			if (filesDir == null) {
+				Assert.Fail ("`Context.FilesDir` was null.");
+				return;
+			}
+
+			// .NET always terminates `AppContext.BaseDirectory` with a directory separator.
+			string expected = filesDir.AbsolutePath + "/";
+			Assert.AreEqual (expected, AppContext.BaseDirectory);
+		}
 	}
 }

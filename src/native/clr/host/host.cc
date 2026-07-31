@@ -353,6 +353,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// the values here without searching the names array.
 	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
 	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
 
 	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
 
@@ -361,6 +362,18 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
 	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
 	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
+
+	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
+	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
+	// string for us since assemblies are read straight out of the APK. Point it at the application's
+	// files directory, the same value MonoVM has always used. `.NET` terminates the base directory
+	// with a directory separator, so we do too.
+	// Storage must outlive `coreclr_initialize`, hence the function-local static.
+	static std::string app_context_base_directory { files_dir.get_cstr () };
+	if (!app_context_base_directory.ends_with ('/')) {
+		app_context_base_directory.push_back ('/');
+	}
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = const_cast<char*>(app_context_base_directory.c_str ());
 
 	const char **prop_names = init_runtime_property_names;
 	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
