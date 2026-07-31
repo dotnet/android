@@ -26,16 +26,22 @@ namespace Microsoft.Android.Build.Tasks
 		public static char GetHexValue (int value, bool upperCase = true)
 		{
 			if (value < 10)
-				return (char)(value + '0');
-			return (char)(value - 10 + (upperCase ? 'A' : 'a'));
+				return (char) (value + '0');
+			return (char) (value - 10 + (upperCase ? 'A' : 'a'));
 		}
 
 		/// <summary>
 		/// Write <paramref name="value"/> into <paramref name="destination"/> as exactly two
 		/// hexadecimal digits.
 		/// </summary>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="destination"/> is shorter than two characters.
+		/// </exception>
 		public static void WriteHex (Span<char> destination, byte value, bool upperCase = true)
 		{
+			if (destination.Length < 2)
+				throw new ArgumentException ("Destination must be at least 2 characters long.", nameof (destination));
+
 			destination [0] = GetHexValue (value >> 4, upperCase);
 			destination [1] = GetHexValue (value & 0x0f, upperCase);
 		}
@@ -63,8 +69,8 @@ namespace Microsoft.Android.Build.Tasks
 
 			int charLength = bytes.Length * 2;
 			Span<char> chars = charLength <= MaxStackCharLength
-				? stackalloc char[charLength]
-				: new char[charLength];
+				? stackalloc char [charLength]
+				: new char [charLength];
 			for (int i = 0, j = 0; i < bytes.Length; i += 1, j += 2) {
 				WriteHex (chars.Slice (j, 2), bytes [i], upperCase);
 			}

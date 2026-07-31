@@ -105,6 +105,22 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.Throws<ArgumentNullException> (() => HexUtilities.WriteHex (writer: null, value: 0x00));
 		}
 
+		[TestCase (0)]
+		[TestCase (1)]
+		public void WriteHex_Span_TooShortThrows (int length)
+		{
+			var destination = new char [length];
+			Assert.Throws<ArgumentException> (() => HexUtilities.WriteHex (destination.AsSpan (), 0xAB));
+		}
+
+		[Test]
+		public void WriteHex_Span_LongerThanTwoOnlyWritesTwo ()
+		{
+			var destination = new char [] { 'x', 'x', 'x', 'x' };
+			HexUtilities.WriteHex (destination.AsSpan (), 0xAB);
+			Assert.AreEqual ("ABxx", new string (destination));
+		}
+
 		[Test]
 		public void ToHexString_Empty ()
 		{
