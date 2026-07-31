@@ -906,71 +906,65 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
 		{
-			// The stride determines how many elements are written on a single line before a newline is added.
-			const uint stride = 16;
-			Type elementType = typeof(byte);
+			// String blobs are emitted as a single LLVM IR constant byte string (`c"..."`) instead of one
+			// `i8 u0xNN` element per byte.  A hello world MAUI app has ~3.6 million bytes of type map
+			// strings, so the array form produces a >50MB `.ll` file which is slow both to write here and
+			// to consume in `llc`.  The `c"..."` form is roughly ten times smaller.
+			//
+			// A consequence of this is that we can no longer annotate individual strings with comments,
+			// because a constant string literal must fit on a single line and `;` comments extend to the
+			// end of the line.
+			const int chunkSize = 4096;
+			char[] chunk = ArrayPool<char>.Shared.Rent (chunkSize);
+			int chunkUsed = 0;
 
-			LlvmIrVariableNumberFormat oldNumberFormat = context.NumberFormat;
-			context.NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal;
-			WriteArrayValueStart (context);
-			foreach (LlvmIrStringBlob.StringInfo si in blob.GetSegments ()) {
-				if (si.Offset > 0) {
-					context.Output.Write (',');
-					context.Output.WriteLine ();
-					context.Output.WriteLine ();
-				}
+			try {
+				context.Output.Write ('c');
+				context.Output.Write ('"');
 
-				context.Output.Write (context.CurrentIndent);
-				WriteCommentLine (context, $" '{si.Value}' @ {si.Offset}");
-				WriteBytes (si.Bytes);
-			}
-			context.Output.WriteLine ();
-			WriteArrayValueEnd (context);
-			context.NumberFormat = oldNumberFormat;
-
-			void WriteBytes (byte[] bytes)
-			{
-				ulong counter = 0;
-				bool first = true;
-				foreach (byte b in bytes) {
-					if (!first) {
-						WriteCommaWithStride (counter);
-					} else {
-						context.Output.Write (context.CurrentIndent);
-						first = false;
+				foreach (LlvmIrStringBlob.StringInfo si in blob.GetSegments ()) {
+					foreach (byte b in si.Bytes) {
+						WriteByte (b);
 					}
 
-					counter++;
-					WriteByteTypeAndValue (b);
+					// Terminating NUL is counted for each string, but not included in its bytes
+					WriteByte (0);
 				}
 
-				if (bytes.Length > 0) {
-					WriteCommaWithStride (counter);
-				} else {
-					context.Output.Write (context.CurrentIndent);
-				}
-				WriteByteTypeAndValue (0); // Terminating NUL is counted for each string, but not included in its bytes
+				Flush ();
+				context.Output.Write ('"');
+			} finally {
+				ArrayPool<char>.Shared.Return (chunk);
 			}
 
-			void WriteCommaWithStride (ulong counter)
+			void WriteByte (byte b)
 			{
-				context.Output.Write (',');
-				if (stride == 1 || counter % stride == 0) {
-					context.Output.WriteLine ();
-					context.Output.Write (context.CurrentIndent);
-				} else {
-					context.Output.Write (' ');
+				// `"` and `\` must always be escaped, as must anything outside of the printable ASCII range.
+				if (b != (byte)'"' && b != (byte)'\\' && b >= 32 && b < 127) {
+					if (chunkUsed == chunkSize) {
+						Flush ();
+					}
+					chunk[chunkUsed++] = (char)b;
+					return;
 				}
+
+				if (chunkUsed + 3 > chunkSize) {
+					Flush ();
+				}
+
+				chunk[chunkUsed++] = '\\';
+				HexUtilities.WriteHex (chunk.AsSpan (chunkUsed), b, upperCase: true);
+				chunkUsed += 2;
 			}
 
-			void WriteByteTypeAndValue (byte v)
+			void Flush ()
 			{
-				// This is by far the hottest path in the generator: a hello world MAUI app writes
-				// ~3.6 million bytes here.  WriteType()/WriteValue() would box the byte and allocate a
-				// handful of strings per element, so write the (always identical) type and the two hex
-				// digits directly.
-				context.Output.Write ("i8 u0x");
-				HexUtilities.WriteHex (context.Output, v, upperCase: false);
+				if (chunkUsed == 0) {
+					return;
+				}
+
+				context.Output.Write (chunk, 0, chunkUsed);
+				chunkUsed = 0;
 			}
 		}
 
