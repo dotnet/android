@@ -914,8 +914,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			// A consequence of this is that we can no longer annotate individual strings with comments,
 			// because a constant string literal must fit on a single line and `;` comments extend to the
 			// end of the line.
-			const int chunkSize = 4096;
-			char[] chunk = ArrayPool<char>.Shared.Rent (chunkSize);
+			// `Rent()` may return a larger array than requested, so use its actual length as the capacity.
+			char[] chunk = ArrayPool<char>.Shared.Rent (4096);
+			int chunkCapacity = chunk.Length;
 			int chunkUsed = 0;
 
 			try {
@@ -941,14 +942,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{
 				// `"` and `\` must always be escaped, as must anything outside of the printable ASCII range.
 				if (b != (byte)'"' && b != (byte)'\\' && b >= 32 && b < 127) {
-					if (chunkUsed == chunkSize) {
+					if (chunkUsed == chunkCapacity) {
 						Flush ();
 					}
 					chunk[chunkUsed++] = (char)b;
 					return;
 				}
 
-				if (chunkUsed + 3 > chunkSize) {
+				if (chunkUsed + 3 > chunkCapacity) {
 					Flush ();
 				}
 
