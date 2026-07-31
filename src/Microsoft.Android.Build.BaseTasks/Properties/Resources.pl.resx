@@ -98,7 +98,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="XA0000_Exception" xml:space="preserve">
-    <value>Nieobsługiwany wyjątek: {0}</value>
+    <value>Nieobsłużony wyjątek: {0}</value>
     <comment>{0} - The exception message of the associated exception</comment>
   </data>
 </root>

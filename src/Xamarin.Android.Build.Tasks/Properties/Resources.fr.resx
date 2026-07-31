@@ -872,7 +872,7 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
   <data name="XA4323" xml:space="preserve">
-    <value>Ignoring directory '{0}' as it does not exist!</value>
+    <value>Le répertoire « {0} » est ignoré, car il n’existe pas !</value>
     <comment>{0} - The path to the directory being ignored.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
@@ -1074,6 +1074,18 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element. Set the $(AndroidLaunchActivity) or $(AndroidInstrumentation) MSBuild property to specify one.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>La propriété MSBuild « {0} » n’est pas compatible avec le runtime {1}. La compilation ne peut pas continuer tant que cette propriété est activée. Supprimez la propriété ou protégez-la avec une condition : Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1092,6 +1104,12 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
   <data name="XA1047" xml:space="preserve">
     <value>L'attribut requis « {0} » est absent de l'élément « {1} »; {2} ligne {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>'{0}' does not contain an &lt;instrumentation&gt; element. Add an Android.App.Instrumentation subclass to the application, or set the $(AndroidInstrumentation) MSBuild property to the name of one.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dépendance Java « {0} » n’est pas satisfaite.</value>
