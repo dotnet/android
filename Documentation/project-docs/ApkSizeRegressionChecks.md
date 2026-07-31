@@ -23,7 +23,8 @@ and some files are built with different optimizations.
 The `BuildReleaseArm64` test is used to collect apk size data.
 
 The test builds a simple .NET for Android app and a simple .NET MAUI
-app, for each supported runtime, so this gets us several variations
+app, for each supported runtime, with and without Java code shrinking
+(`$(AndroidLinkTool)=r8`), so this gets us several variations
 to check.
 
 The reference files are located
@@ -33,11 +34,17 @@ current sizes. These files can be used as a new reference. They
 are named like this:
 
     .../Base/BuildReleaseArm64SimpleDotNet.CoreCLR.apkdesc
+    .../Base/BuildReleaseArm64SimpleDotNet.CoreCLR.R8.apkdesc
     .../Base/BuildReleaseArm64SimpleDotNet.MonoVM.apkdesc
     .../Base/BuildReleaseArm64SimpleDotNet.NativeAOT.apkdesc
     .../Base/BuildReleaseArm64XFormsDotNet.CoreCLR.apkdesc
+    .../Base/BuildReleaseArm64XFormsDotNet.CoreCLR.R8.apkdesc
     .../Base/BuildReleaseArm64XFormsDotNet.MonoVM.apkdesc
     .../Base/BuildReleaseArm64XFormsDotNet.NativeAOT.apkdesc
+
+The `.R8` files cover the `$(AndroidLinkTool)=r8` configuration.
+NativeAOT enables `r8` by default, so it has no separate `.R8`
+reference.
 
 The new reference files can be obtained from the test results
 archive - artifact of the given CI build (preferred method).
