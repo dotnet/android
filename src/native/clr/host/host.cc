@@ -34,11 +34,6 @@
 
 using namespace xamarin::android;
 
-// Not part of `host_runtime_contract.h`: `hostfxr` sets this property when it starts the runtime,
-// and `System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier` reads it back through
-// `AppContext.GetData`.
-constexpr char HOST_PROPERTY_RUNTIME_IDENTIFIER[] = "RUNTIME_IDENTIFIER";
-
 void Host::clr_error_writer (const char *message) noexcept
 {
 	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
@@ -353,28 +348,19 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// We REALLY shouldn't be doing this
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
-	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
-	// of that.
+	// The first two entries in the property arrays are for the host contract pointer and the
+	// runtime identifier. Application build makes sure of that.
 	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+
+	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
+	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
+	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
+	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
+	init_runtime_property_values[1] = const_cast<char*>(Constants::runtime_identifier.data ());
 
 	const char **prop_names = init_runtime_property_names;
 	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
 	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
-
-	// Storage must outlive `coreclr_initialize`; function-local statics
-	// give us process lifetime without polluting global namespace.
-	static std::vector<const char*> host_prop_names;
-	static std::vector<const char*> host_prop_values;
-
-	host_prop_names.assign (prop_names, prop_names + prop_count);
-	host_prop_values.assign (prop_values, prop_values + prop_count);
-
-	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
-	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". MonoVM does the same
-	// thing in `MonoVMProperties`. The value is per-ABI, so it can't come from the (shared)
-	// `*.runtimeconfig.json` properties baked in at build time.
-	host_prop_names.push_back (HOST_PROPERTY_RUNTIME_IDENTIFIER);
-	host_prop_values.push_back (Constants::runtime_identifier.data ());
 
 	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
 	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
@@ -382,20 +368,30 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// `StackTraceSymbols` can find sibling `.pdb` files for runtime-rendered
 	// managed stack traces (file/line).
 	if constexpr (Constants::is_debug_build) {
+		// Storage must outlive `coreclr_initialize`; function-local statics
+		// give us process lifetime without polluting global namespace.
 		static std::string fastdev_tpa_list;
+		static std::vector<const char*> fastdev_prop_names;
+		static std::vector<const char*> fastdev_prop_values;
 
 		if (FastDevAssemblies::build_tpa_list (fastdev_tpa_list)) {
-			host_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
-			host_prop_values.push_back (fastdev_tpa_list.c_str ());
+			fastdev_prop_names.assign (prop_names, prop_names + prop_count);
+			fastdev_prop_values.assign (prop_values, prop_values + prop_count);
+			fastdev_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
+			fastdev_prop_values.push_back (fastdev_tpa_list.c_str ());
+
+			prop_names = fastdev_prop_names.data ();
+			prop_values = fastdev_prop_values.data ();
+			prop_count = static_cast<int>(fastdev_prop_names.size ());
 		}
 	}
 
 	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
 		application_config.android_package_name,
 		"Xamarin.Android",
-		static_cast<int>(host_prop_names.size ()),
-		host_prop_names.data (),
-		host_prop_values.data (),
+		prop_count,
+		prop_names,
+		prop_values,
 		&clr_host,
 		&domain_id
 	);

@@ -20,6 +20,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	const string HOST_PROPERTY_BUNDLE_PROBE     = "BUNDLE_PROBE";
 	const string HOST_PROPERTY_PINVOKE_OVERRIDE = "PINVOKE_OVERRIDE";
 
+	// Set by `hostfxr` on other platforms, by our native runtime here
+	const string HOST_PROPERTY_RUNTIME_IDENTIFIER = "RUNTIME_IDENTIFIER";
+
 	sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override string GetComment (object data, string fieldName)
@@ -217,8 +220,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			this.runtimeProperties = new SortedDictionary<string, string> (StringComparer.Ordinal);
 		}
 
-		// This will be filled in by the native host.
+		// These will be filled in by the native host.
 		this.runtimeProperties[HOST_PROPERTY_RUNTIME_CONTRACT] = String.Empty;
+		this.runtimeProperties[HOST_PROPERTY_RUNTIME_IDENTIFIER] = String.Empty;
 
 		// these mustn't be there, they would break our host contract
 		this.runtimeProperties.Remove (HOST_PROPERTY_PINVOKE_OVERRIDE);
@@ -317,19 +321,23 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		// HOST_PROPERTY_RUNTIME_CONTRACT will come first, our native runtime requires that since it needs
-		// to set its value in the values array and we don't want to spend time searching for the index, nor
-		// we want to add yet another variable storing the index to the entry. KISS.
+		// HOST_PROPERTY_RUNTIME_CONTRACT and HOST_PROPERTY_RUNTIME_IDENTIFIER will come first, in that
+		// order, our native runtime requires that since it needs to set their values in the values array
+		// and we don't want to spend time searching for the indices, nor we want to add yet another
+		// variable storing the index to the entry. KISS.
 		var runtime_property_names = new List<string> {
 			HOST_PROPERTY_RUNTIME_CONTRACT,
+			HOST_PROPERTY_RUNTIME_IDENTIFIER,
 		};
 		var runtime_property_values = new List<string?> {
+			null,
 			null,
 		};
 
 		if (runtimeProperties != null) {
 			foreach (var kvp in runtimeProperties) {
-				if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT)) {
+				if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT) ||
+						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_IDENTIFIER)) {
 					continue;
 				}
 				runtime_property_names.Add (kvp.Key);
