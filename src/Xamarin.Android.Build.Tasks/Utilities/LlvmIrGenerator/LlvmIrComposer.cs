@@ -18,6 +18,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		protected readonly TaskLoggingHelper Log;
 
 		/// <summary>
+		/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to
+		/// <c>false</c>; see <see cref="LlvmIrGenerator.EmitComments" />.
+		/// </summary>
+		public bool EmitComments { get; set; }
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="LlvmIrComposer"/> class.
 		/// </summary>
 		/// <param name="log">The task logging helper for logging messages.</param>
@@ -62,6 +68,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
+			generator.EmitComments = EmitComments;
 			generator.Generate (output, module);
 			output.Flush ();
 
