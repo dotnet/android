@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 
 namespace Java.Interop {
@@ -40,4 +41,3 @@ namespace Java.Interop {
 		}
 	}
 }
-
