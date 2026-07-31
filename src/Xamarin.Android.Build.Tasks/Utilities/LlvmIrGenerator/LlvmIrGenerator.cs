@@ -473,10 +473,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			// Fast path: a basic scalar type (`byte`, `uint`, ...) can never be a structure instance,
 			// an array or a string blob, so skip the reflection-heavy probing below.  Arrays and string
-			// blobs are written one element at a time, so this runs millions of times for a typical
+			// blobs write one element at a time, so this runs millions of times for a typical
 			// application and `Type.IsPrimitive`/`Type.IsArray` dominate the generator otherwise.
 			if (basicTypeMap.ContainsKey (type)) {
-				WriteBasicType (context, type, out typeInfo);
+				string basicIRType = GetIRType (context, type, out ulong basicSize, out bool basicIsPointer);
+				typeInfo = new LlvmTypeInfo (
+					isPointer: basicIsPointer,
+					isAggregate: false,
+					isStructure: false,
+					size: basicSize,
+					maxFieldAlignment: basicSize
+				);
+				context.Output.Write (basicIRType);
 				return;
 			}
 
@@ -524,19 +532,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			irType = GetIRType (context, type, out size, out isPointer);
-			typeInfo = new LlvmTypeInfo (
-				isPointer: isPointer,
-				isAggregate: false,
-				isStructure: false,
-				size: size,
-				maxFieldAlignment: size
-			);
-			context.Output.Write (irType);
-		}
-
-		void WriteBasicType (GeneratorWriteContext context, Type type, out LlvmTypeInfo typeInfo)
-		{
-			string irType = GetIRType (context, type, out ulong size, out bool isPointer);
 			typeInfo = new LlvmTypeInfo (
 				isPointer: isPointer,
 				isAggregate: false,
@@ -913,6 +908,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			// The stride determines how many elements are written on a single line before a newline is added.
 			const uint stride = 16;
+			Type elementType = typeof(byte);
 
 			LlvmIrVariableNumberFormat oldNumberFormat = context.NumberFormat;
 			context.NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal;
@@ -969,12 +965,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteByteTypeAndValue (byte v)
 			{
-				// String blobs are `i8` arrays written in hexadecimal and can contain millions of
-				// entries.  WriteValue() would box the byte and allocate two strings per element, so
-				// write the type and the two hex digits directly.
+				// This is by far the hottest path in the generator: a hello world MAUI app writes
+				// ~3.6 million bytes here.  WriteType()/WriteValue() would box the byte and allocate a
+				// handful of strings per element, so write the (always identical) type and the two hex
+				// digits directly.
 				context.Output.Write ("i8 u0x");
-				context.Output.Write (HexUtilities.GetHexValue (v >> 4, upperCase: false));
-				context.Output.Write (HexUtilities.GetHexValue (v & 0x0f, upperCase: false));
+				HexUtilities.WriteHex (context.Output, v, upperCase: false);
 			}
 		}
 

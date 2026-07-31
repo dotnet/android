@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.IO;
 
 namespace Microsoft.Android.Build.Tasks
 {
@@ -24,6 +25,31 @@ namespace Microsoft.Android.Build.Tasks
 		}
 
 		/// <summary>
+		/// Write <paramref name="value"/> into <paramref name="destination"/> as exactly two
+		/// hexadecimal digits.
+		/// </summary>
+		public static void WriteHex (Span<char> destination, byte value, bool upperCase = true)
+		{
+			destination [0] = GetHexValue (value >> 4, upperCase);
+			destination [1] = GetHexValue (value & 0x0f, upperCase);
+		}
+
+		/// <summary>
+		/// Write <paramref name="value"/> to <paramref name="writer"/> as exactly two hexadecimal
+		/// digits, without allocating.
+		/// </summary>
+		public static void WriteHex (TextWriter writer, byte value, bool upperCase = true)
+		{
+			if (writer == null)
+				throw new ArgumentNullException (nameof (writer));
+
+			Span<char> chars = stackalloc char[2];
+			WriteHex (chars, value, upperCase);
+			writer.Write (chars [0]);
+			writer.Write (chars [1]);
+		}
+
+		/// <summary>
 		/// Convert <paramref name="bytes"/> to a hexadecimal string, without allocating
 		/// intermediate strings.
 		/// </summary>
@@ -36,9 +62,7 @@ namespace Microsoft.Android.Build.Tasks
 				? stackalloc char[charLength]
 				: new char[charLength];
 			for (int i = 0, j = 0; i < bytes.Length; i += 1, j += 2) {
-				byte b = bytes [i];
-				chars [j] = GetHexValue (b >> 4, upperCase);
-				chars [j + 1] = GetHexValue (b & 0x0f, upperCase);
+				WriteHex (chars.Slice (j, 2), bytes [i], upperCase);
 			}
 			return ((ReadOnlySpan<char>) chars).ToString ();
 		}

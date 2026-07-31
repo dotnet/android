@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using NUnit.Framework;
@@ -30,6 +31,78 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		public void GetHexValue_DefaultsToUpperCase ()
 		{
 			Assert.AreEqual ('A', HexUtilities.GetHexValue (10));
+		}
+
+		[Test]
+		public void WriteHex_Span_UpperCase ()
+		{
+			Span<char> chars = stackalloc char [2];
+			HexUtilities.WriteHex (chars, 0xab);
+			Assert.AreEqual ("AB", chars.ToString ());
+		}
+
+		[Test]
+		public void WriteHex_Span_LowerCase ()
+		{
+			Span<char> chars = stackalloc char [2];
+			HexUtilities.WriteHex (chars, 0xab, upperCase: false);
+			Assert.AreEqual ("ab", chars.ToString ());
+		}
+
+		[Test]
+		public void WriteHex_Span_WritesExactlyTwoChars ()
+		{
+			Span<char> chars = stackalloc char [4];
+			chars.Fill ('_');
+			HexUtilities.WriteHex (chars.Slice (1, 2), 0x0f);
+			Assert.AreEqual ("_0F_", chars.ToString ());
+		}
+
+		[Test]
+		public void WriteHex_Span_EveryByteValue ()
+		{
+			Span<char> chars = stackalloc char [2];
+			for (int i = 0; i < 256; i++) {
+				HexUtilities.WriteHex (chars, (byte) i);
+				Assert.AreEqual (i.ToString ("X2"), chars.ToString (), $"Mismatch at {i}.");
+			}
+		}
+
+		[Test]
+		public void WriteHex_TextWriter_UpperCase ()
+		{
+			var writer = new StringWriter ();
+			HexUtilities.WriteHex (writer, 0x00);
+			HexUtilities.WriteHex (writer, 0x0f);
+			HexUtilities.WriteHex (writer, 0xff);
+			Assert.AreEqual ("000FFF", writer.ToString ());
+		}
+
+		[Test]
+		public void WriteHex_TextWriter_LowerCase ()
+		{
+			var writer = new StringWriter ();
+			HexUtilities.WriteHex (writer, 0x00, upperCase: false);
+			HexUtilities.WriteHex (writer, 0x0f, upperCase: false);
+			HexUtilities.WriteHex (writer, 0xff, upperCase: false);
+			Assert.AreEqual ("000fff", writer.ToString ());
+		}
+
+		[Test]
+		public void WriteHex_TextWriter_EveryByteValue ()
+		{
+			var writer = new StringWriter ();
+			for (int i = 0; i < 256; i++) {
+				HexUtilities.WriteHex (writer, (byte) i);
+			}
+			var expected = string.Concat (Enumerable.Range (0, 256).Select (i => i.ToString ("X2")));
+			Assert.AreEqual (expected, writer.ToString ());
+		}
+
+		[Test]
+		public void WriteHex_TextWriter_NullThrows ()
+		{
+			Assert.Throws<ArgumentNullException> (() => HexUtilities.WriteHex (writer: null, value: 0x00));
 		}
 
 		[Test]
