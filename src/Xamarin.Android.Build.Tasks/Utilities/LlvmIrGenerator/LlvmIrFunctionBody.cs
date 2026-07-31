@@ -24,7 +24,7 @@ abstract class LlvmIrFunctionBodyItem
 	public void Write (GeneratorWriteContext context, LlvmIrGenerator generator)
 	{
 		DoWrite (context, generator);
-		if (!String.IsNullOrEmpty (Comment)) {
+		if (context.EmitComments && !String.IsNullOrEmpty (Comment)) {
 			context.Output.Write (' ');
 			generator.WriteComment (context, Comment);
 		}
