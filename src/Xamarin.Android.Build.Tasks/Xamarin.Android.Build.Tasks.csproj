@@ -226,11 +226,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Microsoft.Android.Build.BaseTasks exposes this as `internal`, so link in the source. -->
-    <Compile Include="..\Microsoft.Android.Build.BaseTasks\HexUtilities.cs" Link="Utilities\HexUtilities.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

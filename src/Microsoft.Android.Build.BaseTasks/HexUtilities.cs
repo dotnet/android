@@ -8,10 +8,16 @@ namespace Microsoft.Android.Build.Tasks
 	/// Allocation-free helpers for rendering bytes as hexadecimal.
 	/// </summary>
 	/// <remarks>
-	/// This file is also linked into <c>Microsoft.Android.Sdk.TrimmableTypeMap</c>, which cannot
-	/// reference <c>Microsoft.Android.Build.BaseTasks</c>.  It is therefore <c>internal</c>, so the
-	/// two copies do not collide in assemblies referencing both.
+	/// This file is also linked into <c>Microsoft.Android.Sdk.TrimmableTypeMap</c>, which
+	/// deliberately does not reference <c>Microsoft.Android.Build.BaseTasks</c> (that would drag
+	/// Microsoft.Build.*, LibZipSharp, K4os.LZ4 and Mono.Unix into it).  Only the copy compiled
+	/// into <c>Microsoft.Android.Build.BaseTasks</c> is <c>public</c>; the linked copy stays
+	/// <c>internal</c>, otherwise <c>Xamarin.Android.Build.Tasks</c> — which references both
+	/// assemblies — fails with <c>CS0433</c>.
 	/// </remarks>
+#if MICROSOFT_ANDROID_BUILD_BASETASKS
+	public
+#endif
 	static class HexUtilities
 	{
 		/// <summary>
