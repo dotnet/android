@@ -1932,10 +1932,19 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_FindJavaStubFiles" DependsOnTargets="_GenerateJavaStubs;_ManifestMerger;_ConvertCustomView;$(_AfterConvertCustomView);_GenerateEnvironmentFiles;">
   <ItemGroup>
     <_JavaStubFiles Include="$(_AndroidIntermediateJavaSourceDirectory)**\*.java" />
-    <!-- Additional Java source directories compiled in place (e.g. the trimmable type map's
-         generated Java Callable Wrappers, which are no longer copied into android/src). Track
-         their *.java as _CompileJava inputs so edits/additions/removals trigger recompilation. -->
+  </ItemGroup>
+  <!-- Additional Java source directories compiled in place (e.g. the trimmable type map's
+       generated Java Callable Wrappers, which are no longer copied into android/src). Track
+       their *.java as _CompileJava inputs so edits/additions trigger recompilation.
+
+       The Condition is required: %() batching over an empty item list still evaluates the
+       Include once with an empty %(Identity), which degrades to "**\*.java" relative to the
+       project directory. That recursively walks the entire app tree (bin, obj, Platforms, ...)
+       on every build and re-adds every android/src stub a second time. -->
+  <ItemGroup Condition=" '@(_AdditionalJavaStubDirectory->Count())' != '0' ">
     <_JavaStubFiles Include="%(_AdditionalJavaStubDirectory.Identity)**\*.java" />
+  </ItemGroup>
+  <ItemGroup>
     <FileWrites Include="@(_JavaStubFiles)" />
   </ItemGroup>
 </Target>
