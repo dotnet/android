@@ -12,7 +12,8 @@ namespace Microsoft.Android.Build.Tasks
 	/// reference <c>Microsoft.Android.Build.BaseTasks</c>.  It is therefore <c>internal</c>, so the
 	/// two copies do not collide in assemblies referencing both.
 	/// </remarks>
-	static class HexUtilities	{
+	static class HexUtilities
+	{
 		/// <summary>
 		/// Convert a value in the <c>0..15</c> range to its hexadecimal digit.
 		/// </summary>
@@ -42,10 +43,8 @@ namespace Microsoft.Android.Build.Tasks
 			if (writer == null)
 				throw new ArgumentNullException (nameof (writer));
 
-			Span<char> chars = stackalloc char[2];
-			WriteHex (chars, value, upperCase);
-			writer.Write (chars [0]);
-			writer.Write (chars [1]);
+			writer.Write (GetHexValue (value >> 4, upperCase));
+			writer.Write (GetHexValue (value & 0x0f, upperCase));
 		}
 
 		/// <summary>
