@@ -140,6 +140,8 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				expectedFiles.Add ($"{proj.PackageName}.apk");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.apk.idsig");
+				// The .NET SDK emits this in Debug to enable Hot Reload switches
+				expectedFiles.Add ($"{proj.ProjectName}.runtimeconfig.dev.json");
 			}
 
 			expectedFiles.Sort(StringComparer.OrdinalIgnoreCase);

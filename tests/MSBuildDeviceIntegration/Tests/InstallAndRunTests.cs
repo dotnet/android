@@ -1014,25 +1014,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			// Android bakes the properties into the app at build time, so seeing them here proves the dev
 			// file was picked up. Asking for `$(StartupHookSupport)` to be `false` also proves the dev file
 			// wins over `*.runtimeconfig.json`.
-			//
-			// The SDK we currently build against sets `$(GenerateRuntimeConfigDevFile)` to `false` for
-			// `net6.0`+, so it does not emit the file and leaves `$(ProjectRuntimeConfigDevFilePath)` empty.
-			// Write the file and point the property at it ourselves. Both of these can be dropped once we
-			// pick up an SDK containing https://github.com/dotnet/sdk/pull/53715.
-			const string devFileName = "runtimeconfig.dev.json";
-			proj.OtherBuildItems.Add (new BuildItem ("None", devFileName) {
-				TextContent = () => """
-					{
-					  "runtimeOptions": {
-					    "configProperties": {
-					      "System.Reflection.Metadata.MetadataUpdater.IsSupported": true,
-					      "System.StartupHookProvider.IsSupported": true
-					    }
-					  }
-					}
-					""",
-			});
-			proj.SetProperty ("ProjectRuntimeConfigDevFilePath", $"$(MSBuildProjectDirectory)/{devFileName}");
 			proj.SetProperty ("StartupHookSupport", "false");
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
