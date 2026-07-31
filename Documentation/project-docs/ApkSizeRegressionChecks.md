@@ -2,9 +2,8 @@
 
 We are checking the apk sizes for regression during CI builds.
 
-The apk size information is collected in 2 places, in APK
-instrumentation tests and MSBuild tests. It is then compared to
-reference `.apkdesc` files with `apkdiff` tool,
+The apk size information is collected by MSBuild tests. It is then
+compared to reference `.apkdesc` files with `apkdiff` tool,
 https://www.nuget.org/packages/apkdiff/. It compares
 the size differences against reference sizes and fails when
 they are larger than given thresholds. The test result file contains
@@ -23,20 +22,22 @@ and some files are built with different optimizations.
 
 The `BuildReleaseArm64` test is used to collect apk size data.
 
-The test builds simple Xamarin Android and simple Xamarin Forms
-on Xamarin Android apps. We build it targeting legacy and NET6
-framworks, so this get us 4 variations to check.
+The test builds a simple .NET for Android app and a simple .NET MAUI
+app, for each supported runtime, so this gets us several variations
+to check.
 
 The reference files are located
 in `src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Resources\Base`
 directory. During the test run, we save `.apkdesc` files, with
-current sizes. These files can be used a new reference. The 4 files
+current sizes. These files can be used a new reference. They
 are named like this:
 
-    .../Base/BuildReleaseArm64SimpleDotNet.apkdesc
-    .../Base/BuildReleaseArm64SimpleLegacy.apkdesc
-    .../Base/BuildReleaseArm64XFormsDotNet.apkdesc
-    .../Base/BuildReleaseArm64XFormsLegacy.apkdesc
+    .../Base/BuildReleaseArm64SimpleDotNet.CoreCLR.apkdesc
+    .../Base/BuildReleaseArm64SimpleDotNet.MonoVM.apkdesc
+    .../Base/BuildReleaseArm64SimpleDotNet.NativeAOT.apkdesc
+    .../Base/BuildReleaseArm64XFormsDotNet.CoreCLR.apkdesc
+    .../Base/BuildReleaseArm64XFormsDotNet.MonoVM.apkdesc
+    .../Base/BuildReleaseArm64XFormsDotNet.NativeAOT.apkdesc
 
 The new reference files can be obtained from the test results
 archive - artifact of the given CI build (preferred method).
@@ -46,26 +47,8 @@ or the `build-tools/scripts/UpdateApkSizeReference.sh` script
 if you are on MacOS or *nix.
 
 The thresholds for these checks are set
-in `src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/BuildTest.cs`
-in `BuildReleaseArm64` method.
-
-# APK instrumentation tests
-
-2 instrumentation tests are used to collect apk size data,
-`tests\Xamarin.Forms-Performance-Integration` and
-`samples\VSAndroidApp` test apps.
-
-The reference file are located in `tests/apk-sizes-reference` directory.
-
-    com.companyname.vsandroidapp-Signed-Release.apkdesc
-    Xamarin.Forms_Performance_Integration-Signed-Release.apkdesc
-    Xamarin.Forms_Performance_Integration-Signed-Release-Aot.apkdesc
-    Xamarin.Forms_Performance_Integration-Signed-Release-Bundle.apkdesc
-    Xamarin.Forms_Performance_Integration-Signed-Release-Profiled-Aot.apkdesc
-
-The thresholds for these checks are set
-in `build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/ApkDiffCheckRegression.cs`
-in fields of `ApkDiffCheckRegression` class.
+in `src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/BuildTest2.cs`
+in the `BuildReleaseArm64` method.
 
 # How to resolve regression
 

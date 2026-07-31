@@ -17,7 +17,6 @@
     <EnableDefaultAndroidAssetItems>false</EnableDefaultAndroidAssetItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
-    <PlotDataLabelSuffix>-$(TestsFlavor)NET6</PlotDataLabelSuffix>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <AndroidNdkDirectory></AndroidNdkDirectory>

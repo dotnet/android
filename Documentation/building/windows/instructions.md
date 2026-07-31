@@ -124,9 +124,9 @@ and path for the proper version of `dotnet`.
 
 ## Running Unit Tests
 
-All `.apk`-based unit tests can be executed via
+All NUnit-based unit tests can be executed via
 
-    dotnet-local.cmd build Xamarin.Android.sln /t:RunApkTests
+    dotnet-local.cmd build Xamarin.Android.sln /t:RunNunitTests
 
 ### Listing Nunit Tests
 
@@ -142,34 +142,38 @@ You can run then a single (or a group) of tests using the `$(TEST)` MSBuild prop
 
     dotnet-local.cmd build Xamarin.Android.sln /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
 
-### Running Individual `.apk` Projects
+## Running On-Device Tests
 
-See also the [`tests/RunApkTests.targets`](../../tests/RunApkTests.targets) and
-[`build-tools/scripts/TestApks.targets`](../../build-tools/scripts/TestApks.targets)
-files.
+The on-device test apps are ordinary `dotnet test` projects that run their
+NUnit tests inside an Android instrumentation. Install the app, then run the
+tests against the attached device or emulator:
 
-All `.apk`-based unit test projects provide the following targets:
+    dotnet-local.cmd build -t:Install -c Release tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj
+    pushd tests\Mono.Android-Tests\Mono.Android-Tests
+    ..\..\..\dotnet-local.cmd test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx --results-directory ..\..\..\bin\TestRelease\TestResults
+    popd
 
-* `DeployTestApks`: Installs the associated `.apk` to an Android device.
+The same pattern works for
+`tests\CodeGen-Binding\Xamarin.Android.JcwGen-Tests\Xamarin.Android.JcwGen-Tests.csproj`.
 
-* `UndeployTestApks`: Uninstalls the associated `.apk` from an Android device.
+Results are written as `.trx` files into the `--results-directory` directory.
 
-* `RunTestApks`: Executes the unit tests contained within a `.apk`.
-  This target must be executed *after* the `DeployTestApks` target.
+### Running Specific On-Device Tests
 
-To run an individual `.apk`-based test project, a package must be built, using the
-`SignAndroidPackage` target, installed, and executed.
+`dotnet test` filtering options apply, for example:
 
-### Running `.apk` Projects with Include/Exclude
+    ..\..\..\dotnet-local.cmd test Mono.Android.NET-Tests.csproj --no-build --filter-class "Xamarin.Android.RuntimeTests.JnienvTest"
 
-If an `.apk`-based unit test uses the NUnit `[Category]` custom attribute, then
-those tests can be explicitly included or excluded from execution by setting
-the `$(IncludeCategories)` or `$(ExcludeCategories)` MSBuild properties.
+### Running On-Device Tests with Include/Exclude
+
+If an on-device test uses the NUnit `[Category]` custom attribute, then those
+tests can be explicitly included or excluded from execution by setting the
+`$(IncludeCategories)` or `$(ExcludeCategories)` MSBuild properties when
+building the test app. These flow to the on-device instrumentation through
+`runtimeconfig.json`.
 
 For example, to exclude tests that use the internet (`InetAccess`) category:
 
-    dotnet-local.cmd build Xamarin.Android.sln /t:RunApkTests /p:ExcludeCategories=InetAccess
-
-`$(IncludeCategories)` functions in the same fashion.
+    dotnet-local.cmd build -t:Install -c Release /p:ExcludeCategories=InetAccess tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj
 
 To specify multiple categories, separate each category with a `:` character.
