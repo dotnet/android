@@ -19,7 +19,7 @@ internal static class ScannerHashingHelper
 			Crc64Helper.HashCore (rented, 0, bytesWritten, ref crc, ref length);
 			Span<byte> hash = stackalloc byte [8];
 			BinaryPrimitives.WriteUInt64LittleEndian (hash, crc ^ length);
-			return ToHexString (hash);
+			return HexUtilities.ToHexString (hash, upperCase: false);
 		} finally {
 			ArrayPool<byte>.Shared.Return (rented);
 		}
@@ -38,7 +38,7 @@ internal static class ScannerHashingHelper
 		System.IO.Hashing.Crc64.Hash (utf8Buffer.Slice (0, bytesWritten), hash);
 		ulong hashValue = BinaryPrimitives.ReadUInt64LittleEndian (hash);
 		BinaryPrimitives.WriteUInt64LittleEndian (hash, hashValue ^ (ulong) bytesWritten);
-		return ToHexString (hash);
+		return HexUtilities.ToHexString (hash, upperCase: false);
 	}
 
 	static int GetNamespaceAssemblyUtf8ByteCount (string ns, string assemblyName)
@@ -62,10 +62,5 @@ internal static class ScannerHashingHelper
 		}
 
 		return bytesWritten;
-	}
-
-	static string ToHexString (ReadOnlySpan<byte> hash)
-	{
-		return HexUtilities.ToHexString (hash, upperCase: false);
 	}
 }
