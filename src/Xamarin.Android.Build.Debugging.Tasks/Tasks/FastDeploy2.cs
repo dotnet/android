@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Build.Debugging.Tasks.Properties;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -732,70 +733,21 @@ namespace Xamarin.Android.Tasks
 			}
 			adbArguments.AddRange (arguments);
 
-			var stdout = new StringBuilder ();
-			var stderr = new StringBuilder ();
-			using var stdoutCompleted = new ManualResetEvent (false);
-			using var stderrCompleted = new ManualResetEvent (false);
-			var psi = new ProcessStartInfo {
-				FileName = adb,
-				Arguments = string.Join (" ", adbArguments.Select (QuoteProcessArgument)),
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
+			var psi = ProcessUtils.CreateProcessStartInfo (adb, adbArguments.ToArray ());
+			psi.WindowStyle = ProcessWindowStyle.Hidden;
+
+			LogDiagnostic ($"adb command: {psi.FileName} {string.Join (" ", adbArguments)}");
+
+			using var stdout = new StringWriter ();
+			using var stderr = new StringWriter ();
+			int exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, CancellationToken, environmentVariables);
+			var result = new AdbCommandResult {
+				ExitCode = exitCode,
+				StandardOutput = stdout.ToString ().Trim (),
+				StandardError = stderr.ToString ().Trim (),
 			};
-			if (environmentVariables != null) {
-				foreach (var kvp in environmentVariables) {
-					psi.EnvironmentVariables [kvp.Key] = kvp.Value;
-				}
-			}
-
-			LogDiagnostic ($"adb command: {psi.FileName} {psi.Arguments}");
-			using (var process = new Process ()) {
-				process.StartInfo = psi;
-				process.OutputDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						lock (stdout) {
-							stdout.AppendLine (e.Data);
-						}
-					} else {
-						stdoutCompleted.Set ();
-					}
-				};
-				process.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						lock (stderr) {
-							stderr.AppendLine (e.Data);
-						}
-					} else {
-						stderrCompleted.Set ();
-					}
-				};
-
-				process.Start ();
-				process.BeginOutputReadLine ();
-				process.BeginErrorReadLine ();
-				using (CancellationToken.Register (() => {
-					try {
-						if (!process.HasExited) {
-							process.Kill ();
-						}
-					} catch (InvalidOperationException) {
-					}
-				})) {
-					await Task.Run (() => process.WaitForExit (), CancellationToken);
-				}
-				stdoutCompleted.WaitOne (TimeSpan.FromSeconds (30));
-				stderrCompleted.WaitOne (TimeSpan.FromSeconds (30));
-				var result = new AdbCommandResult {
-					ExitCode = process.ExitCode,
-					StandardOutput = stdout.ToString ().Trim (),
-					StandardError = stderr.ToString ().Trim (),
-				};
-				LogAdbCommandResult (result);
-				return result;
-			}
+			LogAdbCommandResult (result);
+			return result;
 		}
 
 		void LogAdbCommandResult (AdbCommandResult result)

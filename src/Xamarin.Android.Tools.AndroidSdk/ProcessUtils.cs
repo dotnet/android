@@ -186,7 +186,8 @@ namespace Xamarin.Android.Tools
 		/// <summary>
 		/// Creates a <see cref="ProcessStartInfo"/> with the given filename and arguments.
 		/// On .NET 5+ uses <see cref="ProcessStartInfo.ArgumentList"/> to avoid shell-escaping issues;
-		/// on older frameworks falls back to a single <see cref="ProcessStartInfo.Arguments"/> string.
+		/// on older frameworks falls back to a single <see cref="ProcessStartInfo.Arguments"/> string
+		/// built by <see cref="JoinArguments"/>.
 		/// </summary>
 		public static ProcessStartInfo CreateProcessStartInfo (string fileName, params string[] args)
 		{
@@ -204,18 +205,66 @@ namespace Xamarin.Android.Tools
 			return psi;
 		}
 
-#if !NET5_0_OR_GREATER
-		static string JoinArguments (string[] args)
+		static readonly char [] CharsRequiringQuotes = { ' ', '\t', '"', '\n', '\v' };
+
+		/// <summary>
+		/// Joins <paramref name="args"/> into a single command line suitable for
+		/// <see cref="ProcessStartInfo.Arguments"/>.
+		/// </summary>
+		/// <remarks>
+		/// Implements the quoting rules understood by <c>CommandLineToArgvW</c>, which are also
+		/// the rules .NET uses when it parses <see cref="ProcessStartInfo.Arguments"/> on Unix.
+		/// A run of backslashes is only an escape sequence when it is immediately followed by a
+		/// quote, so backslashes must *not* be doubled unconditionally: doing so turns
+		/// <c>C:\dir\file.dll</c> into <c>C:\\dir\\file.dll</c>, which some tools (notably
+		/// <c>adb push</c>) reject.
+		/// </remarks>
+		internal static string JoinArguments (params string?[] args)
 		{
 			var sb = new StringBuilder ();
 			for (int i = 0; i < args.Length; i++) {
 				if (i > 0)
 					sb.Append (' ');
-				sb.Append ('"').Append (args [i]).Append ('"');
+				AppendArgument (sb, args [i]);
 			}
 			return sb.ToString ();
 		}
-#endif
+
+		static void AppendArgument (StringBuilder sb, string? argument)
+		{
+			if (argument is null || argument.Length == 0) {
+				sb.Append ("\"\"");
+				return;
+			}
+
+			if (argument.IndexOfAny (CharsRequiringQuotes) < 0) {
+				sb.Append (argument);
+				return;
+			}
+
+			sb.Append ('"');
+			for (int i = 0; i < argument.Length; i++) {
+				int backslashes = 0;
+				while (i < argument.Length && argument [i] == '\\') {
+					backslashes++;
+					i++;
+				}
+
+				if (i == argument.Length) {
+					// Trailing backslashes precede the closing quote, so they must be doubled
+					// to avoid escaping it.
+					sb.Append ('\\', backslashes * 2);
+					break;
+				}
+
+				if (argument [i] == '"') {
+					sb.Append ('\\', backslashes * 2 + 1).Append ('"');
+				} else {
+					sb.Append ('\\', backslashes).Append (argument [i]);
+				}
+			}
+			sb.Append ('"');
+		}
 
 		/// <summary>
 		/// Throws <see cref="InvalidOperationException"/> when <paramref name="exitCode"/> is non-zero.
