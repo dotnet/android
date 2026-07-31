@@ -914,6 +914,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			// A consequence of this is that we can no longer annotate individual strings with comments,
 			// because a constant string literal must fit on a single line and `;` comments extend to the
 			// end of the line.
+
 			// `Rent()` may return a larger array than requested, so use its actual length as the capacity.
 			char[] chunk = ArrayPool<char>.Shared.Rent (4096);
 			int chunkCapacity = chunk.Length;
