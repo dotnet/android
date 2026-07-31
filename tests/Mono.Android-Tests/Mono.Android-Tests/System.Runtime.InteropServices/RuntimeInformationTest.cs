@@ -27,11 +27,14 @@ namespace Xamarin.Android.RuntimeTests {
 			// `android.os.Process.is64Bit()` tells us the bitness this process actually runs as,
 			// and `android.os.Build.SUPPORTED_{32,64}_BIT_ABIS` are ordered most-preferred-first,
 			// so the first entry is the ABI Android picked for us.
-			var abis = Android.OS.Process.Is64Bit ()
-				? Android.OS.Build.Supported64BitAbis
-				: Android.OS.Build.Supported32BitAbis;
-			Assert.IsNotNull (abis, "`android.os.Build` did not report any supported ABIs.");
-			Assert.IsNotEmpty (abis, "`android.os.Build` did not report any supported ABIs.");
+			var abis = global::Android.OS.Process.Is64Bit ()
+				? global::Android.OS.Build.Supported64BitAbis
+				: global::Android.OS.Build.Supported32BitAbis;
+			// `Assert.IsNotEmpty()` reads `.Count` through reflection, which NativeAOT trims away.
+			if (abis == null || abis.Count == 0) {
+				Assert.Fail ("`android.os.Build` did not report any supported ABIs.");
+				return;
+			}
 			Assert.AreEqual (abis [0], RidToAbi (rid), $"`RuntimeInformation.RuntimeIdentifier` was '{rid}'.");
 		}
 	}
