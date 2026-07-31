@@ -25,23 +25,15 @@ namespace Microsoft.Android.Build.Tasks
 		/// Convert a value in the <c>0..15</c> range to its hexadecimal digit.
 		/// </summary>
 		/// <remarks>
-		/// Values outside <c>0..15</c> produce meaningless characters.  The check is
-		/// <see cref="Conditional"/> on <c>DEBUG</c> so this stays branch-free in release builds,
-		/// where it is called once per nibble over millions of bytes.
+		/// Values outside <c>0..15</c> produce meaningless characters.
 		/// </remarks>
 		public static char GetHexValue (int value, bool upperCase = true)
 		{
-			AssertNibble (value);
+			Debug.Assert ((uint) value < 16, $"Value must be in the 0..15 range, was {value}.");
 
 			if (value < 10)
 				return (char) (value + '0');
 			return (char) (value - 10 + (upperCase ? 'A' : 'a'));
-		}
-
-		[Conditional ("DEBUG")]
-		static void AssertNibble (int value)
-		{
-			Debug.Assert ((uint) value < 16, $"Value must be in the 0..15 range, was {value}.");
 		}
 
 		/// <summary>
