@@ -93,6 +93,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
+		/// <summary>
+		/// Everything <see cref="WriteType(GeneratorWriteContext, Type, object?, out LlvmTypeInfo, LlvmIrGlobalVariable?)" />
+		/// needs in order to emit a basic scalar type.  Both members depend only on the managed type and
+		/// on <see cref="target" />, which is fixed for the lifetime of a generator instance, so they can
+		/// be computed once per type instead of once per written value.
+		/// </summary>
+		sealed class BasicTypeWriteInfo
+		{
+			public readonly string IRType;
+			public readonly LlvmTypeInfo TypeInfo;
+
+			public BasicTypeWriteInfo (string irType, LlvmTypeInfo typeInfo)
+			{
+				IRType = irType;
+				TypeInfo = typeInfo;
+			}
+		}
+
 		sealed class BasicType
 		{
 			public readonly string Name;
@@ -162,6 +180,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool EmitComments         { get; set; }
 
 		LlvmIrModuleTarget target;
+		readonly Dictionary<Type, BasicTypeWriteInfo> basicTypeWriteCache = new Dictionary<Type, BasicTypeWriteInfo> ();
 
 		protected LlvmIrGenerator (string filePath, LlvmIrModuleTarget target)
 		{
@@ -492,6 +511,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			// an array or a string blob, so skip the reflection-heavy probing below.  Arrays and string
 			// blobs write one element at a time, so this runs millions of times for a typical
 			// application and `Type.IsPrimitive`/`Type.IsArray` dominate the generator otherwise.
+			// The IR type name and the `LlvmTypeInfo` are the same for every value of a given type,
+			// so they are computed once and memoized - a single dictionary lookup per written value.
+			if (basicTypeWriteCache.TryGetValue (type, out BasicTypeWriteInfo cachedBasicType)) {
+				typeInfo = cachedBasicType.TypeInfo;
+				context.Output.Write (cachedBasicType.IRType);
+				return;
+			}
+
 			if (basicTypeMap.ContainsKey (type)) {
 				string basicIRType = GetIRType (context, type, out ulong basicSize, out bool basicIsPointer);
 				typeInfo = new LlvmTypeInfo (
@@ -501,6 +528,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					size: basicSize,
 					maxFieldAlignment: basicSize
 				);
+				basicTypeWriteCache.Add (type, new BasicTypeWriteInfo (basicIRType, typeInfo));
 				context.Output.Write (basicIRType);
 				return;
 			}
