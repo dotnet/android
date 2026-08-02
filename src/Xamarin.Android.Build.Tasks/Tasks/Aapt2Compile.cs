@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks {
 			if (fileOrDirectory.IsNullOrEmpty () || !isDirectory)
 				fileOrDirectory = item.ItemSpec;
 			if (isDirectory && !Directory.Exists (fileOrDirectory)) {
-				Log.LogCodedWarning ("XA4323", Properties.Resources.XA4323, fileOrDirectory);
+				LogCodedWarning ("XA4323", Properties.Resources.XA4323, fileOrDirectory);
 				return;
 			}
 			if (isDirectory && !Directory.EnumerateDirectories (fileOrDirectory).Any ())
