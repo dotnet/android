@@ -348,9 +348,19 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// We REALLY shouldn't be doing this
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
-	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
-	// of that.
-	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+	// These indices are load-bearing: the application build emits the property names in this
+	// exact order (see `ApplicationConfigNativeAssemblyGeneratorCLR`) so that we can fill in
+	// the values here without searching the names array.
+	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
+
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
+
+	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
+	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
+	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
+	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
 
 	const char **prop_names = init_runtime_property_names;
 	const char **prop_values = const_cast<const char**>(init_runtime_property_values);

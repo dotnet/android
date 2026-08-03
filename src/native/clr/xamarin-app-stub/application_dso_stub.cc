@@ -51,7 +51,7 @@ const ApplicationConfig application_config = {
 	.jni_add_native_method_registration_attribute_present = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
-	.number_of_runtime_properties = 1,
+	.number_of_runtime_properties = 2,
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
@@ -218,8 +218,10 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 
 const char *init_runtime_property_names[] = {
 	"HOST_RUNTIME_CONTRACT",
+	"RUNTIME_IDENTIFIER",
 };
 
 char *init_runtime_property_values[] {
+	nullptr,
 	nullptr,
 };
