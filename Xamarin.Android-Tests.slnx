@@ -42,5 +42,4 @@
   <Folder Name="/tests/TestRunner.Core/">
     <Project Path="tests/TestRunner.Core/TestRunner.Core.NET.csproj" />
   </Folder>
-  <Project Path="tests/Xamarin.Forms-Performance-Integration/Xamarin.Forms.Performance.Integration.csproj" />
 </Solution>
