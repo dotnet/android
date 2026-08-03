@@ -92,6 +92,7 @@
     <GenerateTypeMappings
         AndroidRuntime="$(_AndroidRuntime)"
         Debug="$(AndroidIncludeDebugSymbols)"
+        EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
         EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"

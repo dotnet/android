@@ -33,6 +33,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public readonly LlvmIrMetadataManager MetadataManager;
 		public readonly LlvmIrTypeCache TypeCache;
 		public readonly LlvmIrGenerator Generator;
+
+		/// <summary>
+		/// Whether descriptive comments are written to the generated LLVM IR.  Comments make the
+		/// output easier to read, but they can account for the majority of the file's size and
+		/// have no effect on the code <c>llc</c> produces.
+		/// </summary>
+		public readonly bool EmitComments;
+
 		public string CurrentIndent { get; private set; } = String.Empty;
 		public bool InVariableGroup { get; set; }
 		public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Default;
@@ -40,6 +48,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public GeneratorWriteContext (LlvmIrGenerator generator, TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager, LlvmIrTypeCache cache)
 		{
 			Generator = generator;
+			EmitComments = generator.EmitComments;
 			Output = writer;
 			Module = module;
 			Target = target;
@@ -144,6 +153,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public string FilePath           { get; }
 		public string FileName           { get; }
 
+		/// <summary>
+		/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to
+		/// <c>false</c>, since comments can easily account for more than half of the generated
+		/// file's size while having no effect whatsoever on the object code <c>llc</c> emits.
+		/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
+		/// </summary>
+		public bool EmitComments         { get; set; }
+
 		LlvmIrModuleTarget target;
 
 		protected LlvmIrGenerator (string filePath, LlvmIrModuleTarget target)
@@ -207,7 +224,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				foreach (LlvmIrStringVariable info in group.Strings) {
 					string s = QuoteString (info, out ulong size);
 
-					if (!info.IsConstantStringLiteral) {
+					if (context.EmitComments && !info.IsConstantStringLiteral) {
 						WriteCommentLine (context, $" '{info.Value}'");
 					}
 
@@ -238,7 +255,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.NumberFormat = gv.NumberFormat;
 
 				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
-					if (!context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
+					if (context.EmitComments && !context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
 						context.Output.WriteLine ();
 						context.Output.Write (context.CurrentIndent);
 						WriteComment (context, groupDelimiter.Comment);
@@ -442,7 +459,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			if (memberInfo.IsIRStruct (context.TypeCache)) {
+			if (memberInfo.IsIRStruct) {
 				var sim = new GeneratorStructureInstance (context.Module.GetStructureInfo (memberInfo.MemberType), memberInfo.GetValue (si.Obj));
 				WriteStructureType (context, sim, out typeInfo);
 				return;
@@ -718,7 +735,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point. Field {smi.Info.Name} in structure {structInstance.Info.Name}");
 			}
 
-			if (smi.IsIRStruct (context.TypeCache)) {
+			if (smi.IsIRStruct) {
 				StructureInfo si = context.Module.GetStructureInfo (smi.MemberType);
 				WriteValue (context, typeof(GeneratorStructureInstance), new GeneratorStructureInstance (si, value));
 				return;
@@ -1007,15 +1024,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					context.Output.Write (", ");
 				}
 
-				string? comment = info.GetCommentFromProvider (smi, instance);
-				if (String.IsNullOrEmpty (comment)) {
-					var sb = new StringBuilder (" ");
-					sb.Append (MapManagedTypeToNative (context, smi));
-					sb.Append (' ');
-					sb.Append (smi.MappedName);
-					comment = sb.ToString ();
+				if (context.EmitComments) {
+					string? comment = info.GetCommentFromProvider (smi, instance);
+					if (String.IsNullOrEmpty (comment)) {
+						var sb = new StringBuilder (" ");
+						sb.Append (MapManagedTypeToNative (context, smi));
+						sb.Append (' ');
+						sb.Append (smi.MappedName);
+						comment = sb.ToString ();
+					}
+					WriteCommentLine (context, comment);
+				} else {
+					context.Output.WriteLine ();
 				}
-				WriteCommentLine (context, comment);
 			}
 
 			context.DecreaseIndent ();
@@ -1047,7 +1068,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void WriteArrayEntries (GeneratorWriteContext context, LlvmIrVariable? variable, ICollection? entries, Type elementType, uint stride, bool writeIndices, bool terminateWithComma = false)
 		{
 			bool first = true;
-			bool ignoreComments = stride > 1;
+			// Comments are skipped when the array is written in rows, as they would break the layout
+			bool ignoreComments = stride > 1 || !context.EmitComments;
 			string? prevItemComment = null;
 			ulong counter = 0;
 			bool writeStringInComment = !ignoreComments && (elementType == typeof(string) || elementType == typeof(StringHolder));
@@ -1349,7 +1371,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					context.Output.Write (' ');
 				}
 
-				if (!String.IsNullOrEmpty (comment)) {
+				if (context.EmitComments && !String.IsNullOrEmpty (comment)) {
 					WriteCommentLine (context, comment);
 				} else {
 					context.Output.WriteLine ();
@@ -1684,12 +1706,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public void WriteComment (GeneratorWriteContext context, string comment)
 		{
+			if (!context.EmitComments) {
+				return;
+			}
+
 			context.Output.Write (';');
 			context.Output.Write (comment);
 		}
 
 		public void WriteCommentLine (GeneratorWriteContext context, string comment)
 		{
+			if (!context.EmitComments) {
+				return;
+			}
+
 			WriteComment (context, comment);
 			context.Output.WriteLine ();
 		}
