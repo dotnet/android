@@ -595,20 +595,8 @@ namespace Microsoft.Android.Build.Tasks
 
 		public static string ToHexString (ReadOnlySpan<byte> hash)
 		{
-			const int MaxStackCharLength = 128;
-			int charLength = hash.Length * 2;
-			Span<char> chars = charLength <= MaxStackCharLength
-				? stackalloc char[charLength]
-				: new char[charLength];
-			for (int i = 0, j = 0; i < hash.Length; i += 1, j += 2) {
-				byte b = hash [i];
-				chars [j] = GetHexValue (b / 16);
-				chars [j + 1] = GetHexValue (b % 16);
-			}
-			return ((ReadOnlySpan<char>) chars).ToString ();
+			return HexUtilities.ToHexString (hash);
 		}
-
-		static char GetHexValue (int i) => (char) (i < 10 ? i + 48 : i - 10 + 65);
 
 		public static void DeleteFile (string filename, object log)
 		{

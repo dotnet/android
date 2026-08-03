@@ -9,6 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
+using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
@@ -470,6 +471,23 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteType (GeneratorWriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo, LlvmIrGlobalVariable? globalVariable = null)
 		{
+			// Fast path: a basic scalar type (`byte`, `uint`, ...) can never be a structure instance,
+			// an array or a string blob, so skip the reflection-heavy probing below.  Arrays and string
+			// blobs write one element at a time, so this runs millions of times for a typical
+			// application and `Type.IsPrimitive`/`Type.IsArray` dominate the generator otherwise.
+			if (basicTypeMap.ContainsKey (type)) {
+				string basicIRType = GetIRType (context, type, out ulong basicSize, out bool basicIsPointer);
+				typeInfo = new LlvmTypeInfo (
+					isPointer: basicIsPointer,
+					isAggregate: false,
+					isStructure: false,
+					size: basicSize,
+					maxFieldAlignment: basicSize
+				);
+				context.Output.Write (basicIRType);
+				return;
+			}
+
 			if (IsStructureInstance (type)) {
 				if (value == null) {
 					throw new ArgumentException ($"must not be null for structure instances ({type})", nameof (value));
@@ -947,10 +965,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteByteTypeAndValue (byte v)
 			{
-				WriteType (context, elementType, v, out _);
-
-				context.Output.Write (' ');
-				WriteValue (context, elementType, v);
+				// This is by far the hottest path in the generator: a hello world MAUI app writes
+				// ~3.6 million bytes here.  WriteType()/WriteValue() would box the byte and allocate a
+				// handful of strings per element, so write the (always identical) type and the two hex
+				// digits directly.
+				context.Output.Write ("i8 u0x");
+				HexUtilities.WriteHex (context.Output, v, upperCase: false);
 			}
 		}
 
