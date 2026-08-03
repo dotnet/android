@@ -906,71 +906,62 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
 		{
-			// The stride determines how many elements are written on a single line before a newline is added.
-			const uint stride = 16;
-			Type elementType = typeof(byte);
+			// Emitted as a single `c"..."` literal rather than one `i8` element per byte, which shrinks
+			// the `.ll` ~10x.  No per-string comments are possible, as the literal must be on one line.
+			const int HexDigits = 2;
+			const int MaxEscapeWidth = 1 + HexDigits;
+			const int ChunkSize = 4096;
 
-			LlvmIrVariableNumberFormat oldNumberFormat = context.NumberFormat;
-			context.NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal;
-			WriteArrayValueStart (context);
-			foreach (LlvmIrStringBlob.StringInfo si in blob.GetSegments ()) {
-				if (si.Offset > 0) {
-					context.Output.Write (',');
-					context.Output.WriteLine ();
-					context.Output.WriteLine ();
-				}
+			char [] chunk = ArrayPool<char>.Shared.Rent (ChunkSize);
+			int chunkCapacity = chunk.Length;
+			int chunkUsed = 0;
 
-				context.Output.Write (context.CurrentIndent);
-				WriteCommentLine (context, $" '{si.Value}' @ {si.Offset}");
-				WriteBytes (si.Bytes);
-			}
-			context.Output.WriteLine ();
-			WriteArrayValueEnd (context);
-			context.NumberFormat = oldNumberFormat;
+			try {
+				context.Output.Write ('c');
+				context.Output.Write ('"');
 
-			void WriteBytes (byte[] bytes)
-			{
-				ulong counter = 0;
-				bool first = true;
-				foreach (byte b in bytes) {
-					if (!first) {
-						WriteCommaWithStride (counter);
-					} else {
-						context.Output.Write (context.CurrentIndent);
-						first = false;
+				foreach (LlvmIrStringBlob.StringInfo si in blob.GetSegments ()) {
+					foreach (byte b in si.Bytes) {
+						WriteByte (b);
 					}
 
-					counter++;
-					WriteByteTypeAndValue (b);
+					// Terminating NUL is counted for each string, but not included in its bytes
+					WriteByte (0);
 				}
 
-				if (bytes.Length > 0) {
-					WriteCommaWithStride (counter);
-				} else {
-					context.Output.Write (context.CurrentIndent);
-				}
-				WriteByteTypeAndValue (0); // Terminating NUL is counted for each string, but not included in its bytes
+				Flush ();
+				context.Output.Write ('"');
+			} finally {
+				ArrayPool<char>.Shared.Return (chunk);
 			}
 
-			void WriteCommaWithStride (ulong counter)
+			void WriteByte (byte b)
 			{
-				context.Output.Write (',');
-				if (stride == 1 || counter % stride == 0) {
-					context.Output.WriteLine ();
-					context.Output.Write (context.CurrentIndent);
-				} else {
-					context.Output.Write (' ');
+				if (b != (byte) '"' && b != (byte) '\\' && b >= 32 && b < 127) {
+					if (chunkUsed == chunkCapacity) {
+						Flush ();
+					}
+					chunk [chunkUsed++] = (char) b;
+					return;
 				}
+
+				if (chunkUsed + MaxEscapeWidth > chunkCapacity) {
+					Flush ();
+				}
+
+				chunk [chunkUsed++] = '\\';
+				HexUtilities.WriteHex (chunk.AsSpan (chunkUsed, HexDigits), b, upperCase: true);
+				chunkUsed += HexDigits;
 			}
 
-			void WriteByteTypeAndValue (byte v)
+			void Flush ()
 			{
-				// This is by far the hottest path in the generator: a hello world MAUI app writes
-				// ~3.6 million bytes here.  WriteType()/WriteValue() would box the byte and allocate a
-				// handful of strings per element, so write the (always identical) type and the two hex
-				// digits directly.
-				context.Output.Write ("i8 u0x");
-				HexUtilities.WriteHex (context.Output, v, upperCase: false);
+				if (chunkUsed == 0) {
+					return;
+				}
+
+				context.Output.Write (chunk, 0, chunkUsed);
+				chunkUsed = 0;
 			}
 		}
 
