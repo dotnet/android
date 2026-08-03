@@ -29,10 +29,7 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    # `dotnet test` deploys to the device through an in-process MSBuild invocation,
-    # which bypasses MSBuildForwardingApp and does not set DOTNET_HOST_PATH. Without
-    # it, MSBuild cannot launch task hosts (MSB4221 on ILLink's ComputeManagedAssemblies).
-    # See https://github.com/dotnet/sdk/pull/55581.
+    # Workaround for https://github.com/dotnet/sdk/pull/55581
     $env:DOTNET_HOST_PATH = $dotnetPath
     & $dotnetPath test $projectFile -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
     Pop-Location
