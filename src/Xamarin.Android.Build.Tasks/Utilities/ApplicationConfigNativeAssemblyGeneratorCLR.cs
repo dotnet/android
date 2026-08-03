@@ -20,6 +20,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	const string HOST_PROPERTY_BUNDLE_PROBE       = "BUNDLE_PROBE";
 	const string HOST_PROPERTY_PINVOKE_OVERRIDE   = "PINVOKE_OVERRIDE";
 	const string HOST_PROPERTY_RUNTIME_IDENTIFIER = "RUNTIME_IDENTIFIER";
+	const string HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY = "APP_CONTEXT_BASE_DIRECTORY";
 
 	sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
@@ -221,6 +222,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// These will be filled in by the native host.
 		this.runtimeProperties[HOST_PROPERTY_RUNTIME_CONTRACT] = String.Empty;
 		this.runtimeProperties[HOST_PROPERTY_RUNTIME_IDENTIFIER] = String.Empty;
+		this.runtimeProperties[HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY] = String.Empty;
 
 		// these mustn't be there, they would break our host contract
 		this.runtimeProperties.Remove (HOST_PROPERTY_PINVOKE_OVERRIDE);
@@ -319,15 +321,18 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		// HOST_PROPERTY_RUNTIME_CONTRACT and HOST_PROPERTY_RUNTIME_IDENTIFIER will come first, in that
-		// order, our native runtime requires that since it needs to set their values in the values array
-		// and we don't want to spend time searching for the indices, nor we want to add yet another
-		// variable storing the index to the entry. KISS.
+		// HOST_PROPERTY_RUNTIME_CONTRACT, HOST_PROPERTY_RUNTIME_IDENTIFIER and
+		// HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY will come first, in that order, our native runtime
+		// requires that since it needs to set their values in the values array and we don't want to
+		// spend time searching for the indices, nor we want to add yet another variable storing the
+		// index to the entry. KISS.
 		var runtime_property_names = new List<string> {
 			HOST_PROPERTY_RUNTIME_CONTRACT,
 			HOST_PROPERTY_RUNTIME_IDENTIFIER,
+			HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY,
 		};
 		var runtime_property_values = new List<string?> {
+			null,
 			null,
 			null,
 		};
@@ -335,7 +340,8 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		if (runtimeProperties != null) {
 			foreach (var kvp in runtimeProperties) {
 				if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT) ||
-						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_IDENTIFIER)) {
+						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_IDENTIFIER) ||
+						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY)) {
 					continue;
 				}
 				runtime_property_names.Add (kvp.Key);
