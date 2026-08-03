@@ -163,7 +163,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildReleaseArm64 ([Values] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildReleaseArm64 ([Values] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime, [Values] bool r8)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -171,6 +171,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			if (IgnoreNativeAotLinkedAssemblyChecks (runtime)) {
+				return;
+			}
+
+			// NativeAOT already defaults to $(AndroidLinkTool)=r8, so the r8 dimension only adds
+			// a new configuration for the runtimes that default to no Java code shrinking.
+			if (r8 && runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT enables r8 by default; covered by the non-r8 test case.");
 				return;
 			}
 
@@ -183,8 +190,11 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a" });
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
+			if (r8) {
+				proj.SetProperty ("AndroidLinkTool", "r8");
+			}
 
-			var flavor = (forms ? "XForms" : "Simple") + "DotNet" + "." + runtime.ToString ();
+			var flavor = (forms ? "XForms" : "Simple") + "DotNet" + "." + runtime.ToString () + (r8 ? ".R8" : "");
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
 			var apkDescReference = "reference.apkdesc";
 			byte [] apkDescData = XamarinAndroidCommonProject.GetResourceContents ($"Xamarin.ProjectTools.Resources.Base.{apkDescFilename}");
@@ -278,7 +288,12 @@ namespace Xamarin.Android.Build.Tests
 		static Dictionary<string, long> ReadApkDescEntries (string path)
 		{
 			var result = new Dictionary<string, long> (StringComparer.Ordinal);
-			using var doc = JsonDocument.Parse (File.ReadAllText (path));
+			var text = File.ReadAllText (path);
+			if (text.IsNullOrWhiteSpace ()) {
+				// A brand new flavor has no embedded reference yet, so the reference file is empty.
+				return result;
+			}
+			using var doc = JsonDocument.Parse (text);
 			if (doc.RootElement.TryGetProperty ("Entries", out var entries)) {
 				foreach (var entry in entries.EnumerateObject ()) {
 					if (entry.Value.TryGetProperty ("Size", out var size)) {

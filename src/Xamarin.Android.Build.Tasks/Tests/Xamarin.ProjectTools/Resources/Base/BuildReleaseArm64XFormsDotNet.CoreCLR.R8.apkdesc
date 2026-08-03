@@ -5,10 +5,7 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9412464
-    },
-    "classes2.dex": {
-      "Size": 132684
+      "Size": 3240220
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -2234,5 +2231,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 20262477
+  "PackageSize": 18116115
 }

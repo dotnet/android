@@ -6,6 +6,7 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tasks;
+using TypeName = System.Reflection.Metadata.TypeName;
 
 namespace MonoDroid.Tuner {
 
@@ -92,9 +93,23 @@ namespace MonoDroid.Tuner {
 			// because it won't be referenced anywhere, but it will
 			// be called from Java
 			if (IsUserType (type) && type.HasMethods) {
-				foreach (var method in type.Methods.Where (m => m.Overrides != null))
+				foreach (var method in type.Methods.Where (IsJavaCallable))
 					PreserveMethod (type, method);
 			}
+		}
+
+		static bool IsJavaCallable (MethodDefinition method)
+		{
+			// Java Callable Wrappers mirror every instance constructor.
+			if (method.IsConstructor)
+				return !method.IsStatic;
+
+			if (!method.IsVirtual)
+				return false;
+
+			// `!IsNewSlot` is a C# `override`, and `Overrides` entries are an
+			// explicit interface implementation.
+			return !method.IsNewSlot || method.HasOverrides;
 		}
 
 		void PreserveJavaObjectImplementation (TypeDefinition type)
@@ -193,22 +208,22 @@ namespace MonoDroid.Tuner {
 			Annotations.AddPreservedMethod (type, method);
 		}
 
-		string TypeNameWithoutKey (string name)
+		// `name` is a `[Register]` connector type such as "Foo.IBarInvoker, MyBinding",
+		// which omits the assembly version, culture, and public key token.
+		static bool CheckInvokerType (string invokerName, string invokerAssembly, string name)
 		{
-			var idx = name.IndexOf (", PublicKeyToken=", StringComparison.Ordinal);
-			if (idx > 0)
-				name = name.Substring (0, idx);
+			if (!TypeName.TryParse (name.AsSpan (), out var parsed))
+				return false;
 
-			return name;
-		}
-
-		bool CheckInvokerType (TypeDefinition type, string name)
-		{
-			return TypeNameWithoutKey (name) == TypeNameWithoutKey ($"{ type.FullName}, { type.Module.Assembly.FullName}");
+			return parsed.FullName == invokerName &&
+				parsed.AssemblyName?.Name == invokerAssembly;
 		}
 
 		void PreserveInterfaceMethods (TypeDefinition type, TypeDefinition invoker)
 		{
+			var invokerName = invoker.FullName;
+			var invokerAssembly = invoker.Module.Assembly.Name.Name;
+
 			foreach (var m in type.Methods.Where (m => !m.IsConstructor)) {
 				string methodAndType;
 				if (!m.TryGetRegisterMember (out methodAndType))
@@ -218,7 +233,7 @@ namespace MonoDroid.Tuner {
 					continue;
 
 				var values = methodAndType.Split (new char [] { ':' }, 2);
-				if (!CheckInvokerType (invoker, values [1]))
+				if (!CheckInvokerType (invokerName, invokerAssembly, values [1]))
 					continue;
 
 				foreach (var invokerMethod in invoker.Methods.Where (m => !m.IsConstructor)) {
