@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -179,25 +178,6 @@ namespace Xamarin.Android.Tasks
 				InstallResultKind.InsufficientSpace => "ADB0060",
 				_ => "ADB0010",
 			};
-		}
-
-		/// <summary>Quotes an argument for <see cref="System.Diagnostics.ProcessStartInfo.Arguments"/>.</summary>
-		static string QuoteProcessArgument (string argument)
-		{
-			if (argument == null) {
-				return "\"\"";
-			}
-			var sb = new StringBuilder ();
-			sb.Append ('"');
-			// The .NET process class only supports quoted arguments with escaped quotes/backslashes.
-			foreach (char c in argument) {
-				if (c == '"' || c == '\\') {
-					sb.Append ('\\');
-				}
-				sb.Append (c);
-			}
-			sb.Append ('"');
-			return sb.ToString ();
 		}
 	}
 
