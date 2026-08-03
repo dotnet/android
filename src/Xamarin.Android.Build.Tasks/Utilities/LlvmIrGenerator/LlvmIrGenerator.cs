@@ -906,17 +906,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteStringBlobArray (GeneratorWriteContext context, LlvmIrStringBlob blob)
 		{
-			// String blobs are emitted as a single LLVM IR constant byte string (`c"..."`) instead of one
-			// `i8 u0xNN` element per byte.  A hello world MAUI app has ~3.6 million bytes of type map
-			// strings, so the array form produces a >50MB `.ll` file which is slow both to write here and
-			// to consume in `llc`.  The `c"..."` form is roughly ten times smaller.
-			//
-			// A consequence of this is that we can no longer annotate individual strings with comments,
-			// because a constant string literal must fit on a single line and `;` comments extend to the
-			// end of the line.
+			// Emitted as a single `c"..."` literal rather than one `i8` element per byte, which shrinks
+			// the `.ll` ~10x.  No per-string comments are possible, as the literal must be on one line.
+			const int HexDigits = 2;
+			const int MaxEscapeWidth = 1 + HexDigits;
+			const int ChunkSize = 4096;
 
-			// `Rent()` may return a larger array than requested, so use its actual length as the capacity.
-			char [] chunk = ArrayPool<char>.Shared.Rent (4096);
+			char [] chunk = ArrayPool<char>.Shared.Rent (ChunkSize);
 			int chunkCapacity = chunk.Length;
 			int chunkUsed = 0;
 
@@ -941,7 +937,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteByte (byte b)
 			{
-				// `"` and `\` must always be escaped, as must anything outside of the printable ASCII range.
 				if (b != (byte) '"' && b != (byte) '\\' && b >= 32 && b < 127) {
 					if (chunkUsed == chunkCapacity) {
 						Flush ();
@@ -950,13 +945,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					return;
 				}
 
-				if (chunkUsed + 3 > chunkCapacity) {
+				if (chunkUsed + MaxEscapeWidth > chunkCapacity) {
 					Flush ();
 				}
 
 				chunk [chunkUsed++] = '\\';
-				HexUtilities.WriteHex (chunk.AsSpan (chunkUsed, 2), b, upperCase: true);
-				chunkUsed += 2;
+				HexUtilities.WriteHex (chunk.AsSpan (chunkUsed, HexDigits), b, upperCase: true);
+				chunkUsed += HexDigits;
 			}
 
 			void Flush ()
