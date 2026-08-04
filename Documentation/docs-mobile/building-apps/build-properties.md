@@ -1765,6 +1765,10 @@ assemblies in `obj/<Configuration>/android<ABI>/linked` directory.
 
 The default value is False.
 
+## MandroidI18n
+
+This MSBuild property is obsolete and is no longer supported.
+
 ## MauiEnableFullReadyToRun
 
 A boolean property for .NET MAUI Android applications that use CoreCLR
@@ -1776,10 +1780,6 @@ full ReadyToRun.
 Full ReadyToRun increases application and download size, but can
 potentially improve runtime performance because more methods are
 precompiled.
-
-## MandroidI18n
-
-This MSBuild property is obsolete and is no longer supported.
 
 ## MetricsSupport
 
