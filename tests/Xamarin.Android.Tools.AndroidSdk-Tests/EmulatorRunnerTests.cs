@@ -350,17 +350,13 @@ public class EmulatorRunnerTests
 
 			Assert.IsFalse (result.Success, "Boot should time out");
 
-			// Give the script a moment to flush args.log
-			await Task.Delay (200);
-
-			if (File.Exists (argsLogPath)) {
-				var logged = File.ReadAllText (argsLogPath);
-				Assert.That (logged, Does.Contain ("-gpu"), "Should contain -gpu arg");
-				Assert.That (logged, Does.Contain ("auto"), "Should contain auto value");
-				Assert.That (logged, Does.Contain ("-no-audio"), "Should contain -no-audio arg");
-				Assert.That (logged, Does.Contain ("-avd"), "Should contain -avd flag");
-				Assert.That (logged, Does.Contain ("Test_AVD"), "Should contain AVD name");
-			}
+			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
+			var logged = File.ReadAllText (argsLogPath);
+			Assert.That (logged, Does.Contain ("-gpu"), "Should contain -gpu arg");
+			Assert.That (logged, Does.Contain ("auto"), "Should contain auto value");
+			Assert.That (logged, Does.Contain ("-no-audio"), "Should contain -no-audio arg");
+			Assert.That (logged, Does.Contain ("-avd"), "Should contain -avd flag");
+			Assert.That (logged, Does.Contain ("Test_AVD"), "Should contain AVD name");
 		} finally {
 			DeleteDirectoryWithRetry (tempDir);
 		}
@@ -429,12 +425,9 @@ public class EmulatorRunnerTests
 			var result = await runner.BootEmulatorAsync ("Test_AVD", mockAdb, options);
 
 			Assert.IsFalse (result.Success, "Boot should time out");
-			await Task.Delay (200);
-
-			if (File.Exists (argsLogPath)) {
-				var logged = File.ReadAllText (argsLogPath);
-				Assert.That (logged, Does.Contain ("-no-snapshot-load"), "ColdBoot should pass -no-snapshot-load");
-			}
+			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
+			var logged = File.ReadAllText (argsLogPath);
+			Assert.That (logged, Does.Contain ("-no-snapshot-load"), "ColdBoot should pass -no-snapshot-load");
 		} finally {
 			DeleteDirectoryWithRetry (tempDir);
 		}
@@ -573,6 +566,17 @@ public class EmulatorRunnerTests
 		}
 
 		return (tempDir, emuPath);
+	}
+
+	static async Task<bool> WaitForFileAsync (string path, TimeSpan timeout)
+	{
+		var stopwatch = Stopwatch.StartNew ();
+		while (stopwatch.Elapsed < timeout) {
+			if (File.Exists (path) && new FileInfo (path).Length > 0 && IsFileUnlocked (path))
+				return true;
+			await Task.Delay (20);
+		}
+		return File.Exists (path) && new FileInfo (path).Length > 0 && IsFileUnlocked (path);
 	}
 
 	static void DeleteDirectoryWithRetry (string path)
