@@ -186,7 +186,7 @@ public class EmulatorRunnerTests
 			Assert.AreEqual ("emulator-5554", result.Serial);
 			Assert.IsTrue (pollCount >= 2);
 		} finally {
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -362,7 +362,7 @@ public class EmulatorRunnerTests
 				Assert.That (logged, Does.Contain ("Test_AVD"), "Should contain AVD name");
 			}
 		} finally {
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -398,7 +398,7 @@ public class EmulatorRunnerTests
 					"Cancellation should abort within a few seconds, not wait for full timeout");
 			}
 		} finally {
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -436,7 +436,7 @@ public class EmulatorRunnerTests
 				Assert.That (logged, Does.Contain ("-no-snapshot-load"), "ColdBoot should pass -no-snapshot-load");
 			}
 		} finally {
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -573,6 +573,19 @@ public class EmulatorRunnerTests
 		}
 
 		return (tempDir, emuPath);
+	}
+
+	static void DeleteDirectoryWithRetry (string path)
+	{
+		var timeout = Stopwatch.StartNew ();
+		while (Directory.Exists (path)) {
+			try {
+				Directory.Delete (path, recursive: true);
+				return;
+			} catch (IOException) when (OS.IsWindows && timeout.Elapsed < TimeSpan.FromSeconds (5)) {
+				Thread.Sleep (20);
+			}
+		}
 	}
 
 	static bool IsFileUnlocked (string path)
