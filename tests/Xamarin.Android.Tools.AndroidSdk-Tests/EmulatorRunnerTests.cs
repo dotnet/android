@@ -584,6 +584,8 @@ public class EmulatorRunnerTests
 				return;
 			} catch (IOException) when (OS.IsWindows && timeout.Elapsed < TimeSpan.FromSeconds (5)) {
 				Thread.Sleep (20);
+			} catch (UnauthorizedAccessException) when (OS.IsWindows && timeout.Elapsed < TimeSpan.FromSeconds (5)) {
+				Thread.Sleep (20);
 			}
 		}
 	}
