@@ -51,7 +51,7 @@ safe-outputs:
   github-token: ${{ secrets.GITHUB_TOKEN }}
   assign-to-agent:
     github-token: ${{ secrets.ANDROID_TEAM_PAT }}
-    model: claude-opus-4.8
+    model: gpt-5.6-sol
     target: "*"
   create-issue:
     close-older-issues: false
@@ -90,9 +90,9 @@ steps:
     } > /tmp/gh-aw/agent/scan-results.md
     echo "✅ Script $SCRIPT_NAME complete → /tmp/gh-aw/agent/scan-results.md"
 description: Nightly scan for random code improvement opportunities, files issues assigned to Copilot
+model: gpt-5.6-sol
 engine:
   id: copilot
-  model: claude-opus-4.8
   env:
     COPILOT_GITHUB_TOKEN: |
       ${{ case(
@@ -135,6 +135,7 @@ tools:
     - repos
     - issues
 ---
+
 # Nightly Fix Finder
 
 You are the Nightly Fix Finder Agent — an expert system that scans the dotnet/android repository each night for random code improvement opportunities and files actionable issues for Copilot to fix.

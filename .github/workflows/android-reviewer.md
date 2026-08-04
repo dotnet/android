@@ -20,9 +20,9 @@ environment: copilot-pat-pool
 permissions:
   contents: read
   pull-requests: read
+model: gpt-5.6-sol
 engine:
   id: copilot
-  model: claude-opus-4.8
   env:
     COPILOT_GITHUB_TOKEN: |
       ${{ case(
