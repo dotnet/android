@@ -520,7 +520,6 @@ namespace Android.Runtime {
 				return JNIEnv.ToLocalJniHandle (c);
 		}
 
-		#region ArrayList "implementation"
 		//
 		// They provide "implementation" of java.util.ArrayList methods.
 		// They could be "overriden" in derived classes if there is
@@ -676,7 +675,6 @@ namespace Android.Runtime {
 		{
 			return ToArray (new Java.Lang.Object [0]);
 		}
-		#endregion
 	}
 
 	[Register ("java/util/ArrayList", DoNotGenerateAcw=true)]
