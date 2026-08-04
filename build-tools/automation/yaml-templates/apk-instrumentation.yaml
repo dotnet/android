@@ -11,28 +11,31 @@ parameters:
   condition: succeeded()
 
 steps:
-  # Build and install the APK to the device first, so that ComputeRunArguments
-  # can resolve the package name from AndroidManifest.xml.
-  #
-  # Retry the install up to 3 times: the emulator/ADB connection occasionally
-  # drops mid-install (XAGCPU7000 "device offline") and a retry usually recovers.
-  # If every attempt fails, continueOnError: false fails the lane immediately -
-  # there is no point running the tests against a device where the app was never
-  # installed (that only wastes CI time and produces a misleading
-  # INSTRUMENTATION_FAILED). See dotnet/android#11830.
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-  parameters:
-    configuration: ${{ parameters.buildConfiguration }}
-    xaSourcePath: ${{ parameters.xaSourcePath }}
-    displayName: build ${{ parameters.testName }}
-    project: ${{ parameters.project }}
-    arguments: >-
-      -t:Install
-      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/build-${{ parameters.testName }}.binlog
-      -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
-    condition: ${{ parameters.condition }}
-    retryCountOnTaskFailure: 3
-    continueOnError: false
+  # Run dotnet test from the project directory so it finds the project-local
+  # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
+  # This enables MTP mode, which uses RunCommand/RunArguments to invoke
+  # Microsoft.Android.Run for on-device test execution.
+- powershell: |
+    $projectDir = Split-Path -Parent "${{ parameters.project }}"
+    $projectFile = Split-Path -Leaf "${{ parameters.project }}"
+    $resultsDir = "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
+    Push-Location $projectDir
+    if ([Environment]::OSVersion.Platform -eq "Unix") {
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
+        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}/dotnet"
+    } else {
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.buildConfiguration }}\dotnet"
+        $env:PATH = "${DOTNET_ROOT};$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
+    }
+    # Workaround for https://github.com/dotnet/sdk/pull/55581
+    $env:DOTNET_HOST_PATH = $dotnetPath
+    & $dotnetPath test $projectFile -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
+    Pop-Location
+  displayName: run ${{ parameters.testName }}
+  condition: ${{ parameters.condition }}
+  continueOnError: true
 
   # If the install above failed, snapshot device state so we can classify WHY on
   # the next iteration instead of guessing: connectivity (adb devices/get-state),
@@ -55,30 +58,6 @@ steps:
   condition: failed()
   continueOnError: true
   timeoutInMinutes: 3
-
-  # Run dotnet test from the project directory so it finds the project-local
-  # global.json with "test": { "runner": "Microsoft.Testing.Platform" }.
-  # This enables MTP mode, which uses RunCommand/RunArguments to invoke
-  # Microsoft.Android.Run for on-device test execution.
-- powershell: |
-    $projectDir = Split-Path -Parent "${{ parameters.project }}"
-    $projectFile = Split-Path -Leaf "${{ parameters.project }}"
-    $resultsDir = "${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/TestResults"
-    Push-Location $projectDir
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.buildConfiguration }}/dotnet"
-        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}/dotnet"
-    } else {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.buildConfiguration }}\dotnet"
-        $env:PATH = "${DOTNET_ROOT};$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
-    }
-    & $dotnetPath test $projectFile --no-build -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
-    Pop-Location
-  displayName: run ${{ parameters.testName }}
-  condition: ${{ parameters.condition }}
-  continueOnError: true
 
 - script: >
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&

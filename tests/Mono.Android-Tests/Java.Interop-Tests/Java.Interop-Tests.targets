@@ -6,6 +6,14 @@
   </PropertyGroup>
   <ItemGroup>
     <AndroidJavaLibrary Include="$(_JavaInteropTestsJarFile)" />
+    <!--
+      Once BuildTestJarFile has written these, the SDK's default @(AndroidLibrary)
+      glob (**\*.jar, %(Bind)=true) would bind our own test JAR on any later
+      evaluation. Both variants are listed because they can coexist in Jars\.
+      See dotnet/android#12254.
+    -->
+    <AndroidLibrary Remove="Jars\Mono.Android-Test-classes.jar" />
+    <AndroidLibrary Remove="Jars\Mono.Android-Test-classes-trimmable.jar" />
   </ItemGroup>
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <ItemDefinitionGroup>

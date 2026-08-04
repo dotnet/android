@@ -158,6 +158,8 @@ stages:
         extraBuildArgs: -p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-Mono
+        # https://github.com/dotnet/runtime/issues/131760
+        condition: false
 
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
