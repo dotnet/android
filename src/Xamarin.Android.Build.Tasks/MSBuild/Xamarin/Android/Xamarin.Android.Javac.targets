@@ -51,7 +51,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     </DetermineJavaLibrariesToCompile>
   </Target>
 
-  <Target Name="_DetermineJavaLibrariesToCompile">
+  <Target Name="_DetermineJavaLibrariesToCompile"
+      DependsOnTargets="_CollectJavaSourceForBinding;_CompileBindingJava">
 
     <DetermineJavaLibrariesToCompile
         MonoPlatformJarPaths="$(MonoPlatformJarPath);$(_RuntimeJar)"
