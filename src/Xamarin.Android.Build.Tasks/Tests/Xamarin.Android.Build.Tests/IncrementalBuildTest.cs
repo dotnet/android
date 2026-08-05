@@ -1858,12 +1858,51 @@ namespace Lib2
 				Assert.IsTrue (secondAssemblyWrite > firstAssemblyWrite,
 					$"Assembly write time was not updated on partially incremental build. Before: {firstAssemblyWrite}. After: {secondAssemblyWrite}.");
 
-				// TODO: NativeAOT fails this with "Apk write time was not updated on partially incremental build. Before: 1/1/1981 1:01:02 AM. After: 1/1/1981 1:01:02 AM."
-				if (runtime != AndroidRuntime.NativeAOT) {
-					Assert.IsTrue (secondApkWrite > firstApkWrite,
-						$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
-				}
+				Assert.IsTrue (secondApkWrite > firstApkWrite,
+					$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
 			}
+		}
+
+		[Test]
+		public void UniversalApkFromBundleIsIncremental ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormats", "aab;apk");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateUniversalApkFromBundle");
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var signedApk = Directory.GetFiles (outputDirectory, "*-Signed.apk", SearchOption.AllDirectories).Single ();
+			var firstWriteTime = File.GetLastWriteTimeUtc (signedApk);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_CreateUniversalApkFromBundle");
+			Assert.AreEqual (firstWriteTime, File.GetLastWriteTimeUtc (signedApk), "No-op builds should preserve the signed APK timestamp.");
+
+			Assert.IsTrue (
+				builder.Build (proj, parameters: new [] { "AndroidBundleToolExtraArgs=--overwrite" }, doNotCleanupOnUpdate: true, saveProject: false),
+				"Changing bundletool arguments should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateUniversalApkFromBundle");
+
+			Assert.IsTrue (
+				builder.Build (proj, parameters: new [] { "AndroidBundleToolExtraArgs=" }, doNotCleanupOnUpdate: true, saveProject: false),
+				"Clearing bundletool arguments should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateUniversalApkFromBundle");
+
+			Assert.IsTrue (
+				builder.Build (proj, parameters: new [] { "AndroidBundleToolExtraArgs=" }, doNotCleanupOnUpdate: true, saveProject: false),
+				"No-op build after clearing bundletool arguments should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_CreateUniversalApkFromBundle");
 		}
 
 		[Test]
