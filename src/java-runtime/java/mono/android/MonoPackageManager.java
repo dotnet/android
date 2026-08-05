@@ -43,11 +43,6 @@ public class MonoPackageManager {
 				ApplicationRegistration.Context = context;
 			}
 			if (!initialized) {
-				android.content.IntentFilter timezoneChangedFilter  = new android.content.IntentFilter (
-						android.content.Intent.ACTION_TIMEZONE_CHANGED
-				);
-				context.registerReceiver (new mono.android.app.NotifyTimeZoneChanges (), timezoneChangedFilter);
-
 				Locale locale       = Locale.getDefault ();
 				String language     = locale.getLanguage () + "-" + locale.getCountry ();
 				String filesDir     = context.getFilesDir ().getAbsolutePath ();

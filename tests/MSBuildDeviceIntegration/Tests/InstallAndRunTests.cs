@@ -1329,9 +1329,6 @@ namespace Library1 {
 					new BuildItem.Source ("LocalTestServers.cs") {
 						TextContent = () => File.ReadAllText (Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", "Xamarin.Android.Net", "LocalTestServers.cs"))
 					},
-					new BuildItem.Source ("PreserveTest.cs") {
-						TextContent = () => getResource("PreserveTest")
-					},
 				},
 			};
 			lib2.SetRuntime (runtime);
