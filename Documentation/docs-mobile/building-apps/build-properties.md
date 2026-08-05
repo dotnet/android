@@ -1890,8 +1890,11 @@ Mono runtime instead of CoreCLR. Set this property to `true` to use
 Mono or `false` to use CoreCLR. `$(PublishAot)` takes precedence and
 selects NativeAOT when set to `true`.
 
-.NET MAUI defaults can vary by target framework and build
-configuration. For more information, see
+This property defaults to `true` in .NET 10 and earlier, so Android
+applications use Mono. In .NET 11 and later, it defaults to `false`,
+so Android applications use CoreCLR.
+
+For more information, see
 [Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
 
 [maui-runtimes-compilation]: https://learn.microsoft.com/dotnet/maui/deployment/runtimes-compilation
