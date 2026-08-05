@@ -152,10 +152,18 @@ public class EmulatorRunnerTests
 		mockAdb.ShellProperties ["sys.boot_completed"] = "1";
 		mockAdb.ShellCommands ["pm path android"] = "package:/system/framework/framework-res.apk";
 
+		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
+		var launchedPath = Path.Combine (tempDir, "launched");
+		if (OS.IsWindows) {
+			File.WriteAllText (emuPath, $"@echo off\r\necho launched > \"{launchedPath}\"\r\nexit /b 0\r\n");
+		} else {
+			File.WriteAllText (emuPath, $"#!/bin/sh\necho launched > \"{launchedPath}\"\n");
+		}
+
 		int pollCount = 0;
 		mockAdb.OnListDevices = () => {
 			pollCount++;
-			if (pollCount >= 2) {
+			if (pollCount >= 2 && File.Exists (launchedPath) && IsFileUnlocked (emuPath)) {
 				devices.Add (new AdbDeviceInfo {
 					Serial = "emulator-5554",
 					Type = AdbDeviceType.Emulator,
@@ -165,8 +173,6 @@ public class EmulatorRunnerTests
 			}
 		};
 
-		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
-		Process? emulatorProcess = null;
 		try {
 			var runner = new EmulatorRunner (emuPath);
 			var options = new EmulatorBootOptions {
@@ -180,13 +186,7 @@ public class EmulatorRunnerTests
 			Assert.AreEqual ("emulator-5554", result.Serial);
 			Assert.IsTrue (pollCount >= 2);
 		} finally {
-			// Kill any emulator process spawned by the test
-			try {
-				emulatorProcess = FindEmulatorProcess (emuPath);
-				emulatorProcess?.Kill ();
-				emulatorProcess?.WaitForExit (1000);
-			} catch { }
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -328,9 +328,9 @@ public class EmulatorRunnerTests
 
 		// Rewrite the fake emulator to log its arguments
 		if (OS.IsWindows) {
-			File.WriteAllText (emuPath, $"@echo off\r\necho %* > \"{argsLogPath}\"\r\nping -n 60 127.0.0.1 >nul\r\n");
+			File.WriteAllText (emuPath, $"@echo off\r\necho %* > \"{argsLogPath}\"\r\nexit /b 0\r\n");
 		} else {
-			File.WriteAllText (emuPath, $"#!/bin/sh\necho \"$@\" > \"{argsLogPath}\"\nsleep 60\n");
+			File.WriteAllText (emuPath, $"#!/bin/sh\necho \"$@\" > \"{argsLogPath}\"\nexit 0\n");
 		}
 
 		try {
@@ -350,25 +350,15 @@ public class EmulatorRunnerTests
 
 			Assert.IsFalse (result.Success, "Boot should time out");
 
-			// Give the script a moment to flush args.log
-			await Task.Delay (200);
-
-			if (File.Exists (argsLogPath)) {
-				var logged = File.ReadAllText (argsLogPath);
-				Assert.That (logged, Does.Contain ("-gpu"), "Should contain -gpu arg");
-				Assert.That (logged, Does.Contain ("auto"), "Should contain auto value");
-				Assert.That (logged, Does.Contain ("-no-audio"), "Should contain -no-audio arg");
-				Assert.That (logged, Does.Contain ("-avd"), "Should contain -avd flag");
-				Assert.That (logged, Does.Contain ("Test_AVD"), "Should contain AVD name");
-			}
+			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
+			var logged = File.ReadAllText (argsLogPath);
+			Assert.That (logged, Does.Contain ("-gpu"), "Should contain -gpu arg");
+			Assert.That (logged, Does.Contain ("auto"), "Should contain auto value");
+			Assert.That (logged, Does.Contain ("-no-audio"), "Should contain -no-audio arg");
+			Assert.That (logged, Does.Contain ("-avd"), "Should contain -avd flag");
+			Assert.That (logged, Does.Contain ("Test_AVD"), "Should contain AVD name");
 		} finally {
-			// Clean up any spawned processes
-			try {
-				foreach (var p in Process.GetProcessesByName ("sleep")) {
-					try { p.Kill (); p.WaitForExit (1000); } catch { }
-				}
-			} catch { }
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -377,8 +367,7 @@ public class EmulatorRunnerTests
 	{
 		// Verify that cancelling the token during the polling phase causes
 		// BootEmulatorAsync to return promptly rather than blocking for the
-		// full BootTimeout duration. We need a real fake emulator script so
-		// LaunchEmulator succeeds (starts the process), then cancel while polling.
+		// full BootTimeout duration.
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
 
 		try {
@@ -405,12 +394,7 @@ public class EmulatorRunnerTests
 					"Cancellation should abort within a few seconds, not wait for full timeout");
 			}
 		} finally {
-			try {
-				foreach (var p in Process.GetProcessesByName ("sleep")) {
-					try { p.Kill (); p.WaitForExit (1000); } catch { }
-				}
-			} catch { }
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -422,9 +406,9 @@ public class EmulatorRunnerTests
 		var argsLogPath = Path.Combine (tempDir, "args.log");
 
 		if (OS.IsWindows) {
-			File.WriteAllText (emuPath, $"@echo off\r\necho %* > \"{argsLogPath}\"\r\nping -n 60 127.0.0.1 >nul\r\n");
+			File.WriteAllText (emuPath, $"@echo off\r\necho %* > \"{argsLogPath}\"\r\nexit /b 0\r\n");
 		} else {
-			File.WriteAllText (emuPath, $"#!/bin/sh\necho \"$@\" > \"{argsLogPath}\"\nsleep 60\n");
+			File.WriteAllText (emuPath, $"#!/bin/sh\necho \"$@\" > \"{argsLogPath}\"\nexit 0\n");
 		}
 
 		try {
@@ -441,19 +425,11 @@ public class EmulatorRunnerTests
 			var result = await runner.BootEmulatorAsync ("Test_AVD", mockAdb, options);
 
 			Assert.IsFalse (result.Success, "Boot should time out");
-			await Task.Delay (200);
-
-			if (File.Exists (argsLogPath)) {
-				var logged = File.ReadAllText (argsLogPath);
-				Assert.That (logged, Does.Contain ("-no-snapshot-load"), "ColdBoot should pass -no-snapshot-load");
-			}
+			Assert.IsTrue (await WaitForFileAsync (argsLogPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments");
+			var logged = File.ReadAllText (argsLogPath);
+			Assert.That (logged, Does.Contain ("-no-snapshot-load"), "ColdBoot should pass -no-snapshot-load");
 		} finally {
-			try {
-				foreach (var p in Process.GetProcessesByName ("sleep")) {
-					try { p.Kill (); p.WaitForExit (1000); } catch { }
-				}
-			} catch { }
-			Directory.Delete (tempDir, true);
+			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
@@ -480,7 +456,7 @@ public class EmulatorRunnerTests
 	[Platform ("Linux,MacOsX")]
 	public void LaunchEmulator_SurvivesSigint ()
 	{
-		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
+		var (tempDir, emuPath) = CreateFakeEmulatorSdk (keepRunning: true);
 		Process? process = null;
 		try {
 			var runner = new EmulatorRunner (emuPath);
@@ -569,7 +545,7 @@ public class EmulatorRunnerTests
 
 	// --- Helpers ---
 
-	static (string tempDir, string emulatorPath) CreateFakeEmulatorSdk ()
+	static (string tempDir, string emulatorPath) CreateFakeEmulatorSdk (bool keepRunning = false)
 	{
 		var tempDir = Path.Combine (Path.GetTempPath (), $"emu-boot-test-{Path.GetRandomFileName ()}");
 		var emulatorDir = Path.Combine (tempDir, "emulator");
@@ -578,9 +554,11 @@ public class EmulatorRunnerTests
 		var emuName = OS.IsWindows ? "emulator.bat" : "emulator";
 		var emuPath = Path.Combine (emulatorDir, emuName);
 		if (OS.IsWindows) {
-			File.WriteAllText (emuPath, "@echo off\r\nping -n 60 127.0.0.1 >nul\r\n");
+			var command = keepRunning ? "ping -n 60 127.0.0.1 >nul" : "exit /b 0";
+			File.WriteAllText (emuPath, $"@echo off\r\n{command}\r\n");
 		} else {
-			File.WriteAllText (emuPath, "#!/bin/sh\nsleep 60\n");
+			var command = keepRunning ? "sleep 60" : "exit 0";
+			File.WriteAllText (emuPath, $"#!/bin/sh\n{command}\n");
 			var psi = ProcessUtils.CreateProcessStartInfo ("chmod", "+x", emuPath);
 			using var chmod = new Process { StartInfo = psi };
 			chmod.Start ();
@@ -590,18 +568,40 @@ public class EmulatorRunnerTests
 		return (tempDir, emuPath);
 	}
 
-	static Process? FindEmulatorProcess (string emuPath)
+	static async Task<bool> WaitForFileAsync (string path, TimeSpan timeout)
 	{
-		// Best-effort: find the process by matching the command line
+		var stopwatch = Stopwatch.StartNew ();
+		while (stopwatch.Elapsed < timeout) {
+			if (File.Exists (path) && new FileInfo (path).Length > 0 && IsFileUnlocked (path))
+				return true;
+			await Task.Delay (20);
+		}
+		return File.Exists (path) && new FileInfo (path).Length > 0 && IsFileUnlocked (path);
+	}
+
+	static void DeleteDirectoryWithRetry (string path)
+	{
+		var timeout = Stopwatch.StartNew ();
+		while (Directory.Exists (path)) {
+			try {
+				Directory.Delete (path, recursive: true);
+				return;
+			} catch (IOException) when (OS.IsWindows && timeout.Elapsed < TimeSpan.FromSeconds (5)) {
+				Thread.Sleep (20);
+			} catch (UnauthorizedAccessException) when (OS.IsWindows && timeout.Elapsed < TimeSpan.FromSeconds (5)) {
+				Thread.Sleep (20);
+			}
+		}
+	}
+
+	static bool IsFileUnlocked (string path)
+	{
 		try {
-			foreach (var p in Process.GetProcessesByName ("emulator")) {
-				return p;
-			}
-			foreach (var p in Process.GetProcessesByName ("sleep")) {
-				return p;
-			}
-		} catch { }
-		return null;
+			using var stream = File.Open (path, FileMode.Open, FileAccess.Read, FileShare.None);
+			return true;
+		} catch (IOException) {
+			return false;
+		}
 	}
 
 	/// <summary>
