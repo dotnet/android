@@ -1769,6 +1769,22 @@ The default value is False.
 
 This MSBuild property is obsolete and is no longer supported.
 
+## MauiEnableFullReadyToRun
+
+A boolean property for .NET MAUI Android applications that use CoreCLR
+and are built in `Release` configuration with ReadyToRun enabled.
+When this property is unset or `false`, MAUI uses partial ReadyToRun
+with its default MIBC profiles. Set this property to `true` to enable
+full ReadyToRun. This property has no effect when
+[`$(PublishReadyToRun)`](#publishreadytorun) is `false`.
+
+Full ReadyToRun increases application and download size, but can
+potentially improve runtime performance because more methods are
+precompiled.
+
+For more information about CoreCLR and ReadyToRun in .NET MAUI, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
 ## MetricsSupport
 
 When set to `false`, disables .NET's [Metrics][dotnetmetrics] support
@@ -1819,18 +1835,69 @@ debugging symbols enabled:
 [`$(Optimize)`](/visualstudio/msbuild/common-msbuild-project-properties)
 is True.
 
+## PublishReadyToRun
+
+A boolean property that controls whether assemblies are compiled to
+[ReadyToRun][ready-to-run] format when using CoreCLR. ReadyToRun
+assemblies contain both MSIL and native code. This can improve
+application startup time while retaining JIT compatibility, but
+increases application and download size.
+
+For Android applications that use CoreCLR, this property defaults to
+`true` in `Release` configuration and is not enabled by default in
+`Debug` configuration. ReadyToRun does not apply when using Mono or
+NativeAOT.
+
+ReadyToRun compilation is composite by default. See
+[`$(PublishReadyToRunComposite)`](#publishreadytoruncomposite).
+.NET MAUI also uses partial ReadyToRun with default MIBC profiles. See
+[`$(MauiEnableFullReadyToRun)`](#mauienablefullreadytorun) to opt in to
+full ReadyToRun.
+
+For more information, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
+[ready-to-run]: https://learn.microsoft.com/dotnet/core/deploying/ready-to-run
+
+## PublishReadyToRunComposite
+
+A boolean property that controls whether ReadyToRun compilation
+combines application assemblies into a composite image. Composite
+ReadyToRun enables cross-assembly optimizations, but can increase build
+time.
+
+For Android applications that use CoreCLR, this property defaults to
+`true` when [`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+
 ## RunAOTCompilation
 
 A boolean property that determines whether or not assemblies will be
-Ahead-of-Time compiled into native code and included in applications.
-This property is `False` by default for `Debug` builds and `True` by
-default for `Release` builds.
+Ahead-of-Time compiled with the Mono AOT compiler and included in
+applications that use the Mono runtime. This property is `False` by
+default for `Debug` builds and `True` by default for `Release` builds
+that use Mono. It does not enable ReadyToRun or NativeAOT.
 
 This MSBuild property replaces the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property from
 Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 
 [blazor]: /aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
+
+## UseMonoRuntime
+
+A boolean property that controls whether Android applications use the
+Mono runtime instead of CoreCLR. Set this property to `true` to use
+Mono or `false` to use CoreCLR. `$(PublishAot)` takes precedence and
+selects NativeAOT when set to `true`.
+
+This property defaults to `true` in .NET 10 and earlier, so Android
+applications use Mono. In .NET 11 and later, it defaults to `false`,
+so Android applications use CoreCLR.
+
+For more information, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
+[maui-runtimes-compilation]: https://learn.microsoft.com/dotnet/maui/deployment/runtimes-compilation
 
 ## WaitForExit
 
