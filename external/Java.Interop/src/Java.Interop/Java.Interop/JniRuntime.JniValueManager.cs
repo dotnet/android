@@ -116,6 +116,14 @@ namespace Java.Interop
 				var h = value.PeerReference;
 				if (!h.IsValid)
 					return;
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+					var javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (h);
+					InteropEventSource.ManagedPeerReleasedJavaPeer (
+						value.GetType ().FullName,
+						javaType,
+						value.JniIdentityHashCode,
+						RuntimeHelpers.GetHashCode (value));
+				}
 
 				DisposePeer (h, value);
 			}

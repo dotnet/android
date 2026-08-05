@@ -100,6 +100,14 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		peer.SetPeerReference (newRef);
 		peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (newRef));
+		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+			var javaType = newRef.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (newRef) : null;
+			InteropEventSource.JavaPeerCreated (
+				peer.GetType ().FullName,
+				javaType,
+				peer.JniIdentityHashCode,
+				RuntimeHelpers.GetHashCode (peer));
+		}
 
 		var o = Runtime.ObjectReferenceManager;
 		if (o.LogGlobalReferenceMessages) {
@@ -130,8 +138,18 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		try {
 			var resolvedTargetType = ResolvePeerType (targetType);
-			return TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
+			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
 				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
+			if (peer != null && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+				var peerReference = peer.PeerReference;
+				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
+				InteropEventSource.ManagedPeerCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer));
+			}
+			return peer;
 		} finally {
 			JniObjectReference.Dispose (ref reference, transfer);
 		}
