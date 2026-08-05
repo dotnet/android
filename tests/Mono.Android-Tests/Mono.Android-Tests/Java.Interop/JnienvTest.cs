@@ -506,52 +506,6 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
-		[Test, Category ("GCBridge")]
-		[Ignore ("Failing in NativeAOT: https://github.com/dotnet/android/issues/11690")]
-		public void DoNotLeakWeakReferences ()
-		{
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-
-			var surfaced    = Runtime.GetSurfacedObjects ();
-			int startCount  = surfaced.Count;
-
-			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
-
-			// `Runtime.GetSurfacedObjects()` is process-global: NUnit/MTP
-			// infrastructure (per-test TestExecutionContext, listeners, Console
-			// capture, etc.) creates and releases transient Java.Lang.Object
-			// peers around every test, so the count drifts by a few entries
-			// between the snapshots below. Allow a small tolerance instead of
-			// requiring an exact count -- a real leak would dwarf this.
-			const int tolerance = 10;
-
-			WeakReference r = null;
-			Exception threadException = null;
-			var t = new Thread (() => {
-				try {
-					var c = new MyCb ();
-					Assert.That (Runtime.GetSurfacedObjects ().Count,
-							Is.EqualTo (startCount + 1).Within (tolerance), "#2");
-					r = new WeakReference (c);
-				} catch (Exception e) {
-					threadException = e;
-				}
-			});
-			t.Start ();
-			t.Join ();
-			if (threadException != null)
-				throw new Exception ("Worker thread failed", threadException);
-
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-
-			surfaced  = Runtime.GetSurfacedObjects ();
-			Assert.That (surfaced.Count, Is.EqualTo (startCount).Within (tolerance), "#3");
-			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
-		}
 	}
 
 	[Register ("from/NewNativeThreadOne")]
@@ -573,13 +527,6 @@ namespace Java.InteropTests
 		public override void Run ()
 		{
 			Instance = new RegisterMeOnNewThreadTwo ();
-		}
-	}
-
-	class MyCb : Java.Lang.Object, Java.Lang.IRunnable {
-		public void Run ()
-		{
-			Console.WriteLine ("MyCb.Run! JNIEnv.Handle={0}", JNIEnv.Handle.ToString ("x"));
 		}
 	}
 

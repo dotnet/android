@@ -346,7 +346,7 @@ namespace Android.Runtime {
 
 		internal static void DeleteRef (IntPtr handle, JniHandleOwnership transfer)
 		{
-			switch (transfer) {
+			switch (transfer & ~JniHandleOwnership.DoNotRegister) {
 			case JniHandleOwnership.DoNotTransfer:
 				break;
 			case JniHandleOwnership.TransferLocalRef:

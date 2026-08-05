@@ -101,16 +101,12 @@ namespace Xamarin.Android.JcwGenTests {
 				// To ensure that CallMethodFromCtor.class_ref is initialized
 			}
 			using (var c = Java.Lang.Class.FromType (typeof (ConstructorTest))) {
-				int initGref = Java.Interop.Runtime.GlobalReferenceCount;
 				using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
 					var instance = j.JavaCast<ConstructorTest>();
 					Assert.AreSame (j, instance);
 					Assert.IsTrue (instance.DefaultConstructorInvoked);
 					Assert.IsTrue (instance.ActivationConstructorInvoked);
 				}
-				int finiGref = Java.Interop.Runtime.GlobalReferenceCount;
-				Assert.AreEqual (initGref, finiGref,
-						string.Format ("Initial grefc={0}; final gref={1}; No GREFs should be lost!", initGref, finiGref));
 			}
 		}
 
@@ -391,4 +387,3 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 	}
 }
-

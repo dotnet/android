@@ -27,6 +27,7 @@
     <Project Path="samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/JniReferenceLeakTests/JniReferenceLeakTests.csproj" />
     <Project Path="tests/StartupHook/StartupHook.csproj" />
   </Folder>
   <Folder Name="/tests/Mono.Android-Tests/" />

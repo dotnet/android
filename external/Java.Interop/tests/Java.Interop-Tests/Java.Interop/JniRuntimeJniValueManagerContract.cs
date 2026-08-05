@@ -61,45 +61,33 @@ namespace Java.InteropTests {
 		{
 		}
 
-		int GetSurfacedPeersCount ()
+		int GetSurfacedPeerCount (IJavaPeerable peer)
 		{
-			return valueManager.GetSurfacedPeers ().Count;
+			return valueManager.GetSurfacedPeers ().Count (candidate => {
+				return candidate.SurfacedPeer.TryGetTarget (out var target) && object.ReferenceEquals (target, peer);
+			});
 		}
 
 		[Test]
 		public void AddPeer_NoDuplicates ()
 		{
-			int startPeerCount  = GetSurfacedPeersCount ();
 			using (var v = new MyDisposableObject ()) {
 				// MyDisposableObject ctor implicitly calls AddPeer();
-				Assert.AreEqual (startPeerCount + 1, GetSurfacedPeersCount (), DumpPeers ());
+				Assert.AreEqual (1, GetSurfacedPeerCount (v), DumpPeers ());
 				valueManager.AddPeer (v);
-				Assert.AreEqual (startPeerCount + 1, GetSurfacedPeersCount (), DumpPeers ());
+				Assert.AreEqual (1, GetSurfacedPeerCount (v), DumpPeers ());
 			}
 		}
 
 		[Test]
 		public void ConstructPeer_ImplicitViaBindingConstructor_PeerIsInSurfacedPeers ()
 		{
-			int startPeerCount  = GetSurfacedPeersCount ();
-
 			var g               = new GetThis ();
-			var surfaced        = valueManager.GetSurfacedPeers ();
-			Assert.AreEqual (startPeerCount + 1, surfaced.Count);
-
-			var found           = false;
-			foreach (var pr in surfaced) {
-				if (!pr.SurfacedPeer.TryGetTarget (out var p))
-					continue;
-				if (object.ReferenceEquals (g, p)) {
-					found = true;
-				}
-			}
-			Assert.IsTrue (found);
+			Assert.AreEqual (1, GetSurfacedPeerCount (g), DumpPeers ());
 
 			var localRef        = g.PeerReference.NewLocalRef ();
 			g.Dispose ();
-			Assert.AreEqual (startPeerCount, GetSurfacedPeersCount ());
+			Assert.AreEqual (0, GetSurfacedPeerCount (g));
 			Assert.IsNull (valueManager.PeekPeer (localRef));
 			JniObjectReference.Dispose (ref localRef);
 		}
@@ -107,29 +95,17 @@ namespace Java.InteropTests {
 		[Test]
 		public void ConstructPeer_ImplicitViaBindingMethod_PeerIsInSurfacedPeers ()
 		{
-			int startPeerCount  = GetSurfacedPeersCount ();
-
 			var g               = new GetThis ();
-			var surfaced        = valueManager.GetSurfacedPeers ();
-			Assert.AreEqual (startPeerCount + 1, surfaced.Count);
-
-			var found           = false;
-			foreach (var pr in surfaced) {
-				if (!pr.SurfacedPeer.TryGetTarget (out var p))
-					continue;
-				if (object.ReferenceEquals (g, p)) {
-					found = true;
-				}
-			}
-			Assert.IsTrue (found);
+			Assert.AreEqual (1, GetSurfacedPeerCount (g), DumpPeers ());
 
 			var localRef        = g.PeerReference.NewLocalRef ();
 			g.Dispose ();
-			Assert.AreEqual (startPeerCount, GetSurfacedPeersCount ());
+			Assert.AreEqual (0, GetSurfacedPeerCount (g));
 			Assert.IsNull (valueManager.PeekPeer (localRef));
 			JniObjectReference.Dispose (ref localRef);
 		}
 
+#if !__ANDROID__
 		// https://github.com/dotnet/android/issues/11101
 		[Test]
 		public void ConstructPeer_CalledMultipleTimes_ShouldNotLeakGlobalRefs ()
@@ -169,6 +145,7 @@ namespace Java.InteropTests {
 				}
 			}
 		}
+#endif // !__ANDROID__
 
 
 		[Test]
