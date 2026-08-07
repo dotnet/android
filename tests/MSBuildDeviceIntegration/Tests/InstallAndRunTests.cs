@@ -407,7 +407,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			TestContext.AddTestAttachment (logPath);
 
 			if (shouldWakeDevice) {
-				StringAssert.Contains ("shell input keyevent KEYCODE_WAKEUP && wm dismiss-keyguard && am start", output.ToString (),
+				StringAssert.Contains ("shell input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; am start", output.ToString (),
 					$"`dotnet run` should wake the device and dismiss its keyguard in the same adb shell command used to start the app. See {logPath} for details.");
 			} else {
 				StringAssert.Contains ("shell am start", output.ToString (),

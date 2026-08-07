@@ -519,7 +519,8 @@ async Task<int> RunAppAsync ()
 async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP && wm dismiss-keyguard && " : "";
+	// Device preparation is best effort; am start must run and determine the shell exit code.
+	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; " : "";
 	var cmdArgs = $"shell {wakeDeviceCommand}am start -S -W{userArg} -n \"{package}/{activity}\"";
 	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
