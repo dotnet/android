@@ -20,7 +20,7 @@ ms.date: 05/08/2024
 | `AndroidEnableObsoleteOverrideInheritance`<br />_Added in .NET 8_ | `true` | An boolean property that specifies if bound methods that override `@Deprecated` Java methods are automatically marked as `@Deprecated`.<br /><br />[Documentation](#androidenableobsoleteoverrideinheritance)|
 | `AndroidEnableRestrictToAttributes`<br />_Added in .NET 8_ | `obsolete` | An enum-style property with valid values of `obsolete` and `disable` that specifies if the .NET `[Obsolete]` attribute is added to bound API that is marked with `@RestrictTo` in a Java library.<br /><br />[Documentation](#androidenablerestricttoattributes)|
 | `AndroidJavadocVerbosity` | `intellisense` | An enum-style property with valid values `intellisense` and `full` that specifies how "verbose" [C# XML Documentation Comments](/dotnet/csharp/codedoc) should be when importing Javadoc documentation within binding projects using the [`@(JavaSourceJar)`](build-items.md#javasourcejar) build action.<br /><br />[Documentation](#androidjavadocverbosity)|
-| `GenerateDocumentationFile` | `true` | A boolean property that specifies whether a C# XML documentation file is generated and included when packing the binding project.<br /><br />[Documentation](#generatedocumentationfile)|
+| `GenerateDocumentationFile` | `true` | A boolean property that specifies whether a C# XML documentation file is generated during build and (when packing) included in the produced NuGet package.<br /><br />[Documentation](#generatedocumentationfile)|
 
 ### AndroidBoundInterfacesContainConstants
 
