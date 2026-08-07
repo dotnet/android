@@ -1037,7 +1037,7 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
 </comment>
   </data>
   <data name="XA4237_Details" xml:space="preserve">
