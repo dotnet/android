@@ -20,9 +20,8 @@ namespace Xamarin.AndroidTools.Debugging
 	/// </summary>
 	public static class DebuggingExtensions
 	{
-		const int GET_PID_MAX_ATTEMPTS = 7;
-		const int GET_PID_INITIAL_RETRY_DELAY_MS = 250;
-		const int GET_PID_MAX_RETRY_DELAY_MS = 1000;
+		const int GET_PID_RETRY_COUNT = 20;
+		const int WAIT_BEFORE_RETRY_GET_PID = 250;
 		const int WAIT_FOR_DEBUGGER_TO_ATTACH_MS = 1400;
 
 		/// <summary>
@@ -169,19 +168,13 @@ namespace Xamarin.AndroidTools.Debugging
 
 		public static async Task ConnectJdwpAsync(this AndroidDevice androidDevice, ExecutionConfiguration config, CancellationToken token)
 		{
-			if (config.RunCommand != null && config.RunCommand is AmStartCommand amStartCommand && amStartCommand.EnableDebugging)
+			if (config.RunCommand is AmStartCommand amStartCommand && amStartCommand.EnableDebugging)
 			{
 				var packageName = amStartCommand.PackageName;
-				var pid = await androidDevice.GetProcessIDAsync (
-					packageName,
-					GET_PID_MAX_ATTEMPTS,
-					GET_PID_INITIAL_RETRY_DELAY_MS,
-					GET_PID_MAX_RETRY_DELAY_MS,
-					token
-				).ConfigureAwait (false);
+				var pid = await androidDevice.GetProcessIDAsync (packageName, GET_PID_RETRY_COUNT, WAIT_BEFORE_RETRY_GET_PID, token).ConfigureAwait (false);
 
 				if (pid <= 0)
-					throw new InvalidOperationException ($"Could not find process for package '{packageName}' after {GET_PID_MAX_ATTEMPTS} attempts.");
+					throw new InvalidOperationException ($"Could not find process for package '{packageName}'.");
 
 				using (var jdwpClient = new JdwpClient (config.Debugger.JdwpHostName, config.Debugger.JdwpPort)) {
 					await AdbServer.Default.ForwardPort (androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, token);
