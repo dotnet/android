@@ -33,7 +33,7 @@ details:
 | `$(_AndroidFastDeployMaxShellCommandLength)` | `900` | Maximum length of a single `adb shell` command line before it is split. |
 | `$(_AndroidFastDeployMaxAdbCommandLength)` | `4096` | Maximum length of a single `adb` command line before it is split. |
 | `$(_AndroidFastDeploySkipCleanup)` | blank | Set to `true` to skip orphan staging cleanup. |
-| `$(_AndroidFastDeployForceCleanup)` | blank | Set to `true` to run orphan staging cleanup on every install without the interval or age guards. |
+| `$(_AndroidFastDeployForceCleanup)` | blank | Set to `true` to bypass the orphan cleanup interval and age guards on a cold deployment. |
 
 ## On-device layout
 

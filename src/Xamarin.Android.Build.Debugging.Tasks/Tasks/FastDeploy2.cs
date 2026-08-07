@@ -190,20 +190,16 @@ namespace Xamarin.Android.Tasks
 		async Task RunInstall ()
 		{
 			ManifestData previousManifest = LoadPreviousManifest ();
-			if (!FastDeploySkipCleanup && FastDeployForceCleanup) {
-				await CleanupRemoteStagingDirectories (force: true);
-			}
-
 			WarmStateProbeOutcome warmState = await TryRunWarmStateProbe (previousManifest);
 			if (warmState == WarmStateProbeOutcome.Failed) {
 				return;
 			}
 
-			if (!FastDeploySkipCleanup && !FastDeployForceCleanup && warmState != WarmStateProbeOutcome.Ready) {
-				await CleanupRemoteStagingDirectories (force: false);
-			}
-
 			if (warmState != WarmStateProbeOutcome.Ready) {
+				if (!FastDeploySkipCleanup) {
+					await CleanupRemoteStagingDirectories (force: FastDeployForceCleanup);
+				}
+
 				string redirectStdio = await GetDeviceProperty ("log.redirect-stdio");
 				if (string.Equals ("true", redirectStdio, StringComparison.OrdinalIgnoreCase)) {
 					LogFastDeploy2Error ("XA0128", Resources.XA0128_RedirectStdioIsEnabled);
