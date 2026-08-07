@@ -321,6 +321,35 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void FastDeploy2CleansOrphanStagingDirectory ()
+		{
+			const string orphanPackageName = "com.xamarin.fastdeploy2_cleanup_orphan";
+			string orphanDirectory = $"/data/local/tmp/fastdeploy2/{orphanPackageName}/0";
+			string orphanFile = $"{orphanDirectory}/orphan.txt";
+			var proj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeploy2_cleanup",
+			};
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
+			proj.SetProperty ("_AndroidFastDeployForceCleanup", "true");
+
+			using (var builder = CreateApkBuilder ()) {
+				try {
+					RunAdbCommand ($"shell mkdir -p {orphanDirectory}");
+					RunAdbCommand ($"shell touch {orphanFile}");
+					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {orphanFile}; then echo exists; else echo missing; fi").Trim ());
+
+					Assert.IsTrue (builder.Install (proj), "FastDeploy2 install should have succeeded.");
+
+					Assert.AreEqual ("missing", RunAdbCommand ($"shell if test -e {orphanDirectory}; then echo exists; else echo missing; fi").Trim ());
+				} finally {
+					RunAdbCommand ($"shell rm -rf {orphanDirectory}");
+					builder.Uninstall (proj);
+				}
+			}
+		}
+
 		string GetOverrideFileKind (string packageName, string path)
 		{
 			return RunAdbCommand ($"shell run-as {packageName} sh -c 'if test -L {path}; then echo symlink; elif test -f {path}; then echo regular; else echo missing; fi'").Trim ();
