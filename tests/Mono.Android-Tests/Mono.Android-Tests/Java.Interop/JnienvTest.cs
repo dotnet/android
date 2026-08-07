@@ -538,24 +538,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		sealed class FinalizableHandleOwner : IJavaObject
-		{
-			readonly Java.Lang.Object peer = new FinalizableHandlePeer ();
-
-			public IntPtr Handle => peer.Handle;
-
-			public void Dispose ()
-			{
-				peer.Dispose ();
-				GC.SuppressFinalize (this);
-			}
-			~FinalizableHandleOwner ()
-			{
-				peer.Dispose ();
-			}
-		}
-
-		sealed class FinalizableHandlePeer : Java.Lang.Object
+		sealed class FinalizableHandleOwner : Java.Lang.Object
 		{
 		}
 
