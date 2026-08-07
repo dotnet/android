@@ -1642,6 +1642,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains reserved Java identifier &apos;{1}&apos;. Change the package or type name..
+        /// </summary>
+        public static string XA4258 {
+            get {
+                return ResourceManager.GetString("XA4258", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {

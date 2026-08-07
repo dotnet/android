@@ -45,6 +45,9 @@ public class TrimmableTypeMapGenerator
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
+		if (!ValidateJavaNames (allPeers)) {
+			return new TrimmableTypeMapResult ([], [], allPeers);
+		}
 		MarkFrameworkAssemblyPeers (allPeers, frameworkAssemblyNames);
 
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
@@ -68,6 +71,19 @@ public class TrimmableTypeMapGenerator
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+	}
+
+	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers)
+	{
+		bool valid = true;
+		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
+		foreach (var peer in peers) {
+			if (JavaNameValidator.TryGetInvalidJniNameSegment (peer.JavaName, out var invalidIdentifier) && reportedNames.Add (peer.JavaName)) {
+				logger.LogInvalidJavaNameError (peer.JavaName, invalidIdentifier);
+				valid = false;
+			}
+		}
+		return valid;
 	}
 
 	internal static List<string> CollectApplicationRegistrationTypes (List<JavaPeerInfo> allPeers)
