@@ -14,6 +14,7 @@ string? activity = null;
 string? deviceUserId = null;
 string? instrumentation = null;
 bool verbose = false;
+bool wakeDevice = true;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
@@ -72,6 +73,9 @@ async Task<int> RunAsync (string[] args)
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
+		{ "no-wake-device",
+			"Do not wake the device or dismiss its keyguard before launching the application.",
+			v => wakeDevice = v == null },
 		{ "logcat-args=",
 			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'monodroid-assembly:S' to silence a tag).",
 			v => logcatArgs = v },
@@ -515,7 +519,8 @@ async Task<int> RunAppAsync ()
 async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
+	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP && wm dismiss-keyguard && " : "";
+	var cmdArgs = $"shell {wakeDeviceCommand}am start -S -W{userArg} -n \"{package}/{activity}\"";
 	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
