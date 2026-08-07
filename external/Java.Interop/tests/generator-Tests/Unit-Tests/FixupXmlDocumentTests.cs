@@ -31,6 +31,19 @@ namespace generatortests
 		}
 
 		[Test]
+		public void AddNode_PreservesJniOverrides ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument ("<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='(Ljava/lang/Object;)V'><parameter name='value' type='java.lang.String' jni-type='Ljava/lang/Object;' /></method></add-node>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.AreEqual ("(Ljava/lang/Object;)V", method.Attribute ("managed-jni-signature").Value);
+			Assert.AreEqual ("Ljava/lang/Object;", method.Element ("parameter").Attribute ("managed-jni-type").Value);
+		}
+
+		[Test]
 		public void ChangeNode ()
 		{
 			var api = GetXmlApiDocument ();

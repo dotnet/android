@@ -81,6 +81,7 @@ namespace Java.Interop.Tools.Generator
 							// BG8A01
 							Report.LogCodedWarning (0, Report.WarningAddNodeMatchedNoNodes, null, metaitem, $"<add-node path=\"{path}\" />");
 						else {
+							PreserveJniOverrides (metaitem);
 							foreach (var node in nodes)
 								node.Add (metaitem.Nodes ());
 						}
@@ -125,6 +126,7 @@ namespace Java.Interop.Tools.Generator
 
 						foreach (var n in nodes) {
 							n.SetAttributeValue (attr_name, metaitem.Value);
+							PreserveJniOverride (n, attr_name, metaitem.Value);
 							attr_matched++;
 						}
 						if (attr_matched == 0)
@@ -166,6 +168,7 @@ namespace Java.Interop.Tools.Generator
 
 						foreach (var node in nodes) {
 							node.Attributes (name).Remove ();
+							RemoveJniOverride (node, name);
 							matched = true;
 						}
 						
@@ -179,6 +182,33 @@ namespace Java.Interop.Tools.Generator
 					break;
 				}
 			}
+		}
+
+		static void PreserveJniOverrides (XElement element)
+		{
+			// Class-parser JNI values are normally recomputed; only metadata-authored values are explicit overrides.
+			foreach (var method in element.Descendants ("method"))
+				PreserveJniOverride (method, "jni-signature", method.XGetAttribute ("jni-signature"));
+			foreach (var parameter in element.Descendants ("parameter"))
+				PreserveJniOverride (parameter, "jni-type", parameter.XGetAttribute ("jni-type"));
+		}
+
+		static void PreserveJniOverride (XElement element, string name, string? value)
+		{
+			if (value is null)
+				return;
+			if (element.Name.LocalName == "method" && name == "jni-signature")
+				element.SetAttributeValue ("managed-jni-signature", value);
+			else if (element.Name.LocalName == "parameter" && name == "jni-type")
+				element.SetAttributeValue ("managed-jni-type", value);
+		}
+
+		static void RemoveJniOverride (XElement element, string? name)
+		{
+			if (element.Name.LocalName == "method" && name == "jni-signature")
+				element.Attributes ("managed-jni-signature").Remove ();
+			else if (element.Name.LocalName == "parameter" && name == "jni-type")
+				element.Attributes ("managed-jni-type").Remove ();
 		}
 
 		public IList<NamespaceTransform> GetNamespaceTransforms ()

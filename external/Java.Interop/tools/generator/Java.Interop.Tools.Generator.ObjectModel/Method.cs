@@ -27,6 +27,7 @@ namespace MonoDroid.Generation
 		public bool IsStatic { get; set; }
 		public bool IsVirtual { get; set; }
 		public string JavaName { get; set; }
+		public string JniSignatureOverride { get; set; }
 		public string ManagedOverride { get; set; }
 		public string ManagedReturn { get; set; }
 		public string KotlinInlineClassReturnJniType { get; set; }
@@ -152,6 +153,7 @@ namespace MonoDroid.Generation
 			clone.IsStatic = IsStatic;
 			clone.IsVirtual = IsVirtual;
 			clone.JavaName = JavaName;
+			clone.JniSignatureOverride = JniSignatureOverride;
 			clone.ManagedOverride = ManagedOverride;
 			clone.ManagedReturn = ManagedReturn;
 			clone.KotlinInlineClassReturnJniType = KotlinInlineClassReturnJniType;
@@ -216,7 +218,7 @@ namespace MonoDroid.Generation
 
 		public bool IsVoid => RetVal.JavaName == "void";
 
-		public string JniSignature => "(" + Parameters.JniSignature + ")" + RetVal.JniName;
+		public string JniSignature => JniSignatureOverride ?? "(" + Parameters.JniSignature + ")" + RetVal.JniName;
 
 		public InterfaceGen ListenerType => Parameters [0].ListenerType;
 
