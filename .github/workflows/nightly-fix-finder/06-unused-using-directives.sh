@@ -7,7 +7,7 @@ cat << 'GUIDANCE'
 ### What to look for
 Files in `src/` with >10 `using` directives that likely contain unused ones.
 A high count alone isn't a bug — the agent MUST open the file and confirm
-specific directives are unused before filing.
+specific directives are unused before changing it.
 
 ### How to fix
 Remove the unused `using` directives. Keep `global using`s and conditional
