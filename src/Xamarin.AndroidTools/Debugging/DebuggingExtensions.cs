@@ -20,6 +20,8 @@ namespace Xamarin.AndroidTools.Debugging
 	/// </summary>
 	public static class DebuggingExtensions
 	{
+		// Twenty retries at 250 ms intervals allow up to five seconds for the process to appear.
+		const int GET_PID_RETRY_COUNT = 20;
 		const int WAIT_BEFORE_RETRY_GET_PID = 250;
 		const int WAIT_FOR_DEBUGGER_TO_ATTACH_MS = 1400;
 
@@ -58,14 +60,8 @@ namespace Xamarin.AndroidTools.Debugging
 			}
 
 			await androidDevice.ExecuteIntentCommandAsync(configuration.RunCommand, configuration.LogWiter, token).ConfigureAwait(false);
-			if (javaDebugging) {
-				try {
-					await androidDevice.ConnectJdwpAsync (configuration, token).ConfigureAwait(false);
-				} catch (Exception ex) {
-					if (configuration.LogWiter != null)
-						configuration.LogWiter ($"warning: Could not connect Jdwp. {ex}");
-				}
-			}
+			if (javaDebugging)
+				await androidDevice.ConnectJdwpAsync (configuration, token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -173,29 +169,27 @@ namespace Xamarin.AndroidTools.Debugging
 
 		public static async Task ConnectJdwpAsync(this AndroidDevice androidDevice, ExecutionConfiguration config, CancellationToken token)
 		{
-			if (config.RunCommand != null && config.RunCommand is AmStartCommand amStartCommand && amStartCommand.EnableDebugging)
+			if (config.RunCommand is AmStartCommand amStartCommand && amStartCommand.EnableDebugging)
 			{
-				var packageName = (config.RunCommand as AmStartCommand).PackageName;
-				var pid = await androidDevice.GetProcessIDAsync(packageName, 5, WAIT_BEFORE_RETRY_GET_PID, token);
+				var packageName = amStartCommand.PackageName;
+				var pid = await androidDevice.GetProcessIDAsync (packageName, GET_PID_RETRY_COUNT, WAIT_BEFORE_RETRY_GET_PID, token).ConfigureAwait (false);
 
 				if (pid <= 0)
-				{
-					throw new Exception("Process Not Found.");
-				}
+					throw new InvalidOperationException ($"Could not find process for package '{packageName}'.");
 
-				var jdwpClient = new JdwpClient(config.Debugger.JdwpHostName, config.Debugger.JdwpPort);
+				using (var jdwpClient = new JdwpClient (config.Debugger.JdwpHostName, config.Debugger.JdwpPort)) {
+					await AdbServer.Default.ForwardPort (androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, token);
+					try {
+						await jdwpClient.ConnectAsync (token);
 
-				await AdbServer.Default.ForwardPort(androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, token);
-				try {
-					await jdwpClient.ConnectAsync (token);
+						// Keep the Connection for 1300 milliseconds, otherwise the Android OS ignores the connection!
+						// https://github.com/aosp-mirror/platform_frameworks_base/blob/6b28a227400749f4f8ad1f56799370e7c2cab149/core/java/android/os/Debug.java#L101C50-L101C54
+						await Task.Delay (WAIT_FOR_DEBUGGER_TO_ATTACH_MS, token);
 
-					// Keep the Connection for 1300 milliseconds, otherwise the Android OS ignores the connection!
-					// https://github.com/aosp-mirror/platform_frameworks_base/blob/6b28a227400749f4f8ad1f56799370e7c2cab149/core/java/android/os/Debug.java#L101C50-L101C54
-					await Task.Delay (WAIT_FOR_DEBUGGER_TO_ATTACH_MS);
-
-					await jdwpClient.DisconnectAsync ();
-				} finally {
-					await AdbServer.Default.KillForward (androidDevice, "tcp", jdwpClient.Port, token);
+						await jdwpClient.DisconnectAsync ();
+					} finally {
+						await AdbServer.Default.KillForward (androidDevice, "tcp", jdwpClient.Port, CancellationToken.None);
+					}
 				}
 			}
 		}
