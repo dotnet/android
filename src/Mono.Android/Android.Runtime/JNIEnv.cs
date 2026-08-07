@@ -506,9 +506,9 @@ namespace Android.Runtime {
 			if (value == null)
 				return IntPtr.Zero;
 			var ex = value as IJavaObjectEx;
-			if (ex != null)
-				return ex.ToLocalJniHandle ();
-			return NewLocalRef (value.Handle);
+			IntPtr result = ex != null ? ex.ToLocalJniHandle () : NewLocalRef (value.Handle);
+			GC.KeepAlive (value);
+			return result;
 		}
 
 		public static string? GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
@@ -895,6 +895,7 @@ namespace Android.Runtime {
 			for (int i = 0; i < src.Length; i++) {
 				IJavaObject o = src [i];
 				JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (o == null ? IntPtr.Zero : o.Handle));
+				GC.KeepAlive (o);
 			}
 		}
 
@@ -1545,6 +1546,7 @@ namespace Android.Runtime {
 				} },
 				{ typeof (IJavaObject), (dest, index, value) => {
 					SetObjectArrayElement (dest, index, value == null ? IntPtr.Zero : ((IJavaObject) value).Handle);
+					GC.KeepAlive (value);
 				} },
 				{ typeof (Array), (dest, index, value) => {
 					IntPtr _v = NewArray ((Array) value!);
