@@ -145,14 +145,19 @@ public static class AndroidDeviceExtensions
 
 	public static async Task<int> GetProcessIDAsync(this AndroidDevice device, string packageName, int maxAttempts, int timeBetweenAttempts, CancellationToken token)
 	{
+		return await GetProcessIDAsync (cancellationToken => device.GetProcessId (packageName, cancellationToken), maxAttempts, timeBetweenAttempts, token);
+	}
+
+	internal static async Task<int> GetProcessIDAsync (Func<CancellationToken, Task<int>> getProcessId, int maxAttempts, int timeBetweenAttempts, CancellationToken token)
+	{
 		var retryCount = 1;
-		var pidOfResult = await device.GetProcessId(packageName, token);
+		var pidOfResult = await getProcessId (token);
 		AndroidLogger.LogDebug("GetProcessIDAsync", "PID of the application :: " + pidOfResult);
 
 		while (pidOfResult <= 0 && retryCount <= maxAttempts)
 		{
 			await Task.Delay(timeBetweenAttempts, token);
-			pidOfResult = await device.GetProcessId(packageName, token);
+			pidOfResult = await getProcessId (token);
 			AndroidLogger.LogDebug("GetProcessIDAsync", "Retrying " + retryCount + " time(s) to get PID of the application");
 			retryCount++;
 		}
