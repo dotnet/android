@@ -131,7 +131,7 @@ public class MavenDownload : AsyncTask
 		} catch (Exception ex) {
 			var unresolved_artifact = resolver.UnresolvedArtifact ?? artifact;
 			var unresolved_pom = resolver.UnresolvedPomUrl ?? resolver.GetPomUrl (unresolved_artifact);
-			var details = $"Failed to resolve POM for Maven artifact '{unresolved_artifact}' from '{unresolved_pom}'.{Environment.NewLine}- {ex.Unwrap ().Message}";
+			var details = string.Format (Properties.Resources.XA4237_Details, unresolved_artifact, unresolved_pom, ex.Unwrap ().Message);
 			LogCodedError ("XA4237", Properties.Resources.XA4237, artifact, details);
 			return null;
 		}
