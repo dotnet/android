@@ -6,6 +6,7 @@ using Xamarin.Android.Tools;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
+const int CtrlCExitCode = 130; // Standard Unix exit code for SIGINT: 128 + signal 2.
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -24,7 +25,7 @@ string? dotnetTestPipe = null;
 try {
 	return await RunAsync (args);
 } catch (OperationCanceledException) {
-	return 130; // 128 + SIGINT(2), standard Unix convention for Ctrl+C
+	return CtrlCExitCode;
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)
@@ -202,7 +203,7 @@ async Task<int> RunAsync (string[] args)
 		cts.Dispose ();
 	}
 
-	return cancellationRequested ? 130 : exitCode;
+	return cancellationRequested ? CtrlCExitCode : exitCode;
 }
 
 void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
