@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaCallableWrappers;
 using MonoDroid.Generation.Utilities;
 
@@ -265,7 +266,28 @@ namespace MonoDroid.Generation
 			if (!RetVal.Validate (opt, tpl, context))
 				return false;
 
-			return base.OnValidate (opt, tpl, context);
+			if (!base.OnValidate (opt, tpl, context))
+				return false;
+
+			if (JniSignatureOverride == null)
+				return true;
+
+			if (!JniSignatureUtilities.TryParseMethodSignature (JniSignatureOverride, out var parameters, out var returnType) || parameters.Length != Parameters.Count) {
+				Report.LogCodedWarning (0, Report.WarningInvalidJniSignatureOverride, this, JniSignatureOverride, context.GetContextTypeMember ());
+				return false;
+			}
+			for (int i = 0; i < parameters.Length; i++) {
+				if (!JniSignatureUtilities.AreAbiCompatible (Parameters [i].Symbol.JniName, parameters [i])) {
+					Report.LogCodedWarning (0, Report.WarningInvalidParameterType, Parameters [i], parameters [i], context.GetContextTypeMember ());
+					return false;
+				}
+			}
+			if (!JniSignatureUtilities.AreAbiCompatible (RetVal.Symbol.JniName, returnType)) {
+				Report.LogCodedWarning (0, Report.WarningInvalidReturnType, this, returnType, context.GetContextTypeMember ());
+				return false;
+			}
+
+			return true;
 		}
 	}
 }

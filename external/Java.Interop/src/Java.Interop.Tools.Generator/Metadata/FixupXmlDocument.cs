@@ -63,8 +63,10 @@ namespace Java.Interop.Tools.Generator
 						var nodes = apiDocument.ApiDocument.XPathSelectElements (path).ToArray ();
 
 						if (nodes.Any ())
-							foreach (var node in nodes)
+							foreach (var node in nodes) {
+								InvalidateContainingMethodJniSignature (node);
 								node.Remove ();
+							}
 						else
 							// BG8A00
 							Report.LogCodedWarning (0, Report.WarningRemoveNodeMatchedNoNodes, null, metaitem, $"<remove-node path=\"{path}\" />");
@@ -82,8 +84,11 @@ namespace Java.Interop.Tools.Generator
 							Report.LogCodedWarning (0, Report.WarningAddNodeMatchedNoNodes, null, metaitem, $"<add-node path=\"{path}\" />");
 						else {
 							PreserveJniOverrides (metaitem);
-							foreach (var node in nodes)
+							foreach (var node in nodes) {
+								if (node.Name.LocalName == "method" && metaitem.Elements ("parameter").Any ())
+									node.Attributes ("managed-jni-signature").Remove ();
 								node.Add (metaitem.Nodes ());
+							}
 						}
 					} catch (XPathException) {
 						// BG4302
@@ -127,6 +132,7 @@ namespace Java.Interop.Tools.Generator
 						foreach (var n in nodes) {
 							n.SetAttributeValue (attr_name, metaitem.Value);
 							PreserveJniOverride (n, attr_name, metaitem.Value);
+							InvalidateJniOverrides (n, attr_name);
 							attr_matched++;
 						}
 						if (attr_matched == 0)
@@ -169,6 +175,7 @@ namespace Java.Interop.Tools.Generator
 						foreach (var node in nodes) {
 							node.Attributes (name).Remove ();
 							RemoveJniOverride (node, name);
+							InvalidateJniOverrides (node, name);
 							matched = true;
 						}
 						
@@ -197,10 +204,30 @@ namespace Java.Interop.Tools.Generator
 		{
 			if (value is null)
 				return;
+			if (value.Length == 0) {
+				RemoveJniOverride (element, name);
+				return;
+			}
 			if (element.Name.LocalName == "method" && name == "jni-signature")
 				element.SetAttributeValue ("managed-jni-signature", value);
 			else if (element.Name.LocalName == "parameter" && name == "jni-type")
 				element.SetAttributeValue ("managed-jni-type", value);
+		}
+
+		static void InvalidateJniOverrides (XElement element, string? name)
+		{
+			if (element.Name.LocalName == "method" && name == "return") {
+				element.Attributes ("managed-jni-signature").Remove ();
+			} else if (element.Name.LocalName == "parameter" && name == "type") {
+				element.Attributes ("managed-jni-type").Remove ();
+				element.Parent?.Attributes ("managed-jni-signature").Remove ();
+			}
+		}
+
+		static void InvalidateContainingMethodJniSignature (XElement element)
+		{
+			if (element.Name.LocalName == "parameter" && element.Parent?.Name.LocalName == "method")
+				element.Parent.Attributes ("managed-jni-signature").Remove ();
 		}
 
 		static void RemoveJniOverride (XElement element, string? name)

@@ -296,6 +296,10 @@ namespace MonoDroid.Generation {
 				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, type, context.GetContextTypeMember ());
 				return false;
 			}
+			if (JniTypeOverride != null && !JniSignatureUtilities.AreAbiCompatible (sym.JniName, JniTypeOverride)) {
+				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, JniTypeOverride, context.GetContextTypeMember ());
+				return false;
+			}
 			ApplyKotlinInlineClassProjection (opt, type_params);
 			return true;
 		}

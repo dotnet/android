@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using NUnit.Framework;
@@ -41,6 +42,101 @@ namespace generatortests
 			var method = api.ApiDocument.Root.Element ("package").Element ("method");
 			Assert.AreEqual ("(Ljava/lang/Object;)V", method.Attribute ("managed-jni-signature").Value);
 			Assert.AreEqual ("Ljava/lang/Object;", method.Element ("parameter").Attribute ("managed-jni-type").Value);
+		}
+
+		[Test]
+		public void AddNode_ParameterTransformInvalidatesJniOverrides ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument (
+				"<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='(I)V' return='void'><parameter name='value' type='int' jni-type='I' /></method></add-node>" +
+				"<attr path=\"/api/package[@name='android']/method[@name='test']/parameter[@name='value']\" name='type'>java.lang.String</attr>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.Multiple (() => {
+				Assert.IsNull (method.Attribute ("managed-jni-signature"));
+				Assert.IsNull (method.Element ("parameter").Attribute ("managed-jni-type"));
+			});
+		}
+
+		[Test]
+		public void AddNode_ReturnTransformInvalidatesJniOverride ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument (
+				"<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='()I' return='int' /></add-node>" +
+				"<attr path=\"/api/package[@name='android']/method[@name='test']\" name='return'>java.lang.String</attr>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.IsNull (method.Attribute ("managed-jni-signature"));
+		}
+
+		[Test]
+		public void AddNode_EnumTransformsPreserveJniOverrides ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument (
+				"<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='(Lexample/Listener;I)I' return='int'><parameter name='listener' type='example.Listener' jni-type='Lexample/Listener;' /><parameter name='value' type='int' jni-type='I' /></method></add-node>" +
+				"<attr path=\"/api/package[@name='android']/method[@name='test']/parameter[@name='value']\" name='enumType'>Example.MyEnum</attr>" +
+				"<attr path=\"/api/package[@name='android']/method[@name='test']\" name='enumReturn'>Example.MyEnum</attr>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.Multiple (() => {
+				Assert.AreEqual ("(Lexample/Listener;I)I", method.Attribute ("managed-jni-signature").Value);
+				Assert.AreEqual ("Lexample/Listener;", method.Elements ("parameter").First ().Attribute ("managed-jni-type").Value);
+				Assert.AreEqual ("I", method.Elements ("parameter").Last ().Attribute ("managed-jni-type").Value);
+			});
+		}
+
+		[Test]
+		public void AddNode_ParameterInvalidatesJniSignatureOverride ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument (
+				"<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='(Ljava/lang/String;)V' return='void'><parameter name='value' type='java.lang.String' jni-type='Ljava/lang/String;' /></method></add-node>" +
+				"<add-node path=\"/api/package[@name='android']/method[@name='test']\"><parameter name='flags' type='int' /></add-node>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.IsNull (method.Attribute ("managed-jni-signature"));
+			Assert.AreEqual ("Ljava/lang/String;", method.Elements ("parameter").First ().Attribute ("managed-jni-type").Value);
+		}
+
+		[Test]
+		public void RemoveNode_ParameterInvalidatesJniSignatureOverride ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument (
+				"<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='(Ljava/lang/String;I)V' return='void'><parameter name='value' type='java.lang.String' jni-type='Ljava/lang/String;' /><parameter name='flags' type='int' jni-type='I' /></method></add-node>" +
+				"<remove-node path=\"/api/package[@name='android']/method[@name='test']/parameter[@name='flags']\" />");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.IsNull (method.Attribute ("managed-jni-signature"));
+			Assert.AreEqual ("Ljava/lang/String;", method.Element ("parameter").Attribute ("managed-jni-type").Value);
+		}
+
+		[Test]
+		public void AddNode_DoesNotPreserveEmptyJniOverrides ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument ("<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='' return='void'><parameter name='value' type='int' jni-type='' /></method></add-node>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.Multiple (() => {
+				Assert.IsNull (method.Attribute ("managed-jni-signature"));
+				Assert.IsNull (method.Element ("parameter").Attribute ("managed-jni-type"));
+			});
 		}
 
 		[Test]
