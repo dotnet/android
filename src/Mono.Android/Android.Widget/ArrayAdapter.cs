@@ -190,9 +190,9 @@ namespace Android.Widget {
 				id_createFromResource_Landroid_content_Context_II = JNIEnv.GetStaticMethodID (class_ref, "createFromResource", "(Landroid/content/Context;II)Landroid/widget/ArrayAdapter;");
 			var result = JavaConvert.FromJniHandle<ArrayAdapter<Java.Lang.ICharSequence>> (
 					JNIEnv.CallStaticObjectMethod (class_ref, id_createFromResource_Landroid_content_Context_II, new JValue (context), new JValue (textArrayResId), new JValue (textViewResId)),
-						JniHandleOwnership.TransferLocalRef)!;
+						JniHandleOwnership.TransferLocalRef);
 			GC.KeepAlive (context);
-			return result;
+			return result ?? throw new InvalidOperationException ("Unable to marshal the return value to an Android.Widget.ArrayAdapter instance.");
 		}
 
 		static IntPtr id_getItem_I;
