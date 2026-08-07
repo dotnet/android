@@ -540,7 +540,7 @@ namespace Java.InteropTests
 
 		sealed class FinalizableHandleOwner : IJavaObject
 		{
-			readonly Java.Lang.Object peer = new Java.Lang.Object ();
+			readonly Java.Lang.Object peer = new FinalizableHandlePeer ();
 
 			public IntPtr Handle => peer.Handle;
 
@@ -553,6 +553,10 @@ namespace Java.InteropTests
 			{
 				peer.Dispose ();
 			}
+		}
+
+		sealed class FinalizableHandlePeer : Java.Lang.Object
+		{
 		}
 
 		[Test, Category ("GCBridge")]
