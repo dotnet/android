@@ -1417,7 +1417,6 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources)">
-	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
       Condition=" '$(_AndroidRuntime)' != 'NativeAOT' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
@@ -1433,7 +1432,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <FileWrites Include="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java" />
-    <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
     <FileWrites Include="$(_AndroidStaticResourcesFlag)" />
   </ItemGroup>
 </Target>
