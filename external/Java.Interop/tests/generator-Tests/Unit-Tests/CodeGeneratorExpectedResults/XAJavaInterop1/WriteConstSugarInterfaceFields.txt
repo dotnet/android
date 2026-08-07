@@ -35,10 +35,7 @@ public abstract class MyInterface : Java.Lang.Object {
 		set {
 			const string __id = "MyStaticField.I";
 
-			try {
-				_members.StaticFields.SetValue (__id, value);
-			} finally {
-			}
+			_members.StaticFields.SetValue (__id, value);
 		}
 	}
 

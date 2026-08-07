@@ -36,23 +36,18 @@ namespace Java.Util {
 		{
 			const string __id = "add.(Ljava/lang/Object;)Z";
 			var native_e = (e?.PeerReference ?? default);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_e);
-				var __rm = _members_java_util_Collection.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (e);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_e);
+			var __rm = _members_java_util_Collection.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (e);
+			return __result;
 		}
 
 		public unsafe void Clear ()
 		{
 			const string __id = "clear.()V";
-			try {
-				_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members_java_util_Collection.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

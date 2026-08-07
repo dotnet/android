@@ -131,14 +131,12 @@ namespace Test.ME {
 		public unsafe int GetSpanFlags (global::Java.Lang.Object tag)
 		{
 			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (tag);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
+			var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (tag);
+			return __result;
 		}
 
 		static Delegate cb_append_Append_Ljava_lang_CharSequence__V;

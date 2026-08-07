@@ -34,10 +34,7 @@ namespace Xamarin.Test {
 		public unsafe void PublicMethod ()
 		{
 			const string __id = "publicMethod.()V";
-			try {
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='packageMethodB' and count(parameter)=0]"
@@ -45,10 +42,7 @@ namespace Xamarin.Test {
 		public unsafe void PackageMethodB ()
 		{
 			const string __id = "packageMethodB.()V";
-			try {
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='PublicFinalClass']/method[@name='packageMethodA' and count(parameter)=0]"
@@ -56,10 +50,7 @@ namespace Xamarin.Test {
 		public unsafe void PackageMethodA ()
 		{
 			const string __id = "packageMethodA.()V";
-			try {
-				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-			} finally {
-			}
+			_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 		}
 
 	}

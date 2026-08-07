@@ -55,14 +55,11 @@ namespace Xamarin.Test {
 			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
 				return;
 
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (aint);
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
-				SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
-			} finally {
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (aint);
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), __args);
+			SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, __args);
 		}
 
 	}

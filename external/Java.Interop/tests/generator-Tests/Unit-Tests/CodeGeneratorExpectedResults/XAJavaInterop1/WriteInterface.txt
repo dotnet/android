@@ -9,10 +9,7 @@ public abstract class MyInterface : Java.Lang.Object {
 	public static unsafe void StaticMethod ()
 	{
 		const string __id = "StaticMethod.()V";
-		try {
-			_members.StaticMethods.InvokeVoidMethod (__id, null);
-		} finally {
-		}
+		_members.StaticMethods.InvokeVoidMethod (__id, null);
 	}
 
 	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (MyInterface));

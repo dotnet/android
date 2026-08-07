@@ -152,9 +152,27 @@ namespace generator.SourceWriters
 				}
 			}
 
-			writer.WriteLine ("try {");
+			var cleanup = new List<string> ();
+			if (field.Symbol.IsArray) {
+				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+					cleanup.Add ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
+			} else {
+				foreach (var statement in field.SetParameters.GetCallCleanup (opt))
+					cleanup.Add (statement);
+				if (field.SetParameters.HasCleanup && !have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+					cleanup.Add ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
+			}
+			var needsKeepAlive = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
+					field.Symbol.JniName != null &&
+					field.Symbol.JniName.Length > 1 &&
+					(field.Symbol.JniName [0] == 'L' || field.Symbol.JniName [0] == '[');
 
-			writer.Write ($"\t_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
+			if (cleanup.Count > 0) {
+				writer.WriteLine ("try {");
+				writer.Write ("\t");
+			}
+
+			writer.Write ($"_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
 
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				if (invokeType != "Object" || have_prep) {
@@ -170,32 +188,21 @@ namespace generator.SourceWriters
 				writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
 			}
 
-			writer.WriteLine ("} finally {");
-			writer.Indent ();
+			if (cleanup.Count > 0) {
+				writer.WriteLine ("} finally {");
+				writer.Indent ();
 
-			if (field.Symbol.IsArray) {
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-					writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-				}
-			} else {
-				foreach (var cleanup in field.SetParameters.GetCallCleanup (opt))
-					writer.WriteLine (cleanup);
-				if (field.SetParameters.HasCleanup && !have_prep) {
-					if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-						writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-					}
-				}
-			}
+				foreach (var statement in cleanup)
+					writer.WriteLine (statement);
 
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
-					field.Symbol.JniName != null &&
-					field.Symbol.JniName.Length > 1 &&
-					(field.Symbol.JniName[0] == 'L' || field.Symbol.JniName[0] == '[')) {
+				if (needsKeepAlive)
+					writer.WriteLine ("GC.KeepAlive (value);");
+
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			} else if (needsKeepAlive) {
 				writer.WriteLine ($"GC.KeepAlive (value);");
 			}
-
-			writer.Unindent ();
-			writer.WriteLine ("}");
 		}
 	}
 }

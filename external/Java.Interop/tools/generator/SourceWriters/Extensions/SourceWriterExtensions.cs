@@ -238,30 +238,55 @@ namespace generator.SourceWriters
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
 				body.Add (prep);
 
-			body.Add ("try {");
+			var cleanup = method.Parameters.GetCallCleanup (opt);
+			var keepAlive = method.Parameters.Where (para => para.ShouldGenerateKeepAlive ()).ToList ();
+			var needsFinally = cleanup.Count > 0;
+			var needsTry = needsFinally || method.IsCompatVirtualMethod;
 
-			AddMethodBodyTryBlock (body, method, opt, members);
+			if (needsTry)
+				body.Add ("try {");
+
+			AddMethodBodyTryBlock (body, method, opt, members, deferReturn: !needsFinally && keepAlive.Count > 0, indent: needsTry);
 
 			if (method.IsCompatVirtualMethod) {
+				if (!needsFinally) {
+					foreach (var p in keepAlive)
+						body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+
+					if (!method.IsVoid && keepAlive.Count > 0)
+						body.Add ("\treturn __result;");
+				}
+
 				body.Add ("}");
 				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
 				body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
 			}
 
-			body.Add ("} finally {");
+			if (needsFinally) {
+				body.Add ("} finally {");
 
-			foreach (string cleanup in method.Parameters.GetCallCleanup (opt))
-				body.Add ("\t" + cleanup);
+				foreach (string statement in cleanup)
+					body.Add ("\t" + statement);
 
-			foreach (var p in method.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
-				body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				foreach (var p in keepAlive)
+					body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
 
-			body.Add ("}");
+				body.Add ("}");
+			} else if (method.IsCompatVirtualMethod) {
+				body.Add ("}");
+			} else if (!method.IsCompatVirtualMethod) {
+				foreach (var p in keepAlive)
+					body.Add ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+
+				if (!method.IsVoid && keepAlive.Count > 0)
+					body.Add ("return __result;");
+			}
 		}
 
-		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
+		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members", bool deferReturn = false, bool indent = true)
 		{
-			AddParameterListCallArgs (body, method.Parameters, opt, false);
+			AddParameterListCallArgs (body, method.Parameters, opt, false, indent);
+			var indentation = indent ? "\t" : "";
 
 			var invokeType = JavaInteropCodeGenerator.GetInvokeType (method.RetVal.CallMethodPrefix);
 
@@ -279,18 +304,18 @@ namespace generator.SourceWriters
 			var this_param = method.IsStatic ? $"__id{call_args}" : $"__id, this{call_args}";
 
 			// Example: var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-			body.Add ($"\t{return_var}{members}.{method_type}.Invoke{virt_type}{invokeType}Method ({this_param});");
+			body.Add ($"{indentation}{return_var}{members}.{method_type}.Invoke{virt_type}{invokeType}Method ({this_param});");
 
 			if (!method.IsVoid) {
 				var r = "__rm";
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 && invokeType == "Object") {
 					r += ".Handle";
 				}
-				body.Add ($"\treturn {method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + opt.GetNullForgiveness (method.RetVal)};");
+				body.Add ($"{indentation}{(deferReturn ? "var __result = " : "return ")}{method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + opt.GetNullForgiveness (method.RetVal)};");
 			}
 		}
 
-		public static void AddParameterListCallArgs (List<string> body, ParameterList parameters, CodeGenerationOptions opt, bool invoker)
+		public static void AddParameterListCallArgs (List<string> body, ParameterList parameters, CodeGenerationOptions opt, bool invoker, bool indent = true)
 		{
 			if (parameters.Count == 0)
 				return;
@@ -298,12 +323,13 @@ namespace generator.SourceWriters
 			invoker = invoker && opt.EmitLegacyInterfaceInvokers;
 
 			var JValue = invoker ? "JValue" : "JniArgumentValue";
+			var indentation = indent ? "\t" : "";
 
-			body.Add ($"\t{JValue}* __args = stackalloc {JValue} [{parameters.Count}];");
+			body.Add ($"{indentation}{JValue}* __args = stackalloc {JValue} [{parameters.Count}];");
 
 			for (var i = 0; i < parameters.Count; ++i) {
 				var p = parameters [i];
-				body.Add ($"\t__args [{i}] = new {JValue} ({p.GetCall (opt)});");
+				body.Add ($"{indentation}__args [{i}] = new {JValue} ({p.GetCall (opt)});");
 			}
 		}
 

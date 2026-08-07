@@ -49,11 +49,8 @@ namespace Java.Lang {
 			[Register ("getMessage", "()Ljava/lang/String;", "GetGetMessageHandler")]
 			get {
 				const string __id = "getMessage.()Ljava/lang/String;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
 

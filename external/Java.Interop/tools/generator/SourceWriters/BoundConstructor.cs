@@ -74,9 +74,15 @@ namespace generator.SourceWriters
 			foreach (var prep in constructor.Parameters.GetCallPrep (opt))
 				writer.WriteLine (prep);
 
-			writer.WriteLine ("try {");
+			var cleanup = constructor.Parameters.GetCallCleanup (opt);
+			var keepAlive = constructor.Parameters.Where (para => para.ShouldGenerateKeepAlive ()).ToList ();
+			var needsFinally = cleanup.Count > 0;
 
-			writer.Indent ();
+			if (needsFinally) {
+				writer.WriteLine ("try {");
+				writer.Indent ();
+			}
+
 			WriteParamterListCallArgs (writer, constructor.Parameters, false, opt);
 			writer.WriteLine ("var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (){0});", constructor.Parameters.GetCallArgs (opt, invoker: false));
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
@@ -85,21 +91,24 @@ namespace generator.SourceWriters
 				writer.WriteLine ("SetHandle (__r.Handle, JniHandleOwnership.TransferLocalRef);");
 			}
 			writer.WriteLine ("_members.InstanceMethods.FinishCreateInstance (__id, this{0});", constructor.Parameters.GetCallArgs (opt, invoker: false));
-			writer.Unindent ();
 
-			writer.WriteLine ("} finally {");
+			if (needsFinally) {
+				writer.Unindent ();
+				writer.WriteLine ("} finally {");
+				writer.Indent ();
 
-			writer.Indent ();
-			var call_cleanup = constructor.Parameters.GetCallCleanup (opt);
-			foreach (string cleanup in call_cleanup)
-				writer.WriteLine (cleanup);
+				foreach (string statement in cleanup)
+					writer.WriteLine (statement);
 
-			foreach (var p in constructor.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
-				writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				foreach (var p in keepAlive)
+					writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
 
-			writer.Unindent ();
-
-			writer.WriteLine ("}");
+				writer.Unindent ();
+				writer.WriteLine ("}");
+			} else {
+				foreach (var p in keepAlive)
+					writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+			}
 		}
 
 		void WriteParamterListCallArgs (CodeWriter writer, ParameterList parameters, bool invoker, CodeGenerationOptions opt)

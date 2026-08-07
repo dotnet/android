@@ -225,22 +225,16 @@ namespace Xamarin.Test {
 			[Register ("getSomeInteger", "()I", "GetGetSomeIntegerHandler")]
 			get {
 				const string __id = "getSomeInteger.()I";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
-					return __rm;
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+				return __rm;
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeInteger' and count(parameter)=1 and parameter[1][@type='int']]"
 			[Register ("setSomeInteger", "(I)V", "GetSetSomeInteger_IHandler")]
 			set {
 				const string __id = "setSomeInteger.(I)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (value);
-					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 			}
 		}
 
@@ -249,23 +243,17 @@ namespace Xamarin.Test {
 			[Register ("getSomeObjectProperty", "()Ljava/lang/Object;", "GetGetSomeObjectPropertyHandler")]
 			get {
 				const string __id = "getSomeObjectProperty.()Ljava/lang/Object;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-					return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeObjectProperty' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 			[Register ("setSomeObjectProperty", "(Ljava/lang/Object;)V", "GetSetSomeObjectProperty_Ljava_lang_Object_Handler")]
 			set {
 				const string __id = "setSomeObjectProperty.(Ljava/lang/Object;)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
-					_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (value);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((value == null) ? IntPtr.Zero : ((global::Java.Lang.Object) value).Handle);
+				_members.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (value);
 			}
 		}
 
@@ -274,11 +262,8 @@ namespace Xamarin.Test {
 			[Register ("getSomeString", "()Ljava/lang/String;", "GetGetSomeStringHandler")]
 			get {
 				const string __id = "getSomeString.()Ljava/lang/String;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
-					return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeAbstractObjectMethod (__id, this, null);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/method[@name='setSomeString' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
 			[Register ("setSomeString", "(Ljava/lang/String;)V", "GetSetSomeString_Ljava_lang_String_Handler")]
