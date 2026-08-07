@@ -185,18 +185,24 @@ async Task<int> RunAsync (string[] args)
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
+	int exitCode;
+	bool cancellationRequested;
 	try {
 		if (isDotnetTestMode)
-			return await RunDotnetTestAsync (remaining);
-
-		if (isInstrumentMode)
-			return await RunInstrumentationAsync (remaining);
-
-		return await RunAppAsync ();
+			exitCode = await RunDotnetTestAsync (remaining);
+		else if (isInstrumentMode)
+			exitCode = await RunInstrumentationAsync (remaining);
+		else
+			exitCode = await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
+		cancellationRequested = cts.IsCancellationRequested;
+		if (cancellationRequested)
+			await StopAppAsync ();
 		cts.Dispose ();
 	}
+
+	return cancellationRequested ? 130 : exitCode;
 }
 
 void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
@@ -206,19 +212,6 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	Console.WriteLine ("Stopping application...");
 
 	cts.Cancel ();
-
-	// Force-stop the app (fire-and-forget in cancel handler)
-	_ = StopAppAsync ();
-
-	// Kill logcat process if running
-	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error killing logcat process: {ex.Message}");
-	}
 }
 
 async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
@@ -616,7 +609,15 @@ async Task StopAppAsync ()
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+	try {
+		var (exitCode, _, error) = await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+		if (exitCode != 0)
+			Console.Error.WriteLine ($"Error: Failed to stop app: {error}");
+	} catch (Exception ex) {
+		Console.Error.WriteLine ($"Error: Failed to stop app: {ex.Message}");
+		if (verbose)
+			Console.Error.WriteLine (ex.ToString ());
+	}
 }
 
 string? FindAdbPath ()
