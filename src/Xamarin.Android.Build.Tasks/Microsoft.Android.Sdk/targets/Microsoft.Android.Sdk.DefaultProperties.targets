@@ -51,6 +51,7 @@
     <_AndroidEmitLegacyInterfaceInvokers Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == '' ">false</_AndroidEmitLegacyInterfaceInvokers>
     <AndroidEnableObsoleteOverrideInheritance Condition=" '$(AndroidEnableObsoleteOverrideInheritance)' == '' ">true</AndroidEnableObsoleteOverrideInheritance>
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
+    <GenerateDocumentationFile Condition=" '$(GenerateDocumentationFile)' == '' ">true</GenerateDocumentationFile>
 
     <!-- Mono components -->
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">$(EnableDiagnostics)</AndroidEnableProfiler>

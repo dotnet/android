@@ -630,6 +630,54 @@ namespace Foo {
 		}
 
 		[Test]
+		public void DocumentationFileGeneratedByDefault ()
+		{
+			var binding = new XamarinAndroidBindingProject ();
+			using var builder = CreateDllBuilder ();
+
+			Assert.IsTrue (builder.Build (binding), "binding build should have succeeded");
+
+			var documentationPath = Path.Combine (Root, builder.ProjectDirectory, binding.OutputPath, $"{binding.ProjectName}.xml");
+			FileAssert.Exists (documentationPath);
+		}
+
+		[TestCase ("Build", false)]
+		[TestCase ("Pack", false)]
+		[TestCase ("Build", true)]
+		public void DisableDocumentationFile (string target, bool setInDirectoryBuildTargets)
+		{
+			var binding = new XamarinAndroidBindingProject ();
+			if (setInDirectoryBuildTargets) {
+				var directoryBuildTargets = binding.Imports.Single (import => import.Project () == "Directory.Build.targets");
+				directoryBuildTargets.TextContent = () => """
+					<Project>
+					  <PropertyGroup>
+					    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+					  </PropertyGroup>
+					</Project>
+					""";
+			} else {
+				binding.SetProperty ("GenerateDocumentationFile", "false");
+			}
+			using var builder = CreateDllBuilder ();
+			builder.Target = target;
+
+			Assert.IsTrue (builder.Build (binding), $"binding {target} should have succeeded");
+
+			var documentationPath = Path.Combine (Root, builder.ProjectDirectory, binding.OutputPath, $"{binding.ProjectName}.xml");
+			FileAssert.DoesNotExist (documentationPath);
+
+			if (target == "Pack") {
+				var packagePath = Path.Combine (Root, builder.ProjectDirectory, binding.OutputPath, $"{binding.ProjectName}.1.0.0.nupkg");
+				FileAssert.Exists (packagePath);
+				using var package = ZipHelper.OpenZip (packagePath);
+				Assert.IsFalse (
+					package.Any (entry => entry.FullName.EndsWith ($"/{binding.ProjectName}.xml", StringComparison.OrdinalIgnoreCase)),
+					$"{packagePath} should not contain an XML documentation file");
+			}
+		}
+
+		[Test]
 		public void AppWithSingleJar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
