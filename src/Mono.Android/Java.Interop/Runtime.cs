@@ -40,7 +40,9 @@ namespace Java.Interop {
 		{
 			if (value == null)
 				return false;
-			return IsGCUserPeer (value.Handle);
+			bool result = IsGCUserPeer (value.Handle);
+			GC.KeepAlive (value);
+			return result;
 		}
 
 		public static bool IsGCUserPeer (IntPtr value)

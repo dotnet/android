@@ -527,7 +527,10 @@ namespace Java.Interop {
 				return JNIEnv.NewArray ((Array) value);
 			} },
 			{ typeof (Android.Runtime.JavaObject), value => {
-				return value == null ? IntPtr.Zero : JNIEnv.ToLocalJniHandle (new Android.Runtime.JavaObject (value));
+				if (value == null)
+					return IntPtr.Zero;
+				using (var v = new Android.Runtime.JavaObject (value))
+					return JNIEnv.ToLocalJniHandle (v);
 			} },
 		};
 

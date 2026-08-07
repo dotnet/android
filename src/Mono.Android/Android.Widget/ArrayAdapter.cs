@@ -39,6 +39,7 @@ namespace Android.Widget {
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;I)V", new JValue (context), new JValue (textViewResourceId));
 			}
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_II;
@@ -62,6 +63,7 @@ namespace Android.Widget {
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;II)V", new JValue (context), new JValue (resource), new JValue (textViewResourceId));
 			}
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_;
@@ -87,6 +89,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;I[Ljava/lang/Object;)V", new JValue (context), new JValue (textViewResourceId), new JValue (native_objects));
 			}
 			JNIEnv.DeleteLocalRef (native_objects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_;
@@ -112,6 +115,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;II[Ljava/lang/Object;)V", new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (native_objects));
 			}
 			JNIEnv.DeleteLocalRef (native_objects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_ILjava_util_List_;
@@ -137,6 +141,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;ILjava/util/List;)V", new JValue (context), new JValue (textViewResourceId), new JValue (lrefObjects));
 			}
 			JNIEnv.DeleteLocalRef (lrefObjects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_IILjava_util_List_;
@@ -162,6 +167,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;IILjava/util/List;)V", new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (lrefObjects));
 			}
 			JNIEnv.DeleteLocalRef (lrefObjects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_add_Ljava_lang_Object_;
@@ -182,9 +188,11 @@ namespace Android.Widget {
 		{
 			if (id_createFromResource_Landroid_content_Context_II == IntPtr.Zero)
 				id_createFromResource_Landroid_content_Context_II = JNIEnv.GetStaticMethodID (class_ref, "createFromResource", "(Landroid/content/Context;II)Landroid/widget/ArrayAdapter;");
-			return JavaConvert.FromJniHandle<ArrayAdapter<Java.Lang.ICharSequence>> (
+			var result = JavaConvert.FromJniHandle<ArrayAdapter<Java.Lang.ICharSequence>> (
 					JNIEnv.CallStaticObjectMethod (class_ref, id_createFromResource_Landroid_content_Context_II, new JValue (context), new JValue (textArrayResId), new JValue (textViewResId)),
 						JniHandleOwnership.TransferLocalRef)!;
+			GC.KeepAlive (context);
+			return result;
 		}
 
 		static IntPtr id_getItem_I;
@@ -239,6 +247,8 @@ namespace Android.Widget {
 			if (id_sort_Ljava_util_Comparator_ == IntPtr.Zero)
 				id_sort_Ljava_util_Comparator_ = JNIEnv.GetMethodID (class_ref, "sort", "(Ljava/util/Comparator;)V");
 			JNIEnv.CallNonvirtualVoidMethod (Handle, class_ref, id_sort_Ljava_util_Comparator_, new JValue (comparator));
+			GC.KeepAlive (comparator);
+			GC.KeepAlive (this);
 		}
 	}
 }
