@@ -641,23 +641,24 @@ namespace Foo {
 			FileAssert.Exists (documentationPath);
 		}
 
-		[TestCase ("Build", false)]
-		[TestCase ("Pack", false)]
-		[TestCase ("Build", true)]
-		public void DisableDocumentationFile (string target, bool setInDirectoryBuildTargets)
+		[TestCase ("Build", "false", false)]
+		[TestCase ("Pack", "false", false)]
+		[TestCase ("Build", "false", true)]
+		[TestCase ("Build", "", true)]
+		public void DisableDocumentationFile (string target, string generateDocumentationFile, bool setInDirectoryBuildTargets)
 		{
 			var binding = new XamarinAndroidBindingProject ();
 			if (setInDirectoryBuildTargets) {
 				var directoryBuildTargets = binding.Imports.Single (import => import.Project () == "Directory.Build.targets");
-				directoryBuildTargets.TextContent = () => """
+				directoryBuildTargets.TextContent = () => $"""
 					<Project>
 					  <PropertyGroup>
-					    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+					    <GenerateDocumentationFile>{generateDocumentationFile}</GenerateDocumentationFile>
 					  </PropertyGroup>
 					</Project>
 					""";
 			} else {
-				binding.SetProperty ("GenerateDocumentationFile", "false");
+				binding.SetProperty ("GenerateDocumentationFile", generateDocumentationFile);
 			}
 			using var builder = CreateDllBuilder ();
 			builder.Target = target;
