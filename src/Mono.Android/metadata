@@ -1135,7 +1135,9 @@
     -->
   <!-- These constructors were removed before the minimum supported Android API level. -->
   <attr path="/api/package[@name='android.util']/class[@name='Config' or @name='DebugUtils' or @name='EventLog' or @name='StateSet' or @name='TimeUtils' or @name='Xml']/constructor[count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 15.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='Plugin' or @name='PluginList' or @name='UrlInterceptRegistry']/constructor" name="deprecated">This constructor was removed in Android API level 15.</attr>
   <attr path="/api/package[@name='android.webkit']/class[@name='GeolocationPermissions' or @name='WebStorage']/constructor[count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 16.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CacheManager']/constructor[count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 17.</attr>
   <attr path="/api/package[@name='android.media']/class[@name='AudioFormat']/constructor[count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 21.</attr>
   <attr path="/api/package[@name='android.os']/class[@name='BatteryManager' or @name='RecoverySystem']/constructor[count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 23.</attr>
 
