@@ -143,20 +143,25 @@ public static class AndroidDeviceExtensions
 		return tcs.Task;
 	}
 
-	public static async Task<int> GetProcessIDAsync(this AndroidDevice device, string packageName, int maxAttempts, int timeBetweenAttempts, CancellationToken token)
+	public static Task<int> GetProcessIDAsync (this AndroidDevice device, string packageName, int maxAttempts, int timeBetweenAttempts, CancellationToken token)
 	{
-		var retryCount = 1;
-		var pidOfResult = await device.GetProcessId(packageName, token);
-		AndroidLogger.LogDebug("GetProcessIDAsync", "PID of the application :: " + pidOfResult);
+		return GetProcessIDAsync (device, packageName, maxAttempts + 1, timeBetweenAttempts, timeBetweenAttempts, token);
+	}
 
-		while (pidOfResult <= 0 && retryCount <= maxAttempts)
-		{
-			await Task.Delay(timeBetweenAttempts);
-			pidOfResult = await device.GetProcessId(packageName, token);
-			AndroidLogger.LogDebug("GetProcessIDAsync", "Retrying " + retryCount + " time(s) to get PID of the application");
-			retryCount++;
+	public static async Task<int> GetProcessIDAsync (this AndroidDevice device, string packageName, int maxAttempts, int initialDelayMilliseconds, int maxDelayMilliseconds, CancellationToken token)
+	{
+		var delayMilliseconds = initialDelayMilliseconds;
+		for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+			var pid = await device.GetProcessId (packageName, token);
+			AndroidLogger.LogDebug ("GetProcessIDAsync", $"Attempt {attempt} of {maxAttempts} to get PID of the application returned {pid}");
+			if (pid > 0 || attempt == maxAttempts)
+				return pid;
+
+			await Task.Delay (delayMilliseconds, token);
+			delayMilliseconds = Math.Min (delayMilliseconds * 2, maxDelayMilliseconds);
 		}
-		return pidOfResult;
+
+		return 0;
 	}
 
 
