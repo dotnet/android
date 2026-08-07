@@ -221,7 +221,7 @@ public class BuildArchive : AndroidTask
 		var frameworkDescription = RuntimeInformation.FrameworkDescription;
 		Log.LogDebugMessage ($"RuntimeInformation.FrameworkDescription: {frameworkDescription}");
 		if (Environment.Version.Major < 6) {
-			Log.LogDebugMessage ("Falling back to LibZipSharp because we are *not* running on .NET 6+.");
+			Log.LogDebugMessage ($"Falling back to LibZipSharp because we are *not* running on .NET 6+, Environment.Version.Major: {Environment.Version.Major}");
 			return true;
 		}
 
