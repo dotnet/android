@@ -23,9 +23,8 @@ properties intended for end users are:
 | `$(_AndroidFastDeployAppFileTransferMode)` | `Symlink` (for `FastDeploy2`) | How staged files are surfaced in the override directory: `Symlink` or `Copy`. |
 | `$(AndroidFastDeploymentAdbCompressionAlgorithm)` | `any` | The `adb push -z` compression algorithm. `FastDeploy2` relies on a modern Android SDK Platform-Tools `adb` for multi-file `push -z` support. |
 
-The following internal/unsupported properties tune batching. They exist mainly so
-the batching paths can be exercised with smaller batches while testing; their
-defaults match the matching task properties:
+The following internal/unsupported properties tune or disable implementation
+details:
 
 | Property | Default | Description |
 | --- | --- | --- |
@@ -33,6 +32,7 @@ defaults match the matching task properties:
 | `$(_AndroidFastDeployCopyBatchSize)` | `25` | Number of files copied per batch when staging fast-deployment files. |
 | `$(_AndroidFastDeployMaxShellCommandLength)` | `900` | Maximum length of a single `adb shell` command line before it is split. |
 | `$(_AndroidFastDeployMaxAdbCommandLength)` | `4096` | Maximum length of a single `adb` command line before it is split. |
+| `$(_AndroidFastDeploySkipCleanup)` | blank | Set to `true` to skip orphan staging cleanup. |
 
 ## On-device layout
 
@@ -46,6 +46,16 @@ defaults match the matching task properties:
   staging and override directories. It records the hash of the last successfully
   deployed manifest so the next build can detect whether the device is already up
   to date and skip redundant work.
+
+At the start of an install, FastDeploy2 also checks for orphaned staging
+directories. The check runs at most once every 24 hours per device. In one
+`adb shell` command it enumerates staged `<package-name>/<user-id>` directories,
+compares them with `pm list packages --user <user-id>`, and removes directories
+for packages that are no longer installed. A staging directory must also be at
+least 24 hours old before it can be removed, which prevents cleanup from racing a
+concurrent first-time deployment. Cleanup runs only on the cold deployment path,
+so warm incremental installs do not perform this check or add another `adb`
+invocation.
 
 Changing `$(_AndroidFastDevStrategy)` or
 `$(_AndroidFastDeployAppFileTransferMode)` invalidates the deployment
@@ -196,3 +206,55 @@ Install failures are reported with `ADB####` codes; fast-deployment shell
 failures (`mkdir`/`rm`/`push`/`ln`) are reported with `XA0129`. `run-as`
 diagnostics map to `XA0131`–`XA0137`. See the
 [build/deploy message docs](../docs-mobile/messages/index.md) for details.
+
+## Command Compatibility
+
+.NET for Android supports Android 7.0 (API level 24) and later. FastDeploy2's
+device-side commands are available by Android 6.0 (API level 23), before the
+supported device floor. The API levels below are approximate because shell
+utilities are not Android SDK APIs.
+
+Host-side `adb` commands depend on the installed Android SDK Platform-Tools
+version rather than the device API level:
+
+| Command | FastDeploy2 use | Compatibility |
+| --- | --- | --- |
+| `adb devices`, `adb -s <device> shell ...` | Device selection and all device-side operations | Standard Platform-Tools commands |
+| `adb install -r -d [-t] [--user <id>]` | APK installation and replacement | Standard Platform-Tools command; `--user` corresponds to Android multi-user support introduced in API 17 |
+| `adb push -z <algorithm>` | Batched compressed staging-file upload | Modern Platform-Tools capability; not controlled by the device application API level |
+
+FastDeploy2 uses these device-side commands and shell features:
+
+| Command or shell feature | FastDeploy2 use | Approximate availability |
+| --- | --- | --- |
+| `sh`/mksh syntax, `[ ... ]`, `test`, `command -v`, `cd`, `pwd`, `echo`, `trap`, globbing, command/parameter/arithmetic expansion, and redirection | Combined checks, override updates, and cleanup control flow | API 14; Android has used mksh since Android 4.0 |
+| `getprop` | Validate `run-as` compatibility properties | API 1 |
+| `run-as <package>` | Access the private data directory of a debuggable app | Early Android; availability alone is insufficient because the package must be debuggable and the device must permit `run-as` |
+| `su <user>` | Access files for a system application when adbd is not root | Not guaranteed on production devices; used only for the system-app fallback |
+| `cat`, `true`, `rm -f`, `rm -rf`, `mkdir -p`, `rmdir`, `touch`, `cp -p`, and `ln -sf` | Read markers and manage staging/override files, locks, copies, and symlinks | API 21 or earlier; supplied by toolbox/BSD utilities before toybox |
+| `readlink -f`, `whoami` | Resolve system-app paths and determine whether adbd is root | Reliably available by API 23 |
+| `pidof` | Find the running application process | Reliably available by API 23 |
+| `find -type f -exec stat ... {} +` and `stat -c` | Enumerate and compare staged and override files | API 23; supplied by toybox starting in Android 6.0 |
+| `printf %s` | Write manifest hash markers without a trailing newline | API 23; supplied by toybox starting in Android 6.0 |
+| `date +%s` | Cleanup rate limiting and staging-directory age checks | API 21 or earlier |
+| `grep -Fqx` | Exact installed-package lookup during orphan cleanup | API 21 or earlier |
+| `pm list packages --user <id>` | Find installed packages during orphan cleanup | API 17 |
+| `pm uninstall [-k] [--user <id>]` | Remove an incompatible package before retrying installation | Base command predates the supported floor; `--user` requires API 17 multi-user support |
+| `am force-stop <package>` | Stop the app before replacing fast-deployment files | API 8 or earlier |
+| `am start-user -w <id>` | Ensure a secondary Android user is running before `run-as` | API 17 multi-user support |
+
+The orphan cleanup command additionally checks that each external utility is
+present before cleanup. Missing utilities, failed or empty `pm` output, `stat`
+failures, and `grep` errors all skip deletion. Only `grep` exit status `1`,
+meaning a definite non-match, permits an old staging directory to be removed.
+
+These estimates are based on the
+[AOSP shell and utility inventories][aosp-shell-utilities], the
+[Android 6.0 toybox build][aosp-marshmallow-toybox], the
+[Android 4.2 `pm --user` implementation][aosp-pm-user], and the
+[Android Debug Bridge documentation][adb-docs].
+
+[aosp-shell-utilities]: https://android.googlesource.com/platform/system/core/+/refs/heads/main/shell_and_utilities/README.md
+[aosp-marshmallow-toybox]: https://android.googlesource.com/platform/external/toybox/+/android-6.0.1_r81/Android.mk
+[aosp-pm-user]: https://android.googlesource.com/platform/frameworks/base/+/android-4.2_r1/cmds/pm/src/com/android/commands/pm/Pm.java
+[adb-docs]: https://developer.android.com/tools/adb

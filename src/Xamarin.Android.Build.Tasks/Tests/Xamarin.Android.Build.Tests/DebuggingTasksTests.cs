@@ -161,6 +161,26 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (FastDeploy2.IsUnexpectedRemoteFilesystemError ("adb: error: device offline"));
 		}
 
+		[Test]
+		public void FastDeploy2CreatesOrphanStagingCleanupCommand ()
+		{
+			string command = FastDeploy2.CreateRemoteStagingCleanupCommand ("/data/local/tmp/fastdeploy2", 86400, 86400);
+
+			StringAssert.Contains ("command -v \"$tool\"", command);
+			StringAssert.Contains ("last=$(stat -c %Y \"$marker\"", command);
+			StringAssert.Contains ("mkdir \"$lock\"", command);
+			StringAssert.Contains ("modified=$(stat -c %Y \"$user_dir\"", command);
+			StringAssert.Contains ("pm list packages --user \"$user\"", command);
+			StringAssert.Contains ("packages_file=\"$lock/packages-$user\"", command);
+			StringAssert.Contains ("[ ! -s \"$packages_file\" ]", command);
+			StringAssert.Contains ("grep -Fqx \"package:$package\"", command);
+			StringAssert.Contains ("if [ \"$grep_status\" -ne 1 ]", command);
+			StringAssert.Contains ("rm -rf \"$user_dir\"", command);
+			StringAssert.Contains ("[ \"$((now - modified))\" -ge 86400 ]", command);
+			StringAssert.DoesNotContain ("printf", command);
+			Assert.Less (command.IndexOf ("touch \"$marker\"", StringComparison.Ordinal), command.IndexOf ("for user_dir", StringComparison.Ordinal));
+		}
+
 	}
 
 	/// <summary>

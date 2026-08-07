@@ -14,8 +14,52 @@ namespace Xamarin.Android.Tasks
 	{
 		const string RemoteStagingRootPath = "/data/local/tmp/fastdeploy2";
 		const string ManifestHashMarker = ".fastdeploy2-manifest-hash";
+		const string CleanupMarker = ".last-orphan-cleanup";
+		const string CleanupLockDirectory = ".orphan-cleanup-lock";
+		const int CleanupIntervalSeconds = 24 * 60 * 60;
+		const int CleanupSafetyWindowSeconds = 24 * 60 * 60;
 
 		string RemoteStagingRoot => RemoteStagingRootPath;
+
+		async Task CleanupRemoteStagingDirectories ()
+		{
+			string command = CreateRemoteStagingCleanupCommand (
+				RemoteStagingRoot,
+				CleanupIntervalSeconds,
+				CleanupSafetyWindowSeconds);
+			AdbCommandResult result = await RunAdbShellCommand (command);
+			if (result.ExitCode != 0) {
+				LogDiagnostic ($"FastDeploy2 orphan staging cleanup failed and will be skipped. Output: {result.Output}");
+			} else if (!string.IsNullOrEmpty (result.StandardOutput)) {
+				LogDiagnostic (result.StandardOutput);
+			}
+		}
+
+		internal static string CreateRemoteStagingCleanupCommand (string remoteStagingRoot, int cleanupIntervalSeconds, int safetyWindowSeconds)
+		{
+			return string.Join ("; ", new [] {
+				$"root={QuoteShellArgument (remoteStagingRoot)}",
+				$"marker=\"$root/{CleanupMarker}\"",
+				$"lock=\"$root/{CleanupLockDirectory}\"",
+				"if [ ! -d \"$root\" ]; then echo 'FastDeploy2 orphan staging cleanup: no staging root'; exit 0; fi",
+				"for tool in date stat rm mkdir rmdir touch pm grep; do if ! command -v \"$tool\" >/dev/null 2>&1; then echo \"FastDeploy2 orphan staging cleanup: $tool unavailable\"; exit 0; fi; done",
+				"now=$(date +%s) || exit 1",
+				"last=$(stat -c %Y \"$marker\" 2>/dev/null || echo 0)",
+				$"if [ \"$((now - last))\" -lt {cleanupIntervalSeconds} ]; then echo 'FastDeploy2 orphan staging cleanup: already checked'; exit 0; fi",
+				"lock_time=$(stat -c %Y \"$lock\" 2>/dev/null || echo \"$now\")",
+				$"if [ -d \"$lock\" ] && [ \"$((now - lock_time))\" -ge {cleanupIntervalSeconds} ]; then rm -rf \"$lock\"; fi",
+				"if ! mkdir \"$lock\" 2>/dev/null; then echo 'FastDeploy2 orphan staging cleanup: already running'; exit 0; fi",
+				"trap 'rm -rf \"$lock\"' 0",
+				"last=$(stat -c %Y \"$marker\" 2>/dev/null || echo 0)",
+				$"if [ \"$((now - last))\" -lt {cleanupIntervalSeconds} ]; then echo 'FastDeploy2 orphan staging cleanup: already checked'; exit 0; fi",
+				"touch \"$marker\" || exit 1",
+				"removed=0",
+				"status=0",
+				$"for user_dir in \"$root\"/*/*; do [ -d \"$user_dir\" ] || continue; modified=$(stat -c %Y \"$user_dir\" 2>/dev/null) || {{ status=1; continue; }}; [ \"$((now - modified))\" -ge {safetyWindowSeconds} ] || continue; package_dir=${{user_dir%/*}}; package=${{package_dir##*/}}; user=${{user_dir##*/}}; case \"$user\" in ''|*[!0-9]*) continue ;; esac; packages_file=\"$lock/packages-$user\"; packages_failed=\"$packages_file.failed\"; if [ ! -f \"$packages_file\" ] && [ ! -f \"$packages_failed\" ]; then if ! pm list packages --user \"$user\" > \"$packages_file\" || [ ! -s \"$packages_file\" ]; then rm -f \"$packages_file\"; touch \"$packages_failed\"; status=1; fi; fi; [ -f \"$packages_failed\" ] && continue; grep -Fqx \"package:$package\" \"$packages_file\"; grep_status=$?; if [ \"$grep_status\" -eq 0 ]; then continue; fi; if [ \"$grep_status\" -ne 1 ]; then status=1; continue; fi; if rm -rf \"$user_dir\"; then rmdir \"$package_dir\" 2>/dev/null || true; removed=$((removed + 1)); else status=1; fi; done",
+				"echo \"FastDeploy2 orphan staging cleanup: removed $removed directories\"",
+				"exit \"$status\"",
+			});
+		}
 
 		async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath, bool forceFreshDeployment = false)
 		{
