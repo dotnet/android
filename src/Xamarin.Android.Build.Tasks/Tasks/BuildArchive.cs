@@ -220,7 +220,7 @@ public class BuildArchive : AndroidTask
 		// Always fallback on .NET Framework
 		var frameworkDescription = RuntimeInformation.FrameworkDescription;
 		Log.LogDebugMessage ($"RuntimeInformation.FrameworkDescription: {frameworkDescription}");
-		if (IsDotNet(frameworkDescription)) {
+		if (Environment.Version.Major < 6) {
 			Log.LogDebugMessage ("Falling back to LibZipSharp because we are *not* running on .NET 6+.");
 			return true;
 		}
@@ -228,12 +228,6 @@ public class BuildArchive : AndroidTask
 		// .NET 6+ handles uncompressed files correctly, so we don't need to fallback.
 		Log.LogDebugMessage ("Using System.IO.Compression because we're running on .NET 6+.");
 		return false;
-	}
-
-	internal static bool IsDotNet (string frameworkDescription)
-	{
-		return !(frameworkDescription.StartsWith (".NET Framework", StringComparison.Ordinal) ||
-			frameworkDescription.StartsWith ("Mono", StringComparison.Ordinal));
 	}
 
 	bool AddFileToArchiveIfNewer (IZipArchive apk, string file, string inArchivePath, ITaskItem item, List<string> existingEntries)
