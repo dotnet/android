@@ -61,18 +61,18 @@ public class CommandLineToolsResolverTests
 	}
 
 	[Test]
-	public void FindCommandLineTool_NumericHasHigherPackageRevision_SelectsNumeric ()
+	public void FindCommandLineTool_NumericHasHigherPackageRevision_SelectsLatest ()
 	{
-		var expectedSdkManager = CreateCommandLineTool ("22.0", "sdkmanager", "22.0");
-		var expectedAvdManager = CreateCommandLineTool ("22.0", "avdmanager", "22.0");
-		CreateCommandLineTool ("latest", "sdkmanager", "19.0");
-		CreateCommandLineTool ("latest", "avdmanager", "19.0");
+		CreateCommandLineTool ("22.0", "sdkmanager", "22.0");
+		CreateCommandLineTool ("22.0", "avdmanager", "22.0");
+		var expectedSdkManager = CreateCommandLineTool ("latest", "sdkmanager", "19.0");
+		var expectedAvdManager = CreateCommandLineTool ("latest", "avdmanager", "19.0");
 
 		using var manager = CreateSdkManager ();
 		var selected = manager.FindSdkManager ();
 
 		Assert.That (selected?.Path, Is.EqualTo (expectedSdkManager));
-		Assert.That (selected?.Revision, Is.EqualTo ("22.0"));
+		Assert.That (selected?.Revision, Is.EqualTo ("19.0"));
 		Assert.That (
 			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
 			Is.EqualTo (expectedAvdManager));
@@ -95,21 +95,52 @@ public class CommandLineToolsResolverTests
 	}
 
 	[Test]
-	public void FindCommandLineTool_MissingAndMalformedPackageRevision_UsesDirectoryVersion ()
+	public void FindCommandLineTool_LatestHasMalformedPackageRevision_SelectsLatest ()
 	{
-		var expectedSdkManager = CreateCommandLineTool ("22.0", "sdkmanager");
-		var expectedAvdManager = CreateCommandLineTool ("22.0", "avdmanager");
-		CreateCommandLineTool ("latest", "sdkmanager", "not-a-version");
-		CreateCommandLineTool ("latest", "avdmanager", "not-a-version");
+		CreateCommandLineTool ("22.0", "sdkmanager");
+		CreateCommandLineTool ("22.0", "avdmanager");
+		var expectedSdkManager = CreateCommandLineTool ("latest", "sdkmanager", "not-a-version");
+		var expectedAvdManager = CreateCommandLineTool ("latest", "avdmanager", "not-a-version");
 
 		using var manager = CreateSdkManager ();
 		var selected = manager.FindSdkManager ();
 
 		Assert.That (selected?.Path, Is.EqualTo (expectedSdkManager));
-		Assert.That (selected?.Revision, Is.EqualTo ("22.0"));
+		Assert.That (selected?.Revision, Is.Null);
 		Assert.That (
 			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
 			Is.EqualTo (expectedAvdManager));
+	}
+
+	[Test]
+	public void FindCommandLineTool_LatestMissingTool_FallsBackToHighestVersioned ()
+	{
+		var expectedSdkManager = CreateCommandLineTool ("22.0", "sdkmanager", "22.0");
+		var expectedAvdManager = CreateCommandLineTool ("22.0", "avdmanager", "22.0");
+		CreateCommandLineTool ("latest", "unrelated", "23.0");
+
+		using var manager = CreateSdkManager ();
+
+		Assert.That (manager.FindSdkManagerPath (), Is.EqualTo (expectedSdkManager));
+		Assert.That (
+			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			Is.EqualTo (expectedAvdManager));
+	}
+
+	[Test]
+	public void FindCommandLineTool_LegacyToolsBin_IsNotSupported ()
+	{
+		var binDirectory = Path.Combine (SdkDirectory, "tools", "bin");
+		Directory.CreateDirectory (binDirectory);
+		File.WriteAllText (Path.Combine (binDirectory, "sdkmanager" + ExecutableExtension), "");
+		File.WriteAllText (Path.Combine (binDirectory, "avdmanager" + ExecutableExtension), "");
+
+		using var manager = CreateSdkManager ();
+
+		Assert.That (manager.FindSdkManagerPath (), Is.Null);
+		Assert.That (
+			ProcessUtils.FindCmdlineTool (SdkDirectory, "avdmanager", ExecutableExtension),
+			Is.Null);
 	}
 
 	[Test]
