@@ -21,12 +21,12 @@ namespace Xamarin.Android.Tasks
 
 		string RemoteStagingRoot => RemoteStagingRootPath;
 
-		async Task CleanupRemoteStagingDirectories ()
+		async Task CleanupRemoteStagingDirectories (bool force)
 		{
 			string command = CreateRemoteStagingCleanupCommand (
 				RemoteStagingRoot,
-				CleanupIntervalSeconds,
-				CleanupSafetyWindowSeconds);
+				force ? 0 : CleanupIntervalSeconds,
+				force ? 0 : CleanupSafetyWindowSeconds);
 			AdbCommandResult result = await RunAdbShellCommand (command);
 			if (result.ExitCode != 0) {
 				LogDiagnostic ($"FastDeploy2 orphan staging cleanup failed and will be skipped. Output: {result.Output}");
@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		internal static string CreateRemoteStagingCleanupCommand (string remoteStagingRoot, int cleanupIntervalSeconds, int safetyWindowSeconds)
+		static string CreateRemoteStagingCleanupCommand (string remoteStagingRoot, int cleanupIntervalSeconds, int safetyWindowSeconds)
 		{
 			return string.Join ("; ", new [] {
 				$"root={QuoteShellArgument (remoteStagingRoot)}",
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tasks
 				"last=$(stat -c %Y \"$marker\" 2>/dev/null || echo 0)",
 				$"if [ \"$((now - last))\" -lt {cleanupIntervalSeconds} ]; then echo 'FastDeploy2 orphan staging cleanup: already checked'; exit 0; fi",
 				"lock_time=$(stat -c %Y \"$lock\" 2>/dev/null || echo \"$now\")",
-				$"if [ -d \"$lock\" ] && [ \"$((now - lock_time))\" -ge {cleanupIntervalSeconds} ]; then rm -rf \"$lock\"; fi",
+				$"if [ -d \"$lock\" ] && [ \"$((now - lock_time))\" -ge {CleanupIntervalSeconds} ]; then rm -rf \"$lock\"; fi",
 				"if ! mkdir \"$lock\" 2>/dev/null; then echo 'FastDeploy2 orphan staging cleanup: already running'; exit 0; fi",
 				"trap 'rm -rf \"$lock\"' 0",
 				"last=$(stat -c %Y \"$marker\" 2>/dev/null || echo 0)",
