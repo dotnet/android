@@ -341,14 +341,15 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			Assert.True (builder.Uninstall (proj), "Project should have uninstalled.");
 		}
 
-		[Test]
-		public void DotNetRunWaitForExit ()
+		[TestCase ("", true)]
+		[TestCase ("--no-wake-device", false)]
+		public void DotNetRunWaitForExit (string extraArgs, bool shouldWakeDevice)
 		{
 			const string logcatMessage = "DOTNET_RUN_TEST_MESSAGE_12345";
 			var proj = new XamarinAndroidApplicationProject ();
 
 			// Enable verbose output from Microsoft.Android.Run for debugging
-			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+			proj.SetProperty ("_AndroidRunExtraArgs", $"--verbose {extraArgs}");
 
 			// Add a Console.WriteLine that will appear in logcat
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
@@ -401,10 +402,21 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			}
 
 			// Write the output to a log file for debugging
-			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-output.log");
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, $"dotnet-run-output-wake-{shouldWakeDevice}.log");
 			File.WriteAllText (logPath, output.ToString ());
 			TestContext.AddTestAttachment (logPath);
 
+			if (shouldWakeDevice) {
+				StringAssert.Contains ("shell input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; am start", output.ToString (),
+					$"`dotnet run` should wake the device and dismiss its keyguard in the same adb shell command used to start the app. See {logPath} for details.");
+			} else {
+				StringAssert.Contains ("shell am start", output.ToString (),
+					$"`dotnet run` should start the app without waking the device or dismissing its keyguard when --no-wake-device is specified. See {logPath} for details.");
+				StringAssert.DoesNotContain ("KEYCODE_WAKEUP", output.ToString (),
+					$"`dotnet run` should not wake the device when --no-wake-device is specified. See {logPath} for details.");
+				StringAssert.DoesNotContain ("dismiss-keyguard", output.ToString (),
+					$"`dotnet run` should not dismiss the keyguard when --no-wake-device is specified. See {logPath} for details.");
+			}
 			Assert.IsTrue (foundMessage, $"Expected message '{logcatMessage}' was not found in output. See {logPath} for details.");
 		}
 
