@@ -51,10 +51,51 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 				$"'{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
+		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
+			logMessages.Add ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
 			warnings?.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
+	}
+
+	[Theory]
+	[InlineData ("com/for/Example", "for")]
+	[InlineData ("com/example/for", "for")]
+	[InlineData ("com/example/record", "record")]
+	public void ValidateJavaNames_ReservedIdentifier_LogsError (string javaName, string invalidIdentifier)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = javaName,
+				CompatJniName = javaName,
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_ContextualKeywordInPackage_IsValid ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/record/Example",
+				CompatJniName = "com/record/Example",
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+			},
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
 	}
 
 	[Fact]

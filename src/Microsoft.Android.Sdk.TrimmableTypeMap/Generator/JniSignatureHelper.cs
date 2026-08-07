@@ -241,6 +241,12 @@ static class JniSignatureHelper
 					}
 				}
 
+				string segment = jniName.Substring (segmentStart, i - segmentStart);
+				bool isTypeName = i == jniName.Length;
+				if (JavaNameValidator.IsInvalidIdentifier (segment, isTypeName)) {
+					throw new ArgumentException ($"JNI name '{jniName}' contains reserved Java identifier '{segment}'.", nameof (jniName));
+				}
+
 				segmentStart = i + 1;
 			}
 		}

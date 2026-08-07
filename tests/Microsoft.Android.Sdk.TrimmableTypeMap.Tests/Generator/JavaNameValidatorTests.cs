@@ -1,0 +1,107 @@
+using System.Collections.Generic;
+using Xunit;
+
+namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
+
+public class JavaNameValidatorTests
+{
+	public static IEnumerable<object []> ReservedIdentifiers {
+		get {
+			string [] identifiers = [
+				"_",
+				"abstract", "assert", "boolean", "break", "byte",
+				"case", "catch", "char", "class", "const", "continue",
+				"default", "do", "double",
+				"else", "enum", "extends",
+				"false", "final", "finally", "float", "for",
+				"goto",
+				"if", "implements", "import", "instanceof", "int", "interface",
+				"long",
+				"native", "new", "null",
+				"package", "private", "protected", "public",
+				"return",
+				"short", "static", "strictfp", "super", "switch", "synchronized",
+				"this", "throw", "throws", "transient", "true", "try",
+				"void", "volatile",
+				"while",
+			];
+
+			foreach (var identifier in identifiers) {
+				yield return [identifier];
+			}
+		}
+	}
+
+	public static IEnumerable<object []> RestrictedTypeIdentifiers {
+		get {
+			yield return ["permits"];
+			yield return ["record"];
+			yield return ["sealed"];
+			yield return ["var"];
+			yield return ["yield"];
+		}
+	}
+
+	[Theory]
+	[MemberData (nameof (ReservedIdentifiers))]
+	public void TryGetInvalidPackageSegment_ReservedIdentifier_ReturnsTrue (string identifier)
+	{
+		Assert.True (JavaNameValidator.TryGetInvalidPackageSegment ($"com.{identifier}.example", '.', out var actual));
+		Assert.Equal (identifier, actual);
+	}
+
+	[Theory]
+	[MemberData (nameof (ReservedIdentifiers))]
+	public void TryGetInvalidJniNameSegment_ReservedPackageIdentifier_ReturnsTrue (string identifier)
+	{
+		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/{identifier}/Example", out var actual));
+		Assert.Equal (identifier, actual);
+	}
+
+	[Theory]
+	[MemberData (nameof (ReservedIdentifiers))]
+	public void TryGetInvalidJniNameSegment_ReservedTypeIdentifier_ReturnsTrue (string identifier)
+	{
+		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/example/{identifier}", out var actual));
+		Assert.Equal (identifier, actual);
+	}
+
+	[Theory]
+	[MemberData (nameof (RestrictedTypeIdentifiers))]
+	public void RestrictedTypeIdentifier_IsValidInPackageButInvalidAsType (string identifier)
+	{
+		Assert.False (JavaNameValidator.TryGetInvalidPackageSegment ($"com.example.{identifier}", '.', out var packageIdentifier));
+		Assert.Equal ("", packageIdentifier);
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/{identifier}/Example", out var jniPackageIdentifier));
+		Assert.Equal ("", jniPackageIdentifier);
+		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/example/{identifier}", out var typeIdentifier));
+		Assert.Equal (identifier, typeIdentifier);
+	}
+
+	[Theory]
+	[InlineData ("module")]
+	[InlineData ("open")]
+	[InlineData ("requires")]
+	[InlineData ("exports")]
+	[InlineData ("opens")]
+	[InlineData ("to")]
+	[InlineData ("uses")]
+	[InlineData ("provides")]
+	[InlineData ("with")]
+	[InlineData ("transitive")]
+	public void ModuleContextualKeyword_IsValidIdentifier (string identifier)
+	{
+		Assert.False (JavaNameValidator.TryGetInvalidPackageSegment ($"com.example.{identifier}", '.', out _));
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/{identifier}/Example", out _));
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ($"com/example/{identifier}", out _));
+	}
+
+	[Fact]
+	public void ValidNames_ReturnFalseAndEmptyIdentifier ()
+	{
+		Assert.False (JavaNameValidator.TryGetInvalidPackageSegment ("com.example.app", '.', out var packageIdentifier));
+		Assert.Equal ("", packageIdentifier);
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ("com/example/MainActivity", out var jniIdentifier));
+		Assert.Equal ("", jniIdentifier);
+	}
+}

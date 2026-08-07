@@ -57,6 +57,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedWarning ("XA4257", Properties.Resources.XA4257, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
+		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
+			log.LogCodedError ("XA4258", Properties.Resources.XA4258, javaName, invalidIdentifier);
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
@@ -220,6 +222,9 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				packageNamingPolicy: PackageNamingPolicy,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				errorOnCustomJavaObject: ErrorOnCustomJavaObject);
+			if (Log.HasLoggedErrors) {
+				return false;
+			}
 
 			if (GenerateTypeMapAssemblies) {
 				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
