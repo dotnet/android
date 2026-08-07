@@ -20,6 +20,7 @@ namespace Xamarin.AndroidTools.Debugging
 	/// </summary>
 	public static class DebuggingExtensions
 	{
+		// Twenty retries at 250 ms intervals allow up to five seconds for the process to appear.
 		const int GET_PID_RETRY_COUNT = 20;
 		const int WAIT_BEFORE_RETRY_GET_PID = 250;
 		const int WAIT_FOR_DEBUGGER_TO_ATTACH_MS = 1400;
