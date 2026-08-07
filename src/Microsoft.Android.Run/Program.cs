@@ -6,6 +6,7 @@ using Xamarin.Android.Tools;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
+const int CtrlCExitCode = 130; // Standard Unix exit code for SIGINT: 128 + signal 2.
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -17,6 +18,7 @@ bool verbose = false;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
+int ctrlCRequested = 0;
 string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
@@ -24,7 +26,7 @@ string? dotnetTestPipe = null;
 try {
 	return await RunAsync (args);
 } catch (OperationCanceledException) {
-	return 130; // 128 + SIGINT(2), standard Unix convention for Ctrl+C
+	return CtrlCExitCode;
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)
@@ -185,18 +187,24 @@ async Task<int> RunAsync (string[] args)
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
+	int exitCode;
+	bool cancellationRequested;
 	try {
 		if (isDotnetTestMode)
-			return await RunDotnetTestAsync (remaining);
-
-		if (isInstrumentMode)
-			return await RunInstrumentationAsync (remaining);
-
-		return await RunAppAsync ();
+			exitCode = await RunDotnetTestAsync (remaining);
+		else if (isInstrumentMode)
+			exitCode = await RunInstrumentationAsync (remaining);
+		else
+			exitCode = await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
+		cancellationRequested = Volatile.Read (ref ctrlCRequested) != 0;
+		if (cancellationRequested)
+			await StopAppAsync ();
 		cts.Dispose ();
 	}
+
+	return cancellationRequested ? CtrlCExitCode : exitCode;
 }
 
 void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
@@ -205,20 +213,8 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	Console.WriteLine ();
 	Console.WriteLine ("Stopping application...");
 
+	Interlocked.Exchange (ref ctrlCRequested, 1);
 	cts.Cancel ();
-
-	// Force-stop the app (fire-and-forget in cancel handler)
-	_ = StopAppAsync ();
-
-	// Kill logcat process if running
-	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error killing logcat process: {ex.Message}");
-	}
 }
 
 async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
@@ -616,7 +612,15 @@ async Task StopAppAsync ()
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+	try {
+		var (exitCode, _, error) = await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+		if (exitCode != 0)
+			Console.Error.WriteLine ($"Error: Failed to stop app: {error}");
+	} catch (Exception ex) {
+		Console.Error.WriteLine ($"Error: Failed to stop app: {ex.Message}");
+		if (verbose)
+			Console.Error.WriteLine (ex.ToString ());
+	}
 }
 
 string? FindAdbPath ()
