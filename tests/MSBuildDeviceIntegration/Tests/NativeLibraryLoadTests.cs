@@ -36,9 +36,9 @@ public class NativeLibraryLoadTests : DeviceTest
 			libraryName = $"lib{proj.ProjectName}.so";
 			removeLibraryItems = $@"
 			<FrameworkNativeLibrary Remove=""@(FrameworkNativeLibrary)""
-				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == '{libraryName}' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == '{proj.ProjectName}.so' "" />
+				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == '{libraryName}' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == '{libraryName}' "" />
 			<_ApplicationSharedLibrary Remove=""@(_ApplicationSharedLibrary)""
-				Condition="" '%(_ApplicationSharedLibrary.ArchiveFileName)' == '{libraryName}' or '%(_ApplicationSharedLibrary.FileName)%(_ApplicationSharedLibrary.Extension)' == '{proj.ProjectName}.so' "" />";
+				Condition="" '%(_ApplicationSharedLibrary.ArchiveFileName)' == '{libraryName}' or '%(_ApplicationSharedLibrary.FileName)%(_ApplicationSharedLibrary.Extension)' == '{libraryName}' "" />";
 		} else {
 			libraryName = "libmonodroid.so";
 			removeLibraryItems = @"
