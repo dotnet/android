@@ -18,6 +18,7 @@ bool verbose = false;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
+int ctrlCRequested = 0;
 string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
@@ -197,7 +198,7 @@ async Task<int> RunAsync (string[] args)
 			exitCode = await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
-		cancellationRequested = cts.IsCancellationRequested;
+		cancellationRequested = Volatile.Read (ref ctrlCRequested) != 0;
 		if (cancellationRequested)
 			await StopAppAsync ();
 		cts.Dispose ();
@@ -212,6 +213,7 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	Console.WriteLine ();
 	Console.WriteLine ("Stopping application...");
 
+	Interlocked.Exchange (ref ctrlCRequested, 1);
 	cts.Cancel ();
 }
 
