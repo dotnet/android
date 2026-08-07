@@ -30,6 +30,14 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+# ###############################################################
+# Select a PAT from the pool and override COPILOT_GITHUB_TOKEN.
+# Run agentic jobs in an isolated `copilot-pat-pool` environment.
+#
+# When org-level billing is available, this will be removed.
+# See `shared/pat_pool.README.md` for more information.
+# ###############################################################
+#
 # The PAT pool authenticates Copilot requests only. Repository writes use the
 # workflow GITHUB_TOKEN, so generated commits and PRs are authored by
 # github-actions[bot].
