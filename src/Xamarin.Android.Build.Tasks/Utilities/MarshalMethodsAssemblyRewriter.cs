@@ -196,7 +196,7 @@ namespace Xamarin.Android.Tasks
 					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
 					File.Delete (path);
 				} catch (Exception ex) {
-					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
+					log.LogWarning (string.Format (Properties.Resources.MarshalMethodsAssemblyRewriterUnableToDeleteSourceFile, targetArch, path));
 					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
 			}
