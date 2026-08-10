@@ -15,6 +15,19 @@
   "primaryOutputs": [
     { "path": "AndroidLib1.csproj" }
   ],
+  "postActions": [
+    {
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages required by this project.",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ],
   "symbols": {
     "supportedOSVersion": {
       "type": "parameter",
@@ -22,6 +35,12 @@
       "datatype": "string",
       "replaces": "SUPPORTED_OS_PLATFORM_VERSION",
       "defaultValue": "24"
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "If specified, skips the automatic restore of the project on create.",
+      "defaultValue": "false"
     }
   },
   "defaultName": "AndroidLib1"
