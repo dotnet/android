@@ -164,7 +164,6 @@ steps:
     arguments: >-
       build -v:n "$(Build.StagingDirectory)\LocalWorkloadTest"
       -p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\NuGet.config"
-      -p:NuGetAudit=false
       -p:AndroidSdkDirectory="$(USERPROFILE)\android-toolchain\sdk"
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\build-template.binlog
 
