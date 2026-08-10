@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 
 			void RemoveFile (string? path)
 			{
-				if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+				if (path.IsNullOrEmpty () || !File.Exists (path)) {
 					return;
 				}
 
