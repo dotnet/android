@@ -976,7 +976,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				.Replace ("//${USINGS}", "using Google.Android.Material.Tabs;")
 				.Replace ("public class MainActivity : Activity", "public class MainActivity : Activity, TabLayout.IOnTabSelectedListener2")
 				.Replace ("//${AFTER_ONCREATE}",
-$$"""
+"""
 			var tabLayout = new TabLayout (this);
 			tabLayout.AddOnTabSelectedListener (this);
 			tabLayout.AddTab (tabLayout.NewTab (), true);
@@ -985,7 +985,7 @@ $$"""
 
 		public void OnTabSelected (TabLayout.Tab tab)
 		{
-			Android.Util.Log.Debug ("TabLayoutTest", "{{expectedLogcatOutput}}");
+			Android.Util.Log.Debug ("TabLayoutTest", "OnTabSelected called!");
 		}
 
 		public void OnTabUnselected (TabLayout.Tab tab)
