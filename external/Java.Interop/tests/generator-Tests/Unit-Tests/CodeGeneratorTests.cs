@@ -413,10 +413,17 @@ namespace generatortests
 			var xml = @"<api>
 			  <package name='java.lang' jni-name='java/lang'>
 			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' final='true' name='String' static='false' visibility='public' jni-signature='Ljava/lang/String;' />
 			  </package>
 			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
 			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
 			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'></method>
+			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuffWithObject' jni-signature='(Ljava/lang/Object;)I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'>
+			        <parameter name='value' type='java.lang.Object' jni-type='Ljava/lang/Object;' />
+			      </method>
+			      <method abstract='true' deprecated='not deprecated' final='true' name='DoStuffWithString' jni-signature='(Ljava/lang/String;)I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' compatVirtualMethod='true'>
+			        <parameter name='value' type='java.lang.String' jni-type='Ljava/lang/String;' />
+			      </method>
 			    </class>
 			  </package>
 			</api>";
@@ -430,6 +437,25 @@ namespace generatortests
 
 			var generated = writer.ToString ();
 			Assert.True (generated.NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+				var __result = __rm;
+				global::System.GC.KeepAlive (value);
+				return __result;
+			}
+			catch (Java.Lang.NoSuchMethodError) {
+				throw new Java.Lang.AbstractMethodError (__id);
+			}
+			""".NormalizeLineEndings ()), generated);
+			Assert.That (generated.NormalizeLineEndings (), Does.Contain ("""
+			}
+			catch (Java.Lang.NoSuchMethodError) {
+				throw new Java.Lang.AbstractMethodError (__id);
+			} finally {
+			""".NormalizeLineEndings ()), generated);
+			var expectedStringCleanup = Target == CodeGenerationTarget.JavaInterop1
+				? "global::Java.Interop.JniObjectReference.Dispose (ref native_value);"
+				: "JNIEnv.DeleteLocalRef (native_value);";
+			Assert.That (generated, Does.Contain (expectedStringCleanup));
 			Assert.AreEqual (generated.Count (c => c == '{'), generated.Count (c => c == '}'), generated);
 		}
 
