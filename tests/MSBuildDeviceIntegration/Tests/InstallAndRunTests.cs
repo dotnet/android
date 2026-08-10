@@ -972,8 +972,12 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			proj.SetDefaultTargetDevice ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+				TextContent = () => "<resources><style name=\"AppTheme\" parent=\"Theme.MaterialComponents.DayNight.NoActionBar\" /></resources>",
+			});
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${USINGS}", "using Google.Android.Material.Tabs;")
+				.Replace ("MainLauncher = true", "MainLauncher = true, Theme = \"@style/AppTheme\"")
 				.Replace ("public class MainActivity : Activity", "public class MainActivity : Activity, TabLayout.IOnTabSelectedListener2")
 				.Replace ("//${AFTER_ONCREATE}",
 """
