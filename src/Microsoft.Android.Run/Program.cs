@@ -7,6 +7,7 @@ using Xamarin.Android.Tools;
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
 const int CtrlCExitCode = 130; // Standard Unix exit code for SIGINT: 128 + signal 2.
+const int StopAppTimeoutSeconds = 10;
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -612,10 +613,13 @@ async Task StopAppAsync ()
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
+	using var timeoutCts = new CancellationTokenSource (TimeSpan.FromSeconds (StopAppTimeoutSeconds));
 	try {
-		var (exitCode, _, error) = await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+		var (exitCode, _, error) = await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", timeoutCts.Token, verbose);
 		if (exitCode != 0)
 			Console.Error.WriteLine ($"Error: Failed to stop app: {error}");
+	} catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested) {
+		Console.Error.WriteLine ($"Error: Timed out stopping app after {StopAppTimeoutSeconds} seconds.");
 	} catch (Exception ex) {
 		Console.Error.WriteLine ($"Error: Failed to stop app: {ex.Message}");
 		if (verbose)

@@ -474,6 +474,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
 				string outputText = output.ToString ();
