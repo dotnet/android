@@ -219,7 +219,7 @@ namespace MonoDroid.Generation
 
 		public bool IsVoid => RetVal.JavaName == "void";
 
-		public string JniSignature => JniSignatureOverride ?? "(" + Parameters.JniSignature + ")" + RetVal.JniName;
+		public string JniSignature => string.IsNullOrEmpty (JniSignatureOverride) ? "(" + Parameters.JniSignature + ")" + RetVal.JniName : JniSignatureOverride;
 
 		public InterfaceGen ListenerType => Parameters [0].ListenerType;
 
@@ -269,7 +269,7 @@ namespace MonoDroid.Generation
 			if (!base.OnValidate (opt, tpl, context))
 				return false;
 
-			if (JniSignatureOverride == null)
+			if (string.IsNullOrEmpty (JniSignatureOverride))
 				return true;
 
 			if (!JniSignatureUtilities.TryParseMethodSignature (JniSignatureOverride, out var parameters, out var returnType) || parameters.Length != Parameters.Count) {

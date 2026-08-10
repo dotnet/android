@@ -108,7 +108,7 @@ namespace MonoDroid.Generation {
 		}
 
 		public string JniType { 
-			get { return JniTypeOverride ?? sym.JniName; }
+			get { return string.IsNullOrEmpty (JniTypeOverride) ? sym.JniName : JniTypeOverride; }
 		}
 
 		public InterfaceGen ListenerType {
@@ -296,7 +296,7 @@ namespace MonoDroid.Generation {
 				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, type, context.GetContextTypeMember ());
 				return false;
 			}
-			if (JniTypeOverride != null && !JniSignatureUtilities.AreAbiCompatible (sym.JniName, JniTypeOverride)) {
+			if (!string.IsNullOrEmpty (JniTypeOverride) && !JniSignatureUtilities.AreAbiCompatible (sym.JniName, JniTypeOverride)) {
 				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, JniTypeOverride, context.GetContextTypeMember ());
 				return false;
 			}
