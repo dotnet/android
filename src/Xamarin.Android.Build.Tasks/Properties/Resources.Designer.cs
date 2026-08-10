@@ -144,15 +144,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [{0}] Unable to delete source file &apos;{1}&apos;.
-        /// </summary>
-        public static string MarshalMethodsAssemblyRewriterUnableToDeleteSourceFile {
-            get {
-                return ResourceManager.GetString("MarshalMethodsAssemblyRewriterUnableToDeleteSourceFile", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Directory &apos;{0}&apos; is from &apos;{1}&apos;..
         /// </summary>
         public static string XA_Directory_Is_From {
@@ -1901,6 +1892,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4323 {
             get {
                 return ResourceManager.GetString("XA4323", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0}] Unable to delete source file &apos;{1}&apos;.
+        /// </summary>
+        public static string XA4324 {
+            get {
+                return ResourceManager.GetString("XA4324", resourceCulture);
             }
         }
         

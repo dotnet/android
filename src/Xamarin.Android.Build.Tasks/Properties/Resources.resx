@@ -145,9 +145,6 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
   <data name="IL6001" xml:space="preserve">
     <value>Assembly '{0}' contains reference to obsolete attribute 'Android.Runtime.PreserveAttribute'. Members with this attribute may be trimmed. Please use System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute instead</value>
   </data>
-  <data name="MarshalMethodsAssemblyRewriterUnableToDeleteSourceFile" xml:space="preserve">
-    <value>[{0}] Unable to delete source file '{1}'</value>
-  </data>
   <data name="XA0000_API_for_TargetFrameworkVersion" xml:space="preserve">
     <value>Could not determine API level for $(TargetFrameworkVersion) of '{0}'.</value>
     <comment>The following are literal names and should not be translated: $(TargetFrameworkVersion)
@@ -877,6 +874,11 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
   <data name="XA4323" xml:space="preserve">
     <value>Ignoring directory '{0}' as it does not exist!</value>
     <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] Unable to delete source file '{1}'</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
   </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>

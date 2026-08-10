@@ -196,7 +196,7 @@ namespace Xamarin.Android.Tasks
 					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
 					File.Delete (path);
 				} catch (Exception ex) {
-					log.LogWarning (string.Format (Properties.Resources.MarshalMethodsAssemblyRewriterUnableToDeleteSourceFile, targetArch, path));
+					log.LogCodedWarning ("XA4324", Properties.Resources.XA4324, targetArch, path);
 					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
 			}
