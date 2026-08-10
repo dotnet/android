@@ -178,17 +178,17 @@ namespace Xamarin.AndroidTools.Debugging
 					throw new InvalidOperationException ($"Could not find process for package '{packageName}'.");
 
 				using (var jdwpClient = new JdwpClient (config.Debugger.JdwpHostName, config.Debugger.JdwpPort)) {
-					await AdbServer.Default.ForwardPort (androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, token);
+					await AdbServer.Default.ForwardPort (androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, token).ConfigureAwait (false);
 					try {
-						await jdwpClient.ConnectAsync (token);
+						await jdwpClient.ConnectAsync (token).ConfigureAwait (false);
 
 						// Keep the Connection for 1300 milliseconds, otherwise the Android OS ignores the connection!
 						// https://github.com/aosp-mirror/platform_frameworks_base/blob/6b28a227400749f4f8ad1f56799370e7c2cab149/core/java/android/os/Debug.java#L101C50-L101C54
-						await Task.Delay (WAIT_FOR_DEBUGGER_TO_ATTACH_MS, token);
+						await Task.Delay (WAIT_FOR_DEBUGGER_TO_ATTACH_MS, token).ConfigureAwait (false);
 
-						await jdwpClient.DisconnectAsync ();
+						await jdwpClient.DisconnectAsync ().ConfigureAwait (false);
 					} finally {
-						await AdbServer.Default.KillForward (androidDevice, "tcp", jdwpClient.Port, CancellationToken.None);
+						await AdbServer.Default.KillForward (androidDevice, "tcp", jdwpClient.Port, CancellationToken.None).ConfigureAwait (false);
 					}
 				}
 			}

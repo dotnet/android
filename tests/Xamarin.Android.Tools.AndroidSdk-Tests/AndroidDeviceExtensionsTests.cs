@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ public class AndroidDeviceExtensionsTests
 	}
 
 	[Test]
-	public async Task GetProcessIDAsyncStopsAfterMaximumAttempts ()
+	public async Task GetProcessIDAsyncPerformsInitialAttemptAndMaximumRetries ()
 	{
 		var attempts = 0;
 
@@ -49,7 +50,7 @@ public class AndroidDeviceExtensionsTests
 		using (var cancellationTokenSource = new CancellationTokenSource ()) {
 			cancellationTokenSource.Cancel ();
 
-			Assert.ThrowsAsync<TaskCanceledException> (() => AndroidDeviceExtensions.GetProcessIDAsync (
+			Assert.CatchAsync<OperationCanceledException> (() => AndroidDeviceExtensions.GetProcessIDAsync (
 				_ => Task.FromResult (0),
 				maxAttempts: 20,
 				timeBetweenAttempts: 1,
