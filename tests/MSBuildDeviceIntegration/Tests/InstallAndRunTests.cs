@@ -402,19 +402,20 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			}
 
 			// Write the output to a log file for debugging
+			string outputText = output.ToString ();
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, $"dotnet-run-output-wake-{shouldWakeDevice}.log");
-			File.WriteAllText (logPath, output.ToString ());
+			File.WriteAllText (logPath, outputText);
 			TestContext.AddTestAttachment (logPath);
 
 			if (shouldWakeDevice) {
-				StringAssert.Contains ("shell input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; am start", output.ToString (),
+				StringAssert.Contains ("shell input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; am start", outputText,
 					$"`dotnet run` should wake the device and dismiss its keyguard in the same adb shell command used to start the app. See {logPath} for details.");
 			} else {
-				StringAssert.Contains ("shell am start", output.ToString (),
+				StringAssert.Contains ("shell am start", outputText,
 					$"`dotnet run` should start the app without waking the device or dismissing its keyguard when --no-wake-device is specified. See {logPath} for details.");
-				StringAssert.DoesNotContain ("KEYCODE_WAKEUP", output.ToString (),
+				StringAssert.DoesNotContain ("KEYCODE_WAKEUP", outputText,
 					$"`dotnet run` should not wake the device when --no-wake-device is specified. See {logPath} for details.");
-				StringAssert.DoesNotContain ("dismiss-keyguard", output.ToString (),
+				StringAssert.DoesNotContain ("dismiss-keyguard", outputText,
 					$"`dotnet run` should not dismiss the keyguard when --no-wake-device is specified. See {logPath} for details.");
 			}
 			Assert.IsTrue (foundMessage, $"Expected message '{logcatMessage}' was not found in output. See {logPath} for details.");
