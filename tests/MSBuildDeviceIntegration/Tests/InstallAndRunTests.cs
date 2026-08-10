@@ -960,6 +960,53 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
+		public void TabLayoutOnTabSelectedListener2_ShouldFire_OnActivityLaunch ()
+		{
+			const string expectedLogcatOutput = "OnTabSelected called!";
+
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					KnownPackages.XamarinGoogleAndroidMaterial,
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Google.Android.Material.Tabs;")
+				.Replace ("public class MainActivity : Activity", "public class MainActivity : Activity, TabLayout.IOnTabSelectedListener2")
+				.Replace ("//${AFTER_ONCREATE}",
+$$"""
+			var tabLayout = new TabLayout (this);
+			tabLayout.AddOnTabSelectedListener (this);
+			tabLayout.AddTab (tabLayout.NewTab (), true);
+			SetContentView (tabLayout);
+		}
+
+		public void OnTabSelected (TabLayout.Tab tab)
+		{
+			Android.Util.Log.Debug ("TabLayoutTest", "{{expectedLogcatOutput}}");
+		}
+
+		public void OnTabUnselected (TabLayout.Tab tab)
+		{
+		}
+
+		public void OnTabReselected (TabLayout.Tab tab)
+		{
+""");
+
+			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			RunProjectAndAssert (proj, builder);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		[Test]
 		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
