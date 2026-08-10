@@ -303,8 +303,9 @@ namespace Xamarin.Android.Tools
 
 		/// <summary>
 		/// Searches for a cmdline-tools binary in the SDK.
-		/// Selects the highest installed revision reported by source.properties,
-		/// with deterministic directory-name fallback when metadata is unavailable.
+		/// Selects cmdline-tools/latest first, then the highest installed revision reported
+		/// by source.properties, with deterministic directory-name fallback when metadata is unavailable.
+		/// Legacy tools/bin installations are not supported.
 		/// </summary>
 		/// <param name="sdkPath">Root path to the Android SDK.</param>
 		/// <param name="toolName">Tool binary name without extension (e.g., "avdmanager").</param>
