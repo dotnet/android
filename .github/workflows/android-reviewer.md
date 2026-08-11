@@ -18,6 +18,7 @@ imports:
 
 environment: copilot-pat-pool
 permissions:
+  checks: read
   contents: read
   pull-requests: read
 model: gpt-5.6-sol
