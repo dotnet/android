@@ -54,6 +54,7 @@ network:
     - "microsoft.com"
     - "vsassets.io"
 tools:
+  bash: [cat, find, grep, head, tail, wc]
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
