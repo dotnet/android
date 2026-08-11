@@ -1,5 +1,5 @@
 ---
-name: android-reviewer
+name: code-review
 description: >-
   Review dotnet/android PRs against established rules. Trigger on "review this PR",
   a GitHub PR URL, or code review requests. Checks MSBuild, nullable, async, security,
