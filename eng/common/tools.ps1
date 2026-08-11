@@ -31,6 +31,10 @@
 # Set to true to reuse msbuild nodes. Recommended to not reuse on CI.
 [bool]$nodeReuse = if (Test-Path variable:nodeReuse) { $nodeReuse } else { !$ci }
 
+# Set to true to build with MSBuild's multi-threaded mode (-mt). Opt-in for now, so off unless it was
+# explicitly requested. It's intended to become the default for local builds once it has proven out.
+[bool]$msbuildMultiThreaded = if (Test-Path variable:msbuildMultiThreaded) { $msbuildMultiThreaded } else { $false }
+
 # Configures warning treatment in msbuild.
 [bool]$warnAsError = if (Test-Path variable:warnAsError) { $warnAsError } else { $true }
 
@@ -808,8 +812,8 @@ function MSBuild() {
 
   $cmdArgs = "$($buildTool.Command) /m /nologo /clp:Summary /v:$verbosity /nr:$nodeReuse /p:ContinuousIntegrationBuild=$ci"
 
-  # Add -mt flag for MSBuild multithreaded mode if enabled via environment variable
-  if ($env:MSBUILD_MT_ENABLED -eq "1") {
+  # Build with MSBuild's multi-threaded mode.
+  if ($msbuildMultiThreaded) {
     $cmdArgs += ' -mt'
   }
 
