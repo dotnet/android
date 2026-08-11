@@ -77,17 +77,22 @@ namespace Java.Interop.Tools.Generator
 					break;
 				case "add-node":
 					try {
-						var nodes = apiDocument.ApiDocument.XPathSelectElements (path);
+						var nodes = apiDocument.ApiDocument.XPathSelectElements (path).ToArray ();
 
 						if (!nodes.Any ())
 							// BG8A01
 							Report.LogCodedWarning (0, Report.WarningAddNodeMatchedNoNodes, null, metaitem, $"<add-node path=\"{path}\" />");
 						else {
-							PreserveJniOverrides (metaitem);
 							foreach (var node in nodes) {
-								if (node.Name.LocalName == "method" && metaitem.Elements ("parameter").Any ())
-									node.Attributes ("managed-jni-signature").Remove ();
-								node.Add (metaitem.Nodes ());
+								var content = new XElement ("content", metaitem.Nodes ());
+								PreserveJniOverrides (content);
+								if (node.Name.LocalName == "method") {
+									foreach (var parameter in content.Elements ("parameter"))
+										PreserveJniOverride (parameter, "jni-type", parameter.XGetAttribute ("jni-type"), isMethodParameter: true);
+									if (content.Elements ("parameter").Any ())
+										node.Attributes ("managed-jni-signature").Remove ();
+								}
+								node.Add (content.Nodes ());
 							}
 						}
 					} catch (XPathException) {
@@ -206,7 +211,7 @@ namespace Java.Interop.Tools.Generator
 			}
 		}
 
-		static void PreserveJniOverride (XElement element, string name, string? value)
+		static void PreserveJniOverride (XElement element, string name, string? value, bool isMethodParameter = false)
 		{
 			if (value is null)
 				return;
@@ -216,7 +221,7 @@ namespace Java.Interop.Tools.Generator
 			}
 			if (element.Name.LocalName == "method" && name == "jni-signature")
 				element.SetAttributeValue ("managed-jni-signature", value);
-			else if (element.Name.LocalName == "parameter" && element.Parent?.Name.LocalName == "method" && name == "jni-type")
+			else if (element.Name.LocalName == "parameter" && (isMethodParameter || element.Parent?.Name.LocalName == "method") && name == "jni-type")
 				element.SetAttributeValue ("managed-jni-type", value);
 		}
 
