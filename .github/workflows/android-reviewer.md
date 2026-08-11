@@ -59,7 +59,6 @@ tools:
     - az pipelines:*
     - az rest:*
     - cat
-    - gh pr:*
     - grep
     - head
     - jq

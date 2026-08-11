@@ -31,6 +31,13 @@ Formats: `https://github.com/{owner}/{repo}/pull/{number}`, `{owner}/{repo}#{num
 
 ### 2. Gather context (before reading PR description)
 
+Use the GitHub `pull_request_read` tool:
+
+- `method: get_diff` to read the diff
+- `method: get_files` to list changed files
+
+When the GitHub MCP tool is unavailable, fall back to:
+
 ```
 gh pr diff {number} --repo {owner}/{repo}
 gh pr view {number} --repo {owner}/{repo} --json files
@@ -42,6 +49,8 @@ For each changed file, read the **full source file** (not just the diff) to unde
 
 ### 3. Incorporate PR narrative and reconcile
 
+Use `pull_request_read` with `method: get` to read the title and description. When the GitHub MCP tool is unavailable, fall back to:
+
 ```
 gh pr view {number} --repo {owner}/{repo} --json title,body
 ```
@@ -49,6 +58,8 @@ gh pr view {number} --repo {owner}/{repo} --json title,body
 Now read the PR description and linked issues. Treat them as claims to verify, not facts to accept. Where your independent reading disagrees with the PR description, investigate further. If the PR claims a performance improvement, require evidence (benchmarks, profiling data). If it claims a bug fix, verify the bug exists and the fix addresses root cause — not symptoms.
 
 ### 4. Check CI status
+
+Use `pull_request_read` with `method: get_check_runs` to read CI checks. When the GitHub MCP tool is unavailable, fall back to:
 
 ```
 gh pr checks {number} --repo {owner}/{repo}
