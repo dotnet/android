@@ -59,6 +59,8 @@ variables:
   value: $[ format('{0}.{1}', format('{0:yyyyMMdd}', pipeline.startTime), counter(format('{0:yyyyMMdd}', pipeline.startTime), 1)) ]
 - name: DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE
   value: 'true'
+- name: DOTNET_SDK_VULNERABILITY_CHECK_DISABLE
+  value: 'true'
 - name: NuGetAudit
   value: 'false'
 # Override for internal pipeline
