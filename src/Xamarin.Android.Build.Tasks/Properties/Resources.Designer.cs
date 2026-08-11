@@ -1477,6 +1477,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4237", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to resolve POM for Maven artifact &apos;{0}&apos; from &apos;{1}&apos;.
+        ///- {2}.
+        /// </summary>
+        public static string XA4237_Details {
+            get {
+                return ResourceManager.GetString("XA4237_Details", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Unknown Maven repository: &apos;{0}&apos;..

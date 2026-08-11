@@ -210,7 +210,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4234](xa4234.md): '<{item}>' item '{itemspec}' is missing required attribute '{name}'.
 + [XA4235](xa4235.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id'.
 + [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}
-+ [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - {exception}
++ [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - Failed to resolve POM for Maven artifact '{dependency}' from '{url}'. - {exception}
 + [XA4239](xa4239.md): Unknown Maven repository: '{repository}'.
 + [XA4241](xa4241.md): Java dependency '{artifact}' is not satisfied.
 + [XA4242](xa4242.md): Java dependency '{artifact}' is not satisfied. Microsoft maintains the NuGet package '{nugetId}' that could fulfill this dependency.
