@@ -59,7 +59,8 @@ network:
   - github
   - dotnet
   - java
-  - "aka.ms"
+  - aka.ms
+  - download.visualstudio.microsoft.com
 safe-outputs:
   github-token: ${{ secrets.GITHUB_TOKEN }}
   create-pull-request:
