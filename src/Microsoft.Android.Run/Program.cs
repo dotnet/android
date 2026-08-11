@@ -576,34 +576,36 @@ void StartLogcat ()
 
 async Task WaitForAppExitAsync ()
 {
-	while (!cts.Token.IsCancellationRequested) {
-		// Check if app is still running
-		var pid = await GetAppPidAsync ();
-		if (pid == null || pid != logcatPid) {
-			if (verbose)
-				Console.WriteLine ("App has exited.");
-			break;
-		}
-
-		// Also check if logcat process exited unexpectedly
-		if (logcatProcess != null && logcatProcess.HasExited) {
-			if (verbose)
-				Console.WriteLine ("Logcat process exited.");
-			break;
-		}
-
-		await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
-	}
-
-	// Clean up logcat process
 	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-			logcatProcess.WaitForExit (1000);
+		while (!cts.Token.IsCancellationRequested) {
+			// Check if app is still running
+			var pid = await GetAppPidAsync ();
+			if (pid == null || pid != logcatPid) {
+				if (verbose)
+					Console.WriteLine ("App has exited.");
+				break;
+			}
+
+			// Also check if logcat process exited unexpectedly
+			if (logcatProcess != null && logcatProcess.HasExited) {
+				if (verbose)
+					Console.WriteLine ("Logcat process exited.");
+				break;
+			}
+
+			await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+	} finally {
+		// Clean up logcat process
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+		}
 	}
 }
 
