@@ -58,15 +58,31 @@ internal static class JavaNameValidator
 			}
 		}
 
-		// '$' separates nested types in a JNI binary name and becomes '.' in Java source.
-		foreach (var segment in segments [segments.Length - 1].Split ('$')) {
+		string typeName = segments [segments.Length - 1];
+		if (IsInvalidIdentifier (typeName, isTypeName: true)) {
+			invalidSegment = typeName;
+			return true;
+		}
+
+		invalidSegment = "";
+		return false;
+	}
+
+	internal static bool TryGetInvalidJniSourceTypeSegment (string jniName, out string invalidSegment)
+	{
+		if (TryGetInvalidJniNameSegment (jniName, out invalidSegment)) {
+			return true;
+		}
+
+		// '$' becomes '.' when a JNI binary name is emitted as a Java source type reference.
+		string typeName = jniName.Substring (jniName.LastIndexOf ('/') + 1);
+		foreach (var segment in typeName.Split ('$')) {
 			if (IsInvalidIdentifier (segment, isTypeName: true)) {
 				invalidSegment = segment;
 				return true;
 			}
 		}
 
-		invalidSegment = "";
 		return false;
 	}
 }

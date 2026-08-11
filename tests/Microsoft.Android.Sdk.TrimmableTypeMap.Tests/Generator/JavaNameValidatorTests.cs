@@ -70,9 +70,10 @@ public class JavaNameValidatorTests
 	[InlineData ("com/example/Outer$for", "for")]
 	[InlineData ("com/example/Outer$record", "record")]
 	[InlineData ("com/example/for$Nested", "for")]
-	public void TryGetInvalidJniNameSegment_ReservedNestedTypeIdentifier_ReturnsTrue (string jniName, string expected)
+	public void TryGetInvalidJniSourceTypeSegment_ReservedNestedTypeIdentifier_ReturnsTrue (string jniName, string expected)
 	{
-		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var actual));
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out _));
+		Assert.True (JavaNameValidator.TryGetInvalidJniSourceTypeSegment (jniName, out var actual));
 		Assert.Equal (expected, actual);
 	}
 
@@ -114,6 +115,8 @@ public class JavaNameValidatorTests
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ("com/example/MainActivity", out var jniIdentifier));
 		Assert.Equal ("", jniIdentifier);
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ("com/example/Outer$Inner", out var nestedIdentifier));
+		Assert.Equal ("", nestedIdentifier);
+		Assert.False (JavaNameValidator.TryGetInvalidJniSourceTypeSegment ("com/example/Outer$Inner", out nestedIdentifier));
 		Assert.Equal ("", nestedIdentifier);
 	}
 }

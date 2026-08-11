@@ -131,6 +131,43 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Generate_DeclaredDollarKeyword_PreservesDollar ()
+		{
+			var type = new JavaPeerInfo {
+				JavaName = "com/example/Outer$for",
+				CompatJniName = "com/example/Outer$for",
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+			};
+
+			var java = GenerateToString (type);
+
+			Assert.Contains ("public class Outer$for\n", java);
+		}
+
+		[Fact]
+		public void Generate_ReferencedDollarKeyword_UsesSourceDots ()
+		{
+			var type = new JavaPeerInfo {
+				JavaName = "com/example/Derived",
+				CompatJniName = "com/example/Derived",
+				ManagedTypeName = "Example.Derived",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Derived",
+				AssemblyName = "Example",
+				BaseJavaName = "com/example/Outer$for",
+				ImplementedInterfaceJavaNames = ["com/example/Outer$record"],
+			};
+
+			var java = GenerateToString (type);
+
+			Assert.Contains ("\textends com.example.Outer.for\n", java);
+			Assert.Contains ("\t\tcom.example.Outer.record", java);
+		}
+
+		[Fact]
 		public void Generate_ApplicationSubclass_WithApplicationJavaClass_ExtendsThatClass ()
 		{
 			// When $(AndroidApplicationJavaClass) is set (e.g. android.support.multidex.MultiDexApplication
@@ -397,8 +434,6 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("com/for/Example")]
 		[InlineData ("com/example/for")]
 		[InlineData ("com/example/record")]
-		[InlineData ("com/example/Outer$for")]
-		[InlineData ("com/example/Outer$record")]
 		public void ValidateJniName_InvalidName_Throws (string badJniName)
 		{
 			Assert.Throws<ArgumentException> (() => JniSignatureHelper.ValidateJniName (badJniName));
@@ -410,6 +445,8 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("SingleSegment")]
 		[InlineData ("com/example/_Private")]
 		[InlineData ("com/example/$Generated")]
+		[InlineData ("com/example/Outer$for")]
+		[InlineData ("com/example/Outer$record")]
 		public void ValidateJniName_ValidName_DoesNotThrow (string validJniName)
 		{
 			JniSignatureHelper.ValidateJniName (validJniName);

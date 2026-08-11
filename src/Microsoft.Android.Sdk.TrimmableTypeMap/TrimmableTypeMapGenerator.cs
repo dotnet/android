@@ -85,6 +85,25 @@ public class TrimmableTypeMapGenerator
 				logger.LogInvalidJavaNameError (peer.JavaName, invalidIdentifier);
 				valid = false;
 			}
+			if (peer.CannotRegisterInStaticConstructor &&
+					JavaNameValidator.TryGetInvalidJniSourceTypeSegment (peer.JavaName, out invalidIdentifier) &&
+					reportedNames.Add (peer.JavaName)) {
+				logger.LogInvalidJavaNameError (peer.JavaName, invalidIdentifier);
+				valid = false;
+			}
+			if (peer.BaseJavaName is not null &&
+					JavaNameValidator.TryGetInvalidJniSourceTypeSegment (peer.BaseJavaName, out invalidIdentifier) &&
+					reportedNames.Add (peer.BaseJavaName)) {
+				logger.LogInvalidJavaNameError (peer.BaseJavaName, invalidIdentifier);
+				valid = false;
+			}
+			foreach (var interfaceName in peer.ImplementedInterfaceJavaNames) {
+				if (JavaNameValidator.TryGetInvalidJniSourceTypeSegment (interfaceName, out invalidIdentifier) &&
+						reportedNames.Add (interfaceName)) {
+					logger.LogInvalidJavaNameError (interfaceName, invalidIdentifier);
+					valid = false;
+				}
+			}
 		}
 		return valid;
 	}
