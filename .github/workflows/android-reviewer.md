@@ -75,7 +75,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 
 ## Instructions
 
-1. Read the review methodology from `.github/skills/android-reviewer/SKILL.md` — this defines the review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types.
+1. Read the review methodology from `.github/skills/code-review/SKILL.md` — this defines the review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types.
 2. Follow the skill's workflow to analyze the pull request:
    - Gather context: read the diff and changed files
    - For each changed file, read the **full source file** to understand surrounding context
