@@ -153,6 +153,29 @@ namespace generatortests
 			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 		}
 
+		[TestCase ("(Ljava.lang.String;)V")]
+		[TestCase ("([Ljava.lang.String;)V")]
+		public void Method_DottedJniSignatureOverrideIsInvalid (string signature)
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ($"<method name='test' return='void' managed-jni-signature='{signature}'><parameter name='value' type='java.lang.String' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
+		public void Method_DottedJniParameterOverrideIsInvalid ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void'><parameter name='value' type='java.lang.String' managed-jni-type='Ljava.lang.String;' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
 		[Test]
 		public void Method_EmptyJniOverridesAreIgnored ()
 		{

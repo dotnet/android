@@ -67,6 +67,10 @@ namespace MonoDroid.Generation
 				int end = signature.IndexOf (';', index);
 				if (end <= index)
 					return false;
+				for (int i = index; i < end; i++) {
+					if (signature [i] == '.' || signature [i] == '[')
+						return false;
+				}
 				index = end + 1;
 			} else if ("ZBCSIJFD".IndexOf (kind) < 0 && (kind != 'V' || !allowVoid || isArray)) {
 				return false;

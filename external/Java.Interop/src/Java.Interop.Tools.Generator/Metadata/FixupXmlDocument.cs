@@ -210,7 +210,7 @@ namespace Java.Interop.Tools.Generator
 		{
 			if (value is null)
 				return;
-			if (value.Length == 0) {
+			if (value.Length == 0 || (element.Name.LocalName == "parameter" && name == "jni-type" && IsGenericJniType (value))) {
 				RemoveJniOverride (element, name);
 				return;
 			}
@@ -218,6 +218,14 @@ namespace Java.Interop.Tools.Generator
 				element.SetAttributeValue ("managed-jni-signature", value);
 			else if (element.Name.LocalName == "parameter" && element.Parent?.Name.LocalName == "method" && name == "jni-type")
 				element.SetAttributeValue ("managed-jni-type", value);
+		}
+
+		static bool IsGenericJniType (string value)
+		{
+			int index = 0;
+			while (index < value.Length && value [index] == '[')
+				index++;
+			return index < value.Length && value [index] == 'T';
 		}
 
 		static void InvalidateJniOverrides (XElement element, string? name)

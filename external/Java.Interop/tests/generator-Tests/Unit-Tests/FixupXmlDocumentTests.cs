@@ -45,6 +45,21 @@ namespace generatortests
 		}
 
 		[Test]
+		public void AddNode_GenericJniTypeUsesErasedMethodSignature ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument ("<add-node path=\"/api/package[@name='android']\"><method name='onNext' jni-signature='(Ljava/lang/Object;)V' return='void'><parameter name='value' type='T' jni-type='TT;' /></method></add-node>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.Multiple (() => {
+				Assert.AreEqual ("(Ljava/lang/Object;)V", method.Attribute ("managed-jni-signature").Value);
+				Assert.IsNull (method.Element ("parameter").Attribute ("managed-jni-type"));
+			});
+		}
+
+		[Test]
 		public void AddNode_DoesNotPreserveConstructorJniType ()
 		{
 			var api = GetXmlApiDocument ();
