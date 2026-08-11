@@ -101,6 +101,7 @@ namespace Java.Interop.Tools.Generator
 						var matched = false;
 
 						foreach (var node in nodes) {
+							InvalidateContainingMethodJniSignature (node, metaitem.Value);
 							var newChild = new XElement (metaitem.Value);
 							newChild.Add (node.Attributes ());
 							newChild.Add (node.Nodes ());
@@ -153,9 +154,13 @@ namespace Java.Interop.Tools.Generator
 
 						foreach (var parent_node in parents) {
 							var nodes = parent_node.XPathSelectElements (path).ToArray ();
-							foreach (var node in nodes)
+							foreach (var node in nodes) {
+								InvalidateContainingMethodJniSignature (node);
 								node.Remove ();
+							}
 							parent_node.Add (nodes);
+							foreach (var node in nodes)
+								InvalidateContainingMethodJniSignature (node);
 							matched = true;
 						}
 						if (!matched)
@@ -224,9 +229,9 @@ namespace Java.Interop.Tools.Generator
 			}
 		}
 
-		static void InvalidateContainingMethodJniSignature (XElement element)
+		static void InvalidateContainingMethodJniSignature (XElement element, string? replacementName = null)
 		{
-			if (element.Name.LocalName == "parameter" && element.Parent?.Name.LocalName == "method")
+			if ((element.Name.LocalName == "parameter" || replacementName == "parameter") && element.Parent?.Name.LocalName == "method")
 				element.Parent.Attributes ("managed-jni-signature").Remove ();
 		}
 

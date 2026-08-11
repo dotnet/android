@@ -151,6 +151,20 @@ namespace generatortests
 		}
 
 		[Test]
+		public void ChangeNode_ParameterInvalidatesJniSignatureOverride ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument (
+				"<add-node path=\"/api/package[@name='android']\"><method name='test' jni-signature='(I)V' return='void'><parameter name='value' type='int' jni-type='I' /></method></add-node>" +
+				"<change-node path=\"/api/package[@name='android']/method[@name='test']/parameter[@name='value']\">field</change-node>");
+
+			api.ApplyFixupFile (fixup);
+
+			var method = api.ApiDocument.Root.Element ("package").Element ("method");
+			Assert.IsNull (method.Attribute ("managed-jni-signature"));
+		}
+
+		[Test]
 		public void MoveNode ()
 		{
 			var api = GetXmlApiDocument ();
@@ -159,6 +173,24 @@ namespace generatortests
 			api.ApplyFixupFile (fixup);
 
 			Assert.AreEqual ("<api><package name='android' jni-name='android'><package name='java' jni-name='java' /></package></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
+		}
+
+		[Test]
+		public void MoveNode_ParameterInvalidatesJniSignatureOverrides ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument (
+				"<add-node path=\"/api/package[@name='android']\"><method name='source' jni-signature='(I)V' return='void'><parameter name='value' type='int' jni-type='I' /></method><method name='destination' jni-signature='()V' return='void' /></add-node>" +
+				"<move-node path=\"/api/package[@name='android']/method[@name='source']/parameter\">/api/package[@name='android']/method[@name='destination']</move-node>");
+
+			api.ApplyFixupFile (fixup);
+
+			var methods = api.ApiDocument.Root.Element ("package").Elements ("method").ToArray ();
+			Assert.Multiple (() => {
+				Assert.IsNull (methods [0].Attribute ("managed-jni-signature"));
+				Assert.IsNull (methods [1].Attribute ("managed-jni-signature"));
+				Assert.AreEqual ("I", methods [1].Element ("parameter").Attribute ("managed-jni-type").Value);
+			});
 		}
 
 		[Test]
