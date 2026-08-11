@@ -129,14 +129,21 @@ public class MavenDownload : AsyncTask
 				LogMessage ("Found POM file '{0}' for Java artifact '{1}'.", kv.Value, pom_artifact);
 			}
 		} catch (Exception ex) {
-			var unresolved_artifact = resolver.UnresolvedArtifact ?? artifact;
-			var unresolved_pom = resolver.UnresolvedPomUrl ?? resolver.GetPomUrl (unresolved_artifact);
-			var details = string.Format (Properties.Resources.XA4237_Details, unresolved_artifact, unresolved_pom, ex.Unwrap ().Message);
+			var details = GetPomResolutionErrorDetails (resolver, ex);
 			LogCodedError ("XA4237", Properties.Resources.XA4237, artifact, details);
 			return null;
 		}
 
 		return result;
+	}
+
+	internal static string GetPomResolutionErrorDetails (LoggingPomResolver resolver, Exception exception)
+	{
+		var message = exception.Unwrap ().Message;
+		if (resolver.UnresolvedArtifact is not Artifact unresolved_artifact || resolver.UnresolvedPomUrl is not string unresolved_pom)
+			return message;
+
+		return string.Format (Properties.Resources.XA4237_Details, unresolved_artifact, unresolved_pom, message);
 	}
 
 	/// <summary>

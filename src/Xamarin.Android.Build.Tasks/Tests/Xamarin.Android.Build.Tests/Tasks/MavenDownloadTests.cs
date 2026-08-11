@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Java.Interop.Tools.Maven;
 using Java.Interop.Tools.Maven.Models;
@@ -189,7 +190,7 @@ public class MavenDownloadTests
 			  </dependencyManagement>
 			</project>
 			""";
-		var repository = new TestMavenRepository (root, root_pom);
+		var repository = new TestMavenRepository ((root, root_pom));
 		var cache = new CachedMavenRepository (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ()), repository);
 		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
 
@@ -199,6 +200,31 @@ public class MavenDownloadTests
 			Assert.AreEqual ($"No POM found for {imported}", exception?.Message);
 			Assert.AreEqual (imported.VersionedArtifactString, resolver.UnresolvedArtifact?.VersionedArtifactString);
 			Assert.AreEqual ("https://repo.example.com/maven2/androidx/compose/compose-bom/2024.09.00/compose-bom-2024.09.00.pom", resolver.UnresolvedPomUrl);
+		} finally {
+			DeleteTempDirectory (cache.CacheDirectory);
+		}
+	}
+
+	[Test]
+	public void ImportedPomModelFailureDoesNotBlameRootArtifact ()
+	{
+		var root = new Artifact ("com.example", "library", "1.0.0");
+		var imported = new Artifact ("com.example", "bom", "1.0.0");
+		var root_pom = CreatePomWithImport (root, imported.GroupId, imported.Id, imported.Version);
+		var imported_pom = CreatePomWithImport (imported, "${invalid.group}", "nested-bom", "1.0.0");
+		var repository = new TestMavenRepository ((root, root_pom), (imported, imported_pom));
+		var cache = new CachedMavenRepository (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ()), repository);
+		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
+
+		try {
+			var exception = Assert.Throws<ArgumentException> (() => ResolvedProject.FromArtifact (root, resolver));
+			if (exception is null)
+				throw new InvalidOperationException ("Expected imported POM model resolution to fail.");
+
+			Assert.IsNull (resolver.UnresolvedArtifact);
+			Assert.IsNull (resolver.UnresolvedPomUrl);
+			Assert.IsTrue (resolver.ResolvedPoms.ContainsKey (imported.VersionedArtifactString));
+			Assert.AreEqual (exception.Message, MavenDownload.GetPomResolutionErrorDetails (resolver, exception));
 		} finally {
 			DeleteTempDirectory (cache.CacheDirectory);
 		}
@@ -345,22 +371,41 @@ public class MavenDownloadTests
 		}
 	}
 
+	static string CreatePomWithImport (Artifact artifact, string importedGroupId, string importedArtifactId, string importedVersion)
+		=> $"""
+			<project xmlns="http://maven.apache.org/POM/4.0.0">
+			  <modelVersion>4.0.0</modelVersion>
+			  <groupId>{artifact.GroupId}</groupId>
+			  <artifactId>{artifact.Id}</artifactId>
+			  <version>{artifact.Version}</version>
+			  <dependencyManagement>
+			    <dependencies>
+			      <dependency>
+			        <groupId>{importedGroupId}</groupId>
+			        <artifactId>{importedArtifactId}</artifactId>
+			        <version>{importedVersion}</version>
+			        <type>pom</type>
+			        <scope>import</scope>
+			      </dependency>
+			    </dependencies>
+			  </dependencyManagement>
+			</project>
+			""";
+
 	sealed class TestMavenRepository : IMavenRepository
 	{
-		readonly Artifact artifact;
-		readonly byte [] pom;
+		readonly Dictionary<string, byte []> poms;
 
 		public string Name => "test";
 
-		public TestMavenRepository (Artifact artifact, string pom)
+		public TestMavenRepository (params (Artifact Artifact, string Pom) [] poms)
 		{
-			this.artifact = artifact;
-			this.pom = Encoding.UTF8.GetBytes (pom);
+			this.poms = poms.ToDictionary (p => p.Artifact.VersionedArtifactString, p => Encoding.UTF8.GetBytes (p.Pom));
 		}
 
 		public bool TryGetFile (Artifact artifact, string filename, out Stream stream)
 		{
-			if (artifact.VersionedArtifactString == this.artifact.VersionedArtifactString) {
+			if (poms.TryGetValue (artifact.VersionedArtifactString, out var pom)) {
 				stream = new MemoryStream (pom);
 				return true;
 			}
