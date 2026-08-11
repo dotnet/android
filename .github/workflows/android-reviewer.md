@@ -54,7 +54,21 @@ network:
     - "microsoft.com"
     - "vsassets.io"
 tools:
-  bash: [cat, find, grep, head, tail, wc]
+  bash:
+    - az devops:*
+    - az pipelines:*
+    - az rest:*
+    - cat
+    - gh pr:*
+    - git diff:*
+    - git log:*
+    - git show:*
+    - git status
+    - grep
+    - head
+    - jq
+    - tail
+    - wc
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
