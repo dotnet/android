@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
@@ -32,18 +31,43 @@ namespace Xamarin.Android.Build.Tests
 
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
 			var dotnet = new DotNetCLI (Path.Combine (templatePath, $"{templateName}.csproj"));
-			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
+			Assert.IsTrue (dotnet.New (template, noRestore: true), $"`dotnet new {template} --no-restore` should succeed");
+
+			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
+			var projectNuGetConfig = Path.Combine (dotnet.ProjectDirectory, "NuGet.config");
+			File.Copy (repoNuGetConfig, projectNuGetConfig);
+			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
+
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 
 			// Debug build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Debug", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Debug")), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
 			// Release build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Release")), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
+
+			string [] GetBuildParameters (string configuration)
+			{
+				var parameters = new List<string> {
+					$"Configuration={configuration}",
+					"TrimmerSingleWarn=false",
+				};
+				if (template == "androidwear") {
+					var mavenTargets = Path.Combine (
+						XABuildPaths.TopDirectory,
+						"src",
+						"Xamarin.Android.Build.Tasks",
+						"Tests",
+						"Xamarin.Android.Build.Tests",
+						"dotnet-public-maven.targets");
+					parameters.Add ($"CustomAfterMicrosoftCommonTargets=\"{mavenTargets}\"");
+				}
+				return parameters.ToArray ();
+			}
 		}
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
