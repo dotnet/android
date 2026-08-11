@@ -377,10 +377,25 @@
     </ItemGroup>
   </Target>
 
-  <!-- Override _RemoveRegisterAttribute to strip [Register] attributes from shrunk assemblies -->
+  <!--
+    Override _RemoveRegisterAttribute to strip [Register] attributes from shrunk assemblies.
+
+    The shrunk copies must be taken from the *final* linked assemblies. `_GenerateJavaStubs`
+    runs `RewriteMarshalMethods`, which rewrites @(_ResolvedAssemblies) in place (removing the
+    `cb_*` JNI callback fields), and `_PostTrimmingPipeline` rewrites them again after ILLink.
+    Depending on `_GenerateJavaStubs` keeps this copy ordered after those rewrites.
+
+    Inputs track the assemblies themselves rather than `$(_AndroidLinkFlag)`: the link flag is
+    only touched by ILLink, so it does not change when the post-link rewrites modify the
+    assemblies. Keying on the flag let the shrunk copies go stale while @(_ResolvedAssemblies)
+    moved on, so mono-aot-cross compiled the rewritten assemblies while packaging shipped the
+    pre-rewrite copies. Their metadata field tables then disagreed, and AOT `SFLDA` patches
+    resolved to the wrong MonoClassField at runtime. This mirrors `_RemoveRegisterAttributeCoreClr`
+    in Microsoft.Android.Sdk.TypeMap.Trimmable.targets.
+  -->
   <Target Name="_RemoveRegisterAttribute"
-      DependsOnTargets="_PrepareAssemblies"
-      Inputs="$(_AndroidLinkFlag)"
+      DependsOnTargets="_PrepareAssemblies;_GenerateJavaStubs"
+      Inputs="@(_ResolvedAssemblies);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_RemoveRegisterFlag)"
       Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'">
     <CopyIfChanged
@@ -394,6 +409,9 @@
         ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
     <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
     <Touch Files="$(_RemoveRegisterFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_RemoveRegisterFlag)" />
+    </ItemGroup>
   </Target>
 
   <!-- Collect native typemap files for archive (FastDev) -->
