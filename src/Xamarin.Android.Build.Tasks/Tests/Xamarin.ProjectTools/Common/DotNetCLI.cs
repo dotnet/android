@@ -154,13 +154,16 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public bool New (string template, string output = null)
+		public bool New (string template, string output = null, bool noRestore = false)
 		{
 			var arguments = new List<string> {
 				"new",
 				template,
 				"--output", $"\"{output ?? ProjectDirectory}\"",
 			};
+			if (noRestore) {
+				arguments.Add ("--no-restore");
+			}
 			return Execute (arguments.ToArray ());
 		}
 
