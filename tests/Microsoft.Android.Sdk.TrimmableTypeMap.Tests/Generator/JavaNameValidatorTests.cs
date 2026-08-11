@@ -119,4 +119,26 @@ public class JavaNameValidatorTests
 		Assert.False (JavaNameValidator.TryGetInvalidJniSourceTypeSegment ("com/example/Outer$Inner", out nestedIdentifier));
 		Assert.Equal ("", nestedIdentifier);
 	}
+
+	[Theory]
+	[InlineData ("Lcom/example/Outer$for;", "com/example/Outer$for", "for")]
+	[InlineData ("[[Lcom/example/Outer$record;", "com/example/Outer$record", "record")]
+	public void TryGetInvalidJniTypeSegment_ReservedTypeIdentifier_ReturnsTrue (string jniType, string expectedTypeName, string expectedIdentifier)
+	{
+		Assert.True (JavaNameValidator.TryGetInvalidJniTypeSegment (jniType, out var typeName, out var invalidIdentifier));
+		Assert.Equal (expectedTypeName, typeName);
+		Assert.Equal (expectedIdentifier, invalidIdentifier);
+	}
+
+	[Theory]
+	[InlineData ("com.example.Outer.for", "for")]
+	[InlineData ("com.example.record", "record")]
+	[InlineData ("com.record.Example", null)]
+	[InlineData ("int[]", null)]
+	public void TryGetInvalidJavaSourceTypeSegment_ValidatesEmittedTypeName (string javaType, string? expectedIdentifier)
+	{
+		bool invalid = JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (javaType, out var invalidIdentifier);
+		Assert.Equal (expectedIdentifier is not null, invalid);
+		Assert.Equal (expectedIdentifier ?? "", invalidIdentifier);
+	}
 }

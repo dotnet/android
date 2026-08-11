@@ -165,6 +165,88 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'."));
 	}
 
+	[Fact]
+	public void ValidateJavaNames_ReservedEmittedTypeReferences_LogErrors ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/Derived",
+				CompatJniName = "com/example/Derived",
+				ManagedTypeName = "Example.Derived",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Derived",
+				AssemblyName = "Example",
+				JavaConstructors = [
+					new JavaConstructorInfo {
+						JniSignature = "(Lcom/example/Outer$for;)V",
+						ConstructorIndex = 0,
+					},
+				],
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "method",
+						JniSignature = "([Lcom/example/Outer$record;)Lcom/example/Outer$yield;",
+						ManagedMethodName = "Method",
+						NativeCallbackName = "n_method",
+						ThrownNames = ["com.example.Outer.permits"],
+					},
+				],
+				JavaFields = [
+					new JavaFieldInfo {
+						FieldName = "VALUE",
+						JavaTypeName = "com.example.Outer.sealed",
+						InitializerMethodName = "getValue",
+						Visibility = "public",
+					},
+				],
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$record' contains reserved Java identifier 'record'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$yield' contains reserved Java identifier 'yield'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.permits' contains reserved Java identifier 'permits'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.sealed' contains reserved Java identifier 'sealed'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_AfterDeferredRegistrationPropagation_ValidatesRegistrationName ()
+	{
+		var basePeer = new JavaPeerInfo {
+			JavaName = "com/example/Outer$for",
+			CompatJniName = "com/example/Outer$for",
+			ManagedTypeName = "Example.BaseApplication",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "BaseApplication",
+			AssemblyName = "Example",
+		};
+		var applicationPeer = new JavaPeerInfo {
+			JavaName = "com/example/Application",
+			CompatJniName = "com/example/Application",
+			ManagedTypeName = "Example.Application",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Application",
+			AssemblyName = "Example",
+			BaseJavaName = basePeer.JavaName,
+			CannotRegisterInStaticConstructor = true,
+		};
+		var peers = new List<JavaPeerInfo> { basePeer, applicationPeer };
+
+		TrimmableTypeMapGenerator.PropagateDeferredRegistrationToBaseClasses (peers);
+
+		Assert.True (basePeer.CannotRegisterInStaticConstructor);
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_ReservedApplicationJavaClassIdentifier_LogsError ()
+	{
+		Assert.False (CreateGenerator ().ValidateJavaNames ([], "com.example.Outer.for"));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.for' contains reserved Java identifier 'for'."));
+	}
+
 	[Theory]
 	[InlineData (true, false, "com/for/Example")]
 	[InlineData (false, true, "com/for/Example")]

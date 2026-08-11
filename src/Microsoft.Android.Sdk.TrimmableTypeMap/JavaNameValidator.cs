@@ -85,4 +85,45 @@ internal static class JavaNameValidator
 
 		return false;
 	}
+
+	internal static bool TryGetInvalidJniTypeSegment (string jniType, out string typeName, out string invalidSegment)
+	{
+		int typeStart = 0;
+		while (typeStart < jniType.Length && jniType [typeStart] == '[') {
+			typeStart++;
+		}
+
+		if (typeStart < jniType.Length - 1 && jniType [typeStart] == 'L' && jniType [jniType.Length - 1] == ';') {
+			typeName = jniType.Substring (typeStart + 1, jniType.Length - typeStart - 2);
+			return TryGetInvalidJniSourceTypeSegment (typeName, out invalidSegment);
+		}
+
+		typeName = "";
+		invalidSegment = "";
+		return false;
+	}
+
+	internal static bool TryGetInvalidJavaSourceTypeSegment (string javaType, out string invalidSegment)
+	{
+		string typeName = javaType;
+		while (typeName.EndsWith ("[]", StringComparison.Ordinal)) {
+			typeName = typeName.Substring (0, typeName.Length - 2);
+		}
+		if (typeName is "boolean" or "byte" or "char" or "short" or "int" or "long" or "float" or "double" or "void") {
+			invalidSegment = "";
+			return false;
+		}
+
+		var segments = typeName.Split ('.');
+		for (int i = 0; i < segments.Length; i++) {
+			bool isTypeName = i == segments.Length - 1;
+			if (IsInvalidIdentifier (segments [i], isTypeName)) {
+				invalidSegment = segments [i];
+				return true;
+			}
+		}
+
+		invalidSegment = "";
+		return false;
+	}
 }
