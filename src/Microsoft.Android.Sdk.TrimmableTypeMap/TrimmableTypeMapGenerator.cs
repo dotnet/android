@@ -50,6 +50,9 @@ public class TrimmableTypeMapGenerator
 		RootManifestReferencedTypes (allPeers, PrepareManifestForRooting (manifestTemplate, manifestConfig), manifestConfig?.ApplicationJavaClass);
 		PropagateDeferredRegistrationToBaseClasses (allPeers);
 		PropagateCannotRegisterToDescendants (allPeers);
+		if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass)) {
+			return new TrimmableTypeMapResult ([], [], allPeers);
+		}
 
 		var generatedAssemblies = generateTypeMapAssemblies
 			? GenerateTypeMapAssemblies (allPeers, systemRuntimeVersion, useSharedTypemapUniverse)
@@ -68,6 +71,90 @@ public class TrimmableTypeMapGenerator
 			: null;
 
 		return new TrimmableTypeMapResult (generatedAssemblies, generatedJavaSources, allPeers, manifest, appRegTypes);
+	}
+
+	internal bool ValidateJavaNames (IReadOnlyList<JavaPeerInfo> peers, string? applicationJavaClass = null)
+	{
+		bool valid = true;
+		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
+		if (applicationJavaClass is not null &&
+				JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (applicationJavaClass, out var invalidApplicationIdentifier)) {
+			ReportInvalidName (applicationJavaClass, invalidApplicationIdentifier);
+		}
+		foreach (var peer in peers) {
+			if (!ShouldGenerateJcw (peer)) {
+				continue;
+			}
+			ReportInvalidJniName (peer.JavaName);
+			if (peer.CannotRegisterInStaticConstructor &&
+					JavaNameValidator.TryGetInvalidJniSourceTypeSegment (peer.JavaName, out var invalidIdentifier)) {
+				ReportInvalidName (peer.JavaName, invalidIdentifier);
+			}
+			if (peer.BaseJavaName is not null) {
+				ReportInvalidJniSourceType (peer.BaseJavaName);
+			}
+			foreach (var interfaceName in peer.ImplementedInterfaceJavaNames) {
+				ReportInvalidJniSourceType (interfaceName);
+			}
+			foreach (var constructor in peer.JavaConstructors) {
+				ValidateJniSignature (constructor.JniSignature);
+			}
+			foreach (var method in peer.MarshalMethods) {
+				if (!method.IsConstructor) {
+					ValidateJniSignature (method.JniSignature);
+				}
+				if (method.ThrownNames is not null) {
+					foreach (var thrownName in method.ThrownNames) {
+						if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (thrownName, out invalidIdentifier)) {
+							ReportInvalidName (thrownName, invalidIdentifier);
+						}
+					}
+				}
+			}
+			foreach (var field in peer.JavaFields) {
+				if (JavaNameValidator.TryGetInvalidJavaSourceTypeSegment (field.JavaTypeName, out invalidIdentifier)) {
+					ReportInvalidName (field.JavaTypeName, invalidIdentifier);
+				}
+			}
+		}
+		return valid;
+
+		void ValidateJniSignature (string jniSignature)
+		{
+			foreach (var parameter in JniSignatureHelper.ParseParameters (jniSignature)) {
+				ReportInvalidJniType (parameter.JniType);
+			}
+			ReportInvalidJniType (JniSignatureHelper.ParseReturnTypeString (jniSignature));
+		}
+
+		void ReportInvalidJniName (string jniName)
+		{
+			if (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier)) {
+				ReportInvalidName (jniName, invalidIdentifier);
+			}
+		}
+
+		void ReportInvalidJniSourceType (string jniName)
+		{
+			if (JavaNameValidator.TryGetInvalidJniSourceTypeSegment (jniName, out var invalidIdentifier)) {
+				ReportInvalidName (jniName, invalidIdentifier);
+			}
+		}
+
+		void ReportInvalidJniType (string jniType)
+		{
+			if (JavaNameValidator.TryGetInvalidJniTypeSegment (jniType, out var typeName, out var invalidIdentifier)) {
+				ReportInvalidName (typeName, invalidIdentifier);
+			}
+		}
+
+		void ReportInvalidName (string name, string invalidIdentifier)
+		{
+			if (reportedNames.Add (name)) {
+				logger.LogInvalidJavaNameError (name, invalidIdentifier);
+				valid = false;
+			}
+		}
 	}
 
 	internal static List<string> CollectApplicationRegistrationTypes (List<JavaPeerInfo> allPeers)
