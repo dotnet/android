@@ -58,6 +58,13 @@ network:
   - defaults
   - github
   - dotnet
+  - aka.ms
+  - developer.android.com
+  - learn.microsoft.com
+  - source.android.com
+  - android.googlesource.com
+  - docs.oracle.com
+  - source.dot.net
 safe-outputs:
   github-token: ${{ secrets.GITHUB_TOKEN }}
   create-pull-request:
