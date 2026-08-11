@@ -143,16 +143,21 @@ public static class AndroidDeviceExtensions
 		return tcs.Task;
 	}
 
-	public static async Task<int> GetProcessIDAsync(this AndroidDevice device, string packageName, int maxAttempts, int timeBetweenAttempts, CancellationToken token)
+	public static Task<int> GetProcessIDAsync (this AndroidDevice device, string packageName, int maxAttempts, int timeBetweenAttempts, CancellationToken token)
+	{
+		return GetProcessIDAsync (cancellationToken => device.GetProcessId (packageName, cancellationToken), maxAttempts, timeBetweenAttempts, token);
+	}
+
+	internal static async Task<int> GetProcessIDAsync (Func<CancellationToken, Task<int>> getProcessId, int maxAttempts, int timeBetweenAttempts, CancellationToken token)
 	{
 		var retryCount = 1;
-		var pidOfResult = await device.GetProcessId(packageName, token);
+		var pidOfResult = await getProcessId (token).ConfigureAwait (false);
 		AndroidLogger.LogDebug("GetProcessIDAsync", "PID of the application :: " + pidOfResult);
 
 		while (pidOfResult <= 0 && retryCount <= maxAttempts)
 		{
-			await Task.Delay(timeBetweenAttempts);
-			pidOfResult = await device.GetProcessId(packageName, token);
+			await Task.Delay(timeBetweenAttempts, token).ConfigureAwait (false);
+			pidOfResult = await getProcessId (token).ConfigureAwait (false);
 			AndroidLogger.LogDebug("GetProcessIDAsync", "Retrying " + retryCount + " time(s) to get PID of the application");
 			retryCount++;
 		}

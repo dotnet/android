@@ -58,7 +58,9 @@ network:
   - defaults
   - github
   - dotnet
+  - java
   - aka.ms
+  - download.visualstudio.microsoft.com
   - developer.android.com
   - learn.microsoft.com
   - source.android.com
@@ -225,7 +227,7 @@ Implement the fix yourself:
 1. Make the smallest complete change that resolves the verified problem.
 2. Follow all repository instructions and existing style. Never modify generated files, non-English localization files, or unrelated code.
 3. Add or update a focused test when behavior changes or a regression test is practical.
-4. Run the smallest targeted build or test command that covers the changed behavior. A PR requires successful validation; if the fix cannot be validated in this environment, revert only your own changes and call `noop`.
+4. Bootstrap the repository toolchain with `./build.sh Prepare` before validation. This installs the repository-pinned .NET 11 SDK under the active `bin/{Debug|Release}/dotnet` configuration and prepares generated build prerequisites. Then run the smallest targeted build or test command through `./dotnet-local.sh`; never use the runner's system `dotnet` or lower `DotNetTargetFrameworkVersion` to work around missing tooling. A PR requires successful validation; if the fix cannot be validated in this environment, revert only your own changes and call `noop`.
 5. Review `git diff` for accidental or unrelated edits.
 6. Commit the final changes with a concise message ending in:
 

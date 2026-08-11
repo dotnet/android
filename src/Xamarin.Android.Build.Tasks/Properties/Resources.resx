@@ -875,6 +875,11 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Ignoring directory '{0}' as it does not exist!</value>
     <comment>{0} - The path to the directory being ignored.</comment>
   </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] Unable to delete source file '{1}'</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

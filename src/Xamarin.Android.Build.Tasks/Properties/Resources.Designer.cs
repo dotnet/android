@@ -1896,6 +1896,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [{0}] Unable to delete source file &apos;{1}&apos;.
+        /// </summary>
+        public static string XA4324 {
+            get {
+                return ResourceManager.GetString("XA4324", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {
