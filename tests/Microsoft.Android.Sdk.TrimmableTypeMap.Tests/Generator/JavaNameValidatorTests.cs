@@ -67,6 +67,16 @@ public class JavaNameValidatorTests
 	}
 
 	[Theory]
+	[InlineData ("com/example/Outer$for", "for")]
+	[InlineData ("com/example/Outer$record", "record")]
+	[InlineData ("com/example/for$Nested", "for")]
+	public void TryGetInvalidJniNameSegment_ReservedNestedTypeIdentifier_ReturnsTrue (string jniName, string expected)
+	{
+		Assert.True (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var actual));
+		Assert.Equal (expected, actual);
+	}
+
+	[Theory]
 	[MemberData (nameof (RestrictedTypeIdentifiers))]
 	public void RestrictedTypeIdentifier_IsValidInPackageButInvalidAsType (string identifier)
 	{
@@ -103,5 +113,7 @@ public class JavaNameValidatorTests
 		Assert.Equal ("", packageIdentifier);
 		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ("com/example/MainActivity", out var jniIdentifier));
 		Assert.Equal ("", jniIdentifier);
+		Assert.False (JavaNameValidator.TryGetInvalidJniNameSegment ("com/example/Outer$Inner", out var nestedIdentifier));
+		Assert.Equal ("", nestedIdentifier);
 	}
 }

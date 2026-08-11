@@ -78,6 +78,9 @@ public class TrimmableTypeMapGenerator
 		bool valid = true;
 		var reportedNames = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var peer in peers) {
+			if (!ShouldGenerateJcw (peer)) {
+				continue;
+			}
 			if (JavaNameValidator.TryGetInvalidJniNameSegment (peer.JavaName, out var invalidIdentifier) && reportedNames.Add (peer.JavaName)) {
 				logger.LogInvalidJavaNameError (peer.JavaName, invalidIdentifier);
 				valid = false;

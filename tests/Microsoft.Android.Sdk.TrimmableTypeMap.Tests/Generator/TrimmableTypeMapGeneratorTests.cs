@@ -63,6 +63,8 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	[InlineData ("com/for/Example", "for")]
 	[InlineData ("com/example/for", "for")]
 	[InlineData ("com/example/record", "record")]
+	[InlineData ("com/example/Outer$for", "for")]
+	[InlineData ("com/example/Outer$record", "record")]
 	public void ValidateJavaNames_ReservedIdentifier_LogsError (string javaName, string invalidIdentifier)
 	{
 		var peers = new List<JavaPeerInfo> {
@@ -91,6 +93,30 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 				ManagedTypeNamespace = "Example",
 				ManagedTypeShortName = "Type",
 				AssemblyName = "Example",
+			},
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Theory]
+	[InlineData (true, false, "com/for/Example")]
+	[InlineData (false, true, "com/for/Example")]
+	[InlineData (true, false, "com/example/Outer$record")]
+	[InlineData (false, true, "com/example/Outer$record")]
+	public void ValidateJavaNames_TypeWithoutJcw_IsNotValidated (bool doNotGenerateAcw, bool isInterface, string javaName)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = javaName,
+				CompatJniName = javaName,
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+				DoNotGenerateAcw = doNotGenerateAcw,
+				IsInterface = isInterface,
 			},
 		};
 

@@ -397,6 +397,8 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("com/for/Example")]
 		[InlineData ("com/example/for")]
 		[InlineData ("com/example/record")]
+		[InlineData ("com/example/Outer$for")]
+		[InlineData ("com/example/Outer$record")]
 		public void ValidateJniName_InvalidName_Throws (string badJniName)
 		{
 			Assert.Throws<ArgumentException> (() => JniSignatureHelper.ValidateJniName (badJniName));

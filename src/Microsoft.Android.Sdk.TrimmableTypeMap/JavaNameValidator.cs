@@ -51,9 +51,16 @@ internal static class JavaNameValidator
 	internal static bool TryGetInvalidJniNameSegment (string jniName, out string invalidSegment)
 	{
 		var segments = jniName.Split ('/');
-		for (int i = 0; i < segments.Length; i++) {
-			string segment = segments [i];
-			if (IsInvalidIdentifier (segment, i == segments.Length - 1)) {
+		for (int i = 0; i < segments.Length - 1; i++) {
+			if (JavaKeywords.Contains (segments [i])) {
+				invalidSegment = segments [i];
+				return true;
+			}
+		}
+
+		// '$' separates nested types in a JNI binary name and becomes '.' in Java source.
+		foreach (var segment in segments [segments.Length - 1].Split ('$')) {
+			if (IsInvalidIdentifier (segment, isTypeName: true)) {
 				invalidSegment = segment;
 				return true;
 			}
