@@ -385,17 +385,17 @@
     `cb_*` JNI callback fields), and `_PostTrimmingPipeline` rewrites them again after ILLink.
     Depending on `_GenerateJavaStubs` keeps this copy ordered after those rewrites.
 
-    Inputs track the assemblies themselves rather than `$(_AndroidLinkFlag)`: the link flag is
-    only touched by ILLink, so it does not change when the post-link rewrites modify the
-    assemblies. Keying on the flag let the shrunk copies go stale while @(_ResolvedAssemblies)
-    moved on, so mono-aot-cross compiled the rewritten assemblies while packaging shipped the
-    pre-rewrite copies. Their metadata field tables then disagreed, and AOT `SFLDA` patches
-    resolved to the wrong MonoClassField at runtime. This mirrors `_RemoveRegisterAttributeCoreClr`
-    in Microsoft.Android.Sdk.TypeMap.Trimmable.targets.
+    `$(_AndroidLinkFlag)` tracks ILLink, while @(_ResolvedAssemblies) tracks the later in-place
+    rewrites that the link flag cannot observe. The assembly hash also invalidates the target when
+    the resolved assembly set changes. Without the final assemblies as inputs, the shrunk copies
+    could go stale while @(_ResolvedAssemblies) moved on, so mono-aot-cross compiled the rewritten
+    assemblies while packaging shipped the pre-rewrite copies. Their metadata field tables then
+    disagreed, and AOT `SFLDA` patches resolved to the wrong MonoClassField at runtime. This mirrors
+    `_RemoveRegisterAttributeCoreClr` in Microsoft.Android.Sdk.TypeMap.Trimmable.targets.
   -->
   <Target Name="_RemoveRegisterAttribute"
       DependsOnTargets="_PrepareAssemblies;_GenerateJavaStubs"
-      Inputs="@(_ResolvedAssemblies);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Inputs="$(_AndroidLinkFlag);@(_ResolvedAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_RemoveRegisterFlag)"
       Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'">
     <CopyIfChanged
