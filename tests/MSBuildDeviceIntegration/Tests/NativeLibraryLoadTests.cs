@@ -80,6 +80,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			"contains no matching native libraries",
 			"The application installation may be corrupt; reinstalling the application may fix this error.",
 		};
+		ClearAdbLogcat ();
 		string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "native-library-load.log");
 		bool foundDiagnostic = MonitorAdbLogcat (
 			line => {
