@@ -524,7 +524,7 @@ namespace Java.InteropTests
 
 			try {
 				for (int i = 0; i < iterations; i++) {
-					IntPtr handle = JNIEnv.ToLocalJniHandle (new FinalizableHandleOwner ());
+					IntPtr handle = JNIEnv.ToLocalJniHandleFallback (new FinalizableHandleOwner ());
 					try {
 						Assert.AreNotEqual (IntPtr.Zero, handle, $"No local reference was returned during iteration {i}.");
 						Assert.IsNotEmpty (JNIEnv.GetClassNameFromInstance (handle), $"The local reference was invalid during iteration {i}.");

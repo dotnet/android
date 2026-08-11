@@ -506,7 +506,17 @@ namespace Android.Runtime {
 			if (value == null)
 				return IntPtr.Zero;
 			var ex = value as IJavaObjectEx;
-			IntPtr result = ex != null ? ex.ToLocalJniHandle () : NewLocalRef (value.Handle);
+			if (ex != null) {
+				IntPtr result = ex.ToLocalJniHandle ();
+				GC.KeepAlive (value);
+				return result;
+			}
+			return ToLocalJniHandleFallback (value);
+		}
+
+		internal static IntPtr ToLocalJniHandleFallback (IJavaObject value)
+		{
+			IntPtr result = NewLocalRef (value.Handle);
 			GC.KeepAlive (value);
 			return result;
 		}
