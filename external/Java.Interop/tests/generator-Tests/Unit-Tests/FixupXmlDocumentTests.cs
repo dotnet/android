@@ -45,6 +45,18 @@ namespace generatortests
 		}
 
 		[Test]
+		public void AddNode_DoesNotPreserveConstructorJniType ()
+		{
+			var api = GetXmlApiDocument ();
+			var fixup = GetFixupXmlDocument ("<add-node path=\"/api/package[@name='android']\"><constructor name='test'><parameter name='value' type='java.lang.String' jni-type='TT;' /></constructor></add-node>");
+
+			api.ApplyFixupFile (fixup);
+
+			var constructor = api.ApiDocument.Root.Element ("package").Element ("constructor");
+			Assert.IsNull (constructor.Element ("parameter").Attribute ("managed-jni-type"));
+		}
+
+		[Test]
 		public void AddNode_ParameterTransformInvalidatesJniOverrides ()
 		{
 			var api = GetXmlApiDocument ();

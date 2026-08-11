@@ -7,8 +7,8 @@ namespace MonoDroid.Generation
 	{
 		public static bool AreAbiCompatible (string expected, string actual)
 		{
-			if (!TryParseType (expected, allowVoid: true, out var expectedType) ||
-					!TryParseType (actual, allowVoid: true, out var actualType))
+			if (!TryParseType (expected, allowVoid: true, allowTypeVariable: true, out var expectedType) ||
+					!TryParseType (actual, allowVoid: true, allowTypeVariable: false, out var actualType))
 				return false;
 
 			return GetAbiType (expectedType) == GetAbiType (actualType);
@@ -25,7 +25,7 @@ namespace MonoDroid.Generation
 
 			int index = 1;
 			while (index < signature.Length && signature [index] != ')') {
-				if (!TryReadType (signature, ref index, allowVoid: false, out var parameter))
+				if (!TryReadType (signature, ref index, allowVoid: false, allowTypeVariable: false, out var parameter))
 					return false;
 				types.Add (parameter);
 			}
@@ -33,7 +33,7 @@ namespace MonoDroid.Generation
 				return false;
 
 			index++;
-			if (!TryReadType (signature, ref index, allowVoid: true, out returnType) || index != signature.Length)
+			if (!TryReadType (signature, ref index, allowVoid: true, allowTypeVariable: false, out returnType) || index != signature.Length)
 				return false;
 
 			parameters = types.ToArray ();
@@ -45,13 +45,13 @@ namespace MonoDroid.Generation
 			return type [0] == 'L' || type [0] == '[' || type [0] == 'T' ? "L" : type;
 		}
 
-		static bool TryParseType (string signature, bool allowVoid, out string type)
+		static bool TryParseType (string signature, bool allowVoid, bool allowTypeVariable, out string type)
 		{
 			int index = 0;
-			return TryReadType (signature, ref index, allowVoid, out type) && index == signature.Length;
+			return TryReadType (signature, ref index, allowVoid, allowTypeVariable, out type) && index == signature.Length;
 		}
 
-		static bool TryReadType (string signature, ref int index, bool allowVoid, out string type)
+		static bool TryReadType (string signature, ref int index, bool allowVoid, bool allowTypeVariable, out string type)
 		{
 			type = "";
 			int start = index;
@@ -63,7 +63,7 @@ namespace MonoDroid.Generation
 
 			bool isArray = index > start;
 			char kind = signature [index++];
-			if (kind == 'L' || kind == 'T') {
+			if (kind == 'L' || (kind == 'T' && allowTypeVariable)) {
 				int end = signature.IndexOf (';', index);
 				if (end <= index)
 					return false;

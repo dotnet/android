@@ -132,6 +132,28 @@ namespace generatortests
 		}
 
 		[Test]
+		public void Method_GenericJniSignatureOverrideIsInvalid ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void' managed-jni-signature='(TT;)V'><parameter name='value' type='java.lang.String' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
+		public void Method_GenericJniParameterOverrideIsInvalid ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void'><parameter name='value' type='java.lang.String' managed-jni-type='TT;' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
 		public void Method_EmptyJniOverridesAreIgnored ()
 		{
 			var element = package.Element ("class");

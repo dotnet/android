@@ -199,10 +199,11 @@ namespace Java.Interop.Tools.Generator
 		static void PreserveJniOverrides (XElement element)
 		{
 			// Class-parser JNI values are normally recomputed; only metadata-authored values are explicit overrides.
-			foreach (var method in element.Descendants ("method"))
+			foreach (var method in element.Descendants ("method")) {
 				PreserveJniOverride (method, "jni-signature", method.XGetAttribute ("jni-signature"));
-			foreach (var parameter in element.Descendants ("parameter"))
-				PreserveJniOverride (parameter, "jni-type", parameter.XGetAttribute ("jni-type"));
+				foreach (var parameter in method.Elements ("parameter"))
+					PreserveJniOverride (parameter, "jni-type", parameter.XGetAttribute ("jni-type"));
+			}
 		}
 
 		static void PreserveJniOverride (XElement element, string name, string? value)
@@ -215,7 +216,7 @@ namespace Java.Interop.Tools.Generator
 			}
 			if (element.Name.LocalName == "method" && name == "jni-signature")
 				element.SetAttributeValue ("managed-jni-signature", value);
-			else if (element.Name.LocalName == "parameter" && name == "jni-type")
+			else if (element.Name.LocalName == "parameter" && element.Parent?.Name.LocalName == "method" && name == "jni-type")
 				element.SetAttributeValue ("managed-jni-type", value);
 		}
 
