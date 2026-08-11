@@ -487,24 +487,18 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
 				string outputText = output.ToString ();
 				Assert.IsTrue (outputText.Contains ("Stopping application..."),
 					$"Output should contain 'Stopping application...' from Microsoft.Android.Run's Ctrl+C handler");
+				Assert.IsFalse (outputText.Contains ("Error: The operation was canceled."),
+					"Cancellation should not be reported as an error");
 
-				// Verify the app is no longer running on the device.
-				// Poll with retries since StopAppAsync is fire-and-forget in the Ctrl+C handler.
-				bool appStopped = false;
-				for (int i = 0; i < 10; i++) {
-					pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
-					if (string.IsNullOrEmpty (pidOutput)) {
-						appStopped = true;
-						break;
-					}
-					Thread.Sleep (1000);
-				}
-				Assert.IsTrue (appStopped,
+				// Microsoft.Android.Run must not exit until force-stop has completed.
+				pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+				Assert.IsTrue (string.IsNullOrEmpty (pidOutput),
 					$"App should not be running on the device after Ctrl+C. pidof output: '{pidOutput}'");
 			} finally {
 				// Ensure the process is killed if it's still running
