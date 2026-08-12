@@ -120,7 +120,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Build (proj), "Publish should have succeeded.");
 
 			var assemblyName = proj.ProjectName;
-			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
+			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, "publish", $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
 
 			var helper = new ArchiveAssemblyHelper (apk, true);
