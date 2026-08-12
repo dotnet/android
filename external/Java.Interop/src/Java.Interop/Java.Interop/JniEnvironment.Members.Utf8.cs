@@ -1,6 +1,5 @@
 #nullable enable
 
-#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 using System;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -122,4 +121,3 @@ namespace Java.Interop {
 		}
 	}
 }
-#endif // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS

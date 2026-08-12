@@ -51,7 +51,6 @@ namespace Java.Interop
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
 				var info    = JniEnvironment.CurrentInfo;
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 				// Convert dot-separated names (e.g. "java.lang.Object") to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				var jniClassName = classname.Contains ('.') ? classname.Replace ('.', '/') : classname;
@@ -72,10 +71,6 @@ namespace Java.Interop
 					return default;
 
 				throw new InvalidOperationException ($"Could not find Java class '{classname}'.");
-#else
-				throw new NotSupportedException (
-						"Rebuild with FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS or FEATURE_JNIENVIRONMENT_JI_PINVOKES set!");
-#endif  // !(FEATURE_JNIENVIRONMENT_JI_PINVOKES || FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS)
 			}
 
 			static unsafe bool TryLoadClassWithFallback (JniEnvironmentInfo info, IntPtr thrown, JniObjectReference classNameJavaString, bool throwOnError, out JniObjectReference result)
@@ -115,7 +110,6 @@ namespace Java.Interop
 				return false;
 			}
 
-#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			static unsafe JniObjectReference NewJavaNameFromUtf8 (IntPtr env, ReadOnlySpan<byte> classname)
 			{
 				var terminator = classname.IndexOf ((byte) 0);
@@ -143,17 +137,9 @@ namespace Java.Interop
 					return r;
 				}
 			}
-#endif
 
 			static bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
 			{
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				klass = NativeMethods.java_interop_jnienv_find_class (env, out thrown, classname);
-				if (thrown == IntPtr.Zero) {
-					return true;
-				}
-#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
-#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
 				klass   = JniNativeMethods.FindClass (env, _classname_ptr);
 				thrown  = JniNativeMethods.ExceptionOccurred (env);
@@ -161,41 +147,19 @@ namespace Java.Interop
 				if (thrown == IntPtr.Zero) {
 					return true;
 				}
-#endif  // !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 				return false;
 			}
 
 			static void RawExceptionClear (IntPtr env)
 			{
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				// If the Java-side exception stack trace is *lost* a'la 89a5a229,
-				// change `false` to `true` and rebuild+re-run.
-#if false
-				NativeMethods.java_interop_jnienv_exception_describe (env);
-#endif  // FEATURE_JNIENVIRONMENT_JI_PINVOKES
-
-				NativeMethods.java_interop_jnienv_exception_clear (env);
-#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
-				// If the Java-side exception stack trace is *lost* a'la 89a5a229,
-				// change `false` to `true` and rebuild+re-run.
-#if false
-				JniNativeMethods.ExceptionDescribe (env);
-#endif
 				JniNativeMethods.ExceptionClear (env);
-#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			}
 
 			static IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
 			{
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				return NativeMethods.java_interop_jnienv_call_static_object_method_a (env, out thrown, clazz, jmethodID, args);
-#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 				var r   = JniNativeMethods.CallStaticObjectMethodA (env, clazz, jmethodID, args);
 				thrown  = JniNativeMethods.ExceptionOccurred (env);
 				return r;
-#else   // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
-				return IntPtr.Zero;
-#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			}
 
 			public static bool TryFindClass (string classname, out JniObjectReference instance)
@@ -333,13 +297,8 @@ namespace Java.Interop
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;
 				fixed (JniNativeMethod* methodsPtr = methods) {
-#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
 						(void*) (*((JNIEnv**)env))->RegisterNatives;
-#else
-					var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
-						JniEnvironment.CurrentInfo.Invoker.env.RegisterNatives;
-#endif
 					r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
 				}
 
@@ -366,7 +325,6 @@ namespace Java.Interop
 				}
 			}
 
-#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			/// <summary>
 			/// Finds a Java class using a null-terminated UTF-8 class name span.
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
@@ -442,7 +400,6 @@ namespace Java.Interop
 					: Encoding.UTF8.GetString (classname);
 				throw new InvalidOperationException ($"Could not find Java class '{errorClassName}'.");
 			}
-#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 		}
 	}
 }
