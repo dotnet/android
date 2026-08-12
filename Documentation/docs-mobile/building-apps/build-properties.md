@@ -372,6 +372,17 @@ called `desugar`, on the output of the `javac` compiler. The default value is
 `False` if using `$(AndroidDexTool)=dx` and `True` if
 using [`$(AndroidDexTool)`](#androiddextool)=`d8`.
 
+## AndroidEnableFastDeployment
+
+A boolean property that determines whether [Fast Deployment](build-process.md#Fast_Deployment)
+is enabled. Fast Deployment installs assemblies outside of the application
+package, which can reduce deployment and rebuild times.
+
+The default value is `True` for Debug builds and `False` for Release builds.
+Setting this property is equivalent to setting the inverse value of
+[`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk). If both properties
+are set, `$(EmbedAssembliesIntoApk)` takes precedence.
+
 ## AndroidEnableGooglePlayStoreChecks
 
 A bool property
@@ -1597,6 +1608,11 @@ Defaults to `false`.
 A boolean property that
 determines whether or not the app's assemblies should be embedded
 into the Application package.
+
+This property is the inverse of
+[`$(AndroidEnableFastDeployment)`](#androidenablefastdeployment). New projects
+should use `$(AndroidEnableFastDeployment)` to control Fast Deployment. If both
+properties are set, `$(EmbedAssembliesIntoApk)` takes precedence.
 
 This property should be `True` for Release builds and `False` for
 Debug builds. It *may* need to be `True` in Debug builds if Fast

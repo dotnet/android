@@ -1375,6 +1375,36 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void AndroidEnableFastDeployment (
+			[Values (true, false)] bool enabled,
+			[Values (true, false)] bool isRelease,
+			[Values (true, false)] bool globalProperty,
+			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			if (!globalProperty) {
+				proj.AndroidEnableFastDeployment = enabled;
+			}
+			using (var b = CreateApkBuilder ()) {
+				var parameters = globalProperty ? new [] { $"{KnownProperties.AndroidEnableFastDeployment}={enabled}" } : null;
+				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				FileAssert.Exists (apk);
+				var helper = new ArchiveAssemblyHelper (apk);
+				using var assembly = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll");
+				Assert.AreEqual (!enabled, assembly != null, $"{proj.ProjectName}.dll should {(!enabled ? "" : "not ")}be embedded in {apk}.");
+			}
+		}
+
+		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime)) {

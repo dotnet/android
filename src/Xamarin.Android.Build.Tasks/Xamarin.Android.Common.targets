@@ -158,7 +158,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<TargetFrameworkIdentifier Condition="'$(TargetFrameworkIdentifier)' == ''">MonoAndroid</TargetFrameworkIdentifier>
 	<MonoAndroidVersion>v$(_XAMajorVersionNumber).0</MonoAndroidVersion>
 	<AndroidUpdateResourceReferences Condition="'$(AndroidUpdateResourceReferences)' == ''">True</AndroidUpdateResourceReferences>
-	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' ">False</EmbedAssembliesIntoApk>
+	<AndroidEnableFastDeployment Condition=" '$(EmbedAssembliesIntoApk)' != '' And '$(EmbedAssembliesIntoApk)' != 'True' ">True</AndroidEnableFastDeployment>
+	<AndroidEnableFastDeployment Condition=" '$(EmbedAssembliesIntoApk)' == 'True' ">False</AndroidEnableFastDeployment>
+	<AndroidEnableFastDeployment Condition=" '$(AndroidEnableFastDeployment)' == '' And '$(Optimize)' != 'True' ">True</AndroidEnableFastDeployment>
+	<AndroidEnableFastDeployment Condition=" '$(AndroidEnableFastDeployment)' == '' ">False</AndroidEnableFastDeployment>
+	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(AndroidEnableFastDeployment)' == 'True' ">False</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
   <AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
@@ -506,15 +510,15 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Condition=" '$(AndroidApplication)' == 'true' ">
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_AOT"
-      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AotAssemblies)' == 'True' "
+      Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_LinkMode"
-      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidLinkMode)' != 'None' "
+      Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(AndroidLinkMode)' != 'None' "
   />
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_LinkTool"
-      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidLinkTool)' != '' "
+      Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(AndroidLinkTool)' != '' "
   />
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_Interpreter"
@@ -522,7 +526,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_ReadyToRun"
-      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(PublishReadyToRun)' == 'True' "
+      Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(PublishReadyToRun)' == 'True' "
   />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
