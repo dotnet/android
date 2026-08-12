@@ -155,14 +155,15 @@ steps:
   displayName: Test dotnet-local.cmd - create template
   inputs:
     filename: dotnet-local.cmd
-    arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
+    arguments: new android -o "$(Build.StagingDirectory)\LocalWorkloadTest"
 
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - build template
   inputs:
     filename: dotnet-local.cmd
     arguments: >-
-      build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+      build -v:n "$(Build.StagingDirectory)\LocalWorkloadTest"
+      -p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\NuGet.config"
       -p:AndroidSdkDirectory="$(USERPROFILE)\android-toolchain\sdk"
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\build-template.binlog
 
