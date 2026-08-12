@@ -72,7 +72,7 @@ steps:
       fi
     done
   displayName: copy package intermediates
-  condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+  condition: ${{ parameters.condition }}
   continueOnError: true
 
   # Always capture full device logcat so we can diagnose native library load
