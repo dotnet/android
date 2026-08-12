@@ -104,12 +104,13 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BasicApplicationPublishReadyToRunCustomConfiguration ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = false,
+			// Use a non-standard release configuration name to validate PublishReadyToRun
+			// defaults on for publish builds, not just $(Configuration)=='Release'.
+			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: "AppStore") {
+				IsRelease = true,
 			};
 
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("Configuration", "AppStore");
 			proj.SetProperty ("RuntimeIdentifier", rid);
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
