@@ -37,9 +37,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <!-- Outer restores use RuntimeIdentifiers; RuntimeIdentifier is only set in per-RID inner builds. -->
   <ItemGroup>
-    <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler">
-      <ILCompilerPackVersion>$(MicrosoftNETCoreAppRefPackageVersion)</ILCompilerPackVersion>
-    </KnownILCompilerPack>
     <_AndroidNetCoreAppNativeAotKnownRuntimePack Include="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'NativeAOT'))" />
     <KnownRuntimePack Remove="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)" />
     <KnownRuntimePack Include="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)">
