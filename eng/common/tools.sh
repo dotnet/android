@@ -70,7 +70,8 @@ warn_as_error=$(NormalizeBoolArg "${warn_as_error:-}")
 warn_as_error=${warn_as_error:-true}
 
 # Specifies semi-colon delimited list of warning codes that should not be treated as errors.
-warn_not_as_error=${warn_not_as_error:-''}
+# Defaults to NuGet Audit warning codes NU1901-NU1904.
+warn_not_as_error="${warn_not_as_error:-NU1901;NU1902;NU1903;NU1904}"
 
 # True to attempt using .NET Core already that meets requirements specified in global.json
 # installed on the machine instead of downloading one.
