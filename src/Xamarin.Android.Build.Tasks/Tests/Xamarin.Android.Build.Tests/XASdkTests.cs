@@ -355,16 +355,13 @@ public class JavaSourceTest {
 
 			// Only check latest TFM, as previous or preview TFMs will come from NuGet
 			if (dotnetVersion == XABuildConfig.LatestDotNetTargetFramework && !preview) {
+				var buildOutput = dotnet.LastBuildOutput.ToArray ();
 				var versionString = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
-				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
-				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
-				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
+				AssertUsingPack (buildOutput, $"Microsoft.Android.Ref.{versionString}", "ref", dotnetVersion, "Mono.Android.dll");
 
 				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
 				versionString = runtimeApiLevel.Minor == 0 ? $"{runtimeApiLevel.Major}" : $"{runtimeApiLevel.Major}.{runtimeApiLevel.Minor}";
-				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{versionString}.android")).LastOrDefault ();
-				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
-				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
+				AssertUsingPack (buildOutput, $"Microsoft.Android.Runtime.{versionString}.android", "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
 			}
 
 			var publishDirectory = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
@@ -383,6 +380,16 @@ public class JavaSourceTest {
 				FileAssert.Exists (aab);
 				FileAssert.Exists (aabSigned);
 			}
+		}
+
+		static void AssertUsingPack (IEnumerable<string> buildOutput, string packName, params string [] assemblyPath)
+		{
+			var packDirectory = Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, packName);
+			var assemblyPathSuffix = Path.Combine (assemblyPath);
+			Assert.That (Directory.EnumerateFiles (packDirectory, "Mono.Android.dll", SearchOption.AllDirectories),
+				Has.Exactly (1).Matches<string> (path =>
+					path.EndsWith (assemblyPathSuffix, StringComparison.OrdinalIgnoreCase) && buildOutput.ContainsText (path)),
+				$"Build should use exactly one installed '{packName}' pack.");
 		}
 
 		[Test]
