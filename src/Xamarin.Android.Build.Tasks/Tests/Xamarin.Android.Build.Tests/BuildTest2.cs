@@ -102,6 +102,38 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BasicApplicationPublishReadyToRunCustomConfiguration ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false,
+			};
+
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("Configuration", "AppStore");
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
+
+			var b = CreateApkBuilder ();
+			b.Target = "Publish";
+			Assert.IsTrue (b.Build (proj), "Publish should have succeeded.");
+
+			var assemblyName = proj.ProjectName;
+			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, true);
+			var abi = MonoAndroidHelper.RidToAbi (rid);
+			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+
+			using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
+			stream.Position = 0;
+			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+		}
+
+		[Test]
 		public void IncompatiblePlatformTargetAndRuntimeIdentifiersFailsBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
