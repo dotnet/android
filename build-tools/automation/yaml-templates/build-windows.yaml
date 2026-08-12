@@ -104,13 +104,15 @@ stages:
       displayName: Test dotnet-local.cmd - create template
       inputs:
         filename: dotnet-local.cmd
-        arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
+        arguments: new android -o "$(Build.StagingDirectory)\LocalWorkloadTest"
 
     - task: BatchScript@1
       displayName: Test dotnet-local.cmd - build template
       inputs:
         filename: dotnet-local.cmd
-        arguments: build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+        arguments: >-
+          build -v:n "$(Build.StagingDirectory)\LocalWorkloadTest"
+          -p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\NuGet.config"
 
     # Pack .nupkgs and extract workload packs to dotnet preview test directory
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
