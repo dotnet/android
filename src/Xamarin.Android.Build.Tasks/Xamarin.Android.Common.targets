@@ -502,20 +502,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
 </Target>
 
-<Target Name="_CheckNonIdealLibraryConfigurations"
-    Condition=" '$(AndroidApplication)' != 'true' ">
-  <AndroidWarning Code="XA1037"
-      ResourceName="XA1037"
-      FormatArguments="_AndroidUseJavaLegacyResolver;10"
-      Condition=" '$(_AndroidUseJavaLegacyResolver)' == 'true' "
-  />
-  <AndroidWarning Code="XA1037"
-      ResourceName="XA1037"
-      FormatArguments="_AndroidEmitLegacyInterfaceInvokers;10"
-      Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == 'true' "
-  />
-</Target>
-
 <Target Name="_CheckNonIdealAppConfigurations"
     Condition=" '$(AndroidApplication)' == 'true' ">
   <AndroidWarning Code="XA0119"
@@ -576,11 +562,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1035"
       Condition=" '$(BundleAssemblies)' == 'true' "
   />
-  <AndroidWarning Code="XA1037"
-      ResourceName="XA1037"
-      FormatArguments="AndroidFastDeploymentType;9"
-      Condition=" '$(AndroidFastDeploymentType)' != '' "
-  />
   <AndroidWarning Code="XA1040"
       ResourceName="XA1040"
       FormatArguments="$(_AndroidRuntime)"
@@ -589,7 +570,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations"
-    DependsOnTargets="_CheckNonIdealLibraryConfigurations;_CheckNonIdealAppConfigurations">
+    DependsOnTargets="_CheckNonIdealAppConfigurations">
 </Target>
 
 <!--

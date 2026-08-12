@@ -261,7 +261,7 @@ namespace generator.SourceWriters
 
 		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
 		{
-			AddParameterListCallArgs (body, method.Parameters, opt, false);
+			AddParameterListCallArgs (body, method.Parameters, opt);
 
 			var invokeType = JavaInteropCodeGenerator.GetInvokeType (method.RetVal.CallMethodPrefix);
 
@@ -290,20 +290,16 @@ namespace generator.SourceWriters
 			}
 		}
 
-		public static void AddParameterListCallArgs (List<string> body, ParameterList parameters, CodeGenerationOptions opt, bool invoker)
+		public static void AddParameterListCallArgs (List<string> body, ParameterList parameters, CodeGenerationOptions opt)
 		{
 			if (parameters.Count == 0)
 				return;
 
-			invoker = invoker && opt.EmitLegacyInterfaceInvokers;
-
-			var JValue = invoker ? "JValue" : "JniArgumentValue";
-
-			body.Add ($"\t{JValue}* __args = stackalloc {JValue} [{parameters.Count}];");
+			body.Add ($"\tJniArgumentValue* __args = stackalloc JniArgumentValue [{parameters.Count}];");
 
 			for (var i = 0; i < parameters.Count; ++i) {
 				var p = parameters [i];
-				body.Add ($"\t__args [{i}] = new {JValue} ({p.GetCall (opt)});");
+				body.Add ($"\t__args [{i}] = new JniArgumentValue ({p.GetCall (opt)});");
 			}
 		}
 
@@ -375,48 +371,6 @@ namespace generator.SourceWriters
 
 			// We consider all scopes to be "internal" API we need to warn about
 			attributes.Add (new RestrictToAttr (isType));
-		}
-
-		public static void WriteMethodInvokerBodyLegacy (CodeWriter writer, Method method, CodeGenerationOptions opt, string contextThis)
-		{
-			writer.WriteLine ($"if ({method.EscapedIdName} == IntPtr.Zero)");
-			writer.WriteLine ($"\t{method.EscapedIdName} = JNIEnv.GetMethodID (class_ref, \"{method.JavaName}\", \"{method.JniSignature}\");");
-
-			foreach (var prep in method.Parameters.GetCallPrep (opt))
-				writer.WriteLine (prep);
-
-			WriteParameterListCallArgs (writer, method.Parameters, opt, invoker: true);
-
-			var env_method = $"Call{method.RetVal.CallMethodPrefix}Method";
-			var call = $"{method.RetVal.ReturnCast}JNIEnv.{env_method} ({contextThis}, {method.EscapedIdName}{method.Parameters.GetCallArgs (opt, invoker: true)})";
-
-			if (method.IsVoid)
-				writer.WriteLine (call + ";");
-			else
-				writer.WriteLine ($"{(method.Parameters.HasCleanup ? "var __ret = " : "return ")}{method.RetVal.FromNative (opt, call, true) + opt.GetNullForgiveness (method.RetVal)};");
-
-			foreach (var cleanup in method.Parameters.GetCallCleanup (opt))
-				writer.WriteLine (cleanup);
-
-			if (!method.IsVoid && method.Parameters.HasCleanup)
-				writer.WriteLine ("return __ret;");
-		}
-
-		public static void WriteParameterListCallArgs (CodeWriter writer, ParameterList parameters, CodeGenerationOptions opt, bool invoker)
-		{
-			if (parameters.Count == 0)
-				return;
-
-			invoker = invoker && opt.EmitLegacyInterfaceInvokers;
-
-			var JValue = invoker ? "JValue" : "JniArgumentValue";
-
-			writer.WriteLine ($"{JValue}* __args = stackalloc {JValue} [{parameters.Count}];");
-
-			for (var i = 0; i < parameters.Count; ++i) {
-				var p = parameters [i];
-				writer.WriteLine ($"__args [{i}] = new {JValue} ({p.GetCall (opt)});");
-			}
 		}
 
 		public static void WriteMethodStringOverloadBody (CodeWriter writer, Method method, CodeGenerationOptions opt, bool haveSelf)

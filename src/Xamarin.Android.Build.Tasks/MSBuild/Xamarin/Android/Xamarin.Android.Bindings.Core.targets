@@ -114,14 +114,12 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         ToolPath="$(_BindingsToolsLocation)"
         ToolExe="$(BindingsGeneratorToolExe)"
         LangVersion="$(LangVersion)"
-        EmitLegacyInterfaceInvokers="$(_AndroidEmitLegacyInterfaceInvokers)"
         EnableBindingStaticAndDefaultInterfaceMethods="$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)"
         EnableBindingNestedInterfaceTypes="$(AndroidBoundInterfacesContainTypes)"
         EnableBindingInterfaceConstants="$(AndroidBoundInterfacesContainConstants)"
         EnableRestrictToAttributes="$(AndroidEnableRestrictToAttributes)"
         EnableObsoleteOverrideInheritance="$(AndroidEnableObsoleteOverrideInheritance)"
         Nullable="$(Nullable)"
-        UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
         NamespaceTransforms="@(AndroidNamespaceReplacement)"
     />
 

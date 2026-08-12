@@ -7,8 +7,6 @@ using System.Xml.Linq;
 using Mono.Cecil;
 using MonoDroid.Generation;
 using Xamarin.AndroidTools.AnnotationSupport;
-using Xamarin.Android.Tools.ApiXmlAdjuster;
-
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
@@ -85,7 +83,6 @@ namespace Xamarin.Android.Binder
 				SupportNullableReferenceTypes = options.SupportNullableReferenceTypes,
 				UseObsoletedOSPlatformAttributes = options.UseObsoletedOSPlatformAttributes,
 				UseRestrictToAttributes = options.UseRestrictToAttributes,
-				EmitLegacyInterfaceInvokers      = options.EmitLegacyInterfaceInvokers,
 				FixObsoleteOverrides = options.FixObsoleteOverrides,
 			};
 			var resolverCache       = new TypeDefinitionCache ();
@@ -111,7 +108,7 @@ namespace Xamarin.Android.Binder
 			var is_classparse = apiSourceAttr == "class-parse";
 
 			// Resolve types using Java.Interop.Tools.JavaTypeSystem
-			if (is_classparse && !options.UseLegacyJavaResolver) {
+			if (is_classparse) {
 				var output_xml = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
 				JavaTypeResolutionFixups.Fixup (filename, output_xml, resolver, references.Distinct ().ToArray (), resolverCache, options);
 
@@ -121,13 +118,7 @@ namespace Xamarin.Android.Binder
 				// Use this output for future steps
 				filename = output_xml;
 				apiXmlFile = filename;
-				is_classparse = false;
 			}
-
-			// We don't use shallow referenced types with class-parse because the Adjuster process
-			// enumerates every ctor/method/property/field to build its model, so we will need
-			// every type to be fully populated.
-			opt.UseShallowReferencedTypes = !is_classparse;
 
 			foreach (var reference in references.Distinct ()) {
 				try {
@@ -149,13 +140,6 @@ namespace Xamarin.Android.Binder
 				} catch (Exception ex) {
 					Report.LogCodedWarning (0, Report.WarningAssemblyParseFailure, ex, reference, ex.Message);
 				}
-			}
-
-			// For class-parse API description, transform it to jar2xml style.
-			// Resolve types using ApiXmlAdjuster
-			if (is_classparse && options.UseLegacyJavaResolver) {
-				apiXmlFile = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
-				new Adjuster ().Process (filename, opt, opt.SymbolTable.AllRegisteredSymbols (opt).OfType<GenBase> ().ToArray (), apiXmlFile, Report.Verbosity ?? 0);
 			}
 
 			if (only_xml_adjuster)
