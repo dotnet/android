@@ -591,7 +591,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         command: new
-        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Create MAUI template
         continueOnError: false

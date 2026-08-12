@@ -964,6 +964,19 @@ If you are getting this error you can add the following to the
 
 which will allow the `dx` step to succeed.
 
+## AndroidNdkDirectory
+
+The `$(AndroidNdkDirectory)` property specifies a custom Android NDK
+installation directory. The path can be set in the project file or on the
+command line:
+
+```dotnetcli
+dotnet build -p:AndroidNdkDirectory=/path/to/android-ndk
+```
+
+If this property is not set, .NET for Android locates the NDK from the
+configured Android development environment.
+
 ## AndroidPackageFormat
 
 An enum-style property with valid

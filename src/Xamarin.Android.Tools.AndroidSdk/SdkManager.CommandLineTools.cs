@@ -14,12 +14,12 @@ public partial class SdkManager
 	const string LatestCommandLineToolsPackage = "cmdline-tools;latest";
 
 	/// <summary>
-	/// Finds the installed <c>sdkmanager</c> from the highest command-line tools
-	/// revision reported by <c>source.properties</c>.
+	/// Finds <c>sdkmanager</c> in <c>cmdline-tools/latest/bin</c>, or falls back to
+	/// the highest installed command-line tools revision reported by <c>source.properties</c>.
 	/// </summary>
 	/// <returns>
 	/// The selected executable and revision, or <see langword="null"/> when no compatible
-	/// <c>sdkmanager</c> is installed.
+	/// <c>sdkmanager</c> is installed. Legacy <c>tools/bin</c> installations are not supported.
 	/// </returns>
 	public CommandLineTool? FindSdkManager ()
 	{

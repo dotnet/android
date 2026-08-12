@@ -1,5 +1,5 @@
 ---
-name: android-reviewer
+name: code-review
 description: >-
   Review dotnet/android PRs against established rules. Trigger on "review this PR",
   a GitHub PR URL, or code review requests. Checks MSBuild, nullable, async, security,
@@ -31,6 +31,13 @@ Formats: `https://github.com/{owner}/{repo}/pull/{number}`, `{owner}/{repo}#{num
 
 ### 2. Gather context (before reading PR description)
 
+Use the GitHub `pull_request_read` tool:
+
+- `method: get_diff` to read the diff
+- `method: get_files` with `perPage: 100` to list changed files; increment `page` until a page returns fewer than 100 files
+
+When the GitHub MCP tool is unavailable, fall back to:
+
 ```
 gh pr diff {number} --repo {owner}/{repo}
 gh pr view {number} --repo {owner}/{repo} --json files
@@ -42,6 +49,8 @@ For each changed file, read the **full source file** (not just the diff) to unde
 
 ### 3. Incorporate PR narrative and reconcile
 
+Use `pull_request_read` with `method: get` to read the title and description. When the GitHub MCP tool is unavailable, fall back to:
+
 ```
 gh pr view {number} --repo {owner}/{repo} --json title,body
 ```
@@ -49,6 +58,8 @@ gh pr view {number} --repo {owner}/{repo} --json title,body
 Now read the PR description and linked issues. Treat them as claims to verify, not facts to accept. Where your independent reading disagrees with the PR description, investigate further. If the PR claims a performance improvement, require evidence (benchmarks, profiling data). If it claims a bug fix, verify the bug exists and the fix addresses root cause — not symptoms.
 
 ### 4. Check CI status
+
+Use `pull_request_read` with `method: get_check_runs` and `perPage: 100` to read CI checks. Increment `page` until a page returns fewer than 100 check runs so failures are not missed. When the GitHub MCP tool is unavailable, fall back to:
 
 ```
 gh pr checks {number} --repo {owner}/{repo}

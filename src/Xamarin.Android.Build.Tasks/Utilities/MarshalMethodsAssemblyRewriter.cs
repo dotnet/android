@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 
 			void RemoveFile (string? path)
 			{
-				if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+				if (path.IsNullOrEmpty () || !File.Exists (path)) {
 					return;
 				}
 
@@ -196,7 +196,7 @@ namespace Xamarin.Android.Tasks
 					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
 					File.Delete (path);
 				} catch (Exception ex) {
-					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
+					log.LogCodedWarning ("XA4324", Properties.Resources.XA4324, targetArch, path);
 					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
 			}

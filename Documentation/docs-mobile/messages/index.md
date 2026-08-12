@@ -210,7 +210,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4234](xa4234.md): '<{item}>' item '{itemspec}' is missing required attribute '{name}'.
 + [XA4235](xa4235.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id'.
 + [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}
-+ [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - {exception}
++ [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - Failed to resolve POM for Maven artifact '{dependency}' from '{url}'. - {exception}
 + [XA4239](xa4239.md): Unknown Maven repository: '{repository}'.
 + [XA4241](xa4241.md): Java dependency '{artifact}' is not satisfied.
 + [XA4242](xa4242.md): Java dependency '{artifact}' is not satisfied. Microsoft maintains the NuGet package '{nugetId}' that could fulfill this dependency.
@@ -227,6 +227,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
++ [XA4258](xa4258.md): Java name '{name}' contains reserved Java identifier '{identifier}'. Change the package or type name.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -251,6 +252,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
++ [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
 
 ## XA5xxx: GCC and toolchain
 

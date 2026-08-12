@@ -244,6 +244,10 @@ static class JniSignatureHelper
 				segmentStart = i + 1;
 			}
 		}
+
+		if (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier)) {
+			throw new ArgumentException ($"JNI name '{jniName}' contains reserved Java identifier '{invalidIdentifier}'.", nameof (jniName));
+		}
 	}
 
 	/// <summary>

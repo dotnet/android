@@ -36,10 +36,10 @@ namespace Xamarin.Android.Build.Tests
 				EnableDefaultItems = true,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.7.1.3" },
-					// Using * here, so we explicitly get newer packages
-					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
-					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
-					new Package { Id = "Microsoft.JSInterop", Version = "8.0.*" },
+					// Using * here, so we explicitly get the latest stable packages
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "*" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "*" },
+					new Package { Id = "Microsoft.JSInterop", Version = "*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Resource.resx") {

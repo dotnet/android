@@ -1746,6 +1746,7 @@ namespace Xamarin.Android.Net
 			var keyFactory = KeyFactory.GetInstance (algorithmName) ?? throw new InvalidOperationException ($"Failed to get the KeyFactory instance for algorithm {algorithmName}");
 			var privateKey = keyFactory.GeneratePrivate (new Java.Security.Spec.PKCS8EncodedKeySpec (key.ExportPkcs8PrivateKey ()));
 			var certificate = Java.Lang.Object.GetObject<Certificate> (clientCertificate.Handle, JniHandleOwnership.DoNotTransfer);
+			GC.KeepAlive (clientCertificate);
 
 			if (privateKey is null || certificate is null) {
 				return null;

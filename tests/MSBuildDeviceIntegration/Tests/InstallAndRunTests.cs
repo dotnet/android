@@ -341,14 +341,15 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			Assert.True (builder.Uninstall (proj), "Project should have uninstalled.");
 		}
 
-		[Test]
-		public void DotNetRunWaitForExit ()
+		[TestCase ("", true)]
+		[TestCase ("--no-wake-device", false)]
+		public void DotNetRunWaitForExit (string extraArgs, bool shouldWakeDevice)
 		{
 			const string logcatMessage = "DOTNET_RUN_TEST_MESSAGE_12345";
 			var proj = new XamarinAndroidApplicationProject ();
 
 			// Enable verbose output from Microsoft.Android.Run for debugging
-			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+			proj.SetProperty ("_AndroidRunExtraArgs", $"--verbose {extraArgs}");
 
 			// Add a Console.WriteLine that will appear in logcat
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
@@ -401,10 +402,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			}
 
 			// Write the output to a log file for debugging
-			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-output.log");
-			File.WriteAllText (logPath, output.ToString ());
+			string outputText = output.ToString ();
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, $"dotnet-run-output-wake-{shouldWakeDevice}.log");
+			File.WriteAllText (logPath, outputText);
 			TestContext.AddTestAttachment (logPath);
 
+			if (shouldWakeDevice) {
+				StringAssert.Contains ("shell input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; am start", outputText,
+					$"`dotnet run` should wake the device and dismiss its keyguard in the same adb shell command used to start the app. See {logPath} for details.");
+			} else {
+				StringAssert.Contains ("shell am start", outputText,
+					$"`dotnet run` should start the app without waking the device or dismissing its keyguard when --no-wake-device is specified. See {logPath} for details.");
+				StringAssert.DoesNotContain ("KEYCODE_WAKEUP", outputText,
+					$"`dotnet run` should not wake the device when --no-wake-device is specified. See {logPath} for details.");
+				StringAssert.DoesNotContain ("dismiss-keyguard", outputText,
+					$"`dotnet run` should not dismiss the keyguard when --no-wake-device is specified. See {logPath} for details.");
+			}
 			Assert.IsTrue (foundMessage, $"Expected message '{logcatMessage}' was not found in output. See {logPath} for details.");
 		}
 
@@ -474,24 +487,18 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
 				string outputText = output.ToString ();
 				Assert.IsTrue (outputText.Contains ("Stopping application..."),
 					$"Output should contain 'Stopping application...' from Microsoft.Android.Run's Ctrl+C handler");
+				Assert.IsFalse (outputText.Contains ("Error: The operation was canceled."),
+					"Cancellation should not be reported as an error");
 
-				// Verify the app is no longer running on the device.
-				// Poll with retries since StopAppAsync is fire-and-forget in the Ctrl+C handler.
-				bool appStopped = false;
-				for (int i = 0; i < 10; i++) {
-					pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
-					if (string.IsNullOrEmpty (pidOutput)) {
-						appStopped = true;
-						break;
-					}
-					Thread.Sleep (1000);
-				}
-				Assert.IsTrue (appStopped,
+				// Microsoft.Android.Run must not exit until force-stop has completed.
+				pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+				Assert.IsTrue (string.IsNullOrEmpty (pidOutput),
 					$"App should not be running on the device after Ctrl+C. pidof output: '{pidOutput}'");
 			} finally {
 				// Ensure the process is killed if it's still running
@@ -957,6 +964,57 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (MonitorAdbLogcat ((line) => {
 				return line.Contains (expectedLogcatOutput);
 			}, Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		[Test]
+		public void TabLayoutOnTabSelectedListener2_ShouldFire_OnActivityLaunch ()
+		{
+			const string expectedLogcatOutput = "OnTabSelected called!";
+
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					KnownPackages.XamarinGoogleAndroidMaterial,
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+				TextContent = () => "<resources><style name=\"AppTheme\" parent=\"Theme.MaterialComponents.DayNight.NoActionBar\" /></resources>",
+			});
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Google.Android.Material.Tabs;")
+				.Replace ("MainLauncher = true", "MainLauncher = true, Theme = \"@style/AppTheme\"")
+				.Replace ("public class MainActivity : Activity", "public class MainActivity : Activity, TabLayout.IOnTabSelectedListener2")
+				.Replace ("//${AFTER_ONCREATE}",
+"""
+			var tabLayout = new TabLayout (this);
+			tabLayout.AddOnTabSelectedListener (this);
+			tabLayout.AddTab (tabLayout.NewTab (), true);
+			SetContentView (tabLayout);
+		}
+
+		public void OnTabSelected (TabLayout.Tab tab)
+		{
+			Android.Util.Log.Debug ("TabLayoutTest", "OnTabSelected called!");
+		}
+
+		public void OnTabUnselected (TabLayout.Tab tab)
+		{
+		}
+
+		public void OnTabReselected (TabLayout.Tab tab)
+		{
+""");
+
+			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			RunProjectAndAssert (proj, builder);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
 		[Test]

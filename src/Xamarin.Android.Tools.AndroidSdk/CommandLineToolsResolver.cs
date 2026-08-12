@@ -136,6 +136,11 @@ static class CommandLineToolsResolver
 
 	static int CompareCandidates (Candidate first, Candidate second)
 	{
+		var firstIsLatest = string.Equals (first.DirectoryName, "latest", StringComparison.Ordinal);
+		var secondIsLatest = string.Equals (second.DirectoryName, "latest", StringComparison.Ordinal);
+		if (firstIsLatest != secondIsLatest)
+			return firstIsLatest ? -1 : 1;
+
 		if (first.Revision.HasValue != second.Revision.HasValue)
 			return first.Revision.HasValue ? -1 : 1;
 
@@ -147,11 +152,6 @@ static class CommandLineToolsResolver
 
 		if (first.RevisionFromSource != second.RevisionFromSource)
 			return first.RevisionFromSource ? -1 : 1;
-
-		var firstIsLatest = string.Equals (first.DirectoryName, "latest", StringComparison.Ordinal);
-		var secondIsLatest = string.Equals (second.DirectoryName, "latest", StringComparison.Ordinal);
-		if (firstIsLatest != secondIsLatest)
-			return firstIsLatest ? -1 : 1;
 
 		return string.Compare (first.DirectoryName, second.DirectoryName, StringComparison.Ordinal);
 	}
