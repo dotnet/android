@@ -831,7 +831,7 @@ namespace generatortests
 			var iface = gens.OfType<InterfaceGen> ().Single (g => g.Name == "IMyType");
 
 			generator.Context.ContextTypes.Push (iface);
-			var invoker = new InterfaceInvokerClass (iface, options, generator.Context);
+			var invoker = new InterfaceInvokerClass (iface, options);
 			var extensions = new InterfaceExtensionsClass (iface, iface.Name, options);
 			generator.Context.ContextTypes.Pop ();
 

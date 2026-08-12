@@ -37,7 +37,6 @@ namespace Xamarin.Android.Binder
 		public string               ApiVersionsXmlFile {get; set;}
 		public Collection<string>   ApiVersionsXmlFiles {get; set;}
 		public Collection<string>   AnnotationsZipFiles {get; set;}
-		public bool                 EmitLegacyInterfaceInvokers { get; set; }
 		public string               EnumFieldsMapFile {get; set;}
 		public string               EnumFlagsFile {get; set;}
 		public string               EnumMethodsMapFile {get; set;}
@@ -55,7 +54,6 @@ namespace Xamarin.Android.Binder
 		public bool		    SupportNullableReferenceTypes { get; set; }
 		public bool		    UseRestrictToAttributes { get; set; }
 		public bool		    FixObsoleteOverrides { get; set;} = true;
-		public bool		    UseLegacyJavaResolver { get; set; }
 		public bool			UseObsoletedOSPlatformAttributes { get; set; }
 
 		public XmldocStyle		    XmldocStyle { get; set; } = XmldocStyle.IntelliSense;
@@ -106,9 +104,8 @@ namespace Xamarin.Android.Binder
 					"SDK Platform {VERSION}/API level.",
 					v => opts.ApiLevel = v },
 				{ "lang-features=",
-					"For internal use. (Flags: interface-constants,default-interface-methods,nested-interface-types,nullable-reference-types,obsoleted-platform-attributes,restrict-to-attributes,do-not-fix-obsolete-overrides,emit-legacy-interface-invokers)",
+					"For internal use. (Flags: interface-constants,default-interface-methods,nested-interface-types,nullable-reference-types,obsoleted-platform-attributes,restrict-to-attributes,do-not-fix-obsolete-overrides)",
 					v => {
-						opts.EmitLegacyInterfaceInvokers = v?.Contains ("emit-legacy-interface-invokers") == true;
 						opts.SupportInterfaceConstants = v?.Contains ("interface-constants") == true;
 						opts.SupportDefaultInterfaceMethods = v?.Contains ("default-interface-methods") == true;
 						opts.SupportNestedInterfaceTypes = v?.Contains ("nested-interface-types") == true;
@@ -176,9 +173,6 @@ namespace Xamarin.Android.Binder
 				{ "annotations=",
 					"For internal use.",
 					v => opts.AnnotationsZipFiles.Add (v) },
-				{ "use-legacy-java-resolver",
-					"Uses the legacy ApiXmlAdjuster to resolve Java types, this is a *temporary* fallback in case there are unknown issues with JavaTypeSystem.",
-					v => opts.UseLegacyJavaResolver = v != null },
 				new ResponseFileSource (),
 			};
 
