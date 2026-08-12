@@ -18,6 +18,7 @@ imports:
 
 environment: copilot-pat-pool
 permissions:
+  checks: read
   contents: read
   pull-requests: read
 model: gpt-5.6-sol
@@ -54,6 +55,16 @@ network:
     - "microsoft.com"
     - "vsassets.io"
 tools:
+  bash:
+    - az devops:*
+    - az pipelines:*
+    - az rest:*
+    - cat
+    - grep
+    - head
+    - jq
+    - tail
+    - wc
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
