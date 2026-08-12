@@ -386,7 +386,8 @@ public class JavaSourceTest {
 		{
 			var packDirectory = Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, packName);
 			var assemblyPathSuffix = Path.Combine (assemblyPath);
-			Assert.That (Directory.EnumerateFiles (packDirectory, "Mono.Android.dll", SearchOption.AllDirectories),
+			var assemblyFileName = Path.GetFileName (assemblyPathSuffix);
+			Assert.That (Directory.EnumerateFiles (packDirectory, assemblyFileName, SearchOption.AllDirectories),
 				Has.Exactly (1).Matches<string> (path =>
 					path.EndsWith (assemblyPathSuffix, StringComparison.OrdinalIgnoreCase) && buildOutput.ContainsText (path)),
 				$"Build should use exactly one installed '{packName}' pack.");
