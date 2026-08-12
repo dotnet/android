@@ -34,7 +34,7 @@ Formats: `https://github.com/{owner}/{repo}/pull/{number}`, `{owner}/{repo}#{num
 Use the GitHub `pull_request_read` tool:
 
 - `method: get_diff` to read the diff
-- `method: get_files` to list changed files
+- `method: get_files` with `perPage: 100` to list changed files; increment `page` until a page returns fewer than 100 files
 
 When the GitHub MCP tool is unavailable, fall back to:
 
@@ -59,7 +59,7 @@ Now read the PR description and linked issues. Treat them as claims to verify, n
 
 ### 4. Check CI status
 
-Use `pull_request_read` with `method: get_check_runs` to read CI checks. When the GitHub MCP tool is unavailable, fall back to:
+Use `pull_request_read` with `method: get_check_runs` and `perPage: 100` to read CI checks. Increment `page` until a page returns fewer than 100 check runs so failures are not missed. When the GitHub MCP tool is unavailable, fall back to:
 
 ```
 gh pr checks {number} --repo {owner}/{repo}
