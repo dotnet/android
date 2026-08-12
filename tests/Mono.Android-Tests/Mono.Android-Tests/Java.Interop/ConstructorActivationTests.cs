@@ -1,3 +1,5 @@
+#nullable enable annotations
+
 using System;
 using System.Reflection;
 
@@ -635,7 +637,7 @@ namespace Java.InteropTests
 			return containsKey.Invoke (cache, new object [] { type }) is true;
 		}
 
-		static ConstructorInfo GetCachedReflectionActivationConstructor (Type type)
+		static ConstructorInfo? GetCachedReflectionActivationConstructor (Type type)
 		{
 			var cache = GetReflectionActivationConstructorCache ();
 			var item = cache.GetType ().GetProperty ("Item");
