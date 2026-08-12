@@ -330,15 +330,16 @@ namespace Android.RuntimeTests {
 				object[] data = JNIEnv.GetObjectArray (byteArray.Handle, new[]{typeof (byte), typeof (byte), typeof (byte)});
 				AssertArrays ("GetObjectArray", data, (object) 1, (object) 2, (object) 3);
 			}
+			var context = Application.Context;
 			using (var objectArray =
 					new Java.Lang.Object (
 							JNIEnv.NewArray (
-								new Java.Lang.Object[]{Application.Context, 42L, "string"},
+								new Java.Lang.Object[]{context, 42L, "string"},
 								typeof (Java.Lang.Object)),
 						JniHandleOwnership.TransferLocalRef)) {
 				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
 				Assert.AreEqual (3, values.Length);
-				Assert.AreSame (Application.Context, values [0], $"Expected existing Context peer, got {values [0]?.GetType ()}.");
+				Assert.AreSame (context, values [0], $"Expected existing Context peer, got {values [0]?.GetType ()}.");
 				Assert.IsInstanceOf<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
