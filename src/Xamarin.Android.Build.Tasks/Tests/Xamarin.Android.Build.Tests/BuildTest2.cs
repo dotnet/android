@@ -117,7 +117,9 @@ namespace Xamarin.Android.Build.Tests
 
 			var b = CreateApkBuilder ();
 			b.Target = "Publish";
-			Assert.IsTrue (b.Build (proj), "Publish should have succeeded.");
+			b.BuildingInsideVisualStudio = false; // Publish's inner Build must produce & sign the .apk
+			// `dotnet publish` sets _IsPublishing=true itself; emulate that since we invoke MSBuild directly.
+			Assert.IsTrue (b.Build (proj, parameters: new [] { "_IsPublishing=true" }), "Publish should have succeeded.");
 
 			var assemblyName = proj.ProjectName;
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, "publish", $"{proj.PackageName}-Signed.apk");
