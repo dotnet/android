@@ -515,9 +515,10 @@ namespace Xamarin.Android.Build.Tests
 				foreach (string field in line.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) {
 					if (!field.StartsWith (componentPrefix, StringComparison.OrdinalIgnoreCase))
 						continue;
-					string activity = field.Substring (componentPrefix.Length).TrimStart ('.');
-					return activity.Equals (activityName, StringComparison.OrdinalIgnoreCase) ||
-						activity.EndsWith ("." + activityName, StringComparison.OrdinalIgnoreCase);
+					string activity = field.Substring (componentPrefix.Length).TrimStart ('.').TrimEnd ('\r');
+					if (activity.Equals (activityName, StringComparison.OrdinalIgnoreCase) ||
+							activity.EndsWith ("." + activityName, StringComparison.OrdinalIgnoreCase))
+						return true;
 				}
 			}
 			return false;
