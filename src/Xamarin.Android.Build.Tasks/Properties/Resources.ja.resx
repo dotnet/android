@@ -876,6 +876,11 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <value>ディレクトリ '{0}' は存在しないため無視されます。</value>
     <comment>{0} - The path to the directory being ignored.</comment>
   </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] Unable to delete source file '{1}'</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK のツールチェーン ディレクトリ '{0}' がありません。Android NDK をインストールしてください。</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1038,7 +1043,16 @@ In this message, the term "handheld app" means "app for handheld devices."
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>Failed to resolve POM for Maven artifact '{0}' from '{1}'.
+- {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
@@ -1076,13 +1090,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA1042" xml:space="preserve">
-    <value>The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.</value>
+    <value>'{0}' の &lt;instrumentation&gt;要素に android:name 属性がありません。</value>
     <comment>The following are literal names and should not be translated: instrumentation, android:name.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
   </data>
   <data name="XA1043" xml:space="preserve">
-    <value>Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element. Set the $(AndroidLaunchActivity) or $(AndroidInstrumentation) MSBuild property to specify one.</value>
+    <value>起動対象を判断できませんでした: '{0}' には起動可能な &lt;activity&gt;または &lt;instrumentation&gt; 要素が含まれていません。$(AndroidLaunchActivity) または $(AndroidInstrumentation) MSBuild プロパティを設定して、起動対象を指定します。</value>
     <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
@@ -1107,7 +1121,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
   </data>
   <data name="XA1048" xml:space="preserve">
-    <value>'{0}' does not contain an &lt;instrumentation&gt; element. Add an Android.App.Instrumentation subclass to the application, or set the $(AndroidInstrumentation) MSBuild property to the name of one.</value>
+    <value>'{0}' には &lt;instrumentation&gt; 要素が含まれていません。アプリケーションに Android.App.Instrumentation のサブクラスを追加するか、$(AndroidInstrumentation) MSBuild プロパティをその名前に設定します。</value>
     <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
 {0} - The path to the AndroidManifest.xml file.
 </comment>
@@ -1216,6 +1230,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>コマンド '{0}' が失敗しました。\n{1}</value>
