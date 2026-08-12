@@ -29,8 +29,6 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    # Workaround for https://github.com/dotnet/sdk/pull/55581
-    $env:DOTNET_HOST_PATH = $dotnetPath
     & $dotnetPath test $projectFile -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
     Pop-Location
   displayName: run ${{ parameters.testName }}
