@@ -359,7 +359,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
-			// `adb logcat` emits buffered lines before continuing with live output.
 			var info = new ProcessStartInfo (adb, "logcat") {
 				RedirectStandardOutput = true,
 				UseShellExecute = false,
@@ -370,6 +369,13 @@ namespace Xamarin.Android.Build.Tests
 			bool didActionSucceed = false;
 			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
+				// Process already-buffered logcat lines first so startup messages emitted before
+				// this monitor starts are still visible to tests.
+				if (TryMatchLogcatOutput (RunAdbCommand ("logcat -d"), sw, action)) {
+					sw.Flush ();
+					return true;
+				}
+
 				using (var proc = Process.Start (info)) {
 					proc.OutputDataReceived += (sender, e) => {
 						if (e.Data != null) {
@@ -400,6 +406,23 @@ namespace Xamarin.Android.Build.Tests
 					return didActionSucceed;
 				}
 			}
+		}
+
+		static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
+		{
+			bool didActionSucceed = false;
+			using (var sr = new StringReader (output ?? "")) {
+				string line = sr.ReadLine ();
+				while (line != null) {
+					logcatOutput.WriteLine (line);
+					if (action (line)) {
+						didActionSucceed = true;
+						break;
+					}
+					line = sr.ReadLine ();
+				}
+			}
+			return didActionSucceed;
 		}
 
 		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 120)
