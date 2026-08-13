@@ -25,6 +25,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty (proj.DebugProperties, "AndroidLinkMode", "Full");
+			proj.EmbedAssembliesIntoApk = false;
 			using (var b = CreateApkBuilder ()) {
 				b.Target = "Build"; // SignAndroidPackage would fail for OSS builds
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
