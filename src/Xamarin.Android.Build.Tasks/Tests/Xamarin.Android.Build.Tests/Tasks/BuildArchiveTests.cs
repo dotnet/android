@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -34,29 +35,37 @@ public class BuildArchiveTests
 	}
 
 	[Test]
-	public void ExistingJavaArchiveEntriesAreUpdated ()
+	public void ConsecutiveUnchangedBuildsKeepJavaArchiveEntries ()
 	{
 		var apk = Path.Combine (TempDirectory, "app.apk");
 		var jar = Path.Combine (TempDirectory, "classes.jar");
 
-		CreateArchive (apk, ("commonMain/default/manifest", "existing"), ("stale.txt", "stale"));
+		CreateArchive (apk, ("AndroidManifest.xml", "manifest"), ("commonMain/default/manifest", "existing"), ("stale.txt", "stale"));
 		CreateArchive (jar, ("commonMain/default/manifest", "current"));
 
 		var item = new TaskItem ($"{jar}#commonMain/default/manifest");
 		item.SetMetadata ("ArchivePath", "commonMain/default/manifest");
 		item.SetMetadata ("JavaArchiveEntry", "commonMain/default/manifest");
+		string? previousSnapshot = null;
 
-		var task = new BuildArchive {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
-			ApkOutputPath = apk,
-			FilesToAddToArchive = [item],
-		};
+		for (var build = 1; build <= 3; build++) {
+			var task = new BuildArchive {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				ApkOutputPath = apk,
+				FilesToAddToArchive = [item],
+			};
 
-		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+			Assert.IsTrue (task.RunTask (), $"build {build} should have succeeded");
 
-		using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
-			archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
-			archive.AssertDoesNotContainEntry (apk, "stale.txt");
+			var snapshot = GetArchiveSnapshot (apk);
+			if (previousSnapshot is not null)
+				Assert.AreEqual (previousSnapshot, snapshot, $"build {build} should match the previous unchanged build");
+			previousSnapshot = snapshot;
+
+			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
+				archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
+				archive.AssertDoesNotContainEntry (apk, "stale.txt");
+			}
 		}
 	}
 
@@ -164,5 +173,17 @@ public class BuildArchiveTests
 				archive.AddEntry (entry.name, entry.contents, encoding: Encoding.UTF8);
 			}
 		}
+	}
+
+	static string GetArchiveSnapshot (string path)
+	{
+		using var archive = ZipArchive.Open (path, FileMode.Open);
+		return string.Join ("\n", archive
+			.OrderBy (entry => entry.FullName, StringComparer.Ordinal)
+			.Select (entry => {
+				using var stream = new MemoryStream ();
+				entry.Extract (stream);
+				return $"{entry.FullName}:{Convert.ToBase64String (stream.ToArray ())}";
+			}));
 	}
 }
