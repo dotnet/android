@@ -91,18 +91,35 @@ steps:
     mkdir -p /tmp/gh-aw/agent
     SKILL_ROOT=".github/skills"
     # The set of skills this workflow is allowed to run unattended. Keep this
-    # in sync with the workflow_dispatch `skill` options list above.
+    # in sync with the workflow_dispatch `skill` options list above. This is
+    # an allowlist: an explicit dispatch input must still be a member of this
+    # array, so a stray/unregistered skill directory can never be run just by
+    # naming it in workflow_dispatch, even if it happens to exist on disk.
     ELIGIBLE_SKILLS=("update-androidsdk-packages")
+    COUNT=${#ELIGIBLE_SKILLS[@]}
+    if [ "$COUNT" -eq 0 ]; then
+      echo "❌ ELIGIBLE_SKILLS is empty — nothing to run." >&2
+      exit 1
+    fi
 
     if [ -n "$INPUT_SKILL" ]; then
-      SKILL_NAME="$INPUT_SKILL"
+      SKILL_NAME=""
+      for candidate in "${ELIGIBLE_SKILLS[@]}"; do
+        if [ "$candidate" = "$INPUT_SKILL" ]; then
+          SKILL_NAME="$candidate"
+          break
+        fi
+      done
+      if [ -z "$SKILL_NAME" ]; then
+        echo "❌ Requested skill '$INPUT_SKILL' is not in ELIGIBLE_SKILLS: ${ELIGIBLE_SKILLS[*]}" >&2
+        exit 1
+      fi
     else
       # No explicit selection (scheduled run, or manual dispatch left blank):
       # pick uniformly at random from the eligible skills, same as
       # nightly-fix-finder does for its scan scripts. With only one skill
       # registered today this always picks it; once more are added, each
       # unselected run picks one at random.
-      COUNT=${#ELIGIBLE_SKILLS[@]}
       SKILL_NAME="${ELIGIBLE_SKILLS[$((RANDOM % COUNT))]}"
     fi
 

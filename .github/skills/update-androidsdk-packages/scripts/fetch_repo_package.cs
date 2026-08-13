@@ -78,7 +78,7 @@ foreach (var pkg in doc.Descendants().Where(e => e.Name.LocalName is "remotePack
 	var revisionElem = pkg.Elements().FirstOrDefault(e => e.Name.LocalName == "revision");
 	var (revisionText, revisionKey) = ParseRevision(revisionElem);
 	bool hasPreviewRevision = revisionElem?.Elements().FirstOrDefault(e => e.Name.LocalName == "preview") is { } previewElem
-		&& int.TryParse(previewElem.Value, out var previewNum) && previewNum != 0;
+		&& int.TryParse(previewElem.Value, out var previewNum0) && previewNum0 != 0;
 	var displayName = pkg.Elements().FirstOrDefault(e => e.Name.LocalName == "display-name")?.Value ?? "";
 	// <channelRef> is a direct child of <remotePackage>/<localPackage>, not of <type-details>.
 	var channelRef = pkg.Elements().FirstOrDefault(e => e.Name.LocalName == "channelRef")?.Attribute("ref")?.Value ?? "";
@@ -117,10 +117,10 @@ static void PrintUsage()
 	Console.Error.WriteLine("  --archives  print archive URLs + SHA-1 + size for each match (SHA-1 only; recompute SHA-256 from the actual download)");
 }
 
-static (string Text, (int, int, int) Key) ParseRevision(XElement? revisionElem)
+static (string Text, (int, int, int, int) Key) ParseRevision(XElement? revisionElem)
 {
 	if (revisionElem is null)
-		return ("", (0, 0, 0));
+		return ("", (0, 0, 0, 0));
 
 	int Int(string name) {
 		var s = revisionElem.Elements().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
@@ -132,10 +132,17 @@ static (string Text, (int, int, int) Key) ParseRevision(XElement? revisionElem)
 	int major = Int("major");
 	string? minor = Str("minor");
 	string? micro = Str("micro");
+	string? preview = Str("preview");
+	int previewNum = int.TryParse(preview, out var p) ? p : 0;
 	var parts = new List<string> { major.ToString() };
 	if (!string.IsNullOrEmpty(minor)) parts.Add(minor);
 	if (!string.IsNullOrEmpty(micro)) parts.Add(micro);
-	return (string.Join(".", parts), (major, Int("minor"), Int("micro")));
+	if (!string.IsNullOrEmpty(preview) && previewNum != 0) parts.Add($"rc{preview}");
+	// Sort key includes preview as its own component so e.g. 36.0.0-preview1 and
+	// 36.0.0-preview2 don't collapse to the same key, and so a stable release
+	// (previewNum == 0) always sorts *after* any preview of the same
+	// major.minor.micro (Google publishes previews before promoting to stable).
+	return (string.Join(".", parts), (major, Int("minor"), Int("micro"), previewNum == 0 ? int.MaxValue : previewNum));
 }
 
 static List<ArchiveInfo> CollectArchives(XElement pkg, string manifestUrl)
@@ -166,5 +173,5 @@ static List<ArchiveInfo> CollectArchives(XElement pkg, string manifestUrl)
 	return result;
 }
 
-record PackageMatch(string Path, string Revision, (int, int, int) RevisionKey, string DisplayName, string ChannelRef, bool PreviewGuess, List<ArchiveInfo> Archives);
+record PackageMatch(string Path, string Revision, (int, int, int, int) RevisionKey, string DisplayName, string ChannelRef, bool PreviewGuess, List<ArchiveInfo> Archives);
 record ArchiveInfo(string HostOs, string HostArch, string Url, string Sha1, string Size);
