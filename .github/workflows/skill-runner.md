@@ -22,6 +22,10 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+concurrency:
+  group: skill-runner
+  cancel-in-progress: false
+  queue: max
 # ###############################################################
 # Select a PAT from the pool and override COPILOT_GITHUB_TOKEN.
 # Run agentic jobs in an isolated `copilot-pat-pool` environment.
@@ -41,6 +45,7 @@ imports:
 environment: copilot-pat-pool
 checkout:
   - fetch-depth: 0
+    ref: main
 jobs:
   conclusion:
     permissions:
@@ -241,13 +246,17 @@ go straight to Phase 4 and report the failure instead.
 
 ## Phase 3: Commit and Open the PR (only if changes were made and validated)
 
-1. Commit with a concise message describing exactly what changed, per the skill's own guidance, ending
+1. Before making changes or opening a PR, inspect open pull requests targeting `main` for an existing
+   update from this workflow and selected skill (for example, using `gh pr list --state open --base main`
+   and checking the title/body). If an equivalent open update PR already exists, do not create another
+   one; report a no-op with the existing PR number and continue to Phase 4.
+2. Commit with a concise message describing exactly what changed, per the skill's own guidance, ending
    in:
 
    `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
 
    The workflow configures Git as `github-actions[bot]` — keep that author identity.
-2. Call `create_pull_request` exactly once. Use a short branch name and a PR body with this
+3. Call `create_pull_request` exactly once. Use a short branch name, explicitly target `main`, and use a PR body with this
    structure:
 
    ```markdown

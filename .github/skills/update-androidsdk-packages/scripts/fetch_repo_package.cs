@@ -87,7 +87,7 @@ foreach (var pkg in doc.Descendants().Where(e => e.Name.LocalName is "remotePack
 		continue;
 
 	var archives = showArchives ? CollectArchives(pkg, manifest) : new List<ArchiveInfo>();
-	matches.Add(new PackageMatch(pkgPath, revisionText, revisionKey, displayName, channelRef, preview, archives));
+	matches.Add(new PackageMatch(pkgPath, revisionText, revisionKey, displayName, channelRef, preview, ParsePlatformKey(pkgPath), archives));
 }
 
 if (matches.Count == 0) {
@@ -95,7 +95,11 @@ if (matches.Count == 0) {
 	return 1;
 }
 
-foreach (var m in matches.OrderByDescending(m => m.RevisionKey)) {
+foreach (var m in matches
+	.OrderByDescending(m => m.PlatformKey?.Major ?? -1)
+	.ThenByDescending(m => m.PlatformKey?.Minor ?? -1)
+	.ThenByDescending(m => m.PlatformKey?.Extension ?? -1)
+	.ThenByDescending(m => m.RevisionKey)) {
 	string flag = m.PreviewGuess ? " [PREVIEW-LOOKING]" : "";
 	Console.WriteLine($"{m.Path}  rev={m.Revision}  channel={m.ChannelRef}{flag}  {m.DisplayName}");
 	foreach (var a in m.Archives) {
@@ -173,5 +177,15 @@ static List<ArchiveInfo> CollectArchives(XElement pkg, string manifestUrl)
 	return result;
 }
 
-record PackageMatch(string Path, string Revision, (int, int, int, int) RevisionKey, string DisplayName, string ChannelRef, bool PreviewGuess, List<ArchiveInfo> Archives);
+static (int Major, int Minor, int Extension)? ParsePlatformKey(string path)
+{
+	var match = Regex.Match(path, @"(?:^|;)android-(\d+)(?:\.(\d+))?(?:-ext(\d+))?(?:$|;)", RegexOptions.IgnoreCase);
+	if (!match.Success || !int.TryParse(match.Groups [1].Value, out var major))
+		return null;
+	int.TryParse(match.Groups [2].Value, out var minor);
+	int.TryParse(match.Groups [3].Value, out var extension);
+	return (major, minor, extension);
+}
+
+record PackageMatch(string Path, string Revision, (int, int, int, int) RevisionKey, string DisplayName, string ChannelRef, bool PreviewGuess, (int Major, int Minor, int Extension)? PlatformKey, List<ArchiveInfo> Archives);
 record ArchiveInfo(string HostOs, string HostArch, string Url, string Sha1, string Size);

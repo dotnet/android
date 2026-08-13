@@ -127,8 +127,9 @@ one shared macOS zip still covers both).
   (e.g. `platform-34-ext7_r02` → `platform-34-ext12_r01`) — do not introduce an extension suffix for
   an API level that never had one, or vice versa, without a clear reason from the manifest.
 - The `source-NN_r0M.zip` sources package and `XAAndroidSourcesHash` should track whichever API level
-  is `IsLatestStable="true"` in `_PlatformPackage` (see the existing `<Destination>` path — it embeds
-  the API level, e.g. `\sources\android-37.0`). Update both the zip name/Destination and the hash
+  is `IsLatestStable="true"` in `_PlatformPackage` (the `<Destination>` uses the integer API level,
+  e.g. `\sources\android-37`, even when the catalog entry is `platform-37.0_r01`). Update both the
+  zip name/Destination and the hash
   together if the latest stable API level's source archive changed.
 
 ### 5. Validate before finishing
