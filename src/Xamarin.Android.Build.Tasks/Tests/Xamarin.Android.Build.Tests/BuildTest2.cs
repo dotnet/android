@@ -120,7 +120,9 @@ namespace Xamarin.Android.Build.Tests
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
-			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should have succeeded.");
+			// `dotnet publish` defaults $(Configuration) to Release unless told otherwise, which would
+			// override the project's own custom "AppStore" configuration default.
+			Assert.IsTrue (dotnet.Publish (parameters: new [] { $"Configuration={proj.Configuration}" }), "`dotnet publish` should have succeeded.");
 
 			var assemblyName = proj.ProjectName;
 			var apk = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, rid, "publish", $"{proj.PackageName}-Signed.apk");
