@@ -74,9 +74,7 @@ namespace generator.SourceWriters
 			foreach (var prep in constructor.Parameters.GetCallPrep (opt))
 				writer.WriteLine (prep);
 
-			var cleanup = constructor.Parameters.GetCallCleanup (opt);
-			var keepAlive = constructor.Parameters.Where (para => para.ShouldGenerateKeepAlive ()).ToList ();
-			var needsFinally = cleanup.Count > 0;
+			var needsFinally = SourceWriterExtensions.HasCallCleanup (constructor.Parameters, opt);
 
 			if (needsFinally) {
 				writer.WriteLine ("try {");
@@ -97,17 +95,14 @@ namespace generator.SourceWriters
 				writer.WriteLine ("} finally {");
 				writer.Indent ();
 
-				foreach (string statement in cleanup)
-					writer.WriteLine (statement);
+				SourceWriterExtensions.WriteCallCleanup (writer, constructor.Parameters, opt);
 
-				foreach (var p in keepAlive)
-					writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				SourceWriterExtensions.WriteKeepAlive (writer, constructor.Parameters, opt);
 
 				writer.Unindent ();
 				writer.WriteLine ("}");
 			} else {
-				foreach (var p in keepAlive)
-					writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				SourceWriterExtensions.WriteKeepAlive (writer, constructor.Parameters, opt);
 			}
 		}
 

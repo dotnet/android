@@ -238,32 +238,28 @@ namespace generator.SourceWriters
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
 				body.Add (prep);
 
-			var cleanup = method.Parameters.GetCallCleanup (opt);
-			var keepAlive = method.Parameters.Where (para => para.ShouldGenerateKeepAlive ()).ToList ();
-			var needsFinally = cleanup.Count > 0;
+			var hasKeepAlive = HasKeepAlive (method.Parameters);
+			var needsFinally = HasCallCleanup (method.Parameters, opt);
 			var needsTry = needsFinally || method.IsCompatVirtualMethod;
 
 			if (needsTry)
 				body.Add ("try {");
 
-			AddMethodBodyTryBlock (body, method, opt, members, deferReturn: !needsFinally && keepAlive.Count > 0, indent: needsTry);
+			AddMethodBodyTryBlock (body, method, opt, members, deferReturn: !needsFinally && hasKeepAlive, indent: needsTry);
 
 			if (method.IsCompatVirtualMethod) {
 				if (!needsFinally) {
-					foreach (var p in keepAlive)
-						body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+					AddKeepAlive (body, method.Parameters, opt, "\t");
 
-					if (!method.IsVoid && keepAlive.Count > 0)
+					if (!method.IsVoid && hasKeepAlive)
 						body.Add ("\treturn __result;");
 				}
 
 				body.Add ("}");
 				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
 
-				if (!needsFinally) {
-					foreach (var p in keepAlive)
-						body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
-				}
+				if (!needsFinally)
+					AddKeepAlive (body, method.Parameters, opt, "\t");
 
 				body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
 			}
@@ -271,21 +267,77 @@ namespace generator.SourceWriters
 			if (needsFinally) {
 				body.Add ("} finally {");
 
-				foreach (string statement in cleanup)
-					body.Add ("\t" + statement);
+				AddCallCleanup (body, method.Parameters, opt, "\t");
 
-				foreach (var p in keepAlive)
-					body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				AddKeepAlive (body, method.Parameters, opt, "\t");
 
 				body.Add ("}");
 			} else if (method.IsCompatVirtualMethod) {
 				body.Add ("}");
-			} else if (!method.IsCompatVirtualMethod) {
-				foreach (var p in keepAlive)
-					body.Add ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+			} else {
+				AddKeepAlive (body, method.Parameters, opt);
 
-				if (!method.IsVoid && keepAlive.Count > 0)
+				if (!method.IsVoid && hasKeepAlive)
 					body.Add ("return __result;");
+			}
+		}
+
+		public static void WriteKeepAlive (CodeWriter writer, ParameterList parameters, CodeGenerationOptions opt)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (parameter.ShouldGenerateKeepAlive ())
+					writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (parameter.Name)});");
+			}
+		}
+
+		public static bool HasCallCleanup (ParameterList parameters, CodeGenerationOptions opt)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (parameter.NeedsPrep && parameter.GetPostCall (opt).Length > 0)
+					return true;
+			}
+			return false;
+		}
+
+		public static void WriteCallCleanup (CodeWriter writer, ParameterList parameters, CodeGenerationOptions opt)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (!parameter.NeedsPrep)
+					continue;
+				foreach (var statement in parameter.GetPostCall (opt))
+					writer.WriteLine (statement);
+			}
+		}
+
+		static bool HasKeepAlive (ParameterList parameters)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				if (parameters [i].ShouldGenerateKeepAlive ())
+					return true;
+			}
+			return false;
+		}
+
+		static void AddCallCleanup (List<string> body, ParameterList parameters, CodeGenerationOptions opt, string indentation)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (!parameter.NeedsPrep)
+					continue;
+				foreach (var statement in parameter.GetPostCall (opt))
+					body.Add (indentation + statement);
+			}
+		}
+
+		static void AddKeepAlive (List<string> body, ParameterList parameters, CodeGenerationOptions opt, string indentation = "")
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (parameter.ShouldGenerateKeepAlive ())
+					body.Add ($"{indentation}global::System.GC.KeepAlive ({opt.GetSafeIdentifier (parameter.Name)});");
 			}
 		}
 

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -152,22 +151,16 @@ namespace generator.SourceWriters
 				}
 			}
 
-			var cleanup = new List<string> ();
-			if (field.Symbol.IsArray) {
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
-					cleanup.Add ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-			} else {
-				foreach (var statement in field.SetParameters.GetCallCleanup (opt))
-					cleanup.Add (statement);
-				if (field.SetParameters.HasCleanup && !have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
-					cleanup.Add ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-			}
+			var needsFinally = field.Symbol.IsArray
+				? opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1
+				: SourceWriterExtensions.HasCallCleanup (field.SetParameters, opt) ||
+					(field.SetParameters.HasCleanup && !have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1);
 			var needsKeepAlive = opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1 &&
 					field.Symbol.JniName != null &&
 					field.Symbol.JniName.Length > 1 &&
 					(field.Symbol.JniName [0] == 'L' || field.Symbol.JniName [0] == '[');
 
-			if (cleanup.Count > 0) {
+			if (needsFinally) {
 				writer.WriteLine ("try {");
 				writer.Write ("\t");
 			}
@@ -188,12 +181,17 @@ namespace generator.SourceWriters
 				writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
 			}
 
-			if (cleanup.Count > 0) {
+			if (needsFinally) {
 				writer.WriteLine ("} finally {");
 				writer.Indent ();
 
-				foreach (var statement in cleanup)
-					writer.WriteLine (statement);
+				if (field.Symbol.IsArray) {
+					writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
+				} else {
+					SourceWriterExtensions.WriteCallCleanup (writer, field.SetParameters, opt);
+					if (!have_prep && opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1)
+						writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
+				}
 
 				if (needsKeepAlive)
 					writer.WriteLine ("GC.KeepAlive (value);");
