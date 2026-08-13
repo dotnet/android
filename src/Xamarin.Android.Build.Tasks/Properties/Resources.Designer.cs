@@ -917,16 +917,6 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details..
-        /// </summary>
-        public static string XA1037 {
-            get {
-                return ResourceManager.GetString("XA1037", resourceCulture);
-            }
-        }
-        
         /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property has an invalid value of &apos;{1}&apos;. A valid value is one of: {2}..
         /// </summary>
@@ -1477,6 +1467,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4237", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to resolve POM for Maven artifact &apos;{0}&apos; from &apos;{1}&apos;.
+        ///- {2}.
+        /// </summary>
+        public static string XA4237_Details {
+            get {
+                return ResourceManager.GetString("XA4237_Details", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Unknown Maven repository: &apos;{0}&apos;..
@@ -1638,6 +1638,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4257 {
             get {
                 return ResourceManager.GetString("XA4257", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains reserved Java identifier &apos;{1}&apos;. Change the package or type name..
+        /// </summary>
+        public static string XA4258 {
+            get {
+                return ResourceManager.GetString("XA4258", resourceCulture);
             }
         }
 
@@ -1892,6 +1901,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4323 {
             get {
                 return ResourceManager.GetString("XA4323", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [{0}] Unable to delete source file &apos;{1}&apos;.
+        /// </summary>
+        public static string XA4324 {
+            get {
+                return ResourceManager.GetString("XA4324", resourceCulture);
             }
         }
         

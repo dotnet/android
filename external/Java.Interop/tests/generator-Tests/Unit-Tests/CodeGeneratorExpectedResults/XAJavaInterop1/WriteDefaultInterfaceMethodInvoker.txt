@@ -39,57 +39,32 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
-	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
-
 	static IntPtr java_class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
+		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-		get { return _members; }
+		get { return _members_java_code_IMyInterface; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override IntPtr ThresholdClass {
-		get { return class_ref; }
+		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
+		get { return _members_java_code_IMyInterface.ManagedPeerType; }
 	}
 
-	IntPtr class_ref;
+	static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
-	public static IMyInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
-		return global::Java.Lang.Object.GetObject<IMyInterface> (handle, transfer);
-	}
-
-	static IntPtr Validate (IntPtr handle)
-	{
-		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'java.code.IMyInterface'.");
-		return handle;
-	}
-
-	protected override void Dispose (bool disposing)
-	{
-		if (this.class_ref != IntPtr.Zero)
-			JNIEnv.DeleteGlobalRef (this.class_ref);
-		this.class_ref = IntPtr.Zero;
-		base.Dispose (disposing);
-	}
-
-	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-	{
-		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-		JNIEnv.DeleteLocalRef (local_ref);
 	}
 
 	static Delegate cb_DoDeclaration_DoDeclaration_V;
@@ -112,12 +87,10 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 #pragma warning restore 0169
 
-	IntPtr id_DoDeclaration;
 	public unsafe void DoDeclaration ()
 	{
-		if (id_DoDeclaration == IntPtr.Zero)
-			id_DoDeclaration = JNIEnv.GetMethodID (class_ref, "DoDeclaration", "()V");
-		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_DoDeclaration);
+		const string __id = "DoDeclaration.()V";
+		_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, null);
 	}
 
 }

@@ -18,6 +18,7 @@ imports:
 
 environment: copilot-pat-pool
 permissions:
+  checks: read
   contents: read
   pull-requests: read
 model: gpt-5.6-sol
@@ -54,6 +55,16 @@ network:
     - "microsoft.com"
     - "vsassets.io"
 tools:
+  bash:
+    - az devops:*
+    - az pipelines:*
+    - az rest:*
+    - cat
+    - grep
+    - head
+    - jq
+    - tail
+    - wc
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
@@ -75,7 +86,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 
 ## Instructions
 
-1. Read the review methodology from `.github/skills/android-reviewer/SKILL.md` — this defines the review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types.
+1. Read the review methodology from `.github/skills/code-review/SKILL.md` — this defines the review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types.
 2. Follow the skill's workflow to analyze the pull request:
    - Gather context: read the diff and changed files
    - For each changed file, read the **full source file** to understand surrounding context

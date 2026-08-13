@@ -74,57 +74,32 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
 internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
-	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
-
 	static IntPtr java_class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
+		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-		get { return _members; }
+		get { return _members_java_code_IMyInterface; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override IntPtr ThresholdClass {
-		get { return class_ref; }
+		get { return _members_java_code_IMyInterface.JniPeerType.PeerReference.Handle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
+		get { return _members_java_code_IMyInterface.ManagedPeerType; }
 	}
 
-	IntPtr class_ref;
+	static readonly JniPeerMembers _members_java_code_IMyInterface = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
 
-	public static IMyInterface? GetObject (IntPtr handle, JniHandleOwnership transfer)
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
-		return global::Java.Lang.Object.GetObject<IMyInterface> (handle, transfer);
-	}
-
-	static IntPtr Validate (IntPtr handle)
-	{
-		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'java.code.IMyInterface'.");
-		return handle;
-	}
-
-	protected override void Dispose (bool disposing)
-	{
-		if (this.class_ref != IntPtr.Zero)
-			JNIEnv.DeleteGlobalRef (this.class_ref);
-		this.class_ref = IntPtr.Zero;
-		base.Dispose (disposing);
-	}
-
-	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-	{
-		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-		JNIEnv.DeleteLocalRef (local_ref);
 	}
 
 	static Delegate? cb_get_Count_get_Count_I;
@@ -167,20 +142,17 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 #pragma warning restore 0169
 
-	IntPtr id_get_Count;
-	IntPtr id_set_Count_I;
 	public unsafe int Count {
 		get {
-			if (id_get_Count == IntPtr.Zero)
-				id_get_Count = JNIEnv.GetMethodID (class_ref, "get_Count", "()I");
-			return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_get_Count);
+			const string __id = "get_Count.()I";
+			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+			return __rm;
 		}
 		set {
-			if (id_set_Count_I == IntPtr.Zero)
-				id_set_Count_I = JNIEnv.GetMethodID (class_ref, "set_Count", "(I)V");
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue (value);
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_set_Count_I, __args);
+			const string __id = "set_Count.(I)V";
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
 		}
 	}
 
@@ -225,22 +197,22 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 #pragma warning restore 0169
 
-	IntPtr id_get_Key;
-	IntPtr id_set_Key_Ljava_lang_String_;
 	public unsafe string? Key {
 		get {
-			if (id_get_Key == IntPtr.Zero)
-				id_get_Key = JNIEnv.GetMethodID (class_ref, "get_Key", "()Ljava/lang/String;");
-			return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_get_Key), JniHandleOwnership.TransferLocalRef);
+			const string __id = "get_Key.()Ljava/lang/String;";
+			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 		}
 		set {
-			if (id_set_Key_Ljava_lang_String_ == IntPtr.Zero)
-				id_set_Key_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "set_Key", "(Ljava/lang/String;)V");
+			const string __id = "set_Key.(Ljava/lang/String;)V";
 			IntPtr native_value = JNIEnv.NewString ((string?)value);
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue (native_value);
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_set_Key_Ljava_lang_String_, __args);
-			JNIEnv.DeleteLocalRef (native_value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			} finally {
+				JNIEnv.DeleteLocalRef (native_value);
+			}
 		}
 	}
 
@@ -284,20 +256,17 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 #pragma warning restore 0169
 
-	IntPtr id_get_AbstractCount;
-	IntPtr id_set_AbstractCount_I;
 	public unsafe int AbstractCount {
 		get {
-			if (id_get_AbstractCount == IntPtr.Zero)
-				id_get_AbstractCount = JNIEnv.GetMethodID (class_ref, "get_AbstractCount", "()I");
-			return JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_get_AbstractCount);
+			const string __id = "get_AbstractCount.()I";
+			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+			return __rm;
 		}
 		set {
-			if (id_set_AbstractCount_I == IntPtr.Zero)
-				id_set_AbstractCount_I = JNIEnv.GetMethodID (class_ref, "set_AbstractCount", "(I)V");
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue (value);
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_set_AbstractCount_I, __args);
+			const string __id = "set_AbstractCount.(I)V";
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (value);
+			_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
 		}
 	}
 
@@ -323,17 +292,18 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 #pragma warning restore 0169
 
-	IntPtr id_GetCountForKey_Ljava_lang_String_;
 	public unsafe int GetCountForKey (string? key)
 	{
-		if (id_GetCountForKey_Ljava_lang_String_ == IntPtr.Zero)
-			id_GetCountForKey_Ljava_lang_String_ = JNIEnv.GetMethodID (class_ref, "GetCountForKey", "(Ljava/lang/String;)I");
+		const string __id = "GetCountForKey.(Ljava/lang/String;)I";
 		IntPtr native_key = JNIEnv.NewString ((string?)key);
-		JValue* __args = stackalloc JValue [1];
-		__args [0] = new JValue (native_key);
-		var __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_GetCountForKey_Ljava_lang_String_, __args);
-		JNIEnv.DeleteLocalRef (native_key);
-		return __ret;
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_key);
+			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+			return __rm;
+		} finally {
+			JNIEnv.DeleteLocalRef (native_key);
+		}
 	}
 
 	static Delegate? cb_Key_Key_Ljava_lang_String_;
@@ -356,12 +326,11 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 #pragma warning restore 0169
 
-	IntPtr id_Key;
 	public unsafe string? Key ()
 	{
-		if (id_Key == IntPtr.Zero)
-			id_Key = JNIEnv.GetMethodID (class_ref, "Key", "()Ljava/lang/String;");
-		return JNIEnv.GetString (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_Key), JniHandleOwnership.TransferLocalRef);
+		const string __id = "Key.()Ljava/lang/String;";
+		var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+		return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
 	}
 
 	static Delegate? cb_AbstractMethod_AbstractMethod_V;
@@ -384,12 +353,10 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 	}
 #pragma warning restore 0169
 
-	IntPtr id_AbstractMethod;
 	public unsafe void AbstractMethod ()
 	{
-		if (id_AbstractMethod == IntPtr.Zero)
-			id_AbstractMethod = JNIEnv.GetMethodID (class_ref, "AbstractMethod", "()V");
-		JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_AbstractMethod);
+		const string __id = "AbstractMethod.()V";
+		_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 	}
 
 }

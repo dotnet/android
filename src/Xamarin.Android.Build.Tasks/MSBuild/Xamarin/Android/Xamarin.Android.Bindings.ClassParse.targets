@@ -52,7 +52,6 @@ This file is only used by binding projects.
         ToolPath="$(_BindingsToolsLocation)"
         ToolExe="$(BindingsGeneratorToolExe)"
         Nullable="$(Nullable)"
-        UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
     />
 
     <ItemGroup>

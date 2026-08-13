@@ -6,6 +6,8 @@ using Xamarin.Android.Tools;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
+const int CtrlCExitCode = 130; // Standard Unix exit code for SIGINT: 128 + signal 2.
+const int StopAppTimeoutSeconds = 10;
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -14,9 +16,11 @@ string? activity = null;
 string? deviceUserId = null;
 string? instrumentation = null;
 bool verbose = false;
+bool wakeDevice = true;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
+int ctrlCRequested = 0;
 string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
@@ -24,7 +28,7 @@ string? dotnetTestPipe = null;
 try {
 	return await RunAsync (args);
 } catch (OperationCanceledException) {
-	return 130; // 128 + SIGINT(2), standard Unix convention for Ctrl+C
+	return CtrlCExitCode;
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)
@@ -72,6 +76,9 @@ async Task<int> RunAsync (string[] args)
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
+		{ "no-wake-device",
+			"Do not wake the device or dismiss its keyguard before launching the application.",
+			v => wakeDevice = v == null },
 		{ "logcat-args=",
 			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'monodroid-assembly:S' to silence a tag).",
 			v => logcatArgs = v },
@@ -185,18 +192,24 @@ async Task<int> RunAsync (string[] args)
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
+	int exitCode;
+	bool cancellationRequested;
 	try {
 		if (isDotnetTestMode)
-			return await RunDotnetTestAsync (remaining);
-
-		if (isInstrumentMode)
-			return await RunInstrumentationAsync (remaining);
-
-		return await RunAppAsync ();
+			exitCode = await RunDotnetTestAsync (remaining);
+		else if (isInstrumentMode)
+			exitCode = await RunInstrumentationAsync (remaining);
+		else
+			exitCode = await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
+		cancellationRequested = Volatile.Read (ref ctrlCRequested) != 0;
+		if (cancellationRequested)
+			await StopAppAsync ();
 		cts.Dispose ();
 	}
+
+	return cancellationRequested ? CtrlCExitCode : exitCode;
 }
 
 void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
@@ -205,20 +218,8 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	Console.WriteLine ();
 	Console.WriteLine ("Stopping application...");
 
+	Interlocked.Exchange (ref ctrlCRequested, 1);
 	cts.Cancel ();
-
-	// Force-stop the app (fire-and-forget in cancel handler)
-	_ = StopAppAsync ();
-
-	// Kill logcat process if running
-	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error killing logcat process: {ex.Message}");
-	}
 }
 
 async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
@@ -515,7 +516,9 @@ async Task<int> RunAppAsync ()
 async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
+	// Device preparation is best effort; am start must run and determine the shell exit code.
+	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; " : "";
+	var cmdArgs = $"shell {wakeDeviceCommand}am start -S -W{userArg} -n \"{package}/{activity}\"";
 	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
@@ -579,34 +582,36 @@ void StartLogcat ()
 
 async Task WaitForAppExitAsync ()
 {
-	while (!cts.Token.IsCancellationRequested) {
-		// Check if app is still running
-		var pid = await GetAppPidAsync ();
-		if (pid == null || pid != logcatPid) {
-			if (verbose)
-				Console.WriteLine ("App has exited.");
-			break;
-		}
-
-		// Also check if logcat process exited unexpectedly
-		if (logcatProcess != null && logcatProcess.HasExited) {
-			if (verbose)
-				Console.WriteLine ("Logcat process exited.");
-			break;
-		}
-
-		await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
-	}
-
-	// Clean up logcat process
 	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-			logcatProcess.WaitForExit (1000);
+		while (!cts.Token.IsCancellationRequested) {
+			// Check if app is still running
+			var pid = await GetAppPidAsync ();
+			if (pid == null || pid != logcatPid) {
+				if (verbose)
+					Console.WriteLine ("App has exited.");
+				break;
+			}
+
+			// Also check if logcat process exited unexpectedly
+			if (logcatProcess != null && logcatProcess.HasExited) {
+				if (verbose)
+					Console.WriteLine ("Logcat process exited.");
+				break;
+			}
+
+			await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+	} finally {
+		// Clean up logcat process
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+		}
 	}
 }
 
@@ -616,7 +621,18 @@ async Task StopAppAsync ()
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+	using var timeoutCts = new CancellationTokenSource (TimeSpan.FromSeconds (StopAppTimeoutSeconds));
+	try {
+		var (exitCode, _, error) = await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", timeoutCts.Token, verbose);
+		if (exitCode != 0)
+			Console.Error.WriteLine ($"Error: Failed to stop app: {error}");
+	} catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested) {
+		Console.Error.WriteLine ($"Error: Timed out stopping app after {StopAppTimeoutSeconds} seconds.");
+	} catch (Exception ex) {
+		Console.Error.WriteLine ($"Error: Failed to stop app: {ex.Message}");
+		if (verbose)
+			Console.Error.WriteLine (ex.ToString ());
+	}
 }
 
 string? FindAdbPath ()

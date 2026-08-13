@@ -585,53 +585,6 @@ namespace Xamarin.Android.Build.Tests
 			b.AssertHasNoWarnings ();
 		}
 
-		static IEnumerable<object[]> Get_XA1037PropertyDeprecatedWarningData ()
-		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("AndroidFastDeploymentType", "Assemblies", true, false, runtime);
-				AddTestData ("AndroidFastDeploymentType", "Assemblies", false, false, runtime);
-				AddTestData ("_AndroidUseJavaLegacyResolver", "true", false, true, runtime);
-				AddTestData ("_AndroidUseJavaLegacyResolver", "true", true, true, runtime);
-				AddTestData ("_AndroidEmitLegacyInterfaceInvokers", "true", false, true, runtime);
-				AddTestData ("_AndroidEmitLegacyInterfaceInvokers", "true", true, true, runtime);
-			}
-
-			return ret;
-
-			void AddTestData (string property, string value, bool isRelease, bool isBindingProject, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					property,
-					value,
-					isRelease,
-					isBindingProject,
-					runtime,
-				});
-			}
-		}
-
-		[Test]
-		[TestCaseSource (nameof (Get_XA1037PropertyDeprecatedWarningData))]
-		public void XA1037PropertyDeprecatedWarning (string property, string value, bool isRelease, bool isBindingProject, AndroidRuntime runtime)
-		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
-			proj.IsRelease = isRelease;
-			proj.SetProperty (property, value);
-			proj.SetRuntime (runtime);
-
-			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder () : CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"The '{property}' MSBuild property is deprecated and will be removed"),
-					$"Should not get a warning about the {property} property");
-			}
-		}
-
 		[Test]
 		public void ClassLibraryHasNoWarnings ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{

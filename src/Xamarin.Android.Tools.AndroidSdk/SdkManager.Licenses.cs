@@ -175,7 +175,7 @@ public partial class SdkManager
 			var line = rawLine.TrimEnd ('\r');
 
 			// License header: "License android-sdk-license:"
-			if (line.StartsWith ("License ", StringComparison.OrdinalIgnoreCase) && line.TrimEnd ().EndsWith (":")) {
+			if (line.StartsWith ("License ", StringComparison.OrdinalIgnoreCase) && line.TrimEnd ().EndsWith (":", StringComparison.Ordinal)) {
 				// Save previous license if any
 				if (currentLicenseId is not null && currentLicenseText.Length > 0) {
 					licenses.Add (new SdkLicense (currentLicenseId, currentLicenseText.ToString ().Trim ()));

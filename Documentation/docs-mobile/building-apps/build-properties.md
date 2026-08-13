@@ -372,6 +372,17 @@ called `desugar`, on the output of the `javac` compiler. The default value is
 `False` if using `$(AndroidDexTool)=dx` and `True` if
 using [`$(AndroidDexTool)`](#androiddextool)=`d8`.
 
+## AndroidEnableFastDeployment
+
+A boolean property that determines whether [Fast Deployment](build-process.md#Fast_Deployment)
+is enabled. Fast Deployment installs assemblies outside of the application
+package, which can reduce deployment and rebuild times.
+
+The default value is `True` for Debug builds and `False` for Release builds.
+Setting this property is equivalent to setting the inverse value of
+[`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk). If both properties
+are set, `$(EmbedAssembliesIntoApk)` takes precedence.
+
 ## AndroidEnableGooglePlayStoreChecks
 
 A bool property
@@ -547,31 +558,7 @@ compiler.
 
 ## AndroidFastDeploymentType
 
-A `:` (colon)-separated list
-of values to control what types can be deployed to the
-[Fast Deployment directory](build-process.md#Fast_Deployment)
-on the target device
-when the [`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk) MSBuild
-property is `False`. If a resource is fast deployed, it is *not*
-embedded into the generated `.apk` or `.aab`, which can speed up deployment
-times. (The more that is fast deployed, then the less frequently
-the package needs to be rebuilt, and the install process can be
-faster.) Valid values include:
-
-- `Assemblies`: Deploy application assemblies.
-- `Dexes`: Deploy `.dex` files, native libraries and typemaps.
-  **The `Dexes` value can *only* be used on devices running
-  Android 4.4 or later (API-19).**
-
-The default value is `Assemblies`.
-
-Support for Fast Deploying resources and assets via that system was
-removed in commit [f0d565fe](https://github.com/xamarin/xamarin-android/commit/f0d565fe4833f16df31378c77bbb492ffd2904b9). This was becuase it required the use of
-deprecated API's to work.
-
-**Support for this feature was removed in .NET 9
-
-**Experimental**.
+This property was removed in .NET 9 and has no effect.
 
 ## AndroidFragmentType
 
@@ -963,6 +950,19 @@ If you are getting this error you can add the following to the
 ```
 
 which will allow the `dx` step to succeed.
+
+## AndroidNdkDirectory
+
+The `$(AndroidNdkDirectory)` property specifies a custom Android NDK
+installation directory. The path can be set in the project file or on the
+command line:
+
+```dotnetcli
+dotnet build -p:AndroidNdkDirectory=/path/to/android-ndk
+```
+
+If this property is not set, .NET for Android locates the NDK from the
+configured Android development environment.
 
 ## AndroidPackageFormat
 
@@ -1609,15 +1609,14 @@ A boolean property that
 determines whether or not the app's assemblies should be embedded
 into the Application package.
 
+This property is the inverse of
+[`$(AndroidEnableFastDeployment)`](#androidenablefastdeployment). New projects
+should use `$(AndroidEnableFastDeployment)` to control Fast Deployment. If both
+properties are set, `$(EmbedAssembliesIntoApk)` takes precedence.
+
 This property should be `True` for Release builds and `False` for
 Debug builds. It *may* need to be `True` in Debug builds if Fast
 Deployment doesn't support the target device.
-
-When this property is `False`, then the
-[`$(AndroidFastDeploymentType)`](#androidfastdeploymenttype)
-MSBuild property also controls what
-will be embedded into the `.apk` or `.aab`, which can impact deployment and
-rebuild times.
 
 ## EnableCrashReport
 

@@ -482,7 +482,45 @@ namespace Xamarin.Android.Build.Tests
 					int.Parse (match.Groups ["seconds"].Value, CultureInfo.InvariantCulture),
 					int.Parse (match.Groups ["milliseconds"].Value, CultureInfo.InvariantCulture));
 			}
+			if (result)
+				return true;
+
+			string activityState = RunAdbCommand ("shell dumpsys activity activities", timeout: 10);
+			result = IsActivityResumed (activityState, activityNamespace, activityName);
+			string diagnostics = $"""
+
+				===== Activity start detection: {(result ? "resumed" : "not detected")} =====
+				===== dumpsys activity activities =====
+				{activityState}
+				===== pidof {activityNamespace} =====
+				{RunAdbCommand ($"shell pidof {activityNamespace}", timeout: 5)}
+				""";
+			if (!result) {
+				diagnostics += $"""
+					===== dumpsys window windows =====
+					{RunAdbCommand ("shell dumpsys window windows", timeout: 10)}
+					""";
+			}
+			File.AppendAllText (logcatFilePath, diagnostics);
+			TestContext.Out.WriteLine (diagnostics);
 			return result;
+		}
+
+		static bool IsActivityResumed (string activityState, string activityNamespace, string activityName)
+		{
+			string componentPrefix = activityNamespace + "/";
+			foreach (string line in activityState.Split ('\n')) {
+				if (!line.Contains ("ResumedActivity", StringComparison.OrdinalIgnoreCase))
+					continue;
+				foreach (string field in line.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) {
+					if (!field.StartsWith (componentPrefix, StringComparison.OrdinalIgnoreCase))
+						continue;
+					string activity = field.Substring (componentPrefix.Length).TrimStart ('.');
+					return activity.Equals (activityName, StringComparison.OrdinalIgnoreCase) ||
+						activity.EndsWith ("." + activityName, StringComparison.OrdinalIgnoreCase);
+				}
+			}
+			return false;
 		}
 
 		protected static XDocument GetUI (int timeoutInSeconds = 120)
