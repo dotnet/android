@@ -43,6 +43,9 @@ imports:
       environment: copilot-pat-pool
 
 environment: copilot-pat-pool
+# This workflow intentionally operates only from main. Manual dispatches from any
+# other ref are rejected before activation, and PR-context checkout is disabled
+# so generated workflow context cannot swap the workspace onto a branch checkout.
 checkout:
   - fetch-depth: 0
     ref: main
@@ -89,6 +92,11 @@ safe-outputs:
     create-issue: false
   report-failure-as-issue: true
 steps:
+- name: Reject non-main workflow dispatches
+  if: ${{ github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' }}
+  run: |
+    echo "This workflow only runs from the main branch; refusing workflow_dispatch from ${{ github.ref }}" >&2
+    exit 1
 - env:
     INPUT_SKILL: ${{ inputs.skill }}
   name: Select skill and bootstrap prerequisites
@@ -246,10 +254,16 @@ go straight to Phase 4 and report the failure instead.
 
 ## Phase 3: Commit and Open the PR (only if changes were made and validated)
 
-1. Before making changes or opening a PR, inspect open pull requests targeting `main` for an existing
-   update from this workflow and selected skill (for example, using `gh pr list --state open --base main`
-   and checking the title/body). If an equivalent open update PR already exists, do not create another
-   one; report a no-op with the existing PR number and continue to Phase 4.
+1. Immediately before creating a PR, run a deterministic open-PR check keyed to this workflow and the
+   selected skill. Use a paginated search/filter that matches the exact title prefix for this workflow,
+   for example:
+
+   `gh pr list --state open --base main --limit 100 --search '"[skill-runner]" "<skill-name>"' --json number,title,headRefName,body`
+
+   and compare the returned titles against the exact prefix `"[skill-runner] <skill-name>"`. If any open
+   PR matches that same workflow/skill key, do not create another PR; report a no-op with the existing
+   PR number and continue to Phase 4. Do not fall back to a looser heuristic or a manually judged
+   "equivalent" match.
 2. Commit with a concise message describing exactly what changed, per the skill's own guidance, ending
    in:
 
