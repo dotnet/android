@@ -6,6 +6,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -126,6 +127,7 @@ namespace Xamarin.Android.Build.Tests
 			string responseFilePath = d8Task.ResponseFilePath;
 
 			try {
+				Assert.IsNotNull (responseFilePath, "Response file path should not be null");
 				FileAssert.Exists (responseFilePath, "Response file should exist");
 				Assert.IsTrue (commandLine.Contains ($"\"@{responseFilePath}\""), "Command line should quote a response file path containing spaces");
 				string responseFileContent = File.ReadAllText (responseFilePath);
@@ -156,7 +158,7 @@ namespace Xamarin.Android.Build.Tests
 
 		protected override string CreateResponseFilePath ()
 		{
-			if (!String.IsNullOrEmpty (ResponseFileDirectory)) {
+			if (!ResponseFileDirectory.IsNullOrEmpty ()) {
 				return Path.Combine (ResponseFileDirectory, Path.GetRandomFileName ());
 			}
 			return base.CreateResponseFilePath ();
