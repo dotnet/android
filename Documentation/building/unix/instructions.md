@@ -137,7 +137,7 @@ In order to get a list of the tests you can use the `list-nunit-tests` make targ
 
 or via the `ListNUnitTests` target
 
-    msbuild Xamarin.Android.sln /t:ListNUnitTests
+    msbuild Xamarin.Android.slnx /t:ListNUnitTests
 
 This will produce a list of the tests in all of the test assemblies.
 
@@ -150,7 +150,7 @@ or msbuild property.
 
 or via
 
-    msbuild Xamarin.Android.sln /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    msbuild Xamarin.Android.slnx /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
 
 ## Running On-Device Tests
 
@@ -304,4 +304,3 @@ For example, to rebuild Mono for armeabi-v7a:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
 	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
-

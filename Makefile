@@ -1,7 +1,7 @@
 V             ?= 0
 prefix         = /usr/local
 CONFIGURATION ?= Debug
-SOLUTION       = Xamarin.Android.sln
+SOLUTION       = Xamarin.Android.slnx
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
 LOCALIZE_TEMPLATES ?= 0
