@@ -102,6 +102,46 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BasicApplicationPublishReadyToRunCustomConfiguration ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
+		{
+			// Use a non-standard release configuration name to validate PublishReadyToRun
+			// defaults on for publish builds, not just $(Configuration)=='Release'.
+			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: "AppStore") {
+				IsRelease = true,
+			};
+
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("Optimize", "true");
+			proj.SetProperty ("DebugType", "None");
+			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
+
+			// Use `dotnet publish` rather than `msbuild /t:Publish`: only the `dotnet publish` CLI
+			// sets $(_IsPublishing)=true, which the CoreCLR R2R default (issue #11069) relies on.
+			var projBuilder = CreateDllBuilder ();
+			projBuilder.Save (proj);
+			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
+			// `dotnet publish` defaults $(Configuration) to Release unless told otherwise, which would
+			// override the project's own custom "AppStore" configuration default.
+			Assert.IsTrue (dotnet.Publish (parameters: new [] { $"Configuration={proj.Configuration}" }), "`dotnet publish` should have succeeded.");
+
+			var assemblyName = proj.ProjectName;
+			var apk = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, rid, "publish", $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, true);
+			var abi = MonoAndroidHelper.RidToAbi (rid);
+			Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+
+			using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
+			stream.Position = 0;
+			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+		}
+
+		[Test]
 		public void IncompatiblePlatformTargetAndRuntimeIdentifiersFailsBuild ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
