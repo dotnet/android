@@ -29,8 +29,6 @@ steps:
         $env:PATH = "${DOTNET_ROOT};$env:PATH"
         $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
-    # Workaround for https://github.com/dotnet/sdk/pull/55581
-    $env:DOTNET_HOST_PATH = $dotnetPath
     & $dotnetPath test $projectFile -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog -c ${{ parameters.configuration }} --results-directory $resultsDir --report-trx --report-trx-filename ${{ parameters.testName }}.trx --output Detailed ${{ parameters.extraBuildArgs }}
     Pop-Location
   displayName: run ${{ parameters.testName }}
@@ -59,13 +57,20 @@ steps:
   continueOnError: true
   timeoutInMinutes: 3
 
-- script: >
-    DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
-    mkdir -p "$DEST" &&
-    cp "${{ parameters.artifactSource }}" "$DEST" ||
-    echo "copy apk/aab failed"  # We don't need to report the error
-  displayName: copy apk/aab
-  condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+- script: |
+    DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/"
+    INTERMEDIATE_DIR="$(dirname "${{ parameters.project }}")/obj/${{ parameters.configuration }}/$(DotNetTargetFramework)-android/android/bin"
+    mkdir -p "$DEST"
+    cp "${{ parameters.artifactSource }}" "$DEST" || echo "copy apk/aab failed"
+    cp "$INTERMEDIATE_DIR/packaged_resources" "$DEST/packaged_resources.zip" || echo "copy packaged_resources failed"
+    cp "$INTERMEDIATE_DIR/base.zip" "$DEST" || echo "copy base.zip failed"
+    for AAB in "$INTERMEDIATE_DIR"/*.aab; do
+      if [ -f "$AAB" ]; then
+        cp "$AAB" "$DEST"
+      fi
+    done
+  displayName: copy package intermediates
+  condition: ${{ parameters.condition }}
   continueOnError: true
 
   # Always capture full device logcat so we can diagnose native library load

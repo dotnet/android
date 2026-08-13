@@ -209,12 +209,12 @@ public class JavaSourceTest {
 			aarEntry.Extract (aarStream);
 			aarStream.Seek (0, SeekOrigin.Begin);
 
-			// Look for 2 .jar files under libs/
+			// Look for the Maven dependency, foo.jar, and the compiled AndroidJavaSource output under libs/
 			using var aar = ZipArchive.Open (aarStream);
 			int count = aar.Count (e =>
 				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
 				e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
-			Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
+			Assert.AreEqual (3, count, $"There should be 3 .jar files in the {aarPath} archive, but found {count}.");
 		}
 
 		static IEnumerable<object[]> Get_DotNetTargetFrameworks_Data ()

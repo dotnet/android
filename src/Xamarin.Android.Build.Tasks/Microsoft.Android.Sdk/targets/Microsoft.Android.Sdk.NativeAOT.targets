@@ -368,13 +368,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     />
 
     <ItemGroup>
-      <!-- Replace the .a that NativeCompile/ComputeLinkedFilesToPublish would publish with our .so -->
-      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
-      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)">
-        <RelativePath>$(NativeBinaryPrefix)$(TargetName).so</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
-
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
@@ -396,7 +389,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       DependsOnTargets="$(_AndroidRunNativeCompileDependsOn)" />
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
+    <PropertyGroup>
+      <_AndroidNativeAotSharedLibraryName>lib$(TargetName).so</_AndroidNativeAotSharedLibraryName>
+      <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' != '' ">$(NativeOutputPath)$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
+      <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' == '' ">$(OutputPath)$(RuntimeIdentifier)/native/$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
+    </PropertyGroup>
     <ItemGroup>
+      <!-- The linker target is not always scheduled during incremental deployment builds. -->
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
+      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)" Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') ">
+        <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
       <!-- Fix paths to contain lib-prefix -->
       <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).so' " />
     </ItemGroup>
