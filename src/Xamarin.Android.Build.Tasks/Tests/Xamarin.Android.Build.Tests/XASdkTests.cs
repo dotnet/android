@@ -178,8 +178,8 @@ public class JavaSourceTest {
 				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 				MetadataValues = "Pack=false;Bind=false",
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("com.google.auto.value:auto-value-annotations") {
-				MetadataValues = $"Version=1.10.4;Bind=false;Repository={TestEnvironment.DotNetPublicMaven}",
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {
+				MetadataValues = $"Version=1.3.3;Bind=false;Repository={TestEnvironment.DotNetPublicMaven}",
 				BinaryContent = () => [],
 			});
 
