@@ -19,7 +19,7 @@ target, *or* set the
 property to True when building:
 
 ```shell
-msbuild /p:AndroidBuildApplicationPackage=True App.sln
+msbuild /p:AndroidBuildApplicationPackage=True App.slnx
 ```
 
 ## BuildAndStartAotProfiling

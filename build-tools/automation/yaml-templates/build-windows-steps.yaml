@@ -35,7 +35,7 @@ steps:
   displayName: Prepare Solution
   retryCountOnTaskFailure: 1
   inputs:
-    projects: Xamarin.Android.sln
+    projects: Xamarin.Android.slnx
     arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
@@ -45,7 +45,7 @@ steps:
 # Build Xamarin.Android and configure local workloads to test improved local build loop
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
-    project: Xamarin.Android.sln
+    project: Xamarin.Android.slnx
     arguments: >-
       -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
@@ -170,7 +170,7 @@ steps:
 # Pack .nupkgs and extract workload packs to dotnet preview test directory
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
-    project: Xamarin.Android.sln
+    project: Xamarin.Android.slnx
     arguments: >-
       -t:PackDotNet -c $(XA.Build.Configuration) -v:n
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog

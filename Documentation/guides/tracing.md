@@ -368,7 +368,7 @@ the trace smaller and easier to understand:
 
 * Set `$DOTNET_CLI_TELEMETRY_OPTOUT` to `1`, to avoid any dotnet CLI
   telemetry in the trace.
-* Profile a single `.csproj` build, not a `.sln`. This keeps
+* Profile a single `.csproj` build, not a `.slnx`. This keeps
   the build in-process.
 * Always `restore` in a separate step and use `--no-restore` when you
   trace. This avoids NuGet logic in the trace.

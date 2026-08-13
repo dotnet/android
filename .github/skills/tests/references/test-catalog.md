@@ -7,7 +7,7 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make prepare && make all`.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.slnx -c Debug` or `make prepare && make all`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
@@ -41,7 +41,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make prepare && make all`
+Build: Full-build — `./dotnet-local.sh build Xamarin.Android.slnx -c Debug` or `make prepare && make all`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |
@@ -169,7 +169,7 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 Tooling tests are standalone (listed in the Standalone Tests table above).
 JVM-based tests are full-build (require local SDK + JVM).
 
-Build (full-build only): `./dotnet-local.sh build external/Java.Interop/Java.Interop.sln -c Debug`
+Build (full-build only): `./dotnet-local.sh build external/Java.Interop/Java.Interop.slnx -c Debug`
 Device: **No** (runs on host JVM via `TestJVM`)
 
 | Test Area | Assembly / Project | Notes |
