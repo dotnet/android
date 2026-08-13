@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = GetCommandLineBuilder ();
 
-			var responseFile = Path.Combine (Path.GetDirectoryName (OutputFile), "class-parse.rsp");
+			var responseFile = Path.Combine (Path.GetDirectoryName (Path.GetFullPath (OutputFile)) ?? "", "class-parse.rsp");
 			Log.LogDebugMessage ("[class-parse] response file: {0}", responseFile);
 
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM)) {

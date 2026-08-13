@@ -13,10 +13,21 @@ This file is only used by binding projects.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ClassParse" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
+  <Target Name="_ExportJarToXmlInputs">
+    <ItemGroup>
+      <_ExportJarToXmlOutputs Remove="@(_ExportJarToXmlOutputs)" />
+      <_ExportJarToXmlOutputs Include="$(ApiOutputFile)" />
+      <_ExportJarToXmlOutputs
+          Include="$(ApiOutputFile).reference.class-parse"
+          Condition=" '@(EmbeddedReferenceJar->Count())' != '0' or '@(ReferenceJar->Count())' != '0' "
+      />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_ExportJarToXml"
-      DependsOnTargets="_ExtractJavadocsFromJavaSourceJars"
+      DependsOnTargets="_ExtractJavadocsFromJavaSourceJars;_ExportJarToXmlInputs"
       Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);@(_AndroidMSBuildAllProjects)"
-      Outputs="$(ApiOutputFile)">
+      Outputs="@(_ExportJarToXmlOutputs)">
 
     <PropertyGroup>
       <!-- Allow $(_BindingsToolsLocation) to override where to find class-parse/generator -->

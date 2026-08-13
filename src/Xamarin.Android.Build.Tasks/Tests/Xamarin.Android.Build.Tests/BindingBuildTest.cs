@@ -611,6 +611,11 @@ public class UsesDependency {
 			Assert.IsTrue (builder.Build (binding), "Binding build should have succeeded.");
 			var apiXml = builder.Output.GetIntermediaryPath ("api.xml");
 			FileAssert.Exists (apiXml);
+			var referenceApiXml = $"{apiXml}.reference.class-parse";
+			FileAssert.Exists (referenceApiXml);
+			File.Delete (referenceApiXml);
+			Assert.IsTrue (builder.Build (binding, doNotCleanupOnUpdate: true, saveProject: false), "Missing reference API recovery build should have succeeded.");
+			FileAssert.Exists (referenceApiXml);
 			StringAssert.Contains ("com.xamarin.android.test.msbuildtest.JavaSourceJarTest", File.ReadAllText (apiXml),
 				"Bind='false' dependency types should be available while resolving the generated API.");
 			var generatedSourceDirectory = Path.Combine (Root, builder.ProjectDirectory, binding.IntermediateOutputPath, "generated", "src");
