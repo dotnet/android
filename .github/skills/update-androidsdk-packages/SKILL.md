@@ -95,12 +95,13 @@ guess a SHA-256** — either:
 - Compute it yourself by downloading the exact archive URL and hashing it:
 
 ```bash
-dotnet run .github/skills/update-androidsdk-packages/scripts/sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip
+dotnet run .github/skills/update-androidsdk-packages/scripts/sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip --sha1 <manifest-sha1> --size <manifest-size>
 ```
 
 This script downloads into a scratch temp file (not `$(AndroidToolchainCacheDirectory)`,
 which defaults to `$HOME/android-archives` and is the repo's real download cache) and deletes the
-file once hashed, so it never pollutes the cache or shows up as an untracked file in `git status`.
+file once hashed. It validates the downloaded bytes against the manifest's SHA-1 and size before
+printing the SHA-256, so it never trusts a successful HTTP response for the wrong archive.
 Do this for every host archive you're updating — Windows, Linux, macOS, and macOS arm64 when Google
 publishes a separate Apple Silicon archive (as it started doing for command-line tools; check
 whether the manifest/download page now lists a `mac_arm64` alongside `mac_x86_64` before assuming
