@@ -139,6 +139,7 @@
     <MakeDir Directories="$(_TempDirectory);$(BuildOutputDirectory)lib\sdk-manifests" />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
+        EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory)\packages"
         WorkingDirectory="$(_TempDirectory)"
     />
     <RemoveDir Directories="$(_TempDirectory)" />
