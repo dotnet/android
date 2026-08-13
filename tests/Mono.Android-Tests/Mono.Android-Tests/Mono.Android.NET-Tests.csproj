@@ -167,6 +167,7 @@
     <Compile Include="System.Net.NetworkInformation\PingTest.cs" />
     <Compile Include="System.Runtime.InteropServices\DllImportTest.cs" />
     <Compile Include="System.Runtime.InteropServices\RuntimeInformationTest.cs" />
+    <Compile Include="System.Security.Cryptography\CryptographyTest.cs" />
     <Compile Include="System.Text\EncodingTests.cs" />
     <Compile Include="System.Text.Json\JsonSerializerTest.cs" />
     <Compile Include="System.Threading\InterlockedTest.cs" />

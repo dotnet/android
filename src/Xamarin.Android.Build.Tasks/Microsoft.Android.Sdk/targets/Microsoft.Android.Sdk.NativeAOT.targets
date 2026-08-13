@@ -321,6 +321,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
     <!-- Common items (same regardless of linker source) -->
     <ItemGroup>
+      <!-- Supplied by the SDK-resolved NativeAOT runtime pack, including the BCL native archives. -->
       <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
@@ -330,11 +331,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotSystemLibraries Include="m" />
       <_NativeAotSystemLibraries Include="c" />
     </ItemGroup>
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' and Exists('$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a') ">
-      <_NativeAotLinkLibraries Remove="$(IlcSdkPath)libSystem.Security.Cryptography.Native.Android.a" />
-      <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a" />
-    </ItemGroup>
-
     <!-- When using workload linker, resolve libc++/libnaot from runtime pack dir.
          When using NDK, @(_NdkLibs) already has the right NDK sysroot paths. -->
     <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
