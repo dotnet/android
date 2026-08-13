@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 				FileAssert.Exists (responseFilePath, "Response file should exist");
 
 				// Verify the response file is referenced in the command line
-				Assert.IsTrue (commandLine.Contains ($"@{responseFilePath}"), "Command line should reference the response file");
+				Assert.IsTrue (commandLine.Contains ($"\"@{responseFilePath}\""), "Command line should quote the response file");
 
 				// Read and verify response file content
 				string [] responseFileContent = File.ReadAllLines (responseFilePath);
@@ -116,16 +116,18 @@ namespace Xamarin.Android.Build.Tests
 				JarPath = "d8.jar",
 				JavaPlatformJarPath = platformJar,
 				OutputDirectory = tempDir,
+				ResponseFileDirectory = pathWithSpaces,
 				JavaLibrariesToEmbed = new ITaskItem [] {
 					new TaskItem (inputJar),
 				},
 			};
 
-			d8Task.TestGenerateCommandLineCommands ();
+			string commandLine = d8Task.TestGenerateCommandLineCommands ();
 			string responseFilePath = d8Task.ResponseFilePath;
 
 			try {
 				FileAssert.Exists (responseFilePath, "Response file should exist");
+				Assert.IsTrue (commandLine.Contains ($"\"@{responseFilePath}\""), "Command line should quote a response file path containing spaces");
 				string responseFileContent = File.ReadAllText (responseFilePath);
 
 				// Paths with spaces should NOT be quoted (R8/D8 treats each line as a complete argument)
@@ -150,30 +152,30 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		public string ResponseFilePath { get; private set; }
 
+		public string ResponseFileDirectory { get; set; }
+
+		protected override string CreateResponseFilePath ()
+		{
+			if (!String.IsNullOrEmpty (ResponseFileDirectory)) {
+				return Path.Combine (ResponseFileDirectory, Path.GetRandomFileName ());
+			}
+			return base.CreateResponseFilePath ();
+		}
+
+		protected override string CreateResponseFile ()
+		{
+			var responseFile = base.CreateResponseFile ();
+			ResponseFilePath = responseFile;
+			return responseFile;
+		}
+
 		/// <summary>
 		/// Test method that generates command line without actually running the task.
 		/// </summary>
 		public string TestGenerateCommandLineCommands ()
 		{
 			var cmd = GetCommandLineBuilder ();
-			// Capture the response file path after command line generation
-			ResponseFilePath = GetResponseFilePathFromCommandLine (cmd.ToString ());
 			return cmd.ToString ();
-		}
-
-		private static string GetResponseFilePathFromCommandLine (string commandLine)
-		{
-			// Find the @filepath argument
-			var startIndex = commandLine.IndexOf ("@", StringComparison.Ordinal);
-			if (startIndex < 0) return null;
-
-			// Check if '@' is the last character
-			if (startIndex + 1 >= commandLine.Length) return null;
-
-			var endIndex = commandLine.IndexOf (" ", startIndex, StringComparison.Ordinal);
-			if (endIndex < 0) endIndex = commandLine.Length;
-
-			return commandLine.Substring (startIndex + 1, endIndex - startIndex - 1);
 		}
 	}
 }
