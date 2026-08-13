@@ -129,7 +129,7 @@ public class JavaSourceTest {
 				MetadataValues = "Pack=false;Bind=false",
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {
-				MetadataValues = "Version=1.3.3;Bind=false",
+				MetadataValues = $"Version=1.3.3;Bind=false;Repository={TestEnvironment.DotNetPublicMaven}",
 				BinaryContent = () => [],
 			});
 
