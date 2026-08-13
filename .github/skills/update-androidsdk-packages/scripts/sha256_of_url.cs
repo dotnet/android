@@ -53,7 +53,7 @@ try {
 		await cryptoStream.FlushFinalBlockAsync();
 		size = new FileInfo(tmpPath).Length;
 
-		string digest = Convert.ToHexString(sha256.Hash!);
+		string digest = Convert.ToHexString(sha256.Hash ?? throw new InvalidOperationException("SHA256 hash was not computed."));
 		Console.WriteLine($"url:    {url}");
 		Console.WriteLine($"size:   {size} bytes");
 		Console.WriteLine($"sha256: {digest}");
