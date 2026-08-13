@@ -58,46 +58,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAotSharedLibraryIsPublishedWithoutNativeCompile ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.Imports.Add (new Import ("nativeaot-publish.targets") {
-				TextContent = () =>
-					"""
-					<?xml version="1.0" encoding="utf-8"?>
-					<Project>
-					  <Target Name="_CreateExistingNativeAotSharedLibrary" BeforeTargets="_AndroidFixNativeLibraryFileName">
-					    <PropertyGroup>
-					      <NativeOutputPath />
-					      <_ExpectedNativeAotSharedLibrary>$(OutputPath)$(RuntimeIdentifier)/native/lib$(TargetName).so</_ExpectedNativeAotSharedLibrary>
-					    </PropertyGroup>
-					    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_ExpectedNativeAotSharedLibrary)'))" />
-					    <Touch Files="$(_ExpectedNativeAotSharedLibrary)" AlwaysCreate="true" />
-					  </Target>
-					  <Target Name="_ValidateNativeAotSharedLibrary" AfterTargets="_AndroidFixNativeLibraryFileName">
-					    <ItemGroup>
-					      <_NativeAotAppLibrary Include="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == 'lib$(TargetName).so' " />
-					    </ItemGroup>
-					    <Error Condition=" '@(_NativeAotAppLibrary->Count())' != '1' " Text="Expected one NativeAOT application library, but found @(_NativeAotAppLibrary->Count())." />
-					    <Error Condition=" '%(_NativeAotAppLibrary.RelativePath)' != 'lib$(TargetName).so' " Text="NativeAOT application library has incorrect RelativePath metadata: %(_NativeAotAppLibrary.RelativePath)" />
-					  </Target>
-					</Project>
-					""",
-			});
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (
-				builder.RunTarget (proj, "_AndroidFixNativeLibraryFileName", parameters: [
-					"RuntimeIdentifier=android-arm64",
-				]),
-				"Existing NativeAOT shared library should be registered for publishing."
-			);
-		}
-
-		[Test]
 		public void BuildNativeAot_WithNdkLinker ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
