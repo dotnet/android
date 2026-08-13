@@ -393,13 +393,15 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
     <PropertyGroup>
-      <_AndroidNativeAotSharedLibrary>$(NativeOutputPath)$(NativeBinaryPrefix)$(TargetName).so</_AndroidNativeAotSharedLibrary>
+      <_AndroidNativeAotSharedLibraryName>lib$(TargetName).so</_AndroidNativeAotSharedLibraryName>
+      <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' != '' ">$(NativeOutputPath)$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
+      <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' == '' ">$(OutputPath)$(RuntimeIdentifier)/native/$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
     </PropertyGroup>
     <ItemGroup>
       <!-- The linker target is not always scheduled during incremental deployment builds. -->
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
       <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)" Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') ">
-        <RelativePath>$(NativeBinaryPrefix)$(TargetName).so</RelativePath>
+        <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
       <!-- Fix paths to contain lib-prefix -->
