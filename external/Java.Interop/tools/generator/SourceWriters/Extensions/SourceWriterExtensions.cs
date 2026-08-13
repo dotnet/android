@@ -259,6 +259,12 @@ namespace generator.SourceWriters
 
 				body.Add ("}");
 				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
+
+				if (!needsFinally) {
+					foreach (var p in keepAlive)
+						body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				}
+
 				body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
 			}
 

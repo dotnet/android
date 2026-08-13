@@ -487,6 +487,7 @@ namespace generatortests
 				return __result;
 			}
 			catch (Java.Lang.NoSuchMethodError) {
+				global::System.GC.KeepAlive (value);
 				throw new Java.Lang.AbstractMethodError (__id);
 			}
 			""".NormalizeLineEndings ()), generated);
