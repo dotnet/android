@@ -92,9 +92,43 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (errors, "No errors should be logged.");
 		}
 
+		[Test]
+		public void ExtractsBoundAndReferenceLibraries ()
+		{
+			var boundAar = CreateAarWithEntry ("bound.aar", "classes.jar");
+			var referenceAar = CreateAarWithEntry ("reference.aar", "libs/helper.jar");
+			var jarOutputDir = Path.Combine (path, "jars");
+			var annotationOutputDir = Path.Combine (path, "annotations");
+			var referenceJarOutputDir = Path.Combine (path, "reference-jars");
+			var referenceAnnotationOutputDir = Path.Combine (path, "reference-annotations");
+			var task = new ExtractJarsFromAar {
+				BuildEngine = engine,
+				OutputJarsDirectory = jarOutputDir,
+				OutputAnnotationsDirectory = annotationOutputDir,
+				Libraries = [boundAar],
+				OutputReferenceJarsDirectory = referenceJarOutputDir,
+				OutputReferenceAnnotationsDirectory = referenceAnnotationOutputDir,
+				ReferenceLibraries = [referenceAar],
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should extract both library categories.");
+			Assert.IsTrue (File.Exists (Path.Combine (jarOutputDir, "bound.aar", "classes.jar")));
+			var extractedReference = Path.Combine (referenceJarOutputDir, "reference.aar", "libs", "helper.jar");
+			Assert.IsTrue (File.Exists (extractedReference));
+
+			task.ReferenceLibraries = [];
+			Assert.IsTrue (task.Execute (), "Task should clean an empty reference category.");
+			Assert.IsFalse (File.Exists (extractedReference), "Stale reference JAR should be deleted.");
+		}
+
 		string CreateAarWithEntry (string entryName)
 		{
-			var aarPath = Path.Combine (path, "test.aar");
+			return CreateAarWithEntry ("test.aar", entryName);
+		}
+
+		string CreateAarWithEntry (string fileName, string entryName)
+		{
+			var aarPath = Path.Combine (path, fileName);
 			using (var stream = new FileStream (aarPath, FileMode.Create))
 			using (var archive = new ZipArchive (stream, ZipArchiveMode.Create)) {
 				var entry = archive.CreateEntry (entryName);

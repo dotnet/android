@@ -24,19 +24,38 @@ namespace Xamarin.Android.Tasks
 
 		public string []? Libraries { get; set; }
 
+		public string? OutputReferenceJarsDirectory { get; set; }
+
+		public string? OutputReferenceAnnotationsDirectory { get; set; }
+
+		public string []? ReferenceLibraries { get; set; }
+
 		public override bool RunTask ()
 		{
-			if (Libraries == null || Libraries.Length == 0)
-				return true;
-
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
 			try {
-				var jars = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-				var annotations = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-				foreach (var library in Libraries) {
+				ExtractLibraries (Libraries, OutputJarsDirectory, OutputAnnotationsDirectory, memoryStream);
+				if (!OutputReferenceJarsDirectory.IsNullOrEmpty () && !OutputReferenceAnnotationsDirectory.IsNullOrEmpty ()) {
+					ExtractLibraries (ReferenceLibraries, OutputReferenceJarsDirectory, OutputReferenceAnnotationsDirectory, memoryStream);
+				} else if (ReferenceLibraries?.Length > 0) {
+					Log.LogError ("Reference output directories are required when reference libraries are specified.");
+				}
+			} finally {
+				MemoryStreamPool.Shared.Return (memoryStream);
+			}
+
+			return !Log.HasLoggedErrors;
+		}
+
+		void ExtractLibraries (string []? libraries, string outputJarsDirectory, string outputAnnotationsDirectory, MemoryStream memoryStream)
+		{
+			var jars = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			var annotations = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			if (libraries != null) {
+				foreach (var library in libraries) {
 					bool isAar = library.EndsWith (".aar", StringComparison.OrdinalIgnoreCase);
-					var jarOutputDirectory = Path.Combine (OutputJarsDirectory, Path.GetFileName (library));
-					var annotationOutputDirectory = Path.Combine (OutputAnnotationsDirectory, Path.GetFileName (library));
+					var jarOutputDirectory = Path.Combine (outputJarsDirectory, Path.GetFileName (library));
+					var annotationOutputDirectory = Path.Combine (outputAnnotationsDirectory, Path.GetFileName (library));
 					using (var zip = MonoAndroidHelper.ReadZipFile (library)) {
 						foreach (var entry in zip) {
 							if (entry.IsDirectory)
@@ -63,13 +82,9 @@ namespace Xamarin.Android.Tasks
 						}
 					}
 				}
-				DeleteUnknownFiles (OutputJarsDirectory, jars);
-				DeleteUnknownFiles (OutputAnnotationsDirectory, annotations);
-			} finally {
-				MemoryStreamPool.Shared.Return (memoryStream);
 			}
-
-			return !Log.HasLoggedErrors;
+			DeleteUnknownFiles (outputJarsDirectory, jars);
+			DeleteUnknownFiles (outputAnnotationsDirectory, annotations);
 		}
 
 		bool IsUnderDirectory (string resolvedPath, string targetDirectory, string entryName, string archivePath)

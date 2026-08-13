@@ -43,6 +43,32 @@ namespace Xamarin.Android.Build.Tests
 			Assert.True (classParseTask.Execute (), "Task should have succeeded.");
 			Assert.IsTrue (messages.Any (m => m.Message.StartsWith (dotnetPath)), "Task did not use expected tool path.");
 		}
+
+		[Test]
+		public void ClassParseWritesReferenceArguments ()
+		{
+			var outputDirectory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (outputDirectory);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = outputDirectory;
+			var output = Path.Combine (outputDirectory, "api.xml");
+			var referenceOutput = Path.Combine (outputDirectory, "reference-api.xml");
+			var sourceJar = Path.Combine (outputDirectory, "source.jar");
+			var referenceJar = Path.Combine (outputDirectory, "reference.jar");
+			var task = new ClassParseArgumentsTestTask {
+				BuildEngine = engine,
+				OutputFile = output,
+				ReferenceOutputFile = referenceOutput,
+				ReferenceJars = [new TaskItem (referenceJar)],
+				SourceJars = [new TaskItem (sourceJar)],
+			};
+
+			task.GenerateArguments ();
+
+			var responseFile = File.ReadAllLines (Path.Combine (outputDirectory, "class-parse.rsp"));
+			Assert.That (responseFile, Does.Contain ($"--reference-output=\"{referenceOutput}\""));
+			Assert.That (responseFile, Does.Contain ($"--reference=\"{referenceJar}\""));
+			Assert.That (responseFile, Does.Contain ($"\"{sourceJar}\""));
+		}
 	}
 
 	public class ClassParseTestTask : AndroidDotnetToolTask
@@ -51,6 +77,14 @@ namespace Xamarin.Android.Build.Tests
 		protected override string GenerateCommandLineCommands ()
 		{
 			return GetCommandLineBuilder ().ToString ();
+		}
+	}
+
+	public class ClassParseArgumentsTestTask : ClassParse
+	{
+		public string GenerateArguments ()
+		{
+			return GenerateCommandLineCommands ();
 		}
 	}
 }

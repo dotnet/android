@@ -18,6 +18,10 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] SourceJars { get; set; } = [];
 
+		public string? ReferenceOutputFile { get; set; }
+
+		public ITaskItem []? ReferenceJars { get; set; }
+
 		public ITaskItem []? DocumentationPaths { get; set; }
 
 		protected override string GenerateCommandLineCommands ()
@@ -33,6 +37,13 @@ namespace Xamarin.Android.Tasks
 				if (DocumentationPaths != null)
 					foreach (var doc in DocumentationPaths)
 						WriteLine (sw, $"--docspath=\"{doc}\"");
+
+				if (!ReferenceOutputFile.IsNullOrEmpty ())
+					WriteLine (sw, $"--reference-output=\"{ReferenceOutputFile}\"");
+
+				if (ReferenceJars != null)
+					foreach (var reference in ReferenceJars)
+						WriteLine (sw, $"--reference=\"{reference}\"");
 
 				foreach (var doc in SourceJars)
 					WriteLine (sw, $"\"{doc}\"");

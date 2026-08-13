@@ -520,7 +520,7 @@ namespace Foo {
 		}
 
 		[Test]
-		public void AndroidLibraryPackFalseExcludesJarFromAar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AndroidLibraryPackMetadataIsPreservedInNuGet ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -542,23 +542,92 @@ namespace Foo {
 			});
 
 			using (var bindingBuilder = CreateDllBuilder ()) {
-				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
+				bindingBuilder.Target = "Pack";
+				Assert.IsTrue (bindingBuilder.Build (binding), "`Pack` should succeed");
 
-				// Check that the AAR file was created
-				var aarPath = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath, "UnnamedProject.aar");
-				FileAssert.Exists (aarPath);
-
-				// Extract and examine AAR contents
-				using (var aar = ZipArchive.Open (aarPath, FileMode.Open)) {
-					// test-pack-false.jar should NOT be in the AAR because Pack='false'
-					var packFalseEntry = aar.Where (e => e.FullName.Contains ("test-pack-false")).FirstOrDefault ();
-					Assert.IsNull (packFalseEntry, "Jar with Pack='false' should not be included in AAR");
-
-					// test-pack-true.jar should be in the AAR (default Pack='true')
-					var packTrueEntry = aar.Where (e => e.FullName.Contains ("test-pack-true") || e.FullName.StartsWith ("libs/")).FirstOrDefault ();
-					Assert.IsNotNull (packTrueEntry, "Jar with Pack='true' (default) should be included in AAR");
+				var nupkgPath = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath, "UnnamedProject.1.0.0.nupkg");
+				FileAssert.Exists (nupkgPath);
+				using (var nupkg = ZipArchive.Open (nupkgPath, FileMode.Open)) {
+					var aarEntry = nupkg.Single (entry => entry.FullName.EndsWith ("/UnnamedProject.aar", StringComparison.Ordinal));
+					using var aarStream = new MemoryStream ();
+					aarEntry.Extract (aarStream);
+					aarStream.Position = 0;
+					using var aar = ZipArchive.Open (aarStream);
+					Assert.AreEqual (1, aar.Count (entry => entry.FullName.StartsWith ("libs/", StringComparison.Ordinal) && entry.FullName.EndsWith (".jar", StringComparison.Ordinal)),
+						"The generated AAR should contain only the Bind='false', Pack='true' JAR.");
 				}
 			}
+		}
+
+		[Test]
+		public void BindFalseAndroidLibraryResolvesGeneratorTypes (
+			[Values (".jar", ".aar")] string extension,
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var dependency = extension == ".aar" ? CreateAar (ResourceData.JavaSourceJarTestJar) : ResourceData.JavaSourceJarTestJar;
+			var binding = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
+				AndroidClassParser = "class-parse",
+				Sources = {
+					new BuildItem.Source ("JavaSourceJarTest.cs") {
+						TextContent = () => @"
+namespace Com.Xamarin.Android.Test.Msbuildtest {
+	[global::Android.Runtime.Register (""com/xamarin/android/test/msbuildtest/JavaSourceJarTest"", DoNotGenerateAcw = true)]
+	public class JavaSourceJarTest : global::Java.Lang.Object {
+	}
+}
+",
+					},
+				},
+				AndroidJavaSources = {
+					new AndroidItem.AndroidJavaSource ("UsesDependency.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => @"
+package com.example;
+
+import com.xamarin.android.test.msbuildtest.JavaSourceJarTest;
+
+public class UsesDependency {
+	public JavaSourceJarTest echo (JavaSourceJarTest value) {
+		return value;
+	}
+}
+",
+						Metadata = { { "Bind", "true" } },
+					},
+				},
+			};
+			binding.SetRuntime (runtime);
+			binding.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ($"dependency{extension}") {
+				BinaryContent = () => dependency,
+				MetadataValues = "Bind=false",
+			});
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (binding), "Binding build should have succeeded.");
+			var apiXml = builder.Output.GetIntermediaryPath ("api.xml");
+			FileAssert.Exists (apiXml);
+			StringAssert.Contains ("com.xamarin.android.test.msbuildtest.JavaSourceJarTest", File.ReadAllText (apiXml),
+				"Bind='false' dependency types should be available while resolving the generated API.");
+			var generatedSourceDirectory = Path.Combine (Root, builder.ProjectDirectory, binding.IntermediateOutputPath, "generated", "src");
+			var generatedSources = Directory.EnumerateFiles (generatedSourceDirectory, "*.cs", SearchOption.AllDirectories).ToArray ();
+			Assert.IsTrue (generatedSources.Any (source => File.ReadAllText (source).Contains (" Echo (", StringComparison.Ordinal)),
+				"Members that use Bind='false' dependency types should generate managed bindings.");
+			Assert.IsFalse (generatedSources.Any (source => Path.GetFileName (source).Contains ("JavaSourceJarTest", StringComparison.Ordinal)),
+				"Bind='false' dependency types should not generate managed bindings.");
+		}
+
+		static byte [] CreateAar (byte [] classesJar)
+		{
+			using var stream = new MemoryStream ();
+			using (var aar = ZipArchive.Open (stream)) {
+				aar.AddStream (new MemoryStream (classesJar), "classes.jar");
+			}
+			return stream.ToArray ();
 		}
 
 		[Test]
