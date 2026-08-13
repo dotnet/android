@@ -115,14 +115,15 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
-			var b = CreateApkBuilder ();
-			b.Target = "Publish";
-			b.BuildingInsideVisualStudio = false; // Publish's inner Build must produce & sign the .apk
-			// `dotnet publish` sets _IsPublishing=true itself; emulate that since we invoke MSBuild directly.
-			Assert.IsTrue (b.Build (proj, parameters: new [] { "_IsPublishing=true" }), "Publish should have succeeded.");
+			// Use `dotnet publish` rather than `msbuild /t:Publish`: only the `dotnet publish` CLI
+			// sets $(_IsPublishing)=true, which the CoreCLR R2R default (issue #11069) relies on.
+			var projBuilder = CreateDllBuilder ();
+			projBuilder.Save (proj);
+			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should have succeeded.");
 
 			var assemblyName = proj.ProjectName;
-			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, rid, "publish", $"{proj.PackageName}-Signed.apk");
+			var apk = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, rid, "publish", $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
 
 			var helper = new ArchiveAssemblyHelper (apk, true);
