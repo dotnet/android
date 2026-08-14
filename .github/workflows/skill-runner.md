@@ -134,7 +134,7 @@ steps:
         echo "❌ ELIGIBLE_SKILLS is empty — nothing to run." >&2
         exit 1
       fi
-  
+
       if [ -n "$INPUT_SKILL" ]; then
         SKILL_NAME=""
         for candidate in "${ELIGIBLE_SKILLS[@]}"; do
@@ -155,7 +155,7 @@ steps:
         # unselected run picks one at random.
         SKILL_NAME="${ELIGIBLE_SKILLS[$((RANDOM % COUNT))]}"
       fi
-  
+
       SKILL_PATH="$SKILL_ROOT/$SKILL_NAME/SKILL.md"
       if [ ! -f "$SKILL_PATH" ]; then
         echo "❌ Requested skill not found: $SKILL_PATH" >&2
@@ -163,7 +163,7 @@ steps:
       fi
       echo "$SKILL_NAME" > /tmp/gh-aw/agent/selected-skill.txt
       echo "✅ Selected skill: $SKILL_NAME ($SKILL_PATH)"
-  
+
       # Skill-specific prerequisite bootstrap. androidsdk.csproj requires the
       # BootstrapTasks assembly to evaluate at all, so build it up front whenever
       # that skill is selected. Add an `elif` here for future skills that need
