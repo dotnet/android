@@ -16,8 +16,13 @@ This file is only used by binding projects.
   <Target Name="_ExportJarToXmlInputs">
     <ItemGroup>
       <_ExportJarToXmlOutputs Remove="@(_ExportJarToXmlOutputs)" />
+      <_JavaReferenceApiXml Remove="@(_JavaReferenceApiXml)" />
       <_ExportJarToXmlOutputs Include="$(ApiOutputFile)" />
       <_ExportJarToXmlOutputs
+          Include="$(ApiOutputFile).reference.class-parse"
+          Condition=" '@(EmbeddedReferenceJar->Count())' != '0' or '@(ReferenceJar->Count())' != '0' "
+      />
+      <_JavaReferenceApiXml
           Include="$(ApiOutputFile).reference.class-parse"
           Condition=" '@(EmbeddedReferenceJar->Count())' != '0' or '@(ReferenceJar->Count())' != '0' "
       />
@@ -53,12 +58,6 @@ This file is only used by binding projects.
         ToolPath="$(_BindingsToolsLocation)"
         ToolExe="$(ClassParseToolExe)"
     />
-    <ItemGroup>
-      <_JavaReferenceApiXml
-          Include="$(ApiOutputFile).reference.class-parse"
-          Condition=" ('@(EmbeddedReferenceJar->Count())' != '0' or '@(ReferenceJar->Count())' != '0') and Exists('$(ApiOutputFile).reference.class-parse') "
-      />
-    </ItemGroup>
     <BindingsGenerator
         OnlyRunXmlAdjuster="true"
         XmlAdjusterOutput="$(ApiOutputFile)"

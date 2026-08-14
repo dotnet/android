@@ -24,9 +24,11 @@ namespace Xamarin.Android.Tasks
 
 		public string []? Libraries { get; set; }
 
-		public string? OutputReferenceJarsDirectory { get; set; }
+		[Required]
+		public string OutputReferenceJarsDirectory { get; set; } = "";
 
-		public string? OutputReferenceAnnotationsDirectory { get; set; }
+		[Required]
+		public string OutputReferenceAnnotationsDirectory { get; set; } = "";
 
 		public string []? ReferenceLibraries { get; set; }
 
@@ -35,11 +37,7 @@ namespace Xamarin.Android.Tasks
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
 			try {
 				ExtractLibraries (Libraries, OutputJarsDirectory, OutputAnnotationsDirectory, memoryStream);
-				if (!OutputReferenceJarsDirectory.IsNullOrEmpty () && !OutputReferenceAnnotationsDirectory.IsNullOrEmpty ()) {
-					ExtractLibraries (ReferenceLibraries, OutputReferenceJarsDirectory, OutputReferenceAnnotationsDirectory, memoryStream);
-				} else if (ReferenceLibraries?.Length > 0) {
-					Log.LogError ("Reference output directories are required when reference libraries are specified.");
-				}
+				ExtractLibraries (ReferenceLibraries, OutputReferenceJarsDirectory, OutputReferenceAnnotationsDirectory, memoryStream);
 			} finally {
 				MemoryStreamPool.Shared.Return (memoryStream);
 			}

@@ -41,6 +41,8 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = engine,
 				OutputJarsDirectory = jarOutputDir,
 				OutputAnnotationsDirectory = annotationOutputDir,
+				OutputReferenceJarsDirectory = Path.Combine (path, "reference-jars"),
+				OutputReferenceAnnotationsDirectory = Path.Combine (path, "reference-annotations"),
 				Libraries = [aarPath],
 			};
 
@@ -65,6 +67,8 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = engine,
 				OutputJarsDirectory = jarOutputDir,
 				OutputAnnotationsDirectory = annotationOutputDir,
+				OutputReferenceJarsDirectory = Path.Combine (path, "reference-jars"),
+				OutputReferenceAnnotationsDirectory = Path.Combine (path, "reference-annotations"),
 				Libraries = [aarPath],
 			};
 
@@ -85,6 +89,8 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = engine,
 				OutputJarsDirectory = jarOutputDir,
 				OutputAnnotationsDirectory = annotationOutputDir,
+				OutputReferenceJarsDirectory = Path.Combine (path, "reference-jars"),
+				OutputReferenceAnnotationsDirectory = Path.Combine (path, "reference-annotations"),
 				Libraries = [aarPath],
 			};
 
