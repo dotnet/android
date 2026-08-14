@@ -245,7 +245,7 @@
       <Level>37</Level>
       <VersionCodeFull>37.1</VersionCodeFull>
       <Id>37.1</Id>
-      <Stable>False</Stable>
+      <Stable>True</Stable>
     </AndroidApiInfo>
   </ItemGroup>
 </Project>

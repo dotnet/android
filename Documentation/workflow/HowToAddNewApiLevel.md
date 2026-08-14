@@ -547,7 +547,15 @@ the `csv` variable within `MainForm.FindAPILevelMethodsToolStripMenuItem_Click`.
 Once this process is complete, use `Tools` -> `Export Final Method Map`, and create a *new*
 `.csv` file, e.g. `new-methodmap.csv`.
 
-Copy the contents of `new-methodmap.csv` and *append* to `src/Mono.Android/methodmap.csv`.
+Note: `new-methodmap.csv` will likely use JNI syntax for package names, e.g. `android/widget`.
+`methodmap.csv` ***must*** use *Java* syntax for package names, e.g. `android.widget`.
+Use **sed**(1) to fix package names and nested class names:
+
+```sh
+sed 's,/,.,g;s/\$/./g' < src/Mono.Android/new-methodmap.csv > src/Mono.Android/new-methodmap2.csv
+```
+
+Copy the contents of `new-methodmap2.csv` and *append* to `src/Mono.Android/methodmap.csv`.
 
 There may be redundant duplicate entries within `methodmap.csv`.  Use the **uniq**(1)
 Unix app to remove duplicate entries.
