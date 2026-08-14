@@ -125,10 +125,20 @@
     <!-- dotnet workload install android -->
     <PropertyGroup>
       <_TempDirectory>$(IntermediateOutputPath).xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
+      <_LocalSdkPackProject>$(_TempDirectory)\local-sdk-pack.csproj</_LocalSdkPackProject>
     </PropertyGroup>
     <ItemGroup>
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
       <_PreviewPacks Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' " Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.$(AndroidLatestUnstableApiLevel).*.nupkg" />
+      <_LocalSdkPackProjectLines Include="&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;" />
+      <_LocalSdkPackProjectLines Include="  &lt;PropertyGroup&gt;" />
+      <_LocalSdkPackProjectLines Include="    &lt;TargetFramework&gt;$(DotNetTargetFramework)&lt;/TargetFramework&gt;" />
+      <_LocalSdkPackProjectLines Include="    &lt;DisableImplicitFrameworkReferences&gt;true&lt;/DisableImplicitFrameworkReferences&gt;" />
+      <_LocalSdkPackProjectLines Include="  &lt;/PropertyGroup&gt;" />
+      <_LocalSdkPackProjectLines Include="  &lt;ItemGroup&gt;" />
+      <_LocalSdkPackProjectLines Include="    &lt;PackageDownload Include=&quot;$(MicrosoftAndroidSdkPackName)&quot; Version=&quot;[$(AndroidPackVersionLong)]&quot; /&gt;" />
+      <_LocalSdkPackProjectLines Include="  &lt;/ItemGroup&gt;" />
+      <_LocalSdkPackProjectLines Include="&lt;/Project&gt;" />
       <_InstallArguments Include="android" />
       <_InstallArguments Include="--no-cache" />
       <_InstallArguments Include="--skip-manifest-update" />
@@ -138,6 +148,17 @@
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
     <MakeDir Directories="$(_TempDirectory);$(BuildOutputDirectory)lib\sdk-manifests" />
+    <!-- Seed the isolated package cache from this build. PR package versions are
+         reused across CI attempts, so a feed can contain older same-version bits. -->
+    <WriteLinesToFile
+        File="$(_LocalSdkPackProject)"
+        Lines="@(_LocalSdkPackProjectLines)"
+        Overwrite="true"
+        Encoding="UTF-8"
+    />
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; restore &quot;$(_LocalSdkPackProject)&quot; --source &quot;$(OutputPath.TrimEnd('\'))&quot; --packages &quot;$(_TempDirectory)\packages&quot; --no-cache"
+    />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
         EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory)\packages"
