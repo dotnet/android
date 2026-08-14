@@ -1,0 +1,2 @@
+Compat issues with assembly Mono.Android:
+CannotRemoveAttribute : Attribute 'System.Runtime.Versioning.ObsoletedOSPlatformAttribute' exists on 'Android.Graphics.Drawables.Drawable.SetDither(System.Boolean)' in the contract but not the implementation.

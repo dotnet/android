@@ -2060,7 +2060,7 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.0")] string targetFramework,
+				[Values ("net11.0-android37.1")] string targetFramework,
 				[Values (true)] bool enablePreviewFeatures)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2080,8 +2080,8 @@ namespace UnnamedProject
 				.Replace ("//${AFTER_ONCREATE}", """
 				// The value `ignore` is not used.
 				#pragma warning disable 0219
-					if (OperatingSystem.IsAndroidVersionAtLeast (37, 0)) {
-						var ignore = global::Android.Manifest.Permission.RequestCompanionProfileMedical;
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, 1)) {
+						var ignore = global::Android.Manifest.Permission.AccessHid;
 					}
 				#pragma warning restore 0219
 				""");
