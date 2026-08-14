@@ -97,6 +97,11 @@ steps:
   run: |
     echo "This workflow only runs from the main branch; refusing workflow_dispatch from ${{ github.ref }}" >&2
     exit 1
+- name: Reject PR ambient context on manual dispatch
+  if: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.aw_context || '{}').item_type == 'pull_request' }}
+  run: |
+    echo "Manual dispatch with PR aw_context is forbidden; refusing to checkout or act on branch-controlled PR context." >&2
+    exit 1
 - env:
     INPUT_SKILL: ${{ inputs.skill }}
   name: Select skill and bootstrap prerequisites
@@ -255,15 +260,16 @@ go straight to Phase 4 and report the failure instead.
 ## Phase 3: Commit and Open the PR (only if changes were made and validated)
 
 1. Immediately before creating a PR, run a deterministic open-PR check keyed to this workflow and the
-   selected skill. Use a paginated search/filter that matches the exact title prefix for this workflow,
-   for example:
+   selected skill. Search all open PRs against `main` using the exact workflow title prefix, with a
+   paginated query that is not limited to the first page and not derived from a loose semantic match:
 
    `gh pr list --state open --base main --limit 100 --search '"[skill-runner]" "<skill-name>"' --json number,title,headRefName,body`
 
-   and compare the returned titles against the exact prefix `"[skill-runner] <skill-name>"`. If any open
-   PR matches that same workflow/skill key, do not create another PR; report a no-op with the existing
-   PR number and continue to Phase 4. Do not fall back to a looser heuristic or a manually judged
-   "equivalent" match.
+   Repeat/paginate until exhausted, then compare every returned title against the exact prefix
+   `"[skill-runner] <skill-name>"`. If any open PR matches that same workflow/skill key, do not create
+   another PR; report a no-op with the existing PR number and continue to Phase 4. Do not fall back to
+   a looser heuristic or a manually judged "equivalent" match. The uniqueness check is mandatory and
+   must be enforced before any `create_pull_request` call.
 2. Commit with a concise message describing exactly what changed, per the skill's own guidance, ending
    in:
 
