@@ -139,6 +139,7 @@ Run these in order — do not skip the BootstrapTasks build; `androidsdk.csproj`
 
 ```bash
 dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
+dotnet restore src/androidsdk/androidsdk.csproj
 dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal
 ```
 

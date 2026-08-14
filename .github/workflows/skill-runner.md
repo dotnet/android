@@ -18,20 +18,8 @@ on:
         - "update-androidsdk-packages"
         required: false
         type: choice
-  steps:
-    - name: Reject non-main workflow dispatches before activation
-      if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
-      env:
-        WORKFLOW_REF: ${{ github.ref }}
-      run: |
-        echo "This workflow only runs from the main branch; refusing workflow_dispatch from $WORKFLOW_REF" >&2
-        exit 1
-    - name: Reject PR ambient context on manual dispatch
-      if: github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.aw_context || '{}').item_type == 'pull_request'
-      run: |
-        echo "Manual dispatch with PR aw_context is forbidden." >&2
-        exit 1
-  skip-if-match: 'is:pr is:open in:title "[skill-runner] update-androidsdk-packages"'
+  needs:
+    - workflow_guard
 permissions:
   contents: read
   issues: read
@@ -64,6 +52,17 @@ checkout:
   - fetch-depth: 0
     ref: main
 jobs:
+  workflow_guard:
+    runs-on: ubuntu-slim
+    permissions: {}
+    steps:
+      - name: Validate workflow dispatch context
+        if: github.event_name == 'workflow_dispatch' && (github.ref != 'refs/heads/main' || fromJSON(github.event.inputs.aw_context || '{}').item_type == 'pull_request')
+        env:
+          WORKFLOW_REF: ${{ github.ref }}
+        run: |
+          echo "This workflow only accepts main-branch dispatches without PR context (ref: $WORKFLOW_REF)." >&2
+          exit 1
   activation:
     if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
   conclusion:
@@ -108,70 +107,70 @@ safe-outputs:
     create-issue: false
   report-failure-as-issue: true
 steps:
-- name: Reject non-main workflow dispatches
-  if: ${{ github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' }}
-  run: |
-    echo "This workflow only runs from the main branch; refusing workflow_dispatch from ${{ github.ref }}" >&2
-    exit 1
-- name: Reject PR ambient context on manual dispatch
-  if: ${{ github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.aw_context || '{}').item_type == 'pull_request' }}
-  run: |
-    echo "Manual dispatch with PR aw_context is forbidden; refusing to checkout or act on branch-controlled PR context." >&2
-    exit 1
-- env:
-    INPUT_SKILL: ${{ inputs.skill }}
-  name: Select skill and bootstrap prerequisites
-  run: |
-    mkdir -p /tmp/gh-aw/agent
-    SKILL_ROOT=".github/skills"
-    # The set of skills this workflow is allowed to run unattended. Keep this
-    # in sync with the workflow_dispatch `skill` options list above. This is
-    # an allowlist: an explicit dispatch input must still be a member of this
-    # array, so a stray/unregistered skill directory can never be run just by
-    # naming it in workflow_dispatch, even if it happens to exist on disk.
-    ELIGIBLE_SKILLS=("update-androidsdk-packages")
-    COUNT=${#ELIGIBLE_SKILLS[@]}
-    if [ "$COUNT" -eq 0 ]; then
-      echo "❌ ELIGIBLE_SKILLS is empty — nothing to run." >&2
-      exit 1
-    fi
-
-    if [ -n "$INPUT_SKILL" ]; then
-      SKILL_NAME=""
-      for candidate in "${ELIGIBLE_SKILLS[@]}"; do
-        if [ "$candidate" = "$INPUT_SKILL" ]; then
-          SKILL_NAME="$candidate"
-          break
-        fi
-      done
-      if [ -z "$SKILL_NAME" ]; then
-        echo "❌ Requested skill '$INPUT_SKILL' is not in ELIGIBLE_SKILLS: ${ELIGIBLE_SKILLS[*]}" >&2
+  - name: Enforce unique skill update PR
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    run: |
+      existing_prs="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls?state=open&base=main&per_page=100" \
+        --jq '.[] | select(.title == "[skill-runner] update-androidsdk-packages") | .number')"
+      if [ -n "$existing_prs" ]; then
+        printf '{"type":"noop","message":"An open [skill-runner] update-androidsdk-packages PR already exists against main: #%s. No duplicate PR will be created."}\n' \
+          "$(printf '%s' "$existing_prs" | paste -sd, -)" >> "$GH_AW_SAFE_OUTPUTS"
+      fi
+  - name: Select skill and bootstrap prerequisites
+    env:
+      INPUT_SKILL: ${{ inputs.skill }}
+    run: |
+      mkdir -p /tmp/gh-aw/agent
+      SKILL_ROOT=".github/skills"
+      # The set of skills this workflow is allowed to run unattended. Keep this
+      # in sync with the workflow_dispatch `skill` options list above. This is
+      # an allowlist: an explicit dispatch input must still be a member of this
+      # array, so a stray/unregistered skill directory can never be run just by
+      # naming it in workflow_dispatch, even if it happens to exist on disk.
+      ELIGIBLE_SKILLS=("update-androidsdk-packages")
+      COUNT=${#ELIGIBLE_SKILLS[@]}
+      if [ "$COUNT" -eq 0 ]; then
+        echo "❌ ELIGIBLE_SKILLS is empty — nothing to run." >&2
         exit 1
       fi
-    else
-      # No explicit selection (scheduled run, or manual dispatch left blank):
-      # pick uniformly at random from the eligible skills, same as
-      # nightly-fix-finder does for its scan scripts. With only one skill
-      # registered today this always picks it; once more are added, each
-      # unselected run picks one at random.
-      SKILL_NAME="${ELIGIBLE_SKILLS[$((RANDOM % COUNT))]}"
-    fi
-
-    SKILL_PATH="$SKILL_ROOT/$SKILL_NAME/SKILL.md"
-    if [ ! -f "$SKILL_PATH" ]; then
-      echo "❌ Requested skill not found: $SKILL_PATH" >&2
-      exit 1
-    fi
-    echo "$SKILL_NAME" > /tmp/gh-aw/agent/selected-skill.txt
-    echo "✅ Selected skill: $SKILL_NAME ($SKILL_PATH)"
-
-    # Skill-specific prerequisite bootstrap. androidsdk.csproj requires the
-    # BootstrapTasks assembly to evaluate at all, so build it up front whenever
-    # that skill is selected. Add an `elif` here for future skills that need
-    # their own bootstrap step, rather than special-casing it in the prompt.
-    if [ "$SKILL_NAME" = "update-androidsdk-packages" ]; then
-      dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
-    fi
+  
+      if [ -n "$INPUT_SKILL" ]; then
+        SKILL_NAME=""
+        for candidate in "${ELIGIBLE_SKILLS[@]}"; do
+          if [ "$candidate" = "$INPUT_SKILL" ]; then
+            SKILL_NAME="$candidate"
+            break
+          fi
+        done
+        if [ -z "$SKILL_NAME" ]; then
+          echo "❌ Requested skill '$INPUT_SKILL' is not in ELIGIBLE_SKILLS: ${ELIGIBLE_SKILLS[*]}" >&2
+          exit 1
+        fi
+      else
+        # No explicit selection (scheduled run, or manual dispatch left blank):
+        # pick uniformly at random from the eligible skills, same as
+        # nightly-fix-finder does for its scan scripts. With only one skill
+        # registered today this always picks it; once more are added, each
+        # unselected run picks one at random.
+        SKILL_NAME="${ELIGIBLE_SKILLS[$((RANDOM % COUNT))]}"
+      fi
+  
+      SKILL_PATH="$SKILL_ROOT/$SKILL_NAME/SKILL.md"
+      if [ ! -f "$SKILL_PATH" ]; then
+        echo "❌ Requested skill not found: $SKILL_PATH" >&2
+        exit 1
+      fi
+      echo "$SKILL_NAME" > /tmp/gh-aw/agent/selected-skill.txt
+      echo "✅ Selected skill: $SKILL_NAME ($SKILL_PATH)"
+  
+      # Skill-specific prerequisite bootstrap. androidsdk.csproj requires the
+      # BootstrapTasks assembly to evaluate at all, so build it up front whenever
+      # that skill is selected. Add an `elif` here for future skills that need
+      # their own bootstrap step, rather than special-casing it in the prompt.
+      if [ "$SKILL_NAME" = "update-androidsdk-packages" ]; then
+        dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj -v:minimal
+      fi
 description: Weekly (or on-demand) runner that executes a selectable repository Copilot skill end to end, opens a PR for validated changes, and always reports outcome/errors on a tracking issue
 model: gpt-5.6-sol
 engine:
