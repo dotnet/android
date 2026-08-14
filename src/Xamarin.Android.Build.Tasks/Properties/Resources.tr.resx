@@ -1059,12 +1059,6 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>Bu '{0}' MSBuild özelliği kullanım dışı bırakıldı ve .NET’ten kaldırılacak {1}. Daha fazla ayrıntı için bkz. https://aka.ms/net-android-deprecations için ayrıntılara bakın.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
-  </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild özelliğinin geçersiz '{1}' değeri var. Geçerli bir değer şunlardan biri: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
