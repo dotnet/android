@@ -38,15 +38,16 @@
 
   <!-- Build Mono.Android.dll for additional API levels if necessary -->
   <Target Name="BuildExtraApiLevels">
+    <!-- Project references are already built by BuildDotNet and may be loaded by MSBuild from the extracted workload. -->
     <MSBuild
          Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel)"
+         Properties="AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel);BuildProjectReferences=false"
     />
     <MSBuild
          Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion)"
+         Properties="AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion);BuildProjectReferences=false"
     />
   </Target>
 
