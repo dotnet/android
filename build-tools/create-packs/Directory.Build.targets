@@ -126,6 +126,7 @@
     <PropertyGroup>
       <_TempDirectory>$(IntermediateOutputPath).xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <_LocalSdkPackProject>$(_TempDirectory)\local-sdk-pack.csproj</_LocalSdkPackProject>
+      <_LocalSdkPackPackagesDirectory>$([System.IO.Path]::Combine('$(_TempDirectory)', 'packages'))</_LocalSdkPackPackagesDirectory>
     </PropertyGroup>
     <ItemGroup>
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
@@ -156,11 +157,11 @@
         Encoding="UTF-8"
     />
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; restore &quot;$(_LocalSdkPackProject)&quot; --source &quot;$(OutputPath.TrimEnd('\'))&quot; --packages &quot;$(_TempDirectory)\packages&quot; --no-cache"
+        Command="&quot;$(DotNetPreviewTool)&quot; restore &quot;$(_LocalSdkPackProject)&quot; --source &quot;$(OutputPath.TrimEnd('\'))&quot; --packages &quot;$(_LocalSdkPackPackagesDirectory)&quot; --no-cache -p:ImportDirectoryBuildProps=false -p:ImportDirectoryBuildTargets=false"
     />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
-        EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory)\packages"
+        EnvironmentVariables="NUGET_PACKAGES=$(_LocalSdkPackPackagesDirectory)"
         WorkingDirectory="$(_TempDirectory)"
     />
     <RemoveDir Directories="$(_TempDirectory)" />
