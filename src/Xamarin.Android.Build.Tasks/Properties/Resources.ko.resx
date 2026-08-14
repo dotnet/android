@@ -876,7 +876,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The path to the directory being ignored.</comment>
   </data>
   <data name="XA4324" xml:space="preserve">
-    <value>[{0}] Unable to delete source file '{1}'</value>
+    <value>[{0}] 원본 파일 '{1}'을(를) 삭제할 수 없습니다.</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
@@ -1046,7 +1046,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA4237_Details" xml:space="preserve">
-    <value>Failed to resolve POM for Maven artifact '{0}' from '{1}'.
+    <value>Maven 아티팩트 '{0}'의 POM을 '{1}'에서 확인하지 못했습니다.
 - {2}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Unresolved Maven artifact id
@@ -1058,12 +1058,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>알 수 없는 Maven 리포지토리: '{0}'.</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>'{0}' MSBuild 속성은 더 이상 사용되지 않으며 .NET {1}에서 제거됩니다. 자세한 내용은 https://aka.ms/net-android-deprecations을 참조하세요.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild 속성의 '{1}' 값이 잘못되었습니다. 올바른 값은 {2} 중 하나입니다.</value>
@@ -1231,7 +1225,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.</value>
+    <value>Java 이름 '{0}'에 예약된 Java 식별자 '{1}'가 포함되어 있습니다. 패키지 이름 또는 형식 이름을 변경하세요.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Java reserved keyword or restricted identifier</comment>
