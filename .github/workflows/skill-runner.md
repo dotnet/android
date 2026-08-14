@@ -18,6 +18,20 @@ on:
         - "update-androidsdk-packages"
         required: false
         type: choice
+  steps:
+    - name: Reject non-main workflow dispatches before activation
+      if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+      env:
+        WORKFLOW_REF: ${{ github.ref }}
+      run: |
+        echo "This workflow only runs from the main branch; refusing workflow_dispatch from $WORKFLOW_REF" >&2
+        exit 1
+    - name: Reject PR ambient context on manual dispatch
+      if: github.event_name == 'workflow_dispatch' && fromJSON(github.event.inputs.aw_context || '{}').item_type == 'pull_request'
+      run: |
+        echo "Manual dispatch with PR aw_context is forbidden." >&2
+        exit 1
+  skip-if-match: 'is:pr is:open in:title "[skill-runner] update-androidsdk-packages"'
 permissions:
   contents: read
   issues: read
@@ -50,6 +64,8 @@ checkout:
   - fetch-depth: 0
     ref: main
 jobs:
+  activation:
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
   conclusion:
     permissions:
       issues: write
