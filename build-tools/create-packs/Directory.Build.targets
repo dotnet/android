@@ -140,7 +140,6 @@
       <_LocalSdkPackProjectLines Include="  &lt;/ItemGroup&gt;" />
       <_LocalSdkPackProjectLines Include="&lt;/Project&gt;" />
       <_InstallArguments Include="android" />
-      <_InstallArguments Include="--no-cache" />
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--skip-sign-check" />
       <_InstallArguments Include="--verbosity diag" />
