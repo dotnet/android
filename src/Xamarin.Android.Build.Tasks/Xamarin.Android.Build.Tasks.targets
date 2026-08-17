@@ -129,39 +129,10 @@
         Properties="Configuration=$(Configuration);AndroidApiLevel=$(AndroidLatestStableApiLevel);AndroidFrameworkVersion=$(AndroidLatestStableFrameworkVersion);AndroidPlatformId=$(AndroidLatestStablePlatformId)"
     />
   </Target>
-  <Target Name="_WriteXACommonPropsCache"
-      DependsOnTargets="GetXAVersionInfo">
-    <ItemGroup>
-      <_XACommonPropsCacheLines Include="CommandLineToolsFolder=$(CommandLineToolsFolder)" />
-      <_XACommonPropsCacheLines Include="XABundleToolVersion=$(XABundleToolVersion)" />
-      <_XACommonPropsCacheLines Include="JavaSdkVersion=$(JavaSdkVersion)" />
-      <_XACommonPropsCacheLines Include="MinimumSupportedJavaSdkVersion=$(MinimumSupportedJavaSdkVersion)" />
-      <_XACommonPropsCacheLines Include="AndroidNdkApiLevel_ArmV8a=$(AndroidNdkApiLevel_ArmV8a)" />
-      <_XACommonPropsCacheLines Include="AndroidNdkApiLevel_ArmV7a=$(AndroidNdkApiLevel_ArmV7a)" />
-      <_XACommonPropsCacheLines Include="AndroidNdkApiLevel_X86_64=$(AndroidNdkApiLevel_X86_64)" />
-      <_XACommonPropsCacheLines Include="AndroidNdkApiLevel_X86=$(AndroidNdkApiLevel_X86)" />
-      <_XACommonPropsCacheLines Include="XAVersionCommitCount=$(XAVersionCommitCount)" />
-      <_XACommonPropsCacheLines Include="ProductVersion=$(ProductVersion)" />
-      <_XACommonPropsCacheLines Include="XABuildToolsFolder=$(XABuildToolsFolder)" />
-      <_XACommonPropsCacheLines Include="XAPlatformToolsVersion=$(XAPlatformToolsVersion)" />
-      <_XACommonPropsCacheLines Include="AndroidLatestStablePlatformId=$(AndroidLatestStablePlatformId)" />
-      <_XACommonPropsCacheLines Include="_BuildInfo_SqliteCommit=$(_BuildInfo_SqliteCommit)" />
-    </ItemGroup>
-    <WriteLinesToFile
-        File="$(IntermediateOutputPath)_GenerateXACommonProps.cache"
-        Lines="@(_XACommonPropsCacheLines)"
-        Overwrite="true"
-        WriteOnlyWhenDifferent="true"
-    />
-    <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)_GenerateXACommonProps.cache" />
-    </ItemGroup>
-  </Target>
-
   <Target Name="_GenerateXACommonProps"
-      DependsOnTargets="_WriteXACommonPropsCache"
+      DependsOnTargets="GetXAVersionInfo"
       BeforeTargets="DeployOutputFiles"
-      Inputs="Xamarin.Android.Common.props.in;Xamarin.Android.BuildInfo.txt.in;$(IntermediateOutputPath)_GenerateXACommonProps.cache;..\..\build-tools\scripts\Ndk.targets"
+      Inputs="Xamarin.Android.Common.props.in;Xamarin.Android.BuildInfo.txt.in;..\..\build-tools\scripts\Ndk.targets"
       Outputs="Xamarin.Android.Common.props;Xamarin.Android.BuildInfo.txt">
     <ReplaceFileContents
         SourceFile="Xamarin.Android.BuildInfo.txt.in"
