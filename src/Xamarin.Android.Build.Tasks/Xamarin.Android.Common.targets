@@ -810,16 +810,20 @@ because xbuild doesn't support framework reference assemblies.
 		<Output TaskParameter="AndroidDefineConstants" ItemName="AndroidDefineConstants" />
 	</GetAndroidDefineConstants>
 
-	<PropertyGroup>
-		<DefineConstants>$(DefineConstants);@(AndroidDefineConstants)</DefineConstants>
-	</PropertyGroup>
-
 	<!-- Setup $(AndroidApplicationJavaClass) -->
 	<PropertyGroup>
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == '' And $(AndroidEnableMultiDex)">android.support.multidex.MultiDexApplication</AndroidApplicationJavaClass>
 		<AndroidApplicationJavaClass Condition="'$(AndroidApplicationJavaClass)' == ''">android.app.Application</AndroidApplicationJavaClass>
 	</PropertyGroup>
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
+</Target>
+
+<Target Name="_AddAndroidDefineConstants"
+    BeforeTargets="AddImplicitDefineConstants;CoreCompile"
+    DependsOnTargets="_ResolveMonoAndroidSdks">
+	<PropertyGroup>
+		<DefineConstants>$(DefineConstants);@(AndroidDefineConstants)</DefineConstants>
+	</PropertyGroup>
 </Target>
 
 <Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks);$(AndroidPrepareForBuildDependsOn)" />
@@ -1721,6 +1725,7 @@ because xbuild doesn't support framework reference assemblies.
     _PrepareEnvironmentAssemblySources;
     _GenerateEnvironmentFiles;
     _GenerateAndroidRemapNativeCode;
+    UpdateAndroidAssets;
     _GenerateEmptyAndroidRemapNativeCode;
     _IncludeNativeSystemLibraries;
     _GetGeneratePackageManagerJavaInputs;
