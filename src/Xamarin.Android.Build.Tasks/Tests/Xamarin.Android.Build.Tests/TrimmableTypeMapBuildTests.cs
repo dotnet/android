@@ -27,7 +27,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -46,7 +46,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -115,7 +115,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -153,7 +153,7 @@ namespace Xamarin.Android.Build.Tests {
 				LinkTool = "r8",
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -181,7 +181,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -219,7 +219,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -286,7 +286,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -309,7 +309,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -358,7 +358,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -398,7 +398,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -472,7 +472,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -492,7 +492,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -537,7 +537,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -565,7 +565,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -588,7 +588,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("RuntimeIdentifier", "android-arm64");
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 
@@ -675,7 +675,7 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty ("TrimMode", "full");
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder (Path.Combine ("temp", $"TypemapComparison_trimmable_single_rid_{Guid.NewGuid ():N}"));
 			Assert.IsTrue (builder.Build (proj), "trimmable single-RID build should have succeeded.");
@@ -787,7 +787,7 @@ namespace Xamarin.Android.Build.Tests {
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.Sources.Add (new BuildItem.Source ("ExportShapes.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;
@@ -879,7 +879,7 @@ namespace UnnamedProject {
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("TrimmerSingleWarn", "false");
 			proj.Sources.Add (new BuildItem.Source ("ExportShapes.cs") {
@@ -942,7 +942,7 @@ namespace UnnamedProject {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.Sources.Add (new BuildItem.Source ("AbstractProvider.cs") {
 				TextContent = () => @"
 namespace UnnamedProject {
@@ -989,7 +989,7 @@ namespace UnnamedProject {
 			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("PublishReadyToRun", "false");
-			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			if (dynamicCodeSupport.HasValue) {
 				proj.SetProperty ("DynamicCodeSupport", dynamicCodeSupport.Value.ToString ().ToLowerInvariant ());
 			}

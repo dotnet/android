@@ -37,7 +37,7 @@
     compile through the generator. The matching NUnit test class is excluded by
     name in tests/Mono.Android-Tests/Mono.Android-Tests/Xamarin.Android.RuntimeTests/NUnitInstrumentation.cs.
   -->
-  <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+  <ItemGroup Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorBase.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\CallVirtualFromConstructorDerived.cs" />
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\InvokeVirtualFromConstructorTests.cs" />
@@ -49,7 +49,7 @@
   </ItemGroup>
 
   <!-- ReflectionJniValueManager is unsupported by the trimmable typemap value manager. See dotnet/android#12221. -->
-  <ItemGroup Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">
+  <ItemGroup Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' ">
     <Compile Remove="$(JavaInteropTestDirectory)Java.Interop\JniRuntime.JniValueManagerTests.cs" />
   </ItemGroup>
 
