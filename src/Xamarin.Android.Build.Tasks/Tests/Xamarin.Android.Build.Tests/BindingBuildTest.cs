@@ -646,7 +646,7 @@ public class UsesDependency {
 				IsRelease = isRelease,
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("Jars\\ActionBarSherlock-4.3.1.zip") {
-						WebContent = "https://raw.githubusercontent.com/dotnet/android-samples/archived-xamarin/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip"
+						WebContent = "https://raw.githubusercontent.com/dotnet/android-samples/1d6b56f205205f587f4fb496a7c7e6633048507e/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip"
 					}
 				},
 				AndroidClassParser = "class-parse",
