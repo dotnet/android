@@ -351,7 +351,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void PrepareStructure (StructureInstance structure)
 		{
 			foreach (StructureMemberInfo smi in structure.Info.Members) {
-				if (smi.IsIRStruct (TypeCache)) {
+				if (smi.IsIRStruct) {
 					object? instance = structure.Obj == null ? null : smi.GetValue (structure.Obj);
 					if (instance == null) {
 						continue;
@@ -681,7 +681,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"{t} must be a class or a struct");
 			}
 
-			// TODO: check if already there
 			if (structures.TryGetValue (t, out StructureInfo sinfo)) {
 				return (StructureInfo)sinfo;
 			}

@@ -10,14 +10,10 @@ Hardcoded error/warning strings passed to `Log.Error`, `Log.Warning`,
 should live in `Properties.Resources` for localization.
 
 ### How to fix
-1. Add the new message to the English `src/.../Properties/Resources.resx`
-   (never modify non-English `*.resx` or `*.lcl` files — those are auto-generated)
-2. Reference it via `Properties.Resources.XA####`
-3. If you create a NEW `XA####` error code, you MUST also:
-   - Create `Documentation/docs-mobile/messages/xa####.md` following the
-     existing format (frontmatter + Example messages + Issue explanation + Solution)
-   - Add the new code to the table of contents in
-     `Documentation/docs-mobile/messages/index.md`
+Replace the literal with a suitable existing `Properties.Resources.XA####`
+message. If no existing resource accurately describes the error, call `noop`:
+adding a new resource requires updating the generated `Resources.Designer.cs`,
+which this workflow must not modify.
 
 ### What NOT to flag
 - Strings already coming from `Properties.Resources`

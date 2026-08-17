@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' != '' And !$(TargetFramework.StartsWith('nets')) ">
-    <JIBuildingForNetCoreApp>True</JIBuildingForNetCoreApp>
-  </PropertyGroup>
-
   <PropertyGroup>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)-$(DotNetTargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
     <BuildToolOutputFullPathNoTF>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</BuildToolOutputFullPathNoTF>

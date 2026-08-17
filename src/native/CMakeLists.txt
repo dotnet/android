@@ -225,7 +225,10 @@ file(REAL_PATH "../../" REPO_ROOT_DIR)
 set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
 set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
-set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+
+if(IS_MONO_RUNTIME)
+  set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+endif()
 
 #
 # Include directories
@@ -248,7 +251,6 @@ endif()
 
 set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
 set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
-set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
 
 include_directories(common/include)
 
@@ -260,8 +262,6 @@ if(IS_CLR_RUNTIME)
         ${TARGET}
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
-        ${EXTERNAL_DIR}
-        ${CONSTEXPR_XXH3_DIR}
         ${RUNTIME_INCLUDE_DIR}
      )
   endmacro()
@@ -275,7 +275,6 @@ elseif(IS_NAOT_RUNTIME)
         PRIVATE
         ${XA_RUNTIME_INCLUDE_DIR}
         ${RUNTIME_INCLUDE_DIR}
-        ${CONSTEXPR_XXH3_DIR}
         ${CLR_INCLUDE_DIR}
      )
   endmacro()
@@ -679,7 +678,6 @@ else()
   if (IS_CLR_RUNTIME)
     add_subdirectory(clr/pinvoke-override)
     add_subdirectory(clr/host)
-    add_subdirectory(clr/startup)
   endif()
 
   if (IS_NAOT_RUNTIME)

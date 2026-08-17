@@ -147,7 +147,7 @@ namespace Xamarin.Android.NetTests {
 				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
 				var httpClient = new HttpClient (handler) {
-					BaseAddress = new Uri ("https://google.com"),
+					BaseAddress = new Uri ("https://localhost/"),
 					Timeout = TimeSpan.FromMilliseconds (1)
 				};
 
@@ -273,10 +273,12 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void GetString_Many ()
 		{
+			using var server = LocalHttpServer.Start ();
 			var client = new HttpClient (new Xamarin.Android.Net.AndroidMessageHandler ());
-			var t1 = client.GetStringAsync ("https://google.com");
-			var t2 = client.GetStringAsync ("https://google.com");
+			var t1 = client.GetStringAsync (server.OkUri);
+			var t2 = client.GetStringAsync (server.OkUri);
 			Assert.IsTrue (Task.WaitAll (new [] { t1, t2 }, WaitTimeout));
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
@@ -285,7 +287,7 @@ namespace Xamarin.Android.NetTests {
 			var listener = CreateListener (l => {
 					using (var response = l.Response)
 					{
-						response.Redirect("http://xamarin.com/");
+						response.Redirect("http://localhost/");
 					}
 				});
 

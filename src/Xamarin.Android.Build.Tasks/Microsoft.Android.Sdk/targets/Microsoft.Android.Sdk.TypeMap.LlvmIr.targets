@@ -85,7 +85,6 @@
 
     <RewriteMarshalMethods
         Condition=" '$(_AndroidUseMarshalMethods)' == 'true' And '$(AndroidIncludeDebugSymbols)' == 'false' "
-        EnableManagedMarshalMethodsLookup="$(_AndroidUseManagedMarshalMethodsLookup)"
         Environments="@(_EnvironmentFiles)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)">
     </RewriteMarshalMethods>
@@ -93,6 +92,7 @@
     <GenerateTypeMappings
         AndroidRuntime="$(_AndroidRuntime)"
         Debug="$(AndroidIncludeDebugSymbols)"
+        EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
         EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
         ResolvedAssemblies="@(_ResolvedAssemblies)"
@@ -189,12 +189,6 @@
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
       <!-- Custom steps that run after MarkStep -->
       <!-- Custom steps that run after CleanStep -->
-      <_TrimmerCustomSteps
-          Condition=" '$(_AndroidTypeMapImplementation)' == 'managed' "
-          Include="$(_AndroidLinkerCustomStepAssembly)"
-          AfterStep="CleanStep"
-          Type="Microsoft.Android.Sdk.ILLink.TypeMappingStep"
-      />
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml"
           Exclude="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml" />
       <TrimmerRootDescriptor Include="$(MSBuildThisFileDirectory)..\PreserveLists\System.Private.CoreLib.xml"
@@ -289,17 +283,30 @@
     Runs in the inner build after ILLink but before ReadyToRun/crossgen2 compilation,
     so R2R images are generated from the already-modified assemblies.
   -->
-  <Target Name="_PostTrimmingPipeline"
-      AfterTargets="ILLink"
+  <Target Name="_CollectPostTrimmingAssemblies"
       Condition=" '$(PublishTrimmed)' == 'true' ">
     <ItemGroup>
+      <_PostTrimmingAssembly Remove="@(_PostTrimmingAssembly)" />
       <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_PostTrimmingPipeline"
+      AfterTargets="ILLink"
+      DependsOnTargets="_CollectPostTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' "
+      Inputs="@(_PostTrimmingAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Outputs="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp">
     <PostTrimmingPipeline
         Assemblies="@(_PostTrimmingAssembly)"
         AddKeepAlives="$(AndroidAddKeepAlives)"
         AndroidLinkResources="$(AndroidLinkResources)"
         Deterministic="$(Deterministic)" />
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
+    <Touch Files="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" />
+    </ItemGroup>
   </Target>
 
   <!-- Inject _TypeMapKind into the property cache -->
@@ -311,6 +318,7 @@
     </PropertyGroup>
     <ItemGroup>
       <_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
+      <_PropertyCacheItems Include="Deterministic=$(Deterministic)" />
     </ItemGroup>
   </Target>
 
@@ -369,10 +377,25 @@
     </ItemGroup>
   </Target>
 
-  <!-- Override _RemoveRegisterAttribute to strip [Register] attributes from shrunk assemblies -->
+  <!--
+    Override _RemoveRegisterAttribute to strip [Register] attributes from shrunk assemblies.
+
+    The shrunk copies must be taken from the *final* linked assemblies. `_GenerateJavaStubs`
+    runs `RewriteMarshalMethods`, which rewrites @(_ResolvedAssemblies) in place (removing the
+    `cb_*` JNI callback fields), and `_PostTrimmingPipeline` rewrites them again after ILLink.
+    Depending on `_GenerateJavaStubs` keeps this copy ordered after those rewrites.
+
+    `$(_AndroidLinkFlag)` tracks ILLink, while @(_ResolvedAssemblies) tracks the later in-place
+    rewrites that the link flag cannot observe. The assembly hash also invalidates the target when
+    the resolved assembly set changes. Without the final assemblies as inputs, the shrunk copies
+    could go stale while @(_ResolvedAssemblies) moved on, so mono-aot-cross compiled the rewritten
+    assemblies while packaging shipped the pre-rewrite copies. Their metadata field tables then
+    disagreed, and AOT `SFLDA` patches resolved to the wrong MonoClassField at runtime. This mirrors
+    `_RemoveRegisterAttributeCoreClr` in Microsoft.Android.Sdk.TypeMap.Trimmable.targets.
+  -->
   <Target Name="_RemoveRegisterAttribute"
-      DependsOnTargets="_PrepareAssemblies"
-      Inputs="$(_AndroidLinkFlag)"
+      DependsOnTargets="_PrepareAssemblies;_GenerateJavaStubs"
+      Inputs="$(_AndroidLinkFlag);@(_ResolvedAssemblies);$(_ResolvedUserAssembliesHashFile);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_RemoveRegisterFlag)"
       Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'">
     <CopyIfChanged
@@ -386,6 +409,9 @@
         ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
     <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
     <Touch Files="$(_RemoveRegisterFlag)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_RemoveRegisterFlag)" />
+    </ItemGroup>
   </Target>
 
   <!-- Collect native typemap files for archive (FastDev) -->

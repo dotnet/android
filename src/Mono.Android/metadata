@@ -312,6 +312,7 @@
   <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='newInstance']" name="return">java.lang.Object</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='cast']" name="return">java.lang.Object</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="managedName">JavaFinalize</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="deprecated">Override Dispose (bool disposing) for cleanup customization, or use the C# destructor instead. Java's Object.finalize() has been deprecated since JDK 9 and is marked for removal.</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='StringBuffer']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='StringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
   <attr path="/api/package[@name='java.lang']/interface[@name='CharSequence']" name="managedName">ICharSequence</attr>
@@ -1132,6 +1133,14 @@
     The problem with this is that our tooling doesn't have any real support for stating that
     a method was removed; api-merge assumes that once an API is added, it's present for ALL TIME.
     -->
+  <!-- These constructors were removed before the minimum supported Android API level. -->
+  <attr path="/api/package[@name='android.util']/class[@name='Config' or @name='DebugUtils' or @name='EventLog' or @name='StateSet' or @name='TimeUtils' or @name='Xml']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 15.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='Plugin' or @name='PluginList' or @name='UrlInterceptRegistry']/constructor[@visibility='public' or @visibility='protected']" name="deprecated">This constructor was removed in Android API level 15.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='GeolocationPermissions' or @name='WebStorage']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 16.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CacheManager']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 17.</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='AudioFormat']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 21.</attr>
+  <attr path="/api/package[@name='android.os']/class[@name='BatteryManager' or @name='RecoverySystem']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 23.</attr>
+
   <!-- View.fitsSystemWindows() was removed from docs/android.jar, but still appears to exist on-device. -->
   <attr api-since="14" path="/api/package[@name='android.view']/class[@name='View']/method[@name='fitsSystemWindows' and count(parameters)=0]"
       name="managedName"

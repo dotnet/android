@@ -58,7 +58,13 @@ Util::create_public_directory (std::string_view const& dir)
 			// Try to change the mode, just in case
 			chmod (dir.data (), 0777);
 		} else {
-			log_warn (LOG_DEFAULT, "Failed to create directory '{}'. {}"sv, dir, std::strerror (errno));
+			log_warnf (
+				LOG_DEFAULT,
+				"Failed to create directory '%.*s'. %s",
+				static_cast<int>(dir.length ()),
+				dir.data (),
+				std::strerror (errno)
+			);
 		}
 	}
 	umask (m);
@@ -72,7 +78,13 @@ Util::monodroid_fopen (std::string_view const& filename, std::string_view const&
 	 */
 	FILE *ret = fopen (filename.data (), mode.data ());
 	if (ret == nullptr) {
-		log_error (LOG_DEFAULT, "fopen failed for file {}: {}", filename, strerror (errno));
+		log_errorf (
+			LOG_DEFAULT,
+			"fopen failed for file %.*s: %s",
+			static_cast<int>(filename.length ()),
+			filename.data (),
+			strerror (errno)
+		);
 		return nullptr;
 	}
 
@@ -87,7 +99,13 @@ void Util::set_world_accessable (std::string_view const& path)
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_error (LOG_DEFAULT, "chmod(\"{}\", 0664) failed: {}", path, strerror (errno));
+		log_errorf (
+			LOG_DEFAULT,
+			"chmod(\"%.*s\", 0664) failed: %s",
+			static_cast<int>(path.length ()),
+			path.data (),
+			strerror (errno)
+		);
 	}
 }
 
@@ -99,7 +117,7 @@ auto Util::set_world_accessible (int fd) noexcept -> bool
 	} while (r == -1 && errno == EINTR);
 
 	if (r == -1) {
-		log_error (LOG_DEFAULT, "fchmod() failed: {}"sv, strerror (errno));
+		log_errorf (LOG_DEFAULT, "fchmod() failed: %s", strerror (errno));
 		return false;
 	}
 

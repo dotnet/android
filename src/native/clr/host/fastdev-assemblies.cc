@@ -6,6 +6,7 @@
 #include <cerrno>
 #include <cstring>
 #include <limits>
+#include <string>
 
 #include <constants.hh>
 #include <host/fastdev-assemblies.hh>
@@ -17,6 +18,23 @@ using namespace xamarin::android;
 auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
 	size = 0;
+
+	// When the override directory was used to build a `TRUSTED_PLATFORM_ASSEMBLIES`
+	// list (see `build_tpa_list`), the external probe should yield to TPA-based
+	// loading so that CoreCLR opens the assembly from disk via `PEImage::OpenImage`
+	// and `Assembly.Location` ends up populated. Otherwise sibling portable PDB
+	// lookup (used by `StackTraceSymbols`) returns an empty path and stack frames
+	// render without file/line info.
+	//
+	// The CoreLib bootstrap is a special case: CoreCLR loads
+	// `System.Private.CoreLib.dll` via the external probe (not through the
+	// regular TPA-aware binder), so we must keep returning the bytes for it
+	// even when TPA is in use. CoreLib has no user code we'd symbolicate, so
+	// the resulting bare-filename `Assembly.Location` does not matter.
+	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
+	if (tpa_in_use && name != corelib_name) {
+		return nullptr;
+	}
 
 	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
@@ -110,4 +128,78 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	log_debug (LOG_ASSEMBLY, "Read {} bytes of FastDev assembly '{}'"sv, nread, name);
 
 	return reinterpret_cast<void*>(buffer);
+}
+
+auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
+{
+	tpa_list.clear ();
+
+	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
+	if (!Util::dir_exists (override_dir_path)) {
+		return false;
+	}
+
+	DIR *dir = opendir (override_dir_path.c_str ());
+	if (dir == nullptr) {
+		log_warn (LOG_ASSEMBLY, "FastDev: failed to open override dir '{}'. {}"sv, override_dir_path, std::strerror (errno));
+		return false;
+	}
+
+	constexpr std::string_view dll_ext { ".dll" };
+	constexpr std::string_view r2r_ext { ".r2r.dll" };
+	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
+	bool found_corelib = false;
+	bool found_r2r = false;
+	size_t count = 0;
+	dirent *e;
+	while ((e = readdir (dir)) != nullptr) {
+		std::string_view name { e->d_name };
+		if (name.size () <= dll_ext.size () || !name.ends_with (dll_ext)) {
+			continue;
+		}
+		if (name.ends_with (r2r_ext)) {
+			// Release+EmbedAssembliesIntoApk=false deploys ReadyToRun
+			// composites named `Foo.r2r.dll`. CoreCLR's binder probes for
+			// these by filename and we don't have a clean way to satisfy
+			// those probes via TPA, so we leave Release-style deployments
+			// on the legacy probe-only path.
+			found_r2r = true;
+			break;
+		}
+
+		if (!tpa_list.empty ()) {
+			tpa_list.append (":");
+		}
+		tpa_list.append (override_dir_path);
+		tpa_list.append ("/");
+		tpa_list.append (name);
+		if (name == corelib_name) {
+			found_corelib = true;
+		}
+		count++;
+	}
+	closedir (dir);
+
+	log_debug (
+		LOG_ASSEMBLY,
+		"FastDev: built TPA list with {} assemblies from '{}' (corelib={}, r2r={})"sv,
+		count,
+		override_dir_path,
+		found_corelib,
+		found_r2r
+	);
+
+	// We can only safely hand a TPA list to CoreCLR when it contains
+	// `System.Private.CoreLib.dll`. Passing TPA without CoreLib changes the
+	// CLR binder mode such that CoreLib is searched via TPA/probe instead of
+	// the built-in bootstrap, which fails on incomplete FastDev deployments
+	// (e.g. tests that only sync a handful of user assemblies). We also skip
+	// TPA when ReadyToRun variants are present (Release+nonembed), since
+	// CoreCLR's `.r2r.dll` probes aren't compatible with our TPA path.
+	if (count > 0 && found_corelib && !found_r2r) {
+		tpa_in_use = true;
+		return true;
+	}
+	tpa_list.clear ();
+	return false;
 }

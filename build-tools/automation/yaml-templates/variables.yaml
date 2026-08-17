@@ -82,3 +82,5 @@ variables:
   value: 'true'
 - name: DOTNET_SDK_VULNERABILITY_CHECK_DISABLE
   value: 'true'
+- name: NuGetAudit
+  value: 'false'

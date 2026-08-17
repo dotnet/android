@@ -14,13 +14,17 @@
          before Java.Interop's Prepare target scans for a JDK. Otherwise its JdkInfo task
          falls back to a system-installed JDK (e.g. the JDK 25 preinstalled on hosted
          macOS images), which can be incompatible with our Gradle version. -->
-    <MSBuild Projects="$(_Root)src\openjdk\openjdk.csproj" Properties="Configuration=$(Configuration)" Targets="Restore;Build" />
+    <!-- Build out of process so NuGet-generated props are evaluated after restore. -->
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_Root)src\openjdk\openjdk.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-openjdk.binlog"
+        WorkingDirectory="$(_Root)"
+    />
   </Target>
 
   <Target Name="PrepareJavaInterop"
       DependsOnTargets="PrepareOpenJDK">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.slnx -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
         WorkingDirectory="$(_Root)external\Java.Interop"
     />
   </Target>
@@ -28,7 +32,7 @@
   <Target Name="BuildDotNet"
       DependsOnTargets="PrepareJavaInterop">
     <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
+    <MSBuild Projects="$(_Root)Xamarin.Android.slnx" Properties="DisableApiCompatibilityCheck=true" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ConfigureLocalWorkload" />
   </Target>
 

@@ -11,7 +11,7 @@
 #include "android-system.hh"
 #include "monodroid-state.hh"
 #include <runtime-base/dso-loader.hh>
-#include <runtime-base/search.hh>
+#include <runtime-base/search-xxhash.hh>
 #include "shared-constants.hh"
 #include "startup-aware-lock.hh"
 #include "util.hh"
@@ -57,7 +57,7 @@ namespace xamarin::android::internal
 
 			auto equal = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash == key; };
 			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
-			ssize_t idx = Search::binary_search<DSOCacheEntry, equal, less_than> (hash, arr, arr_size);
+			ssize_t idx = SearchXxHash::binary_search<DSOCacheEntry, equal, less_than> (hash, arr, arr_size);
 
 			if (idx >= 0) {
 				log_debug (LOG_ASSEMBLY, "Found hash 0x{:x} entry at index {} of the cache", hash, idx);

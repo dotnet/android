@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
@@ -406,6 +407,17 @@ namespace Java.Interop {
 
 		static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 		static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
+		static  readonly    Dictionary<Type, ActivationConstructor>  ActivationConstructorCache = new Dictionary<Type, ActivationConstructor> ();
+		static  readonly    Lock    ActivationConstructorCacheLock = new Lock ();
+
+		enum ActivationConstructorKind
+		{
+			Missing,
+			XA,
+			JI,
+		}
+
+		readonly record struct ActivationConstructor (ConstructorInfo? Constructor, ActivationConstructorKind Kind);
 
 		internal static object CreateProxy (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
@@ -416,17 +428,18 @@ namespace Java.Interop {
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.
 			var peer = GetUninitializedObject (type);
-			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
-			if (c != null) {
-				c.Invoke (peer, new object[] { handle, transfer });
+			// XA constructors are the normal activation path; resolve XA first and cache the result.
+			var activation = GetActivationConstructor (type);
+			var constructor = activation.Constructor;
+			if (constructor != null && activation.Kind == ActivationConstructorKind.XA) {
+				constructor.Invoke (peer, new object[] { handle, transfer });
 				return peer;
 			}
-			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
-			if (c != null) {
+			// JI constructors are a legacy fallback slated for removal, but cache them while supported.
+			if (constructor != null && activation.Kind == ActivationConstructorKind.JI) {
 				JniObjectReference          r = new JniObjectReference (handle);
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
-				c.Invoke (peer, new object [] { r, o });
+				constructor.Invoke (peer, new object [] { r, o });
 				JNIEnv.DeleteRef (handle, transfer);
 				return peer;
 			}
@@ -434,6 +447,29 @@ namespace Java.Interop {
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					CreateJavaLocationException ());
+
+			static ActivationConstructor GetActivationConstructor (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type type)
+			{
+				lock (ActivationConstructorCacheLock) {
+					if (ActivationConstructorCache.TryGetValue (type, out var activation))
+						return activation;
+
+					const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+					var constructor = type.GetConstructor (flags, null, XAConstructorSignature, null);
+					if (constructor != null) {
+						activation = new ActivationConstructor (constructor, ActivationConstructorKind.XA);
+					} else {
+						constructor = type.GetConstructor (flags, null, JIConstructorSignature, null);
+						activation = new ActivationConstructor (
+								constructor,
+								constructor == null ? ActivationConstructorKind.Missing : ActivationConstructorKind.JI);
+					}
+					ActivationConstructorCache.Add (type, activation);
+					return activation;
+				}
+			}
 
 			static IJavaPeerable GetUninitializedObject (
 					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]

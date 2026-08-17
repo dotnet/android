@@ -8,6 +8,7 @@ namespace Xamarin.ProjectTools
 		public const string TargetFrameworkVersion = "TargetFrameworkVersion";
 
 		public const string AndroidLinkMode = "AndroidLinkMode";
+		public const string AndroidEnableFastDeployment = "AndroidEnableFastDeployment";
 		public const string EmbedAssembliesIntoApk = "EmbedAssembliesIntoApk";
 		public const string AndroidCreatePackagePerAbi = "AndroidCreatePackagePerAbi";
 		public const string AndroidEnableMarshalMethods = "AndroidEnableMarshalMethods";

@@ -506,6 +506,42 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, m, "`JnienvTest` does *not* subclass Java.Lang.Object, it should *not* be in the typemap!");
 		}
 
+		[Test]
+		[Category ("GCBridge")]
+		[Category ("NativeAOTIgnore")]
+		public void ToLocalJniHandleSurvivesConcurrentCollection ()
+		{
+			const int iterations = 1000;
+			using var done = new CancellationTokenSource ();
+			var collector = new Thread (() => {
+				while (!done.IsCancellationRequested) {
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+					Thread.Yield ();
+				}
+			});
+			collector.Start ();
+
+			try {
+				for (int i = 0; i < iterations; i++) {
+					IntPtr handle = JNIEnv.ToLocalJniHandleFallback (new FinalizableHandleOwner ());
+					try {
+						Assert.AreNotEqual (IntPtr.Zero, handle, $"No local reference was returned during iteration {i}.");
+						Assert.IsNotEmpty (JNIEnv.GetClassNameFromInstance (handle), $"The local reference was invalid during iteration {i}.");
+					} finally {
+						JNIEnv.DeleteLocalRef (handle);
+					}
+				}
+			} finally {
+				done.Cancel ();
+				collector.Join ();
+			}
+		}
+
+		sealed class FinalizableHandleOwner : Java.Lang.Object
+		{
+		}
+
 	}
 
 	[Register ("from/NewNativeThreadOne")]

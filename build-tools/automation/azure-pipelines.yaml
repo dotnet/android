@@ -110,6 +110,18 @@ extends:
           image: $(WindowsPoolImage1ESPT)
           os: windows
 
+    - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
+      parameters:
+        use1ESTemplate: true
+        # The internal Xamarin.Android pipeline uses 1ES Pipeline Templates, which
+        # require Windows jobs to run on a 1ES-hosted pool. macOS is fine on the
+        # hosted Azure Pipelines pool as long as `os: macOS` is set (which is now
+        # the template default).
+        windowsPool:
+          name: MAUI-1ESPT
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
+
     - stage: maui_tests
       displayName: MAUI Tests
       dependsOn: mac_build
@@ -173,7 +185,7 @@ extends:
         - task: DotNetCoreCLI@2
           displayName: Update Android SDK band in Workloads.csproj
           inputs:
-            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.slnx
             arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
         - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
@@ -189,13 +201,13 @@ extends:
           displayName: Install MAUI workload packs
           retryCountOnTaskFailure: 3
           inputs:
-            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.slnx
             arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             command: new
-            arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+            arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Create MAUI template
             continueOnError: false
@@ -395,9 +407,9 @@ extends:
             destinationPath: $(Build.StagingDirectory)\nuget-signed
 
         - task: DotNetCoreCLI@2
-          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
+          displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
           inputs:
-            projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
+            projects: $(System.DefaultWorkingDirectory)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj
             arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 

@@ -193,9 +193,6 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			var app = new XamarinAndroidApplicationProject {
-				References = {
-					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
-				},
 				OtherBuildItems = {
 					new AndroidItem.AndroidAsset ("Assets\\asset2.txt") {
 						TextContent = () => "foo",

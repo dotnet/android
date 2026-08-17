@@ -61,15 +61,18 @@ public class CecilImporter
 		cwt.ExtendsType = GetJavaTypeName (type.BaseType, resolver);
 
 		// Implemented interfaces
-		foreach (var ifaceInfo in type.Interfaces) {
-			var iface = resolver.Resolve (ifaceInfo.InterfaceType);
-			if (iface is null)
+		var interfaces = type.Interfaces
+			.Select (iface => resolver.Resolve (iface.InterfaceType))
+			.Where (iface => iface is not null && CecilExtensions.GetTypeRegistrationAttributes (iface).Any ())
+			.ToList ();
+		var addedInterfaces = new HashSet<string> ();
+		foreach (var iface in interfaces) {
+			if (interfaces.Any (other => iface.FullName != other.FullName && iface.IsAssignableFrom (other, resolver)))
 				continue;
 
-			if (!CecilExtensions.GetTypeRegistrationAttributes (iface).Any ())
-				continue;
-
-			cwt.ImplementedInterfaces.Add (GetJavaTypeName (iface, resolver));
+			var javaTypeName = GetJavaTypeName (iface, resolver);
+			if (addedInterfaces.Add (javaTypeName))
+				cwt.ImplementedInterfaces.Add (javaTypeName);
 		}
 
 		// Application constructor

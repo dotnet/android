@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -37,9 +39,6 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData (true, "llvm-ir", runtime);
 				AddTestData (false, "llvm-ir", runtime);
-				AddTestData (true, "managed", runtime);
-				// NOTE: TypeMappingStep is not yet setup for Debug mode
-				//AddTestData (false, "managed", runtime);
 			}
 
 			AddTestData (true, "trimmable", AndroidRuntime.CoreCLR);
@@ -94,6 +93,73 @@ namespace Xamarin.Android.Build.Tests
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void PublishReadyToRunPartial ([Values] bool isComposite)
+		{
+			const string logcatMessage = "R2R_PARTIAL_TEST_ONCREATE";
+
+			var rid = MonoAndroidHelper.AbiToRid (DeviceAbi);
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, $"r2rpartial{isComposite}")) {
+				IsRelease = true, // Enables ReadyToRun by default
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
+			// "--partial" restricts crossgen2 to the methods in the profile, "--map" makes it
+			// write a listing of everything it compiled.
+			proj.SetProperty ("PublishReadyToRunCrossgen2ExtraArgs", "--partial;--map");
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				$"Console.WriteLine (\"{logcatMessage}\");");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Project should have installed.");
+
+			var assemblyName = proj.ProjectName;
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+
+			// _AndroidGenerateMibcProfile should have written a profile for the app assembly.
+			var mibc = Directory.GetFiles (intermediate, $"{assemblyName}.mibc", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (mibc, $"{assemblyName}.mibc should have been generated!");
+
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, rid, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+
+			var helper = new ArchiveAssemblyHelper (apk, true);
+			var apkEntry = $"assemblies/{DeviceAbi}/{assemblyName}.dll";
+			Assert.IsTrue (helper.Exists (apkEntry), $"{assemblyName}.dll should exist in apk!");
+
+			using (var stream = helper.ReadEntry (apkEntry, MonoAndroidHelper.AbiToTargetArch (DeviceAbi))) {
+				Assert.IsNotNull (stream, $"{apkEntry} should be readable from the apk!");
+				stream.Position = 0;
+				using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
+				Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
+					$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+			}
+
+			// The crossgen2 map lists every method that made it into the R2R image.  Without the
+			// generated profile, "--partial" would leave the app's own code out entirely.  The
+			// file is named after the app assembly, or after the composite image in a composite
+			// build.
+			var maps = Directory.GetFiles (intermediate, "*.map", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (maps, "crossgen2 should have written a .map file!");
+			// e.g. "0x000108C0 | 0x000100 | 0 | .text | UnnamedProject_UnnamedProject_MainActivity__OnCreate  (MethodWithGCInfo)"
+			var symbol = $"{assemblyName}_{assemblyName}_MainActivity__OnCreate  (MethodWithGCInfo)";
+			Assert.IsTrue (maps.Any (m => File.ReadAllText (m).Contains (symbol)),
+				$"MainActivity.OnCreate() should be ReadyToRun compiled! Looked for '{symbol}' in: {string.Join (", ", maps)}");
+
+			// A partially ReadyToRun compiled app must still start and run its managed code.
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat ((line) => line.Contains (logcatMessage),
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), 45),
+				$"Output did not contain {logcatMessage}! MainActivity.OnCreate() should have run.");
+			Assert.IsTrue (builder.Uninstall (proj), "Project should have uninstalled.");
 		}
 
 		[Test]
@@ -275,14 +341,15 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			Assert.True (builder.Uninstall (proj), "Project should have uninstalled.");
 		}
 
-		[Test]
-		public void DotNetRunWaitForExit ()
+		[TestCase ("", true)]
+		[TestCase ("--no-wake-device", false)]
+		public void DotNetRunWaitForExit (string extraArgs, bool shouldWakeDevice)
 		{
 			const string logcatMessage = "DOTNET_RUN_TEST_MESSAGE_12345";
 			var proj = new XamarinAndroidApplicationProject ();
 
 			// Enable verbose output from Microsoft.Android.Run for debugging
-			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+			proj.SetProperty ("_AndroidRunExtraArgs", $"--verbose {extraArgs}");
 
 			// Add a Console.WriteLine that will appear in logcat
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
@@ -335,10 +402,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			}
 
 			// Write the output to a log file for debugging
-			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-output.log");
-			File.WriteAllText (logPath, output.ToString ());
+			string outputText = output.ToString ();
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, $"dotnet-run-output-wake-{shouldWakeDevice}.log");
+			File.WriteAllText (logPath, outputText);
 			TestContext.AddTestAttachment (logPath);
 
+			if (shouldWakeDevice) {
+				StringAssert.Contains ("shell input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; am start", outputText,
+					$"`dotnet run` should wake the device and dismiss its keyguard in the same adb shell command used to start the app. See {logPath} for details.");
+			} else {
+				StringAssert.Contains ("shell am start", outputText,
+					$"`dotnet run` should start the app without waking the device or dismissing its keyguard when --no-wake-device is specified. See {logPath} for details.");
+				StringAssert.DoesNotContain ("KEYCODE_WAKEUP", outputText,
+					$"`dotnet run` should not wake the device when --no-wake-device is specified. See {logPath} for details.");
+				StringAssert.DoesNotContain ("dismiss-keyguard", outputText,
+					$"`dotnet run` should not dismiss the keyguard when --no-wake-device is specified. See {logPath} for details.");
+			}
 			Assert.IsTrue (foundMessage, $"Expected message '{logcatMessage}' was not found in output. See {logPath} for details.");
 		}
 
@@ -408,24 +487,18 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
 				string outputText = output.ToString ();
 				Assert.IsTrue (outputText.Contains ("Stopping application..."),
 					$"Output should contain 'Stopping application...' from Microsoft.Android.Run's Ctrl+C handler");
+				Assert.IsFalse (outputText.Contains ("Error: The operation was canceled."),
+					"Cancellation should not be reported as an error");
 
-				// Verify the app is no longer running on the device.
-				// Poll with retries since StopAppAsync is fire-and-forget in the Ctrl+C handler.
-				bool appStopped = false;
-				for (int i = 0; i < 10; i++) {
-					pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
-					if (string.IsNullOrEmpty (pidOutput)) {
-						appStopped = true;
-						break;
-					}
-					Thread.Sleep (1000);
-				}
-				Assert.IsTrue (appStopped,
+				// Microsoft.Android.Run must not exit until force-stop has completed.
+				pidOutput = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+				Assert.IsTrue (string.IsNullOrEmpty (pidOutput),
 					$"App should not be running on the device after Ctrl+C. pidof output: '{pidOutput}'");
 			} finally {
 				// Ensure the process is killed if it's still running
@@ -661,6 +734,98 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 		}
 
 		[Test]
+		public void AssemblyStoreDecompressionCacheMapsPersistedAssemblies ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "assemblycache")) {
+				IsRelease = true,
+			};
+			app.SetRuntime (AndroidRuntime.CoreCLR);
+			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			app.SetProperty ("AndroidEnableAssemblyStoreDecompressionCache", "true");
+			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+
+			using var appBuilder = CreateApkBuilder ();
+			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-first-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"First launch should succeed."
+			);
+
+			string [] cacheFiles = [];
+			for (int attempt = 0; attempt < 40 && cacheFiles.Length < 2; attempt++) {
+				Thread.Sleep (250);
+				cacheFiles = RunAdbCommand (
+					$"shell run-as {app.PackageName} find code_cache/decompressed-assembly-cache-v1 -type f -name '*.bin'"
+				)
+					.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where (line => line.EndsWith (".bin", StringComparison.Ordinal))
+					.ToArray ();
+			}
+			Assert.That (cacheFiles.Length, Is.GreaterThanOrEqualTo (2), "The first launch should persist multiple decompressed assemblies.");
+
+			RunAdbCommand ($"shell am force-stop --user all {app.PackageName}");
+			string cacheFileToCorrupt = cacheFiles.First ();
+			string ValidFileHash () => RunAdbCommand (
+				$"shell run-as {app.PackageName} md5sum {cacheFileToCorrupt}"
+			).Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault () ?? "";
+
+			string validHash = ValidFileHash ();
+			Assert.That (validHash, Is.Not.Empty, $"Should be able to hash the persisted cache file '{cacheFileToCorrupt}'.");
+
+			RunAdbCommand (
+				$"shell run-as {app.PackageName} dd if=/dev/zero of={cacheFileToCorrupt} bs=1 count=1 conv=notrunc"
+			);
+			Assert.That (ValidFileHash (), Is.Not.EqualTo (validHash), "Corrupting the cache file should change its contents.");
+
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			Assert.IsTrue (
+				WaitForActivityToStart (
+					app.PackageName,
+					"MainActivity",
+					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-cache-second-launch.log"),
+					ActivityStartTimeoutInSeconds
+				),
+				"Second launch should succeed."
+			);
+
+			// A corrupted entry must be rejected (footer hash mismatch) and re-decompressed, which
+			// re-persists a byte-identical file. Verify the *exact* corrupted file is healed rather
+			// than merely checking that some other valid entry is still mapped.
+			bool rewritten = false;
+			for (int attempt = 0; attempt < 40 && !rewritten; attempt++) {
+				Thread.Sleep (250);
+				rewritten = ValidFileHash () == validHash;
+			}
+			Assert.IsTrue (rewritten, $"The corrupted cache file '{cacheFileToCorrupt}' should be rewritten with valid contents after fallback.");
+
+			string [] pids = RunAdbCommand ($"shell pidof {app.PackageName}")
+				.Split (new [] { ' ', '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+			Assert.IsNotEmpty (pids, "The application process should be running after the second launch.");
+			var maps = new StringBuilder ();
+			foreach (string pid in pids) {
+				maps.Append (RunAdbCommand ($"shell run-as {app.PackageName} cat /proc/{pid}/maps"));
+			}
+			StringAssert.Contains (
+				"/code_cache/decompressed-assembly-cache-v1/",
+				maps.ToString (),
+				"The second launch should map persisted decompressed assemblies."
+			);
+		}
+
+		[Test]
 		public void ActivityAliasRuns ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -802,6 +967,57 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		}
 
 		[Test]
+		public void TabLayoutOnTabSelectedListener2_ShouldFire_OnActivityLaunch ()
+		{
+			const string expectedLogcatOutput = "OnTabSelected called!";
+
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					KnownPackages.XamarinGoogleAndroidMaterial,
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			proj.SetDefaultTargetDevice ();
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+				TextContent = () => "<resources><style name=\"AppTheme\" parent=\"Theme.MaterialComponents.DayNight.NoActionBar\" /></resources>",
+			});
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Google.Android.Material.Tabs;")
+				.Replace ("MainLauncher = true", "MainLauncher = true, Theme = \"@style/AppTheme\"")
+				.Replace ("public class MainActivity : Activity", "public class MainActivity : Activity, TabLayout.IOnTabSelectedListener2")
+				.Replace ("//${AFTER_ONCREATE}",
+"""
+			var tabLayout = new TabLayout (this);
+			tabLayout.AddOnTabSelectedListener (this);
+			tabLayout.AddTab (tabLayout.NewTab (), true);
+			SetContentView (tabLayout);
+		}
+
+		public void OnTabSelected (TabLayout.Tab tab)
+		{
+			Android.Util.Log.Debug ("TabLayoutTest", "OnTabSelected called!");
+		}
+
+		public void OnTabUnselected (TabLayout.Tab tab)
+		{
+		}
+
+		public void OnTabReselected (TabLayout.Tab tab)
+		{
+""");
+
+			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			ClearAdbLogcat ();
+			RunProjectAndAssert (proj, builder);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		[Test]
 		public void SubscribeToAppDomainUnhandledException ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
@@ -842,6 +1058,38 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				$"Output did not contain {expectedLogcatOutput}!");
 		}
 
+		[Test]
+		public void RuntimeConfigDevJsonIsApplied ()
+		{
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR)) {
+				IsRelease = false,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+
+			// The .NET SDK writes these two switches into `*.runtimeconfig.dev.json` for `Debug` builds and
+			// nowhere else. `hostfxr` layers that file over `*.runtimeconfig.json` at startup, but .NET for
+			// Android bakes the properties into the app at build time, so seeing them here proves the dev
+			// file was picked up. Asking for `$(StartupHookSupport)` to be `false` also proves the dev file
+			// wins over `*.runtimeconfig.json`.
+			proj.SetProperty ("StartupHookSupport", "false");
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+@"			AppContext.TryGetSwitch (""System.StartupHookProvider.IsSupported"", out bool startupHookProvider);
+			AppContext.TryGetSwitch (""System.Reflection.Metadata.MetadataUpdater.IsSupported"", out bool metadataUpdater);
+			Console.WriteLine (""# runtimeconfig.dev.json: StartupHookProvider={0}; MetadataUpdater={1}"",
+				startupHookProvider, metadataUpdater);
+");
+			builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			RunProjectAndAssert (proj, builder);
+
+			const string expectedLogcatOutput = "# runtimeconfig.dev.json: StartupHookProvider=True; MetadataUpdater=True";
+			Assert.IsTrue (
+				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
+					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "runtimeconfig-logcat.log"), timeout: 60),
+				$"Output did not contain {expectedLogcatOutput}!");
+		}
 
 		public static Func<string, bool> CreateLineChecker (string expectedLogcatOutput)
 		{
@@ -1368,23 +1616,14 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void AppWithStyleableUsageRuns ([Values] bool isRelease,	[Values] bool linkResources, [Values] bool useStringTypeMaps, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AppWithStyleableUsageRuns ([Values] bool isRelease, [Values] bool linkResources, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			// Not all combinations are valid, ignore those that aren't
-			if (runtime == AndroidRuntime.MonoVM && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is used only in CoreCLR and NativeAOT apps");
-			}
-
-			if (runtime != AndroidRuntime.MonoVM && isRelease && useStringTypeMaps) {
-				Assert.Ignore ("String-based typemaps mode is available only in Debug CoreCLR builds");
-			}
-
 			// TODO: fix this for NativeAOT
-			if (runtime == AndroidRuntime.NativeAOT && isRelease && !useStringTypeMaps) {
+			if (runtime == AndroidRuntime.NativeAOT && isRelease) {
 				// This configuration currently fails with a long stack trace, the gist of it is:
 				//
 				//  AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
@@ -1403,7 +1642,7 @@ using System.Runtime.Serialization.Json;
 				//  DOTNET  :  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
 				//  DOTNET  :  ---> System.IO
 				//  eruns_nativeaot: No implementation found for void mono.android.Runtime.propagateUncaughtException(java.lang.Thread, java.lang.Throwable) (tried Java_mono_android_Runtime_propagateUncaughtException and Java_mono_android_Runtime_propagateUncaughtException__Ljava_lang_Thread_2Ljava_lang_Throwable_2) - is the library loaded, e.g. System.loadLibrary?
-				Assert.Ignore ("NativeAOT is broken without string-based typemaps");
+				Assert.Ignore ("NativeAOT type mapping fails");
 			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -1508,15 +1747,7 @@ namespace Styleable.Library {
 
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
-			Dictionary<string, string>? environmentVariables = null;
-			if (runtime == AndroidRuntime.CoreCLR && !isRelease && useStringTypeMaps) {
-				// The variable must have content to enable string-based typemaps
-				environmentVariables = new (StringComparer.Ordinal) {
-					{"CI_TYPEMAP_DEBUG_USE_STRINGS", "yes"}
-				};
-			}
-
-			RunProjectAndAssert (proj, builder, environmentVariables: environmentVariables);
+			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
@@ -1566,6 +1797,10 @@ namespace Styleable.Library {
 		public void SkiaSharpCanvasBasedAppRuns ([Values] bool isRelease, [Values] bool addResource, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (IgnoreOnNativeAot (runtime, "the legacy resource-designer fix (FixLegacyResourceDesignerStep, which emits XA8000 for the unresolved SkiaSharp @styleable/SKCanvasView) is intentionally not run on the trimmable typemap path, which is the NativeAOT default.")) {
 				return;
 			}
 
@@ -1872,10 +2107,11 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		// .NET 10 NativeAOT was experimental and is not covered by previous-version compatibility tests.
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values] bool isRelease,
 				[Values ("net10.0-android36.1")] string targetFramework,
-				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -2133,7 +2369,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 					logcatOutput,
 					"The Environment variable \"DOTNET_DiagnosticPorts\" was not set to expected value \"127.0.0.1:9000,connect,nosuspend\"."
 			);
-			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
+			// NOTE: set when $(AndroidIncludeDebugSymbols) is true
 			if (!isRelease) {
 				StringAssert.Contains (
 						"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",
@@ -2141,6 +2377,117 @@ MONO_GC_PARAMS=bridge-implementation=new",
 						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
 				);
 			}
+		}
+
+		[Test]
+		public void CoreClrCrashReportUsesCacheDirectory ([Values] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (CoreClrCrashReportUsesCacheDirectory),
+				RootNamespace = nameof (CoreClrCrashReportUsesCacheDirectory),
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+				OtherBuildItems = {
+					new BuildItem ("AndroidEnvironment", "env.txt") {
+						TextContent = () => "DOTNET_EnableCrashReport=1",
+					},
+				},
+			};
+			if (isRelease) {
+				// Release apps only need to be debuggable here so that run-as can retrieve the crash report.
+				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
+				proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			}
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+		var crashReportRootPath = Environment.GetEnvironmentVariable ("DOTNET_CrashReportRootPath");
+		var crashReportDirectory = crashReportRootPath == null
+			? null
+			: System.IO.Path.Combine (crashReportRootPath, ".dotnet", "crash-reports");
+		Console.WriteLine ("DOTNET_CrashReportRootPath=" + crashReportRootPath);
+		Console.WriteLine ("CacheDir=" + CacheDir.AbsolutePath);
+		Console.WriteLine ("CrashReportDirectory=" + crashReportDirectory);
+		Console.WriteLine ("#CRASH-REPORT-ROOT-PATH-VALID#" +
+			(crashReportRootPath == CacheDir.AbsolutePath && System.IO.Directory.Exists (crashReportDirectory)));
+		Console.WriteLine ("#CRASH-REPORT-FAILFAST#");
+		Console.Out.Flush ();
+		Environment.FailFast ("MSBuildDeviceIntegration crash report test");
+		""");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "App should have installed.");
+			RunAdbCommand ($"shell run-as {proj.PackageName} rm -rf cache/.dotnet");
+			RunProjectAndAssert (proj, builder);
+
+			const string reportDirectory = "cache/.dotnet/crash-reports";
+			string crashReportPath = "";
+			WaitFor (
+				TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds),
+				() => {
+					var output = RunAdbCommand ($"shell run-as {proj.PackageName} find {reportDirectory} -type f -name '*.crashreport.json'").Trim ();
+					crashReportPath = output
+						.Split (new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+						.FirstOrDefault (path => path.EndsWith (".crashreport.json", StringComparison.Ordinal));
+					return !string.IsNullOrEmpty (crashReportPath);
+				},
+				intervalInMS: 1000
+			);
+			Assert.IsNotEmpty (crashReportPath, $"CoreCLR did not create a crash report in {reportDirectory}.");
+
+			var crashReportJson = RunAdbCommand ($"exec-out run-as {proj.PackageName} cat {crashReportPath}");
+			var localCrashReport = Path.Combine (Root, builder.ProjectDirectory, "crashreport.json");
+			File.WriteAllText (localCrashReport, crashReportJson);
+			TestContext.AddTestAttachment (localCrashReport);
+
+			using var crashReport = JsonDocument.Parse (File.ReadAllText (localCrashReport));
+			Assert.AreEqual (JsonValueKind.Object, crashReport.RootElement.ValueKind, "CoreCLR crash report should contain a JSON object.");
+		}
+
+		[Test]
+		public void StackTraceContainsLineNumbers ()
+		{
+			// FastDev (Debug + assemblies on disk in .__override__) wires up
+			// portable PDB lookup for runtime-rendered stack traces on CoreCLR
+			// via the TPA list passed to coreclr_initialize.
+			AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				ProjectName = nameof (StackTraceContainsLineNumbers),
+				RootNamespace = nameof (StackTraceContainsLineNumbers),
+				IsRelease = false,
+				EmbedAssembliesIntoApk = false,
+				EnableDefaultItems = true,
+			};
+			proj.SetRuntime (runtime);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+		Console.WriteLine ("#STACKTRACE-BEGIN#");
+		Console.WriteLine (Environment.StackTrace);
+		Console.WriteLine ("#STACKTRACE-END#");
+		""");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "App should have installed.");
+			RunProjectAndAssert (proj, builder);
+
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
+			Assert.IsTrue (
+				MonitorAdbLogcat (line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60),
+				"Stack trace end marker not found in logcat (output may be missing or truncated)."
+			);
+
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
+
+			// Expect a frame in MainActivity.OnCreate to include
+			// "in <path>MainActivity.cs:line <N>" on a single line.
+			var match = Regex.Match (
+				logcatOutput,
+				@"at\s+\S*MainActivity\.OnCreate.*\sin\s+\S+MainActivity\.cs:line\s+\d+"
+			);
+			Assert.IsTrue (
+				match.Success,
+				$"Expected MainActivity.OnCreate frame to include file/line info. Logcat:\n{logcatOutput}"
+			);
 		}
 
 		[Test]
@@ -2287,6 +2634,7 @@ MONO_GC_PARAMS=bridge-implementation=new",
 				return;
 			}
 
+			const string facebookVersion = "18.3.0";
 			var moduleName = "Library";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
 			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
@@ -2305,7 +2653,7 @@ android {{
 dependencies {{
     implementation(""androidx.appcompat:appcompat:1.7.0"")
     implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:17.0.2"")
+    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
 }}
 ";
 			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
@@ -2336,9 +2684,6 @@ public class FacebookSdk {{
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
-				ExtraNuGetConfigSources = {
-					"https://api.nuget.org/v3/index.json",
-				},
 				OtherBuildItems = {
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
 						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
@@ -2350,14 +2695,16 @@ public class FacebookSdk {{
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.DotNetPublicMaven },
 						},
 					},
 					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
 						Metadata = {
-							{ "Version", "17.0.2" },
+							{ "Version", facebookVersion },
 							{ "Bind", "false" },
+							{ "Repository", TestEnvironment.DotNetPublicMaven },
 						},
 					},
 				},
@@ -2376,7 +2723,8 @@ public class FacebookSdk {{
 					},
 					new Package {
 						Id = "Xamarin.Google.Android.InstallReferrer",
-						Version = "1.1.2.6",
+						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
+						Version = "2.2.0.8",
 					},
 					new Package {
 						Id = "Xamarin.AndroidX.Core.Core.Ktx",
@@ -2433,38 +2781,6 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		public void AppStartsWithManagedMarshalMethodsLookupEnabled ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// TODO: Segfaults on Mono currently
-			if (runtime == AndroidRuntime.MonoVM) {
-				Assert.Ignore ("MonoVM segfaults in this test.");
-			}
-
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidUseMarshalMethods", "true");
-			proj.SetProperty ("_AndroidUseManagedMarshalMethodsLookup", "true");
-
-			using var builder = CreateApkBuilder ();
-			builder.Save (proj);
-
-			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Run (), "`dotnet run --no-build` should succeed");
-
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
-			Assert.IsTrue (didLaunch, "Activity should have started.");
-		}
-
-		[Test]
 		public void StartAndroidActivityRespectsAndroidDeviceUserId ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -2480,12 +2796,19 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				"The 'am start' command should contain '--user 0' when AndroidDeviceUserId is set.");
 		}
 
-		[Test]
-		[TestCase ("run", AndroidRuntime.CoreCLR)]
-		[TestCase ("test", AndroidRuntime.CoreCLR)]
-		public void DotNetNewAndroidTest (string mode, AndroidRuntime runtime)
+		public enum MSTestPackageChannel
 		{
-			var templateName = $"DotNetNewAndroidTest_{mode}_{runtime}";
+			Stable,
+			Nightly,
+		}
+
+		[Test]
+		[TestCase ("run", MSTestPackageChannel.Nightly)]
+		[TestCase ("test", MSTestPackageChannel.Stable)]
+		[TestCase ("test", MSTestPackageChannel.Nightly)]
+		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
+		{
+			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -2494,31 +2817,25 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
-			// Override the MSTest version from the template with the version used by our build
-			var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
-			var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
-			var doc = XDocument.Load (csprojPath);
-			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
-			var msTestRef = doc.Descendants (ns + "PackageReference")
-				.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
-			Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
-			msTestRef.SetAttributeValue ("Version", msTestVersion);
-			doc.Save (csprojPath);
+			var buildParameters = new List<string> ();
 
-			bool useMonoRuntime = runtime == AndroidRuntime.MonoVM;
-			var buildParameters = new List<string> {
-				$"UseMonoRuntime={useMonoRuntime}",
-				"RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json",
-			};
+			if (msTestPackageChannel == MSTestPackageChannel.Nightly) {
+				// Override the stable template version with the version used by our build.
+				var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
+				var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
+				var doc = XDocument.Load (csprojPath);
+				var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+				var msTestRef = doc.Descendants (ns + "PackageReference")
+					.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
+				Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
+				msTestRef.SetAttributeValue ("Version", msTestVersion);
+				doc.Save (csprojPath);
+				buildParameters.Add ("RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json");
+			}
 
 			// Build and assert 0 warnings
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
-
-			// `dotnet test` doesn't go through the MSBuild Run target, so Install
-			// must be invoked explicitly to deploy the APK to the device.
-			if (mode == "test")
-				Assert.IsTrue (dotnet.Build (target: "Install", parameters: buildParameters.ToArray ()), "`dotnet build -t:Install` should succeed");
 
 			// Run based on mode
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
@@ -2592,6 +2909,149 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				var resultSummary = trxDoc.Root?.Element (trxNs + "ResultSummary");
 				Assert.IsNotNull (resultSummary, $"TRX file should contain a ResultSummary element. File: {trxFiles [0]}");
 			}
+		}
+
+		/// <summary>
+		/// An app whose only entry point is an `Android.App.Instrumentation` subclass that
+		/// runs BenchmarkDotNet in-process. There is no `<activity/>`, so `dotnet run` has to
+		/// resolve `$(AndroidInstrumentation)` from the generated `AndroidManifest.xml`.
+		/// </summary>
+		const string BenchmarkDotNetInstrumentationSource = """
+			using System;
+			using System.IO;
+			using BenchmarkDotNet.Attributes;
+			using BenchmarkDotNet.Columns;
+			using BenchmarkDotNet.Configs;
+			using BenchmarkDotNet.Jobs;
+			using BenchmarkDotNet.Loggers;
+			using BenchmarkDotNet.Running;
+			using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
+
+			namespace ${ROOT_NAMESPACE}
+			{
+				public class SampleBenchmarks
+				{
+					[Benchmark]
+					public int Sum ()
+					{
+						int total = 0;
+						for (int i = 0; i < 1000; i++)
+							total += i;
+						return total;
+					}
+				}
+
+				[Instrumentation (Name = "${JAVA_PACKAGENAME}.BenchmarkInstrumentation")]
+				public class BenchmarkInstrumentation : Instrumentation
+				{
+					protected BenchmarkInstrumentation (IntPtr handle, Android.Runtime.JniHandleOwnership ownership)
+						: base (handle, ownership) { }
+
+					public override void OnCreate (Bundle? arguments)
+					{
+						base.OnCreate (arguments);
+						Console.WriteLine ($"BENCHMARK_ARGS args={arguments?.GetString ("args")} greeting={arguments?.GetString ("greeting")}");
+						Start ();
+					}
+
+					public override void OnStart ()
+					{
+						base.OnStart ();
+						var results = new Bundle ();
+						try {
+							var artifacts = Path.Combine (
+								Application.Context.GetExternalFilesDir (null)?.AbsolutePath ?? Path.GetTempPath (),
+								"BenchmarkDotNet.Artifacts");
+							// BenchmarkDotNet cannot spawn child processes on Android, so run in-process.
+							// Job.Dry keeps the run to a single iteration.
+							var config = ManualConfig.CreateEmpty ()
+								.AddJob (Job.Dry.WithToolchain (InProcessNoEmitToolchain.Instance))
+								.AddLogger (ConsoleLogger.Default)
+								.AddColumnProvider (DefaultColumnProviders.Instance)
+								.WithArtifactsPath (artifacts)
+								.WithOptions (ConfigOptions.DisableOptimizationsValidator);
+							var summary = BenchmarkRunner.Run<SampleBenchmarks> (config);
+							Console.WriteLine ($"BENCHMARKS_COMPLETE reports={summary.Reports.Length}");
+							results.PutInt ("reports", summary.Reports.Length);
+							Finish (Result.Ok, results);
+						} catch (Exception ex) {
+							Console.WriteLine ($"BENCHMARKS_FAILED {ex}");
+							results.PutString ("error", ex.ToString ());
+							Finish (Result.Canceled, results);
+						}
+					}
+				}
+			}
+			""";
+
+		[Test]
+		public void DotNetRunBenchmarkDotNet ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (DotNetRunBenchmarkDotNet),
+				RootNamespace = nameof (DotNetRunBenchmarkDotNet),
+				IsRelease = false,
+			};
+			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.15.8" });
+
+			// Enable verbose output from Microsoft.Android.Run for debugging
+			proj.SetProperty ("_AndroidRunExtraArgs", "--verbose");
+
+			// Replace MainActivity.cs, so the app declares an <instrumentation> and no <activity>
+			proj.MainActivity = BenchmarkDotNetInstrumentationSource;
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
+
+			// Arguments after `--` are forwarded to `am instrument` as extras:
+			// `greeting=hello` becomes `-e greeting hello`, and `--custom-flag` is
+			// collected into a single `-e args "..."` extra.
+			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
+
+			var locker = new Lock ();
+			var output = new StringBuilder ();
+
+			process.OutputDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine (e.Data);
+			};
+			process.ErrorDataReceived += (sender, e) => {
+				if (e.Data != null)
+					lock (locker)
+						output.AppendLine ($"STDERR: {e.Data}");
+			};
+
+			process.BeginOutputReadLine ();
+			process.BeginErrorReadLine ();
+
+			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (10).TotalMilliseconds);
+			if (!completed) {
+				try { process.Kill (entireProcessTree: true); } catch { }
+			} else {
+				// Ensure async output events are fully drained
+				process.WaitForExit ();
+			}
+
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath} for details.");
+
+			var outputText = output.ToString ();
+
+			// `Console.WriteLine` from the app lands in logcat, which `dotnet run` streams
+			StringAssert.Contains ("BENCHMARK_ARGS args=--custom-flag greeting=hello", outputText,
+				$"The instrumentation should receive the arguments passed after `--`. See {logPath} for details.");
+			StringAssert.Contains ("BENCHMARKS_COMPLETE reports=1", outputText,
+				$"BenchmarkDotNet should have produced 1 report. See {logPath} for details.");
+			StringAssert.Contains ("INSTRUMENTATION_CODE: -1", outputText,
+				$"The instrumentation should have finished with Result.Ok. See {logPath} for details.");
+			Assert.AreEqual (0, process.ExitCode, $"`dotnet run` should succeed. See {logPath} for details.");
 		}
 
 		static int ParseInstrumentationResult (string output, string key)

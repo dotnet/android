@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +14,11 @@ namespace Xamarin.Android.Tasks
 	public class RtxtWriter {
 		public void Write (string file, IList<R> items)
 		{
+			if (file == null)
+				throw new ArgumentNullException (nameof (file));
+			if (items == null)
+				throw new ArgumentNullException (nameof (items));
+
 			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				foreach (var item in items) {
 					sw.WriteLine (item.ToString ());
