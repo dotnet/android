@@ -388,7 +388,8 @@ public sealed class JavaPeerScanner : IDisposable
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
-				IsManagedCreated = registerInfo?.IsManagedCreated ?? false,
+				IsBindingEventListenerImplementor = IsBindingEventListenerImplementor (
+					typeDef, index, jniName, fullName, isInterface, doNotGenerateAcw, implementedInterfaces),
 				IsFromJniTypeSignature = registerInfo?.IsFromJniTypeSignature ?? false,
 				IsUnconditional = isUnconditional,
 				CannotRegisterInStaticConstructor = cannotRegisterInStaticConstructor,
@@ -404,6 +405,41 @@ public sealed class JavaPeerScanner : IDisposable
 
 			results [(fullName, index.AssemblyName)] = peer;
 		}
+	}
+
+	static bool IsBindingEventListenerImplementor (
+		TypeDefinition typeDef,
+		AssemblyIndex index,
+		string jniName,
+		string managedTypeName,
+		bool isInterface,
+		bool doNotGenerateAcw,
+		IReadOnlyList<string> implementedInterfaces)
+	{
+		if (isInterface ||
+		    doNotGenerateAcw ||
+		    !jniName.StartsWith ("mono/", StringComparison.Ordinal) ||
+		    implementedInterfaces.Count == 0 ||
+		    (typeDef.Attributes & TypeAttributes.Sealed) == 0) {
+			return false;
+		}
+
+		foreach (var methodHandle in typeDef.GetMethods ()) {
+			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
+			if ((methodDef.Attributes & MethodAttributes.Static) == 0 ||
+			    index.Reader.GetString (methodDef.Name) != "__IsEmpty") {
+				continue;
+			}
+
+			var signature = methodDef.DecodeSignature (TypeRefSignatureTypeProvider.Instance, genericContext: index);
+			if (signature.ReturnType.ManagedTypeName == "System.Boolean" &&
+			    signature.ParameterTypes.Length == 1 &&
+			    signature.ParameterTypes [0].ManagedTypeName == managedTypeName) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	bool IsResolvableJavaPeerType (

@@ -240,9 +240,10 @@ static class ModelBuilder
 			return true;
 		}
 
-		// Managed-created peers only enter Java after managed code constructs them. Their conditional
-		// entry follows the managed type's reachability while preserving callbacks when the type is used.
-		if (peer.IsManagedCreated) {
+		// Binding-generated listener implementors are instantiated by the generated managed event
+		// accessors before being passed to Java. Existing binding assemblies can be recognized by
+		// their generated metadata shape, so their entries can follow managed reachability.
+		if (peer.IsBindingEventListenerImplementor) {
 			return false;
 		}
 

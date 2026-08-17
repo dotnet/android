@@ -20,7 +20,6 @@ namespace Android.Runtime
 		public string? Signature { get; set; }
 		public string? Connector { get; set; }
 		public bool DoNotGenerateAcw { get; set; }
-		public bool IsManagedCreated { get; set; }
 		public int ApiSince { get; set; }
 
 		public RegisterAttribute (string name) => Name = name;
@@ -230,7 +229,6 @@ namespace Java.Interop
 	{
 		public string SimpleReference { get; }
 		public bool GenerateJavaPeer { get; set; } = true;
-		public bool IsManagedCreated { get; set; }
 		public bool IsKeyword { get; set; }
 		public int ArrayRank { get; set; }
 

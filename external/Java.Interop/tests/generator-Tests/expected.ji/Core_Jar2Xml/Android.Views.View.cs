@@ -15,7 +15,7 @@ namespace Android.Views {
 
 		}
 
-		[global::Android.Runtime.Register ("mono/android/view/View_OnClickListenerImplementor", IsManagedCreated=true)]
+		[global::Android.Runtime.Register ("mono/android/view/View_OnClickListenerImplementor")]
 		internal sealed partial class IOnClickListenerImplementor : global::Java.Lang.Object, IOnClickListener {
 			public IOnClickListenerImplementor () : base (global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/android/view/View_OnClickListenerImplementor", "()V"), JniHandleOwnership.TransferLocalRef)
 			{

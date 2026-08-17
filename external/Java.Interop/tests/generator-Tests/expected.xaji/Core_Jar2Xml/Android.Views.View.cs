@@ -92,7 +92,7 @@ namespace Android.Views {
 
 		}
 
-		[global::Android.Runtime.Register ("mono/android/view/View_OnClickListenerImplementor", IsManagedCreated=true)]
+		[global::Android.Runtime.Register ("mono/android/view/View_OnClickListenerImplementor")]
 		internal sealed partial class IOnClickListenerImplementor : global::Java.Lang.Object, IOnClickListener {
 			public unsafe IOnClickListenerImplementor () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 			{

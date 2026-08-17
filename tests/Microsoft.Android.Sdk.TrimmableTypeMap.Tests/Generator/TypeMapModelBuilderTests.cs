@@ -228,22 +228,22 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
-		public void Build_ManagedCreatedUserAcw_IsTrimmable ()
+		public void Build_BindingEventListenerImplementor_IsTrimmable ()
 		{
-			var peer = MakeAcwPeer ("my/app/Listener", "MyApp.Listener", "App") with {
-				IsManagedCreated = true,
+			var peer = MakeAcwPeer ("mono/example/ListenerImplementor", "Example.ListenerImplementor", "Binding") with {
+				IsBindingEventListenerImplementor = true,
 			};
 			var model = BuildModel ([peer]);
 
 			Assert.False (model.Entries [0].IsUnconditional);
-			Assert.Equal ("MyApp.Listener, App", model.Entries [0].TargetTypeReference);
+			Assert.Equal ("Example.ListenerImplementor, Binding", model.Entries [0].TargetTypeReference);
 		}
 
 		[Fact]
-		public void Build_ManagedCreatedUserAcw_MarkedUnconditional_IsUnconditional ()
+		public void Build_BindingEventListenerImplementor_MarkedUnconditional_IsUnconditional ()
 		{
-			var peer = MakeAcwPeer ("my/app/ManifestListener", "MyApp.ManifestListener", "App") with {
-				IsManagedCreated = true,
+			var peer = MakeAcwPeer ("mono/example/ListenerImplementor", "Example.ListenerImplementor", "Binding") with {
+				IsBindingEventListenerImplementor = true,
 				IsUnconditional = true,
 			};
 			var model = BuildModel ([peer]);
@@ -781,18 +781,18 @@ public class ModelBuilderTests : FixtureTestBase
 		[Theory]
 		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", true)]
 		[InlineData ("mono/android/view/View_ClickEventDispatcher", false)]
-		public void Fixture_HelperType_UsesManagedCreatedMetadata (string javaName, bool isManagedCreated)
+		public void Fixture_HelperType_UsesGeneratedShapeDetection (string javaName, bool isBindingEventListenerImplementor)
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.False (peer.DoNotGenerateAcw);
 			Assert.False (peer.IsInterface);
-			Assert.Equal (isManagedCreated, peer.IsManagedCreated);
+			Assert.Equal (isBindingEventListenerImplementor, peer.IsBindingEventListenerImplementor);
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
 
 			var entry = model.Entries.FirstOrDefault ();
 			Assert.NotNull (entry);
-			Assert.Equal (!isManagedCreated, entry.IsUnconditional);
+			Assert.Equal (!isBindingEventListenerImplementor, entry.IsUnconditional);
 		}
 	}
 

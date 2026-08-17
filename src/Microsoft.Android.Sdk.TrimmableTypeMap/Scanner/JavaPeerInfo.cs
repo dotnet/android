@@ -73,11 +73,11 @@ public sealed record JavaPeerInfo
 	public bool DoNotGenerateAcw { get; init; }
 
 	/// <summary>
-	/// True when instances are created by managed code before being passed to Java.
-	/// Such peers can be trimmed based on managed reachability because Java does not independently
-	/// instantiate or discover them.
+	/// True when the type matches the existing binding-generator listener implementor shape:
+	/// a generated <c>mono/</c> ACW implementing a Java interface with the static
+	/// <c>__IsEmpty(TImplementor)</c> helper used by event removal.
 	/// </summary>
-	public bool IsManagedCreated { get; init; }
+	public bool IsBindingEventListenerImplementor { get; init; }
 
 	/// <summary>
 	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>

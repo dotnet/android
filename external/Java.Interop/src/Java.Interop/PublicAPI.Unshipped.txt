@@ -20,8 +20,6 @@ Java.Interop.JniRuntime.JniValueManager.GetPeer(Java.Interop.JniObjectReference 
 Java.Interop.JniRuntime.JniValueManager.EnsureNotDisposed() -> void
 Java.Interop.JniRuntime.ReflectionJniValueManager
 Java.Interop.JniRuntime.ReflectionJniValueManager.ReflectionJniValueManager() -> void
-Java.Interop.JniTypeSignatureAttribute.IsManagedCreated.get -> bool
-Java.Interop.JniTypeSignatureAttribute.IsManagedCreated.set -> void
 Java.Interop.JniTypeSignatureAttribute.InvokerType.get -> System.Type?
 Java.Interop.JniTypeSignatureAttribute.InvokerType.set -> void
 Java.Interop.IJavaPeerable.JniObjectReferenceControlBlock.get -> nint

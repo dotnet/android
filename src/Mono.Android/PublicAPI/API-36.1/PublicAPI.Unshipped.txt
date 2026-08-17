@@ -1,6 +1,4 @@
 #nullable enable
-Android.Runtime.RegisterAttribute.IsManagedCreated.get -> bool
-Android.Runtime.RegisterAttribute.IsManagedCreated.set -> void
 REMOVED Xamarin.Android.Net.AndroidClientHandler
 REMOVED Xamarin.Android.Net.AndroidClientHandler.AndroidClientHandler() -> void
 REMOVED Xamarin.Android.Net.AndroidClientHandler.AssertSelf() -> void

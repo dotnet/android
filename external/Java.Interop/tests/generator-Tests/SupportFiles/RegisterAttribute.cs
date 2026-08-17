@@ -35,7 +35,6 @@ namespace Android.Runtime {
 		}
 
 		public bool DoNotGenerateAcw {get; set;}
-		public bool IsManagedCreated {get; set;}
 	}
 }
 

@@ -111,6 +111,18 @@ namespace Android.Views
 	public class View : Java.Lang.Object
 	{
 		protected View (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+
+		[Register ("mono/android/view/View_IOnClickListenerImplementor")]
+		internal sealed class IOnClickListenerImplementor : Java.Lang.Object, IOnClickListener
+		{
+			#pragma warning disable 0649
+			public EventHandler? Handler;
+			#pragma warning restore 0649
+
+			public IOnClickListenerImplementor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+			public void OnClick (View v) => Handler?.Invoke (this, EventArgs.Empty);
+			internal static bool __IsEmpty (IOnClickListenerImplementor value) => value.Handler is null;
+		}
 	}
 
 	[Register ("android/view/View$OnClickListener", "", "Android.Views.IOnClickListenerInvoker")]
@@ -186,10 +198,11 @@ namespace Android.Views
 		string? Label { get; }
 	}
 
-	[Register ("mono/android/view/View_IOnClickListenerImplementor", IsManagedCreated = true)]
-	public class View_IOnClickListenerImplementor : Java.Lang.Object
+	[Register ("mono/android/view/FakeListenerPeer")]
+	internal sealed class FakeListenerPeer : Java.Lang.Object, IOnClickListener
 	{
-		public View_IOnClickListenerImplementor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		public FakeListenerPeer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+		public void OnClick (View v) { }
 	}
 
 	[Register ("mono/android/view/View_ClickEventDispatcher")]
@@ -1315,7 +1328,7 @@ namespace Java.Interop.TestTypes
 		public JavaObject () { }
 	}
 
-	[Java.Interop.JniTypeSignature ("net/dot/jni/test/JavaDisposedObject", IsManagedCreated = true)]
+	[Java.Interop.JniTypeSignature ("net/dot/jni/test/JavaDisposedObject")]
 	public class JavaDisposedObject : JavaObject
 	{
 		public JavaDisposedObject () { }

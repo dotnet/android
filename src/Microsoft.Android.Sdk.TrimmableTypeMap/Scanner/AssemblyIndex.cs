@@ -314,7 +314,6 @@ sealed class AssemblyIndex : IDisposable
 
 		string jniName = "";
 		bool doNotGenerateAcw = false;
-		bool isManagedCreated = false;
 
 		if (value.FixedArguments.Length > 0) {
 			jniName = (string?)value.FixedArguments [0].Value ?? "";
@@ -323,16 +322,12 @@ sealed class AssemblyIndex : IDisposable
 		if (TryGetNamedArgument<bool> (value, "GenerateJavaPeer", out var generateJavaPeer)) {
 			doNotGenerateAcw = !generateJavaPeer;
 		}
-		if (TryGetNamedArgument<bool> (value, "IsManagedCreated", out var managedCreated)) {
-			isManagedCreated = managedCreated;
-		}
 
 		var isArrayType = TryGetNamedArgument<int> (value, "ArrayRank", out var rank) && rank > 0;
 
 		return new RegisterInfo {
 			JniName = jniName.Replace ('.', '/'),
 			DoNotGenerateAcw = doNotGenerateAcw,
-			IsManagedCreated = isManagedCreated,
 			IsFromJniTypeSignature = true,
 			IsArrayType = isArrayType,
 		};
@@ -350,7 +345,6 @@ sealed class AssemblyIndex : IDisposable
 		string? signature = null;
 		string? connector = null;
 		bool doNotGenerateAcw = false;
-		bool isManagedCreated = false;
 
 		if (value.FixedArguments.Length > 0) {
 			jniName = (string?)value.FixedArguments [0].Value ?? "";
@@ -365,16 +359,12 @@ sealed class AssemblyIndex : IDisposable
 		if (TryGetNamedArgument<bool> (value, "DoNotGenerateAcw", out var doNotGenerateAcwValue)) {
 			doNotGenerateAcw = doNotGenerateAcwValue;
 		}
-		if (TryGetNamedArgument<bool> (value, "IsManagedCreated", out var managedCreated)) {
-			isManagedCreated = managedCreated;
-		}
 
 		return new RegisterInfo {
 			JniName = jniName,
 			Signature = signature,
 			Connector = connector,
 			DoNotGenerateAcw = doNotGenerateAcw,
-			IsManagedCreated = isManagedCreated,
 		};
 	}
 
@@ -677,7 +667,6 @@ sealed record RegisterInfo
 	public string? Signature { get; init; }
 	public string? Connector { get; init; }
 	public bool DoNotGenerateAcw { get; init; }
-	public bool IsManagedCreated { get; init; }
 	public bool IsFromJniTypeSignature { get; init; }
 	public bool IsArrayType { get; init; }
 }
