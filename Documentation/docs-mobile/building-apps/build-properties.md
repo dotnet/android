@@ -910,6 +910,20 @@ available and can be installed.
 
 If `$(AndroidManifestType)` is not set, then `Xamarin` is used.
 
+## AndroidManifestUrl
+
+A string property that specifies an absolute URI for the repository manifest
+used by the
+[`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target. This overrides the default repository manifest selected by
+`$(AndroidManifestType)`.
+
+For example, a local manifest can be used with a `file` URI:
+
+```xml
+<AndroidManifestUrl>file:///path/to/AndroidManifestFeed.xml</AndroidManifestUrl>
+```
+
 ## AndroidManifestPlaceholders
 
 A semicolon-separated list of
