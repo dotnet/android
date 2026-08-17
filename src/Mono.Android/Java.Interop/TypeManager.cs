@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -407,8 +408,7 @@ namespace Java.Interop {
 
 		static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 		static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
-		static  readonly    Dictionary<Type, ActivationConstructor>  ActivationConstructorCache = new Dictionary<Type, ActivationConstructor> ();
-		static  readonly    Lock    ActivationConstructorCacheLock = new Lock ();
+		static  readonly    ConcurrentDictionary<Type, ActivationConstructor>  ActivationConstructorCache = new ConcurrentDictionary<Type, ActivationConstructor> (1, 3);
 
 		enum ActivationConstructorKind
 		{
@@ -418,6 +418,23 @@ namespace Java.Interop {
 		}
 
 		readonly record struct ActivationConstructor (ConstructorInfo? Constructor, ActivationConstructorKind Kind);
+
+		/// <summary>
+		/// Preserves constructor annotations through the stateful <c>GetOrAdd</c> factory,
+		/// whose <c>Func</c> key parameter cannot carry <see cref="DynamicallyAccessedMembersAttribute"/>.
+		/// </summary>
+		readonly struct AnnotatedType
+		{
+			public AnnotatedType (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type type)
+			{
+				Type = type;
+			}
+
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			public Type Type { get; }
+		}
 
 		internal static object CreateProxy (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
@@ -452,23 +469,18 @@ namespace Java.Interop {
 					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 					Type type)
 			{
-				lock (ActivationConstructorCacheLock) {
-					if (ActivationConstructorCache.TryGetValue (type, out var activation))
-						return activation;
+				return ActivationConstructorCache.GetOrAdd (type,
+						static (_, state) => {
+							const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+							var constructor = state.Type.GetConstructor (flags, null, XAConstructorSignature, null);
+							if (constructor != null)
+								return new ActivationConstructor (constructor, ActivationConstructorKind.XA);
 
-					const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-					var constructor = type.GetConstructor (flags, null, XAConstructorSignature, null);
-					if (constructor != null) {
-						activation = new ActivationConstructor (constructor, ActivationConstructorKind.XA);
-					} else {
-						constructor = type.GetConstructor (flags, null, JIConstructorSignature, null);
-						activation = new ActivationConstructor (
+							constructor = state.Type.GetConstructor (flags, null, JIConstructorSignature, null);
+							return new ActivationConstructor (
 								constructor,
 								constructor == null ? ActivationConstructorKind.Missing : ActivationConstructorKind.JI);
-					}
-					ActivationConstructorCache.Add (type, activation);
-					return activation;
-				}
+						}, new AnnotatedType (type));
 			}
 
 			static IJavaPeerable GetUninitializedObject (
