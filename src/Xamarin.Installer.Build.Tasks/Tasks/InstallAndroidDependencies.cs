@@ -42,6 +42,8 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public string ManifestType { get; set; }
 
+		public string ManifestUrl { get; set; }
+
 		public async override Task RunTaskAsync ()
 		{
 			if (Dependencies?.Length == 0 && JavaDependencies?.Length == 0) {
@@ -141,7 +143,12 @@ namespace Xamarin.Installer.Build.Tasks
 				resolvedJavaSdkPath = GetDefaultJavaSdkPath();
 			}
 
-			var installer = new AndroidSDKInstaller(new Helper(), manifestType);
+			Uri manifestUrl = null;
+			if (!string.IsNullOrEmpty (ManifestUrl)) {
+				manifestUrl = new Uri (ManifestUrl, UriKind.Absolute);
+			}
+
+			var installer = new AndroidSDKInstaller(new Helper(), manifestType, manifestURL: manifestUrl);
 			installer.Discover(new List<string> { path });
 
 			var sdkInstance = installer.FindInstance(path);

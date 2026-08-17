@@ -57,6 +57,10 @@ namespace Xamarin.Android.Build.Tests
 				// When using the Google manifest, override the platform tools version to the one in their manifest as it only ever contains one version
 				if (manifestType == "GoogleV2") {
 					buildArgs.Add ($"AndroidSdkPlatformToolsVersion={GetCurrentPlatformToolsVersion ()}");
+				} else {
+					var manifestPath = Path.Combine (Root, "src", "Xamarin.Installer.AndroidSDK", "Feeds", "AndroidManifestFeed_d18.0.xml");
+					Assert.IsTrue (File.Exists (manifestPath), $"Xamarin manifest does not exist at '{manifestPath}'.");
+					buildArgs.Add ($"AndroidManifestUrl={new Uri (manifestPath).AbsoluteUri}");
 				}
 
 				using (var b = CreateApkBuilder ()) {
