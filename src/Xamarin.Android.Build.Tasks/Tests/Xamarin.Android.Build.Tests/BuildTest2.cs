@@ -967,7 +967,9 @@ printf ""%d"" x
 		}
 
 		[Test]
-		public void DesignTimeBuildHasAndroidDefines ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void DesignTimeBuildHasAndroidDefines (
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
+			[Values (false, true)] bool disableImplicitFrameworkDefines)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -977,6 +979,7 @@ printf ""%d"" x
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("DisableImplicitFrameworkDefines", disableImplicitFrameworkDefines.ToString ());
 			var androidDefines = new List<string> ();
 			for (int i = 1; i <= XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major; ++i) {
 				androidDefines.Add ($"!__ANDROID_{i}__");
