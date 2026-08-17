@@ -60,6 +60,15 @@ namespace Android.Runtime {
 
 		public bool DoNotGenerateAcw {get; set;}
 
+		/// <summary>
+		/// Gets or sets whether instances of this type are created by managed code before being passed to Java.
+		/// </summary>
+		/// <remarks>
+		/// Build tooling may trim the Java peer when the managed type is unreachable. This should only be set
+		/// for types that are not independently instantiated or discovered from Java.
+		/// </remarks>
+		public bool IsManagedCreated {get; set;}
+
 		public int ApiSince {get; set;}
 	}
 }

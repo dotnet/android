@@ -1,4 +1,6 @@
 #nullable enable
+Android.Runtime.RegisterAttribute.IsManagedCreated.get -> bool
+Android.Runtime.RegisterAttribute.IsManagedCreated.set -> void
 *REMOVED*Android.App.Admin.DevicePolicyManager.SetDeviceOwnerLockScreenInfo(Android.Content.ComponentName! admin, string? info) -> void
 *REMOVED*Android.App.AppFunctions.AppFunctionManager.SetAppFunctionEnabled(string! functionIdentifier, Android.App.AppFunctions.AppFunctionState newEnabledState, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
 *REMOVED*Android.App.AppFunctions.AppFunctionState.Default = 0 -> Android.App.AppFunctions.AppFunctionState

@@ -14,6 +14,7 @@ namespace generator.SourceWriters
 		public string Signature { get; set; }
 		public string Connector { get; set; }
 		public bool DoNotGenerateAcw { get; set; }
+		public bool IsManagedCreated { get; set; }
 		public string AdditionalProperties { get; set; }
 		public bool UseGlobal { get; set; }	// TODO: Temporary for matching existing unit tests
 		public bool UseShortForm { get; set; }  // TODO: Temporary for matching existing unit tests
@@ -49,6 +50,9 @@ namespace generator.SourceWriters
 			if (DoNotGenerateAcw && !AcwLast)
 				sb.Append (", DoNotGenerateAcw=true");
 
+			if (IsManagedCreated)
+				sb.Append (", IsManagedCreated=true");
+
 			if (AdditionalProperties.HasValue ())
 				sb.Append (AdditionalProperties);
 
@@ -67,7 +71,8 @@ namespace generator.SourceWriters
 					var invokerType = string.IsNullOrEmpty (Connector)
 						? ""
 						: $", InvokerType=typeof ({Connector.Replace ('/', '.')})";
-					writer.WriteLine ($"[global::Java.Interop.JniTypeSignature (\"{Name}\", GenerateJavaPeer={(DoNotGenerateAcw ? "false" : "true")}{invokerType})]");
+					var isManagedCreated = IsManagedCreated ? ", IsManagedCreated=true" : "";
+					writer.WriteLine ($"[global::Java.Interop.JniTypeSignature (\"{Name}\", GenerateJavaPeer={(DoNotGenerateAcw ? "false" : "true")}{isManagedCreated}{invokerType})]");
 					break;
 				case MemberTypes.Constructor:
 					writer.WriteLine ($"[global::Java.Interop.JniConstructorSignature (\"{Signature}\")]");

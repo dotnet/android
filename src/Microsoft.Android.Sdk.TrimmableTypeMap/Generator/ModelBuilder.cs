@@ -235,14 +235,20 @@ static class ModelBuilder
 			return true;
 		}
 
-		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
-		// because Android can instantiate them from Java at any time.
-		if (!peer.IsFrameworkAssembly && !peer.DoNotGenerateAcw && !peer.IsInterface) {
+		// Types marked unconditional by the scanner (component attributes: Activity, Service, etc.)
+		if (peer.IsUnconditional) {
 			return true;
 		}
 
-		// Types marked unconditional by the scanner (component attributes: Activity, Service, etc.)
-		if (peer.IsUnconditional) {
+		// Managed-created peers only enter Java after managed code constructs them. Their conditional
+		// entry follows the managed type's reachability while preserving callbacks when the type is used.
+		if (peer.IsManagedCreated) {
+			return false;
+		}
+
+		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
+		// because Android can instantiate them from Java at any time.
+		if (!peer.IsFrameworkAssembly && !peer.DoNotGenerateAcw && !peer.IsInterface) {
 			return true;
 		}
 

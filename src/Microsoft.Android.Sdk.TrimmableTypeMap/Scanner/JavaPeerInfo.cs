@@ -73,6 +73,13 @@ public sealed record JavaPeerInfo
 	public bool DoNotGenerateAcw { get; init; }
 
 	/// <summary>
+	/// True when instances are created by managed code before being passed to Java.
+	/// Such peers can be trimmed based on managed reachability because Java does not independently
+	/// instantiate or discover them.
+	/// </summary>
+	public bool IsManagedCreated { get; init; }
+
+	/// <summary>
 	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>
 	/// rather than <c>[RegisterAttribute]</c>.  Used to resolve cross-assembly
 	/// alias ownership: <c>[Register]</c> types take precedence.

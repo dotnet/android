@@ -228,6 +228,31 @@ public class ModelBuilderTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Build_ManagedCreatedUserAcw_IsTrimmable ()
+		{
+			var peer = MakeAcwPeer ("my/app/Listener", "MyApp.Listener", "App") with {
+				IsManagedCreated = true,
+			};
+			var model = BuildModel ([peer]);
+
+			Assert.False (model.Entries [0].IsUnconditional);
+			Assert.Equal ("MyApp.Listener, App", model.Entries [0].TargetTypeReference);
+		}
+
+		[Fact]
+		public void Build_ManagedCreatedUserAcw_MarkedUnconditional_IsUnconditional ()
+		{
+			var peer = MakeAcwPeer ("my/app/ManifestListener", "MyApp.ManifestListener", "App") with {
+				IsManagedCreated = true,
+				IsUnconditional = true,
+			};
+			var model = BuildModel ([peer]);
+
+			Assert.True (model.Entries [0].IsUnconditional);
+			Assert.Null (model.Entries [0].TargetTypeReference);
+		}
+
+		[Fact]
 		public void Build_FrameworkAcwType_IsTrimmable ()
 		{
 			var peer = MakeAcwPeer ("mono/android/view/View_OnClickListenerImplementor", "Android.Views.View+IOnClickListenerImplementor", "Mono.Android") with {
@@ -754,21 +779,20 @@ public class ModelBuilderTests : FixtureTestBase
 	public class FixtureImplementorsAndDispatchers
 	{
 		[Theory]
-		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", "Implementor")]
-		[InlineData ("mono/android/view/View_ClickEventDispatcher", "EventDispatcher")]
-		public void Fixture_HelperType_IsUnconditional (string javaName, string kind)
+		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", true)]
+		[InlineData ("mono/android/view/View_ClickEventDispatcher", false)]
+		public void Fixture_HelperType_UsesManagedCreatedMetadata (string javaName, bool isManagedCreated)
 		{
 			var peer = FindFixtureByJavaName (javaName);
 			Assert.False (peer.DoNotGenerateAcw);
 			Assert.False (peer.IsInterface);
+			Assert.Equal (isManagedCreated, peer.IsManagedCreated);
 
 			var model = BuildModel (new [] { peer }, "TypeMap");
 
 			var entry = model.Entries.FirstOrDefault ();
 			Assert.NotNull (entry);
-			// Implementor/EventDispatcher types are treated as unconditional ACW types.
-			// Future optimization (see #10911) may make them trimmable.
-			Assert.True (entry.IsUnconditional, $"{kind} should be unconditional");
+			Assert.Equal (!isManagedCreated, entry.IsUnconditional);
 		}
 	}
 

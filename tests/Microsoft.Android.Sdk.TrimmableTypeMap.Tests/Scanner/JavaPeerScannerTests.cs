@@ -130,6 +130,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		var peer = FindFixtureByJavaName ("net/dot/jni/test/JavaDisposedObject");
 		Assert.Equal ("Java.Interop.TestTypes.JavaDisposedObject", peer.ManagedTypeName);
 		Assert.False (peer.DoNotGenerateAcw, "GenerateJavaPeer=true should map to DoNotGenerateAcw=false");
+		Assert.True (peer.IsManagedCreated);
 	}
 
 	[Fact]
@@ -137,6 +138,14 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	{
 		var nonGenerated = FindFixtureByJavaName ("net/dot/jni/test/MyJavaObject");
 		Assert.True (nonGenerated.DoNotGenerateAcw, "NonGeneratedJavaObject has GenerateJavaPeer=false");
+		Assert.False (nonGenerated.IsManagedCreated);
+	}
+
+	[Fact]
+	public void Scan_RegisterAttribute_IsManagedCreated ()
+	{
+		Assert.True (FindFixtureByJavaName ("mono/android/view/View_IOnClickListenerImplementor").IsManagedCreated);
+		Assert.False (FindFixtureByJavaName ("mono/android/view/View_ClickEventDispatcher").IsManagedCreated);
 	}
 
 	[Fact]

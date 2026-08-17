@@ -27,7 +27,10 @@ namespace generator.SourceWriters
 				type.Nullable = opt.SupportNullableReferenceTypes;
 				Fields.Add (new FieldWriter { Name = "sender", Type = type });
 			}
-			Attributes.Add (new RegisterAttr (jni_class, additionalProperties: iface.AdditionalAttributeString ()) { UseGlobal = true });
+			Attributes.Add (new RegisterAttr (jni_class, additionalProperties: iface.AdditionalAttributeString ()) {
+				IsManagedCreated = true,
+				UseGlobal = true,
+			});
 
 			AddConstructor (iface);
 			AddMethods (iface, opt);

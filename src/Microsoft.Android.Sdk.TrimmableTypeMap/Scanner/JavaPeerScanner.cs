@@ -388,6 +388,7 @@ public sealed class JavaPeerScanner : IDisposable
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
 				DoNotGenerateAcw = doNotGenerateAcw,
+				IsManagedCreated = registerInfo?.IsManagedCreated ?? false,
 				IsFromJniTypeSignature = registerInfo?.IsFromJniTypeSignature ?? false,
 				IsUnconditional = isUnconditional,
 				CannotRegisterInStaticConstructor = cannotRegisterInStaticConstructor,

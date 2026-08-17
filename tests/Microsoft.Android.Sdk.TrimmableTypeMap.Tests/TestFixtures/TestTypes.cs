@@ -186,7 +186,7 @@ namespace Android.Views
 		string? Label { get; }
 	}
 
-	[Register ("mono/android/view/View_IOnClickListenerImplementor")]
+	[Register ("mono/android/view/View_IOnClickListenerImplementor", IsManagedCreated = true)]
 	public class View_IOnClickListenerImplementor : Java.Lang.Object
 	{
 		public View_IOnClickListenerImplementor (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
@@ -1315,7 +1315,7 @@ namespace Java.Interop.TestTypes
 		public JavaObject () { }
 	}
 
-	[Java.Interop.JniTypeSignature ("net/dot/jni/test/JavaDisposedObject")]
+	[Java.Interop.JniTypeSignature ("net/dot/jni/test/JavaDisposedObject", IsManagedCreated = true)]
 	public class JavaDisposedObject : JavaObject
 	{
 		public JavaDisposedObject () { }
