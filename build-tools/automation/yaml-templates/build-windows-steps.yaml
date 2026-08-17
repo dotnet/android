@@ -167,6 +167,12 @@ steps:
       -p:AndroidSdkDirectory="$(USERPROFILE)\android-toolchain\sdk"
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\build-template.binlog
 
+- task: BatchScript@1
+  displayName: Shut down build servers
+  inputs:
+    filename: dotnet-local.cmd
+    arguments: build-server shutdown
+
 # Pack .nupkgs and extract workload packs to dotnet preview test directory
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
