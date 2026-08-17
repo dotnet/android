@@ -10,7 +10,7 @@ public class ActivationConstructorCacheBenchmarks
 	delegate object CreateProxyDelegate (Type type, IntPtr handle, JniHandleOwnership transfer);
 
 	readonly CreateProxyDelegate createProxy;
-	readonly Java.Lang.String peer;
+	IntPtr globalReference;
 
 	public ActivationConstructorCacheBenchmarks ()
 	{
@@ -25,25 +25,30 @@ public class ActivationConstructorCacheBenchmarks
 			throw new InvalidOperationException ("Could not find TypeManager.CreateProxy.");
 
 		createProxy = method.CreateDelegate<CreateProxyDelegate> ();
-		peer = new Java.Lang.String ("benchmark");
 	}
 
 	[GlobalSetup]
 	public void Setup ()
 	{
+		IntPtr reference = JNIEnv.NewString ("benchmark");
+		try {
+			globalReference = JNIEnv.NewGlobalRef (reference);
+		} finally {
+			JNIEnv.DeleteLocalRef (reference);
+		}
 		_ = CreateProxy ();
 	}
 
 	[GlobalCleanup]
 	public void Cleanup ()
 	{
-		peer.Dispose ();
+		JNIEnv.DeleteGlobalRef (globalReference);
 	}
 
 	[Benchmark]
 	public int CreateProxy ()
 	{
-		IntPtr reference = JNIEnv.NewLocalRef (peer.Handle);
+		IntPtr reference = JNIEnv.NewLocalRef (globalReference);
 		Java.Lang.String? proxy = null;
 		try {
 			proxy = (Java.Lang.String) createProxy (typeof (Java.Lang.String), reference, JniHandleOwnership.TransferLocalRef);
