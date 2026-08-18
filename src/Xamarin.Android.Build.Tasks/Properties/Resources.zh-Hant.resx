@@ -876,7 +876,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The path to the directory being ignored.</comment>
   </data>
   <data name="XA4324" xml:space="preserve">
-    <value>[{0}] Unable to delete source file '{1}'</value>
+    <value>[{0}] 無法刪除來源檔案 '{1}'</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
@@ -1046,7 +1046,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 </comment>
   </data>
   <data name="XA4237_Details" xml:space="preserve">
-    <value>Failed to resolve POM for Maven artifact '{0}' from '{1}'.
+    <value>無法從 '{1}' 解析 Maven 成品 '{0}' 的 POM。
 - {2}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Unresolved Maven artifact id
@@ -1058,12 +1058,6 @@ In this message, the term "handheld app" means "app for handheld devices."
     <value>未知的 Maven 存放庫: '{0}'。</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>已取代 '{0}' MSBuild 屬性，並將在 .NET {1} 中移除。如需更多詳細資料，請參閲 https://aka.ms/net-android-deprecations。</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild 屬性有 '{1}' 的無效值。有效的值為下列之一: {2}。</value>
@@ -1231,7 +1225,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.</value>
+    <value>Java 名稱 '{0}' 包含保留的 Java 識別碼 '{1}'。請變更套件或類型名稱。</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Java reserved keyword or restricted identifier</comment>

@@ -7,7 +7,7 @@
   <!-- NuGet Package Versions -->
   <ItemGroup>
     <PackageReference Update="Microsoft.Win32.Registry"                     Version="5.0.0" />
-    <PackageReference Update="System.CodeDom"                               Version="10.0.10" />
+    <PackageReference Update="System.CodeDom"                               Version="10.0.11" />
     <PackageReference Update="Irony"                                        Version="1.5.3" />
   </ItemGroup>
 

@@ -82,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 
@@ -176,7 +176,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("UcoOverrideTypes.cs") {
 				TextContent = () => @"using System;
@@ -2060,7 +2060,7 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.0")] string targetFramework,
+				[Values ("net11.0-android37.1")] string targetFramework,
 				[Values (true)] bool enablePreviewFeatures)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -2080,8 +2080,8 @@ namespace UnnamedProject
 				.Replace ("//${AFTER_ONCREATE}", """
 				// The value `ignore` is not used.
 				#pragma warning disable 0219
-					if (OperatingSystem.IsAndroidVersionAtLeast (37, 0)) {
-						var ignore = global::Android.Manifest.Permission.RequestCompanionProfileMedical;
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, 1)) {
+						var ignore = global::Android.Manifest.Permission.AccessHid;
 					}
 				#pragma warning restore 0219
 				""");
@@ -2836,11 +2836,6 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			// Build and assert 0 warnings
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
-
-			// `dotnet test` doesn't go through the MSBuild Run target, so Install
-			// must be invoked explicitly to deploy the APK to the device.
-			if (mode == "test")
-				Assert.IsTrue (dotnet.Build (target: "Install", parameters: buildParameters.ToArray ()), "`dotnet build -t:Install` should succeed");
 
 			// Run based on mode
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();

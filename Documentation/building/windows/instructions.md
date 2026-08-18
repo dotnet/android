@@ -20,7 +20,7 @@ be available within the Command-Line environment.
 
  5. In a [Developer Command Prompt][developer-prompt], prepare the project:
 
-        dotnet msbuild Xamarin.Android.sln -t:Prepare
+        dotnet msbuild Xamarin.Android.slnx -t:Prepare
 
     This will ensure that the build dependencies are installed, perform
     `git submodule update`, download NuGet dependencies, and other
@@ -28,7 +28,7 @@ be available within the Command-Line environment.
 
  6. Build the project:
 
-        dotnet-local.cmd build Xamarin.Android.sln
+        dotnet-local.cmd build Xamarin.Android.slnx
 
  7. Configure local `android` workload:
 
@@ -38,16 +38,16 @@ After the solution has built successfully, you can use `dotnet-local.cmd` to cre
 
 Once an initial build succeeds, for incremental builds, you can simply do:
 
-    dotnet-local.cmd build Xamarin.Android.sln
+    dotnet-local.cmd build Xamarin.Android.slnx
 
 [developer-prompt]: https://docs.microsoft.com/dotnet/framework/tools/developer-command-prompt-for-vs
 
 ## Windows Build Notes
 
-Opening `Xamarin.Android.sln` in Visual Studio currently tends to hold file
+Opening `Xamarin.Android.slnx` in Visual Studio currently tends to hold file
 locks on output assemblies containing MSBuild tasks.  If you are only making
 changes to Xamarin.Android.Build.Tasks, one way to avoid this issue is to open
-`Xamarin.Android.Build.Tasks.sln` instead.  But if you are working on changes
+`Xamarin.Android.Build.Tasks.slnx` instead.  But if you are working on changes
 outside of the build tasks, then you might prefer to work in an editor like
 Visual Studio Code instead and build via the command-line.
 
@@ -60,13 +60,13 @@ Visual Studio Code instead and build via the command-line.
 
 ## Creating a local .NET for Android Workload
 
-`dotnet msbuild Xamarin.Android.sln -t:Prepare` provisions a
+`dotnet msbuild Xamarin.Android.slnx -t:Prepare` provisions a
 specific build of .NET to `bin\$(Configuration)\dotnet`.
 
 Once the prepare target is complete, you can set up a local
 .NET for Android workload install with:
 
-    dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet
+    dotnet-local.cmd build Xamarin.Android.slnx -t:BuildDotNet
 
 Your local `bin\$(Configuration)\lib\packs` directory will be
 populated with a local Android "workload" in
@@ -98,16 +98,16 @@ See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
 ## Creating installers
 
-Once `dotnet msbuild Xamarin.Android.sln -t:Prepare` is complete,
+Once `dotnet msbuild Xamarin.Android.slnx -t:Prepare` is complete,
 .NET for Android workload packs can be built with:
 
-    dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet,PackDotNet
+    dotnet-local.cmd build Xamarin.Android.slnx -t:BuildDotNet,PackDotNet
 
 Several `.nupkg` files will be output in `.\bin\Build$(Configuration)\nuget-unsigned`.
 
 ## Building Unit Tests
 
-Once `dotnet-local.cmd build Xamarin.Android.sln` has completed, the unit tests may
+Once `dotnet-local.cmd build Xamarin.Android.slnx` has completed, the unit tests may
 be built with e.g.:
 
     dotnet-local.cmd build Xamarin.Android-Tests.slnx /restore /p:Configuration=Debug /bl:bin\TestDebug\msbuild-build-tests.binlog
@@ -126,13 +126,13 @@ and path for the proper version of `dotnet`.
 
 All NUnit-based unit tests can be executed via
 
-    dotnet-local.cmd build Xamarin.Android.sln /t:RunNUnitTests
+    dotnet-local.cmd build Xamarin.Android.slnx /t:RunNUnitTests
 
 ### Listing NUnit Tests
 
 In order to get a list of the tests you can use the `ListNUnitTests` target
 
-    dotnet-local.cmd build Xamarin.Android.sln /t:ListNUnitTests
+    dotnet-local.cmd build Xamarin.Android.slnx /t:ListNUnitTests
 
 This will produce a list of the tests in all of the test assemblies.
 
@@ -140,7 +140,7 @@ This will produce a list of the tests in all of the test assemblies.
 
 You can run then a single (or a group) of tests using the `$(TEST)` MSBuild property.
 
-    dotnet-local.cmd build Xamarin.Android.sln /t:RunNUnitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    dotnet-local.cmd build Xamarin.Android.slnx /t:RunNUnitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
 
 ## Running On-Device Tests
 

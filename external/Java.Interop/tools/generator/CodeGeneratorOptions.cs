@@ -20,6 +20,7 @@ namespace Xamarin.Android.Binder
 			LibraryPaths        = new Collection<string> ();
 			AnnotationsZipFiles = new Collection<string> ();
 			JavadocXmlFiles     = new Collection<string> ();
+			JavaReferenceApiXml = new Collection<string> ();
 		}
 
 		public string               ApiLevel {get; set;}
@@ -30,6 +31,7 @@ namespace Xamarin.Android.Binder
 		public Collection<string>   FixupFiles {get; private set;}
 		public Collection<string>   LibraryPaths {get; private set;}
 		public Collection<string>   JavadocXmlFiles {get; private set;}
+		public Collection<string>   JavaReferenceApiXml {get; private set;}
 		public bool                 GlobalTypeNames {get; set;}
 		public bool                 OnlyBindPublicTypes {get; set;}
 		public string               ApiDescriptionFile {get; set;}
@@ -100,6 +102,9 @@ namespace Xamarin.Android.Binder
 				{ "r|ref=",
 					"{ASSEMBLY} to reference.",
 					v => opts.AssemblyReferences.Add (v) },
+				{ "java-reference=",
+					"Java API XML {FILE} containing reference-only types.",
+					v => opts.JavaReferenceApiXml.Add (v) },
 				{ "sdk-platform|api-level=",
 					"SDK Platform {VERSION}/API level.",
 					v => opts.ApiLevel = v },

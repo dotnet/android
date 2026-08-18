@@ -110,7 +110,7 @@ namespace Xamarin.Android.Binder
 			// Resolve types using Java.Interop.Tools.JavaTypeSystem
 			if (is_classparse) {
 				var output_xml = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
-				JavaTypeResolutionFixups.Fixup (filename, output_xml, resolver, references.Distinct ().ToArray (), resolverCache, options);
+				JavaTypeResolutionFixups.Fixup (filename, output_xml, resolver, references.Distinct ().ToArray (), options.JavaReferenceApiXml.ToArray (), resolverCache, options);
 
 				if (only_xml_adjuster)
 					return;
@@ -118,6 +118,17 @@ namespace Xamarin.Android.Binder
 				// Use this output for future steps
 				filename = output_xml;
 				apiXmlFile = filename;
+			}
+
+			foreach (var javaReference in options.JavaReferenceApiXml) {
+				var referenceApi = ApiXmlDocument.Load (javaReference, api_level, product_version);
+				if (referenceApi is null)
+					continue;
+				var referenceGens = XmlApiImporter.Parse (referenceApi.ApiDocument, opt);
+				if (referenceGens is null)
+					continue;
+				foreach (var referenceGen in referenceGens)
+					AddTypeToTable (opt, referenceGen);
 			}
 
 			foreach (var reference in references.Distinct ()) {

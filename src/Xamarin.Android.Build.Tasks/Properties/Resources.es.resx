@@ -876,7 +876,7 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
     <comment>{0} - The path to the directory being ignored.</comment>
   </data>
   <data name="XA4324" xml:space="preserve">
-    <value>[{0}] Unable to delete source file '{1}'</value>
+    <value>[{0}] No se puede eliminar el archivo de origen "{1}"</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
@@ -1046,7 +1046,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 </comment>
   </data>
   <data name="XA4237_Details" xml:space="preserve">
-    <value>Failed to resolve POM for Maven artifact '{0}' from '{1}'.
+    <value>No se pudo resolver el POM del artefacto de Maven "{0}" desde "{1}".
 - {2}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Unresolved Maven artifact id
@@ -1058,12 +1058,6 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <value>Repositorio de Maven desconocido: "{0}".</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>La propiedad '{0}' de MSBuild está en desuso y se quitará en .NET {1}. Consulte https://aka.ms/net-android-deprecations para obtener más detalles.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Un valor válido es uno de: {2}.</value>
@@ -1231,7 +1225,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.</value>
+    <value>El nombre de Java "{0}" contiene el identificador de Java reservado "{1}". Cambie el nombre del paquete o tipo.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Java reserved keyword or restricted identifier</comment>
