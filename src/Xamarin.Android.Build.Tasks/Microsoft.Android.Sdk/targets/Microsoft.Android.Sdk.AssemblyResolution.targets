@@ -153,7 +153,6 @@ _ResolveAssemblies MSBuild target.
         ;DesignTimeBuild=$(DesignTimeBuild)
         ;AppendRuntimeIdentifierToOutputPath=true
         ;ResolveAssemblyReferencesFindRelatedSatellites=false
-        ;NativeCompilationDuringPublish=$(NativeCompilationDuringPublish)
         ;SkipCompilerExecution=true
         ;_OuterIntermediateAssembly=@(IntermediateAssembly)
         ;_OuterIntermediateSatelliteAssembliesWithTargetPath=@(IntermediateSatelliteAssembliesWithTargetPath)
