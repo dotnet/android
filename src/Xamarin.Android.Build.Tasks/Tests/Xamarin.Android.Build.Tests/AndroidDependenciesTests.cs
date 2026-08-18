@@ -58,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 				if (manifestType == "GoogleV2") {
 					buildArgs.Add ($"AndroidSdkPlatformToolsVersion={GetCurrentPlatformToolsVersion ()}");
 				} else {
-					var manifestPath = Path.Combine (Root, "src", "Xamarin.Installer.AndroidSDK", "Feeds", "AndroidManifestFeed_d18.0.xml");
+					var manifestPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Installer.AndroidSDK", "Feeds", "AndroidManifestFeed_d18.0.xml");
 					Assert.IsTrue (File.Exists (manifestPath), $"Xamarin manifest does not exist at '{manifestPath}'.");
 					buildArgs.Add ($"AndroidManifestUrl={new Uri (manifestPath).AbsoluteUri}");
 				}
