@@ -17,7 +17,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
     <_AndroidUseWorkloadNativeLinker Condition=" '$(_AndroidUseWorkloadNativeLinker)' == '' ">true</_AndroidUseWorkloadNativeLinker>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' ">JavaInterop1</_AndroidJcwCodegenTarget>
-    <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' ">trimmable</_AndroidTypeMapImplementation>
+    <AndroidTypeMapImplementation Condition=" '$(AndroidTypeMapImplementation)' == '' ">trimmable</AndroidTypeMapImplementation>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
@@ -321,6 +321,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
     <!-- Common items (same regardless of linker source) -->
     <ItemGroup>
+      <!-- Supplied by the SDK-resolved NativeAOT runtime pack, including the BCL native archives. -->
       <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
@@ -330,11 +331,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotSystemLibraries Include="m" />
       <_NativeAotSystemLibraries Include="c" />
     </ItemGroup>
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' and Exists('$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a') ">
-      <_NativeAotLinkLibraries Remove="$(IlcSdkPath)libSystem.Security.Cryptography.Native.Android.a" />
-      <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a" />
-    </ItemGroup>
-
     <!-- When using workload linker, resolve libc++/libnaot from runtime pack dir.
          When using NDK, @(_NdkLibs) already has the right NDK sysroot paths. -->
     <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">

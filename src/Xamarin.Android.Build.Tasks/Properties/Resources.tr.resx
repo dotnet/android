@@ -876,7 +876,7 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
     <comment>{0} - The path to the directory being ignored.</comment>
   </data>
   <data name="XA4324" xml:space="preserve">
-    <value>[{0}] Unable to delete source file '{1}'</value>
+    <value>[{0}] '{1}' adlı kaynak dosya silinemiyor</value>
     <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
 {1} - The path to the source file which could not be deleted.</comment>
   </data>
@@ -1046,7 +1046,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 </comment>
   </data>
   <data name="XA4237_Details" xml:space="preserve">
-    <value>Failed to resolve POM for Maven artifact '{0}' from '{1}'.
+    <value>'{1}' konumundaki '{0}' Maven yapıtı için POM çözümlenemedi.
 - {2}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Unresolved Maven artifact id
@@ -1058,12 +1058,6 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <value>Bilinmeyen Maven deposu: '{0}'.</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>Bu '{0}' MSBuild özelliği kullanım dışı bırakıldı ve .NET’ten kaldırılacak {1}. Daha fazla ayrıntı için bkz. https://aka.ms/net-android-deprecations için ayrıntılara bakın.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild özelliğinin geçersiz '{1}' değeri var. Geçerli bir değer şunlardan biri: {2}.</value>
@@ -1231,7 +1225,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
   </data>
   <data name="XA4258" xml:space="preserve">
-    <value>Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.</value>
+    <value>Java adı '{0}', ayrılmış '{1}' Java tanımlayıcısı içeriyor. Paket veya tür adını değiştirin.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Java package or type name
 {1} - Java reserved keyword or restricted identifier</comment>

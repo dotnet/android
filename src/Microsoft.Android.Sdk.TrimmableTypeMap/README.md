@@ -1,7 +1,7 @@
 # Trimmable typemap build pipeline
 
 This document describes how the **trimmable** typemap implementation
-(`_AndroidTypeMapImplementation=trimmable`) is produced during an Android app
+(`AndroidTypeMapImplementation=trimmable`) is produced during an Android app
 build, and how the MSBuild targets are kept incremental. It is aimed at
 contributors working on the targets in
 `src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable*.targets`

@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Java.Interop
 {
@@ -39,8 +39,8 @@ namespace Java.Interop
 
 		readonly Type                                       DeclaringType;
 
-		Dictionary<string, JniMethodInfo>                   InstanceMethods = new Dictionary<string, JniMethodInfo>(StringComparer.Ordinal);
-		Dictionary<Type, JniInstanceMethods>                SubclassConstructors = new Dictionary<Type, JniInstanceMethods> ();
+		readonly ConcurrentDictionary<string, JniMethodInfo>    InstanceMethods      = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
+		readonly ConcurrentDictionary<Type, JniInstanceMethods> SubclassConstructors = new ConcurrentDictionary<Type, JniInstanceMethods> (1, 1);
 
 		internal void Dispose ()
 		{
@@ -58,13 +58,8 @@ namespace Java.Interop
 		{
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
-			lock (InstanceMethods) {
-				if (!InstanceMethods.TryGetValue (signature, out var m)) {
-					m = JniPeerType.GetConstructor (signature);
-					InstanceMethods.Add (signature, m);
-				}
-				return m;
-			}
+			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
+					methods.JniPeerType.GetConstructor (member), this);
 		}
 
 		internal JniInstanceMethods GetConstructorsForType (Type declaringType)
@@ -72,13 +67,7 @@ namespace Java.Interop
 			if (declaringType == DeclaringType)
 				return this;
 
-			JniInstanceMethods? methods;
-
-			lock (SubclassConstructors) {
-				if (SubclassConstructors.TryGetValue (declaringType, out methods))
-					return methods;
-			}
-			// Init outside of `lock` in case we have recursive access:
+			// Initialize before publication in case construction recursively accesses this cache:
 			// System.ArgumentException: An item with the same key has already been added. Key: Java.Interop.JavaProxyThrowable
 			//    at System.Collections.Generic.Dictionary`2.TryInsert(TKey key, TValue value, InsertionBehavior behavior)
 			//    at System.Collections.Generic.Dictionary`2.Add(TKey key, TValue value)
@@ -100,32 +89,16 @@ namespace Java.Interop
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods..ctor(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 27
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructorsForType(Type declaringType) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 77
 			//    at Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(String constructorSignature, Type declaringType, JniArgumentValue* parameters) in /Users/jon/Developer/src/xamarin/java.interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods.cs:line 146
-			methods = new JniInstanceMethods (declaringType);
-			lock (SubclassConstructors) {
-				if (SubclassConstructors.TryGetValue (declaringType, out var m))
-					return m;
-				SubclassConstructors.Add (declaringType, methods);
-				return methods;
-			}
+			return SubclassConstructors.GetOrAdd (declaringType, static type => new JniInstanceMethods (type));
 		}
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			lock (InstanceMethods) {
-				if (InstanceMethods.TryGetValue (encodedMember, out var m)) {
-					return m;
-				}
-			}
-			string method, signature;
-			JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
-			var info = GetMethodInfo (method, signature);
-			lock (InstanceMethods) {
-				if (InstanceMethods.TryGetValue (encodedMember, out var m)) {
-					return m;
-				}
-				InstanceMethods.Add (encodedMember, info);
-			}
-			return info;
+			return InstanceMethods.GetOrAdd (encodedMember, static (member, methods) => {
+				string method, signature;
+				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
+				return methods.GetMethodInfo (method, signature);
+			}, this);
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)
