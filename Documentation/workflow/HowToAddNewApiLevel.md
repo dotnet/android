@@ -138,12 +138,13 @@ Then update the following files:
     [`/src/androidsdk/androidsdk.targets`](../../src/androidsdk/androidsdk.targets):
 
     ```xml
-    <_PlatformPackage Include="platform-36.0-CANARY_r03"> <ApiLevel>CANARY</ApiLevel> <Hash>...</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-36.0-CANARY_r03"> <ApiLevel>CANARY</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>...</Hash></_PlatformPackage>
     ```
 
     The `Include` value is the *base filename* of the package to download; the
     build automatically appends `.zip`. Provide the package's SHA-256 hash in
-    the `<Hash>` metadata.
+    the `%(Hash)` metadata.  `%(IsLatestStable)` should be `true` so that it
+    will be downloaded and installed.
 
 At this point, you can run `Xamarin.Android.slnx -t:Prepare` using your usual mechanism.
 However, it might not download the new platform into your local Android SDK.
