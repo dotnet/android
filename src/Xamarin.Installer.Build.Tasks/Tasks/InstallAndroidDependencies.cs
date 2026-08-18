@@ -144,11 +144,15 @@ namespace Xamarin.Installer.Build.Tasks
 			}
 
 			Uri manifestUrl = null;
-			if (!string.IsNullOrEmpty (ManifestUrl)) {
+			string manifestFilePath = null;
+			if (File.Exists (ManifestUrl)) {
+				manifestFilePath = Path.GetFullPath (ManifestUrl);
+				manifestUrl = new Uri (manifestFilePath);
+			} else if (!string.IsNullOrEmpty (ManifestUrl)) {
 				manifestUrl = new Uri (ManifestUrl, UriKind.Absolute);
 			}
 
-			var installer = new AndroidSDKInstaller(new Helper(), manifestType, manifestURL: manifestUrl);
+			var installer = new AndroidSDKInstaller(new Helper(manifestFilePath: manifestFilePath), manifestType, manifestURL: manifestUrl);
 			installer.Discover(new List<string> { path });
 
 			var sdkInstance = installer.FindInstance(path);
