@@ -100,7 +100,7 @@
   </Target>
 
   <Target Name="_ValidateTrimmableTypeMapPackageNamingPolicy"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidPackageNamingPolicySetByUser)' == 'true' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'crc64' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'lowercasecrc64' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(_AndroidPackageNamingPolicySetByUser)' == 'true' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'crc64' and '$(AndroidPackageNamingPolicy.ToLowerInvariant())' != 'lowercasecrc64' "
       BeforeTargets="_GenerateTrimmableTypeMap;Build">
     <Error Text="AndroidPackageNamingPolicy value '$(AndroidPackageNamingPolicy)' is not supported with the trimmable typemap. Supported values are 'Crc64' (default) and 'LowercaseCrc64'." />
   </Target>
@@ -117,7 +117,7 @@
     deferred-registration propagation.
   -->
   <Target Name="_GenerateTrimmableTypeMap"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
       AfterTargets="CoreCompile"
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn)"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache)"
@@ -209,7 +209,7 @@
   </Target>
 
   <Target Name="_ReadGeneratedTrimmableTypeMapAssemblies"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' "
       DependsOnTargets="_GenerateTrimmableTypeMap">
     <MakeDir
         Directories="$(_TypeMapOutputDirectory)"
@@ -290,7 +290,7 @@
     skipped on incremental builds, which would leave the item group empty.
   -->
   <Target Name="_PrepareTrimmableNativeConfigAssemblies"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' "
       BeforeTargets="_GeneratePackageManagerJava"
       DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
@@ -306,7 +306,7 @@
     the item groups empty for targets such as Install.
   -->
   <Target Name="_PrepareTrimmableTypeMapAssemblies"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' "
       BeforeTargets="_CollectAssembliesToCompress;_GeneratePackageManagerJava;_RemoveRegisterAttribute"
       DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies;_DefineBuildTargetAbis">
     <PropertyGroup>

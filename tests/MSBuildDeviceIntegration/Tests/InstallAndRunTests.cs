@@ -82,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			using var builder = CreateApkBuilder ();
 			builder.Save (proj);
 
@@ -176,7 +176,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("UcoOverrideTypes.cs") {
 				TextContent = () => @"using System;
