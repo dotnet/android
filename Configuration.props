@@ -43,6 +43,23 @@
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <AndroidBuildApiLevel Include="37">
+      <PlatformId>37.0</PlatformId>
+      <FrameworkVersion>v17.0</FrameworkVersion>
+      <Unstable>false</Unstable>
+    </AndroidBuildApiLevel>
+    <AndroidBuildApiLevel Include="37.1">
+      <PlatformId>37.1</PlatformId>
+      <FrameworkVersion>v17.1</FrameworkVersion>
+      <Unstable>true</Unstable>
+    </AndroidBuildApiLevel>
+    <AndroidBuildApiLevel Include="37.2">
+      <PlatformId>37.2</PlatformId>
+      <FrameworkVersion>v17.2</FrameworkVersion>
+      <Unstable>true</Unstable>
+    </AndroidBuildApiLevel>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
     <HostOS Condition="$([MSBuild]::IsOSPlatform('linux'))">Linux</HostOS>

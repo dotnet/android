@@ -37,16 +37,12 @@
   </Target>
 
   <!-- Build Mono.Android.dll for additional API levels if necessary -->
-  <Target Name="BuildExtraApiLevels">
+  <Target Name="BuildExtraApiLevels"
+      Inputs="@(AndroidBuildApiLevel)"
+      Outputs="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\Mono.Android.dll">
     <MSBuild
-         Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' != '$(AndroidLatestStableApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel);AndroidPlatformId=$(AndroidDefaultTargetDotnetApiLevel)"
-    />
-    <MSBuild
-         Condition=" '$(AndroidLatestUnstableApiLevel)' != '$(AndroidLatestStableApiLevel)' "
-         Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=$(AndroidLatestUnstableApiLevel);AndroidPlatformId=$(AndroidLatestUnstablePlatformId);AndroidFrameworkVersion=$(AndroidLatestUnstableFrameworkVersion)"
+         Properties="AndroidApiLevel=%(AndroidBuildApiLevel.Identity);AndroidPlatformId=%(AndroidBuildApiLevel.PlatformId);AndroidFrameworkVersion=%(AndroidBuildApiLevel.FrameworkVersion);IsUnstableVersion=%(AndroidBuildApiLevel.Unstable)"
     />
   </Target>
 
