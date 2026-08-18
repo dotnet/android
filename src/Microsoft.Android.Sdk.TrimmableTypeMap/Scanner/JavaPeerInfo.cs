@@ -74,8 +74,9 @@ public sealed record JavaPeerInfo
 
 	/// <summary>
 	/// True when the type matches the existing binding-generator listener implementor shape:
-	/// a generated <c>mono/{interface-jni-name}Implementor</c> ACW implementing that
-	/// Java interface with the static <c>__IsEmpty(TImplementor)</c> helper used by event removal.
+	/// a generated ACW whose JNI name is <c>mono/</c> plus the implemented interface's
+	/// JNI name with <c>$</c> replaced by <c>_</c>, followed by <c>Implementor</c>,
+	/// with the static <c>__IsEmpty(TImplementor)</c> helper used by event removal.
 	/// </summary>
 	public bool IsBindingEventListenerImplementor { get; init; }
 

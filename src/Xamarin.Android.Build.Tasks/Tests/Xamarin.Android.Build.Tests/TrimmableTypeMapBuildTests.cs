@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tasks;
@@ -735,6 +736,106 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void ReleaseCoreClrTrimmableTypeMap_TrimsUnusedBindingListenerImplementors ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var testRoot = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
+			var binding = new XamarinAndroidBindingProject {
+				IsRelease = true,
+				ProjectName = "ListenerBinding",
+				AndroidClassParser = "class-parse",
+			};
+			binding.SetRuntime (AndroidRuntime.CoreCLR);
+
+			var javaRoot = Path.Combine (Root, testRoot, "java");
+			var javaSource = Path.Combine ("com", "example", "listener", "Widget.java");
+			Directory.CreateDirectory (Path.Combine (javaRoot, Path.GetDirectoryName (javaSource) ?? ""));
+			binding.Jars.Add (new AndroidItem.EmbeddedJar (Path.Combine ("java", "listener.jar")) {
+				BinaryContent = new JarContentBuilder {
+					BaseDirectory = javaRoot,
+					JarFileName = "listener.jar",
+					JavaSourceFileName = javaSource,
+					JavaSourceText = """
+						package com.example.listener;
+
+						public class Widget {
+							public interface OnChangedListener {
+								void onChanged ();
+							}
+
+							public void setOnChangedListener (OnChangedListener listener) {
+							}
+						}
+						""",
+				}.Build,
+			});
+
+			using var bindingBuilder = CreateDllBuilder (Path.Combine (testRoot, binding.ProjectName));
+			Assert.IsTrue (bindingBuilder.Build (binding), "Listener binding build should have succeeded.");
+
+			foreach (bool useListener in new [] { false, true }) {
+				var app = new XamarinAndroidApplicationProject {
+					IsRelease = true,
+					PackageName = useListener ? "com.xamarin.listenerused" : "com.xamarin.listenerunused",
+					ProjectName = useListener ? "ListenerUsed" : "ListenerUnused",
+				};
+				app.SetRuntime (AndroidRuntime.CoreCLR);
+				app.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+				app.SetProperty ("AndroidPackageFormat", "apk");
+				app.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+				app.SetProperty ("TrimMode", "full");
+				app.SetProperty ("PublishReadyToRun", "false");
+				app.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+				app.References.Add (new BuildItem.ProjectReference ($"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj", binding.ProjectName, binding.ProjectGuid));
+				if (useListener) {
+					app.MainActivity = app.DefaultMainActivity.Replace (
+						"//${AFTER_ONCREATE}",
+						"""
+									var widget = new Com.Example.Listener.Widget ();
+									widget.Changed += (sender, args) => { };
+						""");
+				}
+
+				using var builder = CreateApkBuilder (Path.Combine (testRoot, app.ProjectName));
+				Assert.IsTrue (builder.Build (app), $"{app.ProjectName} build should have succeeded.");
+
+				var linkedDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
+				var linkedBinding = Path.Combine (linkedDirectory, $"{binding.ProjectName}.dll");
+				var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "linked-java"));
+				var implementorJava = Path.Combine (javaDirectory, "mono", "com", "example", "listener", "Widget_OnChangedListenerImplementor.java");
+				var acwMapPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "acw-map.txt"));
+				var proguardPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_primary.cfg"));
+				var dexPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin", "classes.dex"));
+
+				Assert.AreEqual (
+					useListener,
+					AssemblyContainsTypeNamed (linkedBinding, "IOnChangedListenerImplementor"),
+					$"{app.ProjectName} linked managed output should {(useListener ? "retain" : "trim")} the listener implementor.");
+				Assert.AreEqual (
+					useListener,
+					File.Exists (implementorJava),
+					$"{app.ProjectName} post-trim Java output should {(useListener ? "retain" : "trim")} the listener implementor.");
+				AssertFileContains (
+					acwMapPath,
+					"IOnChangedListenerImplementor",
+					useListener,
+					$"{app.ProjectName} ACW map");
+				AssertFileContains (
+					proguardPath,
+					"mono.com.example.listener.Widget_OnChangedListenerImplementor",
+					useListener,
+					$"{app.ProjectName} ProGuard configuration");
+				Assert.AreEqual (
+					useListener,
+					DexUtils.ContainsClass ("Lmono/com/example/listener/Widget_OnChangedListenerImplementor;", dexPath, AndroidSdkPath),
+					$"{app.ProjectName} DEX should {(useListener ? "retain" : "trim")} the listener implementor.");
+			}
+		}
+
+		[Test]
 		public void TrimmableTypeMap_PreserveLists_ArePackagedInSdk ()
 		{
 			foreach (var file in new [] {
@@ -974,6 +1075,38 @@ namespace UnnamedProject {
 			var javaFiles = Directory.GetFiles (javaDir, "*.java", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 		}
+
+		static bool AssemblyContainsTypeNamed (string assemblyPath, string typeName)
+		{
+			if (!File.Exists (assemblyPath)) {
+				return false;
+			}
+
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			return ContainsTypeNamed (assembly.MainModule.Types, typeName);
+		}
+
+		static bool ContainsTypeNamed (IEnumerable<TypeDefinition> types, string typeName)
+		{
+			foreach (var type in types) {
+				if (type.Name == typeName || ContainsTypeNamed (type.NestedTypes, typeName)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		static void AssertFileContains (string path, string value, bool expected, string description)
+		{
+			FileAssert.Exists (path, $"{description} should exist.");
+			var contents = File.ReadAllText (path);
+			Assert.AreEqual (
+				expected,
+				contents.Contains (value, StringComparison.Ordinal),
+				$"{description} should {(expected ? "contain" : "exclude")} '{value}'.");
+		}
+
 		DynamicCodeSupportProfile BuildDynamicCodeSupportProfile (string typemapImplementation, bool? dynamicCodeSupport)
 		{
 			var dynamicCodeSuffix = dynamicCodeSupport.HasValue ? $"_{dynamicCodeSupport.Value.ToString ().ToLowerInvariant ()}" : "";

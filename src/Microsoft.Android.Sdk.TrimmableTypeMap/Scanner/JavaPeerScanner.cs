@@ -445,6 +445,8 @@ public sealed class JavaPeerScanner : IDisposable
 	static bool HasGeneratedListenerImplementorJniName (string jniName, IReadOnlyList<string> implementedInterfaces)
 	{
 		foreach (var interfaceJniName in implementedInterfaces) {
+			// InterfaceEventHandlerImplClass has used this JNI naming contract since the
+			// earliest supported binding-generator versions.
 			var expectedJniName = $"mono/{interfaceJniName.Replace ('$', '_')}Implementor";
 			if (string.Equals (jniName, expectedJniName, StringComparison.Ordinal)) {
 				return true;
