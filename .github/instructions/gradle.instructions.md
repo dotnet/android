@@ -6,15 +6,32 @@ applyTo: "**/*.gradle,**/*.gradle.kts"
 
 All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-repositories.gradle`** (for `pluginManagement.repositories`) and **`eng/gradle/dependency-repositories.gradle`** (for `dependencyResolutionManagement.repositories`). Never hard-code Maven URLs (`mavenCentral()`, `google()`, `pkgs.dev.azure.com/...`, etc.) in `build.gradle`/`settings.gradle`.
 
+Dependabot's Gradle updater does not inspect repository declarations in scripts
+loaded with `apply from`. Each configured `settings.gradle` must repeat the
+public repository declarations behind a `DEPENDABOT_JOB_ID` environment check
+so version discovery queries Google Maven. Dependabot already probes Maven
+Central and the Gradle Plugin Portal by default, and sets this variable inside
+its updater container.
+
 ## settings.gradle template
 
 ```groovy
 // See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
+    if (System.getenv('DEPENDABOT_JOB_ID') != null) {
+        repositories {
+            google()
+        }
+    }
 }
 dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
+    if (System.getenv('DEPENDABOT_JOB_ID') != null) {
+        repositories {
+            google()
+        }
+    }
 }
 rootProject.name = '<project>'
 ```
@@ -30,9 +47,19 @@ the receiver as `to = this`:
 // See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
     apply(from = "$rootDir/../../eng/gradle/plugin-repositories.gradle", to = this)
+    if (System.getenv("DEPENDABOT_JOB_ID") != null) {
+        repositories {
+            google()
+        }
+    }
 }
 dependencyResolutionManagement {
     apply(from = "$rootDir/../../eng/gradle/dependency-repositories.gradle", to = this)
+    if (System.getenv("DEPENDABOT_JOB_ID") != null) {
+        repositories {
+            google()
+        }
+    }
 }
 rootProject.name = "<project>"
 ```
