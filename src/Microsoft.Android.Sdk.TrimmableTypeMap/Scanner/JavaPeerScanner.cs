@@ -419,7 +419,7 @@ public sealed class JavaPeerScanner : IDisposable
 		if (isInterface ||
 		    doNotGenerateAcw ||
 		    !jniName.StartsWith ("mono/", StringComparison.Ordinal) ||
-		    implementedInterfaces.Count == 0 ||
+		    !HasGeneratedListenerImplementorJniName (jniName, implementedInterfaces) ||
 		    (typeDef.Attributes & TypeAttributes.Sealed) == 0) {
 			return false;
 		}
@@ -435,6 +435,18 @@ public sealed class JavaPeerScanner : IDisposable
 			if (signature.ReturnType.ManagedTypeName == "System.Boolean" &&
 			    signature.ParameterTypes.Length == 1 &&
 			    signature.ParameterTypes [0].ManagedTypeName == managedTypeName) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	static bool HasGeneratedListenerImplementorJniName (string jniName, IReadOnlyList<string> implementedInterfaces)
+	{
+		foreach (var interfaceJniName in implementedInterfaces) {
+			var expectedJniName = $"mono/{interfaceJniName.Replace ('$', '_')}Implementor";
+			if (string.Equals (jniName, expectedJniName, StringComparison.Ordinal)) {
 				return true;
 			}
 		}

@@ -95,7 +95,7 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 	[Fact]
 	public void Scan_DetectsBindingEventListenerImplementorShape ()
 	{
-		Assert.True (FindFixtureByJavaName ("mono/android/view/View_IOnClickListenerImplementor").IsBindingEventListenerImplementor);
+		Assert.True (FindFixtureByJavaName ("mono/android/view/View_OnClickListenerImplementor").IsBindingEventListenerImplementor);
 		Assert.False (FindFixtureByJavaName ("mono/android/view/FakeListenerPeer").IsBindingEventListenerImplementor);
 		Assert.False (FindFixtureByJavaName ("mono/android/view/View_ClickEventDispatcher").IsBindingEventListenerImplementor);
 		Assert.False (FindFixtureByJavaName ("my/app/MainActivity").IsBindingEventListenerImplementor);

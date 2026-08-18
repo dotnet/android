@@ -112,7 +112,7 @@ namespace Android.Views
 	{
 		protected View (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
-		[Register ("mono/android/view/View_IOnClickListenerImplementor")]
+		[Register ("mono/android/view/View_OnClickListenerImplementor")]
 		internal sealed class IOnClickListenerImplementor : Java.Lang.Object, IOnClickListener
 		{
 			#pragma warning disable 0649
@@ -203,6 +203,7 @@ namespace Android.Views
 	{
 		public FakeListenerPeer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 		public void OnClick (View v) { }
+		internal static bool __IsEmpty (FakeListenerPeer value) => true;
 	}
 
 	[Register ("mono/android/view/View_ClickEventDispatcher")]

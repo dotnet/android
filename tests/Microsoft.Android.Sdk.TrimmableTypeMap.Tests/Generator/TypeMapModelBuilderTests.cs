@@ -779,7 +779,7 @@ public class ModelBuilderTests : FixtureTestBase
 	public class FixtureImplementorsAndDispatchers
 	{
 		[Theory]
-		[InlineData ("mono/android/view/View_IOnClickListenerImplementor", true)]
+		[InlineData ("mono/android/view/View_OnClickListenerImplementor", true)]
 		[InlineData ("mono/android/view/View_ClickEventDispatcher", false)]
 		public void Fixture_HelperType_UsesGeneratedShapeDetection (string javaName, bool isBindingEventListenerImplementor)
 		{
