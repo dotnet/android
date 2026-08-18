@@ -42,7 +42,7 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public string ManifestType { get; set; }
 
-		public string ManifestUrl { get; set; }
+		public string ManifestSource { get; set; }
 
 		public async override Task RunTaskAsync ()
 		{
@@ -145,11 +145,11 @@ namespace Xamarin.Installer.Build.Tasks
 
 			Uri manifestUrl = null;
 			string manifestFilePath = null;
-			if (File.Exists (ManifestUrl)) {
-				manifestFilePath = Path.GetFullPath (ManifestUrl);
+			if (File.Exists (ManifestSource)) {
+				manifestFilePath = Path.GetFullPath (ManifestSource);
 				manifestUrl = new Uri (manifestFilePath);
-			} else if (!string.IsNullOrEmpty (ManifestUrl)) {
-				manifestUrl = new Uri (ManifestUrl, UriKind.Absolute);
+			} else if (!string.IsNullOrEmpty (ManifestSource)) {
+				manifestUrl = new Uri (ManifestSource, UriKind.Absolute);
 			}
 
 			var installer = new AndroidSDKInstaller(new Helper(manifestFilePath: manifestFilePath), manifestType, manifestURL: manifestUrl);

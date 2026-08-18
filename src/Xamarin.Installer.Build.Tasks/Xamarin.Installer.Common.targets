@@ -23,7 +23,7 @@
 				JavaSdkPath="$(JavaSdkDirectory)"
 				AcceptAndroidSDKLicenses="$(AcceptAndroidSDKLicenses)"
 				ManifestType="$(AndroidManifestType)"
-				ManifestUrl="$(AndroidManifestUrl)"
+				ManifestSource="$(AndroidManifestSource)"
 				TimeoutInMinutes="$(AndroidDependencyInstallationTimeout)"
 				InstallJavaDependencies="$(AndroidInstallJavaDependencies)"
 			>
