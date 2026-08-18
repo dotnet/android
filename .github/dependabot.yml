@@ -48,6 +48,10 @@ updates:
       - "/src/manifestmerger"
       - "/src/proguard-android"
       - "/tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib"
+    # Google Maven does not publish per-version release dates for R8, so the
+    # default cooldown filters every available R8 update.
+    cooldown:
+      default-days: 0
     schedule:
       interval: "weekly"
   - package-ecosystem: "gitsubmodule"
