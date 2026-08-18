@@ -1248,8 +1248,8 @@ This property is obsolete and should not be used.
 An enum-style property that selects the type map implementation.
 Valid values are `llvm-ir` and `trimmable`.
 
-The default value is `llvm-ir` when using CoreCLR and `trimmable` when using
-NativeAOT.
+The default value is `trimmable` when using CoreCLR or NativeAOT and `llvm-ir`
+when using MonoVM.
 
 ## AndroidUseApkSigner
 
@@ -1894,8 +1894,9 @@ Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 
 A boolean property that controls whether Android applications use the
 Mono runtime instead of CoreCLR. Set this property to `true` to use
-Mono or `false` to use CoreCLR. `$(PublishAot)` takes precedence and
-selects NativeAOT when set to `true`.
+Mono or `false` to use CoreCLR. `$(PublishAot)` takes precedence. Debug
+builds continue to use CoreCLR, while Release builds and publish operations
+use NativeAOT.
 
 This property defaults to `true` in .NET 10 and earlier, so Android
 applications use Mono. In .NET 11 and later, it defaults to `false`,

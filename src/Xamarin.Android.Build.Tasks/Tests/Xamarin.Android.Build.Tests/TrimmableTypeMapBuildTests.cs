@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests {
 	public class TrimmableTypeMapBuildTests : BaseTest {
 
 		[Test]
-		public void Build_WithTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void Build_WithDefaultTrimmableTypeMap_Succeeds ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -27,13 +27,40 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[Test]
+		public void Build_WithPublishAotInDebug_UsesCoreClrAndTrimmableTypeMap ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false,
+			};
+			proj.SetProperty ("PublishAot", "true");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
+			AssertTrimmableTypeMapOutputs (intermediateDir);
+
+			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (
+				builder.Output.GetIntermediaryPath (""),
+				"arm64-v8a",
+				required: true,
+				runtime: AndroidRuntime.CoreCLR);
+			Assert.IsInstanceOf<EnvironmentHelper.ApplicationConfig_CoreCLR> (
+				EnvironmentHelper.ReadApplicationConfig (environmentFiles, AndroidRuntime.CoreCLR),
+				"PublishAot=true in Debug should use CoreCLR.");
 		}
 
 		[Test]
