@@ -1,0 +1,17 @@
+// Shared Maven repository list for project DEPENDENCY resolution
+// (dependencyResolutionManagement.repositories) across every settings.gradle
+// in this repo. See plugin-repositories.gradle for plugin resolution.
+//
+// Switches on RUNNINGONCI for the same CFSClean reasons described there.
+
+repositories {
+    if (System.getenv('RUNNINGONCI') == 'true') {
+        maven {
+            url = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+            name = 'dotnet-public-maven'
+        }
+    } else {
+        google()
+        mavenCentral()
+    }
+}

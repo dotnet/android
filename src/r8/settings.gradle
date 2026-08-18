@@ -6,4 +6,4 @@ dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
 }
 
-rootProject.name = 'proguard-android'
+rootProject.name = 'r8'

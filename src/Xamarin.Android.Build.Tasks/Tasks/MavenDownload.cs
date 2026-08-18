@@ -136,15 +136,23 @@ public class MavenDownload : AsyncTask
 		return result;
 	}
 
-	CachedMavenRepository? GetRepository (ITaskItem item)
-	{
-		var type = item.GetMetadataOrDefault ("Repository", "Central");
-
-		var repo = type.ToLowerInvariant () switch {
+	/// <summary>
+	/// Maps the well-known <c>Repository</c> metadata shorthands to their repositories.
+	/// Returns <see langword="null"/> if <paramref name="type"/> is not a known shorthand,
+	/// in which case it is treated as a repository URL.
+	/// </summary>
+	internal static MavenRepository? GetKnownRepository (string type) =>
+		type.ToLowerInvariant () switch {
 			"central" => MavenRepository.Central,
 			"google" => MavenRepository.Google,
 			_ => null
 		};
+
+	CachedMavenRepository? GetRepository (ITaskItem item)
+	{
+		var type = item.GetMetadataOrDefault ("Repository", "Central");
+
+		var repo = GetKnownRepository (type);
 
 		if (repo is null && type.StartsWith ("http", StringComparison.OrdinalIgnoreCase)) {
 			using var hasher = SHA256.Create ();
