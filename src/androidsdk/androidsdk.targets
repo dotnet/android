@@ -103,13 +103,9 @@
     </_AndroidSdkPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <!-- commandlinetools: one zip per host OS and macOS architecture -->
-    <_AndroidSdkPackage Include="commandlinetools-mac_x86_64-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' and '$(_IsArm64Apple)' != 'true' ">
+    <!-- commandlinetools: one zip per HostOS -->
+    <_AndroidSdkPackage Include="commandlinetools-mac-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' ">
       <Hash>$(XACmdlineToolsHashMacOS)</Hash>
-      <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
-    </_AndroidSdkPackage>
-    <_AndroidSdkPackage Include="commandlinetools-mac_arm64-$(CommandLineToolsVersion).zip" Condition=" '$(_IsArm64Apple)' == 'true' ">
-      <Hash>$(XACmdlineToolsHashMacOSArm64)</Hash>
       <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
     </_AndroidSdkPackage>
     <_AndroidSdkPackage Include="commandlinetools-linux-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Linux' ">
