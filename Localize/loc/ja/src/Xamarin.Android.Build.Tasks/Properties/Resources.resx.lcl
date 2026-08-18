@@ -844,16 +844,7 @@
         <Str Cat="Text">
           <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).]D;]A;Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' は、プロジェクト ファイルの $(SupportedOSPlatformVersion) 値 '{1}' と一致しません (プロジェクト ファイルに $(SupportedOSPlatformVersion) 値がない場合は、既定値が想定されています)。]A;]D;$(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml の値を変更するか、AndroidManifest.xml の値を削除します (まだ存在しない場合は、$(SupportedOSPlatformVersion) 値をプロジェクト ファイルに追加します)。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' MSBuild プロパティは非推奨であり、.NET {1}では削除されます。詳細については、「https://aka.ms/net-android-deprecations」を参照してください。]]></Val>
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' は、プロジェクト ファイルの $(SupportedOSPlatformVersion) 値 '{1}' と一致しません (プロジェクト ファイルに $(SupportedOSPlatformVersion) 値がない場合は、既定値が想定されています)。]D;]A;$(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml の値を変更するか、AndroidManifest.xml の値を削除してください (そして、まだ存在しない場合は、$(SupportedOSPlatformVersion) 値をプロジェクト ファイルに追加してください)。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
