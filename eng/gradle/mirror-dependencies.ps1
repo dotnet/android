@@ -35,7 +35,8 @@
     Maven coordinates to mirror directly, for tests that do not use Gradle.
     Each value is group:artifact:version, which attempts the POM, JAR, AAR, and
     Gradle module metadata files. Append an exact filename as a fourth segment
-    when a test requests a nonstandard payload.
+    when a test requests a nonstandard payload. The command fails if no payload
+    can be mirrored for any requested coordinate.
 
 .PARAMETER GradleWrapper
     Optional path to the Gradle wrapper used by CI for this project, relative
@@ -126,7 +127,12 @@ function Invoke-Mirror($logPath) {
         ForEach-Object { $_.Matches } |
         ForEach-Object { $_.Groups[1].Value } |
         Sort-Object -Unique
-    if ($urls.Count -eq 0) { return 0 }
+    if ($urls.Count -eq 0) {
+        return [pscustomobject]@{
+            SuccessCount = 0
+            FailureCount = 0
+        }
+    }
     $token = Get-AzDevOpsToken
     $basicCredential = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$token"))
     $headers = @{ Authorization = "Basic $basicCredential" }
@@ -141,7 +147,10 @@ function Invoke-Mirror($logPath) {
         }
     }
     Write-Host "  -> mirrored OK=$ok, not-found=$fail (of $($urls.Count))" -ForegroundColor Cyan
-    return $urls.Count
+    return [pscustomobject]@{
+        SuccessCount = $ok
+        FailureCount = $fail
+    }
 }
 
 function Get-MavenArtifactUrls($artifacts) {
@@ -177,14 +186,25 @@ if ($PSCmdlet.ParameterSetName -eq 'MavenArtifact') {
     Write-Host "Mirroring Maven artifacts directly:"
     $MavenArtifact | ForEach-Object { Write-Host "  $_" }
     $log = Join-Path ([IO.Path]::GetTempPath()) 'maven-artifact-mirror.log'
+    $failedArtifacts = @()
     try {
-        Get-MavenArtifactUrls $MavenArtifact |
-            ForEach-Object { "Could not GET '$_'" } |
-            Set-Content $log
-        Invoke-Mirror $log | Out-Null
+        foreach ($artifact in $MavenArtifact) {
+            Get-MavenArtifactUrls $artifact |
+                ForEach-Object { "Could not GET '$_'" } |
+                Set-Content $log
+            $result = Invoke-Mirror $log
+            if ($result.SuccessCount -eq 0) {
+                $failedArtifacts += $artifact
+            }
+        }
     }
     finally {
         Remove-Item $log -ErrorAction SilentlyContinue
+    }
+    if ($failedArtifacts.Count -gt 0) {
+        Write-Host "`nNo payloads were mirrored for:" -ForegroundColor Red
+        $failedArtifacts | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        exit 1
     }
     return
 }
@@ -208,8 +228,8 @@ try {
             Write-Host "`nBUILD SUCCESSFUL after $i iteration(s). The feed now has the packages CI needs." -ForegroundColor Green
             return
         }
-        $count = Invoke-Mirror $log
-        if ($count -eq 0) {
+        $result = Invoke-Mirror $log
+        if (($result.SuccessCount + $result.FailureCount) -eq 0) {
             Write-Host "`nGradle failed but no 401s to mirror — see $log" -ForegroundColor Red
             Get-Content $log -Tail 30
             exit 1
