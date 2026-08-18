@@ -62,8 +62,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	<_UploadFlag>$(IntermediateOutputPath)upload.flag</_UploadFlag>
 	<_ConfigurationCacheDirectory>$(BaseIntermediateOutputPath).cache\</_ConfigurationCacheDirectory>
 	<_AndroidFastDevStrategy Condition=" '$(_AndroidFastDevStrategy)' == '' ">FastDeploy2</_AndroidFastDevStrategy>
-	<_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' And '$(_AndroidFastDevStrategy)' == 'FastDeploy2' ">Symlink</_AndroidFastDeployAppFileTransferMode>
-	<_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Copy</_AndroidFastDeployAppFileTransferMode>
 </PropertyGroup>
 
 <PropertyGroup>
@@ -258,7 +256,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Target Name="_CheckForConfigurationChange">
 	<ItemGroup>
-		<_ConfigurationCacheItems Include="$(Configuration)|$(Platform)|$(AdbTarget)|$(_AndroidFastDevStrategy)|$(_AndroidFastDeployAppFileTransferMode)" />
+		<_ConfigurationCacheItems Include="$(Configuration)|$(Platform)|$(AdbTarget)|$(_AndroidFastDevStrategy)" />
 	</ItemGroup>
 	<ReadLinesFromFile File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag"
 			Condition="Exists('$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag')">
@@ -342,9 +340,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     <Error
       Condition=" '$(_AndroidFastDevStrategy)' != 'FastDeploy' And '$(_AndroidFastDevStrategy)' != 'FastDeploy2' "
       Text="Invalid _AndroidFastDevStrategy value '$(_AndroidFastDevStrategy)'. Supported values are 'FastDeploy' and 'FastDeploy2'." />
-    <Error
-      Condition=" '$(_AndroidFastDeployAppFileTransferMode)' != 'Copy' And '$(_AndroidFastDeployAppFileTransferMode)' != 'Symlink' "
-      Text="Invalid _AndroidFastDeployAppFileTransferMode value '$(_AndroidFastDeployAppFileTransferMode)'. Supported values are 'Copy' and 'Symlink'." />
     <RemoveDuplicates
         Inputs="@(_FastDevFiles)">
       <Output TaskParameter="Filtered" ItemName="_FilteredFastDevFiles"/>
@@ -389,7 +384,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       AdbToolPath="$(AdbToolPath)"
       AdbToolExe="$(AdbToolExe)"
       AdbPushCompressionAlgorithm="$(AndroidFastDeploymentAdbCompressionAlgorithm)"
-      AppFileTransferMode="$(_AndroidFastDeployAppFileTransferMode)"
       UploadFlagFile="$(_UploadFlag)"
       UserID="$(AndroidDeviceUserId)"
       IsTestOnly="$(_AndroidIsTestOnlyPackage)"
@@ -399,6 +393,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       CopyBatchSize="$(_AndroidFastDeployCopyBatchSize)"
       MaxShellCommandLength="$(_AndroidFastDeployMaxShellCommandLength)"
       MaxAdbCommandLength="$(_AndroidFastDeployMaxAdbCommandLength)"
+      ResetOverrideDirectory="$(_FastDeploymentConfigurationChanged)"
     />
     <Touch Files="$(_UploadFlag)" AlwaysCreate="True" />
     <MakeDir Directories="$(_ConfigurationCacheDirectory)" Condition="!Exists('$(_ConfigurationCacheDirectory)')" />

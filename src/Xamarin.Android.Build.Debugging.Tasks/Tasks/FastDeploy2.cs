@@ -62,6 +62,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool DiagnosticLogging { get; set; } = false;
 
+		public bool ResetOverrideDirectory { get; set; } = false;
+
 		public string UserID { get; set; }
 
 		public bool IsTestOnly { get; set; }
@@ -76,8 +78,6 @@ namespace Xamarin.Android.Tasks
 		public string AdbToolExe { get; set; }
 
 		public string AdbPushCompressionAlgorithm { get; set; } = "any";
-
-		public string AppFileTransferMode { get; set; } = "Copy";
 
 		string DeviceId = "";
 		PackageInfo packageInfo = new PackageInfo ();
@@ -101,11 +101,6 @@ namespace Xamarin.Android.Tasks
 			public string UserId { get; set; } = null;
 			public string PackageName { get; set; } = null;
 			public int ProcessId { get; set; } = 0;
-		}
-
-		class RemoteFileInfo {
-			public long Size { get; set; }
-			public long ModifiedTime { get; set; }
 		}
 
 		class DirectPushFile {
@@ -185,7 +180,8 @@ namespace Xamarin.Android.Tasks
 
 		async Task RunInstall ()
 		{
-			WarmStateProbeOutcome warmState = await TryRunWarmStateProbe (LoadPreviousManifest ());
+			ManifestData previousManifest = LoadPreviousManifest ();
+			WarmStateProbeOutcome warmState = await TryRunWarmStateProbe (previousManifest);
 			if (warmState == WarmStateProbeOutcome.Failed) {
 				return;
 			}
@@ -500,72 +496,10 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		async Task<Dictionary<string, RemoteFileInfo>> GetRemoteFileData (string rootPath, bool runAs)
+		async Task<bool> RemoveStaleOverrideFiles (string overridePath, List<string> removedFiles)
 		{
-			// The stat format must be quoted so that the `|` separators survive to the device
-			// shell. `adb shell` re-parses its arguments, so passing the format as an argv element
-			// (e.g. via RunAdbShellCommand (params string [])) would let the device shell treat the
-			// `|` characters as pipes. Building a single, explicitly quoted command string avoids it.
-			string findCommand = $"find {QuoteShellArgument (rootPath)} -type f -exec stat -c '%n|%s|%Y' {{}} +";
-			string output;
-			if (runAs) {
-				output = await RunAsShell (findCommand);
-				if (RaiseRunAsError (output)) {
-					return null;
-				}
-			} else {
-				var result = await RunAdbShellCommand (findCommand);
-				output = result.Output;
-			}
-
-			if (IsMissingDirectoryError (output)) {
-				return new Dictionary<string, RemoteFileInfo> (StringComparer.Ordinal);
-			}
-			if (IsShellError (output, "find") || IsShellError (output, "stat")) {
-				LogFastDeploy2Error ("XA0129", output, rootPath);
-				return null;
-			}
-
-			return ParseRemoteFileData (rootPath, output);
-		}
-
-		Dictionary<string, RemoteFileInfo> ParseRemoteFileData (string rootPath, string output)
-		{
-			var files = new Dictionary<string, RemoteFileInfo> (StringComparer.Ordinal);
-			string prefix = rootPath.TrimEnd ('/') + "/";
-			foreach (string line in output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-				var entries = line.Split (new char [] { '|' }, 3);
-				if (entries.Length != 3) {
-					LogDebugMessage ($"Ignoring remote file entry '{line}'. Line is incorrectly formatted.");
-					continue;
-				}
-				string remoteFile = entries [0].Trim ();
-				if (!remoteFile.StartsWith (prefix, StringComparison.Ordinal)) {
-					LogDebugMessage ($"Ignoring remote file entry '{line}'. Path is outside '{rootPath}'.");
-					continue;
-				}
-				if (!long.TryParse (entries [1].Trim (), out long size) || !long.TryParse (entries [2].Trim (), out long mtime)) {
-					LogDebugMessage ($"Ignoring remote file entry '{line}'. Size or timestamp is invalid.");
-					continue;
-				}
-				files [remoteFile.Substring (prefix.Length)] = new RemoteFileInfo {
-					Size = size,
-					ModifiedTime = mtime,
-				};
-			}
-			return files;
-		}
-
-		async Task<bool> RemoveStaleOverrideFiles (string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
-		{
-			var staleFiles = new List<string> ();
-			foreach (var file in overrideFiles.Keys) {
-				if (!stagedFiles.ContainsKey (file)) {
-					staleFiles.Add (CombineRemotePath (overridePath, file));
-				}
-			}
-
-			LogDiagnostic ($"FastDeploy2 removing {staleFiles.Count} stale override files.");
+			LogDiagnostic ($"FastDeploy2 removing {removedFiles.Count} stale override files.");
+			var staleFiles = removedFiles.Select (file => CombineRemotePath (overridePath, file));
 			foreach (var batch in BatchShellArguments (new [] { "rm", "-f" }, staleFiles, StaleFileRemovalBatchSize)) {
 				string output = await RunAs (batch.ToArray ());
 				if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
@@ -576,17 +510,8 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		async Task<bool> CopyChangedFiles (string remoteStagingPath, string overridePath, Dictionary<string, RemoteFileInfo> stagedFiles, Dictionary<string, RemoteFileInfo> overrideFiles)
+		async Task<bool> CopyChangedFiles (string remoteStagingPath, string overridePath, HashSet<string> changedFiles)
 		{
-			var changedFiles = new List<string> ();
-			foreach (var file in stagedFiles) {
-				if (!overrideFiles.TryGetValue (file.Key, out RemoteFileInfo existing) ||
-						existing.Size != file.Value.Size ||
-						existing.ModifiedTime != file.Value.ModifiedTime) {
-					changedFiles.Add (file.Key);
-				}
-			}
-
 			LogDiagnostic ($"FastDeploy2 copying {changedFiles.Count} changed override files.");
 			var filesByDirectory = GroupFilesByDirectory (changedFiles);
 
@@ -598,9 +523,8 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 
-				// Remove the current destination files, then copy the freshly staged files in.
-				// `cp` overwrites anyway, so removing first (rather than interleaving per batch)
-				// is equivalent and lets each command batch independently by length.
+				// Remove destinations first so `cp` cannot follow symlinks left by an older
+				// FastDeploy2 deployment. Separate removal also lets each command batch by length.
 				var destinationFiles = group.Value.Select (file => CombineRemotePath (targetDirectory, Path.GetFileName (file)));
 				foreach (var batch in BatchShellArguments (new [] { "rm", "-f" }, destinationFiles, CopyBatchSize)) {
 					output = await RunAs (batch.ToArray ());

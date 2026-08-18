@@ -273,7 +273,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj), "FastDeploy2 install should have succeeded.");
 
 				string assemblyPath = $"files/.__override__/{DeviceAbi}/UnnamedProject.dll";
-				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
+				Assert.AreEqual ("regular", GetOverrideFileKind (proj.PackageName, assemblyPath));
 				RunAdbCommand ($"shell run-as {proj.PackageName} sh -c 'echo preserved > files/fastdeploy-strategy-marker'");
 				Assert.IsTrue (builder.Clean (proj), "clean should have succeeded.");
 
@@ -288,7 +288,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.Touch ("MainActivity.cs");
 				proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
 				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "FastDeploy2 install should have succeeded after FastDeploy.");
-				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
+				Assert.AreEqual ("regular", GetOverrideFileKind (proj.PackageName, assemblyPath));
 				Assert.AreEqual ("preserved", RunAdbCommand ($"shell run-as {proj.PackageName} cat files/fastdeploy-strategy-marker").Trim ());
 
 				Assert.IsTrue (builder.Uninstall (proj), "uninstall should have succeeded.");
@@ -296,10 +296,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploy2RestoresMissingRemoteDirectory ()
+		public void FastDeploy2RemovesRemoteStagingDirectory ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeploy2_restore_remote",
+				PackageName = "com.xamarin.fastdeploy2_removes_staging",
 			};
 			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetDefaultTargetDevice ();
@@ -307,16 +307,16 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (builder.Install (proj), "initial install should have succeeded.");
 
-				string remoteDirectory = $"/data/local/tmp/fastdeploy2/{proj.PackageName}/0/{DeviceAbi}";
-				RunAdbCommand ($"shell rm -rf {remoteDirectory}");
+				string remoteDirectory = $"/data/local/tmp/fastdeploy2/{proj.PackageName}/0";
+				Assert.AreEqual ("missing", RunAdbCommand ($"shell if test -e {remoteDirectory}; then echo exists; else echo missing; fi").Trim ());
 
 				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
 				proj.Touch ("MainActivity.cs");
-				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "fresh deployment fallback should have succeeded.");
+				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "incremental deployment should have succeeded.");
 
 				string assemblyPath = $"files/.__override__/{DeviceAbi}/UnnamedProject.dll";
-				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
-				Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {remoteDirectory}/UnnamedProject.dll; then echo exists; else echo missing; fi").Trim ());
+				Assert.AreEqual ("regular", GetOverrideFileKind (proj.PackageName, assemblyPath));
+				Assert.AreEqual ("missing", RunAdbCommand ($"shell if test -e {remoteDirectory}; then echo exists; else echo missing; fi").Trim ());
 				Assert.IsTrue (builder.Uninstall (proj), "uninstall should have succeeded.");
 			}
 		}

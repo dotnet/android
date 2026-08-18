@@ -17,7 +17,7 @@ namespace Xamarin.Android.Tasks
 
 		string RemoteStagingRoot => RemoteStagingRootPath;
 
-		async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath, bool forceFreshDeployment = false)
+		async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath)
 		{
 			var files = PrepareDirectPushFiles ();
 			var currentManifest = CreateManifest (files);
@@ -30,22 +30,20 @@ namespace Xamarin.Android.Tasks
 			var previousManifest = LoadPreviousManifest ();
 			string previousManifestHash = previousManifest == null ? "" : ComputeManifestHash (previousManifest);
 			DeviceManifestState deviceManifestState;
-			if (forceFreshDeployment || previousManifest == null) {
+			if (previousManifest == null) {
 				deviceManifestState = new DeviceManifestState ();
 			} else if (warmDeviceManifestState != null && string.Equals (warmDeviceManifestHash, previousManifestHash, StringComparison.Ordinal)) {
 				deviceManifestState = warmDeviceManifestState;
 			} else {
-				deviceManifestState = await GetDeviceManifestState (remoteStagingPath, overridePath);
+				deviceManifestState = await GetDeviceManifestState (overridePath);
 			}
-			bool remoteReady = previousManifest != null && string.Equals (deviceManifestState.RemoteHash, previousManifestHash, StringComparison.Ordinal);
-			bool overrideSymlinksReady = previousManifest != null && string.Equals (deviceManifestState.OverrideHash, previousManifestHash, StringComparison.Ordinal);
-			if (forceFreshDeployment || !remoteReady) {
+			bool overrideReady =
+				!ResetOverrideDirectory &&
+				previousManifest != null &&
+				string.Equals (deviceManifestState.OverrideHash, previousManifestHash, StringComparison.Ordinal);
+			if (!overrideReady) {
 				previousManifest = null;
-				overrideSymlinksReady = false;
-				if (!await ResetRemoteStagingDirectory (remoteStagingPath)) {
-					return false;
-				}
-				if (forceFreshDeployment && !await ClearOverrideDirectory (overridePath)) {
+				if (!await ClearOverrideDirectory (overridePath)) {
 					return false;
 				}
 			}
@@ -62,198 +60,63 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			HashSet<string> filesRequiringDirectories = GetFilesRequiringStagingDirectories (
-				currentManifest.Files.Keys,
-				previousManifest?.Files.Keys);
-			if (filesRequiringDirectories.Count > 0) {
-				string output = await CreateRemoteStagingDirectories (remoteStagingPath, filesRequiringDirectories);
+			if (!await ResetRemoteStagingDirectory (remoteStagingPath)) {
+				return false;
+			}
+
+			bool deployed;
+			bool stagingRemoved;
+			try {
+				deployed = await DeployStagedFiles (
+					remoteStagingPath,
+					overridePath,
+					files,
+					changedFiles,
+					removedFiles,
+					currentManifest);
+			} finally {
+				stagingRemoved = await ResetRemoteStagingDirectory (remoteStagingPath);
+			}
+
+			return deployed && stagingRemoved;
+		}
+
+		async Task<bool> DeployStagedFiles (
+			string remoteStagingPath,
+			string overridePath,
+			List<DirectPushFile> files,
+			HashSet<string> changedFiles,
+			List<string> removedFiles,
+			ManifestData currentManifest)
+		{
+			if (changedFiles.Count > 0) {
+				string output = await CreateRemoteStagingDirectories (remoteStagingPath, changedFiles);
 				if (!string.IsNullOrEmpty (output) && IsShellError (output, "mkdir")) {
 					LogFastDeploy2Error ("XA0129", output, remoteStagingPath);
 					return false;
 				}
-			}
 
-			if (!await RemoveRemoteStaleFiles (remoteStagingPath, removedFiles)) {
-				return false;
-			}
-
-			UploadFilesResult uploadResult = await UploadChangedFiles (remoteStagingPath, files, changedFiles);
-			if (!uploadResult.Success) {
-				if (uploadResult.RemoteStateInvalid && !forceFreshDeployment) {
-					LogDiagnostic ($"FastDeploy2 remote staging state was incomplete. Retrying with a fresh deployment. Output: {uploadResult.Output}");
-					return await DeployFastDevFilesWithAdbPush (overridePath, forceFreshDeployment: true);
-				}
-				LogFastDeploy2Error ("XA0129", uploadResult.Output, uploadResult.RemoteDirectory);
-				return false;
-			}
-
-			bool result;
-			if (UseShellSymlinkAppFileTransfer ()) {
-				result = await UpdateOverrideShellSymlinks (remoteStagingPath, overridePath, currentManifest, previousManifest, overrideSymlinksReady, removedFiles);
-			} else {
-				result = await UpdateOverrideCopies (remoteStagingPath, overridePath);
-			}
-
-			if (result) {
-				string currentManifestHash = ComputeManifestHash (currentManifest);
-				bool manifestsAlreadyMarked =
-					string.Equals (deviceManifestState.RemoteHash, currentManifestHash, StringComparison.Ordinal) &&
-					(!UseShellSymlinkAppFileTransfer () || string.Equals (deviceManifestState.OverrideHash, currentManifestHash, StringComparison.Ordinal));
-				if (!manifestsAlreadyMarked && !await MarkRemoteManifests (remoteStagingPath, overridePath, currentManifestHash)) {
+				UploadFilesResult uploadResult = await UploadChangedFiles (remoteStagingPath, files, changedFiles);
+				if (!uploadResult.Success) {
+					LogFastDeploy2Error ("XA0129", uploadResult.Output, uploadResult.RemoteDirectory);
 					return false;
 				}
-				WriteManifest (currentManifest);
-			}
-			return result;
-		}
-
-		bool UseShellSymlinkAppFileTransfer ()
-		{
-			return string.Equals (AppFileTransferMode, "Symlink", StringComparison.OrdinalIgnoreCase);
-		}
-
-		async Task<bool> UpdateOverrideShellSymlinks (string remoteStagingPath, string overridePath, ManifestData currentManifest, ManifestData previousManifest, bool overrideSymlinksReady, List<string> removedFiles)
-		{
-			var previousSymlinkManifest = overrideSymlinksReady ? previousManifest : null;
-			var newFiles = previousSymlinkManifest == null ?
-				new HashSet<string> (currentManifest.Files.Keys, StringComparer.Ordinal) :
-				new HashSet<string> (currentManifest.Files.Keys.Where (file => !previousSymlinkManifest.Files.ContainsKey (file)), StringComparer.Ordinal);
-			LogDiagnostic ($"FastDeploy2 symlink update new files: {newFiles.Count}; removed files: {removedFiles.Count}.");
-
-			if (!await RunCombinedShellSymlinkUpdate (remoteStagingPath, overridePath, currentManifest, previousSymlinkManifest, newFiles, removedFiles)) {
-				return await FallbackToCopy (remoteStagingPath, overridePath);
 			}
 
+			if (!await RemoveStaleOverrideFiles (overridePath, removedFiles)) {
+				return false;
+			}
+			if (!await CopyChangedFiles (remoteStagingPath, overridePath, changedFiles)) {
+				return false;
+			}
+
+			string currentManifestHash = ComputeManifestHash (currentManifest);
+			if (!await MarkOverrideManifest (overridePath, currentManifestHash)) {
+				return false;
+			}
+
+			WriteManifest (currentManifest);
 			return true;
-		}
-
-		async Task<bool> RunCombinedShellSymlinkUpdate (string remoteStagingPath, string overridePath, ManifestData currentManifest, ManifestData previousManifest, HashSet<string> newFiles, List<string> removedFiles)
-		{
-			var currentByDirectory = GroupFilesByDirectory (currentManifest.Files.Keys);
-			var newByDirectory = GroupFilesByDirectory (newFiles);
-			var removedByDirectory = GroupFilesByDirectory (removedFiles);
-			var directories = new HashSet<string> (currentByDirectory.Keys, StringComparer.Ordinal);
-			directories.UnionWith (removedByDirectory.Keys);
-
-			foreach (string directory in directories) {
-				var currentInDirectory = GetFilesInDirectory (currentByDirectory, directory);
-				var newInDirectory = GetFilesInDirectory (newByDirectory, directory);
-				var removedInDirectory = GetFilesInDirectory (removedByDirectory, directory);
-				string targetDirectory = CombineRemotePath (overridePath, directory);
-				string sourceDirectory = CombineRemotePath (remoteStagingPath, directory);
-
-				if (currentInDirectory.Count > 0 && (previousManifest == null || newInDirectory.Count == currentInDirectory.Count)) {
-					// Clear and symlink only the files that live directly in this directory, never
-					// the subdirectories. A plain `rm -rf ./*` + `ln -sf "$s"/* .` would (a) delete
-					// child directories that other iterations populate and (b) create symlinks to
-					// staging subdirectories; processing those children would then follow the symlink
-					// back into the shell-owned staging area and fail with "Permission denied" under
-					// run-as. Each subdirectory is handled by its own iteration instead.
-					string script = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&for e in ./*;do [ -d \"$e\" ]||rm -f \"$e\";done&&for f in \"$s\"/*;do [ -d \"$f\" ]||ln -sf \"$f\" .;done";
-					string output = await RunAsShell (script);
-					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
-						LogDiagnostic ($"Shell symlink glob update failed with '{output}'.");
-						return false;
-					}
-					continue;
-				}
-
-				foreach (string script in CreateShellSymlinkScripts (remoteStagingPath, overridePath, newInDirectory, removedInDirectory)) {
-					string output = await RunAsShell (script);
-					if (RaiseRunAsError (output) || IsShellError (output, "rm") || IsShellError (output, "mkdir") || IsShellError (output, "ln")) {
-						LogDiagnostic ($"Shell symlink batch update failed with '{output}'.");
-						return false;
-					}
-				}
-			}
-
-			return true;
-		}
-
-		static List<string> GetFilesInDirectory (Dictionary<string, List<string>> filesByDirectory, string directory)
-		{
-			return filesByDirectory.TryGetValue (directory, out List<string> files) ? files : [];
-		}
-
-		IEnumerable<string> CreateShellSymlinkScripts (string remoteStagingPath, string overridePath, List<string> newFiles, List<string> removedFiles)
-		{
-			foreach (var group in removedFiles.Concat (newFiles).GroupBy (GetDirectoryName, StringComparer.Ordinal)) {
-				string targetDirectory = CombineRemotePath (overridePath, group.Key);
-				var prefix = $"d={QuoteShellArgument (targetDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&rm -f";
-				foreach (var batch in BatchShellWords (prefix, group.Select (file => QuoteShellArgument (Path.GetFileName (file))))) {
-					yield return batch;
-				}
-			}
-
-			foreach (var group in newFiles.GroupBy (GetDirectoryName, StringComparer.Ordinal)) {
-				string targetDirectory = CombineRemotePath (overridePath, group.Key);
-				string sourceDirectory = CombineRemotePath (remoteStagingPath, group.Key);
-				var prefix = $"d={QuoteShellArgument (targetDirectory)};s={QuoteShellArgument (sourceDirectory)};mkdir -p \"$d\"&&cd \"$d\"&&ln -sf";
-				var sources = group.Select (file => "\"$s\"/" + QuoteShellArgument (Path.GetFileName (file)));
-				foreach (var batch in BatchShellWords (prefix, sources, " .")) {
-					yield return batch;
-				}
-			}
-		}
-
-		IEnumerable<string> BatchShellWords (string prefix, IEnumerable<string> words, string suffix = "")
-		{
-			var builder = new StringBuilder (prefix);
-			int count = 0;
-			foreach (string word in words) {
-				string argument = " " + word;
-				if (count > 0 && builder.Length + argument.Length + suffix.Length >= MaxAdbCommandLength) {
-					if (!string.IsNullOrEmpty (suffix)) {
-						builder.Append (suffix);
-					}
-					yield return builder.ToString ();
-					builder.Clear ();
-					builder.Append (prefix);
-					count = 0;
-				}
-				builder.Append (argument);
-				count++;
-			}
-			if (count > 0) {
-				if (!string.IsNullOrEmpty (suffix)) {
-					builder.Append (suffix);
-				}
-				yield return builder.ToString ();
-			}
-		}
-
-		async Task<bool> FallbackToCopy (string remoteStagingPath, string overridePath)
-		{
-			LogDiagnostic ("FastDeploy2 symlink update failed; falling back to copy mode.");
-			return await UpdateOverrideCopies (remoteStagingPath, overridePath, clearOverrideDirectory: true);
-		}
-
-		async Task<bool> UpdateOverrideCopies (string remoteStagingPath, string overridePath, bool clearOverrideDirectory = false)
-		{
-			if (clearOverrideDirectory) {
-				if (!await ClearOverrideDirectory (overridePath)) {
-					return false;
-				}
-			} else if (!await ClearOverrideSymlinkState (overridePath)) {
-				return false;
-			}
-
-			var stagedFileData = await GetRemoteFileData (remoteStagingPath, runAs: false);
-			if (stagedFileData == null) {
-				return false;
-			}
-			stagedFileData.Remove (ManifestHashMarker);
-
-			var overrideFileData = await GetRemoteFileData (overridePath, runAs: true);
-			if (overrideFileData == null) {
-				return false;
-			}
-
-			if (!await RemoveStaleOverrideFiles (overridePath, stagedFileData, overrideFileData)) {
-				return false;
-			}
-
-			return await CopyChangedFiles (remoteStagingPath, overridePath, stagedFileData, overrideFileData);
 		}
 
 		ManifestData CreateManifest (List<DirectPushFile> files)
@@ -308,23 +171,6 @@ namespace Xamarin.Android.Tasks
 			return removedFiles;
 		}
 
-		internal static HashSet<string> GetFilesRequiringStagingDirectories (IEnumerable<string> currentFiles, IEnumerable<string> previousFiles)
-		{
-			if (previousFiles == null) {
-				return new HashSet<string> (currentFiles, StringComparer.Ordinal);
-			}
-
-			var previousDirectories = new HashSet<string> (
-				previousFiles.Select (GetDirectoryName),
-				StringComparer.Ordinal);
-			return new HashSet<string> (
-				currentFiles.Where (file => {
-					string directory = GetDirectoryName (file);
-					return directory.Length > 0 && !previousDirectories.Contains (directory);
-				}),
-				StringComparer.Ordinal);
-		}
-
 		async Task<UploadFilesResult> UploadChangedFiles (string remoteStagingPath, List<DirectPushFile> files, HashSet<string> changedFiles)
 		{
 			var changedFileList = files.Where (file => changedFiles.Contains (file.RelativePath)).ToList ();
@@ -335,34 +181,12 @@ namespace Xamarin.Android.Tasks
 					if (result.ExitCode != 0) {
 						return new UploadFilesResult (
 							success: false,
-							remoteStateInvalid: IsUnexpectedRemoteFilesystemError (result.Output),
 							output: result.Output,
 							remoteDirectory: remoteDirectory);
 					}
 				}
 			}
-			return new UploadFilesResult (success: true, remoteStateInvalid: false, output: "", remoteDirectory: "");
-		}
-
-		internal static bool IsUnexpectedRemoteFilesystemError (string output)
-		{
-			return IsMissingDirectoryError (output) ||
-				(!string.IsNullOrEmpty (output) &&
-					(output.IndexOf ("not a directory", StringComparison.OrdinalIgnoreCase) >= 0 ||
-					 output.IndexOf ("is a directory", StringComparison.OrdinalIgnoreCase) >= 0));
-		}
-
-		async Task<bool> RemoveRemoteStaleFiles (string remoteStagingPath, List<string> removedFiles)
-		{
-			foreach (var batch in BatchArguments ("rm", "-f", removedFiles.Select (file => CombineRemotePath (remoteStagingPath, file)))) {
-				var args = new [] { "shell" }.Concat (batch).ToArray ();
-				var result = await RunAdbCommand (args);
-				if (result.ExitCode != 0 || IsShellError (result.Output, "rm")) {
-					LogFastDeploy2Error ("XA0129", result.Output, remoteStagingPath);
-					return false;
-				}
-			}
-			return true;
+			return new UploadFilesResult (success: true, output: "", remoteDirectory: "");
 		}
 
 		async Task<bool> ResetRemoteStagingDirectory (string remoteStagingPath)
@@ -402,34 +226,11 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		async Task<DeviceManifestState> GetDeviceManifestState (string remoteStagingPath, string overridePath)
+		async Task<DeviceManifestState> GetDeviceManifestState (string overridePath)
 		{
-			string remoteMarkerPath = CombineRemotePath (remoteStagingPath, ManifestHashMarker);
 			string overrideMarkerPath = CombineRemotePath (overridePath, ManifestHashMarker);
-			string runAsCommand = string.Join (" ", BuildRunAsArgs ().Concat (new [] {
-				"sh",
-				"-c",
-				$"cat {QuoteShellArgument (overrideMarkerPath)} 2>/dev/null || true"
-			}).Select (QuoteShellArgument));
-			// Use `echo` (which emits a real newline) with command substitution rather than
-			// `printf '\n'`: the backslash escape does not reliably survive the adb/shell quoting
-			// layers and can arrive at the device as a literal "\n", which merges both values onto
-			// a single line so ParseDeviceManifestState can never read the override hash and the
-			// readiness check always fails (forcing a full redeploy on every incremental install).
-			string script = $"echo \"remote=$(cat {QuoteShellArgument (remoteMarkerPath)} 2>/dev/null)\"; echo \"override=$({runAsCommand} 2>/dev/null)\"";
-			var result = await RunAdbShellCommand (script);
-			return ParseDeviceManifestState (result.Output);
-		}
-
-		async Task<bool> ClearOverrideSymlinkState (string overridePath)
-		{
-			string markerPath = CombineRemotePath (overridePath, ManifestHashMarker);
-			string output = await RunAsShell ($"if test -f {QuoteShellArgument (markerPath)}; then rm -rf {QuoteShellArgument (overridePath)}; else rm -f {QuoteShellArgument (markerPath)}; fi");
-			if (RaiseRunAsError (output) || IsShellError (output, "rm")) {
-				LogFastDeploy2Error ("XA0129", output, overridePath);
-				return false;
-			}
-			return true;
+			string output = await RunAsShell ($"cat {QuoteShellArgument (overrideMarkerPath)} 2>/dev/null || true");
+			return new DeviceManifestState { OverrideHash = output.Trim () };
 		}
 
 		async Task<bool> ClearOverrideDirectory (string overridePath)
@@ -442,44 +243,19 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		async Task<bool> MarkRemoteManifests (string remoteStagingPath, string overridePath, string manifestHash)
+		async Task<bool> MarkOverrideManifest (string overridePath, string manifestHash)
 		{
-			string remoteMarkerPath = CombineRemotePath (remoteStagingPath, ManifestHashMarker);
-			string script = $"printf %s {QuoteShellArgument (manifestHash)} > {QuoteShellArgument (remoteMarkerPath)}";
-			if (UseShellSymlinkAppFileTransfer ()) {
-				string overrideScript =
-					$"mkdir -p {QuoteShellArgument (overridePath)}; " +
-					$"printf %s {QuoteShellArgument (manifestHash)} > {QuoteShellArgument (CombineRemotePath (overridePath, ManifestHashMarker))}";
-				string runAsCommand = string.Join (" ", BuildRunAsArgs ().Concat (new [] {
-					"sh",
-					"-c",
-					overrideScript,
-				}).Select (QuoteShellArgument));
-				script += $" && {runAsCommand}";
-			}
-
-			AdbCommandResult result = await RunAdbShellCommand (script);
-			if ((UseShellSymlinkAppFileTransfer () && RaiseRunAsError (result.Output)) ||
-					result.ExitCode != 0 ||
-					IsShellError (result.Output, "mkdir") ||
-					IsShellError (result.Output, "printf")) {
-				LogFastDeploy2Error ("XA0129", result.Output, remoteMarkerPath);
+			string markerPath = CombineRemotePath (overridePath, ManifestHashMarker);
+			string output = await RunAsShell (
+				$"mkdir -p {QuoteShellArgument (overridePath)} && " +
+				$"printf %s {QuoteShellArgument (manifestHash)} > {QuoteShellArgument (markerPath)}");
+			if (RaiseRunAsError (output) ||
+					IsShellError (output, "mkdir") ||
+					IsShellError (output, "printf")) {
+				LogFastDeploy2Error ("XA0129", output, markerPath);
 				return false;
 			}
 			return true;
-		}
-
-		static DeviceManifestState ParseDeviceManifestState (string output)
-		{
-			var state = new DeviceManifestState ();
-			foreach (string line in output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-				if (line.StartsWith ("remote=", StringComparison.Ordinal)) {
-					state.RemoteHash = line.Substring ("remote=".Length).Trim ();
-				} else if (line.StartsWith ("override=", StringComparison.Ordinal)) {
-					state.OverrideHash = line.Substring ("override=".Length).Trim ();
-				}
-			}
-			return state;
 		}
 
 		ManifestData LoadPreviousManifest ()
@@ -557,20 +333,17 @@ namespace Xamarin.Android.Tasks
 		}
 
 		class DeviceManifestState {
-			public string RemoteHash { get; set; } = "";
 			public string OverrideHash { get; set; } = "";
 		}
 
 		readonly struct UploadFilesResult {
 			public bool Success { get; }
-			public bool RemoteStateInvalid { get; }
 			public string Output { get; }
 			public string RemoteDirectory { get; }
 
-			public UploadFilesResult (bool success, bool remoteStateInvalid, string output, string remoteDirectory)
+			public UploadFilesResult (bool success, string output, string remoteDirectory)
 			{
 				Success = success;
-				RemoteStateInvalid = remoteStateInvalid;
 				Output = output;
 				RemoteDirectory = remoteDirectory;
 			}

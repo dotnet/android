@@ -20,12 +20,10 @@ properties intended for end users are:
 | Property | Default | Description |
 | --- | --- | --- |
 | `$(_AndroidFastDevStrategy)` | `FastDeploy2` | `FastDeploy` or `FastDeploy2`. Set to `FastDeploy` to fall back to the legacy strategy. |
-| `$(_AndroidFastDeployAppFileTransferMode)` | `Symlink` (for `FastDeploy2`) | How staged files are surfaced in the override directory: `Symlink` or `Copy`. |
 | `$(AndroidFastDeploymentAdbCompressionAlgorithm)` | `any` | The `adb push -z` compression algorithm. `FastDeploy2` relies on a modern Android SDK Platform-Tools `adb` for multi-file `push -z` support. |
 
-The following internal/unsupported properties tune batching. They exist mainly so
-the batching paths can be exercised with smaller batches while testing; their
-defaults match the matching task properties:
+The following internal/unsupported properties tune or disable implementation
+details:
 
 | Property | Default | Description |
 | --- | --- | --- |
@@ -38,22 +36,21 @@ defaults match the matching task properties:
 
 * **Staging directory:** `/data/local/tmp/fastdeploy2/<package-name>/<user-id>`.
   Files are pushed here first (this location is writable by `adb` without
-  `run-as`).
+  `run-as`) and the directory is removed after each deployment attempt.
 * **Override directory:** `files/.__override__` inside the application's private
   data directory (resolved with `run-as`). The runtime loads assemblies from here
   in preference to the ones embedded in the `.apk`.
-* **Manifest markers:** a `.fastdeploy2-manifest-hash` file is written to both the
-  staging and override directories. It records the hash of the last successfully
-  deployed manifest so the next build can detect whether the device is already up
-  to date and skip redundant work.
+* **Manifest marker:** a `.fastdeploy2-manifest-hash` file is written to the
+  override directory. It records the hash of the last successfully deployed
+  manifest so the next build can detect whether the private files match the
+  local manifest and skip redundant work.
 
-Changing `$(_AndroidFastDevStrategy)` or
-`$(_AndroidFastDeployAppFileTransferMode)` invalidates the deployment
-configuration. In particular, switching from `FastDeploy2` to legacy
-`FastDeploy` removes the FastDeploy2-managed override tree before
-`xamarin.sync` runs, so legacy deployment never attempts to overwrite
-FastDeploy2 symlinks. The installed package and unrelated application data are
-preserved.
+Changing `$(_AndroidFastDevStrategy)` invalidates the deployment configuration.
+Switching between `FastDeploy2` and legacy `FastDeploy` removes the managed
+override tree before the selected strategy runs. The installed package and
+unrelated application data are preserved. The first deployment after upgrading
+from a symlink-based FastDeploy2 version also clears the old override tree so
+all files are recreated as private regular files.
 
 ## Stages
 
@@ -67,9 +64,9 @@ is passed to every subsequent command as `adb -s <id> …`.
 
 When the APK and local FastDeploy2 manifest are current, one tagged
 `adb shell` probe performs the warm-path validation. It reads both compatibility
-properties, the staging marker, the app-private path and override marker through
-`run-as`, and the current process id. If the app is running, the same shell
-invocation force-stops it after `run-as` succeeds.
+properties, the app-private path and override marker through `run-as`, and the
+current process id. If the app is running, the same shell invocation force-stops
+it after `run-as` succeeds.
 
 The deployment is aborted with a coded error if either compatibility property
 makes fast deployment unsafe:
@@ -141,58 +138,78 @@ This is the incremental core (`DeployFastDevFilesWithAdbPush`):
    size and last-write time; the set of
    `{ relative-path → (size, mtime) }` forms the manifest. A single SHA256 hash
    over the whole manifest is used as the device readiness marker (see below).
-2. **Compare against the device.** The previous manifest is read from `obj`, and
-   the on-device `.fastdeploy2-manifest-hash` markers are read to confirm the
-   device still matches it. If the staging directory is not in the expected
-   state it is reset:
+2. **Compare against private device state.** The previous manifest is read from
+   `obj`, and the app-private `.fastdeploy2-manifest-hash` marker is read through
+   `run-as`. If it does not match, the override directory is cleared and all
+   current files are treated as changed.
+3. **Reset and create transient staging.** Any staging left by an interrupted
+   deployment is removed, then directories are created for changed files:
    ```
    adb shell rm -rf <staging-dir>
-   ```
-3. **Create staging directories** for the files being deployed. After the
-   initial deployment, this step runs only when a file introduces a new
-   relative directory:
-   ```
    adb shell mkdir -p <dir> [<dir> …]   # batched up to MaxShellCommandLength
    ```
-4. **Remove stale files** that are no longer part of the app:
-   ```
-   adb shell rm -f <file> [<file> …]    # batched up to StaleFileRemovalBatchSize / MaxAdbCommandLength
-   ```
-5. **Upload changed files** (only files whose size or last-write time changed),
+4. **Upload changed files** (only files whose size or last-write time changed),
    grouped by
    directory and batched up to `MaxAdbCommandLength`:
    ```
    adb push -z <algorithm> <local-file> [<local-file> …] <remote-dir>
    ```
-6. **Update the override directory** so it points at the freshly staged files,
-   using one of two modes:
-   * **`Symlink` (default):** for each directory, symlink the staged files into
-     the override directory, leaving subdirectories untouched. Roughly:
-     ```
-     adb shell run-as <package> sh -c \
-       'd=<override-dir>;s=<staging-dir>;mkdir -p "$d"&&cd "$d"&& \
-        for e in ./*;do [ -d "$e" ]||rm -f "$e";done&& \
-        for f in "$s"/*;do [ -d "$f" ]||ln -sf "$f" .;done'
-     ```
-     If the device does not support symlinking into the override directory, the
-     task automatically falls back to `Copy`.
-   * **`Copy`:** the staged files are copied into the override directory instead
-     of symlinked.
-7. **Mark success.** When the override directory is up to date, one
-   `adb shell` invocation writes the current manifest hash to the staging and
-   override markers, and the manifest is saved to `obj` for the next incremental
-   build.
-
-The marker match is intentionally the fast-path filesystem contract; the task
-does not probe every expected directory before each upload. If a push reports
-that an expected remote path is missing or has the wrong file type, FastDeploy2
-discards the incremental state, clears the staging and override trees, and
-retries once as a full deployment. A successful retry rewrites both remote
-markers and the local manifest.
+5. **Update private storage.** Files removed from the manifest are deleted from
+   the override directory. Changed files are copied from staging with
+   `run-as cp -p`; existing destinations are removed first so this also replaces
+   override symlinks created by an older FastDeploy2 version:
+   ```
+   adb shell run-as <package> rm -f <removed-or-changed-file> [...]
+   adb shell run-as <package> cp -p <staged-file> [...] <override-dir>
+   ```
+6. **Mark success and remove staging.** The current manifest hash is written to
+   the private override marker, the manifest is saved to `obj`, and the staging
+   directory is removed. Staging removal also runs when upload or copy fails.
 
 ## Error codes
 
 Install failures are reported with `ADB####` codes; fast-deployment shell
-failures (`mkdir`/`rm`/`push`/`ln`) are reported with `XA0129`. `run-as`
+failures (`mkdir`/`rm`/`push`/`cp`) are reported with `XA0129`. `run-as`
 diagnostics map to `XA0131`–`XA0137`. See the
 [build/deploy message docs](../docs-mobile/messages/index.md) for details.
+
+## Command Compatibility
+
+.NET for Android supports Android 7.0 (API level 24) and later. FastDeploy2's
+device-side commands are available by Android 6.0 (API level 23), before the
+supported device floor. The API levels below are approximate because shell
+utilities are not Android SDK APIs.
+
+Host-side `adb` commands depend on the installed Android SDK Platform-Tools
+version rather than the device API level:
+
+| Command | FastDeploy2 use | Compatibility |
+| --- | --- | --- |
+| `adb devices`, `adb -s <device> shell ...` | Device selection and all device-side operations | Standard Platform-Tools commands |
+| `adb install -r -d [-t] [--user <id>]` | APK installation and replacement | Standard Platform-Tools command; `--user` corresponds to Android multi-user support introduced in API 17 |
+| `adb push -z <algorithm>` | Batched compressed staging-file upload | Modern Platform-Tools capability; not controlled by the device application API level |
+
+FastDeploy2 uses these device-side commands and shell features:
+
+| Command or shell feature | FastDeploy2 use | Approximate availability |
+| --- | --- | --- |
+| `sh`/mksh syntax, `[ ... ]`, `test`, `pwd`, `echo`, command substitution, and redirection | Combined checks, private marker reads/writes, and warm-state validation | API 14; Android has used mksh since Android 4.0 |
+| `getprop` | Validate `run-as` compatibility properties | API 1 |
+| `run-as <package>` | Access the private data directory of a debuggable app | Early Android; availability alone is insufficient because the package must be debuggable and the device must permit `run-as` |
+| `su <user>` | Access files for a system application when adbd is not root | Not guaranteed on production devices; used only for the system-app fallback |
+| `cat`, `true`, `rm -f`, `rm -rf`, `mkdir -p`, and `cp -p` | Read markers and manage transient staging and private override files | API 21 or earlier; supplied by toolbox/BSD utilities before toybox |
+| `readlink -f`, `whoami` | Resolve system-app paths and determine whether adbd is root | Reliably available by API 23 |
+| `pidof` | Find the running application process | Reliably available by API 23 |
+| `printf %s` | Write manifest hash markers without a trailing newline | API 23; supplied by toybox starting in Android 6.0 |
+| `pm uninstall [-k] [--user <id>]` | Remove an incompatible package before retrying installation | Base command predates the supported floor; `--user` requires API 17 multi-user support |
+| `am force-stop <package>` | Stop the app before replacing fast-deployment files | API 8 or earlier |
+| `am start-user -w <id>` | Ensure a secondary Android user is running before `run-as` | API 17 multi-user support |
+
+These estimates are based on the
+[AOSP shell and utility inventories][aosp-shell-utilities], the
+[Android 6.0 toybox build][aosp-marshmallow-toybox], and the
+[Android Debug Bridge documentation][adb-docs].
+
+[aosp-shell-utilities]: https://android.googlesource.com/platform/system/core/+/refs/heads/main/shell_and_utilities/README.md
+[aosp-marshmallow-toybox]: https://android.googlesource.com/platform/external/toybox/+/android-6.0.1_r81/Android.mk
+[adb-docs]: https://developer.android.com/tools/adb

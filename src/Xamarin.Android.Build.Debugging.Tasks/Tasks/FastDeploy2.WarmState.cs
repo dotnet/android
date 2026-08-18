@@ -11,7 +11,6 @@ namespace Xamarin.Android.Tasks
 	{
 		const string WarmRedirectTag = "__XA_FD2_REDIRECT__=";
 		const string WarmRunAsDisabledTag = "__XA_FD2_RUN_AS_DISABLED__=";
-		const string WarmRemoteHashTag = "__XA_FD2_REMOTE_HASH__=";
 		const string WarmPathTag = "__XA_FD2_PATH__=";
 		const string WarmOverrideHashTag = "__XA_FD2_OVERRIDE_HASH__=";
 		const string WarmPidTag = "__XA_FD2_PID__=";
@@ -28,8 +27,6 @@ namespace Xamarin.Android.Tasks
 				return WarmStateProbeOutcome.NotEligible;
 			}
 
-			string remoteStagingPath = GetRemoteAdbPushStagingPath ();
-			string remoteMarkerPath = CombineRemotePath (remoteStagingPath, ManifestHashMarker);
 			string overrideMarkerPath = CombineRemotePath (OverridePath, ManifestHashMarker);
 			string packageName = QuoteShellArgument (PackageName);
 
@@ -48,7 +45,6 @@ namespace Xamarin.Android.Tasks
 			string script =
 				$"fd2_redirect=$(getprop log.redirect-stdio); echo {QuoteShellArgument (WarmRedirectTag)}$fd2_redirect; " +
 				$"fd2_run_as_disabled=$(getprop ro.boot.disable_runas); echo {QuoteShellArgument (WarmRunAsDisabledTag)}$fd2_run_as_disabled; " +
-				$"echo {QuoteShellArgument (WarmRemoteHashTag)}$(cat {QuoteShellArgument (remoteMarkerPath)} 2>/dev/null); " +
 				"if [ \"$fd2_redirect\" != true ] && [ \"$fd2_run_as_disabled\" != true ]; then " +
 				$"fd2_pid=$(pidof {packageName} 2>/dev/null || true); echo {QuoteShellArgument (WarmPidTag)}$fd2_pid; " +
 				$"{runAsCommand}; fd2_run_as_status=$?; echo {QuoteShellArgument (WarmRunAsStatusTag)}$fd2_run_as_status; " +
@@ -82,7 +78,6 @@ namespace Xamarin.Android.Tasks
 			packageInfo.ProcessId = 0;
 			warmDeviceManifestHash = ComputeManifestHash (previousManifest);
 			warmDeviceManifestState = new DeviceManifestState {
-				RemoteHash = data.RemoteHash,
 				OverrideHash = data.OverrideHash,
 			};
 			warmProbeStoppedApp = true;
@@ -113,9 +108,6 @@ namespace Xamarin.Android.Tasks
 				} else if (TryGetTaggedValue (line, WarmRunAsDisabledTag, out value)) {
 					data.HasRunAsDisabled = true;
 					data.RunAsDisabled = value;
-				} else if (TryGetTaggedValue (line, WarmRemoteHashTag, out value)) {
-					data.HasRemoteHash = true;
-					data.RemoteHash = value;
 				} else if (TryGetTaggedValue (line, WarmPathTag, out value)) {
 					data.HasInternalPath = true;
 					data.InternalPath = value;
@@ -168,8 +160,6 @@ namespace Xamarin.Android.Tasks
 			public string RedirectStdio { get; set; } = "";
 			public bool HasRunAsDisabled { get; set; }
 			public string RunAsDisabled { get; set; } = "";
-			public bool HasRemoteHash { get; set; }
-			public string RemoteHash { get; set; } = "";
 			public bool HasInternalPath { get; set; }
 			public string InternalPath { get; set; } = "";
 			public bool HasOverrideHash { get; set; }
@@ -184,7 +174,6 @@ namespace Xamarin.Android.Tasks
 			public bool HasRequiredState =>
 				HasRedirectStdio &&
 				HasRunAsDisabled &&
-				HasRemoteHash &&
 				HasInternalPath &&
 				HasOverrideHash &&
 				HasProcessId &&
