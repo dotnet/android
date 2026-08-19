@@ -16,17 +16,15 @@ namespace xamarin::android
 				// During startup we run without threads, do nothing
 				return;
 			}
-
 			lock.lock ();
+			owns_lock = true;
 		}
 
 		~StartupAwareLock ()
 		{
-			if (MonodroidState::is_startup_in_progress ()) {
-				return;
+			if (owns_lock) {
+				lock.unlock ();
 			}
-
-			lock.unlock ();
 		}
 
 		StartupAwareLock (StartupAwareLock const&) = delete;
@@ -36,5 +34,6 @@ namespace xamarin::android
 
 	private:
 		std::mutex& lock;
+		bool owns_lock = false;
 	};
 }
