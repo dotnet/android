@@ -2350,6 +2350,10 @@ public class ToolbarEx {
 				originalWriteTimes.Add (assembly, File.GetLastWriteTimeUtc (assembly));
 			}
 
+			var postLinkStamp = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "stamp", "_AdditionalPostLinkerSteps.stamp");
+			FileAssert.Exists (postLinkStamp);
+			File.Delete (postLinkStamp);
+
 			// A package cache is immutable: deny write sharing and verify timestamps remain unchanged.
 			var packageLocks = satelliteAssemblies
 				.Select (assembly => File.Open (assembly, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -2358,6 +2362,7 @@ public class ToolbarEx {
 				var postLinkParameters = buildParameters.Append ("TestEnableMarshalMethodsForPostLink=true").ToArray ();
 				Assert.IsTrue (builder.RunTarget (proj, "_PrepareAssemblies", doNotCleanupOnUpdate: true, saveProject: false, parameters: postLinkParameters),
 					"Preparing assemblies should have succeeded.");
+				FileAssert.Exists (postLinkStamp);
 				foreach (string assembly in satelliteAssemblies) {
 					Assert.AreEqual (originalWriteTimes [assembly], File.GetLastWriteTimeUtc (assembly), $"Build should not modify '{assembly}'.");
 				}
