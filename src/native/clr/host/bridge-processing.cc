@@ -463,7 +463,7 @@ void CrossReferenceTarget::mark_refs_added_if_needed () noexcept
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
-	log_error (LOG_DEFAULT, "Failed to find monodroidAddReferences method");
+	log_errorf (LOG_DEFAULT, "Failed to find monodroidAddReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
 	if (!Logger::gc_spew_enabled ()) [[likely]] {
@@ -479,7 +479,7 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 [[gnu::always_inline]]
 void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused]] jclass java_class) noexcept
 {
-	log_error (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
+	log_errorf (LOG_DEFAULT, "Failed to find monodroidClearReferences method");
 #if DEBUG
 	abort_if_invalid_pointer_argument (java_class, "java_class");
 	if (!Logger::gc_spew_enabled ()) [[likely]] {

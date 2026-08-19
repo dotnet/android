@@ -91,13 +91,13 @@ auto OSBridge::_monodroid_weak_gref_dec () noexcept -> int
 void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategories category) noexcept
 {
 	if (from == nullptr) [[unlikely]] {
-		log_warn (category, "Unable to write stack trace, managed runtime passed a NULL string.");
+		log_warnf (category, "Unable to write stack trace, managed runtime passed a NULL string.");
 		return;
 	}
 
 	std::string_view trace { from };
 	if (trace.empty ()) [[unlikely]] {
-		log_warn (category, "Empty stack trace passed by the managed runtime.");
+		log_warnf (category, "Empty stack trace passed by the managed runtime.");
 		return;
 	}
 

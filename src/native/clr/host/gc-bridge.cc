@@ -85,7 +85,7 @@ void GCBridge::trigger_java_gc (JNIEnv *env) noexcept
 
 	env->ExceptionDescribe ();
 	env->ExceptionClear ();
-	log_error (LOG_DEFAULT, "Java GC failed");
+	log_errorf (LOG_DEFAULT, "Java GC failed");
 }
 
 void GCBridge::mark_cross_references (MarkCrossReferencesArgs *args) noexcept

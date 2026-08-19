@@ -1,12 +1,24 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
+
+#if !defined (XA_HOST_NATIVEAOT)
 #include <format>
 #include <string>
-#include <string_view>
+#endif
 
 #include <shared/log_functions.hh>
 
+namespace xamarin::android {
+	[[gnu::always_inline]]
+	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
+	{
+		log_write (category, level, message.data ());
+	}
+}
+
+#if !defined (XA_HOST_NATIVEAOT)
 // We redeclare macros here
 #if defined(log_debug)
 #undef log_debug
@@ -43,12 +55,6 @@
 #define log_fatal(_category_, _fmt_, ...) log_fatal_fmt ((_category_), (_fmt_) __VA_OPT__(,) __VA_ARGS__)
 
 namespace xamarin::android {
-	[[gnu::always_inline]]
-	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
-	{
-		log_write (category, level, message.data ());
-	}
-
 	template<typename ...Args> [[gnu::always_inline]]
 	static inline constexpr void log_write_fmt (LogCategories category, LogLevel level, std::format_string<Args...> fmt, Args&& ...args)
 	{
@@ -115,5 +121,6 @@ static inline constexpr void log_fatal_fmt (LogCategories category, std::string_
 {
 	log_write (category, xamarin::android::LogLevel::Fatal, message.data ());
 }
+#endif
 
 extern unsigned int log_categories;
