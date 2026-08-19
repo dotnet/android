@@ -40,6 +40,8 @@ updates:
     target-branch: "release/10.0.1xx"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
   - package-ecosystem: "gradle"
     directories:
       - "/external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
