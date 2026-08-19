@@ -494,6 +494,7 @@
         EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
         IgnoreExitCode="true"
     />
+    <MakeDir Directories="$(AndroidSdkFullPath)\licenses" />
     <Touch Files="$(_LicensesAcceptedFile)" AlwaysCreate="true" />
   </Target>
 
