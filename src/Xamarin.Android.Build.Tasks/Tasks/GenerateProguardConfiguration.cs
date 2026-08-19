@@ -19,6 +19,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputFile { get; set; } = "";
 
+		public bool ProcessMonoAndroid { get; set; }
+
 		public override bool RunTask ()
 		{
 			var dir = Path.GetDirectoryName (OutputFile);
@@ -44,17 +46,18 @@ namespace Xamarin.Android.Tasks
 					return;
 
 				var reader = pe.GetMetadataReader ();
+				var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
 
-				// Those assemblies that do not reference Mono.Android.dll (such as System.*
-				// assemblies and Mono.Android.dll itself) can be skipped.
-				// (Mono.Android.dll is special; android.jar is not part of classes.dex).
+				// Assemblies that do not reference Mono.Android.dll (such as System.*) can be
+				// skipped. Mono.Android.dll is normally skipped too, but the pre-generated typemap
+				// path consumes its precompiled JCWs from mono.android.jar and needs keep rules for
+				// the framework types that survived managed trimming.
 				//
 				// FIXME: Those non-embedded jar bindings could visit here too, and they don't have to
 				// be part of proguard configuration. But they don't break (they will be NOTEd though).
-				if (!ReferencesMonoAndroid (reader))
+				if (!ReferencesMonoAndroid (reader) && (!ProcessMonoAndroid || !string.Equals (assemblyName, "Mono.Android", StringComparison.Ordinal)))
 					return;
 
-				var assemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
 				writer.WriteLine ($"# ACW for {assemblyName}");
 
 				foreach (var typeHandle in reader.TypeDefinitions) {
