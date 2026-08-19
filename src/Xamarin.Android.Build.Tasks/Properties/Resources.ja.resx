@@ -496,8 +496,7 @@ In this message, the term "binding" means a piece of generated code that makes i
   </data>
   <data name="XA1036" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' は、プロジェクト ファイルの $(SupportedOSPlatformVersion) 値 '{1}' と一致しません (プロジェクト ファイルに $(SupportedOSPlatformVersion) 値がない場合は、既定値が想定されています)。
-
-$(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml の値を変更するか、AndroidManifest.xml の値を削除します (まだ存在しない場合は、$(SupportedOSPlatformVersion) 値をプロジェクト ファイルに追加します)。</value>
+$(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml の値を変更するか、AndroidManifest.xml の値を削除してください (そして、まだ存在しない場合は、$(SupportedOSPlatformVersion) 値をプロジェクト ファイルに追加してください)。</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
