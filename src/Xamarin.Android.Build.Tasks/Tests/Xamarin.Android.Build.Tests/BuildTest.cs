@@ -2301,6 +2301,54 @@ public class ToolbarEx {
 		}
 
 		[Test]
+		public void BuildDoesNotModifyNuGetPackageCache ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				GlobalPackagesFolder = Path.Combine (Root, TestName, "packages"),
+				TargetFramework = "net10.0-android",
+				PackageReferences = {
+					new Package { Id = "Humanizer.Core", Version = "2.14.1" },
+					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.MonoVM);
+			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
+			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Humanizer;")
+				.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (System.DateTime.UtcNow.Humanize ());");
+
+			using var builder = CreateApkBuilder ();
+			var buildParameters = new [] { $"RestorePackagesPath={proj.GlobalPackagesFolder}" };
+			Assert.IsTrue (builder.Restore (proj, parameters: buildParameters), "Package restore should have succeeded.");
+
+			var satelliteAssemblies = Directory.GetFiles (proj.GlobalPackagesFolder, "*.resources.dll", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (satelliteAssemblies, "The NuGet package should contain satellite assemblies.");
+
+			var originalWriteTimes = new Dictionary<string, DateTime> ();
+			foreach (string assembly in satelliteAssemblies) {
+				File.SetLastWriteTimeUtc (assembly, new DateTime (2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+				originalWriteTimes.Add (assembly, File.GetLastWriteTimeUtc (assembly));
+			}
+
+			// A package cache is immutable: deny write sharing and verify timestamps remain unchanged.
+			var packageLocks = satelliteAssemblies
+				.Select (assembly => File.Open (assembly, FileMode.Open, FileAccess.Read, FileShare.Read))
+				.ToList ();
+			try {
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: buildParameters), "Build should have succeeded.");
+				foreach (string assembly in satelliteAssemblies) {
+					Assert.AreEqual (originalWriteTimes [assembly], File.GetLastWriteTimeUtc (assembly), $"Build should not modify '{assembly}'.");
+				}
+			} finally {
+				foreach (var packageLock in packageLocks) {
+					packageLock.Dispose ();
+				}
+			}
+		}
+
+		[Test]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (false, AndroidRuntime.CoreCLR)]
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
