@@ -60,6 +60,11 @@ updates:
       interval: "weekly"
     groups:
       java-source-utils-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      java-source-utils-security-updates:
+        applies-to: security-updates
         patterns:
           - "*"
   - package-ecosystem: "gradle"
@@ -70,6 +75,11 @@ updates:
       interval: "weekly"
     groups:
       manifestmerger-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      manifestmerger-security-updates:
+        applies-to: security-updates
         patterns:
           - "*"
   - package-ecosystem: "gitsubmodule"
