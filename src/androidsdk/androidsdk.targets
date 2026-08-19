@@ -85,6 +85,7 @@
     <_PlatformPackage Include="platform-36_r02">      <ApiLevel>36</ApiLevel>   <Hash>37607369A28C5B640B3A7998868D45898EBCB777565A0E85F9ACF36F29631D2E</Hash></_PlatformPackage>
     <_PlatformPackage Include="platform-36.1_r01">    <ApiLevel>36.1</ApiLevel> <Hash>265E9AA7D8DB6ABE7AD1696085D5D62784B341084C625DE46DB530970B1E806D</Hash></_PlatformPackage>
     <_PlatformPackage Include="platform-37.0_r01">    <ApiLevel>37.0</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>19BDCF42DE0CB0E9500A27DA6833FC30CDD49A7EC690AA5CABAA0EF893AF9EBE</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-37.1_r01">    <ApiLevel>37.1</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>CADF0A541847820EA3D8FFC5C192562A18376CF9BA510BF9659C772F9A442184</Hash></_PlatformPackage>
   </ItemGroup>
 
   <!--

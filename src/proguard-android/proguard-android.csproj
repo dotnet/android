@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\androidsdk\androidsdk.csproj" ReferenceOutputAssembly="False" />
+    <!-- Serialize projects that invoke the shared Gradle wrapper. -->
+    <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
 
   <Import Project="..\..\Configuration.props" />

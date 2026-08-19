@@ -98,7 +98,7 @@
         ResolvedAssemblies="@(_ResolvedAssemblies)"
         SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
         SupportedAbis="@(_BuildTargetAbis)"
-        TypemapImplementation="$(_AndroidTypeMapImplementation)"
+        TypemapImplementation="$(AndroidTypeMapImplementation)"
         TypemapOutputDirectory="$(_NativeAssemblySourceDir)">
     </GenerateTypeMappings>
 

@@ -154,6 +154,44 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
 		}
 
+		[Test]
+		public void NoChangeBuildPreservesJniAddNativeMethodRegistrationAttributePresent ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => """
+<replacements>
+  <replace-type from="android/app/Activity" to="example/RemapActivity" />
+</replacements>
+""",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
+			proj.SetProperty ("_SkipJniAddNativeMethodRegistrationAttributeScan", "true");
+
+			using (var builder = CreateApkBuilder ()) {
+				Assert.IsTrue (builder.Build (proj), "first build should have succeeded.");
+				AssertJniAddNativeMethodRegistrationAttributePresent (proj, builder);
+
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+				AssertJniAddNativeMethodRegistrationAttributePresent (proj, builder);
+			}
+		}
+
+		void AssertJniAddNativeMethodRegistrationAttributePresent (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
+			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			Assert.IsTrue (appConfig.jni_add_native_method_registration_attribute_present, "JNI native method registration should remain enabled.");
+		}
+
 		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
 		{
 			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android");
@@ -790,6 +828,45 @@ namespace Lib2
 				// Build with no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build should succeed");
 				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+			}
+		}
+
+		[Test]
+		public void AndroidDefineConstantsAreOrderIndependent ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library",
+			};
+			lib.Imports.Add (new Import ("DefineConstants.targets") {
+				TextContent = () => """
+<Project>
+  <Target Name="_AddTestDefineConstant">
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);TEST_DEFINE</DefineConstants>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_WriteTestDefineConstants">
+    <WriteLinesToFile File="$(IntermediateOutputPath)define-constants.txt" Lines="$(DefineConstants)" Overwrite="true" />
+  </Target>
+</Project>
+"""
+			});
+
+			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				builder.Target = "_ResolveMonoAndroidSdks,_AddTestDefineConstant,Compile,_WriteTestDefineConstants";
+				Assert.IsTrue (builder.Build (lib), "first library build should have succeeded.");
+				var firstDefineConstants = builder.Output.GetIntermediaryAsText ("define-constants.txt");
+
+				builder.Target = "_AddTestDefineConstant,_ResolveMonoAndroidSdks,Compile,_WriteTestDefineConstants";
+				Assert.IsTrue (builder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
+				Assert.AreEqual (firstDefineConstants, builder.Output.GetIntermediaryAsText ("define-constants.txt"),
+					"DefineConstants should not depend on target execution order.");
+				var defines = firstDefineConstants.Split (new [] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+				Assert.Less (Array.IndexOf (defines, "__ANDROID__"), Array.IndexOf (defines, "NET"),
+					"Android define constants should retain their historical position before the .NET implicit constants.");
+				Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("Building target \"CoreCompile\" completely.")),
+					"CoreCompile should not run when define constants are reordered.");
 			}
 		}
 

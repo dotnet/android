@@ -1243,6 +1243,14 @@ Supported values include:
 
 This property is obsolete and should not be used.
 
+## AndroidTypeMapImplementation
+
+An enum-style property that selects the type map implementation.
+Valid values are `llvm-ir` and `trimmable`.
+
+The default value is `llvm-ir` when using CoreCLR and `trimmable` when using
+NativeAOT.
+
 ## AndroidUseApkSigner
 
 A bool property that allows the developer to
