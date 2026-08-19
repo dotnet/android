@@ -47,6 +47,7 @@
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        ProcessMonoAndroid="$(_AndroidUsePreGeneratedMonoAndroidTypeMap)"
         OutputFile="$(_ProguardProjectConfiguration)" />
   </Target>
 

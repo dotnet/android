@@ -69,15 +69,16 @@
 
   <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). When present,
        the app build skips scanning Mono.Android (its ~8000 types) and instead references the
-       pre-built _Mono.Android.TypeMap.dll (Java.Lang.Object universe) + dexes the pre-compiled
-       JCW jar. Opt out with $(_AndroidUsePreGeneratedMonoAndroidTypeMap)=false. -->
+       pre-built _Mono.Android.TypeMap.dll (Java.Lang.Object universe). Framework Java Callable
+       Wrappers continue to come from the existing mono.android.jar. Opt out with
+       $(_AndroidUsePreGeneratedMonoAndroidTypeMap)=false. -->
   <PropertyGroup>
     <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
     <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
-    <_PreGeneratedMonoAndroidTypeMapJar>$(_PreGeneratedTypeMapDir)mono.android-typemaps.jar</_PreGeneratedMonoAndroidTypeMapJar>
     <_PreGeneratedMonoAndroidTypeMapAcwMap>$(_PreGeneratedTypeMapDir)mono.android-acw-map.txt</_PreGeneratedMonoAndroidTypeMapAcwMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>
     <!-- ACW map fed to the R8/proguard keep-rule generation. Normally this is the app's own
          acw-map.txt. When the pre-generated Mono.Android typemap is used, Mono.Android is excluded
          from the app scan, so its ACW entries are absent from acw-map.txt; the keep rules must
@@ -266,11 +267,6 @@
       <_GeneratedTypeMapAssembliesFromList Include="$(_PreGeneratedTypeMapDir)*.TypeMap.dll" />
     </ItemGroup>
   </Target>
-
-  <!-- Dex the pre-compiled Mono.Android JCW jar instead of regenerating/compiling those JCWs. -->
-  <ItemGroup Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
-    <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidTypeMapJar)" />
-  </ItemGroup>
 
   <!--
     The TypeMap generator has dynamic outputs: the set of generated assemblies

@@ -199,10 +199,10 @@
 
   <!-- When the pre-generated Mono.Android typemap is used, Mono.Android is excluded from the app
        scan so its ACW entries are missing from acw-map.txt. Build a SEPARATE merged map (app map +
-       pre-built mono.android-acw-map.txt) for the keep-rule generator, so R8 keeps the pre-built
-       JCWs instead of shrinking them out of classes.dex. Regenerated wholesale (Overwrite="true")
-       from both inputs each time they change — never appended in place — so it is deterministic and
-       leaves the app's acw-map.txt untouched. -->
+       pre-built mono.android-acw-map.txt) for the keep-rule generator, so R8 keeps the framework
+       JCWs from mono.android.jar instead of shrinking them out of classes.dex. Regenerated
+       wholesale (Overwrite="true") from both inputs each time they change — never appended in
+       place — so it is deterministic and leaves the app's acw-map.txt untouched. -->
   <Target Name="_MergePreGeneratedMonoAndroidAcwMapForKeepRules"
       Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' and '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
       Inputs="$(IntermediateOutputPath)acw-map.txt;$(_PreGeneratedMonoAndroidTypeMapAcwMap)"
