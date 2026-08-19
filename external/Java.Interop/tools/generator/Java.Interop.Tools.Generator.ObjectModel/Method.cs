@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaCallableWrappers;
 using MonoDroid.Generation.Utilities;
 
@@ -27,6 +28,7 @@ namespace MonoDroid.Generation
 		public bool IsStatic { get; set; }
 		public bool IsVirtual { get; set; }
 		public string JavaName { get; set; }
+		public string JniSignatureOverride { get; set; }
 		public string ManagedOverride { get; set; }
 		public string ManagedReturn { get; set; }
 		public string KotlinInlineClassReturnJniType { get; set; }
@@ -152,6 +154,7 @@ namespace MonoDroid.Generation
 			clone.IsStatic = IsStatic;
 			clone.IsVirtual = IsVirtual;
 			clone.JavaName = JavaName;
+			clone.JniSignatureOverride = JniSignatureOverride;
 			clone.ManagedOverride = ManagedOverride;
 			clone.ManagedReturn = ManagedReturn;
 			clone.KotlinInlineClassReturnJniType = KotlinInlineClassReturnJniType;
@@ -216,7 +219,7 @@ namespace MonoDroid.Generation
 
 		public bool IsVoid => RetVal.JavaName == "void";
 
-		public string JniSignature => "(" + Parameters.JniSignature + ")" + RetVal.JniName;
+		public string JniSignature => string.IsNullOrEmpty (JniSignatureOverride) ? "(" + Parameters.JniSignature + ")" + RetVal.JniName : JniSignatureOverride;
 
 		public InterfaceGen ListenerType => Parameters [0].ListenerType;
 
@@ -263,7 +266,28 @@ namespace MonoDroid.Generation
 			if (!RetVal.Validate (opt, tpl, context))
 				return false;
 
-			return base.OnValidate (opt, tpl, context);
+			if (!base.OnValidate (opt, tpl, context))
+				return false;
+
+			if (string.IsNullOrEmpty (JniSignatureOverride))
+				return true;
+
+			if (!JniSignatureUtilities.TryParseMethodSignature (JniSignatureOverride, out var parameters, out var returnType) || parameters.Length != Parameters.Count) {
+				Report.LogCodedWarning (0, Report.WarningInvalidJniSignatureOverride, this, JniSignatureOverride, context.GetContextTypeMember ());
+				return false;
+			}
+			for (int i = 0; i < parameters.Length; i++) {
+				if (!JniSignatureUtilities.AreAbiCompatible (Parameters [i].Symbol.JniName, parameters [i])) {
+					Report.LogCodedWarning (0, Report.WarningInvalidParameterType, Parameters [i], parameters [i], context.GetContextTypeMember ());
+					return false;
+				}
+			}
+			if (!JniSignatureUtilities.AreAbiCompatible (RetVal.Symbol.JniName, returnType)) {
+				Report.LogCodedWarning (0, Report.WarningInvalidReturnType, this, returnType, context.GetContextTypeMember ());
+				return false;
+			}
+
+			return true;
 		}
 	}
 }

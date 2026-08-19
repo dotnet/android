@@ -185,7 +185,7 @@ extends:
         - task: DotNetCoreCLI@2
           displayName: Update Android SDK band in Workloads.csproj
           inputs:
-            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.slnx
             arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
         - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
@@ -201,13 +201,13 @@ extends:
           displayName: Install MAUI workload packs
           retryCountOnTaskFailure: 3
           inputs:
-            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.slnx
             arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             command: new
-            arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+            arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Create MAUI template
             continueOnError: false

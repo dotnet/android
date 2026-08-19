@@ -3,11 +3,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-#if INTEROP
 namespace Java.Interop
-#else
-namespace Android.Runtime
-#endif
 {
 
 	[StructLayout(LayoutKind.Explicit)]
@@ -136,4 +132,3 @@ namespace Android.Runtime
 		}
 	}
 }
-

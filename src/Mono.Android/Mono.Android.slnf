@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "..\\..\\Xamarin.Android.sln",
+    "path": "..\\..\\Xamarin.Android.slnx",
     "projects": [
       "build-tools\\api-merge\\api-merge.csproj",
       "build-tools\\api-xml-adjuster\\api-xml-adjuster.csproj",

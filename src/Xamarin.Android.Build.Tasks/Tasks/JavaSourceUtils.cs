@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks
 			// Arguments sent to java.exe
 			cmd.AppendSwitchIfNotNull ("-jar ", JavaSourceUtilsJar);
 
-			cmd.AppendSwitch ($"@{responseFilePath}");
+			cmd.AppendSwitch ($"\"@{responseFilePath}\"");
 
 
 			return cmd.ToString ();

@@ -1,0 +1,131 @@
+#nullable enable
+Xamarin.Android.Tools.AndroidAppManifest
+Xamarin.Android.Tools.AndroidAppManifest.AndroidPermissions.get -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidAppManifest.AndroidPermissionsQualified.get -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationIcon.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationIcon.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationLabel.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationLabel.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationRoundIcon.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationRoundIcon.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationTheme.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.ApplicationTheme.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.Debuggable.get -> bool?
+Xamarin.Android.Tools.AndroidAppManifest.Debuggable.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.Document.get -> System.Xml.Linq.XDocument!
+Xamarin.Android.Tools.AndroidAppManifest.GetAllActivityNames() -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidAppManifest.GetLaunchableActivityName() -> string?
+Xamarin.Android.Tools.AndroidAppManifest.GetLaunchableActivityNames() -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidAppManifest.GetLaunchableFastDevActivityName() -> string?
+Xamarin.Android.Tools.AndroidAppManifest.GetLaunchableUserActivityName() -> string?
+Xamarin.Android.Tools.AndroidAppManifest.InstallLocation.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.InstallLocation.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.MinSdkVersion.get -> int?
+Xamarin.Android.Tools.AndroidAppManifest.MinSdkVersion.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.PackageName.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.PackageName.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.SetAndroidPermissions(System.Collections.Generic.IEnumerable<string!>! permissions) -> void
+Xamarin.Android.Tools.AndroidAppManifest.TargetSdkVersion.get -> int?
+Xamarin.Android.Tools.AndroidAppManifest.TargetSdkVersion.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.VersionCode.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.VersionCode.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.VersionName.get -> string?
+Xamarin.Android.Tools.AndroidAppManifest.VersionName.set -> void
+Xamarin.Android.Tools.AndroidAppManifest.Write(System.Xml.XmlWriter! writer) -> void
+Xamarin.Android.Tools.AndroidAppManifest.WriteToFile(string! fileName) -> void
+Xamarin.Android.Tools.AndroidSdkInfo
+Xamarin.Android.Tools.AndroidSdkInfo.AllAndroidSdkPaths.get -> string![]!
+Xamarin.Android.Tools.AndroidSdkInfo.AndroidNdkHostPlatform.get -> string!
+Xamarin.Android.Tools.AndroidSdkInfo.AndroidNdkPath.get -> string?
+Xamarin.Android.Tools.AndroidSdkInfo.AndroidSdkInfo(System.Action<System.Diagnostics.TraceLevel, string!>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null) -> void
+Xamarin.Android.Tools.AndroidSdkInfo.AndroidSdkPath.get -> string!
+Xamarin.Android.Tools.AndroidSdkInfo.GetBuildToolsPaths() -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidSdkInfo.GetBuildToolsPaths(string! preferredBuildToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidSdkInfo.GetCommandLineToolsPaths() -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidSdkInfo.GetCommandLineToolsPaths(string! preferredCommandLineToolsVersion) -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.AndroidSdkInfo.GetInstalledPlatformVersions(Xamarin.Android.Tools.AndroidVersions! versions) -> System.Collections.Generic.IEnumerable<Xamarin.Android.Tools.AndroidVersion!>!
+Xamarin.Android.Tools.AndroidSdkInfo.GetPlatformDirectory(int apiLevel) -> string!
+Xamarin.Android.Tools.AndroidSdkInfo.GetPlatformDirectoryFromId(string! id) -> string!
+Xamarin.Android.Tools.AndroidSdkInfo.IsPlatformInstalled(int apiLevel) -> bool
+Xamarin.Android.Tools.AndroidSdkInfo.JavaSdkPath.get -> string!
+Xamarin.Android.Tools.AndroidSdkInfo.TryGetCommandLineToolsPath() -> string?
+Xamarin.Android.Tools.AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel(string! idOrApiLevel, Xamarin.Android.Tools.AndroidVersions! versions) -> string?
+Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidTargetArch.Arm = 1 -> Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidTargetArch.Arm64 = 8 -> Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidTargetArch.Mips = 4 -> Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidTargetArch.None = 0 -> Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidTargetArch.Other = 65536 -> Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidTargetArch.X86 = 2 -> Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidTargetArch.X86_64 = 16 -> Xamarin.Android.Tools.AndroidTargetArch
+Xamarin.Android.Tools.AndroidVersion
+Xamarin.Android.Tools.AndroidVersion.AndroidVersion(System.Version! versionCodeFull, string! osVersion, string? codeName = null, string? id = null, bool stable = true) -> void
+Xamarin.Android.Tools.AndroidVersion.AndroidVersion(int apiLevel, string! osVersion, string? codeName = null, string? id = null, bool stable = true) -> void
+Xamarin.Android.Tools.AndroidVersion.ApiLevel.get -> int
+Xamarin.Android.Tools.AndroidVersion.CodeName.get -> string?
+Xamarin.Android.Tools.AndroidVersion.FrameworkVersion.get -> string!
+Xamarin.Android.Tools.AndroidVersion.Id.get -> string!
+Xamarin.Android.Tools.AndroidVersion.OSVersion.get -> string!
+Xamarin.Android.Tools.AndroidVersion.Stable.get -> bool
+Xamarin.Android.Tools.AndroidVersion.TargetFrameworkVersion.get -> System.Version!
+Xamarin.Android.Tools.AndroidVersion.VersionCodeFull.get -> System.Version!
+Xamarin.Android.Tools.AndroidVersions
+Xamarin.Android.Tools.AndroidVersions.AndroidVersions(System.Collections.Generic.IEnumerable<Xamarin.Android.Tools.AndroidVersion!>! versions) -> void
+Xamarin.Android.Tools.AndroidVersions.AndroidVersions(System.Collections.Generic.IEnumerable<string!>! frameworkDirectories) -> void
+Xamarin.Android.Tools.AndroidVersions.FrameworkDirectories.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Xamarin.Android.Tools.AndroidVersions.GetApiLevelFromFrameworkVersion(string! frameworkVersion) -> int?
+Xamarin.Android.Tools.AndroidVersions.GetApiLevelFromId(string! id) -> int?
+Xamarin.Android.Tools.AndroidVersions.GetFrameworkVersionFromApiLevel(int apiLevel) -> string?
+Xamarin.Android.Tools.AndroidVersions.GetFrameworkVersionFromId(string! id) -> string?
+Xamarin.Android.Tools.AndroidVersions.GetIdFromApiLevel(int apiLevel) -> string?
+Xamarin.Android.Tools.AndroidVersions.GetIdFromApiLevel(string! apiLevel) -> string?
+Xamarin.Android.Tools.AndroidVersions.GetIdFromFrameworkVersion(string! frameworkVersion) -> string?
+Xamarin.Android.Tools.AndroidVersions.GetIdFromVersionCodeFull(System.Version! versionCodeFull) -> string?
+Xamarin.Android.Tools.AndroidVersions.InstalledBindingVersions.get -> System.Collections.Generic.IReadOnlyList<Xamarin.Android.Tools.AndroidVersion!>!
+Xamarin.Android.Tools.AndroidVersions.MaxStableVersion.get -> Xamarin.Android.Tools.AndroidVersion?
+Xamarin.Android.Tools.AndroidVersions.MinStableVersion.get -> Xamarin.Android.Tools.AndroidVersion?
+Xamarin.Android.Tools.JdkInfo
+Xamarin.Android.Tools.JdkInfo.GetJavaSettingsPropertyValue(string! key, out string? value) -> bool
+Xamarin.Android.Tools.JdkInfo.GetJavaSettingsPropertyValues(string! key, out System.Collections.Generic.IEnumerable<string!>? value) -> bool
+Xamarin.Android.Tools.JdkInfo.HomePath.get -> string!
+Xamarin.Android.Tools.JdkInfo.IncludePath.get -> System.Collections.ObjectModel.ReadOnlyCollection<string!>!
+Xamarin.Android.Tools.JdkInfo.JarPath.get -> string!
+Xamarin.Android.Tools.JdkInfo.JavaPath.get -> string!
+Xamarin.Android.Tools.JdkInfo.JavaSettingsPropertyKeys.get -> System.Collections.Generic.IEnumerable<string!>!
+Xamarin.Android.Tools.JdkInfo.JavacPath.get -> string!
+Xamarin.Android.Tools.JdkInfo.JdkInfo(string! homePath) -> void
+Xamarin.Android.Tools.JdkInfo.JdkInfo(string! homePath, string! locator) -> void
+Xamarin.Android.Tools.JdkInfo.JdkInfo(string! homePath, string? locator = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+Xamarin.Android.Tools.JdkInfo.JdkJvmPath.get -> string!
+Xamarin.Android.Tools.JdkInfo.Locator.get -> string?
+Xamarin.Android.Tools.JdkInfo.ReleaseProperties.get -> System.Collections.ObjectModel.ReadOnlyDictionary<string!, string!>!
+Xamarin.Android.Tools.JdkInfo.Vendor.get -> string?
+Xamarin.Android.Tools.JdkInfo.Version.get -> System.Version?
+Xamarin.Android.Tools.KernelEx
+Xamarin.Android.Tools.OS
+Xamarin.Android.Tools.OS.OS() -> void
+Xamarin.Android.Tools.ProcessUtils
+override Xamarin.Android.Tools.AndroidVersion.ToString() -> string!
+override Xamarin.Android.Tools.JdkInfo.ToString() -> string!
+static Xamarin.Android.Tools.AndroidAppManifest.AndroidXNamespace.get -> System.Xml.Linq.XNamespace!
+static Xamarin.Android.Tools.AndroidAppManifest.CanonicalizePackageName(string! packageNameOrAssemblyName) -> string!
+static Xamarin.Android.Tools.AndroidAppManifest.Create(string! packageName, string! appLabel, Xamarin.Android.Tools.AndroidVersions! versions) -> Xamarin.Android.Tools.AndroidAppManifest!
+static Xamarin.Android.Tools.AndroidAppManifest.Load(System.Xml.Linq.XDocument! doc, Xamarin.Android.Tools.AndroidVersions! versions) -> Xamarin.Android.Tools.AndroidAppManifest!
+static Xamarin.Android.Tools.AndroidAppManifest.Load(string! filename, Xamarin.Android.Tools.AndroidVersions! versions) -> Xamarin.Android.Tools.AndroidAppManifest!
+static Xamarin.Android.Tools.AndroidAppManifest.NameXName.get -> System.Xml.Linq.XName!
+static Xamarin.Android.Tools.AndroidSdkInfo.DetectAndSetPreferredJavaSdkPathToLatest(System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+static Xamarin.Android.Tools.AndroidSdkInfo.SetPreferredAndroidNdkPath(string! path, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+static Xamarin.Android.Tools.AndroidSdkInfo.SetPreferredAndroidSdkPath(string! path, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+static Xamarin.Android.Tools.AndroidSdkInfo.SetPreferredJavaSdkPath(string! path, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
+static Xamarin.Android.Tools.AndroidVersion.Load(System.IO.Stream! stream) -> Xamarin.Android.Tools.AndroidVersion!
+static Xamarin.Android.Tools.AndroidVersion.Load(string! uri) -> Xamarin.Android.Tools.AndroidVersion!
+static Xamarin.Android.Tools.JdkInfo.GetKnownSystemJdkInfos(System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> System.Collections.Generic.IEnumerable<Xamarin.Android.Tools.JdkInfo!>!
+static Xamarin.Android.Tools.JdkInfo.GetSupportedJdkInfos(System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> System.Collections.Generic.IEnumerable<Xamarin.Android.Tools.JdkInfo!>!
+static Xamarin.Android.Tools.KernelEx.GetLongPathName(string! path) -> string!
+static Xamarin.Android.Tools.KernelEx.GetShortPathName(string! path) -> string!
+static Xamarin.Android.Tools.ProcessUtils.ExecuteToolAsync<TResult>(string! exe, System.Func<string!, TResult>! result, System.Threading.CancellationToken token, System.Action<System.Diagnostics.Process!>? onStarted = null) -> System.Threading.Tasks.Task<TResult>!
+static Xamarin.Android.Tools.ProcessUtils.StartProcess(System.Diagnostics.ProcessStartInfo! psi, System.IO.TextWriter? stdout, System.IO.TextWriter? stderr, System.Threading.CancellationToken cancellationToken, System.Action<System.Diagnostics.Process!>? onStarted = null) -> System.Threading.Tasks.Task<int>!
+static readonly Xamarin.Android.Tools.AndroidVersions.KnownVersions -> Xamarin.Android.Tools.AndroidVersion![]!
+static readonly Xamarin.Android.Tools.OS.IsLinux -> bool
+static readonly Xamarin.Android.Tools.OS.IsMac -> bool
+static readonly Xamarin.Android.Tools.OS.IsWindows -> bool

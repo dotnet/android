@@ -36,10 +36,10 @@ namespace Xamarin.Android.Build.Tests
 				EnableDefaultItems = true,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.7.1.3" },
-					// Using * here, so we explicitly get newer packages
-					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
-					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
-					new Package { Id = "Microsoft.JSInterop", Version = "8.0.*" },
+					// Using * here, so we explicitly get the latest stable packages
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "*" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "*" },
+					new Package { Id = "Microsoft.JSInterop", Version = "*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Resource.resx") {
@@ -58,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => "<metadata><remove-node path=\"/api/package[@name='com.balysv.material.drawable.menu']/class[@name='MaterialMenuView']/method[@name='onRestoreInstanceState']\" /><remove-node path=\"/api/package[@name='com.balysv.material.drawable.menu']/class[@name='MaterialMenuView']/method[@name='onSaveInstanceState']\" /></metadata>",
 					},
 					new AndroidItem.AndroidLibrary ("material-menu-1.1.0.aar") {
-						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 					},
 				}
 			};
@@ -140,6 +140,8 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				expectedFiles.Add ($"{proj.PackageName}.apk");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.apk.idsig");
+				// The .NET SDK emits this in Debug to enable Hot Reload switches
+				expectedFiles.Add ($"{proj.ProjectName}.runtimeconfig.dev.json");
 			}
 
 			expectedFiles.Sort(StringComparer.OrdinalIgnoreCase);
@@ -650,14 +652,14 @@ namespace Xamarin.Android.Build.Tests
 
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
-				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				OtherBuildItems = {
 					aar,
 					new AndroidItem.AndroidAarLibrary ("fragment-1.2.2.aar") {
-						WebContent = "https://maven.google.com/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
 					}
 				},
 			};
@@ -1214,19 +1216,19 @@ public class MyReceiver : BroadcastReceiver
 				});
 			}
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okio-1.13.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okhttp-3.8.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "retrofit-2.3.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "converter-gson-2.3.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
 			/* The source is simple:
 			 *
@@ -1373,6 +1375,36 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void AndroidEnableFastDeployment (
+			[Values (true, false)] bool enabled,
+			[Values (true, false)] bool isRelease,
+			[Values (true, false)] bool globalProperty,
+			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			if (!globalProperty) {
+				proj.AndroidEnableFastDeployment = enabled;
+			}
+			using (var b = CreateApkBuilder ()) {
+				var parameters = globalProperty ? new [] { $"{KnownProperties.AndroidEnableFastDeployment}={enabled}" } : null;
+				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				FileAssert.Exists (apk);
+				var helper = new ArchiveAssemblyHelper (apk);
+				using var assembly = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll");
+				Assert.AreEqual (!enabled, assembly != null, $"{proj.ProjectName}.dll should {(!enabled ? "" : "not ")}be embedded in {apk}.");
+			}
+		}
+
+		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime)) {
@@ -1392,7 +1424,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				var content = File.ReadAllLines (manifest);
 				var type = "mono.android.ResourcePatcher";
 
-				//NOTE: only $(AndroidFastDeploymentType) containing "dexes" should add this to the manifest
 				Assert.IsFalse (StringAssertEx.ContainsText (content, type), $"`{type}` should not exist in `AndroidManifest.xml`!");
 			}
 		}
@@ -1687,17 +1718,16 @@ namespace UnnamedProject
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (true, "LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
-				AddTestData (true, "LowercaseCrc64", "", runtime, false);
-				AddTestData (false, "", "127.0.0.1:9000,suspend,connect", runtime, false);
+				AddTestData ("LowercaseMD5", "", runtime, runtime == AndroidRuntime.CoreCLR);
+				AddTestData ("LowercaseCrc64", "", runtime, false);
+				AddTestData ("", "127.0.0.1:9000,suspend,connect", runtime, false);
 			}
 
 			return ret;
 
-			void AddTestData (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+			void AddTestData (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 			{
 				ret.Add (new object[] {
-					useInterpreter,
 					packageNamingPolicy,
 					diagnosticConfiguration,
 					runtime,
@@ -1708,34 +1738,23 @@ namespace UnnamedProject
 
 		[Test]
 		[TestCaseSource (nameof (Get_EnvironmentVariablesData))]
-		public void EnvironmentVariables (bool useInterpreter, string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
+		public void EnvironmentVariables (string packageNamingPolicy, string diagnosticConfiguration, AndroidRuntime runtime, bool enableCrashReport)
 		{
-			// NativeAOT supports neither the interpreter nor debug builds, but what we test here is
-			// environment file creation and contents, and that's relevant to NativeAOT too
+			// NativeAOT does not support debug builds, but environment file creation and contents are relevant to NativeAOT too.
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			if (runtime == AndroidRuntime.NativeAOT) {
-				if (packageNamingPolicy == "LowercaseMD5") {
-					Assert.Ignore ("NativeAOT does not support the 'LowercaseMD5' package naming policy.");
-					return;
-				}
-
-				// TODO: investigate and fix this. For some reason, `DOTNET_MODIFIABLE_ASSEMBLIES=Debug` is not
-				// in the environment variables file
-				if (useInterpreter && packageNamingPolicy == "LowercaseCrc64" && diagnosticConfiguration == "") {
-					Assert.Ignore ("NativeAOT doesn't put the DOTNET_MODIFIABLE_ASSEMBLIES=Debug variable in the environment file.");
-					return;
-				}
+			if (runtime == AndroidRuntime.NativeAOT && packageNamingPolicy == "LowercaseMD5") {
+				Assert.Ignore ("NativeAOT does not support the 'LowercaseMD5' package naming policy.");
+				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("UseInterpreter", useInterpreter.ToString ());
 			proj.SetProperty ("EnableCrashReport", enableCrashReport.ToString ());
 			if (!string.IsNullOrEmpty (packageNamingPolicy))
 				proj.SetProperty ("AndroidPackageNamingPolicy", packageNamingPolicy);
@@ -1748,7 +1767,7 @@ namespace UnnamedProject
 				var values = new List<string> {
 					"mono.enable_assembly_preload=0",
 				};
-				if (useInterpreter)
+				if (!isRelease)
 					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				if (!string.IsNullOrEmpty (diagnosticConfiguration))
 					values.Add ($"DOTNET_DiagnosticPorts={diagnosticConfiguration}");
@@ -1775,10 +1794,10 @@ namespace UnnamedProject
 				// Disable fast deployment for aabs because it is not currently compatible and so gives an XA0119 build error.
 				proj.EmbedAssembliesIntoApk = true;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "kotlinx-coroutines-android-1.3.2.jar") {
-				WebContent = "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");

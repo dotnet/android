@@ -18,6 +18,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		protected readonly TaskLoggingHelper Log;
 
 		/// <summary>
+		/// Whether to write descriptive comments into the generated LLVM IR.  Defaults to
+		/// <c>false</c>; see <see cref="LlvmIrGenerator.EmitComments" />.
+		/// </summary>
+		public bool EmitComments { get; set; }
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="LlvmIrComposer"/> class.
 		/// </summary>
 		/// <param name="log">The task logging helper for logging messages.</param>
@@ -58,10 +64,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public void Generate (LlvmIrModule module, AndroidTargetArch arch, StreamWriter output, string fileName)
 		{
 			if (!constructed) {
-				throw new InvalidOperationException ($"Internal error: module not constructed yet. Was Constrict () called?");
+				throw new InvalidOperationException ($"Internal error: module not constructed yet. Was Construct () called?");
 			}
 
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
+			generator.EmitComments = EmitComments;
 			generator.Generate (output, module);
 			output.Flush ();
 

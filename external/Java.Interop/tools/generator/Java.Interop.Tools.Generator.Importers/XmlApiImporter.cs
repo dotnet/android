@@ -390,6 +390,7 @@ namespace MonoDroid.Generation
 				IsReturnEnumified = elem.Attribute ("enumReturn") != null,
 				IsStatic = elem.XGetAttribute ("static") == "true",
 				JavaName = elem.XGetAttribute ("name"),
+				JniSignatureOverride = elem.XGetAttribute ("managed-jni-signature"),
 				ManagedOverride = elem.XGetAttribute ("managedOverride"),
 				ManagedReturn = elem.XGetAttribute ("managedReturn"),
 				KotlinInlineClassReturnJniType = elem.Attribute ("kotlin-inline-class-return-jni-type") != null ? elem.XGetAttribute ("kotlin-inline-class-return-jni-type") : null,
@@ -451,6 +452,7 @@ namespace MonoDroid.Generation
 			string kotlin_inline_jni = elem.Attribute ("kotlin-inline-class-jni-type") != null ? elem.XGetAttribute ("kotlin-inline-class-jni-type") : null;
 			// FIXME: "enum_type ?? java_type" should be extraneous. Somewhere in generator uses it improperly.
 			var result = new Parameter (name, enum_type ?? java_type, enum_type ?? managed_type, enum_type != null, java_type, not_null) {
+				JniTypeOverride = elem.XGetAttribute ("managed-jni-type"),
 				KotlinInlineClassJniType = kotlin_inline_jni,
 			};
 			if (elem.Attribute ("sender") != null)

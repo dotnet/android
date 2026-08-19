@@ -64,6 +64,7 @@ namespace Xamarin.Android.Tasks
 			public bool SkipInJavaToManaged;
 			public TypeMapDebugEntry DuplicateForJavaToManaged;
 			public string AssemblyName;
+			public string AssemblyFullName;
 
 			// This field is only used by the Cecil adapter for temp storage while reading.
 			// It is not used to create the typemap.
@@ -126,6 +127,12 @@ namespace Xamarin.Android.Tasks
 		readonly AndroidRuntime runtime;
 
 		public IList<string> GeneratedBinaryTypeMaps { get; } = new List<string> ();
+
+		/// <summary>
+		/// Whether to write descriptive comments into the generated LLVM IR type maps.
+		/// See <see cref="LLVMIR.LlvmIrGenerator.EmitComments" />.
+		/// </summary>
+		public bool EmitComments { get; set; }
 
 		public TypeMapGenerator (TaskLoggingHelper log, ITypeMapGeneratorAdapter state, AndroidRuntime runtime)
 		{
@@ -203,6 +210,8 @@ namespace Xamarin.Android.Tasks
 		void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
 		{
 			string outputFile = $"{baseFileName}.{MonoAndroidHelper.ArchToAbi (state.TargetArch)}.ll";
+
+			composer.EmitComments = EmitComments;
 
 			// TODO: each .ll file should have a comment which lists paths to all the DLLs that were used to generate
 			// the native code

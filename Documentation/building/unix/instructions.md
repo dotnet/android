@@ -118,9 +118,8 @@ All NUnit-based tests can be executed via the `make run-nunit-tests` target:
 
 	$ make run-nunit-tests
 
-All `.apk`-based unit tests can be executed via the `make run-apk-tests` target:
-
-	$ make run-apk-tests
+All `.apk`-based (on-device) unit tests are run with `dotnet test`; see
+[Running On-Device Tests](#running-on-device-tests) below.
 
 
 ## Running Individual NUnit Tests
@@ -138,7 +137,7 @@ In order to get a list of the tests you can use the `list-nunit-tests` make targ
 
 or via the `ListNUnitTests` target
 
-    msbuild Xamarin.Android.sln /t:ListNUnitTests
+    msbuild Xamarin.Android.slnx /t:ListNUnitTests
 
 This will produce a list of the tests in all of the test assemblies.
 
@@ -151,79 +150,47 @@ or msbuild property.
 
 or via
 
-    msbuild Xamarin.Android.sln /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    msbuild Xamarin.Android.slnx /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
 
-## Running Individual `.apk` Projects
+## Running On-Device Tests
 
-You can run selected apk test by passing PACKAGES variable to
-`make run-apk-tests`. For example:
+The on-device test apps are ordinary `dotnet test` projects that run their
+NUnit tests inside an Android instrumentation. Install the app, then run the
+tests against the attached device or emulator:
 
-    make run-apk-tests PACKAGES="Xamarin.Forms_Performance_Integration;Xamarin.Android.Locale_Tests"
+    $ ./dotnet-local.sh build -t:Install -c Release \
+        tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    $ (cd tests/Mono.Android-Tests/Mono.Android-Tests && \
+        ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
+            --report-trx --results-directory ../../../bin/TestRelease/TestResults)
 
-or with msbuild:
+The same pattern works for
+`tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj`.
 
-    msbuild /t:RunApkTests tests/RunApkTests.targets /p:ApkTests='"Xamarin.Forms_Performance_Integration;Xamarin.Android.Locale_Tests"'
+Results are written as `.trx` files into the `--results-directory` directory.
 
-Another possibility is to run them manually as described below.
+### Running Specific On-Device Tests
 
-See also the [`tests/RunApkTests.targets`](../../../tests/RunApkTests.targets) and
-[`build-tools/scripts/TestApks.targets`](../../../build-tools/scripts/TestApks.targets)
-files.
+`dotnet test` filtering options apply, for example:
 
-All `.apk`-based unit test projects provide the following targets:
+    $ ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build \
+        --filter-class "Xamarin.Android.RuntimeTests.JnienvTest"
 
-  * `DeployTestApks`: Installs the associated `.apk` to an Android device.
-  * `UndeployTestApks`: Uninstalls the associated `.apk` from an Android device.
-  * `RunTestApks`: Executes the unit tests contained within a `.apk`.
-    This target must be executed *after* the `DeployTestApks` target.
+### Running On-Device Tests with Include/Exclude
 
-To run an individual `.apk`-based test project, a package must be built, using the
-`SignAndroidPackage` target, installed, and executed.
-
-## Running `.apk` Projects with Include/Exclude
-
-If an `.apk`-based unit test uses the NUnit `[Category]` custom attribute, then
-those tests can be explicitly included or excluded from execution by setting
-the `$(INCLUDECATEGORIES)` or `$(EXCLUDECATEGORIES)` make variables.
+If an on-device test uses the NUnit `[Category]` custom attribute, then those
+tests can be explicitly included or excluded from execution by setting the
+`$(IncludeCategories)` or `$(ExcludeCategories)` MSBuild properties when
+building the test app. These flow to the on-device instrumentation through
+`runtimeconfig.json`.
 
 For example, to exclude tests that use the internet (`InetAccess`) category:
 
-	$ make run-apk-tests EXCLUDECATEGORIES=InetAccess
-
-`$(INCLUDECATEGORIES)` functions in the same fashion.
+    $ ./dotnet-local.sh build -t:Install -c Release \
+        -p:ExcludeCategories=InetAccess \
+        tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 
 To specify multiple categories, separate each category with a `:` character.
-
-
-### Running A Single Test Fixture
-
-A single NUnit *Test Fixture* -- a class with the `[TestFixture]`
-custom attribute -- may be executed instead of executing *all* test fixtures.
-
-The `RunTestApks` target accepts a `TestFixture` MSBuild property
-to specify the test fixture class to execute.
-
-If using `Xamarin.Android.NUnitLite` for projects outside the `dotnet/android`
-repository, such as NUnit tests for a custom app, the `RunTestApks` target
-will not exist. In such scenarios, the [`adb shell am`][adb-shell-am]
-`instrument` command can be used instead. It follows the format:
-
-[adb-shell-am]: https://developer.android.com/studio/command-line/adb.html#am
-
-	$ adb shell am instrument -e suite FIXTURE -w PACKAGE/INSTRUMENTATION
-
-Where:
-
-  * `FIXTURE` is the full *managed* class name of the NUnit test fixture to
-    execute.
-  * `PACKAGE` is the Android package name containing the NUnit tests
-  * `INSTRUMENTATION` is the *Java callable wrapper* class name to execute,
-    located within the Android package `PACKAGE`.
-
-For example:
-
-	$ adb shell am instrument -e suite Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
-		-w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
 
 
 # How do I build `Mono.Android.dll` for a given API Level?
@@ -337,4 +304,3 @@ For example, to rebuild Mono for armeabi-v7a:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
 	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
-

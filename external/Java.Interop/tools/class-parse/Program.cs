@@ -23,8 +23,10 @@ namespace Xamarin.Android.Tools {
 			int  verbosity  = 0;
 			bool autorename = false;
 			var  outputFile = (string) null;
+			var  referenceOutputFile = (string) null;
 			string platform = null;
 			var  docsPaths  = new List<string> ();
+			var  referenceFiles = new List<string> ();
 			var p = new OptionSet () {
 				"usage: class-dump [-dump] FILES [@RESPONSE-FILES]",
 				"",
@@ -37,6 +39,12 @@ namespace Xamarin.Android.Tools {
 				{ "o=",
 				  "Write output to {PATH}.",
 				  v => outputFile = v },
+				{ "reference=",
+				  "Reference .class or .jar {FILE}.",
+				  v => referenceFiles.Add (v) },
+				{ "reference-output=",
+				  "Write the reference API to {PATH}.",
+				  v => referenceOutputFile = v },
 				{ "docspath=",
 				  "Documentation {PATH} for parameter fixup",
 				  doc => docsPaths.Add (doc) },
@@ -67,18 +75,32 @@ namespace Xamarin.Android.Tools {
 			}
 			if (docsType)
 				Console.WriteLine ("class-parse: --docstype is obsolete and no longer a valid option.");
-			var output = outputFile == null
-				? Console.Out
-				: (TextWriter) new StreamWriter (outputFile, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 			Log.OnLog = (t, v, m, a) => {
 				Console.Error.WriteLine(m, a);
 			};
-			var globalClassPath = CreateClassPath (platform, docsPaths, autorename);
+			var globalClassPath = LoadClassPath (files, platform, docsPaths, autorename, dump, verbosity);
+			WriteOutput (globalClassPath, outputFile, dump);
+			if (referenceFiles.Count > 0) {
+				if (referenceOutputFile == null) {
+					Console.Error.WriteLine ("class-parse: --reference-output is required when using --reference.");
+					Environment.ExitCode = 1;
+					return;
+				}
+				var referenceClassPath = LoadClassPath (referenceFiles, platform, new List<string> (), autoRename: false, dump: false, verbosity: verbosity);
+				WriteOutput (referenceClassPath, referenceOutputFile, dump: false);
+			} else if (referenceOutputFile != null && File.Exists (referenceOutputFile)) {
+				File.Delete (referenceOutputFile);
+			}
+		}
+
+		static ClassPath LoadClassPath (IEnumerable<string> files, string platform, List<string> docsPaths, bool autoRename, bool dump, int verbosity)
+		{
+			var globalClassPath = CreateClassPath (platform, docsPaths, autoRename);
 			var classPaths      = new List<ClassPath> ();
 			foreach (var file in files) {
 				try {
 					if (ClassPath.IsJmodFile (file) || ClassPath.IsJarFile (file)) {
-						var cp = CreateClassPath (platform, docsPaths, autorename);
+						var cp = CreateClassPath (platform, docsPaths, autoRename);
 						cp.Load (file);
 						classPaths.Add (cp);
 						continue;
@@ -102,20 +124,31 @@ namespace Xamarin.Android.Tools {
 			foreach (var cp in classPaths) {
 				globalClassPath.Add (cp, removeModules: !dump);
 			}
-			if (!dump) {
-				globalClassPath.SaveXmlDescription (output);
-			} else {
-				bool first = true;
-				foreach (var c in globalClassPath.GetClassFiles ()) {
-					if (!first) {
-						output.WriteLine ();
+			return globalClassPath;
+		}
+
+		static void WriteOutput (ClassPath classPath, string outputFile, bool dump)
+		{
+			var output = outputFile == null
+				? Console.Out
+				: (TextWriter) new StreamWriter (outputFile, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
+			try {
+				if (!dump) {
+					classPath.SaveXmlDescription (output);
+				} else {
+					bool first = true;
+					foreach (var c in classPath.GetClassFiles ()) {
+						if (!first) {
+							output.WriteLine ();
+						}
+						first = false;
+						DumpClassFile (c, output);
 					}
-					first = false;
-					DumpClassFile (c, output);
 				}
+			} finally {
+				if (outputFile != null)
+					output.Close ();
 			}
-			if (outputFile != null)
-				output.Close ();
 		}
 
 		static ClassPath CreateClassPath (string platform, List<string> docsPaths, bool autoRename)

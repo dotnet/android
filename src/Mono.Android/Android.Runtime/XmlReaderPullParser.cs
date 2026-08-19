@@ -15,8 +15,11 @@ namespace Android.Runtime
 				return IntPtr.Zero;
 
 			var xpr = value as XmlResourceParserReader;
-			if (xpr != null)
-				return JNIEnv.NewLocalRef (xpr.Handle);
+			if (xpr != null) {
+				IntPtr result = JNIEnv.NewLocalRef (xpr.Handle);
+				GC.KeepAlive (xpr);
+				return result;
+			}
 			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderResourceParser (value));
 		}
 
@@ -130,8 +133,11 @@ namespace Android.Runtime
 				return IntPtr.Zero;
 
 			var xppr = value as XmlPullParserReader;
-			if (xppr != null)
-				return JNIEnv.NewLocalRef (xppr.Handle);
+			if (xppr != null) {
+				IntPtr result = JNIEnv.NewLocalRef (xppr.Handle);
+				GC.KeepAlive (xppr);
+				return result;
+			}
 			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderPullParser (value));
 		}
 		

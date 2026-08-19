@@ -119,7 +119,7 @@
     generator's Inputs stable across builds.
   -->
   <Target Name="_ResolveRuntimeOnlyAssembliesForTrimmableTypeMap"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
       Inputs="$(ProjectAssetsFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TypeMapOutputDirectory)runtime-only-assemblies.txt">
     <PropertyGroup>
@@ -152,7 +152,7 @@
   </Target>
 
   <Target Name="_AddRuntimeOnlyAssembliesToTrimmableTypeMap"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
+      Condition=" '$(AndroidTypeMapImplementation)' == 'trimmable' and '$(_OuterIntermediateOutputPath)' == '' and '$(DesignTimeBuild)' != 'true' "
       DependsOnTargets="_ResolveRuntimeOnlyAssembliesForTrimmableTypeMap"
       BeforeTargets="_GenerateTrimmableTypeMap">
     <ReadLinesFromFile

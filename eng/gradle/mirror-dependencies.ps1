@@ -1,8 +1,8 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Mirrors a gradle project's dependencies into the dnceng dotnet-public-maven
-    Azure Artifacts feed so CI can resolve them anonymously.
+    Mirrors Gradle dependencies or explicit Maven artifacts into the dnceng
+    dotnet-public-maven Azure Artifacts feed so CI can resolve them anonymously.
 
 .DESCRIPTION
     When Dependabot bumps a gradle dependency (or its transitive graph changes),
@@ -12,10 +12,11 @@
 
     This script does that by running the requested gradle build in a loop:
       1. Run gradle with RUNNINGONCI=true so it points at the dnceng feed.
-      2. Parse any 'Could not GET' URLs out of the build log.
-      3. Re-fetch each failing URL with an Azure DevOps OAuth bearer token
-         (obtained via `az account get-access-token`). The feed's upstream
-         connector then pulls the package and caches it for anonymous reads.
+      2. Parse any 'Could not GET/HEAD' URLs out of the build log.
+      3. Re-fetch each failing URL with an Azure DevOps OAuth token using Basic
+         authentication (obtained via `az account get-access-token`). The
+         feed's upstream connector then pulls the package and caches it for
+         anonymous reads.
       4. Repeat until the build succeeds or no more 401s appear.
 
     After the loop converges, no PR edits are needed — just re-run the failing
@@ -29,6 +30,13 @@
 .PARAMETER Task
     Gradle task(s) to run. Should be one that resolves the new dependency
     graph (e.g. 'assembleDebug', 'build', 'extractProguardFiles').
+
+.PARAMETER MavenArtifact
+    Maven coordinates to mirror directly, for tests that do not use Gradle.
+    Each value is group:artifact:version, which attempts the POM, JAR, AAR, and
+    Gradle module metadata files. Append an exact filename as a fourth segment
+    when a test requests a nonstandard payload. The command fails if no payload
+    can be mirrored for any requested coordinate.
 
 .PARAMETER GradleWrapper
     Optional path to the Gradle wrapper used by CI for this project, relative
@@ -59,19 +67,30 @@
         -ProjectDir external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle `
         -Task classes `
         -GradleWrapper external/Java.Interop/build-tools/gradle/gradlew.bat
-#>
-[CmdletBinding()]
-param(
-    [Parameter(Mandatory=$true)]
-    [string] $ProjectDir,
 
-    [Parameter(Mandatory=$true)]
+.EXAMPLE
+    pwsh ./eng/gradle/mirror-dependencies.ps1 `
+        -MavenArtifact 'androidx.core:core:1.12.0', `
+            'com.facebook.react:react-android:0.76.1:react-android-0.76.1.module'
+#>
+[CmdletBinding(DefaultParameterSetName='Gradle')]
+param(
+    [Parameter(Mandatory=$true, ParameterSetName='Gradle')]
+    [string] $ProjectDir = '.',
+
+    [Parameter(Mandatory=$true, ParameterSetName='Gradle')]
     [string] $Task,
 
+    [Parameter(Mandatory=$true, ParameterSetName='MavenArtifact')]
+    [string[]] $MavenArtifact,
+
+    [Parameter(ParameterSetName='Gradle')]
     [string] $GradleWrapper,
 
+    [Parameter(ParameterSetName='Gradle')]
     [string] $AndroidHome = $env:ANDROID_HOME,
 
+    [Parameter(ParameterSetName='Gradle')]
     [int] $MaxIterations = 15
 )
 
@@ -104,13 +123,19 @@ function Get-AzDevOpsToken {
 }
 
 function Invoke-Mirror($logPath) {
-    $urls = Select-String -Path $logPath -Pattern "Could not GET 'https://pkgs\.dev\.azure\.com/dnceng/[^']+'" -AllMatches |
+    $urls = Select-String -Path $logPath -Pattern "Could not (?:GET|HEAD) '(https://pkgs\.dev\.azure\.com/dnceng/[^']+)'" -AllMatches |
         ForEach-Object { $_.Matches } |
-        ForEach-Object { $_.Value -replace "^Could not GET '", "" -replace "'$", "" } |
+        ForEach-Object { $_.Groups[1].Value } |
         Sort-Object -Unique
-    if ($urls.Count -eq 0) { return 0 }
+    if ($urls.Count -eq 0) {
+        return [pscustomobject]@{
+            SuccessCount = 0
+            FailureCount = 0
+        }
+    }
     $token = Get-AzDevOpsToken
-    $headers = @{ Authorization = "Bearer $token" }
+    $basicCredential = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$token"))
+    $headers = @{ Authorization = "Basic $basicCredential" }
     $ok = 0; $fail = 0
     foreach ($u in $urls) {
         try {
@@ -122,7 +147,66 @@ function Invoke-Mirror($logPath) {
         }
     }
     Write-Host "  -> mirrored OK=$ok, not-found=$fail (of $($urls.Count))" -ForegroundColor Cyan
-    return $urls.Count
+    return [pscustomobject]@{
+        SuccessCount = $ok
+        FailureCount = $fail
+    }
+}
+
+function Get-MavenArtifactUrls($artifacts) {
+    $feedBaseUrl = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1'
+    foreach ($artifact in $artifacts) {
+        $parts = $artifact.Split(':', 4)
+        if ($parts.Count -lt 3) {
+            throw "Invalid Maven artifact '$artifact'. Expected group:artifact:version[:filename]."
+        }
+        $group = $parts[0].Replace('.', '/')
+        $name = $parts[1]
+        $version = $parts[2]
+        $filenames = if ($parts.Count -eq 4) {
+            @($parts[3])
+        } else {
+            @(
+                "$name-$version.pom"
+                "$name-$version.jar"
+                "$name-$version.aar"
+                "$name-$version.module"
+            )
+        }
+        foreach ($filename in $filenames) {
+            "$feedBaseUrl/$group/$name/$version/$filename"
+        }
+    }
+}
+
+# Verify az is available and authenticated up front so we fail fast.
+Get-AzDevOpsToken | Out-Null
+
+if ($PSCmdlet.ParameterSetName -eq 'MavenArtifact') {
+    Write-Host "Mirroring Maven artifacts directly:"
+    $MavenArtifact | ForEach-Object { Write-Host "  $_" }
+    $log = Join-Path ([IO.Path]::GetTempPath()) 'maven-artifact-mirror.log'
+    $failedArtifacts = @()
+    try {
+        foreach ($artifact in $MavenArtifact) {
+            Get-MavenArtifactUrls $artifact |
+                ForEach-Object { "Could not GET '$_'" } |
+                Set-Content $log
+            $result = Invoke-Mirror $log
+            if ($result.SuccessCount -eq 0) {
+                $failedArtifacts += $artifact
+            }
+        }
+    }
+    finally {
+        Remove-Item $log -ErrorAction SilentlyContinue
+    }
+    if ($failedArtifacts.Count -gt 0) {
+        Write-Host "`nNo payloads were mirrored for:" -ForegroundColor Red
+        $failedArtifacts | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        exit 1
+    }
+    return
 }
 
 Write-Host "Repo root:    $repoRoot"
@@ -131,12 +215,8 @@ Write-Host "Task:         $Task"
 Write-Host "Gradle:       $gradlew"
 if ($AndroidHome) { Write-Host "ANDROID_HOME: $AndroidHome" }
 
-# Verify az is available and authenticated up front so we fail fast.
-Get-AzDevOpsToken | Out-Null
-
 if ($AndroidHome) { $env:ANDROID_HOME = $AndroidHome }
 $env:RUNNINGONCI = 'true'
-$env:ANDROID_MIRROR_MAVEN_DEPENDENCIES = 'true'
 
 Push-Location $projectDirAbs
 try {
@@ -148,8 +228,8 @@ try {
             Write-Host "`nBUILD SUCCESSFUL after $i iteration(s). The feed now has the packages CI needs." -ForegroundColor Green
             return
         }
-        $count = Invoke-Mirror $log
-        if ($count -eq 0) {
+        $result = Invoke-Mirror $log
+        if (($result.SuccessCount + $result.FailureCount) -eq 0) {
             Write-Host "`nGradle failed but no 401s to mirror — see $log" -ForegroundColor Red
             Get-Content $log -Tail 30
             exit 1
