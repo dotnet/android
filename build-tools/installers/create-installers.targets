@@ -71,9 +71,6 @@
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jcw-gen.pdb" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jit-times.exe" />
     <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)jit-times.pdb" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)logcat-parse.exe" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)logcat-parse.pdb" />
-    <_LegacyJIFiles Include="$(LegacyMSBuildSrcDir)Mono.CSharp.dll" />  <!-- Required by logcat-parse.exe -->
   </ItemGroup>
   <ItemGroup>
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\Mono.Android.Export.dll" />

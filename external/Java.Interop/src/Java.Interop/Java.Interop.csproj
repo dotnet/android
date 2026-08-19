@@ -22,20 +22,12 @@
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
   <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   <PropertyGroup>
-    <DefineConstants>INTEROP;$(JavaInteropDefineConstants)</DefineConstants>
+    <DefineConstants>$(JavaInteropDefineConstants)</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <DocumentationFile>$(ToolOutputFullPath)Java.Interop.xml</DocumentationFile>
     <JNIEnvGenPath>$(BuildToolOutputFullPath)</JNIEnvGenPath>
     <Version>$(JICoreLibVersion)</Version>
-    <Standalone Condition=" '$(Standalone)' == '' ">true</Standalone>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Standalone)' == 'True' ">
-    <DefineConstants Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS;$(DefineConstants)</DefineConstants>
-    <DefineConstants Condition=" '$(JIBuildingForNetCoreApp)' != 'True' ">FEATURE_JNIENVIRONMENT_JI_PINVOKES;$(DefineConstants)</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Standalone)' != 'True' ">
-    <DefineConstants>FEATURE_JNIENVIRONMENT_JI_PINVOKES;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Java.Interop\JniLocationException.cs" />
@@ -95,7 +87,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

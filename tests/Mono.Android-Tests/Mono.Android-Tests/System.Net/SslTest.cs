@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 using NUnit.Framework;
 
+using Xamarin.Android.NetTests;
+
 namespace System.NetTests {
 	// TODO: https://github.com/dotnet/android/issues/10069
 	[TestFixture, Category ("InetAccess"), Category ("SSL")]
@@ -29,6 +31,7 @@ namespace System.NetTests {
 		[Test]
 		public void SslWithinTasksShouldWork ()
 		{
+			using var server = LocalHttpsServer.Start ();
 			var cb = ServicePointManager.ServerCertificateValidationCallback;
 			ServicePointManager.ServerCertificateValidationCallback = (s, cert, chain, policy) => {
 					Console.WriteLine ("# ServerCertificateValidationCallback");
@@ -39,9 +42,7 @@ namespace System.NetTests {
 			Exception  exception  = null;
 
 			var thread = new Thread (() => {
-				string url = "https://dotnet.microsoft.com/";
-
-				var downloadTask = new WebClient ().DownloadDataTaskAsync (url);
+				var downloadTask = new WebClient ().DownloadDataTaskAsync (server.OkUri);
 				var completeTask = downloadTask.ContinueWith (t => {
 						Console.WriteLine ("# DownloadDataTaskAsync complete; status={0}; exception={1}", t.Status, t.Exception);
 						status    = t.Status;
@@ -55,10 +56,6 @@ namespace System.NetTests {
 			ServicePointManager.ServerCertificateValidationCallback = cb;
 			var wex = (exception as AggregateException)?.InnerException as WebException;
 			if (wex != null) {
-				if (ShouldIgnoreException (wex)) {
-					Assert.Ignore ($"Ignoring network failure: {wex}");
-					return;
-				}
 				throw wex;
 			}
 
@@ -66,6 +63,7 @@ namespace System.NetTests {
 				throw exception;
 
 			Assert.AreEqual (TaskStatus.RanToCompletion, status);
+			server.AssertNoUnhandledExceptions ();
 		}
 
 		[Test]
@@ -80,36 +78,31 @@ namespace System.NetTests {
 
 		void DoHttpsShouldWork ()
 		{
-			// string url = "https://bugzilla.novell.com/show_bug.cgi?id=634817";
-			string[] urls = new string[]  {
-				"https://dotnet.microsoft.com/",
-				"https://www.bing.com/",
-				"https://httpbin.org/get",
-			};
-			// string url = "http://slashdot.org";
-			HttpWebResponse response = null;
-			foreach (var url in urls) {
-				HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-				request.Method = "GET";
-				response = (HttpWebResponse) request.GetResponse ();
-				if (response.StatusCode == HttpStatusCode.TooManyRequests) {
-					// try the next url.
-					continue;
-				}
-				break;
-			}
-			Assert.IsNotNull (response);
-			int len = 0;
-			using (var _r = new StreamReader (response.GetResponseStream ())) {
-				char[] buf = new char [4096];
-				int n;
-				while ((n = _r.Read (buf, 0, buf.Length)) > 0) {
-					/* ignore; we just want to make sure we can read */
-					len += n;
-				}
-			}
+			using var server = LocalHttpsServer.Start ();
+			var callback = ServicePointManager.ServerCertificateValidationCallback;
 
-			Assert.IsTrue (len > 0);
+			try {
+				ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) => true;
+
+				HttpWebRequest request = (HttpWebRequest) WebRequest.Create (server.OkUri);
+				request.Method = "GET";
+				using HttpWebResponse response = (HttpWebResponse) request.GetResponse ();
+
+				Assert.AreEqual (HttpStatusCode.OK, response.StatusCode);
+				int len = 0;
+				using (var reader = new StreamReader (response.GetResponseStream ())) {
+					char[] buf = new char [4096];
+					int n;
+					while ((n = reader.Read (buf, 0, buf.Length)) > 0) {
+						len += n;
+					}
+				}
+
+				Assert.IsTrue (len > 0);
+				server.AssertNoUnhandledExceptions ();
+			} finally {
+				ServicePointManager.ServerCertificateValidationCallback = callback;
+			}
 		}
 
 		[Test (Description="Bug https://bugzilla.xamarin.com/show_bug.cgi?id=18962")]

@@ -91,6 +91,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
 			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;

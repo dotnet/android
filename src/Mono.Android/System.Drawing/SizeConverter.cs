@@ -45,7 +45,7 @@ namespace System.Drawing {
 		{
 		}
 
-		public override bool CanConvertFrom (ITypeDescriptorContext context,
+		public override bool CanConvertFrom (ITypeDescriptorContext? context,
 						     Type sourceType)
 		{
 			if (sourceType == typeof (string))
@@ -54,8 +54,8 @@ namespace System.Drawing {
 			return base.CanConvertFrom (context, sourceType);
 		}
 
-		public override bool CanConvertTo (ITypeDescriptorContext context,
-						   Type destinationType)
+		public override bool CanConvertTo (ITypeDescriptorContext? context,
+					   Type? destinationType)
 		{
 			if (destinationType == typeof (string))
 				return true;
@@ -66,8 +66,8 @@ namespace System.Drawing {
 			return base.CanConvertTo (context, destinationType);
 		}
 
-		public override object? ConvertFrom (ITypeDescriptorContext context,
-						    CultureInfo culture,
+		public override object? ConvertFrom (ITypeDescriptorContext? context,
+					    CultureInfo? culture,
 						    object value)
 		{
 			if (culture == null)
@@ -93,9 +93,9 @@ namespace System.Drawing {
 			return new Size (numSubs[0], numSubs[1]);
 		}
 
-		public override object? ConvertTo (ITypeDescriptorContext context,
-						  CultureInfo culture,
-						  object value,
+		public override object? ConvertTo (ITypeDescriptorContext? context,
+					  CultureInfo? culture,
+					  object? value,
 						  Type destinationType)
 		{
 			if (culture == null)
@@ -118,7 +118,7 @@ namespace System.Drawing {
 			return base.ConvertTo (context, culture, value, destinationType);
 		}
 
-		public override object CreateInstance (ITypeDescriptorContext context,
+		public override object CreateInstance (ITypeDescriptorContext? context,
 						       IDictionary propertyValues)
 		{
 			var ow = propertyValues ["Width"];
@@ -131,15 +131,15 @@ namespace System.Drawing {
 			return new Size (width, height);
 		}
 
-		public override bool GetCreateInstanceSupported (ITypeDescriptorContext context)
+		public override bool GetCreateInstanceSupported (ITypeDescriptorContext? context)
 		{
 			return true;
 		}
 
 		[RequiresUnreferencedCode ("The Type of value cannot be statically discovered.")]
 		public override PropertyDescriptorCollection? GetProperties (
-							ITypeDescriptorContext context,
-							object value, Attribute[] attributes)
+						ITypeDescriptorContext? context,
+						object value, Attribute[]? attributes)
 		{
 			if (value is Size)
 				return TypeDescriptor.GetProperties (value, attributes);
@@ -147,7 +147,7 @@ namespace System.Drawing {
 			return base.GetProperties (context, value, attributes);
 		}
 		
-		public override bool GetPropertiesSupported (ITypeDescriptorContext context)
+		public override bool GetPropertiesSupported (ITypeDescriptorContext? context)
 		{
 			return true;
 		}

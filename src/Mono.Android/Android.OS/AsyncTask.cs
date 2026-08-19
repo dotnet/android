@@ -19,7 +19,7 @@ namespace Android.OS {
 	> : AsyncTask {
 
 		static IntPtr java_class_handle;
-		internal static IntPtr class_ref {
+		internal static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("android/os/AsyncTask", ref java_class_handle);
 			}

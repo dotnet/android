@@ -11,29 +11,7 @@ namespace Android.Runtime {
 			if (obj == null)
 				return IntPtr.Zero;
 
-			Type type = obj.GetType ();
-			if (type == typeof (bool))
-				return new Java.Lang.Boolean ((bool)obj).Handle;
-			else if (type == typeof (sbyte))
-				return new Java.Lang.Byte ((sbyte)obj).Handle;
-			else if (type == typeof (char))
-				return new Java.Lang.Character ((char)obj).Handle;
-			else if (type == typeof (short))
-				return new Java.Lang.Short ((short)obj).Handle;
-			else if (type == typeof (int))
-				return new Java.Lang.Integer ((int)obj).Handle;
-			else if (type == typeof (long))
-				return new Java.Lang.Long ((long)obj).Handle;
-			else if (type == typeof (float))
-				return new Java.Lang.Float ((float)obj).Handle;
-			else if (type == typeof (double))
-				return new Java.Lang.Double ((double)obj).Handle;
-			else if (type == typeof (string))
-				return JNIEnv.NewString ((string)obj);
-			else if (typeof (IJavaObject).IsAssignableFrom (type))
-				return ((IJavaObject)obj).Handle;
-			else
-				return new JavaObject (obj).Handle;
+			return Java.Interop.JavaConvert.ToLocalJniHandle (obj);
 		}
 
 		public static object? GetObject (IntPtr handle, JniHandleOwnership transfer)
@@ -104,12 +82,11 @@ namespace Android.Runtime {
 			return inst.GetHashCode ();
 		}
 
-		public override string? ToString ()
+		public override string ToString ()
 		{
 			if (inst == null)
 				return "";
-			return inst.ToString ();
+			return inst.ToString () ?? "";
 		}
 	}
 }
-

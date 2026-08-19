@@ -10,7 +10,7 @@ namespace Microsoft.Android.Runtime;
 /// Abstraction over a generated typemap universe.
 /// Both Debug (per-assembly universes) and Release (single merged universe)
 /// go through this interface, so <see cref="TrimmableTypeMap"/> doesn't need
-/// to know about aliasing mechanics or per-rank array map storage.
+/// to know about aliasing mechanics.
 /// </summary>
 interface ITypeMap
 {
@@ -24,9 +24,4 @@ interface ITypeMap
 	/// carries the <see cref="JavaPeerProxy"/> attribute).
 	/// </summary>
 	bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType);
-
-	/// <summary>
-	/// Resolves a managed element type key and 0-based array rank index to a generated array proxy type.
-	/// </summary>
-	bool TryGetArrayProxyType (string managedTypeKey, int rankIndex, [NotNullWhen (true)] out Type? proxyType);
 }

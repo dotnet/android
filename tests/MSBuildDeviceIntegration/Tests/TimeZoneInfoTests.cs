@@ -11,6 +11,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	[TestFixtureSource (nameof (Get_Fixture_Args))]
 	[Category ("TimeZoneInfo")]
 	[NonParallelizable]
 	public class TimeZoneInfoTests : DeviceTest

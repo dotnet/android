@@ -10,7 +10,7 @@ namespace Android.Widget {
 	public abstract partial class BaseAdapter<T> : BaseAdapter {
 
 		static IntPtr java_class_handle;
-		static IntPtr class_ref {
+		static new IntPtr class_ref {
 			get {
 				return JNIEnv.FindClass ("android/widget/BaseAdapter", ref java_class_handle);
 			}

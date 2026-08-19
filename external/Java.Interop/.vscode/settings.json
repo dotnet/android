@@ -4,7 +4,6 @@
     "nxunitExplorer.modules": [
         "bin/TestDebug/generator-Tests.dll",
         "bin/TestDebug/Java.Interop.Tools.JavaCallableWrappers-Tests.dll",
-        "bin/TestDebug/LogcatParse-Tests.dll",
         "bin/TestDebug/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll",
         "bin/TestDebug/Xamarin.Android.Tools.Bytecode-Tests.dll",
     ]

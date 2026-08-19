@@ -13,6 +13,7 @@ public interface ITrimmableTypeMapLogger
 	void LogRootingManifestReferencedTypeInfo (string javaTypeName, string managedTypeName);
 	void LogManifestReferencedTypeNotFoundWarning (string javaTypeName);
 	void LogLibraryManifestMergeWarning (string message);
+	void LogInvalidManifestPlaceholderWarning (string placeholders);
 	void LogUnresolvableJavaPeerSkippedWarning (
 		string managedTypeName,
 		string assemblyName,
@@ -20,4 +21,7 @@ public interface ITrimmableTypeMapLogger
 		string unresolvedAssemblyName,
 		string unresolvedAssemblyPath);
 	void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName);
+	void LogInvalidJavaNameError (string javaName, string invalidIdentifier);
+	void LogCustomJavaObjectError (string managedTypeName);
+	void LogCustomJavaObjectWarning (string managedTypeName);
 }

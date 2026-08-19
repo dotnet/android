@@ -2,7 +2,6 @@
 
 using System;
 using System.IO;
-using System.Globalization;
 using System.Linq;
 using System.Xml;
 using Microsoft.Build.Framework;
@@ -44,10 +43,18 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			var minVersion        = ToVersion (MinimumApiLevel);
 			var targetVersion     = ToVersion (TargetApiLevel);
-			var versions          = new AndroidVersions (AndroidApiInfo.Select (ToAndroidVersion));
+			var versions          = AndroidApiInfo.Select (ToAndroidVersion).ToArray ();
+			var stableVersions = versions
+				.Where (version => version.Stable)
+				.ToArray ();
+			if (stableVersions.Length == 0) {
+				Log.LogError ("No @(AndroidApiInfo) items are marked as stable.");
+				return false;
+			}
+			var maxStableVersion = stableVersions.MaxBy (version => version.TargetFrameworkVersion);
 			var targetApiLevel    = targetVersion != null && targetVersion.Major > 0
 				? targetVersion
-				: versions.MaxStableVersion!.VersionCodeFull;
+				: maxStableVersion.VersionCodeFull;
 			var settings = new XmlWriterSettings {
 				OmitXmlDeclaration = true,
 				Indent = true,
@@ -81,11 +88,11 @@ Specifies the supported Android platform versions for this SDK.
 				writer.WriteEndElement (); // </PropertyGroup>
 
 				writer.WriteStartElement ("ItemGroup");
-				foreach (Version versionCode in versions.InstalledBindingVersions
-						.Where (v => v.VersionCodeFull >= minVersion)
-						.Select (v => v.VersionCodeFull)
+				foreach (Version versionCode in versions
+						.Select (version => version.VersionCodeFull)
+						.Where (version => version >= minVersion)
 						.Distinct ()
-						.OrderBy (v => v)) {
+						.OrderBy (version => version)) {
 					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
 					writer.WriteAttributeString ("Include", versionCode.ToString ());
 					if (versionCode < targetVersion) {
@@ -116,7 +123,7 @@ Specifies the supported Android platform versions for this SDK.
 			return null;
 		}
 
-		static AndroidVersion ToAndroidVersion (ITaskItem item)
+		static (Version VersionCodeFull, Version TargetFrameworkVersion, bool Stable) ToAndroidVersion (ITaskItem item)
 		{
 			/*
 			<AndroidApiInfo Include="v16.0.99">
@@ -131,9 +138,12 @@ Specifies the supported Android platform versions for this SDK.
 			if (!Version.TryParse (item.GetMetadata ("VersionCodeFull"), out var versionCodeFull)) {
 				throw new ArgumentException ($"Invalid VersionCodeFull '{item.GetMetadata ("VersionCodeFull")}' for item '{item.ItemSpec}'");
 			}
+			if (!Version.TryParse (item.ItemSpec.TrimStart ('v'), out var targetFrameworkVersion)) {
+				throw new ArgumentException ($"Invalid framework version '{item.ItemSpec}'");
+			}
 			bool.TryParse (item.GetMetadata ("Stable"), out bool stable);
 
-			return new AndroidVersion (versionCodeFull, item.ItemSpec.TrimStart ('v'), item.GetMetadata ("Name"), item.GetMetadata ("Id"), stable);
+			return (versionCodeFull, targetFrameworkVersion, stable);
 		}
 	}
 }

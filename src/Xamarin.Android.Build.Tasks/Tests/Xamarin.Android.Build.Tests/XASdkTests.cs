@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
@@ -32,18 +31,43 @@ namespace Xamarin.Android.Build.Tests
 
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
 			var dotnet = new DotNetCLI (Path.Combine (templatePath, $"{templateName}.csproj"));
-			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
+			Assert.IsTrue (dotnet.New (template, noRestore: true), $"`dotnet new {template} --no-restore` should succeed");
+
+			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
+			var projectNuGetConfig = Path.Combine (dotnet.ProjectDirectory, "NuGet.config");
+			File.Copy (repoNuGetConfig, projectNuGetConfig);
+			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
+
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 
 			// Debug build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Debug", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Debug")), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
 			// Release build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Release")), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
+
+			string [] GetBuildParameters (string configuration)
+			{
+				var parameters = new List<string> {
+					$"Configuration={configuration}",
+					"TrimmerSingleWarn=false",
+				};
+				if (template == "androidwear") {
+					var mavenTargets = Path.Combine (
+						XABuildPaths.TopDirectory,
+						"src",
+						"Xamarin.Android.Build.Tasks",
+						"Tests",
+						"Xamarin.Android.Build.Tests",
+						"dotnet-public-maven.targets");
+					parameters.Add ($"CustomAfterMicrosoftCommonTargets=\"{mavenTargets}\"");
+				}
+				return parameters.ToArray ();
+			}
 		}
 
 		static IEnumerable<object[]> Get_DotNetPack_Data ()
@@ -114,7 +138,7 @@ namespace Xamarin.Android.Build.Tests
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					},
 					new AndroidItem.AndroidLibrary ("sub\\directory\\bar.aar") {
-						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 					},
 					new AndroidItem.AndroidJavaSource ("JavaSourceTest.java") {
 						Encoding = Encoding.ASCII,
@@ -146,16 +170,16 @@ public class JavaSourceTest {
 				BinaryContent = () => [],
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.LibraryProjectZip ("..\\baz.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 				MetadataValues = "Bind=false",
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
 				Update = () => "nopack.aar",
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 				MetadataValues = "Pack=false;Bind=false",
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {
-				MetadataValues = "Version=1.3.3;Bind=false",
+				MetadataValues = $"Version=1.3.3;Bind=false;Repository={TestEnvironment.DotNetPublicMaven}",
 				BinaryContent = () => [],
 			});
 
@@ -185,12 +209,12 @@ public class JavaSourceTest {
 			aarEntry.Extract (aarStream);
 			aarStream.Seek (0, SeekOrigin.Begin);
 
-			// Look for 2 .jar files under libs/
+			// Look for the Maven dependency, foo.jar, and the compiled AndroidJavaSource output under libs/
 			using var aar = ZipArchive.Open (aarStream);
 			int count = aar.Count (e =>
 				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
 				e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
-			Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
+			Assert.AreEqual (3, count, $"There should be 3 .jar files in the {aarPath} archive, but found {count}.");
 		}
 
 		static IEnumerable<object[]> Get_DotNetTargetFrameworks_Data ()
@@ -326,26 +350,18 @@ public class JavaSourceTest {
 
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
-				if (runtime != AndroidRuntime.NativeAOT) {
-					dotnet.AssertHasNoWarnings ();
-				} else {
-					// NativeAOT currently issues 1 warning
-					dotnet.AssertHasSomeWarnings (1);
-				}
+				dotnet.AssertHasNoWarnings ();
 			}
 
 			// Only check latest TFM, as previous or preview TFMs will come from NuGet
 			if (dotnetVersion == XABuildConfig.LatestDotNetTargetFramework && !preview) {
+				var buildOutput = dotnet.LastBuildOutput.ToArray ();
 				var versionString = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
-				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
-				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
-				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
+				AssertUsingPack (buildOutput, $"Microsoft.Android.Ref.{versionString}", "ref", dotnetVersion, "Mono.Android.dll");
 
 				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
 				versionString = runtimeApiLevel.Minor == 0 ? $"{runtimeApiLevel.Major}" : $"{runtimeApiLevel.Major}.{runtimeApiLevel.Minor}";
-				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{versionString}.android")).LastOrDefault ();
-				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
-				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
+				AssertUsingPack (buildOutput, $"Microsoft.Android.Runtime.{versionString}.android", "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
 			}
 
 			var publishDirectory = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
@@ -364,6 +380,17 @@ public class JavaSourceTest {
 				FileAssert.Exists (aab);
 				FileAssert.Exists (aabSigned);
 			}
+		}
+
+		static void AssertUsingPack (IEnumerable<string> buildOutput, string packName, params string [] assemblyPath)
+		{
+			var packDirectory = Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, packName);
+			var assemblyPathSuffix = Path.Combine (assemblyPath);
+			var assemblyFileName = Path.GetFileName (assemblyPathSuffix);
+			Assert.That (Directory.EnumerateFiles (packDirectory, assemblyFileName, SearchOption.AllDirectories),
+				Has.Exactly (1).Matches<string> (path =>
+					path.EndsWith (assemblyPathSuffix, StringComparison.OrdinalIgnoreCase) && buildOutput.ContainsText (path)),
+				$"Build should use exactly one installed '{packName}' pack.");
 		}
 
 		[Test]

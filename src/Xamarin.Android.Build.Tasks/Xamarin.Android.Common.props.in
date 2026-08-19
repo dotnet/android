@@ -35,6 +35,7 @@
 		<!-- Enable nuget package conflict resolution -->
 		<ResolveAssemblyConflicts>true</ResolveAssemblyConflicts>
 
+		<AndroidNdkApiLevel_Arm>@NDK_ARMEABI_V7_API@</AndroidNdkApiLevel_Arm>
 		<AndroidNdkApiLevel_Arm64>@NDK_ARM64_V8A_API@</AndroidNdkApiLevel_Arm64>
 		<AndroidNdkApiLevel_X64>@NDK_X86_64_API@</AndroidNdkApiLevel_X64>
 	</PropertyGroup>

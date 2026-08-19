@@ -44,8 +44,7 @@ static class ComponentElementBuilder
 			element.Add (CreateIntentFilterElement (intentFilter));
 		}
 
-		// Add <layout> element from a [Layout] attribute, if present
-		if (component.LayoutProperties is not null) {
+		if (component.Kind == ComponentKind.Activity && component.LayoutProperties is not null) {
 			var layout = CreateLayoutElement (component.LayoutProperties);
 			if (layout is not null) {
 				element.Add (layout);
@@ -238,7 +237,7 @@ static class ComponentElementBuilder
 
 	internal static void UpdateApplicationElement (XElement app, JavaPeerInfo peer, int targetSdkVersion = 0)
 	{
-		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+		string jniName = JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName);
 		app.SetAttributeValue (AttName, jniName);
 
 		var component = peer.ComponentAttribute;
@@ -250,7 +249,7 @@ static class ComponentElementBuilder
 
 	internal static void AddInstrumentation (XElement manifest, JavaPeerInfo peer, string packageName)
 	{
-		string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+		string jniName = JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName);
 		var element = new XElement ("instrumentation",
 			new XAttribute (AttName, jniName));
 

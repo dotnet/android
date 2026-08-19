@@ -62,11 +62,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			double total = 0;
-			StructuredBuild build = null;
+			double maxEvaluationTime = 0;
 			for (int i=0; i < iterations; i++) {
 				action (builder);
-				build = ReadBinLog (builder);
+				var build = ReadBinLog (builder);
 				var actual = GetDuration (build, builder);
+				maxEvaluationTime = Math.Max (maxEvaluationTime, GetMaxEvaluationTime (build));
 				TestContext.Out.WriteLine ($"run {i} took: {actual}ms");
 				total += actual;
 				if (afterRun is not null)
@@ -75,7 +76,7 @@ namespace Xamarin.Android.Build.Tests
 			total /= iterations;
 			TestContext.Out.WriteLine ($"expected: {expected}ms, actual: {total}ms");
 			if (total > expected) {
-				AssertSlowMachine (build, expected, total);
+				AssertSlowMachine (maxEvaluationTime, expected, total);
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
 			}
 		}
@@ -86,30 +87,35 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Fail ($"No timeout value found for a key of {caller}");
 			}
 			double total = 0;
-			StructuredBuild build = null;
+			double maxEvaluationTime = 0;
 			for (int i=0; i < iterations; i++) {
 				action (builder);
-				build = ReadBinLog (builder);
+				var build = ReadBinLog (builder);
 				var duration = GetTaskDuration (build, builder, task);
+				maxEvaluationTime = Math.Max (maxEvaluationTime, GetMaxEvaluationTime (build));
 				TestContext.Out.WriteLine($"run {i} took: {duration}ms");
 				total += duration;
 			}
 			total /= iterations;
 			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
 			if (total > expected) {
-				AssertSlowMachine (build, expected, total);
+				AssertSlowMachine (maxEvaluationTime, expected, total);
 				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
 			}
 		}
 
-		void AssertSlowMachine (StructuredBuild build, int expected, double actual)
+		void AssertSlowMachine (double maxEvaluationTime, int expected, double actual)
+		{
+			TestContext.Out.WriteLine ($"max evaluation time: {maxEvaluationTime}ms (threshold: {MaxEvaluationTimeInMs}ms)");
+			if (maxEvaluationTime > MaxEvaluationTimeInMs) {
+				Assert.Inconclusive ($"Exceeded expected time of {expected}ms, actual {actual}ms, but evaluation time was {maxEvaluationTime:F0}ms (threshold: {MaxEvaluationTimeInMs}ms), indicating a slow CI machine.");
+			}
+		}
+
+		double GetMaxEvaluationTime (StructuredBuild build)
 		{
 			var evaluations = build.FindChildrenRecursive<ProjectEvaluation> ();
-			var maxEval = evaluations.Any () ? evaluations.Max (e => e.Duration.TotalMilliseconds) : 0;
-			TestContext.Out.WriteLine ($"max evaluation time: {maxEval}ms (threshold: {MaxEvaluationTimeInMs}ms)");
-			if (maxEval > MaxEvaluationTimeInMs) {
-				Assert.Inconclusive ($"Exceeded expected time of {expected}ms, actual {actual}ms, but evaluation time was {maxEval:F0}ms (threshold: {MaxEvaluationTimeInMs}ms), indicating a slow CI machine.");
-			}
+			return evaluations.Any () ? evaluations.Max (e => e.Duration.TotalMilliseconds) : 0;
 		}
 
 		StructuredBuild ReadBinLog (ProjectBuilder builder)
@@ -379,7 +385,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Quiet;
 				builder.Install (proj);
 				builder.AutomaticNuGetRestore = false;
-				ProfileTask (builder, "FastDeploy", 20, b => {
+				ProfileTask (builder, "FastDeploy2", 20, b => {
 					b.Uninstall (proj);
 					b.Install (proj);
 				});

@@ -57,19 +57,6 @@ namespace Java.Interop {
 			} },
 		};
 
-		static readonly Dictionary<Type, JavaPeerContainerFactory> ScalarContainerFactories = new Dictionary<Type, JavaPeerContainerFactory> {
-			{ typeof (bool), JavaPeerContainerFactory<bool>.Instance },
-			{ typeof (byte), JavaPeerContainerFactory<byte>.Instance },
-			{ typeof (sbyte), JavaPeerContainerFactory<sbyte>.Instance },
-			{ typeof (char), JavaPeerContainerFactory<char>.Instance },
-			{ typeof (short), JavaPeerContainerFactory<short>.Instance },
-			{ typeof (int), JavaPeerContainerFactory<int>.Instance },
-			{ typeof (long), JavaPeerContainerFactory<long>.Instance },
-			{ typeof (float), JavaPeerContainerFactory<float>.Instance },
-			{ typeof (double), JavaPeerContainerFactory<double>.Instance },
-			{ typeof (string), JavaPeerContainerFactory<string>.Instance },
-		};
-
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
 			if (target == null)
@@ -89,13 +76,14 @@ namespace Java.Interop {
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
 				if (RuntimeFeature.TrimmableTypeMap) {
-					var factoryConverter = TryGetFactoryBasedConverter (target);
-					if (factoryConverter != null)
-						return factoryConverter;
-				} else {
+					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
+						return collectionConverter;
+				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
 					if (factoryConverter != null)
 						return factoryConverter;
+				} else {
+					throw new NotSupportedException ($"Cannot convert Java collection elements to closed generic array element type '{target}' because the runtime does not support dynamic code generation.");
 				}
 			}
 
@@ -110,6 +98,7 @@ namespace Java.Interop {
 
 			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
 				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
+			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
 			{
 				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
@@ -124,73 +113,6 @@ namespace Java.Interop {
 					Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
 					return GetJniHandleConverterForType (t);
 				}
-
-				return null;
-			}
-		}
-
-		/// <summary>
-		/// AOT-safe converter using <see cref="JavaPeerContainerFactory"/> from the generated proxy.
-		/// Avoids <c>MakeGenericType()</c> by using the pre-typed factory from the proxy attribute.
-		/// </summary>
-		static Func<IntPtr, JniHandleOwnership, object?>? TryGetFactoryBasedConverter (Type target)
-		{
-			if (TryGetSingleGenericArgument (target, typeof (IList<>), typeof (JavaList<>), out var listElementType)) {
-				var factory = TryGetContainerFactory (listElementType);
-				if (factory != null)
-					return (h, t) => factory.CreateList (h, t);
-			}
-
-			if (TryGetSingleGenericArgument (target, typeof (ICollection<>), typeof (JavaCollection<>), out var collectionElementType)) {
-				var factory = TryGetContainerFactory (collectionElementType);
-				if (factory != null)
-					return (h, t) => factory.CreateCollection (h, t);
-			}
-
-			if (TryGetDictionaryArguments (target, out var typeArgs)) {
-				var keyFactory = TryGetContainerFactory (typeArgs [0]);
-				var valueFactory = TryGetContainerFactory (typeArgs [1]);
-				if (keyFactory != null && valueFactory != null)
-					return (h, t) => valueFactory.CreateDictionary (keyFactory, h, t);
-			}
-
-			return null;
-
-			static bool TryGetSingleGenericArgument (Type target, Type interfaceType, Type wrapperType, [NotNullWhen (true)] out Type? argument)
-			{
-				if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-					var genericDef = target.GetGenericTypeDefinition ();
-					if (genericDef == interfaceType || genericDef == wrapperType) {
-						argument = target.GetGenericArguments () [0];
-						return true;
-					}
-				}
-
-				argument = null;
-				return false;
-			}
-
-			static bool TryGetDictionaryArguments (Type target, [NotNullWhen (true)] out Type []? arguments)
-			{
-				if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-					var genericDef = target.GetGenericTypeDefinition ();
-					if (genericDef == typeof (IDictionary<,>) || genericDef == typeof (JavaDictionary<,>)) {
-						arguments = target.GetGenericArguments ();
-						return true;
-					}
-				}
-
-				arguments = null;
-				return false;
-			}
-
-			static JavaPeerContainerFactory? TryGetContainerFactory (Type elementType)
-			{
-				if (ScalarContainerFactories.TryGetValue (elementType, out var scalarFactory))
-					return scalarFactory;
-
-				if (typeof (IJavaPeerable).IsAssignableFrom (elementType))
-					return TrimmableTypeMap.Instance?.GetContainerFactory (elementType);
 
 				return null;
 			}

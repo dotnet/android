@@ -1,0 +1,26 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workbench ActiveDocument="../../README.md">
+    <Files>
+      <File FileName="Sdks/AndroidSdkBase.cs" Line="6" Column="32" />
+      <File FileName="Sdks/AndroidSdkUnix.cs" Line="7" Column="32" />
+      <File FileName="Sdks/AndroidSdkWindows.cs" Line="6" Column="32" />
+      <File FileName="Sdks/MonoDroidSdkBase.cs" Line="7" Column="32" />
+      <File FileName="Sdks/MonoDroidSdkUnix.cs" Line="6" Column="32" />
+      <File FileName="Sdks/MonoDroidSdkWindows.cs" Line="6" Column="32" />
+      <File FileName="AndroidLogger.cs" Line="8" Column="30" />
+      <File FileName="AndroidSdk.cs" Line="6" Column="32" />
+      <File FileName="AndroidTargetArch.cs" Line="8" Column="23" />
+      <File FileName="AndroidVersion.cs" Line="5" Column="22" />
+      <File FileName="MonoDroidSdk.cs" Line="6" Column="28" />
+      <File FileName="OS.cs" Line="8" Column="16" />
+      <File FileName="ProcessUtils.cs" Line="14" Column="26" />
+      <File FileName="Properties/AssemblyInfo.cs" Line="13" Column="40" />
+      <File FileName="../../README.md" Line="3" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

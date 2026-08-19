@@ -9,14 +9,17 @@ namespace Android.Runtime
 {
 	public class XmlReaderResourceParser : XmlReaderPullParser, IXmlResourceParser
 	{
-		public static IntPtr ToLocalJniHandle (XmlReader? value)
+		public new static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)
 				return IntPtr.Zero;
 
 			var xpr = value as XmlResourceParserReader;
-			if (xpr != null)
-				return JNIEnv.NewLocalRef (xpr.Handle);
+			if (xpr != null) {
+				IntPtr result = JNIEnv.NewLocalRef (xpr.Handle);
+				GC.KeepAlive (xpr);
+				return result;
+			}
 			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderResourceParser (value));
 		}
 
@@ -28,14 +31,13 @@ namespace Android.Runtime
 			this.r = r;
 		}
 	
-		#region IXmlResourceParser implementation
+		// IXmlResourceParser implementation
 		public void Close ()
 		{
 			r.Close ();
 		}
-		#endregion
 	
-		#region IAttributeSet implementation
+		// IAttributeSet implementation
 		public bool GetAttributeBooleanValue (int index, bool defaultValue)
 		{
 			return index < AttributeCount ? XmlConvert.ToBoolean (GetAttributeValue (index)) : defaultValue;
@@ -121,7 +123,6 @@ namespace Android.Runtime
 		public int StyleAttribute {
 			get { return GetAttributeResourceValue (null, "style", 0); }
 		}
-		#endregion
 	}
 
 	public class XmlReaderPullParser : Java.Lang.Object, IXmlPullParser
@@ -132,8 +133,11 @@ namespace Android.Runtime
 				return IntPtr.Zero;
 
 			var xppr = value as XmlPullParserReader;
-			if (xppr != null)
-				return JNIEnv.NewLocalRef (xppr.Handle);
+			if (xppr != null) {
+				IntPtr result = JNIEnv.NewLocalRef (xppr.Handle);
+				GC.KeepAlive (xppr);
+				return result;
+			}
 			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderPullParser (value));
 		}
 		
@@ -145,7 +149,7 @@ namespace Android.Runtime
 			this.r = r;
 		}
 	
-		#region IXmlPullParser implementation
+		// IXmlPullParser implementation
 		public void DefineEntityReplacementText (string? entityName, string? replacementText)
 		{
 			throw new NotSupportedException ();
@@ -197,8 +201,10 @@ namespace Android.Runtime
 			return false;
 		}
 	
-		public string? GetNamespace (string prefix)
+		public string? GetNamespace (string? prefix)
 		{
+			if (prefix == null)
+				return null;
 			return r.LookupNamespace (prefix);
 		}
 	
@@ -222,7 +228,7 @@ namespace Android.Runtime
 			throw new NotSupportedException ();
 		}
 	
-		public char[] GetTextCharacters (int[] holderForStartAndLength)
+		public char[] GetTextCharacters (int[]? holderForStartAndLength)
 		{
 			throw new NotSupportedException ();
 		}
@@ -481,7 +487,5 @@ namespace Android.Runtime
 				return r.Value;
 			}
 		}
-		#endregion
 	}
 }
-

@@ -39,6 +39,7 @@ namespace Android.Widget {
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;I)V", new JValue (context), new JValue (textViewResourceId));
 			}
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_II;
@@ -62,6 +63,7 @@ namespace Android.Widget {
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;II)V", new JValue (context), new JValue (resource), new JValue (textViewResourceId));
 			}
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_;
@@ -87,6 +89,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;I[Ljava/lang/Object;)V", new JValue (context), new JValue (textViewResourceId), new JValue (native_objects));
 			}
 			JNIEnv.DeleteLocalRef (native_objects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_;
@@ -112,6 +115,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;II[Ljava/lang/Object;)V", new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (native_objects));
 			}
 			JNIEnv.DeleteLocalRef (native_objects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_ILjava_util_List_;
@@ -137,6 +141,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;ILjava/util/List;)V", new JValue (context), new JValue (textViewResourceId), new JValue (lrefObjects));
 			}
 			JNIEnv.DeleteLocalRef (lrefObjects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_IILjava_util_List_;
@@ -162,6 +167,7 @@ namespace Android.Widget {
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;IILjava/util/List;)V", new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (lrefObjects));
 			}
 			JNIEnv.DeleteLocalRef (lrefObjects);
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_add_Ljava_lang_Object_;
@@ -178,18 +184,20 @@ namespace Android.Widget {
 
 		static IntPtr id_createFromResource_Landroid_content_Context_II;
 		[Register ("createFromResource", "(Landroid/content/Context;II)Landroid/widget/ArrayAdapter;", "")]
-		public static Android.Widget.ArrayAdapter<Java.Lang.ICharSequence> CreateFromResource (Android.Content.Context context, int textArrayResId, int textViewResId)
+		public new static Android.Widget.ArrayAdapter<Java.Lang.ICharSequence> CreateFromResource (Android.Content.Context context, int textArrayResId, int textViewResId)
 		{
 			if (id_createFromResource_Landroid_content_Context_II == IntPtr.Zero)
 				id_createFromResource_Landroid_content_Context_II = JNIEnv.GetStaticMethodID (class_ref, "createFromResource", "(Landroid/content/Context;II)Landroid/widget/ArrayAdapter;");
-			return JavaConvert.FromJniHandle<ArrayAdapter<Java.Lang.ICharSequence>> (
+			var result = JavaConvert.FromJniHandle<ArrayAdapter<Java.Lang.ICharSequence>> (
 					JNIEnv.CallStaticObjectMethod (class_ref, id_createFromResource_Landroid_content_Context_II, new JValue (context), new JValue (textArrayResId), new JValue (textViewResId)),
-						JniHandleOwnership.TransferLocalRef)!;
+						JniHandleOwnership.TransferLocalRef);
+			GC.KeepAlive (context);
+			return result ?? throw new InvalidOperationException ("Unable to marshal the return value to an Android.Widget.ArrayAdapter instance.");
 		}
 
 		static IntPtr id_getItem_I;
 		[Register ("getItem", "(I)Ljava/lang/Object;", "GetGetItem_IHandler")]
-		public T? GetItem (int position)
+		public new T? GetItem (int position)
 		{
 			if (id_getItem_I == IntPtr.Zero)
 				id_getItem_I = JNIEnv.GetMethodID (class_ref, "getItem", "(I)Ljava/lang/Object;");
@@ -234,11 +242,13 @@ namespace Android.Widget {
 
 		static IntPtr id_sort_Ljava_util_Comparator_;
 		[Register ("sort", "(Ljava/util/Comparator;)V", "GetSort_Ljava_util_Comparator_Handler")]
-		public void Sort (Java.Util.IComparator comparator)
+		public new void Sort (Java.Util.IComparator comparator)
 		{
 			if (id_sort_Ljava_util_Comparator_ == IntPtr.Zero)
 				id_sort_Ljava_util_Comparator_ = JNIEnv.GetMethodID (class_ref, "sort", "(Ljava/util/Comparator;)V");
 			JNIEnv.CallNonvirtualVoidMethod (Handle, class_ref, id_sort_Ljava_util_Comparator_, new JValue (comparator));
+			GC.KeepAlive (comparator);
+			GC.KeepAlive (this);
 		}
 	}
 }

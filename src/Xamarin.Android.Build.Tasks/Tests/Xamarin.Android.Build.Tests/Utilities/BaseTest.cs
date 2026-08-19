@@ -103,24 +103,31 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
-			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-			(int code, string stdOutput, string stdError) result;
-
+			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
+			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+			};
+			using var stdOutput = new StringWriter ();
+			using var stdError = new StringWriter ();
+			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+			int processId = -1;
+			int exitCode;
 			try {
-				result = RunProcessWithExitCode ("apkdiff" + ext, args);
-			} catch (System.ComponentModel.Win32Exception) {
-				// apkdiff's location might not be in the $PATH, try known locations
-				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var apkdiffPath = Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext);
-				if (!File.Exists (apkdiffPath)) {
-					var agentToolsDir = Environment.GetEnvironmentVariable ("AGENT_TOOLSDIRECTORY");
-					if (Directory.Exists (agentToolsDir)) {
-						apkdiffPath = Path.Combine (agentToolsDir, "apkdiff" + ext);
-					}
-				}
-				result = RunProcessWithExitCode (apkdiffPath, args);
+				exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
+					info,
+					stdOutput,
+					stdError,
+					cancellationTokenSource.Token,
+					onStarted: process => processId = process.Id
+				).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) {
+				exitCode = -1;
+				stdError.WriteLine ($"apkdiff timed out after 30 seconds (PID {processId}).");
 			}
-			var logContent = $"apkdiff exited with code: {result.code}" +
+
+			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
+			var logContent = $"apkdiff exited with code: {exitCode}" +
 				$"\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
 			File.WriteAllText (logFilePath, logContent);
@@ -490,8 +497,8 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				CreateNoWindow = true,
 			};
-			using var proc = Process.Start (psi);
-			string stdout = proc!.StandardOutput.ReadToEnd ();
+			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{apksignerExe}'.");
+			string stdout = proc.StandardOutput.ReadToEnd ();
 			string stderr = proc.StandardError.ReadToEnd ();
 			proc.WaitForExit ();
 			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
@@ -624,6 +631,34 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			// MonoVM supports all the combinations
+			return false;
+		}
+
+		// NativeAOT trims with ILC and does not emit illink's `obj/<config>/<rid>/linked/` output.
+		// Tests that inspect the `linked/` directory (e.g. to verify trimming or type-map behavior)
+		// therefore cannot run as-is on NativeAOT.
+		// TODO: add DGML-based counterparts to verify these behaviors on NativeAOT (follow-up issue).
+		protected bool IgnoreNativeAotLinkedAssemblyChecks (AndroidRuntime runtime)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
+				return true;
+			}
+
+			return false;
+		}
+
+		// Some behaviors differ fundamentally between NativeAOT (ILC) and CoreCLR/MonoVM
+		// (e.g. ILC does not run illink, and the trimmable typemap uses CRC-only package naming),
+		// so certain test cases cannot apply as-is on NativeAOT. Use this to skip such a case
+		// with an explicit reason.
+		protected bool IgnoreOnNativeAot (AndroidRuntime runtime, string reason)
+		{
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ($"NativeAOT: {reason}");
+				return true;
+			}
+
 			return false;
 		}
 

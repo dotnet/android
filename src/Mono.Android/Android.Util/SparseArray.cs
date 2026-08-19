@@ -36,7 +36,7 @@ namespace Android.Util
 		
 		static IntPtr id_get_I;
 		[Register ("get", "(I)Ljava/lang/Object;", "")]
-		public virtual E Get (int key)
+		public new virtual E Get (int key)
 		{
 			if (id_get_I == IntPtr.Zero)
 				id_get_I = JNIEnv.GetMethodID (class_ref, "get", "(I)Ljava/lang/Object;");
@@ -90,7 +90,7 @@ namespace Android.Util
 		
 		static IntPtr id_valueAt_I;
 		[Register ("valueAt", "(I)Ljava/lang/Object;", "")]
-		public virtual E ValueAt (int index)
+		public new virtual E ValueAt (int index)
 		{
 			if (id_valueAt_I == IntPtr.Zero)
 				id_valueAt_I = JNIEnv.GetMethodID (class_ref, "valueAt", "(I)Ljava/lang/Object;");

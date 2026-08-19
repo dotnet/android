@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
@@ -60,7 +62,7 @@ namespace Java.Interop {
 		}
 
 		class TypeNameComparer : IComparer<string> {
-			public int Compare (string x, string y)
+			public int Compare (string? x, string? y)
 			{
 				if (object.ReferenceEquals (x, y))
 					return 0;
@@ -239,7 +241,11 @@ namespace Java.Interop {
 				return null;
 			}
 
-			string managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			string? managedAssemblyName = Marshal.PtrToStringAnsi (managedAssemblyNamePointer);
+			if (managedAssemblyName is null) {
+				return null;
+			}
+
 			Assembly assembly = Assembly.Load (managedAssemblyName);
 			Type? ret = null;
 			foreach (Module module in assembly.Modules) {
@@ -309,9 +315,11 @@ namespace Java.Interop {
 			string? class_name = GetClassName (class_ptr);
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero) {
-					type = GetJavaToManagedTypeCore (class_name);
-					if (type != null) {
-						break;
+					if (!string.IsNullOrEmpty (class_name)) {
+						type = GetJavaToManagedTypeCore (class_name);
+						if (type != null) {
+							break;
+						}
 					}
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
@@ -400,6 +408,33 @@ namespace Java.Interop {
 
 		static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 		static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
+		static  readonly    ConcurrentDictionary<Type, ActivationConstructor>  ActivationConstructorCache = new ConcurrentDictionary<Type, ActivationConstructor> (1, 3);
+
+		enum ActivationConstructorKind
+		{
+			Missing,
+			XA,
+			JI,
+		}
+
+		readonly record struct ActivationConstructor (ConstructorInfo? Constructor, ActivationConstructorKind Kind);
+
+		/// <summary>
+		/// Preserves constructor annotations through the stateful <c>GetOrAdd</c> factory,
+		/// whose <c>Func</c> key parameter cannot carry <see cref="DynamicallyAccessedMembersAttribute"/>.
+		/// </summary>
+		readonly struct AnnotatedType
+		{
+			public AnnotatedType (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type type)
+			{
+				Type = type;
+			}
+
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			public Type Type { get; }
+		}
 
 		internal static object CreateProxy (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
@@ -410,17 +445,18 @@ namespace Java.Interop {
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.
 			var peer = GetUninitializedObject (type);
-			BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-			var c = type.GetConstructor (flags, null, XAConstructorSignature, null);
-			if (c != null) {
-				c.Invoke (peer, new object[] { handle, transfer });
+			// XA constructors are the normal activation path; resolve XA first and cache the result.
+			var activation = GetActivationConstructor (type);
+			var constructor = activation.Constructor;
+			if (constructor != null && activation.Kind == ActivationConstructorKind.XA) {
+				constructor.Invoke (peer, new object[] { handle, transfer });
 				return peer;
 			}
-			c = type.GetConstructor (flags, null, JIConstructorSignature, null);
-			if (c != null) {
+			// JI constructors are a legacy fallback slated for removal, but cache them while supported.
+			if (constructor != null && activation.Kind == ActivationConstructorKind.JI) {
 				JniObjectReference          r = new JniObjectReference (handle);
 				JniObjectReferenceOptions   o = JniObjectReferenceOptions.Copy;
-				c.Invoke (peer, new object [] { r, o });
+				constructor.Invoke (peer, new object [] { r, o });
 				JNIEnv.DeleteRef (handle, transfer);
 				return peer;
 			}
@@ -428,6 +464,24 @@ namespace Java.Interop {
 			throw new MissingMethodException (
 					"No constructor found for " + type.FullName + "::.ctor(System.IntPtr, Android.Runtime.JniHandleOwnership)",
 					CreateJavaLocationException ());
+
+			static ActivationConstructor GetActivationConstructor (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+					Type type)
+			{
+				return ActivationConstructorCache.GetOrAdd (type,
+						static (_, state) => {
+							const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+							var constructor = state.Type.GetConstructor (flags, null, XAConstructorSignature, null);
+							if (constructor != null)
+								return new ActivationConstructor (constructor, ActivationConstructorKind.XA);
+
+							constructor = state.Type.GetConstructor (flags, null, JIConstructorSignature, null);
+							return new ActivationConstructor (
+								constructor,
+								constructor == null ? ActivationConstructorKind.Missing : ActivationConstructorKind.JI);
+						}, new AnnotatedType (type));
+			}
 
 			static IJavaPeerable GetUninitializedObject (
 					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]

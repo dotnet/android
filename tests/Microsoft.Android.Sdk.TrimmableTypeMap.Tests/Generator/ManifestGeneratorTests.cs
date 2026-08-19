@@ -106,6 +106,25 @@ public class ManifestGeneratorTests
 	}
 
 	[Fact]
+	public void Placeholders_EmptyKey_ReplacesEmptyTokenWithoutWarning ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var warnings = new List<string> ();
+		gen.WarnInvalidPlaceholder = warnings.Add;
+		gen.ManifestPlaceholders = "=val1";
+		var template = ParseTemplate ("""
+			<?xml version="1.0" encoding="utf-8"?>
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.app">
+			  <uses-sdk />
+			  <application android:label="${}" />
+			</manifest>
+			""");
+		var doc = GenerateAndLoad (gen, template: template);
+		Assert.Empty (warnings);
+		Assert.Equal ("val1", (string?) doc.Root?.Element ("application")?.Attribute (AndroidNs + "label"));
+	}
+
+	[Fact]
 	public void Package_PlaceholderToken_ReplacedWithResolvedPackageName ()
 	{
 		// A template package that is a placeholder token (e.g. "${PACKAGENAME}") must be replaced
@@ -161,6 +180,20 @@ public class ManifestGeneratorTests
 		Assert.NotNull (filter);
 		Assert.True (filter?.Elements ("action").Any (a => (string?)a.Attribute (AttName) == "android.intent.action.MAIN"));
 		Assert.True (filter?.Elements ("category").Any (c => (string?)c.Attribute (AttName) == "android.intent.category.LAUNCHER"));
+	}
+
+	[Fact]
+	public void Activity_NestedClass_PreservesBinaryName ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/Outer$NestedActivity", new ComponentInfo {
+			Kind = ComponentKind.Activity,
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var activity = doc.Root?.Element ("application")?.Element ("activity");
+
+		Assert.Equal ("com.example.app.Outer$NestedActivity", (string?) activity?.Attribute (AttName));
 	}
 
 	[Fact]
@@ -383,6 +416,24 @@ public class ManifestGeneratorTests
 		Assert.Equal ("center", (string?)layout?.Attribute (AndroidNs + "gravity"));
 		Assert.Equal ("300dp", (string?)layout?.Attribute (AndroidNs + "minWidth"));
 		Assert.Equal ("400dp", (string?)layout?.Attribute (AndroidNs + "minHeight"));
+	}
+
+	[Fact]
+	public void Service_LayoutAttributeElement_Ignored ()
+	{
+		var gen = CreateDefaultGenerator ();
+		var peer = CreatePeer ("com/example/app/MyService", new ComponentInfo {
+			Kind = ComponentKind.Service,
+			LayoutProperties = new Dictionary<string, object?> {
+				["DefaultWidth"] = "500dp",
+			},
+		});
+
+		var doc = GenerateAndLoad (gen, [peer]);
+		var service = doc.Root?.Element ("application")?.Element ("service");
+
+		Assert.NotNull (service);
+		Assert.Null (service?.Element ("layout"));
 	}
 
 	[Fact]

@@ -120,10 +120,23 @@ static class JavaMarshalRegisteredPeers
 					continue;
 				if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
 					continue;
-				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
+				// JNIEnv.NewObject/JNIEnv.CreateInstance() compatibility.
+				// When two MCW's are created for one Java instance [0],
+				// we want the 2nd MCW to replace the 1st, as the 2nd is
+				// the one the dev created; the 1st is an implicit intermediary.
+				//
+				// Meanwhile, a new "replaceable" instance should *not* replace an
+				// existing "replaceable" instance; see dotnet/android#9862.
+				//
+				// [0]: If Java ctor invokes overridden virtual method, we'll
+				// transition into managed code w/o a registered instance, and
+				// thus will create an "intermediary" via
+				// (IntPtr, JniHandleOwnership) .ctor.
+				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) &&
+						!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
 					peer.Dispose ();
 					peers [i] = new ReferenceTrackingHandle (value);
-				} else {
+				} else if (JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages) {
 					WarnNotReplacing (key, value, target);
 				}
 				GC.KeepAlive (target);
@@ -313,11 +326,11 @@ static class JavaMarshalRegisteredPeers
 		}
 
 		// This is an internal mirror of the Java.Interop.JniObjectReferenceControlBlock
+		[StructLayout (LayoutKind.Sequential)]
 		private struct JniObjectReferenceControlBlock
 		{
 			public IntPtr handle;
 			public int handle_type;
-			public IntPtr weak_handle;
 			public int refs_added;
 		}
 

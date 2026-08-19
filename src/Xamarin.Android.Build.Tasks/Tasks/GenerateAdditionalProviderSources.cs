@@ -70,18 +70,8 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 			Xamarin.Android.Tasks.AndroidRuntime.CoreCLR => true,
 			_ => false,
 		};
-		string providerTemplateFile = isMonoVM ?
-			"MonoRuntimeProvider.Bundled.java" :
-			"NativeAotRuntimeProvider.java";
-		string providerTemplate = GetResource (providerTemplateFile);
 
-		foreach (var provider in AdditionalProviderSources) {
-			var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
-			var real_provider = isMonoVM ?
-				Path.Combine (OutputDirectory, "src", "mono", provider + ".java") :
-				Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
-			Files.CopyIfStringChanged (contents, real_provider);
-		}
+		WriteAdditionalRuntimeProviderSources (OutputDirectory, isMonoVM, AdditionalProviderSources);
 
 		// For NativeAOT, generate JavaInteropRuntime.java and NativeAotEnvironmentVars.java
 		if (androidRuntime == Xamarin.Android.Tasks.AndroidRuntime.NativeAOT) {
@@ -120,6 +110,29 @@ public sealed class GenerateAdditionalProviderSources : AndroidTask
 		using (var stream = typeof (GenerateAdditionalProviderSources).Assembly.GetManifestResourceStream (resource))
 		using (var reader = new StreamReader (stream))
 			return reader.ReadToEnd ();
+	}
+
+	/// <summary>
+	/// Writes the additional per-process runtime provider Java sources (e.g. NativeAotRuntimeProvider_1.java)
+	/// by cloning the runtime provider template for each name. Shared between the legacy (ILLink) and
+	/// trimmable build paths so both emit the extra providers a multi-process app declares in its manifest.
+	/// </summary>
+	internal static void WriteAdditionalRuntimeProviderSources (string outputDirectory, bool isMonoVM, string [] additionalProviderSources)
+	{
+		if (additionalProviderSources.Length == 0) {
+			return;
+		}
+		string providerTemplateFile = isMonoVM ?
+			"MonoRuntimeProvider.Bundled.java" :
+			"NativeAotRuntimeProvider.java";
+		string providerTemplate = GetResource (providerTemplateFile);
+		foreach (var provider in additionalProviderSources) {
+			var contents = providerTemplate.Replace (isMonoVM ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider", provider);
+			var realProvider = isMonoVM ?
+				Path.Combine (outputDirectory, "src", "mono", provider + ".java") :
+				Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
+			Files.CopyIfStringChanged (contents, realProvider);
+		}
 	}
 
 	void SaveResource (string resource, string filename, string destDir, Func<string, string> applyTemplate)

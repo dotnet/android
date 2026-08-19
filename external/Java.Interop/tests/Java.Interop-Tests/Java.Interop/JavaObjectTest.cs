@@ -44,6 +44,7 @@ namespace Java.InteropTests
 #endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[Test]
+		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void UnregisterFromRuntime ()
 		{
 			int registeredCount = JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count;

@@ -3,10 +3,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using Java.Interop.Tools.Maven;
+using Java.Interop.Tools.Maven.Models;
+using Java.Interop.Tools.Maven.Repositories;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
+using Xamarin.ProjectTools;
 using Task = System.Threading.Tasks.Task;
 namespace Xamarin.Android.Build.Tests;
 
@@ -91,7 +97,7 @@ public class MavenDownloadTests
 	public async Task InsecureHttpRepository_AllowedWithOptIn ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-		var item = CreateMavenTaskItem ("com.example:dummy", "1.0.0", "http://repo.example.com/maven2/");
+		var item = CreateMavenTaskItem ("com.example:dummy", "1.0.0", "http://127.0.0.1:1/maven2/");
 		item.SetMetadata ("AllowInsecureHttp", "true");
 
 		var task = new MavenDownload {
@@ -110,6 +116,9 @@ public class MavenDownloadTests
 	[Test]
 	public async Task UnknownArtifact ()
 	{
+		if (TestEnvironment.IsRunningOnCI)
+			Assert.Ignore ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
+
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
@@ -126,6 +135,9 @@ public class MavenDownloadTests
 	[Test]
 	public async Task UnknownPom ()
 	{
+		if (TestEnvironment.IsRunningOnCI)
+			Assert.Ignore ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
+
 		var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 
 		try {
@@ -138,16 +150,83 @@ public class MavenDownloadTests
 
 			// Create the dummy jar so we bypass that step and try to download the dummy pom
 			var dummy_jar = Path.Combine (temp_cache_dir, "central", "com.example", "dummy", "1.0.0", "dummy-1.0.0.jar");
-			Directory.CreateDirectory (Path.GetDirectoryName (dummy_jar)!);
+			var dummy_jar_directory = Path.GetDirectoryName (dummy_jar);
+			if (dummy_jar_directory is null)
+				throw new InvalidOperationException ($"Could not determine the directory for '{dummy_jar}'.");
+			Directory.CreateDirectory (dummy_jar_directory);
 
 			using (File.Create (dummy_jar)) { }
 
 			await task.RunTaskAsync ();
 
 			Assert.AreEqual (1, engine.Errors.Count);
-			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy:1.0.0'.{Environment.NewLine}- Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
+			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy:1.0.0'.{Environment.NewLine}- Failed to resolve POM for Maven artifact 'com.example:dummy:1.0.0' from 'https://repo1.maven.org/maven2/com/example/dummy/1.0.0/dummy-1.0.0.pom'.{Environment.NewLine}- Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
+		}
+	}
+
+	[Test]
+	public void ImportedPomFailureIdentifiesTransitiveArtifactAndRepository ()
+	{
+		var root = new Artifact ("com.example", "library", "1.0.0");
+		var imported = new Artifact ("androidx.compose", "compose-bom", "2024.09.00");
+		var root_pom = """
+			<project xmlns="http://maven.apache.org/POM/4.0.0">
+			  <modelVersion>4.0.0</modelVersion>
+			  <groupId>com.example</groupId>
+			  <artifactId>library</artifactId>
+			  <version>1.0.0</version>
+			  <dependencyManagement>
+			    <dependencies>
+			      <dependency>
+			        <groupId>androidx.compose</groupId>
+			        <artifactId>compose-bom</artifactId>
+			        <version>2024.09.00</version>
+			        <type>pom</type>
+			        <scope>import</scope>
+			      </dependency>
+			    </dependencies>
+			  </dependencyManagement>
+			</project>
+			""";
+		var repository = new TestMavenRepository ((root, root_pom));
+		var cache = new CachedMavenRepository (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ()), repository);
+		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
+
+		try {
+			var exception = Assert.Throws<InvalidOperationException> (() => ResolvedProject.FromArtifact (root, resolver));
+
+			Assert.AreEqual ($"No POM found for {imported}", exception?.Message);
+			Assert.AreEqual (imported.VersionedArtifactString, resolver.UnresolvedArtifact?.VersionedArtifactString);
+			Assert.AreEqual ("https://repo.example.com/maven2/androidx/compose/compose-bom/2024.09.00/compose-bom-2024.09.00.pom", resolver.UnresolvedPomUrl);
+		} finally {
+			DeleteTempDirectory (cache.CacheDirectory);
+		}
+	}
+
+	[Test]
+	public void ImportedPomModelFailureDoesNotBlameRootArtifact ()
+	{
+		var root = new Artifact ("com.example", "library", "1.0.0");
+		var imported = new Artifact ("com.example", "bom", "1.0.0");
+		var root_pom = CreatePomWithImport (root, imported.GroupId, imported.Id, imported.Version);
+		var imported_pom = CreatePomWithImport (imported, "${invalid.group}", "nested-bom", "1.0.0");
+		var repository = new TestMavenRepository ((root, root_pom), (imported, imported_pom));
+		var cache = new CachedMavenRepository (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ()), repository);
+		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
+
+		try {
+			var exception = Assert.Throws<ArgumentException> (() => ResolvedProject.FromArtifact (root, resolver));
+			if (exception is null)
+				throw new InvalidOperationException ("Expected imported POM model resolution to fail.");
+
+			Assert.IsNull (resolver.UnresolvedArtifact);
+			Assert.IsNull (resolver.UnresolvedPomUrl);
+			Assert.IsTrue (resolver.ResolvedPoms.ContainsKey (imported.VersionedArtifactString));
+			Assert.AreEqual (exception.Message, MavenDownload.GetPomResolutionErrorDetails (resolver, exception));
+		} finally {
+			DeleteTempDirectory (cache.CacheDirectory);
 		}
 	}
 
@@ -161,7 +240,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4")],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4", TestEnvironment.DotNetPublicMaven)],
 			};
 
 			await task.RunTaskAsync ();
@@ -169,10 +248,14 @@ public class MavenDownloadTests
 			Assert.AreEqual (0, engine.Errors.Count);
 			Assert.AreEqual (1, task.ResolvedAndroidMavenLibraries?.Length);
 
-			var output_item = task.ResolvedAndroidMavenLibraries! [0];
+			var output_items = task.ResolvedAndroidMavenLibraries;
+			if (output_items is null)
+				throw new InvalidOperationException ("MavenDownload did not produce resolved libraries.");
+			var output_item = output_items [0];
 
 			Assert.AreEqual ("com.google.auto.value:auto-value-annotations:1.10.4", output_item.GetMetadata ("JavaArtifact"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom"), output_item.GetMetadata ("Manifest"));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom")));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
@@ -188,7 +271,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("androidx.core:core", "1.12.0", "Google")],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("androidx.core:core", "1.12.0", TestEnvironment.DotNetPublicMaven)],
 			};
 
 			await task.RunTaskAsync ();
@@ -196,10 +279,14 @@ public class MavenDownloadTests
 			Assert.AreEqual (0, engine.Errors.Count);
 			Assert.AreEqual (1, task.ResolvedAndroidMavenLibraries?.Length);
 
-			var output_item = task.ResolvedAndroidMavenLibraries! [0];
+			var output_items = task.ResolvedAndroidMavenLibraries;
+			if (output_items is null)
+				throw new InvalidOperationException ("MavenDownload did not produce resolved libraries.");
+			var output_item = output_items [0];
 
 			Assert.AreEqual ("androidx.core:core:1.12.0", output_item.GetMetadata ("JavaArtifact"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "google", "androidx.core", "core", "1.12.0", "core-1.12.0.pom"), output_item.GetMetadata ("Manifest"));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("androidx.core", "core", "1.12.0", "core-1.12.0.pom")));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
@@ -217,7 +304,7 @@ public class MavenDownloadTests
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
-				AndroidMavenLibraries = [CreateMavenTaskItem ("com.facebook.react:react-android", "0.76.1", artifactFilename: "react-android-0.76.1.module")],
+				AndroidMavenLibraries = [CreateMavenTaskItem ("com.facebook.react:react-android", "0.76.1", TestEnvironment.DotNetPublicMaven, artifactFilename: "react-android-0.76.1.module")],
 			};
 
 			await task.RunTaskAsync ();
@@ -225,14 +312,40 @@ public class MavenDownloadTests
 			Assert.AreEqual (0, engine.Errors.Count);
 			Assert.AreEqual (1, task.ResolvedAndroidMavenLibraries?.Length);
 
-			var output_item = task.ResolvedAndroidMavenLibraries! [0];
+			var output_items = task.ResolvedAndroidMavenLibraries;
+			if (output_items is null)
+				throw new InvalidOperationException ("MavenDownload did not produce resolved libraries.");
+			var output_item = output_items [0];
 
 			Assert.AreEqual ("com.facebook.react:react-android:0.76.1", output_item.GetMetadata ("JavaArtifact"));
 			Assert.True (output_item.ItemSpec.EndsWith (Path.Combine ("0.76.1", "react-android-0.76.1.module"), StringComparison.OrdinalIgnoreCase));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.facebook.react", "react-android", "0.76.1", "react-android-0.76.1.pom"), output_item.GetMetadata ("Manifest"));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
+			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("com.facebook.react", "react-android", "0.76.1", "react-android-0.76.1.pom")));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
+	}
+
+	// The tests below route every download through TestEnvironment.DotNetPublicMaven, so the
+	// "Central"/"Google" shorthands are never exercised there. Cover them directly instead --
+	// this needs no network, so it also runs under CI's network isolation.
+	[TestCase ("Central", "central")]
+	[TestCase ("central", "central")]
+	[TestCase ("Google", "google")]
+	[TestCase ("google", "google")]
+	public void KnownRepositoryShorthand (string metadata, string expectedName)
+	{
+		var repository = MavenDownload.GetKnownRepository (metadata);
+
+		Assert.IsNotNull (repository);
+		Assert.AreEqual (expectedName, repository?.Name);
+	}
+
+	[TestCase ("bad-repo")]
+	[TestCase ("https://repo1.maven.org/maven2/")]
+	public void UnknownRepositoryShorthand (string metadata)
+	{
+		Assert.IsNull (MavenDownload.GetKnownRepository (metadata));
 	}
 
 	ITaskItem CreateMavenTaskItem (string name, string? version, string? repository = null, string? artifactFilename = null)
@@ -255,6 +368,50 @@ public class MavenDownloadTests
 			Directory.Delete (dir, true);
 		} catch {
 			// Ignore any cleanup failure
+		}
+	}
+
+	static string CreatePomWithImport (Artifact artifact, string importedGroupId, string importedArtifactId, string importedVersion)
+		=> $"""
+			<project xmlns="http://maven.apache.org/POM/4.0.0">
+			  <modelVersion>4.0.0</modelVersion>
+			  <groupId>{artifact.GroupId}</groupId>
+			  <artifactId>{artifact.Id}</artifactId>
+			  <version>{artifact.Version}</version>
+			  <dependencyManagement>
+			    <dependencies>
+			      <dependency>
+			        <groupId>{importedGroupId}</groupId>
+			        <artifactId>{importedArtifactId}</artifactId>
+			        <version>{importedVersion}</version>
+			        <type>pom</type>
+			        <scope>import</scope>
+			      </dependency>
+			    </dependencies>
+			  </dependencyManagement>
+			</project>
+			""";
+
+	sealed class TestMavenRepository : IMavenRepository
+	{
+		readonly Dictionary<string, byte []> poms;
+
+		public string Name => "test";
+
+		public TestMavenRepository (params (Artifact Artifact, string Pom) [] poms)
+		{
+			this.poms = poms.ToDictionary (p => p.Artifact.VersionedArtifactString, p => Encoding.UTF8.GetBytes (p.Pom));
+		}
+
+		public bool TryGetFile (Artifact artifact, string filename, out Stream stream)
+		{
+			if (poms.TryGetValue (artifact.VersionedArtifactString, out var pom)) {
+				stream = new MemoryStream (pom);
+				return true;
+			}
+
+			stream = Stream.Null;
+			return false;
 		}
 	}
 }

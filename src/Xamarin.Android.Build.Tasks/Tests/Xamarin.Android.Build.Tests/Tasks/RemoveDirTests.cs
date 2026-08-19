@@ -93,6 +93,35 @@ namespace Xamarin.Android.Build.Tests
 			DirectoryAssert.DoesNotExist (tempDirectory);
 		}
 
+		[Test]
+		public void LongPathWithTrailingDirectorySeparator ()
+		{
+			if (!IsWindows) {
+				Assert.Ignore ("MAX_PATH only applies on Windows.");
+				return;
+			}
+
+			NewFile (fileName: "foo".PadRight (MaxFileName, 'N'));
+			var deletedPaths = new List<string> ();
+			var task = CreateTask ();
+			task.Directories = new [] { new TaskItem (tempDirectory + Path.DirectorySeparatorChar) };
+			task.RetryAttempts = 2;
+			task.RetryDelayMs = 0;
+			task.DeleteDirectory = (path, recursive) => {
+				deletedPaths.Add (path);
+				if (deletedPaths.Count <= 2)
+					throw new DirectoryNotFoundException ("Simulated MAX_PATH failure.");
+				Directory.Delete (path, recursive);
+			};
+
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+			Assert.AreEqual (3, deletedPaths.Count, "Delete should have been attempted three times.");
+			Assert.AreEqual (Files.ToLongPath (tempDirectory), deletedPaths [1], "Long path should not have a trailing directory separator.");
+			Assert.AreEqual (deletedPaths [1], deletedPaths [2], "Long path should not be prefixed more than once.");
+			DirectoryAssert.DoesNotExist (tempDirectory);
+		}
+
 		[Test, Category ("SmokeTests")]
 		public void DirectoryInUse ()
 		{

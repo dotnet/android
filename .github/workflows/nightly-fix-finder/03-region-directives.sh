@@ -21,7 +21,7 @@ hold the `#region` directive.
 - Generated files (`*.generated.cs`, `*.Designer.cs`, `*.g.cs`)
 - Files under `external/` (submodules — not owned by this repo)
 - `#region` appearing inside a string literal or comment (rare but verify
-  by opening the file before filing)
+  by opening the file before changing it)
 GUIDANCE
 
 echo ""

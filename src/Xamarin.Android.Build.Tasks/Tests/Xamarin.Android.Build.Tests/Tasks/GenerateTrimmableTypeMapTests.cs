@@ -111,6 +111,45 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Execute_MissingJavaSource_DoesNotPruneExistingOutput ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaInputDir = Path.Combine (Root, path, "java");
+			var javaOutputDir = Path.Combine (Root, path, "linked-java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var firstTask = CreateTask (new [] { monoAndroidItem }, outputDir, javaInputDir);
+			Assert.IsTrue (firstTask.Execute (), "First run should generate Java inputs.");
+			Assert.IsNotEmpty (firstTask.GeneratedJavaFiles, "Test setup should generate Java sources.");
+
+			var missingInput = firstTask.GeneratedJavaFiles [0].ItemSpec;
+			var relativePath = Path.GetRelativePath (javaInputDir, missingInput);
+			var existingOutput = Path.Combine (javaOutputDir, relativePath);
+			var existingOutputDirectory = Path.GetDirectoryName (existingOutput);
+			if (existingOutputDirectory is null) {
+				throw new InvalidOperationException ("Could not determine the linked Java output directory.");
+			}
+			Directory.CreateDirectory (existingOutputDirectory);
+			File.Copy (missingInput, existingOutput);
+			File.Delete (missingInput);
+
+			var errors = new List<BuildErrorEventArgs> ();
+			var secondTask = CreateTask (new [] { monoAndroidItem }, outputDir, javaOutputDir, errors: errors);
+			secondTask.JavaSourceInputDirectory = javaInputDir;
+			secondTask.GenerateTypeMapAssemblies = false;
+
+			Assert.IsFalse (secondTask.Execute (), "The missing pre-trim Java source should fail with XA4255.");
+			Assert.IsTrue (errors.Any (e => e.Code == "XA4255"), "The task should report the missing Java source.");
+			FileAssert.Exists (existingOutput, "A failing in-place update should preserve the last known-good linked Java source.");
+		}
+
+		[Test]
 		public void Execute_WritesGeneratedAssembliesListFile ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -254,7 +293,8 @@ namespace Xamarin.Android.Build.Tests {
 				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
 				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
 				    <Node Id="3" Label="Type metadata: [My.Assembly]Duplicate.Type" />
-				    <Node Id="4" Label="Unrelated node" />
+				    <Node Id="4" Label="Type metadata: [Xamarin.AndroidX.Activity]AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture" />
+				    <Node Id="5" Label="Unrelated node" />
 				  </Nodes>
 				</DirectedGraph>
 				""");
@@ -262,6 +302,7 @@ namespace Xamarin.Android.Build.Tests {
 				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
 				Android.App.Activity, Mono.Android;android.app.Activity
 				Duplicate.Type, My.Assembly;my.app.Duplicate
+				AndroidX.Activity.Result.Contract.ActivityResultContracts+TakePicture, Xamarin.AndroidX.Activity;androidx.activity.result.contract.ActivityResultContracts$TakePicture
 				Duplicate.Type;wrong.Duplicate
 				Other.Type;other.Type
 				""");
@@ -271,6 +312,7 @@ namespace Xamarin.Android.Build.Tests {
 				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
 				AcwMapFile = acwMapFile,
 				OutputFile = outputFile,
+				TrimJavaCallableWrappers = true,
 			};
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
@@ -278,15 +320,86 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
 			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
 			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
+			StringAssert.Contains ("-keep class androidx.activity.result.contract.ActivityResultContracts$TakePicture { *; }", proguard);
 			StringAssert.DoesNotContain ("wrong.Duplicate", proguard);
 			StringAssert.DoesNotContain ("other.Type", proguard);
 		}
 
+		[Test]
+		public void Execute_GenerateNativeAotProguardConfiguration_KeepsAllWhenTrimmingDisabled ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (acwMapFile, """
+				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
+				Android.App.Activity, Mono.Android;android.app.Activity
+				Duplicate.Type, My.Assembly;my.app.Duplicate
+				Other.Type;other.Type
+				""");
+
+			// No DGML is provided: with trimming disabled the task must keep every ACW from the map
+			// rather than shrinking to the DGML-retained subset.
+			var task = new GenerateNativeAotProguardConfiguration {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				AcwMapFile = acwMapFile,
+				OutputFile = outputFile,
+				TrimJavaCallableWrappers = false,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed without a DGML when trimming is disabled.");
+			var proguard = File.ReadAllText (outputFile);
+			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
+			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
+			StringAssert.Contains ("-keep class my.app.Duplicate { *; }", proguard);
+			StringAssert.Contains ("-keep class other.Type { *; }", proguard);
+		}
+
+		[Test]
+		public void Execute_GenerateNativeAotProguardConfiguration_IgnoresDgmlWhenTrimmingDisabled ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var dgmlFile = Path.Combine (path, "app.scan.dgml.xml");
+			var acwMapFile = Path.Combine (path, "acw-map.txt");
+			var outputFile = Path.Combine (path, "proguard", "proguard_project_references.cfg");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (dgmlFile, """
+				<?xml version="1.0" encoding="utf-8"?>
+				<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+				  <Nodes>
+				    <Node Id="1" Label="Type metadata: [UnnamedProject]UnnamedProject.MainActivity" />
+				    <Node Id="2" Label="Type metadata: [Mono.Android]Android.App.Activity" />
+				  </Nodes>
+				</DirectedGraph>
+				""");
+			File.WriteAllText (acwMapFile, """
+				UnnamedProject.MainActivity, UnnamedProject;crc64a1.MainActivity
+				Android.App.Activity, Mono.Android;android.app.Activity
+				Other.Type;other.Type
+				""");
+
+			var task = new GenerateNativeAotProguardConfiguration {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				NativeAotDgmlFiles = new [] { new TaskItem (dgmlFile) },
+				AcwMapFile = acwMapFile,
+				OutputFile = outputFile,
+				TrimJavaCallableWrappers = false,
+			};
+
+			Assert.IsTrue (task.Execute (), "Task should succeed and ignore the DGML when trimming is disabled.");
+			var proguard = File.ReadAllText (outputFile);
+			StringAssert.Contains ("-keep class crc64a1.MainActivity { *; }", proguard);
+			StringAssert.Contains ("-keep class android.app.Activity { *; }", proguard);
+			StringAssert.Contains ("-keep class other.Type { *; }", proguard);
+		}
+
 		GenerateTrimmableTypeMap CreateTask (ITaskItem [] assemblies, string outputDir, string javaDir,
-			IList<BuildMessageEventArgs>? messages = null, IList<BuildWarningEventArgs>? warnings = null, string tfv = "v11.0")
+			IList<BuildMessageEventArgs>? messages = null, IList<BuildWarningEventArgs>? warnings = null,
+			IList<BuildErrorEventArgs>? errors = null, string tfv = "v11.0")
 		{
 			return new GenerateTrimmableTypeMap {
-				BuildEngine = new MockBuildEngine (TestContext.Out, warnings: warnings, messages: messages),
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors, warnings: warnings, messages: messages),
 				ResolvedAssemblies = assemblies,
 				OutputDirectory = outputDir,
 				JavaSourceOutputDirectory = javaDir,

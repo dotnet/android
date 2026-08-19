@@ -27,11 +27,27 @@ public sealed class TypeMapAssemblyGenerator
 	/// <param name="useSharedTypemapUniverse">
 	/// When true, uses <c>Java.Lang.Object</c> as the shared anchor type. When false, emits a per-assembly anchor.
 	/// </param>
-	/// <param name="maxArrayRank">Max rank for per-rank array <c>TypeMap</c> entries. 0 disables.</param>
-	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false, int maxArrayRank = 0)
+	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName, maxArrayRank);
+		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
 		emitter.Emit (model, stream, useSharedTypemapUniverse);
+	}
+
+	/// <summary>
+	/// Emits an empty typemap assembly (containing no type map entries) with the given
+	/// <paramref name="assemblyName"/>, writing it to <paramref name="stream"/>. Used to satisfy
+	/// <c>[assembly: TypeMapAssemblyTarget&lt;T&gt;("name")]</c> references to per-assembly typemaps
+	/// that the trimmer removed (their target Java binding was unused): the runtime can still
+	/// <c>Assembly.Load</c> the stub, which contributes no mappings, instead of throwing
+	/// <see cref="System.IO.FileNotFoundException"/>.
+	/// </summary>
+	/// <param name="stream">Stream to write the output PE assembly to.</param>
+	/// <param name="assemblyName">Assembly name for the generated stub.</param>
+	public void GenerateEmpty (Stream stream, string assemblyName)
+	{
+		var builder = new PEAssemblyBuilder (_systemRuntimeVersion);
+		builder.EmitPreamble (assemblyName, assemblyName + ".dll");
+		builder.WritePE (stream);
 	}
 }

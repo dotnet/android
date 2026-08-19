@@ -9,13 +9,13 @@ namespace Android.Content.Res
 	{
 		#region These members are dare defined here to avoid conflicts between IAttributeSet and IXmlPullParser.
 
-		int AttributeCount { get; }
+		new int AttributeCount { get; }
 		
-		string PositionDescription { get; }
+		new string PositionDescription { get; }
 		
-		string GetAttributeName (int pos);
-		string GetAttributeValue (int pos);
-		string? GetAttributeValue (string? ns, string? name);
+		new string GetAttributeName (int pos);
+		new string GetAttributeValue (int pos);
+		new string? GetAttributeValue (string? ns, string? name);
 		#endregion
 	}
 }

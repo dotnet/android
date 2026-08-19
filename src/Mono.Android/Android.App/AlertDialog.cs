@@ -17,14 +17,14 @@ namespace Android.App {
 
 			public event EventHandler<Android.Widget.AdapterView.ItemSelectedEventArgs> ItemSelected {
 				add {
-					AndroidEventHelper.AddEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
+					EventHelper.AddEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
 							ref weak_implementor_SetOnItemSelectedListener,
 							CreateItemSelectedImplementor,
 							__SetOnItemSelectedListener,
 							__h => __h.OnItemSelectedHandler += value);
 				}
 				remove {
-					AndroidEventHelper.RemoveEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
+					EventHelper.RemoveEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
 							ref weak_implementor_SetOnItemSelectedListener,
 							AdapterView.IOnItemSelectedListenerImplementor.__IsEmpty,
 							__SetOnItemSelectedListener,
@@ -34,14 +34,14 @@ namespace Android.App {
 
 			public event EventHandler<Android.Widget.AdapterView.NothingSelectedEventArgs> NothingSelected {
 				add {
-					AndroidEventHelper.AddEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
+					EventHelper.AddEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
 							ref weak_implementor_SetOnItemSelectedListener,
 							CreateItemSelectedImplementor,
 							__SetOnItemSelectedListener,
 							__h => __h.OnNothingSelectedHandler += value);
 				}
 				remove {
-					AndroidEventHelper.RemoveEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
+					EventHelper.RemoveEventHandler<AdapterView.IOnItemSelectedListener, AdapterView.IOnItemSelectedListenerImplementor>(
 							ref weak_implementor_SetOnItemSelectedListener,
 							AdapterView.IOnItemSelectedListenerImplementor.__IsEmpty,
 							__SetOnItemSelectedListener,

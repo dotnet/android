@@ -11,7 +11,7 @@ namespace Android.Runtime {
 
 	sealed class JavaProxyThrowable : Java.Lang.Error {
 
-		public  readonly Exception InnerException;
+		public  readonly new Exception InnerException;
 
 		JavaProxyThrowable (string message, Exception innerException)
 			: base (message)

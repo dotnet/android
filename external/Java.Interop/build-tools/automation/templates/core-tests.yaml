@@ -18,11 +18,6 @@ steps:
 
 - template: run-dotnet-test.yaml
   parameters:
-    testRunTitle: logcat-parse (${{ parameters.platformName }})
-    testAssemblyName: logcat-parse-Tests
-
-- template: run-dotnet-test.yaml
-  parameters:
     testRunTitle: Xamarin.Android.Tools.ApiXmlAdjuster (${{ parameters.platformName }})
     testAssemblyName: Xamarin.Android.Tools.ApiXmlAdjuster-Tests
 

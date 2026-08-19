@@ -1,15 +1,23 @@
 #include <array>
+#include <cstdint>
+#include <cstring>
 
 #include <host/typemap.hh>
+#include <runtime-base/crc32.hh>
 #include <runtime-base/timing-internal.hh>
 #include <runtime-base/search.hh>
 #include <runtime-base/util.hh>
-#include <shared/xxhash.hh>
 #include <xamarin-app.hh>
 
 using namespace xamarin::android;
 
 namespace {
+	[[gnu::always_inline]]
+	auto same_string (const char *value, size_t value_length, const char *key, size_t key_length) noexcept -> bool
+	{
+		return value_length == key_length && strncmp (value, key, key_length) == 0;
+	}
+
 	class MonoGuidString
 	{
 		static inline constexpr size_t MVID_SIZE = 16;
@@ -93,29 +101,30 @@ auto TypeMapper::find_index_by_name (const char *typeName, const TypeMapEntry *m
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::find_index_by_hash (const char *typeName, const TypeMapEntry *map, const char (&name_map)[], std::string_view const& from_name, std::string_view const& to_name) noexcept -> ssize_t
 {
-	if (!typemap_use_hashes) [[unlikely]] {
-		return find_index_by_name (typeName, map, name_map, from_name, to_name);
-	}
-
 	log_debug (LOG_ASSEMBLY, "typemap: map {} -> {} uses hashes"sv, from_name, to_name);
 
-	auto equal = [](TypeMapEntry const& entry, hash_t key) -> bool {
-		if (entry.from == std::numeric_limits<uint32_t>::max ()) [[unlikely]] {
-			return 1;
-		}
-
-		return entry.from_hash == key;
-	};
+	size_t type_name_length = strlen (typeName);
+	hash_t type_name_hash = crc32_hash (typeName, type_name_length);
 
 	auto less_than = [](TypeMapEntry const& entry, hash_t key) -> bool {
-		if (entry.from == std::numeric_limits<uint32_t>::max ()) [[unlikely]] {
-			return 1;
+		return entry.from != std::numeric_limits<uint32_t>::max () && entry.from_hash < key;
+	};
+
+	size_t idx = Search::lower_bound<TypeMapEntry, hash_t, less_than> (type_name_hash, map, type_map.entry_count);
+	while (idx < type_map.entry_count) {
+		TypeMapEntry const& entry = map[idx];
+		if (entry.from == std::numeric_limits<uint32_t>::max () || entry.from_hash != type_name_hash) {
+			break;
 		}
 
-		return entry.from_hash < key;
-	};
-	hash_t type_name_hash = xxhash::hash (typeName, strlen (typeName));
-	return Search::binary_search<TypeMapEntry, hash_t, equal, less_than> (type_name_hash, map, type_map.entry_count);
+		const char *mapped_type_name = &name_map[entry.from];
+		if (same_string (mapped_type_name, strlen (mapped_type_name), typeName, type_name_length)) {
+			return static_cast<ssize_t>(idx);
+		}
+		idx++;
+	}
+
+	return -1z;
 }
 
 [[gnu::always_inline, gnu::flatten]]
@@ -141,32 +150,15 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 }
 
 [[gnu::always_inline, gnu::flatten]]
-auto TypeMapper::managed_to_java_debug (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
 	dynamic_local_path_string full_type_name;
 	full_type_name.append (typeName);
+	full_type_name.append (", "sv);
+	full_type_name.append (assemblyFullName);
 
-	hash_t mvid_hash = xxhash::hash (reinterpret_cast<const char*>(mvid), 16z); // we must hope managed land called us with valid data
+	ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 
-	auto equal = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash == key; };
-	auto less_than = [](TypeMapAssembly const& entry, hash_t key) -> bool { return entry.mvid_hash < key; };
-	ssize_t idx = Search::binary_search<TypeMapAssembly, hash_t, equal, less_than> (mvid_hash, type_map_unique_assemblies, type_map.unique_assemblies_count);
-
-	if (idx >= 0) [[likely]] {
-		TypeMapAssembly const& assm = type_map_unique_assemblies[idx];
-		full_type_name.append (", "sv);
-
-		// We explicitly trust the build process here, with regards to validity of offsets
-		full_type_name.append (&type_map_assembly_names[assm.name_offset], assm.name_length);
-	} else {
-		log_warn (LOG_ASSEMBLY, "typemap: unable to look up assembly name for type '{}', trying without it."sv, typeName);
-	}
-
-	// If hashes are used for matching, the type names array is not used. If, however, string-based matching is in
-	// effect, the managed type name is looked up and then...
-	idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
-
-	// ...either method gives us index into the Java type names array
 	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
 }
 #endif // def DEBUG
@@ -196,17 +188,24 @@ auto TypeMapper::find_module_entry (const uint8_t *mvid, const TypeMapModule *en
 }
 
 [[gnu::always_inline]]
-auto TypeMapper::find_managed_to_java_map_entry (hash_t name_hash, const TypeMapModuleEntry *map, size_t entry_count) noexcept -> const TypeMapModuleEntry*
+auto TypeMapper::find_managed_to_java_map_entry (hash_t name_hash, const char *type_name, size_t type_name_length, const TypeMapModuleEntry *map, size_t entry_count) noexcept -> const TypeMapModuleEntry*
 {
 	if (map == nullptr) {
 		return nullptr;
 	};
 
-	auto equal = [](TypeMapModuleEntry const& entry, hash_t key) -> bool { return entry.managed_type_name_hash == key; };
-	auto less_than = [](TypeMapModuleEntry const& entry, hash_t key) -> bool { return entry.managed_type_name_hash < key; };
-	ssize_t idx = Search::binary_search<TypeMapModuleEntry, equal, less_than> (name_hash, map, entry_count);
-	if (idx >= 0) [[likely]] {
-		return &map[idx];
+	auto less_than = [](TypeMapModuleEntry const& entry, hash_t key) -> bool {
+		return entry.managed_type_name_hash < key;
+	};
+
+	size_t idx = Search::lower_bound<TypeMapModuleEntry, hash_t, less_than> (name_hash, map, entry_count);
+	while (idx < entry_count && map[idx].managed_type_name_hash == name_hash) {
+		TypeMapModuleEntry const& entry = map[idx];
+		const char *managed_type_name = &managed_type_names[entry.managed_type_name_index];
+		if (same_string (managed_type_name, entry.managed_type_name_length, type_name, type_name_length)) {
+			return &entry;
+		}
+		idx++;
 	}
 
 	return nullptr;
@@ -226,12 +225,13 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 	}
 
 	log_debug (LOG_ASSEMBLY, "typemap: found module matching MVID [{}]"sv, MonoGuidString (mvid).c_str ());
-	hash_t name_hash = xxhash::hash (typeName, strlen (typeName));
+	size_t type_name_length = strlen (typeName);
+	hash_t name_hash = crc32_hash (typeName, type_name_length);
 
 	// We implicitly trust the build process that the indexes are correct. This is by design, the libxamarin-app.so built
 	// with the application is immutable and the build process made sure that the data in it matches the application.
 	const TypeMapModuleEntry *const map = &modules_map_data[match->map_index];
-	const TypeMapModuleEntry *entry = find_managed_to_java_map_entry (name_hash, map, match->entry_count);
+	const TypeMapModuleEntry *entry = find_managed_to_java_map_entry (name_hash, typeName, type_name_length, map, match->entry_count);
 	if (entry == nullptr) [[unlikely]] {
 		if (match->duplicate_count > 0 && match->duplicate_map_index < std::numeric_limits<decltype (match->duplicate_map_index)>::max ()) {
 			log_debug (
@@ -243,7 +243,7 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 			);
 
 			const TypeMapModuleEntry *const duplicate_map = &modules_duplicates_data[match->duplicate_map_index];
-			entry = find_managed_to_java_map_entry (name_hash, duplicate_map, match->duplicate_count);
+			entry = find_managed_to_java_map_entry (name_hash, typeName, type_name_length, duplicate_map, match->duplicate_count);
 		}
 
 		if (entry == nullptr) {
@@ -308,7 +308,11 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 #endif // def RELEASE
 
 [[gnu::flatten]]
+#if defined(RELEASE)
 auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noexcept -> const char*
+#else
+auto TypeMapper::managed_to_java (const char *typeName, const char *assemblyFullName) noexcept -> const char*
+#endif
 {
 	log_debug (LOG_ASSEMBLY, "managed_to_java: looking up type '{}'"sv, optional_string (typeName));
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -320,14 +324,15 @@ auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noe
 		return nullptr;
 	}
 
-	auto do_map = [&typeName, &mvid]() -> const char* {
 #if defined(RELEASE)
-		return managed_to_java_release (typeName, mvid);
+	const char *ret = managed_to_java_release (typeName, mvid);
 #else
-		return managed_to_java_debug (typeName, mvid);
+	if (assemblyFullName == nullptr) [[unlikely]] {
+		log_warnf (LOG_ASSEMBLY, "typemap: assembly full name not specified in typemap_managed_to_java");
+		return nullptr;
+	}
+	const char *ret = managed_to_java_debug (typeName, assemblyFullName);
 #endif
-	};
-	const char *ret = do_map ();
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event ();
@@ -375,14 +380,23 @@ auto TypeMapper::java_to_managed_debug (const char *java_type_name, char const**
 #else // def DEBUG
 
 [[gnu::always_inline]]
-auto TypeMapper::find_java_to_managed_entry (hash_t name_hash) noexcept -> const TypeMapJava*
+auto TypeMapper::find_java_to_managed_entry (hash_t name_hash, const char *java_type_name, size_t java_type_name_length) noexcept -> const TypeMapJava*
 {
-	ssize_t idx = Search::binary_search (name_hash, java_to_managed_hashes, java_type_count);
-	if (idx < 0) [[unlikely]] {
-		return nullptr;
+	auto less_than = [](hash_t const& entry, hash_t key) -> bool {
+		return entry < key;
+	};
+
+	size_t idx = Search::lower_bound<hash_t, hash_t, less_than> (name_hash, java_to_managed_hashes, java_type_count);
+	while (idx < java_type_count && java_to_managed_hashes[idx] == name_hash) {
+		TypeMapJava const& entry = java_to_managed_map[idx];
+		const char *mapped_java_type_name = &java_type_names[entry.java_name_index];
+		if (same_string (mapped_java_type_name, entry.java_name_length, java_type_name, java_type_name_length)) {
+			return &entry;
+		}
+		idx++;
 	}
 
-	return &java_to_managed_map[idx];
+	return nullptr;
 }
 
 [[gnu::flatten]]
@@ -419,8 +433,9 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 		return false;
 	}
 
-	hash_t name_hash = xxhash::hash (java_type_name, strlen (java_type_name));
-	TypeMapJava const* java_entry = find_java_to_managed_entry (name_hash);
+	size_t java_type_name_length = strlen (java_type_name);
+	hash_t name_hash = crc32_hash (java_type_name, java_type_name_length);
+	TypeMapJava const* java_entry = find_java_to_managed_entry (name_hash, java_type_name, java_type_name_length);
 	if (java_entry == nullptr) {
 		log_info (
 			LOG_ASSEMBLY,
