@@ -250,20 +250,10 @@ namespace Java.Interop
 		static unsafe IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
 		{
 			IntPtr vm   = IntPtr.Zero;
-#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			if (JniNativeMethods.GetJavaVM (envp, &vm) is int r &&
 					r != JNI_OK) {
 				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
 			}
-#elif FEATURE_JNIENVIRONMENT_JI_PINVOKES
-			if (NativeMethods.java_interop_jnienv_get_java_vm (envp, out vm) is int r &&
-					r != JNI_OK) {
-				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
-			}
-#else   // !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES
-			throw new NotSupportedException ("Cannot obtain JavaVM* from JNIEnv*! " +
-				"Rebuild with FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS or FEATURE_JNIENVIRONMENT_JI_PINVOKES set!");
-#endif  // !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 			return vm;
 		}
 

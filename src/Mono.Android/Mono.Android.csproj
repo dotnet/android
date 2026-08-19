@@ -319,12 +319,13 @@
     <Compile Include="Java.Interop\JavaLibraryReferenceAttribute.cs" />
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
-    <Compile Include="Java.Interop\JavaPeerContainerFactory.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
-    <Compile Include="Java.Interop\ManagedMarshalMethodsLookupTable.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
+    <Compile Include="Java.Interop\SafeArrayFactory.cs" />
+    <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
+    <Compile Include="Java.Interop\ValueTypeFactory.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
     <Compile Include="Java.Lang\Byte.cs" />
     <Compile Include="Java.Lang\Character.cs" />
@@ -362,8 +363,6 @@
     <Compile Include="Microsoft.Android.Runtime\AggregateTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\ITypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\JniRemappingLookup.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeManager.cs" />
-    <Compile Include="Microsoft.Android.Runtime\ManagedTypeMapping.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
@@ -28,6 +29,7 @@ namespace Xamarin.Android.Tasks;
 //  [ENTRY_COUNT]        uint; number of entries in the store
 //  [INDEX_ENTRY_COUNT]  uint; number of entries in the index
 //  [INDEX_SIZE]         uint; index size in bytes
+//  [CONTENT_ID]         ulong: deterministic hash of everything after the header
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
 //  [NAME_HASH]          uint CRC32 for CoreCLR; uint/ulong xxhash for MonoVM depending on target bitness
@@ -53,8 +55,8 @@ partial class AssemblyStoreGenerator
 	const uint ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian, must match the BUNDLED_ASSEMBLIES_BLOB_MAGIC native constant
 
 	// Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_64BIT = 0x80000003; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
-	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_32BIT = 0x00000003;
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_64BIT = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
+	const uint ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_32BIT = 0x00000004;
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_64BIT = 0x80000004; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_CORECLR_32BIT = 0x00000004;
 
@@ -129,7 +131,7 @@ partial class AssemblyStoreGenerator
 		ulong curPos = assemblyDataStart;
 
 		Directory.CreateDirectory (Path.GetDirectoryName (storePath));
-		using var fs = File.Open (storePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+		using var fs = File.Open (storePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 
 		uint mappingIndex = 0;
@@ -164,7 +166,7 @@ partial class AssemblyStoreGenerator
 		fs.Seek (0, SeekOrigin.Begin);
 
 		uint storeVersion = GetAssemblyStoreFormatVersion (is64Bit);
-		var header = new AssemblyStoreHeader (storeVersion | abiFlag, infoCount, (uint)index.Count, (uint)(index.Count * indexEntrySize));
+		var header = new AssemblyStoreHeader (storeVersion | abiFlag, infoCount, (uint)index.Count, (uint)(index.Count * indexEntrySize), content_id: 0);
 		using var writer = new BinaryWriter (fs);
 		WriteHeader (writer, header);
 
@@ -185,6 +187,13 @@ partial class AssemblyStoreGenerator
 			throw new InvalidOperationException ($"Internal error: store '{storePath}' position is different than metadata size after header write");
 		}
 
+		ulong contentId = ComputeContentId (fs);
+		header = new AssemblyStoreHeader (storeVersion | abiFlag, infoCount, (uint)index.Count, (uint)(index.Count * indexEntrySize), contentId);
+		fs.Seek (0, SeekOrigin.Begin);
+		WriteHeader (writer, header);
+		writer.Flush ();
+		log.LogDebugMessage ($"Assembly store content ID: 0x{contentId:x16}");
+
 		return storePath;
 	}
 
@@ -204,6 +213,20 @@ partial class AssemblyStoreGenerator
 		}
 
 		return is64Bit ? ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_64BIT : ASSEMBLY_STORE_FORMAT_VERSION_MONOVM_32BIT;
+	}
+
+	static ulong ComputeContentId (Stream stream)
+	{
+		stream.Seek (AssemblyStoreHeader.NativeSize, SeekOrigin.Begin);
+
+		var hash = new XxHash3 ();
+		byte [] buffer = new byte [64 * 1024];
+		int bytesRead;
+		while ((bytesRead = stream.Read (buffer, 0, buffer.Length)) > 0) {
+			hash.Append (buffer.AsSpan (0, bytesRead));
+		}
+
+		return hash.GetCurrentHashAsUInt64 ();
 	}
 
 	void CopyData (FileInfo? src, Stream dest, string storePath)
@@ -262,6 +285,7 @@ partial class AssemblyStoreGenerator
 		writer.Write (header.entry_count);
 		writer.Write (header.index_entry_count);
 		writer.Write (header.index_size);
+		writer.Write (header.content_id);
 	}
 #if XABT_TESTS
 	AssemblyStoreHeader ReadHeader (BinaryReader reader)
@@ -272,8 +296,9 @@ partial class AssemblyStoreGenerator
 		uint entry_count       = reader.ReadUInt32 ();
 		uint index_entry_count = reader.ReadUInt32 ();
 		uint index_size        = reader.ReadUInt32 ();
+		ulong content_id        = reader.ReadUInt64 ();
 
-		return new AssemblyStoreHeader (magic, version, entry_count, index_entry_count, index_size);
+		return new AssemblyStoreHeader (magic, version, entry_count, index_entry_count, index_size, content_id);
 	}
 #endif
 

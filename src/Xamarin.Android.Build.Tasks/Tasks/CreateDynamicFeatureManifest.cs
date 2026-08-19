@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 			XElement usesSdk = new XElement ("uses-sdk");
 			if (!MinSdkVersion.IsNullOrEmpty ())
 				usesSdk.Add (new XAttribute (androidNS + "minSdkVersion", MinSdkVersion));
-			if (!MinSdkVersion.IsNullOrEmpty ())
+			if (!TargetSdkVersion.IsNullOrEmpty ())
 				usesSdk.Add (new XAttribute (androidNS + "targetSdkVersion", TargetSdkVersion));
 			doc.Add (new XElement ("manifest",
 					new XAttribute (XNamespace.Xmlns + "android", androidNS),

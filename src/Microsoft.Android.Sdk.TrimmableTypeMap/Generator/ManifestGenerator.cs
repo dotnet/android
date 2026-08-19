@@ -107,7 +107,7 @@ class ManifestGenerator
 		var managedToManifestNames = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
 			if (!string.IsNullOrEmpty (peer.ManagedTypeName)) {
-				managedToManifestNames [peer.ManagedTypeName] = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+				managedToManifestNames [peer.ManagedTypeName] = JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName);
 			}
 		}
 
@@ -128,7 +128,7 @@ class ManifestGenerator
 				continue;
 			}
 
-			string jniName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
+			string jniName = JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName);
 			if (existingTypes.Contains (jniName)) {
 				continue;
 			}
@@ -295,8 +295,8 @@ class ManifestGenerator
 		// Build mapping: fully-qualified compat Java name → CRC Java name
 		var compatToCrc = new Dictionary<string, string> (allPeers.Count, StringComparer.Ordinal);
 		foreach (var peer in allPeers) {
-			string javaName = JniSignatureHelper.JniNameToJavaName (peer.JavaName);
-			string compatName = JniSignatureHelper.JniNameToJavaName (peer.CompatJniName);
+			string javaName = JniSignatureHelper.JniNameToJavaBinaryName (peer.JavaName);
+			string compatName = JniSignatureHelper.JniNameToJavaBinaryName (peer.CompatJniName);
 			if (javaName != compatName) {
 				compatToCrc [compatName] = javaName;
 			}

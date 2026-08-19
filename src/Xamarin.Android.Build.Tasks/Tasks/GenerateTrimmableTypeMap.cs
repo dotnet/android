@@ -57,6 +57,12 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			log.LogCodedWarning ("XA4257", Properties.Resources.XA4257, managedTypeName, assemblyName, unresolvedTypeName, unresolvedAssemblyName, unresolvedAssemblyPath);
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			log.LogCodedError ("XA4251", Properties.Resources.XA4251, managedTypeName);
+		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
+			log.LogCodedError ("XA4258", Properties.Resources.XA4258, javaName, invalidIdentifier);
+		public void LogCustomJavaObjectError (string managedTypeName) =>
+			log.LogError ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
+		public void LogCustomJavaObjectWarning (string managedTypeName) =>
+			log.LogWarning ("{0}", $"XA4212: {string.Format (Properties.Resources.XA4212, managedTypeName)}");
 	}
 
 	public override string TaskPrefix => "GTT";
@@ -102,13 +108,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public bool EmbedAssemblies { get; set; }
 	public string? PackageNamingPolicy { get; set; }
 
-	/// <summary>
-	/// Maximum array rank for which the generator emits per-rank <c>__ArrayMapRank{N}</c>
-	/// sentinels and <c>TypeMap</c> entries. 0 disables. Set via
-	/// <c>$(_AndroidTrimmableTypeMapMaxArrayRank)</c>.
-	/// </summary>
-	public int MaxArrayRank { get; set; }
-
 	public string? ManifestPlaceholders { get; set; }
 	public string? CheckedBuild { get; set; }
 	public string? ApplicationJavaClass { get; set; }
@@ -132,6 +131,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public ITaskItem [] PreGeneratedTypeMapAssemblies { get; set; } = [];
 
 	public bool CleanJavaSourceOutputDirectory { get; set; }
+
+	/// <summary>
+	/// When true (the default, from <c>$(AndroidErrorOnCustomJavaObject)</c>), a managed class
+	/// that implements <c>Android.Runtime.IJavaObject</c> without deriving from a Java peer is
+	/// reported as the XA4212 error; otherwise it is reported as a warning.
+	/// </summary>
+	public bool ErrorOnCustomJavaObject { get; set; } = true;
 
 	[Output]
 	public ITaskItem [] GeneratedAssemblies { get; set; } = [];
@@ -242,10 +248,13 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				manifestConfig: manifestConfig,
 				manifestTemplate: manifestTemplate,
 				packageNamingPolicy: PackageNamingPolicy,
-				maxArrayRank: MaxArrayRank,
 				generateTypeMapAssemblies: GenerateTypeMapAssemblies,
 				generateRootAssembly: GenerateRootAssembly,
-				sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames);
+				sharedFrameworkTypeMapNames: sharedFrameworkTypeMapNames,
+				errorOnCustomJavaObject: ErrorOnCustomJavaObject);
+			if (Log.HasLoggedErrors) {
+				return false;
+			}
 
 			if (GenerateTypeMapAssemblies) {
 				GeneratedAssemblies = WriteAssembliesToDisk (result.GeneratedAssemblies, assemblyInputs.Select (i => i.Path).ToList ());
@@ -435,30 +444,27 @@ public class GenerateTrimmableTypeMap : AndroidTask
 
 	// Removes generated Java sources from a previous build that the current generation pass
 	// no longer produces (for example when a managed type is removed or trimmed away). Returns
-	// the deleted files (with a RelativePath metadata) so the targets can mirror the deletion
-	// into the android/src copies and force a Java recompilation.
+	// the deleted files (with RelativePath metadata) so the targets can force Java recompilation.
 	//
-	// When the output directory was wiped before generation (CleanJavaSourceOutputDirectory, used
-	// by the post-trim pass), the stale files are already gone from disk; the previous contents
-	// are supplied via priorJavaSnapshot and the difference against the freshly generated set is
-	// reported. Otherwise the directory is scanned and any file the current pass did not produce
-	// is deleted.
+	// When the output directory was wiped before generation (CleanJavaSourceOutputDirectory), the
+	// stale files are already gone from disk; the previous contents are supplied via
+	// priorJavaSnapshot and the difference against the freshly generated set is reported.
+	// Otherwise the directory is scanned and any file the current pass did not produce is deleted.
 	ITaskItem [] DeleteStaleJavaSources (IReadOnlyCollection<ITaskItem> generatedJavaFiles, string[]? priorJavaSnapshot)
 	{
+		// GeneratedJavaFiles can be incomplete after an error (for example XA4255 when a
+		// pre-trim source is missing). The build will fail, but keep the last known-good output
+		// set intact rather than pruning files based on a partial result.
+		if (Log.HasLoggedErrors) {
+			return [];
+		}
+
 		var expectedFiles = new HashSet<string> (
 			generatedJavaFiles.Select (i => Path.GetFullPath (i.ItemSpec)),
 			Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 		var deleted = new List<ITaskItem> ();
 
 		if (priorJavaSnapshot is not null) {
-			// If generation logged errors (e.g. a generated source was missing from the input
-			// directory, XA4255), GeneratedJavaFiles may be incomplete, so the prior-minus-current
-			// diff could wrongly flag a still-valid source as deleted. The build fails on logged
-			// errors anyway; skip pruning to avoid removing a file that should remain.
-			if (Log.HasLoggedErrors) {
-				return [];
-			}
-
 			foreach (var path in priorJavaSnapshot) {
 				var fullPath = Path.GetFullPath (path);
 				if (expectedFiles.Contains (fullPath)) {

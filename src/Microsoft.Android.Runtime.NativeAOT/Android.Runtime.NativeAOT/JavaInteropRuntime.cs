@@ -74,6 +74,8 @@ static partial class JavaInteropRuntime
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
 			JNIEnvInit.InitializeNativeAotRuntime (runtime, initArgs);
 
+			SetAppContextBaseDirectory (filesDir);
+
 			transition  = new JniTransition (jnienv);
 
 			var handler = Java.Lang.Thread.DefaultUncaughtExceptionHandler;
@@ -84,5 +86,22 @@ static partial class JavaInteropRuntime
 			transition.SetPendingException (e);
 		}
 		transition.Dispose ();
+	}
+
+	// MonoVM and CoreCLR hand `APP_CONTEXT_BASE_DIRECTORY` to the runtime as a host property, but
+	// NativeAOT has no such property bag: without this, `AppContext.BaseDirectory` falls back to the
+	// directory of `Environment.ProcessPath`, which is `/system/bin/` (where `app_process64` lives).
+	static void SetAppContextBaseDirectory (IntPtr filesDir)
+	{
+		string? baseDirectory = JniEnvironment.Strings.ToString (filesDir);
+		if (string.IsNullOrEmpty (baseDirectory)) {
+			return;
+		}
+
+		// .NET always terminates `AppContext.BaseDirectory` with a directory separator.
+		if (!baseDirectory.EndsWith ('/')) {
+			baseDirectory += "/";
+		}
+		AppContext.SetData ("APP_CONTEXT_BASE_DIRECTORY", baseDirectory);
 	}
 }

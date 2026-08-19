@@ -88,7 +88,7 @@
         {
             "label": "Run Xamarin.Android Build Tasks Unit Tests",
             "type": "shell",
-            "command": "msbuild Xamarin.Android.sln /t:RunNunitTests /p:Configuration=${input:configuration}",
+            "command": "msbuild Xamarin.Android.slnx /t:RunNunitTests /p:Configuration=${input:configuration}",
             "group": {
                 "kind": "test",
                 "isDefault": true

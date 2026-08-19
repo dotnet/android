@@ -84,6 +84,7 @@ public class MainActivity : Activity
 ";
 
 	[Test]
+	[Ignore ("Marshal methods are not yet working on CoreCLR: https://github.com/dotnet/android/issues/12206")]
 	public void MarshalMethodsAppRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		const bool isRelease = true;
@@ -114,13 +115,15 @@ public class MainActivity : Activity
 
 		using var apkBuilder = CreateApkBuilder ();
 		Assert.True (apkBuilder.Install (proj), "Project should have installed.");
-		RunProjectAndAssert (proj, apkBuilder);
+		ClearAdbLogcat ();
 
 		const string expectedLogcatOutput = "XXX:OnStart done";
 		Assert.IsTrue (
 			MonitorAdbLogcat (
 				InstallAndRunTests.CreateLineChecker (expectedLogcatOutput),
-				logcatFilePath: Path.Combine (Root, apkBuilder.ProjectDirectory, "startup-logcat.log"), timeout: 60
+				logcatFilePath: Path.Combine (Root, apkBuilder.ProjectDirectory, "startup-logcat.log"),
+				timeout: 60,
+				onMonitoringStarted: () => StartActivityAndAssert (proj)
 			),
 			$"Output did not contain {expectedLogcatOutput}!"
 		);

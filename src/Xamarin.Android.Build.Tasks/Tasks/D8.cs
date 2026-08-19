@@ -80,7 +80,7 @@ namespace Xamarin.Android.Tasks
 
 			// Create response file with all D8/R8 arguments to avoid command line length limits
 			responseFilePath = CreateResponseFile ();
-			cmd.AppendSwitch ($"@{responseFilePath}");
+			cmd.AppendSwitch ($"\"@{responseFilePath}\"");
 
 			return cmd;
 		}
@@ -91,7 +91,7 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		protected virtual string CreateResponseFile ()
 		{
-			var responseFile = Path.GetTempFileName ();
+			var responseFile = CreateResponseFilePath ();
 			Log.LogDebugMessage ($"[{MainClass}] response file: {responseFile}");
 
 			using var response = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
@@ -169,6 +169,8 @@ namespace Xamarin.Android.Tasks
 
 			return responseFile;
 		}
+
+		protected virtual string CreateResponseFilePath () => Path.GetTempFileName ();
 
 		/// <summary>
 		/// Writes a single argument to the response file.

@@ -244,6 +244,10 @@ static class JniSignatureHelper
 				segmentStart = i + 1;
 			}
 		}
+
+		if (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier)) {
+			throw new ArgumentException ($"JNI name '{jniName}' contains reserved Java identifier '{invalidIdentifier}'.", nameof (jniName));
+		}
 	}
 
 	/// <summary>
@@ -256,6 +260,17 @@ static class JniSignatureHelper
 	internal static string JniNameToJavaName (string jniName)
 	{
 		return jniName.Replace ('/', '.').Replace ('$', '.');
+	}
+
+	/// <summary>
+	/// Converts a JNI type name to a Java binary type name.
+	/// JNI and Java binary names use '$' for nested classes, but JNI uses '/' for packages.
+	/// e.g., "android/app/Activity" → "android.app.Activity"
+	/// e.g., "android/view/View$OnClickListener" → "android.view.View$OnClickListener"
+	/// </summary>
+	internal static string JniNameToJavaBinaryName (string jniName)
+	{
+		return jniName.Replace ('/', '.');
 	}
 
 	/// <summary>

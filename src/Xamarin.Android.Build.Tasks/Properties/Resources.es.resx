@@ -603,6 +603,11 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
   <data name="XA4213" xml:space="preserve">
     <value>El tipo "{0}" debe proporcionar un constructor predeterminado público.</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>El tipo `{0}` implementa `Android.Runtime.IJavaObject`, pero no hereda `Java.Lang.Object` o `Java.Lang.Throwable`. No se admite este valor.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>El tipo "{0}" administrado existe en varios ensamblados: {1}. Refactorice los nombres de los tipos administrados en estos ensamblados para que no sean idénticos.</value>
     <comment>{0} - The managed type name
@@ -866,6 +871,15 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>Se ignora el directorio "{0}" porque no existe.</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] No se puede eliminar el archivo de origen "{1}"</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Falta el directorio de cadenas de herramientas de Android NDK "{0}". Instale Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1028,19 +1042,22 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>No se pudo resolver el POM del artefacto de Maven "{0}" desde "{1}".
+- {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>Repositorio de Maven desconocido: "{0}".</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>La propiedad '{0}' de MSBuild está en desuso y se quitará en .NET {1}. Consulte https://aka.ms/net-android-deprecations para obtener más detalles.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Un valor válido es uno de: {2}.</value>
@@ -1065,6 +1082,18 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>Falta el atributo android:name en el elemento &lt;instrumentation&gt; de "{0}".</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>No se pudo determinar qué iniciar: "{0}" no contiene un elemento &lt;activity&gt; o &lt;instrumentation&gt; que se pueda iniciar. Establezca la propiedad $(AndroidLaunchActivity) o $(AndroidInstrumentation) de MSBuild para especificar una.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>La propiedad "{0}" de MSBuild no es compatible con el tiempo de {1} ejecución. La compilación no puede continuar mientras esta propiedad esté habilitada. Quite la propiedad o resguarde con una condición: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1083,6 +1112,12 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
   <data name="XA1047" xml:space="preserve">
     <value>Falta el atributo obligatorio "{0}" del elemento "{1}"; {2} línea {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>"{0}" no contiene un elemento &lt;instrumentation&gt;. Agregue una subclase Android.App.Instrumentation a la aplicación o establezca la propiedad $(AndroidInstrumentation) de MSBuild en el nombre de una.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>No se cumple la dependencia de Java "{0}".</value>
@@ -1188,6 +1223,12 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>El nombre de Java "{0}" contiene el identificador de Java reservado "{1}". Cambie el nombre del paquete o tipo.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Error del comando '{0}'.\n{1}</value>

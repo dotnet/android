@@ -50,8 +50,6 @@ namespace Xamarin.Android.Tasks
 
 		public string? LangVersion { get; set; }
 
-		public bool EmitLegacyInterfaceInvokers { get; set; }
-
 		public bool EnableBindingStaticAndDefaultInterfaceMethods { get; set; }
 		public bool EnableBindingNestedInterfaceTypes { get; set; }
 		public bool EnableBindingInterfaceConstants { get; set; }
@@ -66,8 +64,7 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[]? JavadocXml { get; set; }
 		public string? JavadocVerbosity { get; set; }
-
-		public bool UseJavaLegacyResolver { get; set; }
+		public ITaskItem []? JavaReferenceApiXml { get; set; }
 
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
@@ -191,6 +188,9 @@ namespace Xamarin.Android.Tasks
 				if (ReferencedManagedLibraries != null)
 					foreach (var lib in ReferencedManagedLibraries)
 						WriteLine (sw, $"--ref=\"{Path.GetFullPath (lib.ItemSpec)}\"");
+				if (JavaReferenceApiXml != null)
+					foreach (var reference in JavaReferenceApiXml)
+						WriteLine (sw, $"--java-reference=\"{Path.GetFullPath (reference.ItemSpec)}\"");
 				if (AnnotationsZipFiles != null)
 					foreach (var zip in AnnotationsZipFiles)
 						WriteLine (sw, $"--annotations=\"{Path.GetFullPath (zip.ItemSpec)}\"");
@@ -212,10 +212,6 @@ namespace Xamarin.Android.Tasks
 
 				if (SupportsCSharp8) {
 					var features = new List<string> ();
-
-					if (EmitLegacyInterfaceInvokers) {
-						features.Add ("emit-legacy-interface-invokers");
-					}
 
 					if (EnableBindingInterfaceConstants)
 						features.Add ("interface-constants");
@@ -247,9 +243,6 @@ namespace Xamarin.Android.Tasks
 						WriteLine (sw, $"\"--with-javadoc-xml={Path.GetFullPath (xml.ItemSpec)}\"");
 					}
 				}
-
-				if (UseJavaLegacyResolver)
-					WriteLine (sw, "--use-legacy-java-resolver=true");
 			}
 
 			cmd.AppendSwitch ($"\"{ApiXmlInput}\"");

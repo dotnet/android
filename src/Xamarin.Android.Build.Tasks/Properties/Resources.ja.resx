@@ -604,6 +604,11 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
   <data name="XA4213" xml:space="preserve">
     <value>型 '{0}' には、既定のパブリック コンストラクターを指定する必要があります</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>型 `{0}` は `Android.Runtime.IJavaObject` を実装しますが、`Java.Lang.Object` または `Java.Lang.Throwable` を継承しません。これはサポートされていません。</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>マネージ型 '{0}' が複数のアセンブリに存在します: {1}。これらのアセンブリにあるマネージ型の名前をリファクターして、それらが同一にならないようにしてください。</value>
     <comment>{0} - The managed type name
@@ -867,6 +872,15 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>ディレクトリ '{0}' は存在しないため無視されます。</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] ソース ファイル '{1}' を削除できません</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK のツールチェーン ディレクトリ '{0}' がありません。Android NDK をインストールしてください。</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1029,19 +1043,22 @@ In this message, the term "handheld app" means "app for handheld devices."
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>Maven アーティファクト '{0}' の POM を '{1}' から解決できませんでした。
+- {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>不明な Maven リポジトリ: '{0}'。</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>'{0}' MSBuild プロパティは非推奨であり、.NET {1}では削除されます。詳細については、「https://aka.ms/net-android-deprecations」を参照してください。</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild プロパティの値 '{1}' が無効です。有効な値は次のいずれかです:{2}。</value>
@@ -1066,6 +1083,18 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>'{0}' の &lt;instrumentation&gt;要素に android:name 属性がありません。</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>起動対象を判断できませんでした: '{0}' には起動可能な &lt;activity&gt;または &lt;instrumentation&gt; 要素が含まれていません。$(AndroidLaunchActivity) または $(AndroidInstrumentation) MSBuild プロパティを設定して、起動対象を指定します。</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>MSBuild プロパティ '{0}' は {1} ランタイムと互換性がありません。このプロパティが有効な間はビルドを続行できません。プロパティを削除するか、次の条件で保護してください: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1084,6 +1113,12 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1047" xml:space="preserve">
     <value>必須属性 '{0}' が要素 '{1}' にありません。{2} 行 {3}。</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>'{0}' には &lt;instrumentation&gt; 要素が含まれていません。アプリケーションに Android.App.Instrumentation のサブクラスを追加するか、$(AndroidInstrumentation) MSBuild プロパティをその名前に設定します。</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java 依存関係 '{0}' が満たされていません。</value>
@@ -1189,6 +1224,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Java 名 '{0}' には、予約済みの Java 識別子 '{1}' が含まれています。パッケージ名または型名を変更してください。</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>コマンド '{0}' が失敗しました。\n{1}</value>

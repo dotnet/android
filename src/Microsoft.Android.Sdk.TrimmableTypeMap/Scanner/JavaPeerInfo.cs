@@ -51,11 +51,6 @@ public sealed record JavaPeerInfo
 	public bool IsFrameworkAssembly { get; set; }
 
 	/// <summary>
-	/// True when per-rank array typemap entries should be generated for this peer.
-	/// </summary>
-	public bool GenerateArrayEntries { get; set; } = true;
-
-	/// <summary>
 	/// JNI name of the base Java type, e.g., "android/app/Activity" for a type
 	/// that extends Activity. Null for java/lang/Object or types without a Java base.
 	/// Needed by JCW Java source generation ("extends" clause).

@@ -63,8 +63,14 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
+  <!-- RuntimeIdentifier is assigned in these inner builds, after the outer assembly has been compiled.
+       _CheckForInvalidConfigurationAndPlatform is a private MSBuild target, but there is no public
+       validation-only target. Microsoft.Common.targets explicitly directs custom targets that require
+       configuration validation to depend on it. This also avoids depending on the SDK's private
+       _CheckForMismatchingPlatform implementation target.
+       See https://github.com/dotnet/msbuild/blob/eae54023463db15e9a9081f35a959c9162797643/src/Tasks/Microsoft.Common.CurrentVersion.targets#L823-L836 -->
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
+      DependsOnTargets="BuildOnlySettings;_CheckForInvalidConfigurationAndPlatform;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
       Returns="@(ResolvedFileToPublish)">
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />

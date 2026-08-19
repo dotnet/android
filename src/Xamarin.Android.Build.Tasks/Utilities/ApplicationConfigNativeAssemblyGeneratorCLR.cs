@@ -16,9 +16,11 @@ namespace Xamarin.Android.Tasks;
 class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 {
 	// From host_runtime_contract.h in dotnet/runtime
-	const string HOST_PROPERTY_RUNTIME_CONTRACT = "HOST_RUNTIME_CONTRACT";
-	const string HOST_PROPERTY_BUNDLE_PROBE     = "BUNDLE_PROBE";
-	const string HOST_PROPERTY_PINVOKE_OVERRIDE = "PINVOKE_OVERRIDE";
+	const string HOST_PROPERTY_RUNTIME_CONTRACT   = "HOST_RUNTIME_CONTRACT";
+	const string HOST_PROPERTY_BUNDLE_PROBE       = "BUNDLE_PROBE";
+	const string HOST_PROPERTY_PINVOKE_OVERRIDE   = "PINVOKE_OVERRIDE";
+	const string HOST_PROPERTY_RUNTIME_IDENTIFIER = "RUNTIME_IDENTIFIER";
+	const string HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY = "APP_CONTEXT_BASE_DIRECTORY";
 
 	sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
@@ -195,9 +197,9 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 	public ICollection<ITaskItem>? NativeLibrariesNoJniPreload { get; set; }
 	public ICollection<ITaskItem>? NativeLibrariesAlwaysJniPreload { get; set; }
 	public bool MarshalMethodsEnabled { get; set; }
-	public bool ManagedMarshalMethodsLookupEnabled { get; set; }
 	public bool IgnoreSplitConfigs { get; set; }
 	public bool HaveAssemblyStore { get; set; }
+	public bool AssemblyStoreDecompressionCacheEnabled { get; set; }
 
 	public ApplicationConfigNativeAssemblyGeneratorCLR (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties,
 		IDictionary<string, string>? runtimeProperties, TaskLoggingHelper log)
@@ -217,8 +219,10 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			this.runtimeProperties = new SortedDictionary<string, string> (StringComparer.Ordinal);
 		}
 
-		// This will be filled in by the native host.
+		// These will be filled in by the native host.
 		this.runtimeProperties[HOST_PROPERTY_RUNTIME_CONTRACT] = String.Empty;
+		this.runtimeProperties[HOST_PROPERTY_RUNTIME_IDENTIFIER] = String.Empty;
+		this.runtimeProperties[HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY] = String.Empty;
 
 		// these mustn't be there, they would break our host contract
 		this.runtimeProperties.Remove (HOST_PROPERTY_PINVOKE_OVERRIDE);
@@ -267,7 +271,6 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			uses_assembly_preload = UsesAssemblyPreload,
 			jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 			marshal_methods_enabled = MarshalMethodsEnabled,
-			managed_marshal_methods_lookup_enabled = ManagedMarshalMethodsLookupEnabled,
 			ignore_split_configs = IgnoreSplitConfigs,
 			number_of_runtime_properties = (uint)(runtimeProperties == null ? 0 : runtimeProperties.Count),
 			package_naming_policy = (uint)PackageNamingPolicy,
@@ -284,6 +287,7 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 			jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
 			android_package_name = AndroidPackageName,
 			have_assembly_store = HaveAssemblyStore,
+			assembly_store_decompression_cache_enabled = AssemblyStoreDecompressionCacheEnabled,
 		};
 		application_config = new StructureInstance<ApplicationConfigCLR> (applicationConfigStructureInfo, app_cfg);
 		module.AddGlobalVariable ("application_config", application_config);
@@ -317,19 +321,27 @@ class ApplicationConfigNativeAssemblyGeneratorCLR : LlvmIrComposer
 		};
 		module.Add (bundled_assemblies);
 
-		// HOST_PROPERTY_RUNTIME_CONTRACT will come first, our native runtime requires that since it needs
-		// to set its value in the values array and we don't want to spend time searching for the index, nor
-		// we want to add yet another variable storing the index to the entry. KISS.
+		// HOST_PROPERTY_RUNTIME_CONTRACT, HOST_PROPERTY_RUNTIME_IDENTIFIER and
+		// HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY will come first, in that order, our native runtime
+		// requires that since it needs to set their values in the values array and we don't want to
+		// spend time searching for the indices, nor we want to add yet another variable storing the
+		// index to the entry. KISS.
 		var runtime_property_names = new List<string> {
 			HOST_PROPERTY_RUNTIME_CONTRACT,
+			HOST_PROPERTY_RUNTIME_IDENTIFIER,
+			HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY,
 		};
 		var runtime_property_values = new List<string?> {
+			null,
+			null,
 			null,
 		};
 
 		if (runtimeProperties != null) {
 			foreach (var kvp in runtimeProperties) {
-				if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT)) {
+				if (MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_CONTRACT) ||
+						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_RUNTIME_IDENTIFIER) ||
+						MonoAndroidHelper.StringEquals (kvp.Key, HOST_PROPERTY_APP_CONTEXT_BASE_DIRECTORY)) {
 					continue;
 				}
 				runtime_property_names.Add (kvp.Key);
