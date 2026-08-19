@@ -95,6 +95,9 @@ public class AssemblyModifierPipeline : AndroidTask
 				throw new InvalidOperationException ($"Internal error: assembly '{sourceArch}' targets architecture '{sourceArch}', while destination assembly '{destination}' targets '{destinationArch}' instead");
 			}
 
+			if (TryProcessWithoutPipeline (source, destination))
+				continue;
+
 			// Each architecture must have a different set of context classes, or otherwise only the first instance of the assembly may be rewritten.
 			if (currentArch != sourceArch) {
 				currentArch = sourceArch;
@@ -127,6 +130,8 @@ public class AssemblyModifierPipeline : AndroidTask
 
 		return !Log.HasLoggedErrors;
 	}
+
+	protected virtual bool TryProcessWithoutPipeline (ITaskItem source, ITaskItem destination) => false;
 
 	protected virtual void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 	{
