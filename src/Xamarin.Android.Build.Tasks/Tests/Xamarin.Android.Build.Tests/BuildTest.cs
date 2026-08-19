@@ -2306,13 +2306,29 @@ public class ToolbarEx {
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				GlobalPackagesFolder = Path.Combine (Root, TestName, "packages"),
-				TargetFramework = "net10.0-android",
+				Imports = {
+					new Import (() => "EnableMarshalMethodsForPostLink.targets") {
+						TextContent = () =>
+"""
+<Project>
+	<!-- Exercise the in-place post-link path without enabling marshal methods for later CoreCLR targets. -->
+	<Target Name="_EnableMarshalMethodsForPostLink"
+		BeforeTargets="_RunAfterILLinkAdditionalSteps"
+		Condition=" '$(TestEnableMarshalMethodsForPostLink)' == 'true' ">
+		<PropertyGroup>
+			<_AndroidUseMarshalMethods>true</_AndroidUseMarshalMethods>
+		</PropertyGroup>
+	</Target>
+</Project>
+"""
+					},
+				},
 				PackageReferences = {
 					new Package { Id = "Humanizer.Core", Version = "2.14.1" },
 					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
 				},
 			};
-			proj.SetRuntime (AndroidRuntime.MonoVM);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
 			proj.MainActivity = proj.DefaultMainActivity
@@ -2322,6 +2338,8 @@ public class ToolbarEx {
 			using var builder = CreateApkBuilder ();
 			var buildParameters = new [] { $"RestorePackagesPath={proj.GlobalPackagesFolder}" };
 			Assert.IsTrue (builder.Restore (proj, parameters: buildParameters), "Package restore should have succeeded.");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: buildParameters),
+				"Initial build should have succeeded.");
 
 			var satelliteAssemblies = Directory.GetFiles (proj.GlobalPackagesFolder, "*.resources.dll", SearchOption.AllDirectories);
 			Assert.IsNotEmpty (satelliteAssemblies, "The NuGet package should contain satellite assemblies.");
@@ -2337,7 +2355,9 @@ public class ToolbarEx {
 				.Select (assembly => File.Open (assembly, FileMode.Open, FileAccess.Read, FileShare.Read))
 				.ToList ();
 			try {
-				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: buildParameters), "Build should have succeeded.");
+				var postLinkParameters = buildParameters.Append ("TestEnableMarshalMethodsForPostLink=true").ToArray ();
+				Assert.IsTrue (builder.RunTarget (proj, "_PrepareAssemblies", doNotCleanupOnUpdate: true, saveProject: false, parameters: postLinkParameters),
+					"Preparing assemblies should have succeeded.");
 				foreach (string assembly in satelliteAssemblies) {
 					Assert.AreEqual (originalWriteTimes [assembly], File.GetLastWriteTimeUtc (assembly), $"Build should not modify '{assembly}'.");
 				}
