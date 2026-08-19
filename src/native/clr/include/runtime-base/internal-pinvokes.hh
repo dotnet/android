@@ -6,13 +6,10 @@
 #include <host/gc-bridge.hh>
 #include <xamarin-app.hh>
 #include "logger.hh"
-#if defined (XA_HOST_NATIVEAOT)
+
 namespace xamarin::android {
 	struct managed_timing_sequence;
 }
-#else
-#include <runtime-base/timing.hh>
-#endif
 
 extern "C" {
 	int _monodroid_gref_get () noexcept;

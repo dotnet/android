@@ -285,7 +285,7 @@ namespace xamarin::android {
 			}
 
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called"sv);
+				log_warnf (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -301,7 +301,7 @@ namespace xamarin::android {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				log_warnf (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -314,7 +314,7 @@ namespace xamarin::android {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				log_warnf (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
 
@@ -327,7 +327,7 @@ namespace xamarin::android {
 		{
 			auto index = pop_valid_sequence_index ();
 			if (!index.has_value ()) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				log_warnf (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called");
 				return;
 			}
 

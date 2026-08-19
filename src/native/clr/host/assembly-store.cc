@@ -1,3 +1,6 @@
+#include <array>
+#include <cinttypes>
+#include <cstdio>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -116,7 +119,14 @@ namespace {
 
 		void log_file_error (std::string_view operation, std::string const& path, int error) noexcept
 		{
-			log_debug (LOG_ASSEMBLY, "Decompressed-assembly cache {} failed for '{}': {}"sv, operation, path, std::strerror (error));
+			log_debugf (
+				LOG_ASSEMBLY,
+				"Decompressed-assembly cache %.*s failed for '%s': %s",
+				static_cast<int>(operation.length ()),
+				operation.data (),
+				path.c_str (),
+				std::strerror (error)
+			);
 		}
 
 		auto write_cache_file (WriteRequest const& req) noexcept -> WriteResult
@@ -197,7 +207,7 @@ namespace {
 						writes_enabled = false;
 						clear_write_queue_locked ();
 						writer_running = false;
-						log_debug (LOG_ASSEMBLY, "Disabling decompressed-assembly cache writes after a persistence failure"sv);
+						log_debugf (LOG_ASSEMBLY, "Disabling decompressed-assembly cache writes after a persistence failure");
 						return nullptr;
 					}
 				}
@@ -222,7 +232,7 @@ namespace {
 				pthread_attr_destroy (&attributes);
 			}
 			if (result != 0) {
-				log_debug (LOG_ASSEMBLY, "Failed to start decompressed-assembly cache writer: {}"sv, std::strerror (result));
+				log_debugf (LOG_ASSEMBLY, "Failed to start decompressed-assembly cache writer: %s", std::strerror (result));
 				return false;
 			}
 
@@ -324,7 +334,13 @@ namespace {
 
 			store_id = assembly_store_id;
 			cache_dir.append ("/");
-			cache_dir.append (std::format ("{:x}", store_id));
+			std::array<char, (sizeof (uint64_t) * 2) + 1> store_id_hex {};
+			int store_id_length = std::snprintf (store_id_hex.data (), store_id_hex.size (), "%" PRIx64, store_id);
+			abort_unless (
+				store_id_length > 0 && static_cast<size_t>(store_id_length) < store_id_hex.size (),
+				"Failed to format decompressed-assembly cache store ID"
+			);
+			cache_dir.append (store_id_hex.data (), static_cast<size_t>(store_id_length));
 			if (!ensure_directory (cache_dir)) {
 				return;
 			}
@@ -345,10 +361,10 @@ namespace {
 				writes_enabled = true;
 			}
 
-			log_debug (
+			log_debugf (
 				LOG_ASSEMBLY,
-				"Enabled decompressed-assembly cache at '{}'; store ID 0x{:x}; write queue limit {} bytes"sv,
-				cache_dir,
+				"Enabled decompressed-assembly cache at '%s'; store ID 0x%" PRIx64 "; write queue limit %zu bytes",
+				cache_dir.c_str (),
 				store_id,
 				MAX_QUEUED_BYTES
 			);
@@ -401,7 +417,7 @@ namespace {
 			    footer.payload_size != expected_size ||
 			    footer.payload_hash != hash_payload (static_cast<uint8_t*>(mapped), expected_size)) {
 				munmap (mapped, map_size);
-				log_debug (LOG_ASSEMBLY, "Ignoring invalid decompressed-assembly cache entry for '{}'"sv, name);
+				log_debugf (LOG_ASSEMBLY, "Ignoring invalid decompressed-assembly cache entry for '%.*s'", static_cast<int>(name.length ()), name.data ());
 				return nullptr;
 			}
 
@@ -436,18 +452,20 @@ namespace {
 
 			if (queue_full) {
 				if (total > MAX_QUEUED_BYTES) {
-					log_debug (
+					log_debugf (
 						LOG_ASSEMBLY,
-						"Skipping decompressed-assembly cache write for '{}': {} bytes exceed the {}-byte queue limit"sv,
-						name,
+						"Skipping decompressed-assembly cache write for '%.*s': %zu bytes exceed the %zu-byte queue limit",
+						static_cast<int>(name.length ()),
+						name.data (),
 						total,
 						MAX_QUEUED_BYTES
 					);
 				} else {
-					log_debug (
+					log_debugf (
 						LOG_ASSEMBLY,
-						"Skipping decompressed-assembly cache write for '{}': {} of {} queue bytes are in use"sv,
-						name,
+						"Skipping decompressed-assembly cache write for '%.*s': %zu of %zu queue bytes are in use",
+						static_cast<int>(name.length ()),
+						name.data (),
 						bytes_queued,
 						MAX_QUEUED_BYTES
 					);
@@ -517,7 +535,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 #if defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(e.image_data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
-		log_debug (LOG_ASSEMBLY, "Resolving compressed assembly '{}' from the assembly store"sv, name);
+		log_debugf (LOG_ASSEMBLY, "Resolving compressed assembly '%.*s' from the assembly store", static_cast<int>(name.length ()), name.data ());
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::AssemblyDecompression);
@@ -527,12 +545,11 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			Helpers::abort_application (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined"sv);
 		}
 		if (header->descriptor_index >= compressed_assembly_count) [[unlikely]] {
-			Helpers::abort_application (
+			Helpers::abort_applicationf (
 				LOG_ASSEMBLY,
-				std::format (
-					"Invalid compressed assembly descriptor index {}"sv,
-					header->descriptor_index
-				)
+				std::source_location::current (),
+				"Invalid compressed assembly descriptor index %" PRIu32,
+				header->descriptor_index
 			);
 		}
 
@@ -540,13 +557,12 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		assembly_data_size = e.descriptor->data_size - sizeof(CompressedAssemblyHeader);
 
 		if (cad.buffer_offset >= uncompressed_assemblies_data_size) [[unlikely]] {
-			Helpers::abort_application (
+			Helpers::abort_applicationf (
 				LOG_ASSEMBLY,
-				std::format (
-					"Invalid compressed assembly buffer offset {}. Must be smaller than {}",
-					cad.buffer_offset,
-					uncompressed_assemblies_data_size
-				)
+				std::source_location::current (),
+				"Invalid compressed assembly buffer offset %" PRIu32 ". Must be smaller than %" PRIu32,
+				cad.buffer_offset,
+				uncompressed_assemblies_data_size
 			);
 		}
 
@@ -555,14 +571,13 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		// that will cause the app to crash when one or the the other assembly is loaded, so it's
 		// OK to accept that risk. The whole situation is very, very unlikely.
 		if (cad.uncompressed_file_size > uncompressed_assemblies_data_size - cad.buffer_offset) [[unlikely]] {
-			Helpers::abort_application (
+			Helpers::abort_applicationf (
 				LOG_ASSEMBLY,
-				std::format (
-					"Invalid compressed assembly buffer size {} at offset {}. Must not exceed {}",
-					cad.uncompressed_file_size,
-					cad.buffer_offset,
-					uncompressed_assemblies_data_size - cad.buffer_offset
-				)
+				std::source_location::current (),
+				"Invalid compressed assembly buffer size %" PRIu32 " at offset %" PRIu32 ". Must not exceed %" PRIu32,
+				cad.uncompressed_file_size,
+				cad.buffer_offset,
+				uncompressed_assemblies_data_size - cad.buffer_offset
 			);
 		}
 
@@ -602,17 +617,17 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
-					Helpers::abort_application (
+					Helpers::abort_applicationf (
 						LOG_ASSEMBLY,
-						std::format (
-							"Compressed assembly '{}' is larger than when the application was built (expected at most {}, got {}). Assemblies don't grow just like that!"sv,
-							name,
-							cad.uncompressed_file_size,
-							header->uncompressed_length
-						)
+						std::source_location::current (),
+						"Compressed assembly '%.*s' is larger than when the application was built (expected at most %" PRIu32 ", got %" PRIu32 "). Assemblies don't grow just like that!",
+						static_cast<int>(name.length ()),
+						name.data (),
+						cad.uncompressed_file_size,
+						header->uncompressed_length
 					);
 				} else {
-					log_debug (LOG_ASSEMBLY, "Compressed assembly '{}' is smaller than when the application was built. Adjusting accordingly."sv, name);
+					log_debugf (LOG_ASSEMBLY, "Compressed assembly '%.*s' is smaller than when the application was built. Adjusting accordingly.", static_cast<int>(name.length ()), name.data ());
 				}
 				cad.uncompressed_file_size = header->uncompressed_length;
 			}
@@ -623,34 +638,34 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			uint8_t *cached = asm_cache::try_load (descriptor_index, name, cad.uncompressed_file_size);
 			if (cached != nullptr) {
 				loaded_from_cache = true;
-				log_debug (LOG_ASSEMBLY, "Loaded decompressed assembly '{}' from the on-device cache"sv, name);
+				log_debugf (LOG_ASSEMBLY, "Loaded decompressed assembly '%.*s' from the on-device cache", static_cast<int>(name.length ()), name.data ());
 				if (asm_cache::tracking != nullptr) {
 					asm_cache::tracking[descriptor_index] = cached;
 				}
 			} else {
-				log_debug (LOG_ASSEMBLY, "Decompressing assembly '{}' from the assembly store"sv, name);
+				log_debugf (LOG_ASSEMBLY, "Decompressing assembly '%.*s' from the assembly store", static_cast<int>(name.length ()), name.data ());
 				size_t ret = ZSTD_decompress (data_buffer, cad.uncompressed_file_size, data_start, assembly_data_size);
 
 				if (ZSTD_isError (ret)) {
-					Helpers::abort_application (
+					Helpers::abort_applicationf (
 						LOG_ASSEMBLY,
-						std::format (
-							"Decompression of assembly {} failed: {}"sv,
-							name,
-							ZSTD_getErrorName (ret)
-						)
+						std::source_location::current (),
+						"Decompression of assembly %.*s failed: %s",
+						static_cast<int>(name.length ()),
+						name.data (),
+						ZSTD_getErrorName (ret)
 					);
 				}
 
 				if (ret != cad.uncompressed_file_size) {
-					Helpers::abort_application (
+					Helpers::abort_applicationf (
 						LOG_ASSEMBLY,
-						std::format (
-							"Decompression of assembly {} yielded a different size (expected {}, got {})"sv,
-							name,
-							cad.uncompressed_file_size,
-							static_cast<uint32_t>(ret)
-						)
+						std::source_location::current (),
+						"Decompression of assembly %.*s yielded a different size (expected %" PRIu32 ", got %zu)",
+						static_cast<int>(name.length ()),
+						name.data (),
+						cad.uncompressed_file_size,
+						ret
 					);
 				}
 
@@ -674,12 +689,12 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 	} else
 #endif // def RELEASE
 	{
-		log_debug (LOG_ASSEMBLY, "Assembly '{}' is not compressed in the assembly store"sv, name);
+		log_debugf (LOG_ASSEMBLY, "Assembly '%.*s' is not compressed in the assembly store", static_cast<int>(name.length ()), name.data ());
 
 		// HACK! START
 		// Currently, MAUI crashes when we return a pointer to read-only data, so we must copy
 		// the assembly data to a read-write area.
-		log_debug (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area"sv);
+		log_debugf (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.start_event (TimingEventKind::AssemblyLoad);
@@ -733,7 +748,7 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	if constexpr (Constants::is_debug_build) {
 		// In fastdev mode we might not have any assembly store.
 		if (assembly_store_hashes == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '{}'"sv, name);
+			log_warnf (LOG_ASSEMBLY, "Assembly store not registered. Unable to look up assembly '%.*s'", static_cast<int>(name.length ()), name.data ());
 			return nullptr;
 		}
 	}
@@ -741,24 +756,23 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name, name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) [[unlikely]] {
 		size = 0;
-		log_warn (LOG_ASSEMBLY, "Assembly '{}' (hash 0x{:x}) not found"sv, name, name_hash);
+		log_warnf (LOG_ASSEMBLY, "Assembly '%.*s' (hash 0x%" PRIx32 ") not found", static_cast<int>(name.length ()), name.data (), name_hash);
 		return nullptr;
 	}
 
 	if (hash_entry->ignore != 0) {
 		size = 0;
-		log_debug (LOG_ASSEMBLY, "Assembly '{}' ignored"sv, name);
+		log_debugf (LOG_ASSEMBLY, "Assembly '%.*s' ignored", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
 
 	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
-			std::format (
-				"Invalid assembly descriptor index {}, exceeds the maximum value of {}"sv,
-				hash_entry->descriptor_index,
-				assembly_store.assembly_count - 1
-			)
+			std::source_location::current (),
+			"Invalid assembly descriptor index %" PRIu32 ", exceeds the maximum value of %" PRIu32,
+			hash_entry->descriptor_index,
+			assembly_store.assembly_count - 1
 		);
 	}
 
@@ -774,9 +788,9 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
 		}
 
-		log_debug (
+		log_debugf (
 			LOG_ASSEMBLY,
-			"Mapped: image_data == {:p}; debug_info_data == {:p}; config_data == {:p}; descriptor == {:p}; data size == {}; debug data size == {}; config data size == {}; name == '{}'"sv,
+			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %" PRIu32 "; debug data size == %" PRIu32 "; config data size == %" PRIu32 "; name == '%.*s'",
 			static_cast<const void*>(assembly_runtime_info.image_data),
 			static_cast<const void*>(assembly_runtime_info.debug_info_data),
 			static_cast<const void*>(assembly_runtime_info.config_data),
@@ -784,7 +798,8 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 			assembly_runtime_info.descriptor->data_size,
 			assembly_runtime_info.descriptor->debug_data_size,
 			assembly_runtime_info.descriptor->config_data_size,
-			name
+			static_cast<int>(name.length ()),
+			name.data ()
 		);
 	}
 
@@ -796,26 +811,25 @@ auto AssemblyStore::open_assembly (std::string_view const& name, int64_t &size) 
 void AssemblyStore::configure_from_payload (const void *payload_start, const std::function<std::string()>& get_full_store_path) noexcept
 {
 	auto header = static_cast<const AssemblyStoreHeader*>(payload_start);
+	std::string full_store_path = get_full_store_path ();
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
-			std::format (
-				"Assembly store '{}' is not a valid .NET for Android assembly store file"sv,
-				get_full_store_path ()
-			)
+			std::source_location::current (),
+			"Assembly store '%s' is not a valid .NET for Android assembly store file",
+			full_store_path.c_str ()
 		);
 	}
 
 	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
-			std::format (
-				"Assembly store '{}' uses format version {:x}, instead of the expected {:x}"sv,
-				get_full_store_path (),
-				header->version,
-				ASSEMBLY_STORE_FORMAT_VERSION
-			)
+			std::source_location::current (),
+			"Assembly store '%s' uses format version %" PRIx32 ", instead of the expected %" PRIx32,
+			full_store_path.c_str (),
+			header->version,
+			ASSEMBLY_STORE_FORMAT_VERSION
 		);
 	}
 
@@ -845,5 +859,5 @@ void AssemblyStore::configure_from_payload (const void *payload_start, const std
 		names_cursor += name_length;
 	}
 
-	log_debug (LOG_ASSEMBLY, "Mapped assembly store {}; content ID 0x{:x}"sv, get_full_store_path (), assembly_store_content_id);
+	log_debugf (LOG_ASSEMBLY, "Mapped assembly store %s; content ID 0x%" PRIx64, full_store_path.c_str (), assembly_store_content_id);
 }

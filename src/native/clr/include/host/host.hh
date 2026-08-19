@@ -8,13 +8,12 @@
 
 #include "host-common.hh"
 #include <runtime-base/jni-wrappers.hh>
-#if !defined (XA_HOST_NATIVEAOT)
-#include <runtime-base/timing.hh>
-#endif
 #include "../shared/log_types.hh"
 #include "managed-interface.hh"
 
 namespace xamarin::android {
+	class Timing;
+
 	class Host : public HostCommon
 	{
 	public:
@@ -25,12 +24,10 @@ namespace xamarin::android {
 		static void Java_mono_android_Runtime_registerNatives (JNIEnv *env, jclass nativeClass) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
 
-#if !defined (XA_HOST_NATIVEAOT)
 		static auto get_timing () -> std::shared_ptr<Timing>
 		{
 			return _timing;
 		}
-#endif
 
 		static auto get_java_class_TimeZone () noexcept -> jclass
 		{
@@ -58,9 +55,7 @@ namespace xamarin::android {
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
-#if !defined (XA_HOST_NATIVEAOT)
-		static inline std::shared_ptr<Timing> _timing{};
-#endif
+		static std::shared_ptr<Timing> _timing;
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
