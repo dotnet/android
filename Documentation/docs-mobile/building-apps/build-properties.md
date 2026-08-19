@@ -910,6 +910,20 @@ available and can be installed.
 
 If `$(AndroidManifestType)` is not set, then `Xamarin` is used.
 
+## AndroidManifestSource
+
+A string property that specifies an absolute URI or an existing local file path
+for the repository manifest used by the
+[`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target. When this property is not set, the default repository manifest selected
+by `$(AndroidManifestType)` is used.
+
+For example:
+
+```xml
+<AndroidManifestSource>https://example.com/AndroidManifestFeed.xml</AndroidManifestSource>
+```
+
 ## AndroidManifestPlaceholders
 
 A semicolon-separated list of
@@ -1248,8 +1262,8 @@ This property is obsolete and should not be used.
 An enum-style property that selects the type map implementation.
 Valid values are `llvm-ir` and `trimmable`.
 
-The default value is `llvm-ir` when using CoreCLR and `trimmable` when using
-NativeAOT.
+The default value is `trimmable` when `$(PublishAot)` is `true` and `llvm-ir`
+otherwise.
 
 ## AndroidUseApkSigner
 
