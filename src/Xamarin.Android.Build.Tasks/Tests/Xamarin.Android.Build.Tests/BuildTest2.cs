@@ -202,6 +202,30 @@ namespace Xamarin.Android.Build.Tests
 				builder.Output.GetIntermediaryPath (Path.Combine ("android", "assets", filename));
 		}
 
+		[TestCase (false, "", 3)]
+		[TestCase (true, "", 22)]
+		[TestCase (true, "7", 7)]
+		public void BuildAssemblyStoreCompressionLevel (bool isRelease, string compressionLevel, int expectedCompressionLevel)
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			if (!compressionLevel.IsNullOrEmpty ()) {
+				proj.SetProperty ("_AndroidAssemblyStoreCompressionLevel", compressionLevel);
+			}
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var buildProperties = File.ReadAllLines (builder.Output.GetIntermediaryPath ("build.props"));
+			CollectionAssert.Contains (buildProperties, $"_androidassemblystorecompressionlevel={expectedCompressionLevel}");
+		}
+
 		[Test]
 		public void BuildReleaseArm64 ([Values] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime, [Values] bool r8)
 		{
