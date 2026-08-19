@@ -223,6 +223,13 @@
 			<url host-os="windows" host-bits="0" size="109651902" checksum-type="sha1" checksum="a2f359fb8b075acebcb3e3e48b4170cfe4071882">https://dl.google.com/android/repository/commandlinetools-win-7583922_latest.zip</url>
 		</urls>
 	</cmdline-tools>
+	<build-tool revision="37.0.0" path="build-tools;37.0.0" filesystem-path="build-tools/37.0.0" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Build-Tools 37" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
+		<urls>
+			<url host-os="linux" host-bits="0" size="66135704" checksum-type="sha1" checksum="70954e99f4c3d9d46ee70fa32624672fe7cd6ebe">https://dl.google.com/android/repository/build-tools_r37_linux.zip</url>
+			<url host-os="windows" host-bits="0" size="61077164" checksum-type="sha1" checksum="e9c97e26b5b5678002e9d3fed632c841ae62d99f">https://dl.google.com/android/repository/build-tools_r37_windows.zip</url>
+			<url host-os="macosx" host-bits="0" size="81933386" checksum-type="sha1" checksum="eb080751b2b2028eb3604f571027d6f7b3c46321">https://dl.google.com/android/repository/build-tools_r37_macosx.zip</url>
+		</urls>
+	</build-tool>
 	<build-tool revision="36.1.0" path="build-tools;36.1.0" filesystem-path="build-tools/36.1.0" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Build-Tools 36.1" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
 		<urls>
 			<url host-os="linux" host-bits="0" size="64195204" checksum-type="sha1" checksum="936a0d6bd5ae3e2118a7567dddbc95ff67ed46e9">https://dl.google.com/android/repository/build-tools_r36.1_linux.zip</url>

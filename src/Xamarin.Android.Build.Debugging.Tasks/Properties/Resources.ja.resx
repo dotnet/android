@@ -193,12 +193,11 @@ ABI - is an acronym for Application Binary Interface.
   </data>
   <data name="XA0134_RunAsPackageNotDebuggable" xml:space="preserve">
     <value>アプリケーションの AndroidManifest.xml に 'android:debuggable' 属性が設定されていません。
-これは、高速展開を機能させるために必要です。これは通常、デバッグ ビルドの .NET for Android ビルド 
-システムにより既定で有効化されます。'AndroidManifest.xml' の 'application' 要素に
-この属性が設定されていないことをご確認ください。
-'Android.App.Application' から派生したクラスがあり、'[Application]' を使用しているクラスがある場合は、
- を確認してください
-'Debuggable' プロパティは、デバッグ ビルドの値をオーバーライドするため、まったく設定されていません。
+これは、高速展開を機能させるために必要です。これは通常、デバッグ ビルドの .NET for Android ビルド システムにより
+既定で有効になっています。この属性が 'AndroidManifest.xml' の 'application' 要素に
+設定されていないことを確認してください。
+'Android.App.Application' から派生したクラスがあり、'[Application]' を使用しているクラスがある場合、
+'Debuggable' プロパティがまったく設定されていないことを確認してください。設定されていると、デバッグ ビルドの値がオーバーライドされます。
 </value>
     <comment>The following are literal names and should not be translated:
 AndroidManifest.xml - A xml file
@@ -253,10 +252,9 @@ Visual Studio では [ヘルプ] &gt; [フィードバックの送信] &gt; [問
 {2} - The actual error that occured.</comment>
   </data>
   <data name="StartDebugger_ipAddress_port" xml:space="preserve">
-    <value>  {0}:{1}
- でデバッガーを起動しています
-sdb を開始し、次のコマンドを実行してください
-  {0} {1} を接続します
+    <value>  {0}:{1} でデバッガーを起動しています
+sdb を起動し、次のコマンドを実行します
+  connect {0} {1}
     </value>
     <comment>The following are literal names and should not be translated:
 {0} - An ip address of  a computer.
