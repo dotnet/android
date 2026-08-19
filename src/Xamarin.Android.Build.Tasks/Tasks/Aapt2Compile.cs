@@ -89,12 +89,6 @@ namespace Xamarin.Android.Tasks {
 					filename = $"{filename}.flata";
 				outputArchive = Path.Combine (outputArchive, filename);
 				expectedOutputFile = outputArchive;
-				string archive = item.GetMetadata (ResolveLibraryProjectImports.ResourceDirectoryArchive);
-				if (!archive.IsNullOrEmpty () && File.Exists (archive)) {
-					LogDebugMessage ($"Found Compressed Resource Archive '{archive}'.");
-					fileOrDirectory = archive;
-					isArchive = true;
-				}
 			} else {
 				if (IsInvalidFilename (fileOrDirectory)) {
 					LogDebugMessage ($"Invalid filename, ignoring: {fileOrDirectory}");
