@@ -2378,13 +2378,11 @@ public class ToolbarEx {
 		[Test]
 		public void SystemIOHashing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("https://github.com/dotnet/android/issues/10606");
-			}
-
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				PackageReferences = {
-					new Package { Id = "System.IO.Hashing", Version = "10.0.0" }
+					new Package { Id = "System.IO.Hashing", Version = "11.0.0-rc.1.26413.103" }
 				},
 			};
 			proj.SetRuntime (runtime);
@@ -2393,8 +2391,8 @@ public class ToolbarEx {
 				"""
 				base.OnCreate (bundle);
 				
-				// Use System.IO.Hashing to compute a hash
-				var crc32 = new System.IO.Hashing.Crc32 ();
+				// Crc32ParameterSet was added in System.IO.Hashing 11.0.
+				var crc32 = new System.IO.Hashing.Crc32 (System.IO.Hashing.Crc32ParameterSet.Crc32C);
 				var data = System.Text.Encoding.UTF8.GetBytes ("Hello World");
 				crc32.Append (data);
 				var hash = crc32.GetCurrentHash ();
