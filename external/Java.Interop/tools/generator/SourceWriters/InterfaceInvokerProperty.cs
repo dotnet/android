@@ -14,13 +14,10 @@ namespace generator.SourceWriters
 	{
 		readonly MethodCallback getter_callback;
 		readonly MethodCallback setter_callback;
-		readonly Property property;
 		readonly CodeGenerationOptions opt;
-		readonly string context_this;
 
-		public InterfaceInvokerProperty (InterfaceGen iface, Property property, CodeGenerationOptions opt, CodeGeneratorContext context)
+		public InterfaceInvokerProperty (InterfaceGen iface, Property property, CodeGenerationOptions opt)
 		{
-			this.property = property;
 			this.opt = opt;
 
 			Name = property.AdjustedName;
@@ -43,18 +40,14 @@ namespace generator.SourceWriters
 				setter_callback = new MethodCallback (iface, property.Setter, opt, property.AdjustedName, false);
 			}
 
-			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
-
-			if (!opt.EmitLegacyInterfaceInvokers) {
-				if (HasGet) {
-					SourceWriterExtensions.AddMethodBody (GetBody, property.Getter, opt, $"_members_{property.Getter.DeclaringType.JavaFullNameId}");
-				}
-				if (HasSet) {
-					var pname = property.Setter.Parameters [0].Name;
-					property.Setter.Parameters [0].Name = "value";
-					SourceWriterExtensions.AddMethodBody (SetBody, property.Setter, opt, $"_members_{property.Setter.DeclaringType.JavaFullNameId}");
-					property.Setter.Parameters [0].Name = pname;
-				}
+			if (HasGet) {
+				SourceWriterExtensions.AddMethodBody (GetBody, property.Getter, opt, $"_members_{property.Getter.DeclaringType.JavaFullNameId}");
+			}
+			if (HasSet) {
+				var pname = property.Setter.Parameters [0].Name;
+				property.Setter.Parameters [0].Name = "value";
+				SourceWriterExtensions.AddMethodBody (SetBody, property.Setter, opt, $"_members_{property.Setter.DeclaringType.JavaFullNameId}");
+				property.Setter.Parameters [0].Name = pname;
 			}
 		}
 
@@ -65,38 +58,7 @@ namespace generator.SourceWriters
 				setter_callback?.Write (writer);
 			}
 
-			if (opt.EmitLegacyInterfaceInvokers) {
-				if (property.Getter != null)
-					writer.WriteLine ($"IntPtr {property.Getter.EscapedIdName};");
-
-				if (property.Setter != null)
-					writer.WriteLine ($"IntPtr {property.Setter.EscapedIdName};");
-			}
-
 			base.Write (writer);
-		}
-
-		protected override void WriteGetterBody (CodeWriter writer)
-		{
-			if (!opt.EmitLegacyInterfaceInvokers) {
-				base.WriteGetterBody (writer);
-				return;
-			}
-			SourceWriterExtensions.WriteMethodInvokerBodyLegacy (writer, property.Getter, opt, context_this);
-		}
-
-		protected override void WriteSetterBody (CodeWriter writer)
-		{
-			if (!opt.EmitLegacyInterfaceInvokers) {
-				base.WriteSetterBody (writer);
-				return;
-			}
-			var pname = property.Setter.Parameters [0].Name;
-			property.Setter.Parameters [0].Name = "value";
-
-			SourceWriterExtensions.WriteMethodInvokerBodyLegacy (writer, property.Setter, opt, context_this);
-
-			property.Setter.Parameters [0].Name = pname;
 		}
 	}
 }

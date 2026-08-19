@@ -13,7 +13,7 @@
         <Str Cat="Text">
           <Val><![CDATA[  Starting Debugger on {0}:{1}]D;]A;Start sdb then run the following command]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[  {0}:{1}]D; でデバッガーを起動しています]A;sdb を開始し、次のコマンドを実行してください]D;]A;  {0} {1} を接続します]D;]A;    ]]></Val>
+            <Val><![CDATA[  {0}:{1} でデバッガーを起動しています]D;]A;sdb を起動し、次のコマンドを実行します]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -142,7 +142,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the .NET for Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[アプリケーションの AndroidManifest.xml に 'android:debuggable' 属性が設定されていません。]D;]A;これは、高速展開を機能させるために必要です。これは通常、デバッグ ビルドの .NET for Android ビルド ]D;]A;システムにより既定で有効化されます。'AndroidManifest.xml' の 'application' 要素に]D;]A;この属性が設定されていないことをご確認ください。]D;]A;'Android.App.Application' から派生したクラスがあり、'[Application]5D;' を使用しているクラスがある場合は、]D; を確認してください]A;'Debuggable' プロパティは、デバッグ ビルドの値をオーバーライドするため、まったく設定されていません。]D;]A;]]></Val>
+            <Val><![CDATA[アプリケーションの AndroidManifest.xml に 'android:debuggable' 属性が設定されていません。]D;]A;これは、高速展開を機能させるために必要です。これは通常、デバッグ ビルドの .NET for Android ビルド システムにより]D;]A;既定で有効になっています。この属性が 'AndroidManifest.xml' の 'application' 要素に]D;]A;設定されていないことを確認してください。]D;]A;'Android.App.Application' から派生したクラスがあり、'[Application]5D;' を使用しているクラスがある場合、]D;]A;'Debuggable' プロパティがまったく設定されていないことを確認してください。設定されていると、デバッグ ビルドの値がオーバーライドされます。]D;]A;]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The application does not have the 'android:debuggable' attribute set in the AndroidManifest.xml.]D;]A;This is required in order for Fast Deployment to work. This is normally enabled by default by ]D;]A;the Xamarin.Android build system for Debug builds. Please check that you to not have this attribute]D;]A;set on the 'application' element in your 'AndroidManifest.xml'.]D;]A;If you have a class that derives from 'Android.App.Application' and are using the '[Application]5D;' make sure the ]D;]A;'Debuggable' property is not set at all as it will override the value for debug builds.]D;]A;]]></Val>

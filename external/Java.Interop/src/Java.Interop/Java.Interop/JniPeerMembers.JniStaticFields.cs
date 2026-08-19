@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Java.Interop
 {
@@ -15,19 +15,15 @@ namespace Java.Interop
 
 		readonly JniPeerMembers                             Members;
 
-		Dictionary<string, JniFieldInfo>                    StaticFields  = new Dictionary<string, JniFieldInfo>(StringComparer.Ordinal);
+		readonly ConcurrentDictionary<string, JniFieldInfo> StaticFields = new ConcurrentDictionary<string, JniFieldInfo> (1, 3, StringComparer.Ordinal);
 
 		public JniFieldInfo GetFieldInfo (string encodedMember)
 		{
-			lock (StaticFields) {
-				if (!StaticFields.TryGetValue (encodedMember, out var f)) {
-					string field, signature;
-					JniPeerMembers.GetNameAndSignature (encodedMember, out field, out signature);
-					f = Members.JniPeerType.GetStaticField (field, signature);
-					StaticFields.Add (encodedMember, f);
-				}
-				return f;
-			}
+			return StaticFields.GetOrAdd (encodedMember, static (member, fields) => {
+				string field, signature;
+				JniPeerMembers.GetNameAndSignature (member, out field, out signature);
+				return fields.Members.JniPeerType.GetStaticField (field, signature);
+			}, this);
 		}
 
 		internal void Dispose ()
@@ -36,4 +32,3 @@ namespace Java.Interop
 		}
 	}}
 }
-

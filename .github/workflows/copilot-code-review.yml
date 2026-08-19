@@ -1,0 +1,14 @@
+name: Copilot Code Review Setup Steps
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Complete setup
+        run: echo "No additional setup required."

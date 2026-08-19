@@ -27,7 +27,7 @@ test fields) by declaring the field as nullable.
 - Logical-not operators (`!foo`, `!IsEnabled`, `if (!x)`) — only the
   *postfix* null-forgiving form (`foo!.`, `foo![`, `foo!;`, `foo!,`, `foo!)`)
 - Strings/comments containing `!` (the scan filters trailing-`!` positions
-  so this is rare, but still verify before filing). Note: the regex
+  so this is rare, but still verify before changing it). Note: the regex
   intentionally does NOT exclude the `!=` operator at the line level --
   the character class after `!` already excludes `=`, so excluding lines
   that contain `!=` anywhere would drop legitimate hits.

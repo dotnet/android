@@ -312,6 +312,7 @@
   <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='newInstance']" name="return">java.lang.Object</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='cast']" name="return">java.lang.Object</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="managedName">JavaFinalize</attr>
+  <attr path="/api/package[@name='java.lang']/class[@name='Object']/method[@name='finalize']" name="deprecated">Override Dispose (bool disposing) for cleanup customization, or use the C# destructor instead. Java's Object.finalize() has been deprecated since JDK 9 and is marked for removal.</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='StringBuffer']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
   <attr path="/api/package[@name='java.lang']/class[@name='StringBuilder']/method[@name='append']" name="managedReturn">Java.Lang.IAppendable</attr>
   <attr path="/api/package[@name='java.lang']/interface[@name='CharSequence']" name="managedName">ICharSequence</attr>
@@ -1132,6 +1133,14 @@
     The problem with this is that our tooling doesn't have any real support for stating that
     a method was removed; api-merge assumes that once an API is added, it's present for ALL TIME.
     -->
+  <!-- These constructors were removed before the minimum supported Android API level. -->
+  <attr path="/api/package[@name='android.util']/class[@name='Config' or @name='DebugUtils' or @name='EventLog' or @name='StateSet' or @name='TimeUtils' or @name='Xml']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 15.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='Plugin' or @name='PluginList' or @name='UrlInterceptRegistry']/constructor[@visibility='public' or @visibility='protected']" name="deprecated">This constructor was removed in Android API level 15.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='GeolocationPermissions' or @name='WebStorage']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 16.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CacheManager']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 17.</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='AudioFormat']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 21.</attr>
+  <attr path="/api/package[@name='android.os']/class[@name='BatteryManager' or @name='RecoverySystem']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 23.</attr>
+
   <!-- View.fitsSystemWindows() was removed from docs/android.jar, but still appears to exist on-device. -->
   <attr api-since="14" path="/api/package[@name='android.view']/class[@name='View']/method[@name='fitsSystemWindows' and count(parameters)=0]"
       name="managedName"
@@ -2041,6 +2050,15 @@
       name="managedOverride"
   >override</attr>
 
+  <!-- API-37.1 Adjustments -->
+  <!-- API-31 introduced these types as non-`final`. API-35 changed them to be `final`, but api-merge
+       "ignored" that change because binding them as C# `sealed` types would be a source-breaking change.
+       API-37.1 changed `describeContents()` from a `final` method to a non-`final` method; this doesn't
+       matter on the Java side because it's a method on a `final` type, so it can't actually be overridden.
+       Force the method to stay `final` so the C# binding doesn't change. -->
+  <attr api-since="37.1" path="/api/package[@name='android.app.appsearch']/class[@name='SetSchemaResponse']/method[@name='describeContents']" name="final">true</attr>
+  <attr api-since="37.1" path="/api/package[@name='android.app.appsearch']/class[@name='StorageInfo']/method[@name='describeContents']" name="final">true</attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -2073,6 +2091,7 @@
   <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-36.1.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="37" path="/api/package[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="37" path="/api/package[contains(@merge.SourceFile,'api-37.0.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="37.1" path="/api/package[contains(@merge.SourceFile,'api-37.1.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -2102,6 +2121,7 @@
   <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]" name="api-since">37.0</attr>
   <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.xml.in')]" name="api-since">37.0</attr>
   <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.0.xml.in')]" name="api-since">37.0</attr>
+  <attr api-since="37.1" path="/api//*[contains(@merge.SourceFile,'api-37.1.xml.in')]" name="api-since">37.1</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 

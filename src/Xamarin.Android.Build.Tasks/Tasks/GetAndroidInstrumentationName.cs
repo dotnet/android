@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -17,6 +16,14 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ManifestFile { get; set; } = "";
 
+		/// <summary>
+		/// Set when the application was already found to have no launchable
+		/// &lt;activity&gt;, in which case a missing &lt;instrumentation&gt; element
+		/// means there is nothing at all to launch and XA1043 is reported.
+		/// Otherwise a missing &lt;instrumentation&gt; is reported as XA1048.
+		/// </summary>
+		public bool NoLaunchableActivity { get; set; }
+
 		[Output]
 		public string? InstrumentationName { get; set; }
 
@@ -24,13 +31,20 @@ namespace Xamarin.Android.Tasks
 		{
 			var manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
 			var androidNs = AndroidAppManifest.AndroidXNamespace;
-			var doc = manifest.Document;
 
-			var instrumentation = doc?.Root?.Element ("instrumentation")
-				?? throw new InvalidOperationException ("No <instrumentation> element found in AndroidManifest.xml.");
+			var instrumentation = manifest.Document?.Root?.Element ("instrumentation");
+			if (instrumentation == null) {
+				if (NoLaunchableActivity) {
+					Log.LogCodedError ("XA1043", Properties.Resources.XA1043, ManifestFile);
+				} else {
+					Log.LogCodedError ("XA1048", Properties.Resources.XA1048, ManifestFile);
+				}
+				return !Log.HasLoggedErrors;
+			}
+
 			InstrumentationName = instrumentation.Attribute (androidNs + "name")?.Value;
-			if (string.IsNullOrEmpty (InstrumentationName))
-				throw new InvalidOperationException ("The <instrumentation> element in AndroidManifest.xml is missing the android:name attribute.");
+			if (InstrumentationName.IsNullOrEmpty ())
+				Log.LogCodedError ("XA1042", Properties.Resources.XA1042, ManifestFile);
 
 			return !Log.HasLoggedErrors;
 		}

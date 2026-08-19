@@ -44,6 +44,15 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		}
 
 		[Theory]
+		[InlineData ("android/app/Activity", "android.app.Activity")]
+		[InlineData ("java/lang/Object", "java.lang.Object")]
+		[InlineData ("android/view/View$OnClickListener", "android.view.View$OnClickListener")]
+		public void JniNameToJavaBinaryName_ConvertsCorrectly (string jniName, string expected)
+		{
+			Assert.Equal (expected, JniSignatureHelper.JniNameToJavaBinaryName (jniName));
+		}
+
+		[Theory]
 		[InlineData ("com/example/MainActivity", "com.example")]
 		[InlineData ("java/lang/Object", "java.lang")]
 		[InlineData ("TopLevelClass", null)]
@@ -119,6 +128,43 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			var java = GenerateFixture ("my/app/ClickableView");
 			Assert.Contains ("\t\tandroid.view.View.OnClickListener", java);
 			Assert.DoesNotContain ("View$OnClickListener", java);
+		}
+
+		[Fact]
+		public void Generate_DeclaredDollarKeyword_PreservesDollar ()
+		{
+			var type = new JavaPeerInfo {
+				JavaName = "com/example/Outer$for",
+				CompatJniName = "com/example/Outer$for",
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+			};
+
+			var java = GenerateToString (type);
+
+			Assert.Contains ("public class Outer$for\n", java);
+		}
+
+		[Fact]
+		public void Generate_ReferencedDollarKeyword_UsesSourceDots ()
+		{
+			var type = new JavaPeerInfo {
+				JavaName = "com/example/Derived",
+				CompatJniName = "com/example/Derived",
+				ManagedTypeName = "Example.Derived",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Derived",
+				AssemblyName = "Example",
+				BaseJavaName = "com/example/Outer$for",
+				ImplementedInterfaceJavaNames = ["com/example/Outer$record"],
+			};
+
+			var java = GenerateToString (type);
+
+			Assert.Contains ("\textends com.example.Outer.for\n", java);
+			Assert.Contains ("\t\tcom.example.Outer.record", java);
 		}
 
 		[Fact]
@@ -385,6 +431,9 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("C:\\Windows\\System32")]
 		[InlineData ("com/Ex:ample")]
 		[InlineData ("/absolute/path")]
+		[InlineData ("com/for/Example")]
+		[InlineData ("com/example/for")]
+		[InlineData ("com/example/record")]
 		public void ValidateJniName_InvalidName_Throws (string badJniName)
 		{
 			Assert.Throws<ArgumentException> (() => JniSignatureHelper.ValidateJniName (badJniName));
@@ -396,6 +445,8 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		[InlineData ("SingleSegment")]
 		[InlineData ("com/example/_Private")]
 		[InlineData ("com/example/$Generated")]
+		[InlineData ("com/example/Outer$for")]
+		[InlineData ("com/example/Outer$record")]
 		public void ValidateJniName_ValidName_DoesNotThrow (string validJniName)
 		{
 			JniSignatureHelper.ValidateJniName (validJniName);

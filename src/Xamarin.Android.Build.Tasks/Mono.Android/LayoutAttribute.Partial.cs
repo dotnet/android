@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -22,9 +22,9 @@ namespace Android.App
 		TypeDefinition? type;
 		ICollection<string>? specified;
 
-		public static LayoutAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
+		public static LayoutAttribute? FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
-			CustomAttribute attr = type.GetCustomAttributes ("Android.App.LayoutAttribute")
+			CustomAttribute? attr = type.GetCustomAttributes ("Android.App.LayoutAttribute")
 				.SingleOrDefault ();
 			if (attr == null)
 				return null;

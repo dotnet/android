@@ -310,6 +310,65 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
+		public void GetArray_NullableInt32 ()
+		{
+			var values = new int? [] { 1, null, 3 };
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[Ljava/lang/Integer;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<int?> (array.Handle);
+				AssertArrays ("GetArray<int?>", copy, values);
+
+				Assert.IsNull (JNIEnv.GetArrayItem<int?> (array.Handle, 1));
+				JNIEnv.SetArrayItem<int?> (array.Handle, 1, 2);
+				Assert.AreEqual ((int?) 2, JNIEnv.GetArrayItem<int?> (array.Handle, 1));
+			}
+		}
+
+		[Test]
+		public void GetArray_NullableByte ()
+		{
+			var values = new byte? [] { 1, null, 200 };
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[Ljava/lang/Byte;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<byte?> (array.Handle);
+				AssertArrays ("GetArray<byte?>", copy, values);
+
+				Assert.IsNull (JNIEnv.GetArrayItem<byte?> (array.Handle, 1));
+				JNIEnv.SetArrayItem<byte?> (array.Handle, 1, 255);
+				Assert.AreEqual ((byte?) 255, JNIEnv.GetArrayItem<byte?> (array.Handle, 1));
+
+				var replacement = new byte? [] { 128, 129, null };
+				JNIEnv.CopyArray (replacement, array.Handle);
+				AssertArrays ("CopyArray<byte?>", JNIEnv.GetArray<byte?> (array.Handle), replacement);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetArray_NullableByteArrayArray ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("Test only relevant for the trimmable typemap path.");
+			}
+
+			var values = new [] {
+				new byte? [] { 1, null, 200 },
+				new byte? [] { 255, 128 },
+			};
+			using (var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef)) {
+				Assert.AreEqual ("[[Ljava/lang/Byte;", JNIEnv.GetClassNameFromInstance (array.Handle));
+
+				var copy = JNIEnv.GetArray<byte?[]> (array.Handle);
+				Assert.AreEqual (values.Length, copy.Length);
+				for (int i = 0; i < values.Length; i++) {
+					AssertArrays ($"GetArray<byte?[]>[{i}]", copy [i], values [i]);
+				}
+			}
+		}
+
+		[Test]
 		public void GetArray_JavaLangStringArrayToJavaLangObjectArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {
@@ -367,23 +426,24 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
-		[Ignore ("Fails on CoreCLR: https://github.com/dotnet/android/issues/10973")]
+		[Category ("JNIObjectArray")]
 		public void GetObjectArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
 				object[] data = JNIEnv.GetObjectArray (byteArray.Handle, new[]{typeof (byte), typeof (byte), typeof (byte)});
 				AssertArrays ("GetObjectArray", data, (object) 1, (object) 2, (object) 3);
 			}
+			var context = Application.Context;
 			using (var objectArray =
 					new Java.Lang.Object (
 							JNIEnv.NewArray (
-								new Java.Lang.Object[]{Application.Context, 42L, "string"},
+								new Java.Lang.Object[]{context, 42L, "string"},
 								typeof (Java.Lang.Object)),
 						JniHandleOwnership.TransferLocalRef)) {
 				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
 				Assert.AreEqual (3, values.Length);
-				Assert.IsTrue (object.ReferenceEquals (values [0], Application.Context));
-				Assert.IsTrue (values [1] is int);
+				Assert.AreSame (context, values [0], $"Expected existing Context peer, got {values [0]?.GetType ()}.");
+				Assert.IsInstanceOf<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}

@@ -8,7 +8,7 @@ IF EXIST "%ROOT%\bin\Release\dotnet\dotnet.exe" (
 ) ELSE IF EXIST "%ROOT%\bin\Debug\dotnet\dotnet.exe" (
     SET XA_CONFIG=Debug
 ) ELSE (
-    echo "You need to run 'msbuild Xamarin.Android.sln /t:Prepare' first."
+    echo "You need to run 'msbuild Xamarin.Android.slnx /t:Prepare' first."
     goto :exit
 )
 

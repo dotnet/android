@@ -60,7 +60,7 @@ public class LinkNativeRuntime : AsyncTask
 	void LinkRuntime (ITaskItem abiItem)
 	{
 		string abi = abiItem.ItemSpec;
-		Log.LogDebugMessage ($"LinkRuntime ({abi})");
+		LogDebugMessage ($"LinkRuntime ({abi})");
 		ITaskItem outputRuntime = GetFirstAbiItem (OutputRuntimes, "_UnifiedNativeRuntime", abi);
 		string soname = Path.GetFileNameWithoutExtension (outputRuntime.ItemSpec);
 		if (soname.StartsWith ("lib", StringComparison.OrdinalIgnoreCase)) {
@@ -75,17 +75,13 @@ public class LinkNativeRuntime : AsyncTask
 		};
 
 		List<ITaskItem> items = OrganizeCommandLineItemsCLR (abi);
-		bool success = linker.Link (
+		linker.Link (
 			outputRuntime,
 			items,
 			GetAbiItems (NativeLinkStartFiles, "_NativeLinkStartFiles", abi),
 			GetAbiItems (NativeLinkEndFiles, "_NativeLinkEndFiles", abi),
 			GetAbiItems (NativeSymbolsToExport, "_NativeSymbolsToExport", abi)
 		);
-
-		if (!success) {
-			Log.LogError ($"Failed to link native runtime {outputRuntime}");
-		}
 	}
 
 	// Puts object files, static archives in the correct order. This is a bit clumsy, but unfortunately necessary

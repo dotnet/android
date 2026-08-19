@@ -1,4 +1,7 @@
+#nullable enable annotations
+
 using System;
+using System.Reflection;
 
 using Android.App;
 using Android.Content;
@@ -15,6 +18,63 @@ namespace Java.InteropTests
 	[TestFixture]
 	public class ConstructorActivationTests
 	{
+		[Test]
+		[Category ("ReflectionCreateProxy")]
+		public void ReflectionCreateProxyCachesXAConstructor ()
+		{
+			AssumeReflectionActivation ();
+			ReflectionXAActivationPeer.Reset ();
+
+			Assert.IsFalse (IsReflectionActivationConstructorCached (typeof (ReflectionXAActivationPeer)));
+
+			using (CreateReflectionProxy<ReflectionXAActivationPeer> ())
+			using (CreateReflectionProxy<ReflectionXAActivationPeer> ()) {
+				Assert.AreEqual (2, ReflectionXAActivationPeer.XAConstructorInvocations);
+				Assert.AreEqual (0, ReflectionXAActivationPeer.JIConstructorInvocations);
+				Assert.IsTrue (IsReflectionActivationConstructorCached (typeof (ReflectionXAActivationPeer)));
+				var constructor = GetCachedReflectionActivationConstructor (typeof (ReflectionXAActivationPeer));
+				Assert.IsNotNull (constructor);
+				Assert.AreEqual (typeof (IntPtr), constructor.GetParameters () [0].ParameterType);
+			}
+		}
+
+		[Test]
+		[Category ("ReflectionCreateProxy")]
+		public void ReflectionCreateProxyCachesJIConstructorFallback ()
+		{
+			AssumeReflectionActivation ();
+			ReflectionJIActivationPeer.Reset ();
+
+			Assert.IsFalse (IsReflectionActivationConstructorCached (typeof (ReflectionJIActivationPeer)));
+
+			using (CreateReflectionProxy<ReflectionJIActivationPeer> ())
+			using (CreateReflectionProxy<ReflectionJIActivationPeer> ()) {
+				Assert.AreEqual (2, ReflectionJIActivationPeer.ConstructorInvocations);
+				Assert.AreEqual (JniObjectReferenceOptions.Copy, ReflectionJIActivationPeer.Options);
+				Assert.IsTrue (IsReflectionActivationConstructorCached (typeof (ReflectionJIActivationPeer)));
+				var constructor = GetCachedReflectionActivationConstructor (typeof (ReflectionJIActivationPeer));
+				Assert.IsNotNull (constructor);
+				Assert.IsTrue (constructor.GetParameters () [0].ParameterType.IsByRef);
+			}
+		}
+
+		[Test]
+		[Category ("ReflectionCreateProxy")]
+		public void ReflectionCreateProxyCachesMissingConstructor ()
+		{
+			AssumeReflectionActivation ();
+
+			Assert.IsFalse (IsReflectionActivationConstructorCached (typeof (ReflectionMissingActivationPeer)));
+
+			for (int i = 0; i < 2; i++) {
+				var exception = Assert.Throws<TargetInvocationException> (() => CreateReflectionProxy<ReflectionMissingActivationPeer> ());
+				Assert.IsInstanceOf<MissingMethodException> (exception?.InnerException);
+			}
+
+			Assert.IsTrue (IsReflectionActivationConstructorCached (typeof (ReflectionMissingActivationPeer)));
+			Assert.IsNull (GetCachedReflectionActivationConstructor (typeof (ReflectionMissingActivationPeer)));
+		}
+
 		[Test]
 		public void JavaSideDefaultConstructorRunsOnceAndRegistersPeer ()
 		{
@@ -533,6 +593,79 @@ namespace Java.InteropTests
 			}
 		}
 
+		static void AssumeReflectionActivation ()
+		{
+			if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
+				Assert.Ignore ("This test validates the reflection-based TypeManager.CreateProxy activation path.");
+			}
+		}
+
+		static T CreateReflectionProxy<T> ()
+			where T : IJavaPeerable
+		{
+			IntPtr handle = JNIEnv.StartCreateInstance ("java/lang/Object", "()V");
+			JNIEnv.FinishCreateInstance (handle, "()V");
+			try {
+				const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static;
+				var createProxy = typeof (Java.Interop.TypeManager).GetMethod (
+						"CreateProxy",
+						flags,
+						null,
+						new [] { typeof (Type), typeof (IntPtr), typeof (JniHandleOwnership) },
+						null);
+				if (createProxy == null)
+					throw new InvalidOperationException ("Could not find TypeManager.CreateProxy.");
+
+				var proxy = createProxy.Invoke (null, new object [] { typeof (T), handle, JniHandleOwnership.TransferLocalRef });
+				handle = IntPtr.Zero;
+				if (proxy is not T result)
+					throw new InvalidOperationException ($"TypeManager.CreateProxy returned an unexpected peer for {typeof (T)}.");
+				return result;
+			} finally {
+				if (handle != IntPtr.Zero)
+					JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		static bool IsReflectionActivationConstructorCached (Type type)
+		{
+			var cache = GetReflectionActivationConstructorCache ();
+			var containsKey = cache.GetType ().GetMethod ("ContainsKey", new [] { typeof (Type) });
+			if (containsKey == null)
+				throw new InvalidOperationException ("Could not inspect the reflection activation constructor cache.");
+
+			return containsKey.Invoke (cache, new object [] { type }) is true;
+		}
+
+		static ConstructorInfo? GetCachedReflectionActivationConstructor (Type type)
+		{
+			var cache = GetReflectionActivationConstructorCache ();
+			var item = cache.GetType ().GetProperty ("Item");
+			if (item == null)
+				throw new InvalidOperationException ("Could not inspect a reflection activation constructor cache entry.");
+
+			var activation = item.GetValue (cache, new object [] { type });
+			if (activation == null)
+				throw new InvalidOperationException ("The reflection activation constructor cache entry is null.");
+
+			var constructor = activation.GetType ().GetProperty ("Constructor");
+			if (constructor == null)
+				throw new InvalidOperationException ("Could not inspect the cached reflection activation constructor.");
+
+			return constructor.GetValue (activation) as ConstructorInfo;
+		}
+
+		static object GetReflectionActivationConstructorCache ()
+		{
+			const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Static;
+			var cacheField = typeof (Java.Interop.TypeManager).GetField ("ActivationConstructorCache", flags);
+			if (cacheField == null)
+				throw new InvalidOperationException ("Could not find the reflection activation constructor cache.");
+
+			return cacheField.GetValue (null) ??
+					throw new InvalidOperationException ("The reflection activation constructor cache is null.");
+		}
+
 		static T CreateFromJava<T> (string constructorSignature, params JValue [] arguments)
 			where T : Java.Lang.Object
 		{
@@ -589,6 +722,58 @@ namespace Java.InteropTests
 			Assert.IsTrue (
 				JniEnvironment.Types.IsSameObject (expected.PeerReference, actual.PeerReference),
 				$"Expected Java object identity to match. Expected handle: {expected.Handle}, actual handle: {actual.Handle}.");
+		}
+	}
+
+	sealed class ReflectionXAActivationPeer : Java.Lang.Object
+	{
+		public static int XAConstructorInvocations;
+		public static int JIConstructorInvocations;
+
+		public ReflectionXAActivationPeer (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+			XAConstructorInvocations++;
+		}
+
+		public ReflectionXAActivationPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		{
+			JIConstructorInvocations++;
+			Construct (ref reference, options);
+		}
+
+		public static void Reset ()
+		{
+			XAConstructorInvocations = 0;
+			JIConstructorInvocations = 0;
+		}
+	}
+
+	sealed class ReflectionJIActivationPeer : Java.Lang.Object
+	{
+		public static int ConstructorInvocations;
+		public static JniObjectReferenceOptions Options;
+
+		public ReflectionJIActivationPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		{
+			ConstructorInvocations++;
+			Options = options;
+			Construct (ref reference, options);
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+			Options = JniObjectReferenceOptions.None;
+		}
+	}
+
+	sealed class ReflectionMissingActivationPeer : Java.Lang.Object
+	{
+		public ReflectionMissingActivationPeer ()
+		{
 		}
 	}
 

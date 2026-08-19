@@ -38,10 +38,12 @@ namespace MonoDroid.Generation {
 		// with the wrapper struct's full name so the C# parameter signature uses the
 		// struct, while JNI marshaling stays on the underlying primitive (the `type`).
 		public string KotlinInlineClassJniType { get; set; }
+		public string JniTypeOverride { get; set; }
 
 		public Parameter Clone ()
 		{
 			return new Parameter (name, type, managed_type, is_enumified, rawtype, NotNull) {
+				JniTypeOverride = JniTypeOverride,
 				KotlinInlineClassJniType = KotlinInlineClassJniType,
 			};
 		}
@@ -106,7 +108,7 @@ namespace MonoDroid.Generation {
 		}
 
 		public string JniType { 
-			get { return sym.JniName; }
+			get { return string.IsNullOrEmpty (JniTypeOverride) ? sym.JniName : JniTypeOverride; }
 		}
 
 		public InterfaceGen ListenerType {
@@ -292,6 +294,10 @@ namespace MonoDroid.Generation {
 			}
 			if (!sym.Validate (opt, type_params, context)) {
 				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, type, context.GetContextTypeMember ());
+				return false;
+			}
+			if (!string.IsNullOrEmpty (JniTypeOverride) && !JniSignatureUtilities.AreAbiCompatible (sym.JniName, JniTypeOverride)) {
+				Report.LogCodedWarning (0, Report.WarningInvalidParameterType, this, JniTypeOverride, context.GetContextTypeMember ());
 				return false;
 			}
 			ApplyKotlinInlineClassProjection (opt, type_params);

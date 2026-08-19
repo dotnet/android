@@ -18,13 +18,17 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] SourceJars { get; set; } = [];
 
+		public string? ReferenceOutputFile { get; set; }
+
+		public ITaskItem []? ReferenceJars { get; set; }
+
 		public ITaskItem []? DocumentationPaths { get; set; }
 
 		protected override string GenerateCommandLineCommands ()
 		{
 			var cmd = GetCommandLineBuilder ();
 
-			var responseFile = Path.Combine (Path.GetDirectoryName (OutputFile), "class-parse.rsp");
+			var responseFile = Path.Combine (Path.GetDirectoryName (Path.GetFullPath (OutputFile)) ?? "", "class-parse.rsp");
 			Log.LogDebugMessage ("[class-parse] response file: {0}", responseFile);
 
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM)) {
@@ -33,6 +37,13 @@ namespace Xamarin.Android.Tasks
 				if (DocumentationPaths != null)
 					foreach (var doc in DocumentationPaths)
 						WriteLine (sw, $"--docspath=\"{doc}\"");
+
+				if (!ReferenceOutputFile.IsNullOrEmpty ())
+					WriteLine (sw, $"--reference-output=\"{ReferenceOutputFile}\"");
+
+				if (ReferenceJars != null)
+					foreach (var reference in ReferenceJars)
+						WriteLine (sw, $"--reference=\"{reference}\"");
 
 				foreach (var doc in SourceJars)
 					WriteLine (sw, $"\"{doc}\"");

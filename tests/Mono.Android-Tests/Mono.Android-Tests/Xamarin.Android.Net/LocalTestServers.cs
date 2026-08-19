@@ -251,6 +251,8 @@ namespace Xamarin.Android.NetTests {
 					return WriteCompressedStringAsync (stream, "gzip", "{ \"gzipped\": true }", "application/json");
 				case "/ok":
 					return WriteStringAsync (stream, "OK", "text/plain");
+				case "/head":
+					return HandleHead (stream, request);
 				case "/post":
 					return HandlePost (stream, request);
 				case "/redirect-to":
@@ -259,6 +261,12 @@ namespace Xamarin.Android.NetTests {
 				default:
 					return WriteResponseAsync (stream, HttpStatusCode.NotFound, "", "text/plain", null, null);
 			}
+		}
+
+		static Task HandleHead (Stream stream, LocalHttpRequest request)
+		{
+			HttpStatusCode statusCode = request.Method == "HEAD" ? HttpStatusCode.OK : HttpStatusCode.MethodNotAllowed;
+			return WriteResponseAsync (stream, statusCode, "", "text/plain", null, null);
 		}
 
 		static Task HandlePost (Stream stream, LocalHttpRequest request)

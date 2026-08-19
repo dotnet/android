@@ -122,7 +122,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: Xamarin.Android.slnx
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false

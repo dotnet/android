@@ -20,7 +20,7 @@ class AssemblyStoreBuilder
 	{
 		this.log = log;
 		this.targetRuntime = targetRuntime;
-		storeGenerator = new (log);
+		storeGenerator = new (log, targetRuntime);
 	}
 
 	public void AddAssembly (string assemblySourcePath, ITaskItem assemblyItem, bool includeDebugSymbols)
