@@ -249,6 +249,17 @@ namespace generatortests
 		}
 
 		[Test]
+		public void CreateMethod_JniSignatureOverride ()
+		{
+			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test'><method name='test' managed-jni-signature='(Ljava/lang/Object;)V' return='void'><parameter name='value' type='java.lang.String' managed-jni-type='Ljava/lang/CharSequence;' /></method></class></package>");
+			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), opt);
+			var method = klass.Methods [0];
+
+			Assert.AreEqual ("(Ljava/lang/Object;)V", method.JniSignature);
+			Assert.AreEqual ("Ljava/lang/CharSequence;", method.Parameters [0].JniType);
+		}
+
+		[Test]
 		public void CreateParameter_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<parameter name=\"$3\" />");

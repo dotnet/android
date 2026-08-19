@@ -14,11 +14,9 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	// These names MUST match src/native/clr/include/xamarin-app.hh
 	const string TypeMapSymbol = "type_map";
-	const string UniqueAssembliesSymbol = "type_map_unique_assemblies";
 	const string AssemblyNamesBlobSymbol = "type_map_assembly_names";
 	const string ManagedTypeNamesBlobSymbol = "type_map_managed_type_names";
 	const string JavaTypeNamesBlobSymbol = "type_map_java_type_names";
-	const string TypeMapUsesHashesSymbol = "typemap_use_hashes";
 	const string TypeMapManagedTypeInfoSymbol = "type_map_managed_type_info";
 
 	sealed class TypeMapContextDataProvider : NativeAssemblerStructContextDataProvider
@@ -67,24 +65,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		}
 	}
 
-	sealed class TypeMapAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
-	{
-		public override string GetComment (object data, string fieldName)
-		{
-			var entry = EnsureType<TypeMapAssembly> (data);
-
-			if (MonoAndroidHelper.StringEquals ("mvid_hash", fieldName)) {
-				return $" MVID: {entry.MVID}";
-			}
-
-			if (MonoAndroidHelper.StringEquals ("name_offset", fieldName)) {
-				return $" {entry.Name}";
-			}
-
-			return String.Empty;
-		}
-	}
-
 	sealed class TypeMapManagedTypeInfoContextDataProvider : NativeAssemblerStructContextDataProvider
 	{
 		public override string GetComment (object data, string fieldName)
@@ -118,7 +98,7 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public uint from;
 
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong from_hash;
+		public uint from_hash;
 
 		[NativeAssembler (UsesDataProvider = true)]
 		public uint to;
@@ -154,7 +134,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public int    ManagedToJavaCount;
 
 		public uint   entry_count;
-		public ulong  unique_assemblies_count;
 
 		[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 		public TypeMapEntry? java_to_managed = null;
@@ -163,33 +142,12 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public TypeMapEntry? managed_to_java = null;
 	};
 
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh TypeMapAssembly structure
-	[NativeAssemblerStructContextDataProvider (typeof (TypeMapAssemblyContextDataProvider))]
-	sealed class TypeMapAssembly
-	{
-		[NativeAssembler (Ignore = true)]
-		public string Name = String.Empty;
-
-		[NativeAssembler (Ignore = true)]
-		public Guid MVID;
-
-		[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public ulong mvid_hash;
-		public ulong name_length;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public ulong name_offset;
-	}
-
 	readonly TypeMapGenerator.ModuleDebugData data;
 	StructureInfo? typeMapEntryStructureInfo;
 	StructureInfo? typeMapStructureInfo;
-	StructureInfo? typeMapAssemblyStructureInfo;
 	StructureInfo? typeMapManagedTypeInfoStructureInfo;
 	List<StructureInstance<TypeMapEntry>> javaToManagedMap;
 	List<StructureInstance<TypeMapEntry>> managedToJavaMap;
-	List<StructureInstance<TypeMapAssembly>> uniqueAssemblies;
 	List<StructureInstance<TypeMapManagedTypeInfo>> managedTypeInfos;
 	StructureInstance<TypeMap>? type_map;
 
@@ -204,7 +162,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		javaToManagedMap = new ();
 		managedToJavaMap = new ();
-		uniqueAssemblies = new ();
 		managedTypeInfos = new ();
 	}
 
@@ -224,72 +181,31 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// CoreCLR supports only 64-bit targets, so we can make things simpler by hashing all the things here instead of
 		// in a callback during code generation
 
-		// Probability of xxHash clashes on managed type names is very low, it might be hard to find such type names that
-		// would create collision, so in order to be able to test the string-based managed-to-java typemaps, we check whether
-		// the `CI_TYPEMAP_DEBUG_USE_STRINGS` environment variable is present and not empty.  If it's not in the environment
-		// or its value is an empty string, we default to using hashes for the managed-to-java type maps.
-		bool typemap_uses_hashes = String.IsNullOrEmpty (Environment.GetEnvironmentVariable ("CI_TYPEMAP_DEBUG_USE_STRINGS"));
-		var usedHashes = new Dictionary<ulong, string> ();
 		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
-			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
+			if (String.IsNullOrEmpty (entry.AssemblyFullName)) {
+				throw new InvalidOperationException ($"Internal error: assembly full name is missing for managed type '{entry.ManagedName}'.");
+			}
+
+			if (!entry.ManagedName.EndsWith (entry.AssemblyName, StringComparison.Ordinal)) {
+				throw new InvalidOperationException ($"Internal error: managed type name '{entry.ManagedName}' does not end with assembly name '{entry.AssemblyName}'.");
+			}
+
+			string managedName = entry.ManagedName.Substring (0, entry.ManagedName.Length - entry.AssemblyName.Length) + entry.AssemblyFullName;
+			(int managedTypeNameOffset, int _) = managedTypeNames.Add (managedName);
 			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
 			var m2j = new TypeMapEntry {
-				From = entry.ManagedName,
+				From = managedName,
 				To = entry.JavaName,
 
 				from = (uint)managedTypeNameOffset,
-				from_hash = typemap_uses_hashes ? MonoAndroidHelper.GetXxHash (entry.ManagedName, is64Bit: true) : 0,
+				from_hash = TypeMapHelper.HashNameForCLR (managedName),
 				to = (uint)javaTypeNameOffset,
 			};
 			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
-
-			if (!typemap_uses_hashes) {
-				continue;
-			}
-
-			if (usedHashes.ContainsKey (m2j.from_hash)) {
-				typemap_uses_hashes = false;
-				// It could be a warning, but it's not really actionable - users might not be able to rename the clashing types
-				Log.LogMessage ($"Detected xxHash conflict between managed type names '{entry.ManagedName}' and '{usedHashes[m2j.from_hash]}' when mapping to Java type '{entry.JavaName}'.");
-			} else {
-				usedHashes[m2j.from_hash] = entry.ManagedName;
-			}
-		}
-		// Input is sorted on name, we need to re-sort it on hashes, if used
-		if (typemap_uses_hashes) {
-			managedToJavaMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => {
-				if (a.Instance == null) {
-					return b.Instance == null ? 0 : -1;
-				}
-
-				if (b.Instance == null) {
-					return 1;
-				}
-
-				return a.Instance.from_hash.CompareTo (b.Instance.from_hash);
-			});
 		}
 
-		if (!typemap_uses_hashes) {
-			Log.LogMessage ("Managed-to-java typemaps will use string-based matching.");
-		}
-
-		var assemblyNamesBlob = new LlvmIrStringBlob ();
-		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
-			(int assemblyNameOffset, int assemblyNameLength) = assemblyNamesBlob.Add (asm.Name);
-
-			var entry = new TypeMapAssembly {
-				Name = asm.Name,
-				MVID = asm.MVID,
-
-				mvid_hash = MonoAndroidHelper.GetXxHash (asm.MVIDBytes, is64Bit: true),
-				name_length = (ulong)assemblyNameLength, // without the trailing NUL
-				name_offset = (ulong)assemblyNameOffset,
-			};
-			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo, entry));
-		}
-
-		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => {
+		// Input is sorted on name, we need to re-sort it on hashes.
+		managedToJavaMap.Sort ((StructureInstance<TypeMapEntry> a, StructureInstance<TypeMapEntry> b) => {
 			if (a.Instance == null) {
 				return b.Instance == null ? 0 : -1;
 			}
@@ -298,8 +214,14 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 				return 1;
 			}
 
-			return a.Instance.mvid_hash.CompareTo (b.Instance.mvid_hash);
+			return a.Instance.from_hash.CompareTo (b.Instance.from_hash);
 		});
+
+		var assemblyNamesBlob = new LlvmIrStringBlob ();
+		data.UniqueAssemblies.Sort ((a, b) => String.Compare (a.Name, b.Name, StringComparison.Ordinal));
+		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
+			assemblyNamesBlob.Add (asm.Name);
+		}
 
 		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();
 		// Java-to-managed maps don't use hashes since many mappings have multiple instances
@@ -338,7 +260,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			ManagedToJavaCount = data.ManagedToJavaMap == null ? 0 : data.ManagedToJavaMap.Count,
 
 			entry_count = data.EntryCount,
-			unique_assemblies_count = (ulong)data.UniqueAssemblies.Count,
 		};
 		type_map = new StructureInstance<TypeMap> (typeMapStructureInfo, map);
 
@@ -346,8 +267,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);
 		module.AddGlobalVariable (JavaToManagedSymbol, javaToManagedMap, LlvmIrVariableOptions.LocalConstant);
 		module.AddGlobalVariable (TypeMapManagedTypeInfoSymbol, managedTypeInfos, LlvmIrVariableOptions.GlobalConstant);
-		module.AddGlobalVariable (TypeMapUsesHashesSymbol, typemap_uses_hashes, LlvmIrVariableOptions.GlobalConstant);
-		module.AddGlobalVariable (UniqueAssembliesSymbol, uniqueAssemblies, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (AssemblyNamesBlobSymbol, assemblyNamesBlob, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (ManagedTypeNamesBlobSymbol, managedTypeNames, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (JavaTypeNamesBlobSymbol, javaTypeNames, LlvmIrVariableOptions.GlobalConstant);
@@ -355,7 +274,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	void MapStructures (LlvmIrModule module)
 	{
-		typeMapAssemblyStructureInfo = module.MapStructure<TypeMapAssembly> ();
 		typeMapEntryStructureInfo = module.MapStructure<TypeMapEntry> ();
 		typeMapStructureInfo = module.MapStructure<TypeMap> ();
 		typeMapManagedTypeInfoStructureInfo = module.MapStructure<TypeMapManagedTypeInfo> ();

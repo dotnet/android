@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.Build.Framework;
 using Xamarin.Tools.Zip;
 
 namespace Xamarin.ProjectTools
@@ -170,8 +171,27 @@ namespace Xamarin.ProjectTools
 			return TimeSpan.Zero;
 		}
 
+		/// <summary>
+		/// Gets a value indicating whether the .apk was installed on the device by the last build.
+		/// </summary>
+		/// <remarks>
+		/// <para>This scans the build output for the <c>Installed Package</c> message written by the
+		/// <c>FastDeploy</c> and <c>FastDeploy2</c> tasks. Both write it with
+		/// <see cref="Microsoft.Build.Framework.MessageImportance.Low"/>, so it is only present in the
+		/// build output at <see cref="Microsoft.Build.Framework.LoggerVerbosity.Detailed"/> or higher.</para>
+		/// <para>At a lower verbosity this property would silently return <c>false</c> no matter what the
+		/// build did, which makes both <c>Assert.IsTrue</c> and <c>Assert.IsFalse</c> on it meaningless.
+		/// It therefore throws instead, so the test fails with an actionable message rather than a
+		/// misleading pass or an opaque assertion failure.</para>
+		/// </remarks>
+		/// <exception cref="InvalidOperationException">
+		/// <see cref="Builder"/> is running at a verbosity below
+		/// <see cref="Microsoft.Build.Framework.LoggerVerbosity.Detailed"/>.
+		/// </exception>
 		public bool IsApkInstalled {
 			get {
+				if (Builder.Verbosity < LoggerVerbosity.Detailed)
+					throw new InvalidOperationException ($"`{nameof (IsApkInstalled)}` requires `{nameof (Builder)}.{nameof (Builder.Verbosity)}` to be `{nameof (LoggerVerbosity.Detailed)}` or higher, but it is `{Builder.Verbosity}`. The `Installed Package` message it looks for is logged with `MessageImportance.Low`.");
 				foreach (var line in Builder.LastBuildOutput) {
 					if (line.Contains ("Installed Package") || line.Contains (" pm install "))
 						return true;

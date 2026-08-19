@@ -28,15 +28,13 @@ namespace Xamarin.Android.Tasks
 		readonly MarshalMethodsCollection classifier;
 		readonly XAAssemblyResolver resolver;
 		readonly AndroidTargetArch targetArch;
-		readonly ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo;
 
-		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsCollection classifier, XAAssemblyResolver resolver, ManagedMarshalMethodsLookupInfo? managedMarshalMethodsLookupInfo)
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsCollection classifier, XAAssemblyResolver resolver)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.targetArch = targetArch;
 			this.classifier = classifier ?? throw new ArgumentNullException (nameof (classifier));;
 			this.resolver = resolver ?? throw new ArgumentNullException (nameof (resolver));;
-			this.managedMarshalMethodsLookupInfo = managedMarshalMethodsLookupInfo;
 		}
 
 		// TODO: do away with broken exception transitions, there's no point in supporting them
@@ -130,17 +128,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			if (managedMarshalMethodsLookupInfo is not null) {
-				// TODO the code should probably go to different assemblies than Mono.Android (to avoid recursive dependencies)
-				var rootAssembly = resolver.Resolve ("Mono.Android") ?? throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android assembly");
-				var managedMarshalMethodsLookupTableType = FindType (rootAssembly, "Java.Interop.ManagedMarshalMethodsLookupTable", required: true);
-			if (managedMarshalMethodsLookupTableType == null)
-				throw new ArgumentNullException (nameof (managedMarshalMethodsLookupTableType));
-
-				var managedMarshalMethodLookupGenerator = new ManagedMarshalMethodsLookupGenerator (log, targetArch, managedMarshalMethodsLookupInfo, managedMarshalMethodsLookupTableType);
-				managedMarshalMethodLookupGenerator.Generate (classifier.MarshalMethods.Values);
-			}
-
 			foreach (AssemblyDefinition asm in classifier.AssembliesWithMarshalMethods) {
 				string? path = asm.MainModule.FileName;
 				if (String.IsNullOrEmpty (path)) {
@@ -201,7 +188,7 @@ namespace Xamarin.Android.Tasks
 
 			void RemoveFile (string? path)
 			{
-				if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+				if (path.IsNullOrEmpty () || !File.Exists (path)) {
 					return;
 				}
 
@@ -209,7 +196,7 @@ namespace Xamarin.Android.Tasks
 					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
 					File.Delete (path);
 				} catch (Exception ex) {
-					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
+					log.LogCodedWarning ("XA4324", Properties.Resources.XA4324, targetArch, path);
 					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
 			}

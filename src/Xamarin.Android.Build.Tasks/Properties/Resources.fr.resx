@@ -603,6 +603,11 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
   <data name="XA4213" xml:space="preserve">
     <value>Le type '{0}' doit fournir un constructeur public par défaut</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>Le type `{0}` implémente `Android.Runtime.IJavaObject` mais n’hérite pas de `Java.Lang.Object` ni de `Java.Lang.Throwable`. Cela n’est pas recommandé.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>Le type managé '{0}' existe dans plusieurs assemblys : {1}. Refactorisez les noms de types managés dans ces assemblys pour qu'ils ne soient pas identiques.</value>
     <comment>{0} - The managed type name
@@ -866,6 +871,15 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>Le répertoire « {0} » est ignoré, car il n’existe pas !</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] Nous ne pouvons pas supprimer le fichier source « {1} »</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Répertoire de chaînes d'outils du kit Android NDK manquant '{0}'. Installez le kit Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -971,7 +985,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>Niveau de compression AssemblyStore non valide « {0} ». Sa valeur doit être comprise entre {1} et {2}.</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level
@@ -1028,19 +1042,22 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>Nous n’avons pas pu résoudre POM pour l’artefact Maven « {0} » depuis « {1} ».
+– {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>Référentiel Maven inconnu : '{0}'.</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>La propriété MSBuild « {0} » est déconseillée et sera supprimée dans .NET {1}. Pour plus d’informations, consultez https://aka.ms/net-android-deprecations.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>La propriété MSBuild « {0} » a une valeur non valide de « {1} ». Une valeur valide fait partie de :{2}.</value>
@@ -1065,6 +1082,18 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>L'élément &lt;instrumentation&gt; dans '{0}' ne contient pas l'attribut android:name.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>Impossible de déterminer quoi lancer : « {0} » ne contient pas d'élément &lt;activity&gt; ou &lt;instrumentation&gt; pouvant être lancé. Définissez la propriété MSBuild $(AndroidLaunchActivity) ou $(AndroidInstrumentation) pour en spécifier une.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>La propriété MSBuild « {0} » n’est pas compatible avec le runtime {1}. La compilation ne peut pas continuer tant que cette propriété est activée. Supprimez la propriété ou protégez-la avec une condition : Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1083,6 +1112,12 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
   <data name="XA1047" xml:space="preserve">
     <value>L'attribut requis « {0} » est absent de l'élément « {1} »; {2} ligne {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>'{0}' ne contient pas d’élément &lt;instrumentation&gt;. Ajoutez une sous-classe Android.App.Instrumentation à l'application ou définissez la propriété $(AndroidInstrumentation) MSBuild sur le nom d'une sous-classe.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dépendance Java « {0} » n’est pas satisfaite.</value>
@@ -1188,6 +1223,12 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Le nom Java « {0} » contient l’identificateur Java réservé « {1} ». Modifiez le nom du package ou du type.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>La commande « {0} » a échoué.\n{1}</value>

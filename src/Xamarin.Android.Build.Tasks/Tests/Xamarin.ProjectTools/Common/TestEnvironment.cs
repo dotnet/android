@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
@@ -20,6 +21,18 @@ namespace Xamarin.ProjectTools
 	/// <seealso cref="FileSystemUtils"/>
 	public static class TestEnvironment
 	{
+		/// <summary>
+		/// The dnceng <c>dotnet-public-maven</c> feed, which mirrors both Maven Central and
+		/// Google Maven and is readable anonymously.
+		/// </summary>
+		/// <remarks>
+		/// Tests download through this feed unconditionally, including locally, so that a local
+		/// run exercises exactly the same URLs as CI. CI agents are network-isolated and can only
+		/// reach this feed, so an artifact the mirror does not have must fail everywhere rather
+		/// than only on CI.
+		/// </remarks>
+		public const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
+
 		[DllImport ("libc")]
 		static extern int uname (IntPtr buf);
 
@@ -43,6 +56,12 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Gets a value indicating whether the current platform is Windows.
 		/// </summary>
+		/// <remarks>
+		/// <see cref="SupportedOSPlatformGuardAttribute"/> teaches the platform-compatibility
+		/// analyzer (CA1416) that this property is a <c>windows</c> guard, so callers can use it
+		/// instead of <see cref="OperatingSystem.IsWindows"/>.
+		/// </remarks>
+		[SupportedOSPlatformGuard ("windows")]
 		public static bool IsWindows {
 			get {
 				return Environment.OSVersion.Platform == PlatformID.Win32NT;
@@ -52,6 +71,7 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Gets a value indicating whether the current platform is macOS.
 		/// </summary>
+		[SupportedOSPlatformGuard ("macos")]
 		public static bool IsMacOS {
 			get {
 				return IsDarwin ();
@@ -61,11 +81,15 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Gets a value indicating whether the current platform is Linux.
 		/// </summary>
+		[SupportedOSPlatformGuard ("linux")]
 		public static bool IsLinux {
 			get {
 				return !IsWindows && !IsMacOS;
 			}
 		}
+
+		public static bool IsRunningOnCI =>
+			string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase);
 
 		/// <summary>
 		/// The MonoAndroid reference assemblies directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net8.0/<br/>
@@ -196,4 +220,3 @@ namespace Xamarin.ProjectTools
 		public static bool IsUsingJdk11 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("11.0");
 	}
 }
-

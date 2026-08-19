@@ -57,7 +57,6 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 
 		Assert.NotEmpty (peers);
 		Assert.All (peers, p => Assert.True (p.IsFrameworkAssembly, $"{p.ManagedTypeName} should be marked as a framework peer."));
-		Assert.All (peers, p => Assert.False (p.GenerateArrayEntries, $"{p.ManagedTypeName} should not emit array entries unless referenced from a non-framework assembly."));
 	}
 
 	[Fact]

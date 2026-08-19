@@ -8,10 +8,10 @@
 
 #include <java-interop-dlfcn.h>
 
-#include <shared/xxhash.hh>
 #include "../xamarin-app.hh"
 
 #include "android-system.hh"
+#include <runtime-base/crc32.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/search.hh>
 #include "startup-aware-lock.hh"
@@ -20,57 +20,118 @@ namespace xamarin::android
 {
 	class MonodroidDl
 	{
-		enum class CacheKind
-		{
-			// Access AOT cache
-			AOT,
-
-			// Access DSO cache
-			DSO,
-		};
-
 		static inline std::mutex   dso_handle_write_lock;
 
-		template<CacheKind WhichCache>
-		[[gnu::always_inline, gnu::flatten]]
-		static auto find_dso_cache_entry_common (hash_t hash) noexcept -> DSOCacheEntry*
+		[[gnu::always_inline]]
+		static constexpr auto ascii_to_lower (char c) noexcept -> char
 		{
-			static_assert (WhichCache == CacheKind::AOT || WhichCache == CacheKind::DSO, "Unknown cache type specified");
+			return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : c;
+		}
 
-			DSOCacheEntry *arr;
-			size_t arr_size;
-
-			if constexpr (WhichCache == CacheKind::AOT) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in AOT cache", hash);
-				arr = aot_dso_cache;
-				arr_size = application_config.number_of_aot_cache_entries;
-			} else if constexpr (WhichCache == CacheKind::DSO) {
-				log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
-				arr = dso_cache;
-				arr_size = application_config.number_of_dso_cache_entries;
+		[[gnu::always_inline]]
+		static auto ends_with_ci (std::string_view value, std::string_view suffix) noexcept -> bool
+		{
+			if (value.length () < suffix.length ()) {
+				return false;
 			}
 
-			auto equal = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash == key; };
-			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
-			ssize_t idx = Search::binary_search<DSOCacheEntry, equal, less_than> (hash, arr, arr_size);
+			size_t offset = value.length () - suffix.length ();
+			for (size_t i = 0; i < suffix.length (); i++) {
+				if (ascii_to_lower (value[offset + i]) != ascii_to_lower (suffix[i])) {
+					return false;
+				}
+			}
 
-			if (idx >= 0) {
-				return &arr[idx];
+			return true;
+		}
+
+		[[gnu::always_inline]]
+		static auto starts_with_ci (std::string_view value, std::string_view prefix) noexcept -> bool
+		{
+			if (value.length () < prefix.length ()) {
+				return false;
+			}
+
+			for (size_t i = 0; i < prefix.length (); i++) {
+				if (ascii_to_lower (value[i]) != ascii_to_lower (prefix[i])) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		// Equivalent of Path.GetFileNameWithoutExtension for a bare file name: strip the last '.' and
+		// everything following it.
+		[[gnu::always_inline]]
+		static auto strip_last_extension (std::string_view name) noexcept -> std::string_view
+		{
+			size_t dot = name.find_last_of ('.');
+			return dot == std::string_view::npos ? name : name.substr (0, dot);
+		}
+
+		// Mirror of AddNameMutations () in
+		// src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfigNativeAssemblyGeneratorCLR.cs.
+		//
+		// The DSO cache stores one entry per name mutation of a library. Each entry is keyed by the
+		// CRC32 of the *mutation*, but only the library's real (unmutated) name is stored (referenced
+		// through `name_index`); the mutation strings themselves are discarded. To disambiguate a
+		// CRC32 collision we re-derive the mutations of a matched entry's real name and check whether
+		// the requested name is one of them. This MUST be kept in sync with the managed generator.
+		static auto name_is_mutation_of (std::string_view requested, std::string_view real_name) noexcept -> bool
+		{
+			// Mutation: the (real) name itself.
+			if (requested == real_name) {
+				return true;
+			}
+
+			if (ends_with_ci (real_name, ".dll.so"sv)) {
+				// Path.GetFileNameWithoutExtension applied twice strips ".so" and then ".dll".
+				std::string_view no_ext = strip_last_extension (strip_last_extension (real_name));
+
+				// Mutation: the name without the ".dll.so" suffix.
+				if (requested == no_ext) {
+					return true;
+				}
+
+				// Mutation: that same stem with a plain ".so" suffix.
+				if (requested.ends_with (".so"sv) && requested.substr (0, requested.length () - ".so"sv.length ()) == no_ext) {
+					return true;
+				}
+			} else if (requested == strip_last_extension (real_name)) {
+				// Mutation: the name without its final extension.
+				return true;
+			}
+
+			// The generator also emits the mutations of the name with a leading "lib" removed.
+			if (starts_with_ci (real_name, "lib"sv)) {
+				return name_is_mutation_of (requested, real_name.substr ("lib"sv.length ()));
+			}
+
+			return false;
+		}
+
+		// Entries are sorted by `hash`, so all entries sharing `hash` are contiguous. CRC32 is a
+		// 32-bit hash, so collisions are possible (though very unlikely); walk the whole run of
+		// entries with a matching hash and confirm the requested name really is a mutation of the
+		// candidate library's name before accepting it.
+		[[gnu::always_inline, gnu::flatten]]
+		static auto find_dso_cache_entry (std::string_view const& name, hash_t hash) noexcept -> DSOCacheEntry*
+		{
+			log_debug (LOG_ASSEMBLY, "Looking for hash {:x} in DSO cache", hash);
+
+			auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
+			size_t idx = Search::lower_bound<DSOCacheEntry, hash_t, less_than> (hash, dso_cache, application_config.number_of_dso_cache_entries);
+
+			while (idx < application_config.number_of_dso_cache_entries && dso_cache[idx].hash == hash) {
+				DSOCacheEntry &entry = dso_cache[idx];
+				if (name_is_mutation_of (name, get_dso_name (&entry))) {
+					return &entry;
+				}
+				idx++;
 			}
 
 			return nullptr;
-		}
-
-		[[gnu::always_inline, gnu::flatten]]
-		static auto find_only_aot_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
-		{
-			return find_dso_cache_entry_common<CacheKind::AOT> (hash);
-		}
-
-		[[gnu::always_inline, gnu::flatten]]
-		static auto find_only_dso_cache_entry (hash_t hash) noexcept -> DSOCacheEntry*
-		{
-			return find_dso_cache_entry_common<CacheKind::DSO> (hash);
 		}
 
 	public:
@@ -84,7 +145,6 @@ namespace xamarin::android
 			return &dso_names_data[dso->name_index];
 		}
 
-		[[gnu::flatten]]
 		static auto monodroid_dlopen (DSOCacheEntry *dso, std::string_view const& name, int flags) noexcept -> void*
 		{
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash match {}found, DSO name is '{}'", dso == nullptr ? "not "sv : ""sv, get_dso_name (dso));
@@ -115,7 +175,6 @@ namespace xamarin::android
 			return dso->handle;
 		}
 
-		template<bool PREFER_AOT_CACHE> [[gnu::flatten]]
 		static auto monodroid_dlopen (std::string_view const& name, int flags) noexcept -> void*
 		{
 			if (name.empty ()) [[unlikely]] {
@@ -123,37 +182,11 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			hash_t name_hash = xxhash::hash (name.data (), name.size ());
+			hash_t name_hash = crc32_hash (name);
 			log_debug (LOG_ASSEMBLY, "monodroid_dlopen: hash for name '{}' is {:x}", name, name_hash);
 
-			DSOCacheEntry *dso = nullptr;
-			if constexpr (PREFER_AOT_CACHE) {
-				// This code isn't currently used by CoreCLR, but it's possible that in the future we will have separate
-				// .so files for AOT-d assemblies, similar to MonoVM, so let's keep it.
-				//
-				// If we're asked to look in the AOT DSO cache, do it first.  This is because we're likely called from the
-				// MonoVM's dlopen fallback handler and it will not be a request to resolved a p/invoke, but most likely to
-				// find and load an AOT image for a managed assembly.  Since there might be naming/hash conflicts in this
-				// scenario, we look at the AOT cache first.
-				//
-				// See: https://github.com/dotnet/android/issues/9081
-				dso = find_only_aot_cache_entry (name_hash);
-			}
-
-			if (dso == nullptr) {
-				dso = find_only_dso_cache_entry (name_hash);
-			}
-
+			DSOCacheEntry *dso = find_dso_cache_entry (name, name_hash);
 			return monodroid_dlopen (dso, name, flags);
-		}
-
-		[[gnu::flatten]]
-		static auto monodroid_dlopen (const char *name, int flags) noexcept -> void*
-		{
-			// We're called by MonoVM via a callback, we might need to return an AOT DSO.
-			// See: https://github.com/dotnet/android/issues/9081
-			constexpr bool PREFER_AOT_CACHE = true;
-			return monodroid_dlopen<PREFER_AOT_CACHE> (name, flags);
 		}
 
 		[[gnu::flatten]]

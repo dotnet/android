@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../../../../src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj" />
+  <Project Path="Java.Interop.BootstrapTasks.csproj" />
+</Solution>

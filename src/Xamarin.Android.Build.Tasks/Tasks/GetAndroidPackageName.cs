@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
@@ -68,6 +69,10 @@ namespace Xamarin.Android.Tasks
 				// If we don't have a manifest, default to using the assembly name
 				// If the assembly doesn't have a period in it, duplicate it so it does
 				PackageName = AndroidAppManifest.CanonicalizePackageName (AssemblyName);
+			}
+
+			if (JavaNameValidator.TryGetInvalidPackageSegment (PackageName, '.', out var invalidIdentifier)) {
+				Log.LogCodedError ("XA4258", Properties.Resources.XA4258, PackageName, invalidIdentifier);
 			}
 
 			Log.LogDebugMessage ($"  PackageName: {PackageName}");

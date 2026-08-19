@@ -58,9 +58,18 @@ namespace Xamarin.Android.Tasks
 		public string AndroidRuntime { get; set; } = "";
 
 		public bool EnableMarshalMethods { get; set; }
-		public bool EnableManagedMarshalMethodsLookup { get; set; }
+
+		/// <summary>
+		/// When <c>true</c>, descriptive comments are written into the generated LLVM IR.  They make
+		/// the <c>.ll</c> far easier to read, but have no effect on the object code produced from it.
+		/// Set from the <c>$(_AndroidEmitLlvmIrComments)</c> MSBuild property.
+		/// </summary>
+		public bool EmitLlvmIrComments { get; set; }
+
+		public bool AndroidEnableAssemblyStoreDecompressionCache { get; set; }
 		public string? RuntimeConfigBinFilePath { get; set; }
 		public string ProjectRuntimeConfigFilePath { get; set; } = String.Empty;
+		public string? ProjectRuntimeConfigDevFilePath { get; set; }
 		public string? BoundExceptionType { get; set; }
 
 		public string? PackageNamingPolicy { get; set; }
@@ -266,7 +275,7 @@ namespace Xamarin.Android.Tasks
 			LLVMIR.LlvmIrComposer appConfigAsmGen;
 
 			if (TargetsCLR) {
-				Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath);
+				Dictionary<string, string>? runtimeProperties = RuntimePropertiesParser.ParseConfig (ProjectRuntimeConfigFilePath, ProjectRuntimeConfigDevFilePath);
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGeneratorCLR (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, runtimeProperties, Log) {
 					UsesAssemblyPreload = envBuilder.Parser.UsesAssemblyPreload,
 					AndroidPackageName = AndroidPackageName,
@@ -283,9 +292,9 @@ namespace Xamarin.Android.Tasks
 					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
 					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 					MarshalMethodsEnabled = EnableMarshalMethods,
-					ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 					HaveAssemblyStore = UseAssemblyStore,
+					AssemblyStoreDecompressionCacheEnabled = AndroidEnableAssemblyStoreDecompressionCache,
 				};
 			} else {
 				appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (envBuilder.EnvironmentVariables, envBuilder.SystemProperties, Log) {
@@ -313,11 +322,11 @@ namespace Xamarin.Android.Tasks
 					JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
 					JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 					MarshalMethodsEnabled = EnableMarshalMethods,
-					ManagedMarshalMethodsLookupEnabled = EnableManagedMarshalMethodsLookup,
 					IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 				};
 			}
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
+			appConfigAsmGen.EmitComments = EmitLlvmIrComments;
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();

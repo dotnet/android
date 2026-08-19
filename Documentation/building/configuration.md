@@ -11,7 +11,7 @@
 
 The .NET for Android build is heavily dependent on MSBuild, with the *intention*
 that it should (eventually?) be possible to build the project simply by
-checking out the repo, loading `Xamarin.Android.sln` into an IDE, and Building
+checking out the repo, loading `Xamarin.Android.slnx` into an IDE, and Building
 the solution. (This isn't currently possible, and may never be, but it's
 the *vision*.)
 
@@ -117,6 +117,12 @@ Overridable MSBuild properties include:
   * `$(AndroidEnableAssemblyCompression)`: Defaults to `True`. When enabled, all the
      assemblies placed in the APK will be compressed in `Release` builds. `Debug`
      builds are not affected.
+
+  * `$(AndroidEnableAssemblyStoreDecompressionCache)`: Defaults to `False`. When
+     enabled for a CoreCLR `Release` build, decompressed assemblies are cached in
+     the app's Android code-cache directory and mapped from there on subsequent
+     launches. The cache consumes additional on-device storage and is rebuilt
+     after app or platform updates.
 
 ## Options suitable for local development
 

@@ -8,6 +8,8 @@ namespace Java.Interop.Tools.Maven_Tests.Extensions;
 
 class MavenProjectResolver : IProjectResolver
 {
+	// Used locally too, so local runs download from the same feed as CI.
+	const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
 	readonly IMavenRepository repository;
 
 	public MavenProjectResolver (IMavenRepository repository)
@@ -19,8 +21,8 @@ class MavenProjectResolver : IProjectResolver
 	{
 		var cache_path = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "dotnet-android", "MavenCacheDirectory");
 
-		Central = new MavenProjectResolver (new CachedMavenRepository (cache_path, MavenRepository.Central));
-		Google = new MavenProjectResolver (new CachedMavenRepository (cache_path, MavenRepository.Google));
+		Central = new MavenProjectResolver (new CachedMavenRepository (cache_path, new MavenRepository (DotNetPublicMaven, "central")));
+		Google = new MavenProjectResolver (new CachedMavenRepository (cache_path, new MavenRepository (DotNetPublicMaven, "google")));
 	}
 
 	public Project Resolve (Artifact artifact)

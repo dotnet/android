@@ -26,13 +26,13 @@ and [Architecture][architecture] pages.
 - The `main` branch is configured to build with .NET 10, available [here][net-10].
 - The [`release/6.0.3xx`][net-6] branch is configured to build with .NET 6.
 
-`Java.Interop.sln` must first run some "preparatory" tasks before it can be built:
+`Java.Interop.slnx` must first run some "preparatory" tasks before it can be built:
 
 ```console
 dotnet build -t:Prepare
 ```
 
-Once `Java.Interop.sln` has been prepared, it can be built in Visual Studio 2022 or with `dotnet`:
+Once `Java.Interop.slnx` has been prepared, it can be built in Visual Studio 2022 or with `dotnet`:
 
 ```
 dotnet build
