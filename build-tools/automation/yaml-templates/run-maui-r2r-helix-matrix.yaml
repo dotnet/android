@@ -313,6 +313,8 @@ steps:
 
       Write-Host "Starting MAUI R2R Helix submission: $($case.displayName)"
       $process = Start-Process -FilePath $powerShellExe -ArgumentList @('-NoLogo', '-NoProfile', '-File', $scriptPath) -RedirectStandardOutput $outputPath -RedirectStandardError $errorPath -PassThru
+      # Windows PowerShell requires the process handle to be cached before waiting when output is redirected.
+      $null = $process.Handle
       $submissions += [pscustomobject]@{
         Name = $case.name
         DisplayName = $case.displayName
@@ -345,8 +347,13 @@ steps:
       }
       Write-Host "##[endgroup]"
 
-      if ($submission.Process.ExitCode -ne 0) {
-        Write-Host "##vso[task.logissue type=error]MAUI R2R Helix submission failed for $($submission.DisplayName) with exit code $($submission.Process.ExitCode)."
+      $exitCode = $submission.Process.ExitCode
+      if ($null -eq $exitCode) {
+        throw "Could not determine the exit code for MAUI R2R Helix submission $($submission.DisplayName)."
+      }
+
+      if ($exitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error]MAUI R2R Helix submission failed for $($submission.DisplayName) with exit code $exitCode."
         $failedSubmissions += $submission
       }
     }
