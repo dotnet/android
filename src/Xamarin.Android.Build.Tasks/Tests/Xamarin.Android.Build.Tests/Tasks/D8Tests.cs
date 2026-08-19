@@ -46,10 +46,12 @@ namespace Xamarin.Android.Build.Tests
 			var inputJar1 = Path.Combine (tempDir, "input1.jar");
 			var inputJar2 = Path.Combine (tempDir, "input2.jar");
 			var libJar1 = Path.Combine (tempDir, "lib1.jar");
+			var classFile = Path.Combine (tempDir, "Example.class");
 			File.WriteAllText (platformJar, "mock");
 			File.WriteAllText (inputJar1, "mock");
 			File.WriteAllText (inputJar2, "mock");
 			File.WriteAllText (libJar1, "mock");
+			File.WriteAllText (classFile, "mock");
 
 			var d8Task = new D8TestTask {
 				BuildEngine = engine,
@@ -59,6 +61,9 @@ namespace Xamarin.Android.Build.Tests
 				JavaLibrariesToEmbed = new ITaskItem [] {
 					new TaskItem (inputJar1),
 					new TaskItem (inputJar2),
+				},
+				ClassFiles = new ITaskItem [] {
+					new TaskItem (classFile),
 				},
 				JavaLibrariesToReference = new ITaskItem [] {
 					new TaskItem (libJar1),
@@ -87,6 +92,7 @@ namespace Xamarin.Android.Build.Tests
 				// Should contain input jars as direct arguments (no --lib prefix)
 				Assert.IsTrue (responseFileContent.Any (line => line.Contains ("input1.jar")), "Response file should contain input1.jar");
 				Assert.IsTrue (responseFileContent.Any (line => line.Contains ("input2.jar")), "Response file should contain input2.jar");
+				Assert.IsTrue (responseFileContent.Any (line => line.Contains ("Example.class")), "Response file should contain class files");
 
 			} finally {
 				// Clean up response file
