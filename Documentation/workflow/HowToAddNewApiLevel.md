@@ -120,17 +120,15 @@ Then update the following files:
       <Level>36</Level>
       <VersionCodeFull>36.1</VersionCodeFull>
       <Id>36.1</Id>
-      <Stable>True</Stable>
+      <Stable>False</Stable>
     </AndroidApiInfo>
     ```
 
     `Include` is the binding framework version (e.g. `v16.1`).  `Level` is the
     integer API level (`Major` of `VersionCodeFull`).  `Id` is the platform ID
     used to locate `android-$(Id)` directories under the Android SDK.  `Stable`
-    should be `True`; every entry currently in the projitems uses `True`,
-    including preview codenames like CANARY.  (Setting it to `False` would
-    exclude the entry from being picked as the default stable framework
-    version by some build-time selection logic.)
+    should be `False` for preview API levels and `True` once the API level is
+    stable.
 
     TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
 
@@ -220,15 +218,31 @@ You should search-and-replace instances of your local directory name with `..\..
 - Add level to `/build-tools/api-xml-adjuster/Makefile`
   [TODO: remove? `$(API_LEVELS)` was last touched for API-34!]
 - Add level to `DefaultTestSdkPlatforms` in `/build-tools/automation/yaml-templates/variables.yaml`
-- Update `WorkloadManifest.in.json` to generate .NET SDK Workload Packs for the new API level.
-- Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to try to access a member added in the new API level.
-- If (when) the new API level is unstable, update `Configuration.props` and modify the `*Unstable*` MSBuild properties to match the new unstable API level:
+- Update `WorkloadManifest.in.json` with the `Microsoft.Android.Ref.*` and
+  `Microsoft.Android.Runtime.*.android` packs for the new API level.
+- Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to
+  retain the existing preview API levels and try to access a member added in
+  each one.
+- Add the API level to `@(AndroidBuildApiLevel)` in `Configuration.props`.
+  This list drives binding builds, targeting-pack selection, pack creation,
+  local workload setup, and workload dependency installation:
+    ```xml
+    <AndroidBuildApiLevel Include="36.1">
+      <PlatformId>CANARY</PlatformId>
+      <FrameworkVersion>v16.1</FrameworkVersion>
+      <Unstable>true</Unstable>
+    </AndroidBuildApiLevel>
+    ```
+- If the new API level is the latest unstable API level, also update the
+  `*LatestUnstable*` pointers. Keep earlier supported preview API levels in
+  `@(AndroidBuildApiLevel)`:
     ```xml
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">36.1</AndroidLatestUnstableApiLevel>
     <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">CANARY</AndroidLatestUnstablePlatformId>
     <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v16.1</AndroidLatestUnstableFrameworkVersion>
     ```
-- LOCAL ONLY: Update `Configuration.props` or `Configuration.Override.props` to specify building the new level:
+- LOCAL ONLY: To build only the new level, update `Configuration.Override.props`
+  or pass these properties on the command line:
   - `<AndroidApiLevel>31</AndroidApiLevel>`
   - `<AndroidPlatformId>S</AndroidPlatformId>`
   - `<AndroidFrameworkVersion>v11.0.99</AndroidFrameworkVersion>`

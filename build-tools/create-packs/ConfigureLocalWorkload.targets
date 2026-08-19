@@ -12,9 +12,11 @@
 
   <Target Name="_CreateLocalFrameworkLists">
     <ItemGroup>
-      <_FrameworkListInputs  Include="$(MicrosoftAndroidRefPackDir)**" />
-      <_FrameworkListInputs  Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll" />
-      <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\data\FrameworkList.xml" />
+      <_FrameworkListInputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\ref\**" />
+      <_FrameworkListInputs Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll" />
+      <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\data\FrameworkList.xml">
+        <AndroidApiLevel>%(AndroidBuildApiLevel.Identity)</AndroidApiLevel>
+      </_FrameworkListOutputs>
       <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" />
       <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\microsoft.android.templates.$(AndroidPackVersion).nupkg" />
     </ItemGroup>
@@ -24,15 +26,20 @@
       DependsOnTargets="_CreateLocalFrameworkLists;_CreateAndroidBuildInfo">
     <ItemGroup>
       <_RuntimeListInputs
-          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(AndroidAbiAndRuntimeFlavor.AndroidRuntime).$(AndroidApiLevel).%(AndroidAbiAndRuntimeFlavor.AndroidRID)\$(AndroidPackVersion)\runtimes\%(AndroidAbiAndRuntimeFlavor.AndroidRID)\**"
-          AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)"
-          AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)" />
+          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_AndroidBuildInfo.AndroidRuntime).%(_AndroidBuildInfo.Identity).%(_AndroidBuildInfo.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_AndroidBuildInfo.AndroidRID)\**"
+          AndroidApiLevel="%(_AndroidBuildInfo.Identity)"
+          AndroidRID="%(_AndroidBuildInfo.AndroidRID)"
+          AndroidRuntime="%(_AndroidBuildInfo.AndroidRuntime)" />
       <_RuntimeListOutputs
           Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_AndroidBuildInfo.AndroidRuntime).%(_AndroidBuildInfo.Identity).%(_AndroidBuildInfo.AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml"
+          AndroidApiLevel="%(_AndroidBuildInfo.Identity)"
           AndroidRID="%(_AndroidBuildInfo.AndroidRID)"
           AndroidRuntime="%(_AndroidBuildInfo.AndroidRuntime)"
       />
-      <_ManagedRuntimeListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android\$(AndroidPackVersion)\data\RuntimeList.xml" />
+      <_ManagedRuntimeListOutputs
+          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(AndroidBuildApiLevel.Identity).android\$(AndroidPackVersion)\data\RuntimeList.xml"
+          AndroidApiLevel="%(AndroidBuildApiLevel.Identity)"
+      />
     </ItemGroup>
   </Target>
 
@@ -40,15 +47,15 @@
       DependsOnTargets="_CreateLocalRuntimeListsInputs"
       Inputs="$(MSBuildAllProjects);@(_RuntimeListInputs)"
       Outputs="@(_RuntimeListOutputs);@(_ManagedRuntimeListOutputs)">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_ManagedRuntimeListOutputs.RelativeDir) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_RuntimeListOutputs.AndroidApiLevel) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_ManagedRuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_ManagedRuntimeListOutputs.AndroidApiLevel) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
   </Target>
 
   <Target Name="CreateLocalFrameworkLists"
       DependsOnTargets="_CreateLocalFrameworkLists"
       Inputs="$(MSBuildAllProjects);@(_FrameworkListInputs)"
       Outputs="@(_FrameworkListOutputs)">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_FrameworkListOutputs.RelativeDir) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_FrameworkListOutputs.RelativeDir) -p:AndroidApiLevel=%(_FrameworkListOutputs.AndroidApiLevel) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
   </Target>
 
   <Target Name="PackLocalTemplates"
