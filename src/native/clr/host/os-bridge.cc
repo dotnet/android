@@ -164,7 +164,7 @@ void OSBridge::_monodroid_gref_logf (const char *format, ...) noexcept
 [[gnu::always_inline, gnu::flatten]]
 void OSBridge::log_it (LogCategories category, std::string_view const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept
 {
-	log_write (category, LogLevel::Info, line);
+	log_writef (category, LogLevel::Info, "%.*s", static_cast<int>(line.length ()), line.data ());
 
 	// We skip logcat here when logging to file is enabled because _write_stack_trace will output to logcat as well, if enabled
 	if (to == nullptr) {
