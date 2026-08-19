@@ -30,6 +30,12 @@
       "prompt": "Both platform 37.0 and 37.1 are marked IsLatestStable in androidsdk.targets. Refresh the Android sources packages to the current revisions.",
       "expected_output": "Both source-37.0 and source-37.1 _AndroidSdkPackage entries remain present with separate version-specific SHA-256 properties. The 37.0 package installs to sources/android-37 and the 37.1 package installs to sources/android-37.1. Updating 37.1 never removes or overwrites the 37.0 package.",
       "assertions": []
+    },
+    {
+      "id": 6,
+      "prompt": "Update command-line tools from 19.0 to a release where sdkmanager says --licenses is deprecated and exits successfully without creating the SDK license files.",
+      "expected_output": "The package pins and hashes are updated, and license acceptance uses the replacement Android CLI when available while retaining compatibility with older sdkmanager releases. Validation starts without licenses/android-sdk-license or .licenses-accepted, proves both are recreated, and confirms Gradle accepts the pinned Build Tools and platform licenses.",
+      "assertions": []
     }
   ]
 }
