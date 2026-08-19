@@ -558,7 +558,7 @@ namespace UnnamedProject
 			}
 		}
 
-		void CheckCustomView (Xamarin.Tools.Zip.ZipArchive zip, params string [] paths)
+		void CheckCustomView (System.IO.Compression.ZipArchive zip, params string [] paths)
 		{
 			var customViewPath = Path.Combine (paths);
 			FileAssert.Exists (customViewPath, $"custom_text.xml should exist at {customViewPath}");
@@ -571,11 +571,13 @@ namespace UnnamedProject
 
 			//Now check the zip
 			var customViewInZip = "res/layout/" + Path.GetFileName (customViewPath);
-			var entry = zip.ReadEntry (customViewInZip);
+			var entry = zip.GetEntry (customViewInZip);
 			Assert.IsNotNull (entry, $"`{customViewInZip}` should exist in packaged_resources!");
 
 			using (var stream = new MemoryStream ()) {
-				entry.Extract (stream);
+				using (var entryStream = entry.Open ()) {
+					entryStream.CopyTo (stream);
+				}
 				stream.Position = 0;
 
 				using (var reader = new StreamReader (stream)) {

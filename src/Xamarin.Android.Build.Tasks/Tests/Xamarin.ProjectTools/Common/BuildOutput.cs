@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.ProjectTools
 {
@@ -247,20 +247,21 @@ namespace Xamarin.ProjectTools
 			apk.Dispose ();
 		}
 
-		ZipEntry GetEntry (string file)
+		ZipArchiveEntry GetEntry (string file)
 		{
-			return apk.First (e => e.FullName == file);
+			return apk.Entries.First (e => e.FullName == file);
 		}
 
 		public bool Exists (string file)
 		{
-			return apk.Any (e => e.FullName == file);
+			return apk.Entries.Any (e => e.FullName == file);
 		}
 
 		public string GetText (string file)
 		{
-			using (var ms = new MemoryStream ()) {
-				GetEntry (file).Extract (ms);
+			using (var ms = new MemoryStream ())
+			using (var stream = GetEntry (file).Open ()) {
+				stream.CopyTo (ms);
 				ms.Position = 0;
 				using (var sr = new StreamReader (ms))
 					return sr.ReadToEnd ();
@@ -270,8 +271,9 @@ namespace Xamarin.ProjectTools
 		public byte [] GetRaw (string file)
 		{
 			var e = GetEntry (file);
-			using (var ms = new MemoryStream ()) {
-				e.Extract (ms);
+			using (var ms = new MemoryStream ())
+			using (var stream = e.Open ()) {
+				stream.CopyTo (ms);
 				return ms.ToArray ();
 			}
 		}

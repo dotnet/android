@@ -5,11 +5,11 @@
 using System;
 using System.Linq;
 using System.IO;
+using System.IO.Compression;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text;
 using System.Collections.Generic;
-using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
@@ -42,10 +42,10 @@ namespace Xamarin.Android.Tasks
 				return result;
 			// compress all the class files
 			if (!ClassesZip.IsNullOrEmpty ()) {
-				using (var zip = new ZipArchiveEx (ClassesZip, FileMode.OpenOrCreate)) {
-					zip.AutoFlush = false;
-					zip.AddDirectory (ClassesOutputDirectory, "", CompressionMethod.Store);
-				}
+				Files.ArchiveZip (ClassesZip, archivePath => {
+					using var zip = ZipArchiveExtensions.OpenZip (archivePath, FileMode.Create);
+					zip.AddDirectory (ClassesOutputDirectory, compressionLevel: CompressionLevel.NoCompression);
+				});
 			}
 			return result;
 		}

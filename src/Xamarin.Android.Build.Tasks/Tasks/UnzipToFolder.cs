@@ -1,10 +1,10 @@
 #nullable enable
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -22,12 +22,12 @@ namespace Xamarin.Android.Tasks
 			foreach (var pair in Sources.Zip (DestinationDirectories, (s, d) => new { Source = s, Destination = d })) {
 				if (!Directory.Exists (pair.Destination.ItemSpec))
 					Directory.CreateDirectory (pair.Destination.ItemSpec);
-				using (var z = ZipArchive.Open (pair.Source.ItemSpec, FileMode.Open)) {
+				using (var z = ZipArchiveExtensions.OpenZip (pair.Source.ItemSpec, FileMode.Open)) {
 					if (Files == null || Files.Length == 0) {
-						z.ExtractAll (pair.Destination.ItemSpec);
+						Microsoft.Android.Build.Tasks.Files.ExtractAll (z, pair.Destination.ItemSpec);
 					} else {
 						foreach (var file in Files) {
-							ZipEntry entry = z.ReadEntry (file.ItemSpec);
+							var entry = z.ReadEntry (file.ItemSpec, StringComparison.Ordinal);
 							if (entry == null) {
 								Log.LogDebugMessage ($"Skipping not existant file {file.ItemSpec}");
 								continue;

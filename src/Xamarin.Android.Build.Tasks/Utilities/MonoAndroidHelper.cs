@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Mono.Cecil;
 
@@ -432,8 +432,8 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				return Files.ReadZipFile (filename);
-			} catch (ZipIOException ex) {
-				throw new ZipIOException ($"There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again. {ex.Message}", ex);
+			} catch (InvalidDataException ex) {
+				throw new InvalidDataException ($"There was an error opening {filename}. The file is probably corrupt. Try deleting it and building again. {ex.Message}", ex);
 			}
 		}
 

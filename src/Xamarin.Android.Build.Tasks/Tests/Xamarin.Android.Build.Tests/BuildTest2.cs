@@ -672,8 +672,8 @@ namespace Xamarin.Android.Build.Tests
 
 				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-				using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
-				Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+				using var zip = System.IO.Compression.ZipFile.OpenRead (aarPath);
+				Assert.IsFalse (zip.Entries.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
 					$"{aarPath} should not contain a .jar file!");
 			}
 		}

@@ -1,10 +1,11 @@
 using System;
 using System.IO;
 using System.Buffers;
+using System.IO.Compression;
+using System.Linq;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.AssemblyStore;
 
@@ -224,7 +225,7 @@ static class Utils
 
 	static FileFormat DetectAndroidArchive (FileInfo info, FileFormat defaultFormat)
 	{
-		using var zip = ZipArchive.Open (info.FullName, FileMode.Open);
+		using var zip = OpenZip (info.FullName);
 
 		if (HasAllEntries (zip, aabZipEntries)) {
 			return FileFormat.Aab;
@@ -244,11 +245,38 @@ static class Utils
 	static bool HasAllEntries (ZipArchive zip, string[] entries)
 	{
 		foreach (string entry in entries) {
-			if (!zip.ContainsEntry (entry, caseSensitive: true)) {
+			if (!ContainsEntry (zip, entry, caseSensitive: true)) {
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	public static ZipArchive OpenZip (string path)
+	{
+		return ZipFile.OpenRead (path);
+	}
+
+	public static ZipArchive OpenZip (Stream stream, bool leaveOpen = false)
+	{
+		return new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen);
+	}
+
+	public static bool ContainsEntry (ZipArchive archive, string entryName, bool caseSensitive = false)
+	{
+		return ReadEntry (archive, entryName, caseSensitive) != null;
+	}
+
+	public static ZipArchiveEntry? ReadEntry (ZipArchive archive, string entryName, bool caseSensitive = false)
+	{
+		var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+		return archive.Entries.FirstOrDefault (entry => string.Equals (entry.FullName, entryName, comparison));
+	}
+
+	public static void Extract (ZipArchiveEntry entry, Stream destination)
+	{
+		using var stream = entry.Open ();
+		stream.CopyTo (destination);
 	}
 }

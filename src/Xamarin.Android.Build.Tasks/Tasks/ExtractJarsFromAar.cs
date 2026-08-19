@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -55,8 +55,8 @@ namespace Xamarin.Android.Tasks
 					var jarOutputDirectory = Path.Combine (outputJarsDirectory, Path.GetFileName (library));
 					var annotationOutputDirectory = Path.Combine (outputAnnotationsDirectory, Path.GetFileName (library));
 					using (var zip = MonoAndroidHelper.ReadZipFile (library)) {
-						foreach (var entry in zip) {
-							if (entry.IsDirectory)
+						foreach (var entry in zip.Entries) {
+							if (entry.IsDirectory ())
 								continue;
 							var entryFullName = entry.FullName;
 							var fileName = Path.GetFileName (entryFullName);
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		static void Extract (ZipEntry entry, MemoryStream stream, string destination)
+		static void Extract (ZipArchiveEntry entry, MemoryStream stream, string destination)
 		{
 			stream.SetLength (0); //Reuse the stream
 			entry.Extract (stream);

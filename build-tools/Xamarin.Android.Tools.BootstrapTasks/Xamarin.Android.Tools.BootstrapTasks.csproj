@@ -4,7 +4,6 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>$(BootstrapOutputDirectory)</OutputPath>
   </PropertyGroup>
 

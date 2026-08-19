@@ -1,8 +1,9 @@
 ﻿using Microsoft.Build.Framework;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Collections.Generic;
-using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 using MTask = Microsoft.Build.Utilities.Task;
 using TTask = System.Threading.Tasks.Task;
 
@@ -70,17 +71,22 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			relativeDestDir = relativeDestDir?.Replace ('\\', Path.DirectorySeparatorChar);
 
-			using (var zip = ZipArchive.Open (sourceFile, FileMode.Open)) {
-				foreach (var entry in zip) {
-					if (!entry.IsDirectory) {
+			using (var zip = ZipArchiveExtensions.OpenZip (sourceFile, FileMode.Open, encoding)) {
+				foreach (var entry in zip.Entries) {
+					if (!entry.IsDirectory ()) {
 						if (filesToExtract.Count > 0 && !filesToExtract.Contains (Path.GetFileName (entry.FullName)))
 							continue;
-						var entryPath = entry.NativeFullName;
+						var entryPath = entry.FullName.Replace ('/', Path.DirectorySeparatorChar);
 						if (!NoSubdirectory) {
-							entryPath = entryPath.Substring (entryPath.IndexOf (Path.DirectorySeparatorChar) + 1);
+							int separatorIndex = entryPath.IndexOf (Path.DirectorySeparatorChar);
+							if (separatorIndex < 0)
+								continue;
+							entryPath = entryPath.Substring (separatorIndex + 1);
+							if (entryPath.Length == 0)
+								continue;
 						}
 						var destinationPath = Path.Combine (destinationFolder, relativeDestDir, entryPath);
-						Log.LogMessage (MessageImportance.Low, $"Extracting {entry.NativeFullName} to {destinationPath}");
+						Log.LogMessage (MessageImportance.Low, $"Extracting {entry.FullName} to {destinationPath}");
 						entry.Extract (Path.GetDirectoryName (destinationPath), Path.GetFileName (destinationPath));
 					}
 				}
@@ -88,4 +94,3 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		}
 	}
 }
-

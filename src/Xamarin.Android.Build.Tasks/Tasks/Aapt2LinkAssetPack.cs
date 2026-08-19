@@ -41,12 +41,23 @@ namespace Xamarin.Android.Tasks {
 			RunAapt (GenerateCommandLineCommands (Manifest, OutputArchive), OutputArchive.ItemSpec);
 			ProcessOutput ();
 			if (File.Exists (OutputArchive.ItemSpec)) {
+				var zipMetadata = ZipArchiveMetadataReader.Read (OutputArchive.ItemSpec);
 				// move the manifest to the right place.
-				using (var zip = new ZipArchiveEx (OutputArchive.ItemSpec, File.Exists (OutputArchive.ItemSpec) ? FileMode.Open : FileMode.Create)) {
-					zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml");
-					zip.Archive.DeleteEntry ("resources.pb");
-					// Fix up aapt2 not dealing with '\' in subdirectories for assets.
-					zip.FixupWindowsPathSeparators ((a, b) => LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
+				using (var zip = ZipArchiveExtensions.OpenZip (OutputArchive.ItemSpec, FileMode.Open)) {
+					if (zipMetadata.TryGetValue ("AndroidManifest.xml", out var manifestMetadata)) {
+						zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml", manifestMetadata.CompressionMethod.ToCompressionLevel ());
+					}
+					zip.ReadEntry ("resources.pb", StringComparison.Ordinal)?.Delete ();
+					zip.FixupWindowsPathSeparators (
+						entry => {
+							if (!zipMetadata.TryGetValue (entry.FullName, out var metadata)) {
+								throw new InvalidDataException ($"Unable to read ZIP metadata for '{entry.FullName}' in '{OutputArchive.ItemSpec}'.");
+							}
+
+							return metadata.CompressionMethod.ToCompressionLevel ();
+						},
+						(a, b) => LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`")
+					);
 				}
 			}
 			await System.Threading.Tasks.Task.CompletedTask;

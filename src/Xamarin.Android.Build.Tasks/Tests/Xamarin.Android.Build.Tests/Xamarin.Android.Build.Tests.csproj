@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
-    <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
+    <TargetFramework>net12.0</TargetFramework>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -26,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
     <ProjectReference Include="..\..\Xamarin.Android.Build.Tasks.csproj" />
+    <ProjectReference Include="..\..\..\Microsoft.Android.Build.Tasks\Microsoft.Android.Build.Tasks.csproj" />
     <ProjectReference Include="..\..\..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\..\..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
   </ItemGroup>

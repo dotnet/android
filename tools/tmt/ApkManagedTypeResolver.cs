@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 using Mono.Cecil;
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.AssemblyStore.V1;
-using Xamarin.Tools.Zip;
 
 namespace tmt
 {
 	class ApkManagedTypeResolver : ManagedTypeResolver
 	{
-		readonly Dictionary<string, ZipEntry>? individualAssemblies;
+		readonly Dictionary<string, ZipArchiveEntry>? individualAssemblies;
 		readonly Dictionary<string, AssemblyStoreAssembly>? blobAssemblies;
 		readonly ZipArchive apk;
 		readonly AssemblyStoreExplorer? assemblyStoreExplorer;
@@ -20,12 +20,12 @@ namespace tmt
 		{
 			this.apk = apk;
 
-			if (apk.ContainsEntry ($"{assemblyEntryPrefix}assemblies.blob")) {
+			if (Utils.ContainsEntry (apk, $"{assemblyEntryPrefix}assemblies.blob", caseSensitive: true)) {
 				blobAssemblies = new Dictionary<string, AssemblyStoreAssembly> (StringComparer.Ordinal);
 				assemblyStoreExplorer = new AssemblyStoreExplorer (apk, assemblyEntryPrefix, keepStoreInMemory: true);
 				LoadAssemblyBlobs (apk, assemblyEntryPrefix, assemblyStoreExplorer);
 			} else {
-				individualAssemblies = new Dictionary<string, ZipEntry> (StringComparer.Ordinal);
+				individualAssemblies = new Dictionary<string, ZipArchiveEntry> (StringComparer.Ordinal);
 				LoadIndividualAssemblies (apk, assemblyEntryPrefix);
 			}
 		}
@@ -48,7 +48,7 @@ namespace tmt
 
 		void LoadIndividualAssemblies (ZipArchive apkArchive, string assemblyEntryPrefix)
 		{
-			foreach (ZipEntry entry in apkArchive) {
+			foreach (var entry in apkArchive.Entries) {
 				if (!entry.FullName.StartsWith (assemblyEntryPrefix, StringComparison.Ordinal)) {
 					continue;
 				}
@@ -76,7 +76,7 @@ namespace tmt
 					return null;
 				}
 
-				if (!individualAssemblies.TryGetValue (assemblyName, out ZipEntry? entry) || entry == null) {
+				if (!individualAssemblies.TryGetValue (assemblyName, out ZipArchiveEntry? entry) || entry == null) {
 					return null;
 				}
 
@@ -94,13 +94,13 @@ namespace tmt
 		{
 			MemoryStream? stream = null;
 			if (individualAssemblies != null) {
-				if (!individualAssemblies.TryGetValue (assemblyPath, out ZipEntry? entry) || entry == null) {
+				if (!individualAssemblies.TryGetValue (assemblyPath, out ZipArchiveEntry? entry) || entry == null) {
 					// Should "never" happen - if the assembly wasn't there, FindAssembly should have returned `null`
 					throw new InvalidOperationException ($"Should not happen: assembly '{assemblyPath}' not found in the APK archive.");
 				}
 
 				stream = new MemoryStream ();
-				entry.Extract (stream);
+				Utils.Extract (entry, stream);
 				return PrepStream (stream);
 			}
 

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.AssemblyStore;
 
@@ -127,7 +127,7 @@ public class AssemblyStoreExplorer
 	static (IList<AssemblyStoreExplorer>? explorers, string? errorMessage) OpenArchive (FileInfo fi, IList<string> paths)
 	{
 		string? errorMessage;
-		using (var zip = ZipArchive.Open (fi.FullName, FileMode.Open)) {
+		using (var zip = Utils.OpenZip (fi.FullName)) {
 			(IList<AssemblyStoreExplorer>? explorers, string? loadError, bool pathsFound) = TryLoad (fi, zip, paths);
 			if (pathsFound) {
 				return (explorers, loadError);
@@ -172,13 +172,15 @@ public class AssemblyStoreExplorer
 		var ret = new List<AssemblyStoreExplorer> ();
 
 		foreach (string path in paths) {
-			if (!zip.ContainsEntry (path)) {
+			if (!Utils.ContainsEntry (zip, path, caseSensitive: true)) {
 				continue;
 			}
 
-			ZipEntry entry = zip.ReadEntry (path);
+			var entry = Utils.ReadEntry (zip, path, caseSensitive: true);
+			if (entry == null)
+				continue;
 			var stream = new MemoryStream ();
-			entry.Extract (stream);
+			Utils.Extract (entry, stream);
 			ret.Add (new AssemblyStoreExplorer (stream, $"{fi.FullName}!{path}"));
 		}
 

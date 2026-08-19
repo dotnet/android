@@ -4,11 +4,11 @@
 using NUnit.Framework;
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
@@ -271,8 +271,31 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 		bool ExtractAll (MemoryStream stream)
 		{
-			using (var zip = ZipArchive.Open (stream)) {
+			stream.Position = 0;
+			using (var zip = OpenArchive (stream)) {
 				return Files.ExtractAll (zip, tempDir);
+			}
+		}
+
+		ZipArchive CreateArchive (MemoryStream stream)
+		{
+			stream.SetLength (0);
+			stream.Position = 0;
+			return new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true, encoding);
+		}
+
+		ZipArchive OpenArchive (MemoryStream stream)
+		{
+			stream.Position = 0;
+			var mode = stream.Length == 0 ? ZipArchiveMode.Create : ZipArchiveMode.Update;
+			return new ZipArchive (stream, mode, leaveOpen: true, encoding);
+		}
+
+		static void AddEntry (ZipArchive zip, string path, string contents, Encoding encoding)
+		{
+			var entry = zip.CreateEntry (path, CompressionLevel.Optimal);
+			using (var writer = new StreamWriter (entry.Open (), encoding)) {
+				writer.Write (contents);
 			}
 		}
 
@@ -508,9 +531,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
+				AddEntry (zip, "b/b.txt", "b", encoding);
 			}
 
 			bool changes = ExtractAll (stream);
@@ -523,18 +546,18 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_NoChanges ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
+				AddEntry (zip, "b/b.txt", "b", encoding);
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Open (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = OpenArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
+				AddEntry (zip, "b/b.txt", "b", encoding);
 			}
 
 			changes = ExtractAll (stream);
@@ -547,19 +570,19 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_NewFile ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
+				AddEntry (zip, "b/b.txt", "b", encoding);
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Open (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
-				zip.AddEntry ("c/c.txt", "c", encoding);
+			using (var zip = OpenArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
+				AddEntry (zip, "b/b.txt", "b", encoding);
+				AddEntry (zip, "c/c.txt", "c", encoding);
 			}
 
 			changes = ExtractAll (stream);
@@ -573,16 +596,16 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_FileChanged ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("foo.txt", "foo", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "foo.txt", "foo", encoding);
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("foo.txt", "bar", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "foo.txt", "bar", encoding);
 			}
 
 			changes = ExtractAll (stream);
@@ -594,17 +617,17 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_FileDeleted ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
+				AddEntry (zip, "b/b.txt", "b", encoding);
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Open (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = OpenArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
 			}
 
 			changes = ExtractAll (stream);
@@ -617,13 +640,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_ModifyCallback ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("foo/a.txt", "a", encoding);
-				zip.AddEntry ("foo/b/b.txt", "b", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "foo/a.txt", "a", encoding);
+				AddEntry (zip, "foo/b/b.txt", "b", encoding);
 			}
 
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = OpenArchive (stream)) {
 				bool changes = Files.ExtractAll (zip, tempDir, modifyCallback: e => e.Replace ("foo/", ""));
 				Assert.IsTrue (changes, "ExtractAll should report changes.");
 			}
@@ -635,13 +658,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_SkipCallback ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
+				AddEntry (zip, "b/b.txt", "b", encoding);
 			}
 
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = OpenArchive (stream)) {
 				bool changes = Files.ExtractAll (zip, tempDir, skipCallback: e => e == "a.txt");
 				Assert.IsTrue (changes, "ExtractAll should report changes.");
 			}
@@ -653,10 +676,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_MacOSFiles ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a/.DS_Store", "a", encoding);
-				zip.AddEntry ("b/__MACOSX/b.txt", "b", encoding);
-				zip.AddEntry ("c/__MACOSX", "c", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a/.DS_Store", "a", encoding);
+				AddEntry (zip, "b/__MACOSX/b.txt", "b", encoding);
+				AddEntry (zip, "c/__MACOSX", "c", encoding);
 			}
 
 			bool changes = ExtractAll (stream);
@@ -667,13 +690,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_SkipsPathTraversal ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = OpenArchive (stream)) {
 				// modifyCallback introduces a path traversal
 				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e);
 				Assert.IsFalse (changes, "ExtractAll should not report changes for skipped entries.");
@@ -684,14 +707,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_SkipsPathTraversal_ExtractsValidEntries ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("good.txt", "good", encoding);
-				zip.AddEntry ("relative.txt", "relative", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "good.txt", "good", encoding);
+				AddEntry (zip, "relative.txt", "relative", encoding);
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = OpenArchive (stream)) {
 				// Only relative.txt gets a traversal prefix
 				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
 					e == "relative.txt" ? "../" + e : e);
@@ -705,13 +728,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[TestCase ("foo/../../../")]
 		public void ExtractAll_SkipsPathTraversal_ForwardSlash (string prefix)
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = OpenArchive (stream)) {
 				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
 				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
 			}
@@ -722,13 +745,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Platform ("Win")]
 		public void ExtractAll_SkipsPathTraversal_BackSlash (string prefix)
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = OpenArchive (stream)) {
 				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
 				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
 			}
@@ -748,8 +771,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Directory.CreateDirectory (tempDir);
 			var destination = Path.Combine (tempDir, "dest.zip");
 
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
 			}
 			stream.Position = 0;
 
@@ -765,8 +788,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var source = Path.Combine (tempDir, "source.zip");
 			var destination = Path.Combine (tempDir, "dest.zip");
 
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = CreateArchive (stream)) {
+				AddEntry (zip, "a.txt", "a", encoding);
 			}
 			stream.Position = 0;
 			using (var f = File.Create (source)) {
@@ -788,8 +811,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				Directory.CreateDirectory (tempDir);
 				Directory.SetCurrentDirectory (tempDir);
 
-				using (var zip = ZipArchive.Create (stream)) {
-					zip.AddEntry ("a.txt", "a", encoding);
+				using (var zip = CreateArchive (stream)) {
+					AddEntry (zip, "a.txt", "a", encoding);
 				}
 				stream.Position = 0;
 

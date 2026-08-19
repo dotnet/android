@@ -11,7 +11,7 @@ namespace Microsoft.Android.Build.Tasks
 	/// <remarks>
 	/// This file is also linked into <c>Microsoft.Android.Sdk.TrimmableTypeMap</c>, which
 	/// deliberately does not reference <c>Microsoft.Android.Build.BaseTasks</c> (that would drag
-	/// Microsoft.Build.*, LibZipSharp, K4os.LZ4 and Mono.Unix into it).  Only the copy compiled
+	/// Microsoft.Build.*, System.IO.Hashing, K4os.LZ4 and Mono.Unix into it).  Only the copy compiled
 	/// into <c>Microsoft.Android.Build.BaseTasks</c> is <c>public</c>; the linked copy stays
 	/// <c>internal</c>, otherwise <c>Xamarin.Android.Build.Tasks</c> — which references both
 	/// assemblies — fails with <c>CS0433</c>.

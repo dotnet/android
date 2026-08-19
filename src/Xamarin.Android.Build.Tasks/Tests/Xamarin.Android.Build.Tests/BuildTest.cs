@@ -1811,9 +1811,9 @@ namespace UnnamedProject
 				};
 				var manifest = prefix + "META-INF/MANIFEST.MF";
 				using (var zip = ZipHelper.OpenZip (archive)) {
-					Assert.IsFalse (zip.ContainsEntry (manifest, caseSensitive: true), $"{manifest} should *not* exist in {archive}");
+					Assert.IsFalse (zip.ContainsEntry (manifest, StringComparison.Ordinal), $"{manifest} should *not* exist in {archive}");
 					foreach (var expected in expectedFiles) {
-						Assert.IsTrue (zip.ContainsEntry (expected, caseSensitive: true), $"{expected} should exist in {archive}");
+						Assert.IsTrue (zip.ContainsEntry (expected, StringComparison.Ordinal), $"{expected} should exist in {archive}");
 					}
 				}
 			}

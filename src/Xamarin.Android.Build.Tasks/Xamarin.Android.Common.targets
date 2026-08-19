@@ -30,7 +30,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.AssemblyModifierPipeline" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidPackageName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aot" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.BuildArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.BuildArchive" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.BuildArchive" AssemblyFile="Microsoft.Android.Build.Tasks.dll" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildAppBundle" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.BuildApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.InstallApkSet" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -2328,10 +2329,7 @@ because xbuild doesn't support framework reference assemblies.
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
       FilesToAddToArchive="@(FilesToAddToArchive)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-      UseLibZipSharp="$(_AndroidUseLibZipSharp)"
-      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)" />
 
   <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
   <RemoveDir
@@ -2444,10 +2442,7 @@ because xbuild doesn't support framework reference assemblies.
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
       FilesToAddToArchive="@(FilesToAddToArchive)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-      UseLibZipSharp="$(_AndroidUseLibZipSharp)"
-      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)" />
 
   <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
   <RemoveDir

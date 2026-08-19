@@ -2,13 +2,13 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -125,14 +125,18 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			using var zip = ZipHelper.OpenZip (archivePath);
+			if (zip == null)
+				return null;
 			foreach (string assemblyPath in potentialEntries) {
-				if (!zip.ContainsEntry (assemblyPath)) {
+				var entry = zip.GetEntry (assemblyPath);
+				if (entry == null) {
 					continue;
 				}
 
-				ZipEntry entry = zip.ReadEntry (assemblyPath);
 				var ret = new MemoryStream ();
-				entry.Extract (ret);
+				using (var stream = entry.Open ()) {
+					stream.CopyTo (ret);
+				}
 				ret.Flush ();
 				return ret;
 			}
@@ -192,8 +196,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var entries = new List<string> ();
-			using (var zip = ZipArchive.Open (archivePath, FileMode.Open)) {
-				foreach (var entry in zip) {
+			using (var zip = ZipFile.OpenRead (archivePath)) {
+				foreach (var entry in zip.Entries) {
 					entries.Add (entry.FullName);
 				}
 			}

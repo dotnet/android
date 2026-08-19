@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Android.Build.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -259,13 +260,14 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				CompressionMethod method = compressNativeLibraries ? CompressionMethod.Deflate : CompressionMethod.Store;
+				var metadata = ZipArchiveMetadataReader.Read (apk);
+				var expectedCompression = compressNativeLibraries ? ZipEntryCompressionMethod.Deflate : ZipEntryCompressionMethod.Store;
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					var libFiles = zip.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
+					var libFiles = zip.Entries.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
 					var abiPaths = new string[] { "lib/x86_64/" };
 					foreach (var file in libFiles) {
 						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
-						Assert.IsTrue (file.CompressionMethod == method, $"{file.FullName} should have been CompressionMethod.{method} in the apk, but was CompressionMethod.{file.CompressionMethod}");
+						Assert.AreEqual (expectedCompression, metadata [file.FullName].CompressionMethod, $"{file.FullName} should have been {expectedCompression} in the apk.");
 					}
 				}
 			}
@@ -316,22 +318,23 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			Assert.That (RunCommand (zipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{apk} does not contain page-aligned .so files");
 
 			using (var zip = ZipHelper.OpenZip (apk)) {
-				foreach (var entry in zip) {
+				foreach (var entry in zip.Entries) {
 					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
-						AssertCompression (entry, compressed: false);
+						AssertCompression (apk, entry, compressed: false);
 					}
 				}
 			}
 		}
 
-		void AssertCompression (ZipEntry entry, bool compressed)
+		void AssertCompression (string archivePath, ZipArchiveEntry entry, bool compressed)
 		{
+			var compressionMethod = ZipArchiveMetadataReader.Read (archivePath) [entry.FullName].CompressionMethod;
 			if (compressed) {
-				Assert.AreNotEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be compressed!");
-				Assert.AreNotEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be compressed!");
+				Assert.AreNotEqual (ZipEntryCompressionMethod.Store, compressionMethod, $"`{entry.FullName}` should be compressed!");
+				Assert.AreNotEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be compressed!");
 			} else {
-				Assert.AreEqual (CompressionMethod.Store, entry.CompressionMethod, $"`{entry.FullName}` should be uncompressed!");
-				Assert.AreEqual (entry.Size, entry.CompressedSize, $"`{entry.FullName}` should be uncompressed!");
+				Assert.AreEqual (ZipEntryCompressionMethod.Store, compressionMethod, $"`{entry.FullName}` should be uncompressed!");
+				Assert.AreEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be uncompressed!");
 			}
 		}
 
@@ -362,7 +365,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
-							AssertCompression (entry, compressed: true);
+							AssertCompression (apk, entry, compressed: true);
 						}
 					}
 				}
@@ -379,7 +382,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
-							AssertCompression (entry, compressed: false);
+							AssertCompression (apk, entry, compressed: false);
 						}
 					}
 				}
@@ -900,58 +903,6 @@ public class Test
 			}
 		}
 
-		static IEnumerable<object[]> Get_BuildApkWithZipFlushLimits_Data ()
-		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (1, -1, runtime);
-				AddTestData (5, -1, runtime);
-				AddTestData (50, -1, runtime);
-				AddTestData (100, -1, runtime);
-				AddTestData (512, -1, runtime);
-				AddTestData (1024, -1, runtime);
-				AddTestData (-1, 1, runtime);
-				AddTestData (-1, 5, runtime);
-				AddTestData (-1, 10, runtime);
-				AddTestData (-1, 100, runtime);
-				AddTestData (-1, 200, runtime);
-			}
-
-			return ret;
-
-			void AddTestData (int filesLimit, int sizeLimit, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					filesLimit,
-					sizeLimit,
-					runtime,
-				});
-			}
-		}
-
-		[Test]
-		[TestCaseSource (nameof (Get_BuildApkWithZipFlushLimits_Data))]
-		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit, AndroidRuntime runtime)
-		{
-			const bool isRelease = false;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
-			if (filesLimit > 0)
-				proj.SetProperty ("_ZipFlushFilesLimit", filesLimit.ToString ());
-			if (sizeLimit > 0)
-				proj.SetProperty ("_ZipFlushSizeLimit", (sizeLimit * 1024 * 1024).ToString ());
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
-			}
-		}
 
 		[Test]
 		public void ExtractNativeLibsTrue ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
@@ -982,7 +933,7 @@ public class Test
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
-							AssertCompression (entry, compressed: true);
+							AssertCompression (apk, entry, compressed: true);
 						}
 					}
 				}

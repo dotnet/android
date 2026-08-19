@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -61,9 +61,12 @@ namespace Xamarin.Android.Build.Tests
 		{
 			zip.AssertContainsEntry (zipPath, archivePath);
 
-			var entry = zip.ReadEntry (archivePath);
+			var entry = zip.GetEntry (archivePath);
+			Assert.IsNotNull (entry, $"{zipPath} should contain {archivePath}");
 			using var stream = new MemoryStream ();
-			entry.Extract (stream);
+			using (var entryStream = entry.Open ()) {
+				entryStream.CopyTo (stream);
+			}
 			stream.Position = 0;
 			using var reader = new StreamReader (stream);
 			Assert.AreEqual (expected, reader.ReadToEnd ().Trim ());
@@ -72,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 		[DebuggerHidden]
 		public static void AssertContainsEntry (this ZipArchive zip, string zipPath, string archivePath)
 		{
-			Assert.IsTrue (zip.ContainsEntry (archivePath), $"{zipPath} should contain {archivePath}:\n{string.Join (",\n", zip.Select (e => e.FullName))}");
+			Assert.IsNotNull (zip.GetEntry (archivePath), $"{zipPath} should contain {archivePath}:\n{string.Join (",\n", zip.Entries.Select (e => e.FullName))}");
 		}
 
 		[DebuggerHidden]
@@ -84,7 +87,7 @@ namespace Xamarin.Android.Build.Tests
 		[DebuggerHidden]
 		public static void AssertDoesNotContainEntry (this ZipArchive zip, string zipPath, string archivePath)
 		{
-			Assert.IsFalse (zip.ContainsEntry (archivePath), $"{zipPath} should *not* contain {archivePath}");
+			Assert.IsNull (zip.GetEntry (archivePath), $"{zipPath} should *not* contain {archivePath}");
 		}
 
 		[DebuggerHidden]
@@ -117,11 +120,13 @@ namespace Xamarin.Android.Build.Tests
 		public static void AssertEntryContents (this ZipArchive zip, string zipPath, string archivePath, string contents)
 		{
 			zip.AssertContainsEntry (zipPath, archivePath);
-			var entry = zip.ReadEntry (archivePath);
+			var entry = zip.GetEntry (archivePath);
 			Assert.IsNotNull (entry, $"{zipPath} should contain {archivePath}");
 			using (var stream = new MemoryStream ())
 			using (var reader = new StreamReader (stream)) {
-				entry.Extract (stream);
+				using (var entryStream = entry.Open ()) {
+					entryStream.CopyTo (stream);
+				}
 				stream.Position = 0;
 				var actual = reader.ReadToEnd ();
 				Assert.AreEqual (contents, actual, $"{archivePath} should contain {contents}");

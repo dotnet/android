@@ -5,8 +5,7 @@ using System.Text;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-
-using Xamarin.Tools.Zip;
+using Microsoft.Android.Build.Tasks;
 
 using IOFile        = System.IO.File;
 
@@ -43,7 +42,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				prefix  += Path.DirectorySeparatorChar;
 			}
 
-			using (var zip  = ZipArchive.Open (File.ItemSpec, FileMode.OpenOrCreate)) {
+			using (var zip  = ZipArchiveExtensions.OpenZip (File.ItemSpec, FileMode.OpenOrCreate)) {
 				if (Entries == null)
 					return !Log.HasLoggedErrors;
 				foreach (var entry in Entries) {
@@ -57,17 +56,13 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					if (prefix != null && entryDir.StartsWith (prefix, StringComparison.OrdinalIgnoreCase)) {
 						zipDir = entryDir.Substring (prefix.Length);
 					}
-					if (string.IsNullOrEmpty (zipDir)) {
-						// JonP can't figure out how to actually clear the archive directory name
-						// using AddFileToDirectory().  This works as desired.
-						zip.AddFile (entryPath, Path.GetFileName (entryPath));
-					} else {
-						zip.AddFileToDirectory (entryPath, zipDir, useFileDirectory: false);
-					}
+					var archivePath = string.IsNullOrEmpty (zipDir)
+						? Path.GetFileName (entryPath)
+						: Path.Combine (zipDir, Path.GetFileName (entryPath));
+					zip.AddFile (entryPath, archivePath.Replace ('\\', '/'));
 				}
 			}
 			return !Log.HasLoggedErrors;
 		}
 	}
 }
-

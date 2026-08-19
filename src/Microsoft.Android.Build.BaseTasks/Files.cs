@@ -5,11 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
+using System.IO.Hashing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using Xamarin.Tools.Zip;
 using Microsoft.Build.Utilities;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -401,23 +402,27 @@ namespace Microsoft.Android.Build.Tasks
 
 		static string? HashZip (Stream stream)
 		{
-			string hashes = String.Empty;
+			var hashes = new StringBuilder ();
+			var buffer = MemoryStreamPool.Shared.Rent ();
 
 			try {
-				using (var zip = ZipArchive.Open (stream)) {
-					foreach (var item in zip) {
-						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
+				using (var zip = ZipArchiveExtensions.OpenZip (stream, ZipArchiveMode.Read, leaveOpen: true)) {
+					foreach (var item in zip.Entries) {
+						hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, GetEntryCrc32 (item, buffer));
 					}
 				}
 			} catch {
 				return null;
+			} finally {
+				MemoryStreamPool.Shared.Return (buffer);
 			}
-			return hashes;
+			return hashes.ToString ();
 		}
 
 		static string? HashZip (string filename)
 		{
-			string hashes = String.Empty;
+			var hashes = new StringBuilder ();
+			var buffer = MemoryStreamPool.Shared.Rent ();
 
 			try {
 				// check cache
@@ -425,25 +430,38 @@ namespace Microsoft.Android.Build.Tasks
 					return File.ReadAllText (filename + ".hash");
 
 				using (var zip = ReadZipFile (filename)) {
-					foreach (var item in zip) {
-						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
+					foreach (var item in zip.Entries) {
+						hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, GetEntryCrc32 (item, buffer));
 					}
 				}
 			} catch {
 				return null;
+			} finally {
+				MemoryStreamPool.Shared.Return (buffer);
 			}
-			return hashes;
+			return hashes.ToString ();
+		}
+
+		static uint GetEntryCrc32 (ZipArchiveEntry entry, MemoryStream buffer)
+		{
+			buffer.SetLength (0);
+			entry.Extract (buffer);
+			if (buffer.TryGetBuffer (out ArraySegment<byte> segment) && segment.Array != null) {
+				return Crc32.HashToUInt32 (new ReadOnlySpan<byte> (segment.Array, segment.Offset, (int) buffer.Length));
+			}
+
+			return Crc32.HashToUInt32 (buffer.ToArray ());
 		}
 
 		public static ZipArchive ReadZipFile (string filename, bool strictConsistencyChecks = false)
 		{
-			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
+			return ZipArchiveExtensions.OpenZip (filename, FileMode.Open);
 		}
 
-		public static bool ZipAny (string filename, Func<ZipEntry, bool> filter)
+		public static bool ZipAny (string filename, Func<ZipArchiveEntry, bool> filter)
 		{
 			using (var zip = ReadZipFile (filename)) {
-				return zip.Any (filter);
+				return zip.Entries.Any (filter);
 			}
 		}
 
@@ -458,15 +476,15 @@ namespace Microsoft.Android.Build.Tasks
 			Func<string, bool>? deleteCallback = null, Func<string, bool>? skipCallback = null, TaskLoggingHelper? log = null)
 		{
 			int i = 0;
-			int total = (int)zip.EntryCount;
+			int total = zip.Entries.Count;
 			bool updated = false;
 			var files = new HashSet<string> ();
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
 			var fullDestination = Path.GetFullPath (destination + Path.DirectorySeparatorChar);
 			try {
-				foreach (var entry in zip) {
+				foreach (var entry in zip.Entries) {
 					progressCallback?.Invoke (i++, total);
-					if (entry.IsDirectory)
+					if (entry.IsDirectory ())
 						continue;
 					if (entry.FullName.Contains ("/__MACOSX/") ||
 							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||
