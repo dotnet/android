@@ -2,8 +2,8 @@
   Pre-generates the trimmable type map for Mono.Android at SDK build time (issue #10792).
 
   App builds otherwise rescan the ~8000 Mono.Android types on every (Debug) build. Instead we
-  scan Mono.Android once here and ship the resulting _Mono.Android.TypeMap.dll (and, later, the
-  Java Callable Wrapper jar) in the SDK pack. The typemap always anchors on Java.Lang.Object
+  scan Mono.Android once here and ship the resulting typemap assemblies and Java Callable Wrapper
+  jar in the SDK pack. The typemap always anchors on Java.Lang.Object
   (ForceSharedTypemapUniverse=true) so a single artifact serves both app-build universe modes:
   merged (Release) and aggregate (Debug). The root _Microsoft.Android.TypeMaps assembly is NOT
   generated here (GenerateRootAssembly=false) — the app build emits it and references this
@@ -16,21 +16,16 @@
   <PropertyGroup>
     <_PreBuiltTypeMapPackSubDir>data\prebuilt-typemap</_PreBuiltTypeMapPackSubDir>
     <_PreBuiltTypeMapOutputDir>$(MicrosoftAndroidSdkPackDir)$(_PreBuiltTypeMapPackSubDir)\</_PreBuiltTypeMapOutputDir>
+    <!-- These DLLs are SDK runtime inputs consumed explicitly by the Android targets, not
+         compile-time references. NuGet otherwise warns that assemblies under data/ are outside
+         lib/, and this repository treats pack warnings as errors. -->
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
     <!-- Intermediate (not packaged): generated JCW .java and compiled .class files. -->
     <_PreBuiltTypeMapIntDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'obj', 'prebuilt-typemap'))</_PreBuiltTypeMapIntDir>
     <_PreBuiltTypeMapJavaDir>$(_PreBuiltTypeMapIntDir)java\</_PreBuiltTypeMapJavaDir>
     <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
     <_PreBuiltTypeMapJavaInteropAssembly>$(_PreBuiltTypeMapOutputDir)_Java.Interop.TypeMap.dll</_PreBuiltTypeMapJavaInteropAssembly>
     <_PreBuiltTypeMapAcwMap>$(_PreBuiltTypeMapOutputDir)mono.android-acw-map.txt</_PreBuiltTypeMapAcwMap>
-    <!--
-      Array-map rank baked into the pre-generated framework typemaps. This MUST match the app
-      build's effective MaxArrayRank when it consumes these artifacts, otherwise array entries land
-      in different universes (main vs __ArrayMapRank{N}) and the runtime throws BadImageFormatException.
-      The app-build value comes from _AndroidTrimmableTypeMapMaxArrayRank (see
-      Microsoft.Android.Sdk.TypeMap.Trimmable.targets), whose NativeAOT default is 3; pre-generation
-      only runs for that shape, so we hardcode the same value here.
-    -->
-    <_PreBuiltTypeMapMaxArrayRank>3</_PreBuiltTypeMapMaxArrayRank>
   </PropertyGroup>
 
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
@@ -59,7 +54,6 @@
         AcwMapOutputFile="$(_PreBuiltTypeMapAcwMap)"
         TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
         ForceSharedTypemapUniverse="true"
-        MaxArrayRank="$(_PreBuiltTypeMapMaxArrayRank)"
         GenerateRootAssembly="false" />
   </Target>
 

@@ -966,7 +966,16 @@ namespace UnnamedProject {
 		{
 			DirectoryAssert.Exists (typemapDir);
 			FileAssert.Exists (Path.Combine (typemapDir, "_Microsoft.Android.TypeMaps.dll"));
-			FileAssert.Exists (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"));
+			FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+				"Mono.Android should use the typemap pre-generated in the SDK pack.");
+			FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+				"Java.Interop should use the typemap pre-generated in the SDK pack.");
+
+			var generatedAssemblies = File.ReadAllLines (Path.Combine (typemapDir, "typemap-assemblies.txt"))
+				.Select (Path.GetFileName)
+				.ToArray ();
+			CollectionAssert.DoesNotContain (generatedAssemblies, "_Mono.Android.TypeMap.dll");
+			CollectionAssert.DoesNotContain (generatedAssemblies, "_Java.Interop.TypeMap.dll");
 
 			var javaDir = Path.Combine (typemapDir, "java");
 			DirectoryAssert.Exists (javaDir, "Trimmable JCW Java output directory should exist.");
