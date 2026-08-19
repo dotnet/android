@@ -603,6 +603,11 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
   <data name="XA4213" xml:space="preserve">
     <value>'{0}' 형식은 public 기본 생성자를 제공해야 합니다.</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>형식 `{0}`은(는) `Android.Runtime.IJavaObject`를 구현하지만 `Java.Lang.Object` 또는 `Java.Lang.Throwable`을 상속하지 않습니다. 이 길이는 지원되지 않습니다.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>관리되는 형식 '{0}'이(가) 여러 어셈블리({1})에 있습니다. 이와 같은 어셈블리의 관리되는 형식 이름을 리팩터링하여 서로 다른 이름을 사용하도록 하세요.</value>
     <comment>{0} - The managed type name
@@ -866,6 +871,15 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>디렉터리 '{0}'이(가) 존재하지 않으므로 무시합니다!</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] 원본 파일 '{1}'을(를) 삭제할 수 없습니다.</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK 도구 체인 디렉터리 '{0}'이(가) 없습니다. Android NDK를 설치하세요.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -971,7 +985,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>'{0}'은(는) 잘못된 AssemblyStore 압축 수준입니다. 값은 {1}에서 {2} 사이여야 합니다.</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level
@@ -1028,19 +1042,22 @@ In this message, the term "handheld app" means "app for handheld devices."
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>Maven 아티팩트 '{0}'의 POM을 '{1}'에서 확인하지 못했습니다.
+- {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>알 수 없는 Maven 리포지토리: '{0}'.</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>'{0}' MSBuild 속성은 더 이상 사용되지 않으며 .NET {1}에서 제거됩니다. 자세한 내용은 https://aka.ms/net-android-deprecations을 참조하세요.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild 속성의 '{1}' 값이 잘못되었습니다. 올바른 값은 {2} 중 하나입니다.</value>
@@ -1065,6 +1082,18 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>'{0}'의 &lt;instrumentation&gt; 요소에 android:name 특성이 없습니다.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>시작할 항목을 확인할 수 없습니다. '{0}'에 시작 가능한 &lt;activity&gt; 또는 &lt;instrumentation&gt; 요소가 없습니다. $(AndroidLaunchActivity) 또는 $(AndroidInstrumentation) MSBuild 속성을 설정하여 지정합니다.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>MSBuild 속성 '{0}'은(는) {1} 런타임과 호환되지 않습니다. 이 속성이 활성화된 상태에서는 빌드를 계속할 수 없습니다. 속성을 제거하거나 Condition="'$(UseMonoRuntime)' == 'true'" 조건으로 보호하세요.</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1083,6 +1112,12 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1047" xml:space="preserve">
     <value>필수 특성 '{0}'이(가) 요소 '{1}'에 없습니다. {2} 줄 {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>'{0}'에 &lt;instrumentation&gt; 요소가 포함되어 있지 않습니다. 애플리케이션에 Android.App.Instrumentation 하위 클래스를 추가하거나 $(AndroidInstrumentation) MSBuild 속성을 해당 클래스의 이름으로 설정하세요.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Java 종속성 '{0}'이(가) 충족되지 않습니다.</value>
@@ -1188,6 +1223,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Java 이름 '{0}'에 예약된 Java 식별자 '{1}'가 포함되어 있습니다. 패키지 이름 또는 형식 이름을 변경하세요.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>'{0}' 명령이 실패했습니다.\n{1}</value>

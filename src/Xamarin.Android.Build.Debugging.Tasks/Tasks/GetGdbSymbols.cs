@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,24 +16,19 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "GGDB";
 
-		public string AdbTarget { get; set; }
+		public string? AdbTarget { get; set; }
 
 		[Required]
-		public string GdbSymbolsPath { get; set;}
+		public string GdbSymbolsPath { get; set; } = "";
 
 		[Required]
-		public string Package { get; set; }
+		public string Package { get; set; } = "";
 
 		[Required]
-		public string OutputPath { get; set; }
+		public string OutputPath { get; set; } = "";
 
 		[Required]
-		public string PrimaryCpuAbi {get; set; }
-
-		public GetGdbSymbols ()
-		{
-			AdbTarget = null;
-		}
+		public string PrimaryCpuAbi { get; set; } = "";
 
 		public override bool RunTask ()
 		{
@@ -63,4 +59,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-

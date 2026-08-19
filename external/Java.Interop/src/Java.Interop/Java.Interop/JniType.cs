@@ -273,9 +273,6 @@ namespace Java.Interop {
 
 		IntPtr RawGetMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-			return NativeMethods.java_interop_jnienv_get_method_id (env, out thrown, PeerReference.Handle, name, signature);
-#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			var _name = Marshal.StringToCoTaskMemUTF8 (name);
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
@@ -287,9 +284,6 @@ namespace Java.Interop {
 				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
 				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
 			}
-#else
-#error  Unsupported backend
-#endif
 		}
 
 		public JniMethodInfo GetCachedInstanceMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
@@ -336,9 +330,6 @@ namespace Java.Interop {
 
 		IntPtr RawGetStaticMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-			return NativeMethods.java_interop_jnienv_get_static_method_id (env, out thrown, PeerReference.Handle, name, signature);
-#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			var _name = Marshal.StringToCoTaskMemUTF8 (name);
 			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
 			try {
@@ -350,9 +341,6 @@ namespace Java.Interop {
 				Marshal.ZeroFreeCoTaskMemUTF8 (_name);
 				Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
 			}
-#else
-#error  Unsupported backend
-#endif
 		}
 
 		public JniMethodInfo GetCachedStaticMethod ([NotNull] ref JniMethodInfo? cachedMethod, string name, string signature)
@@ -368,7 +356,6 @@ namespace Java.Interop {
 			return cachedMethod;
 		}
 
-#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 		/// <summary>
 		/// Creates a <see cref="JniType"/> from a null-terminated UTF-8 class name span.
 		/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
@@ -483,6 +470,5 @@ namespace Java.Interop {
 			}
 			return cachedMethod;
 		}
-#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 	}
 }

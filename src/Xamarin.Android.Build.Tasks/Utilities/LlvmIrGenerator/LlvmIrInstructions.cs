@@ -730,7 +730,7 @@ sealed class LlvmIrInstructions
 				context.Generator.WriteValue (context, value.Type, constant);
 				context.Output.Write (", label %");
 				context.Output.Write (label.Name);
-				if (!String.IsNullOrEmpty (comment)) {
+				if (context.EmitComments && !String.IsNullOrEmpty (comment)) {
 					context.Output.Write (' ');
 					context.Generator.WriteCommentLine (context, comment);
 				} else {

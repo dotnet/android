@@ -603,6 +603,11 @@ In this message, the term "binding" means a piece of generated code that makes i
   <data name="XA4213" xml:space="preserve">
     <value>類型 '{0}' 必須提供公用預設建構函式</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>類型 `{0}` 實作 `Android.Runtime.IJavaObject`，但未繼承 `Java.Lang.Object` 或 `Java.Lang.Throwable`。不支援此項目。</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>受控類型 `{0}` 存在於多個組件: {1}。請重構這些組件中的受控類型名稱，以免其重複。</value>
     <comment>{0} - The managed type name
@@ -866,6 +871,15 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>由於目錄 '{0}' 不存在，因此已忽略!</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] 無法刪除來源檔案 '{1}'</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>缺少 Android NDK 工具鏈目錄 '{0}'。請安裝 Android NDK。</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -971,7 +985,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The assembly ItemSpec</comment>
   </data>
   <data name="XA5304" xml:space="preserve">
-    <value>Invalid AssemblyStore compression level '{0}'. The value must be between {1} and {2}.</value>
+    <value>無效的 AssemblyStore 壓縮等級 '{0}'。值必須介於 {1} 和 {2} 之間。</value>
     <comment>
 {0} - The invalid compression level value
 {1} - The minimum allowed compression level
@@ -1028,19 +1042,22 @@ In this message, the term "handheld app" means "app for handheld devices."
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>無法從 '{1}' 解析 Maven 成品 '{0}' 的 POM。
+- {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>未知的 Maven 存放庫: '{0}'。</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>已取代 '{0}' MSBuild 屬性，並將在 .NET {1} 中移除。如需更多詳細資料，請參閲 https://aka.ms/net-android-deprecations。</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild 屬性有 '{1}' 的無效值。有效的值為下列之一: {2}。</value>
@@ -1065,6 +1082,18 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>'{0}' 中的 &lt;instrumentation&gt; 元素缺少 android:name 屬性。</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>無法判斷要啟動的項目：'{0}' 未包含可啟動的 &lt;activity&gt; 或 &lt;instrumentation&gt; 元素。請設定 $(AndroidLaunchActivity) 或 $(AndroidInstrumentation) MSBuild 屬性來指定其一。</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>MSBuild 屬性 '{0}' 與 {1} 執行階段不相容。啟用此屬性時，建置無法繼續。移除屬性或使用條件: Condition="'$(UseMonoRuntime)' == 'true'" 保護它</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1083,6 +1112,12 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1047" xml:space="preserve">
     <value>元素 '{1}' 缺少必要的屬性 '{0}'; {2} 行 {3}。</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>'{0}' 不包含 &lt;instrumentation&gt; 元素。請將 Android.App.Instrumentation 子類別新增至應用程式，或將 $(AndroidInstrumentation) MSBuild 屬性設為其中一個的名稱。</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>無法滿足 JAVA 相依性 '{0}'。</value>
@@ -1188,6 +1223,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Java 名稱 '{0}' 包含保留的 Java 識別碼 '{1}'。請變更套件或類型名稱。</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>指令 '{0}' 失敗。\n{1}</value>

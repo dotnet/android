@@ -36,6 +36,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			{ "v16.0", "v15.0" },
 			{ "v16.1", "v16.0" },
 			{ "v17.0", "v16.1" },
+			{ "v17.1", "v17.0" },
 		};
 
 		static readonly string assemblyToValidate = "Mono.Android.dll";
@@ -267,7 +268,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
 					ReportMissingLines (acceptableIssuesFile.FullName, lines);
 
-					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, JdkInfo.CreateTaskLogger (this));
+					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, CreateTaskLogger (this));
 					if (missingItems.Any ()) {
 						Log.LogMessage (MessageImportance.High, $"{Environment.NewLine}*** CodeGen missing items***{Environment.NewLine}");
 						var indent = 0;
@@ -289,6 +290,23 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					return;
 				}
 			}
+		}
+
+		static Action<TraceLevel, string> CreateTaskLogger (Task task)
+		{
+			return (level, value) => {
+				switch (level) {
+				case TraceLevel.Error:
+					task.Log.LogError (value);
+					break;
+				case TraceLevel.Warning:
+					task.Log.LogWarning (value);
+					break;
+				default:
+					task.Log.LogMessage (MessageImportance.Low, "{0}", value);
+					break;
+				}
+			};
 		}
 
 		void ReportMissingLines (string acceptableIssuesFile, List<string> lines)

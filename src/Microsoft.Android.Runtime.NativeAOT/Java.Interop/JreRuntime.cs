@@ -77,15 +77,7 @@ namespace Java.Interop {
 
 		static JniRuntime.JniTypeManager CreateDefaultTypeManager ()
 		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return new TrimmableTypeMapTypeManager ();
-			}
-
-			return CreateManagedTypeManager ();
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Managed type manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This type manager won't be used in Native AOT builds in the future.")]
-			static JniRuntime.JniTypeManager CreateManagedTypeManager () => new ManagedTypeManager ();
+			return new TrimmableTypeMapTypeManager ();
 		}
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]

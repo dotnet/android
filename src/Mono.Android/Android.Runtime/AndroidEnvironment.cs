@@ -105,6 +105,7 @@ namespace Android.Runtime {
 			if (throwable == null)
 				throw new ArgumentNullException ("throwable");
 			JNIEnv.Throw (throwable.Handle);
+			GC.KeepAlive (throwable);
 		}
 
 		internal static void UnhandledException (Exception e)

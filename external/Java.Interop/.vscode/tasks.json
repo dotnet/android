@@ -6,7 +6,7 @@
         {
             "label": "Build Java.Interop",
             "type": "shell",
-            "command": "msbuild Java.Interop.sln /restore /t:Build",
+            "command": "msbuild Java.Interop.slnx /restore /t:Build",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -18,7 +18,7 @@
         {
             "label": "Clean Java.Interop",
             "type": "shell",
-            "command": "msbuild Java.Interop.sln /restore /t:Clean",
+            "command": "msbuild Java.Interop.slnx /restore /t:Clean",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -30,7 +30,7 @@
         {
             "label": "Build Generator",
             "type": "shell",
-            "command": "msbuild tools/generator/generator.sln /restore /t:Build",
+            "command": "msbuild tools/generator/generator.slnf /restore /t:Build",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -42,7 +42,7 @@
         {
             "label": "Clean Generator",
             "type": "shell",
-            "command": "msbuild tools/generator/generator.sln /restore /t:Clean",
+            "command": "msbuild tools/generator/generator.slnf /restore /t:Clean",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -54,7 +54,7 @@
         {
             "label": "Run Generator Unit Tests",
             "type": "shell",
-            "command": "msbuild tools/generator/generator.sln /restore /t:RunNunitTests",
+            "command": "msbuild tools/generator/generator.slnf /restore /t:RunNunitTests",
             "group": {
                 "kind": "test",
                 "isDefault": true

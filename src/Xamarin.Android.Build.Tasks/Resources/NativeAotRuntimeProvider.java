@@ -36,6 +36,7 @@ public class NativeAotRuntimeProvider
         String cacheDir = context.getCacheDir().getAbsolutePath();
 
         // Initialize .NET runtime
+        JavaInteropRuntime.loadLibrary(context);
         JavaInteropRuntime.init(loader, language, filesDir, cacheDir);
         // NOTE: only required for custom applications
         ApplicationRegistration.registerApplications();

@@ -8,12 +8,6 @@ import net.dot.jni.GCUserPeerable;
 		extends java.lang.Object
 		implements GCUserPeerable
 {
-	static {
-		net.dot.jni.ManagedPeer.registerNativeMembers (
-				JavaProxyObject.class,
-				"");
-	}
-
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 
 	@Override
@@ -35,4 +29,3 @@ import net.dot.jni.GCUserPeerable;
 		managedReferences.clear ();
 	}
 }
-

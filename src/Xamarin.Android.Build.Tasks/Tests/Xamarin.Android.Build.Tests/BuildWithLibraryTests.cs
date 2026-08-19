@@ -161,10 +161,10 @@ namespace Xamarin.Android.Build.Tests
 						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 					},
 					new AndroidItem.AndroidLibrary ("sub\\directory\\bar.aar") {
-						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 					},
 					new AndroidItem.AndroidLibrary ("sub\\directory\\baz.aar") {
-						WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar",
 						MetadataValues = "Bind=false",
 					},
 					new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
@@ -318,6 +318,10 @@ namespace Xamarin.Android.Build.Tests
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			if (IgnoreOnNativeAot (runtime, "the trimmable typemap trims Java Callable Wrappers for library types that are never instantiated, so the unused LibraryB JCWs are intentionally absent from classes.dex.")) {
 				return;
 			}
 

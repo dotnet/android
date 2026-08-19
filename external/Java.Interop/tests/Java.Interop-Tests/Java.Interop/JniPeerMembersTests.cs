@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 using Java.Interop;
@@ -30,10 +30,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		static Dictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
+		static ConcurrentDictionary<string, JniMethodInfo> GetInstanceMethods (JniPeerMembers.JniInstanceMethods methods)
 		{
 			var f   = typeof (JniPeerMembers.JniInstanceMethods).GetField ("InstanceMethods", BindingFlags.NonPublic | BindingFlags.Instance);
-			return (Dictionary<string, JniMethodInfo>) f.GetValue (methods);
+			return (ConcurrentDictionary<string, JniMethodInfo>) f.GetValue (methods);
 		}
 
 		[Test]

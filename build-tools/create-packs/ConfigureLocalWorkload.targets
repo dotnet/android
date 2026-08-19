@@ -76,10 +76,23 @@
     </Task>
   </UsingTask>
 
-  <Target Name="InstallManifestAndDependencies"
-      DependsOnTargets="_GetDefaultPackageVersion">
+  <Target Name="_DetermineLocalSdkFeatureBand">
     <PropertyGroup>
-      <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetSdkManifestsFolder)\</_LocalSdkManifestsFolder>
+      <_LocalSdkFeatureBandPrefix>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `^\d+\.\d+\.\d`))</_LocalSdkFeatureBandPrefix>
+      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' ">$(_LocalSdkFeatureBandPrefix)00</_LocalSdkFeatureBand>
+      <_LocalSdkPrerelease>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `(?&lt;=-)[^+]+`))</_LocalSdkPrerelease>
+      <_LocalSdkPrereleaseFeatureBand>$([System.Text.RegularExpressions.Regex]::Match($(_LocalSdkPrerelease), `^[^.]+(\.[^.]+)?`))</_LocalSdkPrereleaseFeatureBand>
+      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' and '$(_LocalSdkPrerelease)' != '' and !$(_LocalSdkPrerelease.Contains('dev')) and !$(_LocalSdkPrerelease.Contains('ci')) and !$(_LocalSdkPrerelease.Contains('rtm')) ">$(_LocalSdkFeatureBand)-$(_LocalSdkPrereleaseFeatureBand)</_LocalSdkFeatureBand>
+    </PropertyGroup>
+
+    <Error Condition=" '$(_LocalSdkFeatureBand)' == '' " Text="Failed to determine the SDK feature band from NETCoreSdkVersion '$(NETCoreSdkVersion)'." />
+  </Target>
+
+  <Target Name="InstallManifestAndDependencies"
+      DependsOnTargets="_GetDefaultPackageVersion;_DetermineLocalSdkFeatureBand">
+    <PropertyGroup>
+      <!-- Use the installed SDK version because stabilized SDK builds can retain a prerelease package version. -->
+      <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(_LocalSdkFeatureBand)\</_LocalSdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
       <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
     </PropertyGroup>

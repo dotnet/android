@@ -1,0 +1,49 @@
+<Solution>
+  <Folder Name="/Build-Tools/">
+    <Project Path="../../src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj" />
+    <Project Path="build-tools/jnienv-gen/jnienv-gen.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="src/java-interop/java-interop.csproj" />
+    <Project Path="src/Java.Interop/Java.Interop.csproj" />
+  </Folder>
+  <Folder Name="/Desktop-Tests/">
+    <Project Path="tests/generator-Tests/generator-Tests.csproj" />
+    <Project Path="tests/Java.Interop-Tests/Java.Interop-Tests.csproj" />
+    <Project Path="tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj" />
+    <Project Path="tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj" />
+    <Project Path="tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj" />
+    <Project Path="tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj" />
+    <Project Path="tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj" />
+    <Project Path="tests/NativeTiming/NativeTiming.csproj" />
+    <Project Path="tests/TestJVM/TestJVM.csproj" />
+    <Project Path="tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj" />
+    <Project Path="tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj" />
+    <Project Path="tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj" />
+  </Folder>
+  <Folder Name="/Desktop/">
+    <Project Path="src/Java.Interop.Localization/Java.Interop.Localization.csproj" />
+    <Project Path="src/Java.Interop.Tools.Cecil/Java.Interop.Tools.Cecil.csproj" />
+    <Project Path="src/Java.Interop.Tools.Diagnostics/Java.Interop.Tools.Diagnostics.csproj" />
+    <Project Path="src/Java.Interop.Tools.Generator/Java.Interop.Tools.Generator.csproj" />
+    <Project Path="src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <Project Path="src/Java.Interop.Tools.JavaSource/Java.Interop.Tools.JavaSource.csproj" />
+    <Project Path="src/Java.Interop.Tools.JavaTypeSystem/Java.Interop.Tools.JavaTypeSystem.csproj" />
+    <Project Path="src/Java.Interop.Tools.Maven/Java.Interop.Tools.Maven.csproj" />
+    <Project Path="src/Xamarin.Android.Tools.AnnotationSupport.Cecil/Xamarin.Android.Tools.AnnotationSupport.Cecil.csproj" />
+    <Project Path="src/Xamarin.Android.Tools.AnnotationSupport/Xamarin.Android.Tools.AnnotationSupport.csproj" />
+    <Project Path="src/Xamarin.Android.Tools.ApiXmlAdjuster/Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
+    <Project Path="src/Xamarin.Android.Tools.Bytecode/Xamarin.Android.Tools.Bytecode.csproj" />
+    <Project Path="src/Xamarin.SourceWriter/Xamarin.SourceWriter.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Java.Interop.Tools.TypeNameMappings/Java.Interop.Tools.TypeNameMappings.csproj" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="tools/class-parse/class-parse.csproj" />
+    <Project Path="tools/generator/generator.csproj" />
+    <Project Path="tools/java-source-utils/java-source-utils.csproj" />
+    <Project Path="tools/jcw-gen/jcw-gen.csproj" />
+    <Project Path="tools/param-name-importer/param-name-importer.csproj" />
+  </Folder>
+</Solution>

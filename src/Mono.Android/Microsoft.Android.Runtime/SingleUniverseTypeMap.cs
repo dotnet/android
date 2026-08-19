@@ -18,31 +18,13 @@ sealed class SingleUniverseTypeMap : ITypeMap
 {
 	readonly IReadOnlyDictionary<string, Type> _typeMap;
 	readonly IReadOnlyDictionary<Type, Type> _proxyTypeMap;
-	readonly IReadOnlyDictionary<string, Type>?[][] _arrayMapsByUniverseAndRank;
 
 	public SingleUniverseTypeMap (IReadOnlyDictionary<string, Type> typeMap, IReadOnlyDictionary<Type, Type> proxyTypeMap)
-		: this (typeMap, proxyTypeMap, arrayMapsByRank: null)
-	{
-	}
-
-	public SingleUniverseTypeMap (
-		IReadOnlyDictionary<string, Type> typeMap,
-		IReadOnlyDictionary<Type, Type> proxyTypeMap,
-		IReadOnlyDictionary<string, Type>?[]? arrayMapsByRank)
-		: this (typeMap, proxyTypeMap, arrayMapsByRank is null ? null : [arrayMapsByRank])
-	{
-	}
-
-	public SingleUniverseTypeMap (
-		IReadOnlyDictionary<string, Type> typeMap,
-		IReadOnlyDictionary<Type, Type> proxyTypeMap,
-		IReadOnlyDictionary<string, Type>?[][]? arrayMapsByUniverseAndRank)
 	{
 		ArgumentNullException.ThrowIfNull (typeMap);
 		ArgumentNullException.ThrowIfNull (proxyTypeMap);
 		_typeMap = typeMap;
 		_proxyTypeMap = proxyTypeMap;
-		_arrayMapsByUniverseAndRank = arrayMapsByUniverseAndRank ?? [];
 	}
 
 	public IEnumerable<Type> GetProxyTypes (string jniName)
@@ -95,20 +77,6 @@ sealed class SingleUniverseTypeMap : ITypeMap
 						return true;
 					}
 				}
-			}
-		}
-
-		proxyType = null;
-		return false;
-	}
-
-	public bool TryGetArrayProxyType (string managedTypeKey, int rankIndex, [NotNullWhen (true)] out Type? proxyType)
-	{
-		foreach (var arrayMapsByRank in _arrayMapsByUniverseAndRank) {
-			if ((uint)rankIndex < (uint)arrayMapsByRank.Length &&
-					arrayMapsByRank [rankIndex] is { } dict &&
-					dict.TryGetValue (managedTypeKey, out proxyType)) {
-				return true;
 			}
 		}
 

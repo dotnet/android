@@ -11,6 +11,9 @@
 
 # sln is always CRLF, even on linux, so don't convert
 *.sln	eol=crlf
+
+# slnx is XML, so use LF on all platforms
+*.slnx	text eol=lf
 *.bat	eol=crlf
 *.cmd	eol=crlf
 *.rtf	eol=crlf
@@ -37,4 +40,4 @@ Makefile	eol=lf
 *.wxs	eol=crlf
 *.rtf	eol=crlf
 
-.github/workflows/*.lock.yml linguist-generated=true merge=ours
+.github/workflows/*.lock.yml linguist-generated=true

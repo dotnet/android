@@ -81,6 +81,7 @@ namespace Android.Widget {
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V", new JValue (context));
 			}
+			GC.KeepAlive (context);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_;
@@ -104,6 +105,8 @@ namespace Android.Widget {
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs));
 			}
+			GC.KeepAlive (context);
+			GC.KeepAlive (attrs);
 		}
 
 		static IntPtr id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I;
@@ -127,6 +130,8 @@ namespace Android.Widget {
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle));
 			}
+			GC.KeepAlive (context);
+			GC.KeepAlive (attrs);
 		}
 
 		protected override Java.Lang.Object? RawAdapter {
@@ -140,4 +145,3 @@ namespace Android.Widget {
 		}
 	}
 }
-
