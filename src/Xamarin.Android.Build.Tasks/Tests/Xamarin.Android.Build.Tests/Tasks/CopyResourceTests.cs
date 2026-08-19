@@ -31,7 +31,6 @@ namespace Xamarin.Android.Build.Tests
 
 		// If we remove one of these, this test should fail
 		static object [] EmbeddedResources = new object [] {
-			new object[] { "machine.config" },
 			new object[] { "MonoRuntimeProvider.Bundled.java" },
 		};
 

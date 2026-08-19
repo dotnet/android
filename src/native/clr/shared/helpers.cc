@@ -1,17 +1,31 @@
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 #include <android/set_abort_message.h>
 
 #include <shared/helpers.hh>
-#include <shared/log_types.hh>
+#include <shared/log_functions.hh>
 
 using namespace xamarin::android;
+
+[[noreturn]] void
+Helpers::abort_applicationf (LogCategories category, std::source_location sloc, const char *format, ...) noexcept
+{
+	char *message = nullptr;
+	const char *safe_format = format == nullptr ? "<null>" : format;
+	va_list args;
+	va_start (args, format);
+	int ret = vasprintf (&message, safe_format, args);
+	va_end (args);
+
+	abort_application (category, ret < 0 ? safe_format : message, true, sloc);
+}
 
 [[noreturn]] void
 Helpers::abort_application (LogCategories category, const char *message, bool log_location, std::source_location sloc) noexcept
 {
 	// Log it, but also...
-	log_fatal (category, "{}", message);
+	log_write (category, LogLevel::Fatal, message);
 
 	// ...let android include it in the tombstone, debuggerd output, stack trace etc
 	android_set_abort_message (message);
@@ -33,9 +47,10 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 			}
 		}
 
-		log_fatal (
+		log_writef (
 			category,
-			"Abort at {}:{}:{} ('{}')",
+			LogLevel::Fatal,
+			"Abort at %s:%u:%u ('%s')",
 			file_name,
 			sloc.line (),
 			sloc.column (),

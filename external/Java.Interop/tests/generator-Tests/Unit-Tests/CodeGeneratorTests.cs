@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using generator.SourceWriters;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
@@ -15,6 +16,49 @@ namespace generatortests
 {
 	abstract class AnyJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
+		[Test]
+		public void WriteMethodJniSignatureOverrides ()
+		{
+			var api = """
+				<api>
+				  <package name='java.lang' jni-name='java/lang'>
+				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+				  </package>
+				  <package name='com.example' jni-name='com/example'>
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='BaseListener' static='false' visibility='public' jni-signature='Lcom/example/BaseListener;' />
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='TypedListener' static='false' visibility='public' jni-signature='Lcom/example/TypedListener;' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' final='false' name='Slider' static='false' visibility='public' jni-signature='Lcom/example/Slider;' />
+				  </package>
+				</api>
+				""";
+			var metadata = """
+				<metadata>
+				  <add-node path="/api/package[@name='com.example']/class[@name='Slider']">
+				      <method abstract='false' deprecated='not deprecated' final='false' name='addOnChangeListener' jni-signature='(Lcom/example/BaseListener;)V' return='void' static='false' visibility='public'>
+				        <parameter name='listener' type='com.example.TypedListener' jni-type='Lcom/example/BaseListener;' />
+				      </method>
+				      <method abstract='false' deprecated='not deprecated' final='false' name='removeOnChangeListener' return='void' static='false' visibility='public'>
+				        <parameter name='listener' type='com.example.TypedListener' jni-type='Lcom/example/BaseListener;' />
+				      </method>
+				  </add-node>
+				</metadata>
+				""";
+			var apiDocument = new ApiXmlDocument (XDocument.Parse (api), "37", 0);
+			apiDocument.ApplyFixupFile (new FixupXmlDocument (XDocument.Parse (metadata)));
+
+			var gens = ParseApiDefinition (apiDocument.ApiDocument.ToString ());
+			var klass = gens.Single (g => g.Name == "Slider");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			var source = writer.ToString ();
+			Assert.True (source.Contains ("addOnChangeListener.(Lcom/example/BaseListener;)V"), source);
+			Assert.True (source.Contains ("removeOnChangeListener.(Lcom/example/BaseListener;)V"), source);
+			Assert.True (source.Contains ("AddOnChangeListener (Com.Example.ITypedListener"), source);
+		}
+
 		[Test]
 		public void WriteKotlinUnsignedTypeMethodsClass ()
 		{
@@ -787,7 +831,7 @@ namespace generatortests
 			var iface = gens.OfType<InterfaceGen> ().Single (g => g.Name == "IMyType");
 
 			generator.Context.ContextTypes.Push (iface);
-			var invoker = new InterfaceInvokerClass (iface, options, generator.Context);
+			var invoker = new InterfaceInvokerClass (iface, options);
 			var extensions = new InterfaceExtensionsClass (iface, iface.Name, options);
 			generator.Context.ContextTypes.Pop ();
 

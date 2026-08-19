@@ -28,6 +28,7 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
+#include <runtime-base/monodroid-state.hh>
 #include <runtime-base/timing-internal.hh>
 #include <shared/log_types.hh>
 
@@ -329,6 +330,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
+	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
@@ -346,9 +348,34 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// We REALLY shouldn't be doing this
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
-	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
-	// of that.
-	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+	// These indices are load-bearing: the application build emits the property names in this
+	// exact order (see `ApplicationConfigNativeAssemblyGeneratorCLR`) so that we can fill in
+	// the values here without searching the names array.
+	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
+
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
+
+	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
+	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
+	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
+	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
+
+	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
+	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
+	// string for us since assemblies are read straight out of the APK. Point it at the application's
+	// files directory, the same value MonoVM has always used. `.NET` terminates the base directory
+	// with a directory separator, so we do too.
+	// Storage must outlive `coreclr_initialize`, hence the function-local static. Assign on every
+	// call rather than relying on the initializer, which would only ever see the first `files_dir`.
+	static std::string app_context_base_directory;
+	app_context_base_directory.assign (files_dir.get_cstr ());
+	if (!app_context_base_directory.ends_with ('/')) {
+		app_context_base_directory.push_back ('/');
+	}
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = const_cast<char*>(app_context_base_directory.c_str ());
 
 	const char **prop_names = init_runtime_property_names;
 	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
@@ -430,9 +457,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
-	init.managedMarshalMethodsLookupEnabled             = application_config.managed_marshal_methods_lookup_enabled;
-	abort_unless (!init.marshalMethodsEnabled || init.managedMarshalMethodsLookupEnabled,
-		"Managed marshal methods lookup must be enabled if marshal methods are enabled");
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
@@ -485,6 +509,8 @@ void Host::Java_mono_android_Runtime_initInternal (
 		internal_timing.end_event (); // native to managed
 		internal_timing.end_event (); // total init time
 	}
+
+	MonodroidState::mark_startup_done ();
 }
 
 void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept

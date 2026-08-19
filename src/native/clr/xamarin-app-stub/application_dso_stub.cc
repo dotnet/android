@@ -14,13 +14,11 @@ static TypeMapEntry managed_to_java[] = {};
 // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 const TypeMap type_map = {
 	.entry_count = 0,
-	.unique_assemblies_count = 0,
 	.java_to_managed = java_to_managed,
 	.managed_to_java = managed_to_java,
 };
 
 const TypeMapManagedTypeInfo type_map_managed_type_info[] = {};
-const TypeMapAssembly type_map_unique_assemblies[] = {};
 const char type_map_assembly_names[] = {};
 const char type_map_managed_type_names[] = {};
 const char type_map_java_type_names[] = {};
@@ -53,7 +51,7 @@ const ApplicationConfig application_config = {
 	.jni_add_native_method_registration_attribute_present = false,
 	.marshal_methods_enabled = false,
 	.ignore_split_configs = false,
-	.number_of_runtime_properties = 1,
+	.number_of_runtime_properties = 3,
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
@@ -67,8 +65,8 @@ const ApplicationConfig application_config = {
 	.jni_remapping_replacement_type_count = 2,
 	.jni_remapping_replacement_method_index_entry_count = 2,
 	.android_package_name = android_package_name,
-	.managed_marshal_methods_lookup_enabled = false,
 	.have_assembly_store = false,
+	.assembly_store_decompression_cache_enabled = false,
 };
 
 // TODO: migrate to std::string_view for these two
@@ -220,8 +218,12 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 
 const char *init_runtime_property_names[] = {
 	"HOST_RUNTIME_CONTRACT",
+	"RUNTIME_IDENTIFIER",
+	"APP_CONTEXT_BASE_DIRECTORY",
 };
 
 char *init_runtime_property_values[] {
+	nullptr,
+	nullptr,
 	nullptr,
 };

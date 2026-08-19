@@ -31,7 +31,7 @@ static class DlopenAssemblyStoreGenerator
 {
 	public const string PayloadStartSymbol = "_assembly_store";
 
-	// Section name that holds the payload. Must match the name `tools/assembly-store-reader-mk2`
+	// Section name that holds the payload. Must match the name `read-assembly-store`
 	// (Utils.FindELFPayloadSectionOffsetAndSize) looks for and the one `DSOWrapperGenerator` uses.
 	const string PayloadSectionName = "payload";
 
@@ -67,7 +67,7 @@ static class DlopenAssemblyStoreGenerator
 
 		// The `.incbin` uses an absolute path so we don't depend on the assembler's working directory.
 		// The section is named `payload` (no leading dot) to match the name the MonoVM
-		// `DSOWrapperGenerator` uses and that `tools/assembly-store-reader-mk2` looks for.
+		// `DSOWrapperGenerator` uses and that `read-assembly-store` looks for.
 		string incbinPath = payloadFilePath.Replace ("\\", "\\\\").Replace ("\"", "\\\"");
 		string asm = $"""
 				.section {PayloadSectionName}, "a"

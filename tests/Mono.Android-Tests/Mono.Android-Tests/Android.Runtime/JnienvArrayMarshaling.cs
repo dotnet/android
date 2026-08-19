@@ -323,23 +323,24 @@ namespace Android.RuntimeTests {
 		}
 
 		[Test]
-		[Ignore ("Fails on CoreCLR: https://github.com/dotnet/android/issues/10973")]
+		[Category ("JNIObjectArray")]
 		public void GetObjectArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
 				object[] data = JNIEnv.GetObjectArray (byteArray.Handle, new[]{typeof (byte), typeof (byte), typeof (byte)});
 				AssertArrays ("GetObjectArray", data, (object) 1, (object) 2, (object) 3);
 			}
+			var context = Application.Context;
 			using (var objectArray =
 					new Java.Lang.Object (
 							JNIEnv.NewArray (
-								new Java.Lang.Object[]{Application.Context, 42L, "string"},
+								new Java.Lang.Object[]{context, 42L, "string"},
 								typeof (Java.Lang.Object)),
 						JniHandleOwnership.TransferLocalRef)) {
 				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
 				Assert.AreEqual (3, values.Length);
-				Assert.IsTrue (object.ReferenceEquals (values [0], Application.Context));
-				Assert.IsTrue (values [1] is int);
+				Assert.AreSame (context, values [0], $"Expected existing Context peer, got {values [0]?.GetType ()}.");
+				Assert.IsInstanceOf<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}

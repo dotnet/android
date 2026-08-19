@@ -79,6 +79,8 @@ namespace Android.Widget {
 				JNIEnv.CallVoidMethod  (Handle, id_setAdapter_Landroid_widget_ListAdapter_, new JValue (adapter));
 			else
 				JNIEnv.CallNonvirtualVoidMethod  (Handle, ThresholdClass, id_setAdapter_Landroid_widget_ListAdapter_, new JValue (adapter));
+			GC.KeepAlive (adapter);
+			GC.KeepAlive (this);
 		}
 #endif
 	}

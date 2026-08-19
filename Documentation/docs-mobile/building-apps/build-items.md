@@ -26,11 +26,34 @@ same item name for their final application artifacts.
 
 Each item includes the following metadata:
 
+- `%(ApplicationId)`: The package name from the final merged
+  **AndroidManifest.xml**.
+- `%(ApplicationTitle)`: The `android:label` value from the final merged
+  manifest.
+- `%(ApplicationName)`: The same final manifest `android:label` value as
+  `%(ApplicationTitle)`.
+- `%(ApplicationDisplayVersion)`: The `android:versionName` value from the
+  final merged manifest.
+- `%(ApplicationVersion)`: The `android:versionCode` value from the final
+  merged manifest.
 - `%(PackageFormat)`: `apk` or `aab`.
 - `%(Signed)`: `true` when the package is signed.
-- `%(PackageId)`: The resolved Android package name.
+- `%(PackageId)`: The resolved Android package name, also exposed as
+  `%(ApplicationId)`.
 - `%(Abi)`: The Android ABI for a per-ABI APK output. This metadata is only
   set for per-ABI APKs.
+
+The final merged manifest is authoritative for the common application
+metadata. Its values take precedence over project properties such as
+`$(ApplicationId)`, `$(ApplicationTitle)`, `$(ApplicationDisplayVersion)`, and
+`$(ApplicationVersion)`. This also applies to custom manifests and projects
+that set `$(GenerateApplicationManifest)` to `false`.
+
+Resource-backed application labels are returned unchanged. For example, an
+`android:label` value of `@string/app_name` produces
+`ApplicationTitle="@string/app_name"` and
+`ApplicationName="@string/app_name"`; the build does not select or resolve a
+locale-specific resource value.
 
 MSBuild also provides well-known metadata for each item. For example,
 `%(Filename)%(Extension)` is the package file name and `%(FullPath)` is the
@@ -48,7 +71,7 @@ For example:
 <Target Name="WriteApplicationArtifacts" AfterTargets="Publish">
   <WriteLinesToFile
       File="$(PublishDir)application-artifacts.txt"
-      Lines="@(ApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)')"
+      Lines="@(ApplicationArtifact->'%(FullPath)|%(Filename)%(Extension)|%(PackageFormat)|%(Signed)|%(PackageId)|%(Abi)|%(ApplicationTitle)|%(ApplicationDisplayVersion)|%(ApplicationVersion)')"
       Overwrite="true" />
 </Target>
 ```

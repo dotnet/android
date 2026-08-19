@@ -103,24 +103,31 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
-			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-			(int code, string stdOutput, string stdError) result;
-
+			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
+			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+			};
+			using var stdOutput = new StringWriter ();
+			using var stdError = new StringWriter ();
+			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (30));
+			int processId = -1;
+			int exitCode;
 			try {
-				result = RunProcessWithExitCode ("apkdiff" + ext, args);
-			} catch (System.ComponentModel.Win32Exception) {
-				// apkdiff's location might not be in the $PATH, try known locations
-				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var apkdiffPath = Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext);
-				if (!File.Exists (apkdiffPath)) {
-					var agentToolsDir = Environment.GetEnvironmentVariable ("AGENT_TOOLSDIRECTORY");
-					if (Directory.Exists (agentToolsDir)) {
-						apkdiffPath = Path.Combine (agentToolsDir, "apkdiff" + ext);
-					}
-				}
-				result = RunProcessWithExitCode (apkdiffPath, args);
+				exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
+					info,
+					stdOutput,
+					stdError,
+					cancellationTokenSource.Token,
+					onStarted: process => processId = process.Id
+				).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) {
+				exitCode = -1;
+				stdError.WriteLine ($"apkdiff timed out after 30 seconds (PID {processId}).");
 			}
-			var logContent = $"apkdiff exited with code: {result.code}" +
+
+			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
+			var logContent = $"apkdiff exited with code: {exitCode}" +
 				$"\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
 			File.WriteAllText (logFilePath, logContent);

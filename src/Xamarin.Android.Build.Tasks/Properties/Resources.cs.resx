@@ -603,6 +603,11 @@ Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnot�
   <data name="XA4213" xml:space="preserve">
     <value>Typ {0} musí poskytovat veřejný výchozí konstruktor.</value>
   </data>
+  <data name="XA4212" xml:space="preserve">
+    <value>Typ `{0}` implementuje rozhraní `Android.Runtime.IJavaObject`, ale nedědí z `Java.Lang.Object` ani `Java.Lang.Throwable`. To není podporováno.</value>
+    <comment>The following are literal names and should not be translated: Android.Runtime.IJavaObject, Java.Lang.Object, Java.Lang.Throwable
+{0} - The managed type name</comment>
+  </data>
   <data name="XA4214" xml:space="preserve">
     <value>Spravovaný typ {0} existuje ve více sestaveních: {1}. V těchto sestaveních prosím refaktorujte názvy spravovaných typů tak, aby nebyly identické.</value>
     <comment>{0} - The managed type name
@@ -866,6 +871,15 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>Adresář {0} se ignoruje, protože neexistuje.</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] Nepovedlo se odstranit zdrojový soubor {1}</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Chybí adresář sady nástrojů Android NDK {0}. Nainstalujte prosím sadu Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1028,19 +1042,22 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>Nepodařilo se přeložit POM pro artefakt Maven {0} z {1}. 
+– {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>Neznámé úložiště Maven: {0}</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>Vlastnost MSBuild {0} je zastaralá a bude v rozhraní .NET {1} odebrána. Další podrobnosti najdete v https://aka.ms/net-android-deprecations.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>Vlastnost MSBuild {0} má neplatnou hodnotu {1}. Platná hodnota je jedna z těchto: {2}.</value>
@@ -1065,6 +1082,18 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>Prvku &lt;instrumentation&gt; v {0} chybí atribut android:name.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>Nedá se určit, co se má spustit: {0} neobsahuje spustitelný prvek &lt;activity&gt; ani prvek &lt;instrumentation&gt;. Nastavte vlastnost MSBuild $(AndroidLaunchActivity) nebo $(AndroidInstrumentation) a určete tak, co se má spustit.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>Vlastnost MSBuild {0} není kompatibilní s modulem runtime {1}. Sestavení nemůže pokračovat, pokud je tato vlastnost povolena. Odeberte vlastnost nebo ji ošetřete podmínkou: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1083,6 +1112,12 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
   <data name="XA1047" xml:space="preserve">
     <value>Požadovaný atribut {0} chybí v elementu {1}; {3} – řádek {2}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>{0} neobsahuje prvek &lt;instrumentation&gt;. Přidejte do aplikace podtřídu Android.App.Instrumentation nebo nastavte vlastnost MSBuild $(AndroidInstrumentation) na její název.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Závislosti Java {0} není vyhověno.</value>
@@ -1188,6 +1223,12 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Název Java {0} obsahuje vyhrazený identifikátor Java {1}. Změňte název balíčku nebo typu.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Příkaz {0} selhal.\n{1}</value>

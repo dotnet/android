@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 
+using ReflectionAssemblyContentType = System.Reflection.AssemblyContentType;
+using ReflectionAssemblyName = System.Reflection.AssemblyName;
+using ReflectionAssemblyNameFlags = System.Reflection.AssemblyNameFlags;
 using ModuleReleaseData = Xamarin.Android.Tasks.TypeMapGenerator.ModuleReleaseData;
 using ReleaseGenerationState = Xamarin.Android.Tasks.TypeMapGenerator.ReleaseGenerationState;
 using TypeMapDebugEntry = Xamarin.Android.Tasks.TypeMapGenerator.TypeMapDebugEntry;
@@ -149,7 +152,23 @@ class TypeMapCecilAdapter
 			TypeDefinition = td,
 			SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
 			AssemblyName = td.Module.Assembly.Name.Name,
+			AssemblyFullName = GetRuntimeAssemblyFullName (td.Module.Assembly.Name),
 		};
+	}
+
+	// Cecil's FullName does not escape assembly display names in the same way as Assembly.FullName.
+	public static string GetRuntimeAssemblyFullName (AssemblyNameReference assemblyName)
+	{
+		var runtimeAssemblyName = new ReflectionAssemblyName {
+			Name = assemblyName.Name,
+			Version = assemblyName.Version,
+			CultureName = assemblyName.Culture ?? "",
+			Flags = assemblyName.IsRetargetable ? ReflectionAssemblyNameFlags.Retargetable : ReflectionAssemblyNameFlags.None,
+			ContentType = assemblyName.IsWindowsRuntime ? ReflectionAssemblyContentType.WindowsRuntime : ReflectionAssemblyContentType.Default,
+		};
+		runtimeAssemblyName.SetPublicKeyToken (assemblyName.PublicKeyToken);
+
+		return runtimeAssemblyName.FullName ?? throw new InvalidOperationException ($"Unable to format assembly name '{assemblyName.Name}'.");
 	}
 
 	static string GetManagedTypeName (TypeDefinition td)

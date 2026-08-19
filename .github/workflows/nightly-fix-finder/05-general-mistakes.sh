@@ -15,11 +15,11 @@ Read the randomly selected source files thoroughly and look for **real bugs**:
 - Incorrect exception handling (catching too broadly, swallowing without logging)
 
 ### How to fix
-File a specific issue describing the actual bug with concrete evidence (line
-numbers, the suspected wrong behavior, and the expected correct behavior).
+Implement the smallest complete fix for the actual bug and add a focused
+regression test when practical.
 
 ### What NOT to flag
-- Formatting, whitespace, or style — not actionable for a fix issue
+- Formatting, whitespace, or style — not actionable for a fix PR
 - "Could be cleaner" subjective preferences with no functional impact
 - Generated files (`*.generated.cs`, `*.Designer.cs`, `AssemblyInfo.cs`)
 GUIDANCE

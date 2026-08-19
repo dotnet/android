@@ -14,7 +14,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	// These names MUST match src/native/clr/include/xamarin-app.hh
 	const string TypeMapSymbol = "type_map";
-	const string UniqueAssembliesSymbol = "type_map_unique_assemblies";
 	const string AssemblyNamesBlobSymbol = "type_map_assembly_names";
 	const string ManagedTypeNamesBlobSymbol = "type_map_managed_type_names";
 	const string JavaTypeNamesBlobSymbol = "type_map_java_type_names";
@@ -60,24 +59,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 			if (MonoAndroidHelper.StringEquals ("to", fieldName)) {
 				return $" to: '{entry.To}'";
-			}
-
-			return String.Empty;
-		}
-	}
-
-	sealed class TypeMapAssemblyContextDataProvider : NativeAssemblerStructContextDataProvider
-	{
-		public override string GetComment (object data, string fieldName)
-		{
-			var entry = EnsureType<TypeMapAssembly> (data);
-
-			if (MonoAndroidHelper.StringEquals ("module_uuid", fieldName)) {
-				return $" MVID: {entry.MVID}";
-			}
-
-			if (MonoAndroidHelper.StringEquals ("name_offset", fieldName)) {
-				return $" {entry.Name}";
 			}
 
 			return String.Empty;
@@ -153,7 +134,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public int    ManagedToJavaCount;
 
 		public uint   entry_count;
-		public ulong  unique_assemblies_count;
 
 		[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 		public TypeMapEntry? java_to_managed = null;
@@ -162,34 +142,12 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		public TypeMapEntry? managed_to_java = null;
 	};
 
-	// Order of fields and their type must correspond *exactly* to that in
-	// src/native/clr/include/xamarin-app.hh TypeMapAssembly structure
-	[NativeAssemblerStructContextDataProvider (typeof (TypeMapAssemblyContextDataProvider))]
-	sealed class TypeMapAssembly
-	{
-		[NativeAssembler (Ignore = true)]
-		public string Name = String.Empty;
-
-		[NativeAssembler (Ignore = true)]
-		public Guid MVID;
-
-		[NativeAssembler (UsesDataProvider = true, InlineArray = true, InlineArraySize = 16)]
-		public byte[] module_uuid = [];
-
-		public ulong name_length;
-
-		[NativeAssembler (UsesDataProvider = true)]
-		public ulong name_offset;
-	}
-
 	readonly TypeMapGenerator.ModuleDebugData data;
 	StructureInfo? typeMapEntryStructureInfo;
 	StructureInfo? typeMapStructureInfo;
-	StructureInfo? typeMapAssemblyStructureInfo;
 	StructureInfo? typeMapManagedTypeInfoStructureInfo;
 	List<StructureInstance<TypeMapEntry>> javaToManagedMap;
 	List<StructureInstance<TypeMapEntry>> managedToJavaMap;
-	List<StructureInstance<TypeMapAssembly>> uniqueAssemblies;
 	List<StructureInstance<TypeMapManagedTypeInfo>> managedTypeInfos;
 	StructureInstance<TypeMap>? type_map;
 
@@ -204,7 +162,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 		javaToManagedMap = new ();
 		managedToJavaMap = new ();
-		uniqueAssemblies = new ();
 		managedTypeInfos = new ();
 	}
 
@@ -225,14 +182,23 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		// in a callback during code generation
 
 		foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
-			(int managedTypeNameOffset, int _) = managedTypeNames.Add (entry.ManagedName);
+			if (String.IsNullOrEmpty (entry.AssemblyFullName)) {
+				throw new InvalidOperationException ($"Internal error: assembly full name is missing for managed type '{entry.ManagedName}'.");
+			}
+
+			if (!entry.ManagedName.EndsWith (entry.AssemblyName, StringComparison.Ordinal)) {
+				throw new InvalidOperationException ($"Internal error: managed type name '{entry.ManagedName}' does not end with assembly name '{entry.AssemblyName}'.");
+			}
+
+			string managedName = entry.ManagedName.Substring (0, entry.ManagedName.Length - entry.AssemblyName.Length) + entry.AssemblyFullName;
+			(int managedTypeNameOffset, int _) = managedTypeNames.Add (managedName);
 			(int javaTypeNameOffset, int _) = javaTypeNames.Add (entry.JavaName);
 			var m2j = new TypeMapEntry {
-				From = entry.ManagedName,
+				From = managedName,
 				To = entry.JavaName,
 
 				from = (uint)managedTypeNameOffset,
-				from_hash = TypeMapHelper.HashNameForCLR (entry.ManagedName),
+				from_hash = TypeMapHelper.HashNameForCLR (managedName),
 				to = (uint)javaTypeNameOffset,
 			};
 			managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
@@ -252,31 +218,10 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		});
 
 		var assemblyNamesBlob = new LlvmIrStringBlob ();
+		data.UniqueAssemblies.Sort ((a, b) => String.Compare (a.Name, b.Name, StringComparison.Ordinal));
 		foreach (TypeMapGenerator.TypeMapDebugAssembly asm in data.UniqueAssemblies) {
-			(int assemblyNameOffset, int assemblyNameLength) = assemblyNamesBlob.Add (asm.Name);
-
-			var entry = new TypeMapAssembly {
-				Name = asm.Name,
-				MVID = asm.MVID,
-
-				module_uuid = asm.MVIDBytes,
-				name_length = (ulong)assemblyNameLength, // without the trailing NUL
-				name_offset = (ulong)assemblyNameOffset,
-			};
-			uniqueAssemblies.Add (new StructureInstance<TypeMapAssembly> (typeMapAssemblyStructureInfo, entry));
+			assemblyNamesBlob.Add (asm.Name);
 		}
-
-		uniqueAssemblies.Sort ((StructureInstance<TypeMapAssembly> a, StructureInstance<TypeMapAssembly> b) => {
-			if (a.Instance == null) {
-				return b.Instance == null ? 0 : -1;
-			}
-
-			if (b.Instance == null) {
-				return 1;
-			}
-
-			return a.Instance.module_uuid.AsSpan ().SequenceCompareTo (b.Instance.module_uuid);
-		});
 
 		var managedTypeInfos = new List<StructureInstance<TypeMapManagedTypeInfo>> ();
 		// Java-to-managed maps don't use hashes since many mappings have multiple instances
@@ -315,7 +260,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 			ManagedToJavaCount = data.ManagedToJavaMap == null ? 0 : data.ManagedToJavaMap.Count,
 
 			entry_count = data.EntryCount,
-			unique_assemblies_count = (ulong)data.UniqueAssemblies.Count,
 		};
 		type_map = new StructureInstance<TypeMap> (typeMapStructureInfo, map);
 
@@ -323,7 +267,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 		module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);
 		module.AddGlobalVariable (JavaToManagedSymbol, javaToManagedMap, LlvmIrVariableOptions.LocalConstant);
 		module.AddGlobalVariable (TypeMapManagedTypeInfoSymbol, managedTypeInfos, LlvmIrVariableOptions.GlobalConstant);
-		module.AddGlobalVariable (UniqueAssembliesSymbol, uniqueAssemblies, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (AssemblyNamesBlobSymbol, assemblyNamesBlob, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (ManagedTypeNamesBlobSymbol, managedTypeNames, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable (JavaTypeNamesBlobSymbol, javaTypeNames, LlvmIrVariableOptions.GlobalConstant);
@@ -331,7 +274,6 @@ class TypeMappingDebugNativeAssemblyGeneratorCLR : LlvmIrComposer
 
 	void MapStructures (LlvmIrModule module)
 	{
-		typeMapAssemblyStructureInfo = module.MapStructure<TypeMapAssembly> ();
 		typeMapEntryStructureInfo = module.MapStructure<TypeMapEntry> ();
 		typeMapStructureInfo = module.MapStructure<TypeMap> ();
 		typeMapManagedTypeInfoStructureInfo = module.MapStructure<TypeMapManagedTypeInfo> ();
