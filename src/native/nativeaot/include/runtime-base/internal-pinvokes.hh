@@ -5,8 +5,11 @@
 
 #include <host/gc-bridge.hh>
 #include <xamarin-app.hh>
-#include "logger.hh"
-#include <runtime-base/timing.hh>
+#include <runtime-base/logger.hh>
+
+namespace xamarin::android {
+	struct managed_timing_sequence;
+}
 
 extern "C" {
 	int _monodroid_gref_get () noexcept;

@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 #include <host/bridge-processing.hh>
-#include <host/host.hh>
+#include <host/host-common.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/logger.hh>
 #include <shared/helpers.hh>
@@ -254,10 +254,10 @@ void BridgeProcessingShared::add_circular_references (const StronglyConnectedCom
 
 		abort_unless (reference_added, [this, &prev, &next] {
 			jclass prev_java_class = env->GetObjectClass (prev.handle);
-			const char *prev_class_name = Host::get_java_class_name_for_TypeManager (prev_java_class);
+			const char *prev_class_name = HostCommon::get_java_class_name_for_TypeManager (prev_java_class);
 
 			jclass next_java_class = env->GetObjectClass (next.handle);
-			const char *next_class_name = Host::get_java_class_name_for_TypeManager (next_java_class);
+			const char *next_class_name = HostCommon::get_java_class_name_for_TypeManager (next_java_class);
 
 			return detail::_format_message (
 				"Failed to add reference between objects in a strongly connected component: %s -> %s.",
@@ -470,7 +470,7 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 		return;
 	}
 
-	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+	char *class_name = HostCommon::get_java_class_name_for_TypeManager (java_class);
 	log_errorf (LOG_GC, "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
@@ -486,7 +486,7 @@ void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused
 		return;
 	}
 
-	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+	char *class_name = HostCommon::get_java_class_name_for_TypeManager (java_class);
 	log_errorf (LOG_GC, "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif

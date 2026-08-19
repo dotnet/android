@@ -1,5 +1,6 @@
 #define PINVOKE_OVERRIDE_INLINE [[gnu::always_inline]]
 
+#include <format>
 #include <string_view>
 
 #include <android/log.h>
@@ -14,14 +15,13 @@ namespace {
 	[[noreturn]]
 	void abort_missing_internal_symbol (std::string_view const& library_name, std::string_view const& entrypoint_name)
 	{
-		Helpers::abort_applicationf (
+		Helpers::abort_application (
 			LOG_ASSEMBLY,
-			std::source_location::current (),
-			"Internal p/invoke symbol '%.*s'@'%.*s' not found",
-			static_cast<int>(entrypoint_name.length ()),
-			entrypoint_name.data (),
-			static_cast<int>(library_name.length ()),
-			library_name.data ()
+			std::format (
+				"Internal p/invoke symbol '{}'@'{}' not found"sv,
+				entrypoint_name,
+				library_name
+			)
 		);
 	}
 
@@ -167,13 +167,8 @@ auto PinvokeOverride::monodroid_pinvoke_override (const char *library_name, cons
 
 const void* Host::clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept
 {
-	log_debugf (
-		LOG_ASSEMBLY,
-		"[precompiled] clr_pinvoke_override (\"%s\", \"%s\")",
-		library_name == nullptr ? "<null>" : library_name,
-		entry_point_name == nullptr ? "<null>" : entry_point_name
-	);
+	log_debug (LOG_ASSEMBLY, "[precompiled] clr_pinvoke_override (\"{}\", \"{}\")"sv, library_name, entry_point_name);
 	void *ret = PinvokeOverride::monodroid_pinvoke_override (library_name, entry_point_name);
-	log_debugf (LOG_DEFAULT, "[precompiled] p/invoke %sfound", ret == nullptr ? "not " : "");
+	log_debug (LOG_DEFAULT, "[precompiled] p/invoke {}found"sv, ret == nullptr ? "not"sv : ""sv);
 	return ret;
 }

@@ -41,10 +41,10 @@ namespace xamarin::android {
 				return load_jni (path, true /* name_is_path */);
 			}
 
-			log_infof (LOG_ASSEMBLY, "[filesystem] Trying to load shared library '%.*s'", static_cast<int>(path.length ()), path.data ());
+			log_info (LOG_ASSEMBLY, "[filesystem] Trying to load shared library '{}'", path);
 			if constexpr (!SkipExistsCheck) {
 				if (!AndroidSystem::is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
-					log_infof (LOG_ASSEMBLY, "Shared library '%.*s' not found", static_cast<int>(path.length ()), path.data ());
+					log_info (LOG_ASSEMBLY, "Shared library '{}' not found", path);
 					return nullptr;
 				}
 			}
@@ -60,13 +60,7 @@ namespace xamarin::android {
 				return load_jni (name, true /* name_is_path */);
 			}
 
-			log_infof (
-				LOG_ASSEMBLY,
-				"[apk] Trying to load shared library '%.*s', offset in the apk == %lld",
-				static_cast<int>(name.length ()),
-				name.data (),
-				static_cast<long long>(offset)
-			);
+			log_info (LOG_ASSEMBLY, "[apk] Trying to load shared library '{}', offset in the apk == {}", name, offset);
 
 			android_dlextinfo dli;
 			dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
@@ -81,13 +75,7 @@ namespace xamarin::android {
 		static auto log_and_return (void *handle, std::string_view const& full_name) -> void*
 		{
 			if (handle != nullptr) [[likely]] {
-				log_debugf (
-					LOG_ASSEMBLY,
-					"Shared library %.*s loaded (handle %p)",
-					static_cast<int>(full_name.length ()),
-					full_name.data (),
-					handle
-				);
+				log_debug (LOG_ASSEMBLY, "Shared library {} loaded (handle {:p})", full_name, handle);
 				return handle;
 			}
 
@@ -95,11 +83,10 @@ namespace xamarin::android {
 			if (load_error == nullptr) {
 				load_error = "Unknown error";
 			}
-			log_errorf (
+			log_error (
 				LOG_ASSEMBLY,
-				"Could not load library '%.*s'. %s",
-				static_cast<int>(full_name.length ()),
-				full_name.data (),
+				"Could not load library '{}'. {}"sv,
+				full_name,
 				load_error
 			);
 
@@ -108,12 +95,7 @@ namespace xamarin::android {
 
 		static auto load_jni (std::string_view const& name, bool name_is_path) -> void*
 		{
-			log_debugf (
-				LOG_ASSEMBLY,
-				"Trying to load loading shared JNI library %.*s with System.loadLibrary",
-				static_cast<int>(name.length ()),
-				name.data ()
-			);
+			log_debug (LOG_ASSEMBLY, "Trying to load loading shared JNI library {} with System.loadLibrary", name);
 
 			auto get_file_name = [](std::string_view const& full_name, bool is_path) -> std::string_view {
 				if (!is_path) {
@@ -193,16 +175,8 @@ namespace xamarin::android {
 			// way :(
 			// We must use full name of the library, because dlopen won't accept an undecorated one without kicking up
 			// a fuss.
-			std::string_view file_name = get_file_name (name, name_is_path);
-			log_debugf (
-				LOG_ASSEMBLY,
-				"Attempting to get library %.*s handle after System.loadLibrary. Will try to load using '%.*s'",
-				static_cast<int>(name.length ()),
-				name.data (),
-				static_cast<int>(file_name.length ()),
-				file_name.data ()
-			);
-			return log_and_return (dlopen (file_name.data (), RTLD_NOLOAD), name);
+			log_debug (LOG_ASSEMBLY, "Attempting to get library {} handle after System.loadLibrary. Will try to load using '{}'", name, get_file_name (name, name_is_path));
+			return log_and_return (dlopen (get_file_name (name, name_is_path).data (), RTLD_NOLOAD), name);
 		}
 
 	private:

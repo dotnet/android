@@ -32,7 +32,7 @@ namespace xamarin::android {
 			// std::string is needed because we must pass a NUL-terminated string to Java, otherwise
 			// strange things happen (and std::string_view is not necessarily such a string)
 			const std::string lib_name { undecorated_lib_name };
-			log_debugf (LOG_ASSEMBLY, "Undecorated library name: %s", lib_name.c_str ());
+			log_debug (LOG_ASSEMBLY, "Undecorated library name: {}", lib_name);
 
 			jstring java_lib_name = jni_env->NewStringUTF (lib_name.c_str ());
 			if (java_lib_name == nullptr) [[unlikely]] {
@@ -41,10 +41,10 @@ namespace xamarin::android {
 			}
 			jni_env->CallStaticVoidMethod (systemKlass, System_loadLibrary, java_lib_name);
 			if (jni_env->ExceptionCheck ()) {
-				log_debugf (LOG_ASSEMBLY, "System.loadLibrary threw a Java exception. Will attempt to log it.");
+				log_debug (LOG_ASSEMBLY, "System.loadLibrary threw a Java exception. Will attempt to log it.");
 				jni_env->ExceptionDescribe ();
 				jni_env->ExceptionClear ();
-				log_debugf (LOG_ASSEMBLY, "Java exception cleared");
+				log_debug (LOG_ASSEMBLY, "Java exception cleared");
 				return false;
 			}
 

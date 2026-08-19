@@ -1,5 +1,4 @@
 #include <array>
-#include <cinttypes>
 #include <cstdint>
 #include <cstring>
 
@@ -76,14 +75,7 @@ namespace {
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::find_index_by_name (const char *typeName, const TypeMapEntry *map, const char (&name_map)[], std::string_view const& from_name, std::string_view const& to_name) noexcept -> ssize_t
 {
-	log_debugf (
-		LOG_ASSEMBLY,
-		"typemap: map %.*s -> %.*s uses strings",
-		static_cast<int>(from_name.length ()),
-		from_name.data (),
-		static_cast<int>(to_name.length ()),
-		to_name.data ()
-	);
+	log_debug (LOG_ASSEMBLY, "typemap: map {} -> {} uses strings", from_name, to_name);
 
 	auto equal = [](TypeMapEntry const& entry, const char *key, const char (&name_map)[]) -> bool {
 		if (entry.from == std::numeric_limits<uint32_t>::max ()) [[unlikely]] {
@@ -109,14 +101,7 @@ auto TypeMapper::find_index_by_name (const char *typeName, const TypeMapEntry *m
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::find_index_by_hash (const char *typeName, const TypeMapEntry *map, const char (&name_map)[], std::string_view const& from_name, std::string_view const& to_name) noexcept -> ssize_t
 {
-	log_debugf (
-		LOG_ASSEMBLY,
-		"typemap: map %.*s -> %.*s uses hashes",
-		static_cast<int>(from_name.length ()),
-		from_name.data (),
-		static_cast<int>(to_name.length ()),
-		to_name.data ()
-	);
+	log_debug (LOG_ASSEMBLY, "typemap: map {} -> {} uses hashes"sv, from_name, to_name);
 
 	size_t type_name_length = strlen (typeName);
 	hash_t type_name_hash = crc32_hash (typeName, type_name_length);
@@ -146,29 +131,19 @@ auto TypeMapper::find_index_by_hash (const char *typeName, const TypeMapEntry *m
 auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMapEntry *map, const char (&name_map)[], std::string_view const& from_name, std::string_view const& to_name) -> const char*
 {
 	if (idx < 0) [[unlikely]] {
-		log_debugf (
-			LOG_ASSEMBLY,
-			"typemap: unable to map from %.*s type '%s' to %.*s type",
-			static_cast<int>(from_name.length ()),
-			from_name.data (),
-			optional_string (typeName),
-			static_cast<int>(to_name.length ()),
-			to_name.data ()
-		);
+		log_debug (LOG_ASSEMBLY, "typemap: unable to map from {} type '{}' to {} type"sv, from_name, typeName, to_name);
 		return nullptr;
 	}
 
 	TypeMapEntry const& entry = map[idx];
 	const char *mapped_name = &name_map[entry.to];
 
-	log_debugf (
+	log_debug (
 		LOG_ASSEMBLY,
-		"typemap: %.*s type '%s' maps to %.*s type '%s'",
-		static_cast<int>(from_name.length ()),
-		from_name.data (),
+		"typemap: {} type '{}' maps to {} type '{}'"sv,
+		from_name,
 		optional_string (typeName),
-		static_cast<int>(to_name.length ()),
-		to_name.data (),
+		to_name,
 		optional_string (mapped_name)
 	);
 	return mapped_name;
@@ -242,14 +217,14 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 	const TypeMapModule *match = find_module_entry (mvid, managed_to_java_map, managed_to_java_map_module_count);
 	if (match == nullptr) {
 		if (mvid == nullptr) {
-			log_warnf (LOG_ASSEMBLY, "typemap: no mvid specified in call to typemap_managed_to_java");
+			log_warn (LOG_ASSEMBLY, "typemap: no mvid specified in call to typemap_managed_to_java"sv);
 		} else {
-			log_infof (LOG_ASSEMBLY, "typemap: module matching MVID [%s] not found.", MonoGuidString (mvid).c_str ());
+			log_info (LOG_ASSEMBLY, "typemap: module matching MVID [{}] not found."sv, MonoGuidString (mvid).c_str ());
 		}
 		return nullptr;
 	}
 
-	log_debugf (LOG_ASSEMBLY, "typemap: found module matching MVID [%s]", MonoGuidString (mvid).c_str ());
+	log_debug (LOG_ASSEMBLY, "typemap: found module matching MVID [{}]"sv, MonoGuidString (mvid).c_str ());
 	size_t type_name_length = strlen (typeName);
 	hash_t name_hash = crc32_hash (typeName, type_name_length);
 
@@ -259,9 +234,9 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 	const TypeMapModuleEntry *entry = find_managed_to_java_map_entry (name_hash, typeName, type_name_length, map, match->entry_count);
 	if (entry == nullptr) [[unlikely]] {
 		if (match->duplicate_count > 0 && match->duplicate_map_index < std::numeric_limits<decltype (match->duplicate_map_index)>::max ()) {
-			log_debugf (
+			log_debug (
 				LOG_ASSEMBLY,
-				"typemap: searching module [%s] duplicate map for type '%s' (hash %" PRIx32 ")",
+				"typemap: searching module [{}] duplicate map for type '{}' (hash {:x})"sv,
 				MonoGuidString (mvid).c_str (),
 				optional_string (typeName),
 				name_hash
@@ -272,28 +247,26 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 		}
 
 		if (entry == nullptr) {
-			log_warnf (
+			log_warn (
 				LOG_ASSEMBLY,
-				"typemap: managed type '%s' (hash %" PRIx32 ") not found in module [%s] (%.*s).",
+				"typemap: managed type '{}' (hash {:x}) not found in module [{}] ({})."sv,
 				optional_string (typeName),
 				name_hash,
 				MonoGuidString (mvid).c_str (),
-				static_cast<int>(match->assembly_name_length),
-				&managed_assembly_names[match->assembly_name_index]
+				std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length)
 			);
 			return nullptr;
 		}
 	}
 
 	if (entry->java_map_index >= java_type_count) [[unlikely]] {
-		log_warnf (
+		log_warn (
 			LOG_ASSEMBLY,
-			"typemap: managed type '%s' (hash %" PRIx32 ") in module [%s] (%.*s) has invalid Java type index %" PRIu32,
+			"typemap: managed type '{}' (hash {:x}) in module [{}] ({}) has invalid Java type index {}"sv,
 			optional_string (typeName),
 			name_hash,
 			MonoGuidString (mvid).c_str (),
-			static_cast<int>(match->assembly_name_length),
-			&managed_assembly_names[match->assembly_name_index],
+			std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length),
 			entry->java_map_index
 		);
 		return nullptr;
@@ -301,14 +274,13 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 
 	TypeMapJava const& java_entry = java_to_managed_map[entry->java_map_index];
 	if (java_entry.java_name_index >= java_type_names_size) [[unlikely]] {
-		log_warnf (
+		log_warn (
 			LOG_ASSEMBLY,
-			"typemap: managed type '%s' (hash %" PRIx32 ") in module [%s] (%.*s) points to invalid Java type at index %" PRIu32 " (invalid type name index %" PRIu32 ")",
+			"typemap: managed type '{}' (hash {:x}) in module [{}] ({}) points to invalid Java type at index {} (invalid type name index {})"sv,
 			optional_string (typeName),
 			name_hash,
 			MonoGuidString (mvid).c_str (),
-			static_cast<int>(match->assembly_name_length),
-			&managed_assembly_names[match->assembly_name_index],
+			std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length),
 			entry->java_map_index,
 			java_entry.java_name_index
 		);
@@ -318,17 +290,16 @@ auto TypeMapper::managed_to_java_release (const char *typeName, const uint8_t *m
 
 	const char *ret = &java_type_names[java_entry.java_name_index];
 	if (ret == nullptr) [[unlikely]] {
-		log_warnf (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index %" PRIu32, entry->java_map_index);
+		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index {}"sv, entry->java_map_index);
 	}
 
-	log_debugf (
+	log_debug (
 		LOG_ASSEMBLY,
-		"typemap: managed type '%s' (hash %" PRIx32 ") in module [%s] (%.*s) corresponds to Java type '%s'",
+		"typemap: managed type '{}' (hash {:x}) in module [{}] ({}) corresponds to Java type '{}'"sv,
 		optional_string (typeName),
 		name_hash,
 		MonoGuidString (mvid).c_str (),
-		static_cast<int>(match->assembly_name_length),
-		&managed_assembly_names[match->assembly_name_index],
+		std::string_view (&managed_assembly_names[match->assembly_name_index], match->assembly_name_length),
 		ret
 	);
 
@@ -343,13 +314,13 @@ auto TypeMapper::managed_to_java (const char *typeName, const uint8_t *mvid) noe
 auto TypeMapper::managed_to_java (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 #endif
 {
-	log_debugf (LOG_ASSEMBLY, "managed_to_java: looking up type '%s'", optional_string (typeName));
+	log_debug (LOG_ASSEMBLY, "managed_to_java: looking up type '{}'"sv, optional_string (typeName));
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::ManagedToJava);
 	}
 
 	if (typeName == nullptr) [[unlikely]] {
-		log_warnf (LOG_ASSEMBLY, "typemap: type name not specified in typemap_managed_to_java");
+		log_warn (LOG_ASSEMBLY, "typemap: type name not specified in typemap_managed_to_java"sv);
 		return nullptr;
 	}
 
@@ -375,7 +346,7 @@ auto TypeMapper::managed_to_java (const char *typeName, const char *assemblyFull
 auto TypeMapper::java_to_managed_debug (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
 	if (assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
-		log_warnf (LOG_ASSEMBLY, "Managed land called java-to-managed mapping function with invalid pointers");
+		log_warn (LOG_ASSEMBLY, "Managed land called java-to-managed mapping function with invalid pointers"sv);
 		return false;
 	}
 
@@ -395,12 +366,12 @@ auto TypeMapper::java_to_managed_debug (const char *java_type_name, char const**
 	*assembly_name = &type_map_assembly_names[type_info.assembly_name_index];
 	*managed_type_token_id = type_info.managed_type_token_id;
 
-	log_debugf (
+	log_debug (
 		LOG_ASSEMBLY,
-		"Mapped Java type '%s' to managed type '%s' in assembly '%s' and with token '%" PRIx32 "'",
+		"Mapped Java type '{}' to managed type '{}' in assembly '{}' and with token '{:x}'"sv,
 		optional_string (java_type_name),
 		name,
-		optional_string (*assembly_name),
+		*assembly_name,
 		*managed_type_token_id
 	);
 
@@ -433,15 +404,30 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 {
 	if (java_type_name == nullptr || assembly_name == nullptr || managed_type_token_id == nullptr) [[unlikely]] {
 		if (java_type_name == nullptr) {
-			log_warnf (LOG_ASSEMBLY, "typemap: required parameter `%s` not passed to %s", "java_type_name", __PRETTY_FUNCTION__);
+			log_warn (
+				LOG_ASSEMBLY,
+				"typemap: required parameter `{}` not passed to {}"sv,
+				"java_type_name"sv,
+				__PRETTY_FUNCTION__
+			);
 		}
 
 		if (assembly_name == nullptr) {
-			log_warnf (LOG_ASSEMBLY, "typemap: required parameter `%s` not passed to %s", "assembly_name", __PRETTY_FUNCTION__);
+			log_warn (
+				LOG_ASSEMBLY,
+				"typemap: required parameter `{}` not passed to {}"sv,
+				"assembly_name"sv,
+				__PRETTY_FUNCTION__
+			);
 		}
 
 		if (managed_type_token_id == nullptr) {
-			log_warnf (LOG_ASSEMBLY, "typemap: required parameter `%s` not passed to %s", "managed_type_token_id", __PRETTY_FUNCTION__);
+			log_warn (
+				LOG_ASSEMBLY,
+				"typemap: required parameter `{}` not passed to {}"sv,
+				"managed_type_token_id"sv,
+				__PRETTY_FUNCTION__
+			);
 		}
 
 		return false;
@@ -451,9 +437,9 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 	hash_t name_hash = crc32_hash (java_type_name, java_type_name_length);
 	TypeMapJava const* java_entry = find_java_to_managed_entry (name_hash, java_type_name, java_type_name_length);
 	if (java_entry == nullptr) {
-		log_infof (
+		log_info (
 			LOG_ASSEMBLY,
-			"typemap: unable to find mapping to a managed type from Java type '%s' (hash %" PRIx32 ")",
+			"typemap: unable to find mapping to a managed type from Java type '{}' (hash {:x})"sv,
 			optional_string (java_type_name),
 			name_hash
 		);
@@ -465,15 +451,13 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 	*assembly_name = &managed_assembly_names[module.assembly_name_index];
 	*managed_type_token_id = java_entry->managed_type_token_id;
 
-	log_debugf (
+	log_debug (
 		LOG_ASSEMBLY,
-		"Java type '%s' corresponds to managed type '%.*s' (token 0x%" PRIx32 " in assembly '%.*s')",
+		"Java type '{}' corresponds to managed type '{}' (token 0x{:x} in assembly '{}')"sv,
 		optional_string (java_type_name),
-		static_cast<int>(java_entry->managed_type_name_length),
-		&managed_type_names[java_entry->managed_type_name_index],
+		std::string_view (&managed_type_names[java_entry->managed_type_name_index], java_entry->managed_type_name_length),
 		*managed_type_token_id,
-		static_cast<int>(module.assembly_name_length),
-		&managed_assembly_names[module.assembly_name_index]
+		std::string_view (&managed_assembly_names[module.assembly_name_index], module.assembly_name_length)
 	);
 
 	return true;
@@ -483,13 +467,13 @@ auto TypeMapper::java_to_managed_release (const char *java_type_name, char const
 [[gnu::flatten]]
 auto TypeMapper::java_to_managed (const char *java_type_name, char const** assembly_name, uint32_t *managed_type_token_id) noexcept -> bool
 {
-	log_debugf (LOG_ASSEMBLY, "java_to_managed: looking up type '%s'", optional_string (java_type_name));
+	log_debug (LOG_ASSEMBLY, "java_to_managed: looking up type '{}'"sv, optional_string (java_type_name));
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.start_event (TimingEventKind::JavaToManaged);
 	}
 
 	if (java_type_name == nullptr) [[unlikely]] {
-		log_warnf (LOG_ASSEMBLY, "typemap: type name not specified in typemap_java_to_managed");
+		log_warn (LOG_ASSEMBLY, "typemap: type name not specified in typemap_java_to_managed"sv);
 		return false;
 	}
 

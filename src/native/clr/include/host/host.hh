@@ -8,12 +8,11 @@
 
 #include "host-common.hh"
 #include <runtime-base/jni-wrappers.hh>
+#include <runtime-base/timing.hh>
 #include "../shared/log_types.hh"
 #include "managed-interface.hh"
 
 namespace xamarin::android {
-	class Timing;
-
 	class Host : public HostCommon
 	{
 	public:
@@ -55,7 +54,7 @@ namespace xamarin::android {
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
-		static std::shared_ptr<Timing> _timing;
+		static inline std::shared_ptr<Timing> _timing{};
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;

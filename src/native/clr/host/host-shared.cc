@@ -1,4 +1,4 @@
-#include <host/host.hh>
+#include <host/host-common.hh>
 #include <host/os-bridge.hh>
 
 using namespace xamarin::android;

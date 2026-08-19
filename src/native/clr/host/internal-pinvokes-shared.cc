@@ -1,5 +1,5 @@
 #include <host/gc-bridge.hh>
-#include <host/host.hh>
+#include <host/host-common.hh>
 #include <host/os-bridge.hh>
 #include <host/typemap.hh>
 #include <runtime-base/android-system.hh>
@@ -56,11 +56,11 @@ void monodroid_log (LogLevel level, LogCategories category, const char *message)
 	switch (level) {
 		case LogLevel::Verbose:
 		case LogLevel::Debug:
-			log_write (category, LogLevel::Debug, message);
+			log_debugf (category, "%s", message);
 			break;
 
 		case LogLevel::Info:
-			log_write (category, LogLevel::Info, message);
+			log_infof (category, "%s", message);
 			break;
 
 		case LogLevel::Warn:
@@ -79,14 +79,14 @@ void monodroid_log (LogLevel level, LogCategories category, const char *message)
 		default:
 		case LogLevel::Unknown:
 		case LogLevel::Default:
-			log_write (category, LogLevel::Info, message);
+			log_infof (category, "%s", message);
 			break;
 	}
 }
 
 char* monodroid_TypeManager_get_java_class_name (jclass klass) noexcept
 {
-	return Host::get_java_class_name_for_TypeManager (klass);
+	return HostCommon::get_java_class_name_for_TypeManager (klass);
 }
 
 void monodroid_free (void *ptr) noexcept

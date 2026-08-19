@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include "../constants.hh"
-#include "../shared/log_types.hh"
+#include <shared/log_types.hh>
 #include "../runtime-base/cpu-arch.hh"
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/strings.hh>
@@ -117,7 +117,7 @@ namespace xamarin::android {
 				}
 			}
 
-			log_debugf (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir.c_str ());
+			log_debug (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
 			Util::create_public_directory (override_dir);
 		}
 #endif

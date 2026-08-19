@@ -26,7 +26,7 @@ namespace xamarin::android {
 				short_library_name.append (Constants::dso_suffix);
 			}
 
-			log_debugf (LOG_ASSEMBLY, "Modified p/invoke library name to '%s'", short_library_name.get ());
+			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name.get ());
 			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name.get (), microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
 		}
 
@@ -35,27 +35,13 @@ namespace xamarin::android {
 		}
 
 		if (lib_handle == nullptr) {
-			log_warnf (
-				LOG_ASSEMBLY,
-				"Shared library '%.*s' not loaded, p/invoke '%.*s' may fail",
-				static_cast<int>(library_name.length ()),
-				library_name.data (),
-				static_cast<int>(symbol_name.length ()),
-				symbol_name.data ()
-			);
+			log_warn (LOG_ASSEMBLY, "Shared library '{}' not loaded, p/invoke '{}' may fail", library_name, symbol_name);
 			return nullptr;
 		}
 
 		void *entry_handle = MonodroidDl::monodroid_dlsym (lib_handle, symbol_name);
 		if (entry_handle == nullptr) {
-			log_warnf (
-				LOG_ASSEMBLY,
-				"Symbol '%.*s' not found in shared library '%.*s', p/invoke may fail",
-				static_cast<int>(symbol_name.length ()),
-				symbol_name.data (),
-				static_cast<int>(library_name.length ()),
-				library_name.data ()
-			);
+			log_warn (LOG_ASSEMBLY, "Symbol '{}' not found in shared library '{}', p/invoke may fail", symbol_name, library_name);
 			return nullptr;
 		}
 

@@ -6,7 +6,7 @@
 #include <host/gc-bridge.hh>
 #include <host/bridge-processing.hh>
 #include <host/os-bridge.hh>
-#include <host/host.hh>
+#include <host/host-common.hh>
 #include <runtime-base/util.hh>
 #include <shared/helpers.hh>
 
@@ -161,7 +161,7 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 	jobject handle = ctx->control_block->handle;
 	jclass java_class = env->GetObjectClass (handle);
 	if (java_class != nullptr) {
-		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
+		char *class_name = HostCommon::get_java_class_name_for_TypeManager (java_class);
 		log_infof (LOG_GC, "gref 0x%" PRIxPTR " [%s]", reinterpret_cast<uintptr_t> (handle), optional_string (class_name));
 		free (class_name);
 		env->DeleteLocalRef (java_class);

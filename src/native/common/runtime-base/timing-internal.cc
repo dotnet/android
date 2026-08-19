@@ -63,7 +63,7 @@ void FastTiming::parse_options (dynamic_local_property_string const& value) noex
 
 		if (param.starts_with (OPT_DURATION)) {
 			if (!param.to_integer (duration_ms, OPT_DURATION.length ())) {
-				log_warnf (LOG_TIMING, "Failed to parse duration in milliseconds from '%.*s'", static_cast<int>(param.length ()), param.start ());
+				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param.start ());
 				duration_ms = default_duration_milliseconds;
 			}
 			continue;
@@ -147,16 +147,15 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 		chrono::nanoseconds time_ns (ns);
 		// Do not change the string format after the first colon, its format is required by performance measuring
 		// utilities.
-		dynamic_local_string<Constants::MAX_LOGCAT_MESSAGE_LENGTH> message;
-		message.append ("  ")
-			.append (msg)
-			.append (": ")
-			.append (static_cast<uint64_t>(chrono::duration_cast<chrono::seconds> (time_ns).count ()))
-			.append (":")
-			.append (static_cast<uint64_t>(chrono::duration_cast<chrono::milliseconds> (time_ns).count ()))
-			.append ("::")
-			.append (static_cast<uint64_t>((time_ns % 1ms).count ()));
-		line_writer (message.as_string_view ());
+		// TODO: it's a bit wasteful... if dynamic_local_string is made an output iterator, we can use std::format_to
+		std::string s = std::format (
+			"  {}: {}:{}::{}",
+			msg,
+			chrono::duration_cast<chrono::seconds> (time_ns).count (),
+			chrono::duration_cast<chrono::milliseconds> (time_ns).count (),
+			(time_ns % 1ms).count ()
+		);
+		line_writer (s);
 	};
 
 	// Do not change the sequence numbers. If a measurement is removed, its sequence number must not be reused.
@@ -201,16 +200,16 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path.get (), "w");
 	if (timing_log == nullptr) {
-		log_errorf (LOG_TIMING, "[2/2] Unable to create the performance measurements file '%s'", timing_log_path.get ());
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path.get ());
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warnf (LOG_TIMING, "[2/2] Failed to make performance measurements file '%s' world-readable", timing_log_path.get ());
+		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path.get ());
 		return;
 	}
 
-	log_infof (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path.get ());
+	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path.get ());
 
 	auto line_writer = [=](std::string_view const& msg) {
 		if (!msg.empty ()) {
