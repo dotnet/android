@@ -103,6 +103,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 - If the same issue appears many times, flag it once listing all affected files.
 - Don't flag what CI catches (compiler errors, linter issues).
 - Avoid false positives — verify concerns given the full file context and project configuration (TargetFramework, references, available APIs).
+- Run each Azure CLI query in a separate shell call; the scoped allowlist rejects calls chained with `;`, `&&`, `||`, or `|`.
 - **Always submit the review as a COMMENT event.** Never APPROVE or REQUEST_CHANGES — surface issues in the comment body instead.
 - Prioritize: bugs > safety > performance > missing tests > duplication > consistency > documentation.
 - **Post suggestions as inline comments, not just in the summary.** If a suggestion can't be posted inline, omit it.
