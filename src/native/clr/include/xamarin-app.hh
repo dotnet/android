@@ -60,17 +60,8 @@ struct TypeMapManagedTypeInfo
 struct TypeMap
 {
 	uint32_t             entry_count;
-	uint64_t             unique_assemblies_count;
 	const TypeMapEntry  *java_to_managed;
 	const TypeMapEntry  *managed_to_java;
-};
-
-// MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
-struct TypeMapAssembly
-{
-	uint8_t module_uuid[16];
-	uint64_t name_length;
-	uint64_t name_offset; // into the assembly names blob
 };
 #else
 struct TypeMapModuleEntry
@@ -295,7 +286,6 @@ extern "C" {
 #if defined (DEBUG)
 	[[gnu::visibility("default")]] extern const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGeneratorCLR.cs
 	[[gnu::visibility("default")]] extern const TypeMapManagedTypeInfo type_map_managed_type_info[];
-	[[gnu::visibility("default")]] extern const TypeMapAssembly type_map_unique_assemblies[];
 	[[gnu::visibility("default")]] extern const char type_map_assembly_names[];
 	[[gnu::visibility("default")]] extern const char type_map_managed_type_names[];
 	[[gnu::visibility("default")]] extern const char type_map_java_type_names[];

@@ -36,7 +36,7 @@ entry exists yet, that means a new `XA####` code is needed in
 - Test code under `Tests/` / `tests/`.
 - The `AsyncTask` base class itself, and the `AsyncTaskExtensions` file.
 - The agent MUST open the file and verify the enclosing class actually
-  derives (directly or transitively) from `AsyncTask` before filing.
+  derives (directly or transitively) from `AsyncTask` before changing it.
 GUIDANCE
 
 echo ""

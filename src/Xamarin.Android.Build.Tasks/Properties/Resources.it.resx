@@ -871,6 +871,15 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>La directory '{0}' verrà ignorata perché non esiste!</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] Non è possibile eliminare il file di origine '{1}'</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>La directory '{0}' delle toolchain di Android NDK non è presente. Installare Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1033,19 +1042,22 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 - {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>Risoluzione del file POM per l'artefatto Maven '{0}' da '{1}' non riuscita.
+- {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>Repository Maven sconosciuto: '{0}'.</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>La proprietà MSBuild '{0}' è deprecata e verrà rimossa in .NET {1}. Per altri dettagli, vedi https://aka.ms/net-android-deprecations.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>Il valore ''{0}'' della proprietà Microsoft Build Engine del ''{1}'' non è valido. Un valore valido è uno dei seguenti:{2}.</value>
@@ -1070,6 +1082,18 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>L'elemento &lt;instrumentation&gt; in '{0}' non contiene l'attributo android:name.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>Non è stato possibile determinare cosa avviare: '{0}' non contiene un elemento activity avviabile &lt;activity&gt; o un elemento instrumentation &lt;instrumentation&gt;. Impostare la proprietà MSBuild $(AndroidLaunchActivity) o $(AndroidInstrumentation) per specificarne una.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>La proprietà MSBuild "{0}" non è compatibile con il runtime {1}. La compilazione non può continuare mentre questa proprietà è abilitata. Rimuovi la proprietà o proteggerla con una condizione: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1088,6 +1112,12 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
   <data name="XA1047" xml:space="preserve">
     <value>Manca l'attributo obbligatorio '''{0}'' per l'elemento ''{1}'', {2}linea ''{3}''.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>'{0}' non contiene un elemento &lt;instrumentation&gt;. Aggiungere una sottoclasse di Android.App.Instrumentation all'applicazione oppure impostare la proprietà MSBuild $(AndroidInstrumentation) sul nome di una sottoclasse.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>La dipendenza Java '{0}' non è soddisfatta.</value>
@@ -1193,6 +1223,12 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Il nome Java '{0}' contiene l'identificatore Java riservato '{1}'. Cambia il nome del pacchetto o del tipo.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Comando '{0}' non riuscito.\n{1}</value>

@@ -871,6 +871,15 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {1} - The path to the proguard.txt file inside the extracted .aar.
 {2} - A description of the source: either a NuGet package id/version or an .aar file path.</comment>
   </data>
+  <data name="XA4323" xml:space="preserve">
+    <value>Каталог "{0}" игнорируется, так как он не существует!</value>
+    <comment>{0} - The path to the directory being ignored.</comment>
+  </data>
+  <data name="XA4324" xml:space="preserve">
+    <value>[{0}] Не удалось удалить исходный файл "{1}"</value>
+    <comment>{0} - The target architecture, such as Arm, Arm64, or X86_64
+{1} - The path to the source file which could not be deleted.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Отсутствует каталог цепочек инструментов Android NDK "{0}". Установите Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
@@ -1033,19 +1042,22 @@ In this message, the term "handheld app" means "app for handheld devices."
 — {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
-{1} - The HttpClient reported download exception message
+{1} - Details about the unresolved Maven artifact, POM URL, and download exception
+</comment>
+  </data>
+  <data name="XA4237_Details" xml:space="preserve">
+    <value>Не удалось сопоставить POM для артефакта Maven "{0}" из "{1}".
+- {2}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Unresolved Maven artifact id
+{1} - Unresolved POM URL
+{2} - The HttpClient reported download exception message
 </comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>Неизвестный репозиторий Maven: "{0}".</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
-    <value>Свойство MSBuild "{0}" является нерекомендуемым и будет удалено в .NET {1}. Дополнительные сведения: https://aka.ms/net-android-deprecations.</value>
-    <comment>The following are literal names and should not be translated: MSBuild, .NET.
-{0} - The deprecated MSBuild property name
-{1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>Свойство "{0}" MSBuild имеет недопустимое значение "{1}". Допускаются следующие значения: {2}.</value>
@@ -1070,6 +1082,18 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The current value of the property
 </comment>
   </data>
+  <data name="XA1042" xml:space="preserve">
+    <value>Элемент &lt;instrumentation&gt; в "{0}" не содержит атрибут android:name.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, android:name.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
+  <data name="XA1043" xml:space="preserve">
+    <value>Не удалось определить, что нужно запустить: "{0}" не содержит запускаемый &lt;activity&gt; или элемент &lt;instrumentation&gt;. Настройте свойство MSBuild $(AndroidLaunchActivity) или $(AndroidInstrumentation), чтобы указать один из них.</value>
+    <comment>The following are literal names and should not be translated: activity, instrumentation, MSBuild, AndroidLaunchActivity, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
+  </data>
   <data name="XA1044" xml:space="preserve">
     <value>Свойство MSBuild "{0}" несовместимо со средой выполнения {1}. Сборка не может продолжаться, пока это свойство включено. Удалите свойство или защитите его условием: Condition="'$(UseMonoRuntime)' == 'true'"</value>
     <comment>The following are literal names and should not be translated: MSBuild, UseMonoRuntime.
@@ -1088,6 +1112,12 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1047" xml:space="preserve">
     <value>Необходимый атрибут "{0}" отсутствует в элементе "{1}"; {2} строка {3}.</value>
     <comment>{0} - attribute name; {1} - element name; {2} - file path; {3} - line number</comment>
+  </data>
+  <data name="XA1048" xml:space="preserve">
+    <value>"{0}" не содержит элемент &lt;instrumentation&gt;. Добавьте в приложение подкласс Android.App.Instrumentation или настройте в свойстве MSBuild $(AndroidInstrumentation) имя одного из них.</value>
+    <comment>The following are literal names and should not be translated: instrumentation, Android.App.Instrumentation, MSBuild, AndroidInstrumentation.
+{0} - The path to the AndroidManifest.xml file.
+</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
     <value>Зависимость Java "{0}" не удовлетворена.</value>
@@ -1193,6 +1223,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {2} - Fully-qualified managed referenced type name that could not be resolved
 {3} - Assembly expected to contain the unresolved type
 {4} - Full path to the resolved assembly file that was expected to contain the unresolved type</comment>
+  </data>
+  <data name="XA4258" xml:space="preserve">
+    <value>Имя Java "{0}" содержит зарезервированный идентификатор Java "{1}". Измените имя пакета или типа.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Java package or type name
+{1} - Java reserved keyword or restricted identifier</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
     <value>Не удалось выполнить команду "{0}".\n{1}</value>

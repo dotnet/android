@@ -207,7 +207,7 @@ namespace Java.Interop {
 		{
 			for (var probing = Path.GetDirectoryName (typeof (TestJVM).Assembly.Location); probing != null; probing = Path.GetDirectoryName (probing)) {
 				logger?.Invoke (TraceLevel.Verbose, $"TestJVM: probing for JdkInfo.props around {probing}");
-				if (File.Exists (Path.Combine (probing, "Java.Interop.sln")))
+				if (File.Exists (Path.Combine (probing, "Java.Interop.slnx")))
 					return ProbeFromRootDir (probing);
 
 				var dirName = Path.GetFileName (probing);

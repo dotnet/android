@@ -372,6 +372,17 @@ called `desugar`, on the output of the `javac` compiler. The default value is
 `False` if using `$(AndroidDexTool)=dx` and `True` if
 using [`$(AndroidDexTool)`](#androiddextool)=`d8`.
 
+## AndroidEnableFastDeployment
+
+A boolean property that determines whether [Fast Deployment](build-process.md#Fast_Deployment)
+is enabled. Fast Deployment installs assemblies outside of the application
+package, which can reduce deployment and rebuild times.
+
+The default value is `True` for Debug builds and `False` for Release builds.
+Setting this property is equivalent to setting the inverse value of
+[`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk). If both properties
+are set, `$(EmbedAssembliesIntoApk)` takes precedence.
+
 ## AndroidEnableGooglePlayStoreChecks
 
 A bool property
@@ -547,31 +558,7 @@ compiler.
 
 ## AndroidFastDeploymentType
 
-A `:` (colon)-separated list
-of values to control what types can be deployed to the
-[Fast Deployment directory](build-process.md#Fast_Deployment)
-on the target device
-when the [`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk) MSBuild
-property is `False`. If a resource is fast deployed, it is *not*
-embedded into the generated `.apk` or `.aab`, which can speed up deployment
-times. (The more that is fast deployed, then the less frequently
-the package needs to be rebuilt, and the install process can be
-faster.) Valid values include:
-
-- `Assemblies`: Deploy application assemblies.
-- `Dexes`: Deploy `.dex` files, native libraries and typemaps.
-  **The `Dexes` value can *only* be used on devices running
-  Android 4.4 or later (API-19).**
-
-The default value is `Assemblies`.
-
-Support for Fast Deploying resources and assets via that system was
-removed in commit [f0d565fe](https://github.com/xamarin/xamarin-android/commit/f0d565fe4833f16df31378c77bbb492ffd2904b9). This was becuase it required the use of
-deprecated API's to work.
-
-**Support for this feature was removed in .NET 9
-
-**Experimental**.
+This property was removed in .NET 9 and has no effect.
 
 ## AndroidFragmentType
 
@@ -688,9 +675,39 @@ A string property that specifies the Android
 [instrumentation](https://developer.android.com/reference/android/app/Instrumentation)
 runner class name to use when launching the application via `dotnet run`.
 
-When [`$(EnableMSTestRunner)`](#enablemstestrunner) is `true` and this property
-is not set, the instrumentation runner class name is automatically resolved from
-the generated `AndroidManifest.xml` in the intermediate output.
+When this property is not set, `dotnet run` resolves what to launch from the
+generated `AndroidManifest.xml` in the intermediate output:
+
+* If [`$(AndroidUseInstrumentation)`](#androiduseinstrumentation) is `true`, the
+  first `<instrumentation/>` element is used.
+* Otherwise the launchable `<activity/>` is preferred, and the first
+  `<instrumentation/>` element is used when the app declares no launchable
+  activity. This makes it possible to `dotnet run` an app whose only entry point
+  is an `Android.App.Instrumentation` subclass, such as a
+  [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) host.
+
+If the app declares neither, the build fails with
+[XA1043](../messages/xa1043.md). If `$(AndroidUseInstrumentation)` is `true` but
+the app declares no `<instrumentation/>`, the build fails with
+[XA1048](../messages/xa1048.md).
+
+When an instrumentation is launched, `dotnet run` runs
+`adb shell am instrument -w -r` and exits with a non-zero exit code if the
+instrumentation crashes or calls `Instrumentation.Finish()` with
+`Result.Canceled`. Setting [`$(WaitForExit)`](#waitforexit) to `false` drops the
+`-w`, so `dotnet run` returns as soon as the instrumentation is started and no
+results are reported.
+
+Any arguments after `--` are forwarded to the instrumentation as `am instrument`
+extras. Arguments of the form `KEY=VALUE` become `-e KEY VALUE`, and all
+remaining arguments are joined into a single `-e args "..."` extra:
+
+```dotnetcli
+dotnet run -- --filter *MyBenchmark*
+```
+
+is delivered to `Instrumentation.OnCreate(Bundle?)` as
+`arguments.GetString("args")`.
 
 Introduced in .NET 11.
 
@@ -933,6 +950,19 @@ If you are getting this error you can add the following to the
 ```
 
 which will allow the `dx` step to succeed.
+
+## AndroidNdkDirectory
+
+The `$(AndroidNdkDirectory)` property specifies a custom Android NDK
+installation directory. The path can be set in the project file or on the
+command line:
+
+```dotnetcli
+dotnet build -p:AndroidNdkDirectory=/path/to/android-ndk
+```
+
+If this property is not set, .NET for Android locates the NDK from the
+configured Android development environment.
 
 ## AndroidPackageFormat
 
@@ -1213,6 +1243,14 @@ Supported values include:
 
 This property is obsolete and should not be used.
 
+## AndroidTypeMapImplementation
+
+An enum-style property that selects the type map implementation.
+Valid values are `llvm-ir` and `trimmable`.
+
+The default value is `llvm-ir` when using CoreCLR and `trimmable` when using
+NativeAOT.
+
 ## AndroidUseApkSigner
 
 A bool property that allows the developer to
@@ -1252,6 +1290,24 @@ which does have this feature enabled in a project that does not, you will
 get a `XA1034` build error.
 
 Added in .NET 8.
+
+## AndroidUseInstrumentation
+
+A boolean property that indicates the application is launched through its
+`<instrumentation/>` element rather than an `<activity/>`, such as a test or
+[BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) host.
+
+When `true`, `dotnet run` resolves
+[`$(AndroidInstrumentation)`](#androidinstrumentation) from the generated
+`AndroidManifest.xml` and launches it with `adb shell am instrument`, even if
+the app also declares a launchable activity.
+
+The default value is `true` when
+[`$(EnableMSTestRunner)`](#enablemstestrunner) is `true`, and `false` otherwise.
+Note that an app with no launchable `<activity/>` launches through its
+`<instrumentation/>` regardless of this property.
+
+Introduced in .NET 11.
 
 ## AndroidUseInterpreter
 
@@ -1561,15 +1617,14 @@ A boolean property that
 determines whether or not the app's assemblies should be embedded
 into the Application package.
 
+This property is the inverse of
+[`$(AndroidEnableFastDeployment)`](#androidenablefastdeployment). New projects
+should use `$(AndroidEnableFastDeployment)` to control Fast Deployment. If both
+properties are set, `$(EmbedAssembliesIntoApk)` takes precedence.
+
 This property should be `True` for Release builds and `False` for
 Debug builds. It *may* need to be `True` in Debug builds if Fast
 Deployment doesn't support the target device.
-
-When this property is `False`, then the
-[`$(AndroidFastDeploymentType)`](#androidfastdeploymenttype)
-MSBuild property also controls what
-will be embedded into the `.apk` or `.aab`, which can impact deployment and
-rebuild times.
 
 ## EnableCrashReport
 
@@ -1721,6 +1776,22 @@ The default value is False.
 
 This MSBuild property is obsolete and is no longer supported.
 
+## MauiEnableFullReadyToRun
+
+A boolean property for .NET MAUI Android applications that use CoreCLR
+and are built in `Release` configuration with ReadyToRun enabled.
+When this property is unset or `false`, MAUI uses partial ReadyToRun
+with its default MIBC profiles. Set this property to `true` to enable
+full ReadyToRun. This property has no effect when
+[`$(PublishReadyToRun)`](#publishreadytorun) is `false`.
+
+Full ReadyToRun increases application and download size, but can
+potentially improve runtime performance because more methods are
+precompiled.
+
+For more information about CoreCLR and ReadyToRun in .NET MAUI, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
 ## MetricsSupport
 
 When set to `false`, disables .NET's [Metrics][dotnetmetrics] support
@@ -1771,18 +1842,69 @@ debugging symbols enabled:
 [`$(Optimize)`](/visualstudio/msbuild/common-msbuild-project-properties)
 is True.
 
+## PublishReadyToRun
+
+A boolean property that controls whether assemblies are compiled to
+[ReadyToRun][ready-to-run] format when using CoreCLR. ReadyToRun
+assemblies contain both MSIL and native code. This can improve
+application startup time while retaining JIT compatibility, but
+increases application and download size.
+
+For Android applications that use CoreCLR, this property defaults to
+`true` in `Release` configuration and is not enabled by default in
+`Debug` configuration. ReadyToRun does not apply when using Mono or
+NativeAOT.
+
+ReadyToRun compilation is composite by default. See
+[`$(PublishReadyToRunComposite)`](#publishreadytoruncomposite).
+.NET MAUI also uses partial ReadyToRun with default MIBC profiles. See
+[`$(MauiEnableFullReadyToRun)`](#mauienablefullreadytorun) to opt in to
+full ReadyToRun.
+
+For more information, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
+[ready-to-run]: https://learn.microsoft.com/dotnet/core/deploying/ready-to-run
+
+## PublishReadyToRunComposite
+
+A boolean property that controls whether ReadyToRun compilation
+combines application assemblies into a composite image. Composite
+ReadyToRun enables cross-assembly optimizations, but can increase build
+time.
+
+For Android applications that use CoreCLR, this property defaults to
+`true` when [`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+
 ## RunAOTCompilation
 
 A boolean property that determines whether or not assemblies will be
-Ahead-of-Time compiled into native code and included in applications.
-This property is `False` by default for `Debug` builds and `True` by
-default for `Release` builds.
+Ahead-of-Time compiled with the Mono AOT compiler and included in
+applications that use the Mono runtime. This property is `False` by
+default for `Debug` builds and `True` by default for `Release` builds
+that use Mono. It does not enable ReadyToRun or NativeAOT.
 
 This MSBuild property replaces the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property from
 Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 
 [blazor]: /aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
+
+## UseMonoRuntime
+
+A boolean property that controls whether Android applications use the
+Mono runtime instead of CoreCLR. Set this property to `true` to use
+Mono or `false` to use CoreCLR. `$(PublishAot)` takes precedence and
+selects NativeAOT when set to `true`.
+
+This property defaults to `true` in .NET 10 and earlier, so Android
+applications use Mono. In .NET 11 and later, it defaults to `false`,
+so Android applications use CoreCLR.
+
+For more information, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
+[maui-runtimes-compilation]: https://learn.microsoft.com/dotnet/maui/deployment/runtimes-compilation
 
 ## WaitForExit
 
@@ -1797,7 +1919,22 @@ When `$(WaitForExit)` not `false` (the default), `dotnet run` will:
 * Force-stop the application when Ctrl+C is pressed
 
 When `$(WaitForExit)` is `false`, `dotnet run` will simply launch the
-application using `adb shell am start` and return immediately without
-waiting for the application to exit or streaming any output.
+application and return immediately without waiting for the application to exit
+or streaming any output.
+
+This property also controls whether `adb shell am instrument` is passed `-w`
+when the application is launched through its
+[`$(AndroidInstrumentation)`](#androidinstrumentation):
+
+| `$(WaitForExit)` | Launching an `<activity/>`   | Launching an `<instrumentation/>`   |
+| ---------------- | ---------------------------- | ----------------------------------- |
+| `true` (default) | `adb shell am start -S -W`   | `adb shell am instrument -w -r`     |
+| `false`          | `adb shell am start -S`      | `adb shell am instrument -r`        |
+
+Because `adb shell am instrument` only reports results once the instrumentation
+completes, `$(WaitForExit)` must not be `false` if you need the instrumentation's
+output or a meaningful exit code. This matters for scenarios such as running
+tests or a [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) host,
+which is why `dotnet test` always uses the default.
 
 Introduced in .NET 11.

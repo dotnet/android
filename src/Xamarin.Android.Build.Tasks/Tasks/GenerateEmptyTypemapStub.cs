@@ -66,13 +66,11 @@ target triple = "{{triple}}"
 
 		if (Debug) {
 			return header + """
-%struct.TypeMap = type { i32, i32, ptr, ptr }
-%struct.TypeMapManagedTypeInfo = type { i64, i32, i32 }
-%struct.TypeMapAssembly = type { [16 x i8], i64, i64 }
+%struct.TypeMap = type { i32, ptr, ptr }
+%struct.TypeMapManagedTypeInfo = type { i32, i32 }
 
 @type_map = dso_local constant %struct.TypeMap zeroinitializer, align 8
 @type_map_managed_type_info = dso_local constant [0 x %struct.TypeMapManagedTypeInfo] zeroinitializer, align 8
-@type_map_unique_assemblies = dso_local constant [0 x %struct.TypeMapAssembly] zeroinitializer, align 8
 @type_map_assembly_names = dso_local constant [1 x i8] zeroinitializer, align 1
 @type_map_managed_type_names = dso_local constant [1 x i8] zeroinitializer, align 1
 @type_map_java_type_names = dso_local constant [1 x i8] zeroinitializer, align 1

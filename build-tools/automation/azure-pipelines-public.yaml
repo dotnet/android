@@ -290,6 +290,12 @@ stages:
         installTestSlicer: true
         use1ESTemplate: false
 
+    # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
+    # Gradle distribution and Maven dependencies on first use.
+    - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -335,6 +341,12 @@ stages:
         useAgentJdkPath: false
         installTestSlicer: true
         use1ESTemplate: false
+
+    # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
+    # Gradle distribution and Maven dependencies on first use.
+    - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -393,7 +405,7 @@ stages:
     # Currently needed for samples/NativeAOT
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: Xamarin.Android.slnx
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
@@ -523,7 +535,7 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: Update Android SDK band in Workloads.csproj
       inputs:
-        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.slnx
         arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
     - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
@@ -573,13 +585,13 @@ stages:
       displayName: Install MAUI workload packs
       retryCountOnTaskFailure: 3
       inputs:
-        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.slnx
         arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         command: new
-        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Create MAUI template
         continueOnError: false

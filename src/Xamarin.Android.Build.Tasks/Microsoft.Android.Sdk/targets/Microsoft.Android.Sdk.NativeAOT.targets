@@ -17,7 +17,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
     <_AndroidUseWorkloadNativeLinker Condition=" '$(_AndroidUseWorkloadNativeLinker)' == '' ">true</_AndroidUseWorkloadNativeLinker>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' ">JavaInterop1</_AndroidJcwCodegenTarget>
-    <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' ">trimmable</_AndroidTypeMapImplementation>
+    <AndroidTypeMapImplementation Condition=" '$(AndroidTypeMapImplementation)' == '' ">trimmable</AndroidTypeMapImplementation>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
@@ -37,9 +37,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <!-- Outer restores use RuntimeIdentifiers; RuntimeIdentifier is only set in per-RID inner builds. -->
   <ItemGroup>
-    <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler">
-      <ILCompilerPackVersion>$(MicrosoftNETCoreAppRefPackageVersion)</ILCompilerPackVersion>
-    </KnownILCompilerPack>
     <_AndroidNetCoreAppNativeAotKnownRuntimePack Include="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'NativeAOT'))" />
     <KnownRuntimePack Remove="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)" />
     <KnownRuntimePack Include="@(_AndroidNetCoreAppNativeAotKnownRuntimePack)">
@@ -324,6 +321,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
     <!-- Common items (same regardless of linker source) -->
     <ItemGroup>
+      <!-- Supplied by the SDK-resolved NativeAOT runtime pack, including the BCL native archives. -->
       <_NativeAotLinkLibraries Include="@(NativeLibrary)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateJniInitFuncsNativeObjectFile)" />
       <_NativeAotAdditionalObjects Include="@(_PrivateEnvironmentNativeObjectFile)" />
@@ -333,11 +331,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NativeAotSystemLibraries Include="m" />
       <_NativeAotSystemLibraries Include="c" />
     </ItemGroup>
-    <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' and Exists('$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a') ">
-      <_NativeAotLinkLibraries Remove="$(IlcSdkPath)libSystem.Security.Cryptography.Native.Android.a" />
-      <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libSystem.Security.Cryptography.Native.Android.a" />
-    </ItemGroup>
-
     <!-- When using workload linker, resolve libc++/libnaot from runtime pack dir.
          When using NDK, @(_NdkLibs) already has the right NDK sysroot paths. -->
     <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
@@ -371,13 +364,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     />
 
     <ItemGroup>
-      <!-- Replace the .a that NativeCompile/ComputeLinkedFilesToPublish would publish with our .so -->
-      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
-      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)">
-        <RelativePath>$(NativeBinaryPrefix)$(TargetName).so</RelativePath>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </ResolvedFileToPublish>
-
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)" />
       <FileWrites Include="$(_AndroidNativeAotSharedLibrary)$(NativeSymbolExt)" Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' " />
       <FileWrites Include="$(NativeIntermediateOutputPath)sections.ld" />
@@ -399,7 +385,18 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       DependsOnTargets="$(_AndroidRunNativeCompileDependsOn)" />
 
   <Target Name="_AndroidFixNativeLibraryFileName" AfterTargets="ComputeFilesToPublish">
+    <PropertyGroup>
+      <_AndroidNativeAotSharedLibraryName>lib$(TargetName).so</_AndroidNativeAotSharedLibraryName>
+      <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' != '' ">$(NativeOutputPath)$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
+      <_AndroidNativeAotSharedLibrary Condition=" '$(NativeOutputPath)' == '' ">$(OutputPath)$(RuntimeIdentifier)/native/$(_AndroidNativeAotSharedLibraryName)</_AndroidNativeAotSharedLibrary>
+    </PropertyGroup>
     <ItemGroup>
+      <!-- The linker target is not always scheduled during incremental deployment builds. -->
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).a' " />
+      <ResolvedFileToPublish Include="$(_AndroidNativeAotSharedLibrary)" Condition=" Exists('$(_AndroidNativeAotSharedLibrary)') ">
+        <RelativePath>$(_AndroidNativeAotSharedLibraryName)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
       <!-- Fix paths to contain lib-prefix -->
       <ResolvedFileToPublish Update="@(ResolvedFileToPublish)" ArchiveFileName="lib%(FileName)%(Extension)" Condition=" '%(Filename)%(Extension)' == '$(TargetName).so' " />
     </ItemGroup>

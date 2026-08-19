@@ -7,6 +7,13 @@ namespace Xamarin.Android.Tasks;
 static class TypeMapHelper
 {
 	/// <summary>
+	/// The largest buffer callers of <see cref="GetBytes"/> should <c>stackalloc</c> before falling
+	/// back to the heap.  Matches the threshold used elsewhere in the SDK, e.g.
+	/// <c>ScannerHashingHelper</c> in Microsoft.Android.Sdk.TrimmableTypeMap.
+	/// </summary>
+	public const int StackallocThresholdBytes = 256;
+
+	/// <summary>
 	/// Hash the given Java type name for use in java-to-managed typemap array (MonoVM version)
 	/// </summary>
 	public static ulong HashJavaName (string name, bool is64Bit)
@@ -23,21 +30,37 @@ static class TypeMapHelper
 	/// <summary>
 	/// Hash the given type name for use in CoreCLR native typemap arrays.
 	/// </summary>
-	public static unsafe uint HashNameForCLR (string name)
+	public static uint HashNameForCLR (string name)
 	{
 		if (name.Length == 0) {
 			return UInt32.MaxValue;
 		}
 
 		int byteCount = Encoding.UTF8.GetByteCount (name);
-		Span<byte> buffer = byteCount <= 256
+		Span<byte> buffer = byteCount <= StackallocThresholdBytes
 			? stackalloc byte [byteCount]
 			: new byte [byteCount];
-		fixed (char* pChars = name)
-		fixed (byte* pBuffer = buffer) {
-			Encoding.UTF8.GetBytes (pChars, name.Length, pBuffer, byteCount);
-		}
+		GetBytes (name, Encoding.UTF8, buffer);
 		return Crc32.HashToUInt32 (buffer);
+	}
+
+	/// <summary>
+	/// Encodes <paramref name="value"/> into <paramref name="buffer"/>, which must be at least
+	/// <c>encoding.GetByteCount (value)</c> bytes long.  Callers allocate the buffer themselves so
+	/// that short strings can use <c>stackalloc</c>.
+	/// </summary>
+	// The unsafe Encoding.GetBytes(char*, int, byte*, int) overload is used because the
+	// Span-based overload requires netstandard2.1+.
+	public static unsafe void GetBytes (string value, Encoding encoding, Span<byte> buffer)
+	{
+		if (value.Length == 0) {
+			return;
+		}
+
+		fixed (char* pChars = value)
+		fixed (byte* pBuffer = buffer) {
+			encoding.GetBytes (pChars, value.Length, pBuffer, buffer.Length);
+		}
 	}
 
 	/// <summary>
@@ -54,18 +77,13 @@ static class TypeMapHelper
 
 	// Java type names are always ASCII and typically 20-100 characters,
 	// so the encoded byte count is well within stackalloc limits.
-	// The unsafe Encoding.GetBytes(char*, int, byte*, int) overload is
-	// used because the Span-based overload requires netstandard2.1+.
-	static unsafe ulong HashString (string name, Encoding encoding, bool is64Bit)
+	static ulong HashString (string name, Encoding encoding, bool is64Bit)
 	{
 		int byteCount = encoding.GetByteCount (name);
-		Span<byte> buffer = byteCount <= 256
+		Span<byte> buffer = byteCount <= StackallocThresholdBytes
 			? stackalloc byte [byteCount]
 			: new byte [byteCount];
-		fixed (char* pChars = name)
-		fixed (byte* pBuffer = buffer) {
-			encoding.GetBytes (pChars, name.Length, pBuffer, byteCount);
-		}
+		GetBytes (name, encoding, buffer);
 		return HashBytes (buffer, is64Bit);
 	}
 
