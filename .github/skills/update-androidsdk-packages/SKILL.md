@@ -19,7 +19,7 @@ lives in two files:
 Google republishes tool revisions on their own cadence; this skill brings those two files back in
 sync with Google's *current stable* releases with a minimal, reviewable diff — matching the shape of PR #12371, which did exactly this (build-tools/platform-tools/cmdline-tools/cmake/emulator/sources/platform revisions all bumped, hashes recomputed, and per-arch macOS cmdline-tools support added when Apple Silicon archives showed up).
 
-## Two hard rules — read these before touching anything
+## Three hard rules — read these before touching anything
 
 **1. Never touch the Android NDK.** `_XAAndroidNdkRelease`, `_XAAndroidNdkPkgRevision`, and every
 `XAAndroidNdkHash*` property in `Configuration.props`, plus the `android-ndk-r$(_XAAndroidNdkRelease)-*`
@@ -43,6 +43,14 @@ final summary (step 6 below) — even if the user didn't ask about platform leve
 nothing else in the catalog needed updating this run. Silence here is a bug: the whole point of this
 rule is that a human decides whether/when to onboard a new API level, and they can't decide on
 something they were never told about.
+
+**3. Preserve the sources package for every shipped stable platform.** Source archives are additive,
+not a single "latest" package: `sources;android-37.0` and `sources;android-37.1` install into distinct
+SDK directories and both are needed when both platform levels are marked `IsLatestStable`. Never
+replace or remove an existing `source-NN.N_rMM.zip` entry when a new stable platform source appears.
+Keep one `_AndroidSdkPackage` entry and one version-specific hash property per stable platform level,
+and preserve the full API level in `Destination` (`sources\android-37.0` uses the historical
+`sources\android-37` directory; `sources\android-37.1` uses `sources\android-37.1`).
 
 ## Workflow
 
@@ -126,11 +134,12 @@ one shared macOS zip still covers both).
   extension-level suffix too when Google has published one for an API level that already uses it
   (e.g. `platform-34-ext7_r02` → `platform-34-ext12_r01`) — do not introduce an extension suffix for
   an API level that never had one, or vice versa, without a clear reason from the manifest.
-- The `source-NN_r0M.zip` sources package and `XAAndroidSourcesHash` should track whichever API level
-  is `IsLatestStable="true"` in `_PlatformPackage` (the `<Destination>` uses the integer API level,
-  e.g. `\sources\android-37`, even when the catalog entry is `platform-37.0_r01`). Update both the
-  zip name/Destination and the hash
-  together if the latest stable API level's source archive changed.
+- Keep a `source-NN.N_r0M.zip` package for every API level marked `IsLatestStable` in
+  `_PlatformPackage`. Treat a newly published stable source as an addition, not a replacement.
+  Give each archive a version-specific hash property such as `XAAndroidSourcesHash37_0`, and use
+  the platform's distinct SDK directory as `Destination` (`37.0` historically maps to
+  `\sources\android-37`; `37.1` maps to `\sources\android-37.1`). Update an existing entry in place
+  only when Google publishes a newer revision for that same API level.
 
 ### 5. Validate before finishing
 
@@ -154,7 +163,7 @@ dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPla
 Also check:
 - **XML validity** — both edited files still parse (`dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
 - **Diff cleanliness** — `git status` and `git diff` should show changes *only* in `Configuration.props` and `src/androidsdk/androidsdk.targets`. This skill's scope is package pins, not the generated-package-xml template (`package.xml.in`) — if a routine refresh seems to require touching that file too, stop and flag it rather than including it, since automated runs of this skill (e.g. the `skill-runner` workflow) are only authorized to change the two files above. No stray temp files from hashing (the `sha256_of_url.cs` script cleans up after itself; double check if you downloaded anything manually instead).
-- **The two hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set against `git diff` to confirm neither was touched/expanded.
+- **The three hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set against `git diff`, then verify every `IsLatestStable` platform has its own sources package and destination.
 - **Formatting** — match the existing tab indentation and column alignment in both files (several `_PlatformPackage`/`_AndroidSdkPackage` lines are hand-aligned with extra spaces before `<ApiLevel>`/`<Hash>` — preserve that style rather than reformatting the whole block).
 
 ### 6. Summarize what changed

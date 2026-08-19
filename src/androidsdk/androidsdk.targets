@@ -243,9 +243,13 @@
       <Hash>$(XAAndroidDocsHash)</Hash>
       <Destination>$(AndroidSdkFullPath)\docs</Destination>
     </_AndroidSdkPackage>
-    <_AndroidSdkPackage Include="source-37.1_r01.zip">
-      <Hash>$(XAAndroidSourcesHash)</Hash>
+    <_AndroidSdkPackage Include="source-37.0_r02.zip">
+      <Hash>$(XAAndroidSourcesHash37_0)</Hash>
       <Destination>$(AndroidSdkFullPath)\sources\android-37</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="source-37.1_r01.zip">
+      <Hash>$(XAAndroidSourcesHash37_1)</Hash>
+      <Destination>$(AndroidSdkFullPath)\sources\android-37.1</Destination>
     </_AndroidSdkPackage>
 
     <!--
