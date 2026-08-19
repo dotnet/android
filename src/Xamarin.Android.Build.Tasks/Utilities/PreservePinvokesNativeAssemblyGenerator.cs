@@ -17,13 +17,11 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	sealed class PInvoke
 	{
 		public readonly LlvmIrFunction NativeFunction;
-		public readonly PinvokeScanner.PinvokeEntryInfo Info;
-		public readonly ulong Hash;
+		public readonly uint Hash;
 
-		public PInvoke (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo, bool is64Bit)
+		public PInvoke (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo)
 		{
-			Info = pinfo;
-			Hash = MonoAndroidHelper.GetXxHash (pinfo.EntryName, is64Bit);
+			Hash = TypeMapHelper.HashNameForCLR (pinfo.EntryName);
 
 			// All the p/invoke functions use the same dummy signature.  The only thing we care about is
 			// a way to reference to the symbol at build time so that we can return pointer to it.  For
@@ -36,21 +34,19 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	sealed class Component
 	{
 		public readonly string Name;
-		public readonly ulong NameHash;
+		public readonly uint NameHash;
 		public readonly List<PInvoke> PInvokes;
-		public bool Is64Bit;
 
-		public Component (string name, bool is64Bit)
+		public Component (string name)
 		{
 			Name = name;
-			NameHash = MonoAndroidHelper.GetXxHash (name, is64Bit);
+			NameHash = TypeMapHelper.HashNameForCLR (name);
 			PInvokes = new ();
-			Is64Bit = is64Bit;
 		}
 
 		public void Add (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo)
 		{
-			PInvokes.Add (new PInvoke (module, pinfo, Is64Bit));
+			PInvokes.Add (new PInvoke (module, pinfo));
 		}
 
 		public void Sort ()
@@ -65,7 +61,6 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		public LlvmIrFunctionLabelItem ReturnLabel = null!;
 		public LlvmIrFunctionParameter EntryPointHashParam = null!;
 		public LlvmIrInstructions.Phi Phi = null!;
-		public bool Is64Bit;
 	}
 
 	// Maps a component name after ridding it of the `lib` prefix and the extension to a "canonical"
@@ -132,13 +127,15 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			return;
 		}
 
-		bool is64Bit = state.TargetArch switch {
-			AndroidTargetArch.Arm64  => true,
-			AndroidTargetArch.X86_64 => true,
-			AndroidTargetArch.Arm    => false,
-			AndroidTargetArch.X86    => false,
-			_                        => throw new NotSupportedException ($"Architecture {state.TargetArch} is not supported here")
-		};
+		switch (state.TargetArch) {
+			case AndroidTargetArch.Arm64:
+			case AndroidTargetArch.X86_64:
+			case AndroidTargetArch.Arm:
+			case AndroidTargetArch.X86:
+				break;
+			default:
+				throw new NotSupportedException ($"Architecture {state.TargetArch} is not supported here");
+		}
 
 		Log.LogDebugMessage ("  Checking discovered p/invokes against the list of components");
 		var preservedPerComponent = new Dictionary<string, Component> (StringComparer.OrdinalIgnoreCase);
@@ -182,7 +179,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			}
 
 			if (!preservedPerComponent.TryGetValue (pinfo.LibraryName, out Component? component)) {
-				component = new Component (pinfo.LibraryName, is64Bit);
+				component = new Component (pinfo.LibraryName);
 				preservedPerComponent.Add (component.Name, component);
 			}
 			component.Add (module, pinfo);
@@ -190,24 +187,18 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 		JniOnLoadNativeAssemblerHelper.GenerateJniOnLoadHandlerCode (jniOnLoadNames, module);
 		module.AddGlobalVariable ("__explicitly_preserved_symbols", symbolsToExplicitlyPreserve, LlvmIrVariableOptions.GlobalConstant);
-
 		var components = new List<Component> (preservedPerComponent.Values);
-		if (is64Bit) {
-			AddFindPinvoke<ulong> (module, components, is64Bit);
-		} else {
-			AddFindPinvoke<uint> (module, components, is64Bit);
-		}
+		AddFindPinvoke (module, components);
 	}
 
-	void AddFindPinvoke<T> (LlvmIrModule module, List<Component> components, bool is64Bit) where T: struct
+	void AddFindPinvoke (LlvmIrModule module, List<Component> components)
 	{
-		var hashType = is64Bit ? typeof (ulong) : typeof (uint);
 		var parameters = new List<LlvmIrFunctionParameter> {
-			new LlvmIrFunctionParameter (hashType, "library_name_hash") {
+			new LlvmIrFunctionParameter (typeof(uint), "library_name_hash") {
 				NoUndef = true,
 			},
 
-			new LlvmIrFunctionParameter (hashType, "entrypoint_hash") {
+			new LlvmIrFunctionParameter (typeof(uint), "entrypoint_hash") {
 				NoUndef = true,
 			},
 
@@ -241,13 +232,12 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			ReturnLabel = new LlvmIrFunctionLabelItem ("return"),
 			EntryPointHashParam = parameters[1],
 			Phi = new LlvmIrInstructions.Phi (retval),
-			Is64Bit = is64Bit,
 		};
 		module.Add (state.Func);
 		state.Func.Body.Add (new LlvmIrFunctionLabelItem ("entry"));
 
 		var libraryNameSwitchEpilog = new LlvmIrFunctionLabelItem ("libNameSW.epilog");
-		var componentSwitch = new LlvmIrInstructions.Switch<T> (parameters[0], libraryNameSwitchEpilog, "sw.libname");
+		var componentSwitch = new LlvmIrInstructions.Switch<uint> (parameters[0], libraryNameSwitchEpilog, "sw.libname");
 
 		state.Func.Body.Add (componentSwitch);
 		state.Phi.AddNode (libraryNameSwitchEpilog, null);
@@ -260,10 +250,10 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			Log.LogDebugMessage ($"    {component.Name} (hash: 0x{component.NameHash:x}; {component.PInvokes.Count} p/invoke(s))");
 
 			string comment = $" {component.Name} (p/invoke count: {component.PInvokes.Count})";
-			LlvmIrFunctionLabelItem componentLabel = AddSwitchItem<T> (componentSwitch, component.NameHash, is64Bit, comment, null);
+			LlvmIrFunctionLabelItem componentLabel = AddSwitchItem (componentSwitch, component.NameHash, comment, null);
 
 			func.Body.Add (componentLabel, comment);
-			AddPInvokeSwitch<T> (state, componentLabel, component, componentID++);
+			AddPInvokeSwitch (state, componentLabel, component, componentID++);
 		}
 
 		func.Body.Add (libraryNameSwitchEpilog);
@@ -277,12 +267,12 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		func.Body.Add (new LlvmIrInstructions.Ret (typeof (IntPtr), retval));
 	}
 
-	void AddPInvokeSwitch<T> (ConstructionState state, LlvmIrFunctionLabelItem componentLabel, Component component, uint id) where T: struct
+	void AddPInvokeSwitch (ConstructionState state, LlvmIrFunctionLabelItem componentLabel, Component component, uint id)
 	{
 		var pinvokeSwitchEpilog = new LlvmIrFunctionLabelItem ($"pinvokeSW.epilog.{id}");
 		state.Phi.AddNode (pinvokeSwitchEpilog, null);
 
-		var pinvokeSwitch = new LlvmIrInstructions.Switch<T> (state.EntryPointHashParam, pinvokeSwitchEpilog, $"sw.pinvoke.{id}");
+		var pinvokeSwitch = new LlvmIrInstructions.Switch<uint> (state.EntryPointHashParam, pinvokeSwitchEpilog, $"sw.pinvoke.{id}");
 		state.Func.Body.Add (pinvokeSwitch);
 
 		component.Sort ();
@@ -290,7 +280,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		foreach (PInvoke pi in component.PInvokes) {
 			string pinvokeName = pi.NativeFunction.Signature.Name;
 			string comment = $" {pinvokeName}";
-			LlvmIrFunctionLabelItem pinvokeLabel = AddSwitchItem<T> (pinvokeSwitch, pi.Hash, state.Is64Bit, comment, first ? state.ReturnLabel : null);
+			LlvmIrFunctionLabelItem pinvokeLabel = AddSwitchItem (pinvokeSwitch, pi.Hash, comment, first ? state.ReturnLabel : null);
 
 			// First item of every component switch block "reuses" the block's label
 			if (first) {
@@ -313,12 +303,9 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		func.Body.Add (branch);
 	}
 
-	LlvmIrFunctionLabelItem AddSwitchItem<T> (LlvmIrInstructions.Switch<T> sw, ulong hash, bool is64Bit, string? comment, LlvmIrFunctionLabelItem? label) where T: struct
+	LlvmIrFunctionLabelItem AddSwitchItem (LlvmIrInstructions.Switch<uint> sw, uint hash, string? comment, LlvmIrFunctionLabelItem? label)
 	{
-		if (is64Bit) {
-			return sw.Add ((T)(object)hash, dest: label, comment: comment);
-		}
-		return sw.Add ((T)(object)(uint)hash, dest: label, comment: comment);
+		return sw.Add (hash, dest: label, comment: comment);
 	}
 
 	LlvmIrFunctionAttributeSet MakeFindPinvokeAttributeSet (LlvmIrModule module)

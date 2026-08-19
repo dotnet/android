@@ -334,7 +334,11 @@ namespace Xamarin.Android.Tasks
 						return;
 					}
 					if (!await IsPackageInstalled (PackageName)) {
-						LogDiagnostic ($"`pm path {PackageName}` still reports no package after reinstall; continuing — the run-as probe will surface the failure.");
+						LogDiagnostic ($"`pm path {PackageName}` still reports no package after reinstall.");
+						LogDiagnosticDataError ("XA0132", Resources.XA0132_PackageNotInstalled);
+						PrintDiagnostics ();
+						LogCodedError ("XA0132", Resources.XA0132_PackageNotInstalled);
+						return;
 					}
 				}
 
@@ -593,6 +597,11 @@ namespace Xamarin.Android.Tasks
 			args.Add (packageName);
 			string output = await Device.RunShellCommand (CancellationToken, args.ToArray ());
 			LogDiagnostic ($"`pm path {packageName}` returned: {(string.IsNullOrWhiteSpace (output) ? "<no output>" : output.Trim ())}");
+			return IsPackageInstalledOutput (output);
+		}
+
+		internal static bool IsPackageInstalledOutput (string output)
+		{
 			return !string.IsNullOrWhiteSpace (output) &&
 				output.IndexOf ("package:", StringComparison.OrdinalIgnoreCase) >= 0;
 		}

@@ -86,15 +86,18 @@ namespace Android.Widget {
                         get {
                                 if (id_getAdapter == IntPtr.Zero)
                                         id_getAdapter = JNIEnv.GetMethodID (class_ref, "getAdapter", "()Landroid/widget/Adapter;");
+                                Android.Widget.IAdapter? result;
                                 if (GetType () == ThresholdType)
-                                        return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (JNIEnv.CallObjectMethod  (Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
+                                        result = Java.Lang.Object.GetObject<Android.Widget.IAdapter> (JNIEnv.CallObjectMethod  (Handle, id_getAdapter), JniHandleOwnership.TransferLocalRef);
                                 else
-                                        return Java.Lang.Object.GetObject<Android.Widget.IAdapter> (
+                                        result = Java.Lang.Object.GetObject<Android.Widget.IAdapter> (
                                                 JNIEnv.CallNonvirtualObjectMethod  (
                                                     Handle,
                                                     ThresholdClass,
                                                     JNIEnv.GetMethodID (ThresholdClass, "getAdapter", "()Landroid/widget/Adapter;")),
                                                 JniHandleOwnership.TransferLocalRef);
+                                GC.KeepAlive (this);
+                                return result;
                         }
                         set {
                                 if (id_setAdapter_Landroid_widget_Adapter_ == IntPtr.Zero)
@@ -108,6 +111,8 @@ namespace Android.Widget {
                                                 ThresholdClass,
                                                 JNIEnv.GetMethodID (ThresholdClass, "setAdapter", "(Landroid/widget/Adapter;)V"),
                                                 new JValue (JNIEnv.ToJniHandle ((IJavaObject?) value)));
+                               GC.KeepAlive (value);
+                               GC.KeepAlive (this);
                         }
 
                 }

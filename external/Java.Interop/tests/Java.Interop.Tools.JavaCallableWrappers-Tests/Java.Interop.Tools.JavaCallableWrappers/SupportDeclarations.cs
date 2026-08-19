@@ -161,6 +161,20 @@ namespace Xamarin.Android.ToolsTests {
 	{
 	}
 
+	[Register ("com/xamarin/android/BaseOnTabSelectedListener")]
+	interface IBaseOnTabSelectedListener : global::Android.Runtime.IJavaObject
+	{
+	}
+
+	[Register ("com/xamarin/android/OnTabSelectedListener")]
+	interface IOnTabSelectedListener : IBaseOnTabSelectedListener
+	{
+	}
+
+	class OnTabSelectedListener : Java.Lang.Object, IOnTabSelectedListener
+	{
+	}
+
 	[Activity (Name = "activity.Name")]
 	class ActivityName : Java.Lang.Object
 	{

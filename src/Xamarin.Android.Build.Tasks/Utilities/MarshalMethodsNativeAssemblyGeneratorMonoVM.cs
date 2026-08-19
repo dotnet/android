@@ -51,8 +51,8 @@ class MarshalMethodsNativeAssemblyGeneratorMonoVM : MarshalMethodsNativeAssembly
 		this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 	}
 
-	public MarshalMethodsNativeAssemblyGeneratorMonoVM (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState, bool managedMarshalMethodsLookupEnabled)
-		: base (log, uniqueAssemblyNames, codeGenState, managedMarshalMethodsLookupEnabled)
+	public MarshalMethodsNativeAssemblyGeneratorMonoVM (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState)
+		: base (log, uniqueAssemblyNames, codeGenState)
 	{
 		this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 	}

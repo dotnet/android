@@ -201,7 +201,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.AndroidLibrary ("Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder ()) {
@@ -223,7 +223,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			proj.MetadataXml = @"
 				<metadata>
@@ -520,7 +520,7 @@ namespace Foo {
 		}
 
 		[Test]
-		public void AndroidLibraryPackFalseExcludesJarFromAar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AndroidLibraryPackMetadataIsPreservedInNuGet ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -542,23 +542,97 @@ namespace Foo {
 			});
 
 			using (var bindingBuilder = CreateDllBuilder ()) {
-				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
+				bindingBuilder.Target = "Pack";
+				Assert.IsTrue (bindingBuilder.Build (binding), "`Pack` should succeed");
 
-				// Check that the AAR file was created
-				var aarPath = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath, "UnnamedProject.aar");
-				FileAssert.Exists (aarPath);
-
-				// Extract and examine AAR contents
-				using (var aar = ZipArchive.Open (aarPath, FileMode.Open)) {
-					// test-pack-false.jar should NOT be in the AAR because Pack='false'
-					var packFalseEntry = aar.Where (e => e.FullName.Contains ("test-pack-false")).FirstOrDefault ();
-					Assert.IsNull (packFalseEntry, "Jar with Pack='false' should not be included in AAR");
-
-					// test-pack-true.jar should be in the AAR (default Pack='true')
-					var packTrueEntry = aar.Where (e => e.FullName.Contains ("test-pack-true") || e.FullName.StartsWith ("libs/")).FirstOrDefault ();
-					Assert.IsNotNull (packTrueEntry, "Jar with Pack='true' (default) should be included in AAR");
+				var nupkgPath = Path.Combine (Root, bindingBuilder.ProjectDirectory, binding.OutputPath, "UnnamedProject.1.0.0.nupkg");
+				FileAssert.Exists (nupkgPath);
+				using (var nupkg = ZipArchive.Open (nupkgPath, FileMode.Open)) {
+					var aarEntry = nupkg.Single (entry => entry.FullName.EndsWith ("/UnnamedProject.aar", StringComparison.Ordinal));
+					using var aarStream = new MemoryStream ();
+					aarEntry.Extract (aarStream);
+					aarStream.Position = 0;
+					using var aar = ZipArchive.Open (aarStream);
+					Assert.AreEqual (1, aar.Count (entry => entry.FullName.StartsWith ("libs/", StringComparison.Ordinal) && entry.FullName.EndsWith (".jar", StringComparison.Ordinal)),
+						"The generated AAR should contain only the Bind='false', Pack='true' JAR.");
 				}
 			}
+		}
+
+		[Test]
+		public void BindFalseAndroidLibraryResolvesGeneratorTypes (
+			[Values (".jar", ".aar")] string extension,
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			const bool isRelease = true;
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var dependency = extension == ".aar" ? CreateAar (ResourceData.JavaSourceJarTestJar) : ResourceData.JavaSourceJarTestJar;
+			var binding = new XamarinAndroidBindingProject {
+				IsRelease = isRelease,
+				AndroidClassParser = "class-parse",
+				Sources = {
+					new BuildItem.Source ("JavaSourceJarTest.cs") {
+						TextContent = () => @"
+namespace Com.Xamarin.Android.Test.Msbuildtest {
+	[global::Android.Runtime.Register (""com/xamarin/android/test/msbuildtest/JavaSourceJarTest"", DoNotGenerateAcw = true)]
+	public class JavaSourceJarTest : global::Java.Lang.Object {
+	}
+}
+",
+					},
+				},
+				AndroidJavaSources = {
+					new AndroidItem.AndroidJavaSource ("UsesDependency.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => @"
+package com.example;
+
+import com.xamarin.android.test.msbuildtest.JavaSourceJarTest;
+
+public class UsesDependency {
+	public JavaSourceJarTest echo (JavaSourceJarTest value) {
+		return value;
+	}
+}
+",
+						Metadata = { { "Bind", "true" } },
+					},
+				},
+			};
+			binding.SetRuntime (runtime);
+			binding.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ($"dependency{extension}") {
+				BinaryContent = () => dependency,
+				MetadataValues = "Bind=false",
+			});
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (binding), "Binding build should have succeeded.");
+			var apiXml = builder.Output.GetIntermediaryPath ("api.xml");
+			FileAssert.Exists (apiXml);
+			var referenceApiXml = $"{apiXml}.reference.class-parse";
+			FileAssert.Exists (referenceApiXml);
+			File.Delete (referenceApiXml);
+			Assert.IsTrue (builder.Build (binding, doNotCleanupOnUpdate: true, saveProject: false), "Missing reference API recovery build should have succeeded.");
+			FileAssert.Exists (referenceApiXml);
+			StringAssert.Contains ("com.xamarin.android.test.msbuildtest.JavaSourceJarTest", File.ReadAllText (apiXml),
+				"Bind='false' dependency types should be available while resolving the generated API.");
+			var generatedSourceDirectory = Path.Combine (Root, builder.ProjectDirectory, binding.IntermediateOutputPath, "generated", "src");
+			var generatedSources = Directory.EnumerateFiles (generatedSourceDirectory, "*.cs", SearchOption.AllDirectories).ToArray ();
+			Assert.IsTrue (generatedSources.Any (source => File.ReadAllText (source).Contains (" Echo (", StringComparison.Ordinal)),
+				"Members that use Bind='false' dependency types should generate managed bindings.");
+			Assert.IsFalse (generatedSources.Any (source => Path.GetFileName (source).Contains ("JavaSourceJarTest", StringComparison.Ordinal)),
+				"Bind='false' dependency types should not generate managed bindings.");
+		}
+
+		static byte [] CreateAar (byte [] classesJar)
+		{
+			using var stream = new MemoryStream ();
+			using (var aar = ZipArchive.Open (stream)) {
+				aar.AddStream (new MemoryStream (classesJar), "classes.jar");
+			}
+			return stream.ToArray ();
 		}
 
 		[Test]
@@ -572,7 +646,7 @@ namespace Foo {
 				IsRelease = isRelease,
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("Jars\\ActionBarSherlock-4.3.1.zip") {
-						WebContent = "https://github.com/xamarin/monodroid-samples/blob/archived-xamarin/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip?raw=true"
+						WebContent = "https://raw.githubusercontent.com/dotnet/android-samples/1d6b56f205205f587f4fb496a7c7e6633048507e/ActionBarSherlock/ActionBarSherlock/Jars/ActionBarSherlock-4.3.1.zip"
 					}
 				},
 				AndroidClassParser = "class-parse",
@@ -625,7 +699,56 @@ namespace Foo {
 				Assert.IsTrue (xml.Contains ("<param name=\"name\">name to display.</param>"), "param `name` documentation not imported!");
 				Assert.IsTrue (xml.Contains ("Includes a https://developer.android.com/test.html element."), "{@docRoot} value was not replaced!");
 				Assert.IsTrue (xml.Contains ("<a href=\"https://developer.android.com/reference/com/xamarin/android/test/msbuildtest/JavaSourceJarTest#greet(java.lang.String,%20java.util.Date)\" title=\"Reference documentation\">"), "Java documentation URL was not imported!");
-				Assert.IsTrue (xml.Contains ("<a href=\"https://developers.google.com/terms/site-policies\" title=\"Android Open Source Project\">Android Open Source Project</a>"), "Copyright file was not imported!");
+				Assert.IsTrue (xml.Contains ("Java source documentation test notice."), "Copyright file was not imported!");
+			}
+		}
+
+		[Test]
+		public void DocumentationFileGeneratedByDefault ()
+		{
+			var binding = new XamarinAndroidBindingProject ();
+			using var builder = CreateDllBuilder ();
+
+			Assert.IsTrue (builder.Build (binding), "binding build should have succeeded");
+
+			var documentationPath = Path.Combine (Root, builder.ProjectDirectory, binding.OutputPath, $"{binding.ProjectName}.xml");
+			FileAssert.Exists (documentationPath);
+		}
+
+		[TestCase ("Build", "false", false)]
+		[TestCase ("Pack", "false", false)]
+		[TestCase ("Build", "false", true)]
+		[TestCase ("Build", "", true)]
+		public void DisableDocumentationFile (string target, string generateDocumentationFile, bool setInDirectoryBuildTargets)
+		{
+			var binding = new XamarinAndroidBindingProject ();
+			if (setInDirectoryBuildTargets) {
+				var directoryBuildTargets = binding.Imports.Single (import => import.Project () == "Directory.Build.targets");
+				directoryBuildTargets.TextContent = () => $"""
+					<Project>
+					  <PropertyGroup>
+					    <GenerateDocumentationFile>{generateDocumentationFile}</GenerateDocumentationFile>
+					  </PropertyGroup>
+					</Project>
+					""";
+			} else {
+				binding.SetProperty ("GenerateDocumentationFile", generateDocumentationFile);
+			}
+			using var builder = CreateDllBuilder ();
+			builder.Target = target;
+
+			Assert.IsTrue (builder.Build (binding), $"binding {target} should have succeeded");
+
+			var documentationPath = Path.Combine (Root, builder.ProjectDirectory, binding.OutputPath, $"{binding.ProjectName}.xml");
+			FileAssert.DoesNotExist (documentationPath);
+
+			if (target == "Pack") {
+				var packagePath = Path.Combine (Root, builder.ProjectDirectory, binding.OutputPath, $"{binding.ProjectName}.1.0.0.nupkg");
+				FileAssert.Exists (packagePath);
+				using var package = ZipHelper.OpenZip (packagePath);
+				Assert.IsFalse (
+					package.Any (entry => entry.FullName.EndsWith ($"/{binding.ProjectName}.xml", StringComparison.OrdinalIgnoreCase)),
+					$"{packagePath} should not contain an XML documentation file");
 			}
 		}
 
@@ -684,7 +807,7 @@ namespace Foo {
 			};
 			proj.SetRuntime (runtime);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\material-menu-1.1.0.aar") {
-				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded.");
@@ -819,6 +942,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
+
+			if (IgnoreOnNativeAot (runtime, "R8 shrinks bound library Java types out of classes.dex on the trimmable typemap path (missing proguard keeps). Tracked by https://github.com/dotnet/android/issues/11774.")) {
+				return;
+			}
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidBindingProject () {
 				IsRelease = isRelease,
@@ -906,7 +1033,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				AndroidClassParser = "class-parse",
 				Jars = {
 					new AndroidItem.LibraryProjectZip ("fragment-1.2.2.aar") {
-						WebContent = "https://maven.google.com/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
 					}
 				},
 				MetadataXml = @"<metadata><remove-node path=""/api/package[@name='androidx.fragment.app']/interface[@name='FragmentManager.OpGenerator']"" /></metadata>"
@@ -955,7 +1082,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					// repackaged.jar
 					new AndroidItem.AndroidLibrary ("emoji2-1.4.0.aar") {
 						MetadataValues = "Bind=false",
-						WebContent = "https://maven.google.com/androidx/emoji2/emoji2/1.4.0/emoji2-1.4.0.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/emoji2/emoji2/1.4.0/emoji2-1.4.0.aar",
 					},
 				},
 			};
@@ -973,7 +1100,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 					// repackaged.jar
 					new AndroidItem.AndroidLibrary ("connect-client-1.1.0-alpha07.aar") {
 						MetadataValues = "Bind=false",
-						WebContent = "https://maven.google.com/androidx/health/connect/connect-client/1.1.0-alpha07/connect-client-1.1.0-alpha07.aar",
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/health/connect/connect-client/1.1.0-alpha07/connect-client-1.1.0-alpha07.aar",
 					},
 				},
 			};
@@ -1007,6 +1134,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
 			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
 			item.Metadata.Add ("Version", "1.10.4");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 
 			var proj = new XamarinAndroidBindingProject {
 				IsRelease = isRelease,
@@ -1035,7 +1163,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 
 			var proj = new XamarinAndroidBindingProject {
 				IsRelease = isRelease,
@@ -1064,7 +1192,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google"  VerifyDependencies="false"/>
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 			item.Metadata.Add ("VerifyDependencies", "false");
 			item.Metadata.Add ("Bind", "false");
 
@@ -1093,7 +1221,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
 			item.Metadata.Add ("Version", "1.9.0");
-			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 			item.Metadata.Add ("Bind", "false");
 
 			// Dependency fulfilled by <PackageReference>
@@ -1105,7 +1233,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			// Dependency fulfilled by <AndroidMavenLibrary>
 			var annotations_experimental_androidlib = new BuildItem ("AndroidMavenLibrary", "androidx.annotation:annotation-experimental");
 			annotations_experimental_androidlib.Metadata.Add ("Version", "1.3.0");
-			annotations_experimental_androidlib.Metadata.Add ("Repository", "Google");
+			annotations_experimental_androidlib.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 			annotations_experimental_androidlib.Metadata.Add ("Bind", "false");
 			annotations_experimental_androidlib.Metadata.Add ("VerifyDependencies", "false");
 

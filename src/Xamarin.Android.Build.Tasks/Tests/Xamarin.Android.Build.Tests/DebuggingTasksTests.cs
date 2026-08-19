@@ -211,5 +211,20 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (FastDeploy.IsTransientRunAsStatRace (output),
 				$"Expected no transient-race detection for: {output}");
 		}
+
+		[TestCase ("package:/data/app/~~hash/com.example.app-base/base.apk")]
+		[TestCase ("package:/data/app/~~hash/com.example.app-base/base.apk\npackage:/data/app/~~hash/com.example.app-split/split_config.en.apk")]
+		public void IsPackageInstalledOutput_ReturnsTrueForPackagePaths (string output)
+		{
+			Assert.IsTrue (FastDeploy.IsPackageInstalledOutput (output));
+		}
+
+		[TestCase (null)]
+		[TestCase ("")]
+		[TestCase ("Error: package com.example.app was not found")]
+		public void IsPackageInstalledOutput_ReturnsFalseWithoutPackagePath (string output)
+		{
+			Assert.IsFalse (FastDeploy.IsPackageInstalledOutput (output));
+		}
 	}
 }

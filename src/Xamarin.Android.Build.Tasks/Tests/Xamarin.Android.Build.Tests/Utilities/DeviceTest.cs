@@ -355,7 +355,7 @@ namespace Xamarin.Android.Build.Tests
 			return stopwatch.Elapsed;
 		}
 
-		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15)
+		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15, Action? onMonitoringStarted = null)
 		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
@@ -369,11 +369,18 @@ namespace Xamarin.Android.Build.Tests
 			bool didActionSucceed = false;
 			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
+				// Process already-buffered logcat lines first so startup messages emitted before
+				// this monitor starts are still visible to tests.
+				if (TryMatchLogcatOutput (RunAdbCommand ("logcat -d"), sw, action)) {
+					sw.Flush ();
+					return true;
+				}
+
 				using (var proc = Process.Start (info)) {
 					proc.OutputDataReceived += (sender, e) => {
 						if (e.Data != null) {
 							sw.WriteLine (e.Data);
-							if (action (e.Data)) {
+							if (!didActionSucceed && action (e.Data)) {
 								didActionSucceed = true;
 							}
 						} else {
@@ -381,18 +388,41 @@ namespace Xamarin.Android.Build.Tests
 						}
 					};
 					proc.BeginOutputReadLine ();
-					TimeSpan time = TimeSpan.FromSeconds (timeout);
-					while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
-						proc.WaitForExit (10);
-						time -= TimeSpan.FromMilliseconds (10);
+					try {
+						onMonitoringStarted?.Invoke ();
+						TimeSpan time = TimeSpan.FromSeconds (timeout);
+						while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
+							proc.WaitForExit (10);
+							time -= TimeSpan.FromMilliseconds (10);
+						}
+					} finally {
+						if (!proc.HasExited) {
+							proc.Kill ();
+						}
+						proc.WaitForExit ();
+						stdout_done.Wait ();
+						sw.Flush ();
 					}
-					proc.Kill ();
-					proc.WaitForExit ();
-					stdout_done.Wait ();
-					sw.Flush ();
 					return didActionSucceed;
 				}
 			}
+		}
+
+		static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
+		{
+			bool didActionSucceed = false;
+			using (var sr = new StringReader (output ?? "")) {
+				string line = sr.ReadLine ();
+				while (line != null) {
+					logcatOutput.WriteLine (line);
+					if (action (line)) {
+						didActionSucceed = true;
+						break;
+					}
+					line = sr.ReadLine ();
+				}
+			}
+			return didActionSucceed;
 		}
 
 		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 120)
@@ -452,7 +482,45 @@ namespace Xamarin.Android.Build.Tests
 					int.Parse (match.Groups ["seconds"].Value, CultureInfo.InvariantCulture),
 					int.Parse (match.Groups ["milliseconds"].Value, CultureInfo.InvariantCulture));
 			}
+			if (result)
+				return true;
+
+			string activityState = RunAdbCommand ("shell dumpsys activity activities", timeout: 10);
+			result = IsActivityResumed (activityState, activityNamespace, activityName);
+			string diagnostics = $"""
+
+				===== Activity start detection: {(result ? "resumed" : "not detected")} =====
+				===== dumpsys activity activities =====
+				{activityState}
+				===== pidof {activityNamespace} =====
+				{RunAdbCommand ($"shell pidof {activityNamespace}", timeout: 5)}
+				""";
+			if (!result) {
+				diagnostics += $"""
+					===== dumpsys window windows =====
+					{RunAdbCommand ("shell dumpsys window windows", timeout: 10)}
+					""";
+			}
+			File.AppendAllText (logcatFilePath, diagnostics);
+			TestContext.Out.WriteLine (diagnostics);
 			return result;
+		}
+
+		static bool IsActivityResumed (string activityState, string activityNamespace, string activityName)
+		{
+			string componentPrefix = activityNamespace + "/";
+			foreach (string line in activityState.Split ('\n')) {
+				if (!line.Contains ("ResumedActivity", StringComparison.OrdinalIgnoreCase))
+					continue;
+				foreach (string field in line.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) {
+					if (!field.StartsWith (componentPrefix, StringComparison.OrdinalIgnoreCase))
+						continue;
+					string activity = field.Substring (componentPrefix.Length).TrimStart ('.');
+					return activity.Equals (activityName, StringComparison.OrdinalIgnoreCase) ||
+						activity.EndsWith ("." + activityName, StringComparison.OrdinalIgnoreCase);
+				}
+			}
+			return false;
 		}
 
 		protected static XDocument GetUI (int timeoutInSeconds = 120)

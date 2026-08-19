@@ -39,14 +39,14 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: Xamarin.Android.slnx
         arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: Xamarin.Android.slnx
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
@@ -126,14 +126,14 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: Xamarin.Android.slnx
         arguments: -t:PrepareJavaInterop -c Debug --no-restore
         displayName: prepare java.interop Debug
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
+        project: Xamarin.Android.slnx
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
@@ -165,7 +165,7 @@ stages:
         testName: Mono.Android.NET_Tests-CoreCLRTrimmable
         project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
         testResultsFiles: TestResult-Mono.Android.NET_Tests-$(XA.Build.Configuration)CoreCLRTrimmable.xml
-        extraBuildArgs: -p:_AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false
+        extraBuildArgs: -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-CoreCLRTrimmable
 

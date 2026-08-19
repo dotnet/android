@@ -14,7 +14,7 @@ class MarshalMethodsNativeAssemblyGeneratorCoreCLR : MarshalMethodsNativeAssembl
 		: base (log, targetArch, uniqueAssemblyNames)
 	{}
 
-	public MarshalMethodsNativeAssemblyGeneratorCoreCLR (TaskLoggingHelper log, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState, bool managedMarshalMethodsLookupEnabled)
-		: base (log, uniqueAssemblyNames, codeGenState, managedMarshalMethodsLookupEnabled)
+	public MarshalMethodsNativeAssemblyGeneratorCoreCLR (TaskLoggingHelper log, ICollection<string> uniqueAssemblyNames, NativeCodeGenStateObject codeGenState)
+		: base (log, uniqueAssemblyNames, codeGenState)
 	{}
 }

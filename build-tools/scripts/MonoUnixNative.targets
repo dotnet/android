@@ -13,6 +13,16 @@
     <_MonoUnixOutputDylib>$(OutputPath)\libMono.Unix.dylib</_MonoUnixOutputDylib>
   </PropertyGroup>
 
+  <!-- `$(PkgMono_Unix)` comes from `obj\*.nuget.g.props`, so it is only set if the project was
+       evaluated after restore. Fail clearly instead of copying `/runtimes/...` paths. -->
+  <Target Name="_ValidateMonoUnixPackagePath"
+      BeforeTargets="PrepareForBuild;_MakeMonoUnixFatBinariesOSX">
+    <Error
+        Text="`%24(PkgMono_Unix)` is not set. Build this project with `dotnet build` so NuGet-generated props are evaluated after restore."
+        Condition=" '$(PkgMono_Unix)' == '' "
+    />
+  </Target>
+
   <Target Name="_MakeMonoUnixFatBinariesOSX"
       Inputs="@(_MonoUnixDylib)"
       Outputs="$(_MonoUnixOutputDylib)">

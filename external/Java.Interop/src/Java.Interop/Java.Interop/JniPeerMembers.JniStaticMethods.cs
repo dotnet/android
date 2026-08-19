@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Java.Interop
 {
@@ -15,7 +15,7 @@ namespace Java.Interop
 
 		internal    readonly    JniPeerMembers              Members;
 
-		Dictionary<string, JniMethodInfo>                   StaticMethods   = new Dictionary<string, JniMethodInfo>(StringComparer.Ordinal);
+		readonly ConcurrentDictionary<string, JniMethodInfo> StaticMethods = new ConcurrentDictionary<string, JniMethodInfo> (1, 3, StringComparer.Ordinal);
 
 		internal void Dispose ()
 		{
@@ -24,21 +24,11 @@ namespace Java.Interop
 
 		public JniMethodInfo GetMethodInfo (string encodedMember)
 		{
-			lock (StaticMethods) {
-				if (StaticMethods.TryGetValue (encodedMember, out var m)) {
-					return m;
-				}
-			}
-			string method, signature;
-			JniPeerMembers.GetNameAndSignature (encodedMember, out method, out signature);
-			var info = GetMethodInfo (method, signature);
-			lock (StaticMethods) {
-				if (StaticMethods.TryGetValue (encodedMember, out var m)) {
-					return m;
-				}
-				StaticMethods.Add (encodedMember, info);
-			}
-			return info;
+			return StaticMethods.GetOrAdd (encodedMember, static (member, methods) => {
+				string method, signature;
+				JniPeerMembers.GetNameAndSignature (member, out method, out signature);
+				return methods.GetMethodInfo (method, signature);
+			}, this);
 		}
 
 		JniMethodInfo GetMethodInfo (string method, string signature)
@@ -160,4 +150,3 @@ namespace Java.Interop
 		}
 	}}
 }
-

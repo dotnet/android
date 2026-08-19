@@ -110,12 +110,16 @@ projects.
   </Target>
 
   <Target Name="_ExtractAar"
-      Inputs="@(LibraryProjectZip)"
+      DependsOnTargets="_CategorizeAndroidLibraries"
+      Inputs="@(LibraryProjectZip);@(_AndroidReferenceLibraryProjectZip);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_AndroidStampDirectory)_ExtractAar.stamp">
     <ExtractJarsFromAar
         OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
         OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
         Libraries="@(LibraryProjectZip)"
+        OutputReferenceJarsDirectory="$(IntermediateOutputPath)reference_library_project_jars"
+        OutputReferenceAnnotationsDirectory="$(IntermediateOutputPath)reference_library_project_annotations"
+        ReferenceLibraries="@(_AndroidReferenceLibraryProjectZip)"
     />
     <Touch Files="$(_AndroidStampDirectory)_ExtractAar.stamp" AlwaysCreate="true" />
   </Target>

@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Adb" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.ApkDiffCheckRegression" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.BundleTool" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RenameTestCases" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunAndroidEmulatorCheckBootTimes" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunInstrumentationTests" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunUITests" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.WaitForAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <!-- APK tests might run on 32-bit emulators -->
@@ -30,23 +23,11 @@
     <SdkManagerImageName Condition=" '$(SdkManagerImageName)' == '' ">system-images;android-$(TestAvdApiLevel);$(TestAvdType);$(TestAvdAbi)</SdkManagerImageName>
     <TestAvdName>XamarinAndroidTestRunner$(TestAvdApiLevel)-$(TestAvdAbi)</TestAvdName>
     <_AdbEmulatorPort>5570</_AdbEmulatorPort>
-    <_ApkSizesReferenceDirectory>$(MSBuildThisFileDirectory)..\..\tests\apk-sizes-reference</_ApkSizesReferenceDirectory>
     <AvdLaunchTimeoutMinutes Condition=" '$(AvdLaunchTimeoutMinutes)' == '' ">10</AvdLaunchTimeoutMinutes>
     <AvdLaunchTimeoutSeconds>$([MSBuild]::Multiply($(AvdLaunchTimeoutMinutes), 60))</AvdLaunchTimeoutSeconds>
     <AvdLaunchTimeoutMS>$([MSBuild]::Multiply($(AvdLaunchTimeoutSeconds), 1000))</AvdLaunchTimeoutMS>
     <_LogcatFilenameBase>$(MSBuildThisFileDirectory)..\..\bin\Test$(Configuration)\logcat-$(Configuration)$(TestsFlavor)</_LogcatFilenameBase>
   </PropertyGroup>
-
-  <ItemGroup>
-    <_AllArchives Include="@(TestApk)" />
-    <_AllArchives Include="@(TestAab)" />
-  </ItemGroup>
-
-  <ItemDefinitionGroup>
-    <TestApkInstrumentation>
-      <TimeoutInMS>1800000</TimeoutInMS>
-    </TestApkInstrumentation>
-  </ItemDefinitionGroup>
 
   <Target Name="AcquireAndroidTarget">
     <Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget
@@ -137,14 +118,6 @@
       <_EmuTarget Condition=" '$(_EmuTarget)' == '' ">-s emulator-$(_AdbEmulatorPort)</_EmuTarget>
     </PropertyGroup>
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Condition="'@(_FailedComponent)' != ''"
-        ContinueOnError="ErrorAndContinue"
-        Arguments="$(_EmuTarget) logcat -d"
-        ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)"
-        Timeout="120000"
-    />
-    <Xamarin.Android.Tools.BootstrapTasks.Adb
         Condition=" '$(_EmuTarget)' != '' "
         ContinueOnError="ErrorAndContinue"
         Arguments="$(_EmuTarget) emu kill"
@@ -180,201 +153,7 @@
         Command="kill -KILL $(_EmuPid)"
     />
   </Target>
-  <Target Name="ReportComponentFailures">
-    <Error
-        Condition="'@(_FailedComponent)' != ''"
-        Text="Execution of the following components did not complete successfully: @(_FailedComponent->'%(Identity)', ', ')"
-    />
-  </Target>
 
-  <!--
-    <ItemGroup>
-      <TestApk Include="ApkFile">
-        <Package></Package>
-        <InstrumentationType></InstrumentationType>
-        <ResultsPath></ResultsPath>
-      </TestApk>
-    </ItemGroup>
-    -->
-
-  <Target Name="DeployTestApks"
-      Condition=" '@(TestApk)' != '' ">
-    <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) $(AdbOptions) install &quot;%(TestApk.Identity)&quot;"
-        ContinueOnError="ErrorAndContinue"
-        ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)"
-        Timeout="120000"
-    />
-  </Target>
-
-  <Target Name="DeployTestAabs"
-      Condition=" '@(TestAab)' != '' ">
-    <PropertyGroup>
-      <_KeyStore>$([System.IO.Path]::Combine ('$(IntermediateOutputPath)', 'test.keystore'))</_KeyStore>
-      <_KeyAlias>mykey</_KeyAlias>
-      <_KeyPass>android</_KeyPass>
-      <_StorePass>android</_StorePass>
-      <_KeytoolExe Condition=" '$(HostOS)' == 'Windows' ">keytool.exe</_KeytoolExe>
-      <_KeytoolExe Condition=" '$(HostOS)' != 'Windows' ">keytool</_KeytoolExe>
-      <_KeytoolPath>$(JavaSdkDirectory)\bin\$(_KeytoolExe)</_KeytoolPath>
-      <!-- Support for running against a system installation of XA. -->
-      <BundleToolJarPath Condition=" !Exists('$(BundleToolJarPath)') ">$(AndroidBundleToolJarPath)</BundleToolJarPath>
-      <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java</JavaPath>
-    </PropertyGroup>
-    <Exec
-        Condition=" !Exists('$(_KeyStore)') "
-        Command="&quot;$(_KeytoolPath)&quot; -genkeypair -v -storetype pkcs12 -keystore &quot;$(_KeyStore)&quot; -alias $(_KeyAlias) -keyalg RSA -keysize 2048 -validity 10000 -storepass $(_StorePass) -keypass $(_KeyPass) -dname &quot;CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US&quot;"
-    />
-    <Xamarin.Android.Tools.BootstrapTasks.BundleTool
-        Arguments="build-apks --connected-device --overwrite --mode default --bundle &quot;%(TestAab.Identity)&quot; --output &quot;%(TestAab.Identity).apks&quot;"
-        ContinueOnError="ErrorAndContinue"
-        JavaPath="$(JavaPath)"
-        JarPath="$(BundleToolJarPath)"
-        Aapt2ToolPath="$(Aapt2ToolPath)"
-        AdbToolExe="$(AdbToolExe)"
-        AdbToolPath="$(AdbToolPath)"
-        KeyStore="$([System.IO.Path]::GetFullPath ('$(_KeyStore)'))"
-        KeyAlias="$(_KeyAlias)"
-        KeyPass="$(_KeyPass)"
-        StorePass="$(_StorePass)"
-    />
-    <!-- modules: List of modules to be installed, or "_ALL_" for all modules.-->
-    <Xamarin.Android.Tools.BootstrapTasks.BundleTool
-        Arguments="install-apks --modules _ALL_ --apks &quot;%(TestAab.Identity).apks&quot;"
-        ContinueOnError="ErrorAndContinue"
-        JavaPath="$(JavaPath)"
-        JarPath="$(BundleToolJarPath)"
-        AdbToolExe="$(AdbToolExe)"
-        AdbToolPath="$(AdbToolPath)"
-    />
-  </Target>
-
-  <Target Name="UndeployTestApks"
-      Condition=" '@(_AllArchives)' != '' ">
-    <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) $(AdbOptions) uninstall &quot;%(_AllArchives.Package)&quot;"
-        ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)"
-        Timeout="120000"
-        IgnoreExitCode="true"
-    />
-  </Target>
-
-  <Target Name="RunTestApks"
-      Condition=" '@(_AllArchives)' != '' ">
-    <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Condition=" '@(TestApkPermission)' != '' "
-        IgnoreExitCode="True"
-        Arguments="$(_AdbTarget) $(AdbOptions) shell pm grant %(TestApkPermission.Package) android.permission.%(TestApkPermission.Identity)"
-        ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)"
-        Timeout="60000"
-    />
-    <PropertyGroup>
-      <_IncludeCategories Condition=" '$(IncludeCategories)' != '' ">include=$(IncludeCategories)</_IncludeCategories>
-      <_ExcludeCategories Condition=" '$(ExcludeCategories)' != '' ">exclude=$(ExcludeCategories)</_ExcludeCategories>
-      <_DryRunTests Condition=" '$(DryRunTests)' == 'true' ">dryrun=true</_DryRunTests>
-      <_NoTestExclusions Condition=" '$(NoTestExclusions)' == 'true' ">noexclusions=true</_NoTestExclusions>
-      <PlotDataLabelSuffix Condition=" '$(PlotDataLabelSuffix)' == '' ">$(TestsFlavor)</PlotDataLabelSuffix>
-    </PropertyGroup>
-    <RunInstrumentationTests
-        Condition=" '%(TestApkInstrumentation.Identity)' != ''"
-        ContinueOnError="ErrorAndContinue"
-        AdbTarget="$(_AdbTarget)"
-        AdbOptions="$(AdbOptions)"
-        ApiLevel="$(TestAvdApiLevel)"
-        LogLevel="Verbose"
-        PackageName="%(TestApkInstrumentation.Package)"
-        Component="%(TestApkInstrumentation.Package)/%(TestApkInstrumentation.Identity)"
-        NUnit2TestResultsFile="%(TestApkInstrumentation.ResultsPath)"
-        LogcatFilename="$(_LogcatFilenameBase)-%(TestApkInstrumentation.Package)%(TestApkInstrumentation.LogcatFilenameDistincion).txt"
-        InstrumentationArguments="$(_IncludeCategories);$(_ExcludeCategories);$(_DryRunTests);$(_NoTestExclusions)"
-        TestFixture="$(TestFixture)"
-        ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)"
-        Timeout="%(TestApkInstrumentation.TimeoutInMS)">
-      <Output TaskParameter="FailedToRun" ItemName="_FailedComponent"/>
-    </RunInstrumentationTests>
-    <RunUITests
-        Condition=" '%(_AllArchives.Activity)' != '' "
-        ContinueOnError="ErrorAndContinue"
-        AdbTarget="$(_AdbTarget)"
-        AdbOptions="$(AdbOptions)"
-        Activity="%(_AllArchives.Activity)"
-        LogcatFilename="$(_LogcatFilenameBase)-%(_AllArchives.Package).txt"
-        ToolExe="$(AdbToolExe)"
-        ToolPath="$(AdbToolPath)"
-        Timeout="300000">
-    </RunUITests>
-    <ProcessLogcatTiming
-        Condition=" '%(_AllArchives.TimingDefinitionsFilename)' != ''"
-        ContinueOnError="ErrorAndContinue"
-        InputFilename="$(_LogcatFilenameBase)-%(_AllArchives.Package).txt"
-        ApplicationPackageName="%(_AllArchives.Package)"
-        ResultsFilename="%(_AllArchives.TimingResultsFilename)"
-        DefinitionsFilename="%(_AllArchives.TimingDefinitionsFilename)"
-        AddResults="true"
-        LabelSuffix="-$(Configuration)$(PlotDataLabelSuffix)"
-        Activity="%(_AllArchives.Activity)" />
-  </Target>
-  <Target Name="RenameTestCases">
-    <Error
-        Condition=" '$(RenameTestCasesGlob)' == '' "
-        Text="Please set `%24(RenameTestCasesGlob)`."
-    />
-    <Error
-        Condition=" '$(Configuration)' == '' "
-        Text="Please set `%24(Configuration)`."
-    />
-    <PropertyGroup>
-      <_DeleteSource Condition=" '$(KEEP_TEST_SOURCES)' != '' ">False</_DeleteSource>
-      <_DeleteSource Condition=" '$(DeleteTestCaseSourceFiles)' != '' ">$(DeleteTestCaseSourceFiles)</_DeleteSource>
-      <_DeleteSource Condition=" '$(_DeleteSource)' == '' ">True</_DeleteSource>
-    </PropertyGroup>
-    <ItemGroup>
-      <_RenameSource1 Include="$(RenameTestCasesGlob)" />
-    </ItemGroup>
-    <ItemGroup>
-      <_RenameSource  Include="%(_RenameSource1.Identity)">
-        <DestinationFolder>@(_RenameSource1->'%(RootDir)%(Directory)')</DestinationFolder>
-      </_RenameSource>
-    </ItemGroup>
-    <RenameTestCases
-        Configuration="$(Configuration)"
-        DeleteSourceFiles="$(_DeleteSource)"
-        SourceFile="%(_RenameSource.Identity)"
-        DestinationFolder="%(_RenameSource.DestinationFolder)">
-      <Output TaskParameter="CreatedFiles" ItemName="_RenameFailed"/>
-    </RenameTestCases>
-    <Error
-        Condition=" '%(_RenameFailed.Invalid)' != '' "
-        Text="One or more of the unit tests failed to produce an NUnit XML file.  Did a unit test runner crash?"
-    />
-  </Target>
-  <Target Name="RenameApkTestCases"
-      Condition=" '@(TestApk)' != '' Or '@(TestAab)' != '' ">
-    <RenameTestCases
-        Condition=" '%(TestApkInstrumentation.ResultsPath)' != '' "
-        Configuration="$(Configuration)"
-        DeleteSourceFiles="True"
-        DestinationFolder="$(MSBuildThisFileDirectory)..\.."
-        SourceFile="%(TestApkInstrumentation.ResultsPath)"
-        TestsFlavor="$(TestsFlavor)"
-    />
-  </Target>
-  <Target Name="CheckAndRecordApkSizes">
-    <ApkDiffCheckRegression
-        Condition="Exists('$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc')"
-        ApkDescDirectory="$(OutputPath)"
-        ApkDescSuffix="-$(Configuration)$(TestsFlavor)"
-        ApkDiffTool="apkdiff"
-        Package="%(_AllArchives.Identity)"
-        ReferenceDescription="$(_ApkSizesReferenceDirectory)\$([System.IO.Path]::GetFileNameWithoutExtension(%(_AllArchives.Identity)))-$(Configuration)$(TestsFlavor)$([System.IO.Path]::GetExtension(%(_AllArchives.Identity)))desc"
-        TestResultDirectory="$(MSBuildThisFileDirectory)..\.."
-        ContinueOnError="ErrorAndContinue"
-    />
-  </Target>
   <Target Name="CheckBootTimes"
       DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
     <RunAndroidEmulatorCheckBootTimes
@@ -419,22 +198,6 @@
         Text="Attempt to install $(AvdImageName) failed after three attempts."
         Condition=" '$(_SdkManagerExitCode)' != '0' "
     />
-  </Target>
-
-  <PropertyGroup>
-    <RunTestAppDependsOn>
-      AcquireAndroidTarget;
-      Install;
-      CheckAndRecordApkSizes;
-      RunTestApks;
-      UndeployTestApks;
-      RenameApkTestCases;
-      ReportComponentFailures;
-    </RunTestAppDependsOn>
-  </PropertyGroup>
-
-  <Target Name="RunTestApp"
-      DependsOnTargets="$(RunTestAppDependsOn)">
   </Target>
 
 </Project>
