@@ -104,9 +104,13 @@
     </_AndroidSdkPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <!-- commandlinetools: one zip per HostOS -->
-    <_AndroidSdkPackage Include="commandlinetools-mac-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' ">
+    <!-- commandlinetools: one zip per HostOS (and per-arch on macOS) -->
+    <_AndroidSdkPackage Include="commandlinetools-mac_x86_64-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' and '$(_IsArm64Apple)' != 'true' ">
       <Hash>$(XACmdlineToolsHashMacOS)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="commandlinetools-mac_arm64-$(CommandLineToolsVersion).zip" Condition=" '$(_IsArm64Apple)' == 'true' ">
+      <Hash>$(XACmdlineToolsHashMacOSArm64)</Hash>
       <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
     </_AndroidSdkPackage>
     <_AndroidSdkPackage Include="commandlinetools-linux-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Linux' ">
@@ -239,7 +243,7 @@
       <Hash>$(XAAndroidDocsHash)</Hash>
       <Destination>$(AndroidSdkFullPath)\docs</Destination>
     </_AndroidSdkPackage>
-    <_AndroidSdkPackage Include="source-37.0_r02.zip">
+    <_AndroidSdkPackage Include="source-37.1_r01.zip">
       <Hash>$(XAAndroidSourcesHash)</Hash>
       <Destination>$(AndroidSdkFullPath)\sources\android-37</Destination>
     </_AndroidSdkPackage>
