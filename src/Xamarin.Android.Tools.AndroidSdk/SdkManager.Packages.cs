@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,14 +83,25 @@ public partial class SdkManager
 		foreach (var line in output.Split (new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
 			var trimmed = line.Trim ();
 
-			if (trimmed.Contains ("Installed packages:")) { target = installed; parsingUpdates = false; continue; }
-			if (trimmed.Contains ("Available Packages:")) { target = available; parsingUpdates = false; continue; }
-			if (trimmed.Contains ("Available Updates:")) { target = available; parsingUpdates = true; continue; }
+			// Match section headers case-insensitively: the classic sdkmanager emits
+			// "Available Packages:" (capital P) while the newer Android CLI replacement
+			// (cmdline-tools 23+) emits "Available packages:" (lowercase p).
+			if (trimmed.IndexOf ("Installed packages:", StringComparison.OrdinalIgnoreCase) >= 0) { target = installed; parsingUpdates = false; continue; }
+			if (trimmed.IndexOf ("Available Packages:", StringComparison.OrdinalIgnoreCase) >= 0) { target = available; parsingUpdates = false; continue; }
+			if (trimmed.IndexOf ("Available Updates:", StringComparison.OrdinalIgnoreCase) >= 0) { target = available; parsingUpdates = true; continue; }
 
 			if (target is null || trimmed.StartsWith ("Path", StringComparison.Ordinal) || trimmed.StartsWith ("---", StringComparison.Ordinal))
 				continue;
 
-			var parts = trimmed.Split ('|');
+			// The classic sdkmanager prints a pipe-delimited table
+			// ("path | version | description | location"). sdkmanager is deprecated in
+			// cmdline-tools 23+ and replaced by the "Android CLI", which prints
+			// whitespace-aligned columns with no pipes. Fall back to splitting on runs of
+			// 2+ spaces when no pipe is present; otherwise every package row is skipped
+			// (pipe split yields a single column), producing an empty installed list.
+			var parts = trimmed.IndexOf ('|') >= 0
+				? trimmed.Split ('|')
+				: Regex.Split (trimmed, @"\s{2,}");
 			if (parsingUpdates && string.Equals (parts [0].Trim (), "ID", StringComparison.Ordinal))
 				continue;
 			var versionIndex = parsingUpdates ? 2 : 1;

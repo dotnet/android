@@ -216,6 +216,60 @@ Available Updates:
 	}
 
 	[Test]
+	public void ParseSdkManagerList_AndroidCliWhitespaceFormat_ParsesInstalledAndAvailable ()
+	{
+		// sdkmanager is deprecated in cmdline-tools 23+ and replaced by the "Android CLI",
+		// which prints a 3-line deprecation banner followed by whitespace-aligned columns
+		// (no pipes) under a lowercase "Available packages:" header. Regression test: the old
+		// pipe-only parser skipped every row here, returning an empty installed list, which the
+		// MAUI extension surfaced as a false "AVD missing components" warning.
+		var output = @"WARNING: The SDK Manager CLI tool (sdkmanager) is deprecated. Android CLI will be used instead.
+The 'android' binary can also be found in the cmdline-tools directory, and 'android sdk' is the replacement for 'sdkmanager'.
+To learn more about the Android CLI and how to use it, see the documentation (https://d.android.com/tools/agents/android-cli)
+
+Installed packages:
+  build-tools/36.0.0                                        36.0.0     Android SDK Build-Tools 36
+  cmdline-tools/latest                                      23.0.0     Android SDK Command-line Tools (latest)
+  emulator                                                  37.1.11    Android Emulator
+  platform-tools                                            37.0.1     Android SDK Platform-Tools
+  platforms/android-35                                      2.0.0      Android SDK Platform 35
+  system-images/android-36.1/google_apis/arm64-v8a          4.0.0      Google APIs ARM 64 v8a System Image
+  system-images/android-37.0/google_apis_ps16k/arm64-v8a    6.0.0      16 KB Page Size Google APIs ARM 64 v8a System Image
+Available packages:
+  add-ons/addon-google_apis-google-10                       2.0.0      Google APIs
+  platforms/android-36                                       2.0.0      Android SDK Platform 36
+";
+
+		var (installed, available) = SdkManager.ParseSdkManagerList (output);
+
+		Assert.AreEqual (7, installed.Count, "Should parse all 7 whitespace-aligned installed packages");
+
+		var buildTools = installed.FirstOrDefault (p => p.Path == "build-tools/36.0.0");
+		Assert.IsNotNull (buildTools, "build-tools/36.0.0 should be parsed");
+		Assert.AreEqual ("36.0.0", buildTools!.Version);
+		Assert.AreEqual ("Android SDK Build-Tools 36", buildTools.Description);
+		Assert.IsTrue (buildTools.IsInstalled);
+
+		// System-image ids carry internal '/' separators and multi-word descriptions with
+		// single spaces (e.g. "16 KB Page Size ...") that must survive the 2+-space column split.
+		var sysImg = installed.FirstOrDefault (p => p.Path == "system-images/android-37.0/google_apis_ps16k/arm64-v8a");
+		Assert.IsNotNull (sysImg, "16 KB page-size system image should be parsed");
+		Assert.AreEqual ("6.0.0", sysImg!.Version);
+		Assert.AreEqual ("16 KB Page Size Google APIs ARM 64 v8a System Image", sysImg.Description);
+
+		var sysImg361 = installed.FirstOrDefault (p => p.Path == "system-images/android-36.1/google_apis/arm64-v8a");
+		Assert.IsNotNull (sysImg361);
+		Assert.AreEqual ("4.0.0", sysImg361!.Version);
+
+		// Available-section parsing requires the case-insensitive "Available packages:" match.
+		Assert.AreEqual (2, available.Count, "Should parse available packages under the lowercase header");
+		var googleApis = available.FirstOrDefault (p => p.Path == "add-ons/addon-google_apis-google-10");
+		Assert.IsNotNull (googleApis);
+		Assert.AreEqual ("2.0.0", googleApis!.Version);
+		Assert.IsFalse (googleApis.IsInstalled);
+	}
+
+	[Test]
 	public void FindSdkManagerPath_NullSdkPath_ReturnsNull ()
 	{
 		manager.AndroidSdkPath = null;
