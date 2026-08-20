@@ -490,6 +490,8 @@
     />
     <MakeDir Directories="$(AndroidSdkFullPath)\licenses" />
     <Delete Files="$(_AndroidSdkLicenseFile)" />
+    <!-- Android CLI can exit with 0xC0000409 after writing the license on Windows.
+         Ignore its exit code and verify that this invocation recreated the deleted license instead. -->
     <Exec
         Condition=" Exists('$(_AndroidCliPath)') and '$(HostOS)' == 'Windows' "
         Command="powershell -NoProfile -Command &quot;1..10 | ForEach-Object { 'y' } | &amp; '$(_AndroidCliPath)' --no-metrics '--sdk=$(AndroidSdkFullPath)' sdk install 'build-tools/$(XABuildToolsFolder)'&quot;"
