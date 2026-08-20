@@ -185,10 +185,11 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		public void Aapt2Compile ()
+		[TestCase ("Aapt2Compile")]
+		[TestCase ("Aapt2CompileÜmläüt")]
+		public void Aapt2Compile (string directoryName)
 		{
-			var path = Path.Combine (Root, "temp", "Aapt2CompileÜmläüt");
+			var path = Path.Combine (Root, "temp", directoryName);
 			Directory.CreateDirectory (path);
 			var resPath = Path.Combine (path, "res");
 			var archivePath = Path.Combine(path, "flata");
