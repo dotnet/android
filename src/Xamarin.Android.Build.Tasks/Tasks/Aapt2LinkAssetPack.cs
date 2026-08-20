@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Xml;
@@ -41,21 +42,14 @@ namespace Xamarin.Android.Tasks {
 			RunAapt (GenerateCommandLineCommands (Manifest, OutputArchive), OutputArchive.ItemSpec);
 			ProcessOutput ();
 			if (File.Exists (OutputArchive.ItemSpec)) {
-				var zipMetadata = ZipArchiveMetadataReader.Read (OutputArchive.ItemSpec);
 				// move the manifest to the right place.
-				using (var zip = ZipArchiveExtensions.OpenZip (OutputArchive.ItemSpec, FileMode.Open)) {
-					if (zipMetadata.TryGetValue ("AndroidManifest.xml", out var manifestMetadata)) {
-						zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml", manifestMetadata.CompressionMethod.ToCompressionLevel ());
-					}
+				using (var zip = ZipArchiveExtensions.OpenZipUpdate (OutputArchive.ItemSpec, FileMode.Open)) {
+					// BundleConfig.pb controls compression in the final APK, so this intermediate
+					// asset-pack archive does not need stored entries.
+					zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml", CompressionLevel.Optimal);
 					zip.ReadEntry ("resources.pb", StringComparison.Ordinal)?.Delete ();
 					zip.FixupWindowsPathSeparators (
-						entry => {
-							if (!zipMetadata.TryGetValue (entry.FullName, out var metadata)) {
-								throw new InvalidDataException ($"Unable to read ZIP metadata for '{entry.FullName}' in '{OutputArchive.ItemSpec}'.");
-							}
-
-							return metadata.CompressionMethod.ToCompressionLevel ();
-						},
+						_ => CompressionLevel.Optimal,
 						(a, b) => LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`")
 					);
 				}

@@ -1458,6 +1458,9 @@ namespace UnamedProject
 
 				var classesZipPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.zip");
 				FileAssert.Exists (classesZipPath);
+				foreach (var entry in ZipArchiveMetadataReader.ReadEntries (classesZipPath)) {
+					Assert.AreEqual (ZipEntryCompressionMethod.Store, entry.CompressionMethod, $"{entry.FullName} should be stored.");
+				}
 				var expectedBuilder = new StringBuilder ();
 				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
 					foreach (var file in zip) {

@@ -221,6 +221,44 @@ public class BuildArchiveTests
 		Assert.That (secondRunMessages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Skipping {emptyFile} as the archive file is up to date."));
 	}
 
+	[Test]
+	public void MissingArchivePathUsesCodedError ()
+	{
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			ApkOutputPath = Path.Combine (TempDirectory, "app.apk"),
+			FilesToAddToArchive = [new TaskItem ("file.txt")],
+		};
+
+		Assert.IsFalse (task.RunTask (), "task should have failed");
+		Assert.That (errors, Has.One.Property (nameof (BuildErrorEventArgs.Code)).EqualTo ("XA4234"));
+	}
+
+	[Test]
+	public void ArchiveRootDirectoryProvidesRelativeEntryPath ()
+	{
+		var root = Path.Combine (TempDirectory, "classes");
+		var classDirectory = Path.Combine (root, "com", "example");
+		var classFile = Path.Combine (classDirectory, "Main.class");
+		Directory.CreateDirectory (classDirectory);
+		File.WriteAllText (classFile, "class");
+
+		var apk = Path.Combine (TempDirectory, "classes.zip");
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			ArchiveRootDirectory = root,
+			FilesToAddToArchive = [new TaskItem (classFile)],
+			UncompressedFileExtensions = ".class",
+		};
+
+		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+		using var archive = ZipFile.OpenRead (apk);
+		archive.AssertEntryContents (apk, "com/example/Main.class", "class");
+		Assert.AreEqual (ZipEntryCompressionMethod.Store, ZipArchiveMetadataReader.Read (apk) ["com/example/Main.class"].CompressionMethod);
+	}
+
 	static void CreateArchive (string path, params (string name, string contents, CompressionLevel compressionLevel) [] entries)
 	{
 		using (var stream = new FileStream (path, FileMode.Create, FileAccess.ReadWrite))

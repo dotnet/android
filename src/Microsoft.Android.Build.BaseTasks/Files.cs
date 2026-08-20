@@ -403,18 +403,13 @@ namespace Microsoft.Android.Build.Tasks
 		static string? HashZip (Stream stream)
 		{
 			var hashes = new StringBuilder ();
-			var buffer = MemoryStreamPool.Shared.Rent ();
 
 			try {
-				using (var zip = ZipArchiveExtensions.OpenZip (stream, ZipArchiveMode.Read, leaveOpen: true)) {
-					foreach (var item in zip.Entries) {
-						hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, GetEntryCrc32 (item, buffer));
-					}
+				foreach (var item in ZipArchiveMetadataReader.ReadEntries (stream)) {
+					hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.Crc32);
 				}
 			} catch {
 				return null;
-			} finally {
-				MemoryStreamPool.Shared.Return (buffer);
 			}
 			return hashes.ToString ();
 		}
@@ -422,40 +417,24 @@ namespace Microsoft.Android.Build.Tasks
 		static string? HashZip (string filename)
 		{
 			var hashes = new StringBuilder ();
-			var buffer = MemoryStreamPool.Shared.Rent ();
 
 			try {
 				// check cache
 				if (File.Exists (filename + ".hash"))
 					return File.ReadAllText (filename + ".hash");
 
-				using (var zip = ReadZipFile (filename)) {
-					foreach (var item in zip.Entries) {
-						hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, GetEntryCrc32 (item, buffer));
-					}
+				foreach (var item in ZipArchiveMetadataReader.ReadEntries (filename)) {
+					hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.Crc32);
 				}
 			} catch {
 				return null;
-			} finally {
-				MemoryStreamPool.Shared.Return (buffer);
 			}
 			return hashes.ToString ();
 		}
 
-		static uint GetEntryCrc32 (ZipArchiveEntry entry, MemoryStream buffer)
-		{
-			buffer.SetLength (0);
-			entry.Extract (buffer);
-			if (buffer.TryGetBuffer (out ArraySegment<byte> segment) && segment.Array != null) {
-				return Crc32.HashToUInt32 (new ReadOnlySpan<byte> (segment.Array, segment.Offset, (int) buffer.Length));
-			}
-
-			return Crc32.HashToUInt32 (buffer.ToArray ());
-		}
-
 		public static ZipArchive ReadZipFile (string filename, bool strictConsistencyChecks = false)
 		{
-			return ZipArchiveExtensions.OpenZip (filename, FileMode.Open);
+			return ZipArchiveExtensions.OpenZipRead (filename);
 		}
 
 		public static bool ZipAny (string filename, Func<ZipArchiveEntry, bool> filter)

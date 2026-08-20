@@ -8,7 +8,7 @@ namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Minimal <see cref="ITaskItem"/> helpers for <see cref="CompressAssemblies"/>, duplicated
-/// here to keep this net11.0 assembly self-contained (the full versions live in
+/// here to keep this modern .NET assembly self-contained (the full versions live in
 /// <c>ITaskItemExtensions</c> in Xamarin.Android.Build.Tasks).
 /// </summary>
 static class TaskItemExtensions

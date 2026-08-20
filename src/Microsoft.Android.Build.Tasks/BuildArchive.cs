@@ -28,6 +28,8 @@ public class BuildArchive : AndroidTask
 	[Required]
 	public ITaskItem [] FilesToAddToArchive { get; set; } = [];
 
+	public string? ArchiveRootDirectory { get; set; }
+
 	public string? UncompressedFileExtensions { get; set; }
 
 	HashSet<string>? uncompressedFileExtensions;
@@ -52,7 +54,7 @@ public class BuildArchive : AndroidTask
 			refreshExistingOutput = false;
 		}
 
-		using var apk = ZipArchiveExtensions.OpenZip (ApkOutputPath, FileMode.OpenOrCreate);
+		using var apk = ZipArchiveExtensions.OpenZipUpdate (ApkOutputPath);
 		var existingEntries = new List<string> ();
 
 		if (refreshExistingOutput) {
@@ -104,7 +106,7 @@ public class BuildArchive : AndroidTask
 		DateTime lastWriteInput = File.GetLastWriteTimeUtc (ApkInputPath);
 		var inputMetadata = ZipArchiveMetadataReader.Read (ApkInputPath);
 
-		using var packaged = ZipArchiveExtensions.OpenZip (ApkInputPath, FileMode.Open);
+		using var packaged = ZipArchiveExtensions.OpenZipRead (ApkInputPath);
 		foreach (var entry in packaged.Entries) {
 			if (entry.IsDirectory ()) {
 				continue;
@@ -144,16 +146,21 @@ public class BuildArchive : AndroidTask
 			}
 
 			Log.LogDebugMessage ($"Refreshing {entryName} from {ApkInputPath}");
-			CopyEntryToArchive (apk, entryName, entry, metadata.CompressionMethod.ToCompressionLevel ());
+			CopyEntryToArchive (apk, entryName, entry, ToCompressionLevel (metadata.CompressionMethod));
 		}
 	}
 
 	bool AddItemToArchive (ZipArchive apk, ITaskItem item, List<string> existingEntries)
 	{
 		string diskPath = item.ItemSpec;
-		string? archivePath = GetRequiredMetadata (item, "FilesToAddToArchive", "ArchivePath");
-		if (archivePath == null)
-			return false;
+		string archivePath = item.GetMetadata ("ArchivePath") ?? "";
+		if (string.IsNullOrWhiteSpace (archivePath)) {
+			if (!string.IsNullOrEmpty (ArchiveRootDirectory)) {
+				archivePath = Path.GetRelativePath (ArchiveRootDirectory, diskPath);
+			} else if (!item.TryGetRequiredMetadata ("FilesToAddToArchive", "ArchivePath", Log, out archivePath)) {
+				return false;
+			}
+		}
 
 		archivePath = archivePath.Replace ('\\', '/');
 
@@ -178,7 +185,7 @@ public class BuildArchive : AndroidTask
 			return;
 		}
 
-		using var jar = ZipArchiveExtensions.OpenZip (jarFilePath, FileMode.Open);
+		using var jar = ZipArchiveExtensions.OpenZipRead (jarFilePath);
 		var jarEntry = jar.ReadEntry (jarEntryName, StringComparison.Ordinal);
 		if (jarEntry == null) {
 			Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jarEntryName, jarFilePath);
@@ -272,6 +279,15 @@ public class BuildArchive : AndroidTask
 		};
 	}
 
+	static CompressionLevel ToCompressionLevel (ZipEntryCompressionMethod compressionMethod)
+	{
+		return compressionMethod switch {
+			ZipEntryCompressionMethod.Store => CompressionLevel.NoCompression,
+			ZipEntryCompressionMethod.Deflate => CompressionLevel.Optimal,
+			_ => throw new NotSupportedException ($"Unsupported ZIP compression method: {(ushort) compressionMethod}"),
+		};
+	}
+
 	static ZipCompressionMethod GetExistingCompressionMethod (ZipArchiveEntry entry)
 	{
 		return entry.CompressionMethod switch {
@@ -304,16 +320,6 @@ public class BuildArchive : AndroidTask
 		}
 
 		return parsedExtensions;
-	}
-
-	string? GetRequiredMetadata (ITaskItem item, string itemName, string metadataName)
-	{
-		string metadataValue = item.GetMetadata (metadataName) ?? "";
-		if (!string.IsNullOrWhiteSpace (metadataValue))
-			return metadataValue;
-
-		Log.LogError ($"The '{metadataName}' metadata on '{itemName}' is required for '{item.ItemSpec}'.");
-		return null;
 	}
 
 	static string GetMetadataOrDefault (ITaskItem item, string metadataName, string defaultValue)

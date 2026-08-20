@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 
 		void ExtractFilesFromPath(string apk, string path)
 		{
-			using (var zip = ZipArchiveExtensions.OpenZip (apk, FileMode.Open)) {
+			using (var zip = ZipArchiveExtensions.OpenZipRead (apk)) {
 				foreach (var e in zip.Entries.Where (x => x.FullName.StartsWith (path, StringComparison.OrdinalIgnoreCase))) {
 					Log.LogDebugMessage ("Extracting {0} from {1}", e.FullName, apk);
 					using (var fs = new FileStream (Path.Combine (GdbSymbolsPath, Path.GetFileName (e.FullName)), FileMode.OpenOrCreate)) {

@@ -48,6 +48,25 @@ namespace Microsoft.Android.Build.Tasks
 
 		public static IReadOnlyDictionary<string, ZipEntryMetadata> Read (Stream stream)
 		{
+			var entries = ReadEntries (stream);
+			var metadata = new Dictionary<string, ZipEntryMetadata> (entries.Count, StringComparer.Ordinal);
+			foreach (var entry in entries) {
+				metadata [entry.FullName] = entry;
+			}
+			return metadata;
+		}
+
+		public static IReadOnlyList<ZipEntryMetadata> ReadEntries (string archivePath)
+		{
+			if (archivePath == null)
+				throw new ArgumentNullException (nameof (archivePath));
+
+			using var stream = File.OpenRead (archivePath);
+			return ReadEntries (stream);
+		}
+
+		public static IReadOnlyList<ZipEntryMetadata> ReadEntries (Stream stream)
+		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			if (!stream.CanSeek)
@@ -55,13 +74,13 @@ namespace Microsoft.Android.Build.Tasks
 
 			long originalPosition = stream.Position;
 			try {
-				return ReadCore (stream);
+				return ReadEntriesCore (stream);
 			} finally {
 				stream.Seek (originalPosition, SeekOrigin.Begin);
 			}
 		}
 
-		static IReadOnlyDictionary<string, ZipEntryMetadata> ReadCore (Stream stream)
+		static IReadOnlyList<ZipEntryMetadata> ReadEntriesCore (Stream stream)
 		{
 			long endOfCentralDirectoryOffset = FindEndOfCentralDirectory (stream);
 			stream.Seek (endOfCentralDirectoryOffset + 10, SeekOrigin.Begin);
@@ -72,7 +91,7 @@ namespace Microsoft.Android.Build.Tasks
 			uint centralDirectoryOffset = reader.ReadUInt32 ();
 
 			stream.Seek (centralDirectoryOffset, SeekOrigin.Begin);
-			var entries = new Dictionary<string, ZipEntryMetadata> ((int) entryCount, StringComparer.Ordinal);
+			var entries = new List<ZipEntryMetadata> ((int) entryCount);
 			long centralDirectoryEnd = centralDirectoryOffset + centralDirectorySize;
 			while (stream.Position < centralDirectoryEnd && entries.Count < entryCount) {
 				if (reader.ReadUInt32 () != CentralDirectoryFileHeaderSignature)
@@ -103,13 +122,13 @@ namespace Microsoft.Android.Build.Tasks
 					throw new InvalidDataException ("ZIP central directory entry exceeds the available data.");
 
 				stream.Seek (extraFieldLength + fileCommentLength, SeekOrigin.Current);
-				entries [fullName] = new ZipEntryMetadata (
+				entries.Add (new ZipEntryMetadata (
 					fullName,
 					crc32,
 					compressedSize,
 					uncompressedSize,
 					(ZipEntryCompressionMethod) compressionMethod
-				);
+				));
 			}
 
 			return entries;

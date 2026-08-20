@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tasks
 			}
 			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
 
-			using (var aar = ZipArchiveExtensions.OpenZip (OutputFile, FileMode.Create)) {
+			using (var aar = ZipArchiveExtensions.CreateZip (OutputFile)) {
 				if (AndroidAssets != null) {
 					foreach (var asset in AndroidAssets) {
 						// See: https://github.com/xamarin/xamarin-android/commit/665cb59205f8ac565b6acbda740624844bc1cbd9

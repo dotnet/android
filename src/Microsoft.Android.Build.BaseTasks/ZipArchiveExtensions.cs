@@ -8,41 +8,48 @@ namespace Microsoft.Android.Build.Tasks
 {
 	public static class ZipArchiveExtensions
 	{
-		public static CompressionLevel ToCompressionLevel (this ZipEntryCompressionMethod compressionMethod)
-		{
-			return compressionMethod switch {
-				ZipEntryCompressionMethod.Store => CompressionLevel.NoCompression,
-				ZipEntryCompressionMethod.Deflate => CompressionLevel.Optimal,
-				_ => throw new NotSupportedException ($"Unsupported ZIP compression method: {(ushort) compressionMethod}"),
-			};
-		}
-
-		public static ZipArchive OpenZip (string archivePath, FileMode fileMode, Encoding? entryNameEncoding = null)
+		public static ZipArchive OpenZipRead (string archivePath, Encoding? entryNameEncoding = null)
 		{
 			if (archivePath == null)
 				throw new ArgumentNullException (nameof (archivePath));
 
-			FileMode actualFileMode = fileMode;
-			ZipArchiveMode archiveMode;
+			var stream = new FileStream (archivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+			return OpenZip (stream, ZipArchiveMode.Read, leaveOpen: false, entryNameEncoding);
+		}
+
+		public static ZipArchive OpenZipUpdate (string archivePath, FileMode fileMode = FileMode.OpenOrCreate, Encoding? entryNameEncoding = null)
+		{
+			if (archivePath == null)
+				throw new ArgumentNullException (nameof (archivePath));
 
 			switch (fileMode) {
-				case FileMode.Create:
-				case FileMode.CreateNew:
-				case FileMode.Truncate:
-					archiveMode = ZipArchiveMode.Create;
-					break;
 				case FileMode.Open:
-					archiveMode = ZipArchiveMode.Update;
-					break;
 				case FileMode.OpenOrCreate:
-					archiveMode = ZipArchiveMode.Update;
 					break;
 				default:
 					throw new ArgumentOutOfRangeException (nameof (fileMode), fileMode, null);
 			}
 
-			var stream = new FileStream (archivePath, actualFileMode, FileAccess.ReadWrite, FileShare.Read);
-			return OpenZip (stream, archiveMode, leaveOpen: false, entryNameEncoding);
+			var stream = new FileStream (archivePath, fileMode, FileAccess.ReadWrite, FileShare.Read);
+			return OpenZip (stream, ZipArchiveMode.Update, leaveOpen: false, entryNameEncoding);
+		}
+
+		public static ZipArchive CreateZip (string archivePath, FileMode fileMode = FileMode.Create, Encoding? entryNameEncoding = null)
+		{
+			if (archivePath == null)
+				throw new ArgumentNullException (nameof (archivePath));
+
+			switch (fileMode) {
+				case FileMode.Create:
+				case FileMode.CreateNew:
+				case FileMode.Truncate:
+					break;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (fileMode), fileMode, null);
+			}
+
+			var stream = new FileStream (archivePath, fileMode, FileAccess.ReadWrite, FileShare.Read);
+			return OpenZip (stream, ZipArchiveMode.Create, leaveOpen: false, entryNameEncoding);
 		}
 
 		public static ZipArchive OpenZip (Stream stream, ZipArchiveMode mode = ZipArchiveMode.Read, bool leaveOpen = false, Encoding? entryNameEncoding = null)

@@ -33,13 +33,12 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		{
 			var archivePath = Path.Combine (TempDirectory, "archive.zip");
 
-			using (var archive = ZipArchiveExtensions.OpenZip (archivePath, FileMode.Create)) {
+			using (var archive = ZipArchiveExtensions.CreateZip (archivePath)) {
 				archive.AddEntry ("assets\\foo.txt", "foo", Encoding.UTF8, CompressionLevel.NoCompression);
 			}
 
-			var metadata = ZipArchiveMetadataReader.Read (archivePath);
-			using (var archive = ZipArchiveExtensions.OpenZip (archivePath, FileMode.Open)) {
-				archive.FixupWindowsPathSeparators (entry => metadata [entry.FullName].CompressionMethod.ToCompressionLevel ());
+			using (var archive = ZipArchiveExtensions.OpenZipUpdate (archivePath, FileMode.Open)) {
+				archive.FixupWindowsPathSeparators (_ => CompressionLevel.NoCompression);
 			}
 
 			var updatedMetadata = ZipArchiveMetadataReader.Read (archivePath);
@@ -60,6 +59,23 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			entry.Extract (destination);
 
 			Assert.AreEqual (0, destination.Length, "The empty entry should produce an empty output.");
+		}
+
+		[Test]
+		public void OpenZipRead_OpensReadOnlyArchive ()
+		{
+			var archivePath = Path.Combine (TempDirectory, "archive.zip");
+			using (var archive = ZipArchiveExtensions.CreateZip (archivePath)) {
+				archive.AddEntry ("entry.txt", "contents", Encoding.UTF8);
+			}
+
+			File.SetAttributes (archivePath, File.GetAttributes (archivePath) | FileAttributes.ReadOnly);
+			try {
+				using var archive = ZipArchiveExtensions.OpenZipRead (archivePath);
+				Assert.AreEqual ("entry.txt", archive.Entries [0].FullName);
+			} finally {
+				File.SetAttributes (archivePath, FileAttributes.Normal);
+			}
 		}
 
 		static void CreateMalformedEmptyStoredEntryArchive (string path)

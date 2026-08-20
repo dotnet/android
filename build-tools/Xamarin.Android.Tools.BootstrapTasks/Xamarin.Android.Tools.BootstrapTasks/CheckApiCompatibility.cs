@@ -134,7 +134,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				var zipFiles = Directory.GetFiles (referenceContractPath.Parent.FullName, "*.zip");
 				foreach (var zipFile in zipFiles) {
 					var zipDateTime = File.GetLastWriteTimeUtc (zipFile);
-					using (var zip = ZipArchiveExtensions.OpenZip (zipFile, FileMode.Open)) {
+					using (var zip = ZipArchiveExtensions.OpenZipRead (zipFile)) {
 						foreach (var entry in zip.Entries) {
 							var path = Path.Combine (referenceContractPath.FullName, entry.FullName.Replace ('/', Path.DirectorySeparatorChar));
 							if (!File.Exists (path) || File.GetLastWriteTimeUtc (path) < zipDateTime) {

@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var pair in Sources.Zip (DestinationDirectories, (s, d) => new { Source = s, Destination = d })) {
 				if (!Directory.Exists (pair.Destination.ItemSpec))
 					Directory.CreateDirectory (pair.Destination.ItemSpec);
-				using (var z = ZipArchiveExtensions.OpenZip (pair.Source.ItemSpec, FileMode.Open)) {
+				using (var z = ZipArchiveExtensions.OpenZipRead (pair.Source.ItemSpec)) {
 					if (Files == null || Files.Length == 0) {
 						Microsoft.Android.Build.Tasks.Files.ExtractAll (z, pair.Destination.ItemSpec);
 					} else {

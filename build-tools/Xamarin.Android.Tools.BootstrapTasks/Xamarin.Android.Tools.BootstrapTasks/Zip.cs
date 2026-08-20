@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				prefix  += Path.DirectorySeparatorChar;
 			}
 
-			using (var zip  = ZipArchiveExtensions.OpenZip (File.ItemSpec, FileMode.OpenOrCreate)) {
+			using (var zip  = ZipArchiveExtensions.OpenZipUpdate (File.ItemSpec)) {
 				if (Entries == null)
 					return !Log.HasLoggedErrors;
 				foreach (var entry in Entries) {

@@ -71,7 +71,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			relativeDestDir = relativeDestDir?.Replace ('\\', Path.DirectorySeparatorChar);
 
-			using (var zip = ZipArchiveExtensions.OpenZip (sourceFile, FileMode.Open, encoding)) {
+			using (var zip = ZipArchiveExtensions.OpenZipRead (sourceFile, encoding)) {
 				foreach (var entry in zip.Entries) {
 					if (!entry.IsDirectory ()) {
 						if (filesToExtract.Count > 0 && !filesToExtract.Contains (Path.GetFileName (entry.FullName)))

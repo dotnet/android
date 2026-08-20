@@ -114,7 +114,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
         ClassesOutputDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
-        ClassesZip="$(_AndroidIntermediateBindingClassesZip)"
         StubSourceDirectory="$(_AndroidIntermediateBindingJavaSourceDirectory)"
         JavaSourceFiles="@(_JavaBindingSource)"
         ToolPath="$(JavacToolPath)"
@@ -125,6 +124,15 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JdkVersion="$(_JdkVersion)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+    />
+    <ItemGroup>
+      <_AndroidBindingClassFile Include="$(_AndroidIntermediateBindingJavaClassDirectory)**\*.class" />
+    </ItemGroup>
+    <BuildArchive
+        ArchiveRootDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
+        ApkOutputPath="$(_AndroidIntermediateBindingClassesZip)"
+        FilesToAddToArchive="@(_AndroidBindingClassFile)"
+        UncompressedFileExtensions=".class"
     />
     <JavaSourceUtils
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
@@ -162,7 +170,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <Javac
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
         ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
-        ClassesZip="$(_AndroidIntermediateClassesZip)"
         StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
         AdditionalStubSourceDirectories="@(_AdditionalJavaStubDirectory)"
         JavaSourceFiles="@(_JavaSource)"
@@ -174,6 +181,15 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JdkVersion="$(_JdkVersion)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+    />
+    <ItemGroup>
+      <_AndroidClassFile Include="$(_AndroidIntermediateJavaClassDirectory)**\*.class" />
+    </ItemGroup>
+    <BuildArchive
+        ArchiveRootDirectory="$(_AndroidIntermediateJavaClassDirectory)"
+        ApkOutputPath="$(_AndroidIntermediateClassesZip)"
+        FilesToAddToArchive="@(_AndroidClassFile)"
+        UncompressedFileExtensions=".class"
     />
 
     <Touch Files="$(_AndroidCompileJavaStampFile)" AlwaysCreate="true" />

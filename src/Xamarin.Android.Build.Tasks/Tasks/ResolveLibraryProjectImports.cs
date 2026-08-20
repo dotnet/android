@@ -499,7 +499,7 @@ namespace Xamarin.Android.Tasks
 		void CreateResourceArchive (string resDir, string outputFile)
 		{
 			Files.ArchiveZip (outputFile, archivePath => {
-				using var zip = ZipArchiveExtensions.OpenZip (archivePath, FileMode.Create);
+				using var zip = ZipArchiveExtensions.CreateZip (archivePath);
 				zip.AddDirectory (resDir, "res");
 			});
 		}
