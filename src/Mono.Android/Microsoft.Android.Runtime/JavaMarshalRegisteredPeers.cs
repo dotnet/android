@@ -136,9 +136,9 @@ static class JavaMarshalRegisteredPeers
 						!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
 					peer.Dispose ();
 					peers [i] = new ReferenceTrackingHandle (value);
-				} else if ((!target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) ||
-							!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) &&
-						JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages) {
+				} else if (JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages &&
+						(!target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) ||
+							!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable))) {
 					WarnNotReplacing (key, value, target);
 				}
 				GC.KeepAlive (target);
