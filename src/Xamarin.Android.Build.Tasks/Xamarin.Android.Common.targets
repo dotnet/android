@@ -1477,8 +1477,10 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <MakeDir Directories="$(_AfterILLinkOutputDir)" Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " />
   <ItemGroup>
-    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(ResolvedAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
-    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(ResolvedAssemblies)" />
+    <_AfterILLinkSourceFiles Include="@(ResolvedAssemblies)"
+        Condition=" '$(_AndroidUseMarshalMethods)' != 'True' or !$([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
+    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(_AfterILLinkSourceFiles->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
+    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(_AfterILLinkSourceFiles)" />
   </ItemGroup>
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
@@ -1492,11 +1494,12 @@ because xbuild doesn't support framework reference assemblies.
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
+      SourceFiles="@(_AfterILLinkSourceFiles)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
   <ItemGroup>
+    <_AfterILLinkSourceFiles Remove="@(_AfterILLinkSourceFiles)" />
     <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
