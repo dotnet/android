@@ -17,6 +17,13 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <!--
+      We share $(OutputPath) with Xamarin.Android.Build.Tasks.csproj. Letting NuGet copy this
+      project's transitive runtime assets there can overwrite the netstandard2.0 assemblies
+      Build.Tasks already deposited with incompatible framework-specific implementations.
+      Only our compiled assembly needs to land in the SDK pack tools folder.
+    -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <!-- Microsoft.Build.* references flow transitively from Microsoft.Android.Build.BaseTasks. -->
