@@ -1436,14 +1436,14 @@ because xbuild doesn't support framework reference assemblies.
     <_AllResolvedAssemblies Include="@(ResolvedAssemblies)" />
     <!-- Non-Android framework assemblies are packaged directly from their runtime packs.
          A zero-byte marker replaces both scanner sidecars without staging the DLL. -->
-    <_AndroidLinkNoShrinkInput Include="@(ResolvedAssemblies)">
-      <OutputFile
+    <ResolvedAssemblies>
+      <_AndroidLinkNoShrinkOutput
           Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' "
-      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</OutputFile>
-      <OutputFile
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</_AndroidLinkNoShrinkOutput>
+      <_AndroidLinkNoShrinkOutput
           Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' "
-      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</OutputFile>
-    </_AndroidLinkNoShrinkInput>
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</_AndroidLinkNoShrinkOutput>
+    </ResolvedAssemblies>
     <_AndroidAssembliesToLinkNoShrink
         Include="@(ResolvedAssemblies)"
         Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' " />
@@ -1466,7 +1466,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' != 'true'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(_AndroidLinkNoShrinkInput->'%(OutputFile)')">
+    Outputs="@(ResolvedAssemblies->'%(_AndroidLinkNoShrinkOutput)')">
   <LinkAssembliesNoShrink
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
