@@ -81,6 +81,12 @@ namespace Microsoft.Android.Build.Tasks
 			if (destination == null)
 				throw new ArgumentNullException (nameof (destination));
 
+			// Some Android archives encode empty stored entries with non-zero compressed data.
+			// ZipArchive validates that data when opening the entry, even though there is
+			// nothing to extract.
+			if (entry.Length == 0)
+				return;
+
 			using var source = entry.Open ();
 			source.CopyTo (destination);
 		}

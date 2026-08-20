@@ -46,5 +46,72 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsFalse (updatedMetadata.ContainsKey ("assets\\foo.txt"), "Malformed entry should be removed.");
 			Assert.AreEqual (ZipEntryCompressionMethod.Store, updatedMetadata ["assets/foo.txt"].CompressionMethod, "Normalized entry should stay stored.");
 		}
+
+		[Test]
+		public void Extract_MalformedEmptyStoredEntry ()
+		{
+			var archivePath = Path.Combine (TempDirectory, "archive.zip");
+			CreateMalformedEmptyStoredEntryArchive (archivePath);
+
+			using var archive = ZipFile.OpenRead (archivePath);
+			var entry = archive.Entries [0];
+			using var destination = new MemoryStream ();
+
+			entry.Extract (destination);
+
+			Assert.AreEqual (0, destination.Length, "The empty entry should produce an empty output.");
+		}
+
+		static void CreateMalformedEmptyStoredEntryArchive (string path)
+		{
+			const string entryName = "R.txt";
+			var entryNameBytes = Encoding.ASCII.GetBytes (entryName);
+
+			using var stream = File.Create (path);
+			using var writer = new BinaryWriter (stream, Encoding.UTF8, leaveOpen: false);
+
+			writer.Write (0x04034b50);
+			writer.Write ((short) 20);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write (0);
+			writer.Write (0);
+			writer.Write (2);
+			writer.Write (0);
+			writer.Write ((short) entryNameBytes.Length);
+			writer.Write ((short) 0);
+			writer.Write (entryNameBytes);
+			writer.Write ((byte) 0x03);
+			writer.Write ((byte) 0x00);
+
+			var centralDirectoryOffset = stream.Position;
+			writer.Write (0x02014b50);
+			writer.Write ((short) 20);
+			writer.Write ((short) 20);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write (0);
+			writer.Write (0);
+			writer.Write (2);
+			writer.Write (0);
+			writer.Write ((short) entryNameBytes.Length);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write (0);
+			writer.Write (0);
+			writer.Write (entryNameBytes);
+
+			var centralDirectorySize = stream.Position - centralDirectoryOffset;
+			writer.Write (0x06054b50);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write ((short) 1);
+			writer.Write ((short) 1);
+			writer.Write ((int) centralDirectorySize);
+			writer.Write ((int) centralDirectoryOffset);
+			writer.Write ((short) 0);
+		}
 	}
 }

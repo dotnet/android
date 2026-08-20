@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.IO.Hashing;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
@@ -284,13 +283,7 @@ public class BuildArchive : AndroidTask
 
 	static uint GetEntryCrc32 (ZipArchiveEntry entry)
 	{
-		using var buffer = MemoryStreamPool.Shared.Rent ();
-		entry.Extract (buffer);
-		if (buffer.TryGetBuffer (out ArraySegment<byte> segment) && segment.Array != null) {
-			return Crc32.HashToUInt32 (new ReadOnlySpan<byte> (segment.Array, segment.Offset, (int) buffer.Length));
-		}
-
-		return Crc32.HashToUInt32 (buffer.ToArray ());
+		return entry.Crc32;
 	}
 
 	HashSet<string> ParseUncompressedFileExtensions ()
