@@ -266,6 +266,47 @@ Available packages:
 	}
 
 	[Test]
+	public void ParseSdkManagerList_AndroidCliWhitespaceFormat_ParsesUpdates ()
+	{
+		var output = @"Installed packages:
+  platform-tools    37.0.1    Android SDK Platform-Tools
+Available Updates:
+  ID                Installed    Available
+  platform-tools    37.0.1       37.0.2
+";
+
+		var (installed, available) = SdkManager.ParseSdkManagerList (output);
+
+		Assert.AreEqual (1, installed.Count);
+		Assert.AreEqual ("37.0.1", installed.Single ().Version);
+
+		var update = available.Single ();
+		Assert.AreEqual ("platform-tools", update.Path);
+		Assert.AreEqual ("37.0.2", update.Version);
+		Assert.IsNull (update.Description);
+		Assert.IsFalse (update.IsInstalled);
+	}
+
+	[Test]
+	public void ParseSdkManagerList_SectionHeadersAreCaseInsensitive ()
+	{
+		var output = @"INSTALLED PACKAGES:
+  platform-tools       | 37.0.1 | Android SDK Platform-Tools
+available packages:
+  platforms;android-37 | 1      | Android SDK Platform 37
+AVAILABLE UPDATES:
+  platform-tools       | 37.0.1 | 37.0.2
+";
+
+		var (installed, available) = SdkManager.ParseSdkManagerList (output);
+
+		Assert.AreEqual ("platform-tools", installed.Single ().Path);
+		Assert.AreEqual (2, available.Count);
+		Assert.AreEqual ("1", available.Single (p => p.Path == "platforms;android-37").Version);
+		Assert.AreEqual ("37.0.2", available.Single (p => p.Path == "platform-tools").Version);
+	}
+
+	[Test]
 	public void FindSdkManagerPath_NullSdkPath_ReturnsNull ()
 	{
 		manager.AndroidSdkPath = null;
