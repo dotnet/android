@@ -34,6 +34,13 @@ namespace Xamarin.Android.Build.Tests {
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease);
+			if (!isRelease) {
+				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+				FileAssert.Exists (dexFile);
+				Assert.IsTrue (
+					DexUtils.ContainsClassWithMethod ("Lmono/android/view/View_OnClickListenerImplementor;", "<init>", "()V", dexFile, AndroidSdkPath),
+					$"`{dexFile}` should include the framework listener implementors from mono.android.jar.");
+			}
 		}
 
 		[Test]

@@ -62,22 +62,20 @@
     <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) (the extracted library .aar
          AndroidManifest.xml files) that the legacy manifest merger merges into the app manifest. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports</_GenerateTrimmableTypeMapDependsOn>
-    <_BeforeCompileJava>$(_BeforeCompileJava);_AddPreGeneratedMonoAndroidJavaLibrary</_BeforeCompileJava>
-    <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_AddPreGeneratedMonoAndroidJavaLibrary</_BeforeCompileToDalvik>
+    <_BeforeAddStaticResources>$(_BeforeAddStaticResources);_AndroidGetPreGeneratedMonoAndroidJarPath</_BeforeAddStaticResources>
+    <_BeforeCompileJava>$(_BeforeCompileJava);_AndroidGetPreGeneratedMonoAndroidJarPath</_BeforeCompileJava>
+    <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_AndroidGetPreGeneratedMonoAndroidJarPath</_BeforeCompileToDalvik>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
       $(IncrementalCleanDependsOn);
     </IncrementalCleanDependsOn>
   </PropertyGroup>
 
-  <Target Name="_AddPreGeneratedMonoAndroidJavaLibrary"
+  <Target Name="_AndroidGetPreGeneratedMonoAndroidJarPath"
       Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
     <GetMonoPlatformJar TargetFrameworkDirectory="$(_XATargetFrameworkDirectories)">
-      <Output TaskParameter="MonoPlatformJarPath" PropertyName="_PreGeneratedMonoAndroidJavaLibrary" />
+      <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
     </GetMonoPlatformJar>
-    <ItemGroup>
-      <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidJavaLibrary)" />
-    </ItemGroup>
   </Target>
 
   <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). Debug builds use
