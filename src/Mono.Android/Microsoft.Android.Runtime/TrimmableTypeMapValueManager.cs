@@ -15,6 +15,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniObjectReferenceOptions DoNotRegisterTarget = JniObjectReferenceOptions.CopyAndDoNotRegister & ~JniObjectReferenceOptions.Copy;
 
+	[ThreadStatic]
+	static JniObjectReference createPeerReference;
+
 	public TrimmableTypeMapValueManager ()
 	{
 		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
@@ -112,6 +115,10 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 
 		if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
+			if (createPeerReference.IsValid &&
+					JniEnvironment.Types.IsSameObject (peer.PeerReference, createPeerReference)) {
+				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+			}
 			AddPeer (peer);
 		}
 	}
@@ -130,8 +137,14 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		try {
 			var resolvedTargetType = ResolvePeerType (targetType);
-			return TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
-				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
+			var previousCreatePeerReference = createPeerReference;
+			createPeerReference = reference;
+			try {
+				return TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
+					?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
+			} finally {
+				createPeerReference = previousCreatePeerReference;
+			}
 		} finally {
 			JniObjectReference.Dispose (ref reference, transfer);
 		}

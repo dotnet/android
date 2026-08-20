@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Java.Interop;
 
@@ -27,6 +29,126 @@ namespace Java.InteropTests {
 				x = vm.CreateValue<IJavaPeerable> (ref r, JniObjectReferenceOptions.Copy);
 				Assert.AreNotSame (o, x);
 				x.Dispose ();
+			}
+		}
+
+		[Test]
+		public void GetPeer_ReturnsRegisteredPeerConcurrently ()
+		{
+			using (var source = new JavaObject ())
+			using (var vm = new ConcurrentGetPeerValueManager (source.JniPeerMembers))
+			using (var start = new Barrier (2)) {
+				vm.OnSetRuntime (JniRuntime.CurrentRuntime);
+				vm.InitialPeekBarrier = start;
+
+				var first = Task.Run (() => vm.GetPeer (source.PeerReference));
+				var second = Task.Run (() => vm.GetPeer (source.PeerReference));
+				Task.WaitAll (first, second);
+
+				Assert.AreEqual (2, vm.CreatePeerCount);
+				Assert.AreSame (first.Result, second.Result);
+			}
+		}
+
+		class ConcurrentGetPeerValueManager : MyValueManager {
+
+			readonly JniPeerMembers peerMembers;
+			IJavaPeerable registeredPeer;
+			int peekPeerCount;
+			int createPeerCount;
+
+			public ConcurrentGetPeerValueManager (JniPeerMembers peerMembers)
+			{
+				this.peerMembers = peerMembers;
+			}
+
+			public Barrier InitialPeekBarrier { get; set; }
+
+			public int CreatePeerCount => createPeerCount;
+
+			public override IJavaPeerable PeekPeer (JniObjectReference reference)
+			{
+				var peer = Volatile.Read (ref registeredPeer);
+				if (Interlocked.Increment (ref peekPeerCount) <= 2 && InitialPeekBarrier != null) {
+					var barrier = InitialPeekBarrier;
+					if (!barrier.SignalAndWait (TimeSpan.FromSeconds (10))) {
+						throw new TimeoutException ("Timed out waiting for concurrent GetPeer() calls.");
+					}
+				}
+				return peer;
+			}
+
+			public override IJavaPeerable CreatePeer (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions transfer,
+					[DynamicallyAccessedMembers (Constructors)]
+					Type targetType)
+			{
+				Interlocked.Increment (ref createPeerCount);
+				var peer = new TestPeer (reference, peerMembers);
+				Interlocked.CompareExchange (ref registeredPeer, peer, null);
+				return peer;
+			}
+
+			public override void DisposePeerUnlessReferenced (IJavaPeerable value)
+			{
+				value.Dispose ();
+			}
+		}
+
+		class TestPeer : IJavaPeerable {
+
+			JniObjectReference reference;
+			int identityHashCode;
+			JniManagedPeerStates state;
+
+			public TestPeer (JniObjectReference reference, JniPeerMembers peerMembers)
+			{
+				this.reference = reference;
+				JniPeerMembers = peerMembers;
+			}
+
+			public int JniIdentityHashCode => identityHashCode;
+
+			public JniObjectReference PeerReference => reference;
+
+			public JniPeerMembers JniPeerMembers { get; }
+
+			public JniManagedPeerStates JniManagedPeerState => state;
+
+			public void SetJniIdentityHashCode (int value)
+			{
+				identityHashCode = value;
+			}
+
+			public void SetPeerReference (JniObjectReference value)
+			{
+				reference = value;
+			}
+
+			public void SetJniManagedPeerState (JniManagedPeerStates value)
+			{
+				state = value;
+			}
+
+			public void UnregisterFromRuntime ()
+			{
+			}
+
+			public void DisposeUnlessReferenced ()
+			{
+			}
+
+			public void Disposed ()
+			{
+			}
+
+			public void Finalized ()
+			{
+			}
+
+			public void Dispose ()
+			{
 			}
 		}
 

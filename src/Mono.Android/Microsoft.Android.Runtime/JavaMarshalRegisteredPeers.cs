@@ -31,7 +31,7 @@ namespace Microsoft.Android.Runtime;
 /// </remarks>
 static class JavaMarshalRegisteredPeers
 {
-	static readonly Dictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
+	static readonly ConcurrentDictionary<int, List<ReferenceTrackingHandle>> RegisteredInstances = new ();
 	static readonly ConcurrentQueue<IntPtr> CollectedContexts = new ();
 
 	static readonly object initializeLock = new ();
@@ -65,9 +65,7 @@ static class JavaMarshalRegisteredPeers
 				Debug.Assert (contextPtr != IntPtr.Zero, "CollectedContexts should not contain null pointers.");
 				HandleContext* context = (HandleContext*)contextPtr;
 
-				lock (RegisteredInstances) {
-					Remove (context);
-				}
+				Remove (context);
 
 				HandleContext.Free (ref context);
 			}
@@ -78,15 +76,13 @@ static class JavaMarshalRegisteredPeers
 				if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
 					return;
 
-				for (int i = peers.Count - 1; i >= 0; i--) {
-					var peer = peers [i];
-					if (peer.BelongsToContext (context)) {
-						peers.RemoveAt (i);
+				lock (peers) {
+					for (int i = peers.Count - 1; i >= 0; i--) {
+						if (peers [i].BelongsToContext (context)) {
+							peers.RemoveAt (i);
+						}
 					}
-				}
-
-				if (peers.Count == 0) {
-					RegisteredInstances.Remove (key);
+					RemoveListIfEmpty (key, peers);
 				}
 			}
 		}
@@ -106,44 +102,48 @@ static class JavaMarshalRegisteredPeers
 			JniObjectReference.Dispose (ref r, JniObjectReferenceOptions.CopyAndDispose);
 		}
 		int key = value.JniIdentityHashCode;
-		lock (RegisteredInstances) {
-			List<ReferenceTrackingHandle>? peers;
-			if (!RegisteredInstances.TryGetValue (key, out peers)) {
-				peers = [new ReferenceTrackingHandle (value)];
-				RegisteredInstances.Add (key, peers);
-				return;
-			}
-
-			for (int i = peers.Count - 1; i >= 0; i--) {
-				ReferenceTrackingHandle peer = peers [i];
-				if (peer.Target is not IJavaPeerable target)
+		while (true) {
+			var peers = RegisteredInstances.GetOrAdd (key, static _ => []);
+			lock (peers) {
+				if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? current) ||
+						!ReferenceEquals (peers, current)) {
 					continue;
-				if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
-					continue;
-				// JNIEnv.NewObject/JNIEnv.CreateInstance() compatibility.
-				// When two MCW's are created for one Java instance [0],
-				// we want the 2nd MCW to replace the 1st, as the 2nd is
-				// the one the dev created; the 1st is an implicit intermediary.
-				//
-				// Meanwhile, a new "replaceable" instance should *not* replace an
-				// existing "replaceable" instance; see dotnet/android#9862.
-				//
-				// [0]: If Java ctor invokes overridden virtual method, we'll
-				// transition into managed code w/o a registered instance, and
-				// thus will create an "intermediary" via
-				// (IntPtr, JniHandleOwnership) .ctor.
-				if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) &&
-						!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
-					peer.Dispose ();
-					peers [i] = new ReferenceTrackingHandle (value);
-				} else if (JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages) {
-					WarnNotReplacing (key, value, target);
 				}
-				GC.KeepAlive (target);
+
+				for (int i = peers.Count - 1; i >= 0; i--) {
+					ReferenceTrackingHandle peer = peers [i];
+					if (peer.Target is not IJavaPeerable target)
+						continue;
+					if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
+						continue;
+					// JNIEnv.NewObject/JNIEnv.CreateInstance() compatibility.
+					// When two MCW's are created for one Java instance [0],
+					// we want the 2nd MCW to replace the 1st, as the 2nd is
+					// the one the dev created; the 1st is an implicit intermediary.
+					//
+					// Meanwhile, a new "replaceable" instance should *not* replace an
+					// existing "replaceable" instance; see dotnet/android#9862.
+					//
+					// [0]: If Java ctor invokes overridden virtual method, we'll
+					// transition into managed code w/o a registered instance, and
+					// thus will create an "intermediary" via
+					// (IntPtr, JniHandleOwnership) .ctor.
+					if (target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) &&
+							!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) {
+						peer.Dispose ();
+						peers [i] = new ReferenceTrackingHandle (value);
+					} else if ((!target.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable) ||
+								!value.JniManagedPeerState.HasFlag (JniManagedPeerStates.Replaceable)) &&
+							JniEnvironment.Runtime.ObjectReferenceManager.LogGlobalReferenceMessages) {
+						WarnNotReplacing (key, value, target);
+					}
+					GC.KeepAlive (target);
+					return;
+				}
+
+				peers.Add (new ReferenceTrackingHandle (value));
 				return;
 			}
-
-			peers.Add (new ReferenceTrackingHandle (value));
 		}
 	}
 
@@ -170,10 +170,10 @@ static class JavaMarshalRegisteredPeers
 
 		int key = JniEnvironment.References.GetIdentityHashCode (reference);
 
-		lock (RegisteredInstances) {
-			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
-				return null;
+		if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
+			return null;
 
+		lock (peers) {
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				if (peers [i].Target is IJavaPeerable peer
 					&& JniEnvironment.Types.IsSameObject (reference, peer.PeerReference))
@@ -181,11 +181,8 @@ static class JavaMarshalRegisteredPeers
 					return peer;
 				}
 			}
-
-			if (peers.Count == 0)
-				RegisteredInstances.Remove (key);
+			return null;
 		}
-		return null;
 	}
 
 	public static void RemovePeer (IJavaPeerable value)
@@ -196,11 +193,11 @@ static class JavaMarshalRegisteredPeers
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
 
-		lock (RegisteredInstances) {
-			int key = value.JniIdentityHashCode;
-			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
-				return;
+		int key = value.JniIdentityHashCode;
+		if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
+			return;
 
+		lock (peers) {
 			for (int i = peers.Count - 1; i >= 0; i--) {
 				ReferenceTrackingHandle peer = peers [i];
 				IJavaPeerable? target = peer.Target;
@@ -210,8 +207,7 @@ static class JavaMarshalRegisteredPeers
 				}
 				GC.KeepAlive (target);
 			}
-			if (peers.Count == 0)
-				RegisteredInstances.Remove (key);
+			RemoveListIfEmpty (key, peers);
 		}
 	}
 
@@ -255,16 +251,24 @@ static class JavaMarshalRegisteredPeers
 		// Remove any collected contexts before iterating over all the registered instances
 		CollectPeers ();
 
-		lock (RegisteredInstances) {
-			var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
-			foreach (var (identityHashCode, referenceTrackingHandles) in RegisteredInstances) {
+		var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);
+		foreach (var (identityHashCode, referenceTrackingHandles) in RegisteredInstances) {
+			lock (referenceTrackingHandles) {
 				foreach (var peer in referenceTrackingHandles) {
 					if (peer.Target is IJavaPeerable target) {
 						peers.Add (new JniSurfacedPeerInfo (identityHashCode, new WeakReference<IJavaPeerable> (target)));
 					}
 				}
 			}
-			return peers;
+		}
+		return peers;
+	}
+
+	static void RemoveListIfEmpty (int key, List<ReferenceTrackingHandle> peers)
+	{
+		if (peers.Count == 0) {
+			((ICollection<KeyValuePair<int, List<ReferenceTrackingHandle>>>) RegisteredInstances)
+				.Remove (new KeyValuePair<int, List<ReferenceTrackingHandle>> (key, peers));
 		}
 	}
 

@@ -200,13 +200,30 @@ namespace Java.Interop
 					return null;
 				}
 
-				var peeked  = PeekPeer (reference);
-				if (peeked != null &&
-						(targetType == null ||
-							targetType.IsAssignableFrom (peeked.GetType ()))) {
-					return peeked;
+				while (true) {
+					var peeked = PeekPeer (reference);
+					if (peeked != null &&
+							(targetType == null ||
+								targetType.IsAssignableFrom (peeked.GetType ()))) {
+						return peeked;
+					}
+
+					var created = CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
+					var registered = PeekPeer (reference);
+					if (registered != null &&
+							(targetType == null ||
+								targetType.IsAssignableFrom (registered.GetType ()))) {
+						if (created != null && !ReferenceEquals (created, registered)) {
+							DisposePeerUnlessReferenced (created);
+						}
+						return registered;
+					}
+					if (registered != null || created == null) {
+						return created;
+					}
+
+					DisposePeerUnlessReferenced (created);
 				}
-				return CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
 			}
 
 			public abstract IJavaPeerable? CreatePeer (
