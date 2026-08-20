@@ -45,8 +45,7 @@ namespace Java.InteropTests {
 				var second = Task.Run (() => vm.GetPeer (source.PeerReference));
 				Task.WaitAll (first, second);
 
-				Assert.AreEqual (2, vm.CreatePeerCount);
-				Assert.AreEqual (1, vm.DisposePeerCount);
+				Assert.AreEqual (1, vm.CreatePeerCount);
 				Assert.AreSame (first.Result, second.Result);
 			}
 		}
@@ -57,7 +56,6 @@ namespace Java.InteropTests {
 			IJavaPeerable registeredPeer;
 			int peekPeerCount;
 			int createPeerCount;
-			int disposePeerCount;
 
 			public ConcurrentGetPeerValueManager (JniPeerMembers peerMembers)
 			{
@@ -67,7 +65,6 @@ namespace Java.InteropTests {
 			public Barrier InitialPeekBarrier { get; set; }
 
 			public int CreatePeerCount => createPeerCount;
-			public int DisposePeerCount => disposePeerCount;
 
 			public override IJavaPeerable PeekPeer (JniObjectReference reference)
 			{
@@ -93,11 +90,6 @@ namespace Java.InteropTests {
 				return peer;
 			}
 
-			public override void DisposePeerUnlessReferenced (IJavaPeerable value)
-			{
-				Interlocked.Increment (ref disposePeerCount);
-				value.Dispose ();
-			}
 		}
 
 		class TestPeer : IJavaPeerable {

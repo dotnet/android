@@ -45,6 +45,7 @@ namespace Java.Interop
 			internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 			JniRuntime?             runtime;
+			readonly object         peerCreationLock = new ();
 			bool                    disposed;
 			public      JniRuntime  Runtime {
 				get => runtime ?? throw new NotSupportedException ();
@@ -205,19 +206,16 @@ namespace Java.Interop
 					return existing;
 				}
 
-				var created = CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
-
-				// Peer construction registers the new instance. Another thread may have
-				// registered its own instance first, so always return the registered winner.
-				var registered = PeekPeer (reference);
-				if (IsCompatiblePeer (registered, targetType)) {
-					if (created != null && !ReferenceEquals (created, registered)) {
-						DisposePeerUnlessReferenced (created);
+				lock (peerCreationLock) {
+					// CreatePeer registers the new peer before returning. Check again while
+					// holding the lock so only one caller creates a peer for this reference.
+					existing = PeekPeer (reference);
+					if (IsCompatiblePeer (existing, targetType)) {
+						return existing;
 					}
-					return registered;
-				}
 
-				return created;
+					return CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
+				}
 			}
 
 			static bool IsCompatiblePeer (IJavaPeerable? peer, Type? targetType)
