@@ -321,6 +321,77 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		[Test]
+		public void FastDeploy2CleansOrphanStagingDirectoriesAfterApkInstall ()
+		{
+			string [] orphanDirectories = {
+				"/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_one/0",
+				"/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_two/0",
+			};
+			string incrementalOrphanDirectory = "/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_incremental/0";
+			string symlinkDirectory = "/data/local/tmp/fastdeploy2/com.xamarin.fastdeploy2_cleanup_symlink";
+			string symlinkTargetDirectory = "/data/local/tmp/fastdeploy2_cleanup_symlink_target/0";
+			var proj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeploy2_cleanup",
+			};
+			proj.MainActivity = proj.DefaultMainActivity;
+			proj.SetDefaultTargetDevice ();
+			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
+			var installedProj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeploy2_cleanup_installed",
+				ProjectName = "FastDeploy2CleanupInstalled",
+			};
+			installedProj.SetDefaultTargetDevice ();
+			string installedDirectory = $"/data/local/tmp/fastdeploy2/{installedProj.PackageName}/0";
+
+			using (var installedBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, installedProj.ProjectName)))
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName))) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				try {
+					Assert.IsTrue (installedBuilder.Install (installedProj), "Installed-package fixture should have installed successfully.");
+					foreach (string directory in orphanDirectories) {
+						RunAdbCommand ($"shell mkdir -p {directory}");
+						RunAdbCommand ($"shell touch {directory}/orphan.txt");
+					}
+					RunAdbCommand ($"shell mkdir -p {installedDirectory}");
+					RunAdbCommand ($"shell touch {installedDirectory}/installed.txt");
+					RunAdbCommand ($"shell mkdir -p {symlinkTargetDirectory}");
+					RunAdbCommand ($"shell touch {symlinkTargetDirectory}/outside.txt");
+					RunAdbCommand ($"shell ln -s {Path.GetDirectoryName (symlinkTargetDirectory).Replace ('\\', '/')} {symlinkDirectory}");
+
+					Assert.IsTrue (builder.Install (proj), "FastDeploy2 install should have succeeded.");
+
+					foreach (string directory in orphanDirectories) {
+						Assert.AreEqual ("missing", RunAdbCommand ($"shell if test -e {directory}; then echo exists; else echo missing; fi").Trim (),
+							$"Orphan staging directory '{directory}' should have been deleted.");
+					}
+					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {installedDirectory}/installed.txt; then echo exists; else echo missing; fi").Trim (),
+						"Staging for an installed package should not be deleted.");
+					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {symlinkTargetDirectory}/outside.txt; then echo exists; else echo missing; fi").Trim (),
+						"Cleanup should not follow a symlinked package directory outside the staging root.");
+
+					RunAdbCommand ($"shell mkdir -p {incrementalOrphanDirectory}");
+					RunAdbCommand ($"shell touch {incrementalOrphanDirectory}/orphan.txt");
+					proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
+					proj.Touch ("MainActivity.cs");
+					Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental FastDeploy2 install should have succeeded.");
+					Assert.IsFalse (builder.Output.IsApkInstalled, "The APK should not have been reinstalled.");
+					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {incrementalOrphanDirectory}/orphan.txt; then echo exists; else echo missing; fi").Trim (),
+						"Cleanup should not run during an incremental deployment that skips APK installation.");
+				} finally {
+					foreach (string directory in orphanDirectories) {
+						RunAdbCommand ($"shell rm -rf {directory}");
+					}
+					RunAdbCommand ($"shell rm -rf {installedDirectory}");
+					RunAdbCommand ($"shell rm -rf {incrementalOrphanDirectory}");
+					RunAdbCommand ($"shell rm -rf {symlinkDirectory}");
+					RunAdbCommand ($"shell rm -rf {Path.GetDirectoryName (symlinkTargetDirectory).Replace ('\\', '/')}");
+					builder.Uninstall (proj);
+					installedBuilder.Uninstall (installedProj);
+				}
+			}
+		}
+
 		string GetOverrideFileKind (string packageName, string path)
 		{
 			return RunAdbCommand ($"shell run-as {packageName} sh -c 'if test -L {path}; then echo symlink; elif test -f {path}; then echo regular; else echo missing; fi'").Trim ();
