@@ -4,17 +4,13 @@
 #include <cerrno>
 #include <chrono>
 #include <ctime>
-#include <expected>
 #include <functional>
 #include <limits>
 #include <memory>
-#include <mutex>
-#include <source_location>
 #include <stack>
 #include <string>
 #include <string_view>
 #include <thread>
-#include <vector>
 
 #if defined(XA_HOST_MONOVM)
 #include <runtime-base/shared-constants.hh>
@@ -26,7 +22,7 @@ using namespace xamarin::android::internal;
 #endif
 
 #include <runtime-base/logger.hh>
-#include <runtime-base/startup-aware-lock.hh>
+#include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
 #include <shared/log_types.hh>
 
@@ -66,6 +62,7 @@ namespace xamarin::android {
 		time_point                   end;
 		TimingEventKind              kind;
 		std::string                 *more_info = nullptr;
+		bool                         complete = false;
 	};
 
 	class FastTiming;
@@ -73,22 +70,16 @@ namespace xamarin::android {
 
 	class FastTiming final
 	{
-#if defined(XA_HOST_MONOVM)
-		using mutex = xamarin::android::mutex;
-#else
-		using mutex = std::mutex;
-#endif
-		enum class SequenceError
-		{
-			EmptyStack,
-			InvalidIndex,
-		};
+		// Number of TimingEvent entries in each allocation.  It's an arbitrary
+		// value large enough to avoid allocating additional chunks during
+		// normal application startup.
+		static constexpr size_t EVENT_CHUNK_SIZE = 4096uz;
 
-		// Number of TimingEvent entries in the event vector allocated at the
-		// time of class instantiation.  It's an arbitrary value, but it should
-		// be large enough to not require any dynamic reallocation of memory at
-		// the run time.
-		static constexpr size_t INITIAL_EVENT_VECTOR_SIZE = 4096uz;
+		struct TimingEventChunk
+		{
+			TimingEvent events [EVENT_CHUNK_SIZE];
+			TimingEventChunk *next = nullptr;
+		};
 
 		// defaults
 		static constexpr bool default_fast_timing_enabled = false;
@@ -104,17 +95,30 @@ namespace xamarin::android {
 	protected:
 		void configure_for_use () noexcept
 		{
-			events.reserve (INITIAL_EVENT_VECTOR_SIZE);
+			first_event_chunk = new TimingEventChunk;
 		}
 
 	public:
 		constexpr FastTiming () noexcept
 		{}
 
+		~FastTiming ()
+		{
+			TimingEventChunk *chunk = first_event_chunk;
+			while (chunk != nullptr) {
+				TimingEventChunk *next = chunk->next;
+				for (TimingEvent &event : chunk->events) {
+					delete event.more_info;
+				}
+				delete chunk;
+				chunk = next;
+			}
+		}
+
 		[[gnu::always_inline]]
 		static auto enabled () noexcept -> bool
 		{
-			return is_enabled;
+			return __atomic_load_n (&is_enabled, __ATOMIC_ACQUIRE);
 		}
 
 		[[gnu::always_inline]]
@@ -154,6 +158,7 @@ namespace xamarin::android {
 			get_time_overhead.end = get_time ();
 
 			init_time.end = get_time ();
+			__atomic_store_n (&is_enabled, true, __ATOMIC_RELEASE);
 			if (!immediate_logging) {
 				return;
 			}
@@ -241,35 +246,15 @@ namespace xamarin::android {
 			format_and_log (event);
 		}
 
-		// std::vector<T> isn't used in a conventional manner here. We treat it as if it was a standard array and we
-		// don't take advantage of any emplacement functionality, merely using vector's ability to resize itself when
-		// needed.  The reason for this is speed - we can atomically increase index into the array and relatively
-		// quickly check whether it's within the boundaries.  We can then safely use thus indexed element without
-		// worrying about concurrency.  Emplacing a new element in the vector would require holding the mutex, something
-		// that's fairly costly and has unpredictable effect on time spent acquiring and holding the lock (the OS can
-		// preempt us at this point)
 		[[gnu::always_inline]]
 		void start_event (TimingEventKind kind = TimingEventKind::Unspecified) noexcept
 		{
 			size_t index = next_event_index.fetch_add (1);
-
-			if (index >= events.capacity ()) [[unlikely]] {
-				StartupAwareLock lock (event_vector_realloc_mutex);
-				if (index >= events.size ()) { // don't increase unnecessarily, if another thread has already done that
-					// Double the vector size. We should, in theory, check for integer overflow here, but it's more
-					// likely we'll run out of memory way, way, way before that happens
-					size_t old_size = events.capacity ();
-					events.reserve (old_size << 1);
-					log_warnf (LOG_TIMING, "Reallocated timing event buffer from %zu to %zu", old_size, events.capacity ());
-				}
-			}
-
-			open_sequences.push (index);
-			TimingEvent &ev = events[index];
+			TimingEvent &ev = get_event (index);
 			ev.start = get_time ();
 			ev.kind = kind;
 			ev.before_managed = MonodroidState::is_startup_in_progress ();
-			ev.more_info = nullptr;
+			open_sequences.push (&ev);
 		}
 
 		// If `uses_more_info` is `true`, the caller **MUST** call `add_more_info`, since the
@@ -277,21 +262,18 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		void end_event (bool uses_more_info = false, bool skip_log = false) noexcept
 		{
-			std::expected<size_t, SequenceError> index;
-			if (!uses_more_info) [[likely]] {
-				index = pop_valid_sequence_index ();
-			} else {
-				index = get_valid_sequence_index ();
-			}
-
-			if (!index.has_value ()) [[unlikely]] {
+			TimingEvent *event = uses_more_info ? get_sequence_event () : pop_sequence_event ();
+			if (event == nullptr) [[unlikely]] {
 				log_warn (LOG_TIMING, "FastTiming::end_event called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
-			events[*index].end = get_time ();
+			event->end = get_time ();
+			if (!uses_more_info) [[likely]] {
+				__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
+			}
 			if (!skip_log) [[likely]] {
-				log (events[*index], uses_more_info /* skip_log_if_more_info_missing */);
+				log (*event, uses_more_info /* skip_log_if_more_info_missing */);
 			}
 		}
 
@@ -299,40 +281,43 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		void add_more_info (string_base<MaxStackSize, TStorage, TChar> const& str) noexcept
 		{
-			auto index = pop_valid_sequence_index ();
-			if (!index.has_value ()) [[unlikely]] {
+			TimingEvent *event = pop_sequence_event ();
+			if (event == nullptr) [[unlikely]] {
 				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
-			events[*index].more_info = new std::string (str.get (), str.length ());
-			log (events[*index], false /* skip_log_if_more_info_missing */);
+			event->more_info = new std::string (str.get (), str.length ());
+			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
+			log (*event, false /* skip_log_if_more_info_missing */);
 		}
 
 		[[gnu::always_inline]]
 		void add_more_info (const char* str) noexcept
 		{
-			auto index = pop_valid_sequence_index ();
-			if (!index.has_value ()) [[unlikely]] {
+			TimingEvent *event = pop_sequence_event ();
+			if (event == nullptr) [[unlikely]] {
 				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
-			events[*index].more_info = new std::string (str);
-			log (events[*index], false /* skip_log_if_more_info_missing */);
+			event->more_info = new std::string (str);
+			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
+			log (*event, false /* skip_log_if_more_info_missing */);
 		}
 
 		[[gnu::always_inline]]
 		void add_more_info (std::string_view const& str) noexcept
 		{
-			auto index = pop_valid_sequence_index ();
-			if (!index.has_value ()) [[unlikely]] {
+			TimingEvent *event = pop_sequence_event ();
+			if (event == nullptr) [[unlikely]] {
 				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
 				return;
 			}
 
-			events[*index].more_info = new std::string (str);
-			log (events[*index], false /* skip_log_if_more_info_missing */);
+			event->more_info = new std::string (str);
+			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
+			log (*event, false /* skip_log_if_more_info_missing */);
 		}
 
 		void dump () noexcept;
@@ -345,7 +330,7 @@ namespace xamarin::android {
 		std::enable_if_t<!std::is_void_v<decltype(std::declval<F>()(std::declval<Args>()...))>, decltype(std::declval<F>()(std::declval<Args>()...))>
 		static time_call (std::string_view const& name, F&& fn, Args... args) noexcept
 		{
-			if (!is_enabled) [[likely]] {
+			if (!enabled ()) [[likely]] {
 				return fn (std::forward<Args>(args)...);
 			}
 
@@ -360,7 +345,7 @@ namespace xamarin::android {
 		std::enable_if_t<std::is_void_v<decltype(std::declval<F>()(std::declval<Args>()...))>, void>
 		static time_call (std::string_view const& name, F&& fn, Args... args) noexcept
 		{
-			if (!is_enabled) [[likely]] {
+			if (!enabled ()) [[likely]] {
 				fn (std::forward<Args>(args)...);
 				return;
 			}
@@ -391,34 +376,24 @@ namespace xamarin::android {
 		void dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept;
 
 		[[gnu::always_inline]]
-		auto get_valid_sequence_index () noexcept -> std::expected<size_t, SequenceError>
+		auto get_sequence_event () noexcept -> TimingEvent*
 		{
 			if (open_sequences.empty ()) [[unlikely]] {
-				return std::unexpected (SequenceError::EmptyStack);
+				return nullptr;
 			}
 
-			size_t index = open_sequences.top ();
-			if (!is_valid_event_index (index)) [[unlikely]] {
-				return std::unexpected (SequenceError::InvalidIndex);
-			}
-
-			return index;
+			return open_sequences.top ();
 		}
 
 		[[gnu::always_inline]]
-		auto pop_valid_sequence_index () noexcept -> std::expected<size_t, SequenceError>
+		auto pop_sequence_event () noexcept -> TimingEvent*
 		{
-			auto ret = get_valid_sequence_index ();
-			if (ret.has_value ()) [[likely]] {
-				open_sequences.pop ();
-				return ret;
-			}
-
-			if (ret.error () != SequenceError::EmptyStack) {
+			TimingEvent *event = get_sequence_event ();
+			if (event != nullptr) [[likely]] {
 				open_sequences.pop ();
 			}
 
-			return ret;
+			return event;
 		}
 
 		template<size_t BufferSize> [[gnu::always_inline]]
@@ -506,24 +481,56 @@ namespace xamarin::android {
 		void parse_options (dynamic_local_property_string const& value) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
 
-		[[gnu::always_inline, nodiscard]]
-		auto is_valid_event_index (size_t index, std::source_location sloc = std::source_location::current ()) const noexcept -> bool
+		[[gnu::always_inline]]
+		auto get_event (size_t index) noexcept -> TimingEvent&
 		{
-			if (index >= events.capacity ()) [[unlikely]] {
-				log_warnf (LOG_TIMING, "Invalid event index passed to method '%s'", optional_string (sloc.function_name ()));
-				return false;
+			size_t chunk_index = index / EVENT_CHUNK_SIZE;
+			size_t current_chunk_index = cached_event_chunk_index;
+			TimingEventChunk *chunk = cached_event_chunk;
+			if (chunk == nullptr || chunk_index < current_chunk_index) {
+				current_chunk_index = 0uz;
+				chunk = first_event_chunk;
 			}
 
-			return true;
+			for (size_t i = current_chunk_index; i < chunk_index; ++i) {
+				TimingEventChunk *next = __atomic_load_n (&chunk->next, __ATOMIC_ACQUIRE);
+				if (next == nullptr) [[unlikely]] {
+					TimingEventChunk *new_chunk = new TimingEventChunk;
+					if (__atomic_compare_exchange_n (
+							&chunk->next,
+							&next,
+							new_chunk,
+							false /* weak */,
+							__ATOMIC_RELEASE,
+							__ATOMIC_ACQUIRE
+						)) {
+						next = new_chunk;
+						log_warnf (
+							LOG_TIMING,
+							"Allocated timing event buffer from %zu to %zu",
+							(i + 1uz) * EVENT_CHUNK_SIZE,
+							(i + 2uz) * EVENT_CHUNK_SIZE
+						);
+					} else {
+						delete new_chunk;
+					}
+				}
+				chunk = next;
+			}
+
+			cached_event_chunk = chunk;
+			cached_event_chunk_index = chunk_index;
+			return chunk->events[index % EVENT_CHUNK_SIZE];
 		}
 
 	private:
 		std::atomic_size_t next_event_index = 0uz;
-		mutex event_vector_realloc_mutex;
-		std::vector<TimingEvent> events;
+		TimingEventChunk *first_event_chunk = nullptr;
 		std::unique_ptr<std::string> output_file_name{};
 
-		static inline thread_local std::stack<size_t> open_sequences;
+		static inline thread_local std::stack<TimingEvent*> open_sequences;
+		static inline thread_local TimingEventChunk *cached_event_chunk = nullptr;
+		static inline thread_local size_t cached_event_chunk_index = 0uz;
 		static inline bool is_enabled = false;
 		static inline bool immediate_logging = false;
 		static inline bool log_to_file = default_log_to_file;
