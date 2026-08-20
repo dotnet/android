@@ -68,8 +68,9 @@
     <_GenerateTrimmableTypeMapDependsOn Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(IlcDynamicBuildPropertyDependencies)</_GenerateTrimmableTypeMapDependsOn>
     <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) for _ManifestMerger. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports;_ConvertResourcesCases</_GenerateTrimmableTypeMapDependsOn>
-    <_BeforeCompileJava>$(_BeforeCompileJava);_AddPreGeneratedMonoAndroidJavaLibrary</_BeforeCompileJava>
-    <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_AddPreGeneratedMonoAndroidJavaLibrary</_BeforeCompileToDalvik>
+    <_BeforeAddStaticResources>$(_BeforeAddStaticResources);_AndroidGetPreGeneratedMonoAndroidJarPath</_BeforeAddStaticResources>
+    <_BeforeCompileJava>$(_BeforeCompileJava);_AndroidGetPreGeneratedMonoAndroidJarPath</_BeforeCompileJava>
+    <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_AndroidGetPreGeneratedMonoAndroidJarPath</_BeforeCompileToDalvik>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
       $(IncrementalCleanDependsOn);
@@ -85,14 +86,11 @@
     <_AdditionalJavaStubDirectory Include="$([MSBuild]::EnsureTrailingSlash('$(_TypeMapJavaStubsSourceDirectory)'))" />
   </ItemGroup>
 
-  <Target Name="_AddPreGeneratedMonoAndroidJavaLibrary"
+  <Target Name="_AndroidGetPreGeneratedMonoAndroidJarPath"
       Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
     <GetMonoPlatformJar TargetFrameworkDirectory="$(_XATargetFrameworkDirectories)">
-      <Output TaskParameter="MonoPlatformJarPath" PropertyName="_PreGeneratedMonoAndroidJavaLibrary" />
+      <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
     </GetMonoPlatformJar>
-    <ItemGroup>
-      <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidJavaLibrary)" />
-    </ItemGroup>
   </Target>
 
   <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). Debug builds use
