@@ -253,10 +253,8 @@ Wenn all dies fehlschlägt, legen Sie die MSBuild-Eigenschaft „EmbedAssemblies
   </data>
   <data name="StartDebugger_ipAddress_port" xml:space="preserve">
     <value>  Debugger wird auf {0} gestartet:{1}
-Starten Sie „sdb“, und führen Sie dann die folgende Befehls-
--
-  Verbindung {0} {1}
- aus
+Starten Sie „sdb“, und führen Sie dann den folgenden Befehl aus:
+  verbinden {0} {1}
     </value>
     <comment>The following are literal names and should not be translated:
 {0} - An ip address of  a computer.
