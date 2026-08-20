@@ -56,10 +56,7 @@ network:
     - "vsassets.io"
 tools:
   bash:
-    - az --version
-    - az devops:*
-    - az pipelines:*
-    - az rest:*
+    - az *
     - cat
     - grep
     - head
