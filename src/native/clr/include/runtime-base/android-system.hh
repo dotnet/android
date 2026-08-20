@@ -9,7 +9,7 @@
 #include <unordered_map>
 
 #include "../constants.hh"
-#include "../shared/log_types.hh"
+#include <shared/log_types.hh>
 #include "../runtime-base/cpu-arch.hh"
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/strings.hh>
