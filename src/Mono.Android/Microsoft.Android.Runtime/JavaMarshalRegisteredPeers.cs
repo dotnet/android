@@ -433,6 +433,8 @@ static class JavaMarshalRegisteredPeers
 #pragma warning disable CA1416
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
 #pragma warning restore CA1416
+
+		AndroidRuntimeInternal.NotifyBridgeProcessingFinished ();
 	}
 
 	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
