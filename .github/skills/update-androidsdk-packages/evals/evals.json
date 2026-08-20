@@ -34,7 +34,19 @@
     {
       "id": 6,
       "prompt": "Update command-line tools from 19.0 to a release where sdkmanager says --licenses is deprecated and exits successfully without creating the SDK license files.",
-      "expected_output": "The package pins and hashes are updated, and license acceptance uses the replacement Android CLI when available while retaining compatibility with older sdkmanager releases. Validation starts without licenses/android-sdk-license or .licenses-accepted, proves both are recreated, and confirms Gradle accepts the pinned Build Tools and platform licenses.",
+      "expected_output": "Bootstrap pins, Xamarin.Installer.Common.props, and the installer manifest feed are updated together for every host/architecture. License acceptance invokes neither sdkmanager nor the network-capable Android CLI bootstrapper: it atomically adds the pinned expected fingerprint under a cross-process lock while preserving existing valid fingerprints and rejecting malformed files. Validation starts without either license file, then repeats with an unrelated valid fingerprint and malformed content, and confirms Gradle accepts the pinned Build Tools and platform licenses.",
+      "assertions": []
+    },
+    {
+      "id": 7,
+      "prompt": "The manifest lists emulator 37.2.5 on channel-2 and emulator 37.1.11 on channel-0. Refresh us to the newest emulator.",
+      "expected_output": "Emulator 37.1.11 is selected because channel-0 is required for emulator updates. The newer 37.2.5 development-channel package is explicitly rejected. All four stable host/architecture archives are hashed and pinned.",
+      "assertions": []
+    },
+    {
+      "id": 8,
+      "prompt": "Add a new macOS arm64 command-line-tools archive. It extracts to the same SDK directory as the x64 archive, so source.properties can stay as the shared output stamp.",
+      "expected_output": "The arm64 archive may share the destination, but source.properties is rejected as the sole incremental output. Extraction uses a stamp containing archive identity and expected SHA-256 so switching architectures or hashes forces replacement with the correct package.",
       "assertions": []
     }
   ]

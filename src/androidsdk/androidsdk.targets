@@ -16,11 +16,6 @@
   <PropertyGroup>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <_AndroidRepositoryUrl>https://dl.google.com/android/repository/</_AndroidRepositoryUrl>
-    <_SdkManagerDir>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</_SdkManagerDir>
-    <_SdkManagerPath Condition=" '$(HostOS)' == 'Windows' ">$(_SdkManagerDir)\sdkmanager.bat</_SdkManagerPath>
-    <_SdkManagerPath Condition=" '$(HostOS)' != 'Windows' ">$(_SdkManagerDir)\sdkmanager</_SdkManagerPath>
-    <_AndroidCliPath Condition=" '$(HostOS)' == 'Windows' ">$(_SdkManagerDir)\android.exe</_AndroidCliPath>
-    <_AndroidCliPath Condition=" '$(HostOS)' != 'Windows' ">$(_SdkManagerDir)\android</_AndroidCliPath>
     <_AndroidSdkLicenseFile>$(AndroidSdkFullPath)\licenses\android-sdk-license</_AndroidSdkLicenseFile>
     <_LicensesAcceptedFile>$(AndroidSdkFullPath)\licenses\.licenses-accepted</_LicensesAcceptedFile>
 
@@ -56,6 +51,7 @@
   </PropertyGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.EnsureAndroidSdkLicense" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <!--
     Catalog of platform APIs. Each item is downloaded as `<Identity>.zip`.
@@ -323,13 +319,14 @@
         (`clang++ -> clang` etc) which then fail with
         `posix_spawn: Exec format error`. `unzip` handles both cleanly.
 
-    `source.properties` is the sentinel produced by every component zip and
-    doubles as an incremental-build skip target.
+    The extraction stamp includes the archive identity and hash so packages
+    that share a destination cannot be confused across versions or host
+    architectures.
   -->
   <Target Name="_ExtractAndroidSdkPackages"
       DependsOnTargets="_DownloadAndroidSdkPackages"
       Inputs="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)"
-      Outputs="%(_AndroidSdkPackage.Destination)\source.properties">
+      Outputs="%(_AndroidSdkPackage.Destination)\.extracted-%(_AndroidSdkPackage.Identity)-%(_AndroidSdkPackage.Hash)">
     <PropertyGroup>
       <_StripComponents>%(_AndroidSdkPackage.StripComponents)</_StripComponents>
       <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
@@ -384,6 +381,7 @@
     />
     <!-- Unzip preserves archive mtimes, so refresh the sentinel used by MSBuild Outputs. -->
     <Touch Files="$(_DestDir)\source.properties" />
+    <Touch Files="$(_DestDir)\.extracted-%(_AndroidSdkPackage.Identity)-%(_AndroidSdkPackage.Hash)" AlwaysCreate="true" />
   </Target>
 
   <!--
@@ -482,45 +480,23 @@
   <Target Name="_AcceptAndroidSdkLicenses"
       BeforeTargets="Build"
       DependsOnTargets="_ExtractAndroidSdkPackages"
-      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props;$(_AndroidSdkLicenseFile)"
       Outputs="$(_AndroidSdkLicenseFile);$(_LicensesAcceptedFile)">
-    <Error
-        Condition=" !Exists('$(_AndroidCliPath)') and !Exists('$(_SdkManagerPath)') "
-        Text="Neither android nor sdkmanager was found in $(_SdkManagerDir)"
-    />
-    <MakeDir Directories="$(AndroidSdkFullPath)\licenses" />
-    <Delete Files="$(_AndroidSdkLicenseFile)" />
-    <!-- Android CLI can exit with 0xC0000409 after writing the license on Windows.
-         Ignore its exit code and verify that this invocation recreated the deleted license instead. -->
-    <Exec
-        Condition=" Exists('$(_AndroidCliPath)') and '$(HostOS)' == 'Windows' "
-        Command="powershell -NoProfile -Command &quot;1..10 | ForEach-Object { 'y' } | &amp; '$(_AndroidCliPath)' --no-metrics '--sdk=$(AndroidSdkFullPath)' sdk install 'build-tools/$(XABuildToolsFolder)'&quot;"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
-        IgnoreExitCode="true"
-    />
-    <Exec
-        Condition=" Exists('$(_AndroidCliPath)') and '$(HostOS)' != 'Windows' "
-        Command="yes | &quot;$(_AndroidCliPath)&quot; --no-metrics &quot;--sdk=$(AndroidSdkFullPath)&quot; sdk install &quot;build-tools/$(XABuildToolsFolder)&quot;"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
-        IgnoreExitCode="true"
-    />
-    <Exec
-        Condition=" !Exists('$(_AndroidCliPath)') and '$(HostOS)' == 'Windows' "
-        Command="powershell -NoProfile -Command &quot;1..10 | ForEach-Object { 'y' } | &amp; '$(_SdkManagerPath)' --licenses&quot;"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
-        IgnoreExitCode="true"
-    />
-    <Exec
-        Condition=" !Exists('$(_AndroidCliPath)') and '$(HostOS)' != 'Windows' "
-        Command="yes | &quot;$(_SdkManagerPath)&quot; --licenses"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
-        IgnoreExitCode="true"
-    />
-    <Error
-        Condition=" !Exists('$(_AndroidSdkLicenseFile)') "
-        Text="Android SDK license acceptance did not create $(_AndroidSdkLicenseFile)"
+    <EnsureAndroidSdkLicense
+        LicenseDirectory="$(AndroidSdkFullPath)\licenses"
+        LicenseHashes="$(XAAndroidSdkLicenseHash)"
     />
     <Touch Files="$(_LicensesAcceptedFile)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="_ValidateAndroidSdkLicenses"
+      BeforeTargets="Build"
+      DependsOnTargets="_AcceptAndroidSdkLicenses">
+    <EnsureAndroidSdkLicense
+        LicenseDirectory="$(AndroidSdkFullPath)\licenses"
+        LicenseHashes="$(XAAndroidSdkLicenseHash)"
+        ValidateOnly="true"
+    />
   </Target>
 
   <Target Name="_CleanAndroidSdkComponents" BeforeTargets="Clean">

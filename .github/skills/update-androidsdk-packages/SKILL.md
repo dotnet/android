@@ -19,7 +19,7 @@ lives in two files:
 Google republishes tool revisions on their own cadence; this skill brings those two files back in
 sync with Google's *current stable* releases with a minimal, reviewable diff — matching the shape of PR #12371, which did exactly this (build-tools/platform-tools/cmdline-tools/cmake/emulator/sources/platform revisions all bumped, hashes recomputed, and per-arch macOS cmdline-tools support added when Apple Silicon archives showed up).
 
-## Three hard rules — read these before touching anything
+## Seven hard rules — read these before touching anything
 
 **1. Never touch the Android NDK.** `_XAAndroidNdkRelease`, `_XAAndroidNdkPkgRevision`, and every
 `XAAndroidNdkHash*` property in `Configuration.props`, plus the `android-ndk-r$(_XAAndroidNdkRelease)-*`
@@ -52,6 +52,29 @@ Keep one `_AndroidSdkPackage` entry and one version-specific hash property per s
 and preserve the full API level in `Destination` (`sources\android-37.0` uses the historical
 `sources\android-37` directory; `sources\android-37.1` uses `sources\android-37.1`).
 
+**4. Stable means Google's stable channel.** Never select an emulator or other tool from a
+development, canary, beta, or preview channel merely because its revision sorts higher. Require
+`channel-0` for emulator updates. If a package's channel metadata and release labeling disagree,
+do not update it unattended; report the ambiguity instead.
+
+**5. Command-line tools are a coordinated product dependency.** Do not update only the bootstrap
+pins. A command-line-tools bump must also update
+`src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.props` and the matching latest entry in
+`src/Xamarin.Installer.AndroidSDK/Feeds/AndroidManifestFeed_d18.0.xml`, including every published
+host/architecture archive. Confirm `CodeGenerator.targets` tracks the property file that supplies
+`AndroidCommandLineToolsVersion`. If the automated workflow is not authorized to change every
+required file, stop and report the coordinated update instead of opening a partial PR.
+
+**6. Never execute an unverified downloader to accept licenses.** License acceptance must not run
+the `android` bootstrapper, `sdkmanager`, or any payload fetched at execution time. Preserve all
+existing valid fingerprints, add the pinned expected fingerprint under a cross-process lock, write
+atomically, validate every line as a 40-character SHA-1 fingerprint, and create the acceptance
+marker only after validation succeeds.
+
+**7. Extraction outputs identify the exact archive.** Packages for different hosts or architectures
+may share a destination. Their incremental output stamp must include both archive identity and
+expected SHA-256; `source.properties` alone is not a safe extraction sentinel.
+
 ## Workflow
 
 ### 1. Read the current catalog
@@ -77,14 +100,11 @@ dotnet run .github/skills/update-androidsdk-packages/scripts/fetch_repo_package.
 
 (These are C# file-based apps, matching the `ci_failures.cs` convention used by the `ci-status` skill — first run restores/builds, so allow a few extra seconds.)
 
-The script sorts matches by revision (newest first) and flags anything whose path/display-name
-looks like a preview build. **Treat that flag as a hint, not ground truth** — Google's
-`channelRef` metadata is not a reliable stable/preview signal by itself (some genuinely-stable
-packages carry a non-zero channel id, and freshly-promoted stable packages can briefly still show
-old channel numbers). Cross-check the display name and version string yourself: a real stable
-release reads like `36.0.1` or `28c`, not `37.0.0-rc1`, `2025.09.15-alpha01`, or anything with
-`beta`/`canary`/`preview` in it. When genuinely unsure whether a release is stable, prefer the
-previous confirmed-stable revision over guessing.
+The script sorts matches by revision (newest first) and reports each package's channel. Require
+`channel-0` for emulator updates and reject version/display names containing `alpha`, `beta`,
+`canary`, `dev`, `preview`, or `rc`. For other package families, a non-zero channel or conflicting
+metadata is ambiguous: keep the previous confirmed-stable revision and report it rather than
+guessing.
 
 Reference `references/package-catalog.md` for the mapping between each `androidsdk.targets` entry,
 its manifest `path`, and its `Configuration.props` properties — it documents the current package
@@ -140,6 +160,9 @@ one shared macOS zip still covers both).
   the platform's distinct SDK directory as `Destination` (`37.0` historically maps to
   `\sources\android-37`; `37.1` maps to `\sources\android-37.1`). Update an existing entry in place
   only when Google publishes a newer revision for that same API level.
+- When command-line tools changes, update the shipped product version and feed entry described in
+  hard rule 5 in the same change. Do not leave bootstrap and product dependency versions split.
+- Keep archive/hash-specific extraction stamps intact when adding host or architecture variants.
 
 ### 5. Validate before finishing
 
@@ -162,9 +185,9 @@ dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPla
 
 Also check:
 - **XML validity** — both edited files still parse (`dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
-- **Diff cleanliness** — `git status` and `git diff` should show changes *only* in `Configuration.props` and `src/androidsdk/androidsdk.targets`. This skill's scope is package pins, not the generated-package-xml template (`package.xml.in`) — if a routine refresh seems to require touching that file too, stop and flag it rather than including it, since automated runs of this skill (e.g. the `skill-runner` workflow) are only authorized to change the two files above. No stray temp files from hashing (the `sha256_of_url.cs` script cleans up after itself; double check if you downloaded anything manually instead).
-- **The three hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set against `git diff`, then verify every `IsLatestStable` platform has its own sources package and destination.
-- **Command-line tools compatibility** — when bumping command-line tools, test with `licenses/android-sdk-license` and `.licenses-accepted` absent. Newer releases may keep `sdkmanager` only as a deprecated compatibility shim; a successful `sdkmanager --licenses` exit does not prove that Gradle's license file was created. Confirm `_AcceptAndroidSdkLicenses` recreates both files, then run an Android Gradle project test or otherwise verify Gradle recognizes the Build Tools and platform licenses.
+- **Diff cleanliness** — no unrelated files or stray temp downloads. Routine families remain scoped to `Configuration.props` and `src/androidsdk/androidsdk.targets`; command-line-tools updates additionally require the two shipped-product files in hard rule 5. Never edit `package.xml.in` during a routine refresh.
+- **The seven hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set, verify every `IsLatestStable` platform has its own sources package, verify selected releases are stable, and verify extraction outputs remain archive/hash-specific.
+- **Command-line tools compatibility** — test with `licenses/android-sdk-license` and `.licenses-accepted` absent, with a pre-existing unrelated valid fingerprint, and with malformed content. Confirm the expected pinned fingerprint is created, the unrelated fingerprint is preserved, malformed content fails, writes are atomic/locked, and Gradle recognizes the Build Tools and platform licenses. No license-acceptance path may execute a network-capable Android CLI.
 - **Formatting** — match the existing tab indentation and column alignment in both files (several `_PlatformPackage`/`_AndroidSdkPackage` lines are hand-aligned with extra spaces before `<ApiLevel>`/`<Hash>` — preserve that style rather than reformatting the whole block).
 
 ### 6. Summarize what changed
