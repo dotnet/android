@@ -244,28 +244,24 @@ Available packages:
 
 		Assert.AreEqual (7, installed.Count, "Should parse all 7 whitespace-aligned installed packages");
 
-		var buildTools = installed.FirstOrDefault (p => p.Path == "build-tools/36.0.0");
-		Assert.IsNotNull (buildTools, "build-tools/36.0.0 should be parsed");
-		Assert.AreEqual ("36.0.0", buildTools!.Version);
+		var buildTools = installed.Single (p => p.Path == "build-tools/36.0.0");
+		Assert.AreEqual ("36.0.0", buildTools.Version);
 		Assert.AreEqual ("Android SDK Build-Tools 36", buildTools.Description);
 		Assert.IsTrue (buildTools.IsInstalled);
 
 		// System-image ids carry internal '/' separators and multi-word descriptions with
 		// single spaces (e.g. "16 KB Page Size ...") that must survive the 2+-space column split.
-		var sysImg = installed.FirstOrDefault (p => p.Path == "system-images/android-37.0/google_apis_ps16k/arm64-v8a");
-		Assert.IsNotNull (sysImg, "16 KB page-size system image should be parsed");
-		Assert.AreEqual ("6.0.0", sysImg!.Version);
+		var sysImg = installed.Single (p => p.Path == "system-images/android-37.0/google_apis_ps16k/arm64-v8a");
+		Assert.AreEqual ("6.0.0", sysImg.Version);
 		Assert.AreEqual ("16 KB Page Size Google APIs ARM 64 v8a System Image", sysImg.Description);
 
-		var sysImg361 = installed.FirstOrDefault (p => p.Path == "system-images/android-36.1/google_apis/arm64-v8a");
-		Assert.IsNotNull (sysImg361);
-		Assert.AreEqual ("4.0.0", sysImg361!.Version);
+		var sysImg361 = installed.Single (p => p.Path == "system-images/android-36.1/google_apis/arm64-v8a");
+		Assert.AreEqual ("4.0.0", sysImg361.Version);
 
 		// Available-section parsing requires the case-insensitive "Available packages:" match.
 		Assert.AreEqual (2, available.Count, "Should parse available packages under the lowercase header");
-		var googleApis = available.FirstOrDefault (p => p.Path == "add-ons/addon-google_apis-google-10");
-		Assert.IsNotNull (googleApis);
-		Assert.AreEqual ("2.0.0", googleApis!.Version);
+		var googleApis = available.Single (p => p.Path == "add-ons/addon-google_apis-google-10");
+		Assert.AreEqual ("2.0.0", googleApis.Version);
 		Assert.IsFalse (googleApis.IsInstalled);
 	}
 

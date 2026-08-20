@@ -13,6 +13,13 @@ namespace Xamarin.Android.Tools;
 
 public partial class SdkManager
 {
+	static readonly (string Header, bool IsInstalled, bool IsUpdate) [] PackageSections = {
+		("Installed packages:", true, false),
+		("Available Packages:", false, false),
+		("Available Updates:", false, true),
+	};
+	static readonly Regex WhitespaceColumnSeparator = new Regex (@"\s{2,}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
 	public async Task<(IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available)> ListAsync (CancellationToken cancellationToken = default)
 	{
 		var sdkManagerPath = RequireSdkManagerPath ();
@@ -86,9 +93,18 @@ public partial class SdkManager
 			// Match section headers case-insensitively: the classic sdkmanager emits
 			// "Available Packages:" (capital P) while the newer Android CLI replacement
 			// (cmdline-tools 23+) emits "Available packages:" (lowercase p).
-			if (trimmed.IndexOf ("Installed packages:", StringComparison.OrdinalIgnoreCase) >= 0) { target = installed; parsingUpdates = false; continue; }
-			if (trimmed.IndexOf ("Available Packages:", StringComparison.OrdinalIgnoreCase) >= 0) { target = available; parsingUpdates = false; continue; }
-			if (trimmed.IndexOf ("Available Updates:", StringComparison.OrdinalIgnoreCase) >= 0) { target = available; parsingUpdates = true; continue; }
+			var foundSection = false;
+			foreach (var section in PackageSections) {
+				if (trimmed.IndexOf (section.Header, StringComparison.OrdinalIgnoreCase) < 0)
+					continue;
+
+				target = section.IsInstalled ? installed : available;
+				parsingUpdates = section.IsUpdate;
+				foundSection = true;
+				break;
+			}
+			if (foundSection)
+				continue;
 
 			if (target is null || trimmed.StartsWith ("Path", StringComparison.Ordinal) || trimmed.StartsWith ("---", StringComparison.Ordinal))
 				continue;
@@ -101,7 +117,7 @@ public partial class SdkManager
 			// (pipe split yields a single column), producing an empty installed list.
 			var parts = trimmed.IndexOf ('|') >= 0
 				? trimmed.Split ('|')
-				: Regex.Split (trimmed, @"\s{2,}");
+				: WhitespaceColumnSeparator.Split (trimmed);
 			if (parsingUpdates && string.Equals (parts [0].Trim (), "ID", StringComparison.Ordinal))
 				continue;
 			var versionIndex = parsingUpdates ? 2 : 1;
