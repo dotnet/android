@@ -1,0 +1,29 @@
+{
+  "skill_name": "update-androidsdk-packages",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Google just published build-tools 37.0.1 and platform-tools 37.0.2 as stable. Can you update src/androidsdk/androidsdk.targets and Configuration.props to pick these up, including recomputing all the SHA-256 hashes for every host?",
+      "expected_output": "XABuildToolsVersion/XABuildToolsFolder and XAPlatformToolsVersion bumped to the new stable revisions, with XABuildToolsHashMacOS/Linux/Windows and XAPlatformToolsHashMacOS/Linux/Windows recomputed from freshly downloaded archives (not guessed). NDK properties and the _PlatformPackage item group are untouched. androidsdk.csproj still builds (after building the BootstrapTasks project first).",
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "prompt": "please update our android sdk pins to whatever's current and stable on google's repository manifest right now (cmdline-tools, cmake, emulator, build-tools, platform-tools) and refresh the hashes. also NDK r29 just went stable, grab that too while you're in there",
+      "expected_output": "Every SDK tool family (cmdline-tools, cmake, emulator, build-tools, platform-tools) is refreshed to Google's current stable revisions with recomputed SHA-256 hashes across all hosts, including a macOS-arm64-specific archive where Google now publishes one. The NDK request is explicitly declined/flagged as out of scope for this skill — _XAAndroidNdkRelease, _XAAndroidNdkPkgRevision, and every XAAndroidNdkHash* property are left completely unchanged, with a clear note to the user explaining why.",
+      "assertions": []
+    },
+    {
+      "id": 3,
+      "prompt": "Android platform 37.1 just came out on the SDK manifest — go ahead and add it to our androidsdk build alongside what we already support, and also bump the existing 37.0 platform package to its latest revision if there's a newer one.",
+      "expected_output": "A brand new _PlatformPackage entry for API 37.1 is NOT added to androidsdk.targets. The existing platform-37.0_r0N entry IS updated in place to the newest published revision (Include + Hash) if Google has released a newer r0N for 37.0, with IsLatestStable preserved on whichever entry currently has it. The response clearly explains that adding a new platform level (37.1) is intentionally out of scope for this skill and flags it for a human decision.",
+      "assertions": []
+    },
+    {
+      "id": 4,
+      "prompt": "our CI machines are on an old command-line tools version (19.0 / 13114758_latest) and I keep seeing warnings that a newer cmdline-tools package is available with separate mac_arm64/mac_x86_64 downloads now — can you get us current, and check whether Android platform 36.1 has a newer revision published too?",
+      "expected_output": "CommandLineToolsFolder/CommandLineToolsVersion bumped to the current stable release, with the command-line tools _AndroidSdkPackage split into a mac_x86_64 item (gated on _IsArm64Apple != 'true') and a new mac_arm64 item (gated on _IsArm64Apple == 'true') backed by a new XACmdlineToolsHashMacOSArm64 property, following the existing emulator/system-image pattern for _IsArm64Apple. The existing platform-36.1_r01 _PlatformPackage entry is checked against the manifest and its revision/hash updated in place if a newer one exists (no new API level added). Validation runs the BootstrapTasks build before the androidsdk.csproj build.",
+      "assertions": []
+    }
+  ]
+}

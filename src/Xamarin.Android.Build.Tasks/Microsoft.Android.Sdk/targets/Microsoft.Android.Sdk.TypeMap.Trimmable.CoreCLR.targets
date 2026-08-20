@@ -192,6 +192,9 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <PostprocessAssembly>true</PostprocessAssembly>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <!-- These generated assemblies always reference Mono.Android. Preserve this known fact so
+             ProcessAssemblies does not reopen and scan every per-assembly typemap DLL. -->
+        <HasMonoAndroidReference>true</HasMonoAndroidReference>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
@@ -208,6 +211,7 @@
         <RelativePath>%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <HasMonoAndroidReference>true</HasMonoAndroidReference>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
