@@ -2152,9 +2152,23 @@ public class ToolbarEx {
 	}
 }
 ",
-						Encoding = Encoding.ASCII
+						Encoding = Encoding.ASCII,
+						Metadata = { { "Bind", "True" } },
 					},
-				}
+				},
+				Sources = {
+					new BuildItem.Source ("UseToolbarEx.cs") {
+						TextContent = () => """
+using Android.Content;
+
+class UseToolbarEx
+{
+	public AndroidX.AppCompat.Widget.Toolbar GetToolbar (Context context) =>
+		Com.Unnamedproject.Unnamedproject.ToolbarEx.GetToolbar (context);
+}
+""",
+					},
+				},
 			};
 			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
