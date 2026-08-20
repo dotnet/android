@@ -3,11 +3,12 @@
 
   App builds otherwise rescan the ~8000 Mono.Android types on every (Debug) build. Instead we
   scan Mono.Android once here and ship the resulting typemap assemblies in the SDK pack. The
-  framework Java Callable Wrappers are already precompiled in mono.android.jar. The typemap always
-  anchors on Java.Lang.Object
-  (ForceSharedTypemapUniverse=true) so a single artifact serves both app-build universe modes:
-  merged (Release) and aggregate (Debug). The root _Microsoft.Android.TypeMaps assembly is NOT
-  generated here (GenerateRootAssembly=false) — the app build emits it and references this
+  framework Java Callable Wrappers are already precompiled in mono.android.jar. The typemap anchors
+  on Java.Lang.Object (ForceSharedTypemapUniverse=true) to coordinate aliases across Mono.Android
+  and Java.Interop. Debug app builds can consume it because their remaining typemaps use separate
+  per-assembly universes. Release builds must instead scan the complete app closure so shared-universe
+  alias ownership includes application types. The root _Microsoft.Android.TypeMaps assembly is NOT
+  generated here (GenerateRootAssembly=false) — the Debug app build emits it and references this
   pre-generated typemap under Java.Lang.Object.
 -->
 <Project>
