@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Hashing;
@@ -405,9 +404,7 @@ namespace Microsoft.Android.Build.Tasks
 			var hashes = new StringBuilder ();
 
 			try {
-				foreach (var item in ZipArchiveMetadataReader.ReadEntries (stream)) {
-					hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.Crc32);
-				}
+				ZipArchiveMetadataReader.AppendHashInput (stream, hashes);
 			} catch {
 				return null;
 			}
@@ -423,9 +420,8 @@ namespace Microsoft.Android.Build.Tasks
 				if (File.Exists (filename + ".hash"))
 					return File.ReadAllText (filename + ".hash");
 
-				foreach (var item in ZipArchiveMetadataReader.ReadEntries (filename)) {
-					hashes.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.Crc32);
-				}
+				using var stream = File.OpenRead (filename);
+				ZipArchiveMetadataReader.AppendHashInput (stream, hashes);
 			} catch {
 				return null;
 			}

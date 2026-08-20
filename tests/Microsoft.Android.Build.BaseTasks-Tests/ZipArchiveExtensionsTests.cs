@@ -41,9 +41,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				archive.FixupWindowsPathSeparators (_ => CompressionLevel.NoCompression);
 			}
 
-			var updatedMetadata = ZipArchiveMetadataReader.Read (archivePath);
-			Assert.IsFalse (updatedMetadata.ContainsKey ("assets\\foo.txt"), "Malformed entry should be removed.");
-			Assert.AreEqual (ZipEntryCompressionMethod.Store, updatedMetadata ["assets/foo.txt"].CompressionMethod, "Normalized entry should stay stored.");
+			using var updatedArchive = ZipFile.OpenRead (archivePath);
+			Assert.IsNull (updatedArchive.GetEntry ("assets\\foo.txt"), "Malformed entry should be removed.");
+			var updatedEntry = updatedArchive.GetEntry ("assets/foo.txt") ?? throw new InvalidDataException ("Normalized entry is missing.");
+#if NET11_0_OR_GREATER
+			Assert.AreEqual (ZipCompressionMethod.Stored, updatedEntry.CompressionMethod, "Normalized entry should stay stored.");
+#else
+			Assert.AreEqual (updatedEntry.Length, updatedEntry.CompressedLength, "Normalized entry should stay stored.");
+#endif
 		}
 
 		[Test]
@@ -100,18 +105,15 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public void ReadZip64Metadata ()
+		public void CopyIfZipChanged_Zip64 ()
 		{
-			var archivePath = Path.Combine (TempDirectory, "archive.zip");
-			CreateZip64Archive (archivePath);
+			var source = Path.Combine (TempDirectory, "source.zip");
+			var destination = Path.Combine (TempDirectory, "destination.zip");
+			CreateZip64Archive (source, crc32: 1);
+			CreateZip64Archive (destination, crc32: 2);
 
-			var metadata = ZipArchiveMetadataReader.ReadEntries (archivePath);
-
-			Assert.AreEqual (1, metadata.Count);
-			Assert.AreEqual ("entry.txt", metadata [0].FullName);
-			Assert.AreEqual (3, metadata [0].CompressedSize);
-			Assert.AreEqual (3, metadata [0].UncompressedSize);
-			Assert.AreEqual (ZipEntryCompressionMethod.Store, metadata [0].CompressionMethod);
+			Assert.IsTrue (Files.CopyIfZipChanged (source, destination), "Different ZIP64 entry CRCs should produce different content hashes.");
+			Assert.IsFalse (Files.CopyIfZipChanged (source, destination), "Identical ZIP64 archives should have matching content hashes.");
 		}
 
 		static void CreateMalformedEmptyStoredEntryArchive (string path)
@@ -166,7 +168,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			writer.Write ((short) 0);
 		}
 
-		static void CreateZip64Archive (string path)
+		static void CreateZip64Archive (string path, uint crc32)
 		{
 			const string entryName = "entry.txt";
 			var entryNameBytes = Encoding.ASCII.GetBytes (entryName);
@@ -180,7 +182,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			writer.Write ((short) 0);
 			writer.Write ((short) 0);
 			writer.Write (0);
-			writer.Write (0);
+			writer.Write (crc32);
 			writer.Write (contents.Length);
 			writer.Write (contents.Length);
 			writer.Write ((short) entryNameBytes.Length);
@@ -195,7 +197,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			writer.Write ((short) 0);
 			writer.Write ((short) 0);
 			writer.Write (0);
-			writer.Write (0);
+			writer.Write (crc32);
 			writer.Write (uint.MaxValue);
 			writer.Write (uint.MaxValue);
 			writer.Write ((short) entryNameBytes.Length);

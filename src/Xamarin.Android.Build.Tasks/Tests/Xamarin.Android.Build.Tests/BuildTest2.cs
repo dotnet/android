@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -1458,8 +1459,10 @@ namespace UnamedProject
 
 				var classesZipPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.zip");
 				FileAssert.Exists (classesZipPath);
-				foreach (var entry in ZipArchiveMetadataReader.ReadEntries (classesZipPath)) {
-					Assert.AreEqual (ZipEntryCompressionMethod.Store, entry.CompressionMethod, $"{entry.FullName} should be stored.");
+				using (var classesZip = ZipFile.OpenRead (classesZipPath)) {
+					foreach (var entry in classesZip.Entries) {
+						Assert.AreEqual (ZipCompressionMethod.Stored, entry.CompressionMethod, $"{entry.FullName} should be stored.");
+					}
 				}
 				var expectedBuilder = new StringBuilder ();
 				using (var zip = ZipHelper.OpenZip (classesZipPath)) {

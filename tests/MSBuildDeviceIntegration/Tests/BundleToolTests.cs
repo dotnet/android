@@ -342,13 +342,15 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					uncompressed.Add (".dll");
 				}
-				var metadata = ZipArchiveMetadataReader.Read (stream);
-				stream.Position = 0;
 				using (var baseApk = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 					foreach (var file in baseApk.Entries) {
 						foreach (var ext in uncompressed) {
 							if (file.FullName.EndsWith (ext, StringComparison.OrdinalIgnoreCase)) {
-								Assert.AreEqual (ZipEntryCompressionMethod.Store, metadata [file.FullName].CompressionMethod, $"{file.FullName} should be uncompressed!");
+#if NET11_0_OR_GREATER
+								Assert.AreEqual (ZipCompressionMethod.Stored, file.CompressionMethod, $"{file.FullName} should be uncompressed!");
+#else
+								Assert.AreEqual (file.Length, file.CompressedLength, $"{file.FullName} should be uncompressed!");
+#endif
 							}
 						}
 					}

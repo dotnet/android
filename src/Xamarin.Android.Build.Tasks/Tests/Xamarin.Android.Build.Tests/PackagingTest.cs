@@ -260,14 +260,13 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				Assert.IsTrue (b.Build (proj), "build failed");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var metadata = ZipArchiveMetadataReader.Read (apk);
-				var expectedCompression = compressNativeLibraries ? ZipEntryCompressionMethod.Deflate : ZipEntryCompressionMethod.Store;
+				var expectedCompression = compressNativeLibraries ? ZipCompressionMethod.Deflate : ZipCompressionMethod.Stored;
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					var libFiles = zip.Entries.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
 					var abiPaths = new string[] { "lib/x86_64/" };
 					foreach (var file in libFiles) {
 						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
-						Assert.AreEqual (expectedCompression, metadata [file.FullName].CompressionMethod, $"{file.FullName} should have been {expectedCompression} in the apk.");
+						Assert.AreEqual (expectedCompression, file.CompressionMethod, $"{file.FullName} should have been {expectedCompression} in the apk.");
 					}
 				}
 			}
@@ -320,20 +319,19 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				foreach (var entry in zip.Entries) {
 					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
-						AssertCompression (apk, entry, compressed: false);
+						AssertCompression (entry, compressed: false);
 					}
 				}
 			}
 		}
 
-		void AssertCompression (string archivePath, ZipArchiveEntry entry, bool compressed)
+		void AssertCompression (ZipArchiveEntry entry, bool compressed)
 		{
-			var compressionMethod = ZipArchiveMetadataReader.Read (archivePath) [entry.FullName].CompressionMethod;
 			if (compressed) {
-				Assert.AreNotEqual (ZipEntryCompressionMethod.Store, compressionMethod, $"`{entry.FullName}` should be compressed!");
+				Assert.AreNotEqual (ZipCompressionMethod.Stored, entry.CompressionMethod, $"`{entry.FullName}` should be compressed!");
 				Assert.AreNotEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be compressed!");
 			} else {
-				Assert.AreEqual (ZipEntryCompressionMethod.Store, compressionMethod, $"`{entry.FullName}` should be uncompressed!");
+				Assert.AreEqual (ZipCompressionMethod.Stored, entry.CompressionMethod, $"`{entry.FullName}` should be uncompressed!");
 				Assert.AreEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be uncompressed!");
 			}
 		}
@@ -365,7 +363,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
-							AssertCompression (apk, entry, compressed: true);
+							AssertCompression (entry, compressed: true);
 						}
 					}
 				}
@@ -382,7 +380,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
-							AssertCompression (apk, entry, compressed: false);
+							AssertCompression (entry, compressed: false);
 						}
 					}
 				}
@@ -933,7 +931,7 @@ public class Test
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					foreach (var entry in zip) {
 						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
-							AssertCompression (apk, entry, compressed: true);
+							AssertCompression (entry, compressed: true);
 						}
 					}
 				}

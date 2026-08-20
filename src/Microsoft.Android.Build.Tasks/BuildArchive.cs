@@ -119,7 +119,6 @@ public class BuildArchive : AndroidTask
 
 		DateTime lastWriteOutput = File.Exists (ApkOutputPath) ? File.GetLastWriteTimeUtc (ApkOutputPath) : DateTime.MinValue;
 		DateTime lastWriteInput = File.GetLastWriteTimeUtc (ApkInputPath);
-		var inputMetadata = ZipArchiveMetadataReader.Read (ApkInputPath);
 
 		using var packaged = ZipArchiveExtensions.OpenZipRead (ApkInputPath);
 		foreach (var entry in packaged.Entries) {
@@ -146,12 +145,8 @@ public class BuildArchive : AndroidTask
 				continue;
 			}
 
-			if (!inputMetadata.TryGetValue (entry.FullName, out ZipEntryMetadata metadata)) {
-				throw new InvalidDataException ($"Unable to read ZIP metadata for '{entry.FullName}' in '{ApkInputPath}'.");
-			}
-
 			var currentEntry = apk.Archive.ReadEntry (entryName, StringComparison.Ordinal);
-			if (currentEntry != null && metadata.Crc32 == GetEntryCrc32 (currentEntry) && metadata.CompressedSize == currentEntry.CompressedLength) {
+			if (currentEntry != null && entry.Crc32 == currentEntry.Crc32 && entry.CompressedLength == currentEntry.CompressedLength) {
 				Log.LogDebugMessage ($"Skipping {entryName} from {ApkInputPath} as its up to date.");
 				continue;
 			}
@@ -161,7 +156,7 @@ public class BuildArchive : AndroidTask
 			}
 
 			Log.LogDebugMessage ($"Refreshing {entryName} from {ApkInputPath}");
-			CopyEntryToArchive (apk.Archive, entryName, entry, ToCompressionLevel (metadata.CompressionMethod));
+			CopyEntryToArchive (apk.Archive, entryName, entry, ToCompressionLevel (entry.CompressionMethod));
 			apk.RecordWrite (entry.Length);
 		}
 	}
@@ -210,7 +205,7 @@ public class BuildArchive : AndroidTask
 			return;
 		}
 
-		if (currentEntry != null && GetEntryCrc32 (currentEntry) == GetEntryCrc32 (jarEntry)) {
+		if (currentEntry != null && currentEntry.Crc32 == jarEntry.Crc32) {
 			Log.LogDebugMessage ("Skipping {0} from {1} as it is up to date.", jarEntryName, jarFilePath);
 			return;
 		}
@@ -299,15 +294,6 @@ public class BuildArchive : AndroidTask
 		};
 	}
 
-	static CompressionLevel ToCompressionLevel (ZipEntryCompressionMethod compressionMethod)
-	{
-		return compressionMethod switch {
-			ZipEntryCompressionMethod.Store => CompressionLevel.NoCompression,
-			ZipEntryCompressionMethod.Deflate => CompressionLevel.Optimal,
-			_ => throw new NotSupportedException ($"Unsupported ZIP compression method: {(ushort) compressionMethod}"),
-		};
-	}
-
 	static ZipCompressionMethod GetExistingCompressionMethod (ZipArchiveEntry entry)
 	{
 		return entry.CompressionMethod switch {
@@ -315,11 +301,6 @@ public class BuildArchive : AndroidTask
 			ZipCompressionMethod.Deflate => ZipCompressionMethod.Deflate,
 			_ => throw new NotSupportedException ($"Unsupported ZIP compression method: {entry.CompressionMethod}"),
 		};
-	}
-
-	static uint GetEntryCrc32 (ZipArchiveEntry entry)
-	{
-		return entry.Crc32;
 	}
 
 	HashSet<string> ParseUncompressedFileExtensions ()

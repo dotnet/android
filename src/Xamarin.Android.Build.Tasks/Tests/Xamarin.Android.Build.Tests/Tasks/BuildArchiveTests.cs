@@ -181,9 +181,10 @@ public class BuildArchiveTests
 
 		Assert.IsTrue (task.RunTask (), "task should have succeeded");
 
-		var metadata = ZipArchiveMetadataReader.Read (bundle);
-		Assert.IsFalse (metadata.ContainsKey ("AndroidManifest.xml"), "Original manifest entry should be moved.");
-		Assert.AreEqual (ZipEntryCompressionMethod.Store, metadata ["manifest/AndroidManifest.xml"].CompressionMethod, "Moved manifest should stay stored.");
+		using var archive = ZipFile.OpenRead (bundle);
+		Assert.IsNull (archive.GetEntry ("AndroidManifest.xml"), "Original manifest entry should be moved.");
+		var manifest = archive.GetEntry ("manifest/AndroidManifest.xml") ?? throw new InvalidDataException ("Moved manifest entry is missing.");
+		Assert.AreEqual (ZipCompressionMethod.Stored, manifest.CompressionMethod, "Moved manifest should stay stored.");
 	}
 
 	[Test]
@@ -206,7 +207,7 @@ public class BuildArchiveTests
 		Assert.IsTrue (firstRun.RunTask (), "first build should have succeeded");
 
 		var firstSnapshot = GetArchiveSnapshot (apk);
-		Assert.AreEqual (ZipEntryCompressionMethod.Store, ZipArchiveMetadataReader.Read (apk) ["empty.dat"].CompressionMethod, "Entry should be stored.");
+		Assert.AreEqual (ZipCompressionMethod.Stored, GetCompressionMethod (apk, "empty.dat"), "Entry should be stored.");
 
 		var secondRun = new BuildArchive {
 			BuildEngine = new MockBuildEngine (TestContext.Out, messages: secondRunMessages),
@@ -256,7 +257,7 @@ public class BuildArchiveTests
 		Assert.IsTrue (task.RunTask (), "task should have succeeded");
 		using var archive = ZipFile.OpenRead (apk);
 		archive.AssertEntryContents (apk, "com/example/Main.class", "class");
-		Assert.AreEqual (ZipEntryCompressionMethod.Store, ZipArchiveMetadataReader.Read (apk) ["com/example/Main.class"].CompressionMethod);
+		Assert.AreEqual (ZipCompressionMethod.Stored, GetCompressionMethod (apk, "com/example/Main.class"));
 	}
 
 	[Test]
@@ -316,5 +317,12 @@ public class BuildArchiveTests
 				}
 				return $"{entry.FullName}:{Convert.ToBase64String (stream.ToArray ())}";
 			}));
+	}
+
+	static ZipCompressionMethod GetCompressionMethod (string archivePath, string entryName)
+	{
+		using var archive = ZipFile.OpenRead (archivePath);
+		var entry = archive.GetEntry (entryName) ?? throw new InvalidDataException ($"Entry '{entryName}' is missing from '{archivePath}'.");
+		return entry.CompressionMethod;
 	}
 }

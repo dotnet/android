@@ -1,91 +1,40 @@
 using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace Microsoft.Android.Build.Tasks
 {
-	public enum ZipEntryCompressionMethod : ushort
-	{
-		Store = 0,
-		Deflate = 8,
-	}
-
-	public readonly struct ZipEntryMetadata
-	{
-		public string FullName { get; }
-		public uint Crc32 { get; }
-		public long CompressedSize { get; }
-		public long UncompressedSize { get; }
-		public ZipEntryCompressionMethod CompressionMethod { get; }
-
-		public ZipEntryMetadata (string fullName, uint crc32, long compressedSize, long uncompressedSize, ZipEntryCompressionMethod compressionMethod)
-		{
-			FullName = fullName;
-			Crc32 = crc32;
-			CompressedSize = compressedSize;
-			UncompressedSize = uncompressedSize;
-			CompressionMethod = compressionMethod;
-		}
-	}
-
-	public static class ZipArchiveMetadataReader
+	static class ZipArchiveMetadataReader
 	{
 		const uint EndOfCentralDirectorySignature = 0x06054b50;
 		const uint Zip64EndOfCentralDirectorySignature = 0x06064b50;
 		const uint Zip64EndOfCentralDirectoryLocatorSignature = 0x07064b50;
 		const uint CentralDirectoryFileHeaderSignature = 0x02014b50;
-		const ushort Zip64ExtraFieldId = 0x0001;
 		const int EndOfCentralDirectoryMinimumSize = 22;
 		const int Zip64EndOfCentralDirectoryLocatorSize = 20;
 		const int CentralDirectoryFileHeaderSize = 46;
 		const int EndOfCentralDirectorySearchWindow = ushort.MaxValue + EndOfCentralDirectoryMinimumSize;
 		static readonly Encoding Cp437 = CreateCp437Encoding ();
 
-		public static IReadOnlyDictionary<string, ZipEntryMetadata> Read (string archivePath)
-		{
-			if (archivePath == null)
-				throw new ArgumentNullException (nameof (archivePath));
-
-			using var stream = File.OpenRead (archivePath);
-			return Read (stream);
-		}
-
-		public static IReadOnlyDictionary<string, ZipEntryMetadata> Read (Stream stream)
-		{
-			var entries = ReadEntries (stream);
-			var metadata = new Dictionary<string, ZipEntryMetadata> (entries.Count, StringComparer.Ordinal);
-			foreach (var entry in entries) {
-				metadata [entry.FullName] = entry;
-			}
-			return metadata;
-		}
-
-		public static IReadOnlyList<ZipEntryMetadata> ReadEntries (string archivePath)
-		{
-			if (archivePath == null)
-				throw new ArgumentNullException (nameof (archivePath));
-
-			using var stream = File.OpenRead (archivePath);
-			return ReadEntries (stream);
-		}
-
-		public static IReadOnlyList<ZipEntryMetadata> ReadEntries (Stream stream)
+		public static void AppendHashInput (Stream stream, StringBuilder hashInput)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+			if (hashInput == null)
+				throw new ArgumentNullException (nameof (hashInput));
 			if (!stream.CanSeek)
 				throw new NotSupportedException ("ZIP metadata requires a seekable stream.");
 
 			long originalPosition = stream.Position;
 			try {
-				return ReadEntriesCore (stream);
+				AppendHashInputCore (stream, hashInput);
 			} finally {
 				stream.Seek (originalPosition, SeekOrigin.Begin);
 			}
 		}
 
-		static IReadOnlyList<ZipEntryMetadata> ReadEntriesCore (Stream stream)
+		static void AppendHashInputCore (Stream stream, StringBuilder hashInput)
 		{
 			long endOfCentralDirectoryOffset = FindEndOfCentralDirectory (stream);
 			using var reader = new BinaryReader (stream, Encoding.UTF8, leaveOpen: true);
@@ -124,9 +73,9 @@ namespace Microsoft.Android.Build.Tasks
 				throw new InvalidDataException ("ZIP central directory exceeds the available data.");
 
 			stream.Seek (centralDirectoryStart, SeekOrigin.Begin);
-			var entries = new List<ZipEntryMetadata> ((int) entryCount);
 			long centralDirectoryEnd = centralDirectoryStart + centralDirectoryLength;
-			while ((ulong) entries.Count < entryCount) {
+			ulong entriesRead = 0;
+			while (entriesRead < entryCount) {
 				if (stream.Position > centralDirectoryEnd - CentralDirectoryFileHeaderSize)
 					throw new InvalidDataException ("ZIP central directory contains fewer entries than expected.");
 				if (reader.ReadUInt32 () != CentralDirectoryFileHeaderSignature)
@@ -135,55 +84,30 @@ namespace Microsoft.Android.Build.Tasks
 				reader.ReadUInt16 (); // version made by
 				reader.ReadUInt16 (); // version needed to extract
 				ushort flags = reader.ReadUInt16 ();
-				ushort compressionMethod = reader.ReadUInt16 ();
+				reader.ReadUInt16 (); // compression method
 				reader.ReadUInt16 (); // last mod file time
 				reader.ReadUInt16 (); // last mod file date
 				uint crc32 = reader.ReadUInt32 ();
-				uint compressedSize = reader.ReadUInt32 ();
-				uint uncompressedSize = reader.ReadUInt32 ();
+				reader.ReadUInt32 (); // compressed size
+				reader.ReadUInt32 (); // uncompressed size
 				ushort fileNameLength = reader.ReadUInt16 ();
 				ushort extraFieldLength = reader.ReadUInt16 ();
 				ushort fileCommentLength = reader.ReadUInt16 ();
-				ushort diskNumberStart = reader.ReadUInt16 ();
+				reader.ReadUInt16 (); // disk number start
 				reader.ReadUInt16 (); // internal file attributes
 				reader.ReadUInt32 (); // external file attributes
-				uint localHeaderOffset = reader.ReadUInt32 ();
+				reader.ReadUInt32 (); // relative offset of local header
 
 				var fileNameBytes = reader.ReadBytes (fileNameLength);
 				if (fileNameBytes.Length != fileNameLength)
 					throw new InvalidDataException ("ZIP central directory entry name exceeds the available data.");
-				var encoding = (flags & (1 << 11)) != 0 ? Encoding.UTF8 : Cp437;
-				var fullName = encoding.GetString (fileNameBytes);
-
 				if (stream.Position > centralDirectoryEnd - extraFieldLength - fileCommentLength)
 					throw new InvalidDataException ("ZIP central directory entry exceeds the available data.");
-
-				var extraField = reader.ReadBytes (extraFieldLength);
-				if (extraField.Length != extraFieldLength)
-					throw new InvalidDataException ("ZIP central directory extra field exceeds the available data.");
-				ReadZip64Sizes (
-					extraField,
-					compressedSize,
-					uncompressedSize,
-					localHeaderOffset,
-					diskNumberStart,
-					out ulong zip64CompressedSize,
-					out ulong zip64UncompressedSize
-				);
-				stream.Seek (fileCommentLength, SeekOrigin.Current);
-
-				if (zip64CompressedSize > long.MaxValue || zip64UncompressedSize > long.MaxValue)
-					throw new InvalidDataException ("ZIP entry is too large.");
-				entries.Add (new ZipEntryMetadata (
-					fullName,
-					crc32,
-					(long) zip64CompressedSize,
-					(long) zip64UncompressedSize,
-					(ZipEntryCompressionMethod) compressionMethod
-				));
+				var encoding = (flags & (1 << 11)) != 0 ? Encoding.UTF8 : Cp437;
+				hashInput.AppendFormat (CultureInfo.InvariantCulture, "{0}{1}", encoding.GetString (fileNameBytes), crc32);
+				stream.Seek (extraFieldLength + fileCommentLength, SeekOrigin.Current);
+				entriesRead++;
 			}
-
-			return entries;
 		}
 
 		static bool TryReadZip64EndOfCentralDirectory (Stream stream, BinaryReader reader, long endOfCentralDirectoryOffset, out Zip64DirectoryInfo info)
@@ -226,83 +150,6 @@ namespace Microsoft.Android.Build.Tasks
 
 			info = new Zip64DirectoryInfo (entriesOnDisk, entryCount, centralDirectorySize, centralDirectoryOffset);
 			return true;
-		}
-
-		static void ReadZip64Sizes (
-			byte [] extraField,
-			uint compressedSize,
-			uint uncompressedSize,
-			uint localHeaderOffset,
-			ushort diskNumberStart,
-			out ulong actualCompressedSize,
-			out ulong actualUncompressedSize)
-		{
-			actualCompressedSize = compressedSize;
-			actualUncompressedSize = uncompressedSize;
-			bool needsCompressedSize = compressedSize == uint.MaxValue;
-			bool needsUncompressedSize = uncompressedSize == uint.MaxValue;
-			bool needsLocalHeaderOffset = localHeaderOffset == uint.MaxValue;
-			bool needsDiskNumberStart = diskNumberStart == ushort.MaxValue;
-			if (!needsCompressedSize && !needsUncompressedSize)
-				return;
-
-			int offset = 0;
-			while (offset <= extraField.Length - 4) {
-				ushort headerId = ReadUInt16 (extraField, offset);
-				ushort dataSize = ReadUInt16 (extraField, offset + 2);
-				offset += 4;
-				if (dataSize > extraField.Length - offset)
-					throw new InvalidDataException ("ZIP central directory extra field is truncated.");
-
-				if (headerId == Zip64ExtraFieldId) {
-					int end = offset + dataSize;
-					if (needsUncompressedSize)
-						actualUncompressedSize = ReadZip64UInt64 (extraField, ref offset, end);
-					if (needsCompressedSize)
-						actualCompressedSize = ReadZip64UInt64 (extraField, ref offset, end);
-					if (needsLocalHeaderOffset)
-						ReadZip64UInt64 (extraField, ref offset, end);
-					if (needsDiskNumberStart)
-						ReadZip64UInt32 (extraField, ref offset, end);
-					return;
-				}
-
-				offset += dataSize;
-			}
-
-			throw new InvalidDataException ("ZIP64 entry size is missing from the central directory extra field.");
-		}
-
-		static ulong ReadZip64UInt64 (byte [] buffer, ref int offset, int end)
-		{
-			if (offset > end - sizeof (long))
-				throw new InvalidDataException ("ZIP64 central directory extra field is truncated.");
-
-			ulong value =
-				buffer [offset] |
-				((ulong) buffer [offset + 1] << 8) |
-				((ulong) buffer [offset + 2] << 16) |
-				((ulong) buffer [offset + 3] << 24) |
-				((ulong) buffer [offset + 4] << 32) |
-				((ulong) buffer [offset + 5] << 40) |
-				((ulong) buffer [offset + 6] << 48) |
-				((ulong) buffer [offset + 7] << 56);
-			offset += sizeof (long);
-			return value;
-		}
-
-		static uint ReadZip64UInt32 (byte [] buffer, ref int offset, int end)
-		{
-			if (offset > end - sizeof (int))
-				throw new InvalidDataException ("ZIP64 central directory extra field is truncated.");
-
-			uint value =
-				buffer [offset] |
-				((uint) buffer [offset + 1] << 8) |
-				((uint) buffer [offset + 2] << 16) |
-				((uint) buffer [offset + 3] << 24);
-			offset += sizeof (int);
-			return value;
 		}
 
 		static long FindEndOfCentralDirectory (Stream stream)
