@@ -2302,6 +2302,7 @@ public class ToolbarEx {
 
 		[Test]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (false, AndroidRuntime.CoreCLR)]
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
 		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
