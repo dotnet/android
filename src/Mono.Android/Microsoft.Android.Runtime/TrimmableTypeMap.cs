@@ -19,6 +19,8 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 public class TrimmableTypeMap
 {
+	const JniHandleOwnership CreatedPeerOwnership = JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister;
+
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
@@ -348,21 +350,21 @@ public class TrimmableTypeMap
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			peer = ActivateUsingReflection (targetType, handle, JniHandleOwnership.DoNotTransfer);
+			peer = ActivateUsingReflection (targetType, handle, CreatedPeerOwnership);
 		} else {
-			peer = proxy?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+			peer = proxy?.CreateInstance (handle, CreatedPeerOwnership);
 		}
 		if (peer is not null) {
-			MarkCreatedPeer (peer);
+			RegisterCreatedPeer (peer);
 		}
 		return peer;
 	}
 
 	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
 	{
-		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
+		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, CreatedPeerOwnership);
 		if (peer is not null) {
-			MarkCreatedPeer (peer);
+			RegisterCreatedPeer (peer);
 		}
 		return peer;
 	}
@@ -398,13 +400,14 @@ public class TrimmableTypeMap
 		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
 	}
 
-	static void MarkCreatedPeer (IJavaPeerable peer)
+	static void RegisterCreatedPeer (IJavaPeerable peer)
 	{
 		var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
 		if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
 			peerState |= JniManagedPeerStates.Activatable;
 		}
 		peer.SetJniManagedPeerState (peerState);
+		JniEnvironment.Runtime.ValueManager.AddPeer (peer);
 	}
 
 	/// <summary>
