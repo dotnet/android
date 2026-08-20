@@ -1626,7 +1626,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease: false);
 		}
 
 		[Test]
