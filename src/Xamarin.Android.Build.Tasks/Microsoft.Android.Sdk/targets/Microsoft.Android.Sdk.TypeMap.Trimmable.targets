@@ -5,6 +5,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateEmptyTypemapStub" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateProguardConfiguration" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetMonoPlatformJar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets"
       Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
@@ -61,23 +62,37 @@
     <!-- _GetLibraryImports populates @(ExtractedManifestDocuments) (the extracted library .aar
          AndroidManifest.xml files) that the legacy manifest merger merges into the app manifest. -->
     <_GenerateTrimmableTypeMapDependsOn>$(_GenerateTrimmableTypeMapDependsOn);_GetLibraryImports</_GenerateTrimmableTypeMapDependsOn>
+    <_BeforeCompileJava>$(_BeforeCompileJava);_AddPreGeneratedMonoAndroidJavaLibrary</_BeforeCompileJava>
+    <_BeforeCompileToDalvik>$(_BeforeCompileToDalvik);_AddPreGeneratedMonoAndroidJavaLibrary</_BeforeCompileToDalvik>
     <IncrementalCleanDependsOn>
       _RecordTrimmableTypeMapFileWrites;
       $(IncrementalCleanDependsOn);
     </IncrementalCleanDependsOn>
   </PropertyGroup>
 
-  <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). When present,
-       the app build skips scanning Mono.Android (its ~8000 types) and instead references the
-       pre-built _Mono.Android.TypeMap.dll (Java.Lang.Object universe). Framework Java Callable
-       Wrappers continue to come from the existing mono.android.jar. Opt out with
-       $(_AndroidUsePreGeneratedMonoAndroidTypeMap)=false. -->
+  <Target Name="_AddPreGeneratedMonoAndroidJavaLibrary"
+      Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
+    <GetMonoPlatformJar TargetFrameworkDirectory="$(_XATargetFrameworkDirectories)">
+      <Output TaskParameter="MonoPlatformJarPath" PropertyName="_PreGeneratedMonoAndroidJavaLibrary" />
+    </GetMonoPlatformJar>
+    <ItemGroup>
+      <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidJavaLibrary)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). Debug builds use
+       per-assembly typemap universes, so they can skip scanning Mono.Android (its ~8000 types) and
+       reference the pre-built _Mono.Android.TypeMap.dll. Release builds require a shared universe:
+       alias ownership must be computed across the complete app closure and therefore cannot use a
+       framework-only pre-generated map. Framework Java Callable Wrappers continue to come from the
+       existing mono.android.jar. -->
   <PropertyGroup>
     <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
     <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
     <_PreGeneratedMonoAndroidTypeMapAcwMap>$(_PreGeneratedTypeMapDir)mono.android-acw-map.txt</_PreGeneratedMonoAndroidTypeMapAcwMap>
-    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and '$(AndroidIncludeDebugSymbols)' == 'true' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>
     <!-- ACW map fed to the R8/proguard keep-rule generation. Normally this is the app's own
          acw-map.txt. When the pre-generated Mono.Android typemap is used, Mono.Android is excluded
