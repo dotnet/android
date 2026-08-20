@@ -612,15 +612,10 @@ are automatically converted into `Android.Graphics.Color`.
 
 ### Finishing the method map
 
-The official `methodmap.csv` uses a slightly different format than the one used for enumification.
-
-Using BindingStudio:
-
-- Ensure the "new api level method map" CSV file is loaded.
-- Choose `Tools` -> `Export Final Method Map`
-- Choose a temporary file name
-- Open the temporary file, copy the contents to the bottom of the official:
-  - dotnet/android/src/Mono.Android/methodmap.csv
+The normalized `new-methodmap2.csv` output appended in the **Mapping methods** section
+is the final method map. Do not export and append the BindingStudio output again, as
+the raw output uses JNI package and nested-type syntax that `methodmap.csv` does not
+support.
 
 Congrats! Enumification is complete!
 
