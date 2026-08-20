@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Java.Interop
 {
@@ -45,7 +46,7 @@ namespace Java.Interop
 			internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 			JniRuntime?             runtime;
-			readonly object         peerCreationLock = new ();
+			readonly Lock           peerCreationLock = new ();
 			bool                    disposed;
 			public      JniRuntime  Runtime {
 				get => runtime ?? throw new NotSupportedException ();
