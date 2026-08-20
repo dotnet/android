@@ -86,7 +86,12 @@ steps:
 - script: |
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/"
     mkdir -p "$DEST"
-    if adb devices | awk 'NR > 1 && $2 == "device" { found=1 } END { exit !found }'; then
+    ADB_DEVICES="$(adb devices 2>&1)"
+    ADB_STATUS=$?
+    echo "$ADB_DEVICES"
+    if [ "$ADB_STATUS" -ne 0 ]; then
+      echo "logcat capture failed: adb devices exited with code $ADB_STATUS"
+    elif echo "$ADB_DEVICES" | awk 'NR > 1 && $2 == "device" { found=1 } END { exit !found }'; then
       adb logcat -d > "$DEST/logcat-${{ parameters.testName }}.txt" || echo "logcat capture failed"
     else
       echo "logcat capture skipped: no connected device"
