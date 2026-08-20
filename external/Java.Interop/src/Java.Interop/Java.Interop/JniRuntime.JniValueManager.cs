@@ -200,31 +200,28 @@ namespace Java.Interop
 					return null;
 				}
 
-				while (true) {
-					var peeked = PeekPeer (reference);
-					if (peeked != null &&
-							(targetType == null ||
-								targetType.IsAssignableFrom (peeked.GetType ()))) {
-						return peeked;
-					}
-
-					var created = CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
-					var registered = PeekPeer (reference);
-					if (registered != null &&
-							(targetType == null ||
-								targetType.IsAssignableFrom (registered.GetType ()))) {
-						if (created != null && !ReferenceEquals (created, registered)) {
-							DisposePeerUnlessReferenced (created);
-						}
-						return registered;
-					}
-					if (registered != null || created == null) {
-						return created;
-					}
-
-					DisposePeerUnlessReferenced (created);
+				var existing = PeekPeer (reference);
+				if (IsCompatiblePeer (existing, targetType)) {
+					return existing;
 				}
+
+				var created = CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
+
+				// Peer construction registers the new instance. Another thread may have
+				// registered its own instance first, so always return the registered winner.
+				var registered = PeekPeer (reference);
+				if (IsCompatiblePeer (registered, targetType)) {
+					if (created != null && !ReferenceEquals (created, registered)) {
+						DisposePeerUnlessReferenced (created);
+					}
+					return registered;
+				}
+
+				return created;
 			}
+
+			static bool IsCompatiblePeer (IJavaPeerable? peer, Type? targetType)
+				=> peer != null && (targetType == null || targetType.IsAssignableFrom (peer.GetType ()));
 
 			public abstract IJavaPeerable? CreatePeer (
 				ref JniObjectReference reference,
