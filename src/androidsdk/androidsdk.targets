@@ -489,6 +489,7 @@
         Text="Neither android nor sdkmanager was found in $(_SdkManagerDir)"
     />
     <MakeDir Directories="$(AndroidSdkFullPath)\licenses" />
+    <Delete Files="$(_AndroidSdkLicenseFile)" />
     <Exec
         Condition=" Exists('$(_AndroidCliPath)') and '$(HostOS)' == 'Windows' "
         Command="powershell -NoProfile -Command &quot;1..10 | ForEach-Object { 'y' } | &amp; '$(_AndroidCliPath)' --no-metrics '--sdk=$(AndroidSdkFullPath)' sdk install 'build-tools/$(XABuildToolsFolder)'&quot;"
