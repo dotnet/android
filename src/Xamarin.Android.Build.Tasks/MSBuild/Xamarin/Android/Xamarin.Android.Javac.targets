@@ -106,7 +106,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
       Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileBindingJavaFileList);$(MonoPlatformJarPath);@(_JavaBindingSource)"
       Outputs="$(_AndroidCompileBindingJavaStampFile)">
 
-    <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
+    <!-- remove existing outputs, since *.class and *.jar files could contain old files -->
     <RemoveDirFixed Directories="$(_AndroidIntermediateBindingJavaClassDirectory)" Condition="Exists('$(_AndroidIntermediateBindingJavaClassDirectory)')" />
     <Delete Files="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
     <!-- Compile java code -->
@@ -114,7 +114,6 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
         ClassesOutputDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
-        ClassesZip="$(_AndroidIntermediateBindingClassesZip)"
         StubSourceDirectory="$(_AndroidIntermediateBindingJavaSourceDirectory)"
         JavaSourceFiles="@(_JavaBindingSource)"
         ToolPath="$(JavacToolPath)"
@@ -125,6 +124,11 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JdkVersion="$(_JdkVersion)"
         IntermediateOutputPath="$(IntermediateOutputPath)"
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+    />
+    <ZipDirectory
+        SourceDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
+        DestinationFile="$(_AndroidIntermediateBindingClassesZip)"
+        Overwrite="true"
     />
     <JavaSourceUtils
         Condition=" '@(_JavaBindingSource->Count())' != '0' "
