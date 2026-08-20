@@ -170,6 +170,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidGenerateLayoutBindings Condition=" '$(AndroidGenerateLayoutBindings)' == '' ">False</AndroidGenerateLayoutBindings>
 	<AndroidFragmentType Condition=" '$(AndroidFragmentType)' == '' ">Android.App.Fragment</AndroidFragmentType>
 	<AndroidEnableAssemblyCompression Condition=" '$(AndroidEnableAssemblyCompression)' == '' ">True</AndroidEnableAssemblyCompression>
+	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' And '$(Optimize)' == 'True' ">22</_AndroidAssemblyStoreCompressionLevel>
 	<_AndroidAssemblyStoreCompressionLevel Condition=" '$(_AndroidAssemblyStoreCompressionLevel)' == '' ">3</_AndroidAssemblyStoreCompressionLevel>
 	<AndroidEnableAssemblyStoreDecompressionCache Condition=" '$(AndroidEnableAssemblyStoreDecompressionCache)' == '' ">False</AndroidEnableAssemblyStoreDecompressionCache>
 	<AndroidIncludeWrapSh Condition=" '$(AndroidIncludeWrapSh)' == '' ">False</AndroidIncludeWrapSh>
@@ -965,11 +966,15 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidDexTool=$(AndroidDexTool)" />
 		<_PropertyCacheItems Include="AndroidLinkTool=$(AndroidLinkTool)" />
 		<_PropertyCacheItems Include="AndroidLinkResources=$(AndroidLinkResources)" />
+		<_PropertyCacheItems Include="AndroidBundleToolExtraArgs=$(AndroidBundleToolExtraArgs)" />
+		<_PropertyCacheItems Include="AndroidKeyStore=$(AndroidKeyStore)" />
 		<_PropertyCacheItems Include="AndroidPackageFormat=$(AndroidPackageFormat)" />
 		<_PropertyCacheItems Include="EmbedAssembliesIntoApk=$(EmbedAssembliesIntoApk)" />
 		<_PropertyCacheItems Include="AndroidLinkMode=$(AndroidLinkMode)" />
 		<_PropertyCacheItems Include="AndroidLinkSkip=$(AndroidLinkSkip)" />
 		<_PropertyCacheItems Include="AndroidSdkBuildToolsVersion=$(AndroidSdkBuildToolsVersion)" />
+		<_PropertyCacheItems Include="Aapt2ToolPath=$(Aapt2ToolPath)" />
+		<_PropertyCacheItems Include="Aapt2ToolExe=$(Aapt2ToolExe)" />
 		<_PropertyCacheItems Include="AndroidSdkPath=$(_AndroidSdkDirectory)" />
 		<_PropertyCacheItems Include="AndroidNdkPath=$(_AndroidNdkDirectory)" />
 		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
@@ -1472,8 +1477,10 @@ because xbuild doesn't support framework reference assemblies.
     Outputs="$(_AdditionalPostLinkerStepsFlag)">
   <MakeDir Directories="$(_AfterILLinkOutputDir)" Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " />
   <ItemGroup>
-    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(ResolvedAssemblies->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
-    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(ResolvedAssemblies)" />
+    <_AfterILLinkSourceFiles Include="@(ResolvedAssemblies)"
+        Condition=" '$(_AndroidUseMarshalMethods)' != 'True' or !$([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
+    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(_AfterILLinkSourceFiles->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
+    <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(_AfterILLinkSourceFiles)" />
   </ItemGroup>
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
@@ -1487,11 +1494,12 @@ because xbuild doesn't support framework reference assemblies.
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       ResolvedUserAssemblies="@(ResolvedUserAssemblies)"
-      SourceFiles="@(ResolvedAssemblies)"
+      SourceFiles="@(_AfterILLinkSourceFiles)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
   <ItemGroup>
+    <_AfterILLinkSourceFiles Remove="@(_AfterILLinkSourceFiles)" />
     <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
@@ -2675,12 +2683,26 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="%(ApkAbiFilesUnaligned.FullPath)" />
 </Target>
 
+<Target Name="_PrepareCreateUniversalApkFromBundle"
+    DependsOnTargets="_ResolveAndroidTooling;_ResolveXamarinAndroidTools">
+  <PropertyGroup>
+    <_UniversalApkAapt2ToolExe Condition=" '$(Aapt2ToolExe)' != '' ">$(Aapt2ToolExe)</_UniversalApkAapt2ToolExe>
+    <_UniversalApkAapt2ToolExe Condition=" '$(_UniversalApkAapt2ToolExe)' == '' and '$(OS)' == 'Windows_NT' ">aapt2.exe</_UniversalApkAapt2ToolExe>
+    <_UniversalApkAapt2ToolExe Condition=" '$(_UniversalApkAapt2ToolExe)' == '' ">aapt2</_UniversalApkAapt2ToolExe>
+    <_UniversalApkAapt2ToolPath>$([System.IO.Path]::Combine('$(Aapt2ToolPath)', '$(_UniversalApkAapt2ToolExe)'))</_UniversalApkAapt2ToolPath>
+    <!-- Preserve the previous always-run behavior for custom signing credentials or bundletool
+         arguments, which can change without changing the input AAB. -->
+    <_UniversalApkAlwaysRunInput Condition=" '$(AndroidKeyStore)' == 'True' or '$(AndroidBundleToolExtraArgs)' != '' ">$(IntermediateOutputPath)__always_rebuild_universal_apk__</_UniversalApkAlwaysRunInput>
+  </PropertyGroup>
+</Target>
+
 <Target Name="_CreateUniversalApkFromBundle"
     Condition=" '$(AndroidPackageFormat)' == 'aab' And $(_AndroidAdditionalPackageFormats.Contains('apk')) "
-    Inputs="$(_AppBundleIntermediate)"
+    DependsOnTargets="_PrepareCreateUniversalApkFromBundle"
+    Inputs="$(_AppBundleIntermediate);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects);$(AndroidBundleToolJarPath);$(_UniversalApkAapt2ToolPath);$(_ApkKeyStore);$(_UniversalApkAlwaysRunInput)"
     Outputs="$(OutDir)$(_AndroidPackage)-Signed.apk"
   >
-  <!-- Delete the existing files or bundetool will fail. -->
+  <!-- Delete the existing files or bundletool will fail. -->
   <Delete Files="$(_UniversalApkSetIntermediate);$(OutDir)$(_AndroidPackage)*-Signed.apk" />
   <BuildApkSet
       ToolPath="$(JavaToolPath)"
@@ -2690,6 +2712,7 @@ because xbuild doesn't support framework reference assemblies.
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Aapt2ToolPath="$(Aapt2ToolPath)"
+      Aapt2ToolExe="$(Aapt2ToolExe)"
       AppBundle="$(_AppBundleIntermediate)"
       Output="$(_UniversalApkSetIntermediate)"
       KeyStore="$(_ApkKeyStore)"
@@ -2708,6 +2731,9 @@ because xbuild doesn't support framework reference assemblies.
     <FileWrites Include="$(OutDir)$(_AndroidPackage)-Signed.apk" />
   </ItemGroup>
   <UnzipToFolder Sources="$(_UniversalApkSetIntermediate)" DestinationDirectories="$(OutDir)" Files="@(_FilestoExtract)" />
+  <!-- bundletool's universal.apk has a fixed ZIP timestamp, which otherwise leaves this target
+       perpetually out of date relative to the unchanged input AAB. -->
+  <Touch Files="$(OutDir)$(_AndroidPackage)-Signed.apk" />
 </Target>
 
 <Target Name="_CollectApplicationArtifacts"
@@ -2907,6 +2933,7 @@ because xbuild doesn't support framework reference assemblies.
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Aapt2ToolPath="$(Aapt2ToolPath)"
+      Aapt2ToolExe="$(Aapt2ToolExe)"
       AppBundle="$(_AppBundleIntermediate)"
       Output="$(_ApkSetIntermediate)"
       KeyStore="$(_ApkKeyStore)"

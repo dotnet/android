@@ -2301,6 +2301,79 @@ public class ToolbarEx {
 		}
 
 		[Test]
+		public void BuildDoesNotModifyNuGetPackageCache ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				GlobalPackagesFolder = Path.Combine (Root, TestName, "packages"),
+				Imports = {
+					new Import (() => "EnableMarshalMethodsForPostLink.targets") {
+						TextContent = () =>
+"""
+<Project>
+	<!-- Exercise the in-place post-link path without enabling marshal methods for later CoreCLR targets. -->
+	<Target Name="_EnableMarshalMethodsForPostLink"
+		BeforeTargets="_RunAfterILLinkAdditionalSteps"
+		Condition=" '$(TestEnableMarshalMethodsForPostLink)' == 'true' ">
+		<PropertyGroup>
+			<_AndroidUseMarshalMethods>true</_AndroidUseMarshalMethods>
+		</PropertyGroup>
+	</Target>
+</Project>
+"""
+					},
+				},
+				PackageReferences = {
+					new Package { Id = "Humanizer.Core", Version = "2.14.1" },
+					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
+			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Humanizer;")
+				.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (System.DateTime.UtcNow.Humanize ());");
+
+			using var builder = CreateApkBuilder ();
+			var buildParameters = new [] { $"RestorePackagesPath={proj.GlobalPackagesFolder}" };
+			Assert.IsTrue (builder.Restore (proj, parameters: buildParameters), "Package restore should have succeeded.");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: buildParameters),
+				"Initial build should have succeeded.");
+
+			var satelliteAssemblies = Directory.GetFiles (proj.GlobalPackagesFolder, "*.resources.dll", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (satelliteAssemblies, "The NuGet package should contain satellite assemblies.");
+
+			var originalWriteTimes = new Dictionary<string, DateTime> ();
+			foreach (string assembly in satelliteAssemblies) {
+				File.SetLastWriteTimeUtc (assembly, new DateTime (2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+				originalWriteTimes.Add (assembly, File.GetLastWriteTimeUtc (assembly));
+			}
+
+			var postLinkStamp = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "stamp", "_AdditionalPostLinkerSteps.stamp");
+			FileAssert.Exists (postLinkStamp);
+			File.Delete (postLinkStamp);
+
+			// A package cache is immutable: deny write sharing and verify timestamps remain unchanged.
+			var packageLocks = satelliteAssemblies
+				.Select (assembly => File.Open (assembly, FileMode.Open, FileAccess.Read, FileShare.Read))
+				.ToList ();
+			try {
+				var postLinkParameters = buildParameters.Append ("TestEnableMarshalMethodsForPostLink=true").ToArray ();
+				Assert.IsTrue (builder.RunTarget (proj, "_PrepareAssemblies", doNotCleanupOnUpdate: true, saveProject: false, parameters: postLinkParameters),
+					"Preparing assemblies should have succeeded.");
+				FileAssert.Exists (postLinkStamp);
+				foreach (string assembly in satelliteAssemblies) {
+					Assert.AreEqual (originalWriteTimes [assembly], File.GetLastWriteTimeUtc (assembly), $"Build should not modify '{assembly}'.");
+				}
+			} finally {
+				foreach (var packageLock in packageLocks) {
+					packageLock.Dispose ();
+				}
+			}
+		}
+
+		[Test]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (false, AndroidRuntime.CoreCLR)]
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
@@ -2378,13 +2451,11 @@ public class ToolbarEx {
 		[Test]
 		public void SystemIOHashing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("https://github.com/dotnet/android/issues/10606");
-			}
-
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				PackageReferences = {
-					new Package { Id = "System.IO.Hashing", Version = "10.0.0" }
+					new Package { Id = "System.IO.Hashing", Version = "11.0.0-rc.1.26413.103" }
 				},
 			};
 			proj.SetRuntime (runtime);
@@ -2393,8 +2464,8 @@ public class ToolbarEx {
 				"""
 				base.OnCreate (bundle);
 				
-				// Use System.IO.Hashing to compute a hash
-				var crc32 = new System.IO.Hashing.Crc32 ();
+				// Crc32ParameterSet was added in System.IO.Hashing 11.0.
+				var crc32 = new System.IO.Hashing.Crc32 (System.IO.Hashing.Crc32ParameterSet.Crc32C);
 				var data = System.Text.Encoding.UTF8.GetBytes ("Hello World");
 				crc32.Append (data);
 				var hash = crc32.GetCurrentHash ();

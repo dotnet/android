@@ -7,12 +7,12 @@ namespace xamarin::android
 	public:
 		static auto is_startup_in_progress () noexcept -> bool
 		{
-			return startup_in_progress;
+			return __atomic_load_n (&startup_in_progress, __ATOMIC_ACQUIRE);
 		}
 
 		static void mark_startup_done () noexcept
 		{
-			startup_in_progress = false;
+			__atomic_store_n (&startup_in_progress, false, __ATOMIC_RELEASE);
 		}
 
 	private:
