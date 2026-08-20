@@ -2336,6 +2336,7 @@ public class ToolbarEx {
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "AndroidX.CustomView.PoolingContainer.PoolingContainer.IsPoolingContainer (null);");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			StringAssertEx.Contains ("warning XA0119: ReadyToRun has been disabled because trimming is disabled.", builder.LastBuildOutput);
 		}
 
 		[Test]
