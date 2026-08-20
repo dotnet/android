@@ -36,7 +36,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease);
 		}
 
 		[TestCase ("llvm-ir", AndroidRuntime.CoreCLR, "APT2008", false)]
@@ -1488,7 +1488,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
-			AssertTrimmableTypeMapOutputs (intermediateDir);
+			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease);
 			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
 			Assert.IsNotEmpty (typemapDlls, "First build should have generated typemap DLL(s).");
 			var typemapFingerprints = Path.Combine (intermediateDir, "typemap-fingerprints.txt");
@@ -2054,15 +2054,16 @@ namespace Xamarin.Android.Build.Tests {
 			StringAssert.Contains ($"--generateunmanagedentrypoints:_{proj.ProjectName}.TypeMap", rspText);
 		}
 
-		[Test]
-		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void CoreClrTrimmableTypeMap_PackagesJavaProxyThrowable (bool isRelease)
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: isRelease)) {
 				return;
 			}
 
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
+				IsRelease = isRelease,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
@@ -2842,20 +2843,29 @@ namespace UnnamedProject {
 			);
 		}
 
-		static void AssertTrimmableTypeMapOutputs (string typemapDir)
+		static void AssertTrimmableTypeMapOutputs (string typemapDir, bool isRelease)
 		{
 			DirectoryAssert.Exists (typemapDir);
 			FileAssert.Exists (Path.Combine (typemapDir, "_Microsoft.Android.TypeMaps.dll"));
-			FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
-				"Mono.Android should use the typemap pre-generated in the SDK pack.");
-			FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
-				"Java.Interop should use the typemap pre-generated in the SDK pack.");
 
 			var generatedAssemblies = File.ReadAllLines (Path.Combine (typemapDir, "typemap-assemblies.txt"))
 				.Select (Path.GetFileName)
 				.ToArray ();
-			CollectionAssert.DoesNotContain (generatedAssemblies, "_Mono.Android.TypeMap.dll");
-			CollectionAssert.DoesNotContain (generatedAssemblies, "_Java.Interop.TypeMap.dll");
+			if (isRelease) {
+				FileAssert.Exists (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+					"Release builds must generate Mono.Android's typemap with the complete shared universe.");
+				FileAssert.Exists (Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+					"Release builds must generate Java.Interop's typemap with the complete shared universe.");
+				CollectionAssert.Contains (generatedAssemblies, "_Mono.Android.TypeMap.dll");
+				CollectionAssert.Contains (generatedAssemblies, "_Java.Interop.TypeMap.dll");
+			} else {
+				FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Mono.Android.TypeMap.dll"),
+					"Debug builds should use the typemap pre-generated in the SDK pack.");
+				FileAssert.DoesNotExist (Path.Combine (typemapDir, "_Java.Interop.TypeMap.dll"),
+					"Debug builds should use the typemap pre-generated in the SDK pack.");
+				CollectionAssert.DoesNotContain (generatedAssemblies, "_Mono.Android.TypeMap.dll");
+				CollectionAssert.DoesNotContain (generatedAssemblies, "_Java.Interop.TypeMap.dll");
+			}
 
 			var javaDir = Path.Combine (typemapDir, "java");
 			DirectoryAssert.Exists (javaDir, "Trimmable JCW Java output directory should exist.");
