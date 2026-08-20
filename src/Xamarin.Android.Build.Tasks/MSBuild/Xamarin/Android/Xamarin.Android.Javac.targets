@@ -126,6 +126,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
     />
     <ZipDirectory
+        Condition=" '$(AndroidApplication)' != 'true' or '$(AndroidClassParser)' == 'jar2xml' "
         SourceDirectory="$(_AndroidIntermediateBindingJavaClassDirectory)"
         DestinationFile="$(_AndroidIntermediateBindingClassesZip)"
         Overwrite="true"
@@ -146,6 +147,14 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     />
     <Touch Files="$(_AndroidCompileBindingJavaStampFile)" AlwaysCreate="true" />
     <ItemGroup>
+      <_JavaBindingClassDirectory
+          Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidClassParser)' != 'jar2xml' "
+          Include="$(_AndroidIntermediateBindingJavaClassDirectory)"
+      />
+      <_JavaBindingClassFile
+          Condition=" '$(AndroidApplication)' == 'true' and '$(AndroidClassParser)' != 'jar2xml' "
+          Include="$(_AndroidIntermediateBindingJavaClassDirectory)**\*.class"
+      />
       <EmbeddedJar Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
       <AndroidJavaLibrary Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
       <FileWrites Include="$(_AndroidIntermediateBindingClassesZip)" Condition="Exists('$(_AndroidIntermediateBindingClassesZip)')" />
@@ -170,7 +179,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JavaSourceFiles="@(_JavaSource)"
         ToolPath="$(JavacToolPath)"
         ToolExe="$(JavacToolExe)"
-        Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
+        Jars="@(_JavaBindingClassDirectory);@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
         JavacTargetVersion="$(JavacTargetVersion)"
         JavacSourceVersion="$(JavacSourceVersion)"
         JdkVersion="$(_JdkVersion)"
