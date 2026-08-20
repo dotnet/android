@@ -33,8 +33,19 @@ public class SampleRepository
 	{
 		var path = name.EndsWith (".zip", StringComparison.OrdinalIgnoreCase) ? name : name + ".zip";
 		archiveStream = new FileStream (path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
-		archive = new ZipArchive (archiveStream, ZipArchiveMode.Update);
-		LoadIndex ();
+		try {
+			if (archiveStream.Length == 0) {
+				using (var emptyArchive = new ZipArchive (archiveStream, ZipArchiveMode.Create, leaveOpen: true)) {
+				}
+				archiveStream.Position = 0;
+			}
+
+			archive = new ZipArchive (archiveStream, ZipArchiveMode.Update);
+			LoadIndex ();
+		} catch {
+			archiveStream.Dispose ();
+			throw;
+		}
 	}
 
 	protected SampleRepository (ZipArchive archive)
@@ -128,7 +139,7 @@ public class SampleRepository
 			}
 		}
 		// Serialize index
-		var writer = new StringWriter ();
+		using var writer = new Utf8StringWriter ();
 		IndexSerializer.Serialize (writer, new List<SampleDesc> (index.Values));
 		UpdateEntry (archive, "index.xml", writer.ToString ());
 
@@ -164,6 +175,11 @@ public class SampleRepository
 		var entry = archive.CreateEntry (entryName);
 		using var writer = new StreamWriter (entry.Open (), Encoding.UTF8);
 		writer.Write (content);
+	}
+
+	sealed class Utf8StringWriter : StringWriter
+	{
+		public override Encoding Encoding => Encoding.UTF8;
 	}
 
 #if STANDALONE_EXPORTER

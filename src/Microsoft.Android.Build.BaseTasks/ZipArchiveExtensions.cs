@@ -13,8 +13,7 @@ namespace Microsoft.Android.Build.Tasks
 			if (archivePath == null)
 				throw new ArgumentNullException (nameof (archivePath));
 
-			var stream = new FileStream (archivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-			return OpenZip (stream, ZipArchiveMode.Read, leaveOpen: false, entryNameEncoding);
+			return OpenZip (archivePath, FileMode.Open, FileAccess.Read, ZipArchiveMode.Read, entryNameEncoding);
 		}
 
 		public static ZipArchive OpenZipUpdate (string archivePath, FileMode fileMode = FileMode.OpenOrCreate, Encoding? entryNameEncoding = null)
@@ -30,8 +29,7 @@ namespace Microsoft.Android.Build.Tasks
 					throw new ArgumentOutOfRangeException (nameof (fileMode), fileMode, null);
 			}
 
-			var stream = new FileStream (archivePath, fileMode, FileAccess.ReadWrite, FileShare.Read);
-			return OpenZip (stream, ZipArchiveMode.Update, leaveOpen: false, entryNameEncoding);
+			return OpenZip (archivePath, fileMode, FileAccess.ReadWrite, ZipArchiveMode.Update, entryNameEncoding);
 		}
 
 		public static ZipArchive CreateZip (string archivePath, FileMode fileMode = FileMode.Create, Encoding? entryNameEncoding = null)
@@ -48,8 +46,7 @@ namespace Microsoft.Android.Build.Tasks
 					throw new ArgumentOutOfRangeException (nameof (fileMode), fileMode, null);
 			}
 
-			var stream = new FileStream (archivePath, fileMode, FileAccess.ReadWrite, FileShare.Read);
-			return OpenZip (stream, ZipArchiveMode.Create, leaveOpen: false, entryNameEncoding);
+			return OpenZip (archivePath, fileMode, FileAccess.ReadWrite, ZipArchiveMode.Create, entryNameEncoding);
 		}
 
 		public static ZipArchive OpenZip (Stream stream, ZipArchiveMode mode = ZipArchiveMode.Read, bool leaveOpen = false, Encoding? entryNameEncoding = null)
@@ -69,6 +66,9 @@ namespace Microsoft.Android.Build.Tasks
 				throw new ArgumentNullException (nameof (archive));
 			if (entryName == null)
 				throw new ArgumentNullException (nameof (entryName));
+
+			if (comparison == StringComparison.Ordinal)
+				return archive.GetEntry (entryName);
 
 			return archive.Entries.FirstOrDefault (entry => string.Equals (entry.FullName, entryName, comparison));
 		}
@@ -255,6 +255,17 @@ namespace Microsoft.Android.Build.Tasks
 				return;
 
 			archive.ReadEntry (entryName, StringComparison.Ordinal)?.Delete ();
+		}
+
+		static ZipArchive OpenZip (string archivePath, FileMode fileMode, FileAccess fileAccess, ZipArchiveMode archiveMode, Encoding? entryNameEncoding)
+		{
+			var stream = new FileStream (archivePath, fileMode, fileAccess, FileShare.Read);
+			try {
+				return OpenZip (stream, archiveMode, leaveOpen: false, entryNameEncoding);
+			} catch {
+				stream.Dispose ();
+				throw;
+			}
 		}
 	}
 }

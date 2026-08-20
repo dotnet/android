@@ -259,6 +259,33 @@ public class BuildArchiveTests
 		Assert.AreEqual (ZipEntryCompressionMethod.Store, ZipArchiveMetadataReader.Read (apk) ["com/example/Main.class"].CompressionMethod);
 	}
 
+	[Test]
+	public void FlushesArchiveUpdates ()
+	{
+		var firstFile = Path.Combine (TempDirectory, "first.txt");
+		var secondFile = Path.Combine (TempDirectory, "second.txt");
+		File.WriteAllText (firstFile, "first");
+		File.WriteAllText (secondFile, "second");
+
+		var firstItem = new TaskItem (firstFile);
+		firstItem.SetMetadata ("ArchivePath", "first.txt");
+		var secondItem = new TaskItem (secondFile);
+		secondItem.SetMetadata ("ArchivePath", "second.txt");
+
+		var apk = Path.Combine (TempDirectory, "app.apk");
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = [firstItem, secondItem],
+			ZipFlushFilesLimit = "1",
+		};
+
+		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+		using var archive = ZipFile.OpenRead (apk);
+		archive.AssertEntryContents (apk, "first.txt", "first");
+		archive.AssertEntryContents (apk, "second.txt", "second");
+	}
+
 	static void CreateArchive (string path, params (string name, string contents, CompressionLevel compressionLevel) [] entries)
 	{
 		using (var stream = new FileStream (path, FileMode.Create, FileAccess.ReadWrite))

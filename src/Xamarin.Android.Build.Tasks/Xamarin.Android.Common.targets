@@ -2329,7 +2329,9 @@ because xbuild doesn't support framework reference assemblies.
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
       FilesToAddToArchive="@(FilesToAddToArchive)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)" />
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
 
   <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
   <RemoveDir
@@ -2442,7 +2444,9 @@ because xbuild doesn't support framework reference assemblies.
       ApkInputPath="$(_PackagedResources)"
       ApkOutputPath="$(_ApkOutputPath)"
       FilesToAddToArchive="@(FilesToAddToArchive)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)" />
+      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)" />
 
   <!-- Hopefully this is temporary and doesn't actually need to be cleaned up. But for now let's not change existing behavior. -->
   <RemoveDir

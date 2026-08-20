@@ -78,6 +78,42 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
+		[TestCase (ZipArchiveMode.Read)]
+		[TestCase (ZipArchiveMode.Update)]
+		[TestCase (ZipArchiveMode.Create)]
+		public void OpenZip_DisposesFileWhenArchiveCreationFails (ZipArchiveMode mode)
+		{
+			var archivePath = Path.Combine (TempDirectory, "archive.zip");
+			using (ZipArchiveExtensions.CreateZip (archivePath)) {
+			}
+
+			Assert.Throws<ArgumentException> (() => {
+				using var archive = mode switch {
+					ZipArchiveMode.Read => ZipArchiveExtensions.OpenZipRead (archivePath, Encoding.Unicode),
+					ZipArchiveMode.Update => ZipArchiveExtensions.OpenZipUpdate (archivePath, FileMode.Open, Encoding.Unicode),
+					ZipArchiveMode.Create => ZipArchiveExtensions.CreateZip (archivePath, FileMode.Create, Encoding.Unicode),
+					_ => throw new ArgumentOutOfRangeException (nameof (mode)),
+				};
+			});
+
+			using var exclusive = new FileStream (archivePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+		}
+
+		[Test]
+		public void ReadZip64Metadata ()
+		{
+			var archivePath = Path.Combine (TempDirectory, "archive.zip");
+			CreateZip64Archive (archivePath);
+
+			var metadata = ZipArchiveMetadataReader.ReadEntries (archivePath);
+
+			Assert.AreEqual (1, metadata.Count);
+			Assert.AreEqual ("entry.txt", metadata [0].FullName);
+			Assert.AreEqual (3, metadata [0].CompressedSize);
+			Assert.AreEqual (3, metadata [0].UncompressedSize);
+			Assert.AreEqual (ZipEntryCompressionMethod.Store, metadata [0].CompressionMethod);
+		}
+
 		static void CreateMalformedEmptyStoredEntryArchive (string path)
 		{
 			const string entryName = "R.txt";
@@ -129,5 +165,80 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			writer.Write ((int) centralDirectoryOffset);
 			writer.Write ((short) 0);
 		}
+
+		static void CreateZip64Archive (string path)
+		{
+			const string entryName = "entry.txt";
+			var entryNameBytes = Encoding.ASCII.GetBytes (entryName);
+			var contents = Encoding.ASCII.GetBytes ("zip");
+
+			using var stream = File.Create (path);
+			using var writer = new BinaryWriter (stream, Encoding.UTF8, leaveOpen: false);
+
+			writer.Write (0x04034b50);
+			writer.Write ((short) 45);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write (0);
+			writer.Write (0);
+			writer.Write (contents.Length);
+			writer.Write (contents.Length);
+			writer.Write ((short) entryNameBytes.Length);
+			writer.Write ((short) 0);
+			writer.Write (entryNameBytes);
+			writer.Write (contents);
+
+			long centralDirectoryOffset = stream.Position;
+			writer.Write (0x02014b50);
+			writer.Write ((short) 45);
+			writer.Write ((short) 45);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write (0);
+			writer.Write (0);
+			writer.Write (uint.MaxValue);
+			writer.Write (uint.MaxValue);
+			writer.Write ((short) entryNameBytes.Length);
+			writer.Write ((short) 20);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write (0);
+			writer.Write (0);
+			writer.Write (entryNameBytes);
+			writer.Write (Zip64ExtraFieldId);
+			writer.Write ((short) 16);
+			writer.Write ((long) contents.Length);
+			writer.Write ((long) contents.Length);
+
+			long centralDirectorySize = stream.Position - centralDirectoryOffset;
+			long zip64DirectoryOffset = stream.Position;
+			writer.Write (0x06064b50);
+			writer.Write ((long) 44);
+			writer.Write ((short) 45);
+			writer.Write ((short) 45);
+			writer.Write (0);
+			writer.Write (0);
+			writer.Write ((long) 1);
+			writer.Write ((long) 1);
+			writer.Write (centralDirectorySize);
+			writer.Write (centralDirectoryOffset);
+
+			writer.Write (0x07064b50);
+			writer.Write (0);
+			writer.Write (zip64DirectoryOffset);
+			writer.Write (1);
+
+			writer.Write (0x06054b50);
+			writer.Write ((short) 0);
+			writer.Write ((short) 0);
+			writer.Write (ushort.MaxValue);
+			writer.Write (ushort.MaxValue);
+			writer.Write (uint.MaxValue);
+			writer.Write (uint.MaxValue);
+			writer.Write ((short) 0);
+		}
+
+		const short Zip64ExtraFieldId = 0x0001;
 	}
 }

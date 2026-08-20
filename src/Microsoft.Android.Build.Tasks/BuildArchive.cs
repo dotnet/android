@@ -32,11 +32,18 @@ public class BuildArchive : AndroidTask
 
 	public string? UncompressedFileExtensions { get; set; }
 
+	public string? ZipFlushFilesLimit { get; set; }
+
+	public string? ZipFlushSizeLimit { get; set; }
+
 	HashSet<string>? uncompressedFileExtensions;
 
 	HashSet<string> UncompressedFileExtensionsSet => uncompressedFileExtensions ??= ParseUncompressedFileExtensions ();
 
 	CompressionLevel uncompressedFileCompression = CompressionLevel.NoCompression;
+
+	const int DefaultFlushFilesLimit = 512;
+	const long DefaultFlushSizeLimit = 100 * 1024 * 1024;
 
 	public override bool RunTask ()
 	{
@@ -54,11 +61,15 @@ public class BuildArchive : AndroidTask
 			refreshExistingOutput = false;
 		}
 
-		using var apk = ZipArchiveExtensions.OpenZipUpdate (ApkOutputPath);
+		using var apk = new ArchiveUpdateSession (
+			ApkOutputPath,
+			ParseFlushLimit (ZipFlushFilesLimit, DefaultFlushFilesLimit),
+			ParseFlushLimit (ZipFlushSizeLimit, DefaultFlushSizeLimit)
+		);
 		var existingEntries = new List<string> ();
 
 		if (refreshExistingOutput) {
-			foreach (var entry in apk.Entries) {
+			foreach (var entry in apk.Archive.Entries) {
 				Log.LogDebugMessage ($"Registering item {entry.FullName}");
 				existingEntries.Add (entry.FullName);
 			}
@@ -68,14 +79,18 @@ public class BuildArchive : AndroidTask
 			RefreshEntriesFromInputArchive (apk, existingEntries, isAab);
 		}
 
-		apk.FixupWindowsPathSeparators (
+		bool fixedPathSeparators = false;
+		apk.Archive.FixupWindowsPathSeparators (
 			entry => ToCompressionLevel (entry.CompressionMethod),
 			(source, destination) => {
+				fixedPathSeparators = true;
 				Log.LogDebugMessage ($"Fixing up malformed entry `{source}` -> `{destination}`");
 				existingEntries.Remove (source);
 				existingEntries.Add (destination);
 			}
 		);
+		if (fixedPathSeparators)
+			apk.Commit ();
 
 		foreach (var file in FilesToAddToArchive) {
 			if (!AddItemToArchive (apk, file, existingEntries))
@@ -87,17 +102,17 @@ public class BuildArchive : AndroidTask
 				continue;
 
 			Log.LogDebugMessage ($"Removing {entry} as it is no longer required.");
-			apk.ReadEntry (entry, StringComparison.Ordinal)?.Delete ();
+			apk.Archive.ReadEntry (entry, StringComparison.Ordinal)?.Delete ();
 		}
 
 		if (isAab) {
-			FixupBundleManifest (apk);
+			FixupBundleManifest (apk.Archive);
 		}
 
 		return !Log.HasLoggedErrors;
 	}
 
-	void RefreshEntriesFromInputArchive (ZipArchive apk, List<string> existingEntries, bool isAab)
+	void RefreshEntriesFromInputArchive (ArchiveUpdateSession apk, List<string> existingEntries, bool isAab)
 	{
 		if (ApkInputPath == null)
 			throw new InvalidOperationException ("ApkInputPath must not be null when refreshing the output archive.");
@@ -135,7 +150,7 @@ public class BuildArchive : AndroidTask
 				throw new InvalidDataException ($"Unable to read ZIP metadata for '{entry.FullName}' in '{ApkInputPath}'.");
 			}
 
-			var currentEntry = apk.ReadEntry (entryName, StringComparison.Ordinal);
+			var currentEntry = apk.Archive.ReadEntry (entryName, StringComparison.Ordinal);
 			if (currentEntry != null && metadata.Crc32 == GetEntryCrc32 (currentEntry) && metadata.CompressedSize == currentEntry.CompressedLength) {
 				Log.LogDebugMessage ($"Skipping {entryName} from {ApkInputPath} as its up to date.");
 				continue;
@@ -146,11 +161,12 @@ public class BuildArchive : AndroidTask
 			}
 
 			Log.LogDebugMessage ($"Refreshing {entryName} from {ApkInputPath}");
-			CopyEntryToArchive (apk, entryName, entry, ToCompressionLevel (metadata.CompressionMethod));
+			CopyEntryToArchive (apk.Archive, entryName, entry, ToCompressionLevel (metadata.CompressionMethod));
+			apk.RecordWrite (entry.Length);
 		}
 	}
 
-	bool AddItemToArchive (ZipArchive apk, ITaskItem item, List<string> existingEntries)
+	bool AddItemToArchive (ArchiveUpdateSession apk, ITaskItem item, List<string> existingEntries)
 	{
 		string diskPath = item.ItemSpec;
 		string archivePath = item.GetMetadata ("ArchivePath") ?? "";
@@ -174,11 +190,11 @@ public class BuildArchive : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
-	void AddJarEntryToArchive (ZipArchive apk, string diskPath, string archivePath, string jarEntryName, List<string> existingEntries)
+	void AddJarEntryToArchive (ArchiveUpdateSession apk, string diskPath, string archivePath, string jarEntryName, List<string> existingEntries)
 	{
 		string jarFilePath = diskPath.Substring (0, diskPath.Length - (jarEntryName.Length + 1));
 		bool wasExistingOutputEntry = existingEntries.Remove (archivePath);
-		var currentEntry = apk.ReadEntry (archivePath, StringComparison.Ordinal);
+		var currentEntry = apk.Archive.ReadEntry (archivePath, StringComparison.Ordinal);
 
 		if (currentEntry != null && !wasExistingOutputEntry) {
 			Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: the same file already exists in the apk", jarEntryName, Path.GetFileName (jarFilePath));
@@ -205,17 +221,19 @@ public class BuildArchive : AndroidTask
 		jarEntry.Extract (buffer);
 		buffer.Position = 0;
 		Log.LogDebugMessage ($"Adding {jarEntryName} from {jarFilePath} as the archive file is out of date.");
-		apk.AddStream (buffer, archivePath);
+		apk.Archive.AddStream (buffer, archivePath);
+		apk.RecordWrite (jarEntry.Length);
 	}
 
-	bool AddFileToArchiveIfNewer (ZipArchive apk, string file, string archivePath, ITaskItem item, List<string> existingEntries)
+	bool AddFileToArchiveIfNewer (ArchiveUpdateSession apk, string file, string archivePath, ITaskItem item, List<string> existingEntries)
 	{
 		ZipCompressionMethod compressionMethod = GetCompressionMethod (item);
 		existingEntries.Remove (archivePath);
 
-		var entry = apk.ReadEntry (archivePath, StringComparison.Ordinal);
+		var entry = apk.Archive.ReadEntry (archivePath, StringComparison.Ordinal);
 		if (entry == null) {
-			apk.AddFile (file, archivePath, ToCompressionLevel (compressionMethod));
+			apk.Archive.AddFile (file, archivePath, ToCompressionLevel (compressionMethod));
+			apk.RecordWrite (new FileInfo (file).Length);
 			Log.LogDebugMessage ($"Adding {file} as it doesn't already exist.");
 			return true;
 		}
@@ -223,7 +241,8 @@ public class BuildArchive : AndroidTask
 		if (GetExistingCompressionMethod (entry) != compressionMethod) {
 			Log.LogDebugMessage ($"Updating {file} as the compression level changed.");
 			entry.Delete ();
-			apk.AddFile (file, archivePath, ToCompressionLevel (compressionMethod));
+			apk.Archive.AddFile (file, archivePath, ToCompressionLevel (compressionMethod));
+			apk.RecordWrite (new FileInfo (file).Length);
 			return true;
 		}
 
@@ -232,7 +251,8 @@ public class BuildArchive : AndroidTask
 		if (existingDosTime < fileDosTime) {
 			Log.LogDebugMessage ($"Updating {file} as the file write time is newer: file in zip - '{existingDosTime}', file on disk - '{fileDosTime}'.");
 			entry.Delete ();
-			apk.AddFile (file, archivePath, ToCompressionLevel (compressionMethod));
+			apk.Archive.AddFile (file, archivePath, ToCompressionLevel (compressionMethod));
+			apk.RecordWrite (new FileInfo (file).Length);
 			return true;
 		}
 
@@ -331,6 +351,14 @@ public class BuildArchive : AndroidTask
 		return metadataValue;
 	}
 
+	static long ParseFlushLimit (string? value, long defaultValue)
+	{
+		if (long.TryParse (value, out long parsedValue) && parsedValue > 0)
+			return parsedValue;
+
+		return defaultValue;
+	}
+
 	const int ValidZipDate_YearMin = 1980;
 
 	static uint DateTimeToDosTime (DateTime dateTime)
@@ -342,5 +370,46 @@ public class BuildArchive : AndroidTask
 		ret = (ret << 6) + dateTime.Minute;
 		ret = (ret << 5) + (dateTime.Second / 2);
 		return (uint) ret;
+	}
+
+	sealed class ArchiveUpdateSession : IDisposable
+	{
+		readonly string archivePath;
+		readonly long flushFilesLimit;
+		readonly long flushSizeLimit;
+		long filesWritten;
+		long bytesWritten;
+		ZipArchive archive;
+
+		public ZipArchive Archive => archive;
+
+		public ArchiveUpdateSession (string archivePath, long flushFilesLimit, long flushSizeLimit)
+		{
+			this.archivePath = archivePath;
+			this.flushFilesLimit = flushFilesLimit;
+			this.flushSizeLimit = flushSizeLimit;
+			archive = ZipArchiveExtensions.OpenZipUpdate (archivePath);
+		}
+
+		public void RecordWrite (long size)
+		{
+			filesWritten++;
+			bytesWritten += size;
+			if (filesWritten >= flushFilesLimit || bytesWritten >= flushSizeLimit)
+				Commit ();
+		}
+
+		public void Commit ()
+		{
+			archive.Dispose ();
+			archive = ZipArchiveExtensions.OpenZipUpdate (archivePath, FileMode.Open);
+			filesWritten = 0;
+			bytesWritten = 0;
+		}
+
+		public void Dispose ()
+		{
+			archive.Dispose ();
+		}
 	}
 }
