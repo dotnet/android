@@ -399,6 +399,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       CopyBatchSize="$(_AndroidFastDeployCopyBatchSize)"
       MaxShellCommandLength="$(_AndroidFastDeployMaxShellCommandLength)"
       MaxAdbCommandLength="$(_AndroidFastDeployMaxAdbCommandLength)"
+      FastDeploySkipCleanup="$(_AndroidFastDeploySkipCleanup)"
     />
     <Touch Files="$(_UploadFlag)" AlwaysCreate="True" />
     <MakeDir Directories="$(_ConfigurationCacheDirectory)" Condition="!Exists('$(_ConfigurationCacheDirectory)')" />

@@ -38,7 +38,7 @@ public class GenerateACWMap : AndroidTask
 		var entries = new List<ACWMapEntry> ();
 
 		foreach (var assembly in singleArchAssemblies) {
-			var wrappersPath = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (assembly.ItemSpec);
+			var wrappersPath = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (assembly);
 
 			if (!File.Exists (wrappersPath)) {
 				Log.LogError ($"'{wrappersPath}' not found.");

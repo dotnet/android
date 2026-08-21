@@ -81,7 +81,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			// Check to see if Api has a previous Api defined.
 			if (!api_versions.TryGetValue (ApiLevel, out string previousApiLevel)) {
-				LogError ($"Please add ApiLevel:{ApiLevel} to the list of supported apis.");
+				LogError ($"Please add ApiLevel:{ApiLevel} to the list of supported apis. Supported APIs include: " +
+					string.Join (", ", api_versions.Keys.OrderBy (k => k)) + ".");
 				return !Log.HasLoggedErrors;
 			}
 

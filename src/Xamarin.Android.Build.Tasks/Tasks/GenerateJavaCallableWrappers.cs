@@ -62,7 +62,7 @@ public class GenerateJavaCallableWrappers : AndroidTask
 		var sw = Stopwatch.StartNew ();
 
 		foreach (var assembly in assemblies) {
-			var wrappersPath = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (assembly.ItemSpec);
+			var wrappersPath = JavaObjectsXmlFile.GetJavaObjectsXmlFilePath (assembly);
 
 			if (!File.Exists (wrappersPath)) {
 				Log.LogError ($"'{wrappersPath}' not found.");

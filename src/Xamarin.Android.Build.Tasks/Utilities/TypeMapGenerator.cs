@@ -338,7 +338,7 @@ namespace Xamarin.Android.Tasks
 			var adapter = new TypeMapObjectsFileAdapter (targetArch);
 
 			foreach (var assembly in assemblies) {
-				var typeMapPath = TypeMapObjectsXmlFile.GetTypeMapObjectsXmlFilePath (assembly.ItemSpec);
+				var typeMapPath = TypeMapObjectsXmlFile.GetTypeMapObjectsXmlFilePath (assembly);
 
 				if (!File.Exists (typeMapPath)) {
 					log.LogError ($"'{typeMapPath}' not found.");
