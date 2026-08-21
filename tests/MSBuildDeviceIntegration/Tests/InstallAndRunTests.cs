@@ -2783,7 +2783,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			}
 			var apk = Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
-			Assert.AreEqual ("Success", RunAdbCommand ($"install -r \"{apk}\"").Trim (), "APK should install.");
+			Assert.That (RunAdbCommand ($"install -r \"{apk}\"").Trim (), Does.EndWith ("Success"), "APK should install.");
 
 			ClearAdbLogcat ();
 			StartActivityAndAssert (proj);

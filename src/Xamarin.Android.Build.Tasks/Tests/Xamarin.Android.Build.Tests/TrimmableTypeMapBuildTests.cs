@@ -51,7 +51,7 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetProperty ("NativeCompilationDuringPublish", "false");
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj, parameters: [ "_AndroidRuntime=CoreCLR" ]), "Build should have succeeded.");
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
