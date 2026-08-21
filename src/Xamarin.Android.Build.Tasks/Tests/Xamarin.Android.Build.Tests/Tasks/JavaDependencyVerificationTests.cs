@@ -79,6 +79,27 @@ public class JavaDependencyVerificationTests
 	}
 
 	[Test]
+	public void InheritedArtifactCoordinates ()
+	{
+		using var parent_pom = new PomBuilder ("com.google.auto.value", "auto-value-parent", "1.10.4").BuildTemporary ();
+		using var pom = new PomBuilder ("", "auto-value-annotations", "")
+			.WithParent ("com.google.auto.value", "auto-value-parent", "1.10.4")
+			.BuildTemporary ();
+
+		var engine = new MockBuildEngine (TestContext.Out, []);
+		var task = new JavaDependencyVerification {
+			BuildEngine = engine,
+			AndroidLibraries = [CreateAndroidLibraryTaskItem ("auto-value-annotations.jar", pom.FilePath)],
+			AdditionalManifests = [CreateAndroidAdditionManifestTaskItem (parent_pom.FilePath)],
+		};
+
+		var result = task.RunTask ();
+
+		Assert.True (result);
+		Assert.AreEqual (0, engine.Errors.Count);
+	}
+
+	[Test]
 	public void MissingSpecifiedDependency ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
