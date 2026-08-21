@@ -15,11 +15,17 @@ namespace generator
 
 		// This fixup ensures all referenced Java types can be resolved, and
 		// removes types and members that rely on unresolvable Java types.
-		public static void Fixup (string xmlFile, string outputXmlFile, DirectoryAssemblyResolver resolver, string [] references, TypeDefinitionCache cache, CodeGeneratorOptions opt)
+		public static void Fixup (string xmlFile, string outputXmlFile, DirectoryAssemblyResolver resolver, string [] references, string [] javaReferences, TypeDefinitionCache cache, CodeGeneratorOptions opt)
 		{
 			// Parse api.xml
 			var type_collection = JavaXmlApiImporter.Parse (xmlFile);
 			var options = new ApiImporterOptions ();
+
+			foreach (var javaReference in javaReferences) {
+				var referenceTypes = JavaXmlApiImporter.Parse (javaReference);
+				foreach (var type in referenceTypes.TypesFlattened.Values)
+					type_collection.AddReferencedType (type);
+			}
 
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				options.SupportedTypeMapAttributes.Clear ();

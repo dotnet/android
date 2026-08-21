@@ -47,12 +47,14 @@ These represent valid instances of entries and attributes respectively that can 
 For example, consider the following valid `AndroidManifest.xml` entry:
 
 ```xml
+<!-- app AndroidManifest.xml, possibly generated -->
 <activity name="MyActivity" />
 ```
 
 This is partially declared within the Android SDK `attrs_manifest.xml` as:
 
 ```xml
+<!-- in $ANDROID_SDK_HOME/platforms/android-*/data/res/values/attrs_manifest.xml -->
 <declare-styleable name="AndroidManifestActivity" parent="AndroidManifestApplication">
     <attr name="name" />
 </declare-styleable>
@@ -64,6 +66,7 @@ The `<activity name="…"/>` element is represented in `metadata.xml` via both a
 and an `<element/>` entry:
 
 ```xml
+<!-- build-tools/manifest-attribute-codegen/metadata.xml -->
 <type name="activity" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\ActivityAttribute.cs" usage="AttributeTargets.Class" jniNameProvider="true" />
 <element path="activity.name" visible="true" />
 ```
@@ -146,3 +149,37 @@ Optional metadata (note that if any metadata is set, `visible` is assumed to be 
 - **obsolete** - A string describing the reason for this member being `[Obsolete ("reason")]`
 - **readonly** - Whether to generate the property with a `private set`; defaults to `false`
 - **manualMap** - Whether to exclude the property from the `mapping` field used by `Xamarin.Android.Build.Tasks`; defaults to `false`
+
+# Examples
+
+Running the `GenerateManifestAttributes` target emits a message such as:
+
+```
+warning - Element: application.backupAgentProcess
+```
+
+The first question: is this *documented*?  View the
+[Google documentation for `<application>`](https://developer.android.com/guide/topics/manifest/application-element),
+which -- at this writing on 2026-Aug-17 -- is ***not*** documented.
+Consequently, we should ignore it, by updating `metadata.xml` to contain:
+
+```xml
+<element path="application.backupAgentProcess" visible="false" />
+```
+
+Running the `GenerateManifestAttributes` target emits a message such as:
+
+```
+warning - Type: <valid-general-purpose>
+```
+
+Similar but different to the `Element: application.backupAgentProcess` message:
+a *Type* is an XML element, not an attribute on an XML element.  As such, we would look at the
+[App manifest overview](https://developer.android.com/guide/topics/manifest/manifest-intro)
+documentation to see if *type* is mentioned in the left-hand sidebar to see if the element
+is documented.  At this writing on 2026-Aug-17, ***no*** `<valid-general-purpose>` element is
+documented, and thus the Type (element) should be hidden by updating `metadata.xml` to contain:
+
+```xml
+<type name="valid-general-purpose" ignore="true" />
+```

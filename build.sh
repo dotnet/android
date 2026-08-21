@@ -1,23 +1,21 @@
 #!/bin/bash
-if [ -z $1 ]; then
+set -e
+
+if [ -z "$1" ]; then
     make prepare && make jenkins && make pack-dotnet
 else
     case $1 in
         Prepare)
             make prepare
-            break
         ;;
         Build)
             make jenkins
-            break
         ;;
         Pack)
             make pack-dotnet
-            break
         ;;
         Everything)
             make prepare && make jenkins && make pack-dotnet
-            break
         ;;
     esac
 fi

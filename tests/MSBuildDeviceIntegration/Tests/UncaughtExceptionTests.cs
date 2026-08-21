@@ -170,7 +170,7 @@ namespace Scratch.JMJMException
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 				Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
-				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+				ClearAdbLogcat ();
 
 				string logcatPath = Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log");
 				int sequenceCounter = 0;
@@ -186,7 +186,11 @@ namespace Scratch.JMJMException
 							break;
 						}
 						return false; // we must examine all the lines, and returning `true` aborts the monitoring process
-					}, logcatPath, 15);
+					},
+					logcatPath,
+					timeout: 15,
+					onMonitoringStarted: () => StartActivityAndAssert (app)
+				);
 			}
 
 			AssertValidLine (0, 0);

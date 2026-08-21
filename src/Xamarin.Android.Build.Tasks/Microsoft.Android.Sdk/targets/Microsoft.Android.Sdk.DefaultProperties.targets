@@ -6,6 +6,12 @@
     <MonoAndroidResourcePrefix Condition=" '$(MonoAndroidResourcePrefix)' == '' ">Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
     <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
+    <!--
+      Apps that launch through an <instrumentation> instead of an <activity>, such as test
+      or benchmark hosts. $(EnableMSTestRunner) opts in automatically.
+    -->
+    <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' and '$(EnableMSTestRunner)' == 'true' ">true</AndroidUseInstrumentation>
+    <AndroidUseInstrumentation Condition=" '$(AndroidUseInstrumentation)' == '' ">false</AndroidUseInstrumentation>
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
     <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
     <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">true</AndroidUseDesignerAssembly>
@@ -38,13 +44,13 @@
     <AndroidClassParser>class-parse</AndroidClassParser>
     <AndroidCodegenTarget Condition=" '$(AndroidCodegenTarget)' == '' ">XAJavaInterop1</AndroidCodegenTarget>
     <_AndroidJcwCodegenTarget Condition=" '$(_AndroidJcwCodegenTarget)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">XAJavaInterop1</_AndroidJcwCodegenTarget>
-    <_AndroidTypeMapImplementation Condition=" '$(_AndroidTypeMapImplementation)' == '' and '$(_AndroidRuntime)' != 'NativeAOT' ">llvm-ir</_AndroidTypeMapImplementation>
+    <AndroidTypeMapImplementation Condition=" '$(AndroidTypeMapImplementation)' == '' and '$(PublishAot)' == 'true' ">trimmable</AndroidTypeMapImplementation>
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
-    <_AndroidEmitLegacyInterfaceInvokers Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == '' ">false</_AndroidEmitLegacyInterfaceInvokers>
     <AndroidEnableObsoleteOverrideInheritance Condition=" '$(AndroidEnableObsoleteOverrideInheritance)' == '' ">true</AndroidEnableObsoleteOverrideInheritance>
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
+    <GenerateDocumentationFile Condition=" '$(GenerateDocumentationFile)' == '' ">true</GenerateDocumentationFile>
 
     <!-- Mono components -->
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == '' ">$(EnableDiagnostics)</AndroidEnableProfiler>
@@ -76,7 +82,7 @@
     <UseInterpreter Condition=" '$(UseInterpreter)' == '' and '$(AndroidUseInterpreter)' == '' and '$(_AndroidRuntime)' == 'MonoVM' ">true</UseInterpreter>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">true</EmbedAssembliesIntoApk>
+    <AndroidEnableFastDeployment Condition=" '$(AndroidEnableFastDeployment)' == '' ">false</AndroidEnableFastDeployment>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
     <AndroidPackageFormats Condition=" '$(AndroidPackageFormats)' == '' " >aab;apk</AndroidPackageFormats>
   </PropertyGroup>

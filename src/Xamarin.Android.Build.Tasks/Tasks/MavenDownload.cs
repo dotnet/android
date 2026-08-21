@@ -81,7 +81,7 @@ public class MavenDownload : AsyncTask
 		// Note if Repository is not specifed, it is defaulted to "Central"
 
 		// Initialize repo
-		var repository = GetRepository (item);
+		var repository = GetRepository (item, out var repository_url);
 
 		if (repository is null)
 			return null;
@@ -106,8 +106,8 @@ public class MavenDownload : AsyncTask
 			return result;
 
 		// Resolve and download POM, and any parent or imported POMs
+		var resolver = new LoggingPomResolver (repository, repository_url);
 		try {
-			var resolver = new LoggingPomResolver (repository);
 			var project = ResolvedProject.FromArtifact (artifact, resolver);
 
 			// Set the POM file path for _this_ artifact
@@ -129,22 +129,45 @@ public class MavenDownload : AsyncTask
 				LogMessage ("Found POM file '{0}' for Java artifact '{1}'.", kv.Value, pom_artifact);
 			}
 		} catch (Exception ex) {
-			LogCodedError ("XA4237", Properties.Resources.XA4237, artifact, ex.Unwrap ().Message);
+			var details = GetPomResolutionErrorDetails (resolver, ex);
+			LogCodedError ("XA4237", Properties.Resources.XA4237, artifact, details);
 			return null;
 		}
 
 		return result;
 	}
 
-	CachedMavenRepository? GetRepository (ITaskItem item)
+	internal static string GetPomResolutionErrorDetails (LoggingPomResolver resolver, Exception exception)
 	{
-		var type = item.GetMetadataOrDefault ("Repository", "Central");
+		var message = exception.Unwrap ().Message;
+		if (resolver.UnresolvedArtifact is not Artifact unresolved_artifact || resolver.UnresolvedPomUrl is not string unresolved_pom)
+			return message;
 
-		var repo = type.ToLowerInvariant () switch {
+		return string.Format (Properties.Resources.XA4237_Details, unresolved_artifact, unresolved_pom, message);
+	}
+
+	/// <summary>
+	/// Maps the well-known <c>Repository</c> metadata shorthands to their repositories.
+	/// Returns <see langword="null"/> if <paramref name="type"/> is not a known shorthand,
+	/// in which case it is treated as a repository URL.
+	/// </summary>
+	internal static MavenRepository? GetKnownRepository (string type) =>
+		type.ToLowerInvariant () switch {
 			"central" => MavenRepository.Central,
 			"google" => MavenRepository.Google,
 			_ => null
 		};
+
+	CachedMavenRepository? GetRepository (ITaskItem item, out string repositoryUrl)
+	{
+		var type = item.GetMetadataOrDefault ("Repository", "Central");
+		repositoryUrl = type.TrimEnd ('/');
+
+		var repo = GetKnownRepository (type);
+		if (repo == MavenRepository.Central)
+			repositoryUrl = "https://repo1.maven.org/maven2";
+		else if (repo == MavenRepository.Google)
+			repositoryUrl = "https://dl.google.com/android/maven2";
 
 		if (repo is null && Uri.TryCreate (type, UriKind.Absolute, out var uri) &&
 			(uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)) {
@@ -173,27 +196,46 @@ public class MavenDownload : AsyncTask
 class LoggingPomResolver : IProjectResolver
 {
 	readonly CachedMavenRepository repository;
+	readonly string repositoryUrl;
 
 	public Dictionary<string, string> ResolvedPoms { get; } = new Dictionary<string, string> ();
+	public Artifact? UnresolvedArtifact { get; private set; }
+	public string? UnresolvedPomUrl { get; private set; }
 
-	public LoggingPomResolver (CachedMavenRepository repository)
+	public LoggingPomResolver (CachedMavenRepository repository, string repositoryUrl)
 	{
 		this.repository = repository;
+		this.repositoryUrl = repositoryUrl.TrimEnd ('/');
 	}
 
 	public Project Resolve (Artifact artifact)
 	{
-		if (repository.TryGetFilePath (artifact, $"{artifact.Id}-{artifact.Version}.pom", out var path)) {
-			using (var stream = File.OpenRead (path)) {
-				var pom = Project.Load (stream) ?? throw new InvalidOperationException ($"Could not deserialize POM for {artifact}");
+		try {
+			if (repository.TryGetFilePath (artifact, $"{artifact.Id}-{artifact.Version}.pom", out var path)) {
+				using (var stream = File.OpenRead (path)) {
+					var pom = Project.Load (stream) ?? throw new InvalidOperationException ($"Could not deserialize POM for {artifact}");
 
-				// Use index instead of Add to handle duplicates
-				ResolvedPoms [artifact.VersionedArtifactString] = path;
+					// Use index instead of Add to handle duplicates
+					ResolvedPoms [artifact.VersionedArtifactString] = path;
 
-				return pom;
+					return pom;
+				}
 			}
+		} catch {
+			RecordUnresolvedPom (artifact);
+			throw;
 		}
 
+		RecordUnresolvedPom (artifact);
 		throw new InvalidOperationException ($"No POM found for {artifact}");
+	}
+
+	public string GetPomUrl (Artifact artifact)
+		=> $"{repositoryUrl}/{artifact.GroupId.Replace ('.', '/')}/{artifact.Id}/{artifact.Version}/{artifact.Id}-{artifact.Version}.pom";
+
+	void RecordUnresolvedPom (Artifact artifact)
+	{
+		UnresolvedArtifact = artifact;
+		UnresolvedPomUrl = GetPomUrl (artifact);
 	}
 }

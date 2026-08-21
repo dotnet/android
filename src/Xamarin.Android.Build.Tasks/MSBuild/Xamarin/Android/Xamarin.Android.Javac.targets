@@ -51,7 +51,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     </DetermineJavaLibrariesToCompile>
   </Target>
 
-  <Target Name="_DetermineJavaLibrariesToCompile">
+  <Target Name="_DetermineJavaLibrariesToCompile"
+      DependsOnTargets="_CollectJavaSourceForBinding;_CompileBindingJava">
 
     <DetermineJavaLibrariesToCompile
         MonoPlatformJarPaths="$(MonoPlatformJarPath);$(_RuntimeJar)"
@@ -153,15 +154,13 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileJavaFileList);$(MonoPlatformJarPath);@(_JavaStubFiles);@(_JavaSource)"
     Outputs="$(_AndroidCompileJavaStampFile)">
 
-    <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
+    <!-- remove existing <Javac /> outputs, since *.class files could contain old files -->
     <RemoveDirFixed Directories="$(_AndroidIntermediateJavaClassDirectory)" />
-    <Delete Files="$(_AndroidIntermediateClassesZip)" />
 
     <!-- Compile java code -->
     <Javac
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
         ClassesOutputDirectory="$(_AndroidIntermediateJavaClassDirectory)"
-        ClassesZip="$(_AndroidIntermediateClassesZip)"
         StubSourceDirectory="$(_AndroidIntermediateJavaSourceDirectory)"
         AdditionalStubSourceDirectories="@(_AdditionalJavaStubDirectory)"
         JavaSourceFiles="@(_JavaSource)"

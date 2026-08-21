@@ -36,10 +36,10 @@ namespace Xamarin.Android.Build.Tests
 				EnableDefaultItems = true,
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.7.1.3" },
-					// Using * here, so we explicitly get newer packages
-					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
-					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
-					new Package { Id = "Microsoft.JSInterop", Version = "8.0.*" },
+					// Using * here, so we explicitly get the latest stable packages
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "*" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "*" },
+					new Package { Id = "Microsoft.JSInterop", Version = "*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Resource.resx") {
@@ -58,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => "<metadata><remove-node path=\"/api/package[@name='com.balysv.material.drawable.menu']/class[@name='MaterialMenuView']/method[@name='onRestoreInstanceState']\" /><remove-node path=\"/api/package[@name='com.balysv.material.drawable.menu']/class[@name='MaterialMenuView']/method[@name='onSaveInstanceState']\" /></metadata>",
 					},
 					new AndroidItem.AndroidLibrary ("material-menu-1.1.0.aar") {
-						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 					},
 				}
 			};
@@ -140,6 +140,8 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				expectedFiles.Add ($"{proj.PackageName}.apk");
 				expectedFiles.Add ($"{proj.PackageName}-Signed.apk.idsig");
+				// The .NET SDK emits this in Debug to enable Hot Reload switches
+				expectedFiles.Add ($"{proj.ProjectName}.runtimeconfig.dev.json");
 			}
 
 			expectedFiles.Sort(StringComparer.OrdinalIgnoreCase);
@@ -650,14 +652,14 @@ namespace Xamarin.Android.Build.Tests
 
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
-				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				OtherBuildItems = {
 					aar,
 					new AndroidItem.AndroidAarLibrary ("fragment-1.2.2.aar") {
-						WebContent = "https://maven.google.com/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
+						WebContent = $"{TestEnvironment.DotNetPublicMaven}/androidx/fragment/fragment/1.2.2/fragment-1.2.2.aar"
 					}
 				},
 			};
@@ -1214,19 +1216,19 @@ public class MyReceiver : BroadcastReceiver
 				});
 			}
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okio-1.13.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/okio/okio/1.13.0/okio-1.13.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "okhttp-3.8.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/okhttp3/okhttp/3.8.0/okhttp-3.8.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "retrofit-2.3.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/retrofit2/retrofit/2.3.0/retrofit-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "converter-gson-2.3.0.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/squareup/retrofit2/converter-gson/2.3.0/converter-gson-2.3.0.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
 			/* The source is simple:
 			 *
@@ -1373,6 +1375,36 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
+		public void AndroidEnableFastDeployment (
+			[Values (true, false)] bool enabled,
+			[Values (true, false)] bool isRelease,
+			[Values (true, false)] bool globalProperty,
+			[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (runtime);
+			if (!globalProperty) {
+				proj.AndroidEnableFastDeployment = enabled;
+			}
+			using (var b = CreateApkBuilder ()) {
+				var parameters = globalProperty ? new [] { $"{KnownProperties.AndroidEnableFastDeployment}={enabled}" } : null;
+				Assert.IsTrue (b.Build (proj, parameters: parameters), "Build should have succeeded.");
+
+				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				FileAssert.Exists (apk);
+				var helper = new ArchiveAssemblyHelper (apk);
+				using var assembly = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll");
+				Assert.AreEqual (!enabled, assembly != null, $"{proj.ProjectName}.dll should {(!enabled ? "" : "not ")}be embedded in {apk}.");
+			}
+		}
+
+		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime)) {
@@ -1392,7 +1424,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				var content = File.ReadAllLines (manifest);
 				var type = "mono.android.ResourcePatcher";
 
-				//NOTE: only $(AndroidFastDeploymentType) containing "dexes" should add this to the manifest
 				Assert.IsFalse (StringAssertEx.ContainsText (content, type), $"`{type}` should not exist in `AndroidManifest.xml`!");
 			}
 		}
@@ -1763,10 +1794,10 @@ namespace UnnamedProject
 				// Disable fast deployment for aabs because it is not currently compatible and so gives an XA0119 build error.
 				proj.EmbedAssembliesIntoApk = true;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "kotlinx-coroutines-android-1.3.2.jar") {
-				WebContent = "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.3.2/kotlinx-coroutines-android-1.3.2.jar"
 			});
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", "gson-2.7.jar") {
-				WebContent = "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar"
+				WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/google/code/gson/gson/2.7/gson-2.7.jar"
 			});
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -2270,6 +2301,79 @@ public class ToolbarEx {
 		}
 
 		[Test]
+		public void BuildDoesNotModifyNuGetPackageCache ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				GlobalPackagesFolder = Path.Combine (Root, TestName, "packages"),
+				Imports = {
+					new Import (() => "EnableMarshalMethodsForPostLink.targets") {
+						TextContent = () =>
+"""
+<Project>
+	<!-- Exercise the in-place post-link path without enabling marshal methods for later CoreCLR targets. -->
+	<Target Name="_EnableMarshalMethodsForPostLink"
+		BeforeTargets="_RunAfterILLinkAdditionalSteps"
+		Condition=" '$(TestEnableMarshalMethodsForPostLink)' == 'true' ">
+		<PropertyGroup>
+			<_AndroidUseMarshalMethods>true</_AndroidUseMarshalMethods>
+		</PropertyGroup>
+	</Target>
+</Project>
+"""
+					},
+				},
+				PackageReferences = {
+					new Package { Id = "Humanizer.Core", Version = "2.14.1" },
+					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
+			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${USINGS}", "using Humanizer;")
+				.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (System.DateTime.UtcNow.Humanize ());");
+
+			using var builder = CreateApkBuilder ();
+			var buildParameters = new [] { $"RestorePackagesPath={proj.GlobalPackagesFolder}" };
+			Assert.IsTrue (builder.Restore (proj, parameters: buildParameters), "Package restore should have succeeded.");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: buildParameters),
+				"Initial build should have succeeded.");
+
+			var satelliteAssemblies = Directory.GetFiles (proj.GlobalPackagesFolder, "*.resources.dll", SearchOption.AllDirectories);
+			Assert.IsNotEmpty (satelliteAssemblies, "The NuGet package should contain satellite assemblies.");
+
+			var originalWriteTimes = new Dictionary<string, DateTime> ();
+			foreach (string assembly in satelliteAssemblies) {
+				File.SetLastWriteTimeUtc (assembly, new DateTime (2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+				originalWriteTimes.Add (assembly, File.GetLastWriteTimeUtc (assembly));
+			}
+
+			var postLinkStamp = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "stamp", "_AdditionalPostLinkerSteps.stamp");
+			FileAssert.Exists (postLinkStamp);
+			File.Delete (postLinkStamp);
+
+			// A package cache is immutable: deny write sharing and verify timestamps remain unchanged.
+			var packageLocks = satelliteAssemblies
+				.Select (assembly => File.Open (assembly, FileMode.Open, FileAccess.Read, FileShare.Read))
+				.ToList ();
+			try {
+				var postLinkParameters = buildParameters.Append ("TestEnableMarshalMethodsForPostLink=true").ToArray ();
+				Assert.IsTrue (builder.RunTarget (proj, "_PrepareAssemblies", doNotCleanupOnUpdate: true, saveProject: false, parameters: postLinkParameters),
+					"Preparing assemblies should have succeeded.");
+				FileAssert.Exists (postLinkStamp);
+				foreach (string assembly in satelliteAssemblies) {
+					Assert.AreEqual (originalWriteTimes [assembly], File.GetLastWriteTimeUtc (assembly), $"Build should not modify '{assembly}'.");
+				}
+			} finally {
+				foreach (var packageLock in packageLocks) {
+					packageLock.Dispose ();
+				}
+			}
+		}
+
+		[Test]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (false, AndroidRuntime.CoreCLR)]
 		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
@@ -2347,13 +2451,11 @@ public class ToolbarEx {
 		[Test]
 		public void SystemIOHashing ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("https://github.com/dotnet/android/issues/10606");
-			}
-
+			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
 				PackageReferences = {
-					new Package { Id = "System.IO.Hashing", Version = "10.0.0" }
+					new Package { Id = "System.IO.Hashing", Version = "11.0.0-rc.1.26413.103" }
 				},
 			};
 			proj.SetRuntime (runtime);
@@ -2362,8 +2464,8 @@ public class ToolbarEx {
 				"""
 				base.OnCreate (bundle);
 				
-				// Use System.IO.Hashing to compute a hash
-				var crc32 = new System.IO.Hashing.Crc32 ();
+				// Crc32ParameterSet was added in System.IO.Hashing 11.0.
+				var crc32 = new System.IO.Hashing.Crc32 (System.IO.Hashing.Crc32ParameterSet.Crc32C);
 				var data = System.Text.Encoding.UTF8.GetBytes ("Hello World");
 				crc32.Append (data);
 				var hash = crc32.GetCurrentHash ();

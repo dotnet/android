@@ -16,6 +16,90 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
+		public void FrameworkAssembliesArePackagedWithoutStaging ()
+		{
+			const string runtimeIdentifier = "android-arm64";
+			const string abi = "arm64-v8a";
+
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var captureFrameworkAssemblies = new Import (() => "CaptureFrameworkAssemblies.targets") {
+				TextContent = () =>
+"""
+<Project>
+  <Target Name="_CaptureFrameworkAssemblies" AfterTargets="_PrepareAssemblies">
+    <Message
+        Condition=" '%(_ResolvedFrameworkAssemblies.Filename)' == 'Microsoft.CSharp' Or '%(_ResolvedFrameworkAssemblies.Filename)' == 'Mono.Android' "
+        Importance="high"
+        Text="FrameworkAssembly=%(_ResolvedFrameworkAssemblies.Filename)|%(_ResolvedFrameworkAssemblies.Identity)|%(_ResolvedFrameworkAssemblies.NuGetPackageId)|%(_ResolvedFrameworkAssemblies.JavaObjectsXmlFile)|%(_ResolvedFrameworkAssemblies.TypeMapObjectsXmlFile)" />
+  </Target>
+</Project>
+"""
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				EmbedAssembliesIntoApk = true,
+				Imports = { captureFrameworkAssemblies },
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "first build should succeed");
+			builder.Output.AssertTargetIsNotSkipped ("_LinkAssembliesNoShrink");
+
+			string [] GetFrameworkAssemblyMetadata (string assemblyName)
+			{
+				string prefix = $"FrameworkAssembly={assemblyName}|";
+				string line = builder.LastBuildOutput.Single (line => line.Contains (prefix, StringComparison.Ordinal));
+				int start = line.IndexOf (prefix, StringComparison.Ordinal);
+				var metadata = line.Substring (start + "FrameworkAssembly=".Length).Split ('|');
+				Assert.AreEqual (5, metadata.Length, $"Unexpected framework assembly metadata: {line}");
+				return metadata;
+			}
+
+			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			string ResolveProjectPath (string path) => Path.GetFullPath (Path.Combine (projectDirectory, path));
+
+			var assemblyDirectory = Path.Combine (projectDirectory, proj.IntermediateOutputPath, runtimeIdentifier, "android", "assets", abi);
+			var stagedMicrosoftCSharp = Path.Combine (assemblyDirectory, "Microsoft.CSharp.dll");
+			var marker = Path.Combine (assemblyDirectory, "Microsoft.CSharp.scan.empty");
+			var microsoftCSharp = GetFrameworkAssemblyMetadata ("Microsoft.CSharp");
+
+			FileAssert.Exists (ResolveProjectPath (microsoftCSharp [1]));
+			Assert.That (microsoftCSharp [2], Does.StartWith ("Microsoft.NETCore.App.Runtime."),
+				$"Microsoft.CSharp.dll should come from a runtime pack, but its package ID was '{microsoftCSharp [2]}'.");
+			Assert.AreNotEqual (Path.GetFullPath (stagedMicrosoftCSharp), ResolveProjectPath (microsoftCSharp [1]),
+				"Microsoft.CSharp.dll should be packaged directly from its runtime pack.");
+			FileAssert.DoesNotExist (stagedMicrosoftCSharp);
+			FileAssert.Exists (marker);
+			Assert.AreEqual (0, new FileInfo (marker).Length, $"{marker} should be empty.");
+			Assert.AreEqual (Path.GetFullPath (marker), ResolveProjectPath (microsoftCSharp [3]),
+				"JavaObjectsXmlFile should point to the shared scan marker.");
+			Assert.AreEqual (Path.GetFullPath (marker), ResolveProjectPath (microsoftCSharp [4]),
+				"TypeMapObjectsXmlFile should point to the shared scan marker.");
+
+			var monoAndroid = GetFrameworkAssemblyMetadata ("Mono.Android");
+			var stagedMonoAndroid = Path.Combine (assemblyDirectory, "Mono.Android.dll");
+			Assert.AreEqual (Path.GetFullPath (stagedMonoAndroid), ResolveProjectPath (monoAndroid [1]),
+				"Mono.Android.dll should continue to use the staged assembly.");
+			FileAssert.Exists (stagedMonoAndroid);
+			FileAssert.Exists (Path.ChangeExtension (stagedMonoAndroid, ".jlo.xml"));
+			FileAssert.Exists (Path.ChangeExtension (stagedMonoAndroid, ".typemap.xml"));
+			FileAssert.DoesNotExist (Path.Combine (assemblyDirectory, "Mono.Android.scan.empty"));
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var apk = Directory.GetFiles (outputDirectory, "*-Signed.apk", SearchOption.AllDirectories).Single ();
+			var archive = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+			Assert.IsTrue (archive.Exists ($"assemblies/{abi}/Microsoft.CSharp.dll"),
+				$"Microsoft.CSharp.dll should be packaged in {apk}.");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+			builder.Output.AssertTargetIsSkipped ("_LinkAssembliesNoShrink");
+		}
+
+		[Test]
 		[Ignore ("Flaky timing-based test. Disabled while investigating incremental build regressions. See: https://github.com/dotnet/android/issues/11792")]
 		public void BasicApplicationRepetitiveBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
@@ -152,6 +236,44 @@ namespace Xamarin.Android.Build.Tests
 			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
 			Assert.AreEqual (expectedTypeCount, appConfig.jni_remapping_replacement_type_count, "jni_remapping_replacement_type_count should be preserved.");
 			Assert.AreEqual (expectedMethodCount, appConfig.jni_remapping_replacement_method_index_entry_count, "jni_remapping_replacement_method_index_entry_count should be preserved.");
+		}
+
+		[Test]
+		public void NoChangeBuildPreservesJniAddNativeMethodRegistrationAttributePresent ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("Remap.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => """
+<replacements>
+  <replace-type from="android/app/Activity" to="example/RemapActivity" />
+</replacements>
+""",
+					},
+				},
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers (new [] { "arm64-v8a" });
+			proj.SetProperty ("_SkipJniAddNativeMethodRegistrationAttributeScan", "true");
+
+			using (var builder = CreateApkBuilder ()) {
+				Assert.IsTrue (builder.Build (proj), "first build should have succeeded.");
+				AssertJniAddNativeMethodRegistrationAttributePresent (proj, builder);
+
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
+				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+				builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+				AssertJniAddNativeMethodRegistrationAttributePresent (proj, builder);
+			}
+		}
+
+		void AssertJniAddNativeMethodRegistrationAttributePresent (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
+		{
+			string objDirPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var envFiles = EnvironmentHelper.GatherEnvironmentFiles (objDirPath, string.Join (";", proj.GetRuntimeIdentifiersAsAbis ()), required: true, runtime: AndroidRuntime.CoreCLR);
+			var appConfig = (EnvironmentHelper.ApplicationConfig_CoreCLR) EnvironmentHelper.ReadApplicationConfig (envFiles, AndroidRuntime.CoreCLR);
+			Assert.IsTrue (appConfig.jni_add_native_method_registration_attribute_present, "JNI native method registration should remain enabled.");
 		}
 
 		Dictionary<string, DateTime> GetJniRemappingSourceTimestamps (XamarinAndroidApplicationProject proj, ProjectBuilder builder)
@@ -794,6 +916,45 @@ namespace Lib2
 		}
 
 		[Test]
+		public void AndroidDefineConstantsAreOrderIndependent ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library",
+			};
+			lib.Imports.Add (new Import ("DefineConstants.targets") {
+				TextContent = () => """
+<Project>
+  <Target Name="_AddTestDefineConstant">
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);TEST_DEFINE</DefineConstants>
+    </PropertyGroup>
+  </Target>
+  <Target Name="_WriteTestDefineConstants">
+    <WriteLinesToFile File="$(IntermediateOutputPath)define-constants.txt" Lines="$(DefineConstants)" Overwrite="true" />
+  </Target>
+</Project>
+"""
+			});
+
+			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+				builder.Target = "_ResolveMonoAndroidSdks,_AddTestDefineConstant,Compile,_WriteTestDefineConstants";
+				Assert.IsTrue (builder.Build (lib), "first library build should have succeeded.");
+				var firstDefineConstants = builder.Output.GetIntermediaryAsText ("define-constants.txt");
+
+				builder.Target = "_AddTestDefineConstant,_ResolveMonoAndroidSdks,Compile,_WriteTestDefineConstants";
+				Assert.IsTrue (builder.Build (lib, doNotCleanupOnUpdate: true, saveProject: false), "second library build should have succeeded.");
+				Assert.AreEqual (firstDefineConstants, builder.Output.GetIntermediaryAsText ("define-constants.txt"),
+					"DefineConstants should not depend on target execution order.");
+				var defines = firstDefineConstants.Split (new [] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+				Assert.Less (Array.IndexOf (defines, "__ANDROID__"), Array.IndexOf (defines, "NET"),
+					"Android define constants should retain their historical position before the .NET implicit constants.");
+				Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("Building target \"CoreCompile\" completely.")),
+					"CoreCompile should not run when define constants are reordered.");
+			}
+		}
+
+		[Test]
 		public void ProduceReferenceAssembly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1167,7 +1328,7 @@ namespace Lib2
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
-					WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
+					WebContent = $"{TestEnvironment.DotNetPublicMaven}/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 				};
 				proj.OtherBuildItems.Add (aar);
 
@@ -1390,6 +1551,32 @@ namespace Lib2
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
 				AssertAssemblyFilesInFileWrites (proj, b, abi, runtime);
+
+				if (!isRelease && runtime == AndroidRuntime.CoreCLR) {
+					string projectDirectory = Path.Combine (Root, b.ProjectDirectory);
+					string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath, MonoAndroidHelper.AbiToRid (abi));
+					string typemap = Path.Combine (intermediate, "android", $"typemaps.{abi}.ll");
+					string apk = Directory.GetFiles (Path.Combine (projectDirectory, proj.OutputPath), "*-Signed.apk", SearchOption.AllDirectories).Single ();
+					DateTime typemapWriteTime = File.GetLastWriteTimeUtc (typemap);
+					DateTime apkWriteTime = File.GetLastWriteTimeUtc (apk);
+					string typemapHash = Files.HashFile (typemap);
+					string apkHash = Files.HashFile (apk);
+
+					// Change managed code without changing any Java type mappings.
+					proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
+					proj.Touch ("MainActivity.cs");
+					Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "fourth build should have succeeded.");
+
+					b.Output.AssertTargetIsNotSkipped ("CoreCompile");
+					b.Output.AssertTargetIsSkipped ("_CompileNativeAssemblySources");
+					b.Output.AssertTargetIsSkipped ("_CreateApplicationSharedLibraries");
+					b.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
+					b.Output.AssertTargetIsSkipped ("_Sign");
+					Assert.AreEqual (typemapWriteTime, File.GetLastWriteTimeUtc (typemap), $"{typemap} should not be rewritten when its mappings have not changed.");
+					Assert.AreEqual (typemapHash, Files.HashFile (typemap), $"{typemap} contents should not change.");
+					Assert.AreEqual (apkWriteTime, File.GetLastWriteTimeUtc (apk), $"{apk} should not be rewritten for an incremental C# change.");
+					Assert.AreEqual (apkHash, Files.HashFile (apk), $"{apk} contents should not change.");
+				}
 			}
 		}
 
@@ -1832,12 +2019,51 @@ namespace Lib2
 				Assert.IsTrue (secondAssemblyWrite > firstAssemblyWrite,
 					$"Assembly write time was not updated on partially incremental build. Before: {firstAssemblyWrite}. After: {secondAssemblyWrite}.");
 
-				// TODO: NativeAOT fails this with "Apk write time was not updated on partially incremental build. Before: 1/1/1981 1:01:02 AM. After: 1/1/1981 1:01:02 AM."
-				if (runtime != AndroidRuntime.NativeAOT) {
-					Assert.IsTrue (secondApkWrite > firstApkWrite,
-						$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
-				}
+				Assert.IsTrue (secondApkWrite > firstApkWrite,
+					$"Apk write time was not updated on partially incremental build. Before: {firstApkWrite}. After: {secondApkWrite}.");
 			}
+		}
+
+		[Test]
+		public void UniversalApkFromBundleIsIncremental ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			proj.SetProperty ("AndroidPackageFormats", "aab;apk");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateUniversalApkFromBundle");
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var signedApk = Directory.GetFiles (outputDirectory, "*-Signed.apk", SearchOption.AllDirectories).Single ();
+			var firstWriteTime = File.GetLastWriteTimeUtc (signedApk);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_CreateUniversalApkFromBundle");
+			Assert.AreEqual (firstWriteTime, File.GetLastWriteTimeUtc (signedApk), "No-op builds should preserve the signed APK timestamp.");
+
+			Assert.IsTrue (
+				builder.Build (proj, parameters: new [] { "AndroidBundleToolExtraArgs=--overwrite" }, doNotCleanupOnUpdate: true, saveProject: false),
+				"Changing bundletool arguments should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateUniversalApkFromBundle");
+
+			Assert.IsTrue (
+				builder.Build (proj, parameters: new [] { "AndroidBundleToolExtraArgs=" }, doNotCleanupOnUpdate: true, saveProject: false),
+				"Clearing bundletool arguments should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_CreateUniversalApkFromBundle");
+
+			Assert.IsTrue (
+				builder.Build (proj, parameters: new [] { "AndroidBundleToolExtraArgs=" }, doNotCleanupOnUpdate: true, saveProject: false),
+				"No-op build after clearing bundletool arguments should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_CreateUniversalApkFromBundle");
 		}
 
 		[Test]
@@ -1861,6 +2087,9 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				b.Output.AssertTargetIsNotSkipped ("_RunAfterILLinkAdditionalSteps");
 				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					b.Output.AssertTargetIsNotSkipped ("_PostTrimmingPipeline");
+				}
 
 				// Verify afterlink/ output directory was created with per-ABI subdirectories containing assemblies
 				var afterlinkDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "afterlink");
@@ -1876,6 +2105,9 @@ namespace Lib2
 				b.Output.AssertTargetIsSkipped ("_RunAfterILLinkAdditionalSteps");
 				// The outer target must always run to update assembly itemgroups for downstream targets
 				b.Output.AssertTargetIsNotSkipped ("_AfterILLinkAdditionalSteps");
+				if (runtime == AndroidRuntime.CoreCLR) {
+					b.Output.AssertTargetIsSkipped ("_PostTrimmingPipeline");
+				}
 			}
 		}
 

@@ -16,6 +16,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
+    <!-- Makes the shared HexUtilities.cs `public` here; it stays `internal` where it is linked in. -->
+    <DefineConstants>$(DefineConstants);MICROSOFT_ANDROID_BUILD_BASETASKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

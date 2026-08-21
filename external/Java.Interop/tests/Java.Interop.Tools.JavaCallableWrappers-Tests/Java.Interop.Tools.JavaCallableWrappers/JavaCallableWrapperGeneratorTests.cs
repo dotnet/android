@@ -153,6 +153,15 @@ public class Name_ActivityLifecycleCallbacks
 			Assert.AreEqual (expected, actual);
 		}
 
+		[Test]
+		public void GenerateOnlyMostDerivedInterfaces ()
+		{
+			var actual = Generate (typeof (OnTabSelectedListener));
+
+			Assert.That (actual, Does.Contain ("\t\tcom.xamarin.android.OnTabSelectedListener"));
+			Assert.That (actual, Does.Not.Contain ("\t\tcom.xamarin.android.BaseOnTabSelectedListener"));
+		}
+
 		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null, JavaPeerStyle style = JavaPeerStyle.XAJavaInterop1)
 		{
 			var reader_options = new CallableWrapperReaderOptions {

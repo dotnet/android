@@ -83,7 +83,7 @@ namespace generator.SourceWriters
 					post_sibling_types.Add (new InterfaceExtensionsClass (iface, null, opt));
 			}
 
-			post_sibling_types.Add (new InterfaceInvokerClass (iface, opt, context));
+			post_sibling_types.Add (new InterfaceInvokerClass (iface, opt));
 
 			AddInterfaceEventHandler (iface, opt, context);
 

@@ -145,12 +145,12 @@ Then update the following files:
     build automatically appends `.zip`. Provide the package's SHA-256 hash in
     the `<Hash>` metadata.
 
-At this point, you can run `Xamarin.Android.sln -t:Prepare` using your usual mechanism.
+At this point, you can run `Xamarin.Android.slnx -t:Prepare` using your usual mechanism.
 However, it might not download the new platform into your local Android SDK.
 
 ### Build Xamarin.Android
 
-Build `Xamarin.Android.sln` using your usual mechanism. This will not use the new platform yet,
+Build `Xamarin.Android.slnx` using your usual mechanism. This will not use the new platform yet,
 but will build the tools like `param-name-importer` and `class-parse` that will be needed
 in the next steps.
 
@@ -247,7 +247,7 @@ cp src/Mono.Android/PublicAPI/API-36/* src/Mono.Android/PublicAPI/API-36.1
 
 ### Building the New Mono.Android
 
-- Build `Xamarin.Android.sln` with your usual mechanism, and the new `Mono.Android.dll` should be built
+- Build `Xamarin.Android.slnx` with your usual mechanism, and the new `Mono.Android.dll` should be built
 - Read the note at the bottom of `/src/Mono.Android/metadata` that has a few lines that must be 
   copy/pasted for new API levels
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
@@ -547,7 +547,15 @@ the `csv` variable within `MainForm.FindAPILevelMethodsToolStripMenuItem_Click`.
 Once this process is complete, use `Tools` -> `Export Final Method Map`, and create a *new*
 `.csv` file, e.g. `new-methodmap.csv`.
 
-Copy the contents of `new-methodmap.csv` and *append* to `src/Mono.Android/methodmap.csv`.
+Note: `new-methodmap.csv` will likely use JNI syntax for package names, e.g. `android/widget`.
+`methodmap.csv` ***must*** use *Java* syntax for package names, e.g. `android.widget`.
+Use **sed**(1) to fix package names and nested class names:
+
+```sh
+sed 's,/,.,g;s/\$/./g' < src/Mono.Android/new-methodmap.csv > src/Mono.Android/new-methodmap2.csv
+```
+
+Copy the contents of `new-methodmap2.csv` and *append* to `src/Mono.Android/methodmap.csv`.
 
 There may be redundant duplicate entries within `methodmap.csv`.  Use the **uniq**(1)
 Unix app to remove duplicate entries.
@@ -604,15 +612,10 @@ are automatically converted into `Android.Graphics.Color`.
 
 ### Finishing the method map
 
-The official `methodmap.csv` uses a slightly different format than the one used for enumification.
-
-Using BindingStudio:
-
-- Ensure the "new api level method map" CSV file is loaded.
-- Choose `Tools` -> `Export Final Method Map`
-- Choose a temporary file name
-- Open the temporary file, copy the contents to the bottom of the official:
-  - dotnet/android/src/Mono.Android/methodmap.csv
+The normalized `new-methodmap2.csv` output appended in the **Mapping methods** section
+is the final method map. Do not export and append the BindingStudio output again, as
+the raw output uses JNI package and nested-type syntax that `methodmap.csv` does not
+support.
 
 Congrats! Enumification is complete!
 
@@ -664,4 +667,3 @@ Depending on when enumification was done, the 10000 may be stored instead of 31.
 goes stable we must update `map.csv` to the correct value.
 
 Search for `android/os/Build$VERSION_CODES` in `map.csv`.
-

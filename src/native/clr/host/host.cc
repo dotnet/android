@@ -348,9 +348,34 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// We REALLY shouldn't be doing this
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
-	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
-	// of that.
-	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+	// These indices are load-bearing: the application build emits the property names in this
+	// exact order (see `ApplicationConfigNativeAssemblyGeneratorCLR`) so that we can fill in
+	// the values here without searching the names array.
+	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
+
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
+
+	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
+	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
+	// come from here: `libxamarin-app.so` is per-ABI, but it is generated from the (shared)
+	// `*.runtimeconfig.json`, which knows nothing about the ABI it is being built for.
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
+
+	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
+	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
+	// string for us since assemblies are read straight out of the APK. Point it at the application's
+	// files directory, the same value MonoVM has always used. `.NET` terminates the base directory
+	// with a directory separator, so we do too.
+	// Storage must outlive `coreclr_initialize`, hence the function-local static. Assign on every
+	// call rather than relying on the initializer, which would only ever see the first `files_dir`.
+	static std::string app_context_base_directory;
+	app_context_base_directory.assign (files_dir.get_cstr ());
+	if (!app_context_base_directory.ends_with ('/')) {
+		app_context_base_directory.push_back ('/');
+	}
+	init_runtime_property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = const_cast<char*>(app_context_base_directory.c_str ());
 
 	const char **prop_names = init_runtime_property_names;
 	const char **prop_values = const_cast<const char**>(init_runtime_property_values);

@@ -74,17 +74,18 @@
     <_PlatformPackage Include="platform-25_r03">      <ApiLevel>25</ApiLevel>   <Hash>9B742D34590FE73FB7229E34835ECFFB1846CA389D9F924F0B2A37DE525DC6B8</Hash></_PlatformPackage>
     <_PlatformPackage Include="platform-26_r02">      <ApiLevel>26</ApiLevel>   <Hash>2AAFA7D19C5E9C4B643EE6ADE3D85EF89DC2F79E8383EFDB9BAF7FDDAD74B52A</Hash></_PlatformPackage>
     <_PlatformPackage Include="platform-27_r03">      <ApiLevel>27</ApiLevel>   <Hash>020C4C090BC82CE87EBAAE5D1A922E21B39A1D03C78FFA43F0C3E42FC7D28169</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-28_r04">      <ApiLevel>28</ApiLevel>   <Hash>967F8CA99B71D337AA9C7781F9D65DD8110BF5C4746F44304047BF71B20D0DED</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-29_r01">      <ApiLevel>29</ApiLevel>   <Hash>2C9E961858E03900FFA0801A4F6234AA7223363B629FD8E1BE60DA9AA09D86BD</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-30_r01">      <ApiLevel>30</ApiLevel>   <Hash>337B1B0E202A02F90DA2E719305F157FCCDA215C760F5B8F7121ACEDCA44942B</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-28_r06">      <ApiLevel>28</ApiLevel>   <Hash>8452DBBF9668A428ABB243C4F02A943B7AA83AF3CCA627629A15C4C09F28E7BD</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-29_r05">      <ApiLevel>29</ApiLevel>   <Hash>951DA8BF175254DA74626824F919BD28DEF64F8828F29DD3B124A535CF4049D8</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-30_r03">      <ApiLevel>30</ApiLevel>   <Hash>F3F5B75744DBF6EE6ED3E8174A71E513BFEE502D0BC3463EA97E517BFF68D84E</Hash></_PlatformPackage>
     <_PlatformPackage Include="platform-31_r01">      <ApiLevel>31</ApiLevel>   <Hash>1D69FE1D7F9788D82FF3A374FAF4F6CCC9D1D372AA84A86B5BCFB517523B0B3F</Hash></_PlatformPackage>
     <_PlatformPackage Include="platform-32_r01">      <ApiLevel>32</ApiLevel>   <Hash>01D8DA1C900E70FCF5DA39767D5444E39928935B1A5927055CE749FC348CA7AE</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-33-ext3_r03"> <ApiLevel>33</ApiLevel>   <Hash>B32B10F787867987F03AE8E101D217E053A9065B7136379FB353B388379AED1D</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-34-ext7_r02"> <ApiLevel>34</ApiLevel>   <Hash>5323311CC3E4AD614F0B8053C72B651726F3422448CEDD39E48F00737CDA8AD0</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-35_r02">      <ApiLevel>35</ApiLevel>   <Hash>0988CACAD01B38A18A47BAC14A0695F246BC76C1B06C0EEB8EB0DC825AB0C8E0</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-36_r02">      <ApiLevel>36</ApiLevel>   <Hash>37607369A28C5B640B3A7998868D45898EBCB777565A0E85F9ACF36F29631D2E</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-33-ext5_r01"> <ApiLevel>33</ApiLevel>   <Hash>3D6189A18D0CEBD4E518B8728DE0E6B940D95C96B57316769DD56EE2D1708D10</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-34-ext12_r01"><ApiLevel>34</ApiLevel>   <Hash>B8349FF89D0BC40D26C712DCC5EB36EE60F40E203D7589BD4599B9237E98329A</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-35-ext15_r01"><ApiLevel>35</ApiLevel>   <Hash>A93712AEDD4F851D9CF1F7281F7C4FE5581CE03A9DF37FFC8C53A487EADF311F</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-36-ext19_r01"><ApiLevel>36</ApiLevel>   <Hash>55BD3620999428FF13097C982C9F0D40DE566D846F0BED153BF8D4E1491B90FF</Hash></_PlatformPackage>
     <_PlatformPackage Include="platform-36.1_r01">    <ApiLevel>36.1</ApiLevel> <Hash>265E9AA7D8DB6ABE7AD1696085D5D62784B341084C625DE46DB530970B1E806D</Hash></_PlatformPackage>
-    <_PlatformPackage Include="platform-37.0_r01">    <ApiLevel>37.0</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>19BDCF42DE0CB0E9500A27DA6833FC30CDD49A7EC690AA5CABAA0EF893AF9EBE</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-37.0_r02">    <ApiLevel>37.0</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>840B23E827F96E64AEA4C89A1194AAC3DC5F6BAD37EDB231C5C795D890330E8D</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-37.1_r01">    <ApiLevel>37.1</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>CADF0A541847820EA3D8FFC5C192562A18376CF9BA510BF9659C772F9A442184</Hash></_PlatformPackage>
   </ItemGroup>
 
   <!--
@@ -238,9 +239,9 @@
       <Hash>$(XAAndroidDocsHash)</Hash>
       <Destination>$(AndroidSdkFullPath)\docs</Destination>
     </_AndroidSdkPackage>
-    <_AndroidSdkPackage Include="source-36_r01.zip">
+    <_AndroidSdkPackage Include="source-37.0_r02.zip">
       <Hash>$(XAAndroidSourcesHash)</Hash>
-      <Destination>$(AndroidSdkFullPath)\sources\android-36</Destination>
+      <Destination>$(AndroidSdkFullPath)\sources\android-37</Destination>
     </_AndroidSdkPackage>
 
     <!--

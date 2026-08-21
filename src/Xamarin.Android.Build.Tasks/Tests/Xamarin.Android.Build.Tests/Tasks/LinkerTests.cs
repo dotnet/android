@@ -743,6 +743,82 @@ public abstract class MyRunner {
 		}
 
 		[Test]
+		public void TrimUnusedJavaCallableMethods ()
+		{
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+				return;
+			}
+
+			var path = Path.Combine (Root, "temp", TestName);
+			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
+			lib.SetRuntime (runtime);
+			lib.SetProperty ("IsTrimmable", "true");
+			lib.Sources.Add (new BuildItem.Source ("Library1.cs") {
+				TextContent = () => """
+					namespace Lib1;
+
+					public class Library1 : Com.Example.Androidlib.MyRunner {
+						public static Library1 Create () => new Library1 ();
+
+						// Overrides an abstract Java method, so it is only ever invoked from Java.
+						public override void Run () => Console.WriteLine ("Run");
+
+						// Not an override, and unreachable from managed code.
+						public void UnusedMethod () => Console.WriteLine ("UnusedMethod");
+					}
+
+					// Android instantiates this through its Java Callable Wrapper, so the
+					// default constructor is never referenced from managed code.
+					[Android.App.Service]
+					public class Service1 : Android.App.Service {
+						public override Android.OS.IBinder? OnBind (Android.Content.Intent? intent) => null;
+					}
+					""",
+			});
+			lib.Sources.Add (new BuildItem ("AndroidJavaSource", "MyRunner.java") {
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () => """
+					package com.example.androidlib;
+
+					public abstract class MyRunner {
+						public abstract void run();
+					}
+					""",
+			});
+
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true, ProjectName = "App1" };
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.References.Add (new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\n" +
+				"Console.WriteLine (Lib1.Library1.Create ());");
+
+			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));
+			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
+			Assert.IsTrue (lb.Build (lib), "library build should have succeeded.");
+			Assert.IsTrue (b.Build (proj), "app build should have succeeded.");
+
+			var linked = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android-arm64", "linked", $"{lib.ProjectName}.dll");
+			FileAssert.Exists (linked);
+
+			using var assembly = AssemblyDefinition.ReadAssembly (linked);
+			var type = assembly.MainModule.FindType ("Lib1.Library1");
+			Assert.IsNotNull (type, "Lib1.Library1 should not have been linked out.");
+			Assert.IsNotNull (type.Methods.FirstOrDefault (m => m.Name == "Run"),
+				"Run() overrides a Java method and must be preserved, because it is only called from Java.");
+			Assert.IsNull (type.Methods.FirstOrDefault (m => m.Name == "UnusedMethod"),
+				"UnusedMethod() is not callable from Java and is unused, so it should have been trimmed.");
+
+			var service = assembly.MainModule.FindType ("Lib1.Service1");
+			Assert.IsNotNull (service, "Lib1.Service1 should not have been linked out.");
+			Assert.IsNotNull (service.Methods.FirstOrDefault (m => m.IsConstructor && !m.IsStatic && !m.HasParameters),
+				"Service1's default constructor must be preserved, because Android instantiates it from Java.");
+		}
+
+		[Test]
 		public void WarnWithReferenceToPreserveAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;

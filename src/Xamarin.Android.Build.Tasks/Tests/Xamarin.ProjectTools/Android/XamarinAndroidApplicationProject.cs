@@ -139,6 +139,11 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.Deterministic, value.ToString ()); }
 		}
 
+		public bool AndroidEnableFastDeployment {
+			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableFastDeployment), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.AndroidEnableFastDeployment, value.ToString ()); }
+		}
+
 		public bool EmbedAssembliesIntoApk {
 			get { return string.Equals (GetProperty (KnownProperties.EmbedAssembliesIntoApk), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.EmbedAssembliesIntoApk, value.ToString ()); }

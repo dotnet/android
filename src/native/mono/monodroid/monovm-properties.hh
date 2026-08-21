@@ -2,6 +2,7 @@
 #define __MONOVM_PROPERTIES_HH
 
 #include <cstring>
+#include <string>
 #include <string_view>
 
 #include "monodroid-glue-internal.hh"
@@ -30,7 +31,12 @@ namespace xamarin::android::internal
 			static_assert (PROPERTY_COUNT == N_PROPERTY_KEYS);
 			static_assert (PROPERTY_COUNT == N_PROPERTY_VALUES);
 
-			_property_values[APP_CONTEXT_BASE_DIRECTORY_INDEX] = strdup (filesDir.get_cstr ());
+			// `.NET` terminates `AppContext.BaseDirectory` with a directory separator, so we do too.
+			std::string baseDirectory { filesDir.get_cstr () };
+			if (!baseDirectory.ends_with ('/')) {
+				baseDirectory.push_back ('/');
+			}
+			_property_values[APP_CONTEXT_BASE_DIRECTORY_INDEX] = strdup (baseDirectory.c_str ());
 
 			static_local_string<32uz> localDateTimeOffsetBuffer;
 			localDateTimeOffsetBuffer.append (localDateTimeOffset);

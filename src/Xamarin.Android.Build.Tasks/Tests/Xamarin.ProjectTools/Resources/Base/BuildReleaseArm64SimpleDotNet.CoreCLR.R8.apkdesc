@@ -1,0 +1,63 @@
+{
+  "Comment": null,
+  "Entries": {
+    "AndroidManifest.xml": {
+      "Size": 3036
+    },
+    "classes.dex": {
+      "Size": 404092
+    },
+    "lib/arm64-v8a/libassembly-store.so": {
+      "Size": 2542344
+    },
+    "lib/arm64-v8a/libclrjit.so": {
+      "Size": 2807600
+    },
+    "lib/arm64-v8a/libcoreclr.so": {
+      "Size": 4843864
+    },
+    "lib/arm64-v8a/libmonodroid.so": {
+      "Size": 1184800
+    },
+    "lib/arm64-v8a/libSystem.Globalization.Native.so": {
+      "Size": 72432
+    },
+    "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
+      "Size": 1259088
+    },
+    "lib/arm64-v8a/libSystem.Native.so": {
+      "Size": 99808
+    },
+    "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
+      "Size": 171584
+    },
+    "lib/arm64-v8a/libxamarin-app.so": {
+      "Size": 20432
+    },
+    "res/drawable-hdpi-v4/icon.png": {
+      "Size": 2178
+    },
+    "res/drawable-mdpi-v4/icon.png": {
+      "Size": 1490
+    },
+    "res/drawable-xhdpi-v4/icon.png": {
+      "Size": 3098
+    },
+    "res/drawable-xxhdpi-v4/icon.png": {
+      "Size": 4674
+    },
+    "res/drawable-xxxhdpi-v4/icon.png": {
+      "Size": 6832
+    },
+    "res/layout/main.xml": {
+      "Size": 544
+    },
+    "res/xml/splits0.xml": {
+      "Size": 120
+    },
+    "resources.arsc": {
+      "Size": 1904
+    }
+  },
+  "PackageSize": 7058875
+}

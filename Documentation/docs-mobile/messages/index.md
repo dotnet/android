@@ -147,15 +147,17 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1035](xa1035.md): The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.
 + [XA1036](xa1036.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '29' does not match the $(SupportedOSPlatformVersion) value '21' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
 Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).
-+ [XA1037](xa1037.md): The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.
 + [XA1038](xa1038.md): The '{0}' MSBuild property has an invalid value. Value values are {1}.
 + [XA1039](xa1039.md): The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.
 + [XA1040](xa1040.md): The NativeAOT runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues
 + [XA1041](xa1041.md): The MSBuild property 'MonoAndroidAssetPrefix' has an invalid value of 'c:\Foo\Assets'. The value is expected to be a directory path representing the relative location of your Assets or Resources
++ [XA1042](xa1042.md): The &lt;instrumentation&gt; element in '{0}' is missing the android:name attribute.
++ [XA1043](xa1043.md): Could not determine what to launch: '{0}' does not contain a launchable &lt;activity&gt; or an &lt;instrumentation&gt; element.
 + [XA1044](xa1044.md): The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled.
 + [XA1045](xa1045.md): Input file `{0}` does not start with `<replacements/>`.
 + [XA1046](xa1046.md): Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.
 + [XA1047](xa1047.md): Required attribute '{0}' missing from element '{1}'; {2} line {3}.
++ [XA1048](xa1048.md): '{0}' does not contain an &lt;instrumentation&gt; element.
 
 ## XA2xxx: Linker
 
@@ -207,7 +209,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4234](xa4234.md): '<{item}>' item '{itemspec}' is missing required attribute '{name}'.
 + [XA4235](xa4235.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id'.
 + [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}
-+ [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - {exception}
++ [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - Failed to resolve POM for Maven artifact '{dependency}' from '{url}'. - {exception}
 + [XA4239](xa4239.md): Unknown Maven repository: '{repository}'.
 + [XA4241](xa4241.md): Java dependency '{artifact}' is not satisfied.
 + [XA4242](xa4242.md): Java dependency '{artifact}' is not satisfied. Microsoft maintains the NuGet package '{nugetId}' that could fulfill this dependency.
@@ -224,6 +226,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4254](xa4254.md): Trimmable type map Java source input directory '{input}' and output directory '{output}' must be different.
 + [XA4255](xa4255.md): Generated trimmable type map Java source '{path}' was not found.
 + [XA4256](xa4256.md): Skipping Java peer type '{type}' from assembly '{assembly}' because referenced type '{referencedType}' from assembly '{referencedAssembly}' could not be resolved in '{path}'. This type will not be included in the trimmable type map.
++ [XA4258](xa4258.md): Java name '{name}' contains reserved Java identifier '{identifier}'. Change the package or type name.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -248,6 +251,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4321](xa4321.md): NativeAOT DGML file '{file}' was not found.
 + [XA4322](xa4322.md): Skipping library ProGuard configuration file '{file}' (from {source}) because it contains the unsupported global option '{option}'. Global ProGuard options are only allowed in application projects.
 + [XA4323](xa4323.md): Ignoring directory '{directory}' as it does not exist.
++ [XA4324](xa4324.md): [{arch}] Unable to delete source file '{file}'.
 
 ## XA5xxx: GCC and toolchain
 

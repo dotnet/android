@@ -96,7 +96,7 @@
     <ItemGroup>
       <_ConfigureArchiveDSOStubCommands Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(AndroidSupportedTargetJitAbi.Identity) -DBUILD_ARCHIVE_DSO_STUB=ON -DSTRIP_DEBUG=ON "$(MSBuildThisFileDirectory)"</Arguments>
+        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(AndroidSupportedTargetJitAbi.Identity) -DBUILD_ARCHIVE_DSO_STUB=ON -DSTRIP_DEBUG=ON "$(MSBuildThisFileDirectory.TrimEnd('\'))"</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub</WorkingDirectory>
       </_ConfigureArchiveDSOStubCommands>
     </ItemGroup>
@@ -135,7 +135,7 @@
     <ItemGroup>
       <_ConfigureTestJniLibraryCommands Include="@(_TestJniLibraryAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(_TestJniLibraryAbi.Identity) -DBUILD_TEST_JNI_LIBRARY=ON "$(MSBuildThisFileDirectory)"</Arguments>
+        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(_TestJniLibraryAbi.Identity) -DBUILD_TEST_JNI_LIBRARY=ON "$(MSBuildThisFileDirectory.TrimEnd('\'))"</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library</WorkingDirectory>
       </_ConfigureTestJniLibraryCommands>
     </ItemGroup>
@@ -161,7 +161,7 @@
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
       <_LocalDotNetRuntimePath Condition=" '$(CLRLocalRuntimePath)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_PATH="$(CLRLocalRuntimePath)"</_LocalDotNetRuntimePath>
       <_LocalDotNetRuntimeConfig Condition=" '$(CLRLocalRuntimeConfig)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_CONFIG="$(CLRLocalRuntimeConfig)"</_LocalDotNetRuntimeConfig>
-      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) $(_LocaLDotNetRuntimeConfig) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
+      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) $(_LocaLDotNetRuntimeConfig) "$(MSBuildThisFileDirectory.TrimEnd('\'))"</_CmakeAndroidFlags>
     </PropertyGroup>
 
     <ItemGroup>
@@ -368,14 +368,6 @@
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
       <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.a"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
-                         AndroidRuntime="$(CMakeRuntimeFlavor)"
-                         RuntimePackName="$(_RuntimePackName)" />
-    </ItemGroup>
-
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_RuntimePackFiles Include="$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a"
-                         Condition="Exists('$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a')"
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />

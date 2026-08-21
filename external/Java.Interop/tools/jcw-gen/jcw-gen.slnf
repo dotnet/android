@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "..\\..\\Java.Interop.sln",
+    "path": "..\\..\\Java.Interop.slnx",
     "projects": [
       "src\\Java.Interop.Localization\\Java.Interop.Localization.csproj",
       "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",

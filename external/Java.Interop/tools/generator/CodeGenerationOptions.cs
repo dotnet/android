@@ -53,7 +53,6 @@ namespace MonoDroid.Generation
 		readonly object jni_marshal_delegates_lock = new object ();
 
 		public string ApiXmlFile { get; set; }
-		public bool EmitLegacyInterfaceInvokers { get; set; }
 		public bool UseGlobal { get; set; }
 		public bool IgnoreNonPublicType { get; set; }
 		public string AssemblyName { get; set; }
@@ -63,7 +62,7 @@ namespace MonoDroid.Generation
 		public bool SupportDefaultInterfaceMethods { get; set; }
 		public bool SupportNestedInterfaceTypes { get; set; }
 		public bool SupportNullableReferenceTypes { get; set; }
-		public bool UseShallowReferencedTypes { get; set; }
+		public bool UseShallowReferencedTypes { get; set; } = true;
 		public bool UseObsoletedOSPlatformAttributes { get; set; }
 		public bool UseRestrictToAttributes { get; set; }
 		public bool FixObsoleteOverrides { get; set; }
@@ -314,4 +313,3 @@ namespace MonoDroid.Generation
 		}
 	}
 }
-

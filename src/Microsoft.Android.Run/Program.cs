@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Microsoft.Testing.Extensions;
 using Mono.Options;
 using Xamarin.Android.Tools;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
+const int CtrlCExitCode = 130; // Standard Unix exit code for SIGINT: 128 + signal 2.
+const int StopAppTimeoutSeconds = 10;
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -13,9 +16,11 @@ string? activity = null;
 string? deviceUserId = null;
 string? instrumentation = null;
 bool verbose = false;
+bool wakeDevice = true;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
+int ctrlCRequested = 0;
 string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
@@ -23,7 +28,7 @@ string? dotnetTestPipe = null;
 try {
 	return await RunAsync (args);
 } catch (OperationCanceledException) {
-	return 130; // 128 + SIGINT(2), standard Unix convention for Ctrl+C
+	return CtrlCExitCode;
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)
@@ -71,6 +76,9 @@ async Task<int> RunAsync (string[] args)
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
+		{ "no-wake-device",
+			"Do not wake the device or dismiss its keyguard before launching the application.",
+			v => wakeDevice = v == null },
 		{ "logcat-args=",
 			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'monodroid-assembly:S' to silence a tag).",
 			v => logcatArgs = v },
@@ -91,7 +99,7 @@ async Task<int> RunAsync (string[] args)
 		return 1;
 	}
 
-	if (remaining.Count > 0 && !isDotnetTestMode) {
+	if (remaining.Count > 0 && !isDotnetTestMode && string.IsNullOrEmpty (instrumentation)) {
 		Console.Error.WriteLine ($"Error: Unexpected argument(s): {string.Join (" ", remaining)}");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
@@ -115,7 +123,12 @@ async Task<int> RunAsync (string[] args)
 		Console.WriteLine ("Examples:");
 		Console.WriteLine ($"  {Name} -p com.example.myapp -c com.example.myapp.MainActivity");
 		Console.WriteLine ($"  {Name} -p com.example.myapp -i com.example.myapp.TestInstrumentation");
+		Console.WriteLine ($"  {Name} -p com.example.myapp -i com.example.myapp.Benchmarks --filter *MyBench*");
 		Console.WriteLine ($"  {Name} --adb /path/to/adb -p com.example.myapp -c com.example.myapp.MainActivity");
+		Console.WriteLine ();
+		Console.WriteLine ("When --instrument is used, any unrecognized arguments are forwarded to");
+		Console.WriteLine ("'am instrument' as extras: KEY=VALUE becomes '-e KEY VALUE', and everything");
+		Console.WriteLine ("else is joined into a single '-e args \"...\"' extra.");
 		Console.WriteLine ();
 		Console.WriteLine ("Press Ctrl+C while running to stop the Android application and exit.");
 		return 0;
@@ -179,18 +192,24 @@ async Task<int> RunAsync (string[] args)
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
+	int exitCode;
+	bool cancellationRequested;
 	try {
 		if (isDotnetTestMode)
-			return await RunDotnetTestAsync (remaining);
-
-		if (isInstrumentMode)
-			return await RunInstrumentationAsync ();
-
-		return await RunAppAsync ();
+			exitCode = await RunDotnetTestAsync (remaining);
+		else if (isInstrumentMode)
+			exitCode = await RunInstrumentationAsync (remaining);
+		else
+			exitCode = await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
+		cancellationRequested = Volatile.Read (ref ctrlCRequested) != 0;
+		if (cancellationRequested)
+			await StopAppAsync ();
 		cts.Dispose ();
 	}
+
+	return cancellationRequested ? CtrlCExitCode : exitCode;
 }
 
 void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
@@ -199,57 +218,56 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	Console.WriteLine ();
 	Console.WriteLine ("Stopping application...");
 
+	Interlocked.Exchange (ref ctrlCRequested, 1);
 	cts.Cancel ();
-
-	// Force-stop the app (fire-and-forget in cancel handler)
-	_ = StopAppAsync ();
-
-	// Kill logcat process if running
-	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error killing logcat process: {ex.Message}");
-	}
 }
 
-async Task<int> RunInstrumentationAsync ()
+async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 {
-	// Build the am instrument command
-	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var cmdArgs = $"shell am instrument -w{userArg} {package}/{instrumentation}";
+	// '-w' waits for the run to complete; '-r' prints raw INSTRUMENTATION_STATUS
+	// blocks as they arrive instead of buffering everything until the end.
+	var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
+	if (!string.IsNullOrEmpty (deviceUserId)) {
+		cmdArgs.Add ("--user");
+		cmdArgs.Add (deviceUserId);
+	}
+	cmdArgs.AddRange (BuildInstrumentationExtras (instrumentationArgs));
+	cmdArgs.Add ($"{package}/{instrumentation}");
 
 	if (verbose)
-		Console.WriteLine ($"Running instrumentation: adb {cmdArgs}");
+		Console.WriteLine ($"Running instrumentation: adb {string.Join (" ", cmdArgs)}");
 
 	// Run instrumentation with streaming output
 	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
 	using var instrumentProcess = new Process { StartInfo = psi };
 
 	var locker = new Lock ();
+	var output = new StringBuilder ();
 
 	instrumentProcess.OutputDataReceived += (s, e) => {
 		if (e.Data != null)
-			lock (locker)
+			lock (locker) {
+				output.AppendLine (e.Data);
 				Console.WriteLine (e.Data);
+			}
 	};
 
 	instrumentProcess.ErrorDataReceived += (s, e) => {
 		if (e.Data != null)
-			lock (locker)
+			lock (locker) {
+				output.AppendLine (e.Data);
 				Console.Error.WriteLine (e.Data);
+			}
 	};
 
 	instrumentProcess.Start ();
 	instrumentProcess.BeginOutputReadLine ();
 	instrumentProcess.BeginErrorReadLine ();
 
-	// Also start logcat in the background for additional debug output
-	logcatPid = await GetAppPidAsync ();
-	if (logcatPid != null)
-		StartLogcat ();
+	// Also stream logcat in the background, which is where Console output from the
+	// app ends up. The app process does not exist yet when `am instrument` starts,
+	// so poll for it rather than giving up after a single `pidof`.
+	var logcatTask = StartLogcatWhenAppStartsAsync ();
 
 	// Wait for instrumentation to complete or Ctrl+C
 	try {
@@ -263,6 +281,8 @@ async Task<int> RunInstrumentationAsync ()
 			return 1;
 		}
 	} finally {
+		cts.Cancel ();
+		await logcatTask;
 		// Clean up logcat
 		try {
 			if (logcatProcess != null && !logcatProcess.HasExited) {
@@ -281,7 +301,131 @@ async Task<int> RunInstrumentationAsync ()
 		return 1;
 	}
 
+	// `am instrument` exits 0 even when the instrumentation crashes or reports
+	// failure, so inspect what it printed to decide the exit code. `WaitForExitAsync`
+	// has already drained both readers, but read under the same lock for clarity.
+	string capturedOutput;
+	lock (locker)
+		capturedOutput = output.ToString ();
+
+	var failure = GetInstrumentationFailure (capturedOutput);
+	if (failure != null) {
+		Console.Error.WriteLine ($"Error: {failure}");
+		return 1;
+	}
+
 	return 0;
+}
+
+/// <summary>
+/// Translates trailing `dotnet run -- ARGS` into `am instrument` extras.
+/// `KEY=VALUE` arguments become `-e KEY VALUE`; everything else is joined and
+/// passed as a single `-e args "..."` extra.
+/// </summary>
+List<string> BuildInstrumentationExtras (List<string> instrumentationArgs)
+{
+	var result = new List<string> ();
+	if (instrumentationArgs.Count == 0)
+		return result;
+
+	var positional = new List<string> ();
+
+	foreach (var arg in instrumentationArgs) {
+		var eqIndex = arg.IndexOf ('=');
+		if (eqIndex > 0 && !arg.StartsWith ("-", StringComparison.Ordinal) && IsBundleKey (arg.AsSpan (0, eqIndex))) {
+			result.Add ("-e");
+			result.Add (arg.Substring (0, eqIndex));
+			result.Add (QuoteForDeviceShell (arg.Substring (eqIndex + 1)));
+		} else {
+			positional.Add (arg);
+		}
+	}
+
+	if (positional.Count > 0) {
+		result.Add ("-e");
+		result.Add ("args");
+		result.Add (QuoteForDeviceShell (string.Join (" ", positional)));
+	}
+
+	return result;
+
+	static bool IsBundleKey (ReadOnlySpan<char> key)
+	{
+		foreach (var c in key) {
+			if (!char.IsLetterOrDigit (c) && c != '_' && c != '.')
+				return false;
+		}
+		return key.Length > 0;
+	}
+}
+
+/// <summary>
+/// Wraps a value in single quotes so the shell on the device treats it as a
+/// single token. `adb shell` deliberately does not escape the arguments it
+/// forwards, it just joins them with spaces (like `ssh`), so quoting for the
+/// device shell is up to the caller. The surrounding quoting needed to survive
+/// the *local* command line is handled by <see cref="ProcessStartInfo.ArgumentList"/>.
+/// </summary>
+static string QuoteForDeviceShell (string value) =>
+	"'" + value.Replace ("'", "'\\''") + "'";
+
+/// <summary>
+/// Inspects `am instrument` output for signs that the instrumentation crashed or
+/// reported failure. Returns a human readable reason, or <c>null</c> on success.
+/// </summary>
+static string? GetInstrumentationFailure (string output)
+{
+	if (output.Contains ("INSTRUMENTATION_FAILED", StringComparison.Ordinal))
+		return "The instrumentation failed to start. See the output above for details.";
+
+	string? shortMsg = null, longMsg = null;
+	int? code = null;
+	foreach (var rawLine in output.Split ('\n')) {
+		var line = rawLine.TrimEnd ('\r');
+		if (line.StartsWith ("INSTRUMENTATION_RESULT: shortMsg=", StringComparison.Ordinal))
+			shortMsg = line.Substring ("INSTRUMENTATION_RESULT: shortMsg=".Length).Trim ();
+		else if (line.StartsWith ("INSTRUMENTATION_RESULT: longMsg=", StringComparison.Ordinal))
+			longMsg = line.Substring ("INSTRUMENTATION_RESULT: longMsg=".Length).Trim ();
+		else if (line.StartsWith ("INSTRUMENTATION_CODE: ", StringComparison.Ordinal)) {
+			if (int.TryParse (line.Substring ("INSTRUMENTATION_CODE: ".Length).Trim (), out int parsed))
+				code = parsed;
+		}
+	}
+
+	if (longMsg != null || shortMsg != null)
+		return $"The application crashed: {longMsg ?? shortMsg}";
+
+	// Activity.RESULT_CANCELED (0) is what Instrumentation.Finish() reports on failure.
+	if (code == 0)
+		return "The instrumentation reported failure (INSTRUMENTATION_CODE: 0).";
+
+	if (code == null)
+		return "The instrumentation did not complete. It may have crashed before calling Finish().";
+
+	return null;
+}
+
+/// <summary>
+/// Polls for the application process and starts streaming logcat once it appears.
+/// </summary>
+async Task StartLogcatWhenAppStartsAsync ()
+{
+	try {
+		while (!cts.Token.IsCancellationRequested) {
+			var pid = await GetAppPidAsync ();
+			if (pid != null) {
+				logcatPid = pid;
+				StartLogcat ();
+				return;
+			}
+			await Task.Delay (250, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
+		}
+	} catch (OperationCanceledException) {
+		// The instrumentation finished (or was cancelled) before the app process was seen
+	} catch (Exception ex) {
+		if (verbose)
+			Console.Error.WriteLine ($"Error starting logcat: {ex.Message}");
+	}
 }
 
 async Task<int> RunDotnetTestAsync (List<string> mtpArgs)
@@ -372,7 +516,9 @@ async Task<int> RunAppAsync ()
 async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
+	// Device preparation is best effort; am start must run and determine the shell exit code.
+	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; " : "";
+	var cmdArgs = $"shell {wakeDeviceCommand}am start -S -W{userArg} -n \"{package}/{activity}\"";
 	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
@@ -436,34 +582,36 @@ void StartLogcat ()
 
 async Task WaitForAppExitAsync ()
 {
-	while (!cts.Token.IsCancellationRequested) {
-		// Check if app is still running
-		var pid = await GetAppPidAsync ();
-		if (pid == null || pid != logcatPid) {
-			if (verbose)
-				Console.WriteLine ("App has exited.");
-			break;
-		}
-
-		// Also check if logcat process exited unexpectedly
-		if (logcatProcess != null && logcatProcess.HasExited) {
-			if (verbose)
-				Console.WriteLine ("Logcat process exited.");
-			break;
-		}
-
-		await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
-	}
-
-	// Clean up logcat process
 	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-			logcatProcess.WaitForExit (1000);
+		while (!cts.Token.IsCancellationRequested) {
+			// Check if app is still running
+			var pid = await GetAppPidAsync ();
+			if (pid == null || pid != logcatPid) {
+				if (verbose)
+					Console.WriteLine ("App has exited.");
+				break;
+			}
+
+			// Also check if logcat process exited unexpectedly
+			if (logcatProcess != null && logcatProcess.HasExited) {
+				if (verbose)
+					Console.WriteLine ("Logcat process exited.");
+				break;
+			}
+
+			await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+	} finally {
+		// Clean up logcat process
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+		}
 	}
 }
 
@@ -473,7 +621,18 @@ async Task StopAppAsync ()
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+	using var timeoutCts = new CancellationTokenSource (TimeSpan.FromSeconds (StopAppTimeoutSeconds));
+	try {
+		var (exitCode, _, error) = await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", timeoutCts.Token, verbose);
+		if (exitCode != 0)
+			Console.Error.WriteLine ($"Error: Failed to stop app: {error}");
+	} catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested) {
+		Console.Error.WriteLine ($"Error: Timed out stopping app after {StopAppTimeoutSeconds} seconds.");
+	} catch (Exception ex) {
+		Console.Error.WriteLine ($"Error: Failed to stop app: {ex.Message}");
+		if (verbose)
+			Console.Error.WriteLine (ex.ToString ());
+	}
 }
 
 string? FindAdbPath ()

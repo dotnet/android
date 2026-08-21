@@ -324,13 +324,14 @@ namespace Xamarin.Android.Tasks {
 				uses.SetAttributeValue (androidNs + "minSdkVersion", minSdkVersionString);
 			}
 
+			// If no targetSdkVersion is specified, set it. Otherwise `aapt2` defaults it to minSdkVersion.
 			string targetSdkVersion;
 			var tsv = uses.Attribute (androidNs + "targetSdkVersion");
 			if (tsv != null)
 				targetSdkVersion = tsv.Value;
 			else {
 				targetSdkVersion = TargetSdkVersionName;
-				uses.AddBeforeSelf (new XComment ("suppress UsesMinSdkAttributes"));
+				uses.SetAttributeValue (androidNs + "targetSdkVersion", targetSdkVersion);
 			}
 
 			int? tryTargetSdkVersion  = VersionResolver.GetApiLevelFromId (targetSdkVersion);

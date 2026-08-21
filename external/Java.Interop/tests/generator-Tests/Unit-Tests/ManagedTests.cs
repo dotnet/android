@@ -110,7 +110,9 @@ namespace generatortests
 			tempFile = Path.GetTempFileName ();
 			File.Copy (GetType ().Assembly.Location, tempFile, true);
 			module = ModuleDefinition.ReadModule (tempFile);
-			options = new CodeGenerationOptions ();
+			options = new CodeGenerationOptions {
+				UseShallowReferencedTypes = false,
+			};
 
 			foreach (var type in module.Types.Where(t => t.IsClass && t.Namespace == "Java.Lang")) {
 				var @class = CecilApiImporter.CreateClass (type, options);

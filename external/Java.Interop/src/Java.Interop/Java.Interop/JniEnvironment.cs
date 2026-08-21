@@ -161,27 +161,15 @@ namespace Java.Interop {
 
 			internal static unsafe int GetJavaVM (IntPtr jnienv, out IntPtr vm)
 			{
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				return NativeMethods.java_interop_jnienv_get_java_vm (jnienv, out vm);
-#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 				IntPtr _vm;
 				int r       = JniNativeMethods.GetJavaVM (jnienv, &_vm);
 				vm          = _vm;
 				return r;
-#else
-				Invoker     = CreateInvoker (environmentPointer);
-				var r       = Invoker.GetJavaVM (EnvironmentPointer, out vm);
-				return r;
-#endif
 			}
 
 			internal static void RawDeleteLocalRef (IntPtr env, IntPtr localRef)
 			{
-#if FEATURE_JNIENVIRONMENT_JI_PINVOKES
-				NativeMethods.java_interop_jnienv_delete_local_ref (env, localRef);
-#elif FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 				JniNativeMethods.DeleteLocalRef (env, localRef);
-#endif  // FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 			}
 		}
 
@@ -280,14 +268,5 @@ namespace Java.Interop {
 			disposed                = true;
 		}
 
-#if !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES
-		internal    JniEnvironmentInvoker   Invoker                 {get; private set;}
-
-		static unsafe JniEnvironmentInvoker CreateInvoker (IntPtr handle)
-		{
-			IntPtr p = Marshal.ReadIntPtr (handle);
-			return new JniEnvironmentInvoker ((JniNativeInterfaceStruct*) p);
-		}
-#endif  // !FEATURE_JNIENVIRONMENT_JI_PINVOKES
 	}
 }

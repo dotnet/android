@@ -1,6 +1,8 @@
 #nullable enable
 
 using System;
+using System.IO;
+using Microsoft.Build.Framework;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
@@ -16,6 +18,21 @@ namespace Xamarin.Android.Tasks
 		public bool AddKeepAlives { get; set; }
 
 		public bool UseDesignerAssembly { get; set; }
+
+		protected override bool TryProcessWithoutPipeline (ITaskItem source, ITaskItem destination)
+		{
+			if (!bool.TryParse (source.GetMetadata ("AndroidSkipAssemblyModification"), out bool skipAssemblyModification) || !skipAssemblyModification)
+				return false;
+
+			// Downstream scanners treat a zero-byte file as an assembly that did not need scanning.
+			var marker = Path.ChangeExtension (destination.ItemSpec, ".scan.empty");
+			var markerDirectory = Path.GetDirectoryName (marker);
+			if (markerDirectory.IsNullOrEmpty ())
+				throw new InvalidOperationException ($"Could not determine the output directory for '{marker}'.");
+			Directory.CreateDirectory (markerDirectory);
+			JavaObjectsXmlFile.WriteEmptyFile (marker, Log);
+			return true;
+		}
 
 		protected override void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 		{

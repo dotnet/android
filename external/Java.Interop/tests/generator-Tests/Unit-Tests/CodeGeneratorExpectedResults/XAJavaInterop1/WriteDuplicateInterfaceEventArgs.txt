@@ -13,57 +13,32 @@ public partial interface AnimatorListener : IJavaObject, IJavaPeerable {
 
 [global::Android.Runtime.Register ("java/code/AnimatorListener", DoNotGenerateAcw=true)]
 internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, AnimatorListener {
-	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
-
 	static IntPtr java_class_ref {
-		get { return _members.JniPeerType.PeerReference.Handle; }
+		get { return _members_java_code_AnimatorListener.JniPeerType.PeerReference.Handle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-		get { return _members; }
+		get { return _members_java_code_AnimatorListener; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override IntPtr ThresholdClass {
-		get { return class_ref; }
+		get { return _members_java_code_AnimatorListener.JniPeerType.PeerReference.Handle; }
 	}
 
 	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 	protected override global::System.Type ThresholdType {
-		get { return _members.ManagedPeerType; }
+		get { return _members_java_code_AnimatorListener.ManagedPeerType; }
 	}
 
-	IntPtr class_ref;
+	static readonly JniPeerMembers _members_java_code_AnimatorListener = new XAPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
 
-	public static AnimatorListener GetObject (IntPtr handle, JniHandleOwnership transfer)
+	public AnimatorListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 	{
-		return global::Java.Lang.Object.GetObject<AnimatorListener> (handle, transfer);
-	}
-
-	static IntPtr Validate (IntPtr handle)
-	{
-		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-			throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'java.code.AnimatorListener'.");
-		return handle;
-	}
-
-	protected override void Dispose (bool disposing)
-	{
-		if (this.class_ref != IntPtr.Zero)
-			JNIEnv.DeleteGlobalRef (this.class_ref);
-		this.class_ref = IntPtr.Zero;
-		base.Dispose (disposing);
-	}
-
-	public AnimatorListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-	{
-		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-		JNIEnv.DeleteLocalRef (local_ref);
 	}
 
 	static Delegate cb_OnAnimationEnd_OnAnimationEnd_I_Z;
@@ -86,14 +61,16 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 	}
 #pragma warning restore 0169
 
-	IntPtr id_OnAnimationEnd_I;
 	public unsafe bool OnAnimationEnd (int param1)
 	{
-		if (id_OnAnimationEnd_I == IntPtr.Zero)
-			id_OnAnimationEnd_I = JNIEnv.GetMethodID (class_ref, "OnAnimationEnd", "(I)Z");
-		JValue* __args = stackalloc JValue [1];
-		__args [0] = new JValue (param1);
-		return JNIEnv.CallBooleanMethod (((global::Java.Lang.Object) this).Handle, id_OnAnimationEnd_I, __args);
+		const string __id = "OnAnimationEnd.(I)Z";
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (param1);
+			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+			return __rm;
+		} finally {
+		}
 	}
 
 	static Delegate cb_OnAnimationEnd_OnAnimationEnd_II_Z;
@@ -116,15 +93,17 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 	}
 #pragma warning restore 0169
 
-	IntPtr id_OnAnimationEnd_II;
 	public unsafe bool OnAnimationEnd (int param1, int param2)
 	{
-		if (id_OnAnimationEnd_II == IntPtr.Zero)
-			id_OnAnimationEnd_II = JNIEnv.GetMethodID (class_ref, "OnAnimationEnd", "(II)Z");
-		JValue* __args = stackalloc JValue [2];
-		__args [0] = new JValue (param1);
-		__args [1] = new JValue (param2);
-		return JNIEnv.CallBooleanMethod (((global::Java.Lang.Object) this).Handle, id_OnAnimationEnd_II, __args);
+		const string __id = "OnAnimationEnd.(II)Z";
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [2];
+			__args [0] = new JniArgumentValue (param1);
+			__args [1] = new JniArgumentValue (param2);
+			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+			return __rm;
+		} finally {
+		}
 	}
 
 }

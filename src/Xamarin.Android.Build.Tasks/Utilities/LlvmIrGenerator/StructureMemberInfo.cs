@@ -30,6 +30,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool NeedsPadding    { get; }
 
 		/// <summary>
+		/// Whether this member is written out as an LLVM IR structure, as opposed to a simple
+		/// value, a string or a pointer.  Computed once during construction: it depends only on
+		/// the member's type and attributes, both of which are fixed, while the value is queried
+		/// once per member for *every* structure instance being generated.
+		/// </summary>
+		public bool IsIRStruct      { get; }
+
+		/// <summary>
 		/// Some fields/properties may override their name for presentation purposes, <see cref="NativeAssemblerAttribute.MemberName" />.
 		/// In such instances, this property will return the overridden/mapped name, otherwise it returns <see cref="Info.Name"/>.
 		/// This property should be used only for "presentation" purposes - for instance when generating comments which refer to
@@ -54,6 +62,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				PropertyInfo pi => pi.PropertyType,
 				_ => throw new InvalidOperationException ($"Unsupported member type {mi}")
 			};
+
+			// MemberType.IsStructure () handles checks for primitive types, enums etc
+			IsIRStruct =
+				MemberType != typeof(string) &&
+				!mi.IsInlineArray (cache) &&
+				!mi.IsNativePointer (cache) &&
+				(MemberType.IsStructure () || MemberType.IsClass);
 
 			ulong size = 0;
 			bool isPointer = false;
@@ -99,7 +114,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				IRType = $"[{arrayElements} x {IRType}]";
 				ArrayElements = (ulong)arrayElements;
-			} else if (this.IsIRStruct (cache)) {
+			} else if (IsIRStruct) {
 				StructureInfo si = module.GetStructureInfo (MemberType);
 				size = si.Size;
 				Alignment = (ulong)si.MaxFieldAlignment;

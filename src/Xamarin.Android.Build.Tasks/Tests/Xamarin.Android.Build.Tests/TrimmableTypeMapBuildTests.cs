@@ -27,10 +27,31 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
+			AssertTrimmableTypeMapOutputs (intermediateDir);
+		}
+
+		[Test]
+		public void Build_PublishAotProject_UsesTrimmableTypeMapForCoreClrDebug ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = false,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.PublishAot, "true");
+			proj.SetProperty ("NativeCompilationDuringPublish", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj, parameters: [ "_AndroidRuntime=CoreCLR" ]), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir);
@@ -46,7 +67,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -61,8 +82,82 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
+			if (isRelease && runtime == AndroidRuntime.CoreCLR) {
+				builder.Output.AssertTargetIsSkipped ("_RemoveRegisterAttributeCoreClr");
+			}
+			if (isRelease && runtime == AndroidRuntime.NativeAOT) {
+				builder.Output.AssertTargetIsNotSkipped ("_RemoveRegisterAttributeNativeAot");
+			}
 			foreach (var typemapDll in typemapDlls) {
 				FileAssert.Exists (typemapDll, $"No-op builds should preserve generated typemap assembly {typemapDll} when _GenerateTrimmableTypeMap is skipped.");
+			}
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_MissingJavaListPreservesGeneratedJava ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var javaDirectory = Path.Combine (typemapDirectory, "java");
+			var javaFiles = Directory.GetFiles (javaDirectory, "*.java", SearchOption.AllDirectories);
+			var javaFilesList = Path.Combine (typemapDirectory, "java-files.txt");
+			Assert.IsNotEmpty (javaFiles, "First build should have generated pre-trim Java sources.");
+			FileAssert.Exists (javaFilesList, "First build should have persisted the pre-trim Java file list.");
+			foreach (var path in File.ReadAllLines (javaFilesList)) {
+				Assert.IsTrue (Path.IsPathFullyQualified (path), $"The persisted Java path should be fully qualified: {path}");
+			}
+			File.Delete (javaFilesList);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+			foreach (var javaFile in javaFiles) {
+				FileAssert.Exists (javaFile, $"IncrementalClean should preserve {javaFile} when upgrading an obj directory without java-files.txt.");
+			}
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_PublishTrimmed_MissingLinkedJavaListRegenerates ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var typemapDirectory = builder.Output.GetIntermediaryPath ("typemap");
+			var linkedJavaDirectory = Path.Combine (typemapDirectory, "linked-java");
+			var linkedJavaFiles = Directory.GetFiles (linkedJavaDirectory, "*.java", SearchOption.AllDirectories);
+			var linkedJavaFilesList = Path.Combine (typemapDirectory, "linked-java-files.txt");
+			Assert.IsNotEmpty (linkedJavaFiles, "First build should have generated post-trim Java sources.");
+			FileAssert.Exists (linkedJavaFilesList, "First build should have persisted the post-trim Java file list.");
+			foreach (var path in File.ReadAllLines (linkedJavaFilesList)) {
+				Assert.IsTrue (Path.IsPathFullyQualified (path), $"The persisted linked Java path should be fully qualified: {path}");
+			}
+			File.Delete (linkedJavaFilesList);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Migration rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+			FileAssert.Exists (linkedJavaFilesList, "Post-trim generation should recreate linked-java-files.txt.");
+			foreach (var javaFile in linkedJavaFiles) {
+				FileAssert.Exists (javaFile, $"IncrementalClean should preserve {javaFile} until post-trim generation recreates its list.");
 			}
 		}
 
@@ -79,7 +174,7 @@ namespace Xamarin.Android.Build.Tests {
 				LinkTool = "r8",
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -107,7 +202,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -145,7 +240,7 @@ namespace Xamarin.Android.Build.Tests {
 
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -212,7 +307,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -235,7 +330,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -258,8 +353,8 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllBytes (staleCompiledClass, []);
 
 			// Force the post-trim Java generation to re-run by removing its stamp (without a source
-			// change, which would trigger an unrelated incremental CrossGen rebuild). It wipes and
-			// regenerates linked-java (dropping the stale JCW); the JCWs are compiled in place, so
+			// change, which would trigger an unrelated incremental CrossGen rebuild). It updates
+			// linked-java in place (dropping the stale JCW); the JCWs are compiled in place, so
 			// busting the compile stamp must drop the stale .class too.
 			var postTrimStamp = builder.Output.GetIntermediaryPath (Path.Combine ("stamp", "_GeneratePostTrimTrimmableTypeMapJavaSources.stamp"));
 			FileAssert.Exists (postTrimStamp, "First build should have written the post-trim Java stamp.");
@@ -284,7 +379,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -296,6 +391,98 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op rebuild should have succeeded.");
 			builder.Output.AssertTargetIsSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
 			builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
+
+			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			FileAssert.Exists (acwMap, "First build should have generated the post-trim ACW map.");
+			var linkedJava = Directory.GetFiles (
+				builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java")),
+				"*.java",
+				SearchOption.AllDirectories).First ();
+			File.Delete (acwMap);
+			File.Delete (linkedJava);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Missing-output recovery build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			FileAssert.Exists (acwMap, "Post-trim generation should restore a missing ACW map even when linked assemblies are unchanged.");
+			FileAssert.Exists (linkedJava, "Post-trim generation should restore a missing linked Java source even when linked assemblies are unchanged.");
+			Assert.That (new FileInfo (acwMap).Length, Is.GreaterThan (0), "The restored ACW map should contain the linked mappings.");
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_PublishTrimmed_IncrementalChangesAvoidUnnecessaryJavaWork ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+
+			var linkedJavaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "linked-java"));
+			var linkedJavaBefore = Directory.GetFiles (linkedJavaDirectory, "*.java", SearchOption.AllDirectories)
+				.ToDictionary (
+					path => Path.GetRelativePath (linkedJavaDirectory, path),
+					path => (Hash: ComputeFileHash (path), WriteTime: File.GetLastWriteTimeUtc (path)),
+					StringComparer.Ordinal);
+			Assert.IsNotEmpty (linkedJavaBefore, "First build should have generated post-trim Java sources.");
+
+			var updatedMainActivity = proj.DefaultMainActivity.Replace (
+				"//${AFTER_ONCREATE}",
+				"System.Console.WriteLine (\"Managed-only incremental change.\");");
+			Assert.AreNotEqual (proj.DefaultMainActivity, updatedMainActivity, "Test setup should update the managed MainActivity body.");
+			proj.MainActivity = updatedMainActivity;
+			proj.Touch ("MainActivity.cs");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Managed-only rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsNotSkipped ("_RemoveRegisterAttributeCoreClr");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+
+			var linkedJavaAfter = Directory.GetFiles (linkedJavaDirectory, "*.java", SearchOption.AllDirectories)
+				.ToDictionary (
+					path => Path.GetRelativePath (linkedJavaDirectory, path),
+					path => (Hash: ComputeFileHash (path), WriteTime: File.GetLastWriteTimeUtc (path)),
+					StringComparer.Ordinal);
+			CollectionAssert.AreEquivalent (linkedJavaBefore.Keys, linkedJavaAfter.Keys, "A managed method-body change should not alter the JCW set.");
+			foreach (var pair in linkedJavaBefore) {
+				var current = linkedJavaAfter [pair.Key];
+				Assert.IsTrue (pair.Value.Hash.SequenceEqual (current.Hash), $"{pair.Key} content should be unchanged.");
+				Assert.AreEqual (pair.Value.WriteTime, current.WriteTime, $"{pair.Key} timestamp should remain stable.");
+			}
+
+			var acwMap = builder.Output.GetIntermediaryPath ("acw-map.txt");
+			var applicationRegistration = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", "net", "dot", "android", "ApplicationRegistration.java"));
+			var postTrimAcwMap = ComputeFileHash (acwMap);
+			var postTrimApplicationRegistration = ComputeFileHash (applicationRegistration);
+
+			var updatedManifest = proj.AndroidManifest.Replace (
+				"</manifest>",
+				"<uses-permission android:name=\"android.permission.CAMERA\" /></manifest>");
+			Assert.AreNotEqual (proj.AndroidManifest, updatedManifest, "Test setup should update AndroidManifest.xml.");
+			proj.AndroidManifest = updatedManifest;
+			proj.Touch ("Properties\\AndroidManifest.xml");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Manifest-only rebuild should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+			builder.Output.AssertTargetIsSkipped ("_GeneratePostTrimTrimmableTypeMapJavaSources");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateJavaStubs");
+			builder.Output.AssertTargetIsSkipped ("_RemoveRegisterAttributeCoreClr");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+			Assert.IsTrue (postTrimAcwMap.SequenceEqual (ComputeFileHash (acwMap)), "The pre-trim pass should not overwrite the linked acw-map.txt.");
+			Assert.IsTrue (
+				postTrimApplicationRegistration.SequenceEqual (ComputeFileHash (applicationRegistration)),
+				"The pre-trim pass should not overwrite the linked ApplicationRegistration.java.");
+
+			var mergedManifest = builder.Output.GetIntermediaryPath (Path.Combine ("android", "AndroidManifest.xml"));
+			StringAssert.Contains ("android.permission.CAMERA", File.ReadAllText (mergedManifest), "The manifest-only change should flow into the packaged manifest.");
 		}
 
 
@@ -306,7 +493,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -326,7 +513,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -371,7 +558,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -399,7 +586,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
@@ -422,7 +609,7 @@ namespace Xamarin.Android.Build.Tests {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("RuntimeIdentifier", "android-arm64");
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 
@@ -509,7 +696,7 @@ namespace Xamarin.Android.Build.Tests {
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty ("TrimMode", "full");
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 
 			using var builder = CreateApkBuilder (Path.Combine ("temp", $"TypemapComparison_trimmable_single_rid_{Guid.NewGuid ():N}"));
 			Assert.IsTrue (builder.Build (proj), "trimmable single-RID build should have succeeded.");
@@ -621,7 +808,7 @@ namespace Xamarin.Android.Build.Tests {
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.Sources.Add (new BuildItem.Source ("ExportShapes.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;
@@ -713,7 +900,7 @@ namespace UnnamedProject {
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("TrimmerSingleWarn", "false");
 			proj.Sources.Add (new BuildItem.Source ("ExportShapes.cs") {
@@ -776,7 +963,7 @@ namespace UnnamedProject {
 				IsRelease = true,
 			};
 			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidTypeMapImplementation", "trimmable");
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
 			proj.Sources.Add (new BuildItem.Source ("AbstractProvider.cs") {
 				TextContent = () => @"
 namespace UnnamedProject {
@@ -823,7 +1010,7 @@ namespace UnnamedProject {
 			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("PublishReadyToRun", "false");
-			proj.SetProperty ("_AndroidTypeMapImplementation", typemapImplementation);
+			proj.SetProperty ("AndroidTypeMapImplementation", typemapImplementation);
 			if (dynamicCodeSupport.HasValue) {
 				proj.SetProperty ("DynamicCodeSupport", dynamicCodeSupport.Value.ToString ().ToLowerInvariant ());
 			}

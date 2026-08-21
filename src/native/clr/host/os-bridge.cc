@@ -91,13 +91,13 @@ auto OSBridge::_monodroid_weak_gref_dec () noexcept -> int
 void OSBridge::_write_stack_trace (FILE *to, const char *const from, LogCategories category) noexcept
 {
 	if (from == nullptr) [[unlikely]] {
-		log_warn (category, "Unable to write stack trace, managed runtime passed a NULL string.");
+		log_warnf (category, "Unable to write stack trace, managed runtime passed a NULL string.");
 		return;
 	}
 
 	std::string_view trace { from };
 	if (trace.empty ()) [[unlikely]] {
-		log_warn (category, "Empty stack trace passed by the managed runtime.");
+		log_warnf (category, "Empty stack trace passed by the managed runtime.");
 		return;
 	}
 
@@ -139,10 +139,32 @@ void OSBridge::_monodroid_gref_log (const char *message) noexcept
 	fflush (Logger::gref_log ());
 }
 
+void OSBridge::_monodroid_gref_logf (const char *format, ...) noexcept
+{
+	const char *safe_format = optional_string (format);
+	va_list args;
+	va_start (args, format);
+
+	if (Logger::gref_to_logcat () && (log_categories & LOG_GREF) != 0) {
+		va_list logcat_args;
+		va_copy (logcat_args, args);
+		log_writev (LOG_GREF, LogLevel::Debug, safe_format, logcat_args);
+		va_end (logcat_args);
+	}
+
+	FILE *gref_log = Logger::gref_log ();
+	if (gref_log != nullptr) {
+		vfprintf (gref_log, safe_format, args);
+		fflush (gref_log);
+	}
+
+	va_end (args);
+}
+
 [[gnu::always_inline, gnu::flatten]]
 void OSBridge::log_it (LogCategories category, std::string_view const& line, FILE *to, const char *const from, bool logcat_enabled) noexcept
 {
-	log_write (category, LogLevel::Info, line);
+	log_writef (category, LogLevel::Info, "%.*s", static_cast<int>(line.length ()), line.data ());
 
 	// We skip logcat here when logging to file is enabled because _write_stack_trace will output to logcat as well, if enabled
 	if (to == nullptr) {
@@ -162,7 +184,7 @@ void OSBridge::log_it (LogCategories category, std::string_view const& line, FIL
 
 void OSBridge::log_itf (LogCategories category, FILE *to, const char *const from, bool logcat_enabled, const char *format, ...) noexcept
 {
-	const char *safe_format = format == nullptr ? "<null>" : format;
+	const char *safe_format = optional_string (format);
 	char *line = nullptr;
 	va_list args;
 	va_start (args, format);

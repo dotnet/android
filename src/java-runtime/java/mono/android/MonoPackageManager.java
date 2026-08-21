@@ -94,19 +94,19 @@ public class MonoPackageManager {
 				// below, leading to an error locating the Mono runtime
 				//
 				if (BuildConfig.Debug) {
-					System.loadLibrary ("xamarin-debug-app-helper");
+					NativeLibraryHelper.loadLibrary ("xamarin-debug-app-helper", runtimePackage, apks);
 					DebugRuntime.init (apks, runtimeDir, appDirs, haveSplitApks);
 				} else {
-					System.loadLibrary("monosgen-2.0");
+					NativeLibraryHelper.loadLibrary ("monosgen-2.0", runtimePackage, apks);
 				}
-				System.loadLibrary("xamarin-app");
+				NativeLibraryHelper.loadLibrary ("xamarin-app", runtimePackage, apks);
 
 				if (!BuildConfig.DotNetRuntime) {
 					// .net5+ APKs don't contain `libmono-native.so`
-					System.loadLibrary("mono-native");
+					NativeLibraryHelper.loadLibrary ("mono-native", runtimePackage, apks);
 				}
 
-				System.loadLibrary("monodroid");
+				NativeLibraryHelper.loadLibrary ("monodroid", runtimePackage, apks);
 
 				Runtime.initInternal (
 						language,

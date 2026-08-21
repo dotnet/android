@@ -1,7 +1,7 @@
 V             ?= 0
 prefix         = /usr/local
 CONFIGURATION ?= Debug
-SOLUTION       = Xamarin.Android.sln
+SOLUTION       = Xamarin.Android.slnx
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
 LOCALIZE_TEMPLATES ?= 0
@@ -70,10 +70,6 @@ endif # $(SKIP_NUNIT_TESTS) == ''
 run-ji-tests:
 	$(call MSBUILD_BINLOG,run-ji-tests,,Test) $(TEST_TARGETS) /t:RunJavaInteropTests
 
-ifneq ($(PACKAGES),)
-APK_TESTS_PROP = /p:ApkTests='"$(PACKAGES)"'
-endif
-
 list-nunit-tests:
 	$(MSBUILD) $(MSBUILD_FLAGS) $(TEST_TARGETS) /t:ListNUnitTests
 
@@ -86,12 +82,6 @@ prepare: install-dotnet
 .PHONY: install-dotnet
 install-dotnet:
 	CONFIGURATION=$(CONFIGURATION) bash ./eng/install-dotnet.sh
-
-APK_SIZES_REFERENCE_DIR=tests/apk-sizes-reference
-
-update-apk-sizes-reference:
-	-mkdir -p $(APK_SIZES_REFERENCE_DIR)
-	cp -v *values-$(CONFIGURATION).csv $(APK_SIZES_REFERENCE_DIR)/
 
 update-api-docs:
 		$(call DOTNET_BINLOG,update-api-docs) -t:UpdateExternalDocumentation src/Mono.Android/Mono.Android.csproj
