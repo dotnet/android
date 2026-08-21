@@ -45,7 +45,11 @@ namespace Java.InteropTests {
 				var second = Task.Run (() => vm.GetPeer (source.PeerReference));
 				Task.WaitAll (first, second);
 
-				Assert.AreEqual (1, vm.CreatePeerCount);
+				// Both callers miss the cache and create a peer -- creation is deliberately
+				// not serialized, because CreatePeer() runs activation constructors. Only one
+				// of them wins registration, and GetPeer() must hand that winner to both.
+				Assert.AreEqual (2, vm.CreatePeerCount);
+				Assert.AreSame (vm.RegisteredPeer, first.Result);
 				Assert.AreSame (first.Result, second.Result);
 			}
 		}
@@ -66,9 +70,13 @@ namespace Java.InteropTests {
 
 			public int CreatePeerCount => createPeerCount;
 
+			public IJavaPeerable RegisteredPeer => Volatile.Read (ref registeredPeer);
+
 			public override IJavaPeerable PeekPeer (JniObjectReference reference)
 			{
 				var peer = Volatile.Read (ref registeredPeer);
+				// Hold both callers at their *first* peek so both are guaranteed to miss
+				// before either one registers a peer.
 				if (Interlocked.Increment (ref peekPeerCount) <= 2 && InitialPeekBarrier != null) {
 					var barrier = InitialPeekBarrier;
 					if (!barrier.SignalAndWait (TimeSpan.FromSeconds (10))) {
@@ -85,7 +93,9 @@ namespace Java.InteropTests {
 					Type targetType)
 			{
 				Interlocked.Increment (ref createPeerCount);
-				var peer = new TestPeer (reference, peerMembers);
+				// Each peer owns its own reference, so discarding the loser cannot
+				// invalidate the winner or the source object.
+				var peer = new TestPeer (reference.NewGlobalRef (), peerMembers);
 				Interlocked.CompareExchange (ref registeredPeer, peer, null);
 				return peer;
 			}

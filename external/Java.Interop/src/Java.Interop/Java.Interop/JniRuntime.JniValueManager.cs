@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Java.Interop
 {
@@ -46,7 +45,6 @@ namespace Java.Interop
 			internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 			JniRuntime?             runtime;
-			readonly Lock           peerCreationLock = new ();
 			bool                    disposed;
 			public      JniRuntime  Runtime {
 				get => runtime ?? throw new NotSupportedException ();
@@ -207,16 +205,24 @@ namespace Java.Interop
 					return existing;
 				}
 
-				lock (peerCreationLock) {
-					// CreatePeer registers the new peer before returning. Check again while
-					// holding the lock so only one caller creates a peer for this reference.
-					existing = PeekPeer (reference);
-					if (IsCompatiblePeer (existing, targetType)) {
-						return existing;
-					}
+				var created = CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
 
-					return CreatePeer (ref reference, JniObjectReferenceOptions.Copy, targetType);
+				// Creating a peer registers it, and registration -- not creation -- decides
+				// which peer is canonical for a given Java instance. Concurrent callers can
+				// therefore each create a peer while only one of them wins registration, so
+				// always hand back the registered winner and discard the loser. Serializing
+				// creation instead is not an option: CreatePeer() runs activation
+				// constructors and Java class loading, so a lock held across it would invert
+				// against Java monitors.
+				var registered = PeekPeer (reference);
+				if (!ReferenceEquals (created, registered) && IsCompatiblePeer (registered, targetType)) {
+					if (created != null) {
+						DisposePeerUnlessReferenced (created);
+					}
+					return registered;
 				}
+
+				return created;
 			}
 
 			static bool IsCompatiblePeer (IJavaPeerable? peer, Type? targetType)
