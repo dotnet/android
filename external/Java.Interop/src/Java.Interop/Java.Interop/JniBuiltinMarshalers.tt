@@ -84,6 +84,11 @@ namespace Java.Interop {
 			if (!type.IsValueType)
 				return false;
 
+			if (type == typeof (Byte?)) {
+				signature = GetCachedTypeSignature (ref __SByteNullableTypeSignature, "java/lang/Byte");
+				return true;
+			}
+
 <#
 	foreach (var type in types) {
 #>
