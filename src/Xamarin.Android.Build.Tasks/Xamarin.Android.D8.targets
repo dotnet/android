@@ -80,6 +80,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         ProguardMappingFileOutput="$(AndroidProguardMappingFile)"
         ProguardConfigurationFiles="@(_ProguardConfiguration)"
         UseTrimmableNativeAotProguardConfiguration="$(_UseTrimmableNativeAotProguardConfiguration)"
+        UseTrimmableCoreClrProguardConfiguration="$(_UseTrimmableCoreClrProguardConfiguration)"
         EnableShrinking="$(_R8EnableShrinking)"
         EnableMultiDex="$(AndroidEnableMultiDex)"
         MultiDexMainDexListFile="$(_AndroidMainDexListFile)"

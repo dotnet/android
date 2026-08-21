@@ -74,7 +74,16 @@ public sealed class RootTypeMapAssemblyGenerator
 	/// <param name="stream">Stream to write the output PE to.</param>
 	/// <param name="assemblyName">Optional assembly name (defaults to _Microsoft.Android.TypeMaps).</param>
 	/// <param name="moduleName">Optional module name for the PE metadata.</param>
-	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null)
+	/// <param name="sharedFrameworkTypeMapNames">
+	/// Names of pre-generated framework per-assembly typemaps (e.g. <c>_Mono.Android.TypeMap</c>,
+	/// produced at SDK build time, issue #10792) that always use <c>Java.Lang.Object</c> as their
+	/// universe anchor regardless of <paramref name="useSharedTypemapUniverse"/>. They are emitted as
+	/// <c>[assembly: TypeMapAssemblyTarget&lt;Java.Lang.Object&gt;("name")]</c> so the runtime loads
+	/// them into the <c>Java.Lang.Object</c> universe: in shared mode they merge into the single
+	/// app universe; in aggregate mode the loader adds the <c>Java.Lang.Object</c> universe alongside
+	/// the app's per-assembly universes.
+	/// </param>
+	public void Generate (IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, Stream stream, string? assemblyName = null, string? moduleName = null, IReadOnlyList<string>? sharedFrameworkTypeMapNames = null)
 	{
 		if (perAssemblyTypeMapNames is null) {
 			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
@@ -118,9 +127,20 @@ public sealed class RootTypeMapAssemblyGenerator
 			EmitPerAssemblyUniverseAssemblyTargetAttributes (pe, perAssemblyTypeMapNames);
 		}
 
+		// Pre-generated framework typemaps (e.g. _Mono.Android.TypeMap) always live in the
+		// Java.Lang.Object universe, so reference them under that anchor regardless of mode.
+		var sharedFrameworkNames = sharedFrameworkTypeMapNames;
+		bool hasSharedFrameworkUniverse = sharedFrameworkNames is { Count: > 0 };
+		if (sharedFrameworkNames is { Count: > 0 }) {
+			var javaLangObjectHandle = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+				pe.Metadata.GetOrAddString ("Java.Lang"),
+				pe.Metadata.GetOrAddString ("Object"));
+			EmitSharedUniverseAssemblyTargetAttributes (pe, javaLangObjectHandle, sharedFrameworkNames);
+		}
+
 		// Emit [assembly: IgnoresAccessChecksTo("...")] so TypeMapLoader.Initialize() can access
 		// internal types (TrimmableTypeMap and friends in Mono.Android, and private anchors
-		// in each per-assembly typemap DLL when aggregate universes or array maps are used).
+		// in each per-assembly typemap DLL when aggregate universes are used).
 		var accessTargets = new List<string> { "Mono.Android" };
 		if (!useSharedTypemapUniverse) {
 			accessTargets.AddRange (perAssemblyTypeMapNames);
@@ -128,7 +148,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.EmitIgnoresAccessChecksToAttribute (accessTargets);
 
 		// Emit TypeMapLoader class with Initialize() method
-		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName);
+		EmitTypeMapLoader (pe, anchorTypeHandle, perAssemblyTypeMapNames, useSharedTypemapUniverse, assemblyName, hasSharedFrameworkUniverse);
 
 		pe.WritePE (stream);
 	}
@@ -176,7 +196,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blobHandle);
 	}
 
-	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, string assemblyName)
+	static void EmitTypeMapLoader (PEAssemblyBuilder pe, EntityHandle anchorTypeHandle, IReadOnlyList<string> perAssemblyTypeMapNames, bool useSharedTypemapUniverse, string assemblyName, bool hasSharedFrameworkUniverse = false)
 	{
 		var metadata = pe.Metadata;
 
@@ -214,13 +234,16 @@ public sealed class RootTypeMapAssemblyGenerator
 		var externalDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: true);
 
 		if (useSharedTypemapUniverse) {
+			// Single Java.Lang.Object universe. Pre-generated framework typemaps (if any) also
+			// anchor on Java.Lang.Object, so GetOrCreateExternalTypeMapping<Java.Lang.Object>()
+			// already merges them in via their TypeMapAssemblyTarget attributes — no extra universe.
 			var initializeRef = AddInitializeSingleNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 			EmitInitializeWithSingleTypeMapNoArrays (pe, anchorTypeHandle, getExternalMemberRef, getProxyMemberRef, initializeRef, assemblyName);
 		} else {
 			var proxyDictTypeSpec = MakeIReadOnlyDictTypeSpec (pe, iReadOnlyDictOpenRef, systemTypeRef, keyIsString: false);
 			var initializeRef = AddInitializeAggregateNoArraysRef (pe, trimmableTypeMapRef, iReadOnlyDictOpenRef, systemTypeRef);
 			EmitInitializeWithAggregateTypeMapNoArrays (pe, perAssemblyTypeMapNames, getExternalMemberRef, getProxyMemberRef,
-				initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName);
+				initializeRef, externalDictTypeSpec, proxyDictTypeSpec, iReadOnlyDictOpenRef, systemTypeRef, assemblyName, hasSharedFrameworkUniverse);
 		}
 	}
 
@@ -251,18 +274,30 @@ public sealed class RootTypeMapAssemblyGenerator
 		MemberReferenceHandle initializeRef,
 		TypeSpecificationHandle externalDictTypeSpec, TypeSpecificationHandle proxyDictTypeSpec,
 		TypeReferenceHandle iReadOnlyDictOpenRef, TypeReferenceHandle systemTypeRef,
-		string assemblyName)
+		string assemblyName,
+		bool hasSharedFrameworkUniverse = false)
 	{
-		var count = perAssemblyTypeMapNames.Count;
+		// When a pre-generated framework typemap is present (e.g. _Mono.Android.TypeMap), it lives in
+		// the Java.Lang.Object universe. Emit it as universe [0] (via
+		// GetOrCreate*TypeMapping<Java.Lang.Object>()), followed by the app's per-assembly universes.
+		var count = perAssemblyTypeMapNames.Count + (hasSharedFrameworkUniverse ? 1 : 0);
 
 		var getExternalSpecs = new EntityHandle [count];
 		var getProxySpecs = new EntityHandle [count];
-		for (int i = 0; i < count; i++) {
+		int offset = 0;
+		if (hasSharedFrameworkUniverse) {
+			var javaLangObjectRef = pe.Metadata.AddTypeReference (pe.MonoAndroidRef,
+				pe.Metadata.GetOrAddString ("Java.Lang"), pe.Metadata.GetOrAddString ("Object"));
+			getExternalSpecs [0] = MakeGenericMethodSpec (pe, getExternalMemberRef, javaLangObjectRef);
+			getProxySpecs [0] = MakeGenericMethodSpec (pe, getProxyMemberRef, javaLangObjectRef);
+			offset = 1;
+		}
+		for (int i = 0; i < perAssemblyTypeMapNames.Count; i++) {
 			var asmRef = pe.FindOrAddAssemblyRef (perAssemblyTypeMapNames [i]);
 			var perAsmAnchorRef = pe.Metadata.AddTypeReference (asmRef,
 				default, pe.Metadata.GetOrAddString ("__TypeMapAnchor"));
-			getExternalSpecs [i] = MakeGenericMethodSpec (pe, getExternalMemberRef, perAsmAnchorRef);
-			getProxySpecs [i] = MakeGenericMethodSpec (pe, getProxyMemberRef, perAsmAnchorRef);
+			getExternalSpecs [offset + i] = MakeGenericMethodSpec (pe, getExternalMemberRef, perAsmAnchorRef);
+			getProxySpecs [offset + i] = MakeGenericMethodSpec (pe, getProxyMemberRef, perAsmAnchorRef);
 		}
 
 		pe.EmitBody ("Initialize",

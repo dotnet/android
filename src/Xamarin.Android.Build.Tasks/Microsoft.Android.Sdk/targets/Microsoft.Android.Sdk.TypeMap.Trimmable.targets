@@ -67,6 +67,31 @@
     </IncrementalCleanDependsOn>
   </PropertyGroup>
 
+  <!-- Pre-generated Mono.Android typemap shipped in the SDK pack (issue #10792). Debug builds use
+       per-assembly typemap universes, so they can skip scanning Mono.Android (its ~8000 types) and
+       reference the pre-built _Mono.Android.TypeMap.dll. Release builds require a shared universe:
+       alias ownership must be computed across the complete app closure and therefore cannot use a
+       framework-only pre-generated map. -->
+  <PropertyGroup>
+    <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
+    <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
+    <_PreGeneratedJavaInteropTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Java.Interop.TypeMap.dll</_PreGeneratedJavaInteropTypeMapAssembly>
+    <_PreGeneratedMonoAndroidTypeMapJar>$(_PreGeneratedTypeMapDir)mono.android-typemaps.jar</_PreGeneratedMonoAndroidTypeMapJar>
+    <_PreGeneratedMonoAndroidTypeMapAcwMap>$(_PreGeneratedTypeMapDir)mono.android-acw-map.txt</_PreGeneratedMonoAndroidTypeMapAcwMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and '$(AndroidIncludeDebugSymbols)' == 'true' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') and Exists('$(_PreGeneratedJavaInteropTypeMapAssembly)') and Exists('$(_PreGeneratedMonoAndroidTypeMapJar)') and Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>
+    <!-- ACW map fed to the R8/proguard keep-rule generation. Normally this is the app's own
+         acw-map.txt. When the pre-generated Mono.Android typemap is used, Mono.Android is excluded
+         from the app scan, so its ACW entries are absent from acw-map.txt; the keep rules must
+         instead read a merge of the app map and the pre-built mono.android-acw-map.txt. We write
+         that merge to a SEPARATE file (rather than appending to acw-map.txt) so the app's acw-map.txt
+         stays byte-stable across builds and its own incremental checks keep working. -->
+    <_TrimmableTypeMapKeepRulesAcwMapFile>$(IntermediateOutputPath)acw-map.txt</_TrimmableTypeMapKeepRulesAcwMapFile>
+    <_TrimmableTypeMapKeepRulesAcwMapFile Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">$(IntermediateOutputPath)acw-map.prebuilt-merged.txt</_TrimmableTypeMapKeepRulesAcwMapFile>
+  </PropertyGroup>
+
   <!-- Compile the generator's Java Callable Wrappers in place from their output directory
        instead of copying every .java into android/src (which was hundreds of per-file copies).
        This is a static ItemGroup so the directory is registered even on incremental builds where
@@ -142,12 +167,23 @@
       <!-- Library (.aar) manifests to merge into the app manifest. Only on the legacy manifest
            merger path; manifestmerger.jar merges these downstream in the _ManifestMerger target. -->
       <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
+
+      <!-- When a pre-generated framework typemap set is shipped, index Mono.Android and Java.Interop
+           for resolution but don't rescan them: pass them as pre-generated assemblies so the generated
+           root references the shipped _Mono.Android.TypeMap / _Java.Interop.TypeMap under
+           Java.Lang.Object instead. Both are pre-generated together so their cross-assembly aliases
+           (e.g. java/lang/Object) are coordinated rather than colliding in the merged universe. -->
+      <_PreGeneratedTypeMapAssemblyInput Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' "
+          Include="@(_TypeMapInputAssemblies)" KeepDuplicates="false" />
+      <_PreGeneratedTypeMapAssemblyInput Remove="@(_PreGeneratedTypeMapAssemblyInput)"
+          Condition=" '%(Filename)' != 'Mono.Android' and '%(Filename)' != 'Java.Interop' " />
     </ItemGroup>
 
     <GenerateTrimmableTypeMap
         ResolvedAssemblies="@(_TypeMapInputAssemblies)"
         ResolvedFrameworkAssemblies="@(_TypeMapFrameworkAssemblies)"
         FrameworkAssemblyNames="@(_TypeMapFrameworkAssemblies->'%(Filename)')"
+        PreGeneratedTypeMapAssemblies="@(_PreGeneratedTypeMapAssemblyInput)"
         OutputDirectory="$(_TypeMapOutputDirectory)"
         JavaSourceOutputDirectory="$(_TypeMapJavaOutputDirectory)"
         TargetFrameworkVersion="$(TargetFrameworkVersion)"
@@ -227,7 +263,20 @@
     <ReadLinesFromFile File="$(_TypeMapAssembliesListFile)">
       <Output TaskParameter="Lines" ItemName="_GeneratedTypeMapAssembliesFromList" />
     </ReadLinesFromFile>
+    <!-- Include the pre-generated framework typemaps (Mono.Android + Java.Interop) so they are
+         linked/published and loadable at runtime (the generated root references them via
+         TypeMapAssemblyTarget<Java.Lang.Object>). -->
+    <ItemGroup Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
+      <_GeneratedTypeMapAssembliesFromList Include="$(_PreGeneratedTypeMapDir)*.TypeMap.dll" />
+    </ItemGroup>
   </Target>
+
+  <!-- Dex the pre-compiled trimmable Mono.Android JCWs instead of regenerating them per app.
+       Libraries must not embed this SDK-wide jar in their AAR: the consuming application either
+       adds it itself for a pre-generated Debug typemap or generates its own Release wrappers. -->
+  <ItemGroup Condition=" '$(AndroidApplication)' == 'true' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
+    <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidTypeMapJar)" />
+  </ItemGroup>
 
   <!--
     The TypeMap generator has dynamic outputs: the set of generated assemblies
