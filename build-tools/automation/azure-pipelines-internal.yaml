@@ -65,7 +65,7 @@ variables:
   value: 'false'
 # Override for internal pipeline
 - name: DefaultJavaSdkMajorVersion
-  value: 21
+  value: 25
 # Override pool images for internal (non-"-open") dnceng agents.
 # Confirm these pool/image names exist in the dnceng/internal project.
 # Match the public pipeline's Mac image (Apple Silicon). Using the x64

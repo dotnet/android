@@ -61,9 +61,9 @@ variables:
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
   value: 35,36,36.1,37.0,37.1
 - name: DefaultJavaSdkMajorVersion
-  value: 17
-- name: LatestJavaSdkMajorVersion
   value: 21
+- name: LatestJavaSdkMajorVersion
+  value: 25
 - name: ExcludedNightlyNUnitCategories
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob

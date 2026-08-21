@@ -33,7 +33,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClassName = 'com.microsoft.android.App'
+    mainClass = 'com.microsoft.android.App'
 }
 
 jar {
