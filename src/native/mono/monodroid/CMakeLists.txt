@@ -105,7 +105,6 @@ set(XAMARIN_MONODROID_SOURCES
   osbridge.cc
   runtime-environment.cc
   runtime-util.cc
-  timezones.cc
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES
