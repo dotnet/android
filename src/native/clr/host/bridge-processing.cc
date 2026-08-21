@@ -115,7 +115,14 @@ void BridgeProcessing::prepare_scc_for_java_collection (size_t scc_index, const 
 {
 	// Count == 0 case: Some SCCs might have no IGCUserPeers associated with them, so we must create one
 	if (scc.Count == 0) {
-		temporary_peers [scc_index] = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		jobject temporary_peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
+		if (temporary_peer == nullptr) [[unlikely]] {
+			constexpr std::string_view failure = "Failed to create a temporary peer during GC bridge processing"sv;
+			abort_on_pending_java_exception (failure);
+			Helpers::abort_application (LOG_GC, failure);
+		}
+
+		temporary_peers [scc_index] = temporary_peer;
 		return;
 	}
 
