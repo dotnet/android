@@ -299,10 +299,10 @@
   <!--
     Extract every downloaded package into its destination.
 
-      * Windows: `UnzipDirectoryChildren` (LibZipSharp) - bsdtar on Windows
+      * Windows: `UnzipDirectoryChildren` (System.IO.Compression) - bsdtar on Windows
         refuses to extract through symlinks, and `C:\Android\android-sdk`
         on the CI image is a junction, so `tar -xf` fails there. The
-        Windows SDK zips have no symlinks of their own, so LibZipSharp is
+        Windows SDK zips have no symlinks of their own, so the managed unzip task is
         fine. `NoSubdirectory=false` (the default) strips the single
         top-level directory; `NoSubdirectory=true` extracts as-is.
       * Unix (Linux + macOS): `unzip` into a sibling `.staging` directory
@@ -330,7 +330,7 @@
     </PropertyGroup>
     <RemoveDir Directories="$(_DestDir);$(_StagingDir)" />
     <MakeDir Directories="$(_DestDir)" />
-    <!-- Windows: LibZipSharp via UnzipDirectoryChildren BootstrapTask. -->
+    <!-- Windows: managed unzip via UnzipDirectoryChildren BootstrapTask. -->
     <UnzipDirectoryChildren
         Condition=" '$(HostOS)' == 'Windows' "
         SourceFiles="$(_ZipPath)"
@@ -338,7 +338,7 @@
         NoSubdirectory="$(_NoSubdirectory)"
     />
     <!--
-      Unix: `unzip` (preserves symlinks; LibZipSharp does not, which the NDK needs)
+      Unix: `unzip` (preserves symlinks; the managed unzip task does not, which the NDK needs)
       into a sibling .staging directory, then `<Move/>` every file into
       $(_DestDir). When StripComponents=1, glob from inside the single
       top-level directory of the zip so that `%(RecursiveDir)` already excludes

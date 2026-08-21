@@ -3,13 +3,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
+using System.IO.Compression;
+using System.IO.Hashing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using Xamarin.Tools.Zip;
 using Microsoft.Build.Utilities;
 using System.Threading;
 using System.Runtime.InteropServices;
@@ -401,49 +401,42 @@ namespace Microsoft.Android.Build.Tasks
 
 		static string? HashZip (Stream stream)
 		{
-			string hashes = String.Empty;
+			var hashes = new StringBuilder ();
 
 			try {
-				using (var zip = ZipArchive.Open (stream)) {
-					foreach (var item in zip) {
-						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
-					}
-				}
+				ZipArchiveMetadataReader.AppendHashInput (stream, hashes);
 			} catch {
 				return null;
 			}
-			return hashes;
+			return hashes.ToString ();
 		}
 
 		static string? HashZip (string filename)
 		{
-			string hashes = String.Empty;
+			var hashes = new StringBuilder ();
 
 			try {
 				// check cache
 				if (File.Exists (filename + ".hash"))
 					return File.ReadAllText (filename + ".hash");
 
-				using (var zip = ReadZipFile (filename)) {
-					foreach (var item in zip) {
-						hashes += String.Format (CultureInfo.InvariantCulture, "{0}{1}", item.FullName, item.CRC);
-					}
-				}
+				using var stream = File.OpenRead (filename);
+				ZipArchiveMetadataReader.AppendHashInput (stream, hashes);
 			} catch {
 				return null;
 			}
-			return hashes;
+			return hashes.ToString ();
 		}
 
 		public static ZipArchive ReadZipFile (string filename, bool strictConsistencyChecks = false)
 		{
-			return ZipArchive.Open (filename, FileMode.Open, strictConsistencyChecks: strictConsistencyChecks);
+			return ZipArchiveExtensions.OpenZipRead (filename);
 		}
 
-		public static bool ZipAny (string filename, Func<ZipEntry, bool> filter)
+		public static bool ZipAny (string filename, Func<ZipArchiveEntry, bool> filter)
 		{
 			using (var zip = ReadZipFile (filename)) {
-				return zip.Any (filter);
+				return zip.Entries.Any (filter);
 			}
 		}
 
@@ -458,15 +451,15 @@ namespace Microsoft.Android.Build.Tasks
 			Func<string, bool>? deleteCallback = null, Func<string, bool>? skipCallback = null, TaskLoggingHelper? log = null)
 		{
 			int i = 0;
-			int total = (int)zip.EntryCount;
+			int total = zip.Entries.Count;
 			bool updated = false;
 			var files = new HashSet<string> ();
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
 			var fullDestination = Path.GetFullPath (destination + Path.DirectorySeparatorChar);
 			try {
-				foreach (var entry in zip) {
+				foreach (var entry in zip.Entries) {
 					progressCallback?.Invoke (i++, total);
-					if (entry.IsDirectory)
+					if (entry.IsDirectory ())
 						continue;
 					if (entry.FullName.Contains ("/__MACOSX/") ||
 							entry.FullName.EndsWith ("/__MACOSX", StringComparison.OrdinalIgnoreCase) ||

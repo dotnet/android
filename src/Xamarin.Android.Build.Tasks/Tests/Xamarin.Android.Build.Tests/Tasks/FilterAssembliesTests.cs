@@ -2,11 +2,11 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests
@@ -52,11 +52,11 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var assemblies = new List<string> ();
 			var nuget = await DownloadFromNuGet (url, filename);
-			using (var zip = ZipArchive.Open (nuget, FileMode.Open)) {
-				foreach (var entry in zip) {
+			using (var zip = ZipFile.OpenRead (nuget)) {
+				foreach (var entry in zip.Entries) {
 					if (entry.FullName.StartsWith (path, StringComparison.OrdinalIgnoreCase) &&
 						entry.FullName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
-						var temp = Path.Combine (tempDirectory, Path.GetFileName (entry.NativeFullName));
+						var temp = Path.Combine (tempDirectory, Path.GetFileName (entry.FullName));
 						assemblies.Add (temp);
 						using (var fileStream = File.Create (temp)) {
 							entry.Extract (fileStream);

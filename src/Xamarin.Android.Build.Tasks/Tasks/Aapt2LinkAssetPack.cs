@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Xml;
@@ -42,11 +43,15 @@ namespace Xamarin.Android.Tasks {
 			ProcessOutput ();
 			if (File.Exists (OutputArchive.ItemSpec)) {
 				// move the manifest to the right place.
-				using (var zip = new ZipArchiveEx (OutputArchive.ItemSpec, File.Exists (OutputArchive.ItemSpec) ? FileMode.Open : FileMode.Create)) {
-					zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml");
-					zip.Archive.DeleteEntry ("resources.pb");
-					// Fix up aapt2 not dealing with '\' in subdirectories for assets.
-					zip.FixupWindowsPathSeparators ((a, b) => LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
+				using (var zip = ZipArchiveExtensions.OpenZipUpdate (OutputArchive.ItemSpec, FileMode.Open)) {
+					// BundleConfig.pb controls compression in the final APK, so this intermediate
+					// asset-pack archive does not need stored entries.
+					zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml", CompressionLevel.Optimal);
+					zip.ReadEntry ("resources.pb", StringComparison.Ordinal)?.Delete ();
+					zip.FixupWindowsPathSeparators (
+						_ => CompressionLevel.Optimal,
+						(a, b) => LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`")
+					);
 				}
 			}
 			await System.Threading.Tasks.Task.CompletedTask;

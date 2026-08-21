@@ -2,12 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Tasks;
 
@@ -71,9 +71,9 @@ public class CollectJarContentFilesForArchive : AndroidTask
 
 		foreach (var jarFile in jarFilePaths) {
 			using (var stream = File.OpenRead (jarFile))
-			using (var jar = ZipArchive.Open (stream)) {
-				foreach (var jarItem in jar) {
-					if (jarItem.IsDirectory)
+			using (var jar = ZipArchiveExtensions.OpenZip (stream, ZipArchiveMode.Read, leaveOpen: false)) {
+				foreach (var jarItem in jar.Entries) {
+					if (jarItem.IsDirectory ())
 						continue;
 					var name = jarItem.FullName;
 					if (!PackagingUtils.CheckEntryForPackaging (name)) {

@@ -3,11 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -47,13 +47,7 @@ namespace Xamarin.Android.Tasks
 			}
 			Directory.CreateDirectory (Path.GetDirectoryName (OutputFile));
 
-			using (var stream = File.Create (OutputFile))
-			using (var aar = ZipArchive.Open (stream)) {
-				var existingEntries = new HashSet<string> (StringComparer.Ordinal);
-				foreach (var entry in aar) {
-					Log.LogDebugMessage ("Existing entry: " + entry.FullName);
-					existingEntries.Add (entry.FullName);
-				}
+			using (var aar = ZipArchiveExtensions.CreateZip (OutputFile)) {
 				if (AndroidAssets != null) {
 					foreach (var asset in AndroidAssets) {
 						// See: https://github.com/xamarin/xamarin-android/commit/665cb59205f8ac565b6acbda740624844bc1cbd9
@@ -63,8 +57,8 @@ namespace Xamarin.Android.Tasks
 						}
 						var relative = MonoAndroidHelper.GetRelativePathForAndroidAsset (AssetDirectory, asset);
 						var archivePath = "assets/" + relative.Replace ('\\', '/');
-						aar.AddStream (File.OpenRead (asset.ItemSpec), archivePath);
-						existingEntries.Remove (archivePath);
+						using var input = File.OpenRead (asset.ItemSpec);
+						aar.AddStream (input, archivePath);
 					}
 				}
 				if (AndroidResources != null) {
@@ -78,24 +72,22 @@ namespace Xamarin.Android.Tasks
 						var directory = Path.GetDirectoryName (resource.ItemSpec);
 						var resourcePath = Path.GetFileName (directory) + "/" + Path.GetFileName (resource.ItemSpec);
 						var archivePath = "res/" + resourcePath;
-						aar.AddStream (File.OpenRead (resource.ItemSpec), archivePath);
-						existingEntries.Remove (archivePath);
+						using var input = File.OpenRead (resource.ItemSpec);
+						aar.AddStream (input, archivePath);
 
 						nameCaseMap.Append (resource.GetMetadata ("LogicalName").Replace ('\\', '/'));
 						nameCaseMap.Append (';');
 						nameCaseMap.AppendLine (resourcePath);
 					}
 					if (nameCaseMap.Length > 0) {
-						var archivePath = ".net/__res_name_case_map.txt";
-						aar.AddEntry (archivePath, nameCaseMap.ToString (), Files.UTF8withoutBOM);
-						existingEntries.Remove (archivePath);
+						aar.AddEntry (".net/__res_name_case_map.txt", nameCaseMap.ToString (), Files.UTF8withoutBOM);
 					}
 				}
 				if (AndroidEnvironment != null) {
 					foreach (var env in AndroidEnvironment) {
 						var archivePath = $".net/env/{GetHashedFileName (env)}.env";
-						aar.AddStream (File.OpenRead (env.ItemSpec), archivePath);
-						existingEntries.Remove (archivePath);
+						using var input = File.OpenRead (env.ItemSpec);
+						aar.AddStream (input, archivePath);
 					}
 				}
 				if (JarFiles != null) {
@@ -106,8 +98,8 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						var archivePath = $"libs/{GetHashedFileName (jar)}.jar";
-						aar.AddStream (File.OpenRead (jar.ItemSpec), archivePath);
-						existingEntries.Remove (archivePath);
+						using var input = File.OpenRead (jar.ItemSpec);
+						aar.AddStream (input, archivePath);
 					}
 				}
 				if (NativeLibraries != null) {
@@ -118,8 +110,8 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						var archivePath = "jni/" + abi + "/" + Path.GetFileName (lib.ItemSpec);
-						aar.AddStream (File.OpenRead (lib.ItemSpec), archivePath);
-						existingEntries.Remove (archivePath);
+						using var input = File.OpenRead (lib.ItemSpec);
+						aar.AddStream (input, archivePath);
 					}
 				}
 				if (ProguardConfigurationFiles != null) {
@@ -137,10 +129,6 @@ namespace Xamarin.Android.Tasks
 					} else {
 						Log.LogDebugMessage ($"Skipping {AndroidManifest.ItemSpec}. The `manifest` does not have a `package` attribute.");
 					}
-				}
-				foreach (var entry in existingEntries) {
-					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
-					aar.DeleteEntry (entry);
 				}
 			}
 

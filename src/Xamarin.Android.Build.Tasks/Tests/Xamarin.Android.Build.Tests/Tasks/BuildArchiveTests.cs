@@ -2,14 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
-using Xamarin.Tools.Zip;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -30,7 +30,7 @@ public class BuildArchiveTests
 	[TearDown]
 	public void TearDown ()
 	{
-		if (!tempDirectory.IsNullOrEmpty () && Directory.Exists (tempDirectory))
+		if (!string.IsNullOrEmpty (tempDirectory) && Directory.Exists (tempDirectory))
 			Directory.Delete (tempDirectory, recursive: true);
 	}
 
@@ -62,7 +62,7 @@ public class BuildArchiveTests
 				Assert.AreEqual (previousSnapshot, snapshot, $"build {build} should match the previous unchanged build");
 			previousSnapshot = snapshot;
 
-			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
+			using (var archive = ZipFile.OpenRead (apk)) {
 				archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
 				archive.AssertDoesNotContainEntry (apk, "stale.txt");
 			}
@@ -93,7 +93,7 @@ public class BuildArchiveTests
 
 		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Skipping commonMain/default/manifest from {jar} as it is up to date."));
 
-		using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
+		using (var archive = ZipFile.OpenRead (apk)) {
 			archive.AssertEntryContents (apk, "commonMain/default/manifest", "current");
 		}
 	}
@@ -127,7 +127,7 @@ public class BuildArchiveTests
 
 		Assert.That (messages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ("Failed to add jar entry commonMain/default/manifest from second.jar: the same file already exists in the apk"));
 
-		using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
+		using (var archive = ZipFile.OpenRead (apk)) {
 			archive.AssertEntryContents (apk, "commonMain/default/manifest", "first");
 			archive.AssertDoesNotContainEntry (apk, "stale.txt");
 		}
@@ -159,31 +159,170 @@ public class BuildArchiveTests
 
 		// The entry should be removed. If the APK itself no longer exists, all entries were cleared (also satisfies the assertion).
 		if (File.Exists (apk)) {
-			using (var archive = ZipArchive.Open (apk, FileMode.Open)) {
+			using (var archive = ZipFile.OpenRead (apk)) {
 				archive.AssertDoesNotContainEntry (apk, "commonMain/default/manifest");
+			}
+		}
+	}
+
+	[Test]
+	public void StoredBundleManifestRelocationPreservesCompressionMethod ()
+	{
+		var bundle = Path.Combine (TempDirectory, "app.aab");
+
+		CreateArchive (bundle, ("AndroidManifest.xml", "manifest", CompressionLevel.NoCompression));
+
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			AndroidPackageFormat = "aab",
+			ApkOutputPath = bundle,
+			FilesToAddToArchive = [],
+		};
+
+		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+
+		using var archive = ZipFile.OpenRead (bundle);
+		Assert.IsNull (archive.GetEntry ("AndroidManifest.xml"), "Original manifest entry should be moved.");
+		var manifest = archive.GetEntry ("manifest/AndroidManifest.xml") ?? throw new InvalidDataException ("Moved manifest entry is missing.");
+		Assert.AreEqual (ZipCompressionMethod.Stored, manifest.CompressionMethod, "Moved manifest should stay stored.");
+	}
+
+	[Test]
+	public void ZeroByteStoredFileStabilizesAcrossBuilds ()
+	{
+		var apk = Path.Combine (TempDirectory, "app.apk");
+		var emptyFile = Path.Combine (TempDirectory, "empty.dat");
+		File.WriteAllBytes (emptyFile, []);
+
+		var item = new TaskItem (emptyFile);
+		item.SetMetadata ("ArchivePath", "empty.dat");
+		var secondRunMessages = new List<BuildMessageEventArgs> ();
+
+		var firstRun = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = [item],
+			UncompressedFileExtensions = ".dat",
+		};
+		Assert.IsTrue (firstRun.RunTask (), "first build should have succeeded");
+
+		var firstSnapshot = GetArchiveSnapshot (apk);
+		Assert.AreEqual (ZipCompressionMethod.Stored, GetCompressionMethod (apk, "empty.dat"), "Entry should be stored.");
+
+		var secondRun = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out, messages: secondRunMessages),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = [item],
+			UncompressedFileExtensions = ".dat",
+		};
+		Assert.IsTrue (secondRun.RunTask (), "second build should have succeeded");
+
+		var secondSnapshot = GetArchiveSnapshot (apk);
+		Assert.AreEqual (firstSnapshot, secondSnapshot, "Archive contents should be stable across unchanged builds.");
+		Assert.That (secondRunMessages, Has.Some.Property (nameof (BuildMessageEventArgs.Message)).EqualTo ($"Skipping {emptyFile} as the archive file is up to date."));
+	}
+
+	[Test]
+	public void MissingArchivePathUsesCodedError ()
+	{
+		var errors = new List<BuildErrorEventArgs> ();
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			ApkOutputPath = Path.Combine (TempDirectory, "app.apk"),
+			FilesToAddToArchive = [new TaskItem ("file.txt")],
+		};
+
+		Assert.IsFalse (task.RunTask (), "task should have failed");
+		Assert.That (errors, Has.One.Property (nameof (BuildErrorEventArgs.Code)).EqualTo ("XA4234"));
+	}
+
+	[Test]
+	public void ArchiveRootDirectoryProvidesRelativeEntryPath ()
+	{
+		var root = Path.Combine (TempDirectory, "classes");
+		var classDirectory = Path.Combine (root, "com", "example");
+		var classFile = Path.Combine (classDirectory, "Main.class");
+		Directory.CreateDirectory (classDirectory);
+		File.WriteAllText (classFile, "class");
+
+		var apk = Path.Combine (TempDirectory, "classes.zip");
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			ArchiveRootDirectory = root,
+			FilesToAddToArchive = [new TaskItem (classFile)],
+			UncompressedFileExtensions = ".class",
+		};
+
+		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+		using var archive = ZipFile.OpenRead (apk);
+		archive.AssertEntryContents (apk, "com/example/Main.class", "class");
+		Assert.AreEqual (ZipCompressionMethod.Stored, GetCompressionMethod (apk, "com/example/Main.class"));
+	}
+
+	[Test]
+	public void FlushesArchiveUpdates ()
+	{
+		var firstFile = Path.Combine (TempDirectory, "first.txt");
+		var secondFile = Path.Combine (TempDirectory, "second.txt");
+		File.WriteAllText (firstFile, "first");
+		File.WriteAllText (secondFile, "second");
+
+		var firstItem = new TaskItem (firstFile);
+		firstItem.SetMetadata ("ArchivePath", "first.txt");
+		var secondItem = new TaskItem (secondFile);
+		secondItem.SetMetadata ("ArchivePath", "second.txt");
+
+		var apk = Path.Combine (TempDirectory, "app.apk");
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = [firstItem, secondItem],
+			ZipFlushFilesLimit = "1",
+		};
+
+		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+		using var archive = ZipFile.OpenRead (apk);
+		archive.AssertEntryContents (apk, "first.txt", "first");
+		archive.AssertEntryContents (apk, "second.txt", "second");
+	}
+
+	static void CreateArchive (string path, params (string name, string contents, CompressionLevel compressionLevel) [] entries)
+	{
+		using (var stream = new FileStream (path, FileMode.Create, FileAccess.ReadWrite))
+		using (var archive = new ZipArchive (stream, ZipArchiveMode.Create)) {
+			foreach (var entry in entries) {
+				var zipEntry = archive.CreateEntry (entry.name, entry.compressionLevel);
+				using (var writer = new StreamWriter (zipEntry.Open (), Encoding.UTF8)) {
+					writer.Write (entry.contents);
+				}
 			}
 		}
 	}
 
 	static void CreateArchive (string path, params (string name, string contents) [] entries)
 	{
-		using (var stream = File.Create (path))
-		using (var archive = ZipArchive.Create (stream)) {
-			foreach (var entry in entries) {
-				archive.AddEntry (entry.name, entry.contents, encoding: Encoding.UTF8);
-			}
-		}
+		CreateArchive (path, entries.Select (entry => (entry.name, entry.contents, CompressionLevel.Optimal)).ToArray ());
 	}
 
 	static string GetArchiveSnapshot (string path)
 	{
-		using var archive = ZipArchive.Open (path, FileMode.Open);
-		return string.Join ("\n", archive
+		using var archive = ZipFile.OpenRead (path);
+		return string.Join ("\n", archive.Entries
 			.OrderBy (entry => entry.FullName, StringComparer.Ordinal)
 			.Select (entry => {
 				using var stream = new MemoryStream ();
-				entry.Extract (stream);
+				using (var entryStream = entry.Open ()) {
+					entryStream.CopyTo (stream);
+				}
 				return $"{entry.FullName}:{Convert.ToBase64String (stream.ToArray ())}";
 			}));
+	}
+
+	static ZipCompressionMethod GetCompressionMethod (string archivePath, string entryName)
+	{
+		using var archive = ZipFile.OpenRead (archivePath);
+		var entry = archive.GetEntry (entryName) ?? throw new InvalidDataException ($"Entry '{entryName}' is missing from '{archivePath}'.");
+		return entry.CompressionMethod;
 	}
 }

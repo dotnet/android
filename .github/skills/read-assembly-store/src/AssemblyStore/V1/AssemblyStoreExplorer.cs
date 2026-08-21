@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
+using Xamarin.Android.AssemblyStore;
 
 namespace Xamarin.Android.AssemblyStore.V1
 {
@@ -215,20 +215,20 @@ namespace Xamarin.Android.AssemblyStore.V1
 			}
 
 			basePathInArchive = $"{basePathInArchive}/{baseName}.";
-			using (ZipArchive archive = ZipArchive.Open (archivePath, FileMode.Open)) {
+			using (ZipArchive archive = Utils.OpenZip (archivePath)) {
 				ReadStoreSetFromArchive (archive, basePathInArchive);
 			}
 		}
 
 		void ReadStoreSetFromArchive (ZipArchive archive, string basePathInArchive)
 		{
-			foreach (ZipEntry entry in archive) {
+			foreach (var entry in archive.Entries) {
 				if (!entry.FullName.StartsWith (basePathInArchive, StringComparison.Ordinal)) {
 					continue;
 				}
 
 				using (var stream = new MemoryStream ()) {
-					entry.Extract (stream);
+					Utils.Extract (entry, stream);
 
 					if (entry.FullName.EndsWith (".blob", StringComparison.Ordinal)) {
 						AddStore (new AssemblyStoreReader (stream, GetStoreArch (entry.FullName), keepStoreInMemory));

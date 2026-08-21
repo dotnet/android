@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -672,8 +673,8 @@ namespace Xamarin.Android.Build.Tests
 
 				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-				using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
-				Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+				using var zip = System.IO.Compression.ZipFile.OpenRead (aarPath);
+				Assert.IsFalse (zip.Entries.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
 					$"{aarPath} should not contain a .jar file!");
 			}
 		}
@@ -1458,6 +1459,11 @@ namespace UnamedProject
 
 				var classesZipPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.zip");
 				FileAssert.Exists (classesZipPath);
+				using (var classesZip = ZipFile.OpenRead (classesZipPath)) {
+					foreach (var entry in classesZip.Entries) {
+						Assert.AreEqual (ZipCompressionMethod.Stored, entry.CompressionMethod, $"{entry.FullName} should be stored.");
+					}
+				}
 				var expectedBuilder = new StringBuilder ();
 				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
 					foreach (var file in zip) {

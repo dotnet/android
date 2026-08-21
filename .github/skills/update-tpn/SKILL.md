@@ -82,7 +82,6 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 |---------|------------|-------------|
 | ELFSharp | KonradKuczynski/ELFSharp | https://elfsharp.it/ (MIT + LLVM) |
 | K4os.Compression.LZ4 | MiloszKrajewski/K4os.Compression.LZ4 | https://github.com/MiloszKrajewski/K4os.Compression.LZ4/ (MIT) |
-| Xamarin.LibZipSharp | xamarin/LibZipSharp | https://github.com/xamarin/LibZipSharp/ (MIT) |
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
 | Newtonsoft.Json | JamesNK/Newtonsoft.Json | https://github.com/JamesNK/Newtonsoft.Json (MIT) |
 | NuGet.ProjectModel | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
@@ -110,13 +109,6 @@ These are downloaded and shipped with the SDK:
 | bundletool | google/bundletool | https://github.com/google/bundletool (Apache 2.0) |
 | r8 | google/r8 | https://r8.googlesource.com/r8/ (BSD-3-Clause) |
 | binutils | gnu/binutils | https://sourceware.org/git/?p=binutils-gdb.git;a=tree;hb=HEAD (GPLv3) |
-
-#### libzip (via LibZipSharp NuGet)
-LibZipSharp bundles libzip internally:
-
-| Source | Name in TPN | License Location |
-|--------|------------|-----------------|
-| libzip (in LibZipSharp NuGet) | nih-at/libzip | LibZipSharp NuGet `Licences/libzip/LICENSE` or https://github.com/nih-at/libzip/ (BSD-3-Clause) |
 
 ### Step 2 — Cross-reference
 

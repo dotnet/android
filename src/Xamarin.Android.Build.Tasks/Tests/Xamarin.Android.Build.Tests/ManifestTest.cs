@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -13,7 +14,6 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 using PropertyAttribute = Android.App.PropertyAttribute;
 
 namespace Xamarin.Android.Build.Tests
@@ -890,7 +890,7 @@ namespace Bug12935
 			byte [] classesJar = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.classes.jar");
 			byte [] data;
 			using (var ms = new MemoryStream ()) {
-				using (var zip = ZipArchive.Create (ms)) {
+				using (var zip = new ZipArchive (ms, ZipArchiveMode.Create, leaveOpen: true)) {
 					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
     <uses-sdk android:minSdkVersion='16'/>
@@ -906,8 +906,10 @@ namespace Bug12935
     </application>
 </manifest>
 ", encoding: System.Text.Encoding.UTF8);
-					zip.CreateDirectory ("res");
-					zip.AddEntry (classesJar, "classes.jar");
+					zip.CreateEntry ("res/");
+					using (var classesJarStream = new MemoryStream (classesJar)) {
+						zip.AddStream (classesJarStream, "classes.jar");
+					}
 					zip.AddEntry ("R.txt", " ", encoding: System.Text.Encoding.UTF8);
 				}
 				data = ms.ToArray ();

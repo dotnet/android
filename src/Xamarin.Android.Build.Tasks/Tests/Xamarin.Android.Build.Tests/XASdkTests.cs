@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 
@@ -210,7 +210,7 @@ public class JavaSourceTest {
 			aarStream.Seek (0, SeekOrigin.Begin);
 
 			// Look for the Maven dependency, foo.jar, and the compiled AndroidJavaSource output under libs/
-			using var aar = ZipArchive.Open (aarStream);
+			using var aar = new ZipArchive (aarStream, ZipArchiveMode.Read, leaveOpen: true);
 			int count = aar.Count (e =>
 				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
 				e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
