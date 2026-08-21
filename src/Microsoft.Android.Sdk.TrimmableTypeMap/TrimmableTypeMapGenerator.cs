@@ -64,8 +64,22 @@ public class TrimmableTypeMapGenerator
 			collectMarshalMethodsForNonAcw);
 		var manifestForRooting = PrepareManifestForRooting (manifestTemplate, manifestConfig);
 		if (allPeers.Count == 0) {
-			if (ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting)) {
-				logger.LogNoJavaPeerTypesFound ();
+			if (!ValidateJavaNames (allPeers, manifestConfig?.ApplicationJavaClass, manifestForRooting)) {
+				return new TrimmableTypeMapResult ([], [], allPeers);
+			}
+			logger.LogNoJavaPeerTypesFound ();
+			if (generateTypeMapAssemblies &&
+					generateRootAssembly &&
+					sharedFrameworkTypeMapNames is { Count: > 0 }) {
+				var rootAssemblies = GenerateTypeMapAssemblies (
+					allPeers,
+					systemRuntimeVersion,
+					useSharedTypemapUniverse,
+					shouldGenerateTypeMapAssembly,
+					includeBuiltInValueTypeUniverses,
+					generateRootAssembly,
+					sharedFrameworkTypeMapNames);
+				return new TrimmableTypeMapResult (rootAssemblies, [], allPeers);
 			}
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}
