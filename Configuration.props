@@ -137,11 +137,11 @@
     <XABinutilsVersion Condition="'$(XABinutilsVersion)' == ''">L_18.1.6-8.0.0-1</XABinutilsVersion>
     <XABinutilsHash Condition="'$(XABinutilsHash)' == ''">5394EA6C411DA3A08BF0E6A87E1DD1B98BD2562B896C0CACD18E29E2FD4C0660</XABinutilsHash>
     <!-- Microsoft OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download -->
-    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">21.0.8</MicrosoftOpenJDKVersion>
-    <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-21</MicrosoftOpenJDKFolder>
-    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-21.0.8+9</MicrosoftOpenJDKRootDirName>
+    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">25.0.4.1</MicrosoftOpenJDKVersion>
+    <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-25</MicrosoftOpenJDKFolder>
+    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-25.0.4.1+1</MicrosoftOpenJDKRootDirName>
     <JavaSdkVersion Condition=" '$(JavaSdkVersion)' == '' ">$(MicrosoftOpenJDKVersion)</JavaSdkVersion>
-    <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">17.0</MinimumSupportedJavaSdkVersion>
+    <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">21.0</MinimumSupportedJavaSdkVersion>
     <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>
     <_JdkExeExtension Condition=" '$(_JdkExeExtension)' == '' And '$(HostOS)' == 'Windows' ">.exe</_JdkExeExtension>
     <JavaPath Condition=" '$(JavaPath)' == '' ">$(JavaSdkDirectory)\bin\java$(_JdkExeExtension)</JavaPath>

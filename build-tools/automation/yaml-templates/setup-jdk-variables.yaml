@@ -1,5 +1,5 @@
 parameters:
-  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)   # Generally 11|17|21
+  jdkMajorVersion: $(DefaultJavaSdkMajorVersion)   # Supported: 21|25
   useAgentJdkPath: true                            # true to use preinstalled agent JDK, false to use 'android-toolchain/jdk-NN'
 
 steps:

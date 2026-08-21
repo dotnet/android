@@ -905,6 +905,7 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
 		JavaSdkPath="$(_JavaSdkDirectory)"
+		JdkVersion="$(_JdkVersion)"
 	/>
 </Target>
 
@@ -2369,6 +2370,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       BaseZip="$(_BaseZipIntermediate)"
       Modules="@(AndroidAppBundleModules)"
@@ -2485,6 +2487,7 @@ because xbuild doesn't support framework reference assemblies.
 			ToolPath="$(JavaToolPath)"
 			JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
 			JavaOptions="$(JavaOptions)"
+			JdkVersion="$(_JdkVersion)"
 			JarPath="$(AndroidBundleToolJarPath)"
 			BaseZip="$(_BaseZipIntermediate)"
 			Modules="@(AndroidAppBundleModules)"
@@ -2685,6 +2688,8 @@ because xbuild doesn't support framework reference assemblies.
 		ToolExe="$(JavaToolExe)"
 		ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml"
 		AdditionalArguments="$(AndroidApkSignerAdditionalArguments)"
+		JavaOptions="$(JavaOptions)"
+		JdkVersion="$(_JdkVersion)"
 	/>
 	<Message Text="Signed android package '%(ApkAbiFilesAligned.Identity)'" />
 	<ItemGroup>
@@ -2732,6 +2737,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
@@ -2953,6 +2959,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
@@ -2996,6 +3003,7 @@ because xbuild doesn't support framework reference assemblies.
       ToolPath="$(JavaToolPath)"
       JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
       JavaOptions="$(JavaOptions)"
+      JdkVersion="$(_JdkVersion)"
       JarPath="$(AndroidBundleToolJarPath)"
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
