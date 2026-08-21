@@ -1,7 +1,6 @@
 #include <chrono>
 
 #include <runtime-base/android-system.hh>
-#include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/strings.hh>
 #include <runtime-base/timing-internal.hh>
 #include <runtime-base/util.hh>
@@ -18,7 +17,6 @@ namespace chrono = std::chrono;
 void FastTiming::really_initialize (bool log_immediately) noexcept
 {
 	internal_timing.configure_for_use ();
-	is_enabled = true;
 	immediate_logging = log_immediately;
 
 	// TLS variables are initialized on first use, do it here so that we can have
@@ -113,7 +111,10 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 
 	line_writer ("All logged events:"sv);
 	for (size_t i = 0uz; i < entries; i++) {
-		TimingEvent const& event = events[i];
+		TimingEvent const& event = get_event (i);
+		if (!__atomic_load_n (&event.complete, __ATOMIC_ACQUIRE)) {
+			continue;
+		}
 		uint64_t event_time_ns = log (event);
 
 		switch (event.kind) {
@@ -229,7 +230,6 @@ void FastTiming::dump () noexcept
 		return;
 	}
 
-	StartupAwareLock lock { event_vector_realloc_mutex };
 	size_t entries = next_event_index.load ();
 	if (log_to_file) {
 		dump_to_file (entries);

@@ -37,11 +37,14 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 
 		public string CacheFolder { get; set; }
 
+		readonly string manifestFilePath;
+
 		static ConcurrentDictionary<Uri, Tuple<DateTimeOffset, string>> stringDownloadCache = new ConcurrentDictionary<Uri, Tuple<DateTimeOffset, string>> ();
 
-		public Helper (string cacheFolder = null)
+		public Helper (string cacheFolder = null, string manifestFilePath = null)
 		{
 			CacheFolder = cacheFolder;
+			this.manifestFilePath = manifestFilePath;
 		}
 
 		public static string HomeDirectory {
@@ -99,16 +102,17 @@ namespace Xamarin.Installer.AndroidSDK.Manager
             }
 #else
             // Release: only allow https://, plus the in-box file:// fallback manifest that
-            // ships alongside this assembly (XamarinRepository.GetFallbackManifestUrl).
+            // ships alongside this assembly (XamarinRepository.GetFallbackManifestUrl), or a
+            // local manifest path explicitly supplied by InstallAndroidDependencies.
             if (url.Scheme == "file") {
                 var assemblyDir = Path.GetDirectoryName (typeof (Helper).Assembly.Location);
                 var requestedDir = Path.GetDirectoryName (url.LocalPath);
-                if (!string.IsNullOrEmpty (assemblyDir) &&
-                    string.Equals (assemblyDir, requestedDir, StringComparison.OrdinalIgnoreCase)) {
+                if ((!string.IsNullOrEmpty (manifestFilePath) && string.Equals (manifestFilePath, url.LocalPath, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty (assemblyDir) && string.Equals (assemblyDir, requestedDir, StringComparison.OrdinalIgnoreCase))) {
                     output = File.ReadAllText (url.LocalPath);
                     return true;
                 }
-                Logger.Warning ($"Ignoring file:// manifest URL '{url}': file:// is only honored for the in-box fallback manifest in shipped builds.");
+                Logger.Warning ($"Ignoring file:// manifest URL '{url}': file:// is only honored for an explicit local manifest path or the in-box fallback manifest in shipped builds.");
                 output = null;
                 return false;
             }

@@ -5,7 +5,7 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 3242876
+      "Size": 3242640
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -29,13 +29,13 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 11415872
+      "Size": 9435968
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2788736
+      "Size": 2807600
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4841976
+      "Size": 4843864
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 1184800
@@ -47,7 +47,7 @@
       "Size": 1259088
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 99792
+      "Size": 99808
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 171584
@@ -2231,5 +2231,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 18116115
+  "PackageSize": 16346643
 }
