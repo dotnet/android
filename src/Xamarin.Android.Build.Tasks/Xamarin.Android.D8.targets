@@ -52,7 +52,6 @@ Copyright (C) 2018 Xamarin. All rights reserved.
       <_AndroidD8MapDiagnostics Condition=" '$(AndroidD8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
       <_AndroidR8MapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
       <_JavaClassFile Include="$(_AndroidIntermediateJavaClassDirectory)**\*.class" />
-      <_JavaClassFile Include="@(_JavaBindingClassFile)" />
       <!-- User-authored AndroidJavaSource (Bind != True) is not in the acw-map; pass it to R8 so it
            is kept when shrinking is enabled rather than silently removed. -->
       <_R8KeepJavaSource Include="@(AndroidJavaSource)" Condition=" '%(AndroidJavaSource.Bind)' != 'True' " />

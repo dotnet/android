@@ -2152,37 +2152,15 @@ public class ToolbarEx {
 	}
 }
 ",
-						Encoding = Encoding.ASCII,
-						Metadata = { { "Bind", "True" } },
+						Encoding = Encoding.ASCII
 					},
-				},
-				Sources = {
-					new BuildItem.Source ("UseToolbarEx.cs") {
-						TextContent = () => """
-using Android.Content;
-
-class UseToolbarEx
-{
-	public AndroidX.AppCompat.Widget.Toolbar GetToolbar (Context context) =>
-		Com.Unnamedproject.Unnamedproject.ToolbarEx.GetToolbar (context);
-}
-""",
-					},
-				},
+				}
 			};
 			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
-
-				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var bindingJar = Path.Combine (intermediate, "binding", "bin", $"{proj.ProjectName}.jar");
-				FileAssert.DoesNotExist (bindingJar, "Application builds should pass bound Java class files directly to D8/R8.");
-				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
-				FileAssert.Exists (dexFile);
-				Assert.IsTrue (DexUtils.ContainsClass ("Lcom/unnamedproject/unnamedproject/ToolbarEx;", dexFile, AndroidSdkPath),
-					$"`{dexFile}` should contain the bound Java source.");
 
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}

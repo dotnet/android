@@ -1967,7 +1967,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_CompileToDalvikInputs>
 		@(_AndroidMSBuildAllProjects)
 		;@(_JavaLibrariesToCompileForApp)
-		;@(_JavaBindingClassFile)
 		;@(AndroidExternalJavaLibrary)
 		;$(_AndroidCompileJavaStampFile)
 		;@(ProguardConfiguration)
