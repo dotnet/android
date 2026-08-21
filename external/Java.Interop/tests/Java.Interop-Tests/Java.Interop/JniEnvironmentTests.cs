@@ -55,6 +55,7 @@ namespace Java.InteropTests
 			}
 		}
 
+#if !__ANDROID__
 		[Test]
 		public void References_CreatedReference_InvalidRef ()
 		{
@@ -142,6 +143,6 @@ namespace Java.InteropTests
 				GetDeleteRefFunc ("java_interop_jnienv_delete_global_ref")?.Invoke (JniEnvironment.EnvironmentPointer, o.Handle);
 			}
 		}
+#endif // !__ANDROID__
 	}
 }
-

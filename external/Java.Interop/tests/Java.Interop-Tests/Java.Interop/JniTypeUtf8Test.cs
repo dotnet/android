@@ -90,8 +90,8 @@ namespace Java.InteropTests
 			Assert.IsFalse (notFound.IsValid);
 		}
 
+#if !__ANDROID__
 		[Test]
-		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
 			int grefsBefore = JniEnvironment.Runtime.GlobalReferenceCount;
@@ -110,6 +110,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (grefsBefore, grefsAfter,
 				"TryFindClass for non-existent classes should not leak global references");
 		}
+#endif // !__ANDROID__
 
 		[Test]
 		public void GetMethodID_Utf8_MatchesStringOverload ()

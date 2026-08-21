@@ -157,6 +157,7 @@ namespace Java.InteropTests
 		protected override object CreateValueA () {return a;}
 		protected override object CreateValueB () {return 42;}
 
+#if !__ANDROID__
 		int grefStartCount;
 
 		[OneTimeSetUp]
@@ -176,6 +177,7 @@ namespace Java.InteropTests
 					string.Format ("JNI global references: grefStartCount={0}; gref={1}", grefStartCount, gref));
 			JniEnvironment.Runtime.ValueManager.CollectPeers ();
 		}
+#endif // !__ANDROID__
 
 		[Test]
 		public void ObjectArrayType ()

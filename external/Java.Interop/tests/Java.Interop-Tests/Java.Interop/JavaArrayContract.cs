@@ -10,6 +10,7 @@ namespace Java.InteropTests
 {
 	public abstract class JavaArrayContract<T> : ListContract<T>
 	{
+#if !__ANDROID__
 		int lrefStartCount;
 
 		[OneTimeSetUp]
@@ -24,6 +25,7 @@ namespace Java.InteropTests
 			int lref    = JniEnvironment.LocalReferenceCount;
 			Assert.AreEqual (lrefStartCount, lref, "JNI local references");
 		}
+#endif // !__ANDROID__
 
 		[Test]
 		public void ToArray ()
@@ -41,4 +43,3 @@ namespace Java.InteropTests
 		}
 	}
 }
-
