@@ -38,34 +38,25 @@ namespace Test.ME {
 			if (PeerReference.IsValid)
 				return;
 
-			try {
-				var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
-				Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
-				_members.InstanceMethods.FinishCreateInstance (__id, this, null);
-			} finally {
-			}
+			var __r = _members.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			Construct (ref __r, JniObjectReferenceOptions.CopyAndDispose);
+			_members.InstanceMethods.FinishCreateInstance (__id, this, null);
 		}
 
 		public virtual unsafe global::Java.Lang.Object Object {
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericObjectPropertyImplementation']/method[@name='getObject' and count(parameter)=0]"
 			get {
 				const string __id = "getObject.()Ljava/lang/Object;";
-				try {
-					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Lang.Object> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
-				} finally {
-				}
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Lang.Object> (ref __rm, JniObjectReferenceOptions.CopyAndDispose);
 			}
 			// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/class[@name='GenericObjectPropertyImplementation']/method[@name='setObject' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
 			set {
 				const string __id = "setObject.(Ljava/lang/Object;)V";
-				try {
-					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-					__args [0] = new JniArgumentValue (value);
-					_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
-				} finally {
-					global::System.GC.KeepAlive (value);
-				}
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				global::System.GC.KeepAlive (value);
 			}
 		}
 

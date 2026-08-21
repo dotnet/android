@@ -65,10 +65,7 @@ internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Obj
 	public unsafe void Foo ()
 	{
 		const string __id = "Foo.()V";
-		try {
-			_members__InterfaceWithoutNamespace.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
-		} finally {
-		}
+		_members__InterfaceWithoutNamespace.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 	}
 
 }

@@ -32,14 +32,12 @@ namespace Java.Lang {
 		{
 			const string __id = "compareTo.(Ljava/lang/Object;)I";
 			var native_another = (another?.PeerReference ?? default);
-			try {
-				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
-				__args [0] = new JniArgumentValue (native_another);
-				var __rm = _members_java_lang_Comparable.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
-				return __rm;
-			} finally {
-				global::System.GC.KeepAlive (another);
-			}
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (native_another);
+			var __rm = _members_java_lang_Comparable.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+			var __result = __rm;
+			global::System.GC.KeepAlive (another);
+			return __result;
 		}
 
 	}

@@ -238,30 +238,113 @@ namespace generator.SourceWriters
 			foreach (string prep in method.Parameters.GetCallPrep (opt))
 				body.Add (prep);
 
-			body.Add ("try {");
+			var hasKeepAlive = HasKeepAlive (method.Parameters);
+			var needsFinally = HasCallCleanup (method.Parameters, opt);
+			var needsTry = needsFinally || method.IsCompatVirtualMethod;
 
-			AddMethodBodyTryBlock (body, method, opt, members);
+			if (needsTry)
+				body.Add ("try {");
+
+			AddMethodBodyTryBlock (body, method, opt, members, deferReturn: !needsFinally && hasKeepAlive, indent: needsTry);
 
 			if (method.IsCompatVirtualMethod) {
+				if (!needsFinally) {
+					AddKeepAlive (body, method.Parameters, opt, "\t");
+
+					if (!method.IsVoid && hasKeepAlive)
+						body.Add ("\treturn __result;");
+				}
+
 				body.Add ("}");
 				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
+
+				if (!needsFinally)
+					AddKeepAlive (body, method.Parameters, opt, "\t");
+
 				body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
 			}
 
-			body.Add ("} finally {");
+			if (needsFinally) {
+				body.Add ("} finally {");
 
-			foreach (string cleanup in method.Parameters.GetCallCleanup (opt))
-				body.Add ("\t" + cleanup);
+				AddCallCleanup (body, method.Parameters, opt, "\t");
 
-			foreach (var p in method.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
-				body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+				AddKeepAlive (body, method.Parameters, opt, "\t");
 
-			body.Add ("}");
+				body.Add ("}");
+			} else if (method.IsCompatVirtualMethod) {
+				body.Add ("}");
+			} else {
+				AddKeepAlive (body, method.Parameters, opt);
+
+				if (!method.IsVoid && hasKeepAlive)
+					body.Add ("return __result;");
+			}
 		}
 
-		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
+		public static void WriteKeepAlive (CodeWriter writer, ParameterList parameters, CodeGenerationOptions opt)
 		{
-			AddParameterListCallArgs (body, method.Parameters, opt);
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (parameter.ShouldGenerateKeepAlive ())
+					writer.WriteLine ($"global::System.GC.KeepAlive ({opt.GetSafeIdentifier (parameter.Name)});");
+			}
+		}
+
+		public static bool HasCallCleanup (ParameterList parameters, CodeGenerationOptions opt)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (parameter.NeedsPrep && parameter.GetPostCall (opt).Length > 0)
+					return true;
+			}
+			return false;
+		}
+
+		public static void WriteCallCleanup (CodeWriter writer, ParameterList parameters, CodeGenerationOptions opt)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (!parameter.NeedsPrep)
+					continue;
+				foreach (var statement in parameter.GetPostCall (opt))
+					writer.WriteLine (statement);
+			}
+		}
+
+		static bool HasKeepAlive (ParameterList parameters)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				if (parameters [i].ShouldGenerateKeepAlive ())
+					return true;
+			}
+			return false;
+		}
+
+		static void AddCallCleanup (List<string> body, ParameterList parameters, CodeGenerationOptions opt, string indentation)
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (!parameter.NeedsPrep)
+					continue;
+				foreach (var statement in parameter.GetPostCall (opt))
+					body.Add (indentation + statement);
+			}
+		}
+
+		static void AddKeepAlive (List<string> body, ParameterList parameters, CodeGenerationOptions opt, string indentation = "")
+		{
+			for (var i = 0; i < parameters.Count; i++) {
+				var parameter = parameters [i];
+				if (parameter.ShouldGenerateKeepAlive ())
+					body.Add ($"{indentation}global::System.GC.KeepAlive ({opt.GetSafeIdentifier (parameter.Name)});");
+			}
+		}
+
+		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members", bool deferReturn = false, bool indent = true)
+		{
+			AddParameterListCallArgs (body, method.Parameters, opt, indent);
+			var indentation = indent ? "\t" : "";
 
 			var invokeType = JavaInteropCodeGenerator.GetInvokeType (method.RetVal.CallMethodPrefix);
 
@@ -279,27 +362,29 @@ namespace generator.SourceWriters
 			var this_param = method.IsStatic ? $"__id{call_args}" : $"__id, this{call_args}";
 
 			// Example: var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-			body.Add ($"\t{return_var}{members}.{method_type}.Invoke{virt_type}{invokeType}Method ({this_param});");
+			body.Add ($"{indentation}{return_var}{members}.{method_type}.Invoke{virt_type}{invokeType}Method ({this_param});");
 
 			if (!method.IsVoid) {
 				var r = "__rm";
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1 && invokeType == "Object") {
 					r += ".Handle";
 				}
-				body.Add ($"\treturn {method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + opt.GetNullForgiveness (method.RetVal)};");
+				body.Add ($"{indentation}{(deferReturn ? "var __result = " : "return ")}{method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + opt.GetNullForgiveness (method.RetVal)};");
 			}
 		}
 
-		public static void AddParameterListCallArgs (List<string> body, ParameterList parameters, CodeGenerationOptions opt)
+		public static void AddParameterListCallArgs (List<string> body, ParameterList parameters, CodeGenerationOptions opt, bool indent = true)
 		{
 			if (parameters.Count == 0)
 				return;
 
-			body.Add ($"\tJniArgumentValue* __args = stackalloc JniArgumentValue [{parameters.Count}];");
+			var indentation = indent ? "\t" : "";
+
+			body.Add ($"{indentation}JniArgumentValue* __args = stackalloc JniArgumentValue [{parameters.Count}];");
 
 			for (var i = 0; i < parameters.Count; ++i) {
 				var p = parameters [i];
-				body.Add ($"\t__args [{i}] = new JniArgumentValue ({p.GetCall (opt)});");
+				body.Add ($"{indentation}__args [{i}] = new JniArgumentValue ({p.GetCall (opt)});");
 			}
 		}
 
