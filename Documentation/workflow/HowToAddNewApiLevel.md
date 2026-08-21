@@ -547,7 +547,15 @@ the `csv` variable within `MainForm.FindAPILevelMethodsToolStripMenuItem_Click`.
 Once this process is complete, use `Tools` -> `Export Final Method Map`, and create a *new*
 `.csv` file, e.g. `new-methodmap.csv`.
 
-Copy the contents of `new-methodmap.csv` and *append* to `src/Mono.Android/methodmap.csv`.
+Note: `new-methodmap.csv` will likely use JNI syntax for package names, e.g. `android/widget`.
+`methodmap.csv` ***must*** use *Java* syntax for package names, e.g. `android.widget`.
+Use **sed**(1) to fix package names and nested class names:
+
+```sh
+sed 's,/,.,g;s/\$/./g' < src/Mono.Android/new-methodmap.csv > src/Mono.Android/new-methodmap2.csv
+```
+
+Copy the contents of `new-methodmap2.csv` and *append* to `src/Mono.Android/methodmap.csv`.
 
 There may be redundant duplicate entries within `methodmap.csv`.  Use the **uniq**(1)
 Unix app to remove duplicate entries.
@@ -604,15 +612,10 @@ are automatically converted into `Android.Graphics.Color`.
 
 ### Finishing the method map
 
-The official `methodmap.csv` uses a slightly different format than the one used for enumification.
-
-Using BindingStudio:
-
-- Ensure the "new api level method map" CSV file is loaded.
-- Choose `Tools` -> `Export Final Method Map`
-- Choose a temporary file name
-- Open the temporary file, copy the contents to the bottom of the official:
-  - dotnet/android/src/Mono.Android/methodmap.csv
+The normalized `new-methodmap2.csv` output appended in the **Mapping methods** section
+is the final method map. Do not export and append the BindingStudio output again, as
+the raw output uses JNI package and nested-type syntax that `methodmap.csv` does not
+support.
 
 Congrats! Enumification is complete!
 
