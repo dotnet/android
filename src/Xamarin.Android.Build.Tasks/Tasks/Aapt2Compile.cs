@@ -57,7 +57,7 @@ namespace Xamarin.Android.Tasks {
 				}
 			} finally {
 				foreach (var archive in temporaryArchives) {
-					File.Delete (archive);
+					Files.TryDeleteFile (archive, LogDebugMessage);
 				}
 				temporaryArchives.Clear ();
 			}
