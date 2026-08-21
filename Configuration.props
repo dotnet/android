@@ -27,9 +27,9 @@
     <!-- If there is a second *stable* API level (e.g. 38.1 alongside 38), set it here: -->
     <AndroidLatestStableApiLevel2 Condition="'$(AndroidLatestStableApiLevel2)' == ''">37.1</AndroidLatestStableApiLevel2>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">$(AndroidLatestStableApiLevel2)</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">$(AndroidLatestStableApiLevel2)</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v17.1</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">37.2</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">37.2</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v17.2</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) -->
     <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
@@ -42,6 +42,23 @@
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <AndroidBuildApiLevel Include="37">
+      <PlatformId>37.0</PlatformId>
+      <FrameworkVersion>v17.0</FrameworkVersion>
+      <Unstable>false</Unstable>
+    </AndroidBuildApiLevel>
+    <AndroidBuildApiLevel Include="37.1">
+      <PlatformId>37.1</PlatformId>
+      <FrameworkVersion>v17.1</FrameworkVersion>
+      <Unstable>false</Unstable>
+    </AndroidBuildApiLevel>
+    <AndroidBuildApiLevel Include="37.2">
+      <PlatformId>37.2</PlatformId>
+      <FrameworkVersion>v17.2</FrameworkVersion>
+      <Unstable>true</Unstable>
+    </AndroidBuildApiLevel>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
     <HostOS Condition="$([MSBuild]::IsOSPlatform('linux'))">Linux</HostOS>

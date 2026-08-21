@@ -2060,9 +2060,12 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.1")] string targetFramework,
-				[Values (true)] bool enablePreviewFeatures)
+				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework)
 		{
+			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
+			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
+			var permission = apiLevel == "37.1" ? "AccessHid" : "BindContentSafetyService";
+			var enablePreviewFeatures = apiLevel == "37.2";
 			var proj = new XamarinAndroidApplicationProject () {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
@@ -2075,16 +2078,33 @@ namespace UnnamedProject
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
 
+			proj.Imports.Add (new Import (() => "Directory.Build.targets") {
+				TextContent = () => $"""
+<Project>
+	<Target Name="_AssertAndroidTargetingPack" BeforeTargets="ResolveFrameworkReferences">
+		<ItemGroup>
+			<_AndroidKnownFrameworkReference Include="@(KnownFrameworkReference)" Condition=" '%(Identity)' == 'Microsoft.Android' " />
+		</ItemGroup>
+		<Error
+			Condition=" '%(_AndroidKnownFrameworkReference.TargetingPackName)' != 'Microsoft.Android.Ref.{apiLevel}' "
+			Text="Expected Microsoft.Android.Ref.{apiLevel}, but selected '%(_AndroidKnownFrameworkReference.TargetingPackName)'." />
+	</Target>
+</Project>
+"""
+			});
+
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", """
 				// The value `ignore` is not used.
 				#pragma warning disable 0219
-					if (OperatingSystem.IsAndroidVersionAtLeast (37, 1)) {
-						var ignore = global::Android.Manifest.Permission.AccessHid;
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, ${ANDROID_API_MINOR_VERSION})) {
+						var ignore = global::Android.Manifest.Permission.${ANDROID_PERMISSION};
 					}
 				#pragma warning restore 0219
-				""");
+				""")
+				.Replace ("${ANDROID_API_MINOR_VERSION}", apiMinorVersion)
+				.Replace ("${ANDROID_PERMISSION}", permission);
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
