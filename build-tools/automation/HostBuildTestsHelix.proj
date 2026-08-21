@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
+  <PropertyGroup>
+    <Language>msbuild</Language>
+    <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</EnableAzurePipelinesReporter>
+    <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' == ''">false</EnableAzurePipelinesReporter>
+    <FailOnTestFailure>true</FailOnTestFailure>
+    <HelixType Condition="'$(HelixType)' == ''">tests/android/host-build-tests/</HelixType>
+    <HelixTestRunName Condition="'$(HelixTestRunName)' == ''">Xamarin.Android.Build.Tests - Helix</HelixTestRunName>
+    <HostBuildTestsHelixWorkItemTimeout Condition="'$(HostBuildTestsHelixWorkItemTimeout)' == ''">00:45:00</HostBuildTestsHelixWorkItemTimeout>
+  </PropertyGroup>
+
+  <Import Project="$(HostBuildTestsHelixWorkItemsProps)" Condition="Exists('$(HostBuildTestsHelixWorkItemsProps)')" />
+
+  <ItemGroup>
+    <HelixTargetQueue Include="$(HelixTargetQueueForItem)" Condition="'$(HelixTargetQueueForItem)' != ''">
+      <TestRunName>$(HelixTestRunName)</TestRunName>
+    </HelixTargetQueue>
+  </ItemGroup>
+
+  <ItemGroup>
+    <HelixCorrelationPayload Include="$(CorrelationPayloadDirectory)" Condition="'$(CorrelationPayloadDirectory)' != ''">
+      <PayloadDirectory>%(Identity)</PayloadDirectory>
+    </HelixCorrelationPayload>
+  </ItemGroup>
+
+  <ItemGroup>
+    <HelixWorkItem Include="@(_HostBuildTestHelixWorkItem)">
+      <PayloadDirectory>%(_HostBuildTestHelixWorkItem.PayloadDirectory)</PayloadDirectory>
+      <Command>%(_HostBuildTestHelixWorkItem.Command)</Command>
+      <Timeout>$(HostBuildTestsHelixWorkItemTimeout)</Timeout>
+    </HelixWorkItem>
+  </ItemGroup>
+
+  <Target Name="_ValidateHostBuildTestsHelixInputs" BeforeTargets="Test">
+    <Error Text="HostBuildTestsHelixWorkItemsProps must name a generated work-items props file."
+           Condition="'$(HostBuildTestsHelixWorkItemsProps)' == '' or !Exists('$(HostBuildTestsHelixWorkItemsProps)')" />
+    <Error Text="CorrelationPayloadDirectory must name the staged host-test correlation payload."
+           Condition="'$(CorrelationPayloadDirectory)' == '' or !Exists('$(CorrelationPayloadDirectory)')" />
+    <Error Text="HelixTargetQueueForItem is required."
+           Condition="'$(HelixTargetQueueForItem)' == ''" />
+    <Error Text="No host-build-test Helix work items were generated."
+           Condition="'@(_HostBuildTestHelixWorkItem->Count())' == '0'" />
+    <Message Text="Submitting @(_HostBuildTestHelixWorkItem->Count()) host-build-test work items to $(HelixTargetQueueForItem)."
+             Importance="High" />
+  </Target>
+</Project>

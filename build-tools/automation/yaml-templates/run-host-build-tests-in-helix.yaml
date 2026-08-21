@@ -1,0 +1,176 @@
+parameters:
+  platform: ''
+  helixQueue: ''
+  testFilter: ''
+  testRunTitle: ''
+  timingBuildId: ''
+  timingArtifactName: ''
+  targetMinutes: 15
+  durationParallelism: 2.5
+  fallbackTestDurationSeconds: 60
+  workItemTimeout: '00:45:00'
+  nunitWorkers: '-1'
+
+steps:
+- template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+  parameters:
+    useAgentJdkPath: false
+    installTestSlicer: true
+    use1ESTemplate: false
+
+- template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+  parameters:
+    xaSourcePath: $(System.DefaultWorkingDirectory)
+
+- task: DownloadPipelineArtifact@2
+  displayName: Download Xamarin.Android.Build.Tests assets
+  inputs:
+    artifactName: $(TestAssembliesArtifactName)
+    downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+- ${{ if ne(parameters.timingBuildId, '') }}:
+  - task: DownloadPipelineArtifact@2
+    displayName: Download prior ${{ parameters.platform }} host-test timings
+    inputs:
+      buildType: specific
+      project: $(System.TeamProject)
+      definition: $(System.DefinitionId)
+      buildVersionToDownload: specific
+      pipelineId: ${{ parameters.timingBuildId }}
+      artifactName: ${{ parameters.timingArtifactName }}
+      targetPath: $(Pipeline.Workspace)/host-build-test-history-${{ parameters.platform }}
+
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    $platform = '${{ parameters.platform }}'
+    $historyRoot = '$(Pipeline.Workspace)/host-build-test-history-${{ parameters.platform }}'
+    $balanceFile = ''
+    if ('${{ parameters.timingBuildId }}') {
+      $balanceFile = Get-ChildItem -LiteralPath $historyRoot -Recurse -Filter '*.xml' |
+        Select-Object -First 1 -ExpandProperty FullName
+      if (-not $balanceFile) {
+        throw "Build '${{ parameters.timingBuildId }}' did not provide timing XML in '$historyRoot'."
+      }
+    }
+
+    $testSlicer = Join-Path '$(Agent.ToolsDirectory)' $(if ($platform -eq 'windows') { 'dotnet-test-slicer.exe' } else { 'dotnet-test-slicer' })
+    $stagingRoot = '$(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}'
+    $resultsDirectory = Join-Path $stagingRoot 'results'
+    $correlationPayload = Join-Path $stagingRoot 'correlation'
+    $workItemsDirectory = Join-Path $stagingRoot 'work-items'
+    $workItemsProps = Join-Path $stagingRoot 'work-items.props'
+    $adbName = if ($platform -eq 'windows') { 'adb.exe' } else { 'adb' }
+    $androidHome = @(
+      $env:ANDROID_HOME
+      $env:ANDROID_SDK_ROOT
+      $env:AndroidSdkDirectory
+      $(if ($env:USERPROFILE) { Join-Path $env:USERPROFILE 'android-toolchain\sdk' })
+      $(if ($env:HOME) { Join-Path $env:HOME 'android-toolchain/sdk' })
+    ) | Where-Object { $_ -and (Test-Path (Join-Path $_ "platform-tools/$adbName")) } | Select-Object -First 1
+    if (-not $androidHome) {
+      throw 'Could not locate the prepared Android SDK.'
+    }
+
+    & '$(System.DefaultWorkingDirectory)/build-tools/automation/host-build-tests-helix/prepare-host-build-test-helix-payload.ps1' `
+      -Platform $platform `
+      -RepositoryRoot '$(System.DefaultWorkingDirectory)' `
+      -CorrelationPayloadDirectory $correlationPayload `
+      -WorkItemsDirectory $workItemsDirectory `
+      -WorkItemsPropsPath $workItemsProps `
+      -ResultsDirectory $resultsDirectory `
+      -TestAssemblyRelativePath 'bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll' `
+      -TestSlicerPath $testSlicer `
+      -TestFilter '${{ parameters.testFilter }}' `
+      -BalanceFile $balanceFile `
+      -TargetMinutes ${{ parameters.targetMinutes }} `
+      -DurationParallelism ${{ parameters.durationParallelism }} `
+      -FallbackTestDurationSeconds ${{ parameters.fallbackTestDurationSeconds }} `
+      -NUnitWorkers '${{ parameters.nunitWorkers }}' `
+      -Configuration '$(XA.Build.Configuration)' `
+      -AndroidHome $androidHome `
+      -JavaHome $env:JAVA_HOME `
+      -NuGetPackages $env:NUGET_PACKAGES `
+      -DotNetToolsDirectory '$(Agent.ToolsDirectory)' `
+      -GradleUserHome (Join-Path ([Environment]::GetFolderPath('UserProfile')) '.gradle')
+  displayName: Prepare duration-balanced ${{ parameters.platform }} Helix work items
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+  parameters:
+    command: msbuild
+    project: $(System.DefaultWorkingDirectory)/build-tools/automation/HostBuildTestsHelix.proj
+    arguments: >-
+      /restore
+      /t:Test
+      /p:TreatWarningsAsErrors=false
+      /bl:$(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}/results/send-to-helix.binlog
+    displayName: Submit ${{ parameters.platform }} host build tests to Helix
+    continueOnError: false
+    taskTimeoutInMinutes: 240
+    env:
+      HostBuildTestsHelixWorkItemsProps: $(HostBuildTestsHelixWorkItemsProps)
+      CorrelationPayloadDirectory: $(HostBuildTestsHelixCorrelationPayload)
+      HostBuildTestsHelixWorkItemTimeout: ${{ parameters.workItemTimeout }}
+      HelixResultsDestinationDir: $(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}/results
+      HelixSource: pr/dotnet/android
+      HelixType: tests/android/host-build-tests/${{ parameters.platform }}/
+      HelixBuild: $(Build.BuildNumber)
+      HelixConfiguration: ${{ parameters.platform }}
+      HelixTargetQueueForItem: ${{ parameters.helixQueue }}
+      HelixTestRunName: ${{ parameters.testRunTitle }}
+      HelixAccessToken: ''
+      WaitForWorkItemCompletion: 'true'
+      Creator: dotnet-android
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- task: PublishTestResults@2
+  displayName: Publish ${{ parameters.platform }} Helix TRX results
+  condition: always()
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '**/*.trx'
+    searchFolder: $(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}/results
+    mergeTestResults: true
+    testRunTitle: ${{ parameters.testRunTitle }}
+  continueOnError: true
+
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    $resultsDirectory = '$(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}/results'
+    $timingDirectory = '$(Build.StagingDirectory)/host-build-test-timings-${{ parameters.platform }}'
+    $trxDirectory = Join-Path $timingDirectory 'trx'
+    New-Item -ItemType Directory -Force -Path $trxDirectory | Out-Null
+
+    $trxFiles = @(Get-ChildItem -LiteralPath $resultsDirectory -Recurse -Filter '*.trx' -ErrorAction Ignore)
+    if ($trxFiles.Count -eq 0) {
+      Write-Warning "No TRX files were available to produce next-run timings."
+      Write-Host '##vso[task.setvariable variable=HostBuildTestsHelixHasTimings]false'
+      exit 0
+    }
+
+    for ($index = 0; $index -lt $trxFiles.Count; $index++) {
+      Copy-Item -LiteralPath $trxFiles[$index].FullName -Destination (Join-Path $trxDirectory ('{0:d4}.trx' -f $index))
+    }
+
+    $testSlicer = Join-Path '$(Agent.ToolsDirectory)' $(if ('${{ parameters.platform }}' -eq 'windows') { 'dotnet-test-slicer.exe' } else { 'dotnet-test-slicer' })
+    & $testSlicer balance --input-directory=$trxDirectory --outfile=(Join-Path $timingDirectory 'balance.xml')
+    if ($LASTEXITCODE -ne 0) {
+      throw "dotnet-test-slicer balance failed with exit code $LASTEXITCODE."
+    }
+    Remove-Item -LiteralPath $trxDirectory -Recurse -Force
+    Write-Host '##vso[task.setvariable variable=HostBuildTestsHelixHasTimings]true'
+  displayName: Produce next-run ${{ parameters.platform }} timings
+  condition: always()
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish ${{ parameters.platform }} host-test timings
+  condition: and(always(), eq(variables['HostBuildTestsHelixHasTimings'], 'true'))
+  inputs:
+    artifactName: ${{ parameters.timingArtifactName }}
+    targetPath: $(Build.StagingDirectory)/host-build-test-timings-${{ parameters.platform }}
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish ${{ parameters.platform }} Helix diagnostics
+  condition: always()
+  inputs:
+    artifactName: Host Build Test Helix Results - ${{ parameters.platform }}
+    targetPath: $(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}/results
