@@ -96,7 +96,7 @@ safe-outputs:
     - automated
     - skill-runner
     close-older-issues: true
-    expires: 30
+    expires: 30d
   missing-data:
     create-issue: false
   missing-tool:
