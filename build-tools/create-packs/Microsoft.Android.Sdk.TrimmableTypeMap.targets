@@ -27,12 +27,48 @@
     <_PreBuiltTypeMapAssembly>$(_PreBuiltTypeMapOutputDir)_Mono.Android.TypeMap.dll</_PreBuiltTypeMapAssembly>
     <_PreBuiltTypeMapJavaInteropAssembly>$(_PreBuiltTypeMapOutputDir)_Java.Interop.TypeMap.dll</_PreBuiltTypeMapJavaInteropAssembly>
     <_PreBuiltTypeMapAcwMap>$(_PreBuiltTypeMapOutputDir)mono.android-acw-map.txt</_PreBuiltTypeMapAcwMap>
+    <_PreBuiltTypeMapJavaFilesList>$(_PreBuiltTypeMapIntDir)java-files.txt</_PreBuiltTypeMapJavaFilesList>
+    <_PreBuiltTypeMapGenerationStamp>$(_PreBuiltTypeMapIntDir)_GeneratePreBuiltMonoAndroidTypeMap.stamp</_PreBuiltTypeMapGenerationStamp>
   </PropertyGroup>
+
+  <!-- Generated files use content-based writes and can legitimately be older than the generator
+       inputs. Use a stamp for timestamp incrementality, but invalidate it whenever any real output
+       recorded by the previous generation pass is missing. -->
+  <Target Name="_InvalidatePreBuiltMonoAndroidTypeMapStampIfOutputsMissing">
+    <ItemGroup>
+      <_ExpectedPreBuiltTypeMapJavaFile Remove="@(_ExpectedPreBuiltTypeMapJavaFile)" />
+      <_ActualPreBuiltTypeMapJavaFile Remove="@(_ActualPreBuiltTypeMapJavaFile)" />
+      <_MissingPreBuiltTypeMapJavaFile Remove="@(_MissingPreBuiltTypeMapJavaFile)" />
+      <_UnexpectedPreBuiltTypeMapJavaFile Remove="@(_UnexpectedPreBuiltTypeMapJavaFile)" />
+    </ItemGroup>
+    <ReadLinesFromFile
+        File="$(_PreBuiltTypeMapJavaFilesList)"
+        Condition="Exists('$(_PreBuiltTypeMapJavaFilesList)')">
+      <Output TaskParameter="Lines" ItemName="_ExpectedPreBuiltTypeMapJavaFile" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_ActualPreBuiltTypeMapJavaFile Include="$(_PreBuiltTypeMapJavaDir)**\*.java" />
+      <_MissingPreBuiltTypeMapJavaFile Include="@(_ExpectedPreBuiltTypeMapJavaFile)"
+          Condition="!Exists('%(_ExpectedPreBuiltTypeMapJavaFile.Identity)')" />
+      <_UnexpectedPreBuiltTypeMapJavaFile Include="@(_ActualPreBuiltTypeMapJavaFile->'%(FullPath)')"
+          Exclude="@(_ExpectedPreBuiltTypeMapJavaFile)" />
+    </ItemGroup>
+    <Delete
+        Files="$(_PreBuiltTypeMapGenerationStamp)"
+        Condition="Exists('$(_PreBuiltTypeMapGenerationStamp)') and (!Exists('$(_PreBuiltTypeMapAssembly)') or !Exists('$(_PreBuiltTypeMapJavaInteropAssembly)') or !Exists('$(_PreBuiltTypeMapAcwMap)') or !Exists('$(_PreBuiltTypeMapJavaFilesList)') or '@(_MissingPreBuiltTypeMapJavaFile->Count())' != '0' or '@(_UnexpectedPreBuiltTypeMapJavaFile->Count())' != '0')" />
+    <ItemGroup>
+      <_ExpectedPreBuiltTypeMapJavaFile Remove="@(_ExpectedPreBuiltTypeMapJavaFile)" />
+      <_ActualPreBuiltTypeMapJavaFile Remove="@(_ActualPreBuiltTypeMapJavaFile)" />
+      <_MissingPreBuiltTypeMapJavaFile Remove="@(_MissingPreBuiltTypeMapJavaFile)" />
+      <_UnexpectedPreBuiltTypeMapJavaFile Remove="@(_UnexpectedPreBuiltTypeMapJavaFile)" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="_GeneratePreBuiltMonoAndroidTypeMap"
       BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
+      DependsOnTargets="_InvalidatePreBuiltMonoAndroidTypeMapStampIfOutputsMissing"
       Inputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll"
-      Outputs="$(_PreBuiltTypeMapAssembly);$(_PreBuiltTypeMapJavaInteropAssembly)">
+      Outputs="$(_PreBuiltTypeMapGenerationStamp)">
     <ItemGroup>
       <!-- Scan Mono.Android and Java.Interop TOGETHER so their cross-assembly aliases (e.g.
            java/lang/Object mapped by both Java.Lang.Object and Java.Interop.JavaObject) are
@@ -55,7 +91,20 @@
         AcwMapOutputFile="$(_PreBuiltTypeMapAcwMap)"
         TargetFrameworkVersion="v$(DotNetTargetFrameworkVersion)"
         ForceSharedTypemapUniverse="true"
-        GenerateRootAssembly="false" />
+        GenerateRootAssembly="false">
+      <Output TaskParameter="GeneratedJavaFiles" ItemName="_GeneratedPreBuiltTypeMapJavaFile" />
+    </GenerateTrimmableTypeMap>
+    <WriteLinesToFile
+        File="$(_PreBuiltTypeMapJavaFilesList)"
+        Lines="@(_GeneratedPreBuiltTypeMapJavaFile->'%(FullPath)')"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <Touch Files="$(_PreBuiltTypeMapGenerationStamp)" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="@(_GeneratedPreBuiltTypeMapJavaFile)" />
+      <FileWrites Include="$(_PreBuiltTypeMapJavaFilesList)" />
+      <FileWrites Include="$(_PreBuiltTypeMapGenerationStamp)" />
+    </ItemGroup>
   </Target>
 
   <PropertyGroup>
@@ -70,14 +119,21 @@
   <!-- Compile the generated Java Callable Wrappers into a jar shipped in the SDK pack. These
        wrappers use the trimmable runtime registration path and cannot be replaced by the legacy
        wrappers from mono.android.jar, which call TypeManager.n_activate. -->
+  <Target Name="_CompilePreBuiltMonoAndroidTypeMapJcwJarInputs"
+      DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMap">
+    <ItemGroup>
+      <_PreBuiltTypeMapJavaFile Remove="@(_PreBuiltTypeMapJavaFile)" />
+    </ItemGroup>
+    <ReadLinesFromFile File="$(_PreBuiltTypeMapJavaFilesList)">
+      <Output TaskParameter="Lines" ItemName="_PreBuiltTypeMapJavaFile" />
+    </ReadLinesFromFile>
+  </Target>
+
   <Target Name="_CompilePreBuiltMonoAndroidTypeMapJcwJar"
       BeforeTargets="ConfigureLocalWorkload;_GenerateXASdkContent"
-      DependsOnTargets="_GeneratePreBuiltMonoAndroidTypeMap"
-      Inputs="$(_PreBuiltTypeMapAssembly)"
+      DependsOnTargets="_CompilePreBuiltMonoAndroidTypeMapJcwJarInputs"
+      Inputs="$(_PreBuiltTypeMapGenerationStamp);$(_PreBuiltTypeMapJavaFilesList);@(_PreBuiltTypeMapJavaFile);$(_PreBuiltTypeMapAndroidJar);$(_PreBuiltTypeMapMonoAndroidJar);$(_PreBuiltTypeMapRuntimeJar)"
       Outputs="$(_PreBuiltTypeMapJcwJar)">
-    <ItemGroup>
-      <_PreBuiltTypeMapJavaFile Include="$(_PreBuiltTypeMapJavaDir)**\*.java" />
-    </ItemGroup>
     <RemoveDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
     <MakeDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
     <WriteLinesToFile File="$(_PreBuiltTypeMapJcwSourceList)" Lines="@(_PreBuiltTypeMapJavaFile)" Overwrite="true" />
