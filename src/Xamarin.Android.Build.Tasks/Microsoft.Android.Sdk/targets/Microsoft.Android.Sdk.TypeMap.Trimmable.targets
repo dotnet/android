@@ -270,8 +270,10 @@
     </ItemGroup>
   </Target>
 
-  <!-- Dex the pre-compiled trimmable Mono.Android JCWs instead of regenerating them per app. -->
-  <ItemGroup Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
+  <!-- Dex the pre-compiled trimmable Mono.Android JCWs instead of regenerating them per app.
+       Libraries must not embed this SDK-wide jar in their AAR: the consuming application either
+       adds it itself for a pre-generated Debug typemap or generates its own Release wrappers. -->
+  <ItemGroup Condition=" '$(AndroidApplication)' == 'true' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">
     <AndroidJavaLibrary Include="$(_PreGeneratedMonoAndroidTypeMapJar)" />
   </ItemGroup>
 

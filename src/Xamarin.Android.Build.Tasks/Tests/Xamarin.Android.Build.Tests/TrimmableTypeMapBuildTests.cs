@@ -39,7 +39,35 @@ namespace Xamarin.Android.Build.Tests {
 				FileAssert.Exists (dexFile);
 				Assert.IsTrue (
 					DexUtils.ContainsClassWithMethod ("Lmono/android/view/View_OnClickListenerImplementor;", "<init>", "()V", dexFile, AndroidSdkPath),
-					$"`{dexFile}` should include the framework listener implementors from mono.android.jar.");
+					$"`{dexFile}` should include the pre-generated framework listener implementors.");
+			}
+		}
+
+		[Test]
+		public void DebugTrimmableTypeMapLibrary_DoesNotPackageFrameworkJavaWrappers ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+
+			var aarPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+			FileAssert.Exists (aarPath);
+			using var aar = ZipHelper.OpenZip (aarPath);
+			foreach (var entry in aar.Where (entry => entry.FullName.StartsWith ("libs/", StringComparison.Ordinal) && entry.FullName.EndsWith (".jar", StringComparison.Ordinal))) {
+				using var stream = new MemoryStream ();
+				entry.Extract (stream);
+				stream.Position = 0;
+				using var jar = Xamarin.Tools.Zip.ZipArchive.Open (stream);
+				Assert.IsFalse (
+					jar.ContainsEntry ("android/runtime/JavaProxyThrowable.class"),
+					$"{aarPath}!/{entry.FullName} should not redistribute the SDK's pre-generated framework wrappers.");
 			}
 		}
 
