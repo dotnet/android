@@ -3066,6 +3066,14 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
         Condition=" '$(DesignTimeBuild)' != 'true' "/>
+  <Target Name="_ValidateAndroidJcwCodegenTarget"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+    <AndroidError Code="XA4232"
+        ResourceName="XA4232"
+        FormatArguments="$(_AndroidJcwCodegenTarget)"
+        Condition=" '$(_AndroidJcwCodegenTarget)' == 'XamarinAndroid' or '$(_AndroidJcwCodegenTarget)' == 'JavaInterop1' " />
+  </Target>
+
   <Target Name="_ValidateAndroidTypeMapImplementation"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "
