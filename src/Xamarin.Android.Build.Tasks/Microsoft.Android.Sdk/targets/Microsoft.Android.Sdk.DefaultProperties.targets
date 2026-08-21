@@ -33,6 +33,7 @@
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' and '$(PublishAot)' == 'true' and ('$(_IsPublishing)' == 'true' or '$(Optimize)' == 'true') ">NativeAOT</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' and '$(UseMonoRuntime)' == 'true' ">MonoVM</_AndroidRuntime>
     <_AndroidRuntime Condition=" '$(_AndroidRuntime)' == '' ">CoreCLR</_AndroidRuntime>
+    <NativeCompilationDuringPublish Condition=" '$(NativeCompilationDuringPublish)' == '' and '$(PublishAot)' == 'true' and '$(_AndroidRuntime)' != 'NativeAOT' ">false</NativeCompilationDuringPublish>
     <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</PublishAotUsingRuntimePack>
 
     <!-- Use $(AndroidMinimumSupportedApiLevel) for $(SupportedOSPlatformVersion) if unset -->

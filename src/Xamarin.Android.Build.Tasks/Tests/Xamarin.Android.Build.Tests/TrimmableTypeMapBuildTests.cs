@@ -48,7 +48,6 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty (KnownProperties.PublishAot, "true");
-			proj.SetProperty ("NativeCompilationDuringPublish", "false");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
