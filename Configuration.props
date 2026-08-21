@@ -51,7 +51,7 @@
     <AndroidBuildApiLevel Include="37.1">
       <PlatformId>37.1</PlatformId>
       <FrameworkVersion>v17.1</FrameworkVersion>
-      <Unstable>true</Unstable>
+      <Unstable>false</Unstable>
     </AndroidBuildApiLevel>
     <AndroidBuildApiLevel Include="37.2">
       <PlatformId>37.2</PlatformId>

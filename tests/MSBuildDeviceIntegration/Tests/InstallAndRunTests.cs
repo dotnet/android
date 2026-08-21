@@ -2060,12 +2060,12 @@ namespace UnnamedProject
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework,
-				[Values (true)] bool enablePreviewFeatures)
+				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework)
 		{
 			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
 			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
 			var permission = apiLevel == "37.1" ? "AccessHid" : "BindContentSafetyService";
+			var enablePreviewFeatures = apiLevel == "37.2";
 			var proj = new XamarinAndroidApplicationProject () {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
