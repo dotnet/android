@@ -426,6 +426,38 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Generate_LeafCtor_CreateInstanceMarksPeerReplaceableBeforeActivation ()
+	{
+		var peers = ScanFixtures ();
+		// ClickableView has its own (IntPtr, JniHandleOwnership) ctor
+		var clickableView = peers.First (p => p.JavaName == "my/app/ClickableView");
+
+		using var stream = GenerateAssembly (new [] { clickableView }, "LeafCtorPreMarkTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		AssertCreateInstancePreMarksPeer (pe, reader, "MyApp_ClickableView_Proxy", "ClickableView");
+	}
+
+	[Fact]
+	public void Generate_LeafJavaInteropCtor_CreateInstanceMarksPeerReplaceableBeforeActivation ()
+	{
+		var peer = MakeAcwPeer ("test/JiLeafTarget", "Test.JiLeafTarget", "TestAsm") with {
+			ActivationCtor = new ActivationCtorInfo {
+				DeclaringTypeName = "Test.JiLeafTarget",
+				DeclaringAssemblyName = "TestAsm",
+				Style = ActivationCtorStyle.JavaInterop,
+			},
+		};
+
+		using var stream = GenerateAssembly (new [] { peer }, "LeafJiCtorPreMarkTest");
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		AssertCreateInstancePreMarksPeer (pe, reader, "Test_JiLeafTarget_Proxy", "JiLeafTarget");
+	}
+
+	[Fact]
 	public void Generate_InheritedCtor_CreateInstanceDoesNotActivate ()
 	{
 		var peers = ScanFixtures ();
@@ -2699,6 +2731,61 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 	static void AssertCreateInstanceReturnsNull (PEReader pe, MetadataReader reader, string proxyTypeName)
 	{
+		var ilBytes = GetCreateInstanceIL (pe, reader, proxyTypeName);
+		Assert.Equal (new [] { (byte) ILOpCode.Ldnull, (byte) ILOpCode.Ret }, ilBytes);
+	}
+
+	/// <summary>
+	/// Asserts that CreateInstance allocates the peer uninitialized and marks it replaceable
+	/// *before* invoking the activation constructor, rather than using <c>newobj</c>.
+	/// The activation constructor is what registers the peer, and
+	/// <c>JniRuntime.JniValueManager.AddPeer()</c> arbitrates using
+	/// <c>JniManagedPeerStates.Replaceable</c>: a peer that only becomes replaceable after it
+	/// is registered can be evicted by a second implicitly created peer, so two threads
+	/// wrapping the same Java instance could each keep a different wrapper.
+	/// </summary>
+	static void AssertCreateInstancePreMarksPeer (
+			PEReader pe,
+			MetadataReader reader,
+			string proxyTypeName,
+			string targetTypeShortName)
+	{
+		var ilBytes = GetCreateInstanceIL (pe, reader, proxyTypeName);
+
+		Assert.True (
+			AllMemberRefHandles (reader)
+				.Where (h => reader.GetString (reader.GetMemberReference (h).Name) == "GetUninitializedObject")
+				.Any (h => ILContainsCallToken (ilBytes, MetadataTokens.GetToken (h))),
+			"CreateInstance should allocate the peer via RuntimeHelpers.GetUninitializedObject()");
+
+		Assert.True (
+			AllMemberRefHandles (reader)
+				.Where (h => reader.GetString (reader.GetMemberReference (h).Name) == "MarkCreatedPeerReplaceable")
+				.Any (h => ILContainsCallToken (ilBytes, MetadataTokens.GetToken (h))),
+			"CreateInstance should call JavaPeerProxy.MarkCreatedPeerReplaceable()");
+
+		var activationCtors = AllMemberRefHandles (reader)
+			.Where (h => {
+				var mref = reader.GetMemberReference (h);
+				if (reader.GetString (mref.Name) != ".ctor" || mref.Parent.Kind != HandleKind.TypeReference) {
+					return false;
+				}
+				var typeRef = reader.GetTypeReference ((TypeReferenceHandle) mref.Parent);
+				return reader.GetString (typeRef.Name) == targetTypeShortName;
+			})
+			.ToList ();
+		Assert.NotEmpty (activationCtors);
+
+		Assert.True (
+			activationCtors.Any (h => ILContainsCallToken (ilBytes, MetadataTokens.GetToken (h))),
+			$"CreateInstance should `call` the {targetTypeShortName} activation ctor on the pre-marked instance");
+		Assert.All (activationCtors, h => Assert.False (
+			ILContainsNewobjToken (ilBytes, MetadataTokens.GetToken (h)),
+			$"CreateInstance must not `newobj` {targetTypeShortName}: the peer would register before it is marked replaceable"));
+	}
+
+	static byte[] GetCreateInstanceIL (PEReader pe, MetadataReader reader, string proxyTypeName)
+	{
 		var proxyTypeHandle = reader.TypeDefinitions.First (h => {
 			var type = reader.GetTypeDefinition (h);
 			return reader.GetString (type.Namespace) == "_TypeMap.Proxies" &&
@@ -2712,7 +2799,7 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.NotNull (body);
 		var ilBytes = body.GetILBytes ();
 		Assert.NotNull (ilBytes);
-		Assert.Equal (new [] { (byte) ILOpCode.Ldnull, (byte) ILOpCode.Ret }, ilBytes!);
+		return ilBytes!;
 	}
 
 	static List<MemberReferenceHandle> AllMemberRefHandles (MetadataReader reader) =>

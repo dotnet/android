@@ -108,6 +108,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getActivationPeerRef;
 	MemberReferenceHandle _setActivationPeerReferenceRef;
 	MemberReferenceHandle _markActivationPeerReplaceableRef;
+	MemberReferenceHandle _markCreatedPeerReplaceableRef;
 	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
@@ -431,6 +432,11 @@ sealed class TypeMapAssemblyEmitter
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().IntPtr ()));
+
+		_markCreatedPeerReplaceableRef = _pe.AddMemberRef (_javaPeerProxyRef, "MarkCreatedPeerReplaceable",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Void (),
+				p => p.AddParameter ().Type ().Type (_iJavaPeerableRef, false)));
 
 		_waitForBridgeProcessingRef = _pe.AddMemberRef (_androidRuntimeInternalRef, "WaitForBridgeProcessing",
 			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
@@ -800,25 +806,55 @@ sealed class TypeMapAssemblyEmitter
 		});
 	}
 
+	/// <summary>
+	/// Emits CreateInstance for XA-style activation (leaf type):
+	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+	///   JavaPeerProxy.MarkCreatedPeerReplaceable(obj);
+	///   obj.Ctor(handle, ownership);
+	///   return obj;
+	/// </summary>
+	/// <remarks>
+	/// The peer is allocated uninitialized and marked replaceable before the activation
+	/// constructor runs, because that constructor is what registers the peer. See
+	/// <c>JavaPeerProxy.MarkCreatedPeerReplaceable()</c>. This mirrors
+	/// <c>TypeManager.CreateProxy()</c> in the non-trimmable typemap implementation.
+	/// </remarks>
 	void EmitCreateInstanceViaNewobj (EntityHandle typeRef)
 	{
 		var ctorRef = AddActivationCtorRef (typeRef);
 		EmitCreateInstanceBody (encoder => {
+			EmitUninitializedReplaceablePeer (encoder, typeRef);
+
+			encoder.OpCode (ILOpCode.Dup);
 			encoder.OpCode (ILOpCode.Ldarg_1);
 			encoder.OpCode (ILOpCode.Ldarg_2);
-			encoder.NewObject (ctorRef, parameterCount: 2);
+			encoder.Call (ctorRef, parameterCount: 2, isInstance: true);
+
 			encoder.Return (returnsValue: true);
 		});
+	}
+
+	/// <summary>
+	/// Emits, leaving the new instance on the stack:
+	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+	///   JavaPeerProxy.MarkCreatedPeerReplaceable(obj);
+	/// </summary>
+	void EmitUninitializedReplaceablePeer (PEAssemblyBuilder.TrackedInstructionEncoder encoder, EntityHandle typeRef)
+	{
+		encoder.LoadToken (typeRef);
+		encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
+		encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
+		encoder.CastClass (typeRef);
+
+		encoder.OpCode (ILOpCode.Dup);
+		encoder.Call (_markCreatedPeerReplaceableRef, parameterCount: 1);
 	}
 
 	void EmitCreateInstanceInheritedCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
 	{
 		var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
 		EmitCreateInstanceBody (encoder => {
-			encoder.LoadToken (targetTypeRef);
-			encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-			encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-			encoder.CastClass (targetTypeRef);
+			EmitUninitializedReplaceablePeer (encoder, targetTypeRef);
 
 			encoder.OpCode (ILOpCode.Dup);
 			encoder.OpCode (ILOpCode.Ldarg_1);
@@ -831,16 +867,22 @@ sealed class TypeMapAssemblyEmitter
 
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
+	///   var result = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
+	///   JavaPeerProxy.MarkCreatedPeerReplaceable(result);
 	///   var jniRef = new JniObjectReference(handle);
-	///   var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+	///   result.Ctor(ref jniRef, JniObjectReferenceOptions.Copy);
 	///   JNIEnv.DeleteRef(handle, ownership);
 	///   return result;
 	/// </summary>
+	/// <remarks>
+	/// See <see cref="EmitCreateInstanceViaNewobj"/> for why the instance is allocated
+	/// uninitialized and marked replaceable before its activation constructor runs.
+	/// </remarks>
 	void EmitCreateInstanceViaJavaInteropNewobj (EntityHandle typeRef)
 	{
 		var ctorRef = AddJavaInteropActivationCtorRef (typeRef);
 		EmitCreateInstanceBodyWithLocals (
-			EncodeJniObjectReferenceAndObjectLocals,
+			EncodeJniObjectReferenceLocal,
 			encoder => {
 				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
@@ -848,18 +890,20 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+				EmitUninitializedReplaceablePeer (encoder, typeRef);
+
+				// result.Ctor(ref jniRef, JniObjectReferenceOptions.Copy);
+				// The result stays on the stack across JNIEnv.DeleteRef() below.
+				encoder.OpCode (ILOpCode.Dup);
 				encoder.LoadLocalAddress (0);
 				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
-				encoder.NewObject (ctorRef, parameterCount: 2);
-				encoder.StoreLocal (1); // save result
+				encoder.Call (ctorRef, parameterCount: 2, isInstance: true);
 
 				// JNIEnv.DeleteRef(handle, ownership);
 				encoder.OpCode (ILOpCode.Ldarg_1); // handle
 				encoder.OpCode (ILOpCode.Ldarg_2); // ownership
 				encoder.Call (_jniEnvDeleteRefRef, parameterCount: 2);
 
-				encoder.LoadLocal (1); // load result
 				encoder.Return (returnsValue: true);
 			});
 	}
@@ -879,10 +923,8 @@ sealed class TypeMapAssemblyEmitter
 			EncodeJniObjectReferenceLocal,
 			encoder => {
 				// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-				encoder.LoadToken (targetTypeRef);
-				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-				encoder.CastClass (targetTypeRef);
+				// JavaPeerProxy.MarkCreatedPeerReplaceable(obj);
+				EmitUninitializedReplaceablePeer (encoder, targetTypeRef);
 
 				// dup obj (one copy for the call, one for the return)
 				encoder.OpCode (ILOpCode.Dup);
@@ -914,18 +956,6 @@ sealed class TypeMapAssemblyEmitter
 		blob.WriteCompressedInteger (1); // 1 local variable
 		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
 		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
-	}
-
-	void EncodeJniObjectReferenceAndObjectLocals (BlobBuilder blob)
-	{
-		// LOCAL_SIG header (0x07), count = 2:
-		//   local 0: JniObjectReference (valuetype)
-		//   local 1: object (for storing the newobj result across the DeleteRef call)
-		blob.WriteByte ((byte) SignatureKind.LocalVariables);
-		blob.WriteCompressedInteger (2); // 2 local variables
-		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
-		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
-		blob.WriteByte ((byte) SignatureTypeCode.Object);
 	}
 
 	MemberReferenceHandle AddJavaInteropActivationCtorRef (EntityHandle declaringTypeRef)

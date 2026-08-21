@@ -4375,6 +4375,7 @@ static Android.Widget.PhotoPicker.PhotoPickerSelectionParams.Creator.get -> Andr
 static Android.Widget.PhotoPicker.PhotoPickerUiCustomizationParams.Creator.get -> Android.OS.IParcelableCreator!
 static Java.Interop.JavaPeerProxy.GetActivationPeer(nint jniSelf) -> Java.Interop.IJavaPeerable?
 static Java.Interop.JavaPeerProxy.MarkActivationPeerReplaceable(nint jniSelf) -> void
+static Java.Interop.JavaPeerProxy.MarkCreatedPeerReplaceable(Java.Interop.IJavaPeerable! peer) -> void
 static Java.Interop.JavaPeerProxy.SetActivationPeerReference(Java.Interop.IJavaPeerable! peer, nint jniSelf) -> void
 static Java.Interop.JavaPeerProxy.ShouldSkipActivation(nint jniSelf) -> bool
 static Java.Lang.Character.UnicodeBlock.CjkUnifiedIdeographsExtensionI.get -> Java.Lang.Character.UnicodeBlock?

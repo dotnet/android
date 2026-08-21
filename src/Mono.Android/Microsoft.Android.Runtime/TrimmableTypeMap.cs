@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Android.Runtime;
@@ -19,8 +20,6 @@ namespace Microsoft.Android.Runtime;
 /// </summary>
 public class TrimmableTypeMap
 {
-	const JniHandleOwnership CreatedPeerOwnership = JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister;
-
 	static readonly Lock s_initLock = new ();
 	static readonly JavaPeerProxy s_noPeerSentinel = new MissingJavaPeerProxy ();
 	static TrimmableTypeMap? s_instance;
@@ -350,21 +349,21 @@ public class TrimmableTypeMap
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			peer = ActivateUsingReflection (targetType, handle, CreatedPeerOwnership);
+			peer = ActivateUsingReflection (targetType, handle, JniHandleOwnership.DoNotTransfer);
 		} else {
-			peer = proxy?.CreateInstance (handle, CreatedPeerOwnership);
+			peer = proxy?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
 		}
 		if (peer is not null) {
-			RegisterCreatedPeer (peer);
+			MarkCreatedPeer (peer);
 		}
 		return peer;
 	}
 
 	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
 	{
-		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, CreatedPeerOwnership);
+		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, JniHandleOwnership.DoNotTransfer);
 		if (peer is not null) {
-			RegisterCreatedPeer (peer);
+			MarkCreatedPeer (peer);
 		}
 		return peer;
 	}
@@ -397,17 +396,22 @@ public class TrimmableTypeMap
 			return null;
 		}
 
-		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+		// Allocate and mark the peer before running the activation constructor, which is
+		// what registers it; see JavaPeerProxy.MarkCreatedPeerReplaceable(). Generated
+		// JavaPeerProxy.CreateInstance() overrides do the same thing.
+		var peer = (IJavaPeerable) RuntimeHelpers.GetUninitializedObject (closedType);
+		JavaPeerProxy.MarkCreatedPeerReplaceable (peer);
+		ctor.Invoke (peer, [handle, transfer]);
+		return peer;
 	}
 
-	static void RegisterCreatedPeer (IJavaPeerable peer)
+	static void MarkCreatedPeer (IJavaPeerable peer)
 	{
 		var peerState = peer.JniManagedPeerState | JniManagedPeerStates.Replaceable;
 		if (global::Java.Interop.Runtime.IsGCUserPeer (peer.PeerReference.Handle)) {
 			peerState |= JniManagedPeerStates.Activatable;
 		}
 		peer.SetJniManagedPeerState (peerState);
-		JniEnvironment.Runtime.ValueManager.AddPeer (peer);
 	}
 
 	/// <summary>

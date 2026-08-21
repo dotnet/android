@@ -110,6 +110,30 @@ namespace Java.Interop
 			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
 		}
 
+		/// <summary>
+		/// Marks an implicitly created peer as replaceable, before its activation
+		/// constructor runs.
+		/// </summary>
+		/// <remarks>
+		/// Generated <see cref="CreateInstance"/> overrides call this on the
+		/// uninitialized instance before invoking the activation constructor, because the
+		/// constructor is what registers the peer and
+		/// <c>JniRuntime.JniValueManager.AddPeer()</c> arbitrates between an incoming and
+		/// an already registered peer using <see cref="JniManagedPeerStates.Replaceable"/>.
+		/// A peer that only becomes replaceable *after* it is registered would let a second
+		/// implicitly created peer evict it, so two threads wrapping the same Java instance
+		/// could each end up holding a different wrapper.
+		///
+		/// This mirrors <c>TypeManager.CreateProxy()</c>, which pre-marks the uninitialized
+		/// instance for the same reason.
+		/// </remarks>
+		public static void MarkCreatedPeerReplaceable (IJavaPeerable peer)
+		{
+			ArgumentNullException.ThrowIfNull (peer);
+
+			peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+		}
+
 		static bool IsActivationPeer (IJavaPeerable peer)
 		{
 			var state = peer.JniManagedPeerState;
