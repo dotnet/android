@@ -100,6 +100,10 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('windows')) ">windows-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('osx')) ">darwin-x86_64</_NdkPrebuiltAbi>
       <_NdkPrebuiltAbi Condition=" $([MSBuild]::IsOSPlatform('linux')) ">linux-x86_64</_NdkPrebuiltAbi>
+      <!-- Runtime packs contain debug and release flavors, independent of the project's configuration name. -->
+      <_AndroidNativeAotRuntimeFlavor Condition=" '$(Optimize)' == 'true' ">release</_AndroidNativeAotRuntimeFlavor>
+      <_AndroidNativeAotRuntimeFlavor Condition=" '$(_AndroidNativeAotRuntimeFlavor)' == '' ">debug</_AndroidNativeAotRuntimeFlavor>
+      <_AndroidNativeAotRuntimeLibraryName>libnaot-android.$(_AndroidNativeAotRuntimeFlavor)-static-$(_AndroidNativeAotRuntimeFlavor)</_AndroidNativeAotRuntimeLibraryName>
 
       <!-- We need to explicitly specify the extension on Windows, since some Android NDK versions
            for Windows contain bash shell scripts without the extension, in addition to the
@@ -163,7 +167,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
-      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
+      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', '$(_AndroidNativeAotRuntimeLibraryName)'))" />
 
       <!-- Include libc++ -->
       <_NdkLibs Include="$(_NdkSysrootDir)libc++_static.a" />
@@ -278,7 +282,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
          _RuntimePackLibraryDirectory is not populated for NativeAOT, so derive the path from
          the libnaot-android RuntimePackAsset item. -->
     <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
-      <_NativeAotRuntimePackAsset Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
+      <_NativeAotRuntimePackAsset Include="@(RuntimePackAsset->WithMetadataValue('Filename', '$(_AndroidNativeAotRuntimeLibraryName)'))" />
     </ItemGroup>
     <PropertyGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
       <_NativeAotRuntimePackNativeDir>@(_NativeAotRuntimePackAsset->'%(RootDir)%(Directory)')</_NativeAotRuntimePackNativeDir>
@@ -334,7 +338,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <!-- When using workload linker, resolve libc++/libnaot from runtime pack dir.
          When using NDK, @(_NdkLibs) already has the right NDK sysroot paths. -->
     <ItemGroup Condition=" '$(_AndroidUseWorkloadNativeLinker)' == 'true' ">
-      <_NativeAotLinkLibraries Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.$(Configuration.ToLower())-static-$(Configuration.ToLower())'))" />
+      <_NativeAotLinkLibraries Include="@(RuntimePackAsset->WithMetadataValue('Filename', '$(_AndroidNativeAotRuntimeLibraryName)'))" />
       <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libc++_static.a" />
       <_NativeAotLinkLibraries Include="$(_NativeAotRuntimePackNativeDir)libc++abi.a" />
     </ItemGroup>

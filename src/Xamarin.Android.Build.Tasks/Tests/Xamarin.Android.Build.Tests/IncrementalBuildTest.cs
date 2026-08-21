@@ -498,8 +498,9 @@ namespace Xamarin.Android.Build.Tests
 			};
 			app2.SetRuntime (runtime);
 			sb.Projects.Add (app2);
-			Assert.IsTrue (sb.Build (), "Build of solution should have succeeded");
-			Assert.IsTrue (sb.ReBuild (), "ReBuild of solution should have succeeded");
+			var parameters = isRelease ? new [] { "Configuration=Release" } : [];
+			Assert.IsTrue (sb.Build (parameters), "Build of solution should have succeeded");
+			Assert.IsTrue (sb.ReBuild (parameters), "ReBuild of solution should have succeeded");
 			sb.Dispose ();
 		}
 
@@ -537,8 +538,9 @@ namespace Xamarin.Android.Build.Tests
 				sb.Projects.Add (app1);
 			}
 			sb.BuildingInsideVisualStudio = false;
-			Assert.IsTrue (sb.Build (), "Build of solution should have succeeded");
-			Assert.IsTrue (sb.ReBuild (), "ReBuild of solution should have succeeded");
+			var parameters = runtime == AndroidRuntime.NativeAOT ? new [] { "Configuration=Release" } : [];
+			Assert.IsTrue (sb.Build (parameters), "Build of solution should have succeeded");
+			Assert.IsTrue (sb.ReBuild (parameters), "ReBuild of solution should have succeeded");
 			sb.Dispose ();
 		}
 
