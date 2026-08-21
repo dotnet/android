@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <cinttypes>
 #include <pthread.h>
 #include <semaphore.h>
 
@@ -128,13 +129,13 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 		return;
 	}
 
-	log_info (LOG_GC, "cross references callback invoked with {} sccs and {} xrefs.", args->ComponentCount, args->CrossReferenceCount);
+	log_infof (LOG_GC, "cross references callback invoked with %zu sccs and %zu xrefs.", args->ComponentCount, args->CrossReferenceCount);
 
 	JNIEnv *env = OSBridge::ensure_jnienv ();
 	
 	for (size_t i = 0; i < args->ComponentCount; ++i) {
 		const StronglyConnectedComponent &scc = args->Components [i];
-		log_info (LOG_GC, "group {} with {} objects", i, scc.Count);
+		log_infof (LOG_GC, "group %zu with %zu objects", i, scc.Count);
 		for (size_t j = 0; j < scc.Count; ++j) {
 			log_handle_context (env, scc.Contexts [j]);
 		}
@@ -147,7 +148,7 @@ void GCBridge::log_mark_cross_references_args_if_enabled (MarkCrossReferencesArg
 	for (size_t i = 0; i < args->CrossReferenceCount; ++i) {
 		size_t source_index = args->CrossReferences [i].SourceGroupIndex;
 		size_t dest_index = args->CrossReferences [i].DestinationGroupIndex;
-		log_info_nocheck_fmt (LOG_GC, "xref [{}] {} -> {}", i, source_index, dest_index);
+		log_writef (LOG_GC, LogLevel::Info, "xref [%zu] %zu -> %zu", i, source_index, dest_index);
 	}
 }
 
@@ -161,10 +162,10 @@ void GCBridge::log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept
 	jclass java_class = env->GetObjectClass (handle);
 	if (java_class != nullptr) {
 		char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-		log_info (LOG_GC, "gref {:#x} [{}]", reinterpret_cast<intptr_t> (handle), class_name);
+		log_infof (LOG_GC, "gref 0x%" PRIxPTR " [%s]", reinterpret_cast<uintptr_t> (handle), optional_string (class_name));
 		free (class_name);
 		env->DeleteLocalRef (java_class);
 	} else {
-		log_info (LOG_GC, "gref {:#x} [unknown class]", reinterpret_cast<intptr_t> (handle));
+		log_infof (LOG_GC, "gref 0x%" PRIxPTR " [unknown class]", reinterpret_cast<uintptr_t> (handle));
 	}
 }

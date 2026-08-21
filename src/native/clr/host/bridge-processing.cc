@@ -1,3 +1,4 @@
+#include <cinttypes>
 #include <cstdlib>
 
 #include <host/bridge-processing.hh>
@@ -32,7 +33,7 @@ TemporaryPeerMap::TemporaryPeerMap (JNIEnv *jni_env, MarkCrossReferencesArgs *ar
 
 	if (env->EnsureLocalCapacity (requested_capacity) != JNI_OK) [[unlikely]] {
 		env->ExceptionClear ();
-		log_warn (LOG_GC, "Failed to reserve JNI local reference capacity for {} temporary peers", map_capacity);
+		log_warnf (LOG_GC, "Failed to reserve JNI local reference capacity for %zu temporary peers", map_capacity);
 	}
 
 	capacity = map_capacity;
@@ -470,7 +471,7 @@ void BridgeProcessingShared::log_missing_add_references_method ([[maybe_unused]]
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	log_error (LOG_GC, "Missing monodroidAddReferences method for object of class {}", optional_string (class_name));
+	log_errorf (LOG_GC, "Missing monodroidAddReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
 }
@@ -486,7 +487,7 @@ void BridgeProcessingShared::log_missing_clear_references_method ([[maybe_unused
 	}
 
 	char *class_name = Host::get_java_class_name_for_TypeManager (java_class);
-	log_error (LOG_GC, "Missing monodroidClearReferences method for object of class {}", optional_string (class_name));
+	log_errorf (LOG_GC, "Missing monodroidClearReferences method for object of class %s", optional_string (class_name));
 	free (class_name);
 #endif
 }
@@ -509,10 +510,11 @@ void BridgeProcessingShared::log_weak_to_gref (jobject weak, jobject handle) noe
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (
-		std::format ("take_global_ref wref={:#x} -> handle={:#x}\n"sv,
-			reinterpret_cast<intptr_t> (weak),
-			reinterpret_cast<intptr_t> (handle)).data ());
+	OSBridge::_monodroid_gref_logf (
+		"take_global_ref wref=0x%" PRIxPTR " -> handle=0x%" PRIxPTR "\n",
+		reinterpret_cast<uintptr_t> (weak),
+		reinterpret_cast<uintptr_t> (handle)
+	);
 }
 
 [[gnu::always_inline]]
@@ -522,8 +524,10 @@ void BridgeProcessingShared::log_weak_ref_collected (jobject weak) noexcept
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (
-		std::format ("handle {:#x}/W; was collected by a Java GC"sv, reinterpret_cast<intptr_t> (weak)).data ());
+	OSBridge::_monodroid_gref_logf (
+		"handle 0x%" PRIxPTR "/W; was collected by a Java GC",
+		reinterpret_cast<uintptr_t> (weak)
+	);
 }
 
 [[gnu::always_inline]]
@@ -533,7 +537,7 @@ void BridgeProcessingShared::log_take_weak_global_ref (jobject handle) noexcept
 		return;
 	}
 
-	OSBridge::_monodroid_gref_log (std::format ("take_weak_global_ref handle={:#x}\n"sv, reinterpret_cast<intptr_t> (handle)).data ());
+	OSBridge::_monodroid_gref_logf ("take_weak_global_ref handle=0x%" PRIxPTR "\n", reinterpret_cast<uintptr_t> (handle));
 }
 
 [[gnu::always_inline]]
@@ -594,5 +598,5 @@ void BridgeProcessingShared::log_gc_summary () noexcept
 		}
 	}
 
-	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
+	log_infof (LOG_GC, "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
 }

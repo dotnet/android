@@ -1728,16 +1728,6 @@ class TestActivity : Activity { }"
 				File.Delete (templateFile);
 			}
 		}
-
-		class MockVersionResolver : IVersionResolver
-		{
-			public Func<string, int?> GetApiLevelFromIdFunc { get; set; } = _ => 99;
-			public Func<string, string> GetIdFromApiLevelFunc { get; set; } = _ => "API-99";
-
-			public int? GetApiLevelFromId (string id) => GetApiLevelFromIdFunc (id);
-
-			public string GetIdFromApiLevel (string apiLevel) => GetIdFromApiLevelFunc (apiLevel);
-		}
 	}
 }
 

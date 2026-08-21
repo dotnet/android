@@ -98,6 +98,98 @@ namespace generatortests
 		}
 
 		[Test]
+		public void Method_InvalidJniParameterOverride ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void'><parameter name='value' type='int' managed-jni-type='Ljava/lang/Object;' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
+		public void Method_InvalidJniSignatureOverride ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='int' managed-jni-signature='()Ljava/lang/Object;' />");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[TestCase ("(L;)V")]
+		[TestCase ("(T;)V")]
+		public void Method_EmptyReferenceDescriptorIsInvalid (string signature)
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ($"<method name='test' return='void' managed-jni-signature='{signature}'><parameter name='value' type='java.lang.String' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
+		public void Method_GenericJniSignatureOverrideIsInvalid ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void' managed-jni-signature='(TT;)V'><parameter name='value' type='java.lang.String' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
+		public void Method_GenericJniParameterOverrideIsInvalid ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void'><parameter name='value' type='java.lang.String' managed-jni-type='TT;' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[TestCase ("(Ljava.lang.String;)V")]
+		[TestCase ("([Ljava.lang.String;)V")]
+		public void Method_DottedJniSignatureOverrideIsInvalid (string signature)
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ($"<method name='test' return='void' managed-jni-signature='{signature}'><parameter name='value' type='java.lang.String' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
+		public void Method_DottedJniParameterOverrideIsInvalid ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void'><parameter name='value' type='java.lang.String' managed-jni-type='Ljava.lang.String;' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsFalse (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+		}
+
+		[Test]
+		public void Method_EmptyJniOverridesAreIgnored ()
+		{
+			var element = package.Element ("class");
+			var @class = XmlApiImporter.CreateClass (package, element, options);
+			var methodElement = XElement.Parse ("<method name='test' return='void' managed-jni-signature=''><parameter name='value' type='int' managed-jni-type='' /></method>");
+			var method = XmlApiImporter.CreateMethod (@class, methodElement);
+
+			Assert.IsTrue (method.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+			Assert.AreEqual ("(I)V", method.JniSignature);
+			Assert.AreEqual ("I", method.Parameters [0].JniType);
+		}
+
+		[Test]
 		public void Method_Matches_True ()
 		{
 			var element = package.Element ("class");

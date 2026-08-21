@@ -1,20 +1,5 @@
 <Project>
 
-  <ItemGroup>
-    <TestApkInstrumentation Include="xamarin.android.runtimetests.NUnitInstrumentation">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-      <ResultsPath>$(OutputPath)TestResult-$(_MonoAndroidTestPackage).xml</ResultsPath>
-    </TestApkInstrumentation>
-
-    <TestApkPermission Include="READ_EXTERNAL_STORAGE">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-    </TestApkPermission>
-
-    <TestApkPermission Include="WRITE_EXTERNAL_STORAGE">
-      <Package>$(_MonoAndroidTestPackage)</Package>
-    </TestApkPermission>
-  </ItemGroup>
-
   <Target Name="BuildNativeLibs"
       BeforeTargets="CoreBuild"
       DependsOnTargets="AndroidPrepareForBuild"

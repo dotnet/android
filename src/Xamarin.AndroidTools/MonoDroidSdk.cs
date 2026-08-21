@@ -40,7 +40,7 @@ namespace Xamarin.AndroidTools
 {
 	public class MonoDroidSdk
 	{
-		#region Obsolete
+		// Obsolete
 		static MonoDroidSdk oldSdk;
 
 		[Obsolete("Use static MonoDroidSdk members")]
@@ -88,8 +88,6 @@ namespace Xamarin.AndroidTools
 
 		[Obsolete ("Do not use.")]
 		public static string Javac;
-
-		#endregion
 
 		static MonoDroidSdkBase sdk;
 

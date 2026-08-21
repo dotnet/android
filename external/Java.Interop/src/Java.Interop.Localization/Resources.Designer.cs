@@ -437,6 +437,15 @@ namespace Java.Interop.Localization {
                 return ResourceManager.GetString("Generator_BG8C02", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to JNI signature override &apos;{0}&apos; is invalid or does not match the parameter count for member &apos;{1}&apos;..
+        /// </summary>
+        public static string Generator_BG8C03 {
+            get {
+                return ResourceManager.GetString("Generator_BG8C03", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Cannot generate Java wrapper for type &apos;{0}&apos;. Only &apos;class&apos; types are supported..

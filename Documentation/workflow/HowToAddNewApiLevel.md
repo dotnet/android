@@ -145,12 +145,12 @@ Then update the following files:
     build automatically appends `.zip`. Provide the package's SHA-256 hash in
     the `<Hash>` metadata.
 
-At this point, you can run `Xamarin.Android.sln -t:Prepare` using your usual mechanism.
+At this point, you can run `Xamarin.Android.slnx -t:Prepare` using your usual mechanism.
 However, it might not download the new platform into your local Android SDK.
 
 ### Build Xamarin.Android
 
-Build `Xamarin.Android.sln` using your usual mechanism. This will not use the new platform yet,
+Build `Xamarin.Android.slnx` using your usual mechanism. This will not use the new platform yet,
 but will build the tools like `param-name-importer` and `class-parse` that will be needed
 in the next steps.
 
@@ -247,7 +247,7 @@ cp src/Mono.Android/PublicAPI/API-36/* src/Mono.Android/PublicAPI/API-36.1
 
 ### Building the New Mono.Android
 
-- Build `Xamarin.Android.sln` with your usual mechanism, and the new `Mono.Android.dll` should be built
+- Build `Xamarin.Android.slnx` with your usual mechanism, and the new `Mono.Android.dll` should be built
 - Read the note at the bottom of `/src/Mono.Android/metadata` that has a few lines that must be 
   copy/pasted for new API levels
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
@@ -664,4 +664,3 @@ Depending on when enumification was done, the 10000 may be stored instead of 31.
 goes stable we must update `map.csv` to the correct value.
 
 Search for `android/os/Build$VERSION_CODES` in `map.csv`.
-

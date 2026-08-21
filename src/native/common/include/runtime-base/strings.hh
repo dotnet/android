@@ -36,16 +36,14 @@ namespace xamarin::android {
 		index_out_of_range,
 	};
 
-	static inline auto to_string (string_segment_error error) -> std::string_view const
+	static constexpr auto to_string (string_segment_error error) -> const char*
 	{
-		using std::operator""sv;
-
 		switch (error) {
 			case string_segment_error::index_out_of_range:
-				return "Index out of range"sv;
+				return "Index out of range";
 
 			default:
-				return "Unknown error"sv;
+				return "Unknown error";
 		}
 	}
 

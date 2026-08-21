@@ -115,6 +115,20 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void DeleteLocalRefWithDoNotRegister ()
+		{
+			int initialLocalReferenceCount = Java.Interop.Runtime.LocalReferenceCount;
+
+			using (var value = new Java.Lang.String (
+					JNIEnv.NewString ("value"),
+					JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister)) {
+				Assert.AreEqual ("value", value.ToString ());
+			}
+
+			Assert.AreEqual (initialLocalReferenceCount, Java.Interop.Runtime.LocalReferenceCount);
+		}
+
+		[Test]
 		public void MarshalInt23Array ()
 		{
 			using (var values = new JavaList<int[]>(

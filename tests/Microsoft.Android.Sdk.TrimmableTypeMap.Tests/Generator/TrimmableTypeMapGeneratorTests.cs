@@ -51,10 +51,224 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 				$"'{unresolvedTypeName}' from '{unresolvedAssemblyName}' at '{unresolvedAssemblyPath}' could not be resolved.");
 		public void LogJniAddNativeMethodRegistrationAttributeError (string managedTypeName) =>
 			logMessages.Add ($"XA4251: Type '{managedTypeName}' uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map.");
+		public void LogInvalidJavaNameError (string javaName, string invalidIdentifier) =>
+			logMessages.Add ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'.");
 		public void LogCustomJavaObjectError (string managedTypeName) =>
 			logMessages.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
 		public void LogCustomJavaObjectWarning (string managedTypeName) =>
 			warnings?.Add ($"XA4212: Type `{managedTypeName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.");
+	}
+
+	[Theory]
+	[InlineData ("com/for/Example", "for")]
+	[InlineData ("com/example/for", "for")]
+	[InlineData ("com/example/record", "record")]
+	public void ValidateJavaNames_ReservedIdentifier_LogsError (string javaName, string invalidIdentifier)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = javaName,
+				CompatJniName = javaName,
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_ContextualKeywordInPackage_IsValid ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/record/Example",
+				CompatJniName = "com/record/Example",
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+			},
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Theory]
+	[InlineData ("com/example/Outer$for", null, "for")]
+	[InlineData ("com/example/Outer$record", null, "record")]
+	[InlineData (null, "com/example/Outer$for", "for")]
+	[InlineData (null, "com/example/Outer$record", "record")]
+	public void ValidateJavaNames_ReservedReferencedTypeIdentifier_LogsError (string? baseJavaName, string? interfaceName, string invalidIdentifier)
+	{
+		var interfaces = interfaceName is null ? [] : new [] { interfaceName };
+		var referencedName = baseJavaName ?? interfaceName;
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/Derived",
+				CompatJniName = "com/example/Derived",
+				ManagedTypeName = "Example.Derived",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Derived",
+				AssemblyName = "Example",
+				BaseJavaName = baseJavaName,
+				ImplementedInterfaceJavaNames = interfaces,
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{referencedName}' contains reserved Java identifier '{invalidIdentifier}'."));
+	}
+
+	[Theory]
+	[InlineData ("com/example/Outer$for")]
+	[InlineData ("com/example/Outer$record")]
+	public void ValidateJavaNames_DollarInDeclaredTypeName_IsValid (string javaName)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = javaName,
+				CompatJniName = javaName,
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+			},
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
+	}
+
+	[Theory]
+	[InlineData ("com/example/Outer$for", "for")]
+	[InlineData ("com/example/Outer$record", "record")]
+	public void ValidateJavaNames_ReservedDeferredRegistrationTypeIdentifier_LogsError (string javaName, string invalidIdentifier)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = javaName,
+				CompatJniName = javaName,
+				ManagedTypeName = "Example.Application",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Application",
+				AssemblyName = "Example",
+				CannotRegisterInStaticConstructor = true,
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ($"XA4258: Java name '{javaName}' contains reserved Java identifier '{invalidIdentifier}'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_ReservedEmittedTypeReferences_LogErrors ()
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = "com/example/Derived",
+				CompatJniName = "com/example/Derived",
+				ManagedTypeName = "Example.Derived",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Derived",
+				AssemblyName = "Example",
+				JavaConstructors = [
+					new JavaConstructorInfo {
+						JniSignature = "(Lcom/example/Outer$for;)V",
+						ConstructorIndex = 0,
+					},
+				],
+				MarshalMethods = [
+					new MarshalMethodInfo {
+						JniName = "method",
+						JniSignature = "([Lcom/example/Outer$record;)Lcom/example/Outer$yield;",
+						ManagedMethodName = "Method",
+						NativeCallbackName = "n_method",
+						ThrownNames = ["com.example.Outer.permits"],
+					},
+				],
+				JavaFields = [
+					new JavaFieldInfo {
+						FieldName = "VALUE",
+						JavaTypeName = "com.example.Outer.sealed",
+						InitializerMethodName = "getValue",
+						Visibility = "public",
+					},
+				],
+			},
+		};
+
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$record' contains reserved Java identifier 'record'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$yield' contains reserved Java identifier 'yield'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.permits' contains reserved Java identifier 'permits'."));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.sealed' contains reserved Java identifier 'sealed'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_AfterDeferredRegistrationPropagation_ValidatesRegistrationName ()
+	{
+		var basePeer = new JavaPeerInfo {
+			JavaName = "com/example/Outer$for",
+			CompatJniName = "com/example/Outer$for",
+			ManagedTypeName = "Example.BaseApplication",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "BaseApplication",
+			AssemblyName = "Example",
+		};
+		var applicationPeer = new JavaPeerInfo {
+			JavaName = "com/example/Application",
+			CompatJniName = "com/example/Application",
+			ManagedTypeName = "Example.Application",
+			ManagedTypeNamespace = "Example",
+			ManagedTypeShortName = "Application",
+			AssemblyName = "Example",
+			BaseJavaName = basePeer.JavaName,
+			CannotRegisterInStaticConstructor = true,
+		};
+		var peers = new List<JavaPeerInfo> { basePeer, applicationPeer };
+
+		TrimmableTypeMapGenerator.PropagateDeferredRegistrationToBaseClasses (peers);
+
+		Assert.True (basePeer.CannotRegisterInStaticConstructor);
+		Assert.False (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com/example/Outer$for' contains reserved Java identifier 'for'."));
+	}
+
+	[Fact]
+	public void ValidateJavaNames_ReservedApplicationJavaClassIdentifier_LogsError ()
+	{
+		Assert.False (CreateGenerator ().ValidateJavaNames ([], "com.example.Outer.for"));
+		Assert.Contains (logMessages, message => message.Contains ("Java name 'com.example.Outer.for' contains reserved Java identifier 'for'."));
+	}
+
+	[Theory]
+	[InlineData (true, false, "com/for/Example")]
+	[InlineData (false, true, "com/for/Example")]
+	[InlineData (true, false, "com/example/Outer$record")]
+	[InlineData (false, true, "com/example/Outer$record")]
+	public void ValidateJavaNames_TypeWithoutJcw_IsNotValidated (bool doNotGenerateAcw, bool isInterface, string javaName)
+	{
+		var peers = new List<JavaPeerInfo> {
+			new JavaPeerInfo {
+				JavaName = javaName,
+				CompatJniName = javaName,
+				ManagedTypeName = "Example.Type",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = "Type",
+				AssemblyName = "Example",
+				DoNotGenerateAcw = doNotGenerateAcw,
+				IsInterface = isInterface,
+			},
+		};
+
+		Assert.True (CreateGenerator ().ValidateJavaNames (peers));
+		Assert.DoesNotContain (logMessages, message => message.Contains ("XA4258"));
 	}
 
 	[Fact]
