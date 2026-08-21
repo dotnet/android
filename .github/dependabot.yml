@@ -40,12 +40,12 @@ updates:
     target-branch: "release/10.0.1xx"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
   - package-ecosystem: "gradle"
     directories:
       - "/external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
-      - "/external/Java.Interop/tools/java-source-utils"
       - "/src/r8"
-      - "/src/manifestmerger"
       - "/src/proguard-android"
       - "/tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib"
     # Google Maven does not publish per-version release dates for R8, so the
@@ -54,6 +54,36 @@ updates:
       default-days: 0
     schedule:
       interval: "weekly"
+  - package-ecosystem: "gradle"
+    directory: "/external/Java.Interop/tools/java-source-utils"
+    cooldown:
+      default-days: 0
+    schedule:
+      interval: "weekly"
+    groups:
+      java-source-utils-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      java-source-utils-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "gradle"
+    directory: "/src/manifestmerger"
+    cooldown:
+      default-days: 0
+    schedule:
+      interval: "weekly"
+    groups:
+      manifestmerger-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      manifestmerger-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
   - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
