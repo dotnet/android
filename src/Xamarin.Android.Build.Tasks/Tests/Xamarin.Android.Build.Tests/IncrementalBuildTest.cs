@@ -16,6 +16,90 @@ namespace Xamarin.Android.Build.Tests
 	public class IncrementalBuildTest : BaseTest
 	{
 		[Test]
+		public void FrameworkAssembliesArePackagedWithoutStaging ()
+		{
+			const string runtimeIdentifier = "android-arm64";
+			const string abi = "arm64-v8a";
+
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var captureFrameworkAssemblies = new Import (() => "CaptureFrameworkAssemblies.targets") {
+				TextContent = () =>
+"""
+<Project>
+  <Target Name="_CaptureFrameworkAssemblies" AfterTargets="_PrepareAssemblies">
+    <Message
+        Condition=" '%(_ResolvedFrameworkAssemblies.Filename)' == 'Microsoft.CSharp' Or '%(_ResolvedFrameworkAssemblies.Filename)' == 'Mono.Android' "
+        Importance="high"
+        Text="FrameworkAssembly=%(_ResolvedFrameworkAssemblies.Filename)|%(_ResolvedFrameworkAssemblies.Identity)|%(_ResolvedFrameworkAssemblies.NuGetPackageId)|%(_ResolvedFrameworkAssemblies.JavaObjectsXmlFile)|%(_ResolvedFrameworkAssemblies.TypeMapObjectsXmlFile)" />
+  </Target>
+</Project>
+"""
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				EmbedAssembliesIntoApk = true,
+				Imports = { captureFrameworkAssemblies },
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, runtimeIdentifier);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "first build should succeed");
+			builder.Output.AssertTargetIsNotSkipped ("_LinkAssembliesNoShrink");
+
+			string [] GetFrameworkAssemblyMetadata (string assemblyName)
+			{
+				string prefix = $"FrameworkAssembly={assemblyName}|";
+				string line = builder.LastBuildOutput.Single (line => line.Contains (prefix, StringComparison.Ordinal));
+				int start = line.IndexOf (prefix, StringComparison.Ordinal);
+				var metadata = line.Substring (start + "FrameworkAssembly=".Length).Split ('|');
+				Assert.AreEqual (5, metadata.Length, $"Unexpected framework assembly metadata: {line}");
+				return metadata;
+			}
+
+			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+			string ResolveProjectPath (string path) => Path.GetFullPath (Path.Combine (projectDirectory, path));
+
+			var assemblyDirectory = Path.Combine (projectDirectory, proj.IntermediateOutputPath, runtimeIdentifier, "android", "assets", abi);
+			var stagedMicrosoftCSharp = Path.Combine (assemblyDirectory, "Microsoft.CSharp.dll");
+			var marker = Path.Combine (assemblyDirectory, "Microsoft.CSharp.scan.empty");
+			var microsoftCSharp = GetFrameworkAssemblyMetadata ("Microsoft.CSharp");
+
+			FileAssert.Exists (ResolveProjectPath (microsoftCSharp [1]));
+			Assert.That (microsoftCSharp [2], Does.StartWith ("Microsoft.NETCore.App.Runtime."),
+				$"Microsoft.CSharp.dll should come from a runtime pack, but its package ID was '{microsoftCSharp [2]}'.");
+			Assert.AreNotEqual (Path.GetFullPath (stagedMicrosoftCSharp), ResolveProjectPath (microsoftCSharp [1]),
+				"Microsoft.CSharp.dll should be packaged directly from its runtime pack.");
+			FileAssert.DoesNotExist (stagedMicrosoftCSharp);
+			FileAssert.Exists (marker);
+			Assert.AreEqual (0, new FileInfo (marker).Length, $"{marker} should be empty.");
+			Assert.AreEqual (Path.GetFullPath (marker), ResolveProjectPath (microsoftCSharp [3]),
+				"JavaObjectsXmlFile should point to the shared scan marker.");
+			Assert.AreEqual (Path.GetFullPath (marker), ResolveProjectPath (microsoftCSharp [4]),
+				"TypeMapObjectsXmlFile should point to the shared scan marker.");
+
+			var monoAndroid = GetFrameworkAssemblyMetadata ("Mono.Android");
+			var stagedMonoAndroid = Path.Combine (assemblyDirectory, "Mono.Android.dll");
+			Assert.AreEqual (Path.GetFullPath (stagedMonoAndroid), ResolveProjectPath (monoAndroid [1]),
+				"Mono.Android.dll should continue to use the staged assembly.");
+			FileAssert.Exists (stagedMonoAndroid);
+			FileAssert.Exists (Path.ChangeExtension (stagedMonoAndroid, ".jlo.xml"));
+			FileAssert.Exists (Path.ChangeExtension (stagedMonoAndroid, ".typemap.xml"));
+			FileAssert.DoesNotExist (Path.Combine (assemblyDirectory, "Mono.Android.scan.empty"));
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			var apk = Directory.GetFiles (outputDirectory, "*-Signed.apk", SearchOption.AllDirectories).Single ();
+			var archive = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+			Assert.IsTrue (archive.Exists ($"assemblies/{abi}/Microsoft.CSharp.dll"),
+				$"Microsoft.CSharp.dll should be packaged in {apk}.");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
+			builder.Output.AssertTargetIsSkipped ("_LinkAssembliesNoShrink");
+		}
+
+		[Test]
 		[Ignore ("Flaky timing-based test. Disabled while investigating incremental build regressions. See: https://github.com/dotnet/android/issues/11792")]
 		public void BasicApplicationRepetitiveBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
