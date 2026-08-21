@@ -166,33 +166,52 @@
       Condition=" '$(_AndroidTrimmableTypemapTrimJavaCode)' == 'true' and '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
       <_TrimmableNativeAotRuntimeIdentifiers Remove="@(_TrimmableNativeAotRuntimeIdentifiers)" />
+      <_TrimmableNativeAotSiblingRuntimeIdentifiers Remove="@(_TrimmableNativeAotSiblingRuntimeIdentifiers)" />
       <_TrimmableNativeAotDgmlFiles Remove="@(_TrimmableNativeAotDgmlFiles)" />
+      <_TrimmableNativeAotScanDgmlCandidates Remove="@(_TrimmableNativeAotScanDgmlCandidates)" />
       <_TrimmableNativeAotCodegenDgmlFiles Remove="@(_TrimmableNativeAotCodegenDgmlFiles)" />
-      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifier)" Condition=" '$(RuntimeIdentifier)' != '' " />
-      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' != '' " />
+      <_TrimmableNativeAotCodegenDgmlCandidates Remove="@(_TrimmableNativeAotCodegenDgmlCandidates)" />
+      <!-- Match _ResolveAssemblies: RuntimeIdentifiers takes precedence when both properties are set. -->
+      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifier)" Condition=" '$(RuntimeIdentifiers)' == '' and '$(RuntimeIdentifier)' != '' " />
+      <_TrimmableNativeAotRuntimeIdentifiers Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
+      <_TrimmableNativeAotSiblingRuntimeIdentifiers Include="@(_TrimmableNativeAotRuntimeIdentifiers)" />
+      <_TrimmableNativeAotSiblingRuntimeIdentifiers Remove="$(RuntimeIdentifier)" />
       <!-- ILC writes each *.scan.dgml.xml into the per-RID inner build's NativeIntermediateOutputPath
            (i.e. '<inner IntermediateOutputPath>/native/'). This target runs in the OUTER build, whose
            '$(IntermediateOutputPath)' may or may not already carry the RID segment:
              * a single explicit '$(RuntimeIdentifier)' set early -> the SDK already appended the RID,
                so the DGML is at '$(NativeIntermediateOutputPath)' (== '$(IntermediateOutputPath)native/');
              * a '$(RuntimeIdentifiers)' list, or a RID assigned late (e.g. by _GetPrimaryCpuAbi) -> the
-               outer path has no RID, so the DGML is at '$(IntermediateOutputPath)<rid>/native/'.
-           Emit both candidate paths and keep only the one(s) ILC actually produced; this stays correct
-           for single-RID (either flavor), multi-RID, and no-RID publishes without having to guess which
-           output-path shape the SDK chose. -->
-      <_TrimmableNativeAotDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml"
-          Condition=" Exists('$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml') " />
-      <_TrimmableNativeAotDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml"
-          Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' and Exists('$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).scan.dgml.xml') " />
+               outer path has no RID, so the DGML is at '$(IntermediateOutputPath)<rid>/native/';
+             * when both properties are set to different values, _ResolveAssemblies uses RuntimeIdentifiers
+               for its inner builds while the outer path carries RuntimeIdentifier. The inner DGML is then
+               in a sibling RID directory.
+           Emit each candidate path and keep only the one(s) ILC actually produced. -->
+      <_TrimmableNativeAotScanDgmlCandidates Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" />
+      <_TrimmableNativeAotScanDgmlCandidates
+          Include="@(_TrimmableNativeAotRuntimeIdentifiers->'$(IntermediateOutputPath)%(Identity)\native\$(TargetName).scan.dgml.xml')"
+          Condition=" '$(RuntimeIdentifier)' == '' " />
+      <_TrimmableNativeAotScanDgmlCandidates
+          Include="@(_TrimmableNativeAotSiblingRuntimeIdentifiers->'$(IntermediateOutputPath)..\%(Identity)\native\$(TargetName).scan.dgml.xml')"
+          Condition=" '$(RuntimeIdentifier)' != '' " />
+      <_TrimmableNativeAotScanDgmlCandidates Remove="@(_TrimmableNativeAotScanDgmlCandidates)"
+          Condition=" !Exists('%(_TrimmableNativeAotScanDgmlCandidates.Identity)') " />
+      <_TrimmableNativeAotDgmlFiles Include="@(_TrimmableNativeAotScanDgmlCandidates)" />
       <!-- ILC only emits the scan graph (*.scan.dgml.xml) when its scanner phase runs (optimized/Release
            builds). Unoptimized builds - e.g. Debug NativeAOT - emit only the codegen graph
            (*.codegen.dgml.xml), which carries the same "Type metadata: [...]" nodes. Collect it at the same
            two candidate locations and fall back to it only when no scan graph was found, so the ACW keep
            rules are still generated (the codegen graph is larger, hence preferring the scan graph). -->
-      <_TrimmableNativeAotCodegenDgmlFiles Include="$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml"
-          Condition=" Exists('$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml') " />
-      <_TrimmableNativeAotCodegenDgmlFiles Include="$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).codegen.dgml.xml"
-          Condition=" '@(_TrimmableNativeAotRuntimeIdentifiers)' != '' and Exists('$(IntermediateOutputPath)%(_TrimmableNativeAotRuntimeIdentifiers.Identity)\native\$(TargetName).codegen.dgml.xml') " />
+      <_TrimmableNativeAotCodegenDgmlCandidates Include="$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml" />
+      <_TrimmableNativeAotCodegenDgmlCandidates
+          Include="@(_TrimmableNativeAotRuntimeIdentifiers->'$(IntermediateOutputPath)%(Identity)\native\$(TargetName).codegen.dgml.xml')"
+          Condition=" '$(RuntimeIdentifier)' == '' " />
+      <_TrimmableNativeAotCodegenDgmlCandidates
+          Include="@(_TrimmableNativeAotSiblingRuntimeIdentifiers->'$(IntermediateOutputPath)..\%(Identity)\native\$(TargetName).codegen.dgml.xml')"
+          Condition=" '$(RuntimeIdentifier)' != '' " />
+      <_TrimmableNativeAotCodegenDgmlCandidates Remove="@(_TrimmableNativeAotCodegenDgmlCandidates)"
+          Condition=" !Exists('%(_TrimmableNativeAotCodegenDgmlCandidates.Identity)') " />
+      <_TrimmableNativeAotCodegenDgmlFiles Include="@(_TrimmableNativeAotCodegenDgmlCandidates)" />
       <_TrimmableNativeAotDgmlFiles Include="@(_TrimmableNativeAotCodegenDgmlFiles)"
           Condition=" '@(_TrimmableNativeAotDgmlFiles->Count())' == '0' " />
     </ItemGroup>
