@@ -90,6 +90,20 @@
 			<url host-os="linux" host-bits="0" host-arch="x64" size="193808535" checksum-type="sha1" checksum="D55978EDEEC613357789D8CE13732117F59D053B" payloadFileName="microsoft-jdk-11.0.19-linux-x64.tar.gz">https://aka.ms/download-jdk/microsoft-jdk-11.0.19-linux-x64.tar.gz</url>
 		</urls>
 	</jdk>
+	<platform-tools revision="37.0.1" path="platform-tools" filesystem-path="platform-tools" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform-Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
+		<urls>
+			<url host-os="linux" host-bits="0" size="9054187" checksum-type="sha1" checksum="477254aa5f903c15cf51001717bdf347fb6b53e0">https://dl.google.com/android/repository/platform-tools_r37.0.1-linux.zip</url>
+			<url host-os="macosx" host-bits="0" size="16110554" checksum-type="sha1" checksum="6ae73f4de6452dc57e62ec02b68eed92a4c21661">https://dl.google.com/android/repository/platform-tools_r37.0.1-darwin.zip</url>
+			<url host-os="windows" host-bits="0" size="8044989" checksum-type="sha1" checksum="e03e78b1d80b396f1c3358e31251cb31740e1110">https://dl.google.com/android/repository/platform-tools_r37.0.1-win.zip</url>
+		</urls>
+	</platform-tools>
+	<platform-tools revision="37.0.0" path="platform-tools" filesystem-path="platform-tools" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform-Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
+		<urls>
+			<url host-os="linux" host-bits="0" size="9167924" checksum-type="sha1" checksum="bcf323933980a59dccc3f14c339aed5fb2171163">https://dl.google.com/android/repository/platform-tools_r37.0.0-linux.zip</url>
+			<url host-os="macosx" host-bits="0" size="16442240" checksum-type="sha1" checksum="8c4c926d0ca192376b2a04b0318484724319e67c">https://dl.google.com/android/repository/platform-tools_r37.0.0-darwin.zip</url>
+			<url host-os="windows" host-bits="0" size="8092164" checksum-type="sha1" checksum="f29bfb58d0d6f9a57d7dbcba6cc259f9ca6f58f1">https://dl.google.com/android/repository/platform-tools_r37.0.0-win.zip</url>
+		</urls>
+	</platform-tools>
 	<platform-tools revision="36.0.0" path="platform-tools" filesystem-path="platform-tools" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform-Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
 		<urls>
 			<url host-os="linux" host-bits="0" size="7904253" checksum-type="sha1" checksum="ddb0cd76d952d9a1f4c8a32e4ec0e73d7a8bebb8">https://dl.google.com/android/repository/platform-tools_r36.0.0-linux.zip</url>
@@ -321,6 +335,14 @@
 			<url host-os="windows" host-bits="0" size="53783318" checksum-type="sha1" checksum="b42b77e02b82f242432cd7ffff5cbb92f6888ca7">https://dl.google.com/android/repository/efbaa277338195608aa4e3dbd43927e97f60218c.build-tools_r30.0.2-windows.zip</url>
 		</urls>
 	</build-tool>
+	<emulator revision="37.1.11" path="emulator" filesystem-path="emulator" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android Emulator" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
+		<urls>
+			<url host-os="linux" host-bits="0" host-arch="x64" size="334378080" checksum-type="sha1" checksum="1b1f78891abf8ec268264356e1365c25519e8379">https://dl.google.com/android/repository/emulator-linux_x64-15917651.zip</url>
+			<url host-os="macosx" host-bits="0" host-arch="x64" size="465773989" checksum-type="sha1" checksum="7df8b0acbe915217dcbb576222bddfcc23e81230">https://dl.google.com/android/repository/emulator-darwin_x64-15917651.zip</url>
+			<url host-os="macosx" host-bits="0" host-arch="aarch64" size="394555844" checksum-type="sha1" checksum="f22f44948a2b7f0a0103645b9a639290eef92426">https://dl.google.com/android/repository/emulator-darwin_aarch64-15917651.zip</url>
+			<url host-os="windows" host-bits="0" host-arch="x64" size="441926448" checksum-type="sha1" checksum="54fa750822ff462d57e04fc8e98e60f08df2bb61">https://dl.google.com/android/repository/emulator-windows_x64-15917651.zip</url>
+		</urls>
+	</emulator>
 	<emulator revision="36.2.12" path="emulator" filesystem-path="emulator" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android Emulator" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
 		<urls>
 			<url host-os="linux" host-bits="0" host-arch="x64" size="320123396" checksum-type="sha1" checksum="b87561b33f5f1df3647519628c3597353dbf534d">https://dl.google.com/android/repository/emulator-linux_x64-14214601.zip</url>
@@ -742,9 +764,14 @@
 			<url host-os="windows" host-bits="64" size="769151176" checksum-type="sha1" checksum="a625e8c599bccdb9061b61dcf3d1f1a01071613f">https://dl.google.com/android/repository/android-ndk-r14b-windows-x86_64.zip</url>
 		</urls>
 	</ndk>
-	<platform revision="1" path="platforms;android-37.0" filesystem-path="platforms/android-37.0" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform 37.0" obsolete="False" preview="False" license="android-sdk-license" original-type="sdk:platformDetailsType" api="37.0" version="0.0.0" codename="" min-tools-rev="0" layoutlib-api="15" layoutlib-revision="0">
+	<platform revision="1" path="platforms;android-37.1" filesystem-path="platforms/android-37.1" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform 37.1" obsolete="False" preview="False" license="android-sdk-license" original-type="sdk:platformDetailsType" api="37.1" version="0.0.0" codename="" min-tools-rev="0" layoutlib-api="15" layoutlib-revision="0">
 		<urls>
-			<url host-os="" host-bits="0" size="67204348" checksum-type="sha1" checksum="1a9a8c2e2a5ab8cd95f2eded7d9da037e62fbc6f">https://dl.google.com/android/repository/platform-37.0_r01.zip</url>
+			<url host-os="" host-bits="0" size="67500655" checksum-type="sha1" checksum="62aeba1ec09c2b1fdf888e79549daf678fa0d75f">https://dl.google.com/android/repository/platform-37.1_r01.zip</url>
+		</urls>
+	</platform>
+	<platform revision="2" path="platforms;android-37.0" filesystem-path="platforms/android-37.0" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform 37.0" obsolete="False" preview="False" license="android-sdk-license" original-type="sdk:platformDetailsType" api="37.0" version="0.0.0" codename="" min-tools-rev="0" layoutlib-api="15" layoutlib-revision="0">
+		<urls>
+			<url host-os="" host-bits="0" size="67281901" checksum-type="sha1" checksum="ed8ebf7f8822a4de5686d427f237d2fa30ff7410">https://dl.google.com/android/repository/platform-37.0_r02.zip</url>
 		</urls>
 	</platform>
 	<platform revision="1" path="platforms;android-36.1" filesystem-path="platforms/android-36.1" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform 36.1" obsolete="False" preview="False" license="android-sdk-license" original-type="sdk:platformDetailsType" api="36.1" version="0.0.0" codename="" min-tools-rev="0" layoutlib-api="15" layoutlib-revision="0">
