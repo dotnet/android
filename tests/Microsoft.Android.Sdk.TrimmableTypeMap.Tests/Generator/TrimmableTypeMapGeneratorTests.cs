@@ -344,6 +344,22 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
+	public void Execute_ReferenceOnlyAssemblyWithSharedFrameworkTypeMap_EmitsRoot ()
+	{
+		using var peReader = CreateTestFixturePEReader ();
+		var result = CreateGenerator ().Execute (
+			[new AssemblyInput ("TestFixtures", "", peReader, ScanForPeers: false)],
+			new Version (11, 0),
+			new HashSet<string> (),
+			sharedFrameworkTypeMapNames: [ "_TestFixtures.TypeMap" ]);
+
+		var root = Assert.Single (result.GeneratedAssemblies);
+		Assert.Equal ("_Microsoft.Android.TypeMaps", root.Name);
+		Assert.Empty (result.GeneratedJavaSources);
+		Assert.Empty (result.AllPeers);
+	}
+
+	[Fact]
 	public void Execute_CollectsDeferredRegistrationTypes_ForAllApplicationAndInstrumentationSubtypes ()
 	{
 		using var peReader = CreateTestFixturePEReader ();

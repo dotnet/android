@@ -75,9 +75,10 @@
   <PropertyGroup>
     <_PreGeneratedTypeMapDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\data\prebuilt-typemap'))</_PreGeneratedTypeMapDir>
     <_PreGeneratedMonoAndroidTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Mono.Android.TypeMap.dll</_PreGeneratedMonoAndroidTypeMapAssembly>
+    <_PreGeneratedJavaInteropTypeMapAssembly>$(_PreGeneratedTypeMapDir)_Java.Interop.TypeMap.dll</_PreGeneratedJavaInteropTypeMapAssembly>
     <_PreGeneratedMonoAndroidTypeMapJar>$(_PreGeneratedTypeMapDir)mono.android-typemaps.jar</_PreGeneratedMonoAndroidTypeMapJar>
     <_PreGeneratedMonoAndroidTypeMapAcwMap>$(_PreGeneratedTypeMapDir)mono.android-acw-map.txt</_PreGeneratedMonoAndroidTypeMapAcwMap>
-    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and '$(AndroidIncludeDebugSymbols)' == 'true' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
+    <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' and '$(AndroidIncludeDebugSymbols)' == 'true' and Exists('$(_PreGeneratedMonoAndroidTypeMapAssembly)') and Exists('$(_PreGeneratedJavaInteropTypeMapAssembly)') and Exists('$(_PreGeneratedMonoAndroidTypeMapJar)') and Exists('$(_PreGeneratedMonoAndroidTypeMapAcwMap)') ">true</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == '' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_AndroidUsePreGeneratedMonoAndroidTypeMap Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">false</_AndroidUsePreGeneratedMonoAndroidTypeMap>
     <_UseTrimmableCoreClrProguardConfiguration Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '$(_AndroidUsePreGeneratedMonoAndroidTypeMap)' == 'true' ">true</_UseTrimmableCoreClrProguardConfiguration>

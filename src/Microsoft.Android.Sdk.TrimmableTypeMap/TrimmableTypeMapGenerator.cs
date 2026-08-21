@@ -44,6 +44,17 @@ public class TrimmableTypeMapGenerator
 		_ = frameworkAssemblyNames ?? throw new ArgumentNullException (nameof (frameworkAssemblyNames));
 		var (allPeers, assemblyManifestInfo) = ScanAssemblies (assemblies, packageNamingPolicy, frameworkAssemblyNames, errorOnCustomJavaObject);
 		if (allPeers.Count == 0) {
+			if (generateTypeMapAssemblies &&
+					generateRootAssembly &&
+					sharedFrameworkTypeMapNames is { Count: > 0 }) {
+				var rootAssemblies = GenerateTypeMapAssemblies (
+					allPeers,
+					systemRuntimeVersion,
+					useSharedTypemapUniverse,
+					generateRootAssembly,
+					sharedFrameworkTypeMapNames);
+				return new TrimmableTypeMapResult (rootAssemblies, [], allPeers);
+			}
 			logger.LogNoJavaPeerTypesFound ();
 			return new TrimmableTypeMapResult ([], [], allPeers);
 		}

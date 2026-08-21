@@ -372,8 +372,6 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		}
 
 		var items = new List<ITaskItem> ();
-		bool anyRegenerated = false;
-
 		foreach (var assembly in assemblies) {
 			if (assembly.Name == "_Microsoft.Android.TypeMaps") {
 				continue; // Handle root assembly separately below
@@ -390,23 +388,19 @@ public class GenerateTrimmableTypeMap : AndroidTask
 				Log.LogDebugMessage ($"  {assembly.Name}: up to date, skipping");
 			} else {
 				Files.CopyIfStreamChanged (assembly.Content, outputPath);
-				anyRegenerated = true;
 				Log.LogDebugMessage ($"  {assembly.Name}: written");
 			}
 
 			items.Add (new TaskItem (outputPath));
 		}
 
-		// Root assembly — regenerate if any per-assembly typemap changed
+		// The root also depends on configuration inputs such as the shared framework typemap set,
+		// which aren't reflected in per-assembly output timestamps.
 		var rootAssembly = assemblies.FirstOrDefault (a => a.Name == "_Microsoft.Android.TypeMaps");
 		if (rootAssembly is not null) {
 			string rootOutputPath = Path.Combine (OutputDirectory, rootAssembly.Name + ".dll");
-			if (anyRegenerated || !File.Exists (rootOutputPath)) {
-				Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
-				Log.LogDebugMessage ($"  Root: written");
-			} else {
-				Log.LogDebugMessage ($"  Root: up to date, skipping");
-			}
+			bool changed = Files.CopyIfStreamChanged (rootAssembly.Content, rootOutputPath);
+			Log.LogDebugMessage (changed ? "  Root: written" : "  Root: unchanged");
 			items.Add (new TaskItem (rootOutputPath));
 		}
 

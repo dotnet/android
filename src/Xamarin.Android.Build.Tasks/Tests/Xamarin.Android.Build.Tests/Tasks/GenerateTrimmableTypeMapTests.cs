@@ -111,6 +111,41 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Execute_SwitchToPreGeneratedFrameworkTypeMap_RewritesRoot ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var outputDir = Path.Combine (Root, path, "typemap");
+			var javaDir = Path.Combine (Root, path, "java");
+
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			var assemblies = new [] { monoAndroidItem };
+			var firstTask = CreateTask (assemblies, outputDir, javaDir);
+			Assert.IsTrue (firstTask.Execute (), "Initial local typemap generation should succeed.");
+
+			var rootPath = Path.Combine (outputDir, "_Microsoft.Android.TypeMaps.dll");
+			var initialRoot = File.ReadAllBytes (rootPath);
+
+			var secondTask = CreateTask (assemblies, outputDir, javaDir);
+			secondTask.PreGeneratedTypeMapAssemblies = assemblies;
+			Assert.IsTrue (secondTask.Execute (), "Switching to the pre-generated framework typemap should succeed.");
+
+			var preGeneratedRoot = File.ReadAllBytes (rootPath);
+			CollectionAssert.AreNotEqual (
+				initialRoot,
+				preGeneratedRoot,
+				"The root assembly should be rewritten when its framework typemap references change.");
+			CollectionAssert.AreEqual (
+				new [] { rootPath },
+				secondTask.GeneratedAssemblies.Select (item => item.ItemSpec).ToArray (),
+				"Only the root assembly should be generated when every scanned assembly uses a pre-generated typemap.");
+		}
+
+		[Test]
 		public void Execute_MissingJavaSource_DoesNotPruneExistingOutput ()
 		{
 			var path = Path.Combine ("temp", TestName);
