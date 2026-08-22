@@ -282,7 +282,6 @@ Get-ChildItem -LiteralPath $repositoryRootFullPath -File | Copy-Item -Destinatio
 $payloadDirectories = @(
 	@('build-tools', 'build-tools', $false),
 	@('eng', 'eng', $false),
-	@('external', 'external', $false),
 	@('.github', '.github', $true),
 	@('samples', 'samples', $true),
 	@('src-ThirdParty', 'src-ThirdParty', $true),
@@ -321,15 +320,28 @@ Add-DirectoryCorrelationPayloads -Source $payloadRepository -Destination 'repo'
 Add-DirectoryCorrelationPayloads `
 	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/$Configuration")) `
 	-Destination "repo/bin/$Configuration"
-Add-DirectoryCorrelationPayloads `
-	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Test$Configuration")) `
-	-Destination "repo/bin/Test$Configuration"
+
+$testOutputRoot = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Test$Configuration")
+$testAssembly = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
+$testAssemblyDirectory = Split-Path -Parent $testAssembly
+$testAssemblyDestination = "repo/bin/Test$Configuration/$([IO.Path]::GetRelativePath($testOutputRoot, $testAssemblyDirectory).Replace('\', '/'))"
+Add-DirectoryCorrelationPayloads -Source $testAssemblyDirectory -Destination $testAssemblyDestination
+$testOutputFiles = @(Get-ChildItem -LiteralPath $testOutputRoot -File)
+if ($testOutputFiles.Count -gt 0) {
+	Add-FileCorrelationPayloads -Files $testOutputFiles -Destination "repo/bin/Test$Configuration"
+}
+foreach ($testDirectory in Get-ChildItem -LiteralPath $testOutputRoot -Directory |
+	Where-Object { $_.Name -eq 'Expected' -or $_.Name -like 'android-*' }) {
+	Add-DirectoryCorrelationPayloads `
+		-Source $testDirectory.FullName `
+		-Destination "repo/bin/Test$Configuration/$($testDirectory.Name)"
+}
 
 $androidRootFiles = @(Get-ChildItem -LiteralPath $AndroidHome -File)
 if ($androidRootFiles.Count -gt 0) {
 	Add-FileCorrelationPayloads -Files $androidRootFiles -Destination 'android-toolchain/sdk'
 }
-$excludedAndroidDirectories = @('emulator', 'skins', 'sources', 'system-images')
+$excludedAndroidDirectories = @('docs', 'emulator', 'extras', 'skins', 'sources', 'system-images')
 foreach ($androidDirectory in Get-ChildItem -LiteralPath $AndroidHome -Directory | Sort-Object Name) {
 	if ($androidDirectory.Name -notin $excludedAndroidDirectories) {
 		Add-DirectoryCorrelationPayloads `
@@ -368,7 +380,6 @@ $correlationPayloads |
 		Write-Host ('- {0:N2} GiB -> {1}' -f ($_.SizeBytes / 1GB), $_.Destination)
 	}
 
-$testAssembly = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
 if (-not (Test-Path -LiteralPath $testAssembly -PathType Leaf)) {
 	throw "Test assembly '$testAssembly' does not exist."
 }

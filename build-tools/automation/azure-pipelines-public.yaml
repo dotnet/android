@@ -55,6 +55,10 @@ parameters:
   displayName: Host build tests Helix work item timeout
   type: string
   default: '00:45:00'
+- name: hostBuildTestsHelixOnly
+  displayName: Run only the host build tests Helix prototype after builds
+  type: boolean
+  default: false
 
 # Repository resources
 resources:
@@ -193,7 +197,7 @@ stages:
     dependsOn:
     - mac_build
     - linux_build
-    condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+    condition: and(succeeded(), or(ne(variables['SkipTestStages'], 'true'), eq('${{ parameters.hostBuildTestsHelixOnly }}', 'true')))
     jobs:
     - job: windows_host_build_tests_helix
       displayName: Windows > Host Build Tests > Helix

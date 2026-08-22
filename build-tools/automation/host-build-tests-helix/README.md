@@ -9,7 +9,8 @@ in-memory ZIP limit. Work item payloads contain only a runsettings filter, a sma
 command script, and generation metadata. To control total payload size, the source
 copy omits `src/Mono.Android` and the NuGet package cache; host build tests consume the
 product through the prepared workload packs and use isolated per-work-item NuGet
-caches.
+caches. Device-only Android SDK content, SDK documentation, the Java.Interop checkout,
+and unrelated test assemblies are also excluded.
 
 `prepare-host-build-test-helix-payload.ps1` discovers NUnit tests with the repository's
 `dotnet-test-slicer`, reads its `balance.xml` format, and uses deterministic best-fit
