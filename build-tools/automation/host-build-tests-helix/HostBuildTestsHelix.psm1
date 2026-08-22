@@ -51,8 +51,11 @@ function Get-NUnitRunSettingsTestNames
 	if ($names.Count -eq 0) {
 		throw "No tests were found in '$Path'."
 	}
+	if ($names.Count -eq 1 -and $names[0] -eq 'dotnet-slicer-dummy-test-name') {
+		throw "The test filter matched no tests in '$Path'."
+	}
 
-	return $names.ToArray()
+	return ,$names.ToArray()
 }
 
 function Get-HostBuildTestTimingHistory

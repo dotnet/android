@@ -80,6 +80,23 @@ try {
 	$roundTrippedNames = Get-NUnitRunSettingsTestNames -Path $runSettingsPath
 	Assert-Equal ($specialNames -join '|') ($roundTrippedNames -join '|') 'Runsettings names should round trip.'
 
+	$singleRunSettingsPath = Join-Path $testRoot 'single.runsettings'
+	Write-NUnitRunSettings -TestNames @('OnlyTest') -Path $singleRunSettingsPath
+	$singleTest = Get-NUnitRunSettingsTestNames -Path $singleRunSettingsPath
+	Assert-Equal 1 $singleTest.Count 'A one-test runsettings file should remain an array.'
+	Assert-Equal 'OnlyTest' $singleTest[0] 'The single test should round trip.'
+
+	$emptyRunSettingsPath = Join-Path $testRoot 'empty.runsettings'
+	Set-Content -LiteralPath $emptyRunSettingsPath -Value "<RunSettings><NUnit><Where>test == 'dotnet-slicer-dummy-test-name'</Where></NUnit></RunSettings>"
+	try {
+		Get-NUnitRunSettingsTestNames -Path $emptyRunSettingsPath
+		throw 'The slicer dummy test should have caused an error.'
+	} catch {
+		if ($_.Exception.Message -notlike '*matched no tests*') {
+			throw
+		}
+	}
+
 	$secondFallbackPlan = New-DurationBalancedWorkItems `
 		-TestNames @('F', 'E', 'D', 'C', 'B', 'A') `
 		-TimingHistory $emptyHistory `

@@ -177,6 +177,9 @@ if (-not [string]::IsNullOrWhiteSpace($DotNetToolsDirectory)) {
 		-Optional
 }
 
+$payloadBytes = (Get-ChildItem -LiteralPath $correlationPayloadFullPath -Recurse -File | Measure-Object -Property Length -Sum).Sum
+Write-Host ('Staged correlation payload size: {0:N2} GiB.' -f ($payloadBytes / 1GB))
+
 $stagedTestAssembly = Join-Path $payloadRepository (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
 if (-not (Test-Path -LiteralPath $stagedTestAssembly -PathType Leaf)) {
 	throw "Test assembly '$stagedTestAssembly' was not staged."

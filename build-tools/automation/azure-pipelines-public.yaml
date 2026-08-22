@@ -232,7 +232,7 @@ stages:
         parameters:
           platform: linux
           helixQueue: Ubuntu.2404.Amd64.Open
-          testFilter: 'Name = BuildTest'
+          testFilter: 'class == Xamarin.Android.Build.Tests.BuildTest'
           testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest Helix Prototype
           timingBuildId: ${{ parameters.hostBuildTestsHelixTimingBuildId }}
           timingArtifactName: Host Build Test Timings - linux
