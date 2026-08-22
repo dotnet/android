@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
@@ -42,7 +43,7 @@ namespace Xamarin.Android.Tasks
 
 				string archDir = Path.Combine (sysrootLibDir, archDirName);
 				if (!Directory.Exists (archDir)) {
-					Log?.LogWarning ($"Architecture {targetArch} toolchain directory '{archDir}' not found");
+					Log?.LogCodedWarning ("XA5101", Properties.Resources.XA5101_Toolchain, targetArch);
 					continue;
 				}
 
