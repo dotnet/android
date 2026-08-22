@@ -324,7 +324,20 @@ Add-DirectoryCorrelationPayloads `
 Add-DirectoryCorrelationPayloads `
 	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Test$Configuration")) `
 	-Destination "repo/bin/Test$Configuration"
-Add-DirectoryCorrelationPayloads -Source $AndroidHome -Destination 'android-toolchain/sdk'
+
+$androidRootFiles = @(Get-ChildItem -LiteralPath $AndroidHome -File)
+if ($androidRootFiles.Count -gt 0) {
+	Add-FileCorrelationPayloads -Files $androidRootFiles -Destination 'android-toolchain/sdk'
+}
+$excludedAndroidDirectories = @('emulator', 'skins', 'sources', 'system-images')
+foreach ($androidDirectory in Get-ChildItem -LiteralPath $AndroidHome -Directory | Sort-Object Name) {
+	if ($androidDirectory.Name -notin $excludedAndroidDirectories) {
+		Add-DirectoryCorrelationPayloads `
+			-Source $androidDirectory.FullName `
+			-Destination "android-toolchain/sdk/$($androidDirectory.Name)"
+	}
+}
+
 Add-DirectoryCorrelationPayloads -Source $JavaHome -Destination 'jdk'
 
 if ([string]::IsNullOrWhiteSpace($GradleUserHome)) {
