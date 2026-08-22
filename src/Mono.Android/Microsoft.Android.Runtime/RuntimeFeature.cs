@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Tracing;
 
 namespace Microsoft.Android.Runtime;
 
@@ -12,6 +13,7 @@ static class RuntimeFeature
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool TrimmableTypeMapEnabledByDefault = false;
 	const bool ObjectReferenceLoggingEnabledByDefault = false;
+	const bool InteropEventSourceEnabledByDefault = false;
 	const bool ManagedToJavaUsesAssemblyFullNameEnabledByDefault = false;
 
 	const string FeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
@@ -45,6 +47,15 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}")]
 	internal static bool ObjectReferenceLogging { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (ObjectReferenceLogging)}", out bool isEnabled) ? isEnabled : ObjectReferenceLoggingEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (InteropEventSource)}")]
+	internal static bool InteropEventSource { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (InteropEventSource)}", out bool isEnabled) ? isEnabled : InteropEventSourceEnabledByDefault;
+
+	internal static bool IsInteropEventSourceEnabled (EventKeywords keywords)
+	{
+		return InteropEventSource && global::Microsoft.Android.Runtime.InteropEventSource.IsEnabled (keywords);
+	}
 
 	// Enabled for Debug builds, whose string-based typemaps support Fast Deployment without embedding assembly MVIDs.
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (ManagedToJavaUsesAssemblyFullName)}")]

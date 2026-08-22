@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
@@ -105,6 +106,14 @@ namespace Java.Interop {
 
 				var typeSig = new JniTypeSignature (JniEnvironment.Types.GetJniTypeNameFromInstance (r_self));
 				var type    = GetTypeFromSignature (runtime.TypeManager, typeSig);
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+					var managedObjectHashCode = self != null ? RuntimeHelpers.GetHashCode (self) : 0;
+					InteropEventSource.JavaPeerCreated (
+						type.FullName,
+						typeSig.SimpleReference,
+						runtime.ValueManager.GetJniIdentityHashCode (r_self),
+						managedObjectHashCode);
+				}
 
 				if (type.IsGenericTypeDefinition) {
 					throw new NotSupportedException (

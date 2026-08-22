@@ -196,6 +196,7 @@ static class JavaMarshalRegisteredPeers
 		if (value == null)
 			throw new ArgumentNullException (nameof (value));
 
+		bool removed = false;
 		lock (RegisteredInstances) {
 			int key = value.JniIdentityHashCode;
 			if (!RegisteredInstances.TryGetValue (key, out List<ReferenceTrackingHandle>? peers))
@@ -207,11 +208,16 @@ static class JavaMarshalRegisteredPeers
 				if (ReferenceEquals (value, target)) {
 					peers.RemoveAt (i);
 					peer.Dispose ();
+					removed = true;
 				}
 				GC.KeepAlive (target);
 			}
 			if (peers.Count == 0)
 				RegisteredInstances.Remove (key);
+		}
+
+		if (removed && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+			EmitJavaPeerReleasedManagedPeer (value);
 		}
 	}
 
@@ -245,6 +251,9 @@ static class JavaMarshalRegisteredPeers
 					RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 					value.GetType ().ToString ());
 		}
+		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+			EmitManagedPeerReleasedJavaPeer (value, h);
+		}
 		value.SetPeerReference (new JniObjectReference ());
 		JniObjectReference.Dispose (ref h);
 		value.Finalized ();
@@ -265,6 +274,105 @@ static class JavaMarshalRegisteredPeers
 				}
 			}
 			return peers;
+		}
+	}
+
+	static void EmitJavaPeerReleasedManagedPeer (IJavaPeerable peer)
+	{
+		JniObjectReference reference = peer.PeerReference;
+		var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+		InteropEventSource.JavaPeerReleasedManagedPeer (
+			peer.GetType ().FullName,
+			javaType,
+			peer.JniIdentityHashCode,
+			RuntimeHelpers.GetHashCode (peer));
+	}
+
+	static void EmitManagedPeerReleasedJavaPeer (IJavaPeerable peer, JniObjectReference reference)
+	{
+		var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+		InteropEventSource.ManagedPeerReleasedJavaPeer (
+			peer.GetType ().FullName,
+			javaType,
+			peer.JniIdentityHashCode,
+			RuntimeHelpers.GetHashCode (peer));
+	}
+
+	unsafe static ReachabilityEventData CaptureReachabilityEvent (HandleContext* context, GCHandle handle, int componentIndex, int contextIndex, bool isCollected)
+	{
+		IJavaPeerable? peer = handle.Target as IJavaPeerable;
+		string? managedType = peer?.GetType ().FullName;
+		int managedObjectHashCode = peer != null ? RuntimeHelpers.GetHashCode (peer) : 0;
+		string? javaType = null;
+		JniObjectReference javaPeerReference = context->JavaPeerReference;
+		if (javaPeerReference.IsValid) {
+			javaType = JniEnvironment.Types.GetJniTypeNameFromInstance (javaPeerReference);
+		}
+
+		return new ReachabilityEventData (
+			managedType,
+			javaType,
+			context->PeerIdentityHashCode,
+			managedObjectHashCode,
+			componentIndex,
+			contextIndex,
+			(long) (nint) context,
+			isCollected);
+	}
+
+	static void EmitReachabilityEvent (ReachabilityEventData eventData)
+	{
+		if (eventData.IsCollected) {
+			InteropEventSource.JavaPeerOnlyReachableFromManagedPeer (
+				eventData.ManagedType,
+				eventData.JavaType,
+				eventData.JniIdentityHashCode,
+				eventData.ManagedObjectHashCode,
+				eventData.ComponentIndex,
+				eventData.ContextIndex,
+				eventData.ContextPointer);
+			return;
+		}
+
+		InteropEventSource.ManagedPeerOnlyReachableFromJavaPeer (
+			eventData.ManagedType,
+			eventData.JavaType,
+			eventData.JniIdentityHashCode,
+			eventData.ManagedObjectHashCode,
+			eventData.ComponentIndex,
+			eventData.ContextIndex,
+			eventData.ContextPointer);
+	}
+
+	readonly struct ReachabilityEventData
+	{
+		public string? ManagedType { get; }
+		public string? JavaType { get; }
+		public int JniIdentityHashCode { get; }
+		public int ManagedObjectHashCode { get; }
+		public int ComponentIndex { get; }
+		public int ContextIndex { get; }
+		public long ContextPointer { get; }
+		public bool IsCollected { get; }
+
+		public ReachabilityEventData (
+			string? managedType,
+			string? javaType,
+			int jniIdentityHashCode,
+			int managedObjectHashCode,
+			int componentIndex,
+			int contextIndex,
+			long contextPointer,
+			bool isCollected)
+		{
+			ManagedType = managedType;
+			JavaType = javaType;
+			JniIdentityHashCode = jniIdentityHashCode;
+			ManagedObjectHashCode = managedObjectHashCode;
+			ComponentIndex = componentIndex;
+			ContextIndex = contextIndex;
+			ContextPointer = contextPointer;
+			IsCollected = isCollected;
 		}
 	}
 
@@ -314,6 +422,19 @@ static class JavaMarshalRegisteredPeers
 		IntPtr controlBlock;
 
 		public int PeerIdentityHashCode => identityHashCode;
+		public JniObjectReference JavaPeerReference
+		{
+			get {
+				if (controlBlock == IntPtr.Zero) {
+					return new JniObjectReference ();
+				}
+
+				IntPtr javaHandle = ((JniObjectReferenceControlBlock*) controlBlock)->handle;
+				return javaHandle == IntPtr.Zero
+					? new JniObjectReference ()
+					: new JniObjectReference (javaHandle, JniObjectReferenceType.Global);
+			}
+		}
 		public bool IsCollected
 		{
 			get
@@ -427,15 +548,23 @@ static class JavaMarshalRegisteredPeers
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr);
+		List<ReachabilityEventData>? reachabilityEvents =
+			RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.ReachabilityKeyword) ? [] : null;
+		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr, reachabilityEvents);
 
 // This call site is reachable on all platforms. 'JavaMarshal.FinishCrossReferenceProcessing(MarkCrossReferencesArgs*, ReadOnlySpan<GCHandle>)' is only supported on: 'android'.
 #pragma warning disable CA1416
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
 #pragma warning restore CA1416
+
+		if (reachabilityEvents != null) {
+			foreach (ReachabilityEventData eventData in reachabilityEvents) {
+				EmitReachabilityEvent (eventData);
+			}
+		}
 	}
 
-	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
+	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr, List<ReachabilityEventData>? reachabilityEvents)
 	{
 		List<GCHandle> handlesToFree = [];
 
@@ -448,24 +577,32 @@ static class JavaMarshalRegisteredPeers
 		for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 			StronglyConnectedComponent component = mcr->Components [i];
 			for (int j = 0; (nuint)j < component.Count; j++) {
-				ProcessContext ((HandleContext*)component.Contexts [j]);
+				ProcessContext ((HandleContext*)component.Contexts [j], i, j);
 			}
 		}
 
 #pragma warning restore CA1416
 
-		void ProcessContext (HandleContext* context)
+		void ProcessContext (HandleContext* context, int componentIndex, int contextIndex)
 		{
 			if (context == null) {
 				throw new ArgumentNullException (nameof (context), "HandleContext should never be null.");
 			}
 
-			// Ignore contexts which were not collected
-			if (!context->IsCollected) {
+			bool isCollected = context->IsCollected;
+			if (!isCollected && reachabilityEvents == null) {
 				return;
 			}
 
 			GCHandle handle = HandleContext.GetAssociatedGCHandle (context);
+			if (reachabilityEvents != null) {
+				reachabilityEvents.Add (CaptureReachabilityEvent (context, handle, componentIndex, contextIndex, isCollected));
+			}
+
+			// Ignore contexts which were not collected
+			if (!isCollected) {
+				return;
+			}
 
 			// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
 			// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
