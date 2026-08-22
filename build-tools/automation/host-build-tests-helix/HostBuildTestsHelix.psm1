@@ -293,7 +293,7 @@ set "DOTNET_ROOT=%REPO%\bin\__CONFIGURATION__\dotnet"
 set "ANDROID_HOME=%HELIX_CORRELATION_PAYLOAD%\android-toolchain\sdk"
 set "ANDROID_SDK_ROOT=%ANDROID_HOME%"
 set "JAVA_HOME=%HELIX_CORRELATION_PAYLOAD%\jdk"
-set "NUGET_PACKAGES=%HELIX_CORRELATION_PAYLOAD%\nuget-packages"
+set "NUGET_PACKAGES=%HELIX_WORKITEM_ROOT%\nuget-packages"
 set "GRADLE_USER_HOME=%HELIX_CORRELATION_PAYLOAD%\gradle"
 set "DOTNET_CLI_HOME=%HELIX_WORKITEM_ROOT%\dotnet-home"
 set "TEMP=%HELIX_WORKITEM_ROOT%\temp"
@@ -316,6 +316,7 @@ if not exist "%DOTNET_ROOT%\dotnet.exe" exit /b 3
 if not exist "%REPO%\__TEST_ASSEMBLY__" exit /b 3
 mkdir "%HELIX_WORKITEM_UPLOAD_ROOT%\dumps" 2>nul
 mkdir "%DOTNET_CLI_HOME%" 2>nul
+mkdir "%NUGET_PACKAGES%" 2>nul
 mkdir "%TEMP%" 2>nul
 copy /y "%~dp0slice.runsettings" "%HELIX_WORKITEM_UPLOAD_ROOT%\slice.runsettings" >nul
 copy /y "%~dp0work-item.json" "%HELIX_WORKITEM_UPLOAD_ROOT%\work-item.json" >nul
@@ -344,7 +345,7 @@ export DOTNET_ROOT="$REPO/bin/__CONFIGURATION__/dotnet"
 export ANDROID_HOME="$HELIX_CORRELATION_PAYLOAD/android-toolchain/sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 export JAVA_HOME="$HELIX_CORRELATION_PAYLOAD/jdk"
-export NUGET_PACKAGES="$HELIX_CORRELATION_PAYLOAD/nuget-packages"
+export NUGET_PACKAGES="$HELIX_WORKITEM_ROOT/nuget-packages"
 export GRADLE_USER_HOME="$HELIX_CORRELATION_PAYLOAD/gradle"
 export DOTNET_CLI_HOME="$HELIX_WORKITEM_ROOT/dotnet-home"
 export TMPDIR="$HELIX_WORKITEM_ROOT/temp"
@@ -364,7 +365,7 @@ export DOTNET_DbgMiniDumpType=2
 export DOTNET_DbgMiniDumpName="$HELIX_WORKITEM_UPLOAD_ROOT/dumps/%e.%p.dmp"
 test -x "$DOTNET_ROOT/dotnet"
 test -f "$REPO/__TEST_ASSEMBLY__"
-mkdir -p "$HELIX_WORKITEM_UPLOAD_ROOT/dumps" "$DOTNET_CLI_HOME" "$TMPDIR"
+mkdir -p "$HELIX_WORKITEM_UPLOAD_ROOT/dumps" "$DOTNET_CLI_HOME" "$NUGET_PACKAGES" "$TMPDIR"
 cp "$HELIX_WORKITEM_ROOT/slice.runsettings" "$HELIX_WORKITEM_UPLOAD_ROOT/slice.runsettings"
 cp "$HELIX_WORKITEM_ROOT/work-item.json" "$HELIX_WORKITEM_UPLOAD_ROOT/work-item.json"
 cd "$REPO"

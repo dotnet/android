@@ -11,6 +11,9 @@ param (
 	[string] $CorrelationPayloadDirectory,
 
 	[Parameter(Mandatory)]
+	[string] $CorrelationPayloadsPropsPath,
+
+	[Parameter(Mandatory)]
 	[string] $WorkItemsDirectory,
 
 	[Parameter(Mandatory)]
@@ -47,8 +50,6 @@ param (
 
 	[Parameter(Mandatory)]
 	[string] $JavaHome,
-
-	[string] $NuGetPackages = '',
 
 	[string] $DotNetToolsDirectory = '',
 
@@ -105,8 +106,167 @@ function Copy-PayloadDirectory
 	}
 }
 
+function Get-DirectorySize
+{
+	param (
+		[Parameter(Mandatory)]
+		[string] $Path
+	)
+
+	$size = 0L
+	foreach ($file in Get-ChildItem -LiteralPath $Path -Recurse -File) {
+		$size += $file.Length
+	}
+	return $size
+}
+
+$correlationPayloads = [System.Collections.Generic.List[object]]::new()
+$filePayloadIndex = 0
+$maximumPayloadBytes = 1GB
+
+function Add-CorrelationPayload
+{
+	param (
+		[Parameter(Mandatory)]
+		[string] $Source,
+
+		[Parameter(Mandatory)]
+		[string] $Destination,
+
+		[Parameter(Mandatory)]
+		[long] $SizeBytes
+	)
+
+	$script:correlationPayloads.Add([pscustomobject] @{
+		Source = [IO.Path]::GetFullPath($Source)
+		Destination = $Destination.Replace('\', '/').Trim('/')
+		SizeBytes = $SizeBytes
+	})
+}
+
+function Add-FileCorrelationPayloads
+{
+	param (
+		[Parameter(Mandatory)]
+		[IO.FileInfo[]] $Files,
+
+		[Parameter(Mandatory)]
+		[string] $Destination
+	)
+
+	$currentFiles = [System.Collections.Generic.List[IO.FileInfo]]::new()
+	$currentSize = 0L
+	foreach ($file in $Files | Sort-Object Name) {
+		if ($file.Length -gt $script:maximumPayloadBytes) {
+			throw "File '$($file.FullName)' exceeds the maximum correlation payload size."
+		}
+		if ($currentFiles.Count -gt 0 -and $currentSize + $file.Length -gt $script:maximumPayloadBytes) {
+			New-FileCorrelationPayload -Files $currentFiles.ToArray() -Destination $Destination -SizeBytes $currentSize
+			$currentFiles.Clear()
+			$currentSize = 0L
+		}
+		$currentFiles.Add($file)
+		$currentSize += $file.Length
+	}
+	if ($currentFiles.Count -gt 0) {
+		New-FileCorrelationPayload -Files $currentFiles.ToArray() -Destination $Destination -SizeBytes $currentSize
+	}
+}
+
+function New-FileCorrelationPayload
+{
+	param (
+		[Parameter(Mandatory)]
+		[IO.FileInfo[]] $Files,
+
+		[Parameter(Mandatory)]
+		[string] $Destination,
+
+		[Parameter(Mandatory)]
+		[long] $SizeBytes
+	)
+
+	$script:filePayloadIndex++
+	$payloadDirectory = Join-Path $script:correlationPayloadFullPath ('files-{0:d3}' -f $script:filePayloadIndex)
+	New-Item -ItemType Directory -Force -Path $payloadDirectory | Out-Null
+	foreach ($file in $Files) {
+		$target = Join-Path $payloadDirectory $file.Name
+		try {
+			New-Item -ItemType HardLink -Path $target -Target $file.FullName | Out-Null
+		} catch {
+			Copy-Item -LiteralPath $file.FullName -Destination $target
+		}
+	}
+	Add-CorrelationPayload -Source $payloadDirectory -Destination $Destination -SizeBytes $SizeBytes
+}
+
+function Add-DirectoryCorrelationPayloads
+{
+	param (
+		[Parameter(Mandatory)]
+		[string] $Source,
+
+		[Parameter(Mandatory)]
+		[string] $Destination,
+
+		[switch] $Optional
+	)
+
+	if (-not (Test-Path -LiteralPath $Source -PathType Container)) {
+		if ($Optional) {
+			Write-Warning "Optional correlation payload directory '$Source' does not exist."
+			return
+		}
+		throw "Required correlation payload directory '$Source' does not exist."
+	}
+
+	$size = Get-DirectorySize -Path $Source
+	if ($size -le $script:maximumPayloadBytes) {
+		Add-CorrelationPayload -Source $Source -Destination $Destination -SizeBytes $size
+		return
+	}
+
+	$files = @(Get-ChildItem -LiteralPath $Source -File)
+	if ($files.Count -gt 0) {
+		Add-FileCorrelationPayloads -Files $files -Destination $Destination
+	}
+	foreach ($directory in Get-ChildItem -LiteralPath $Source -Directory | Sort-Object Name) {
+		Add-DirectoryCorrelationPayloads `
+			-Source $directory.FullName `
+			-Destination "$($Destination.TrimEnd('/'))/$($directory.Name)"
+	}
+}
+
+function Write-CorrelationPayloadProps
+{
+	param (
+		[Parameter(Mandatory)]
+		[string] $Path
+	)
+
+	$settings = [Xml.XmlWriterSettings]::new()
+	$settings.Indent = $true
+	$settings.Encoding = [Text.UTF8Encoding]::new($false)
+	$writer = [Xml.XmlWriter]::Create($Path, $settings)
+	try {
+		$writer.WriteStartElement('Project')
+		$writer.WriteStartElement('ItemGroup')
+		foreach ($payload in $script:correlationPayloads) {
+			$writer.WriteStartElement('_HostBuildTestHelixCorrelationPayload')
+			$writer.WriteAttributeString('Include', $payload.Source)
+			$writer.WriteElementString('Destination', $payload.Destination)
+			$writer.WriteEndElement()
+		}
+		$writer.WriteEndElement()
+		$writer.WriteEndElement()
+	} finally {
+		$writer.Dispose()
+	}
+}
+
 $repositoryRootFullPath = [IO.Path]::GetFullPath($RepositoryRoot)
 $correlationPayloadFullPath = [IO.Path]::GetFullPath($CorrelationPayloadDirectory)
+$correlationPayloadsPropsFullPath = [IO.Path]::GetFullPath($CorrelationPayloadsPropsPath)
 $workItemsFullPath = [IO.Path]::GetFullPath($WorkItemsDirectory)
 $workItemsPropsFullPath = [IO.Path]::GetFullPath($WorkItemsPropsPath)
 $resultsFullPath = [IO.Path]::GetFullPath($ResultsDirectory)
@@ -115,13 +275,11 @@ Remove-Item -LiteralPath $correlationPayloadFullPath -Recurse -Force -ErrorActio
 Remove-Item -LiteralPath $workItemsFullPath -Recurse -Force -ErrorAction Ignore
 New-Item -ItemType Directory -Force -Path $correlationPayloadFullPath, $workItemsFullPath, $resultsFullPath | Out-Null
 
-$payloadRepository = Join-Path $correlationPayloadFullPath 'repo'
+$payloadRepository = Join-Path $correlationPayloadFullPath 'repository'
 New-Item -ItemType Directory -Force -Path $payloadRepository | Out-Null
 Get-ChildItem -LiteralPath $repositoryRootFullPath -File | Copy-Item -Destination $payloadRepository
 
 $payloadDirectories = @(
-	@("bin\$Configuration", "bin\$Configuration", $false),
-	@("bin\Test$Configuration", "bin\Test$Configuration", $false),
 	@('build-tools', 'build-tools', $false),
 	@('eng', 'eng', $false),
 	@('external', 'external', $false),
@@ -145,26 +303,8 @@ foreach ($sourceDirectory in Get-ChildItem -LiteralPath $sourceRoot -Directory |
 		-Destination (Join-Path (Join-Path $payloadRepository 'src') $sourceDirectory.Name)
 }
 
-Copy-PayloadDirectory -Source $AndroidHome -Destination (Join-Path $correlationPayloadFullPath (ConvertTo-NativeRelativePath 'android-toolchain/sdk'))
-Copy-PayloadDirectory -Source $JavaHome -Destination (Join-Path $correlationPayloadFullPath 'jdk')
-
-if ([string]::IsNullOrWhiteSpace($NuGetPackages)) {
-	$NuGetPackages = Join-Path ([Environment]::GetFolderPath('UserProfile')) (ConvertTo-NativeRelativePath '.nuget/packages')
-}
-Copy-PayloadDirectory -Source $NuGetPackages -Destination (Join-Path $correlationPayloadFullPath 'nuget-packages')
-
-if ([string]::IsNullOrWhiteSpace($GradleUserHome)) {
-	$GradleUserHome = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.gradle'
-}
-foreach ($gradleDirectory in @('caches', 'wrapper')) {
-	Copy-PayloadDirectory `
-		-Source (Join-Path $GradleUserHome $gradleDirectory) `
-		-Destination (Join-Path $correlationPayloadFullPath (ConvertTo-NativeRelativePath "gradle/$gradleDirectory")) `
-		-Optional
-}
-
+$payloadTools = Join-Path $correlationPayloadFullPath 'dotnet-tools'
 if (-not [string]::IsNullOrWhiteSpace($DotNetToolsDirectory)) {
-	$payloadTools = Join-Path $correlationPayloadFullPath 'dotnet-tools'
 	New-Item -ItemType Directory -Force -Path $payloadTools | Out-Null
 	$apkDiffShim = if ($Platform -eq 'windows') { 'apkdiff.exe' } else { 'apkdiff' }
 	$apkDiffShimPath = Join-Path $DotNetToolsDirectory $apkDiffShim
@@ -177,12 +317,40 @@ if (-not [string]::IsNullOrWhiteSpace($DotNetToolsDirectory)) {
 		-Optional
 }
 
-$payloadBytes = (Get-ChildItem -LiteralPath $correlationPayloadFullPath -Recurse -File | Measure-Object -Property Length -Sum).Sum
-Write-Host ('Staged correlation payload size: {0:N2} GiB.' -f ($payloadBytes / 1GB))
+Add-DirectoryCorrelationPayloads -Source $payloadRepository -Destination 'repo'
+Add-DirectoryCorrelationPayloads `
+	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/$Configuration")) `
+	-Destination "repo/bin/$Configuration"
+Add-DirectoryCorrelationPayloads `
+	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Test$Configuration")) `
+	-Destination "repo/bin/Test$Configuration"
+Add-DirectoryCorrelationPayloads -Source $AndroidHome -Destination 'android-toolchain/sdk'
+Add-DirectoryCorrelationPayloads -Source $JavaHome -Destination 'jdk'
 
-$stagedTestAssembly = Join-Path $payloadRepository (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
-if (-not (Test-Path -LiteralPath $stagedTestAssembly -PathType Leaf)) {
-	throw "Test assembly '$stagedTestAssembly' was not staged."
+if ([string]::IsNullOrWhiteSpace($GradleUserHome)) {
+	$GradleUserHome = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.gradle'
+}
+Add-DirectoryCorrelationPayloads `
+	-Source (Join-Path $GradleUserHome (ConvertTo-NativeRelativePath 'wrapper/dists')) `
+	-Destination 'gradle/wrapper/dists' `
+	-Optional
+Add-DirectoryCorrelationPayloads `
+	-Source (Join-Path $GradleUserHome (ConvertTo-NativeRelativePath 'caches/modules-2')) `
+	-Destination 'gradle/caches/modules-2' `
+	-Optional
+if (Test-Path -LiteralPath $payloadTools -PathType Container) {
+	Add-DirectoryCorrelationPayloads -Source $payloadTools -Destination 'dotnet-tools'
+}
+
+Write-CorrelationPayloadProps -Path $correlationPayloadsPropsFullPath
+$payloadBytes = ($correlationPayloads | Measure-Object -Property SizeBytes -Sum).Sum
+$largestPayloadBytes = ($correlationPayloads | Measure-Object -Property SizeBytes -Maximum).Maximum
+Write-Host ('Prepared {0} correlation payloads totaling {1:N2} GiB; largest payload is {2:N2} GiB.' -f `
+	$correlationPayloads.Count, ($payloadBytes / 1GB), ($largestPayloadBytes / 1GB))
+
+$testAssembly = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
+if (-not (Test-Path -LiteralPath $testAssembly -PathType Leaf)) {
+	throw "Test assembly '$testAssembly' does not exist."
 }
 if (-not (Test-Path -LiteralPath $TestSlicerPath -PathType Leaf)) {
 	throw "dotnet-test-slicer '$TestSlicerPath' does not exist."
@@ -191,7 +359,7 @@ if (-not (Test-Path -LiteralPath $TestSlicerPath -PathType Leaf)) {
 $discoveryRunSettings = Join-Path $workItemsFullPath 'all-tests.runsettings'
 $sliceArguments = @(
 	'slice',
-	"--test-assembly=$stagedTestAssembly",
+	"--test-assembly=$testAssembly",
 	'--slice-number=1',
 	'--total-slices=1',
 	"--outfile=$discoveryRunSettings"
@@ -254,6 +422,6 @@ if ($plan.DurationMode -eq 'count-fallback') {
 	Write-Warning "No matching timing history was available. Work items use an explicit count fallback of $FallbackTestDurationSeconds second(s) per test."
 }
 
-Write-Host "##vso[task.setvariable variable=HostBuildTestsHelixCorrelationPayload]$correlationPayloadFullPath"
+Write-Host "##vso[task.setvariable variable=HostBuildTestsHelixCorrelationPayloadsProps]$correlationPayloadsPropsFullPath"
 Write-Host "##vso[task.setvariable variable=HostBuildTestsHelixWorkItemsProps]$workItemsPropsFullPath"
 Write-Host "##vso[task.setvariable variable=HostBuildTestsHelixWorkItemCount]$($plan.WorkItems.Count)"

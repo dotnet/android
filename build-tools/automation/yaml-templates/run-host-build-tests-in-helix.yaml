@@ -57,6 +57,7 @@ steps:
     $stagingRoot = '$(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}'
     $resultsDirectory = Join-Path $stagingRoot 'results'
     $correlationPayload = Join-Path $stagingRoot 'correlation'
+    $correlationPayloadsProps = Join-Path $stagingRoot 'correlation-payloads.props'
     $workItemsDirectory = Join-Path $stagingRoot 'work-items'
     $workItemsProps = Join-Path $stagingRoot 'work-items.props'
     $adbName = if ($platform -eq 'windows') { 'adb.exe' } else { 'adb' }
@@ -75,6 +76,7 @@ steps:
       -Platform $platform `
       -RepositoryRoot '$(System.DefaultWorkingDirectory)' `
       -CorrelationPayloadDirectory $correlationPayload `
+      -CorrelationPayloadsPropsPath $correlationPayloadsProps `
       -WorkItemsDirectory $workItemsDirectory `
       -WorkItemsPropsPath $workItemsProps `
       -ResultsDirectory $resultsDirectory `
@@ -89,7 +91,6 @@ steps:
       -Configuration '$(XA.Build.Configuration)' `
       -AndroidHome $androidHome `
       -JavaHome $env:JAVA_HOME `
-      -NuGetPackages $env:NUGET_PACKAGES `
       -DotNetToolsDirectory '$(Agent.ToolsDirectory)' `
       -GradleUserHome (Join-Path ([Environment]::GetFolderPath('UserProfile')) '.gradle')
   displayName: Prepare duration-balanced ${{ parameters.platform }} Helix work items
@@ -108,7 +109,7 @@ steps:
     taskTimeoutInMinutes: 240
     env:
       HostBuildTestsHelixWorkItemsProps: $(HostBuildTestsHelixWorkItemsProps)
-      CorrelationPayloadDirectory: $(HostBuildTestsHelixCorrelationPayload)
+      HostBuildTestsHelixCorrelationPayloadsProps: $(HostBuildTestsHelixCorrelationPayloadsProps)
       HostBuildTestsHelixWorkItemTimeout: ${{ parameters.workItemTimeout }}
       HelixResultsDestinationDir: $(Build.StagingDirectory)/host-build-tests-helix/${{ parameters.platform }}/results
       HelixSource: pr/dotnet/android

@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <Import Project="$(HostBuildTestsHelixWorkItemsProps)" Condition="Exists('$(HostBuildTestsHelixWorkItemsProps)')" />
+  <Import Project="$(HostBuildTestsHelixCorrelationPayloadsProps)" Condition="Exists('$(HostBuildTestsHelixCorrelationPayloadsProps)')" />
 
   <ItemGroup>
     <HelixTargetQueue Include="$(HelixTargetQueueForItem)" Condition="'$(HelixTargetQueueForItem)' != ''">
@@ -18,9 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HelixCorrelationPayload Include="$(CorrelationPayloadDirectory)" Condition="'$(CorrelationPayloadDirectory)' != ''">
-      <PayloadDirectory>%(Identity)</PayloadDirectory>
-    </HelixCorrelationPayload>
+    <HelixCorrelationPayload Include="@(_HostBuildTestHelixCorrelationPayload)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,13 +31,15 @@
   <Target Name="_ValidateHostBuildTestsHelixInputs" BeforeTargets="Test">
     <Error Text="HostBuildTestsHelixWorkItemsProps must name a generated work-items props file."
            Condition="'$(HostBuildTestsHelixWorkItemsProps)' == '' or !Exists('$(HostBuildTestsHelixWorkItemsProps)')" />
-    <Error Text="CorrelationPayloadDirectory must name the staged host-test correlation payload."
-           Condition="'$(CorrelationPayloadDirectory)' == '' or !Exists('$(CorrelationPayloadDirectory)')" />
+    <Error Text="HostBuildTestsHelixCorrelationPayloadsProps must name the generated correlation payload props file."
+           Condition="'$(HostBuildTestsHelixCorrelationPayloadsProps)' == '' or !Exists('$(HostBuildTestsHelixCorrelationPayloadsProps)')" />
     <Error Text="HelixTargetQueueForItem is required."
            Condition="'$(HelixTargetQueueForItem)' == ''" />
+    <Error Text="No host-build-test Helix correlation payloads were generated."
+           Condition="'@(_HostBuildTestHelixCorrelationPayload->Count())' == '0'" />
     <Error Text="No host-build-test Helix work items were generated."
            Condition="'@(_HostBuildTestHelixWorkItem->Count())' == '0'" />
-    <Message Text="Submitting @(_HostBuildTestHelixWorkItem->Count()) host-build-test work items to $(HelixTargetQueueForItem)."
+    <Message Text="Submitting @(_HostBuildTestHelixWorkItem->Count()) host-build-test work items with @(_HostBuildTestHelixCorrelationPayload->Count()) correlation payloads to $(HelixTargetQueueForItem)."
              Importance="High" />
   </Target>
 </Project>

@@ -3,11 +3,13 @@
 Tracking: [AB#12334](https://dev.azure.com/dnceng/internal/_workitems/edit/12334)
 
 This guarded prototype stages the already-prepared .NET SDK/workload, Android SDK,
-JDK, NuGet/Gradle caches, selected repository inputs, and test assemblies into one
-Helix correlation payload per host OS. Work item payloads contain only a runsettings
-filter, a small command script, and generation metadata. To control payload size, the
-source copy omits `src/Mono.Android`; host build tests consume that product through the
-prepared workload packs instead.
+JDK, selected Gradle caches, repository inputs, and test assemblies as shared Helix
+correlation payloads. Individual payloads are capped at 1 GiB to avoid the Helix SDK's
+in-memory ZIP limit. Work item payloads contain only a runsettings filter, a small
+command script, and generation metadata. To control total payload size, the source
+copy omits `src/Mono.Android` and the NuGet package cache; host build tests consume the
+product through the prepared workload packs and use isolated per-work-item NuGet
+caches.
 
 `prepare-host-build-test-helix-payload.ps1` discovers NUnit tests with the repository's
 `dotnet-test-slicer`, reads its `balance.xml` format, and uses deterministic best-fit
