@@ -31,6 +31,34 @@ parameters:
   values:
   - 'true'
   - 'false'
+- name: enableHostBuildTestsHelixPrototype
+  displayName: Enable host build tests in Helix prototype
+  type: boolean
+  default: false
+- name: hostBuildTestsHelixTargetMinutes
+  displayName: Host build tests Helix target minutes
+  type: number
+  default: 15
+- name: hostBuildTestsHelixDurationParallelism
+  displayName: Host build tests timing parallelism
+  type: number
+  default: 2.5
+- name: hostBuildTestsHelixFallbackTestDurationSeconds
+  displayName: Host build tests fallback seconds per test
+  type: number
+  default: 60
+- name: hostBuildTestsHelixTimingBuildId
+  displayName: Prior build ID containing host build test timings
+  type: string
+  default: ''
+- name: hostBuildTestsHelixWorkItemTimeout
+  displayName: Host build tests Helix work item timeout
+  type: string
+  default: '00:45:00'
+- name: hostBuildTestsHelixOnly
+  displayName: Run only the host build tests Helix prototype after builds
+  type: boolean
+  default: false
 
 # Repository resources
 resources:
@@ -161,6 +189,61 @@ stages:
         xaSourcePath: $(System.DefaultWorkingDirectory)/android
         nugetArtifactName: $(LinuxNuGetArtifactName)
         use1ESTemplate: false
+
+# Guarded additive prototype. The existing Windows and Linux test jobs remain enabled.
+- ${{ if eq(parameters.enableHostBuildTestsHelixPrototype, true) }}:
+  - stage: host_build_tests_helix
+    displayName: Host Build Tests Helix Prototype
+    dependsOn:
+    - mac_build
+    - linux_build
+    condition: and(succeeded(), or(ne(variables['SkipTestStages'], 'true'), eq('${{ parameters.hostBuildTestsHelixOnly }}', 'true')))
+    jobs:
+    - job: windows_host_build_tests_helix
+      displayName: Windows > Host Build Tests > Helix
+      pool:
+        name: $(NetCorePublicPoolName)
+        demands:
+        - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      timeoutInMinutes: 300
+      workspace:
+        clean: all
+      steps:
+      - template: /build-tools/automation/yaml-templates/run-host-build-tests-in-helix.yaml
+        parameters:
+          platform: windows
+          helixQueue: Windows.Amd64.VS2026.Open
+          testFilter: ''
+          testRunTitle: Xamarin.Android.Build.Tests - Windows Helix Prototype
+          timingBuildId: ${{ parameters.hostBuildTestsHelixTimingBuildId }}
+          timingArtifactName: Host Build Test Timings - windows
+          targetMinutes: ${{ parameters.hostBuildTestsHelixTargetMinutes }}
+          durationParallelism: ${{ parameters.hostBuildTestsHelixDurationParallelism }}
+          fallbackTestDurationSeconds: ${{ parameters.hostBuildTestsHelixFallbackTestDurationSeconds }}
+          workItemTimeout: ${{ parameters.hostBuildTestsHelixWorkItemTimeout }}
+
+    - job: linux_host_build_tests_helix
+      displayName: Linux > BuildTest > Helix
+      pool:
+        name: $(NetCorePublicPoolName)
+        demands:
+        - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+      timeoutInMinutes: 300
+      workspace:
+        clean: all
+      steps:
+      - template: /build-tools/automation/yaml-templates/run-host-build-tests-in-helix.yaml
+        parameters:
+          platform: linux
+          helixQueue: Ubuntu.2404.Amd64.Open
+          testFilter: 'class == Xamarin.Android.Build.Tests.BuildTest'
+          testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest Helix Prototype
+          timingBuildId: ${{ parameters.hostBuildTestsHelixTimingBuildId }}
+          timingArtifactName: Host Build Test Timings - linux
+          targetMinutes: ${{ parameters.hostBuildTestsHelixTargetMinutes }}
+          durationParallelism: ${{ parameters.hostBuildTestsHelixDurationParallelism }}
+          fallbackTestDurationSeconds: ${{ parameters.hostBuildTestsHelixFallbackTestDurationSeconds }}
+          workItemTimeout: ${{ parameters.hostBuildTestsHelixWorkItemTimeout }}
 
 # Package Tests Stage
 - ${{ if ne(variables.SkipTestStages, 'true') }}:
