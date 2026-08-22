@@ -101,7 +101,8 @@ namespace Java.Interop {
 			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
 			{
-				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
+				var genericTypeDefinition = target.GetGenericTypeDefinition ();
+				if (genericTypeDefinition == typeof (IDictionary<,>) || genericTypeDefinition == typeof (JavaDictionary<,>)) {
 					Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
 					return GetJniHandleConverterForType (t);
 				}
@@ -116,6 +117,16 @@ namespace Java.Interop {
 
 				return null;
 			}
+		}
+
+		internal static bool IsGenericDictionary (Type? type)
+		{
+			if (type == null || !type.IsGenericType || type.IsGenericTypeDefinition)
+				return false;
+
+			var genericTypeDefinition = type.GetGenericTypeDefinition ();
+			return genericTypeDefinition == typeof (IDictionary<,>) ||
+				genericTypeDefinition == typeof (JavaDictionary<,>);
 		}
 
 		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)
