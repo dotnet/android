@@ -360,6 +360,13 @@ $payloadBytes = ($correlationPayloads | Measure-Object -Property SizeBytes -Sum)
 $largestPayloadBytes = ($correlationPayloads | Measure-Object -Property SizeBytes -Maximum).Maximum
 Write-Host ('Prepared {0} correlation payloads totaling {1:N2} GiB; largest payload is {2:N2} GiB.' -f `
 	$correlationPayloads.Count, ($payloadBytes / 1GB), ($largestPayloadBytes / 1GB))
+Write-Host 'Largest correlation payload components:'
+$correlationPayloads |
+	Sort-Object SizeBytes -Descending |
+	Select-Object -First 20 |
+	ForEach-Object {
+		Write-Host ('- {0:N2} GiB -> {1}' -f ($_.SizeBytes / 1GB), $_.Destination)
+	}
 
 $testAssembly = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
 if (-not (Test-Path -LiteralPath $testAssembly -PathType Leaf)) {
@@ -417,6 +424,14 @@ $summaryPath = Join-Path $resultsFullPath 'work-item-generation.json'
 	estimatedTestCount = $plan.EstimatedTestCount
 	workItemCount = $plan.WorkItems.Count
 	totalDurationLoadMs = $plan.TotalDurationMs
+	correlationPayloadCount = $correlationPayloads.Count
+	correlationPayloadBytes = $payloadBytes
+	correlationPayloads = @($correlationPayloads | ForEach-Object {
+		[pscustomobject] @{
+			destination = $_.Destination
+			sizeBytes = $_.SizeBytes
+		}
+	})
 	workItems = @($plan.WorkItems | ForEach-Object {
 		[pscustomobject] @{
 			id = $_.Id
