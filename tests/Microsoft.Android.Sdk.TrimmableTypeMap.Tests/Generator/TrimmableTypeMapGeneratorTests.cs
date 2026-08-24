@@ -701,28 +701,6 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void RootCustomViewTypes_RootsOnlyReferencedManagedTypes ()
-	{
-		var peers = new List<JavaPeerInfo> {
-			new JavaPeerInfo {
-				JavaName = "crc64123456789abc/CustomView", CompatJniName = "my.app.CustomView",
-				ManagedTypeName = "MyApp.CustomView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "CustomView",
-				AssemblyName = "MyApp",
-			},
-			new JavaPeerInfo {
-				JavaName = "crc64123456789abc/UnusedView", CompatJniName = "my.app.UnusedView",
-				ManagedTypeName = "MyApp.UnusedView", ManagedTypeNamespace = "MyApp", ManagedTypeShortName = "UnusedView",
-				AssemblyName = "MyApp",
-			},
-		};
-
-		TrimmableTypeMapGenerator.RootCustomViewTypes (peers, ["MyApp.CustomView"]);
-
-		Assert.True (peers [0].IsUnconditional);
-		Assert.False (peers [1].IsUnconditional);
-	}
-
-	[Fact]
 	public void RootManifestReferencedTypes_RootsApplicationAndInstrumentationTypes ()
 	{
 		var peers = new List<JavaPeerInfo> {
