@@ -299,8 +299,8 @@ set "DOTNET_CLI_HOME=%HELIX_WORKITEM_ROOT%\dotnet-home"
 set "TEMP=%HELIX_WORKITEM_ROOT%\temp"
 set "TMP=%TEMP%"
 set "BUILD_STAGINGDIRECTORY=%HELIX_WORKITEM_UPLOAD_ROOT%"
-set "CONFIGURATION=__CONFIGURATION__"
 set "PATH=%HELIX_CORRELATION_PAYLOAD%\dotnet-tools;%DOTNET_ROOT%;%ANDROID_HOME%\platform-tools;%JAVA_HOME%\bin;%PATH%"
+set "RUNNINGONCI=true"
 set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
 set "DOTNET_NOLOGO=1"
 set "DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1"
@@ -324,6 +324,7 @@ pushd "%REPO%"
 "%DOTNET_ROOT%\dotnet.exe" test "%REPO%\__TEST_ASSEMBLY__" --settings "%~dp0slice.runsettings" --logger "trx;LogFileName=results.trx" --results-directory "%HELIX_WORKITEM_UPLOAD_ROOT%" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ > "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log" 2>&1
 set "testExitCode=%ERRORLEVEL%"
 type "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log"
+powershell.exe -NoLogo -NoProfile -Command "$files = Get-ChildItem -LiteralPath $env:HELIX_WORKITEM_UPLOAD_ROOT -Recurse -File -Include *.binlog,*.dmp,*.log,*.txt; if ($files.Count -gt 0) { Compress-Archive -LiteralPath $files.FullName -DestinationPath (Join-Path $env:HELIX_WORKITEM_UPLOAD_ROOT 'diagnostics.zip') -Force }" >nul 2>&1
 "%DOTNET_ROOT%\dotnet.exe" build-server shutdown >nul 2>&1
 popd
 exit /b %testExitCode%
@@ -350,8 +351,8 @@ export GRADLE_USER_HOME="$HELIX_CORRELATION_PAYLOAD/gradle"
 export DOTNET_CLI_HOME="$HELIX_WORKITEM_ROOT/dotnet-home"
 export TMPDIR="$HELIX_WORKITEM_ROOT/temp"
 export BUILD_STAGINGDIRECTORY="$HELIX_WORKITEM_UPLOAD_ROOT"
-export CONFIGURATION=__CONFIGURATION__
 export PATH="$HELIX_CORRELATION_PAYLOAD/dotnet-tools:$DOTNET_ROOT:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
+export RUNNINGONCI=true
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export DOTNET_NOLOGO=1
 export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
@@ -373,6 +374,7 @@ set +e
 "$DOTNET_ROOT/dotnet" test "$REPO/__TEST_ASSEMBLY__" --settings "$HELIX_WORKITEM_ROOT/slice.runsettings" --logger "trx;LogFileName=results.trx" --results-directory "$HELIX_WORKITEM_UPLOAD_ROOT" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ 2>&1 | tee "$HELIX_WORKITEM_UPLOAD_ROOT/console.log"
 test_exit=${PIPESTATUS[0]}
 set -e
+(cd "$HELIX_WORKITEM_UPLOAD_ROOT" && find . -type f \( -name '*.binlog' -o -name '*.dmp' -o -name '*.log' -o -name '*.txt' \) -print0 | tar --null -czf diagnostics.tar.gz --files-from=-) || true
 "$DOTNET_ROOT/dotnet" build-server shutdown >/dev/null 2>&1 || true
 exit "$test_exit"
 '@
@@ -452,6 +454,8 @@ function Write-HostBuildTestWorkItemPayloads
 			$propsWriter.WriteAttributeString('Include', $name)
 			$propsWriter.WriteElementString('PayloadDirectory', $payloadDirectory)
 			$propsWriter.WriteElementString('Command', $helixCommand)
+			$diagnosticsArchive = if ($Platform -eq 'windows') { 'diagnostics.zip' } else { 'diagnostics.tar.gz' }
+			$propsWriter.WriteElementString('DownloadFilesFromResults', "results.trx;console.log;slice.runsettings;work-item.json;$diagnosticsArchive")
 			$propsWriter.WriteElementString('EstimatedDurationMs', [string] $workItem.EstimatedDurationMs)
 			$propsWriter.WriteElementString('TestCount', [string] $workItem.Tests.Count)
 			$propsWriter.WriteEndElement()

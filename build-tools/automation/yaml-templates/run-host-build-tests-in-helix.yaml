@@ -8,7 +8,7 @@ parameters:
   targetMinutes: 15
   durationParallelism: 2.5
   fallbackTestDurationSeconds: 60
-  workItemTimeout: '00:45:00'
+  workItemTimeout: '01:30:00'
   nunitWorkers: '-1'
 
 steps:

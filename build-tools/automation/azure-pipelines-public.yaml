@@ -54,7 +54,7 @@ parameters:
 - name: hostBuildTestsHelixWorkItemTimeout
   displayName: Host build tests Helix work item timeout
   type: string
-  default: '00:45:00'
+  default: '01:30:00'
 - name: hostBuildTestsHelixOnly
   displayName: Run only the host build tests Helix prototype after builds
   type: boolean
@@ -212,7 +212,7 @@ stages:
       - template: /build-tools/automation/yaml-templates/run-host-build-tests-in-helix.yaml
         parameters:
           platform: windows
-          helixQueue: Windows.Amd64.VS2026.Open
+          helixQueue: Windows.Amd64.Server2022.Open
           testFilter: ''
           testRunTitle: Xamarin.Android.Build.Tests - Windows Helix Prototype
           timingBuildId: ${{ parameters.hostBuildTestsHelixTimingBuildId }}

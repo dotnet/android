@@ -6,7 +6,7 @@
     <FailOnTestFailure>true</FailOnTestFailure>
     <HelixType Condition="'$(HelixType)' == ''">tests/android/host-build-tests/</HelixType>
     <HelixTestRunName Condition="'$(HelixTestRunName)' == ''">Xamarin.Android.Build.Tests - Helix</HelixTestRunName>
-    <HostBuildTestsHelixWorkItemTimeout Condition="'$(HostBuildTestsHelixWorkItemTimeout)' == ''">00:45:00</HostBuildTestsHelixWorkItemTimeout>
+    <HostBuildTestsHelixWorkItemTimeout Condition="'$(HostBuildTestsHelixWorkItemTimeout)' == ''">01:30:00</HostBuildTestsHelixWorkItemTimeout>
   </PropertyGroup>
 
   <Import Project="$(HostBuildTestsHelixWorkItemsProps)" Condition="Exists('$(HostBuildTestsHelixWorkItemsProps)')" />

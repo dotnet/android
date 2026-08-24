@@ -126,9 +126,13 @@ try {
 			throw "Payload directory '$($item.PayloadDirectory)' was not created."
 		}
 		$command = Get-Content -LiteralPath (Join-Path $item.PayloadDirectory 'run-host-tests.cmd') -Raw
-		if ($command.Contains('__CONFIGURATION__') -or -not $command.Contains('bin\Release\dotnet')) {
+		if ($command.Contains('__CONFIGURATION__') -or
+			-not $command.Contains('bin\Release\dotnet') -or
+			$command.Contains('set "CONFIGURATION=Release"') -or
+			-not $command.Contains('set "RUNNINGONCI=true"')) {
 			throw 'The generated command did not apply the requested build configuration.'
 		}
+		Assert-Equal 'results.trx;console.log;slice.runsettings;work-item.json;diagnostics.zip' ([string] $item.DownloadFilesFromResults) 'Windows results should be downloaded.'
 	}
 
 	$linuxPayloadDirectory = Join-Path $testRoot 'linux-payloads'
@@ -144,6 +148,7 @@ try {
 	[xml] $linuxProps = Get-Content -LiteralPath $linuxPropsPath -Raw
 	foreach ($item in @($linuxProps.Project.ItemGroup._HostBuildTestHelixWorkItem)) {
 		Assert-Equal 'bash run-host-tests.sh' ([string] $item.Command) 'Linux work items should explicitly use bash.'
+		Assert-Equal 'results.trx;console.log;slice.runsettings;work-item.json;diagnostics.tar.gz' ([string] $item.DownloadFilesFromResults) 'Linux results should be downloaded.'
 	}
 
 	Write-Host 'HostBuildTestsHelix tests passed.'

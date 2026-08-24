@@ -18,12 +18,14 @@ decreasing bin packing. The target is `15` estimated wall-clock minutes by defau
 `durationParallelism` translates summed per-test elapsed time into expected wall time
 while preserving the current NUnit worker setting. The public prototype defaults this
 factor to `2.5`, uses `60` seconds per test for the explicit first-run fallback, and
-allows `45` minutes before Helix terminates a work item.
+allows `90` minutes before Helix terminates a first-run work item.
 
 If no timing history is provided, generation explicitly reports `count-fallback` and
 uses the configured fallback duration per test. It does not label count-only slicing
 as duration-balanced. Each completed run publishes a new `balance.xml`; pass that
 run's build ID through `hostBuildTestsHelixTimingBuildId` on the next queued build.
+TRX, console output, runsettings, work-item metadata, and a diagnostic archive are
+downloaded from each Helix results container for publication in Azure Pipelines.
 
 The public pipeline keeps the existing Azure Pipelines jobs and adds this path only
 when `enableHostBuildTestsHelixPrototype` is `true`.
