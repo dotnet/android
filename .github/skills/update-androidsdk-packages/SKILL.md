@@ -19,7 +19,7 @@ lives in two files:
 Google republishes tool revisions on their own cadence; this skill brings those two files back in
 sync with Google's *current stable* releases with a minimal, reviewable diff — matching the shape of PR #12371, which did exactly this (build-tools/platform-tools/cmdline-tools/cmake/emulator/sources/platform revisions all bumped, hashes recomputed, and per-arch macOS cmdline-tools support added when Apple Silicon archives showed up).
 
-## Seven hard rules — read these before touching anything
+## Six hard rules — read these before touching anything
 
 **1. Never touch the Android NDK.** `_XAAndroidNdkRelease`, `_XAAndroidNdkPkgRevision`, and every
 `XAAndroidNdkHash*` property in `Configuration.props`, plus the `android-ndk-r$(_XAAndroidNdkRelease)-*`
@@ -57,21 +57,13 @@ development, canary, beta, or preview channel merely because its revision sorts 
 `channel-0` for emulator updates. If a package's channel metadata and release labeling disagree,
 do not update it unattended; report the ambiguity instead.
 
-**5. Command-line tools are a coordinated product dependency.** Do not update only the bootstrap
-pins. A command-line-tools bump must also update
-`src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.props` and the matching latest entry in
-`src/Xamarin.Installer.AndroidSDK/Feeds/AndroidManifestFeed_d18.0.xml`, including every published
-host/architecture archive. Confirm `CodeGenerator.targets` tracks the property file that supplies
-`AndroidCommandLineToolsVersion`. If the automated workflow is not authorized to change every
-required file, stop and report the coordinated update instead of opening a partial PR.
-
-**6. Never execute an unverified downloader to accept licenses.** License acceptance must not run
+**5. Never execute an unverified downloader to accept licenses.** License acceptance must not run
 the `android` bootstrapper, `sdkmanager`, or any payload fetched at execution time. Preserve all
 existing valid fingerprints, add the pinned expected fingerprint under a cross-process lock, write
 atomically, validate every line as a 40-character SHA-1 fingerprint, and create the acceptance
 marker only after validation succeeds.
 
-**7. Extraction outputs identify the exact archive.** Packages for different hosts or architectures
+**6. Extraction outputs identify the exact archive.** Packages for different hosts or architectures
 may share a destination. Their incremental output stamp must include both archive identity and
 expected SHA-256; `source.properties` alone is not a safe extraction sentinel.
 
@@ -160,8 +152,9 @@ one shared macOS zip still covers both).
   the platform's distinct SDK directory as `Destination` (`37.0` historically maps to
   `\sources\android-37`; `37.1` maps to `\sources\android-37.1`). Update an existing entry in place
   only when Google publishes a newer revision for that same API level.
-- When command-line tools changes, update the shipped product version and feed entry described in
-  hard rule 5 in the same change. Do not leave bootstrap and product dependency versions split.
+- Keep this skill scoped to the bootstrap SDK catalog. The product installer has an independent
+  command-line-tools version and feed under `src/Xamarin.Installer.*`; do not update either as part
+  of this workflow.
 - Keep archive/hash-specific extraction stamps intact when adding host or architecture variants.
 
 ### 5. Validate before finishing
@@ -185,8 +178,8 @@ dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPla
 
 Also check:
 - **XML validity** — both edited files still parse (`dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
-- **Diff cleanliness** — no unrelated files or stray temp downloads. Routine families remain scoped to `Configuration.props` and `src/androidsdk/androidsdk.targets`; command-line-tools updates additionally require the two shipped-product files in hard rule 5. Never edit `package.xml.in` during a routine refresh.
-- **The seven hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set, verify every `IsLatestStable` platform has its own sources package, verify selected releases are stable, and verify extraction outputs remain archive/hash-specific.
+- **Diff cleanliness** — no unrelated files or stray temp downloads. Package refreshes remain scoped to `Configuration.props` and `src/androidsdk/androidsdk.targets`. Never edit product-installer files or `package.xml.in` during a routine refresh.
+- **The six hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set, verify every `IsLatestStable` platform has its own sources package, verify selected releases are stable, and verify extraction outputs remain archive/hash-specific.
 - **Command-line tools compatibility** — test with `licenses/android-sdk-license` and `.licenses-accepted` absent, with a pre-existing unrelated valid fingerprint, and with malformed content. Confirm the expected pinned fingerprint is created, the unrelated fingerprint is preserved, malformed content fails, writes are atomic/locked, and Gradle recognizes the Build Tools and platform licenses. No license-acceptance path may execute a network-capable Android CLI.
 - **Formatting** — match the existing tab indentation and column alignment in both files (several `_PlatformPackage`/`_AndroidSdkPackage` lines are hand-aligned with extra spaces before `<ApiLevel>`/`<Hash>` — preserve that style rather than reformatting the whole block).
 

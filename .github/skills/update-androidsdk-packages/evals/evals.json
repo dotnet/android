@@ -21,7 +21,7 @@
     },
     {
       "id": 4,
-      "prompt": "our CI machines are on an old command-line tools version (19.0 / 13114758_latest) and I keep seeing warnings that a newer cmdline-tools package is available with separate mac_arm64/mac_x86_64 downloads now — can you get us current, and check whether Android platform 36.1 has a newer revision published too?",
+      "prompt": "our bootstrap SDK is on an old command-line tools release and I keep seeing warnings that a newer cmdline-tools package is available with separate mac_arm64/mac_x86_64 downloads now — can you get us current, and check whether Android platform 36.1 has a newer revision published too?",
       "expected_output": "CommandLineToolsFolder/CommandLineToolsVersion bumped to the current stable release, with the command-line tools _AndroidSdkPackage split into a mac_x86_64 item (gated on _IsArm64Apple != 'true') and a new mac_arm64 item (gated on _IsArm64Apple == 'true') backed by a new XACmdlineToolsHashMacOSArm64 property, following the existing emulator/system-image pattern for _IsArm64Apple. The existing platform-36.1_r01 _PlatformPackage entry is checked against the manifest and its revision/hash updated in place if a newer one exists (no new API level added). Validation runs the BootstrapTasks build before the androidsdk.csproj build.",
       "assertions": []
     },
@@ -33,8 +33,8 @@
     },
     {
       "id": 6,
-      "prompt": "Update command-line tools from 19.0 to a release where sdkmanager says --licenses is deprecated and exits successfully without creating the SDK license files.",
-      "expected_output": "Bootstrap pins, Xamarin.Installer.Common.props, and the installer manifest feed are updated together for every host/architecture. License acceptance invokes neither sdkmanager nor the network-capable Android CLI bootstrapper: it atomically adds the pinned expected fingerprint under a cross-process lock while preserving existing valid fingerprints and rejecting malformed files. Validation starts without either license file, then repeats with an unrelated valid fingerprint and malformed content, and confirms Gradle accepts the pinned Build Tools and platform licenses.",
+      "prompt": "Update the bootstrap command-line tools catalog to a release where sdkmanager says --licenses is deprecated and exits successfully without creating the SDK license files.",
+      "expected_output": "Bootstrap command-line-tools pins and hashes are updated for every host/architecture while Xamarin.Installer.Common.props and the product installer manifest feed remain unchanged. License acceptance invokes neither sdkmanager nor the network-capable Android CLI bootstrapper: it atomically adds the pinned expected fingerprint under a cross-process lock while preserving existing valid fingerprints and rejecting malformed files. Validation starts without either license file, then repeats with an unrelated valid fingerprint and malformed content, and confirms Gradle accepts the pinned Build Tools and platform licenses.",
       "assertions": []
     },
     {

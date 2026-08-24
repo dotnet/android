@@ -9,7 +9,7 @@ drift as the skill is used.
 |---|---|---|---|---|
 | build-tools | `build-tools` | `XABuildToolsVersion`, `XABuildToolsFolder` | `XABuildToolsHashMacOS/Linux/Windows` | `build-tools_r$(XABuildToolsVersion)_{macosx,linux,windows}.zip` |
 | platform-tools | `platform-tools` | `XAPlatformToolsVersion` | `XAPlatformToolsHashMacOS/Linux/Windows` | `platform-tools_r$(XAPlatformToolsVersion)-{darwin,linux,win}.zip` |
-| cmdline-tools | `cmdline-tools` | `CommandLineToolsFolder`, `CommandLineToolsVersion`; shipped `AndroidCommandLineToolsVersion` in `src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.props` | `XACmdlineToolsHashMacOS`, `XACmdlineToolsHashMacOSArm64`, `XACmdlineToolsHashLinux/Windows` | `commandlinetools-{mac_x86_64,mac_arm64,linux,win}-$(CommandLineToolsVersion).zip`; also update the latest entry in `src/Xamarin.Installer.AndroidSDK/Feeds/AndroidManifestFeed_d18.0.xml` |
+| cmdline-tools | `cmdline-tools` | `CommandLineToolsFolder`, `CommandLineToolsVersion` | `XACmdlineToolsHashMacOS`, `XACmdlineToolsHashMacOSArm64`, `XACmdlineToolsHashLinux/Windows` | `commandlinetools-{mac_x86_64,mac_arm64,linux,win}-$(CommandLineToolsVersion).zip` — macOS is arch-split; product-installer pins and feeds are independent and out of scope |
 | cmake | `cmake;` | `AndroidCmakeVersion` | `XACmakeHashMacOS/Linux/Windows` | `cmake-$(AndroidCmakeVersion)-{darwin,linux,windows}.zip` |
 | emulator | `emulator` | `EmulatorVersion`, `EmulatorPkgRevision` | `XAEmulatorHashMacOSx64`, `XAEmulatorHashMacOSArm64`, `XAEmulatorHashLinux/Windows` | `emulator-{darwin_x64,darwin_aarch64,linux_x64,windows_x64}-$(EmulatorVersion).zip`; also drives a synthesized `package.xml` via `package.xml.in` |
 | API 29 system image | `sys-img/android` manifest, `path="system-images;android-29;default;{x86_64,arm64-v8a}"` | (fixed `x86_64-29_r08*`/`arm64-v8a-29_r08` filenames — check manifest for a newer `rNN` if refreshing) | `XASystemImageHashMacOSx64/MacOSArm64/Linux/Windows` | `{x86_64,arm64-v8a}-29_r08{-darwin,-linux,-windows,}.zip` under `sys-img/android/` |
@@ -37,10 +37,11 @@ used as the incremental output.
 ## Notes on stable channels and licenses
 
 Emulator updates must come from `channel-0`; a higher development-channel revision is not stable.
-Command-line-tools updates are incomplete unless bootstrap pins, shipped product versions, and feed
-archives all move together. License acceptance must remain deterministic and offline: preserve
-valid existing fingerprints and atomically add the pinned expected SHA-1 under a cross-process
-lock. Never invoke the command-line tools' `android` bootstrapper or another mutable downloader.
+This skill updates only the bootstrap command-line-tools catalog; do not couple it to the product
+installer's independently versioned pins or feed. License acceptance must remain deterministic and
+offline: preserve valid existing fingerprints and atomically add the pinned expected SHA-1 under a
+cross-process lock. Never invoke the command-line tools' `android` bootstrapper or another mutable
+downloader.
 
 ## Notes on platform extension levels
 
