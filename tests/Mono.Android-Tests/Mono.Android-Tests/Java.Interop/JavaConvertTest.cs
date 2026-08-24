@@ -7,6 +7,8 @@ using Android.App;
 using Android.Content;
 using Android.Runtime;
 
+using Java.Interop;
+
 using NUnit.Framework;
 
 using Xamarin.Android.RuntimeTests;
