@@ -78,6 +78,7 @@ public class FastTimingTests : DeviceTest
 			Assert.IsTrue (timingOutput.Contains (dumpCompletedMessage, StringComparison.Ordinal), $"Output did not contain {dumpCompletedMessage}.");
 		} finally {
 			RunAdbCommand ($"shell am force-stop {proj.PackageName}");
+			RunAdbCommand ($"shell run-as {proj.PackageName} rm -f cache/{timingFileName}");
 			string monoLogValue = previousMonoLog.Length == 0 ? "\"\"" : $"\"{previousMonoLog}\"";
 			RunAdbCommand ($"shell setprop debug.mono.log {monoLogValue}");
 			string monoTimingValue = previousMonoTiming.Length == 0 ? "\"\"" : $"\"{previousMonoTiming}\"";
