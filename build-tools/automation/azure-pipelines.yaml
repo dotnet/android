@@ -236,6 +236,18 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Release
 
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+          parameters:
+            project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+            arguments: >-
+              -f $(DotNetTargetFramework)-android -c Release
+              -p:UseMonoRuntime=true
+              -p:_DisableCheckForUnsupportedMonoMobileRuntime=true
+              --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+              -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Mono.binlog
+            xaSourcePath: $(Build.SourcesDirectory)/android
+            displayName: Build MAUI template - Mono
+
         - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml@self
           parameters:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
