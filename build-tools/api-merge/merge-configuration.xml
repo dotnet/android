@@ -28,8 +28,9 @@
     <File Path="api-36.1.xml.in"  Level="36.1" />
     <File Path="api-37.0.xml.in" Level="37" />
     <File Path="api-37.1.xml.in"  Level="37.1" />
+    <File Path="api-37.2.xml.in"  Level="37.2" />
   </Inputs>
   <Outputs>
-    <File Path="api-37.1.xml"    LastLevel="37.1" />
+    <File Path="api-37.2.xml"     LastLevel="37.2" />
   </Outputs>
 </Configuration>

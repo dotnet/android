@@ -18,7 +18,7 @@ var JdkMaxVersion           = (string?) null;
 var NdkVersion              = (string?) null;
 var PlatformToolsVersion    = (string?) null;
 var PlatformVersion         = (string?) null;
-var PreviewPlatformVersion  = (string?) null;
+var PreviewPlatformVersions = new List<string> ();
 var WorkloadVersion         = (string?) null;
 
 var options = new OptionSet {
@@ -52,7 +52,7 @@ var options = new OptionSet {
 	  v => PlatformVersion = v },
 	{ "preview-platform-version=",
 	  "The preview Android SDK Platform {VERSION} dotnet/android binds.",
-	  v => PreviewPlatformVersion = v },
+	  v => PreviewPlatformVersions.Add (v) },
 	{ "workload-version=",
 	  "The {VERSION} of the dotnet/android workload.",
 	  v => WorkloadVersion = v },
@@ -282,14 +282,12 @@ IEnumerable<JObject> CreatePlatformPackageEntries (XDocument doc)
 	};
 	yield return platform;
 
-	string?     previewPath = PreviewPlatformVersion != null
-		? $"platforms;android-{PreviewPlatformVersion}"
-		: null;
-	XElement?   previewEntry    = doc.Elements ("platform")
-		.FirstOrDefault (e => e.ReqAttr ("path") == previewPath);
-	if (PreviewPlatformVersion != null) {
+	foreach (var previewPlatformVersion in PreviewPlatformVersions.Distinct ()) {
+		var previewPath = $"platforms;android-{previewPlatformVersion}";
+		var previewEntry = doc.Elements ("platform")
+			.FirstOrDefault (e => e.ReqAttr ("path") == previewPath);
 		yield return new JObject {
-			new JProperty ("desc",          previewEntry?.ReqAttr ("description") ?? $"Android SDK Platform {PreviewPlatformVersion} (Preview)"),
+			new JProperty ("desc",          previewEntry?.ReqAttr ("description") ?? $"Android SDK Platform {previewPlatformVersion} (Preview)"),
 			new JProperty ("sdkPackage", new JObject {
 				new JProperty ("id",    previewPath),
 			}),

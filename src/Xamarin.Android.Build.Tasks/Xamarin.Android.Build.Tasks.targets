@@ -278,10 +278,14 @@
 
   <Target Name="_WriteBundledVersionsCache"
       DependsOnTargets="GetXAVersionInfo">
+    <PropertyGroup>
+      <_AndroidBuildApiLevels>@(AndroidBuildApiLevel, ',')</_AndroidBuildApiLevels>
+    </PropertyGroup>
     <ItemGroup>
       <_BundledVersionsCacheLines Include="AndroidPackVersionLong=$(AndroidPackVersionLong)" />
       <_BundledVersionsCacheLines Include="AndroidLatestStableApiLevel=$(AndroidLatestStableApiLevel)" />
       <_BundledVersionsCacheLines Include="AndroidLatestUnstableApiLevel=$(AndroidLatestUnstableApiLevel)" />
+      <_BundledVersionsCacheLines Include="AndroidBuildApiLevel=$(_AndroidBuildApiLevels)" />
       <_BundledVersionsCacheLines Include="DotNetTargetFramework=$(DotNetTargetFramework)" />
       <_BundledVersionsCacheLines Include="DotNetTargetFrameworkVersion=$(DotNetTargetFrameworkVersion)" />
       <_BundledVersionsCacheLines Include="MicrosoftNETCoreAppRefPackageVersion=$(MicrosoftNETCoreAppRefPackageVersion)" />
@@ -301,11 +305,19 @@
       DependsOnTargets="_WriteBundledVersionsCache"
       Inputs="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.in.props;$(IntermediateOutputPath)_GenerateBundledVersions.cache"
       Outputs="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.props">
+    <ItemGroup>
+      <_BundledVersionsReplacement Include="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong)" />
+      <_BundledVersionsReplacement Include="@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel)" />
+      <_BundledVersionsReplacement Include="@ANDROID_LATEST_UNSTABLE_API_LEVEL@=$(AndroidLatestUnstableApiLevel)" />
+      <_BundledVersionsReplacement Include="@ANDROID_API_LEVELS@=$(_AndroidBuildApiLevels)" />
+      <_BundledVersionsReplacement Include="@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" />
+      <_BundledVersionsReplacement Include="@MICROSOFT_NETCORE_APP_REF_PACKAGE_VERSION@=$(MicrosoftNETCoreAppRefPackageVersion)" />
+    </ItemGroup>
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
         DestinationFile="$(MSBuildThisFileDirectory)\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets"
-        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel);@ANDROID_LATEST_UNSTABLE_API_LEVEL@=$(AndroidLatestUnstableApiLevel);@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework);@MICROSOFT_NETCORE_APP_REF_PACKAGE_VERSION@=$(MicrosoftNETCoreAppRefPackageVersion)" >
-    </ReplaceFileContents>
+        Replacements="@(_BundledVersionsReplacement)"
+    />
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.in.props"
         DestinationFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\Sdk\AutoImport.props"
