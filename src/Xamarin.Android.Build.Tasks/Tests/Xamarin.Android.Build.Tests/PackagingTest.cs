@@ -93,27 +93,62 @@ namespace Xamarin.Android.Build.Tests
 				string.Join (Environment.NewLine, missingFiles)));
 		}
 
-		[Test]
 		[NonParallelizable] // Commonly fails NuGet restore
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		[TestCase (false, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.MonoVM)]
+		public void CheckIncludedAssemblies (bool usesAssemblyStores, AndroidRuntime runtime)
 		{
 			if (!usesAssemblyStores && runtime == AndroidRuntime.CoreCLR) {
 				Assert.Ignore ("CoreCLR only supports builds with assembly stores.");
 				return;
 			}
 
+			var injectPackagedSatellite = new Import (() => "InjectPackagedSatellite.targets") {
+				TextContent = () =>
+"""
+<Project>
+  <Target Name="_AndroidInjectPackagedSatellite"
+      AfterTargets="_PrepareAssemblies"
+      Condition=" '$(UseMonoRuntime)' == 'true' ">
+    <ItemGroup>
+      <_ResolvedAssemblies Include="@(_AndroidResolvedSatellitePaths)">
+        <_InjectedPackagedSatellite>true</_InjectedPackagedSatellite>
+      </_ResolvedAssemblies>
+    </ItemGroup>
+    <Message
+        Condition=" '%(_ResolvedAssemblies._InjectedPackagedSatellite)' == 'true' "
+        Importance="high"
+        Text="InjectedPackagedSatellite=%(_ResolvedAssemblies.Identity)" />
+  </Target>
+  <Target Name="_AndroidRemoveInjectedPackagedSatellite"
+      AfterTargets="_GenerateJavaStubs"
+      Condition=" '$(UseMonoRuntime)' == 'true' ">
+    <ItemGroup>
+      <_ResolvedAssemblies
+          Remove="@(_ResolvedAssemblies)"
+          Condition=" '%(_ResolvedAssemblies._InjectedPackagedSatellite)' == 'true' " />
+    </ItemGroup>
+  </Target>
+</Project>
+"""
+			};
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true
+				IsRelease = true,
+				Imports = { injectPackagedSatellite },
 			};
 
 			AndroidTargetArch[] supportedArches = new[] {
 				runtime switch {
-					AndroidRuntime.MonoVM => AndroidTargetArch.Arm,
+					AndroidRuntime.MonoVM => AndroidTargetArch.Arm64,
 					AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
 					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 				}
 			};
 			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
+			}
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
@@ -157,6 +192,10 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+				if (runtime == AndroidRuntime.MonoVM) {
+					Assert.IsTrue (b.LastBuildOutput.Any (line => line.Contains ("InjectedPackagedSatellite=", StringComparison.Ordinal)),
+						"The test should expose a packaged satellite assembly to Java stub generation.");
+				}
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);

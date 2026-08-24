@@ -50,12 +50,16 @@
     </PropertyGroup>
     <ItemGroup>
       <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
+      <!-- Satellite resource assemblies contain no types and do not have scanner sidecars. -->
+      <_AndroidResolvedAssembliesToScan
+          Include="@(_ResolvedAssemblies)"
+          Condition=" !$([System.String]::Copy('%(_ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
     </ItemGroup>
 
     <GenerateJavaCallableWrappers
         CodeGenerationTarget="$(_AndroidJcwCodegenTarget)"
         OutputDirectory="$(IntermediateOutputPath)android\src"
-        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        ResolvedAssemblies="@(_AndroidResolvedAssembliesToScan)"
         PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
         SupportedAbis="@(_BuildTargetAbis)">
       <Output TaskParameter="GeneratedJavaFilesOutput" ItemName="_GeneratedJavaFiles" />
@@ -63,7 +67,7 @@
 
     <GenerateACWMap
         AcwMapFile="$(_AcwMapFile)"
-        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        ResolvedAssemblies="@(_AndroidResolvedAssembliesToScan)"
         SupportedAbis="@(_BuildTargetAbis)">
     </GenerateACWMap>
 
@@ -95,7 +99,7 @@
         EmitLlvmIrComments="$(_AndroidEmitLlvmIrComments)"
         EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
         IntermediateOutputDirectory="$(IntermediateOutputPath)"
-        ResolvedAssemblies="@(_ResolvedAssemblies)"
+        ResolvedAssemblies="@(_AndroidResolvedAssembliesToScan)"
         SkipJniAddNativeMethodRegistrationAttributeScan="$(_SkipJniAddNativeMethodRegistrationAttributeScan)"
         SupportedAbis="@(_BuildTargetAbis)"
         TypemapImplementation="$(AndroidTypeMapImplementation)"
