@@ -42,7 +42,7 @@ parameters:
 - name: hostBuildTestsHelixDurationParallelism
   displayName: Host build tests timing parallelism
   type: number
-  default: 2.5
+  default: 1.65
 - name: hostBuildTestsHelixFallbackTestDurationSeconds
   displayName: Host build tests fallback seconds per test
   type: number

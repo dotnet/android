@@ -6,7 +6,7 @@ parameters:
   timingBuildId: ''
   timingArtifactName: ''
   targetMinutes: 15
-  durationParallelism: 2.5
+  durationParallelism: 1.65
   fallbackTestDurationSeconds: 60
   workItemTimeout: '01:30:00'
   nunitWorkers: '-1'
@@ -71,13 +71,16 @@ steps:
     if (-not $androidHome) {
       throw 'Could not locate the prepared Android SDK.'
     }
-    $androidNdkHome = @(
-      $env:TEST_ANDROID_NDK_PATH
-      $env:ANDROID_NDK_LATEST_HOME
-      $(Join-Path (Split-Path -Parent $androidHome) 'ndk')
-    ) | Where-Object { $_ -and (Test-Path $_ -PathType Container) } | Select-Object -First 1
-    if (-not $androidNdkHome) {
-      throw 'Could not locate the prepared Android NDK.'
+    $androidNdkHome = ''
+    if ($platform -eq 'windows') {
+      $androidNdkHome = @(
+        $env:TEST_ANDROID_NDK_PATH
+        $env:ANDROID_NDK_LATEST_HOME
+        $(Join-Path (Split-Path -Parent $androidHome) 'ndk')
+      ) | Where-Object { $_ -and (Test-Path $_ -PathType Container) } | Select-Object -First 1
+      if (-not $androidNdkHome) {
+        throw 'Could not locate the prepared Android NDK.'
+      }
     }
 
     & '$(System.DefaultWorkingDirectory)/build-tools/automation/host-build-tests-helix/prepare-host-build-test-helix-payload.ps1' `

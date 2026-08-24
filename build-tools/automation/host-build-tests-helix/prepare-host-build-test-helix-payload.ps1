@@ -48,8 +48,7 @@ param (
 	[Parameter(Mandatory)]
 	[string] $AndroidHome,
 
-	[Parameter(Mandatory)]
-	[string] $AndroidNdkHome,
+	[string] $AndroidNdkHome = '',
 
 	[Parameter(Mandatory)]
 	[string] $JavaHome,
@@ -323,9 +322,11 @@ Add-DirectoryCorrelationPayloads -Source $payloadRepository -Destination 'repo'
 Add-DirectoryCorrelationPayloads `
 	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/$Configuration")) `
 	-Destination "repo/bin/$Configuration"
-Add-DirectoryCorrelationPayloads `
-	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Build$Configuration/nuget-unsigned")) `
-	-Destination "repo/bin/Build$Configuration/nuget-unsigned"
+if ($Platform -eq 'windows') {
+	Add-DirectoryCorrelationPayloads `
+		-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Build$Configuration/nuget-unsigned")) `
+		-Destination "repo/bin/Build$Configuration/nuget-unsigned"
+}
 
 $testOutputRoot = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Test$Configuration")
 $testAssembly = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
@@ -356,7 +357,9 @@ foreach ($androidDirectory in Get-ChildItem -LiteralPath $AndroidHome -Directory
 	}
 }
 
-Add-DirectoryCorrelationPayloads -Source $AndroidNdkHome -Destination 'android-toolchain/ndk'
+if (-not [string]::IsNullOrWhiteSpace($AndroidNdkHome)) {
+	Add-DirectoryCorrelationPayloads -Source $AndroidNdkHome -Destination 'android-toolchain/ndk'
+}
 Add-DirectoryCorrelationPayloads -Source $JavaHome -Destination 'jdk'
 
 if ([string]::IsNullOrWhiteSpace($GradleUserHome)) {
