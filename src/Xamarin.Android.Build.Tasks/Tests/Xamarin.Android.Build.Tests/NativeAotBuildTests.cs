@@ -43,6 +43,23 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RestoreNativeAot_UsesSdkRuntimePackVersion ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (
+				builder.RunTarget (proj, "Restore", parameters: [
+					"MicrosoftNETCoreAppRefPackageVersion=0.0.0",
+				]),
+				"Restore should use the .NET SDK's NativeAOT runtime pack version."
+			);
+		}
+
+		[Test]
 		public void BuildNativeAot_WithoutNdk ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
