@@ -17,6 +17,7 @@ public class FastTimingTests : DeviceTest
 		const string completedMessage = "FAST_TIMING_EVENTS_COMPLETED";
 		const string bufferGrowthMessage = "Allocated timing event buffer from 4096 to 8192";
 		const string dumpCompletedMessage = "[2/8] Assembly decompression";
+		const string timingFileName = "fast-timing.txt";
 
 		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
 			return;
@@ -47,8 +48,10 @@ public class FastTimingTests : DeviceTest
 		Assert.IsTrue (builder.Install (proj), "Project should have installed.");
 
 		string previousMonoLog = RunAdbCommand ("shell getprop debug.mono.log").Trim ();
+		string previousMonoTiming = RunAdbCommand ("shell getprop debug.mono.timing").Trim ();
 		try {
 			RunAdbCommand ("shell setprop debug.mono.log timing=fast-bare");
+			RunAdbCommand ($"shell setprop debug.mono.timing to-file,filename={timingFileName}");
 			ClearAdbLogcat ();
 
 			bool sawBufferGrowth = false;
@@ -65,20 +68,20 @@ public class FastTimingTests : DeviceTest
 			Assert.IsTrue (appCompleted, $"Output did not contain {completedMessage}.");
 			Assert.IsTrue (sawBufferGrowth, $"Output did not contain {bufferGrowthMessage}.");
 
-			bool dumpCompleted = MonitorAdbLogcat (
-				line => line.Contains (dumpCompletedMessage, StringComparison.Ordinal),
-				Path.Combine (Root, builder.ProjectDirectory, "fast-timing-dump.log"),
-				timeout: 60,
-				onMonitoringStarted: () => RunAdbCommand (
-					$"shell am broadcast -a mono.android.app.DUMP_TIMING_DATA -n {proj.PackageName}/mono.android.app.DumpTimingData"
-				)
+			RunAdbCommand ($"shell run-as {proj.PackageName} rm -f cache/{timingFileName}");
+			RunAdbCommand (
+				$"shell am broadcast -a mono.android.app.DUMP_TIMING_DATA -n {proj.PackageName}/mono.android.app.DumpTimingData",
+				timeout: 60
 			);
 
-			Assert.IsTrue (dumpCompleted, $"Output did not contain {dumpCompletedMessage}.");
+			string timingOutput = RunAdbCommand ($"exec-out run-as {proj.PackageName} cat cache/{timingFileName}");
+			Assert.IsTrue (timingOutput.Contains (dumpCompletedMessage, StringComparison.Ordinal), $"Output did not contain {dumpCompletedMessage}.");
 		} finally {
 			RunAdbCommand ($"shell am force-stop {proj.PackageName}");
-			string value = previousMonoLog.Length == 0 ? "\"\"" : $"\"{previousMonoLog}\"";
-			RunAdbCommand ($"shell setprop debug.mono.log {value}");
+			string monoLogValue = previousMonoLog.Length == 0 ? "\"\"" : $"\"{previousMonoLog}\"";
+			RunAdbCommand ($"shell setprop debug.mono.log {monoLogValue}");
+			string monoTimingValue = previousMonoTiming.Length == 0 ? "\"\"" : $"\"{previousMonoTiming}\"";
+			RunAdbCommand ($"shell setprop debug.mono.timing {monoTimingValue}");
 		}
 	}
 }
