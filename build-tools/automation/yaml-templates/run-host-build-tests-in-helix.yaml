@@ -71,6 +71,14 @@ steps:
     if (-not $androidHome) {
       throw 'Could not locate the prepared Android SDK.'
     }
+    $androidNdkHome = @(
+      $env:TEST_ANDROID_NDK_PATH
+      $env:ANDROID_NDK_LATEST_HOME
+      $(Join-Path (Split-Path -Parent $androidHome) 'ndk')
+    ) | Where-Object { $_ -and (Test-Path $_ -PathType Container) } | Select-Object -First 1
+    if (-not $androidNdkHome) {
+      throw 'Could not locate the prepared Android NDK.'
+    }
 
     & '$(System.DefaultWorkingDirectory)/build-tools/automation/host-build-tests-helix/prepare-host-build-test-helix-payload.ps1' `
       -Platform $platform `
@@ -90,6 +98,7 @@ steps:
       -NUnitWorkers '${{ parameters.nunitWorkers }}' `
       -Configuration '$(XA.Build.Configuration)' `
       -AndroidHome $androidHome `
+      -AndroidNdkHome $androidNdkHome `
       -JavaHome $env:JAVA_HOME `
       -DotNetToolsDirectory '$(Agent.ToolsDirectory)' `
       -GradleUserHome (Join-Path ([Environment]::GetFolderPath('UserProfile')) '.gradle')

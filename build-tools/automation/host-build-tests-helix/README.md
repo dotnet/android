@@ -10,7 +10,8 @@ command script, and generation metadata. To control total payload size, the sour
 copy omits `src/Mono.Android` and the NuGet package cache; host build tests consume the
 product through the prepared workload packs and use isolated per-work-item NuGet
 caches. Device-only Android SDK content, SDK documentation, the Java.Interop checkout,
-and unrelated test assemblies are also excluded.
+and unrelated test assemblies are also excluded. The prepared NDK and the local
+`nuget-unsigned` feed remain shared payloads because host tests consume both directly.
 
 `prepare-host-build-test-helix-payload.ps1` discovers NUnit tests with the repository's
 `dotnet-test-slicer`, reads its `balance.xml` format, and uses deterministic best-fit

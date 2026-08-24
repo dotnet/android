@@ -49,6 +49,9 @@ param (
 	[string] $AndroidHome,
 
 	[Parameter(Mandatory)]
+	[string] $AndroidNdkHome,
+
+	[Parameter(Mandatory)]
 	[string] $JavaHome,
 
 	[string] $DotNetToolsDirectory = '',
@@ -320,6 +323,9 @@ Add-DirectoryCorrelationPayloads -Source $payloadRepository -Destination 'repo'
 Add-DirectoryCorrelationPayloads `
 	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/$Configuration")) `
 	-Destination "repo/bin/$Configuration"
+Add-DirectoryCorrelationPayloads `
+	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Build$Configuration/nuget-unsigned")) `
+	-Destination "repo/bin/Build$Configuration/nuget-unsigned"
 
 $testOutputRoot = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Test$Configuration")
 $testAssembly = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
@@ -350,15 +356,18 @@ foreach ($androidDirectory in Get-ChildItem -LiteralPath $AndroidHome -Directory
 	}
 }
 
+Add-DirectoryCorrelationPayloads -Source $AndroidNdkHome -Destination 'android-toolchain/ndk'
 Add-DirectoryCorrelationPayloads -Source $JavaHome -Destination 'jdk'
 
 if ([string]::IsNullOrWhiteSpace($GradleUserHome)) {
 	$GradleUserHome = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.gradle'
 }
+$gradleDistsDirectory = Join-Path $GradleUserHome (ConvertTo-NativeRelativePath 'wrapper/dists')
+New-Item -ItemType Directory -Force -Path $gradleDistsDirectory | Out-Null
 Add-DirectoryCorrelationPayloads `
-	-Source (Join-Path $GradleUserHome (ConvertTo-NativeRelativePath 'wrapper/dists')) `
-	-Destination 'gradle/wrapper/dists' `
-	-Optional
+	-Source $gradleDistsDirectory `
+	-Destination 'gradle/wrapper/dists'
+
 Add-DirectoryCorrelationPayloads `
 	-Source (Join-Path $GradleUserHome (ConvertTo-NativeRelativePath 'caches/modules-2')) `
 	-Destination 'gradle/caches/modules-2' `

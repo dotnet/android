@@ -292,6 +292,8 @@ set "REPO=%HELIX_CORRELATION_PAYLOAD%\repo"
 set "DOTNET_ROOT=%REPO%\bin\__CONFIGURATION__\dotnet"
 set "ANDROID_HOME=%HELIX_CORRELATION_PAYLOAD%\android-toolchain\sdk"
 set "ANDROID_SDK_ROOT=%ANDROID_HOME%"
+set "TEST_ANDROID_NDK_PATH=%HELIX_CORRELATION_PAYLOAD%\android-toolchain\ndk"
+set "ANDROID_NDK_LATEST_HOME=%TEST_ANDROID_NDK_PATH%"
 set "JAVA_HOME=%HELIX_CORRELATION_PAYLOAD%\jdk"
 set "NUGET_PACKAGES=%HELIX_WORKITEM_ROOT%\nuget-packages"
 set "GRADLE_USER_HOME=%HELIX_CORRELATION_PAYLOAD%\gradle"
@@ -324,7 +326,9 @@ pushd "%REPO%"
 "%DOTNET_ROOT%\dotnet.exe" test "%REPO%\__TEST_ASSEMBLY__" --settings "%~dp0slice.runsettings" --logger "trx;LogFileName=results.trx" --results-directory "%HELIX_WORKITEM_UPLOAD_ROOT%" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ > "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log" 2>&1
 set "testExitCode=%ERRORLEVEL%"
 type "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log"
-powershell.exe -NoLogo -NoProfile -Command "$files = Get-ChildItem -LiteralPath $env:HELIX_WORKITEM_UPLOAD_ROOT -Recurse -File -Include *.binlog,*.dmp,*.log,*.txt; if ($files.Count -gt 0) { Compress-Archive -LiteralPath $files.FullName -DestinationPath (Join-Path $env:HELIX_WORKITEM_UPLOAD_ROOT 'diagnostics.zip') -Force }" >nul 2>&1
+pushd "%HELIX_WORKITEM_UPLOAD_ROOT%"
+tar.exe -a -c -f diagnostics.zip --exclude=diagnostics.zip TestRelease dumps >nul 2>&1
+popd
 "%DOTNET_ROOT%\dotnet.exe" build-server shutdown >nul 2>&1
 popd
 exit /b %testExitCode%
@@ -345,6 +349,8 @@ REPO="$HELIX_CORRELATION_PAYLOAD/repo"
 export DOTNET_ROOT="$REPO/bin/__CONFIGURATION__/dotnet"
 export ANDROID_HOME="$HELIX_CORRELATION_PAYLOAD/android-toolchain/sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export TEST_ANDROID_NDK_PATH="$HELIX_CORRELATION_PAYLOAD/android-toolchain/ndk"
+export ANDROID_NDK_LATEST_HOME="$TEST_ANDROID_NDK_PATH"
 export JAVA_HOME="$HELIX_CORRELATION_PAYLOAD/jdk"
 export NUGET_PACKAGES="$HELIX_WORKITEM_ROOT/nuget-packages"
 export GRADLE_USER_HOME="$HELIX_CORRELATION_PAYLOAD/gradle"
