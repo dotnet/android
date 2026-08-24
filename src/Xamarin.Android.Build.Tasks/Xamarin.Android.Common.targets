@@ -1446,6 +1446,12 @@ because xbuild doesn't support framework reference assemblies.
       <_AndroidLinkNoShrinkOutput
           Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</_AndroidLinkNoShrinkOutput>
+      <JavaObjectsXmlFile
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
+      <TypeMapObjectsXmlFile
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
     </ResolvedAssemblies>
     <_AndroidAssembliesToLinkNoShrink
         Include="@(ResolvedAssemblies)"
@@ -1525,8 +1531,10 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(_AfterILLinkSourceFiles)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
+  <Touch Files="@(_AndroidAssembliesToPackageWithoutLinkNoShrink->'%(JavaObjectsXmlFile)')" AlwaysCreate="true" />
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
   <ItemGroup>
+    <FileWrites Include="@(_AndroidAssembliesToPackageWithoutLinkNoShrink->'%(JavaObjectsXmlFile)')" />
     <_AfterILLinkSourceFiles Remove="@(_AfterILLinkSourceFiles)" />
     <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
   </ItemGroup>

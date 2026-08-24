@@ -2300,8 +2300,9 @@ public class ToolbarEx {
 			}
 		}
 
-		[Test]
-		public void BuildDoesNotModifyNuGetPackageCache ()
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.MonoVM)]
+		public void BuildDoesNotModifyNuGetPackageCache (AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
@@ -2328,7 +2329,10 @@ public class ToolbarEx {
 					new Package { Id = "Humanizer.Core.es", Version = "2.14.1" },
 				},
 			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntime (runtime);
+			if (runtime == AndroidRuntime.MonoVM) {
+				proj.SetProperty ("_DisableCheckForUnsupportedMonoMobileRuntime", "true");
+			}
 			proj.SetProperty ("AndroidTypeMapImplementation", "llvm-ir");
 			proj.SetProperty (KnownProperties.PublishTrimmed, true.ToString ());
 			proj.MainActivity = proj.DefaultMainActivity
