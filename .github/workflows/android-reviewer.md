@@ -15,6 +15,7 @@ imports:
   - uses: shared/pat_pool.md
     with:
       environment: copilot-pat-pool
+  - shared/network-allowlist.md
 
 environment: copilot-pat-pool
 permissions:
@@ -41,19 +42,6 @@ engine:
       }}
 max-daily-ai-credits: -1
 max-ai-credits: -1
-network:
-  allowed:
-    - defaults
-    - chrome
-    - dotnet
-    - github
-    - java
-    - "aka.ms"
-    - "dev.azure.com"
-    - "gstatic.com"
-    - "httpbin.org"
-    - "microsoft.com"
-    - "vsassets.io"
 tools:
   bash:
     - az *
