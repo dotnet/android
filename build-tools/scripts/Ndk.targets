@@ -6,4 +6,32 @@
   <Import
       Project="$(ProjitemsFile)"
       Condition="Exists('$(ProjitemsFile)')"/>
+
+  <Target Name="_AndroidGetNdkRedistributables">
+    <PropertyGroup>
+      <_AndroidNdkToolchainOSTag Condition=" '$(HostOS)' == 'Linux'   ">linux-x86_64</_AndroidNdkToolchainOSTag>
+      <_AndroidNdkToolchainOSTag Condition=" '$(HostOS)' == 'Darwin'  ">darwin-x86_64</_AndroidNdkToolchainOSTag>
+      <_AndroidNdkToolchainOSTag Condition=" '$(HostOS)' == 'Windows' ">windows-x86_64</_AndroidNdkToolchainOSTag>
+      <_AndroidNdkToolchainRoot>$(AndroidNdkDirectory)\toolchains\llvm\prebuilt\$(_AndroidNdkToolchainOSTag)</_AndroidNdkToolchainRoot>
+      <_AndroidNdkSysrootLib>$(_AndroidNdkToolchainRoot)\sysroot\usr\lib</_AndroidNdkSysrootLib>
+      <!-- AndroidVersion.txt starts with the full LLVM version e.g. "19.0.1\n". -->
+      <_AndroidNdkVersionFileContent>$([System.IO.File]::ReadAllText('$(_AndroidNdkToolchainRoot)\AndroidVersion.txt'))</_AndroidNdkVersionFileContent>
+      <_AndroidNdkLlvmMajor>$(_AndroidNdkVersionFileContent.Substring(0, $(_AndroidNdkVersionFileContent.IndexOf('.'))))</_AndroidNdkLlvmMajor>
+      <_AndroidNdkClangLibLinux>$(_AndroidNdkToolchainRoot)\lib\clang\$(_AndroidNdkLlvmMajor)\lib\linux</_AndroidNdkClangLibLinux>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidNdkRedistributable Remove="@(_AndroidNdkRedistributable)" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\libc.so')" Kind="System" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\libdl.so')" Kind="System" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\liblog.so')" Kind="System" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\libm.so')" Kind="System" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\libz.so')" Kind="System" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\crtbegin_so.o')" Kind="Toolchain" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\%(ApiLevel)\crtend_so.o')" Kind="Toolchain" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\libc++_static.a')" Kind="Toolchain" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkSysrootLib)\%(ToolchainPrefix)\libc++abi.a')" Kind="Toolchain" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkClangLibLinux)\libclang_rt.builtins-%(ClangArch)-android.a')" Kind="Toolchain" />
+      <_AndroidNdkRedistributable Include="@(AndroidSupportedTargetJitAbi -> '$(_AndroidNdkClangLibLinux)\%(UnwindArchDir)\libunwind.a')" Kind="Toolchain" />
+    </ItemGroup>
+  </Target>
 </Project>

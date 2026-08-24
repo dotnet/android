@@ -263,7 +263,6 @@
     <_MonoRuntimeFlavorDirName>mono</_MonoRuntimeFlavorDirName>
     <_CLRRuntimeFlavorDirName>clr</_CLRRuntimeFlavorDirName>
     <_NativeAotRuntimeFlavorDirName>nativeaot</_NativeAotRuntimeFlavorDirName>
-    <_RuntimeRedistDirName>redist</_RuntimeRedistDirName>
   </PropertyGroup>
 
   <!-- Whenever there's a need to use a locally built CoreCLR, both .NET for Android and the
