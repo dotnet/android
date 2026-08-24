@@ -189,8 +189,7 @@
            Emit each candidate path and keep only the one(s) ILC actually produced. -->
       <_TrimmableNativeAotScanDgmlCandidates Include="$(NativeIntermediateOutputPath)$(TargetName).scan.dgml.xml" />
       <_TrimmableNativeAotScanDgmlCandidates
-          Include="@(_TrimmableNativeAotRuntimeIdentifiers->'$(IntermediateOutputPath)%(Identity)\native\$(TargetName).scan.dgml.xml')"
-          Condition=" '$(RuntimeIdentifier)' == '' " />
+          Include="@(_TrimmableNativeAotRuntimeIdentifiers->'$(IntermediateOutputPath)%(Identity)\native\$(TargetName).scan.dgml.xml')" />
       <_TrimmableNativeAotScanDgmlCandidates
           Include="@(_TrimmableNativeAotSiblingRuntimeIdentifiers->'$(IntermediateOutputPath)..\%(Identity)\native\$(TargetName).scan.dgml.xml')"
           Condition=" '$(RuntimeIdentifier)' != '' " />
@@ -204,8 +203,7 @@
            rules are still generated (the codegen graph is larger, hence preferring the scan graph). -->
       <_TrimmableNativeAotCodegenDgmlCandidates Include="$(NativeIntermediateOutputPath)$(TargetName).codegen.dgml.xml" />
       <_TrimmableNativeAotCodegenDgmlCandidates
-          Include="@(_TrimmableNativeAotRuntimeIdentifiers->'$(IntermediateOutputPath)%(Identity)\native\$(TargetName).codegen.dgml.xml')"
-          Condition=" '$(RuntimeIdentifier)' == '' " />
+          Include="@(_TrimmableNativeAotRuntimeIdentifiers->'$(IntermediateOutputPath)%(Identity)\native\$(TargetName).codegen.dgml.xml')" />
       <_TrimmableNativeAotCodegenDgmlCandidates
           Include="@(_TrimmableNativeAotSiblingRuntimeIdentifiers->'$(IntermediateOutputPath)..\%(Identity)\native\$(TargetName).codegen.dgml.xml')"
           Condition=" '$(RuntimeIdentifier)' != '' " />
