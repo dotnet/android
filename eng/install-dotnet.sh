@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 #
-# Provisions the .NET SDK into bin/$Configuration/dotnet/.
+# Provisions the .NET SDK into bin/$Configuration/dotnet/ by default.
 #
 # The SDK version is read from eng/Versions.props (single source of truth
 # kept up to date by darc when Microsoft.NET.Sdk flows from dotnet/dotnet),
 # so global.json does not need a 'tools.dotnet' pin.
 #
 # Inputs (env vars):
-#   CONFIGURATION   - Debug (default) or Release; controls install path.
+#   CONFIGURATION        - Debug (default) or Release; controls install path.
+#   DOTNET_INSTALL_DIR   - Optional shared base directory. The SDK is installed
+#                          under <base>/<sdk-version>/<configuration>/.
 #
 
 set -euo pipefail
@@ -24,7 +26,18 @@ if [[ -z "$sdk_version" ]]; then
   exit 1
 fi
 
-install_dir="$repo_root/bin/$configuration/dotnet"
+if [[ -n "${DOTNET_INSTALL_DIR:-}" && -z "${TF_BUILD:-}" && -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" ]]; then
+  if [[ "$DOTNET_INSTALL_DIR" = /* ]]; then
+    install_base="$DOTNET_INSTALL_DIR"
+  else
+    install_base="$repo_root/$DOTNET_INSTALL_DIR"
+  fi
+  mkdir -p "$install_base"
+  install_base="$(cd -P "$install_base" && pwd)"
+  install_dir="$install_base/$sdk_version/$configuration"
+else
+  install_dir="$repo_root/bin/$configuration/dotnet"
+fi
 mkdir -p "$install_dir"
 
 # Download Microsoft's official dotnet-install.sh (cached under
@@ -41,3 +54,7 @@ fi
 
 echo "Installing .NET SDK $sdk_version into $install_dir"
 bash "$install_script" --version "$sdk_version" --install-dir "$install_dir" --no-path
+
+install_location_file="$repo_root/bin/$configuration/dotnet-install-location.txt"
+mkdir -p "$(dirname "$install_location_file")"
+printf '%s/\n' "${install_dir%/}" > "$install_location_file"

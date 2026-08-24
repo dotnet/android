@@ -1,11 +1,14 @@
 <#
 .SYNOPSIS
-  Provisions the .NET SDK into bin\$Configuration\dotnet\.
+  Provisions the .NET SDK into bin\$Configuration\dotnet\ by default.
 
 .DESCRIPTION
   The SDK version is read from eng\Versions.props (single source of truth
   kept up to date by darc when Microsoft.NET.Sdk flows from dotnet/dotnet),
   so global.json does not need a 'tools.dotnet' pin.
+
+  Set DOTNET_INSTALL_DIR to a shared base directory to install the SDK under
+  <base>\<sdk-version>\<configuration>\.
 #>
 [CmdletBinding(PositionalBinding=$false)]
 param(
@@ -26,7 +29,17 @@ if ($null -eq $sdkNode -or [string]::IsNullOrWhiteSpace($sdkNode.InnerText)) {
 }
 $sdkVersion = $sdkNode.InnerText
 
-$installDir = Join-Path $repoRoot "bin\$configuration\dotnet"
+$useSharedInstall = -not [string]::IsNullOrWhiteSpace($env:DOTNET_INSTALL_DIR) -and
+  [string]::IsNullOrEmpty($env:TF_BUILD) -and
+  [string]::IsNullOrEmpty($env:GITHUB_ACTIONS) -and
+  [string]::IsNullOrEmpty($env:CI)
+
+if (-not $useSharedInstall) {
+  $installDir = Join-Path $repoRoot "bin\$configuration\dotnet"
+} else {
+  $installBase = [IO.Path]::GetFullPath((Join-Path $repoRoot $env:DOTNET_INSTALL_DIR))
+  $installDir = Join-Path $installBase "$sdkVersion\$configuration"
+}
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
 # Download Microsoft's official dotnet-install.ps1 (cached under $installDir
@@ -52,3 +65,8 @@ Write-Host "Installing .NET SDK $sdkVersion into $installDir"
 if ($LASTEXITCODE -ne 0) {
   exit $LASTEXITCODE
 }
+
+$installLocationFile = Join-Path $repoRoot "bin\$configuration\dotnet-install-location.txt"
+$installLocation = $installDir.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $installLocationFile) | Out-Null
+Set-Content -LiteralPath $installLocationFile -Value $installLocation -NoNewline

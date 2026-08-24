@@ -91,8 +91,21 @@ Or in powershell:
 
     > dotnet-local.cmd build foo.csproj
 
-Using the `dotnet-local` script will execute the `dotnet` provisioned in
-`bin\$(Configuration)\dotnet` and will use the locally built binaries.
+Using the `dotnet-local` script will execute the provisioned `dotnet` and
+will use the locally built binaries.
+
+To share the provisioned SDK between multiple worktrees, set
+`DOTNET_INSTALL_DIR` to a common base directory before running the `Prepare`
+target:
+
+    $env:DOTNET_INSTALL_DIR = Join-Path $HOME 'android-dotnet-sdk'
+    dotnet msbuild Xamarin.Android.slnx -t:Prepare
+
+The SDK will be installed under
+`$env:DOTNET_INSTALL_DIR\<sdk-version>\<configuration>`. The override is
+ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is set, so CI builds and
+local builds without `DOTNET_INSTALL_DIR` continue to use
+`bin\$(Configuration)\dotnet`.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 
