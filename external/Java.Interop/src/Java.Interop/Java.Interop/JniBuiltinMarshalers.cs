@@ -167,6 +167,7 @@ namespace Java.Interop {
 				return new []{
 					new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
 					new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaProxyObject), ProxyValueMarshaler.Instance),
+					new KeyValuePair<Type, JniValueMarshaler>(typeof (Byte?), JniNullableByteValueMarshaler.Instance),
 					new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean),   JniBooleanValueMarshaler.Instance),
 					new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean?),  JniNullableBooleanValueMarshaler.Instance),
 					new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte),   JniSByteValueMarshaler.Instance),
@@ -463,6 +464,37 @@ namespace Java.Interop {
 		}
 
 		public override void DestroyGenericArgumentState (SByte? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
+		{
+			var r   = state.ReferenceValue;
+			JniObjectReference.Dispose (ref r);
+			state   = new JniValueMarshalerState ();
+		}
+	}
+
+	sealed class JniNullableByteValueMarshaler : JniValueMarshaler<Byte?> {
+
+		internal    static  readonly    JniNullableByteValueMarshaler   Instance    = new JniNullableByteValueMarshaler ();
+
+		public override Byte? CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				Type? targetType)
+		{
+			if (!reference.IsValid)
+				return null;
+
+			return unchecked ((Byte) JniByte.GetValueFromJni (ref reference, options, targetType: null));
+		}
+
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] Byte? value, ParameterAttributes synchronize)
+		{
+		    if (!value.HasValue)
+		        return new JniValueMarshalerState ();
+			var r = JniByte.CreateLocalRef (unchecked ((SByte) value.Value));
+			return new JniValueMarshalerState (r);
+		}
+
+		public override void DestroyGenericArgumentState (Byte? value, ref JniValueMarshalerState state, ParameterAttributes synchronize)
 		{
 			var r   = state.ReferenceValue;
 			JniObjectReference.Dispose (ref r);
