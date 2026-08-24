@@ -16,9 +16,7 @@
   <PropertyGroup>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <_AndroidRepositoryUrl>https://dl.google.com/android/repository/</_AndroidRepositoryUrl>
-    <_SdkManagerDir>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</_SdkManagerDir>
-    <_SdkManagerPath Condition=" '$(HostOS)' == 'Windows' ">$(_SdkManagerDir)\sdkmanager.bat</_SdkManagerPath>
-    <_SdkManagerPath Condition=" '$(HostOS)' != 'Windows' ">$(_SdkManagerDir)\sdkmanager</_SdkManagerPath>
+    <_AndroidSdkLicenseFile>$(AndroidSdkFullPath)\licenses\android-sdk-license</_AndroidSdkLicenseFile>
     <_LicensesAcceptedFile>$(AndroidSdkFullPath)\licenses\.licenses-accepted</_LicensesAcceptedFile>
 
     <!-- Emulator/system-image arch differs on Apple Silicon. -->
@@ -53,6 +51,7 @@
   </PropertyGroup>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.UnzipDirectoryChildren" TaskFactory="TaskHostFactory" Runtime="NET" />
+  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.EnsureAndroidSdkLicense" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <!--
     Catalog of platform APIs. Each item is downloaded as `<Identity>.zip`.
@@ -104,9 +103,13 @@
     </_AndroidSdkPackage>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <!-- commandlinetools: one zip per HostOS -->
-    <_AndroidSdkPackage Include="commandlinetools-mac-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' ">
+    <!-- commandlinetools: one zip per HostOS (and per-arch on macOS) -->
+    <_AndroidSdkPackage Include="commandlinetools-mac_x86_64-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Darwin' and '$(_IsArm64Apple)' != 'true' ">
       <Hash>$(XACmdlineToolsHashMacOS)</Hash>
+      <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="commandlinetools-mac_arm64-$(CommandLineToolsVersion).zip" Condition=" '$(_IsArm64Apple)' == 'true' ">
+      <Hash>$(XACmdlineToolsHashMacOSArm64)</Hash>
       <Destination>$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)</Destination>
     </_AndroidSdkPackage>
     <_AndroidSdkPackage Include="commandlinetools-linux-$(CommandLineToolsVersion).zip" Condition=" '$(HostOS)' == 'Linux' ">
@@ -240,8 +243,12 @@
       <Destination>$(AndroidSdkFullPath)\docs</Destination>
     </_AndroidSdkPackage>
     <_AndroidSdkPackage Include="source-37.0_r02.zip">
-      <Hash>$(XAAndroidSourcesHash)</Hash>
+      <Hash>$(XAAndroidSourcesHash37_0)</Hash>
       <Destination>$(AndroidSdkFullPath)\sources\android-37</Destination>
+    </_AndroidSdkPackage>
+    <_AndroidSdkPackage Include="source-37.1_r01.zip">
+      <Hash>$(XAAndroidSourcesHash37_1)</Hash>
+      <Destination>$(AndroidSdkFullPath)\sources\android-37.1</Destination>
     </_AndroidSdkPackage>
 
     <!--
@@ -312,13 +319,14 @@
         (`clang++ -> clang` etc) which then fail with
         `posix_spawn: Exec format error`. `unzip` handles both cleanly.
 
-    `source.properties` is the sentinel produced by every component zip and
-    doubles as an incremental-build skip target.
+    The extraction stamp includes the archive identity and hash so packages
+    that share a destination cannot be confused across versions or host
+    architectures.
   -->
   <Target Name="_ExtractAndroidSdkPackages"
       DependsOnTargets="_DownloadAndroidSdkPackages"
       Inputs="$(AndroidToolchainCacheDirectory)\%(_AndroidSdkPackage.Identity)"
-      Outputs="%(_AndroidSdkPackage.Destination)\source.properties">
+      Outputs="%(_AndroidSdkPackage.Destination)\.extracted-%(_AndroidSdkPackage.Identity)-%(_AndroidSdkPackage.Hash)">
     <PropertyGroup>
       <_StripComponents>%(_AndroidSdkPackage.StripComponents)</_StripComponents>
       <_StripComponents Condition=" '$(_StripComponents)' == '' ">1</_StripComponents>
@@ -373,6 +381,7 @@
     />
     <!-- Unzip preserves archive mtimes, so refresh the sentinel used by MSBuild Outputs. -->
     <Touch Files="$(_DestDir)\source.properties" />
+    <Touch Files="$(_DestDir)\.extracted-%(_AndroidSdkPackage.Identity)-%(_AndroidSdkPackage.Hash)" AlwaysCreate="true" />
   </Target>
 
   <!--
@@ -471,26 +480,23 @@
   <Target Name="_AcceptAndroidSdkLicenses"
       BeforeTargets="Build"
       DependsOnTargets="_ExtractAndroidSdkPackages"
-      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
-      Outputs="$(_LicensesAcceptedFile)">
-    <Error
-        Condition=" !Exists('$(_SdkManagerPath)') "
-        Text="sdkmanager not found at $(_SdkManagerPath)"
-    />
-    <!-- Pipe 'y' responses to accept all licenses -->
-    <Exec
-        Condition=" '$(HostOS)' == 'Windows' "
-        Command="powershell -NoProfile -Command &quot;1..10 | ForEach-Object { 'y' } | &amp; '$(_SdkManagerPath)' --licenses&quot;"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
-        IgnoreExitCode="true"
-    />
-    <Exec
-        Condition=" '$(HostOS)' != 'Windows' "
-        Command="yes | &quot;$(_SdkManagerPath)&quot; --licenses"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory)"
-        IgnoreExitCode="true"
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props;$(_AndroidSdkLicenseFile)"
+      Outputs="$(_AndroidSdkLicenseFile);$(_LicensesAcceptedFile)">
+    <EnsureAndroidSdkLicense
+        LicenseDirectory="$(AndroidSdkFullPath)\licenses"
+        LicenseHashes="$(XAAndroidSdkLicenseHash)"
     />
     <Touch Files="$(_LicensesAcceptedFile)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="_ValidateAndroidSdkLicenses"
+      BeforeTargets="Build"
+      DependsOnTargets="_AcceptAndroidSdkLicenses">
+    <EnsureAndroidSdkLicense
+        LicenseDirectory="$(AndroidSdkFullPath)\licenses"
+        LicenseHashes="$(XAAndroidSdkLicenseHash)"
+        ValidateOnly="true"
+    />
   </Target>
 
   <Target Name="_CleanAndroidSdkComponents" BeforeTargets="Clean">

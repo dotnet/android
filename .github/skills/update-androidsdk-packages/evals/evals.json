@@ -24,6 +24,30 @@
       "prompt": "our CI machines are on an old command-line tools version (19.0 / 13114758_latest) and I keep seeing warnings that a newer cmdline-tools package is available with separate mac_arm64/mac_x86_64 downloads now — can you get us current, and check whether Android platform 36.1 has a newer revision published too?",
       "expected_output": "CommandLineToolsFolder/CommandLineToolsVersion bumped to the current stable release, with the command-line tools _AndroidSdkPackage split into a mac_x86_64 item (gated on _IsArm64Apple != 'true') and a new mac_arm64 item (gated on _IsArm64Apple == 'true') backed by a new XACmdlineToolsHashMacOSArm64 property, following the existing emulator/system-image pattern for _IsArm64Apple. The existing platform-36.1_r01 _PlatformPackage entry is checked against the manifest and its revision/hash updated in place if a newer one exists (no new API level added). Validation runs the BootstrapTasks build before the androidsdk.csproj build.",
       "assertions": []
+    },
+    {
+      "id": 5,
+      "prompt": "Both platform 37.0 and 37.1 are marked IsLatestStable in androidsdk.targets. Refresh the Android sources packages to the current revisions.",
+      "expected_output": "Both source-37.0 and source-37.1 _AndroidSdkPackage entries remain present with separate version-specific SHA-256 properties. The 37.0 package installs to sources/android-37 and the 37.1 package installs to sources/android-37.1. Updating 37.1 never removes or overwrites the 37.0 package.",
+      "assertions": []
+    },
+    {
+      "id": 6,
+      "prompt": "Update command-line tools from 19.0 to a release where sdkmanager says --licenses is deprecated and exits successfully without creating the SDK license files.",
+      "expected_output": "Bootstrap pins, Xamarin.Installer.Common.props, and the installer manifest feed are updated together for every host/architecture. License acceptance invokes neither sdkmanager nor the network-capable Android CLI bootstrapper: it atomically adds the pinned expected fingerprint under a cross-process lock while preserving existing valid fingerprints and rejecting malformed files. Validation starts without either license file, then repeats with an unrelated valid fingerprint and malformed content, and confirms Gradle accepts the pinned Build Tools and platform licenses.",
+      "assertions": []
+    },
+    {
+      "id": 7,
+      "prompt": "The manifest lists emulator 37.2.5 on channel-2 and emulator 37.1.11 on channel-0. Refresh us to the newest emulator.",
+      "expected_output": "Emulator 37.1.11 is selected because channel-0 is required for emulator updates. The newer 37.2.5 development-channel package is explicitly rejected. All four stable host/architecture archives are hashed and pinned.",
+      "assertions": []
+    },
+    {
+      "id": 8,
+      "prompt": "Add a new macOS arm64 command-line-tools archive. It extracts to the same SDK directory as the x64 archive, so source.properties can stay as the shared output stamp.",
+      "expected_output": "The arm64 archive may share the destination, but source.properties is rejected as the sole incremental output. Extraction uses a stamp containing archive identity and expected SHA-256 so switching architectures or hashes forces replacement with the correct package.",
+      "assertions": []
     }
   ]
 }

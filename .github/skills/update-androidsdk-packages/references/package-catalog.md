@@ -9,14 +9,14 @@ drift as the skill is used.
 |---|---|---|---|---|
 | build-tools | `build-tools` | `XABuildToolsVersion`, `XABuildToolsFolder` | `XABuildToolsHashMacOS/Linux/Windows` | `build-tools_r$(XABuildToolsVersion)_{macosx,linux,windows}.zip` |
 | platform-tools | `platform-tools` | `XAPlatformToolsVersion` | `XAPlatformToolsHashMacOS/Linux/Windows` | `platform-tools_r$(XAPlatformToolsVersion)-{darwin,linux,win}.zip` |
-| cmdline-tools | `cmdline-tools` | `CommandLineToolsFolder`, `CommandLineToolsVersion` | `XACmdlineToolsHashMacOS`, `XACmdlineToolsHashMacOSArm64`, `XACmdlineToolsHashLinux/Windows` | `commandlinetools-{mac_x86_64,mac_arm64,linux,win}-$(CommandLineToolsVersion).zip` — macOS is arch-split; other hosts are one zip |
+| cmdline-tools | `cmdline-tools` | `CommandLineToolsFolder`, `CommandLineToolsVersion`; shipped `AndroidCommandLineToolsVersion` in `src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.props` | `XACmdlineToolsHashMacOS`, `XACmdlineToolsHashMacOSArm64`, `XACmdlineToolsHashLinux/Windows` | `commandlinetools-{mac_x86_64,mac_arm64,linux,win}-$(CommandLineToolsVersion).zip`; also update the latest entry in `src/Xamarin.Installer.AndroidSDK/Feeds/AndroidManifestFeed_d18.0.xml` |
 | cmake | `cmake;` | `AndroidCmakeVersion` | `XACmakeHashMacOS/Linux/Windows` | `cmake-$(AndroidCmakeVersion)-{darwin,linux,windows}.zip` |
 | emulator | `emulator` | `EmulatorVersion`, `EmulatorPkgRevision` | `XAEmulatorHashMacOSx64`, `XAEmulatorHashMacOSArm64`, `XAEmulatorHashLinux/Windows` | `emulator-{darwin_x64,darwin_aarch64,linux_x64,windows_x64}-$(EmulatorVersion).zip`; also drives a synthesized `package.xml` via `package.xml.in` |
 | API 29 system image | `sys-img/android` manifest, `path="system-images;android-29;default;{x86_64,arm64-v8a}"` | (fixed `x86_64-29_r08*`/`arm64-v8a-29_r08` filenames — check manifest for a newer `rNN` if refreshing) | `XASystemImageHashMacOSx64/MacOSArm64/Linux/Windows` | `{x86_64,arm64-v8a}-29_r08{-darwin,-linux,-windows,}.zip` under `sys-img/android/` |
 | m2repository | `extras;android;m2repository` | (embedded in filename, e.g. `_r47`) | `XAAndroidM2RepositoryHash` | `android_m2repository_r47.zip`, host-agnostic |
 | docs | `docs` | (embedded in filename, e.g. `-24_r01`) | `XAAndroidDocsHash` | `docs-24_r01.zip`, host-agnostic |
-| sources | `sources;android-NN` (tracks the latest stable platform) | (embedded in filename) | `XAAndroidSourcesHash` | `source-<latest-stable-api>_r0M.zip`, `Destination` embeds the API level too |
-| platform APIs | `platforms;android-NN` | n/a — `_PlatformPackage` item's `Include` *is* the version string | `Hash` metadata per `_PlatformPackage` item | `_PlatformPackage` item group near the top of the file; one `IsLatestStable="true"` entry drives default install + the sources package above |
+| sources | `sources;android-NN.N` (one per stable shipped platform) | (embedded in filename) | Version-specific, e.g. `XAAndroidSourcesHash37_0` | One `source-NN.N_r0M.zip` entry per `IsLatestStable` platform; preserve each distinct `Destination` (`37.0` historically uses `sources\android-37`, while `37.1` uses `sources\android-37.1`) |
+| platform APIs | `platforms;android-NN` | n/a — `_PlatformPackage` item's `Include` *is* the version string | `Hash` metadata per `_PlatformPackage` item | `_PlatformPackage` item group near the top of the file; every `IsLatestStable="true"` entry drives default install and requires a corresponding sources package |
 | **Android NDK — OUT OF SCOPE** | `ndk` | `_XAAndroidNdkRelease`, `_XAAndroidNdkPkgRevision` | `XAAndroidNdkHashMacOS/Linux/Windows` | `android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip` — **never edit as part of this skill** |
 
 ## Notes on Apple Silicon archives
@@ -29,6 +29,18 @@ an `'$(_IsArm64Apple)' != 'true'` item for the existing x86_64/generic macOS arc
 `'$(_IsArm64Apple)' == 'true'` item pointing at the arm64 archive and a new `*HashMacOSArm64`
 property. Don't add an arm64-specific branch speculatively for families where Google still ships
 one universal/x86_64-only macOS archive.
+
+Every extraction output stamp must include the selected archive identity and SHA-256. Multiple
+architectures can intentionally share a destination, so `source.properties` alone must never be
+used as the incremental output.
+
+## Notes on stable channels and licenses
+
+Emulator updates must come from `channel-0`; a higher development-channel revision is not stable.
+Command-line-tools updates are incomplete unless bootstrap pins, shipped product versions, and feed
+archives all move together. License acceptance must remain deterministic and offline: preserve
+valid existing fingerprints and atomically add the pinned expected SHA-1 under a cross-process
+lock. Never invoke the command-line tools' `android` bootstrapper or another mutable downloader.
 
 ## Notes on platform extension levels
 
