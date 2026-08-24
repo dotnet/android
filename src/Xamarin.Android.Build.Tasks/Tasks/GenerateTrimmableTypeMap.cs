@@ -215,7 +215,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 			}
 			IReadOnlyCollection<string>? customViewTypeNames = CustomViewMapFile.IsNullOrEmpty ()
 				? null
-				: MonoAndroidHelper.LoadCustomViewMapFile (CustomViewMapFile).Keys;
+				: MonoAndroidHelper.LoadCustomViewMapFile (BuildEngine4, CustomViewMapFile).Keys;
 
 			result = generator.Execute (
 				assemblies,
