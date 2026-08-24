@@ -50,7 +50,7 @@
     </PropertyGroup>
     <ItemGroup>
       <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
-      <!-- Satellite resource assemblies contain no types and do not have scanner sidecars. -->
+      <!-- By .NET convention, *.resources.dll files are satellite assemblies; they contain no types or scanner sidecars. -->
       <_AndroidResolvedAssembliesToScan
           Include="@(_ResolvedAssemblies)"
           Condition=" !$([System.String]::Copy('%(_ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
