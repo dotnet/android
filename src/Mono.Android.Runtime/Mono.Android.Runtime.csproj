@@ -70,6 +70,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop\InteropCounterEventSource.cs" />
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop\InteropEventSource.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="..\Mono.Android\Android.Runtime\LogCategories.cs" />

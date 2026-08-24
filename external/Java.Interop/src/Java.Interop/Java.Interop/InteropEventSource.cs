@@ -18,7 +18,6 @@ namespace Java.Interop
 #endif
 		const string UnknownValue = "Unknown";
 		const string RuntimeFeatureSwitchPrefix = "Microsoft.Android.Runtime.RuntimeFeature.";
-
 		internal const EventKeywords PeerLifecycleKeyword = (EventKeywords) 0x1;
 		internal const EventKeywords ReachabilityKeyword = (EventKeywords) 0x2;
 

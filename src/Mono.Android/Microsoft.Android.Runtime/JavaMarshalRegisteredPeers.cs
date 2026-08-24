@@ -535,14 +535,23 @@ static class JavaMarshalRegisteredPeers
 			throw new ArgumentNullException (nameof (mcr), "MarkCrossReferencesArgs should never be null.");
 		}
 
+		bool captureBridgeProcessingMetrics = InteropCounterEventSource.AreBridgeProcessingCountersEnabled ();
 		List<ReachabilityEventData>? reachabilityEvents =
 			RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.ReachabilityKeyword) ? [] : null;
-		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr, reachabilityEvents);
+		ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (mcr, reachabilityEvents, captureBridgeProcessingMetrics, out BridgeProcessingMetrics metrics);
 
 // This call site is reachable on all platforms. 'JavaMarshal.FinishCrossReferenceProcessing(MarkCrossReferencesArgs*, ReadOnlySpan<GCHandle>)' is only supported on: 'android'.
 #pragma warning disable CA1416
 		JavaMarshal.FinishCrossReferenceProcessing (mcr, handlesToFree);
 #pragma warning restore CA1416
+
+		if (captureBridgeProcessingMetrics) {
+			InteropCounterEventSource.ReportBridgeProcessingMetrics (
+				metrics.ManagedObjectsOnlyReachableFromJavaCount,
+				metrics.JavaObjectsOnlyReachableFromManagedCount,
+				metrics.BridgeObjectsAliveAfterProcessingCount,
+				metrics.BridgeObjectsUnreachableAfterProcessingCount);
+		}
 
 		if (reachabilityEvents != null) {
 			foreach (ReachabilityEventData eventData in reachabilityEvents) {
@@ -551,9 +560,10 @@ static class JavaMarshalRegisteredPeers
 		}
 	}
 
-	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr, List<ReachabilityEventData>? reachabilityEvents)
+	static unsafe ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr, List<ReachabilityEventData>? reachabilityEvents, bool captureBridgeProcessingMetrics, out BridgeProcessingMetrics metrics)
 	{
 		List<GCHandle> handlesToFree = [];
+		BridgeProcessingMetrics currentMetrics = default;
 
 // This call site is reachable on all platforms. 'MarkCrossReferencesArgs.ComponentCount' is only supported on: 'android'.
 // This call site is reachable on all platforms. 'MarkCrossReferencesArgs.Components' is only supported on: 'android'.
@@ -577,6 +587,10 @@ static class JavaMarshalRegisteredPeers
 			}
 
 			bool isCollected = context->IsCollected;
+			if (captureBridgeProcessingMetrics) {
+				currentMetrics = currentMetrics.WithContext (isCollected);
+			}
+
 			if (!isCollected && reachabilityEvents == null) {
 				return;
 			}
@@ -600,7 +614,43 @@ static class JavaMarshalRegisteredPeers
 			handlesToFree.Add (handle);
 		}
 
+		metrics = currentMetrics;
 		return CollectionsMarshal.AsSpan (handlesToFree);
+	}
+
+	readonly struct BridgeProcessingMetrics
+	{
+		public int ManagedObjectsOnlyReachableFromJavaCount { get; }
+		public int JavaObjectsOnlyReachableFromManagedCount { get; }
+		public int BridgeObjectsAliveAfterProcessingCount { get; }
+		public int BridgeObjectsUnreachableAfterProcessingCount { get; }
+
+		public BridgeProcessingMetrics (
+			int managedObjectsOnlyReachableFromJavaCount,
+			int javaObjectsOnlyReachableFromManagedCount,
+			int bridgeObjectsAliveAfterProcessingCount,
+			int bridgeObjectsUnreachableAfterProcessingCount)
+		{
+			ManagedObjectsOnlyReachableFromJavaCount = managedObjectsOnlyReachableFromJavaCount;
+			JavaObjectsOnlyReachableFromManagedCount = javaObjectsOnlyReachableFromManagedCount;
+			BridgeObjectsAliveAfterProcessingCount = bridgeObjectsAliveAfterProcessingCount;
+			BridgeObjectsUnreachableAfterProcessingCount = bridgeObjectsUnreachableAfterProcessingCount;
+		}
+
+		public BridgeProcessingMetrics WithContext (bool isCollected)
+		{
+			return isCollected
+				? new BridgeProcessingMetrics (
+					ManagedObjectsOnlyReachableFromJavaCount,
+					JavaObjectsOnlyReachableFromManagedCount + 1,
+					BridgeObjectsAliveAfterProcessingCount,
+					BridgeObjectsUnreachableAfterProcessingCount + 1)
+				: new BridgeProcessingMetrics (
+					ManagedObjectsOnlyReachableFromJavaCount + 1,
+					JavaObjectsOnlyReachableFromManagedCount,
+					BridgeObjectsAliveAfterProcessingCount + 1,
+					BridgeObjectsUnreachableAfterProcessingCount);
+		}
 	}
 
 }

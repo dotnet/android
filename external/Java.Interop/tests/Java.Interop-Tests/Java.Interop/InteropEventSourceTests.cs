@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Threading;
 
 using Java.Interop;
 
@@ -57,6 +58,26 @@ namespace Java.InteropTests
 			Assert.DoesNotThrow (() => InteropEventSource.JavaPeerReleasedManagedPeer ("Managed.Type", "java/type", 1, 2));
 			Assert.DoesNotThrow (() => InteropEventSource.ManagedPeerOnlyReachableFromJavaPeer ("Managed.Type", "java/type", 1, 2, 1, 1, 1));
 			Assert.DoesNotThrow (() => InteropEventSource.JavaPeerOnlyReachableFromManagedPeer ("Managed.Type", "java/type", 1, 2, 1, 1, 1));
+			Assert.DoesNotThrow (() => InteropCounterEventSource.ReportBridgeProcessingMetrics (1, 2, 3, 4));
+		}
+
+		[Test]
+		public void BridgeProcessingCounters_CanBeEnabledSeparately ()
+		{
+			using (var listener = new CounterCapturingEventListener ()) {
+				bool countersEnabled = SpinWait.SpinUntil (() => InteropCounterEventSource.AreBridgeProcessingCountersEnabled (), TimeSpan.FromSeconds (5));
+				Assert.IsTrue (countersEnabled, "Expected bridge processing counters to be enabled.");
+				Assert.IsFalse (InteropEventSource.IsEnabled (InteropEventSource.PeerLifecycleKeyword), "Did not expect the fine-grained interop event source to be enabled.");
+
+				InteropCounterEventSource.ReportBridgeProcessingMetrics (11, 12, 13, 14);
+
+				bool receivedCounters = SpinWait.SpinUntil (() => listener.CounterValues.Count == 4, TimeSpan.FromSeconds (5));
+				Assert.IsTrue (receivedCounters, "Expected all bridge processing counters to be emitted.");
+				AssertCounterValue (listener, InteropCounterEventSource.ManagedObjectsOnlyReachableFromJavaCounterName, 11);
+				AssertCounterValue (listener, InteropCounterEventSource.JavaObjectsOnlyReachableFromManagedCounterName, 12);
+				AssertCounterValue (listener, InteropCounterEventSource.BridgeObjectsAliveAfterProcessingCounterName, 13);
+				AssertCounterValue (listener, InteropCounterEventSource.BridgeObjectsUnreachableAfterProcessingCounterName, 14);
+			}
 		}
 
 		static void AssertEventPayload (CapturedEvent captured, string eventName, string managedType, string javaType, int jniHash, int managedHash, string runtimeFlavor)
@@ -80,6 +101,12 @@ namespace Java.InteropTests
 			Assert.AreEqual (componentIndex, captured.Payload [5]);
 			Assert.AreEqual (contextIndex, captured.Payload [6]);
 			Assert.AreEqual (contextPointer, captured.Payload [7]);
+		}
+
+		static void AssertCounterValue (CounterCapturingEventListener listener, string counterName, double expectedValue)
+		{
+			Assert.IsTrue (listener.CounterValues.TryGetValue (counterName, out double actualValue), $"Expected counter '{counterName}' to be present.");
+			Assert.AreEqual (expectedValue, actualValue, 0.001d);
 		}
 
 		readonly struct CapturedEvent
@@ -115,6 +142,50 @@ namespace Java.InteropTests
 
 				var payload = eventData.Payload?.ToArray () ?? Array.Empty<object?> ();
 				Events.Add (new CapturedEvent (eventData.EventName, eventData.EventId, payload));
+			}
+		}
+
+		sealed class CounterCapturingEventListener : EventListener
+		{
+			public Dictionary<string, double> CounterValues { get; } = new Dictionary<string, double> (StringComparer.Ordinal);
+
+			protected override void OnEventSourceCreated (EventSource eventSource)
+			{
+				if (eventSource.Name == InteropCounterEventSource.ProviderName) {
+					EnableEvents (
+						eventSource,
+						EventLevel.Verbose,
+						EventKeywords.None,
+						new Dictionary<string, string?> {
+							["EventCounterIntervalSec"] = "1",
+						});
+				}
+			}
+
+			protected override void OnEventWritten (EventWrittenEventArgs eventData)
+			{
+				if (eventData.EventName != "EventCounters") {
+					return;
+				}
+
+				if (eventData.Payload == null || eventData.Payload.Count == 0 || eventData.Payload [0] is not IEnumerable<KeyValuePair<string, object?>> payload) {
+					return;
+				}
+
+				string? counterName = null;
+				double? mean = null;
+				foreach (var entry in payload) {
+					if (entry.Key == "Name") {
+						counterName = entry.Value as string;
+					} else if (entry.Key == "Mean" && entry.Value is double value) {
+						mean = value;
+					}
+				}
+
+				if (counterName != null && mean.HasValue)
+				{
+					CounterValues [counterName] = mean.Value;
+				}
 			}
 		}
 	}
