@@ -59,7 +59,7 @@ namespace Java.InteropTests
 			Assert.DoesNotThrow (() => InteropEventSource.JavaPeerReleasedManagedPeer ("Managed.Type", "java/type", 1, 2));
 			Assert.DoesNotThrow (() => InteropEventSource.ManagedPeerOnlyReachableFromJavaPeer ("Managed.Type", "java/type", 1, 2, 1, 1, 1));
 			Assert.DoesNotThrow (() => InteropEventSource.JavaPeerOnlyReachableFromManagedPeer ("Managed.Type", "java/type", 1, 2, 1, 1, 1));
-			Assert.DoesNotThrow (() => InteropCounterEventSource.ReportBridgeProcessingMetrics (1, 2, 3, 4));
+			Assert.DoesNotThrow (() => InteropCounterEventSource.ReportBridgeProcessingMetrics (1, 2));
 		}
 
 		[Test]
@@ -70,14 +70,12 @@ namespace Java.InteropTests
 				Assert.IsTrue (countersEnabled, "Expected bridge processing counters to be enabled.");
 				Assert.IsFalse (InteropEventSource.IsEnabled (InteropEventSource.PeerLifecycleKeyword), "Did not expect the fine-grained interop event source to be enabled.");
 
-				InteropCounterEventSource.ReportBridgeProcessingMetrics (11, 12, 13, 14);
+				InteropCounterEventSource.ReportBridgeProcessingMetrics (11, 12);
 
-				bool receivedCounters = SpinWait.SpinUntil (() => listener.CounterValues.Count == 4, TimeSpan.FromSeconds (5));
+				bool receivedCounters = SpinWait.SpinUntil (() => listener.CounterValues.Count == 2, TimeSpan.FromSeconds (5));
 				Assert.IsTrue (receivedCounters, "Expected all bridge processing counters to be emitted.");
 				AssertCounterValue (listener, InteropCounterEventSource.ManagedObjectsOnlyReachableFromJavaCounterName, 11);
 				AssertCounterValue (listener, InteropCounterEventSource.JavaObjectsOnlyReachableFromManagedCounterName, 12);
-				AssertCounterValue (listener, InteropCounterEventSource.BridgeObjectsAliveAfterProcessingCounterName, 13);
-				AssertCounterValue (listener, InteropCounterEventSource.BridgeObjectsUnreachableAfterProcessingCounterName, 14);
 			}
 		}
 

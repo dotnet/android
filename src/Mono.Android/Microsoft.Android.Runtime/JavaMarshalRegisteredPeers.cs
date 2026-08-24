@@ -548,9 +548,7 @@ static class JavaMarshalRegisteredPeers
 		if (captureBridgeProcessingMetrics) {
 			InteropCounterEventSource.ReportBridgeProcessingMetrics (
 				metrics.ManagedObjectsOnlyReachableFromJavaCount,
-				metrics.JavaObjectsOnlyReachableFromManagedCount,
-				metrics.BridgeObjectsAliveAfterProcessingCount,
-				metrics.BridgeObjectsUnreachableAfterProcessingCount);
+				metrics.JavaObjectsOnlyReachableFromManagedCount);
 		}
 
 		if (reachabilityEvents != null) {
@@ -622,19 +620,13 @@ static class JavaMarshalRegisteredPeers
 	{
 		public int ManagedObjectsOnlyReachableFromJavaCount { get; }
 		public int JavaObjectsOnlyReachableFromManagedCount { get; }
-		public int BridgeObjectsAliveAfterProcessingCount { get; }
-		public int BridgeObjectsUnreachableAfterProcessingCount { get; }
 
 		public BridgeProcessingMetrics (
 			int managedObjectsOnlyReachableFromJavaCount,
-			int javaObjectsOnlyReachableFromManagedCount,
-			int bridgeObjectsAliveAfterProcessingCount,
-			int bridgeObjectsUnreachableAfterProcessingCount)
+			int javaObjectsOnlyReachableFromManagedCount)
 		{
 			ManagedObjectsOnlyReachableFromJavaCount = managedObjectsOnlyReachableFromJavaCount;
 			JavaObjectsOnlyReachableFromManagedCount = javaObjectsOnlyReachableFromManagedCount;
-			BridgeObjectsAliveAfterProcessingCount = bridgeObjectsAliveAfterProcessingCount;
-			BridgeObjectsUnreachableAfterProcessingCount = bridgeObjectsUnreachableAfterProcessingCount;
 		}
 
 		public BridgeProcessingMetrics WithContext (bool isCollected)
@@ -642,14 +634,10 @@ static class JavaMarshalRegisteredPeers
 			return isCollected
 				? new BridgeProcessingMetrics (
 					ManagedObjectsOnlyReachableFromJavaCount,
-					JavaObjectsOnlyReachableFromManagedCount + 1,
-					BridgeObjectsAliveAfterProcessingCount,
-					BridgeObjectsUnreachableAfterProcessingCount + 1)
+					JavaObjectsOnlyReachableFromManagedCount + 1)
 				: new BridgeProcessingMetrics (
 					ManagedObjectsOnlyReachableFromJavaCount + 1,
-					JavaObjectsOnlyReachableFromManagedCount,
-					BridgeObjectsAliveAfterProcessingCount + 1,
-					BridgeObjectsUnreachableAfterProcessingCount);
+					JavaObjectsOnlyReachableFromManagedCount);
 		}
 	}
 

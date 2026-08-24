@@ -65,7 +65,5 @@ The aggregate counter provider emits:
 
 - `managed-objects-only-reachable-from-java`
 - `java-objects-only-reachable-from-managed`
-- `bridge-objects-alive-after-processing`
-- `bridge-objects-unreachable-after-processing`
 
 These structured events supplement the existing text-based global and local JNI reference logs; they do not replace them.
