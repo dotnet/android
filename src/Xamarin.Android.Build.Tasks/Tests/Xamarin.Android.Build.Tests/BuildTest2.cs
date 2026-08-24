@@ -115,6 +115,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("Optimize", "true");
 			proj.SetProperty ("DebugType", "None");
+			proj.SetProperty ("PublishTrimmed", "true");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
 			// Use `dotnet publish` rather than `msbuild /t:Publish`: only the `dotnet publish` CLI
