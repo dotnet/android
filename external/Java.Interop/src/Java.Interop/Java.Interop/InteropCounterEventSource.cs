@@ -51,20 +51,33 @@ namespace Java.Interop
 			EventCounter? javaObjectsOnlyReachableFromManagedCounter;
 			EventCounter? bridgeObjectsAliveAfterProcessingCounter;
 			EventCounter? bridgeObjectsUnreachableAfterProcessingCounter;
+			readonly object countersLock = new ();
 
-			internal bool BridgeProcessingCountersEnabled { get; private set; }
+			volatile bool bridgeProcessingCountersEnabled;
+
+			internal bool BridgeProcessingCountersEnabled => bridgeProcessingCountersEnabled;
 
 			[NonEvent]
 			protected override void OnEventCommand (EventCommandEventArgs command)
 			{
 				base.OnEventCommand (command);
 
+				if (command.Command == EventCommand.Disable) {
+					lock (countersLock) {
+						bridgeProcessingCountersEnabled = false;
+						DisposeBridgeProcessingCounters ();
+					}
+					return;
+				}
+
 				if (command.Command != EventCommand.Enable || command.Arguments == null || !command.Arguments.ContainsKey (EventCounterIntervalSecArgumentName)) {
 					return;
 				}
 
-				EnsureBridgeProcessingCountersInitialized ();
-				BridgeProcessingCountersEnabled = true;
+				lock (countersLock) {
+					EnsureBridgeProcessingCountersInitialized ();
+					bridgeProcessingCountersEnabled = true;
+				}
 			}
 
 			[NonEvent]
@@ -74,15 +87,16 @@ namespace Java.Interop
 					int bridgeObjectsAliveAfterProcessingCount,
 					int bridgeObjectsUnreachableAfterProcessingCount)
 			{
-				if (!BridgeProcessingCountersEnabled) {
-					return;
-				}
+				lock (countersLock) {
+					if (!bridgeProcessingCountersEnabled) {
+						return;
+					}
 
-				EnsureBridgeProcessingCountersInitialized ();
-				GetManagedObjectsOnlyReachableFromJavaCounter ().WriteMetric (managedObjectsOnlyReachableFromJavaCount);
-				GetJavaObjectsOnlyReachableFromManagedCounter ().WriteMetric (javaObjectsOnlyReachableFromManagedCount);
-				GetBridgeObjectsAliveAfterProcessingCounter ().WriteMetric (bridgeObjectsAliveAfterProcessingCount);
-				GetBridgeObjectsUnreachableAfterProcessingCounter ().WriteMetric (bridgeObjectsUnreachableAfterProcessingCount);
+					GetManagedObjectsOnlyReachableFromJavaCounter ().WriteMetric (managedObjectsOnlyReachableFromJavaCount);
+					GetJavaObjectsOnlyReachableFromManagedCounter ().WriteMetric (javaObjectsOnlyReachableFromManagedCount);
+					GetBridgeObjectsAliveAfterProcessingCounter ().WriteMetric (bridgeObjectsAliveAfterProcessingCount);
+					GetBridgeObjectsUnreachableAfterProcessingCounter ().WriteMetric (bridgeObjectsUnreachableAfterProcessingCount);
+				}
 			}
 
 			[NonEvent]
@@ -149,6 +163,19 @@ namespace Java.Interop
 				}
 
 				return bridgeObjectsUnreachableAfterProcessingCounter;
+			}
+
+			[NonEvent]
+			void DisposeBridgeProcessingCounters ()
+			{
+				managedObjectsOnlyReachableFromJavaCounter?.Dispose ();
+				managedObjectsOnlyReachableFromJavaCounter = null;
+				javaObjectsOnlyReachableFromManagedCounter?.Dispose ();
+				javaObjectsOnlyReachableFromManagedCounter = null;
+				bridgeObjectsAliveAfterProcessingCounter?.Dispose ();
+				bridgeObjectsAliveAfterProcessingCounter = null;
+				bridgeObjectsUnreachableAfterProcessingCounter?.Dispose ();
+				bridgeObjectsUnreachableAfterProcessingCounter = null;
 			}
 		}
 	}

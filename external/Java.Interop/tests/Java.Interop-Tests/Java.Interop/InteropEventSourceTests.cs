@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Linq;
@@ -147,7 +148,7 @@ namespace Java.InteropTests
 
 		sealed class CounterCapturingEventListener : EventListener
 		{
-			public Dictionary<string, double> CounterValues { get; } = new Dictionary<string, double> (StringComparer.Ordinal);
+			public ConcurrentDictionary<string, double> CounterValues { get; } = new ConcurrentDictionary<string, double> (StringComparer.Ordinal);
 
 			protected override void OnEventSourceCreated (EventSource eventSource)
 			{
@@ -182,8 +183,7 @@ namespace Java.InteropTests
 					}
 				}
 
-				if (counterName != null && mean.HasValue)
-				{
+				if (counterName != null && mean.HasValue) {
 					CounterValues [counterName] = mean.Value;
 				}
 			}
