@@ -62,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Target = "_CheckForInvalidConfigurationAndPlatform";
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (project), "Build should have failed.");
-				StringAssertEx.Contains ("error XA4232:", builder.LastBuildOutput, "Build should fail with XA4232.");
+				StringAssertEx.Contains ("error XA4240:", builder.LastBuildOutput, "Build should fail with XA4240.");
 				StringAssertEx.Contains (codegenTarget, builder.LastBuildOutput, "Error should identify the unsupported code generation target.");
 			}
 		}

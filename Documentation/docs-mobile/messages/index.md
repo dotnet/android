@@ -205,12 +205,13 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA4229: Unrecognized \`TransformFile\` root element: {element}.
 + XA4230: Error parsing XML: {exception}
 + [XA4231](xa4231.md): The Android class parser value 'jar2xml' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'class-parse'.
-+ [XA4232](xa4232.md): The Android code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.
++ [XA4232](xa4232.md): The Android code generation target 'XamarinAndroid' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.
 + [XA4234](xa4234.md): '<{item}>' item '{itemspec}' is missing required attribute '{name}'.
 + [XA4235](xa4235.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id'.
 + [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}
 + [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - Failed to resolve POM for Maven artifact '{dependency}' from '{url}'. - {exception}
 + [XA4239](xa4239.md): Unknown Maven repository: '{repository}'.
++ [XA4240](xa4240.md): The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.
 + [XA4241](xa4241.md): Java dependency '{artifact}' is not satisfied.
 + [XA4242](xa4242.md): Java dependency '{artifact}' is not satisfied. Microsoft maintains the NuGet package '{nugetId}' that could fulfill this dependency.
 + [XA4243](xa4243.md): Attribute '{name}' is required when using '{name}' for '{element}' item '{itemspec}'.

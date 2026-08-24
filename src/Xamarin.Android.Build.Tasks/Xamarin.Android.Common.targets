@@ -3044,8 +3044,8 @@ because xbuild doesn't support framework reference assemblies.
         Condition=" '$(DesignTimeBuild)' != 'true' "/>
   <Target Name="_ValidateAndroidJcwCodegenTarget"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
-    <AndroidError Code="XA4232"
-        ResourceName="XA4232"
+    <AndroidError Code="XA4240"
+        ResourceName="XA4240"
         FormatArguments="$(_AndroidJcwCodegenTarget)"
         Condition=" '$(_AndroidJcwCodegenTarget)' == 'XamarinAndroid' or '$(_AndroidJcwCodegenTarget)' == 'JavaInterop1' " />
   </Target>

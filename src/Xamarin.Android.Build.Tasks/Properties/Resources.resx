@@ -730,8 +730,8 @@ In this message, "root element" refers to the root element of an XML file.
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>The Android code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
-    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+    <value>The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.</value>
+    <comment>The following are literal names and should not be translated: XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
   <data name="XA4300" xml:space="preserve">
@@ -1058,6 +1058,11 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <value>Unknown Maven repository: '{0}'.</value>
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
     <value>The '{0}' MSBuild property has an invalid value of '{1}'. A valid value is one of: {2}.</value>

@@ -1413,7 +1413,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is no longer supported. The &apos;_AndroidJcwCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;; &apos;XamarinAndroid&apos; and &apos;JavaInterop1&apos; are not supported..
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
         /// </summary>
         public static string XA4232 {
             get {
@@ -1487,6 +1487,15 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The Java callable wrapper code generation target &apos;{0}&apos; is no longer supported. The &apos;_AndroidJcwCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;; &apos;XamarinAndroid&apos; and &apos;JavaInterop1&apos; are not supported..
+        /// </summary>
+        public static string XA4240 {
+            get {
+                return ResourceManager.GetString("XA4240", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied..
         /// </summary>
