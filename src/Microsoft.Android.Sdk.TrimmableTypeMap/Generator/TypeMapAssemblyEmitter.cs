@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -194,6 +195,11 @@ sealed class TypeMapAssemblyEmitter
 			EmitAnchorType ();
 		}
 		EmitMemberReferences ();
+
+		_pe.PrepareUtf8Fields (model.ProxyTypes
+			.Where (proxy => proxy.IsAcw)
+			.SelectMany (proxy => proxy.NativeRegistrations)
+			.SelectMany (registration => new [] { registration.JniMethodName, registration.JniSignature }));
 
 		// Track wrapper targets → handles for RegisterNatives.
 		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
@@ -600,16 +606,6 @@ sealed class TypeMapAssemblyEmitter
 
 	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
 	{
-		if (proxy.IsAcw) {
-			// RegisterNatives uses RVA-backed UTF-8 fields under <PrivateImplementationDetails>.
-			// Materialize those helper types before adding the proxy TypeDef, otherwise the
-			// later RegisterNatives method can be attached to the helper type instead.
-			foreach (var reg in proxy.NativeRegistrations) {
-				_pe.GetOrAddUtf8Field (reg.JniMethodName);
-				_pe.GetOrAddUtf8Field (reg.JniSignature);
-			}
-		}
-
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 

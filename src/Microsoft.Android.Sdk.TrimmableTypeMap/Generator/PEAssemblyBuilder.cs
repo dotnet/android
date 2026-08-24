@@ -270,27 +270,37 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
-	/// Returns a deduplicated RVA field containing the null-terminated UTF-8 encoding of
-	/// <paramref name="value"/>. Strings like <c>"()V"</c> that appear across many proxy
-	/// types are stored once and share the same <see cref="FieldDefinitionHandle"/>.
-	/// The field is declared on an internal sized helper type (e.g. <c>__utf8_10</c>)
-	/// nested under <c>&lt;PrivateImplementationDetails&gt;</c>.
+	/// Emits deduplicated RVA fields containing the supplied null-terminated UTF-8 strings.
+	/// Fields are grouped by size so each group is emitted contiguously on its sized helper
+	/// type before any consuming types are emitted.
 	/// </summary>
-	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
+	public void PrepareUtf8Fields (IEnumerable<string> values)
 	{
-		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
-			return existing;
+		var valuesBySize = new SortedDictionary<int, SortedSet<string>> ();
+		foreach (string value in values) {
+			int size = System.Text.Encoding.UTF8.GetByteCount (value) + 1;
+			if (!valuesBySize.TryGetValue (size, out var valuesForSize)) {
+				valuesForSize = new SortedSet<string> (StringComparer.Ordinal);
+				valuesBySize.Add (size, valuesForSize);
+			}
+			valuesForSize.Add (value);
 		}
 
-		EnsurePrivateImplDetailsType ();
+		foreach (var group in valuesBySize) {
+			var sizedType = GetOrCreateSizedType (group.Key);
+			foreach (string value in group.Value) {
+				AddUtf8Field (value, sizedType);
+			}
+		}
+	}
 
+	void AddUtf8Field (string value, TypeDefinitionHandle sizedType)
+	{
 		// Encode to null-terminated UTF-8 (all JNI names/signatures are ASCII).
 		int byteCount = System.Text.Encoding.UTF8.GetByteCount (value);
 		var bytes = new byte [byteCount + 1];
 		System.Text.Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
 		// bytes[byteCount] is already 0 (null terminator)
-
-		var sizedType = GetOrCreateSizedType (bytes.Length);
 
 		_sigBlob.Clear ();
 		new BlobEncoder (_sigBlob).FieldSignature ().Type (sizedType, true);
@@ -306,7 +316,18 @@ sealed class PEAssemblyBuilder
 		Metadata.AddFieldRelativeVirtualAddress (fieldHandle, rva);
 
 		_utf8FieldCache [value] = fieldHandle;
-		return fieldHandle;
+	}
+
+	/// <summary>
+	/// Returns a previously prepared UTF-8 RVA field.
+	/// </summary>
+	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
+	{
+		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
+			return existing;
+		}
+
+		throw new InvalidOperationException ($"UTF-8 field '{value}' was not prepared before type emission.");
 	}
 
 	void EnsurePrivateImplDetailsType ()
