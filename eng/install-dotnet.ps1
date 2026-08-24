@@ -8,7 +8,7 @@
   so global.json does not need a 'tools.dotnet' pin.
 
   Set DOTNET_INSTALL_DIR to a shared base directory to install the SDK under
-  <base>\<sdk-version>\<configuration>\.
+  <base>\<sdk-version>\.
 #>
 [CmdletBinding(PositionalBinding=$false)]
 param(
@@ -37,8 +37,12 @@ $useSharedInstall = -not [string]::IsNullOrWhiteSpace($env:DOTNET_INSTALL_DIR) -
 if (-not $useSharedInstall) {
   $installDir = Join-Path $repoRoot "bin\$configuration\dotnet"
 } else {
-  $installBase = [IO.Path]::GetFullPath((Join-Path $repoRoot $env:DOTNET_INSTALL_DIR))
-  $installDir = Join-Path $installBase "$sdkVersion\$configuration"
+  if ([IO.Path]::IsPathRooted($env:DOTNET_INSTALL_DIR)) {
+    $installBase = [IO.Path]::GetFullPath($env:DOTNET_INSTALL_DIR)
+  } else {
+    $installBase = [IO.Path]::GetFullPath((Join-Path $repoRoot $env:DOTNET_INSTALL_DIR))
+  }
+  $installDir = Join-Path $installBase $sdkVersion
 }
 New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 

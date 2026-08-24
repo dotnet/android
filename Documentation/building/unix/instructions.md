@@ -65,9 +65,10 @@ To share the provisioned SDK between multiple worktrees, set
     $ make prepare
 
 The SDK will be installed under
-`$DOTNET_INSTALL_DIR/<sdk-version>/<configuration>`. The override is ignored
-when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is set, so CI builds and local builds
-without `DOTNET_INSTALL_DIR` continue to use `bin/$(Configuration)/dotnet`.
+`$DOTNET_INSTALL_DIR/<sdk-version>`, shared by Debug and Release builds. The
+override is ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is set, so CI
+builds and local builds without `DOTNET_INSTALL_DIR` continue to use
+`bin/$(Configuration)/dotnet`.
 
 Once `make all` or `make jenkins` have completed, your local
 `bin/$(Configuration)/lib/packs` directory will be populated with a

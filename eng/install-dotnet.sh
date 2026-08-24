@@ -7,9 +7,9 @@
 # so global.json does not need a 'tools.dotnet' pin.
 #
 # Inputs (env vars):
-#   CONFIGURATION        - Debug (default) or Release; controls install path.
+#   CONFIGURATION        - Debug (default) or Release; controls checkout output.
 #   DOTNET_INSTALL_DIR   - Optional shared base directory. The SDK is installed
-#                          under <base>/<sdk-version>/<configuration>/.
+#                          under <base>/<sdk-version>/.
 #
 
 set -euo pipefail
@@ -34,7 +34,7 @@ if [[ -n "${DOTNET_INSTALL_DIR:-}" && -z "${TF_BUILD:-}" && -z "${GITHUB_ACTIONS
   fi
   mkdir -p "$install_base"
   install_base="$(cd -P "$install_base" && pwd)"
-  install_dir="$install_base/$sdk_version/$configuration"
+  install_dir="$install_base/$sdk_version"
 else
   install_dir="$repo_root/bin/$configuration/dotnet"
 fi

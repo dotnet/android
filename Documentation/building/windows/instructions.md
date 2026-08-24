@@ -102,9 +102,9 @@ target:
     dotnet msbuild Xamarin.Android.slnx -t:Prepare
 
 The SDK will be installed under
-`$env:DOTNET_INSTALL_DIR\<sdk-version>\<configuration>`. The override is
-ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is set, so CI builds and
-local builds without `DOTNET_INSTALL_DIR` continue to use
+`$env:DOTNET_INSTALL_DIR\<sdk-version>`, shared by Debug and Release builds.
+The override is ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is set, so
+CI builds and local builds without `DOTNET_INSTALL_DIR` continue to use
 `bin\$(Configuration)\dotnet`.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
