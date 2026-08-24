@@ -289,16 +289,16 @@ sealed class PEAssemblyBuilder
 		foreach (var group in valuesBySize) {
 			var sizedType = GetOrCreateSizedType (group.Key);
 			foreach (string value in group.Value) {
-				AddUtf8Field (value, sizedType);
+				AddUtf8Field (value, group.Key, sizedType);
 			}
 		}
 	}
 
-	void AddUtf8Field (string value, TypeDefinitionHandle sizedType)
+	void AddUtf8Field (string value, int size, TypeDefinitionHandle sizedType)
 	{
 		// Encode to null-terminated UTF-8 (all JNI names/signatures are ASCII).
-		int byteCount = System.Text.Encoding.UTF8.GetByteCount (value);
-		var bytes = new byte [byteCount + 1];
+		int byteCount = size - 1;
+		var bytes = new byte [size];
 		System.Text.Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
 		// bytes[byteCount] is already 0 (null terminator)
 
