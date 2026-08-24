@@ -848,7 +848,7 @@ namespace Xamarin.Android.Build.Tests {
 
 				Assert.AreEqual (
 					useListener,
-					AssemblyContainsTypeNamed (linkedBinding, "IOnChangedListenerImplementor"),
+					AssemblyContainsType (linkedBinding, "Com.Example.Listener.Widget/IOnChangedListenerImplementor"),
 					$"{app.ProjectName} linked managed output should {(useListener ? "retain" : "trim")} the listener implementor.");
 				Assert.AreEqual (
 					useListener,
@@ -926,8 +926,8 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsTrue (builder.Build (app), "External Java roots build should have succeeded.");
 
 			var linkedApp = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", $"{app.ProjectName}.dll"));
-			Assert.IsTrue (AssemblyContainsTypeNamed (linkedApp, "LayoutOnlyView"), "The XML-only custom view should survive linking.");
-			Assert.IsFalse (AssemblyContainsTypeNamed (linkedApp, "UnusedView"), "An unreferenced ACW should be trimmed.");
+			Assert.IsTrue (AssemblyContainsType (linkedApp, "ExternalJavaRoots.LayoutOnlyView"), "The XML-only custom view should survive linking.");
+			Assert.IsFalse (AssemblyContainsType (linkedApp, "ExternalJavaRoots.UnusedView"), "An unreferenced ACW should be trimmed.");
 
 			var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "linked-java"));
 			Assert.IsNotEmpty (Directory.GetFiles (javaDirectory, "LayoutOnlyView.java", SearchOption.AllDirectories));
@@ -1175,20 +1175,20 @@ namespace UnnamedProject {
 			Assert.IsNotEmpty (javaFiles, "At least one trimmable JCW Java source file should be generated.");
 		}
 
-		static bool AssemblyContainsTypeNamed (string assemblyPath, string typeName)
+		static bool AssemblyContainsType (string assemblyPath, string typeFullName)
 		{
 			if (!File.Exists (assemblyPath)) {
 				return false;
 			}
 
 			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
-			return ContainsTypeNamed (assembly.MainModule.Types, typeName);
+			return ContainsType (assembly.MainModule.Types, typeFullName);
 		}
 
-		static bool ContainsTypeNamed (IEnumerable<TypeDefinition> types, string typeName)
+		static bool ContainsType (IEnumerable<TypeDefinition> types, string typeFullName)
 		{
 			foreach (var type in types) {
-				if (type.Name == typeName || ContainsTypeNamed (type.NestedTypes, typeName)) {
+				if (type.FullName == typeFullName || ContainsType (type.NestedTypes, typeFullName)) {
 					return true;
 				}
 			}
