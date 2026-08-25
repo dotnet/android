@@ -16,16 +16,14 @@ namespace xamarin::android {
 
 		// Handle p/invokes of the form [DllImport ("liblog")] or [DllImport ("log")]
 		if (!Util::path_has_directory_components (library_name)) {
-			size_t name_length = Util::get_dso_name_length (library_name, true);
-			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (name_length, 1uz);
 			char local_buffer [Util::LocalPathBufferSize];
-			char *short_library_name = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-			Util::format_dso_name (library_name, true, short_library_name, allocation_size);
+			char *heap_buffer;
+			const char *short_library_name = Util::format_dso_name (local_buffer, heap_buffer, library_name, true);
 
-			std::string_view short_library_name_view { short_library_name, name_length };
+			std::string_view short_library_name_view { short_library_name };
 			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name_view);
 			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name_view, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
-			Helpers::free_temporary_buffer (short_library_name, local_buffer);
+			Util::free_if_used (heap_buffer);
 		}
 
 		if (lib_handle == nullptr) {
