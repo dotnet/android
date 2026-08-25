@@ -332,10 +332,11 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
-		template<size_t Size>
-		static auto join_paths (std::array<char, Size>& buffer, std::string_view first, std::string_view second) noexcept -> std::optional<std::string_view>
+		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> std::optional<std::string_view>
 		{
-			static_assert (Size > 0);
+			if (buffer == nullptr || buffer_size == 0) {
+				return std::nullopt;
+			}
 
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
 			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
@@ -345,11 +346,11 @@ namespace xamarin::android {
 				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 			}
 
-			if (path_length >= Size) {
+			if (path_length >= buffer_size) {
 				return std::nullopt;
 			}
 
-			char *destination = buffer.data ();
+			char *destination = buffer;
 			if (!first.empty ()) {
 				memcpy (destination, first.data (), first.length ());
 				destination += first.length ();
@@ -363,7 +364,7 @@ namespace xamarin::android {
 			}
 			buffer [path_length] = '\0';
 
-			return std::string_view { buffer.data (), path_length };
+			return std::string_view { buffer, path_length };
 		}
 
 	private:
