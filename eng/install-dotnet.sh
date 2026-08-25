@@ -8,8 +8,8 @@
 #
 # Inputs (env vars):
 #   CONFIGURATION        - Debug (default) or Release; controls checkout output.
-#   DOTNET_INSTALL_DIR   - Optional shared base directory. The SDK is installed
-#                          under <base>/<sdk-version>/.
+#   XA_DOTNET_SHARED_INSTALL_BASE - Optional shared base directory. The SDK is
+#                                   installed under <base>/<sdk-version>/.
 #
 
 set -euo pipefail
@@ -26,11 +26,11 @@ if [[ -z "$sdk_version" ]]; then
   exit 1
 fi
 
-if [[ -n "${DOTNET_INSTALL_DIR:-}" && -z "${TF_BUILD:-}" && -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" ]]; then
-  if [[ "$DOTNET_INSTALL_DIR" = /* ]]; then
-    install_base="$DOTNET_INSTALL_DIR"
+if [[ -n "${XA_DOTNET_SHARED_INSTALL_BASE:-}" && -z "${TF_BUILD:-}" && -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" ]]; then
+  if [[ "$XA_DOTNET_SHARED_INSTALL_BASE" = /* ]]; then
+    install_base="$XA_DOTNET_SHARED_INSTALL_BASE"
   else
-    install_base="$repo_root/$DOTNET_INSTALL_DIR"
+    install_base="$repo_root/$XA_DOTNET_SHARED_INSTALL_BASE"
   fi
   mkdir -p "$install_base"
   install_base="$(cd -P "$install_base" && pwd)"

@@ -7,8 +7,8 @@
   kept up to date by darc when Microsoft.NET.Sdk flows from dotnet/dotnet),
   so global.json does not need a 'tools.dotnet' pin.
 
-  Set DOTNET_INSTALL_DIR to a shared base directory to install the SDK under
-  <base>\<sdk-version>\.
+  Set XA_DOTNET_SHARED_INSTALL_BASE to a shared base directory to install the
+  SDK under <base>\<sdk-version>\.
 #>
 [CmdletBinding(PositionalBinding=$false)]
 param(
@@ -29,7 +29,7 @@ if ($null -eq $sdkNode -or [string]::IsNullOrWhiteSpace($sdkNode.InnerText)) {
 }
 $sdkVersion = $sdkNode.InnerText
 
-$useSharedInstall = -not [string]::IsNullOrWhiteSpace($env:DOTNET_INSTALL_DIR) -and
+$useSharedInstall = -not [string]::IsNullOrWhiteSpace($env:XA_DOTNET_SHARED_INSTALL_BASE) -and
   [string]::IsNullOrEmpty($env:TF_BUILD) -and
   [string]::IsNullOrEmpty($env:GITHUB_ACTIONS) -and
   [string]::IsNullOrEmpty($env:CI)
@@ -37,10 +37,10 @@ $useSharedInstall = -not [string]::IsNullOrWhiteSpace($env:DOTNET_INSTALL_DIR) -
 if (-not $useSharedInstall) {
   $installDir = Join-Path $repoRoot "bin\$configuration\dotnet"
 } else {
-  if ([IO.Path]::IsPathRooted($env:DOTNET_INSTALL_DIR)) {
-    $installBase = [IO.Path]::GetFullPath($env:DOTNET_INSTALL_DIR)
+  if ([IO.Path]::IsPathRooted($env:XA_DOTNET_SHARED_INSTALL_BASE)) {
+    $installBase = [IO.Path]::GetFullPath($env:XA_DOTNET_SHARED_INSTALL_BASE)
   } else {
-    $installBase = [IO.Path]::GetFullPath((Join-Path $repoRoot $env:DOTNET_INSTALL_DIR))
+    $installBase = [IO.Path]::GetFullPath((Join-Path $repoRoot $env:XA_DOTNET_SHARED_INSTALL_BASE))
   }
   $installDir = Join-Path $installBase $sdkVersion
 }

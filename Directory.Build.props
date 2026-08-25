@@ -16,9 +16,9 @@
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
     <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
     <PrepTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\xa-prep-tasks.dll</PrepTasksAssembly>
-    <_DotNetInstallBase Condition=" '$(DOTNET_INSTALL_DIR)' != '' and '$(TF_BUILD)' == '' and '$(GITHUB_ACTIONS)' == '' and '$(CI)' == '' ">$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', '$(DOTNET_INSTALL_DIR)'))</_DotNetInstallBase>
-    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' and '$(_DotNetInstallBase)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(_DotNetInstallBase)\$(MicrosoftNETSdkPackageVersion)'))</DotNetPreviewPath>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' and Exists('$(BuildOutputDirectory)dotnet-install-location.txt') ">$([System.IO.File]::ReadAllText('$(BuildOutputDirectory)dotnet-install-location.txt').Trim())</DotNetPreviewPath>
+    <_DotNetSharedInstallBase Condition=" '$(XA_DOTNET_SHARED_INSTALL_BASE)' != '' and '$(TF_BUILD)' == '' and '$(GITHUB_ACTIONS)' == '' and '$(CI)' == '' ">$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', '$(XA_DOTNET_SHARED_INSTALL_BASE)'))</_DotNetSharedInstallBase>
+    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' and '$(_DotNetSharedInstallBase)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(_DotNetSharedInstallBase)\$(MicrosoftNETSdkPackageVersion)'))</DotNetPreviewPath>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and Exists('$(DotNetPreviewPath)') ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">dotnet</DotNetPreviewTool>

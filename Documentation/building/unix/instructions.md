@@ -59,16 +59,17 @@ on Windows, many of the concepts should still apply:
 `bin/$(Configuration)/dotnet`.
 
 To share the provisioned SDK between multiple worktrees, set
-`DOTNET_INSTALL_DIR` to a common base directory before running `make prepare`:
+`XA_DOTNET_SHARED_INSTALL_BASE` to a common base directory before running
+`make prepare`:
 
-    $ export DOTNET_INSTALL_DIR="$HOME/android-dotnet-sdk"
+    $ export XA_DOTNET_SHARED_INSTALL_BASE="$HOME/android-dotnet-sdk"
     $ make prepare
 
 The SDK will be installed under
-`$DOTNET_INSTALL_DIR/<sdk-version>`, shared by Debug and Release builds. The
-override is ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is set, so CI
-builds and local builds without `DOTNET_INSTALL_DIR` continue to use
-`bin/$(Configuration)/dotnet`.
+`$XA_DOTNET_SHARED_INSTALL_BASE/<sdk-version>`, shared by Debug and Release
+builds. The override is ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is
+set, so CI builds and local builds without `XA_DOTNET_SHARED_INSTALL_BASE`
+continue to use `bin/$(Configuration)/dotnet`.
 
 Once `make all` or `make jenkins` have completed, your local
 `bin/$(Configuration)/lib/packs` directory will be populated with a
