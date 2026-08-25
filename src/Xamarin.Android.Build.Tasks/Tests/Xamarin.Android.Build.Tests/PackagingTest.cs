@@ -112,7 +112,7 @@ namespace Xamarin.Android.Build.Tests
       AfterTargets="_PrepareAssemblies"
       Condition=" '$(UseMonoRuntime)' == 'true' ">
     <ItemGroup>
-      <_ResolvedAssemblies Include="@(_AndroidResolvedSatellitePaths)">
+      <_ResolvedAssemblies Include="@(ReferenceSatellitePaths)">
         <_InjectedPackagedSatellite>true</_InjectedPackagedSatellite>
       </_ResolvedAssemblies>
     </ItemGroup>
