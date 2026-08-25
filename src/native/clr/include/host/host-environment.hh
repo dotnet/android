@@ -9,7 +9,6 @@
 
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/logger.hh>
-#include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
 struct AppEnvironmentVariable;
@@ -91,7 +90,7 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void create_xdg_directory (jstring_wrapper &home, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 		{
-			char dir_buffer [SENSIBLE_PATH_MAX];
+			char dir_buffer [Constants::SENSIBLE_PATH_MAX];
 			if (Util::join_paths (dir_buffer, sizeof (dir_buffer), home.get_string_view (), relative_path) < 0) {
 				log_warnf (LOG_DEFAULT, "Failed to create XDG directory: path is too long");
 				return;
