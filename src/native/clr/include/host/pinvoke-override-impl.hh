@@ -15,16 +15,9 @@ namespace xamarin::android {
 		void *lib_handle = nullptr;
 
 		// Handle p/invokes of the form [DllImport ("liblog")] or [DllImport ("log")]
-		// TODO: try modifying the name to contain both the `log` prefix and the `.so` suffix
 		dynamic_local_path_string short_library_name;
 		if (!Util::path_has_directory_components (library_name)) {
-			if (!library_name.starts_with (Constants::DSO_PREFIX)) {
-				short_library_name.append (Constants::DSO_PREFIX);
-			}
-			short_library_name.append (library_name);
-			if (!short_library_name.ends_with (Constants::dso_suffix)) {
-				short_library_name.append (Constants::dso_suffix);
-			}
+			Util::append_dso_name (short_library_name, library_name, true);
 
 			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name.get ());
 			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name.get (), microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);

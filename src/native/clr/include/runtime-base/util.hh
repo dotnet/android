@@ -359,6 +359,19 @@ namespace xamarin::android {
 			return heap_buffer;
 		}
 
+		template<size_t MaxStackSpace, detail::PathBuffer<MaxStackSpace> TBuffer>
+		static void append_dso_name (TBuffer& buf, std::string_view const& name, bool add_lib_prefix) noexcept
+		{
+			if (add_lib_prefix && !name.starts_with (Constants::DSO_PREFIX)) {
+				buf.append (Constants::DSO_PREFIX);
+			}
+
+			buf.append (name);
+			if (!name.ends_with (Constants::dso_suffix)) {
+				buf.append (Constants::dso_suffix);
+			}
+		}
+
 	private:
 		static inline int page_size = getpagesize ();
 	};
