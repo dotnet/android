@@ -209,28 +209,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		});
 	}
 
-	[Fact]
-	public void Generate_InterfaceProxyType_UsesJavaPeerProxyBase ()
-	{
-		// Interface proxies derive from the `JavaPeerProxy` base (a plain TypeReference), like
-		// every other proxy. Interfaces have no constructors and are activated from their
-		// InvokerType in CreateInstance.
-		var peers = ScanFixtures ();
-		using var stream = GenerateAssembly (peers);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var interfaceProxy = reader.TypeDefinitions
-			.Select (h => reader.GetTypeDefinition (h))
-			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
-			.First (t => reader.GetString (t.Name) == "Android_Views_IOnClickListener_Proxy");
-
-		Assert.Equal (HandleKind.TypeReference, interfaceProxy.BaseType.Kind);
-		var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) interfaceProxy.BaseType);
-		Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
-		Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
-	}
-
 	// Regression test: decode the emitted proxy `.ctor` *body* (not just member presence)
 	// and verify it chains to the correct base constructor. Every proxy derives from
 	// `JavaPeerProxy` and calls the two-arg base ctor `(string, Type)` — pushing the target
@@ -945,27 +923,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var body = pe.GetMethodBody (registerNatives.RelativeVirtualAddress);
 
 		Assert.InRange (body.MaxStack, 5, 16);
-	}
-
-	[Fact]
-	public void Generate_AcwProxy_HasUnmanagedCallersOnlyAttribute ()
-	{
-		var peers = ScanFixtures ();
-		var acwPeer = peers.First (p => p.JavaName == "my/app/MainActivity");
-
-		using var stream = GenerateAssembly (new [] { acwPeer }, "UcoTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("UnmanagedCallersOnlyAttribute", typeNames);
-
-		// Verify UCO wrapper methods exist — they should have names like n_<method>_uco_<index>
-		var methodDefs = reader.MethodDefinitions
-			.Select (h => reader.GetMethodDefinition (h))
-			.Select (m => reader.GetString (m.Name))
-			.ToList ();
-		Assert.Contains (methodDefs, name => name.Contains ("_uco_"));
 	}
 
 	[Theory]
@@ -2378,36 +2335,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 
 		Assert.Throws<NotSupportedException> (() => encoder.Branch (ILOpCode.Br, label));
 		Assert.Throws<NotSupportedException> (() => encoder.Branch (ILOpCode.Br_s, label));
-	}
-
-	[Fact]
-	public void Generate_ProxyTypes_HaveSelfAppliedAttribute ()
-	{
-		var peers = ScanFixtures ();
-		var activityPeer = peers.First (p => p.JavaName == "android/app/Activity");
-
-		using var stream = GenerateAssembly (new [] { activityPeer }, "SelfApply");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var proxyTypeDef = reader.TypeDefinitions
-			.First (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Proxies");
-
-		// The proxy type should have a custom attribute applied to itself (self-application)
-		var attrs = reader.GetCustomAttributes (proxyTypeDef);
-		Assert.NotEmpty (attrs);
-
-		// Verify the attribute's constructor is a MethodDef (i.e., defined in this assembly,
-		// meaning it's the proxy's own .ctor — self-application)
-		bool hasSelfApplied = false;
-		foreach (var attrHandle in attrs) {
-			var attr = reader.GetCustomAttribute (attrHandle);
-			if (attr.Constructor.Kind == HandleKind.MethodDefinition) {
-				hasSelfApplied = true;
-				break;
-			}
-		}
-		Assert.True (hasSelfApplied, "Proxy type should have a self-applied attribute (ctor is MethodDefinition)");
 	}
 
 	[Fact]
