@@ -73,11 +73,11 @@ void TemporaryPeerMap::initialize_on_runtime_init (JNIEnv *env, jclass runtimeCl
 	abort_if_invalid_pointer_argument (env, "env");
 	abort_if_invalid_pointer_argument (runtimeClass, "runtimeClass");
 
-	peer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_GCUserPeer", true);
-	abort_unless (peer_class != nullptr, "Failed to load mono.android.GCUserPeer!");
+	GCUserPeer_class = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_GCUserPeer", true);
+	abort_unless (GCUserPeer_class != nullptr, "Failed to load mono.android.GCUserPeer!");
 
-	peer_ctor = env->GetMethodID (peer_class, "<init>", "()V");
-	abort_unless (peer_ctor != nullptr, "Failed to load mono.android.GCUserPeer constructor!");
+	GCUserPeer_ctor = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
+	abort_unless (GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer constructor!");
 }
 
 void TemporaryPeerMap::add (StronglyConnectedComponent &scc) noexcept
@@ -85,7 +85,7 @@ void TemporaryPeerMap::add (StronglyConnectedComponent &scc) noexcept
 	abort_unless (peers != nullptr, "Temporary peer map must not be null");
 	abort_unless (count < capacity, "Temporary peer map must not be full");
 
-	jobject temporary_peer = env->NewObject (peer_class, peer_ctor);
+	jobject temporary_peer = env->NewObject (GCUserPeer_class, GCUserPeer_ctor);
 	if (temporary_peer == nullptr) [[unlikely]] {
 		constexpr std::string_view failure = "Failed to create a temporary peer during GC bridge processing"sv;
 		if (env->ExceptionCheck ()) {

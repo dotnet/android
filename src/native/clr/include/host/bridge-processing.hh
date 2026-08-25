@@ -48,8 +48,8 @@ private:
 	static size_t encode_temporary_peer_index (size_t index) noexcept;
 	static size_t decode_temporary_peer_index (size_t count) noexcept;
 
-	static inline jclass peer_class = nullptr;
-	static inline jmethodID peer_ctor = nullptr;
+	static inline jclass GCUserPeer_class = nullptr;
+	static inline jmethodID GCUserPeer_ctor = nullptr;
 
 	JNIEnv *env;
 	MarkCrossReferencesArgs *cross_refs;
