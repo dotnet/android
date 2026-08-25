@@ -120,13 +120,13 @@ Logger::init_reference_logging (std::string_view const& override_dir) noexcept
 }
 
 [[gnu::always_inline]] bool
-Logger::set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name) noexcept
+Logger::set_category (std::string_view const& name, std::string_view const& arg, unsigned int entry, bool arg_starts_with_name) noexcept
 {
 	if ((log_categories & entry) == entry) {
 		return false;
 	}
 
-	if (arg_starts_with_name ? arg.starts_with (name) : arg.equal (name)) {
+	if (arg_starts_with_name ? arg.starts_with (name) : arg == name) {
 		log_categories |= entry;
 		return true;
 	}
@@ -139,16 +139,25 @@ Logger::init_logging_categories () noexcept
 {
 	_log_timing_categories = LogTimingCategories::Default;
 
-	dynamic_local_property_string value;
-	if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_LOG_PROPERTY, value) == 0) {
+	char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
+	int value_length = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_LOG_PROPERTY, value, sizeof (value));
+	if (value_length <= 0) {
 		return;
 	}
 
-	string_segment param;
-	while (value.next_token (',', param)) {
+	std::string_view remaining { value, static_cast<size_t>(value_length) };
+	while (!remaining.empty ()) {
+		size_t separator = remaining.find (',');
+		std::string_view param = remaining.substr (0, separator);
+		if (separator == std::string_view::npos) {
+			remaining = {};
+		} else {
+			remaining.remove_prefix (separator + 1);
+		}
+
 		constexpr std::string_view CAT_ALL { "all" };
 
-		if (param.equal (CAT_ALL)) {
+		if (param == CAT_ALL) {
 			log_categories = 0xFFFFFFFF;
 			break;
 		}
@@ -189,21 +198,19 @@ Logger::init_logging_categories () noexcept
 			continue;
 		}
 
-		auto get_log_file_name = [](std::string_view const& file_kind, string_segment const& segment, size_t offset) -> std::string_view {
-			auto file_name = segment.at (offset);
-
-			if (!file_name.has_value ()) {
+		auto get_log_file_name = [](std::string_view const& file_kind, std::string_view const& segment, size_t offset) -> std::string_view {
+			if (offset >= segment.length ()) {
 				log_warnf (
 					LOG_DEFAULT,
 					"Unable to set path to %.*s log file: %s",
 					static_cast<int>(file_kind.length ()),
 					file_kind.data (),
-					to_string (file_name.error ())
+					"no file name specified"
 				);
 				return {};
 			}
 
-			return { file_name.value (), segment.length () - offset };
+			return segment.substr (offset);
 		};
 
 		constexpr std::string_view CAT_GREF_EQUALS { "gref=" };
@@ -247,7 +254,6 @@ Logger::init_logging_categories () noexcept
 		if (param.starts_with ("timing=bare")) {
 			log_categories |= LOG_TIMING;
 			_log_timing_categories |= LogTimingCategories::Bare;
-			continue;
 		}
 	}
 

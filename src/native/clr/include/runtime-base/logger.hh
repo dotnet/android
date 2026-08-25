@@ -54,7 +54,7 @@ namespace xamarin::android {
 		static auto open_file (LogCategories category, std::string_view const& custom_path, std::string_view const& override_dir, std::string_view const& fallback_filename) noexcept -> FILE*;
 
 	private:
-		static bool set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name = false) noexcept;
+			static bool set_category (std::string_view const& name, std::string_view const& arg, unsigned int entry, bool arg_starts_with_name = false) noexcept;
 
 	private:
 		static inline LogTimingCategories _log_timing_categories;

@@ -30,8 +30,7 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	}
 
 	char value [Constants::PROPERTY_VALUE_BUFFER_LEN];
-	int value_length = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value);
-	if (value_length > 0) {
+	if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value, sizeof (value)) > 0) {
 		internal_timing.parse_options (value);
 	}
 
@@ -61,7 +60,7 @@ void FastTiming::parse_options (char *value) noexcept
 			errno = 0;
 			unsigned long long parsed_duration = strtoull (duration, &end, 10);
 			if (end == duration || *end != '\0' || errno == ERANGE || parsed_duration > std::numeric_limits<size_t>::max ()) {
-				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param);
+				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '{}'"sv, param);
 				duration_ms = default_duration_milliseconds;
 			} else {
 				duration_ms = static_cast<size_t>(parsed_duration);
