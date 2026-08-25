@@ -1146,7 +1146,7 @@ add_assembly_load_timing_info (std::string_view prefix, const char *assembly_nam
 
 	abort_unless (result >= 0, "Failed to format assembly load timing information using the required capacity");
 	internal_timing.add_more_info (more_info, static_cast<size_t>(result));
-	std::free (heap_buffer);
+	Util::free_if_used (heap_buffer);
 }
 
 inline void
