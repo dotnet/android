@@ -174,10 +174,10 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
-	char local_buffer [Constants::SENSIBLE_PATH_MAX];
+	char stack_buffer [Constants::SENSIBLE_PATH_MAX];
 	char *heap_buffer = nullptr;
-	char *full_type_name = local_buffer;
-	ssize_t result = format_managed_type_name (typeName, assemblyFullName, full_type_name, sizeof (local_buffer));
+	char *full_type_name = stack_buffer;
+	ssize_t result = format_managed_type_name (typeName, assemblyFullName, full_type_name, sizeof (stack_buffer));
 	if (result < 0) {
 		size_t required_capacity = static_cast<size_t>(-result);
 		heap_buffer = static_cast<char*> (std::malloc (required_capacity));
@@ -189,7 +189,7 @@ auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemb
 
 	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 	const char *mapped_name = index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
-	Util::free_if_used (heap_buffer);
+	std::free (heap_buffer);
 
 	return mapped_name;
 }
