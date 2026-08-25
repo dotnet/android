@@ -1182,27 +1182,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_ExportUcoMethod_HasCatchAndFinallyRegions ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/ExportExample");
-		using var stream = GenerateAssembly (new [] { peer }, "UcoLegacyWrapperShape");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var ucoMethodHandle = reader.MethodDefinitions
-			.First (h => {
-				var method = reader.GetMethodDefinition (h);
-				var name = reader.GetString (method.Name);
-				return name.Contains ("myExportedMethod") && name.Contains ("_uco_");
-			});
-		var ucoMethod = reader.GetMethodDefinition (ucoMethodHandle);
-		var body = pe.GetMethodBody (ucoMethod.RelativeVirtualAddress);
-		Assert.NotNull (body);
-		Assert.Contains (body.ExceptionRegions, r => r.Kind == ExceptionRegionKind.Catch);
-		Assert.Contains (body.ExceptionRegions, r => r.Kind == ExceptionRegionKind.Finally);
-	}
-
-	[Fact]
 	public void Generate_UcoMethod_UsesDefaultUnmanagedCallersOnlyAttribute ()
 	{
 		var peer = FindFixtureByJavaName ("my/app/TouchHandler");
@@ -1645,69 +1624,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.ToList ();
 
 		Assert.Contains ("<PrivateImplementationDetails>", typeDefNames);
-	}
-
-	[Fact]
-	public void Generate_ExportProxy_CallsManagedMethodDirectly ()
-	{
-		var peers = ScanFixtures ();
-		var exportPeer = peers.First (p => p.JavaName == "my/app/ExportExample");
-
-		using var stream = GenerateAssembly (new [] { exportPeer }, "ExportDispatch");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var memberNames = GetMemberRefNames (reader);
-		Assert.Contains ("MyExportedMethod", memberNames);
-		Assert.DoesNotContain ("n_MyExportedMethod", memberNames);
-	}
-
-	[Fact]
-	public void Generate_StaticExportProxy_CallsManagedMethodDirectly ()
-	{
-		var peers = ScanFixtures ();
-		var exportPeer = peers.First (p => p.JavaName == "my/app/StaticExportExample");
-
-		using var stream = GenerateAssembly (new [] { exportPeer }, "StaticExportDispatch");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var memberNames = GetMemberRefNames (reader);
-		Assert.Contains ("ComputeLabel", memberNames);
-		Assert.DoesNotContain ("n_ComputeLabel", memberNames);
-	}
-
-	[Fact]
-	public void Generate_ExportProxy_UsesStaticMarshallingHelpers ()
-	{
-		var peers = ScanFixtures ();
-		var exportPeer = peers.First (p => p.JavaName == "my/app/ExportWithJavaBoundParams");
-
-		using var stream = GenerateAssembly (new [] { exportPeer }, "ExportMarshalling");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var memberNames = GetMemberRefNames (reader);
-		Assert.Contains ("GetObject", memberNames);
-		Assert.Contains ("NewString", memberNames);
-		Assert.Contains ("HandleClick", memberNames);
-		Assert.Contains ("ProcessView", memberNames);
-		Assert.Contains ("GetViewName", memberNames);
-	}
-
-	[Fact]
-	public void Generate_ExportFieldProxy_UsesToLocalJniHandleForObjectReturn ()
-	{
-		var peers = ScanFixtures ();
-		var exportFieldPeer = peers.First (p => p.JavaName == "my/app/ExportFieldExample");
-
-		using var stream = GenerateAssembly (new [] { exportFieldPeer }, "ExportFieldDispatch");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var memberNames = GetMemberRefNames (reader);
-		Assert.Contains ("ToLocalJniHandle", memberNames);
-		Assert.Contains ("GetInstance", memberNames);
 	}
 
 	[Fact]

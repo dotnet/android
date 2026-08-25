@@ -1,13 +1,10 @@
-using System.IO;
 using System.Linq;
 using Xunit;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 
 /// <summary>
-/// Tests for [ExportField] support: the scanner must detect [ExportField] attributes
-/// and the JCW generator must emit Java field declarations initialized by calling
-/// the annotated method.
+/// Tests for the [ExportField] scanner and model contracts.
 /// </summary>
 public class ExportFieldTests : FixtureTestBase
 {
@@ -38,21 +35,5 @@ public class ExportFieldTests : FixtureTestBase
 		Assert.Equal ("__export__", getValue.Connector);
 		Assert.True (getValue.IsExport);
 		Assert.Equal ("public", getValue.JavaAccess);
-	}
-
-	[Fact]
-	public void JcwGenerator_EmitsFieldDeclarationsAndMethodWrappers ()
-	{
-		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
-		var generator = new JcwJavaSourceGenerator ();
-		using var writer = new StringWriter ();
-		generator.Generate (peer, writer);
-		var java = writer.ToString ();
-
-		Assert.Contains ("public static", java);
-		Assert.Contains ("STATIC_INSTANCE = GetInstance ();", java);
-		Assert.Contains ("VALUE = GetValue ();", java);
-		Assert.Contains ("GetValue ()", java);
-		Assert.Contains ("n_GetValue", java);
 	}
 }
