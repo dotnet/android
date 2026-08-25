@@ -357,12 +357,13 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 
 	for (std::string const& dir : directories) {
 		char stack_buffer [Util::LocalPathBufferSize];
-		char *heap_buffer;
-		const char *full_path = get_full_dso_path (dir, dso_name, stack_buffer, sizeof (stack_buffer), heap_buffer);
+		char *full_path = get_full_dso_path (dir, dso_name, stack_buffer, sizeof (stack_buffer));
 
 		std::string_view full_path_view { full_path };
 		void *handle = DsoLoader::load (full_path_view, dl_flags, is_jni);
-		std::free (heap_buffer);
+		if (full_path != stack_buffer) {
+			std::free (full_path);
+		}
 		if (handle != nullptr) {
 			return handle;
 		}
