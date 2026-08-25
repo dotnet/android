@@ -1,4 +1,3 @@
-#include <array>
 #include <limits>
 #include <string_view>
 
@@ -258,18 +257,18 @@ AndroidSystem::setup_environment () noexcept
 #if defined(DEBUG)
 	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
-	std::array<char, Constants::SENSIBLE_PATH_MAX> env_override_file_buffer;
+	char env_override_file_buffer [Constants::SENSIBLE_PATH_MAX];
 	ssize_t env_override_file_length = Util::join_paths (
-		env_override_file_buffer.data (),
-		env_override_file_buffer.size (),
+		env_override_file_buffer,
+		sizeof (env_override_file_buffer),
 		primary_override_dir,
 		Constants::OVERRIDE_ENVIRONMENT_FILE_NAME
 	);
 	if (env_override_file_length < 0) {
 		log_warn (LOG_DEFAULT, "Environment override file path is too long");
-	} else if (Util::file_exists (env_override_file_buffer.data ())) {
-		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file_buffer.data ());
-		setup_environment_from_override_file (env_override_file_buffer.data ());
+	} else if (Util::file_exists (env_override_file_buffer)) {
+		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file_buffer);
+		setup_environment_from_override_file (env_override_file_buffer);
 	}
 #endif // def DEBUG
 }
@@ -278,10 +277,10 @@ void
 AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
-	std::array<char, Constants::SENSIBLE_PATH_MAX> libmonodroid_path_buffer;
+	char libmonodroid_path_buffer [Constants::SENSIBLE_PATH_MAX];
 	ssize_t libmonodroid_path_length = Util::join_paths (
-		libmonodroid_path_buffer.data (),
-		libmonodroid_path_buffer.size (),
+		libmonodroid_path_buffer,
+		sizeof (libmonodroid_path_buffer),
 		appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view (),
 		"libmonodroid.so"sv
 	);
@@ -291,7 +290,7 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 		return;
 	}
 
-	const char *libmonodroid_path = libmonodroid_path_buffer.data ();
+	const char *libmonodroid_path = libmonodroid_path_buffer;
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to {}", libmonodroid_path);
 	if (!Util::file_exists (libmonodroid_path)) {
 		log_debug (LOG_ASSEMBLY, "{} not found, assuming application/android:extractNativeLibs == false", libmonodroid_path);

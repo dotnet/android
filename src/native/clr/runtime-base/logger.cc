@@ -1,4 +1,3 @@
-#include <array>
 #include <cerrno>
 #include <cstdarg>
 #include <cstdlib>
@@ -78,14 +77,14 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 	}
 
 	Util::create_public_directory (override_dir);
-	std::array<char, Constants::SENSIBLE_PATH_MAX> path_buffer;
-	ssize_t path_length = Util::join_paths (path_buffer.data (), path_buffer.size (), override_dir, fallback_filename);
+	char path_buffer [Constants::SENSIBLE_PATH_MAX];
+	ssize_t path_length = Util::join_paths (path_buffer, sizeof (path_buffer), override_dir, fallback_filename);
 	if (path_length < 0) {
 		log_warnf (category, "Unable to open fallback log file: path is too long");
 		return nullptr;
 	}
 
-	std::string_view path_view { path_buffer.data (), static_cast<size_t>(path_length) };
+	std::string_view path_view { path_buffer, static_cast<size_t>(path_length) };
 	return log_and_return (open_file (path_view), path_view);
 }
 
