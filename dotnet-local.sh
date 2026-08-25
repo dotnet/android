@@ -5,7 +5,7 @@ sdk_version="$(sed -n 's|.*<MicrosoftNETSdkPackageVersion>\([^<]*\)</MicrosoftNE
 for config in Release Debug ; do
     XA_USING_SHARED_DOTNET=false
     install_location="${FULLROOT}/bin/${config}/dotnet-install-location.txt"
-    if [[ -f "${install_location}" ]] ; then
+    if [[ -z "${TF_BUILD:-}" && -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" && -f "${install_location}" ]] ; then
         IFS= read -r XA_DOTNET_ROOT < "${install_location}"
         if [[ -x "${XA_DOTNET_ROOT}/dotnet" && -d "${XA_DOTNET_ROOT}/sdk/${sdk_version}" ]] ; then
             XA_USING_SHARED_DOTNET=true
