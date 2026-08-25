@@ -317,6 +317,10 @@ The term "lock file" comes from NuGet. For example, search for "UnauthorizedLock
     <value>Il n’est pas recommandé d’utiliser le déploiement rapide et la compilation ReadyToRun en même temps. Utilisez le déploiement rapide pour les configurations Debug et la compilation ReadyToRun pour les configurations Release.</value>
     <comment>The following are literal names and should not be translated: ReadyToRun, Debug, Release.</comment>
   </data>
+  <data name="XA0119_ReadyToRunWithoutTrimming" xml:space="preserve">
+    <value>ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.</value>
+    <comment>The following are literal names and should not be translated: ReadyToRun, 'PublishTrimmed', 'true'.</comment>
+  </data>
   <data name="XA0121" xml:space="preserve">
     <value>L'assembly '{0}' utilise '[assembly : {1}]', qui n'est plus pris en charge. Utilisez une version plus récente de ce package NuGet ou notifiez l'auteur de la bibliothèque.</value>
     <comment>The following are literal names and should not be translated: [assembly: {1}], NuGet
