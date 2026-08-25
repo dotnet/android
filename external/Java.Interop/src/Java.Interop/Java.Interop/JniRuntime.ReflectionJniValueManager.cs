@@ -78,6 +78,9 @@ namespace Java.Interop
 
 				peer.SetPeerReference (newRef);
 				peer.SetJniIdentityHashCode (JniSystem.IdentityHashCode (newRef));
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+					EmitJavaPeerCreatedEvent (peer, newRef);
+				}
 
 				var o = Runtime.ObjectReferenceManager;
 				if (o.LogGlobalReferenceMessages) {
@@ -92,6 +95,27 @@ namespace Java.Interop
 				if ((options & DoNotRegisterTarget) != DoNotRegisterTarget) {
 					AddPeer (peer);
 				}
+			}
+
+			void EmitManagedPeerCreatedEvent (IJavaPeerable peer)
+			{
+				JniObjectReference reference = peer.PeerReference;
+				var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+				InteropEventSource.ManagedPeerCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer));
+			}
+
+			void EmitJavaPeerCreatedEvent (IJavaPeerable peer, JniObjectReference reference)
+			{
+				var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+				InteropEventSource.JavaPeerCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer));
 			}
 
 			// This base method implementation is NOT reachable in trimmable typemap - it is featureswitch guarded
@@ -143,6 +167,9 @@ namespace Java.Interop
 							JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
 				}
 				peer.SetJniManagedPeerState (peer.JniManagedPeerState | JniManagedPeerStates.Replaceable);
+				if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+					EmitManagedPeerCreatedEvent (peer);
+				}
 				return peer;
 			}
 
