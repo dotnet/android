@@ -1130,6 +1130,7 @@ class TestActivity : Activity { }"
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("_AndroidBuildRuntimeIdentifiersInParallel", "false");
 
  			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
  				TextContent = () => $@"using Android.App;
