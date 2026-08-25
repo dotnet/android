@@ -425,16 +425,15 @@ namespace xamarin::android {
 			return static_cast<ssize_t>(name_length);
 		}
 
-		static auto format_dso_name (char *stack_buffer, size_t stack_buffer_size, char *&heap_buffer, std::string_view const& name, bool add_lib_prefix) noexcept -> const char*
+		static auto format_dso_name (char *stack_buffer, size_t stack_buffer_size, std::string_view const& name, bool add_lib_prefix) noexcept -> char*
 		{
-			heap_buffer = nullptr;
 			ssize_t result = format_dso_name (name, add_lib_prefix, stack_buffer, stack_buffer_size);
 			if (result >= 0) {
 				return stack_buffer;
 			}
 
 			size_t required_capacity = static_cast<size_t>(-result);
-			heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
 			abort_unless (heap_buffer != nullptr, "Failed to allocate DSO name");
 			result = format_dso_name (name, add_lib_prefix, heap_buffer, required_capacity);
 			abort_unless (result >= 0, "Failed to format DSO name using the required capacity");
