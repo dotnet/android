@@ -112,7 +112,7 @@ namespace xamarin::android
 		}
 
 		// Returns the path length excluding NUL, or the negative required capacity including NUL.
-		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
+		static auto format_joined_path (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
 		{
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
 			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
@@ -147,7 +147,7 @@ namespace xamarin::android
 
 		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, std::string_view first, std::string_view second) noexcept -> char*
 		{
-			ssize_t result = join_paths (stack_buffer, stack_buffer_size, first, second);
+			ssize_t result = format_joined_path (stack_buffer, stack_buffer_size, first, second);
 			if (result >= 0) {
 				return stack_buffer;
 			}
@@ -155,7 +155,7 @@ namespace xamarin::android
 			size_t required_capacity = static_cast<size_t>(-result);
 			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
 			abort_unless (heap_buffer != nullptr, "Failed to allocate joined path");
-			result = join_paths (heap_buffer, required_capacity, first, second);
+			result = format_joined_path (heap_buffer, required_capacity, first, second);
 			abort_unless (result >= 0, "Failed to join path using the required capacity");
 			return heap_buffer;
 		}

@@ -93,7 +93,7 @@ namespace xamarin::android {
 		{
 			std::string_view home_path = home.get_string_view ();
 			char stack_buffer [Util::LocalPathBufferSize];
-			ssize_t result = Util::join_paths (stack_buffer, sizeof (stack_buffer), home_path, relative_path);
+			ssize_t result = Util::format_joined_path (stack_buffer, sizeof (stack_buffer), home_path, relative_path);
 			abort_unless (result >= 0, "XDG directory path is too long");
 
 			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", stack_buffer);
