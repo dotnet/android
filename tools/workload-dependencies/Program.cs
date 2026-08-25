@@ -165,7 +165,7 @@ JProperty CreateJdkProperty (XDocument doc)
 	var v               = new Version (JdkVersion ?? "17.0");
 	var start           = new Version (v.Major, v.Minor);
 	var end             = GetMaxJdkVersion (v);
-	var latestRevision  = JdkVersion ?? GetLatestRevision (doc, "jdk");
+	var latestRevision  = GetLatestRevision (doc, "jdk", start, new Version (end));
 	var contents        = new JObject (
 		new JProperty ("version", $"[{start},{end})"));
 	if (!string.IsNullOrEmpty (latestRevision))
@@ -202,9 +202,13 @@ IEnumerable<(XElement Element, string Revision)> GetByRevisions (XDocument doc, 
 		.OrderByRevision ();
 }
 
-string? GetLatestRevision (XDocument doc, string element)
+string? GetLatestRevision (XDocument doc, string element, Version minimumVersion, Version maximumVersion)
 {
 	return GetByRevisions (doc, element)
+		.Where (item => {
+			var version = new Version (item.Revision);
+			return version >= minimumVersion && version < maximumVersion;
+		})
 		.LastOrDefault ()
 		.Revision;
 }
