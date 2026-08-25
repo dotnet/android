@@ -198,20 +198,19 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	std::string_view temporary_directory = getenv ("TMPDIR");
 	char local_buffer [Util::LocalPathBufferSize];
 	char *heap_buffer;
-	Util::join_paths (local_buffer, heap_buffer, temporary_directory, file_name);
-	const char *timing_log_path = heap_buffer == nullptr ? local_buffer : heap_buffer;
+	const char *timing_log_path = Util::join_paths (local_buffer, heap_buffer, temporary_directory, file_name);
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {
 		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path);
-		std::free (heap_buffer);
+		Util::free_if_used (heap_buffer);
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
 		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path);
 		fclose (timing_log);
-		std::free (heap_buffer);
+		Util::free_if_used (heap_buffer);
 		return;
 	}
 
@@ -227,7 +226,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	dump (entries, true /* indent */, line_writer);
 	fflush (timing_log);
 	fclose (timing_log);
-	std::free (heap_buffer);
+	Util::free_if_used (heap_buffer);
 }
 
 void FastTiming::dump () noexcept

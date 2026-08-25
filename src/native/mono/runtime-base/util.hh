@@ -146,12 +146,12 @@ namespace xamarin::android
 		}
 
 		template<size_t Size>
-		static auto join_paths (char (&stack_buffer)[Size], char *&heap_buffer, std::string_view first, std::string_view second) noexcept -> ssize_t
+		static auto join_paths (char (&stack_buffer)[Size], char *&heap_buffer, std::string_view first, std::string_view second) noexcept -> const char*
 		{
 			heap_buffer = nullptr;
 			ssize_t result = join_paths (stack_buffer, Size, first, second);
 			if (result >= 0) {
-				return result;
+				return stack_buffer;
 			}
 
 			size_t required_capacity = static_cast<size_t>(-result);
@@ -159,7 +159,12 @@ namespace xamarin::android
 			abort_unless (heap_buffer != nullptr, "Failed to allocate joined path");
 			result = join_paths (heap_buffer, required_capacity, first, second);
 			abort_unless (result >= 0, "Failed to join path using the required capacity");
-			return result;
+			return heap_buffer;
+		}
+
+		static void free_if_used (void *heap_buffer) noexcept
+		{
+			std::free (heap_buffer);
 		}
 
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.
