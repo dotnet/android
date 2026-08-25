@@ -20,7 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Android.Sdk.Analysis.csproj" />
     <None Include="$(MSBuildThisFileDirectory)..\..\..\NuGet.config" Link="NuGet.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <Import Project="..\..\..\build-tools\scripts\NUnitReferences.projitems" />
