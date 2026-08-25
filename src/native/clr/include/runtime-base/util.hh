@@ -398,11 +398,10 @@ namespace xamarin::android {
 			return static_cast<ssize_t>(name_length);
 		}
 
-		template<size_t Size>
-		static auto format_dso_name (char (&stack_buffer)[Size], char *&heap_buffer, std::string_view const& name, bool add_lib_prefix) noexcept -> const char*
+		static auto format_dso_name (char *stack_buffer, size_t stack_buffer_size, char *&heap_buffer, std::string_view const& name, bool add_lib_prefix) noexcept -> const char*
 		{
 			heap_buffer = nullptr;
-			ssize_t result = format_dso_name (name, add_lib_prefix, stack_buffer, Size);
+			ssize_t result = format_dso_name (name, add_lib_prefix, stack_buffer, stack_buffer_size);
 			if (result >= 0) {
 				return stack_buffer;
 			}
