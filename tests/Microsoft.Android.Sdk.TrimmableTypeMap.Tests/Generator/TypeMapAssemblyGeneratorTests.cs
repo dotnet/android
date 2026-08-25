@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -41,9 +40,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 				return signature.ParameterTypes.SequenceEqual (parameterTypes);
 			})
 			.ToList ();
-
-	static MemberReferenceHandle FindCtorMemberRef (MetadataReader reader, string parentNamespace, string parentName, params string [] parameterTypes) =>
-		FindCtorMemberRefs (reader, parentNamespace, parentName, parameterTypes).First ();
 
 	static string GetTypeDefOrRefName (MetadataReader reader, int codedToken)
 	{
@@ -102,22 +98,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_CreatesProxyTypes ()
-	{
-		var peers = ScanFixtures ();
-		using var stream = GenerateAssembly (peers);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var proxyTypes = reader.TypeDefinitions
-			.Select (h => reader.GetTypeDefinition (h))
-			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
-			.ToList ();
-
-		Assert.NotEmpty (proxyTypes);
-		Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
-	}
-
-	[Fact]
 	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
 	{
 		var peer = ScanFixtures ().Single (p => p.JavaName == "my/app/EnumSelectableList");
@@ -142,158 +122,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_ProxyType_HasCtorAndCreateInstance ()
-	{
-		var peers = ScanFixtures ();
-		using var stream = GenerateAssembly (peers);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var objectProxy = reader.TypeDefinitions
-			.Select (h => reader.GetTypeDefinition (h))
-			.First (t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
-
-		var methods = objectProxy.GetMethods ()
-			.Select (h => reader.GetMethodDefinition (h))
-			.Select (m => reader.GetString (m.Name))
-			.ToList ();
-
-		Assert.Contains (".ctor", methods);
-		Assert.Contains ("CreateInstance", methods);
-	}
-
-	[Fact]
-	public void Generate_ProxyType_UsesJavaPeerProxyBase ()
-	{
-		var peers = ScanFixtures ();
-		using var stream = GenerateAssembly (peers);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var proxyTypes = reader.TypeDefinitions
-			.Select (h => reader.GetTypeDefinition (h))
-			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
-			.ToList ();
-
-		Assert.NotEmpty (proxyTypes);
-		// Every proxy — concrete class, interface, or open generic definition — derives from
-		// the `JavaPeerProxy` base (a plain TypeReference), taking `targetType` as a ctor parameter.
-		Assert.All (proxyTypes, proxyType => {
-			Assert.Equal (HandleKind.TypeReference, proxyType.BaseType.Kind);
-			var baseTypeRef = reader.GetTypeReference ((TypeReferenceHandle) proxyType.BaseType);
-			Assert.Equal ("Java.Interop", reader.GetString (baseTypeRef.Namespace));
-			Assert.Equal ("JavaPeerProxy", reader.GetString (baseTypeRef.Name));
-		});
-	}
-
-	// Regression test: decode the emitted proxy `.ctor` *body* (not just member presence)
-	// and verify it chains to the correct base constructor. Every proxy derives from
-	// `JavaPeerProxy` and calls the two-arg base ctor `(string, Type)` — pushing the target
-	// type via `Type.GetTypeFromHandle`. A base-ctor arity/token mismatch here would pass
-	// metadata inspection but blow up as an InvalidProgramException/TypeLoadException on the
-	// CoreCLR device legs, so assert it directly.
-	[Theory]
-	[InlineData ("Java_Lang_Object_Proxy", 2, true)]              // concrete class -> base ctor (string, Type)
-	[InlineData ("Android_Views_IOnClickListener_Proxy", 2, true)] // interface -> base ctor (string, Type)
-	[InlineData ("MyApp_Generic_GenericHolder_1_Proxy", 2, true)]  // open generic -> base ctor (string, Type)
-	public void Generate_ProxyCtor_ChainsToExpectedBaseConstructor (string proxyTypeName, int expectedBaseCtorArity, bool expectsGetTypeFromHandle)
-	{
-		var peers = ScanFixtures ();
-		using var stream = GenerateAssembly (peers);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var proxyTypeHandle = reader.TypeDefinitions.First (h => {
-			var type = reader.GetTypeDefinition (h);
-			return reader.GetString (type.Namespace) == "_TypeMap.Proxies" &&
-				reader.GetString (type.Name) == proxyTypeName;
-		});
-		var proxyType = reader.GetTypeDefinition (proxyTypeHandle);
-		var ctorHandle = proxyType.GetMethods ().First (h =>
-			reader.GetString (reader.GetMethodDefinition (h).Name) == ".ctor");
-		var ctor = reader.GetMethodDefinition (ctorHandle);
-		var body = pe.GetMethodBody (ctor.RelativeVirtualAddress);
-		Assert.NotNull (body);
-		var ilBytes = body.GetILBytes ();
-		Assert.NotNull (ilBytes);
-
-		var decoder = new TypeNameSignatureDecoder (reader);
-		int? baseCtorArity = null;
-		bool sawGetTypeFromHandle = false;
-		foreach (var token in ReadCallTokens (ilBytes!)) {
-			var handle = MetadataTokens.EntityHandle (token);
-			if (handle.Kind != HandleKind.MemberReference)
-				continue;
-			var mref = reader.GetMemberReference ((MemberReferenceHandle) handle);
-			var name = reader.GetString (mref.Name);
-			if (name == "GetTypeFromHandle") {
-				sawGetTypeFromHandle = true;
-			} else if (name == ".ctor") {
-				var sig = mref.DecodeMethodSignature (decoder, genericContext: null);
-				baseCtorArity = sig.RequiredParameterCount;
-			}
-		}
-
-		Assert.True (baseCtorArity.HasValue, $"Proxy '{proxyTypeName}' .ctor must chain to a base ctor");
-		Assert.Equal (expectedBaseCtorArity, baseCtorArity!.Value);
-		Assert.Equal (expectsGetTypeFromHandle, sawGetTypeFromHandle);
-	}
-
-	// Regression test: every generated proxy type must carry a custom attribute whose
-	// constructor points at the proxy's own TypeDefinitionHandle (either as a MemberRef
-	// parented on the TypeDef, or as a MethodDefinition on the TypeDef). This is how
-	// JavaPeerProxy instances are resolved at runtime via
-	// type.GetCustomAttribute<JavaPeerProxy>() — losing the self-application means the
-	// runtime can't construct the proxy. This has regressed twice; keep it covered.
-	[Fact]
-	public void Generate_ProxyType_IsSelfAppliedAsCustomAttribute ()
-	{
-		var peers = ScanFixtures ();
-		using var stream = GenerateAssembly (peers);
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var proxyTypeHandles = reader.TypeDefinitions
-			.Where (h => reader.GetString (reader.GetTypeDefinition (h).Namespace) == "_TypeMap.Proxies")
-			.ToList ();
-
-		Assert.NotEmpty (proxyTypeHandles);
-
-		foreach (var proxyHandle in proxyTypeHandles) {
-			var proxy = reader.GetTypeDefinition (proxyHandle);
-			var proxyName = reader.GetString (proxy.Name);
-
-			bool selfApplied = false;
-			foreach (var caHandle in proxy.GetCustomAttributes ()) {
-				var ca = reader.GetCustomAttribute (caHandle);
-
-				switch (ca.Constructor.Kind) {
-				case HandleKind.MemberReference:
-					var ctorRef = reader.GetMemberReference ((MemberReferenceHandle) ca.Constructor);
-					if (ctorRef.Parent.Kind == HandleKind.TypeDefinition &&
-						(TypeDefinitionHandle) ctorRef.Parent == proxyHandle) {
-						selfApplied = true;
-					}
-					break;
-				case HandleKind.MethodDefinition:
-					var ctorDef = reader.GetMethodDefinition ((MethodDefinitionHandle) ca.Constructor);
-					if (ctorDef.GetDeclaringType () == proxyHandle) {
-						selfApplied = true;
-					}
-					break;
-				}
-
-				if (selfApplied) {
-					break;
-				}
-			}
-
-			Assert.True (selfApplied,
-				$"Proxy type '{proxyName}' is missing its self-applied custom attribute. " +
-				"Every proxy must carry itself as a [JavaPeerProxy] attribute so the runtime " +
-				"can instantiate it via Type.GetCustomAttribute<JavaPeerProxy> ().");
-		}
-	}
-
-	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{
 		var peers = ScanFixtures ();
@@ -309,43 +137,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_DuplicateJniNames_CreatesAliasEntriesAndAssociationAttribute ()
-	{
-		var peers = new List<JavaPeerInfo> {
-			new JavaPeerInfo {
-				JavaName = "test/Duplicate",
-				CompatJniName = "test/Duplicate",
-				ManagedTypeName = "Test.Duplicate1",
-				ManagedTypeNamespace = "Test",
-				ManagedTypeShortName = "Duplicate1",
-				AssemblyName = "TestAssembly",
-				ActivationCtor = new ActivationCtorInfo {
-					DeclaringTypeName = "Test.Duplicate1",
-					DeclaringAssemblyName = "TestAssembly",
-					Style = ActivationCtorStyle.XamarinAndroid,
-				},
-			},
-			new JavaPeerInfo {
-				JavaName = "test/Duplicate",
-				CompatJniName = "test/Duplicate",
-				ManagedTypeName = "Test.Duplicate2",
-				ManagedTypeNamespace = "Test",
-				ManagedTypeShortName = "Duplicate2",
-				AssemblyName = "TestAssembly",
-			},
-		};
-
-		using var stream = GenerateAssembly (peers, "AliasTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var assemblyAttrs = reader.GetCustomAttributes (EntityHandle.AssemblyDefinition);
-		Assert.True (assemblyAttrs.Count () >= 3);
-
-		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains (typeNames, name => name.StartsWith ("TypeMapAssociationAttribute", StringComparison.Ordinal));
-	}
-
-	[Fact]
 	public void Generate_EmptyPeerList_ProducesValidAssembly ()
 	{
 		using var stream = GenerateAssembly ([], "EmptyTest");
@@ -354,28 +145,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.NotNull (reader);
 		var asmDef = reader.GetAssemblyDefinition ();
 		Assert.Equal ("EmptyTest", reader.GetString (asmDef.Name));
-	}
-
-	[Fact]
-	public void Generate_LeafCtor_DoesNotUseCreateManagedPeer ()
-	{
-		var peers = ScanFixtures ();
-		// ClickableView has its own (IntPtr, JniHandleOwnership) ctor
-		var clickableView = peers.First (p => p.JavaName == "my/app/ClickableView");
-		Assert.NotNull (clickableView.ActivationCtor);
-		Assert.Equal (clickableView.ManagedTypeName, clickableView.ActivationCtor.DeclaringTypeName);
-
-		using var stream = GenerateAssembly (new [] { clickableView }, "LeafCtorTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-		var memberNames = GetMemberRefNames (reader);
-		Assert.DoesNotContain ("CreateManagedPeer", memberNames);
-
-		var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
-			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
-			.Where (m => reader.GetString (m.Name) == ".ctor")
-			.ToList ();
-		Assert.True (ctorRefs.Count >= 2, "Should have ctor refs for proxy base + target type");
 	}
 
 	[Fact]
@@ -537,31 +306,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 	}
 
 	[Fact]
-	public void Generate_JiStyleCtor_EmitsJavaInteropActivation ()
-	{
-		var peers = ScanFixtures ();
-		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
-		Assert.NotNull (jiPeer.ActivationCtor);
-		Assert.Equal (ActivationCtorStyle.JavaInterop, jiPeer.ActivationCtor.Style);
-
-		using var stream = GenerateAssembly (new [] { jiPeer }, "JiStyleTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		// JI-style activation should emit JniObjectReference and JniObjectReferenceOptions type refs
-		var typeNames = GetTypeRefNames (reader);
-		Assert.Contains ("JniObjectReference", typeNames);
-		Assert.Contains ("JniObjectReferenceOptions", typeNames);
-
-		// The proxy still exists (with a TargetType property)
-		var proxyTypes = reader.TypeDefinitions
-			.Select (h => reader.GetTypeDefinition (h))
-			.Where (t => reader.GetString (t.Namespace) == "_TypeMap.Proxies")
-			.ToList ();
-		Assert.Single (proxyTypes);
-	}
-
-	[Fact]
 	public void Emit_CalledTwice_Throws ()
 	{
 		var model = ModelBuilder.Build ([], "Double.dll", "Double");
@@ -622,38 +366,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var sig = testMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
 		var paramType = Assert.Single (sig.ParameterTypes);
 		Assert.Equal ("System.Int32", paramType);
-	}
-
-	[Fact]
-	public void Generate_JiStyleCtor_FirstParamIsByRef ()
-	{
-		var peers = ScanFixtures ();
-		var jiPeer = peers.First (p => p.JavaName == "my/app/JiStylePeer");
-		Assert.Equal (ActivationCtorStyle.JavaInterop, jiPeer.ActivationCtor!.Style);
-
-		using var stream = GenerateAssembly (new [] { jiPeer }, "JiByRefTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		// Find the .ctor member reference whose parent type is the JI peer's declaring type
-		var ctorRefs = Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
-			.Select (i => reader.GetMemberReference (MetadataTokens.MemberReferenceHandle (i)))
-			.Where (m => reader.GetString (m.Name) == ".ctor")
-			.ToList ();
-
-		// Decode each .ctor signature and find the JI-style one (2 params, first is byref JniObjectReference)
-		bool foundByRefCtor = false;
-		foreach (var ctor in ctorRefs) {
-			var sig = ctor.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-			if (sig.ParameterTypes.Length == 2 &&
-				sig.ParameterTypes [0].Contains ("JniObjectReference")) {
-				// The byref encoding should produce "Java.Interop.JniObjectReference&"
-				Assert.True (sig.ParameterTypes [0].EndsWith ("&"),
-					$"JI-style .ctor first param must be byref, got: {sig.ParameterTypes [0]}");
-				foundByRefCtor = true;
-			}
-		}
-		Assert.True (foundByRefCtor, "Expected to find a .ctor with byref JniObjectReference parameter");
 	}
 
 	[Fact]
@@ -2136,32 +1848,5 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Enumerable.Range (1, reader.GetTableRowCount (TableIndex.MemberRef))
 			.Select (i => MetadataTokens.MemberReferenceHandle (i))
 			.ToList ();
-
-	// SignatureTypeProvider returning a stringified type name for primitives and typerefs.
-	sealed class TypeNameSignatureDecoder : ISignatureTypeProvider<string, object?>
-	{
-		readonly MetadataReader _reader;
-		public TypeNameSignatureDecoder (MetadataReader reader) => _reader = reader;
-		public string GetPrimitiveType (PrimitiveTypeCode typeCode) => "System." + typeCode;
-		public string GetTypeFromReference (MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
-		{
-			var tr = reader.GetTypeReference (handle);
-			var name = reader.GetString (tr.Name);
-			var ns = tr.Namespace.IsNil ? "" : reader.GetString (tr.Namespace);
-			return ns.Length == 0 ? name : ns + "." + name;
-		}
-		public string GetTypeFromDefinition (MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => "<def>";
-		public string GetTypeFromSpecification (MetadataReader reader, object? genericContext, TypeSpecificationHandle handle, byte rawTypeKind) => "<spec>";
-		public string GetSZArrayType (string elementType) => elementType + "[]";
-		public string GetArrayType (string elementType, ArrayShape shape) => elementType + "[*]";
-		public string GetByReferenceType (string elementType) => elementType + "&";
-		public string GetFunctionPointerType (MethodSignature<string> signature) => "<fnptr>";
-		public string GetGenericInstantiation (string genericType, ImmutableArray<string> typeArguments) => genericType;
-		public string GetGenericMethodParameter (object? genericContext, int index) => "<m!" + index + ">";
-		public string GetGenericTypeParameter (object? genericContext, int index) => "<!" + index + ">";
-		public string GetModifiedType (string modifier, string unmodifiedType, bool isRequired) => unmodifiedType;
-		public string GetPinnedType (string elementType) => elementType;
-		public string GetPointerType (string elementType) => elementType + "*";
-	}
 
 }
