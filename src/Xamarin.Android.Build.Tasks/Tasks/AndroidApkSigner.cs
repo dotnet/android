@@ -73,6 +73,11 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
+			var javaOptions = GetJavaOptions (JavaOptions, JdkVersion);
+			if (!javaOptions.IsNullOrEmpty ()) {
+				cmd.AppendSwitch (javaOptions);
+			}
+
 			var manifest = AndroidAppManifest.Load (ManifestFile.ItemSpec, MonoAndroidHelper.SupportedVersions);
 			int? minSdk = MonoAndroidHelper.SupportedVersions.MinStableVersion?.ApiLevel;
 			int? maxSdk = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel;

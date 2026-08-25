@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
@@ -186,6 +187,9 @@ public class JavaSourceTest {
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
+			if (dotnetVersion == XABuildConfig.PreviousDotNetTargetFramework) {
+				dotnet.JavaSdkPath = GetPreviousWorkloadJavaSdkPath ();
+			}
 			Assert.IsTrue (dotnet.Pack (parameters: ["Configuration=Release"]), "`dotnet pack` should succeed");
 
 			var nupkgPath = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
@@ -439,11 +443,26 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			});
 
 			var builder = CreateDllBuilder ();
-			Assert.IsTrue (builder.Build (library), $"{library.ProjectName} should succeed");
+			string [] parameters = null;
+			if (dotnetVersion == XABuildConfig.PreviousDotNetTargetFramework) {
+				parameters = [$"JavaSdkDirectory=\"{GetPreviousWorkloadJavaSdkPath ()}\""];
+			}
+			Assert.IsTrue (builder.Build (library, parameters: parameters), $"{library.ProjectName} should succeed");
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
 				builder.AssertHasNoWarnings ();
 			}
+		}
+
+		static string GetPreviousWorkloadJavaSdkPath ()
+		{
+			var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
+			var variableName = $"JAVA_HOME_21_{architecture}";
+			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
+			if (string.IsNullOrEmpty (javaSdkPath)) {
+				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
+			}
+			return javaSdkPath;
 		}
 	}
 }
