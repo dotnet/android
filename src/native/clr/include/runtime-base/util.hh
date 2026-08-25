@@ -344,11 +344,10 @@ namespace xamarin::android {
 			return static_cast<ssize_t>(path_length);
 		}
 
-		template<size_t Size>
-		static auto join_paths (char (&stack_buffer)[Size], char *&heap_buffer, std::string_view first, std::string_view second) noexcept -> const char*
+		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, char *&heap_buffer, std::string_view first, std::string_view second) noexcept -> const char*
 		{
 			heap_buffer = nullptr;
-			ssize_t result = join_paths (stack_buffer, Size, first, second);
+			ssize_t result = join_paths (stack_buffer, stack_buffer_size, first, second);
 			if (result >= 0) {
 				return stack_buffer;
 			}

@@ -198,7 +198,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	std::string_view temporary_directory = getenv ("TMPDIR");
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *heap_buffer;
-	const char *timing_log_path = Util::join_paths (stack_buffer, heap_buffer, temporary_directory, file_name);
+	const char *timing_log_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), heap_buffer, temporary_directory, file_name);
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {

@@ -94,7 +94,7 @@ namespace xamarin::android {
 			std::string_view home_path = home.get_string_view ();
 			char stack_buffer [Util::LocalPathBufferSize];
 			char *heap_buffer;
-			const char *dir_path = Util::join_paths (stack_buffer, heap_buffer, home_path, relative_path);
+			const char *dir_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), heap_buffer, home_path, relative_path);
 
 			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", dir_path);
 			int rv = Util::create_directory (dir_path, Constants::DEFAULT_DIRECTORY_MODE);
