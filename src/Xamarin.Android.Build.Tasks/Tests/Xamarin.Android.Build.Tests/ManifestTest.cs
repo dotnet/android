@@ -1131,6 +1131,7 @@ class TestActivity : Activity { }"
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("_AndroidBuildRuntimeIdentifiersInParallel", "false");
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 
  			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
  				TextContent = () => $@"using Android.App;
