@@ -122,7 +122,8 @@ namespace Java.InteropTests
 
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetTypes ("java/util/ArrayList", out var targetTypes));
 			if (targetTypes is null) {
-				throw new InvalidOperationException ("The java/util/ArrayList alias group was not generated.");
+				Assert.Fail ("The java/util/ArrayList alias group was not generated.");
+				return;
 			}
 			CollectionAssert.Contains (targetTypes, typeof (JavaList));
 			CollectionAssert.Contains (targetTypes, typeof (JavaList<>));

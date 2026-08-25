@@ -298,7 +298,8 @@ namespace Java.InteropTests
 			var value = Java.Lang.Object.GetObject<Java.Lang.Integer> (valueHandle, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (value, "OBJECT_ANSWER should wrap as java.lang.Integer");
 			if (value is null) {
-				throw new InvalidOperationException ("OBJECT_ANSWER should wrap as java.lang.Integer");
+				Assert.Fail ("OBJECT_ANSWER should wrap as java.lang.Integer");
+				return;
 			}
 			using (value) {
 				Assert.AreEqual (43, value.IntValue ());
