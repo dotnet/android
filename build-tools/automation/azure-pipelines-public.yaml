@@ -94,9 +94,11 @@ stages:
           if ! git rev-parse --verify "HEAD^1" >/dev/null || ! git rev-parse --verify "HEAD^2" >/dev/null; then
             echo "##vso[task.logissue type=warning]The pull request merge commit is unavailable; running full validation."
             reason="the pull request merge commit is unavailable"
-          elif changedFiles="$(git diff --name-only "HEAD^1" "HEAD^2")"; then
+          elif changedFiles="$(git diff --no-renames --name-only "HEAD^1" HEAD)"; then
             echo "Changed files:"
-            printf '%s\n' "$changedFiles"
+            while IFS= read -r changedFile; do
+              printf 'Changed file: %s\n' "$changedFile"
+            done <<< "$changedFiles"
 
             if [[ -n "$changedFiles" ]] && ! grep -Evq '^Documentation/.*\.md$' <<< "$changedFiles"; then
               runFullValidation=false
@@ -117,7 +119,10 @@ stages:
       name: detect
       displayName: Select validation mode
       env:
-        FORCE_FULL_VALIDATION: ${{ lower(parameters.forceFullValidation) }}
+        ${{ if eq(parameters.forceFullValidation, true) }}:
+          FORCE_FULL_VALIDATION: 'true'
+        ${{ else }}:
+          FORCE_FULL_VALIDATION: 'false'
 
 # macOS Build Stage
 - stage: mac_build
