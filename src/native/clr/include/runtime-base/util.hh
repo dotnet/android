@@ -332,10 +332,11 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
-		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> std::optional<std::string_view>
+		// Returns the number of bytes written, including the terminating NUL, or 0 on failure.
+		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> size_t
 		{
 			if (buffer == nullptr || buffer_size == 0) {
-				return std::nullopt;
+				return 0;
 			}
 
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
@@ -347,7 +348,7 @@ namespace xamarin::android {
 			}
 
 			if (path_length >= buffer_size) {
-				return std::nullopt;
+				return 0;
 			}
 
 			char *destination = buffer;
@@ -364,7 +365,7 @@ namespace xamarin::android {
 			}
 			buffer [path_length] = '\0';
 
-			return std::string_view { buffer, path_length };
+			return path_length + 1uz;
 		}
 
 	private:

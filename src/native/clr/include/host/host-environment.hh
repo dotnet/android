@@ -93,13 +93,12 @@ namespace xamarin::android {
 		static void create_xdg_directory (jstring_wrapper &home, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 		{
 			std::array<char, SENSIBLE_PATH_MAX> dir_buffer;
-			auto dir = Util::join_paths (dir_buffer.data (), dir_buffer.size (), home.get_string_view (), relative_path);
-			if (!dir.has_value ()) {
+			if (Util::join_paths (dir_buffer.data (), dir_buffer.size (), home.get_string_view (), relative_path) == 0) {
 				log_warnf (LOG_DEFAULT, "Failed to create XDG directory: path is too long");
 				return;
 			}
 
-			const char *dir_path = dir->data ();
+			const char *dir_path = dir_buffer.data ();
 			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", dir_path);
 			int rv = Util::create_directory (dir_path, Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
