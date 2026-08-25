@@ -4,6 +4,8 @@
 #error The PINVOKE_OVERRIDE_INLINE macro must be defined before including this header file
 #endif
 
+#include <cstdlib>
+
 #include "pinvoke-override.hh"
 #include "../runtime-base/logger.hh"
 #include "../runtime-base/monodroid-dl.hh"
@@ -15,16 +17,13 @@ namespace xamarin::android {
 		void *lib_handle = nullptr;
 
 		// Handle p/invokes of the form [DllImport ("liblog")] or [DllImport ("log")]
-		char short_library_name[Constants::SENSIBLE_PATH_MAX];
 		if (!Util::path_has_directory_components (library_name)) {
-			ssize_t name_length = Util::format_dso_name (library_name, true, short_library_name, sizeof (short_library_name));
-			if (name_length >= 0) {
-				std::string_view short_library_name_view { short_library_name, static_cast<size_t>(name_length) };
-				log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name_view);
-				lib_handle = MonodroidDl::monodroid_dlopen (short_library_name_view, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
-			} else {
-				log_warn (LOG_ASSEMBLY, "Unable to construct short p/invoke library name for '{}': name is too long", library_name);
-			}
+			size_t name_length;
+			char *short_library_name = Util::format_dso_name (library_name, true, name_length);
+			std::string_view short_library_name_view { short_library_name, name_length };
+			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name_view);
+			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name_view, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			std::free (short_library_name);
 		}
 
 		if (lib_handle == nullptr) {

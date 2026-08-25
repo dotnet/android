@@ -320,42 +320,21 @@ AndroidSystem::lookup_system_property (std::string_view const& name, size_t &val
 	);
 }
 
-auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *path_buffer, size_t path_buffer_length) noexcept -> ssize_t
+auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, size_t &path_length) noexcept -> char*
 {
-	if (path_buffer == nullptr || path_buffer_length == 0) {
-		return -1;
-	}
-
-	path_buffer [0] = '\0';
-	if (dso_path.empty ()) {
-		return -1;
-	}
-
-	size_t path_length = 0;
 	bool is_rooted = Util::is_path_rooted (dso_path);
-	if (!base_dir.empty () && !is_rooted) {
-		if (base_dir.length () >= path_buffer_length - 1) {
-			return -1;
-		}
-
-		memcpy (path_buffer, base_dir.data (), base_dir.length ());
-		path_buffer [base_dir.length ()] = Constants::DIR_SEP [0];
-		path_length = base_dir.length () + 1;
-	}
-
 	bool add_lib_prefix = !base_dir.empty () && !is_rooted && !Util::path_has_directory_components (dso_path);
-	ssize_t dso_name_length = Util::format_dso_name (
-		dso_path,
-		add_lib_prefix,
-		path_buffer + path_length,
-		path_buffer_length - path_length
-	);
-	if (dso_name_length < 0 || path_length > static_cast<size_t>(std::numeric_limits<ssize_t>::max ()) - static_cast<size_t>(dso_name_length)) {
-		path_buffer [0] = '\0';
-		return -1;
+	size_t dso_name_length;
+	auto dso_name = Util::format_dso_name (dso_path, add_lib_prefix, dso_name_length);
+
+	if (base_dir.empty () || is_rooted) {
+		path_length = dso_name_length;
+		return dso_name;
 	}
 
-	return static_cast<ssize_t>(path_length + static_cast<size_t>(dso_name_length));
+	auto full_path = Util::join_paths (base_dir, std::string_view { dso_name, dso_name_length }, path_length);
+	std::free (dso_name);
+	return full_path.release ();
 }
 
 template<class TContainer> [[gnu::always_inline]]
@@ -365,16 +344,12 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 		return nullptr;
 	}
 
-	char full_path[Constants::SENSIBLE_PATH_MAX];
 	for (std::string const& dir : directories) {
-		ssize_t full_path_length = get_full_dso_path (dir, dso_name, full_path, sizeof (full_path));
-		if (full_path_length < 0) {
-			log_warn (LOG_ASSEMBLY, "Unable to construct DSO path for '{}' in '{}': path is too long", dso_name, dir);
-			continue;
-		}
-
-		std::string_view full_path_view { full_path, static_cast<size_t>(full_path_length) };
+		size_t full_path_length;
+		char *full_path = get_full_dso_path (dir, dso_name, full_path_length);
+		std::string_view full_path_view { full_path, full_path_length };
 		void *handle = DsoLoader::load (full_path_view, dl_flags, is_jni);
+		std::free (full_path);
 		if (handle != nullptr) {
 			return handle;
 		}
