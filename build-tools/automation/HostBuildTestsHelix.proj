@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
   <PropertyGroup>
     <Language>msbuild</Language>
-    <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</EnableAzurePipelinesReporter>
-    <EnableAzurePipelinesReporter Condition="'$(SYSTEM_ACCESSTOKEN)' == ''">false</EnableAzurePipelinesReporter>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
     <FailOnTestFailure>true</FailOnTestFailure>
     <HelixType Condition="'$(HelixType)' == ''">tests/android/host-build-tests/</HelixType>
     <HelixTestRunName Condition="'$(HelixTestRunName)' == ''">Xamarin.Android.Build.Tests - Helix</HelixTestRunName>
