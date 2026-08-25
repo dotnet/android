@@ -195,7 +195,7 @@ namespace xamarin::android {
 			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
 
 			std::string path { name, static_cast<size_t>(result) };
-			std::free (heap_buffer);
+			Util::free_if_used (heap_buffer);
 			return path;
 		}
 #endif
