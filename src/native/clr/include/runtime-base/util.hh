@@ -386,24 +386,16 @@ namespace xamarin::android {
 			);
 		}
 
-		static auto format_dso_name (std::string_view const& name, bool add_lib_prefix, char *buffer, size_t buffer_length) noexcept -> ssize_t
+		static auto format_dso_name (std::string_view const& name, bool add_lib_prefix, size_t &name_length) noexcept -> char*
 		{
-			if (buffer == nullptr || buffer_length == 0) {
-				return -1;
-			}
-
-			buffer [0] = '\0';
 			std::string_view prefix = add_lib_prefix && !name.starts_with (Constants::DSO_PREFIX) ? Constants::DSO_PREFIX : std::string_view {};
 			std::string_view suffix = name.ends_with (Constants::dso_suffix) ? std::string_view {} : Constants::dso_suffix;
 
-			if (name.length () > std::numeric_limits<size_t>::max () - prefix.length () - suffix.length ()) {
-				return -1;
-			}
-
-			size_t name_length = prefix.length () + name.length () + suffix.length ();
-			if (name_length >= buffer_length || name_length > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
-				return -1;
-			}
+			name_length = Helpers::add_with_overflow_check<size_t> (prefix.length (), name.length ());
+			name_length = Helpers::add_with_overflow_check<size_t> (name_length, suffix.length ());
+			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (name_length, 1uz);
+			auto buffer = static_cast<char*> (std::malloc (allocation_size));
+			abort_unless (buffer != nullptr, "Failed to allocate DSO name");
 
 			char *destination = buffer;
 			if (!prefix.empty ()) {
@@ -419,7 +411,7 @@ namespace xamarin::android {
 			}
 			buffer [name_length] = '\0';
 
-			return static_cast<ssize_t>(name_length);
+			return buffer;
 		}
 
 	private:
