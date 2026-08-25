@@ -1140,7 +1140,8 @@ class TestActivity : Activity { }"
  [Service (ForegroundServiceType      = {serviceType})]
  class TestService : Service {{ public override Android.OS.IBinder OnBind (Android.Content.Intent intent) {{ return null; }} }}"
  			});
-			using (ProjectBuilder builder = CreateApkBuilder ()) {
+			string projectDirectory = Path.Combine ("temp", $"ForegroundService_{expected}_{runtime}");
+			using (ProjectBuilder builder = CreateApkBuilder (projectDirectory)) {
  				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
  				var doc = XDocument.Parse (manifest);
