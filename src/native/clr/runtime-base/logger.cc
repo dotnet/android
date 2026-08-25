@@ -78,13 +78,15 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 	}
 
 	Util::create_public_directory (override_dir);
-	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> p;
-	p.append (override_dir)
-		.append ("/")
-		.append (fallback_filename);
+	std::array<char, Constants::SENSIBLE_PATH_MAX> path_buffer;
+	auto path = Util::join_paths (path_buffer, override_dir, fallback_filename);
+	if (!path.has_value ()) {
+		log_warnf (category, "Unable to open fallback log file: path is too long");
+		return nullptr;
+	}
 
-	std::string_view path = p.as_string_view ();
-	return log_and_return (open_file (path), path);
+	std::string_view path_view = *path;
+	return log_and_return (open_file (path_view), path_view);
 }
 
 void

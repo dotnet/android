@@ -5,9 +5,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <array>
 #include <cerrno>
 #include <concepts>
 #include <cstdio>
+#include <cstring>
 #include <optional>
 #include <string_view>
 
@@ -328,6 +330,40 @@ namespace xamarin::android {
 		static auto path_has_directory_components (std::string_view const& path) noexcept -> bool
 		{
 			return !path.empty () && path.contains ('/');
+		}
+
+		template<size_t Size>
+		static auto join_paths (std::array<char, Size>& buffer, std::string_view first, std::string_view second) noexcept -> std::optional<std::string_view>
+		{
+			static_assert (Size > 0);
+
+			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
+			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
+			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
+			size_t path_length = Helpers::add_with_overflow_check<size_t> (first.length (), second.length () - second_offset);
+			if (add_separator) {
+				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+			}
+
+			if (path_length >= Size) {
+				return std::nullopt;
+			}
+
+			char *destination = buffer.data ();
+			if (!first.empty ()) {
+				memcpy (destination, first.data (), first.length ());
+				destination += first.length ();
+			}
+			if (add_separator) {
+				*destination++ = '/';
+			}
+			size_t second_length = second.length () - second_offset;
+			if (second_length > 0) {
+				memcpy (destination, second.data () + second_offset, second_length);
+			}
+			buffer [path_length] = '\0';
+
+			return std::string_view { buffer.data (), path_length };
 		}
 
 	private:
