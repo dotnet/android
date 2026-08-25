@@ -23,12 +23,10 @@ Util::create_directory (const char *pathname, mode_t mode)
 	size_t path_length = strlen (pathname);
 	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 	char stack_buffer [Constants::SENSIBLE_PATH_MAX];
-	char *heap_buffer = nullptr;
 	char *path = stack_buffer;
 	if (allocation_size > sizeof (stack_buffer)) {
-		heap_buffer = static_cast<char*> (std::malloc (allocation_size));
-		abort_unless (heap_buffer != nullptr, "Failed to allocate directory path");
-		path = heap_buffer;
+		path = static_cast<char*> (std::malloc (allocation_size));
+		abort_unless (path != nullptr, "Failed to allocate directory path");
 	}
 	memcpy (path, pathname, path_length + 1);
 
@@ -55,7 +53,9 @@ Util::create_directory (const char *pathname, mode_t mode)
 	}
 	int saved_errno = errno;
 	umask (oldumask);
-	std::free (heap_buffer);
+	if (path != stack_buffer) {
+		std::free (path);
+	}
 	errno = saved_errno;
 
 	return ret;
