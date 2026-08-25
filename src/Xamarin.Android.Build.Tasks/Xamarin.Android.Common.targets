@@ -1447,10 +1447,10 @@ because xbuild doesn't support framework reference assemblies.
           Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</_AndroidLinkNoShrinkOutput>
       <JavaObjectsXmlFile
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
       <TypeMapObjectsXmlFile
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
     </ResolvedAssemblies>
     <_AndroidAssembliesToLinkNoShrink
