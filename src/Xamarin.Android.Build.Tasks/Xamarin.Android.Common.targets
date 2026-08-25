@@ -1447,10 +1447,10 @@ because xbuild doesn't support framework reference assemblies.
           Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</_AndroidLinkNoShrinkOutput>
       <JavaObjectsXmlFile
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' "
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
       <TypeMapObjectsXmlFile
-          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' "
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
     </ResolvedAssemblies>
     <_AndroidAssembliesToLinkNoShrink
@@ -1515,7 +1515,7 @@ because xbuild doesn't support framework reference assemblies.
         Condition=" '$(_AndroidUseMarshalMethods)' != 'True' or !$([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
     <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(_AfterILLinkSourceFiles->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
     <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(_AfterILLinkSourceFiles)" />
-    <_AndroidScanMarkerFiles Include="@(_AndroidAssembliesToPackageWithoutLinkNoShrink->'%(JavaObjectsXmlFile)')" />
+    <_AndroidScanMarkerFiles Include="@(ResolvedAssemblies->'%(JavaObjectsXmlFile)')" Condition=" '%(ResolvedAssemblies.JavaObjectsXmlFile)' != '' " />
   </ItemGroup>
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
