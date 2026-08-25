@@ -120,6 +120,11 @@ namespace Android.Runtime {
 			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 
+		/// <summary>
+		/// Gets the number of completed CoreCLR or NativeAOT GC bridge processing cycles.
+		/// </summary>
+		public static int BridgeProcessingGeneration => AndroidRuntimeInternal.BridgeProcessingGeneration;
+
 		public static IntPtr AllocObject (string jniClassName)
 		{
 			IntPtr jniClass = JNIEnv.FindClass (jniClassName);

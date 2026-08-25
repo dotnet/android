@@ -609,6 +609,15 @@ namespace Microsoft.Android.Build.Tasks
 			}
 		}
 
+		public static void TryDeleteFile (string filename, Action<string> log)
+		{
+			try {
+				File.Delete (filename);
+			} catch (Exception ex) {
+				log ($"Could not delete '{filename}': {ex}");
+			}
+		}
+
 		const uint ppdb_signature = 0x424a5342;
 
 		public static bool IsPortablePdb (string filename)

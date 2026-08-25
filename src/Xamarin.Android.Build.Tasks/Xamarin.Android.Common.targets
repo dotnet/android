@@ -529,6 +529,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA0119_ReadyToRun"
       Condition=" '$(AndroidEnableFastDeployment)' == 'True' And '$(PublishReadyToRun)' == 'True' "
   />
+  <AndroidWarning Code="XA0119"
+      ResourceName="XA0119_ReadyToRunWithoutTrimming"
+      Condition=" '$(_AndroidReadyToRunWithoutTrimming)' == 'true' "
+  />
   <AndroidWarning Code="XA1027"
       ResourceName="XA1027"
       Condition=" $(_AndroidXA1027) == 'true' "
@@ -922,7 +926,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AndroidIntermediateJavaSourceDirectory>$(IntermediateOutputPath)android\src\</_AndroidIntermediateJavaSourceDirectory>
 	<_AndroidIntermediateDexOutputDirectory>$(IntermediateOutputPath)android\bin\</_AndroidIntermediateDexOutputDirectory>
 	<_AndroidIntermediateJavaClassDirectory>$(IntermediateOutputPath)android\bin\classes\</_AndroidIntermediateJavaClassDirectory>
-	<_AndroidIntermediateClassesZip>$(IntermediateOutputPath)android\bin\classes.zip</_AndroidIntermediateClassesZip>
 	<_AndroidAotBinDirectory>$(IntermediateOutputPath)aot</_AndroidAotBinDirectory>
 	<_AndroidResgenFlagFile>$(IntermediateOutputPath)R.cs.flag</_AndroidResgenFlagFile>
 	<_AndroidResFlagFile>$(IntermediateOutputPath)res.flag</_AndroidResFlagFile>
@@ -1434,6 +1437,31 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <!-- We need this in its own item group so it isn't lost during a partial build -->
     <_AllResolvedAssemblies Include="@(ResolvedAssemblies)" />
+    <!-- Non-Android framework assemblies are packaged directly from their runtime packs.
+         A zero-byte marker replaces both scanner sidecars without staging the DLL. -->
+    <ResolvedAssemblies>
+      <_AndroidLinkNoShrinkOutput
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</_AndroidLinkNoShrinkOutput>
+      <_AndroidLinkNoShrinkOutput
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</_AndroidLinkNoShrinkOutput>
+    </ResolvedAssemblies>
+    <_AndroidAssembliesToLinkNoShrink
+        Include="@(ResolvedAssemblies)"
+        Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' " />
+    <_AndroidAssembliesToPackageWithoutLinkNoShrink
+        Include="@(ResolvedAssemblies)"
+        Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' ">
+      <JavaObjectsXmlFile>$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
+      <TypeMapObjectsXmlFile>$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
+    </_AndroidAssembliesToPackageWithoutLinkNoShrink>
+    <_AndroidSymbolsToLinkNoShrink
+        Include="@(ResolvedSymbols)"
+        Condition=" '%(ResolvedSymbols.AndroidSkipAssemblyModification)' != 'True' " />
+    <_AndroidSymbolsToPackageWithoutLinkNoShrink
+        Include="@(ResolvedSymbols)"
+        Condition=" '%(ResolvedSymbols.AndroidSkipAssemblyModification)' == 'True' " />
   </ItemGroup>
 </Target>
 
@@ -1441,7 +1469,7 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(PublishTrimmed)' != 'true'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
+    Outputs="@(ResolvedAssemblies->'%(_AndroidLinkNoShrinkOutput)')">
   <LinkAssembliesNoShrink
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
       CodeGenerationTarget="$(AndroidCodegenTarget)"
@@ -1977,7 +2005,7 @@ because xbuild doesn't support framework reference assemblies.
 		@(_AndroidMSBuildAllProjects)
 		;@(_JavaLibrariesToCompileForApp)
 		;@(AndroidExternalJavaLibrary)
-		;$(_AndroidIntermediateClassesZip)
+		;$(_AndroidCompileJavaStampFile)
 		;@(ProguardConfiguration)
 		;@(MultiDexMainDexList)
 		;$(_AndroidBuildPropertiesCache)
@@ -3042,6 +3070,14 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
         Condition=" '$(DesignTimeBuild)' != 'true' "/>
+  <Target Name="_ValidateAndroidJcwCodegenTarget"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
+    <AndroidError Code="XA4240"
+        ResourceName="XA4240"
+        FormatArguments="$(_AndroidJcwCodegenTarget)"
+        Condition=" '$(_AndroidJcwCodegenTarget)' == 'XamarinAndroid' or '$(_AndroidJcwCodegenTarget)' == 'JavaInterop1' " />
+  </Target>
+
   <Target Name="_ValidateAndroidTypeMapImplementation"
       BeforeTargets="_CheckForInvalidConfigurationAndPlatform">
     <Error Condition=" '$(AndroidTypeMapImplementation)' != '' and '$(AndroidTypeMapImplementation)' != 'llvm-ir' and '$(AndroidTypeMapImplementation)' != 'trimmable' "

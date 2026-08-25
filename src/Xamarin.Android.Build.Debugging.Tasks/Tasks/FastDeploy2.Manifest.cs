@@ -17,6 +17,34 @@ namespace Xamarin.Android.Tasks
 
 		string RemoteStagingRoot => RemoteStagingRootPath;
 
+		async Task CleanupRemoteStagingDirectories ()
+		{
+			string command = CreateRemoteStagingCleanupCommand (RemoteStagingRoot);
+			if (command.Length >= MaxShellCommandLength) {
+				LogDiagnostic ($"FastDeploy2 orphan staging cleanup command length {command.Length} exceeds the configured maximum of {MaxShellCommandLength}; cleanup will be skipped.");
+				return;
+			}
+			AdbCommandResult result = await RunAdbShellCommand (command);
+			if (result.ExitCode != 0) {
+				LogDiagnostic ($"FastDeploy2 orphan staging cleanup failed and will be skipped. Output: {result.Output}");
+			} else if (!string.IsNullOrEmpty (result.StandardOutput)) {
+				LogDiagnostic (result.StandardOutput);
+			}
+		}
+
+		static string CreateRemoteStagingCleanupCommand (string remoteStagingRoot)
+		{
+			return string.Join ("; ", new [] {
+				$"r={QuoteShellArgument (remoteStagingRoot)}",
+				"[ -d \"$r\" ]&&[ ! -L \"$r\" ]||exit 0",
+				"for t in rm rmdir pm grep;do command -v \"$t\">/dev/null 2>&1||exit 0;done",
+				"n=0;s=0;u=''",
+				"for c in \"$r\"/*/*;do [ -d \"$c\" ]||continue;i=${c##*/};case \"$i\" in ''|*[!0-9]*)continue;;esac;case \" $u \" in *\" $i \"*)continue;;esac;u=\"$u $i\";p=$(pm list packages --user \"$i\");x=$?;if [ $x -ne 0 ]||[ -z \"$p\" ];then s=1;continue;fi;echo \"$p\"|grep -qv '^package:';[ $? -eq 1 ]||{ s=1;continue;};for d in \"$r\"/*/\"$i\";do [ -d \"$d\" ]||continue;q=${d%/*};a=${q##*/};echo \"$p\"|grep -Fqx \"package:$a\";x=$?;[ $x -eq 0 ]&&continue;if [ $x -ne 1 ];then s=1;continue;fi;if [ -L \"$r\" ]||[ -L \"$q\" ]||[ -L \"$d\" ];then s=1;continue;fi;if rm -rf \"$d\";then rmdir \"$q\" 2>/dev/null||true;n=$((n+1));else s=1;fi;done;done",
+				"echo \"FastDeploy2 orphan staging cleanup: removed $n directories\"",
+				"exit \"$s\"",
+			});
+		}
+
 		async Task<bool> DeployFastDevFilesWithAdbPush (string overridePath, bool forceFreshDeployment = false)
 		{
 			var files = PrepareDirectPushFiles ();

@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
@@ -90,6 +91,12 @@ class JavaObjectsXmlFile
 	/// </summary>
 	public static string GetJavaObjectsXmlFilePath (string assemblyPath)
 		=> Path.ChangeExtension (assemblyPath, ".jlo.xml");
+
+	public static string GetJavaObjectsXmlFilePath (ITaskItem assembly)
+	{
+		var path = assembly.GetMetadata ("JavaObjectsXmlFile");
+		return path.IsNullOrEmpty () ? GetJavaObjectsXmlFilePath (assembly.ItemSpec) : path;
+	}
 
 	public static JavaObjectsXmlFile Import (string filename, JavaObjectsXmlFileReadType readType)
 	{

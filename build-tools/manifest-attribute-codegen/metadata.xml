@@ -25,6 +25,8 @@
   <!-- Manifest elements to ignore -->
   <type name="action" ignore="true" />
   <type name="activity-alias" ignore="true" />
+  <type name="allow-component-access" ignore="true" />
+  <type name="allow-component-access-package" ignore="true" />
   <type name="additional-certificate" ignore="true" />
   <type name="adopt-permissions" ignore="true" />
   <type name="allow-permission" ignore="true" />
@@ -38,6 +40,7 @@
   <type name="extension-sdk" ignore="true" />
   <type name="extra" ignore="true" />
   <type name="feature-group" ignore="true" />
+  <type name="general-purpose" ignore="true" />
   <type name="install-constraints" ignore="true" />
   <type name="install-constraints-fingerprint-prefix" ignore="true" />
   <type name="intent" ignore="true" />
@@ -45,6 +48,7 @@
   <type name="key-set" ignore="true" />
   <type name="library" ignore="true" />
   <type name="manifest" ignore="true" />
+  <type name="memory-budget" ignore="true" />
   <type name="original-package" ignore="true" />
   <type name="package-verifier" ignore="true" />
   <type name="path-permission" ignore="true" />
@@ -74,6 +78,7 @@
   <type name="uses-sdk-library" ignore="true" />
   <type name="uses-split" ignore="true" />
   <type name="uses-static-library" ignore="true" />
+  <type name="valid-general-purpose" ignore="true" />
   <type name="valid-purpose" ignore="true" />
 
   <!-- <activity> - https://developer.android.com/guide/topics/manifest/activity-element -->
@@ -145,6 +150,7 @@
   <element path="activity.playHomeTransitionSound" visible="false" />
   <element path="activity.preferMinimalPostProcessing" visible="false" />
   <element path="activity.primaryUserOnly" visible="false" />
+  <element path="activity.privateComputeCore" visible="false" />
   <element path="activity.requiredDisplayCategory" visible="false" />
   <element path="activity.splitName" visible="false" />
   <element path="activity.systemUserOnly" visible="false" />
@@ -206,6 +212,7 @@
   <element path="application.appComponentFactory" visible="false" />
   <element path="application.attributionsAreUserVisible" visible="false" />
   <element path="application.autoRevokePermissions" visible="false" />
+  <element path="application.backupAgentProcess" visible="false" />
   <element path="application.cantSaveState" visible="false" />
   <element path="application.classLoader" visible="false" />
   <element path="application.crossProfile" visible="false" />
@@ -232,6 +239,8 @@
   <element path="application.useEmbeddedDex" visible="false" />
   <element path="application.usesNonSdkApi" visible="false" />
   <element path="application.zygotePreloadName" visible="false" />
+  <element path="application.zygotePreloadNativeLib" visible="false" />
+  <element path="application.zygotePreloadNativeFunc" visible="false" />
   
   <!-- Documented as deprecated -->
   <element path="application.isGame" visible="false" />
@@ -306,7 +315,9 @@
   <element path="permission.maxSdkVersion" visible="false" />
   <element path="permission.permissionFlags" visible="false" />
   <element path="permission.request" visible="false" />
+  <element path="permission.requiresGeneralPurposeTargetSdkVersion" visible="false" />
   <element path="permission.requiresPurpose" visible="false" />
+  <element path="permission.requiresPurposeStringTargetSdkVersion" visible="false" />
   <element path="permission.requiresPurposeTargetSdkVersion" visible="false" />
 
   <!-- <permission-group> - https://developer.android.com/guide/topics/manifest/permission-group-element -->
@@ -366,6 +377,7 @@
   <element path="provider.forceUriPermissions" visible="false" />
   <element path="provider.intentMatchingFlags" visible="false" />
   <element path="provider.logo" visible="false" />
+  <element path="provider.privateComputeCore" visible="false" />
   <element path="provider.singleUser" visible="false" />
   <element path="provider.splitName" visible="false" />
   <element path="provider.systemUserOnly" visible="false" />
@@ -388,6 +400,7 @@
   <element path="receiver.banner" visible="false" />
   <element path="receiver.intentMatchingFlags" visible="false" />
   <element path="receiver.logo" visible="false" />
+  <element path="receiver.privateComputeCore" visible="false" />
   <element path="receiver.singleUser" visible="false" />
 
   <!-- <service> - https://developer.android.com/guide/topics/manifest/service-element -->
@@ -411,6 +424,8 @@
   <element path="service.externalService" visible="false" />
   <element path="service.intentMatchingFlags" visible="false" />
   <element path="service.logo" visible="false" />
+  <element path="service.nativeService" visible="false" />
+  <element path="service.privateComputeCore" visible="false" />
   <element path="service.singleUser" visible="false" />
   <element path="service.splitName" visible="false" />
   <element path="service.stopWithTask" visible="false" />
@@ -443,6 +458,7 @@
   <element path="uses-permission.minSdkVersion" visible="false" />
   <element path="uses-permission.requiredFeature" visible="false" />
   <element path="uses-permission.requiredNotFeature" visible="false" />
+  <element path="uses-permission.purposeString" visible="false" />
   <!-- usesPermissionFlags - https://developer.android.com/develop/connectivity/bluetooth/bt-permissions#assert-never-for-location -->
   <element path="uses-permission.usesPermissionFlags" visible="true" />
 

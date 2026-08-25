@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\..\Configuration.props" />
+
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <LangVersion>latest</LangVersion>
@@ -40,7 +42,10 @@
        This lets tests use typeof(Java.Lang.Object).Assembly.Location to find the assembly. -->
   <Target Name="_AddMonoAndroidReference" BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <_MonoAndroidRefCandidate Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Mono.Android.dll" />
+      <_MonoAndroidRefCandidate
+          Condition=" '%(AndroidBuildApiLevel.Unstable)' == 'false' "
+          Include="$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\*\ref\net*\Mono.Android.dll"
+      />
     </ItemGroup>
     <PropertyGroup>
       <_MonoAndroidRefAssembly>@(_MonoAndroidRefCandidate, ';')</_MonoAndroidRefAssembly>

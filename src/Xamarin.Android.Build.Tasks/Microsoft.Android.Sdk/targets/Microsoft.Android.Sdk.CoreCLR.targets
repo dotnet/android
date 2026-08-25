@@ -17,6 +17,9 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
     <!-- Default PublishReadyToRun to true for CoreCLR Release mode and publish builds without debug symbols -->
     <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and ('$(Configuration)' == 'Release' or ('$(_IsPublishing)' == 'true' and '$(DebugSymbols)' != 'true')) ">true</PublishReadyToRun>
+    <_AndroidReadyToRunWithoutTrimming Condition=" '$(PublishReadyToRun)' == 'true' and '$(PublishTrimmed)' != 'true' ">true</_AndroidReadyToRunWithoutTrimming>
+    <PublishReadyToRun Condition=" '$(_AndroidReadyToRunWithoutTrimming)' == 'true' ">false</PublishReadyToRun>
+    <PublishReadyToRunComposite Condition=" '$(_AndroidReadyToRunWithoutTrimming)' == 'true' ">false</PublishReadyToRunComposite>
     <PublishReadyToRunComposite Condition=" '$(PublishReadyToRunComposite)' == '' and '$(PublishReadyToRun)' == 'true' ">true</PublishReadyToRunComposite>
     <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishReadyToRun)' == 'true' ">true</_IsPublishing>
     <AllowReadyToRunWithoutRuntimeIdentifier Condition=" '$(PublishReadyToRun)' == 'true' and '$(RuntimeIdentifiers)' != '' ">true</AllowReadyToRunWithoutRuntimeIdentifier>

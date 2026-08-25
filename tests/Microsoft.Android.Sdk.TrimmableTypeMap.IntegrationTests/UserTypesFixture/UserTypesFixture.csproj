@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\..\..\Configuration.props" />
+
   <PropertyGroup>
     <!-- Must target the same Android TFM as Mono.Android -->
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
@@ -21,7 +23,10 @@
 
   <Target Name="_AddMonoAndroidReference" BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <_MonoAndroidRefCandidate Include="$(MSBuildThisFileDirectory)..\..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Mono.Android.dll" />
+      <_MonoAndroidRefCandidate
+          Condition=" '%(AndroidBuildApiLevel.Unstable)' == 'false' "
+          Include="$(MSBuildThisFileDirectory)..\..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\*\ref\net*\Mono.Android.dll"
+      />
       <_JavaInteropRefCandidate Include="$(MSBuildThisFileDirectory)..\..\..\bin\$(Configuration)\lib\packs\Microsoft.Android.Ref.*\*\ref\net*\Java.Interop.dll" />
     </ItemGroup>
     <PropertyGroup>

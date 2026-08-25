@@ -120,17 +120,15 @@ Then update the following files:
       <Level>36</Level>
       <VersionCodeFull>36.1</VersionCodeFull>
       <Id>36.1</Id>
-      <Stable>True</Stable>
+      <Stable>False</Stable>
     </AndroidApiInfo>
     ```
 
     `Include` is the binding framework version (e.g. `v16.1`).  `Level` is the
     integer API level (`Major` of `VersionCodeFull`).  `Id` is the platform ID
     used to locate `android-$(Id)` directories under the Android SDK.  `Stable`
-    should be `True`; every entry currently in the projitems uses `True`,
-    including preview codenames like CANARY.  (Setting it to `False` would
-    exclude the entry from being picked as the default stable framework
-    version by some build-time selection logic.)
+    should be `False` for preview API levels and `True` once the API level is
+    stable.
 
     TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
 
@@ -138,12 +136,13 @@ Then update the following files:
     [`/src/androidsdk/androidsdk.targets`](../../src/androidsdk/androidsdk.targets):
 
     ```xml
-    <_PlatformPackage Include="platform-36.0-CANARY_r03"> <ApiLevel>CANARY</ApiLevel> <Hash>...</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-36.0-CANARY_r03"> <ApiLevel>CANARY</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>...</Hash></_PlatformPackage>
     ```
 
     The `Include` value is the *base filename* of the package to download; the
     build automatically appends `.zip`. Provide the package's SHA-256 hash in
-    the `<Hash>` metadata.
+    the `%(Hash)` metadata.  `%(IsLatestStable)` should be `true` so that it
+    will be downloaded and installed.
 
 At this point, you can run `Xamarin.Android.slnx -t:Prepare` using your usual mechanism.
 However, it might not download the new platform into your local Android SDK.
@@ -219,15 +218,31 @@ You should search-and-replace instances of your local directory name with `..\..
 - Add level to `/build-tools/api-xml-adjuster/Makefile`
   [TODO: remove? `$(API_LEVELS)` was last touched for API-34!]
 - Add level to `DefaultTestSdkPlatforms` in `/build-tools/automation/yaml-templates/variables.yaml`
-- Update `WorkloadManifest.in.json` to generate .NET SDK Workload Packs for the new API level.
-- Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to try to access a member added in the new API level.
-- If (when) the new API level is unstable, update `Configuration.props` and modify the `*Unstable*` MSBuild properties to match the new unstable API level:
+- Update `WorkloadManifest.in.json` with the `Microsoft.Android.Ref.*` and
+  `Microsoft.Android.Runtime.*.android` packs for the new API level.
+- Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to
+  retain the existing preview API levels and try to access a member added in
+  each one.
+- Add the API level to `@(AndroidBuildApiLevel)` in `Configuration.props`.
+  This list drives binding builds, targeting-pack selection, pack creation,
+  local workload setup, and workload dependency installation:
+    ```xml
+    <AndroidBuildApiLevel Include="36.1">
+      <PlatformId>CANARY</PlatformId>
+      <FrameworkVersion>v16.1</FrameworkVersion>
+      <Unstable>true</Unstable>
+    </AndroidBuildApiLevel>
+    ```
+- If the new API level is the latest unstable API level, also update the
+  `*LatestUnstable*` pointers. Keep earlier supported preview API levels in
+  `@(AndroidBuildApiLevel)`:
     ```xml
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">36.1</AndroidLatestUnstableApiLevel>
     <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">CANARY</AndroidLatestUnstablePlatformId>
     <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v16.1</AndroidLatestUnstableFrameworkVersion>
     ```
-- LOCAL ONLY: Update `Configuration.props` or `Configuration.Override.props` to specify building the new level:
+- LOCAL ONLY: To build only the new level, update `Configuration.Override.props`
+  or pass these properties on the command line:
   - `<AndroidApiLevel>31</AndroidApiLevel>`
   - `<AndroidPlatformId>S</AndroidPlatformId>`
   - `<AndroidFrameworkVersion>v11.0.99</AndroidFrameworkVersion>`
@@ -547,7 +562,15 @@ the `csv` variable within `MainForm.FindAPILevelMethodsToolStripMenuItem_Click`.
 Once this process is complete, use `Tools` -> `Export Final Method Map`, and create a *new*
 `.csv` file, e.g. `new-methodmap.csv`.
 
-Copy the contents of `new-methodmap.csv` and *append* to `src/Mono.Android/methodmap.csv`.
+Note: `new-methodmap.csv` will likely use JNI syntax for package names, e.g. `android/widget`.
+`methodmap.csv` ***must*** use *Java* syntax for package names, e.g. `android.widget`.
+Use **sed**(1) to fix package names and nested class names:
+
+```sh
+sed 's,/,.,g;s/\$/./g' < src/Mono.Android/new-methodmap.csv > src/Mono.Android/new-methodmap2.csv
+```
+
+Copy the contents of `new-methodmap2.csv` and *append* to `src/Mono.Android/methodmap.csv`.
 
 There may be redundant duplicate entries within `methodmap.csv`.  Use the **uniq**(1)
 Unix app to remove duplicate entries.
@@ -604,15 +627,10 @@ are automatically converted into `Android.Graphics.Color`.
 
 ### Finishing the method map
 
-The official `methodmap.csv` uses a slightly different format than the one used for enumification.
-
-Using BindingStudio:
-
-- Ensure the "new api level method map" CSV file is loaded.
-- Choose `Tools` -> `Export Final Method Map`
-- Choose a temporary file name
-- Open the temporary file, copy the contents to the bottom of the official:
-  - dotnet/android/src/Mono.Android/methodmap.csv
+The normalized `new-methodmap2.csv` output appended in the **Mapping methods** section
+is the final method map. Do not export and append the BindingStudio output again, as
+the raw output uses JNI package and nested-type syntax that `methodmap.csv` does not
+support.
 
 Congrats! Enumification is complete!
 

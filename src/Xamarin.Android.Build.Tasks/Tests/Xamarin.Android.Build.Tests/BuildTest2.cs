@@ -115,6 +115,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("Optimize", "true");
 			proj.SetProperty ("DebugType", "None");
+			proj.SetProperty ("PublishTrimmed", "true");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
 			// Use `dotnet publish` rather than `msbuild /t:Publish`: only the `dotnet publish` CLI
@@ -1456,35 +1457,30 @@ namespace UnamedProject
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				var classesZipPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes.zip");
-				FileAssert.Exists (classesZipPath);
-				var expectedBuilder = new StringBuilder ();
-				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
-					foreach (var file in zip) {
-						expectedBuilder.AppendLine (file.FullName);
-					}
-				}
-				var expectedZip = expectedBuilder.ToString ();
+				var classesDirectory = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin", "classes");
+				DirectoryAssert.Exists (classesDirectory);
+				var expectedClasses = Directory.GetFiles (classesDirectory, "*.class", SearchOption.AllDirectories)
+					.Select (path => Path.GetRelativePath (classesDirectory, path))
+					.OrderBy (path => path)
+					.ToArray ();
+				Assert.IsNotEmpty (expectedClasses);
 
 				source.Timestamp = null; //Force the file to re-save w/ new Timestamp
 				Assert.IsTrue (b.Build (proj), "Second build should have succeeded.");
 
-				var actualBuilder = new StringBuilder ();
-				using (var zip = ZipHelper.OpenZip (classesZipPath)) {
-					foreach (var file in zip) {
-						actualBuilder.AppendLine (file.FullName);
-					}
-				}
-				var actualZip = actualBuilder.ToString ();
-				Assert.AreNotEqual (expectedZip, actualZip);
+				var actualClasses = Directory.GetFiles (classesDirectory, "*.class", SearchOption.AllDirectories)
+					.Select (path => Path.GetRelativePath (classesDirectory, path))
+					.OrderBy (path => path)
+					.ToArray ();
+				CollectionAssert.AreNotEqual (expectedClasses, actualClasses);
 
 				//Build with no changes
 				Assert.IsTrue (b.Build (proj), "Third build should have succeeded.");
-				FileAssert.Exists (classesZipPath);
+				DirectoryAssert.Exists (classesDirectory);
 
 				//Clean
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				FileAssert.DoesNotExist (classesZipPath);
+				DirectoryAssert.DoesNotExist (classesDirectory);
 			}
 		}
 

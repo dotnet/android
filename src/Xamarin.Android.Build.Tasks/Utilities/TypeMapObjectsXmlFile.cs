@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using ModuleReleaseData = Xamarin.Android.Tasks.TypeMapGenerator.ModuleReleaseData;
@@ -164,6 +165,12 @@ class TypeMapObjectsXmlFile
 	/// </summary>
 	public static string GetTypeMapObjectsXmlFilePath (string assemblyPath)
 		=> Path.ChangeExtension (assemblyPath, ".typemap.xml");
+
+	public static string GetTypeMapObjectsXmlFilePath (ITaskItem assembly)
+	{
+		var path = assembly.GetMetadata ("TypeMapObjectsXmlFile");
+		return path.IsNullOrEmpty () ? GetTypeMapObjectsXmlFilePath (assembly.ItemSpec) : path;
+	}
 
 	public static TypeMapObjectsXmlFile Import (string filename)
 	{

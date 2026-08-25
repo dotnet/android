@@ -1,0 +1,138 @@
+name: Agentic Auto-Upgrade PR
+
+on:
+  schedule:
+    - cron: '17 4 * * 1' # Mondays at 04:17 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: agentic-auto-upgrade-pr
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  upgrade:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && !github.event.repository.fork
+    runs-on: ubuntu-latest
+    environment: copilot-pat-pool
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve latest stable gh-aw version
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(gh api repos/github/gh-aw/releases/latest --jq .tag_name)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install latest stable gh-aw
+        uses: github/gh-aw-actions/setup-cli@6aab9e5b5c91c615506061f09bedd81a23babe3c # v0.86.2
+        with:
+          version: ${{ steps.latest.outputs.version }}
+
+      - name: Upgrade workflows and update pull request
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
+          GH_AW_VERSION: ${{ steps.latest.outputs.version }}
+          UPGRADE_BRANCH: automation/gh-aw-upgrade
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "GH_AW_GITHUB_TOKEN must be a token that can update workflow files." >&2
+            exit 1
+          fi
+
+          gh aw upgrade
+          gh aw compile .github/workflows --validate
+
+          changed_files=$(
+            {
+              git diff --name-only
+              git ls-files --others --exclude-standard
+            } | sort -u
+          )
+          if [[ -z "$changed_files" ]]; then
+            echo "All agentic workflows already use $GH_AW_VERSION."
+            exit 0
+          fi
+
+          invalid_files=$(
+            while IFS= read -r file; do
+              case "$file" in
+                .github/agents/*|.github/aw/*|.github/skills/*|.github/workflows/*) ;;
+                *) echo "$file" ;;
+              esac
+            done <<< "$changed_files"
+          )
+          if [[ -n "$invalid_files" ]]; then
+            echo "gh aw upgrade changed files outside the approved .github paths:" >&2
+            echo "$invalid_files" >&2
+            exit 1
+          fi
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git switch -c "$UPGRADE_BRANCH"
+          git add -A -- .github/agents .github/aw .github/skills .github/workflows
+          git commit -m "[ci] Upgrade gh-aw to $GH_AW_VERSION"
+
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          remote_sha=$(git ls-remote --heads origin "refs/heads/$UPGRADE_BRANCH" | cut -f1)
+          if [[ -n "$remote_sha" ]]; then
+            git push \
+              --force-with-lease="refs/heads/$UPGRADE_BRANCH:$remote_sha" \
+              origin "HEAD:refs/heads/$UPGRADE_BRANCH"
+          else
+            git push origin "HEAD:refs/heads/$UPGRADE_BRANCH"
+          fi
+
+          body_file="$RUNNER_TEMP/gh-aw-upgrade-pr.md"
+          {
+            echo "## Summary"
+            echo
+            echo "Upgrade agentic workflows to gh-aw $GH_AW_VERSION."
+            echo
+            echo "## Changed files"
+            echo
+            git show --pretty="" --name-only HEAD | sed 's/^/- `/' | sed 's/$/`/'
+            echo
+            echo "## Validation"
+            echo
+            echo "- \`gh aw upgrade\`"
+            echo "- \`gh aw compile .github/workflows --validate\`"
+          } > "$body_file"
+
+          owner="${GITHUB_REPOSITORY%%/*}"
+          pr_number=$(
+            gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" \
+              -f state=open \
+              -f "head=$owner:$UPGRADE_BRANCH" \
+              --jq '.[0].number // empty'
+          )
+
+          request_file="$RUNNER_TEMP/gh-aw-upgrade-pr.json"
+          if [[ -n "$pr_number" ]]; then
+            jq -n \
+              --arg title "[ci] Upgrade gh-aw to $GH_AW_VERSION" \
+              --rawfile body "$body_file" \
+              '{title: $title, body: $body}' > "$request_file"
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$pr_number" --input "$request_file"
+          else
+            jq -n \
+              --arg title "[ci] Upgrade gh-aw to $GH_AW_VERSION" \
+              --arg head "$UPGRADE_BRANCH" \
+              --arg base "$DEFAULT_BRANCH" \
+              --rawfile body "$body_file" \
+              '{title: $title, head: $head, base: $base, body: $body}' > "$request_file"
+            gh api --method POST "repos/$GITHUB_REPOSITORY/pulls" --input "$request_file"
+          fi

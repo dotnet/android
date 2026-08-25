@@ -43,6 +43,7 @@ imports:
   - uses: shared/pat_pool.md
     with:
       environment: copilot-pat-pool
+  - shared/network-allowlist.md
 
 environment: copilot-pat-pool
 # This workflow intentionally operates only from main. Manual dispatches from any
@@ -68,12 +69,6 @@ jobs:
   conclusion:
     permissions:
       issues: write
-network:
-  allowed:
-  - defaults
-  - github
-  - dotnet
-  - java
 safe-outputs:
   github-token: ${{ secrets.GITHUB_TOKEN }}
   create-pull-request:
@@ -96,7 +91,7 @@ safe-outputs:
     - automated
     - skill-runner
     close-older-issues: true
-    expires: 30
+    expires: 30d
   missing-data:
     create-issue: false
   missing-tool:

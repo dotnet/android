@@ -51,6 +51,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
     <ItemGroup>
       <_AndroidD8MapDiagnostics Condition=" '$(AndroidD8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
       <_AndroidR8MapDiagnostics Condition=" '$(AndroidR8IgnoreWarnings)' == 'true' " Include="warning" To="info" />
+      <_JavaClassFile Include="$(_AndroidIntermediateJavaClassDirectory)**\*.class" />
       <!-- User-authored AndroidJavaSource (Bind != True) is not in the acw-map; pass it to R8 so it
            is kept when shrinking is enabled rather than silently removed. -->
       <_R8KeepJavaSource Include="@(AndroidJavaSource)" Condition=" '%(AndroidJavaSource.Bind)' != 'True' " />
@@ -66,7 +67,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         OutputDirectory="$(_AndroidIntermediateDexOutputDirectory)"
         Debug="$(AndroidIncludeDebugSymbols)"
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
-        ClassesZip="$(_AndroidIntermediateClassesZip)"
+        ClassFiles="@(_JavaClassFile)"
         JavaLibrariesToEmbed="@(_JavaLibrariesToCompileForApp);"
         JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"
         EnableDesugar="$(AndroidEnableDesugar)"
@@ -100,7 +101,7 @@ Copyright (C) 2018 Xamarin. All rights reserved.
         OutputDirectory="$(_AndroidIntermediateDexOutputDirectory)"
         Debug="$(AndroidIncludeDebugSymbols)"
         JavaPlatformJarPath="$(JavaPlatformJarPath)"
-        ClassesZip="$(_AndroidIntermediateClassesZip)"
+        ClassFiles="@(_JavaClassFile)"
         JavaLibrariesToEmbed="@(_JavaLibrariesToCompileForApp)"
         AlternativeJarLibrariesToEmbed="@(_AlternativeJarForAppD8)"
         JavaLibrariesToReference="@(AndroidExternalJavaLibrary)"

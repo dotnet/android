@@ -344,7 +344,8 @@
           DependsOnTargets="Build">
   </Target>
 
-  <Target Name="_CopyToPackDirs">
+  <Target Name="_CopyToPackDirs"
+          DependsOnTargets="_AndroidGetNdkRedistributables">
     <PropertyGroup>
       <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">Mono</_RuntimePackName>
       <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">CoreCLR</_RuntimePackName>
@@ -356,19 +357,17 @@
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
-      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.so"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+      <_RuntimePackFiles Include="@(_AndroidNdkRedistributable)"
+                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'System' "
+                         AndroidRID="%(_AndroidNdkRedistributable.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' Or '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.o"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
-                         AndroidRuntime="$(CMakeRuntimeFlavor)"
-                         RuntimePackName="$(_RuntimePackName)" />
-      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.a"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+      <_RuntimePackFiles Include="@(_AndroidNdkRedistributable)"
+                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'Toolchain' "
+                         AndroidRID="%(_AndroidNdkRedistributable.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>

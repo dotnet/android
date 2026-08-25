@@ -279,7 +279,7 @@ namespace Java.Interop
 					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 				var marshaler   = GetValueMarshaler (targetType);
-				return marshaler.CreateValue (ref reference, options, targetType);
+				return CreateMarshaledValue (ref reference, options, targetType, marshaler);
 			}
 
 			[return: MaybeNull]
@@ -319,8 +319,14 @@ namespace Java.Interop
 	#pragma warning restore CS8600,CS8601 // Possible null reference assignment.
 				}
 
-				var marshaler   = GetValueMarshaler<T> ();
-				return marshaler.CreateGenericValue (ref reference, options, targetType);
+				var marshaler   = GetValueMarshaler (targetType);
+				var value       = CreateMarshaledValue (ref reference, options, targetType, marshaler);
+				if (value == null) {
+	#pragma warning disable 8653
+					return default (T);
+	#pragma warning restore 8653
+				}
+				return (T) value;
 			}
 
 			object? PeekBoxedObject (JniObjectReference reference)
@@ -361,7 +367,7 @@ namespace Java.Interop
 					return JavaPeerableValueMarshaler.Instance.CreateGenericValue (ref reference, options, targetType);
 				}
 				var marshaler   = GetValueMarshaler (targetType);
-				return marshaler.CreateValue (ref reference, options, targetType);
+				return CreateMarshaledValue (ref reference, options, targetType, marshaler);
 			}
 
 
@@ -401,8 +407,74 @@ namespace Java.Interop
 	#pragma warning restore CS8600,CS8601 // Possible null reference assignment.
 				}
 
-				var marshaler   = GetValueMarshaler<T> ();
-				return marshaler.CreateGenericValue (ref reference, options, targetType);
+				var marshaler   = GetValueMarshaler (targetType);
+				var value       = CreateMarshaledValue (ref reference, options, targetType, marshaler);
+				if (value == null) {
+	#pragma warning disable 8653
+					return default (T);
+	#pragma warning restore 8653
+				}
+				return (T) value;
+			}
+
+			object? CreateMarshaledValue (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions options,
+					Type targetType,
+					JniValueMarshaler marshaler)
+			{
+				if (!IsPrimitiveArrayMarshaler (marshaler))
+					return marshaler.CreateValue (ref reference, options, targetType);
+
+				var jniType = JniEnvironment.Types.GetJniTypeNameFromInstance (reference);
+				if (IsMatchingPrimitiveArray (marshaler, jniType))
+					return marshaler.CreateValue (ref reference, options, targetType);
+
+				if (GetListType (targetType) != null && jniType != null && !jniType.StartsWith ("[", StringComparison.Ordinal)) {
+					if (JavaListType.IsInstanceOfType (reference))
+						return CreateNonArrayListValue (ref reference, options, targetType);
+					JniObjectReference.Dispose (ref reference, options);
+					throw new InvalidCastException ($"JNI reference of type '{jniType}' does not implement java.util.List required by managed type '{targetType}'.");
+				}
+
+				JniObjectReference.Dispose (ref reference, options);
+				throw new InvalidCastException ($"JNI reference of type '{jniType}' is not the primitive array required by managed type '{targetType}'.");
+			}
+
+			static JniType? javaListType;
+			static JniType JavaListType {
+				get {return JniType.GetCachedJniType (ref javaListType, "java/util/List");}
+			}
+
+			bool IsMatchingPrimitiveArray (JniValueMarshaler marshaler, string? jniType)
+			{
+				if (jniType == null || !JniTypeSignature.TryParse (jniType, out var actualType))
+					return false;
+
+				foreach (var candidate in JniPrimitiveArrayMarshalers.Value) {
+					if (!ReferenceEquals (candidate.Value, marshaler))
+						continue;
+					return Runtime.TypeManager.GetTypeSignature (candidate.Key) == actualType;
+				}
+				return false;
+			}
+
+			static bool IsPrimitiveArrayMarshaler (JniValueMarshaler marshaler)
+			{
+				foreach (var candidate in JniPrimitiveArrayMarshalers.Value) {
+					if (ReferenceEquals (candidate.Value, marshaler))
+						return true;
+				}
+				return false;
+			}
+
+			protected virtual object? CreateNonArrayListValue (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions options,
+					Type targetType)
+			{
+				JniObjectReference.Dispose (ref reference, options);
+				throw new InvalidCastException ($"JNI reference cannot be converted to managed list type '{targetType}'.");
 			}
 		
 			Dictionary<Type, JniValueMarshaler> Marshalers = new Dictionary<Type, JniValueMarshaler> ();

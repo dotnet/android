@@ -815,5 +815,16 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Directory.CreateDirectory (path);
 			Assert.DoesNotThrow (() => Files.DeleteFile (path, "not a TaskLoggingHelper"));
 		}
+
+		[Test]
+		public void TryDeleteFile_LogsFailure ()
+		{
+			var path = Path.Combine (tempDir, "directory-instead-of-file-try-delete");
+			Directory.CreateDirectory (path);
+			string message = "";
+
+			Assert.DoesNotThrow (() => Files.TryDeleteFile (path, value => message = value));
+			Assert.That (message, Does.Contain (path));
+		}
 	}
 }
