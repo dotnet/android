@@ -189,7 +189,7 @@ auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemb
 
 	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 	const char *mapped_name = index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
-	std::free (heap_buffer);
+	Util::free_if_used (heap_buffer);
 
 	return mapped_name;
 }
