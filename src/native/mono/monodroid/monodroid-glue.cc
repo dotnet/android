@@ -1117,14 +1117,14 @@ add_assembly_load_timing_info (std::string_view prefix, const char *assembly_nam
 	size_t assembly_name_length = strlen (assembly_name);
 	size_t more_info_length = Helpers::add_with_overflow_check<size_t> (prefix.length (), assembly_name_length);
 	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (more_info_length, 1uz);
-	auto more_info = static_cast<char*> (std::malloc (allocation_size));
-	abort_unless (more_info != nullptr, "Failed to allocate assembly load timing information");
+	char local_buffer [SENSIBLE_PATH_MAX];
+	char *more_info = Helpers::get_temporary_buffer (local_buffer, allocation_size);
 
 	memcpy (more_info, prefix.data (), prefix.length ());
 	memcpy (more_info + prefix.length (), assembly_name, assembly_name_length);
 	more_info [more_info_length] = '\0';
 	internal_timing.add_more_info (more_info, more_info_length);
-	std::free (more_info);
+	Helpers::free_temporary_buffer (more_info, local_buffer);
 }
 
 inline void
