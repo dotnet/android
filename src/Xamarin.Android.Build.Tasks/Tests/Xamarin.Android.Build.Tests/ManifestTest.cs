@@ -809,6 +809,7 @@ namespace Bug12935
 		}
 
 		[Test]
+		[NonParallelizable]
 		[TestCaseSource (nameof (Get_DebuggerAttributeCases_Data))]
 		public void DebuggerAttribute (string debugType, bool isRelease, bool expected, AndroidRuntime runtime)
 		{
@@ -1117,6 +1118,7 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
+		[NonParallelizable]
 		[TestCaseSource (nameof (Get_AllForegroundServiceTypes_Data))]
 		public void AllForegroundServiceTypes (string serviceType, string expected, AndroidRuntime runtime)
 		{
