@@ -76,7 +76,6 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 		return log_and_return (ret, custom_path);
 	}
 	Util::create_public_directory (override_dir);
-	Util::create_public_directory (override_dir);
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *path_buffer = Util::join_paths (stack_buffer, sizeof (stack_buffer), override_dir, fallback_filename);
 
