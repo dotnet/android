@@ -326,27 +326,14 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 		return false;
 	}
 
-	dynamic_local_path_string lib_path { dso_path };
-	bool have_so_extension = lib_path.ends_with (Constants::dso_suffix);
-	if (base_dir.empty () || Util::is_path_rooted (dso_path)) {
-		// Absolute path or no base path, can't do much with it
-		path.assign (dso_path);
-		if (!have_so_extension) {
-			path.append (Constants::dso_suffix);
-		}
-
-		return true;
+	path.clear ();
+	bool is_rooted = Util::is_path_rooted (dso_path);
+	if (!base_dir.empty () && !is_rooted) {
+		path.append (base_dir).append (Constants::DIR_SEP);
 	}
 
-	path.assign (base_dir).append (Constants::DIR_SEP);
-
-	if (!Util::path_has_directory_components (dso_path) && !lib_path.starts_with (Constants::DSO_PREFIX)) {
-		path.append (Constants::DSO_PREFIX);
-	}
-	path.append (dso_path);
-	if (!have_so_extension) {
-		path.append (Constants::dso_suffix);
-	}
+	bool add_lib_prefix = !base_dir.empty () && !is_rooted && !Util::path_has_directory_components (dso_path);
+	Util::append_dso_name (path, dso_path, add_lib_prefix);
 
 	return true;
 }
