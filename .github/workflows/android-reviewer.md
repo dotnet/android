@@ -46,6 +46,7 @@ tools:
   bash:
     - az *
     - cat
+    - git diff *
     - grep
     - head
     - jq
