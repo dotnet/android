@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <limits>
 #include <string_view>
 
@@ -257,14 +258,15 @@ AndroidSystem::setup_environment () noexcept
 #if defined(DEBUG)
 	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
-	auto env_override_file_buffer = Util::join_paths (
+	char *env_override_file = Util::join_paths (
 		primary_override_dir,
 		Constants::OVERRIDE_ENVIRONMENT_FILE_NAME
 	);
-	if (Util::file_exists (env_override_file_buffer.get ())) {
-		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file_buffer.get ());
-		setup_environment_from_override_file (env_override_file_buffer.get ());
+	if (Util::file_exists (env_override_file)) {
+		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file);
+		setup_environment_from_override_file (env_override_file);
 	}
+	std::free (env_override_file);
 #endif // def DEBUG
 }
 
@@ -272,12 +274,11 @@ void
 AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
-	auto libmonodroid_path_buffer = Util::join_paths (
+	char *libmonodroid_path = Util::join_paths (
 		appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view (),
 		"libmonodroid.so"sv
 	);
 
-	const char *libmonodroid_path = libmonodroid_path_buffer.get ();
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to {}", libmonodroid_path);
 	if (!Util::file_exists (libmonodroid_path)) {
 		log_debug (LOG_ASSEMBLY, "{} not found, assuming application/android:extractNativeLibs == false", libmonodroid_path);
@@ -287,6 +288,7 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 		set_embedded_dso_mode_enabled (false);
 		native_libraries_dir.assign (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	}
+	std::free (libmonodroid_path);
 }
 
 auto

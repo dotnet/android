@@ -4,6 +4,7 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <cstdlib>
 #include <cstring>
 #include <string_view>
 
@@ -90,8 +91,7 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void create_xdg_directory (jstring_wrapper &home, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 		{
-			auto dir_buffer = Util::join_paths (home.get_string_view (), relative_path);
-			const char *dir_path = dir_buffer.get ();
+			char *dir_path = Util::join_paths (home.get_string_view (), relative_path);
 			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", dir_path);
 			int rv = Util::create_directory (dir_path, Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
@@ -101,6 +101,7 @@ namespace xamarin::android {
 			if (!environment_variable_name.empty ()) {
 				set_variable (environment_variable_name.data (), dir_path);
 			}
+			std::free (dir_path);
 		}
 
 		[[gnu::flatten, gnu::always_inline]]

@@ -6,10 +6,10 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <limits>
-#include <memory>
 #include <optional>
 #include <string_view>
 
@@ -308,7 +308,7 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
-		static auto join_paths (std::string_view first, std::string_view second, size_t &path_length) noexcept -> std::unique_ptr<char[]>
+		static auto join_paths (std::string_view first, std::string_view second, size_t &path_length) noexcept -> char*
 		{
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
 			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
@@ -319,8 +319,9 @@ namespace xamarin::android {
 			}
 
 			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
-			auto buffer = std::make_unique<char[]> (allocation_size);
-			char *destination = buffer.get ();
+			auto buffer = static_cast<char*> (std::malloc (allocation_size));
+			abort_unless (buffer != nullptr, "Failed to allocate joined path");
+			char *destination = buffer;
 			if (!first.empty ()) {
 				memcpy (destination, first.data (), first.length ());
 				destination += first.length ();
@@ -337,7 +338,7 @@ namespace xamarin::android {
 			return buffer;
 		}
 
-		static auto join_paths (std::string_view first, std::string_view second) noexcept -> std::unique_ptr<char[]>
+		static auto join_paths (std::string_view first, std::string_view second) noexcept -> char*
 		{
 			size_t path_length;
 			return join_paths (first, second, path_length);

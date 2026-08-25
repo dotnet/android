@@ -78,9 +78,11 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 
 	Util::create_public_directory (override_dir);
 	size_t path_length;
-	auto path_buffer = Util::join_paths (override_dir, fallback_filename, path_length);
-	std::string_view path_view { path_buffer.get (), path_length };
-	return log_and_return (open_file (path_view), path_view);
+	char *path_buffer = Util::join_paths (override_dir, fallback_filename, path_length);
+	std::string_view path_view { path_buffer, path_length };
+	FILE *ret = log_and_return (open_file (path_view), path_view);
+	std::free (path_buffer);
+	return ret;
 }
 
 void
