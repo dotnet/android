@@ -84,7 +84,7 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 	Util::join_paths (path_buffer, allocation_size, override_dir, fallback_filename);
 
 	std::string_view path_view { path_buffer, path_length };
-	FILE *ret = log_and_return (open_file (path_view), path_view);
+	ret = log_and_return (open_file (path_view), path_view);
 	Helpers::free_temporary_buffer (path_buffer, local_buffer);
 	return ret;
 }
