@@ -545,7 +545,7 @@ taken when generating binding code for `<fragment>` elements in the layout files
 choose one `Fragment` implementation as the default one to be used if the `<fragment>` element does not
 have any specific type (managed or otherwise) specified. Binding code generator uses the
 [`$(AndroidFragmentType)`](../../building-apps/build-properties.md#androidfragmenttype)
-MSBuild property for that purpose. The property can be overriden by the user to specify a type different
+MSBuild property for that purpose. The property can be overridden by the user to specify a type different
 than the default one. The property is set to `Android.App.Fragment` by default, and is overridden by the
 AndroidX NuGet packages.
 
