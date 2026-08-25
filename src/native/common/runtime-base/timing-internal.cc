@@ -193,11 +193,16 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	// We can count on the envvar being there, since we set it ourselves at startup
+	// TMPDIR is normally set by us at startup.
 	// Note that to access the file for a release app, the app must be made debuggable
 	// and `run-as` must be used.
+	const char *temporary_directory = getenv ("TMPDIR");
+	if (temporary_directory == nullptr || *temporary_directory == '\0') {
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file: TMPDIR is not set"sv);
+		return;
+	}
+
 	std::string_view file_name = output_file_name == nullptr ? default_timing_file_name : *output_file_name;
-	std::string_view temporary_directory = getenv ("TMPDIR");
 	char stack_buffer [Util::LocalPathBufferSize];
 	char *timing_log_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), temporary_directory, file_name);
 
