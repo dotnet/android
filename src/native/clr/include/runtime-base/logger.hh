@@ -5,7 +5,6 @@
 #include <string_view>
 
 #include <shared/log_types.hh>
-#include <runtime-base/strings.hh>
 
 namespace xamarin::android {
 	class Logger
