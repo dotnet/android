@@ -112,7 +112,7 @@ namespace xamarin::android {
 				 * pre-loaded apps!), we need the .__override__ directory...
 				 */
 				char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
-				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value, sizeof (value)) == 0) [[likely]] {
+				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value, sizeof (value)) <= 0) [[likely]] {
 					return;
 				}
 			}
@@ -127,7 +127,6 @@ namespace xamarin::android {
 			return embedded_dso_mode_enabled;
 		}
 
-		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int;
 		static auto monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> int;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;

@@ -38,25 +38,6 @@ auto AndroidSystem::monodroid_get_system_property (std::string_view const& name,
 	return Helpers::add_with_overflow_check<int> (property_length, 0);
 }
 
-auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int
-{
-	int len = monodroid__system_property_get (name, value.get (), value.size ());
-	if (len > 0) {
-		// Clumsy, but if we want direct writes to be fast, this is the price we pay
-		value.set_length_after_direct_write (static_cast<size_t>(len));
-		return len;
-	}
-
-	size_t plen;
-	const char *v = lookup_system_property (name, plen);
-	if (v == nullptr) {
-		return len;
-	}
-
-	value.assign (v, plen);
-	return Helpers::add_with_overflow_check<int> (plen, 0);
-}
-
 auto
 AndroidSystem::monodroid__system_property_get (std::string_view const& name, char *sp_value, size_t sp_value_len) noexcept -> int
 {
@@ -92,10 +73,10 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 		max = 51200;
 	}
 
-	dynamic_local_property_string override;
-	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override) > 0) {
+	char override[Constants::PROPERTY_VALUE_BUFFER_LEN];
+	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override, sizeof (override)) > 0) {
 		char *e;
-		max = strtol (override.get (), &e, 10);
+		max = strtol (override, &e, 10);
 		switch (*e) {
 			case 'k':
 				e++;
@@ -117,7 +98,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 				"Unsupported '%.*s' value '%s'.",
 				static_cast<int>(Constants::DEBUG_MONO_MAX_GREFC.length ()),
 				Constants::DEBUG_MONO_MAX_GREFC.data (),
-				override.get ()
+				override
 			);
 		}
 
