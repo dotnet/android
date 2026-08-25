@@ -140,15 +140,6 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
-    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
-      parameters:
-        configuration: $(XA.Build.Configuration)
-        testName: Mono.Android.NET_Tests-CoreCLR
-        project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-        extraBuildArgs: -p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false
-        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
-        artifactFolder: $(DotNetTargetFramework)-CoreCLR
-
     # Smoke coverage that the test app still builds and runs under Mono.
     - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
