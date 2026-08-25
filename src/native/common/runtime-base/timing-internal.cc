@@ -2,7 +2,6 @@
 #include <cstdlib>
 
 #include <runtime-base/android-system.hh>
-#include <runtime-base/strings.hh>
 #include <runtime-base/timing-internal.hh>
 #include <runtime-base/util.hh>
 
@@ -30,8 +29,9 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 		return;
 	}
 
-	dynamic_local_property_string value;
-	if (AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value) != 0) {
+	char value [Constants::PROPERTY_VALUE_BUFFER_LEN];
+	int value_length = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_TIMING, value);
+	if (value_length > 0) {
 		internal_timing.parse_options (value);
 	}
 
@@ -42,31 +42,33 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	);
 }
 
-void FastTiming::parse_options (dynamic_local_property_string const& value) noexcept
+void FastTiming::parse_options (char *value) noexcept
 {
-	if (value.length () == 0) {
-		return;
-	}
+	char *param = value;
+	while (param != nullptr && *param != '\0') {
+		char *separator = strchr (param, ',');
+		if (separator != nullptr) {
+			*separator = '\0';
+		}
 
-	string_segment param;
-	while (value.next_token (',', param)) {
-		if (param.equal (OPT_TO_FILE)) {
+		if (strcmp (param, OPT_TO_FILE.data ()) == 0) {
 			log_to_file = true;
-			continue;
-		}
-
-		if (param.starts_with (OPT_FILE_NAME)) {
-			output_file_name = std::make_unique<std::string> (param.start () + OPT_FILE_NAME.length (), param.length () - OPT_FILE_NAME.length ());
-			continue;
-		}
-
-		if (param.starts_with (OPT_DURATION)) {
-			if (!param.to_integer (duration_ms, OPT_DURATION.length ())) {
-				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param.start ());
+		} else if (strncmp (param, OPT_FILE_NAME.data (), OPT_FILE_NAME.length ()) == 0) {
+			output_file_name = std::make_unique<std::string> (param + OPT_FILE_NAME.length ());
+		} else if (strncmp (param, OPT_DURATION.data (), OPT_DURATION.length ()) == 0) {
+			const char *duration = param + OPT_DURATION.length ();
+			char *end;
+			errno = 0;
+			unsigned long long parsed_duration = strtoull (duration, &end, 10);
+			if (end == duration || *end != '\0' || errno == ERANGE || parsed_duration > std::numeric_limits<size_t>::max ()) {
+				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'"sv, param);
 				duration_ms = default_duration_milliseconds;
+			} else {
+				duration_ms = static_cast<size_t>(parsed_duration);
 			}
-			continue;
 		}
+
+		param = separator == nullptr ? nullptr : separator + 1;
 	}
 
 	if (output_file_name) {
@@ -91,12 +93,13 @@ bool FastTiming::no_events_logged (size_t entries) noexcept
 
 void FastTiming::dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept
 {
-	dynamic_local_string<Constants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
+	char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
 
 	line_writer ("Startup costs:"sv);
 	auto log = [&] (TimingEvent const& event) -> uint64_t {
-		uint64_t ret = format_message (event, message, indent);
-		line_writer (message.as_string_view ());
+		size_t message_length;
+		uint64_t ret = format_message (event, message, &message_length, indent);
+		line_writer (std::string_view { message, message_length });
 		return ret;
 	};
 	log (start_end_event_time);
@@ -149,7 +152,6 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 		chrono::nanoseconds time_ns (ns);
 		// Do not change the string format after the first colon, its format is required by performance measuring
 		// utilities.
-		// TODO: it's a bit wasteful... if dynamic_local_string is made an output iterator, we can use std::format_to
 		std::string s = std::format (
 			"  {}: {}:{}::{}",
 			msg,
