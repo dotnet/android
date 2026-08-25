@@ -121,6 +121,31 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Equal ("SelectionMode", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
 	}
 
+	[Theory]
+	[InlineData ("my/app/GenericSelectableList")]
+	[InlineData ("my/app/GenericForwardingSelectableList")]
+	public void Generate_InheritedGenericBaseCallback_UsesConstructedBaseMemberRef (string javaName)
+	{
+		var peer = ScanFixtures ().Single (p => p.JavaName == javaName);
+		using var stream = GenerateAssembly (new [] { peer });
+		using var pe = new PEReader (stream);
+		var reader = pe.GetMetadataReader ();
+
+		var member = reader.MemberReferences
+			.Select (h => reader.GetMemberReference (h))
+			.Single (m => reader.GetString (m.Name) == "n_SetSelection_I");
+
+		Assert.Equal (HandleKind.TypeSpecification, member.Parent.Kind);
+		var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) member.Parent);
+		var blob = reader.GetBlobReader (typeSpec.Signature);
+
+		Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
+		Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
+		Assert.Equal ("GenericSelectionHost`1", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
+		Assert.Equal (1, blob.ReadCompressedInteger ());
+		Assert.Equal (0x0E, blob.ReadByte ()); // ELEMENT_TYPE_STRING
+	}
+
 	[Fact]
 	public void Generate_HasIgnoresAccessChecksToAttribute ()
 	{

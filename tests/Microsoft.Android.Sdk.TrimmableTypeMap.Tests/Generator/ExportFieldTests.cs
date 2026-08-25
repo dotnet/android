@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -35,5 +36,19 @@ public class ExportFieldTests : FixtureTestBase
 		Assert.Equal ("__export__", getValue.Connector);
 		Assert.True (getValue.IsExport);
 		Assert.Equal ("public", getValue.JavaAccess);
+	}
+
+	[Fact]
+	public void JcwGenerator_EmitsInstanceFieldDeclarationAndMethodWrapper ()
+	{
+		var peer = FindFixtureByJavaName ("my/app/ExportFieldExample");
+		var generator = new JcwJavaSourceGenerator ();
+		using var writer = new StringWriter ();
+		generator.Generate (peer, writer);
+		var java = writer.ToString ();
+
+		Assert.Contains ("VALUE = GetValue ();", java);
+		Assert.Contains ("GetValue ()", java);
+		Assert.Contains ("n_GetValue", java);
 	}
 }
