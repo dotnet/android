@@ -361,11 +361,6 @@ namespace xamarin::android {
 			return heap_buffer;
 		}
 
-		static void free_if_used (void *heap_buffer) noexcept
-		{
-			std::free (heap_buffer);
-		}
-
 	private:
 		static inline int page_size = getpagesize ();
 	};

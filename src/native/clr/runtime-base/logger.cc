@@ -77,13 +77,13 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 	}
 	Util::create_public_directory (override_dir);
 	Util::create_public_directory (override_dir);
-	char local_buffer [Util::LocalPathBufferSize];
+	char stack_buffer [Util::LocalPathBufferSize];
 	char *heap_buffer;
-	const char *path_buffer = Util::join_paths (local_buffer, heap_buffer, override_dir, fallback_filename);
+	const char *path_buffer = Util::join_paths (stack_buffer, heap_buffer, override_dir, fallback_filename);
 
 	std::string_view path_view { path_buffer };
 	ret = log_and_return (open_file (path_view), path_view);
-	Util::free_if_used (heap_buffer);
+	std::free (heap_buffer);
 	return ret;
 }
 

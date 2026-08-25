@@ -162,11 +162,6 @@ namespace xamarin::android
 			return heap_buffer;
 		}
 
-		static void free_if_used (void *heap_buffer) noexcept
-		{
-			std::free (heap_buffer);
-		}
-
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.
 		template<size_t MaxStackSpace, typename TBuffer>
 		static void path_combine (TBuffer& buf, const char* path1, const char* path2) noexcept
