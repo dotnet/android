@@ -1959,6 +1959,11 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 			.Where (f => (f.Attributes & FieldAttributes.HasFieldRVA) != 0)
 			.ToList ();
 
+		Assert.All (rvaFields, field => {
+			var declaringType = reader.GetTypeDefinition (field.GetDeclaringType ());
+			Assert.StartsWith ("__utf8_", reader.GetString (declaringType.Name));
+		});
+
 		// Collect all JNI method names and signatures from the ACW peers
 		var allStrings = acwPeers
 			.SelectMany (p => p.MarshalMethods)
