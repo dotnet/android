@@ -1585,7 +1585,8 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
 					});
 				}
 
-				Assert.IsTrue (sb.Build (), "Solution should have built.");
+				var parameters = isRelease ? new [] { "Configuration=Release" } : [];
+				Assert.IsTrue (sb.Build (parameters), "Solution should have built.");
 			}
 		}
 	}

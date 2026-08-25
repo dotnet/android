@@ -2775,6 +2775,44 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
+		public void NativeAOTCustomReleaseConfiguration ([Values] bool publish)
+		{
+			const string configuration = "AppStore";
+			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: configuration) {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			var rid = MonoAndroidHelper.AbiToRid (DeviceAbi);
+			proj.SetProperty ("RuntimeIdentifier", rid);
+			proj.SetProperty (proj.ReleaseProperties, "Optimize", "true");
+			proj.SetProperty (proj.ReleaseProperties, "DebugType", "None");
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			var arguments = new [] { "-c", configuration };
+			var succeeded = publish
+				? dotnet.Publish (runtimeIdentifier: rid, msbuildArguments: arguments)
+				: dotnet.Build (runtimeIdentifier: rid, msbuildArguments: arguments);
+			Assert.IsTrue (succeeded, $"`dotnet {(publish ? "publish" : "build")} -c {configuration}` should succeed");
+
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, rid);
+			if (publish) {
+				outputDirectory = Path.Combine (outputDirectory, "publish");
+			}
+			var apk = Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			Assert.That (RunAdbCommand ($"install -r \"{apk}\"").Trim (), Does.EndWith ("Success"), "APK should install.");
+
+			ClearAdbLogcat ();
+			StartActivityAndAssert (proj);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds),
+				"Activity should have started.");
+		}
+
+		[Test]
 		public void NativeAOTSample ()
 		{
 			string [] properties = [
