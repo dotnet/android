@@ -1,6 +1,7 @@
 #if INSIDE_MONO_ANDROID_RUNTIME
 using System;
 using System.Reflection;
+using System.Threading;
 using Microsoft.Android.Runtime;
 
 namespace Android.Runtime
@@ -8,6 +9,9 @@ namespace Android.Runtime
 	public static class AndroidRuntimeInternal
 	{
 		internal static readonly Action<Exception> mono_unhandled_exception;
+		static int bridgeProcessingGeneration;
+
+		internal static int BridgeProcessingGeneration => Volatile.Read (ref bridgeProcessingGeneration);
 
 #pragma warning disable CS0649 // Field is never assigned to.  This field is assigned from monodroid-glue.cc.
 		internal static volatile bool BridgeProcessing; // = false
@@ -38,6 +42,11 @@ namespace Android.Runtime
 		static void MonoUnhandledException (Exception ex)
 		{
 			RuntimeNativeMethods.monodroid_debugger_unhandled_exception (ex);
+		}
+
+		internal static void NotifyBridgeProcessingFinished ()
+		{
+			Interlocked.Increment (ref bridgeProcessingGeneration);
 		}
 
 		public static void WaitForBridgeProcessing ()

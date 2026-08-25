@@ -1,4 +1,5 @@
 #nullable enable
+static Android.Runtime.JNIEnv.BridgeProcessingGeneration.get -> int
 REMOVED Xamarin.Android.Net.AndroidClientHandler
 REMOVED Xamarin.Android.Net.AndroidClientHandler.AndroidClientHandler() -> void
 REMOVED Xamarin.Android.Net.AndroidClientHandler.AssertSelf() -> void
