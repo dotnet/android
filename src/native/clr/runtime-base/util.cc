@@ -1,5 +1,4 @@
 #include <cerrno>
-#include <cstdlib>
 #include <cstring>
 
 #include <sys/stat.h>
@@ -23,11 +22,8 @@ Util::create_directory (const char *pathname, mode_t mode)
 
 	size_t path_length = strlen (pathname);
 	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
-	auto path = static_cast<char*> (std::malloc (allocation_size));
-	if (path == nullptr) {
-		errno = ENOMEM;
-		return -1;
-	}
+	char local_buffer [Constants::SENSIBLE_PATH_MAX];
+	char *path = Helpers::get_temporary_buffer (local_buffer, allocation_size);
 	memcpy (path, pathname, path_length + 1);
 
 	mode_t oldumask = umask (022);
@@ -53,7 +49,7 @@ Util::create_directory (const char *pathname, mode_t mode)
 	}
 	int saved_errno = errno;
 	umask (oldumask);
-	std::free (path);
+	Helpers::free_temporary_buffer (path, local_buffer);
 	errno = saved_errno;
 
 	return ret;
