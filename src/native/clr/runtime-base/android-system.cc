@@ -319,27 +319,23 @@ AndroidSystem::lookup_system_property (std::string_view const& name, size_t &val
 	);
 }
 
-auto AndroidSystem::get_full_dso_path_length (std::string const& base_dir, std::string_view const& dso_path) noexcept -> size_t
+auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t
 {
 	bool is_rooted = Util::is_path_rooted (dso_path);
 	bool add_lib_prefix = !base_dir.empty () && !is_rooted && !Util::path_has_directory_components (dso_path);
 	size_t dso_name_length = Util::get_dso_name_length (dso_path, add_lib_prefix);
-	if (base_dir.empty () || is_rooted) {
-		return dso_name_length;
+	size_t path_length = dso_name_length;
+	if (!base_dir.empty () && !is_rooted) {
+		path_length = Helpers::add_with_overflow_check<size_t> (base_dir.length (), dso_name_length);
+		path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 	}
 
-	size_t path_length = Helpers::add_with_overflow_check<size_t> (base_dir.length (), dso_name_length);
-	path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
-	return path_length;
-}
+	size_t required_capacity = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+	abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Full DSO path is too long");
+	if (buffer == nullptr || buffer_size < required_capacity) {
+		return -static_cast<ssize_t>(required_capacity);
+	}
 
-auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> size_t
-{
-	size_t path_length = get_full_dso_path_length (base_dir, dso_path);
-	abort_unless (buffer != nullptr && buffer_size > path_length, "Full DSO path buffer is too small");
-
-	bool is_rooted = Util::is_path_rooted (dso_path);
-	bool add_lib_prefix = !base_dir.empty () && !is_rooted && !Util::path_has_directory_components (dso_path);
 	char *destination = buffer;
 	if (!base_dir.empty () && !is_rooted) {
 		memcpy (destination, base_dir.data (), base_dir.length ());
@@ -347,8 +343,9 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 		*destination++ = Constants::DIR_SEP [0];
 	}
 
-	Util::format_dso_name (dso_path, add_lib_prefix, destination, buffer_size - static_cast<size_t>(destination - buffer));
-	return path_length;
+	ssize_t result = Util::format_dso_name (dso_path, add_lib_prefix, destination, buffer_size - static_cast<size_t>(destination - buffer));
+	abort_unless (result >= 0, "Failed to format DSO name using the required capacity");
+	return static_cast<ssize_t>(path_length);
 }
 
 template<class TContainer> [[gnu::always_inline]]
@@ -359,15 +356,13 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 	}
 
 	for (std::string const& dir : directories) {
-		size_t full_path_length = get_full_dso_path_length (dir, dso_name);
-		size_t allocation_size = Helpers::add_with_overflow_check<size_t> (full_path_length, 1uz);
 		char local_buffer [Util::LocalPathBufferSize];
-		char *full_path = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-		get_full_dso_path (dir, dso_name, full_path, allocation_size);
+		char *heap_buffer;
+		const char *full_path = get_full_dso_path (dir, dso_name, local_buffer, heap_buffer);
 
-		std::string_view full_path_view { full_path, full_path_length };
+		std::string_view full_path_view { full_path };
 		void *handle = DsoLoader::load (full_path_view, dl_flags, is_jni);
-		Helpers::free_temporary_buffer (full_path, local_buffer);
+		Util::free_if_used (heap_buffer);
 		if (handle != nullptr) {
 			return handle;
 		}

@@ -369,10 +369,15 @@ namespace xamarin::android {
 			return name_length;
 		}
 
-		static auto format_dso_name (std::string_view const& name, bool add_lib_prefix, char *buffer, size_t buffer_size) noexcept -> size_t
+		// Returns the name length excluding NUL, or the negative required capacity including NUL.
+		static auto format_dso_name (std::string_view const& name, bool add_lib_prefix, char *buffer, size_t buffer_size) noexcept -> ssize_t
 		{
 			size_t name_length = get_dso_name_length (name, add_lib_prefix);
-			abort_unless (buffer != nullptr && buffer_size > name_length, "DSO name buffer is too small");
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (name_length, 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "DSO name is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
 
 			std::string_view prefix = add_lib_prefix && !name.starts_with (Constants::DSO_PREFIX) ? Constants::DSO_PREFIX : std::string_view {};
 			std::string_view suffix = name.ends_with (Constants::dso_suffix) ? std::string_view {} : Constants::dso_suffix;
@@ -390,7 +395,24 @@ namespace xamarin::android {
 			}
 			buffer [name_length] = '\0';
 
-			return name_length;
+			return static_cast<ssize_t>(name_length);
+		}
+
+		template<size_t Size>
+		static auto format_dso_name (char (&stack_buffer)[Size], char *&heap_buffer, std::string_view const& name, bool add_lib_prefix) noexcept -> const char*
+		{
+			heap_buffer = nullptr;
+			ssize_t result = format_dso_name (name, add_lib_prefix, stack_buffer, Size);
+			if (result >= 0) {
+				return stack_buffer;
+			}
+
+			size_t required_capacity = static_cast<size_t>(-result);
+			heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (heap_buffer != nullptr, "Failed to allocate DSO name");
+			result = format_dso_name (name, add_lib_prefix, heap_buffer, required_capacity);
+			abort_unless (result >= 0, "Failed to format DSO name using the required capacity");
+			return heap_buffer;
 		}
 
 	private:
