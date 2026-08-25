@@ -137,16 +137,15 @@ namespace xamarin::android {
 	private:
 		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t;
 
-		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size, char *&heap_buffer) noexcept -> const char*
+		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size) noexcept -> char*
 		{
-			heap_buffer = nullptr;
 			ssize_t result = get_full_dso_path (base_dir, dso_path, stack_buffer, stack_buffer_size);
 			if (result >= 0) {
 				return stack_buffer;
 			}
 
 			size_t required_capacity = static_cast<size_t>(-result);
-			heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
 			abort_unless (heap_buffer != nullptr, "Failed to allocate full DSO path");
 			result = get_full_dso_path (base_dir, dso_path, heap_buffer, required_capacity);
 			abort_unless (result >= 0, "Failed to format full DSO path using the required capacity");
