@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <span>
 #include <string>
@@ -175,9 +176,27 @@ namespace xamarin::android {
 #if !defined (XA_HOST_NATIVEAOT)
 		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
 		{
-			char name[Constants::SENSIBLE_PATH_MAX];
-			size_t length = format_primary_override_dir (home, name, sizeof (name));
-			return {name, length};
+			std::string_view home_path = home.get_string_view ();
+			size_t length = Helpers::add_with_overflow_check<size_t> (home_path.length (), Constants::OVERRIDE_DIRECTORY_NAME.length ());
+			length = Helpers::add_with_overflow_check<size_t> (length, Constants::android_lib_abi.length ());
+			length = Helpers::add_with_overflow_check<size_t> (length, 2uz);
+			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (length, 1uz);
+			auto name = static_cast<char*> (std::malloc (allocation_size));
+			abort_unless (name != nullptr, "Failed to allocate primary override directory path");
+
+			char *destination = name;
+			memcpy (destination, home_path.data (), home_path.length ());
+			destination += home_path.length ();
+			*destination++ = Constants::DIR_SEP [0];
+			memcpy (destination, Constants::OVERRIDE_DIRECTORY_NAME.data (), Constants::OVERRIDE_DIRECTORY_NAME.length ());
+			destination += Constants::OVERRIDE_DIRECTORY_NAME.length ();
+			*destination++ = Constants::DIR_SEP [0];
+			memcpy (destination, Constants::android_lib_abi.data (), Constants::android_lib_abi.length ());
+			name [length] = '\0';
+
+			std::string path { name, length };
+			std::free (name);
+			return path;
 		}
 #endif
 
