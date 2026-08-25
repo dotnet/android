@@ -94,6 +94,22 @@ namespace Java.InteropTests
 	}
 
 	[TestFixture]
+	public class JavaObjectArray_NullableByte_ContractTest : JavaObjectArrayContractTest<byte?> {
+		protected override byte? CreateValueA () {return 128;}
+		protected override byte? CreateValueB () {return 255;}
+
+		[Test]
+		public void NullableByteValues ()
+		{
+			var values = new byte? [] { 1, null, 127, 128, 200, 255 };
+			using (var array = new JavaObjectArray<byte?> (values)) {
+				Assert.AreEqual ("[Ljava/lang/Byte;", array.GetJniTypeName ());
+				CollectionAssert.AreEqual (values, array.ToArray ());
+			}
+		}
+	}
+
+	[TestFixture]
 	public class JavaObjectArray_Int32Array_ContractTest : JavaObjectArrayContractTest<int[]> {
 		protected override int[]  CreateValueA () {return new[]{1};}
 		protected override int[]  CreateValueB () {return new[]{2};}
