@@ -159,6 +159,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildBasicApplicationThenMoveIt ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

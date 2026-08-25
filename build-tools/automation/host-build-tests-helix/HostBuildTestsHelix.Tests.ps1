@@ -131,6 +131,7 @@ try {
 			$command.Contains('set "CONFIGURATION=Release"') -or
 			-not $command.Contains('set "RUNNINGONCI=true"') -or
 			-not $command.Contains('set "BuildInParallel=false"') -or
+			-not $command.Contains('set "_AndroidBuildRuntimeIdentifiersInParallel=false"') -or
 			-not $command.Contains('set "TEST_ANDROID_NDK_PATH=') -or
 			-not $command.Contains('tar.exe -a -c -f diagnostics.zip')) {
 			throw 'The generated command did not apply the requested build configuration.'
