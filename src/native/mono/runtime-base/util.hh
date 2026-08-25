@@ -54,6 +54,8 @@ namespace xamarin::android
 	class Util
 	{
 	public:
+		static constexpr size_t LocalPathBufferSize = SENSIBLE_PATH_MAX;
+
 		static void initialize () noexcept;
 
 		static int monodroid_getpagesize () noexcept
@@ -109,13 +111,8 @@ namespace xamarin::android
 			return fd;
 		}
 
-		// Returns the path length excluding the terminating NUL, or -1 on failure.
-		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
+		static auto get_joined_path_length (std::string_view first, std::string_view second) noexcept -> size_t
 		{
-			if (buffer == nullptr || buffer_size == 0) {
-				return -1;
-			}
-
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
 			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
 			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
@@ -123,11 +120,17 @@ namespace xamarin::android
 			if (add_separator) {
 				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 			}
+			return path_length;
+		}
 
-			if (path_length >= buffer_size || path_length > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
-				return -1;
-			}
+		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> size_t
+		{
+			size_t path_length = get_joined_path_length (first, second);
+			abort_unless (buffer != nullptr && buffer_size > path_length, "Joined path buffer is too small");
 
+			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
+			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
+			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
 			char *destination = buffer;
 			if (!first.empty ()) {
 				memcpy (destination, first.data (), first.length ());
@@ -142,7 +145,7 @@ namespace xamarin::android
 			}
 			buffer [path_length] = '\0';
 
-			return static_cast<ssize_t>(path_length);
+			return path_length;
 		}
 
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.

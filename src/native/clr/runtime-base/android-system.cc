@@ -258,15 +258,17 @@ AndroidSystem::setup_environment () noexcept
 #if defined(DEBUG)
 	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
-	char *env_override_file = Util::join_paths (
-		primary_override_dir,
-		Constants::OVERRIDE_ENVIRONMENT_FILE_NAME
-	);
+	size_t env_override_file_length = Util::get_joined_path_length (primary_override_dir, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
+	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (env_override_file_length, 1uz);
+	char local_buffer [Util::LocalPathBufferSize];
+	char *env_override_file = Helpers::get_temporary_buffer (local_buffer, allocation_size);
+	Util::join_paths (env_override_file, allocation_size, primary_override_dir, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
+
 	if (Util::file_exists (env_override_file)) {
 		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file);
 		setup_environment_from_override_file (env_override_file);
 	}
-	std::free (env_override_file);
+	Helpers::free_temporary_buffer (env_override_file, local_buffer);
 #endif // def DEBUG
 }
 
@@ -274,10 +276,12 @@ void
 AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
-	char *libmonodroid_path = Util::join_paths (
-		appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view (),
-		"libmonodroid.so"sv
-	);
+	std::string_view app_data_dir = appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view ();
+	size_t path_length = Util::get_joined_path_length (app_data_dir, "libmonodroid.so"sv);
+	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+	char local_buffer [Util::LocalPathBufferSize];
+	char *libmonodroid_path = Helpers::get_temporary_buffer (local_buffer, allocation_size);
+	Util::join_paths (libmonodroid_path, allocation_size, app_data_dir, "libmonodroid.so"sv);
 
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to {}", libmonodroid_path);
 	if (!Util::file_exists (libmonodroid_path)) {
@@ -288,7 +292,7 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 		set_embedded_dso_mode_enabled (false);
 		native_libraries_dir.assign (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	}
-	std::free (libmonodroid_path);
+	Helpers::free_temporary_buffer (libmonodroid_path, local_buffer);
 }
 
 auto
