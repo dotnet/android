@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <cstring>
+#include <cstdio>
 #include <limits>
 #include <span>
 #include <string>
@@ -79,7 +79,7 @@ namespace xamarin::android {
 		static void set_primary_override_dir (jstring_wrapper& home) noexcept
 		{
 #if defined (XA_HOST_NATIVEAOT)
-			determine_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
+			format_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
 #else
 			primary_override_dir = determine_primary_override_dir (home);
 #endif
@@ -111,8 +111,8 @@ namespace xamarin::android {
 				 * However, if any logging is enabled (which should _not_ happen with
 				 * pre-loaded apps!), we need the .__override__ directory...
 				 */
-				dynamic_local_property_string value;
-				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value) == 0) [[likely]] {
+				char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
+				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value, sizeof (value)) == 0) [[likely]] {
 					return;
 				}
 			}
@@ -128,25 +128,7 @@ namespace xamarin::android {
 		}
 
 		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int;
-
-		template<size_t Size>
-		static auto monodroid_get_system_property (std::string_view const& name, char (&value)[Size]) noexcept -> int
-		{
-			dynamic_local_property_string property_value;
-			int result = monodroid_get_system_property (name, property_value);
-			if (result > 0) {
-				if (property_value.length () >= Size) {
-					value [0] = '\0';
-					return -1;
-				}
-				memcpy (value, property_value.get (), property_value.length ());
-				value [property_value.length ()] = '\0';
-			} else {
-				value [0] = '\0';
-			}
-			return result;
-		}
-
+		static auto monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> int;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
@@ -175,28 +157,28 @@ namespace xamarin::android {
 			embedded_dso_mode_enabled = yesno;
 		}
 
-#if defined (XA_HOST_NATIVEAOT)
-		static void determine_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept
+		static auto format_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept -> size_t
 		{
-			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
-			name.append ("/")
-				.append (Constants::OVERRIDE_DIRECTORY_NAME)
-				.append ("/")
-				.append (Constants::android_lib_abi);
-
-			abort_unless (name.length () < buffer_size, "Primary override directory path is too long");
-			memcpy (buffer, name.get (), name.length () + 1);
+			int length = snprintf (
+				buffer,
+				buffer_size,
+				"%s/%.*s/%.*s",
+				home.get_cstr (),
+				static_cast<int>(Constants::OVERRIDE_DIRECTORY_NAME.length ()),
+				Constants::OVERRIDE_DIRECTORY_NAME.data (),
+				static_cast<int>(Constants::android_lib_abi.length ()),
+				Constants::android_lib_abi.data ()
+			);
+			abort_unless (length >= 0 && static_cast<size_t>(length) < buffer_size, "Primary override directory path is too long");
+			return static_cast<size_t>(length);
 		}
-#else
+
+#if !defined (XA_HOST_NATIVEAOT)
 		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
 		{
-			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
-			name.append ("/")
-				.append (Constants::OVERRIDE_DIRECTORY_NAME)
-				.append ("/")
-				.append (Constants::android_lib_abi);
-
-			return {name.get (), name.length ()};
+			char name[Constants::SENSIBLE_PATH_MAX];
+			size_t length = format_primary_override_dir (home, name, sizeof (name));
+			return {name, length};
 		}
 #endif
 

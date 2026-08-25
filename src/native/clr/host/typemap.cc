@@ -1,5 +1,6 @@
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 
 #include <host/typemap.hh>
@@ -152,14 +153,16 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
-	dynamic_local_path_string full_type_name;
-	full_type_name.append (typeName);
-	full_type_name.append (", "sv);
-	full_type_name.append (assemblyFullName);
+	char full_type_name[Constants::SENSIBLE_PATH_MAX];
+	int length = snprintf (full_type_name, sizeof (full_type_name), "%s, %s", typeName, assemblyFullName);
+	if (length < 0 || static_cast<size_t>(length) >= sizeof (full_type_name)) [[unlikely]] {
+		log_warn (LOG_ASSEMBLY, "typemap: managed type name is too long");
+		return nullptr;
+	}
 
-	ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 
-	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
+	return index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
 }
 #endif // def DEBUG
 

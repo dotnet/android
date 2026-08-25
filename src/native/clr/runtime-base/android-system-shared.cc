@@ -7,6 +7,37 @@ using namespace xamarin::android;
 
 using std::operator""sv;
 
+auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> int
+{
+	if (value == nullptr || value_size == 0) {
+		return -1;
+	}
+
+	value [0] = '\0';
+	if (value_size < Constants::PROPERTY_VALUE_BUFFER_LEN) {
+		return -1;
+	}
+
+	int len = monodroid__system_property_get (name, value, value_size);
+	if (len > 0) {
+		return len;
+	}
+
+	size_t property_length;
+	const char *property_value = lookup_system_property (name, property_length);
+	if (property_value == nullptr) {
+		return len;
+	}
+
+	if (property_length >= value_size) {
+		return -1;
+	}
+
+	memcpy (value, property_value, property_length);
+	value [property_length] = '\0';
+	return Helpers::add_with_overflow_check<int> (property_length, 0);
+}
+
 auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int
 {
 	int len = monodroid__system_property_get (name, value.get (), value.size ());
