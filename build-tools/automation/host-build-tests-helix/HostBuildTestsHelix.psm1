@@ -300,7 +300,7 @@ set "GRADLE_USER_HOME=%HELIX_CORRELATION_PAYLOAD%\gradle"
 set "DOTNET_CLI_HOME=%HELIX_WORKITEM_ROOT%\dotnet-home"
 set "TEMP=%HELIX_WORKITEM_ROOT%\temp"
 set "TMP=%TEMP%"
-set "BUILD_STAGINGDIRECTORY=%HELIX_WORKITEM_UPLOAD_ROOT%"
+set "BUILD_STAGINGDIRECTORY=%HELIX_WORKITEM_ROOT%\o"
 set "PATH=%HELIX_CORRELATION_PAYLOAD%\dotnet-tools;%DOTNET_ROOT%;%ANDROID_HOME%\platform-tools;%JAVA_HOME%\bin;%PATH%"
 set "RUNNINGONCI=true"
 set "DOTNET_CLI_TELEMETRY_OPTOUT=1"
@@ -320,15 +320,14 @@ mkdir "%HELIX_WORKITEM_UPLOAD_ROOT%\dumps" 2>nul
 mkdir "%DOTNET_CLI_HOME%" 2>nul
 mkdir "%NUGET_PACKAGES%" 2>nul
 mkdir "%TEMP%" 2>nul
+mkdir "%BUILD_STAGINGDIRECTORY%" 2>nul
 copy /y "%~dp0slice.runsettings" "%HELIX_WORKITEM_UPLOAD_ROOT%\slice.runsettings" >nul
 copy /y "%~dp0work-item.json" "%HELIX_WORKITEM_UPLOAD_ROOT%\work-item.json" >nul
 pushd "%REPO%"
 "%DOTNET_ROOT%\dotnet.exe" test "%REPO%\__TEST_ASSEMBLY__" --settings "%~dp0slice.runsettings" --logger "trx;LogFileName=results.trx" --results-directory "%HELIX_WORKITEM_UPLOAD_ROOT%" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ > "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log" 2>&1
 set "testExitCode=%ERRORLEVEL%"
 type "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log"
-pushd "%HELIX_WORKITEM_UPLOAD_ROOT%"
-tar.exe -a -c -f diagnostics.zip --exclude=diagnostics.zip TestRelease dumps >nul 2>&1
-popd
+tar.exe -a -c -f "%HELIX_WORKITEM_UPLOAD_ROOT%\diagnostics.zip" -C "%BUILD_STAGINGDIRECTORY%" . >nul 2>&1
 "%DOTNET_ROOT%\dotnet.exe" build-server shutdown >nul 2>&1
 popd
 exit /b %testExitCode%
@@ -354,7 +353,7 @@ export NUGET_PACKAGES="$HELIX_WORKITEM_ROOT/nuget-packages"
 export GRADLE_USER_HOME="$HELIX_CORRELATION_PAYLOAD/gradle"
 export DOTNET_CLI_HOME="$HELIX_WORKITEM_ROOT/dotnet-home"
 export TMPDIR="$HELIX_WORKITEM_ROOT/temp"
-export BUILD_STAGINGDIRECTORY="$HELIX_WORKITEM_UPLOAD_ROOT"
+export BUILD_STAGINGDIRECTORY="$HELIX_WORKITEM_ROOT/o"
 export PATH="$HELIX_CORRELATION_PAYLOAD/dotnet-tools:$DOTNET_ROOT:$ANDROID_HOME/platform-tools:$JAVA_HOME/bin:$PATH"
 export RUNNINGONCI=true
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
@@ -370,7 +369,7 @@ export DOTNET_DbgMiniDumpType=2
 export DOTNET_DbgMiniDumpName="$HELIX_WORKITEM_UPLOAD_ROOT/dumps/%e.%p.dmp"
 test -x "$DOTNET_ROOT/dotnet"
 test -f "$REPO/__TEST_ASSEMBLY__"
-mkdir -p "$HELIX_WORKITEM_UPLOAD_ROOT/dumps" "$DOTNET_CLI_HOME" "$NUGET_PACKAGES" "$TMPDIR"
+mkdir -p "$HELIX_WORKITEM_UPLOAD_ROOT/dumps" "$DOTNET_CLI_HOME" "$NUGET_PACKAGES" "$TMPDIR" "$BUILD_STAGINGDIRECTORY"
 cp "$HELIX_WORKITEM_ROOT/slice.runsettings" "$HELIX_WORKITEM_UPLOAD_ROOT/slice.runsettings"
 cp "$HELIX_WORKITEM_ROOT/work-item.json" "$HELIX_WORKITEM_UPLOAD_ROOT/work-item.json"
 cd "$REPO"
@@ -378,7 +377,7 @@ set +e
 "$DOTNET_ROOT/dotnet" test "$REPO/__TEST_ASSEMBLY__" --settings "$HELIX_WORKITEM_ROOT/slice.runsettings" --logger "trx;LogFileName=results.trx" --results-directory "$HELIX_WORKITEM_UPLOAD_ROOT" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ 2>&1 | tee "$HELIX_WORKITEM_UPLOAD_ROOT/console.log"
 test_exit=${PIPESTATUS[0]}
 set -e
-(cd "$HELIX_WORKITEM_UPLOAD_ROOT" && find . -type f \( -name '*.binlog' -o -name '*.dmp' -o -name '*.log' -o -name '*.txt' \) -print0 | tar --null -czf diagnostics.tar.gz --files-from=-) || true
+tar -czf "$HELIX_WORKITEM_UPLOAD_ROOT/diagnostics.tar.gz" -C "$BUILD_STAGINGDIRECTORY" . || true
 "$DOTNET_ROOT/dotnet" build-server shutdown >/dev/null 2>&1 || true
 exit "$test_exit"
 '@
