@@ -332,9 +332,9 @@ auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_
 		return dso_name;
 	}
 
-	auto full_path = Util::join_paths (base_dir, std::string_view { dso_name, dso_name_length }, path_length);
+	char *full_path = Util::join_paths (base_dir, std::string_view { dso_name, dso_name_length }, path_length);
 	std::free (dso_name);
-	return full_path.release ();
+	return full_path;
 }
 
 template<class TContainer> [[gnu::always_inline]]
