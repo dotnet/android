@@ -20,28 +20,35 @@ Util::create_directory (const char *pathname, mode_t mode)
 	 	mode = Constants::DEFAULT_DIRECTORY_MODE;
 	}
 
-	mode_t oldumask = umask (022);
-	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> path { pathname };
-	int rv, ret = 0;
+	size_t path_length = strlen (pathname);
+	if (path_length >= Constants::SENSIBLE_PATH_MAX) {
+		errno = ENAMETOOLONG;
+		return -1;
+	}
 
-	for (char *d = path.get (); d != nullptr && *d != '\0'; d++) {
+	char path[Constants::SENSIBLE_PATH_MAX];
+	memcpy (path, pathname, path_length + 1);
+
+	mode_t oldumask = umask (022);
+	int ret = 0;
+
+	for (char *d = path; *d != '\0'; d++) {
 		if (*d != '/') {
 			continue;
 		}
 
 		*d = '\0';
-		if (*path.get () != '\0') {
-			rv = ::mkdir (path.get (), mode);
-			if (rv == -1 && errno != EEXIST) {
-				ret = -1;
-				break;
-			}
-		}
+		int rv = *path == '\0' ? 0 : ::mkdir (path, mode);
 		*d = '/';
+
+		if (rv == -1 && errno != EEXIST) {
+			ret = -1;
+			break;
+		}
 	}
 
 	if (ret == 0) {
-		ret = ::mkdir (pathname, mode);
+		ret = ::mkdir (path, mode);
 	}
 	umask (oldumask);
 
