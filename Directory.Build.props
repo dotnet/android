@@ -16,12 +16,25 @@
     <TestOutputDirectory>$(MSBuildThisFileDirectory)bin\Test$(Configuration)\</TestOutputDirectory>
     <BootstrapTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\Xamarin.Android.Tools.BootstrapTasks.dll</BootstrapTasksAssembly>
     <PrepTasksAssembly>$(BootstrapOutputDirectory)$(DotNetStableTargetFramework)\xa-prep-tasks.dll</PrepTasksAssembly>
-    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' and Exists('$(BuildOutputDirectory)dotnet-install-location.txt') ">$([System.IO.File]::ReadAllText('$(BuildOutputDirectory)dotnet-install-location.txt').Trim())</DotNetPreviewPath>
+    <_DotNetInstallLocationFile>$(BuildOutputDirectory)dotnet-install-location.txt</_DotNetInstallLocationFile>
+    <_DotNetInstallLocation Condition=" '$(TF_BUILD)' == '' and '$(GITHUB_ACTIONS)' == '' and '$(CI)' == '' and Exists('$(_DotNetInstallLocationFile)') ">$([System.IO.File]::ReadAllText('$(_DotNetInstallLocationFile)').Trim())</_DotNetInstallLocation>
     <_DotNetSharedInstallBase Condition=" '$(XA_DOTNET_SHARED_INSTALL_BASE)' != '' and '$(TF_BUILD)' == '' and '$(GITHUB_ACTIONS)' == '' and '$(CI)' == '' ">$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', '$(XA_DOTNET_SHARED_INSTALL_BASE)'))</_DotNetSharedInstallBase>
-    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' and '$(_DotNetSharedInstallBase)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(_DotNetSharedInstallBase)\$(MicrosoftNETSdkPackageVersion)'))</DotNetPreviewPath>
+    <_DotNetSharedInstallPath Condition=" '$(_DotNetInstallLocation)' != '' and Exists('$(_DotNetInstallLocation)sdk\$(MicrosoftNETSdkPackageVersion)') ">$(_DotNetInstallLocation)</_DotNetSharedInstallPath>
+    <_DotNetSharedInstallPath Condition=" '$(_DotNetSharedInstallPath)' == '' and '$(_DotNetSharedInstallBase)' != '' ">$(_DotNetSharedInstallBase)\$(MicrosoftNETSdkPackageVersion)</_DotNetSharedInstallPath>
+    <_DotNetUsingSharedSdk Condition=" '$(_DotNetSharedInstallPath)' != '' ">true</_DotNetUsingSharedSdk>
+    <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' and '$(_DotNetSharedInstallPath)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(_DotNetSharedInstallPath)'))</DotNetPreviewPath>
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
-    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and Exists('$(DotNetPreviewPath)') ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
+    <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and (Exists('$(DotNetPreviewPath)dotnet') or Exists('$(DotNetPreviewPath)dotnet.exe')) ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">dotnet</DotNetPreviewTool>
+    <_DotNetWorkloadPackRoot Condition=" '$(_DotNetUsingSharedSdk)' == 'true' ">$(BuildOutputDirectory)lib\</_DotNetWorkloadPackRoot>
+    <_DotNetWorkloadPackRoot Condition=" '$(_DotNetWorkloadPackRoot)' == '' ">$(DotNetPreviewPath)</_DotNetWorkloadPackRoot>
+    <_DotNetWorkloadManifestRoot Condition=" '$(_DotNetUsingSharedSdk)' == 'true' ">$(_DotNetWorkloadPackRoot)sdk-manifests\</_DotNetWorkloadManifestRoot>
+    <_DotNetWorkloadManifestRoot Condition=" '$(_DotNetWorkloadManifestRoot)' == '' ">$(DotNetPreviewPath)sdk-manifests\</_DotNetWorkloadManifestRoot>
+    <_DotNetWorkloadUserHome Condition=" '$(_DotNetUsingSharedSdk)' == 'true' ">$(BuildOutputDirectory)dotnet-home\</_DotNetWorkloadUserHome>
+    <_DotNetWorkloadUserProfileRoot Condition=" '$(_DotNetUsingSharedSdk)' == 'true' ">$(_DotNetWorkloadUserHome).dotnet\</_DotNetWorkloadUserProfileRoot>
+    <_DotNetWorkloadUserProfileRoot Condition=" '$(_DotNetWorkloadUserProfileRoot)' == '' ">$(DotNetPreviewPath)</_DotNetWorkloadUserProfileRoot>
+    <_DotNetWorkloadUserManifestRoot>$(_DotNetWorkloadUserProfileRoot)sdk-manifests\</_DotNetWorkloadUserManifestRoot>
+    <_DotNetWorkloadUserPackRoot>$(_DotNetWorkloadUserProfileRoot)packs\</_DotNetWorkloadUserPackRoot>
     <!-- Copy PackageReference content to OutputDir for our build tasks, tests, and installer creation logic. This no longer happens by default in short-form projects. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <!-- Ensure reference assemblies copied to bin -->

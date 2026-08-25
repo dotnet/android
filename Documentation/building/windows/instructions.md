@@ -103,9 +103,11 @@ To share the provisioned SDK between multiple worktrees, set
 
 The SDK will be installed under
 `$env:XA_DOTNET_SHARED_INSTALL_BASE\<sdk-version>`, shared by Debug and Release
-builds. The override is ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is
-set, so CI builds and local builds without `XA_DOTNET_SHARED_INSTALL_BASE`
-continue to use `bin\$(Configuration)\dotnet`.
+builds. The shared SDK is treated as read-only after provisioning; workload
+packs, manifests, and installation state remain under `bin\$(Configuration)`.
+The override is ignored when `TF_BUILD`, `GITHUB_ACTIONS`, or `CI` is set, so
+CI builds and local builds without `XA_DOTNET_SHARED_INSTALL_BASE` continue to
+use `bin\$(Configuration)\dotnet`.
 
 See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 

@@ -22,10 +22,12 @@
     <!-- Build out of process so NuGet-generated props are evaluated after restore. -->
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_TopDir)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-bootstrap-tasks.binlog"
+        EnvironmentVariables="$(_DotNetBuildEnvironment)"
         WorkingDirectory="$(_TopDir)"
     />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_TopDir)\src\workloads\workloads.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-workloads.binlog"
+        EnvironmentVariables="$(_DotNetBuildEnvironment)"
         WorkingDirectory="$(_TopDir)"
     />
     <CallTarget Targets="PrepareJavaInterop" />

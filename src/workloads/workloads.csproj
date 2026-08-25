@@ -2,7 +2,7 @@
 ***********************************************************************************************
 workloads.csproj
 
-Provisions the Android-specific .NET workloads against the .NET SDK that
+Provisions the Android-specific .NET workloads for the .NET SDK that
 `eng/install-dotnet.{sh,ps1}` has already installed at
 `bin/$(Configuration)/dotnet/`:
 
@@ -10,8 +10,8 @@ Provisions the Android-specific .NET workloads against the .NET SDK that
   * Restores the Mono and Emscripten workload manifest packages
     (Microsoft.NET.Workload.{Mono,Emscripten}.*.Manifest-*).
   * Copies the workload manifests from the NuGet package cache into the
-    local SDK's `sdk-manifests/` folder so the SDK can resolve the
-    workloads against the locally installed runtime packs.
+    checkout-local workload root so the SDK can resolve the workloads
+    against the locally installed runtime packs.
 
 Run via:
 
@@ -61,14 +61,14 @@ inside xaprepare.
 
   <!--
     After Restore has populated $(XAPackagesDir) with the workload manifest
-    packages, copy each manifest's `data/` directory into the local SDK's
+    packages, copy each manifest's `data/` directory into the checkout-local
     `sdk-manifests/<band>/microsoft.net.workload.<flavor>.<dotnet>/<ver>/`
     so the SDK can resolve the Android workloads.
   -->
   <Target Name="_CopyWorkloadManifests" AfterTargets="Build">
     <PropertyGroup>
       <_DotNetSdk>$(DotNetPreviewPath.TrimEnd('\').TrimEnd('/'))</_DotNetSdk>
-      <_SdkManifests>$(_DotNetSdk)\sdk-manifests</_SdkManifests>
+      <_SdkManifests>$(_DotNetWorkloadManifestRoot)</_SdkManifests>
     </PropertyGroup>
 
     <Error

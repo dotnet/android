@@ -17,6 +17,7 @@
     <!-- Build out of process so NuGet-generated props are evaluated after restore. -->
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_Root)src\openjdk\openjdk.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-openjdk.binlog"
+        EnvironmentVariables="$(_DotNetBuildEnvironment)"
         WorkingDirectory="$(_Root)"
     />
   </Target>
@@ -25,6 +26,7 @@
       DependsOnTargets="PrepareOpenJDK">
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.slnx -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
+        EnvironmentVariables="$(_DotNetBuildEnvironment)"
         WorkingDirectory="$(_Root)external\Java.Interop"
     />
   </Target>
@@ -92,7 +94,7 @@
   <Target Name="InstallMaui">
     <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' and '$(MauiUseLocalPacks)' != 'true' " />
     <PropertyGroup>
-      <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
+      <_TempDirectory>$(BuildOutputDirectory)obj\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
     </PropertyGroup>
     <MakeDir Directories="$(_TempDirectory)" />
@@ -102,7 +104,7 @@
         Condition=" '$(MauiUseLocalPacks)' != 'true' "
         Command="&quot;$(DotNetPreviewTool)&quot; restore maui.proj -p:MauiVersion=$(MauiVersion) -p:MauiVersionBand=$(MauiVersionBand)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
-        EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory);DOTNET_MULTILEVEL_LOOKUP=0"
+        EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory);DOTNET_MULTILEVEL_LOOKUP=0;$(_DotNetWorkloadEnvironment)"
     />
     <ItemGroup>
       <_WLManifestPack Include="$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg" />
@@ -120,7 +122,7 @@
     </ItemGroup>
     <!-- Copy manifest to diagnostics folder if specified -->
     <Copy Condition=" '$(MauiManifestDiagnosticsPath)' != '' " SourceFiles="@(_WLManifest)" DestinationFolder="$(MauiManifestDiagnosticsPath)" />
-    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
+    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(_DotNetWorkloadUserManifestRoot)$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
 
     <!-- Parse NuGet.config -->
     <XmlPeek
@@ -147,7 +149,7 @@
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install $(MauiWorkloadToInstall) @(_InstallArguments, ' ')"
         WorkingDirectory="$(_TempDirectory)"
-        EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0"
+        EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0;$(_DotNetBuildEnvironment)"
     />
     <RemoveDir Directories="$(_TempDirectory)" />
   </Target>

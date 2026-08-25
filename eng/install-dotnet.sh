@@ -26,7 +26,17 @@ if [[ -z "$sdk_version" ]]; then
   exit 1
 fi
 
+sdk_version_core="${sdk_version%%-*}"
+IFS=. read -r sdk_major sdk_minor sdk_patch _ <<< "$sdk_version_core"
+if [[ ! "$sdk_major" =~ ^[0-9]+$ || ! "$sdk_minor" =~ ^[0-9]+$ || ! "$sdk_patch" =~ ^[0-9]+$ ]]; then
+  echo "error: could not determine the SDK feature band from '$sdk_version'" >&2
+  exit 1
+fi
+sdk_feature_band="$sdk_major.$sdk_minor.$((10#$sdk_patch / 100 * 100))"
+
+use_shared_install=false
 if [[ -n "${XA_DOTNET_SHARED_INSTALL_BASE:-}" && -z "${TF_BUILD:-}" && -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" ]]; then
+  use_shared_install=true
   if [[ "$XA_DOTNET_SHARED_INSTALL_BASE" = /* ]]; then
     install_base="$XA_DOTNET_SHARED_INSTALL_BASE"
   else
@@ -57,4 +67,14 @@ bash "$install_script" --version "$sdk_version" --install-dir "$install_dir" --n
 
 install_location_file="$repo_root/bin/$configuration/dotnet-install-location.txt"
 mkdir -p "$(dirname "$install_location_file")"
-printf '%s/\n' "${install_dir%/}" > "$install_location_file"
+if [[ "$use_shared_install" == true ]]; then
+  # Keep workload packs, manifests, and installation records outside the shared SDK.
+  userlocal_marker="$install_dir/metadata/workloads/$sdk_feature_band/userlocal"
+  if [[ ! -f "$userlocal_marker" ]]; then
+    mkdir -p "$(dirname "$userlocal_marker")"
+    : > "$userlocal_marker"
+  fi
+  printf '%s/\n' "${install_dir%/}" > "$install_location_file"
+else
+  rm -f "$install_location_file"
+fi

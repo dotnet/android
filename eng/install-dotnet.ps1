@@ -28,6 +28,8 @@ if ($null -eq $sdkNode -or [string]::IsNullOrWhiteSpace($sdkNode.InnerText)) {
   exit 1
 }
 $sdkVersion = $sdkNode.InnerText
+$sdkBaseVersion = [Version]($sdkVersion.Split('-', 2)[0])
+$sdkFeatureBand = '{0}.{1}.{2}' -f $sdkBaseVersion.Major, $sdkBaseVersion.Minor, ([Math]::Floor($sdkBaseVersion.Build / 100) * 100)
 
 $useSharedInstall = -not [string]::IsNullOrWhiteSpace($env:XA_DOTNET_SHARED_INSTALL_BASE) -and
   [string]::IsNullOrEmpty($env:TF_BUILD) -and
@@ -71,6 +73,15 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $installLocationFile = Join-Path $repoRoot "bin\$configuration\dotnet-install-location.txt"
-$installLocation = $installDir.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-New-Item -ItemType Directory -Force -Path (Split-Path -Parent $installLocationFile) | Out-Null
-Set-Content -LiteralPath $installLocationFile -Value $installLocation -NoNewline
+if ($useSharedInstall) {
+  $userLocalMarker = Join-Path $installDir "metadata\workloads\$sdkFeatureBand\userlocal"
+  if (-not (Test-Path $userLocalMarker)) {
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $userLocalMarker) | Out-Null
+    New-Item -ItemType File -Path $userLocalMarker | Out-Null
+  }
+  $installLocation = $installDir.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+  New-Item -ItemType Directory -Force -Path (Split-Path -Parent $installLocationFile) | Out-Null
+  Set-Content -LiteralPath $installLocationFile -Value $installLocation -NoNewline
+} elseif (Test-Path $installLocationFile) {
+  Remove-Item -LiteralPath $installLocationFile -Force
+}

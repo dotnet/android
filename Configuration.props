@@ -150,6 +150,8 @@
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' != 'Windows'">$(HOME)/.nuget/packages</XAPackagesDir>
+    <_DotNetWorkloadEnvironment Condition=" '$(_DotNetUsingSharedSdk)' == 'true' ">DOTNET_CLI_HOME=$(_DotNetWorkloadUserHome);DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=$(_DotNetWorkloadManifestRoot);DOTNETSDK_WORKLOAD_PACK_ROOTS=$(_DotNetWorkloadPackRoot)</_DotNetWorkloadEnvironment>
+    <_DotNetBuildEnvironment Condition=" '$(_DotNetUsingSharedSdk)' == 'true' ">$(_DotNetWorkloadEnvironment);NUGET_PACKAGES=$([MSBuild]::EnsureTrailingSlash('$(XAPackagesDir)'))</_DotNetBuildEnvironment>
     <PathSeparator>$([System.IO.Path]::PathSeparator)</PathSeparator>
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>

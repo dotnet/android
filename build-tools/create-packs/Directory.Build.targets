@@ -88,7 +88,7 @@
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
     </ItemGroup>
     <PropertyGroup>
-      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
+      <_SdkManifestsFolder>$(_DotNetWorkloadUserManifestRoot)$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
     </PropertyGroup>
     <Unzip
         SourceFiles="@(_WLManifest)"
@@ -136,9 +136,10 @@
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
-    <MakeDir Directories="$(_TempDirectory);$(BuildOutputDirectory)lib\sdk-manifests" />
+    <MakeDir Directories="$(_TempDirectory);$(_DotNetWorkloadManifestRoot)" />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
+        EnvironmentVariables="$(_DotNetBuildEnvironment)"
         WorkingDirectory="$(_TempDirectory)"
     />
     <RemoveDir Directories="$(_TempDirectory)" />
@@ -151,18 +152,18 @@
       <_PackApiLevels Include="$(AndroidLatestUnstableApiLevel)" />
     </ItemGroup>
     <ItemGroup>
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\workloadsets" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-arm" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-arm64" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-x86" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-x64" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Darwin" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Linux" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Windows" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)template-packs" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserProfileRoot)metadata" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserManifestRoot)$(DotNetSdkManifestsFolder)\workloadsets" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserManifestRoot)$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-arm" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-arm64" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-x86" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Runtime.Mono.%(_PackApiLevels.Identity).android-x64" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Sdk.Darwin" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Sdk.Linux" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserPackRoot)Microsoft.Android.Sdk.Windows" />
+      <_PackFoldersToDelete Include="$(_DotNetWorkloadUserProfileRoot)template-packs" />
     </ItemGroup>
     <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>

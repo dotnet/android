@@ -24,10 +24,25 @@
 
 MSBUILD       = msbuild
 DOTNET_INSTALL_LOCATION = $(topdir)/bin/$(CONFIGURATION)/dotnet-install-location.txt
-DOTNET_ROOT   = $(if $(wildcard $(DOTNET_INSTALL_LOCATION)),$(shell cat "$(DOTNET_INSTALL_LOCATION)"),$(topdir)/bin/$(CONFIGURATION)/dotnet/)
+DOTNET_SDK_VERSION = $(shell sed -n 's|.*<MicrosoftNETSdkPackageVersion>\([^<]*\)</MicrosoftNETSdkPackageVersion>.*|\1|p' "$(topdir)/eng/Versions.props" | head -n 1)
+ifeq ($(strip $(TF_BUILD)$(GITHUB_ACTIONS)$(CI)),)
+_DOTNET_SHARED_ROOT = $(if $(wildcard $(DOTNET_INSTALL_LOCATION)),$(shell root=$$(cat "$(DOTNET_INSTALL_LOCATION)"); test -x "$${root}dotnet" && test -d "$${root}sdk/$(DOTNET_SDK_VERSION)" && printf '%s' "$$root"))
+endif
+DOTNET_ROOT   = $(if $(_DOTNET_SHARED_ROOT),$(_DOTNET_SHARED_ROOT),$(topdir)/bin/$(CONFIGURATION)/dotnet/)
 DOTNET_TOOL   = $(DOTNET_ROOT)dotnet
 DOTNET_VERB   = build
 MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
+ifneq ($(_DOTNET_SHARED_ROOT),)
+DOTNET_CLI_HOME = $(topdir)/bin/$(CONFIGURATION)/dotnet-home
+DOTNETSDK_WORKLOAD_MANIFEST_ROOTS = $(topdir)/bin/$(CONFIGURATION)/lib/sdk-manifests
+DOTNETSDK_WORKLOAD_PACK_ROOTS = $(topdir)/bin/$(CONFIGURATION)/lib
+NUGET_PACKAGES := $(patsubst %/,%,$(if $(NUGET_PACKAGES),$(NUGET_PACKAGES),$(HOME)/.nuget/packages))/
+
+export DOTNET_CLI_HOME
+export DOTNETSDK_WORKLOAD_MANIFEST_ROOTS
+export DOTNETSDK_WORKLOAD_PACK_ROOTS
+export NUGET_PACKAGES
+endif
 
 ifeq ($(OS_NAME),Darwin)
 _PKG_CONFIG   = /Library/Frameworks/Mono.framework/Commands/pkg-config

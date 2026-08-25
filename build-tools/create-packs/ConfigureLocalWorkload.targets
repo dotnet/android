@@ -95,6 +95,8 @@
       <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(_LocalSdkFeatureBand)\</_LocalSdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
       <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
+      <_InstallManifestEnvironment Condition=" '$(_DotNetUsingSharedSdk)' == 'true' ">$(_DotNetBuildEnvironment)</_InstallManifestEnvironment>
+      <_InstallManifestEnvironment Condition=" '$(_InstallManifestEnvironment)' == '' ">DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=$(BuildOutputDirectory)lib\sdk-manifests</_InstallManifestEnvironment>
     </PropertyGroup>
 
     <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
@@ -128,7 +130,7 @@
     />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install android-deps --configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot; --skip-manifest-update --skip-sign-check --verbosity diag"
-        EnvironmentVariables="DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=$(BuildOutputDirectory)lib\sdk-manifests"
+        EnvironmentVariables="$(_InstallManifestEnvironment)"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
     />
      <RemoveDir Directories="$(_EmptyWorkloadDir)" />
