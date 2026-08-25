@@ -143,7 +143,8 @@ namespace xamarin::android {
 		static auto load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 
 	private:
-		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, size_t &path_length) noexcept -> char*;
+		static auto get_full_dso_path_length (std::string const& base_dir, std::string_view const& dso_path) noexcept -> size_t;
+		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> size_t;
 
 		template<class TContainer> // TODO: replace with a concept
 		static auto load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*;
