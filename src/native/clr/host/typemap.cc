@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 
 #include <host/typemap.hh>
 #include <runtime-base/crc32.hh>
@@ -153,16 +154,21 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
-	char full_type_name[Constants::SENSIBLE_PATH_MAX];
-	int length = snprintf (full_type_name, sizeof (full_type_name), "%s, %s", typeName, assemblyFullName);
-	if (length < 0 || static_cast<size_t>(length) >= sizeof (full_type_name)) [[unlikely]] {
-		log_warn (LOG_ASSEMBLY, "typemap: managed type name is too long");
-		return nullptr;
-	}
+	size_t type_name_length = strlen (typeName);
+	size_t assembly_name_length = strlen (assemblyFullName);
+	size_t full_type_name_length = Helpers::add_with_overflow_check<size_t> (type_name_length, assembly_name_length);
+	full_type_name_length = Helpers::add_with_overflow_check<size_t> (full_type_name_length, 2uz);
+	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (full_type_name_length, 1uz);
+	auto full_type_name = std::make_unique<char[]> (allocation_size);
 
-	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	memcpy (full_type_name.get (), typeName, type_name_length);
+	memcpy (full_type_name.get () + type_name_length, ", ", 2uz);
+	memcpy (full_type_name.get () + type_name_length + 2uz, assemblyFullName, assembly_name_length);
+	full_type_name [full_type_name_length] = '\0';
 
-	return index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
+	ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+
+	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
 }
 #endif // def DEBUG
 
