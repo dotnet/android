@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include <cerrno>
-#include <concepts>
 #include <cstdio>
 #include <cstring>
 #include <limits>
@@ -17,7 +16,6 @@
 #include <shared/helpers.hh>
 #include <runtime-base/jni-wrappers.hh>
 #include "logger.hh"
-#include <runtime-base/strings.hh>
 
 #if !defined(XA_HOST_NATIVEAOT)
 #include "archive-dso-stub-config.hh"
@@ -25,19 +23,6 @@
 
 namespace xamarin::android {
 	namespace detail {
-		template<typename T>
-		concept PathComponentString = requires {
-			std::same_as<std::remove_cvref_t<T>, char*> ||
-			std::same_as<std::remove_cvref_t<T>, std::string_view> ||
-			std::same_as<std::remove_cvref_t<T>, std::string>;
-		};
-
-		template<class T, size_t MaxBufferStorage>
-		concept PathBuffer = requires {
-			std::derived_from<std::remove_cvref<T>, dynamic_local_storage<MaxBufferStorage>> ||
-			std::derived_from<std::remove_cvref<T>, static_local_storage<MaxBufferStorage>>;
-		};
-
 		struct mmap_info
 		{
 			void   *area;
@@ -119,16 +104,6 @@ namespace xamarin::android {
 			}
 
 			return file_exists_no_null_check (file);
-		}
-
-		template<size_t MaxStackSize>
-		static auto file_exists (dynamic_local_string<MaxStackSize> const& file) noexcept -> bool
-		{
-			if (file.empty ()) {
-				return false;
-			}
-
-			return file_exists_no_null_check (file.get ());
 		}
 
 		static auto file_exists (int dirfd, std::string_view const& file) noexcept -> bool
@@ -367,42 +342,6 @@ namespace xamarin::android {
 
 			return static_cast<ssize_t>(path_length);
 		}
-
-	private:
-		// TODO: needs some work to accept mixed params of different accepted types
-		template<size_t MaxStackSpace, detail::PathBuffer<MaxStackSpace> TBuffer, detail::PathComponentString ...TPart>
-		static void path_combine_common (TBuffer& buf, TPart&&... parts) noexcept
-		{
-			buf.clear ();
-
-			for (auto const& part : {parts...}) {
-				if (!buf.empty ()) {
-					buf.append ("/"sv);
-				}
-
-				if constexpr (std::same_as<std::remove_cvref_t<decltype(part)>, char*>) {
-					if (part != nullptr) {
-						buf.append_c (part);
-					}
-				} else {
-					buf.append (part);
-				}
-			}
-		}
-
-	public:
-		template<size_t MaxStackSpace, detail::PathComponentString ...TParts>
-		static void path_combine (dynamic_local_string<MaxStackSpace>& buf, TParts&&... parts) noexcept
-		{
-			path_combine_common<MaxStackSpace> (buf, std::forward<TParts>(parts)...);
-		}
-
-		template<size_t MaxStackSpace, detail::PathComponentString ...TParts>
-		static void path_combine (static_local_string<MaxStackSpace>& buf, TParts&&... parts) noexcept
-		{
-			path_combine_common<MaxStackSpace> (buf, std::forward<TParts>(parts)...);
-		}
-
 	private:
 		static inline int page_size = getpagesize ();
 	};
