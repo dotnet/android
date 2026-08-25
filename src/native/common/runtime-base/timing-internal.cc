@@ -190,16 +190,12 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	char timing_log_path [SENSIBLE_PATH_MAX];
-
 	// We can count on the envvar being there, since we set it ourselves at startup
 	// Note that to access the file for a release app, the app must be made debuggable
 	// and `run-as` must be used.
 	std::string_view file_name = output_file_name == nullptr ? default_timing_file_name : *output_file_name;
-	if (Util::join_paths (timing_log_path, sizeof (timing_log_path), getenv ("TMPDIR"), file_name) < 0) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file: path is too long");
-		return;
-	}
+	auto timing_log_path_buffer = Util::join_paths (getenv ("TMPDIR"), file_name);
+	const char *timing_log_path = timing_log_path_buffer.get ();
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {

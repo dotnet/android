@@ -257,18 +257,13 @@ AndroidSystem::setup_environment () noexcept
 #if defined(DEBUG)
 	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
-	char env_override_file_buffer [Constants::SENSIBLE_PATH_MAX];
-	ssize_t env_override_file_length = Util::join_paths (
-		env_override_file_buffer,
-		sizeof (env_override_file_buffer),
+	auto env_override_file_buffer = Util::join_paths (
 		primary_override_dir,
 		Constants::OVERRIDE_ENVIRONMENT_FILE_NAME
 	);
-	if (env_override_file_length < 0) {
-		log_warn (LOG_DEFAULT, "Environment override file path is too long");
-	} else if (Util::file_exists (env_override_file_buffer)) {
-		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file_buffer);
-		setup_environment_from_override_file (env_override_file_buffer);
+	if (Util::file_exists (env_override_file_buffer.get ())) {
+		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file_buffer.get ());
+		setup_environment_from_override_file (env_override_file_buffer.get ());
 	}
 #endif // def DEBUG
 }
@@ -277,20 +272,12 @@ void
 AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
 {
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
-	char libmonodroid_path_buffer [Constants::SENSIBLE_PATH_MAX];
-	ssize_t libmonodroid_path_length = Util::join_paths (
-		libmonodroid_path_buffer,
-		sizeof (libmonodroid_path_buffer),
+	auto libmonodroid_path_buffer = Util::join_paths (
 		appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view (),
 		"libmonodroid.so"sv
 	);
-	if (libmonodroid_path_length < 0) {
-		log_warn (LOG_ASSEMBLY, "libmonodroid path is too long, assuming application/android:extractNativeLibs == false");
-		set_embedded_dso_mode_enabled (true);
-		return;
-	}
 
-	const char *libmonodroid_path = libmonodroid_path_buffer;
+	const char *libmonodroid_path = libmonodroid_path_buffer.get ();
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to {}", libmonodroid_path);
 	if (!Util::file_exists (libmonodroid_path)) {
 		log_debug (LOG_ASSEMBLY, "{} not found, assuming application/android:extractNativeLibs == false", libmonodroid_path);

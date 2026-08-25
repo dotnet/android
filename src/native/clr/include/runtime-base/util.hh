@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <string_view>
 
@@ -307,26 +308,19 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
-		// Returns the path length excluding the terminating NUL, or -1 on failure.
-		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
+		static auto join_paths (std::string_view first, std::string_view second, size_t &path_length) noexcept -> std::unique_ptr<char[]>
 		{
-			if (buffer == nullptr || buffer_size == 0) {
-				return -1;
-			}
-
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
 			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
 			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
-			size_t path_length = Helpers::add_with_overflow_check<size_t> (first.length (), second.length () - second_offset);
+			path_length = Helpers::add_with_overflow_check<size_t> (first.length (), second.length () - second_offset);
 			if (add_separator) {
 				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 			}
 
-			if (path_length >= buffer_size || path_length > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
-				return -1;
-			}
-
-			char *destination = buffer;
+			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+			auto buffer = std::make_unique<char[]> (allocation_size);
+			char *destination = buffer.get ();
 			if (!first.empty ()) {
 				memcpy (destination, first.data (), first.length ());
 				destination += first.length ();
@@ -340,8 +334,15 @@ namespace xamarin::android {
 			}
 			buffer [path_length] = '\0';
 
-			return static_cast<ssize_t>(path_length);
+			return buffer;
 		}
+
+		static auto join_paths (std::string_view first, std::string_view second) noexcept -> std::unique_ptr<char[]>
+		{
+			size_t path_length;
+			return join_paths (first, second, path_length);
+		}
+
 	private:
 		static inline int page_size = getpagesize ();
 	};
