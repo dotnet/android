@@ -359,17 +359,40 @@ namespace xamarin::android {
 			return heap_buffer;
 		}
 
-		template<size_t MaxStackSpace, detail::PathBuffer<MaxStackSpace> TBuffer>
-		static void append_dso_name (TBuffer& buf, std::string_view const& name, bool add_lib_prefix) noexcept
+		static auto format_dso_name (std::string_view const& name, bool add_lib_prefix, char *buffer, size_t buffer_length) noexcept -> ssize_t
 		{
-			if (add_lib_prefix && !name.starts_with (Constants::DSO_PREFIX)) {
-				buf.append (Constants::DSO_PREFIX);
+			if (buffer == nullptr || buffer_length == 0) {
+				return -1;
 			}
 
-			buf.append (name);
-			if (!name.ends_with (Constants::dso_suffix)) {
-				buf.append (Constants::dso_suffix);
+			buffer [0] = '\0';
+			std::string_view prefix = add_lib_prefix && !name.starts_with (Constants::DSO_PREFIX) ? Constants::DSO_PREFIX : std::string_view {};
+			std::string_view suffix = name.ends_with (Constants::dso_suffix) ? std::string_view {} : Constants::dso_suffix;
+
+			if (name.length () > std::numeric_limits<size_t>::max () - prefix.length () - suffix.length ()) {
+				return -1;
 			}
+
+			size_t name_length = prefix.length () + name.length () + suffix.length ();
+			if (name_length >= buffer_length || name_length > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
+				return -1;
+			}
+
+			char *destination = buffer;
+			if (!prefix.empty ()) {
+				memcpy (destination, prefix.data (), prefix.length ());
+				destination += prefix.length ();
+			}
+			if (!name.empty ()) {
+				memcpy (destination, name.data (), name.length ());
+				destination += name.length ();
+			}
+			if (!suffix.empty ()) {
+				memcpy (destination, suffix.data (), suffix.length ());
+			}
+			buffer [name_length] = '\0';
+
+			return static_cast<ssize_t>(name_length);
 		}
 
 	private:
