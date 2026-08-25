@@ -1,7 +1,9 @@
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 
 #include <host/typemap.hh>
 #include <runtime-base/crc32.hh>
@@ -17,6 +19,25 @@ namespace {
 	auto same_string (const char *value, size_t value_length, const char *key, size_t key_length) noexcept -> bool
 	{
 		return value_length == key_length && strncmp (value, key, key_length) == 0;
+	}
+
+	auto format_managed_type_name (const char *type_name, const char *assembly_name, char *buffer, size_t buffer_size) noexcept -> ssize_t
+	{
+		size_t type_name_length = strlen (type_name);
+		size_t assembly_name_length = strlen (assembly_name);
+		size_t full_name_length = Helpers::add_with_overflow_check<size_t> (type_name_length, assembly_name_length);
+		full_name_length = Helpers::add_with_overflow_check<size_t> (full_name_length, 2uz);
+		size_t required_capacity = Helpers::add_with_overflow_check<size_t> (full_name_length, 1uz);
+		abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Managed type name is too long");
+		if (buffer == nullptr || buffer_size < required_capacity) {
+			return -static_cast<ssize_t>(required_capacity);
+		}
+
+		memcpy (buffer, type_name, type_name_length);
+		memcpy (buffer + type_name_length, ", ", 2uz);
+		memcpy (buffer + type_name_length + 2uz, assembly_name, assembly_name_length);
+		buffer [full_name_length] = '\0';
+		return static_cast<ssize_t>(full_name_length);
 	}
 
 	class MonoGuidString
@@ -153,22 +174,22 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 [[gnu::always_inline, gnu::flatten]]
 auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
-	size_t type_name_length = strlen (typeName);
-	size_t assembly_name_length = strlen (assemblyFullName);
-	size_t full_type_name_length = Helpers::add_with_overflow_check<size_t> (type_name_length, assembly_name_length);
-	full_type_name_length = Helpers::add_with_overflow_check<size_t> (full_type_name_length, 2uz);
-	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (full_type_name_length, 1uz);
 	char local_buffer [Constants::SENSIBLE_PATH_MAX];
-	char *full_type_name = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-
-	memcpy (full_type_name, typeName, type_name_length);
-	memcpy (full_type_name + type_name_length, ", ", 2uz);
-	memcpy (full_type_name + type_name_length + 2uz, assemblyFullName, assembly_name_length);
-	full_type_name [full_type_name_length] = '\0';
+	char *heap_buffer = nullptr;
+	char *full_type_name = local_buffer;
+	ssize_t result = format_managed_type_name (typeName, assemblyFullName, full_type_name, sizeof (local_buffer));
+	if (result < 0) {
+		size_t required_capacity = static_cast<size_t>(-result);
+		heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+		abort_unless (heap_buffer != nullptr, "Failed to allocate managed type name");
+		full_type_name = heap_buffer;
+		result = format_managed_type_name (typeName, assemblyFullName, full_type_name, required_capacity);
+	}
+	abort_unless (result >= 0, "Failed to format managed type name using the required capacity");
 
 	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 	const char *mapped_name = index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
-	Helpers::free_temporary_buffer (full_type_name, local_buffer);
+	std::free (heap_buffer);
 
 	return mapped_name;
 }
