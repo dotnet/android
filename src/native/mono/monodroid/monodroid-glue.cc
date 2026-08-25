@@ -1134,11 +1134,9 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
 
-		constexpr std::string_view PREFIX { " (ALC): " };
-
-		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX.length ()> more_info { PREFIX };
-		more_info.append_c (assm_name);
-		internal_timing.add_more_info (more_info);
+		char more_info [SENSIBLE_PATH_MAX + sizeof (" (ALC): ") - 1uz];
+		int more_info_length = snprintf (more_info, sizeof (more_info), " (ALC): %s", assm_name);
+		internal_timing.add_more_info (more_info, more_info_length);
 	}
 }
 
@@ -1170,12 +1168,9 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly) 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
 
-		constexpr std::string_view PREFIX { " (domain): " };
-		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1uz;
-
-		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
-		more_info.append_c (assm_name);
-		internal_timing.add_more_info (more_info);
+		char more_info [SENSIBLE_PATH_MAX + sizeof (" (domain): ") - 1uz];
+		int more_info_length = snprintf (more_info, sizeof (more_info), " (domain): %s", assm_name);
+		internal_timing.add_more_info (more_info, more_info_length);
 	}
 }
 
@@ -1198,9 +1193,9 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses-more_info */);
 
-		static_local_string<SharedConstants::INTEGER_BASE10_BUFFER_SIZE> more_info;
-		more_info.append (static_cast<uint64_t>(i + 1u));
-		internal_timing.add_more_info (more_info);
+		char more_info [SharedConstants::INTEGER_BASE10_BUFFER_SIZE];
+		int more_info_length = snprintf (more_info, sizeof (more_info), "%zu", i + 1uz);
+		internal_timing.add_more_info (more_info, more_info_length);
 	}
 }
 
@@ -1639,12 +1634,9 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
 
-		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-		type.assign (mt_ptr, strlen (mt_ptr));
+		internal_timing.add_more_info (mt_ptr);
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-		internal_timing.add_more_info (type);
 	}
 }
 

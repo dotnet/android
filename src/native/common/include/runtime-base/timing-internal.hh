@@ -270,9 +270,8 @@ namespace xamarin::android {
 			}
 		}
 
-		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
 		[[gnu::always_inline]]
-		void add_more_info (string_base<MaxStackSize, TStorage, TChar> const& str) noexcept
+		void add_more_info (const char *str, size_t length) noexcept
 		{
 			TimingEvent *event = pop_sequence_event ();
 			if (event == nullptr) [[unlikely]] {
@@ -280,37 +279,28 @@ namespace xamarin::android {
 				return;
 			}
 
-			event->more_info = new std::string (str.get (), str.length ());
+			event->more_info = new std::string (str, length);
 			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
 			log (*event, false /* skip_log_if_more_info_missing */);
+		}
+
+		template<size_t Size> [[gnu::always_inline]]
+		void add_more_info (const char (&str)[Size], int formatted_length) noexcept
+		{
+			size_t length = formatted_length < 0 ? 0uz : static_cast<size_t>(formatted_length);
+			add_more_info (str, length >= Size ? Size - 1uz : length);
 		}
 
 		[[gnu::always_inline]]
 		void add_more_info (const char* str) noexcept
 		{
-			TimingEvent *event = pop_sequence_event ();
-			if (event == nullptr) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
-				return;
-			}
-
-			event->more_info = new std::string (str);
-			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
-			log (*event, false /* skip_log_if_more_info_missing */);
+			add_more_info (str, strlen (str));
 		}
 
 		[[gnu::always_inline]]
 		void add_more_info (std::string_view const& str) noexcept
 		{
-			TimingEvent *event = pop_sequence_event ();
-			if (event == nullptr) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
-				return;
-			}
-
-			event->more_info = new std::string (str);
-			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
-			log (*event, false /* skip_log_if_more_info_missing */);
+			add_more_info (str.data (), str.length ());
 		}
 
 		void dump () noexcept;

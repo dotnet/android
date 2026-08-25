@@ -590,10 +590,15 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 				if (FastTiming::enabled ()) [[unlikely]] {
 					internal_timing.end_event (true /* uses_more_info */);
 
-					dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-					msg.append (name);
-					msg.append (" (decompressed in another thread)"sv);
-					internal_timing.add_more_info (msg);
+					char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+					int message_length = snprintf (
+						message,
+						sizeof (message),
+						"%.*s (decompressed in another thread)",
+						static_cast<int>(name.length ()),
+						name.data ()
+					);
+					internal_timing.add_more_info (message, message_length);
 				}
 				return {assembly_data, assembly_data_size};
 			}
@@ -661,12 +666,16 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			if (FastTiming::enabled ()) [[unlikely]] {
 				internal_timing.end_event (true /* uses_more_info */);
 
-				dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-				msg.append (name);
-				if (loaded_from_cache) {
-					msg.append (" (decompressed cache hit)"sv);
-				}
-				internal_timing.add_more_info (msg);
+				char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+				int message_length = snprintf (
+					message,
+					sizeof (message),
+					"%.*s%s",
+					static_cast<int>(name.length ()),
+					name.data (),
+					loaded_from_cache ? " (decompressed cache hit)" : ""
+				);
+				internal_timing.add_more_info (message, message_length);
 			}
 		}
 
@@ -691,10 +700,15 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.end_event (true /* uses more info */);
 
-			dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-			msg.append (name);
-			msg.append (" (memcpy to r/w area, part of assembly load time)"sv);
-			internal_timing.add_more_info (msg);
+			char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+			int message_length = snprintf (
+				message,
+				sizeof (message),
+				"%.*s (memcpy to r/w area, part of assembly load time)",
+				static_cast<int>(name.length ()),
+				name.data ()
+			);
+			internal_timing.add_more_info (message, message_length);
 		}
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);
