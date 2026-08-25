@@ -145,16 +145,15 @@ namespace xamarin::android
 			return static_cast<ssize_t>(path_length);
 		}
 
-		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, char *&heap_buffer, std::string_view first, std::string_view second) noexcept -> const char*
+		static auto join_paths (char *stack_buffer, size_t stack_buffer_size, std::string_view first, std::string_view second) noexcept -> char*
 		{
-			heap_buffer = nullptr;
 			ssize_t result = join_paths (stack_buffer, stack_buffer_size, first, second);
 			if (result >= 0) {
 				return stack_buffer;
 			}
 
 			size_t required_capacity = static_cast<size_t>(-result);
-			heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
 			abort_unless (heap_buffer != nullptr, "Failed to allocate joined path");
 			result = join_paths (heap_buffer, required_capacity, first, second);
 			abort_unless (result >= 0, "Failed to join path using the required capacity");

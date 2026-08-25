@@ -93,19 +93,18 @@ namespace xamarin::android {
 		{
 			std::string_view home_path = home.get_string_view ();
 			char stack_buffer [Util::LocalPathBufferSize];
-			char *heap_buffer;
-			const char *dir_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), heap_buffer, home_path, relative_path);
+			ssize_t result = Util::join_paths (stack_buffer, sizeof (stack_buffer), home_path, relative_path);
+			abort_unless (result >= 0, "XDG directory path is too long");
 
-			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", dir_path);
-			int rv = Util::create_directory (dir_path, Constants::DEFAULT_DIRECTORY_MODE);
+			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", stack_buffer);
+			int rv = Util::create_directory (stack_buffer, Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
-				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir_path, strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", stack_buffer, strerror (errno));
 			}
 
 			if (!environment_variable_name.empty ()) {
-				set_variable (environment_variable_name.data (), dir_path);
+				set_variable (environment_variable_name.data (), stack_buffer);
 			}
-			std::free (heap_buffer);
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
