@@ -1132,10 +1132,10 @@ format_assembly_load_timing_info (std::string_view prefix, const char *assembly_
 inline void
 add_assembly_load_timing_info (std::string_view prefix, const char *assembly_name) noexcept
 {
-	char local_buffer [SENSIBLE_PATH_MAX];
+	char stack_buffer [SENSIBLE_PATH_MAX];
 	char *heap_buffer = nullptr;
-	char *more_info = local_buffer;
-	ssize_t result = format_assembly_load_timing_info (prefix, assembly_name, more_info, sizeof (local_buffer));
+	char *more_info = stack_buffer;
+	ssize_t result = format_assembly_load_timing_info (prefix, assembly_name, more_info, sizeof (stack_buffer));
 	if (result < 0) {
 		size_t required_capacity = static_cast<size_t>(-result);
 		heap_buffer = static_cast<char*> (std::malloc (required_capacity));
@@ -1146,7 +1146,7 @@ add_assembly_load_timing_info (std::string_view prefix, const char *assembly_nam
 
 	abort_unless (result >= 0, "Failed to format assembly load timing information using the required capacity");
 	internal_timing.add_more_info (more_info, static_cast<size_t>(result));
-	Util::free_if_used (heap_buffer);
+	std::free (heap_buffer);
 }
 
 inline void
