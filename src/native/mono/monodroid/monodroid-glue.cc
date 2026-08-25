@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <limits>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -1111,20 +1112,41 @@ MonodroidRuntime::set_profile_options () noexcept
 	debug.monodroid_profiler_load (AndroidSystem::get_runtime_libdir (), value.get (), output_path.get ());
 }
 
-inline void
-add_assembly_load_timing_info (std::string_view prefix, const char *assembly_name) noexcept
+inline auto
+format_assembly_load_timing_info (std::string_view prefix, const char *assembly_name, char *buffer, size_t buffer_size) noexcept -> ssize_t
 {
 	size_t assembly_name_length = strlen (assembly_name);
 	size_t more_info_length = Helpers::add_with_overflow_check<size_t> (prefix.length (), assembly_name_length);
-	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (more_info_length, 1uz);
-	char local_buffer [SENSIBLE_PATH_MAX];
-	char *more_info = Helpers::get_temporary_buffer (local_buffer, allocation_size);
+	size_t required_capacity = Helpers::add_with_overflow_check<size_t> (more_info_length, 1uz);
+	abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Assembly timing information is too long");
+	if (buffer == nullptr || buffer_size < required_capacity) {
+		return -static_cast<ssize_t>(required_capacity);
+	}
 
-	memcpy (more_info, prefix.data (), prefix.length ());
-	memcpy (more_info + prefix.length (), assembly_name, assembly_name_length);
-	more_info [more_info_length] = '\0';
-	internal_timing.add_more_info (more_info, more_info_length);
-	Helpers::free_temporary_buffer (more_info, local_buffer);
+	memcpy (buffer, prefix.data (), prefix.length ());
+	memcpy (buffer + prefix.length (), assembly_name, assembly_name_length);
+	buffer [more_info_length] = '\0';
+	return static_cast<ssize_t>(more_info_length);
+}
+
+inline void
+add_assembly_load_timing_info (std::string_view prefix, const char *assembly_name) noexcept
+{
+	char local_buffer [SENSIBLE_PATH_MAX];
+	char *heap_buffer = nullptr;
+	char *more_info = local_buffer;
+	ssize_t result = format_assembly_load_timing_info (prefix, assembly_name, more_info, sizeof (local_buffer));
+	if (result < 0) {
+		size_t required_capacity = static_cast<size_t>(-result);
+		heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+		abort_unless (heap_buffer != nullptr, "Failed to allocate assembly load timing information");
+		more_info = heap_buffer;
+		result = format_assembly_load_timing_info (prefix, assembly_name, more_info, required_capacity);
+	}
+
+	abort_unless (result >= 0, "Failed to format assembly load timing information using the required capacity");
+	internal_timing.add_more_info (more_info, static_cast<size_t>(result));
+	std::free (heap_buffer);
 }
 
 inline void
