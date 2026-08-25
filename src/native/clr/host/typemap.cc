@@ -175,21 +175,21 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
 	char stack_buffer [Constants::SENSIBLE_PATH_MAX];
-	char *heap_buffer = nullptr;
 	char *full_type_name = stack_buffer;
 	ssize_t result = format_managed_type_name (typeName, assemblyFullName, full_type_name, sizeof (stack_buffer));
 	if (result < 0) {
 		size_t required_capacity = static_cast<size_t>(-result);
-		heap_buffer = static_cast<char*> (std::malloc (required_capacity));
-		abort_unless (heap_buffer != nullptr, "Failed to allocate managed type name");
-		full_type_name = heap_buffer;
+		full_type_name = static_cast<char*> (std::malloc (required_capacity));
+		abort_unless (full_type_name != nullptr, "Failed to allocate managed type name");
 		result = format_managed_type_name (typeName, assemblyFullName, full_type_name, required_capacity);
 	}
 	abort_unless (result >= 0, "Failed to format managed type name using the required capacity");
 
 	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 	const char *mapped_name = index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
-	std::free (heap_buffer);
+	if (full_type_name != stack_buffer) {
+		std::free (full_type_name);
+	}
 
 	return mapped_name;
 }
