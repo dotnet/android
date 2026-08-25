@@ -18,7 +18,7 @@ namespace xamarin::android {
 		if (!Util::path_has_directory_components (library_name)) {
 			char stack_buffer [Util::LocalPathBufferSize];
 			char *heap_buffer;
-			const char *short_library_name = Util::format_dso_name (stack_buffer, heap_buffer, library_name, true);
+			const char *short_library_name = Util::format_dso_name (stack_buffer, sizeof (stack_buffer), heap_buffer, library_name, true);
 
 			std::string_view short_library_name_view { short_library_name };
 			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name_view);
