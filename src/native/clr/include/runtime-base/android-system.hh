@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cstdio>
-#include <cstdlib>
 #include <limits>
 #include <span>
 #include <string>
@@ -181,8 +180,8 @@ namespace xamarin::android {
 			length = Helpers::add_with_overflow_check<size_t> (length, Constants::android_lib_abi.length ());
 			length = Helpers::add_with_overflow_check<size_t> (length, 2uz);
 			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (length, 1uz);
-			auto name = static_cast<char*> (std::malloc (allocation_size));
-			abort_unless (name != nullptr, "Failed to allocate primary override directory path");
+			char local_buffer [Constants::SENSIBLE_PATH_MAX];
+			char *name = Helpers::get_temporary_buffer (local_buffer, allocation_size);
 
 			char *destination = name;
 			memcpy (destination, home_path.data (), home_path.length ());
@@ -195,7 +194,7 @@ namespace xamarin::android {
 			name [length] = '\0';
 
 			std::string path { name, length };
-			std::free (name);
+			Helpers::free_temporary_buffer (name, local_buffer);
 			return path;
 		}
 #endif
