@@ -126,7 +126,7 @@ size_t TemporaryPeerMap::encode_temporary_peer_index (size_t index) noexcept
 
 size_t TemporaryPeerMap::decode_temporary_peer_index (size_t count) noexcept
 {
-	abort_unless (is_temporary_peer_index (count), "Temporary peer index must be negative");
+	abort_unless (is_temporary_peer_index (count), "SCC count must use the temporary peer marker bit");
 	return ~count;
 }
 
