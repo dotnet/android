@@ -10,6 +10,7 @@
 #include <concepts>
 #include <cstdio>
 #include <cstring>
+#include <limits>
 #include <optional>
 #include <string_view>
 
@@ -332,11 +333,11 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
-		// Returns the number of bytes written, including the terminating NUL, or 0 on failure.
-		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> size_t
+		// Returns the path length excluding the terminating NUL, or -1 on failure.
+		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
 		{
 			if (buffer == nullptr || buffer_size == 0) {
-				return 0;
+				return -1;
 			}
 
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
@@ -347,8 +348,8 @@ namespace xamarin::android {
 				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 			}
 
-			if (path_length >= buffer_size) {
-				return 0;
+			if (path_length >= buffer_size || path_length > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
+				return -1;
 			}
 
 			char *destination = buffer;
@@ -365,7 +366,7 @@ namespace xamarin::android {
 			}
 			buffer [path_length] = '\0';
 
-			return path_length + 1uz;
+			return static_cast<ssize_t>(path_length);
 		}
 
 	private:

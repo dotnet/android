@@ -259,13 +259,13 @@ AndroidSystem::setup_environment () noexcept
 	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
 	std::array<char, Constants::SENSIBLE_PATH_MAX> env_override_file_buffer;
-	size_t env_override_file_length = Util::join_paths (
+	ssize_t env_override_file_length = Util::join_paths (
 		env_override_file_buffer.data (),
 		env_override_file_buffer.size (),
 		primary_override_dir,
 		Constants::OVERRIDE_ENVIRONMENT_FILE_NAME
 	);
-	if (env_override_file_length == 0) {
+	if (env_override_file_length < 0) {
 		log_warn (LOG_DEFAULT, "Environment override file path is too long");
 	} else if (Util::file_exists (env_override_file_buffer.data ())) {
 		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file_buffer.data ());
@@ -279,13 +279,13 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 {
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
 	std::array<char, Constants::SENSIBLE_PATH_MAX> libmonodroid_path_buffer;
-	size_t libmonodroid_path_length = Util::join_paths (
+	ssize_t libmonodroid_path_length = Util::join_paths (
 		libmonodroid_path_buffer.data (),
 		libmonodroid_path_buffer.size (),
 		appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view (),
 		"libmonodroid.so"sv
 	);
-	if (libmonodroid_path_length == 0) {
+	if (libmonodroid_path_length < 0) {
 		log_warn (LOG_ASSEMBLY, "libmonodroid path is too long, assuming application/android:extractNativeLibs == false");
 		set_embedded_dso_mode_enabled (true);
 		return;
