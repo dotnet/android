@@ -190,27 +190,29 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	dynamic_local_path_string timing_log_path;
+	char timing_log_path [SENSIBLE_PATH_MAX];
 
 	// We can count on the envvar being there, since we set it ourselves at startup
 	// Note that to access the file for a release app, the app must be made debuggable
 	// and `run-as` must be used.
-	timing_log_path.assign_c (getenv("TMPDIR"));
-	timing_log_path.append ("/"sv);
-	timing_log_path.append (output_file_name == nullptr ? default_timing_file_name : *output_file_name);
+	std::string_view file_name = output_file_name == nullptr ? default_timing_file_name : *output_file_name;
+	if (Util::join_paths (timing_log_path, sizeof (timing_log_path), getenv ("TMPDIR"), file_name) < 0) {
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file: path is too long");
+		return;
+	}
 
-	FILE *timing_log = Util::monodroid_fopen (timing_log_path.get (), "w");
+	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path.get ());
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path);
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path.get ());
+		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path);
 		return;
 	}
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path.get ());
+	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path);
 
 	auto line_writer = [=](std::string_view const& msg) {
 		if (!msg.empty ()) {

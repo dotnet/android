@@ -24,6 +24,7 @@ static inline constexpr int FALSE = 0;
 #include <cstring>
 #include <ctime>
 #include <fcntl.h>
+#include <limits>
 #include <optional>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -42,6 +43,7 @@ static inline constexpr int FALSE = 0;
 #include <mono/utils/mono-publib.h>
 
 #include <runtime-base/jni-wrappers.hh>
+#include <shared/helpers.hh>
 #include "java-interop-util.h"
 #include "logger.hh"
 #include <runtime-base/strings.hh>
@@ -105,6 +107,42 @@ namespace xamarin::android
 			}
 
 			return fd;
+		}
+
+		// Returns the path length excluding the terminating NUL, or -1 on failure.
+		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
+		{
+			if (buffer == nullptr || buffer_size == 0) {
+				return -1;
+			}
+
+			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
+			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
+			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
+			size_t path_length = Helpers::add_with_overflow_check<size_t> (first.length (), second.length () - second_offset);
+			if (add_separator) {
+				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+			}
+
+			if (path_length >= buffer_size || path_length > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
+				return -1;
+			}
+
+			char *destination = buffer;
+			if (!first.empty ()) {
+				memcpy (destination, first.data (), first.length ());
+				destination += first.length ();
+			}
+			if (add_separator) {
+				*destination++ = '/';
+			}
+			size_t second_length = second.length () - second_offset;
+			if (second_length > 0) {
+				memcpy (destination, second.data () + second_offset, second_length);
+			}
+			buffer [path_length] = '\0';
+
+			return static_cast<ssize_t>(path_length);
 		}
 
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.
