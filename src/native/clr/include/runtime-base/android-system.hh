@@ -181,10 +181,10 @@ namespace xamarin::android {
 #if !defined (XA_HOST_NATIVEAOT)
 		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
 		{
-			char local_buffer [Constants::SENSIBLE_PATH_MAX];
+			char stack_buffer [Constants::SENSIBLE_PATH_MAX];
 			char *heap_buffer = nullptr;
-			char *name = local_buffer;
-			ssize_t result = format_primary_override_dir (home, name, sizeof (local_buffer));
+			char *name = stack_buffer;
+			ssize_t result = format_primary_override_dir (home, name, sizeof (stack_buffer));
 			if (result < 0) {
 				size_t required_capacity = static_cast<size_t>(-result);
 				heap_buffer = static_cast<char*> (std::malloc (required_capacity));
@@ -195,7 +195,7 @@ namespace xamarin::android {
 			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
 
 			std::string path { name, static_cast<size_t>(result) };
-			Util::free_if_used (heap_buffer);
+			std::free (heap_buffer);
 			return path;
 		}
 #endif
