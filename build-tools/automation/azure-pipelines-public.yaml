@@ -31,6 +31,10 @@ parameters:
   values:
   - 'true'
   - 'false'
+- name: forceFullValidation
+  displayName: Force Full Validation
+  type: boolean
+  default: false
 
 # Repository resources
 resources:
@@ -65,9 +69,61 @@ variables:
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
+# Change Classification Stage
+- stage: classify_changes
+  displayName: Classify Changes
+  jobs:
+  - job: classify
+    displayName: Classify PR changes
+    pool:
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+    steps:
+    - checkout: self
+      fetchDepth: 2
+      persistCredentials: false
+
+    - bash: |
+        runFullValidation=true
+        reason="full validation is required by default"
+
+        if [[ "$FORCE_FULL_VALIDATION" == "true" ]]; then
+          reason="full validation was explicitly requested"
+        elif [[ "$BUILD_REASON" == "PullRequest" ]]; then
+          if ! git rev-parse --verify "HEAD^1" >/dev/null || ! git rev-parse --verify "HEAD^2" >/dev/null; then
+            echo "##vso[task.logissue type=warning]The pull request merge commit is unavailable; running full validation."
+            reason="the pull request merge commit is unavailable"
+          elif changedFiles="$(git diff --name-only "HEAD^1" "HEAD^2")"; then
+            echo "Changed files:"
+            printf '%s\n' "$changedFiles"
+
+            if [[ -n "$changedFiles" ]] && ! grep -Evq '^Documentation/.*\.md$' <<< "$changedFiles"; then
+              runFullValidation=false
+              reason="all changed files are Markdown files under Documentation/"
+            else
+              reason="the change includes files outside Documentation/**/*.md or the diff is empty"
+            fi
+          else
+            echo "##vso[task.logissue type=warning]Could not calculate the pull request diff; running full validation."
+            reason="the pull request diff could not be calculated"
+          fi
+        else
+          reason="this is not a pull request build"
+        fi
+
+        echo "RunFullValidation=$runFullValidation: $reason"
+        echo "##vso[task.setvariable variable=RunFullValidation;isOutput=true]$runFullValidation"
+      name: detect
+      displayName: Select validation mode
+      env:
+        FORCE_FULL_VALIDATION: ${{ lower(parameters.forceFullValidation) }}
+
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
+  dependsOn: classify_changes
+  condition: and(succeeded(), ne(dependencies.classify_changes.outputs['classify.detect.RunFullValidation'], 'false'))
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build
@@ -104,7 +160,8 @@ stages:
 # Windows Build Stage
 - stage: win_build_test
   displayName: Windows
-  dependsOn: []
+  dependsOn: classify_changes
+  condition: and(succeeded(), ne(dependencies.classify_changes.outputs['classify.detect.RunFullValidation'], 'false'))
   jobs:
   - job: win_build_test
     displayName: Windows > Build & Smoke Test
@@ -126,7 +183,8 @@ stages:
 # Linux Build Stage
 - stage: linux_build
   displayName: Linux
-  dependsOn: []
+  dependsOn: classify_changes
+  condition: and(succeeded(), ne(dependencies.classify_changes.outputs['classify.detect.RunFullValidation'], 'false'))
   jobs:
   - job: linux_build_create_sdk_pack
     displayName: Linux > Build
@@ -431,6 +489,9 @@ stages:
 # Java.Interop Tests Stage
 - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
   parameters:
+    dependsOn:
+    - classify_changes
+    condition: and(succeeded(), ne(dependencies.classify_changes.outputs['classify.detect.RunFullValidation'], 'false'))
     windowsPool:
       name: $(NetCorePublicPoolName)
       demands:
@@ -445,6 +506,9 @@ stages:
 # Android Tools Tests Stage
 - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
   parameters:
+    dependsOn:
+    - classify_changes
+    condition: and(succeeded(), ne(dependencies.classify_changes.outputs['classify.detect.RunFullValidation'], 'false'))
     windowsPool:
       name: $(NetCorePublicPoolName)
       demands:
