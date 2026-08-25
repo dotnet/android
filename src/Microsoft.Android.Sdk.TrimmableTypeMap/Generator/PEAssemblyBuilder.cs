@@ -321,7 +321,7 @@ sealed class PEAssemblyBuilder
 	/// <summary>
 	/// Returns a previously prepared UTF-8 RVA field.
 	/// </summary>
-	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
+	public FieldDefinitionHandle GetUtf8Field (string value)
 	{
 		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
 			return existing;

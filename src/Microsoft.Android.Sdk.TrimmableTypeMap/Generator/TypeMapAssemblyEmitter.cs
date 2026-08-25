@@ -1622,12 +1622,12 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// Get or create deduplicated RVA fields for each unique name/signature string.
+		// Get the prepared, deduplicated RVA fields for each unique name/signature string.
 		var nameFields = new FieldDefinitionHandle [validRegs.Count];
 		var sigFields = new FieldDefinitionHandle [validRegs.Count];
 		for (int i = 0; i < validRegs.Count; i++) {
-			nameFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniMethodName);
-			sigFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniSignature);
+			nameFields [i] = _pe.GetUtf8Field (validRegs [i].Reg.JniMethodName);
+			sigFields [i] = _pe.GetUtf8Field (validRegs [i].Reg.JniSignature);
 		}
 
 		int methodCount = validRegs.Count;
