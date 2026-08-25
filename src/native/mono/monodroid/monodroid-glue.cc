@@ -1112,6 +1112,22 @@ MonodroidRuntime::set_profile_options () noexcept
 }
 
 inline void
+add_assembly_load_timing_info (std::string_view prefix, const char *assembly_name) noexcept
+{
+	size_t assembly_name_length = strlen (assembly_name);
+	size_t more_info_length = Helpers::add_with_overflow_check<size_t> (prefix.length (), assembly_name_length);
+	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (more_info_length, 1uz);
+	auto more_info = static_cast<char*> (std::malloc (allocation_size));
+	abort_unless (more_info != nullptr, "Failed to allocate assembly load timing information");
+
+	memcpy (more_info, prefix.data (), prefix.length ());
+	memcpy (more_info + prefix.length (), assembly_name, assembly_name_length);
+	more_info [more_info_length] = '\0';
+	internal_timing.add_more_info (more_info, more_info_length);
+	std::free (more_info);
+}
+
+inline void
 MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jstring_wrapper &assembly) noexcept
 {
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -1133,10 +1149,7 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
-
-		char more_info [SENSIBLE_PATH_MAX + sizeof (" (ALC): ") - 1uz];
-		int more_info_length = snprintf (more_info, sizeof (more_info), " (ALC): %s", assm_name);
-		internal_timing.add_more_info (more_info, more_info_length);
+		add_assembly_load_timing_info (" (ALC): "sv, assm_name);
 	}
 }
 
@@ -1167,10 +1180,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly) 
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
-
-		char more_info [SENSIBLE_PATH_MAX + sizeof (" (domain): ") - 1uz];
-		int more_info_length = snprintf (more_info, sizeof (more_info), " (domain): %s", assm_name);
-		internal_timing.add_more_info (more_info, more_info_length);
+		add_assembly_load_timing_info (" (domain): "sv, assm_name);
 	}
 }
 
