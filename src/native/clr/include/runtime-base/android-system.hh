@@ -79,7 +79,8 @@ namespace xamarin::android {
 		static void set_primary_override_dir (jstring_wrapper& home) noexcept
 		{
 #if defined (XA_HOST_NATIVEAOT)
-			format_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
+			ssize_t result = format_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
+			abort_unless (result >= 0, "Primary override directory path is too long");
 #else
 			primary_override_dir = determine_primary_override_dir (home);
 #endif
@@ -156,7 +157,7 @@ namespace xamarin::android {
 			embedded_dso_mode_enabled = yesno;
 		}
 
-		static auto format_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept -> size_t
+		static auto format_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept -> ssize_t
 		{
 			int length = snprintf (
 				buffer,
@@ -168,33 +169,33 @@ namespace xamarin::android {
 				static_cast<int>(Constants::android_lib_abi.length ()),
 				Constants::android_lib_abi.data ()
 			);
-			abort_unless (length >= 0 && static_cast<size_t>(length) < buffer_size, "Primary override directory path is too long");
-			return static_cast<size_t>(length);
+			abort_unless (length >= 0, "Failed to format primary override directory path");
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(length), 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Primary override directory path is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+			return static_cast<ssize_t>(length);
 		}
 
 #if !defined (XA_HOST_NATIVEAOT)
 		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
 		{
-			std::string_view home_path = home.get_string_view ();
-			size_t length = Helpers::add_with_overflow_check<size_t> (home_path.length (), Constants::OVERRIDE_DIRECTORY_NAME.length ());
-			length = Helpers::add_with_overflow_check<size_t> (length, Constants::android_lib_abi.length ());
-			length = Helpers::add_with_overflow_check<size_t> (length, 2uz);
-			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (length, 1uz);
 			char local_buffer [Constants::SENSIBLE_PATH_MAX];
-			char *name = Helpers::get_temporary_buffer (local_buffer, allocation_size);
+			char *heap_buffer = nullptr;
+			char *name = local_buffer;
+			ssize_t result = format_primary_override_dir (home, name, sizeof (local_buffer));
+			if (result < 0) {
+				size_t required_capacity = static_cast<size_t>(-result);
+				heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (heap_buffer != nullptr, "Failed to allocate primary override directory path");
+				name = heap_buffer;
+				result = format_primary_override_dir (home, name, required_capacity);
+			}
+			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
 
-			char *destination = name;
-			memcpy (destination, home_path.data (), home_path.length ());
-			destination += home_path.length ();
-			*destination++ = Constants::DIR_SEP [0];
-			memcpy (destination, Constants::OVERRIDE_DIRECTORY_NAME.data (), Constants::OVERRIDE_DIRECTORY_NAME.length ());
-			destination += Constants::OVERRIDE_DIRECTORY_NAME.length ();
-			*destination++ = Constants::DIR_SEP [0];
-			memcpy (destination, Constants::android_lib_abi.data (), Constants::android_lib_abi.length ());
-			name [length] = '\0';
-
-			std::string path { name, length };
-			Helpers::free_temporary_buffer (name, local_buffer);
+			std::string path { name, static_cast<size_t>(result) };
+			std::free (heap_buffer);
 			return path;
 		}
 #endif
