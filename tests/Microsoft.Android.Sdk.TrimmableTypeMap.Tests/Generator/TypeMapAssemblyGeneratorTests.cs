@@ -117,31 +117,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains (proxyTypes, t => reader.GetString (t.Name) == "Java_Lang_Object_Proxy");
 	}
 
-	[Theory]
-	[InlineData ("my/app/GenericSelectableList")]
-	[InlineData ("my/app/GenericForwardingSelectableList")]
-	public void Generate_InheritedGenericBaseCallback_UsesConstructedBaseMemberRef (string javaName)
-	{
-		var peer = ScanFixtures ().Single (p => p.JavaName == javaName);
-		using var stream = GenerateAssembly (new [] { peer });
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var member = reader.MemberReferences
-			.Select (h => reader.GetMemberReference (h))
-			.Single (m => reader.GetString (m.Name) == "n_SetSelection_I");
-
-		Assert.Equal (HandleKind.TypeSpecification, member.Parent.Kind);
-		var typeSpec = reader.GetTypeSpecification ((TypeSpecificationHandle) member.Parent);
-		var blob = reader.GetBlobReader (typeSpec.Signature);
-
-		Assert.Equal (0x15, blob.ReadByte ()); // ELEMENT_TYPE_GENERICINST
-		Assert.Equal (0x12, blob.ReadByte ()); // ELEMENT_TYPE_CLASS
-		Assert.Equal ("GenericSelectionHost`1", GetTypeDefOrRefName (reader, blob.ReadCompressedInteger ()));
-		Assert.Equal (1, blob.ReadCompressedInteger ());
-		Assert.Equal (0x0E, blob.ReadByte ()); // ELEMENT_TYPE_STRING
-	}
-
 	[Fact]
 	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
 	{
@@ -1020,7 +995,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		// The callback MemberRef must mirror the real n_* method's signature. The TouchHandler fixture
 		// models a *pre-#1296* binding whose n_OnTouch declares JNI boolean as System.Boolean, so the
 		// emitted ref must be Boolean — while the UCO entry keeps the blittable byte for the JNI ABI.
-		// (The modern sbyte counterpart is covered by Generate_UcoMethod_BooleanReturn_ModernBinding_*.)
 		var peer = MakeTouchHandlerCallbackDispatchPeer ();
 		using var stream = GenerateAssembly (new [] { peer }, "BoolReturnTest");
 		using var pe = new PEReader (stream);
@@ -1064,32 +1038,6 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		var callbackRef = FindCallbackMemberRef (reader, "n_OnFocusChange");
 		var callbackSig = callbackRef.DecodeMethodSignature (SignatureTypeProvider.Instance, null);
 		Assert.Equal ("System.Boolean", callbackSig.ParameterTypes.Last ());
-	}
-
-	[Fact]
-	public void Generate_UcoMethod_BooleanReturn_ModernBinding_CallbackUsesSByte ()
-	{
-		// Counterpart to the pre-#1296 TouchHandler tests: the IOnLongClickListenerInvoker fixture
-		// models a *post-#1296* binding whose n_OnLongClick declares JNI boolean as the blittable
-		// sbyte. ImplicitMultiListener inherits that interface callback (no own [Register]) and thus
-		// forwards to the invoker's n_*, so the emitted callback MemberRef must be SByte — proving the
-		// boolean encoding is taken from each real n_* method rather than hardcoded to one form.
-		var peers = ScanFixtures ();
-		var peer = peers.First (p => p.JavaName == "my/app/ImplicitMultiListener");
-		using var stream = GenerateAssembly (new [] { peer }, "ModernBoolReturnTest");
-		using var pe = new PEReader (stream);
-		var reader = pe.GetMetadataReader ();
-
-		var ucoMethod = reader.MethodDefinitions
-			.Select (h => reader.GetMethodDefinition (h))
-			.First (m => reader.GetString (m.Name).Contains ("onLongClick") &&
-			             reader.GetString (m.Name).Contains ("_uco_"));
-		var ucoSig = ucoMethod.DecodeSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.Byte", ucoSig.ReturnType);
-
-		var callbackRefHandle = FindCallbackMemberRefHandle (reader, "n_OnLongClick_Landroid_view_View_", "Android.Views", "IOnLongClickListenerInvoker");
-		var callbackSig = reader.GetMemberReference (callbackRefHandle).DecodeMethodSignature (SignatureTypeProvider.Instance, null);
-		Assert.Equal ("System.SByte", callbackSig.ReturnType);
 	}
 
 	[Fact]

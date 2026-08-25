@@ -58,6 +58,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void JavaToManagedLongClickCallback_MarshalsBooleanReturn ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+			TrimmableRuntimeClickListener.Reset ();
+
+			using var listener = new TrimmableRuntimeClickListener ();
+			using var view = new View (Android.App.Application.Context);
+
+			var method = JNIEnv.GetMethodID (listener.Class.Handle, "onLongClick", "(Landroid/view/View;)Z");
+			var handled = JNIEnv.CallBooleanMethod (listener.Handle, method, new JValue (view.Handle));
+
+			Assert.IsTrue (handled);
+			Assert.AreEqual (1, TrimmableRuntimeClickListener.OnLongClickInvocations);
+			Assert.AreEqual (view.Handle, listener.ViewHandle);
+		}
+
+		[Test]
 		public void JavaToManagedInvocationHandlerCallback_MarshalsObjectArrayParameter ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
@@ -259,9 +276,10 @@ namespace Java.InteropTests
 		}
 	}
 
-	class TrimmableRuntimeClickListener : Java.Lang.Object, View.IOnClickListener
+	class TrimmableRuntimeClickListener : Java.Lang.Object, View.IOnClickListener, View.IOnLongClickListener
 	{
 		public static int OnClickInvocations;
+		public static int OnLongClickInvocations;
 
 		public IntPtr ViewHandle;
 
@@ -271,9 +289,17 @@ namespace Java.InteropTests
 			ViewHandle = v.Handle;
 		}
 
+		public bool OnLongClick (View v)
+		{
+			OnLongClickInvocations++;
+			ViewHandle = v.Handle;
+			return true;
+		}
+
 		public static void Reset ()
 		{
 			OnClickInvocations = 0;
+			OnLongClickInvocations = 0;
 		}
 	}
 
