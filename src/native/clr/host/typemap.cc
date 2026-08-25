@@ -1,8 +1,8 @@
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <memory>
 
 #include <host/typemap.hh>
 #include <runtime-base/crc32.hh>
@@ -159,16 +159,19 @@ auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemb
 	size_t full_type_name_length = Helpers::add_with_overflow_check<size_t> (type_name_length, assembly_name_length);
 	full_type_name_length = Helpers::add_with_overflow_check<size_t> (full_type_name_length, 2uz);
 	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (full_type_name_length, 1uz);
-	auto full_type_name = std::make_unique<char[]> (allocation_size);
+	auto full_type_name = static_cast<char*> (std::malloc (allocation_size));
+	abort_unless (full_type_name != nullptr, "Failed to allocate managed type name");
 
-	memcpy (full_type_name.get (), typeName, type_name_length);
-	memcpy (full_type_name.get () + type_name_length, ", ", 2uz);
-	memcpy (full_type_name.get () + type_name_length + 2uz, assemblyFullName, assembly_name_length);
+	memcpy (full_type_name, typeName, type_name_length);
+	memcpy (full_type_name + type_name_length, ", ", 2uz);
+	memcpy (full_type_name + type_name_length + 2uz, assemblyFullName, assembly_name_length);
 	full_type_name [full_type_name_length] = '\0';
 
-	ssize_t idx = find_index_by_hash (full_type_name.get (), type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
+	const char *mapped_name = index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
+	std::free (full_type_name);
 
-	return index_to_name (idx, full_type_name.get (), type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);
+	return mapped_name;
 }
 #endif // def DEBUG
 
