@@ -20,7 +20,7 @@ Util::create_directory (const char *pathname, mode_t mode)
 	 	mode = Constants::DEFAULT_DIRECTORY_MODE;
 	}
 
-	size_t path_length = strlen (pathname);
+	size_t path_length = strnlen (pathname, Constants::SENSIBLE_PATH_MAX);
 	if (path_length >= Constants::SENSIBLE_PATH_MAX) {
 		errno = ENAMETOOLONG;
 		return -1;
