@@ -10,7 +10,6 @@
 #include <runtime-base/android-system.hh>
 #include <runtime-base/cpu-arch.hh>
 #include <runtime-base/dso-loader.hh>
-#include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
 using namespace microsoft::java_interop;
