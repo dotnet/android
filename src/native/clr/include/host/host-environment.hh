@@ -2,6 +2,7 @@
 
 #include <jni.h>
 
+#include <array>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -89,34 +90,37 @@ namespace xamarin::android {
 
 	private:
 		[[gnu::flatten, gnu::always_inline]]
-		static void create_xdg_directory (jstring_wrapper &home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
+		static void create_xdg_directory (jstring_wrapper &home, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 		{
-			static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
-			Util::path_combine (dir, home.get_string_view (), relative_path);
+			std::array<char, SENSIBLE_PATH_MAX> dir_buffer;
+			auto dir = Util::join_paths (dir_buffer.data (), dir_buffer.size (), home.get_string_view (), relative_path);
+			if (!dir.has_value ()) {
+				log_warnf (LOG_DEFAULT, "Failed to create XDG directory: path is too long");
+				return;
+			}
 
-			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", optional_string (dir.get ()));
-			int rv = Util::create_directory (dir.get (), Constants::DEFAULT_DIRECTORY_MODE);
+			const char *dir_path = dir->data ();
+			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", dir_path);
+			int rv = Util::create_directory (dir_path, Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
-				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", optional_string (dir.get ()), strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir_path, strerror (errno));
 			}
 
 			if (!environment_variable_name.empty ()) {
-				set_variable (environment_variable_name.data (), dir.get ());
+				set_variable (environment_variable_name.data (), dir_path);
 			}
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
 		static void create_xdg_directories_and_environment (jstring_wrapper &homeDir) noexcept
 		{
-			size_t home_len = strlen (homeDir.get_cstr ());
-
 			constexpr auto XDG_DATA_HOME = "XDG_DATA_HOME"sv;
 			constexpr auto HOME_PATH = ".local/share"sv;
-			create_xdg_directory (homeDir, home_len, HOME_PATH, XDG_DATA_HOME);
+			create_xdg_directory (homeDir, HOME_PATH, XDG_DATA_HOME);
 
 			constexpr auto XDG_CONFIG_HOME = "XDG_CONFIG_HOME"sv;
 			constexpr auto CONFIG_PATH = ".config"sv;
-			create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
+			create_xdg_directory (homeDir, CONFIG_PATH, XDG_CONFIG_HOME);
 		}
 
 	public:
