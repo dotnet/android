@@ -19,28 +19,6 @@ namespace xamarin::android
 	class [[gnu::visibility("hidden")]] Helpers
 	{
 	public:
-		template<size_t Size>
-		static auto get_temporary_buffer (char (&local_buffer)[Size], size_t required_size) noexcept -> char*
-		{
-			if (required_size <= Size) {
-				return local_buffer;
-			}
-
-			auto buffer = static_cast<char*> (std::malloc (required_size));
-			if (buffer == nullptr) {
-				abort_application ("Failed to allocate temporary buffer");
-			}
-			return buffer;
-		}
-
-		template<size_t Size>
-		static void free_temporary_buffer (char *buffer, char (&local_buffer)[Size]) noexcept
-		{
-			if (buffer != local_buffer) {
-				std::free (buffer);
-			}
-		}
-
 		template<typename Ret, typename P1, typename P2>
 		[[gnu::always_inline]]
 		static auto add_with_overflow_check (P1 a, P2 b, std::source_location sloc = std::source_location::current ()) noexcept -> Ret

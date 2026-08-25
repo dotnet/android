@@ -196,23 +196,22 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	// and `run-as` must be used.
 	std::string_view file_name = output_file_name == nullptr ? default_timing_file_name : *output_file_name;
 	std::string_view temporary_directory = getenv ("TMPDIR");
-	size_t timing_log_path_length = Util::get_joined_path_length (temporary_directory, file_name);
-	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (timing_log_path_length, 1uz);
 	char local_buffer [Util::LocalPathBufferSize];
-	char *timing_log_path = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-	Util::join_paths (timing_log_path, allocation_size, temporary_directory, file_name);
+	char *heap_buffer;
+	Util::join_paths (local_buffer, heap_buffer, temporary_directory, file_name);
+	const char *timing_log_path = heap_buffer == nullptr ? local_buffer : heap_buffer;
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {
 		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path);
-		Helpers::free_temporary_buffer (timing_log_path, local_buffer);
+		std::free (heap_buffer);
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
 		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path);
 		fclose (timing_log);
-		Helpers::free_temporary_buffer (timing_log_path, local_buffer);
+		std::free (heap_buffer);
 		return;
 	}
 
@@ -228,7 +227,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	dump (entries, true /* indent */, line_writer);
 	fflush (timing_log);
 	fclose (timing_log);
-	Helpers::free_temporary_buffer (timing_log_path, local_buffer);
+	std::free (heap_buffer);
 }
 
 void FastTiming::dump () noexcept

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <limits>
@@ -309,7 +310,8 @@ namespace xamarin::android {
 			return !path.empty () && path.contains ('/');
 		}
 
-		static auto get_joined_path_length (std::string_view first, std::string_view second) noexcept -> size_t
+		// Returns the path length excluding NUL, or the negative required capacity including NUL.
+		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> ssize_t
 		{
 			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
 			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
@@ -318,17 +320,13 @@ namespace xamarin::android {
 			if (add_separator) {
 				path_length = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 			}
-			return path_length;
-		}
 
-		static auto join_paths (char *buffer, size_t buffer_size, std::string_view first, std::string_view second) noexcept -> size_t
-		{
-			size_t path_length = get_joined_path_length (first, second);
-			abort_unless (buffer != nullptr && buffer_size > path_length, "Joined path buffer is too small");
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Joined path is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
 
-			bool remove_duplicate_separator = first.ends_with ('/') && second.starts_with ('/');
-			bool add_separator = !first.empty () && !second.empty () && !first.ends_with ('/') && !second.starts_with ('/');
-			size_t second_offset = remove_duplicate_separator ? 1uz : 0uz;
 			char *destination = buffer;
 			if (!first.empty ()) {
 				memcpy (destination, first.data (), first.length ());
@@ -343,7 +341,24 @@ namespace xamarin::android {
 			}
 			buffer [path_length] = '\0';
 
-			return path_length;
+			return static_cast<ssize_t>(path_length);
+		}
+
+		template<size_t Size>
+		static auto join_paths (char (&stack_buffer)[Size], char *&heap_buffer, std::string_view first, std::string_view second) noexcept -> ssize_t
+		{
+			heap_buffer = nullptr;
+			ssize_t result = join_paths (stack_buffer, Size, first, second);
+			if (result >= 0) {
+				return result;
+			}
+
+			size_t required_capacity = static_cast<size_t>(-result);
+			heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (heap_buffer != nullptr, "Failed to allocate joined path");
+			result = join_paths (heap_buffer, required_capacity, first, second);
+			abort_unless (result >= 0, "Failed to join path using the required capacity");
+			return result;
 		}
 
 	private:

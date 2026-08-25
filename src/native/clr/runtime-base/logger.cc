@@ -75,17 +75,16 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 	if (ret != nullptr) {
 		return log_and_return (ret, custom_path);
 	}
-
 	Util::create_public_directory (override_dir);
-	size_t path_length = Util::get_joined_path_length (override_dir, fallback_filename);
-	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
+	Util::create_public_directory (override_dir);
 	char local_buffer [Util::LocalPathBufferSize];
-	char *path_buffer = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-	Util::join_paths (path_buffer, allocation_size, override_dir, fallback_filename);
+	char *heap_buffer;
+	ssize_t path_length = Util::join_paths (local_buffer, heap_buffer, override_dir, fallback_filename);
+	const char *path_buffer = heap_buffer == nullptr ? local_buffer : heap_buffer;
 
-	std::string_view path_view { path_buffer, path_length };
+	std::string_view path_view { path_buffer, static_cast<size_t>(path_length) };
 	ret = log_and_return (open_file (path_view), path_view);
-	Helpers::free_temporary_buffer (path_buffer, local_buffer);
+	std::free (heap_buffer);
 	return ret;
 }
 

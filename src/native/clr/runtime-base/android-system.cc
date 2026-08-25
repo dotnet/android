@@ -258,17 +258,16 @@ AndroidSystem::setup_environment () noexcept
 #if defined(DEBUG)
 	log_debug (LOG_DEFAULT, "Loading environment from the override directory."sv);
 
-	size_t env_override_file_length = Util::get_joined_path_length (primary_override_dir, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
-	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (env_override_file_length, 1uz);
 	char local_buffer [Util::LocalPathBufferSize];
-	char *env_override_file = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-	Util::join_paths (env_override_file, allocation_size, primary_override_dir, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
+	char *heap_buffer;
+	Util::join_paths (local_buffer, heap_buffer, primary_override_dir, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
+	const char *env_override_file = heap_buffer == nullptr ? local_buffer : heap_buffer;
 
 	if (Util::file_exists (env_override_file)) {
 		log_debug (LOG_DEFAULT, "Loading {}"sv, env_override_file);
 		setup_environment_from_override_file (env_override_file);
 	}
-	Helpers::free_temporary_buffer (env_override_file, local_buffer);
+	std::free (heap_buffer);
 #endif // def DEBUG
 }
 
@@ -277,11 +276,10 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 {
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
 	std::string_view app_data_dir = appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_string_view ();
-	size_t path_length = Util::get_joined_path_length (app_data_dir, "libmonodroid.so"sv);
-	size_t allocation_size = Helpers::add_with_overflow_check<size_t> (path_length, 1uz);
 	char local_buffer [Util::LocalPathBufferSize];
-	char *libmonodroid_path = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-	Util::join_paths (libmonodroid_path, allocation_size, app_data_dir, "libmonodroid.so"sv);
+	char *heap_buffer;
+	Util::join_paths (local_buffer, heap_buffer, app_data_dir, "libmonodroid.so"sv);
+	const char *libmonodroid_path = heap_buffer == nullptr ? local_buffer : heap_buffer;
 
 	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to {}", libmonodroid_path);
 	if (!Util::file_exists (libmonodroid_path)) {
@@ -292,7 +290,7 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 		set_embedded_dso_mode_enabled (false);
 		native_libraries_dir.assign (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	}
-	Helpers::free_temporary_buffer (libmonodroid_path, local_buffer);
+	std::free (heap_buffer);
 }
 
 auto

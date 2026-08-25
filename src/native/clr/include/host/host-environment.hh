@@ -92,11 +92,10 @@ namespace xamarin::android {
 		static void create_xdg_directory (jstring_wrapper &home, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 		{
 			std::string_view home_path = home.get_string_view ();
-			size_t dir_path_length = Util::get_joined_path_length (home_path, relative_path);
-			size_t allocation_size = Helpers::add_with_overflow_check<size_t> (dir_path_length, 1uz);
 			char local_buffer [Util::LocalPathBufferSize];
-			char *dir_path = Helpers::get_temporary_buffer (local_buffer, allocation_size);
-			Util::join_paths (dir_path, allocation_size, home_path, relative_path);
+			char *heap_buffer;
+			Util::join_paths (local_buffer, heap_buffer, home_path, relative_path);
+			const char *dir_path = heap_buffer == nullptr ? local_buffer : heap_buffer;
 
 			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", dir_path);
 			int rv = Util::create_directory (dir_path, Constants::DEFAULT_DIRECTORY_MODE);
@@ -107,7 +106,7 @@ namespace xamarin::android {
 			if (!environment_variable_name.empty ()) {
 				set_variable (environment_variable_name.data (), dir_path);
 			}
-			Helpers::free_temporary_buffer (dir_path, local_buffer);
+			std::free (heap_buffer);
 		}
 
 		[[gnu::flatten, gnu::always_inline]]
