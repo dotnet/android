@@ -15,12 +15,16 @@ namespace xamarin::android {
 		void *lib_handle = nullptr;
 
 		// Handle p/invokes of the form [DllImport ("liblog")] or [DllImport ("log")]
-		dynamic_local_path_string short_library_name;
+		char short_library_name[Constants::SENSIBLE_PATH_MAX];
 		if (!Util::path_has_directory_components (library_name)) {
-			Util::append_dso_name (short_library_name, library_name, true);
-
-			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name.get ());
-			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name.get (), microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			ssize_t name_length = Util::format_dso_name (library_name, true, short_library_name, sizeof (short_library_name));
+			if (name_length >= 0) {
+				std::string_view short_library_name_view { short_library_name, static_cast<size_t>(name_length) };
+				log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name_view);
+				lib_handle = MonodroidDl::monodroid_dlopen (short_library_name_view, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			} else {
+				log_warn (LOG_ASSEMBLY, "Unable to construct short p/invoke library name for '{}': name is too long", library_name);
+			}
 		}
 
 		if (lib_handle == nullptr) {
