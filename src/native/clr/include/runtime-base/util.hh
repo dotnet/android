@@ -5,7 +5,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <array>
 #include <cerrno>
 #include <concepts>
 #include <cstdio>
@@ -48,7 +47,7 @@ namespace xamarin::android {
 
 	class Util
 	{
-		static constexpr inline std::array<char, 16> hex_map {
+		static constexpr inline char hex_map [16] {
 			'0', '1', '2', '3', '4', '5', '6', '7',
 			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
 		};
