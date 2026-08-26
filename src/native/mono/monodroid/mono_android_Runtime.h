@@ -33,14 +33,6 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_register
 
 /*
  * Class:     mono_android_Runtime
- * Method:    notifyTimeZoneChanged
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_mono_android_Runtime_notifyTimeZoneChanged
-  (JNIEnv *, jclass);
-
-/*
- * Class:     mono_android_Runtime
  * Method:    createNewContext
  * Signature: ([Ljava/lang/String;[Ljava/lang/String;Ljava/lang/ClassLoader;)I
  */

@@ -1,10 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Testing;
 using System;
 using System.Collections.Immutable;
+using System.IO;
 
 internal static class CSharpVerifierHelper
 {
+	internal static ReferenceAssemblies DefaultReferenceAssemblies { get; } =
+		ReferenceAssemblies.Default.WithNuGetConfigFilePath (Path.Combine (AppContext.BaseDirectory, "NuGet.config"));
+
 	/// <summary>
 	/// By default, the compiler reports diagnostics for nullable reference types at
 	/// <see cref="DiagnosticSeverity.Warning"/>, and the analyzer test framework defaults to only validating

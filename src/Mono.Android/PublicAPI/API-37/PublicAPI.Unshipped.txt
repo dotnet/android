@@ -4349,6 +4349,7 @@ static Android.Ranging.Wifi.PD.WifiPdRangingCapabilities.Creator.get -> Android.
 static Android.Ranging.Wifi.PD.WifiPdRangingParams.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Ranging.Wifi.Rtt.RttStationRangingParams.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Ranging.Wifi.Rtt.WifiRttSpecificData.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Runtime.JNIEnv.BridgeProcessingGeneration.get -> int
 static Android.Runtime.JNIEnv.GetClassNameFromInstance(nint jobject) -> string?
 static Android.Security.NetworkSecurityPolicy.Instance.get -> Android.Security.NetworkSecurityPolicy!
 static Android.Service.Chooser.ChooserSessionToken.Creator.get -> Android.OS.IParcelableCreator!

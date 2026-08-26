@@ -297,6 +297,34 @@ public class CommandLineToolsResolverTests
 		Assert.That (installCalls, Is.EqualTo (1));
 	}
 
+	[TestCase (@"Available Packages:
+  Path                   | Version | Description
+  cmdline-tools;latest   | 22.0    | Android SDK Command-line Tools (latest)
+")]
+	[TestCase (@"Available packages:
+  cmdline-tools/latest    22.0    Android SDK Command-line Tools (latest)
+")]
+	public async Task EnsureLatestCommandLineToolsAsync_ParsedPackageFormats_RecognizesLatest (string output)
+	{
+		CreateCommandLineTool ("latest", "sdkmanager", "22.0");
+		var installCalls = 0;
+		using var manager = CreateSdkManager ();
+
+		var selected = await manager.EnsureLatestCommandLineToolsAsync (
+			SdkDirectory,
+			new ProgressCollector (),
+			CancellationToken.None,
+			(_, _, _) => Task.CompletedTask,
+			_ => Task.FromResult (SdkManager.ParseSdkManagerList (output)),
+			(_, _, _) => {
+				installCalls++;
+				return Task.CompletedTask;
+			});
+
+		Assert.That (selected.Revision, Is.EqualTo ("22.0"));
+		Assert.That (installCalls, Is.Zero);
+	}
+
 	[Test]
 	public void EnsureLatestCommandLineToolsAsync_MissingCatalogPackage_Throws ()
 	{

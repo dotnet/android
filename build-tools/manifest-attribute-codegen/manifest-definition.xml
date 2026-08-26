@@ -100,6 +100,9 @@
         <a name='intentMatchingFlags' api-level='36.1' />
         <a name='alternateLauncherIcons' format='reference' api-level='36.1' />
         <a name='alternateLauncherLabels' format='reference' api-level='36.1' />
+        <a name='backupAgentProcess' api-level='37.0' />
+        <a name='zygotePreloadNativeLib' api-level='37.0' />
+        <a name='zygotePreloadNativeFunc' api-level='37.0' />
     </e>
     <e name='permission' api-level='10'>
         <parent>manifest</parent>
@@ -119,6 +122,8 @@
         <a name='maxSdkVersion' api-level='34' />
         <a name='requiresPurpose' format='boolean' api-level='36.1' />
         <a name='requiresPurposeTargetSdkVersion' format='integer' api-level='36.1' />
+        <a name='requiresGeneralPurposeTargetSdkVersion' format='integer' api-level='37.0' />
+        <a name='requiresPurposeStringTargetSdkVersion' format='integer' api-level='37.0' />
     </e>
     <e name='permission-group' api-level='10'>
         <parent>manifest</parent>
@@ -153,6 +158,7 @@
         <a name='requiredNotFeature' format='string' api-level='26' />
         <a name='usesPermissionFlags' api-level='31' />
         <a name='minSdkVersion' format='integer|string' api-level='34' />
+        <a name='purposeString' format='reference' api-level='37.0' />
     </e>
     <e name='uses-configuration' api-level='10'>
         <parent>manifest</parent>
@@ -229,6 +235,7 @@
         <a name='attributionTags' api-level='31' />
         <a name='systemUserOnly' format='boolean' api-level='35' />
         <a name='intentMatchingFlags' api-level='36.1' />
+        <a name='privateComputeCore' api-level='37.0' />
     </e>
     <e name='grant-uri-permission' api-level='10'>
         <parent>provider</parent>
@@ -275,6 +282,8 @@
         <a name='allowSharedIsolatedProcess' format='boolean' api-level='34' />
         <a name='systemUserOnly' format='boolean' api-level='35' />
         <a name='intentMatchingFlags' api-level='36.1' />
+        <a name='privateComputeCore' api-level='37.0' />
+        <a name='nativeService' format='boolean' api-level='37.0' />
     </e>
     <e name='receiver' api-level='10'>
         <parent>application</parent>
@@ -293,6 +302,7 @@
         <a name='roundIcon' api-level='25' />
         <a name='attributionTags' api-level='31' />
         <a name='intentMatchingFlags' api-level='36.1' />
+        <a name='privateComputeCore' api-level='37.0' />
     </e>
     <e name='activity' api-level='10'>
         <parent>application</parent>
@@ -365,6 +375,7 @@
         <a name='enableOnBackInvokedCallback' format='boolean' api-level='34' />
         <a name='requireContentUriPermissionFromCaller' format='string' api-level='35' />
         <a name='intentMatchingFlags' api-level='36.1' />
+        <a name='privateComputeCore' api-level='37.0' />
     </e>
     <e name='activity-alias' api-level='10'>
         <parent>application</parent>
@@ -384,6 +395,7 @@
         <a name='allowUntrustedActivityEmbedding' api-level='33' />
         <a name='knownActivityEmbeddingCerts' api-level='33' />
         <a name='intentMatchingFlags' api-level='36.1' />
+        <a name='privateComputeCore' api-level='37.0' />
     </e>
     <e name='meta-data' api-level='10'>
         <parent>application</parent>
@@ -607,6 +619,7 @@
         <a name='nativeHeapZeroInitialized' api-level='31' />
         <a name='name' api-level='33' />
         <a name='useEmbeddedDex' api-level='35' />
+        <a name='singleUser' api-level='37.1' />
     </e>
     <e name='deny-permission' api-level='30'>
         <parent>processes</parent>
@@ -682,5 +695,32 @@
     <e name='adopt-permissions' api-level='36.1'>
         <parent>manifest</parent>
         <a name='name' api-level='36.1' />
+    </e>
+    <e name='valid-general-purpose' api-level='37.0'>
+        <parent>permission</parent>
+        <a name='name' format='string' api-level='37.0' />
+        <a name='maxTargetSdkVersion' format='integer' api-level='37.0' />
+    </e>
+    <e name='general-purpose' api-level='37.0'>
+        <parent>uses-permission</parent>
+        <a name='name' format='string' api-level='37.0' />
+        <a name='minSdkVersion' format='integer|string' api-level='37.0' />
+        <a name='maxSdkVersion' format='integer' api-level='37.0' />
+    </e>
+    <e name='allow-component-access' api-level='37.0'>
+        <parent>manifest</parent>
+    </e>
+    <e name='allow-component-access-package' api-level='37.0'>
+        <parent>allow-component-access</parent>
+        <a name='name' api-level='37.0' />
+        <a name='certDigest' format='string' api-level='37.0' />
+    </e>
+    <e name='memory-budget' api-level='37.1'>
+        <parent>application</parent>
+        <a name='maxMb' api-level='37.1' />
+        <a name='state' api-level='37.1' />
+        <a name='additionalBytesPerDisplayPixel' api-level='37.1' />
+        <a name='additionalMbPerDensity' api-level='37.1' />
+        <a name='feature' api-level='37.1' />
     </e>
 </m>

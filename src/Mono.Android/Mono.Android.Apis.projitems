@@ -245,6 +245,13 @@
       <Level>37</Level>
       <VersionCodeFull>37.1</VersionCodeFull>
       <Id>37.1</Id>
+      <Stable>True</Stable>
+    </AndroidApiInfo>
+    <AndroidApiInfo Include="v17.2">
+      <Name>CinnamonBun</Name>
+      <Level>37</Level>
+      <VersionCodeFull>37.2</VersionCodeFull>
+      <Id>37.2</Id>
       <Stable>False</Stable>
     </AndroidApiInfo>
   </ItemGroup>

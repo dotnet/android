@@ -120,6 +120,11 @@ namespace Android.Runtime {
 			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 
+		/// <summary>
+		/// Gets the number of completed CoreCLR or NativeAOT GC bridge processing cycles.
+		/// </summary>
+		public static int BridgeProcessingGeneration => AndroidRuntimeInternal.BridgeProcessingGeneration;
+
 		public static IntPtr AllocObject (string jniClassName)
 		{
 			IntPtr jniClass = JNIEnv.FindClass (jniClassName);
@@ -657,6 +662,11 @@ namespace Android.Runtime {
 					_GetByteArrayRegion (source, index, 1, r);
 					return r [0];
 				} },
+				{ typeof (sbyte), (type, source, index) => {
+					var r = new sbyte [1];
+					_GetByteArrayRegion (source, index, 1, (byte[]) (object) r);
+					return r [0];
+				} },
 				{ typeof (char), (type, source, index) => {
 					var r = new char [1];
 					_GetCharArrayRegion (source, index, 1, r);
@@ -926,6 +936,7 @@ namespace Android.Runtime {
 			return new Dictionary<Type, Action<Array, IntPtr>> () {
 				{ typeof (bool),        (source, dest) => CopyArray ((bool[]) source, dest) },
 				{ typeof (byte),        (source, dest) => CopyArray ((byte[]) source, dest) },
+				{ typeof (sbyte),       (source, dest) => CopyArray ((byte[]) (object) (sbyte[]) source, dest) },
 				{ typeof (char),        (source, dest) => CopyArray ((char[]) source, dest) },
 				{ typeof (short),       (source, dest) => CopyArray ((short[]) source, dest) },
 				{ typeof (int),         (source, dest) => CopyArray ((int[]) source, dest) },
@@ -1043,6 +1054,11 @@ namespace Android.Runtime {
 				{ typeof (byte), (type, source, len) => {
 					var r = new byte[len];
 					CopyArray (source, r);
+					return r;
+				} },
+				{ typeof (sbyte), (type, source, len) => {
+					var r = new sbyte [len];
+					CopyArray (source, (byte[]) (object) r);
 					return r;
 				} },
 				{ typeof (char), (type, source, len) => {
@@ -1379,6 +1395,7 @@ namespace Android.Runtime {
 			return new Dictionary<Type, Func<Array, IntPtr>> () {
 				{ typeof (bool),          (source) => NewArray ((bool[]) source) },
 				{ typeof (byte),          (source) => NewArray ((byte[]) source) },
+				{ typeof (sbyte),         (source) => NewArray ((byte[]) (object) (sbyte[]) source) },
 				{ typeof (char),          (source) => NewArray ((char[]) source) },
 				{ typeof (short),         (source) => NewArray ((short[]) source) },
 				{ typeof (int),           (source) => NewArray ((int[]) source) },
@@ -1512,6 +1529,10 @@ namespace Android.Runtime {
 				{ typeof (byte), (dest, index, value) => {
 					var _value = new[]{(byte) value!};
 					_SetByteArrayRegion (dest, index, _value.Length, _value);
+				} },
+				{ typeof (sbyte), (dest, index, value) => {
+					var _value = new[]{(sbyte) value!};
+					_SetByteArrayRegion (dest, index, _value.Length, (byte[]) (object) _value);
 				} },
 				{ typeof (char), (dest, index, value) => {
 					var _value = new[]{(char) value!};

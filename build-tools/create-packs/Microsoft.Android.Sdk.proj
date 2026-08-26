@@ -89,16 +89,10 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" TargetPath="targets" />
       <FilesToPackage Include="$(IntermediateOutputPath)UnixFilePermissions.xml" TargetPath="data" Condition=" '$(HostOS)' != 'Windows' " />
       <FilesToPackage Include="$(MSBuildThisFileDirectory)\linux-README.md" TargetPath="\README.md" Condition=" '$(HostOS)' == 'Linux' " />
-      <FilesToPackage Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" TargetPath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)" />
       <FilesToPackage
-          Include="$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\AndroidApiInfo.xml"
-          TargetPath="data\$(DotNetAndroidTargetFramework)$(AndroidDefaultTargetDotnetApiLevel)"
-          Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\AndroidApiInfo.xml') "
-      />
-      <FilesToPackage
-          Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml"
-          TargetPath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestUnstableApiLevel)"
-          Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml') "
+          Include="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\AndroidApiInfo.xml"
+          TargetPath="data\$(DotNetAndroidTargetFramework)%(AndroidBuildApiLevel.Identity)"
+          Condition=" Exists('$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\AndroidApiInfo.xml') "
       />
     </ItemGroup>
   </Target>

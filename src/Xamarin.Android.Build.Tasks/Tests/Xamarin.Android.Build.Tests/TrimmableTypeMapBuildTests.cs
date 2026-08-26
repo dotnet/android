@@ -83,10 +83,9 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty (KnownProperties.PublishAot, "true");
-			proj.SetProperty ("NativeCompilationDuringPublish", "false");
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj, parameters: [ "_AndroidRuntime=CoreCLR" ]), "Build should have succeeded.");
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 
 			var intermediateDir = builder.Output.GetIntermediaryPath ("typemap");
 			AssertTrimmableTypeMapOutputs (intermediateDir, isRelease: false);
@@ -103,6 +102,7 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+			bool trimNativeAotJavaCode = isRelease && runtime == AndroidRuntime.NativeAOT;
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
@@ -112,11 +112,26 @@ namespace Xamarin.Android.Build.Tests {
 			var typemapDlls = Directory.GetFiles (intermediateDir, "*.dll");
 			Assert.IsNotEmpty (typemapDlls, "First build should have generated typemap DLL(s).");
 
+			string scanDgml = "";
+			DateTime scanDgmlTimestamp = default;
+			if (trimNativeAotJavaCode) {
+				var ridIntermediateDir = builder.Output.GetIntermediaryPath ("android-arm64");
+				scanDgml = Path.Combine (ridIntermediateDir, "native", $"{proj.ProjectName}.scan.dgml.xml");
+				var codegenDgml = Path.Combine (ridIntermediateDir, "native", $"{proj.ProjectName}.codegen.dgml.xml");
+				FileAssert.Exists (scanDgml);
+				FileAssert.DoesNotExist (codegenDgml, "Optimized builds should emit only the scan DGML needed for Java trimming.");
+				scanDgmlTimestamp = File.GetLastWriteTimeUtc (scanDgml);
+			}
+
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
 
 			Assert.IsTrue (
 				builder.Output.IsTargetSkipped ("_GenerateJavaStubs"),
 				"_GenerateJavaStubs should be skipped on incremental build.");
+			if (trimNativeAotJavaCode) {
+				builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMapProguardConfiguration");
+				Assert.AreEqual (scanDgmlTimestamp, File.GetLastWriteTimeUtc (scanDgml), "No-op builds should not rewrite the scan DGML.");
+			}
 			if (isRelease && runtime == AndroidRuntime.CoreCLR) {
 				builder.Output.AssertTargetIsSkipped ("_RemoveRegisterAttributeCoreClr");
 			}

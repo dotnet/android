@@ -13,6 +13,7 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
+using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
@@ -22,6 +23,7 @@ namespace Xamarin.Android.Tasks {
 
 		List<ITaskItem> archives = new List<ITaskItem> ();
 		List<ITaskItem> files = new List<ITaskItem> ();
+		List<string> temporaryArchives = new List<string> ();
 
 		public string? ExtraArgs { get; set; }
 
@@ -43,14 +45,21 @@ namespace Xamarin.Android.Tasks {
 
 		public async override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			await this.WhenAllWithLock (ResourcesToCompile ?? ResourceDirectories ?? [], ProcessDirectory);
+			try {
+				await this.WhenAllWithLock (ResourcesToCompile ?? ResourceDirectories ?? [], ProcessDirectory);
 
-			ProcessOutput ();
+				ProcessOutput ();
 
-			for (int i = archives.Count -1; i > 0; i-- ) {
-				if (!File.Exists (archives[i].ItemSpec)) {
-					archives.RemoveAt (i);
+				for (int i = archives.Count -1; i > 0; i-- ) {
+					if (!File.Exists (archives[i].ItemSpec)) {
+						archives.RemoveAt (i);
+					}
 				}
+			} finally {
+				foreach (var archive in temporaryArchives) {
+					Files.TryDeleteFile (archive, LogDebugMessage);
+				}
+				temporaryArchives.Clear ();
 			}
 		}
 
@@ -80,6 +89,16 @@ namespace Xamarin.Android.Tasks {
 				outputArchive = GetFullPath (targetDir);
 			}
 			Directory.CreateDirectory (outputArchive);
+			if (isDirectory && OS.IsWindows && !IsPathOnlyASCII (fileOrDirectory)) {
+				var temporaryArchive = Path.Combine (outputArchive, $"{Path.GetRandomFileName ()}.zip");
+				lock (lockObject)
+					temporaryArchives.Add (temporaryArchive);
+				using (var zip = new ZipArchiveEx (temporaryArchive, FileMode.CreateNew)) {
+					zip.AddDirectory (fileOrDirectory, "res");
+				}
+				fileOrDirectory = temporaryArchive;
+				isArchive = true;
+			}
 			string expectedOutputFile;
 			if (isDirectory) {
 				if (flatFile.IsNullOrEmpty ())
@@ -89,12 +108,6 @@ namespace Xamarin.Android.Tasks {
 					filename = $"{filename}.flata";
 				outputArchive = Path.Combine (outputArchive, filename);
 				expectedOutputFile = outputArchive;
-				string archive = item.GetMetadata (ResolveLibraryProjectImports.ResourceDirectoryArchive);
-				if (!archive.IsNullOrEmpty () && File.Exists (archive)) {
-					LogDebugMessage ($"Found Compressed Resource Archive '{archive}'.");
-					fileOrDirectory = archive;
-					isArchive = true;
-				}
 			} else {
 				if (IsInvalidFilename (fileOrDirectory)) {
 					LogDebugMessage ($"Invalid filename, ignoring: {fileOrDirectory}");

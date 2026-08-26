@@ -137,7 +137,6 @@ namespace Mono.AndroidTools.Adb
 		/// </summary>
 		public static uint UnixFileTimeFromDateTime (DateTime datetime)
 		{
-			//HACK: work around XBC #5697. DateTime.ToFileTimeUtc() does not convert to UTC, so convert beforehand
 			if (datetime.Kind != DateTimeKind.Utc)
 				datetime = datetime.ToUniversalTime ();
 

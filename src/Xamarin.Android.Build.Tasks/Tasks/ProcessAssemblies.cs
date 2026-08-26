@@ -18,6 +18,7 @@ namespace Xamarin.Android.Tasks
 	/// Also sets some metadata:
 	/// * %(FrameworkAssembly)=True to determine if framework or user assembly
 	/// * %(HasMonoAndroidReference)=True for incremental build performance
+	/// * %(AndroidSkipAssemblyModification)=True for framework assemblies with no Android types
 	/// * Modify %(DestinationSubDirectory) and %(DestinationSubPath) if an assembly has an architecture-specific version
 	/// </summary>
 	public class ProcessAssemblies : AndroidTask
@@ -138,11 +139,19 @@ namespace Xamarin.Android.Tasks
 				ITaskItem? symbol = GetOrCreateSymbolItem (symbols, assembly);
 				SetAssemblyAbiMetadata (assembly, symbol);
 				SetDestinationSubDirectory (assembly, symbol);
-				assembly.SetMetadata ("FrameworkAssembly", MonoAndroidHelper.IsFrameworkAssembly (assembly).ToString ());
+				bool isFrameworkAssembly = MonoAndroidHelper.IsFrameworkAssembly (assembly);
+				assembly.SetMetadata ("FrameworkAssembly", isFrameworkAssembly.ToString ());
+				symbol?.SetMetadata ("FrameworkAssembly", isFrameworkAssembly.ToString ());
 
 				if (!DesignTimeBuild) {
 					// Designer builds don't produce assemblies, the HasMonoAndroidReference call would throw an exception in that case
-					assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+					string hasMonoAndroidReference = MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ();
+					assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference);
+					symbol?.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference);
+
+					string skipAssemblyModification = (isFrameworkAssembly && !MonoAndroidHelper.IsAndroidAssembly (assembly)).ToString ();
+					assembly.SetMetadata ("AndroidSkipAssemblyModification", skipAssemblyModification);
+					symbol?.SetMetadata ("AndroidSkipAssemblyModification", skipAssemblyModification);
 				}
 				output.Add (assembly);
 			}

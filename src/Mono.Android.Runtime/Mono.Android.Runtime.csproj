@@ -40,12 +40,12 @@
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   <!-- Only build the .NET 6+ version of 'Mono.Android.Runtime.dll' for the latest stable Android version. -->
-  <PropertyGroup Condition=" '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
+  <PropertyGroup Condition="  $([MSBuild]::VersionLessThan($(AndroidApiLevel), $(AndroidDefaultTargetDotnetApiLevel)))  ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
   
   <!-- Copy .NET ref/runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
-  <PropertyGroup Condition=" '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
+  <PropertyGroup Condition=" $([MSBuild]::VersionGreaterThanOrEquals($(AndroidApiLevel), $(AndroidDefaultTargetDotnetApiLevel))) ">
     <BuildDependsOn>
       $(BuildDependsOn);
       _CopyToPackDirs;
@@ -58,7 +58,8 @@
     <PropertyGroup>
       <InformationalVersion>$(AndroidPackVersion).$(PackVersionCommitCount); git-rev-head:$(XAVersionHash); git-branch:$(XAVersionBranch)</InformationalVersion>
       <TargetPlatformIdentifier>Android</TargetPlatformIdentifier>
-      <TargetPlatformVersion>$(AndroidApiLevel).0</TargetPlatformVersion>
+      <TargetPlatformVersion Condition=" $(AndroidApiLevel.Contains('.')) ">$(AndroidApiLevel)</TargetPlatformVersion>
+      <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">$(AndroidApiLevel).0</TargetPlatformVersion>
       <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel).0</SupportedOSPlatformVersion>
     </PropertyGroup>
   </Target>

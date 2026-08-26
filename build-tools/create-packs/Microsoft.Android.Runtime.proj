@@ -44,16 +44,12 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
   </Target>
 
  <Target Name="_GetRuntimePackItems"
-      DependsOnTargets="_GetLicense;_GetDefaultPackageVersion"
+      DependsOnTargets="_GetLicense;_GetDefaultPackageVersion;_AndroidGetNdkRedistributables"
       BeforeTargets="GetFilesToPackage" >
     <PropertyGroup>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">$(_CLRRuntimeFlavorDirName)</_RuntimeFlavorDirName>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">$(_NativeAotRuntimeFlavorDirName)</_RuntimeFlavorDirName>
       <_RuntimeFlavorDirName Condition=" '$(AndroidRuntime)' == 'Mono' Or '$(AndroidRuntime)' == '' ">$(_MonoRuntimeFlavorDirName)</_RuntimeFlavorDirName>
-      <_ClangArch Condition=" '$(AndroidRID)' == 'android-arm64' ">aarch64</_ClangArch>
-      <_ClangArch Condition=" '$(AndroidRID)' == 'android-arm' ">arm</_ClangArch>
-      <_ClangArch Condition=" '$(AndroidRID)' == 'android-x64' ">x86_64</_ClangArch>
-      <_ClangArch Condition=" '$(AndroidRID)' == 'android-x86' ">i686</_ClangArch>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
@@ -91,23 +87,16 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libarchive-dso-stub.so" />
     </ItemGroup>
 
-    <!-- System lib stubs from the common redist directory, needed by all runtimes -->
+    <!-- System lib stubs needed by all runtimes -->
     <ItemGroup>
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libdl.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\liblog.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libm.so" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libz.so" />
+      <NativeRuntimeAsset Include="@(_AndroidNdkRedistributable)"
+          Condition=" '%(_AndroidNdkRedistributable.AndroidRID)' == '$(AndroidRID)' And '%(_AndroidNdkRedistributable.Kind)' == 'System' " />
     </ItemGroup>
 
     <!-- Toolchain libraries shared by CoreCLR and NativeAOT (both do native linking) -->
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' Or '$(AndroidRuntime)' == 'NativeAOT' ">
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\crtbegin_so.o" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\crtend_so.o" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc++_static.a" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libc++abi.a" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libclang_rt.builtins-$(_ClangArch)-android.a" />
-      <NativeRuntimeAsset Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\$(AndroidRID)\libunwind.a" />
+      <NativeRuntimeAsset Include="@(_AndroidNdkRedistributable)"
+          Condition=" '%(_AndroidNdkRedistributable.AndroidRID)' == '$(AndroidRID)' And '%(_AndroidNdkRedistributable.Kind)' == 'Toolchain' " />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
