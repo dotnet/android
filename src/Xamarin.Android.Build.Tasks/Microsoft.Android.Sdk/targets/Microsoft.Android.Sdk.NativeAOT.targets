@@ -129,13 +129,14 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
           Also, do NOT use `clang++` here because it will link the dynamic libc++ library into the
           application. If, for some reason, `clang++` has to be used, `<LinkerArgs>` need to be
-          added to pass `-nostdlib` to it.
+          added to pass `-nostdlib++` to it.
       -->
       <CppCompilerAndLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppCompilerAndLinker>
       <CppLinker>$(_NdkClangPrefix)$(_NDKApiLevel)-clang$(_NdkWrapperScriptExt)</CppLinker>
       <ObjCopyName>llvm-objcopy</ObjCopyName>
 
-      <!-- We must ensure this is `false`, as it would interfere with statically linking libc++ -->
+      <!-- We must ensure this is `false`, so that the compiler driver does not add libc++,
+           which NativeAOT applications do not link. -->
       <LinkStandardCPlusPlusLibrary>false</LinkStandardCPlusPlusLibrary>
     </PropertyGroup>
 
