@@ -175,7 +175,7 @@ namespace Xamarin.Android.Tools.Tests
 			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
 				var entry = archive.CreateEntry (entryName);
 				using var writer = new StreamWriter (entry.Open ());
-				writer.Write ("malicious");
+				writer.Write ("foo");
 			}
 
 			var ex = Assert.Throws<InvalidOperationException> (() =>
@@ -193,7 +193,7 @@ namespace Xamarin.Android.Tools.Tests
 			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
 				var entry = archive.CreateEntry ($"..{Path.DirectorySeparatorChar}relative.txt");
 				using var writer = new StreamWriter (entry.Open ());
-				writer.Write ("malicious");
+				writer.Write ("foo");
 			}
 
 			Assert.Throws<InvalidOperationException> (() =>
@@ -212,7 +212,7 @@ namespace Xamarin.Android.Tools.Tests
 			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
 				var entry = archive.CreateEntry (Path.Combine (pathRoot, "rooted.txt"));
 				using var writer = new StreamWriter (entry.Open ());
-				writer.Write ("malicious");
+				writer.Write ("foo");
 			}
 
 			Assert.Throws<InvalidOperationException> (() =>
