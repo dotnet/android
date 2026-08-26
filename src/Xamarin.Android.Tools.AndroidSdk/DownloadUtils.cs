@@ -108,19 +108,10 @@ namespace Xamarin.Android.Tools
 			return BitConverter.ToString (hash).Replace ("-", "").ToLowerInvariant ();
 		}
 
-		/// <summary>Extracts a ZIP archive into an empty directory with Zip Slip protection.</summary>
+		/// <summary>Extracts a ZIP archive with Zip Slip protection.</summary>
 		public static void ExtractZipSafe (string archivePath, string destinationPath, CancellationToken cancellationToken)
 		{
 			var fullExtractRoot = Path.GetFullPath (destinationPath);
-			if (Directory.Exists (fullExtractRoot)) {
-				if ((File.GetAttributes (fullExtractRoot) & FileAttributes.ReparsePoint) != 0)
-					throw new InvalidOperationException ($"Extraction target '{destinationPath}' must not be a symbolic link or reparse point.");
-				using var entries = Directory.EnumerateFileSystemEntries (fullExtractRoot).GetEnumerator ();
-				if (entries.MoveNext ())
-					throw new InvalidOperationException ($"Extraction target '{destinationPath}' must be empty.");
-			} else {
-				Directory.CreateDirectory (fullExtractRoot);
-			}
 
 			using var archive = ZipFile.OpenRead (archivePath);
 			foreach (var entry in archive.Entries) {
