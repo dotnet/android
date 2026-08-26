@@ -113,6 +113,8 @@ namespace Xamarin.Android.Tools
 		{
 			using var archive = ZipFile.OpenRead (archivePath);
 			var fullExtractRoot = Path.GetFullPath (destinationPath);
+			if (!fullExtractRoot.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				fullExtractRoot += Path.DirectorySeparatorChar;
 
 			foreach (var entry in archive.Entries) {
 				cancellationToken.ThrowIfCancellationRequested ();
@@ -123,7 +125,7 @@ namespace Xamarin.Android.Tools
 				var destinationFile = Path.GetFullPath (Path.Combine (fullExtractRoot, entry.FullName));
 
 				// Zip Slip protection
-				if (!FileUtil.IsUnderDirectory (destinationFile, fullExtractRoot)) {
+				if (!destinationFile.StartsWith (fullExtractRoot, StringComparison.Ordinal)) {
 					throw new InvalidOperationException ($"Archive entry '{entry.FullName}' would extract outside target directory.");
 				}
 

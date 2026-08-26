@@ -185,16 +185,6 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		/// <summary>Checks if a path is under a given directory.</summary>
-		internal static bool IsUnderDirectory (string path, string directory)
-		{
-			if (string.IsNullOrEmpty (directory) || string.IsNullOrEmpty (path))
-				return false;
-			if (path.Equals (directory, StringComparison.OrdinalIgnoreCase))
-				return true;
-			return path.StartsWith (directory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
-		}
-
 		// Returns .msi (Windows), .pkg (macOS), or null (Linux)
 		internal static string? GetInstallerExtension ()
 		{
@@ -271,4 +261,3 @@ namespace Xamarin.Android.Tools
 #endif
 	}
 }
-
