@@ -98,7 +98,12 @@ namespace Xamarin.Android.Tools
 
 		static HashAlgorithm CreateHashAlgorithm (ChecksumType checksumType) => checksumType switch {
 			ChecksumType.Sha256 => (HashAlgorithm) SHA256.Create (),
+			// SHA1 is used only to verify externally-published file-integrity checksums (Android SDK
+			// repository manifests publish SHA1 checksums) and to match Google's on-disk license hashes,
+			// not as a security or authentication boundary. See ChecksumType / SdkManager.Manifest.cs.
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms
 			ChecksumType.Sha1 => SHA1.Create (),
+#pragma warning restore CA5350
 			_ => throw new NotSupportedException ($"Unsupported checksum type: '{checksumType}'."),
 		};
 
