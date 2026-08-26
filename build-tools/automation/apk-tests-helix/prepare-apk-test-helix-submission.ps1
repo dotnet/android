@@ -4,9 +4,6 @@ param (
 	[string] $WorkItemsDirectory,
 
 	[Parameter(Mandatory)]
-	[string] $CorrelationPayloadDirectory,
-
-	[Parameter(Mandatory)]
 	[string] $ItemsPropsPath,
 
 	[Parameter(Mandatory)]
@@ -57,7 +54,6 @@ function Escape-PowerShellSingleQuotedString
 }
 
 $workItemsFullPath = [IO.Path]::GetFullPath($WorkItemsDirectory)
-$correlationFullPath = [IO.Path]::GetFullPath($CorrelationPayloadDirectory)
 $itemsPropsFullPath = [IO.Path]::GetFullPath($ItemsPropsPath)
 $resultsFullPath = [IO.Path]::GetFullPath($ResultsDirectory)
 
@@ -68,9 +64,7 @@ if (-not (Test-Path -LiteralPath $PlatformToolsDirectory -PathType Container)) {
 	throw "Android platform-tools directory '$PlatformToolsDirectory' does not exist."
 }
 
-Remove-Item -LiteralPath $correlationFullPath -Recurse -Force -ErrorAction Ignore
-New-Item -ItemType Directory -Force -Path $correlationFullPath, $resultsFullPath | Out-Null
-Copy-PayloadDirectory -Source $PlatformToolsDirectory -Destination (Join-Path $correlationFullPath 'platform-tools')
+New-Item -ItemType Directory -Force -Path $resultsFullPath | Out-Null
 
 $cases = [System.Collections.Generic.List[object]]::new()
 foreach ($caseFile in Get-ChildItem -LiteralPath $workItemsFullPath -Filter 'case.json' -Recurse | Sort-Object FullName) {
@@ -80,13 +74,14 @@ foreach ($caseFile in Get-ChildItem -LiteralPath $workItemsFullPath -Filter 'cas
 	if (-not (Test-Path -LiteralPath $apkPath -PathType Leaf)) {
 		throw "APK payload '$apkPath' does not exist."
 	}
+	Copy-PayloadDirectory -Source $PlatformToolsDirectory -Destination (Join-Path $payloadDirectory 'platform-tools')
 
 	$packageName = Escape-PowerShellSingleQuotedString ([string] $case.packageName)
 	$instrumentation = Escape-PowerShellSingleQuotedString ([string] $case.instrumentation)
 	$script = @'
 $ErrorActionPreference = 'Stop'
 $upload = $env:HELIX_WORKITEM_UPLOAD_ROOT
-$adb = Join-Path $env:HELIX_CORRELATION_PAYLOAD 'platform-tools\adb.exe'
+$adb = Join-Path $PSScriptRoot 'platform-tools\adb.exe'
 $apk = Join-Path $PSScriptRoot 'app.apk'
 $packageName = '__PACKAGE_NAME__'
 $instrumentation = '__INSTRUMENTATION__'
@@ -202,5 +197,4 @@ try {
 } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $resultsFullPath 'work-item-generation.json') -Encoding utf8NoBOM
 
 Write-Host "Prepared $($cases.Count) APK test Helix work items."
-Write-Host "##vso[task.setvariable variable=ApkTestsHelixCorrelationPayload]$correlationFullPath"
 Write-Host "##vso[task.setvariable variable=ApkTestsHelixItemsProps]$itemsPropsFullPath"

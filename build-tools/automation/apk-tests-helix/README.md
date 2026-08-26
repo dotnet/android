@@ -6,8 +6,9 @@ measurements put every device test invocation below the configurable 15-minute t
 so splitting an APK's NUnit inventory further would add installation overhead without
 improving the tail.
 
-The shared correlation payload contains only Android `platform-tools`. Each work item
-contains a signed APK, its package/instrumentation metadata, and a PowerShell runner.
+Each small work item contains a signed APK, Android `platform-tools`, its
+package/instrumentation metadata, and a PowerShell runner, matching the proven
+PR #12020 payload layout.
 The runner installs the APK, invokes `am instrument`, pulls the test-generated TRX,
 captures logcat/device state, and returns failure when instrumentation or any test
 fails.

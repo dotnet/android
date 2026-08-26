@@ -175,7 +175,6 @@ steps:
     }
     & '$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/prepare-apk-test-helix-submission.ps1' `
       -WorkItemsDirectory '$(Build.StagingDirectory)/apk-tests-helix/work-items' `
-      -CorrelationPayloadDirectory '$(Build.StagingDirectory)/apk-tests-helix/correlation' `
       -ItemsPropsPath '$(Build.StagingDirectory)/apk-tests-helix/work-items.props' `
       -ResultsDirectory '$(Build.StagingDirectory)/apk-tests-helix/results' `
       -PlatformToolsDirectory (Join-Path $platformTools 'platform-tools') `
@@ -196,7 +195,6 @@ steps:
     taskTimeoutInMinutes: 180
     env:
       ApkTestsHelixItemsProps: $(ApkTestsHelixItemsProps)
-      CorrelationPayloadDirectory: $(ApkTestsHelixCorrelationPayload)
       ApkTestsHelixWorkItemTimeout: ${{ parameters.workItemTimeout }}
       HelixResultsDestinationDir: $(Build.StagingDirectory)/apk-tests-helix/results
       HelixSource: pr/dotnet/android

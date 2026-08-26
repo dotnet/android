@@ -37,7 +37,6 @@ try {
 	$propsPath = Join-Path $root 'items.props'
 	& (Join-Path $PSScriptRoot 'prepare-apk-test-helix-submission.ps1') `
 		-WorkItemsDirectory (Join-Path $root 'work-items') `
-		-CorrelationPayloadDirectory (Join-Path $root 'correlation') `
 		-ItemsPropsPath $propsPath `
 		-ResultsDirectory (Join-Path $root 'results') `
 		-PlatformToolsDirectory $platformTools `
@@ -53,6 +52,9 @@ try {
 		-not $script.Contains('$instrumentation = ''example.tests.TestInstrumentation''') -or
 		-not $script.Contains('INSTRUMENTATION_RESULT: resultsPath=')) {
 		throw 'Generated APK test script is missing required instrumentation values.'
+	}
+	if (-not (Test-Path -LiteralPath (Join-Path $workItem 'platform-tools\adb.exe') -PathType Leaf)) {
+		throw 'Platform tools were not copied into the work item payload.'
 	}
 	$tokens = $null
 	$errors = $null

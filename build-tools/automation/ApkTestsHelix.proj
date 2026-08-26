@@ -14,9 +14,6 @@
     <HelixTargetQueue Include="$(HelixTargetQueueForItem)" Condition="'$(HelixTargetQueueForItem)' != ''">
       <TestRunName>$(HelixTestRunName)</TestRunName>
     </HelixTargetQueue>
-    <HelixCorrelationPayload Include="$(CorrelationPayloadDirectory)" Condition="'$(CorrelationPayloadDirectory)' != ''">
-      <PayloadDirectory>%(Identity)</PayloadDirectory>
-    </HelixCorrelationPayload>
     <HelixWorkItem Include="@(_ApkTestHelixWorkItem)">
       <Timeout>$(ApkTestsHelixWorkItemTimeout)</Timeout>
     </HelixWorkItem>
@@ -25,8 +22,6 @@
   <Target Name="_ValidateApkTestsHelixInputs" BeforeTargets="Test">
     <Error Text="ApkTestsHelixItemsProps must name a generated work-item props file."
            Condition="'$(ApkTestsHelixItemsProps)' == '' or !Exists('$(ApkTestsHelixItemsProps)')" />
-    <Error Text="CorrelationPayloadDirectory must name the staged adb correlation payload."
-           Condition="'$(CorrelationPayloadDirectory)' == '' or !Exists('$(CorrelationPayloadDirectory)')" />
     <Error Text="HelixTargetQueueForItem is required."
            Condition="'$(HelixTargetQueueForItem)' == ''" />
     <Error Text="No APK test Helix work items were generated."
