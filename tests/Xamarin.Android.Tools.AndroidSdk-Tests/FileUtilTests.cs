@@ -106,6 +106,22 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void IsUnderDirectory_SiblingPath_ReturnsFalse ()
+		{
+			Assert.IsFalse (FileUtil.IsUnderDirectory (
+				Path.Combine (tempDir, "data", "java"),
+				Path.Combine (tempDir, "programs")));
+		}
+
+		[Test]
+		public void IsUnderDirectory_DifferentRoot_ReturnsFalse ()
+		{
+			Assert.IsFalse (FileUtil.IsUnderDirectory (
+				Path.Combine (Path.GetPathRoot (tempDir), "other", "java"),
+				Path.Combine (tempDir, "programs")));
+		}
+
+		[Test]
 		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
 		{
 			var parent = Path.Combine (tempDir, "programs");
