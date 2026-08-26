@@ -1063,6 +1063,11 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>Vlastnost MSBuild {0} má neplatnou hodnotu {1}. Platná hodnota je jedna z těchto: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.

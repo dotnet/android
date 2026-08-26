@@ -1063,6 +1063,11 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Un valor válido es uno de: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
