@@ -110,6 +110,18 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void VerifyChecksum_GoogleManifestSha1MatchingHash_DoesNotThrow ()
+		{
+			var filePath = Path.Combine (tempDir, "test.bin");
+			File.WriteAllBytes (filePath, new byte [] { 0x48, 0x65, 0x6c, 0x6c, 0x6f }); // "Hello"
+
+			Assert.DoesNotThrow (() => DownloadUtils.VerifyChecksum (
+				filePath,
+				"f7ff9e8b7bb2e09b70935a5d785e0cc5d9d0abf0",
+				ChecksumType.Sha1));
+		}
+
+		[Test]
 		public void VerifyChecksum_MismatchedHash_Throws ()
 		{
 			var filePath = Path.Combine (tempDir, "test.bin");
