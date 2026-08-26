@@ -146,7 +146,7 @@ extends:
         - checkout: android-tools
           path: s/android-tools
 
-        - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
+        - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml@self
           parameters:
             xaSourcePath: $(System.DefaultWorkingDirectory)/android
             installerArtifactName: $(InstallerArtifactName)
@@ -172,7 +172,7 @@ extends:
         - checkout: self
           persistCredentials: false
 
-        - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml
+        - template: /build-tools/automation/yaml-templates/build-windows-steps.yaml@self
           parameters:
             buildResultArtifactName: Build Results - Windows
             use1ESTemplate: true
@@ -208,7 +208,7 @@ extends:
             sudo apt-get install -y g++-10 gcc-10
           displayName: install g++-10 and gcc-10
 
-        - template: /build-tools/automation/yaml-templates/build-linux-steps.yaml
+        - template: /build-tools/automation/yaml-templates/build-linux-steps.yaml@self
           parameters:
             buildResultArtifactName: Build Results - Linux
             xaSourcePath: $(System.DefaultWorkingDirectory)/android
@@ -217,7 +217,7 @@ extends:
 
     # Package Tests Stage
     - ${{ if ne(variables.SkipTestStages, 'true') }}:
-      - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml
+      - template: /build-tools/automation/yaml-templates/stage-package-tests.yaml@self
         parameters:
           macTestAgentsUseCleanImages: true
           usePublicSetupTemplate: true
@@ -241,7 +241,7 @@ extends:
         workspace:
           clean: all
         steps:
-        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
             useAgentJdkPath: false
             use1ESTemplate: true
@@ -251,19 +251,19 @@ extends:
             artifactName: $(TestAssembliesArtifactName)
             downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = BuildTest"
 
-        - template: /build-tools/automation/yaml-templates/upload-results.yaml
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             artifactName: Test Results - MSBuild - Linux 1
             use1ESTemplate: true
 
-        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
 
       - job: linux_tests_smoke_2
         displayName: Linux > Tests > MSBuild 2
@@ -275,7 +275,7 @@ extends:
         workspace:
           clean: all
         steps:
-        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
             useAgentJdkPath: false
             use1ESTemplate: true
@@ -285,19 +285,19 @@ extends:
             artifactName: $(TestAssembliesArtifactName)
             downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = PackagingTest"
 
-        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
 
-        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
@@ -312,14 +312,14 @@ extends:
               -p:AndroidSdkDirectory="$(HOME)/android-toolchain/sdk"
               -bl:$(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/build-helloworld.binlog
 
-        - template: /build-tools/automation/yaml-templates/upload-results.yaml
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             artifactName: Test Results - MSBuild - Linux 2
             includeBuildResults: true
             use1ESTemplate: true
 
-        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
 
     # Signing and Visual Studio workload insertion artifacts
     - stage: dotnet_prepare_release
@@ -662,14 +662,14 @@ extends:
         timeoutInMinutes: 240
         cancelTimeoutInMinutes: 5
         steps:
-        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
             installTestSlicer: true
             use1ESTemplate: true
 
         # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
         # Gradle distribution and Maven dependencies on first use.
-        - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+        - template: /build-tools/automation/yaml-templates/cache-gradle.yaml@self
           parameters:
             xaSourcePath: $(System.DefaultWorkingDirectory)
 
@@ -678,7 +678,7 @@ extends:
             artifactName: $(TestAssembliesArtifactName)
             downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-        - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+        - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
           parameters:
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             testFilter: ''
@@ -686,13 +686,13 @@ extends:
             retryFailedTests: false
             xaSourcePath: $(System.DefaultWorkingDirectory)
 
-        - template: /build-tools/automation/yaml-templates/upload-results.yaml
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             artifactName: Test Results - MSBuild - macOS-$(System.JobPositionInPhase)
             xaSourcePath: $(System.DefaultWorkingDirectory)
             use1ESTemplate: true
 
-        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
           parameters:
             condition: true
 
@@ -709,11 +709,11 @@ extends:
         steps:
         - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
-        - template: /build-tools/automation/yaml-templates/kill-processes.yaml
+        - template: /build-tools/automation/yaml-templates/kill-processes.yaml@self
 
-        - template: /build-tools/automation/yaml-templates/clean.yaml
+        - template: /build-tools/automation/yaml-templates/clean.yaml@self
 
-        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
             useAgentJdkPath: false
             installTestSlicer: true
@@ -721,7 +721,7 @@ extends:
 
         # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
         # Gradle distribution and Maven dependencies on first use.
-        - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+        - template: /build-tools/automation/yaml-templates/cache-gradle.yaml@self
           parameters:
             xaSourcePath: $(System.DefaultWorkingDirectory)
 
@@ -730,7 +730,7 @@ extends:
             artifactName: $(TestAssembliesArtifactName)
             downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-        - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+        - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
           parameters:
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             testFilter: ''
@@ -738,13 +738,13 @@ extends:
             retryFailedTests: false
             xaSourcePath: $(System.DefaultWorkingDirectory)
 
-        - template: /build-tools/automation/yaml-templates/upload-results.yaml
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             artifactName: Test Results - MSBuild - Windows-$(System.JobPositionInPhase)
             xaSourcePath: $(System.DefaultWorkingDirectory)
             use1ESTemplate: true
 
-        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
           parameters:
             condition: true
 
@@ -768,7 +768,7 @@ extends:
         workspace:
           clean: all
         steps:
-        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+        - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
             jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
             useAgentJdkPath: true
@@ -782,28 +782,28 @@ extends:
             downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
         # Currently needed for samples/NativeAOT
-        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: Xamarin.Android.slnx
             arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
             displayName: prepare java.interop $(XA.Build.Configuration)
             continueOnError: false
 
-        - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+        - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
 
-        - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+        - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
           parameters:
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
             testFilter: $(ExcludedNightlyNUnitCategories)
             testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
-        - template: /build-tools/automation/yaml-templates/upload-results.yaml
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
             xaSourcePath: $(System.DefaultWorkingDirectory)
             use1ESTemplate: true
 
-        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
           parameters:
             condition: true
 
@@ -854,11 +854,11 @@ extends:
         # Restore ~/.gradle/caches between runs so MAUI's Gradle resolution
         # for android-gradle-plugin/sdklib/ddmlib is not gated on the
         # Maven feed every build.
-        - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+        - template: /build-tools/automation/yaml-templates/cache-gradle.yaml@self
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/android
 
-        - template: /build-tools/automation/yaml-templates/setup-test-environment-steps.yaml
+        - template: /build-tools/automation/yaml-templates/setup-test-environment-steps.yaml@self
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
@@ -938,7 +938,7 @@ extends:
             projects: $(Build.SourcesDirectory)/android/Xamarin.Android.slnx
             arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
-        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             command: new
             arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
@@ -946,11 +946,11 @@ extends:
             displayName: Create MAUI template
             continueOnError: false
 
-        - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml
+        - template: /build-tools/automation/yaml-templates/set-maui-target-framework-android.yaml@self
           parameters:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
 
-        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
             arguments: >-
@@ -960,7 +960,7 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Debug
 
-        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
             arguments: >-
@@ -980,7 +980,7 @@ extends:
             TargetFolder: $(Build.StagingDirectory)/logs
             flattenFolders: true
 
-        - template: /build-tools/automation/yaml-templates/publish-artifact.yaml
+        - template: /build-tools/automation/yaml-templates/publish-artifact.yaml@self
           parameters:
             displayName: upload build and test results
             artifactName: Test Results - MAUI Integration
@@ -988,4 +988,4 @@ extends:
             condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
             use1ESTemplate: true
 
-        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
