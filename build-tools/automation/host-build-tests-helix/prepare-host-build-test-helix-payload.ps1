@@ -307,15 +307,17 @@ foreach ($sourceDirectory in Get-ChildItem -LiteralPath $sourceRoot -Directory |
 $payloadTools = Join-Path $correlationPayloadFullPath 'dotnet-tools'
 if (-not [string]::IsNullOrWhiteSpace($DotNetToolsDirectory)) {
 	New-Item -ItemType Directory -Force -Path $payloadTools | Out-Null
-	$apkDiffShim = if ($Platform -eq 'windows') { 'apkdiff.exe' } else { 'apkdiff' }
-	$apkDiffShimPath = Join-Path $DotNetToolsDirectory $apkDiffShim
-	if (Test-Path -LiteralPath $apkDiffShimPath -PathType Leaf) {
-		Copy-Item -LiteralPath $apkDiffShimPath -Destination $payloadTools
+	foreach ($toolName in @('apkdiff', 'dotnet-test-slicer')) {
+		$toolShim = if ($Platform -eq 'windows') { "$toolName.exe" } else { $toolName }
+		$toolShimPath = Join-Path $DotNetToolsDirectory $toolShim
+		if (Test-Path -LiteralPath $toolShimPath -PathType Leaf) {
+			Copy-Item -LiteralPath $toolShimPath -Destination $payloadTools
+		}
+		Copy-PayloadDirectory `
+			-Source (Join-Path $DotNetToolsDirectory (ConvertTo-NativeRelativePath ".store/$toolName")) `
+			-Destination (Join-Path $payloadTools (ConvertTo-NativeRelativePath ".store/$toolName")) `
+			-Optional
 	}
-	Copy-PayloadDirectory `
-		-Source (Join-Path $DotNetToolsDirectory (ConvertTo-NativeRelativePath '.store/apkdiff')) `
-		-Destination (Join-Path $payloadTools (ConvertTo-NativeRelativePath '.store/apkdiff')) `
-		-Optional
 }
 
 Add-DirectoryCorrelationPayloads -Source $payloadRepository -Destination 'repo'

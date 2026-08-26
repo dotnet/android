@@ -132,10 +132,11 @@ try {
 			-not $command.Contains('set "RUNNINGONCI=true"') -or
 			-not $command.Contains('set "TEST_ANDROID_NDK_PATH=') -or
 			-not $command.Contains('set "BUILD_STAGINGDIRECTORY=%HELIX_WORKITEM_ROOT%\o"') -or
+			-not $command.Contains('dotnet-test-slicer.exe" retry') -or
 			-not $command.Contains('tar.exe -a -c -f "%HELIX_WORKITEM_UPLOAD_ROOT%\diagnostics.zip"')) {
 			throw 'The generated command did not apply the requested build configuration.'
 		}
-		Assert-Equal 'results.trx;console.log;slice.runsettings;work-item.json;diagnostics.zip' ([string] $item.DownloadFilesFromResults) 'Windows results should be downloaded.'
+		Assert-Equal 'results.trx;retry-results.trx;console.log;slice.runsettings;work-item.json;diagnostics.zip' ([string] $item.DownloadFilesFromResults) 'Windows results should be downloaded.'
 	}
 
 	$linuxPayloadDirectory = Join-Path $testRoot 'linux-payloads'
@@ -151,7 +152,7 @@ try {
 	[xml] $linuxProps = Get-Content -LiteralPath $linuxPropsPath -Raw
 	foreach ($item in @($linuxProps.Project.ItemGroup._HostBuildTestHelixWorkItem)) {
 		Assert-Equal 'bash run-host-tests.sh' ([string] $item.Command) 'Linux work items should explicitly use bash.'
-		Assert-Equal 'results.trx;console.log;slice.runsettings;work-item.json;diagnostics.tar.gz' ([string] $item.DownloadFilesFromResults) 'Linux results should be downloaded.'
+		Assert-Equal 'results.trx;retry-results.trx;console.log;slice.runsettings;work-item.json;diagnostics.tar.gz' ([string] $item.DownloadFilesFromResults) 'Linux results should be downloaded.'
 	}
 
 	Write-Host 'HostBuildTestsHelix tests passed.'

@@ -27,6 +27,8 @@ as duration-balanced. Each completed run publishes a new `balance.xml`; pass tha
 run's build ID through `hostBuildTestsHelixTimingBuildId` on the next queued build.
 TRX, console output, runsettings, work-item metadata, and a diagnostic archive are
 downloaded from each Helix results container for publication in Azure Pipelines.
+If an initial test invocation fails, the existing `dotnet-test-slicer retry` flow
+reruns only the failed tests once; persistent failures retain a nonzero work-item exit.
 
 The public pipeline keeps the existing Azure Pipelines jobs and adds this path only
 when `enableHostBuildTestsHelixPrototype` is `true`.

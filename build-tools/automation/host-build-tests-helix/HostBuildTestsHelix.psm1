@@ -284,7 +284,7 @@ function Write-HostBuildTestCommand
 		$assemblyPath = $TestAssemblyRelativePath.Replace('/', '\')
 		$command = @'
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 if "%HELIX_CORRELATION_PAYLOAD%"=="" exit /b 2
 if "%HELIX_WORKITEM_ROOT%"=="" exit /b 2
 if "%HELIX_WORKITEM_UPLOAD_ROOT%"=="" exit /b 2
@@ -327,6 +327,18 @@ pushd "%REPO%"
 "%DOTNET_ROOT%\dotnet.exe" test "%REPO%\__TEST_ASSEMBLY__" --settings "%~dp0slice.runsettings" --logger "trx;LogFileName=results.trx" --results-directory "%HELIX_WORKITEM_UPLOAD_ROOT%" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ > "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log" 2>&1
 set "testExitCode=%ERRORLEVEL%"
 type "%HELIX_WORKITEM_UPLOAD_ROOT%\console.log"
+if not "!testExitCode!"=="0" if exist "%HELIX_WORKITEM_UPLOAD_ROOT%\results.trx" if exist "%HELIX_CORRELATION_PAYLOAD%\dotnet-tools\dotnet-test-slicer.exe" (
+  "%HELIX_CORRELATION_PAYLOAD%\dotnet-tools\dotnet-test-slicer.exe" retry --trx="%HELIX_WORKITEM_UPLOAD_ROOT%\results.trx" --outfile="%~dp0retry.runsettings"
+  if not errorlevel 1 (
+    findstr /C:"dotnet-slicer-dummy-test-name" "%~dp0retry.runsettings" >nul
+    if errorlevel 1 (
+      copy /y "%~dp0retry.runsettings" "%HELIX_WORKITEM_UPLOAD_ROOT%\retry.runsettings" >nul
+      "%DOTNET_ROOT%\dotnet.exe" test "%REPO%\__TEST_ASSEMBLY__" --settings "%~dp0retry.runsettings" --logger "trx;LogFileName=retry-results.trx" --results-directory "%HELIX_WORKITEM_UPLOAD_ROOT%" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ > "%HELIX_WORKITEM_UPLOAD_ROOT%\retry-console.log" 2>&1
+      set "testExitCode=!ERRORLEVEL!"
+      type "%HELIX_WORKITEM_UPLOAD_ROOT%\retry-console.log"
+    )
+  )
+)
 tar.exe -a -c -f "%HELIX_WORKITEM_UPLOAD_ROOT%\diagnostics.zip" -C "%BUILD_STAGINGDIRECTORY%" . >nul 2>&1
 "%DOTNET_ROOT%\dotnet.exe" build-server shutdown >nul 2>&1
 popd
@@ -377,6 +389,17 @@ set +e
 "$DOTNET_ROOT/dotnet" test "$REPO/__TEST_ASSEMBLY__" --settings "$HELIX_WORKITEM_ROOT/slice.runsettings" --logger "trx;LogFileName=results.trx" --results-directory "$HELIX_WORKITEM_UPLOAD_ROOT" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ 2>&1 | tee "$HELIX_WORKITEM_UPLOAD_ROOT/console.log"
 test_exit=${PIPESTATUS[0]}
 set -e
+if [[ "$test_exit" -ne 0 && -f "$HELIX_WORKITEM_UPLOAD_ROOT/results.trx" && -x "$HELIX_CORRELATION_PAYLOAD/dotnet-tools/dotnet-test-slicer" ]]; then
+  if "$HELIX_CORRELATION_PAYLOAD/dotnet-tools/dotnet-test-slicer" retry --trx="$HELIX_WORKITEM_UPLOAD_ROOT/results.trx" --outfile="$HELIX_WORKITEM_ROOT/retry.runsettings"; then
+    if ! grep -q 'dotnet-slicer-dummy-test-name' "$HELIX_WORKITEM_ROOT/retry.runsettings"; then
+      cp "$HELIX_WORKITEM_ROOT/retry.runsettings" "$HELIX_WORKITEM_UPLOAD_ROOT/retry.runsettings"
+      set +e
+      "$DOTNET_ROOT/dotnet" test "$REPO/__TEST_ASSEMBLY__" --settings "$HELIX_WORKITEM_ROOT/retry.runsettings" --logger "trx;LogFileName=retry-results.trx" --results-directory "$HELIX_WORKITEM_UPLOAD_ROOT" -- NUnit.NumberOfTestWorkers=__NUNIT_WORKERS__ 2>&1 | tee "$HELIX_WORKITEM_UPLOAD_ROOT/retry-console.log"
+      test_exit=${PIPESTATUS[0]}
+      set -e
+    fi
+  fi
+fi
 tar -czf "$HELIX_WORKITEM_UPLOAD_ROOT/diagnostics.tar.gz" -C "$BUILD_STAGINGDIRECTORY" . || true
 "$DOTNET_ROOT/dotnet" build-server shutdown >/dev/null 2>&1 || true
 exit "$test_exit"
@@ -458,7 +481,7 @@ function Write-HostBuildTestWorkItemPayloads
 			$propsWriter.WriteElementString('PayloadDirectory', $payloadDirectory)
 			$propsWriter.WriteElementString('Command', $helixCommand)
 			$diagnosticsArchive = if ($Platform -eq 'windows') { 'diagnostics.zip' } else { 'diagnostics.tar.gz' }
-			$propsWriter.WriteElementString('DownloadFilesFromResults', "results.trx;console.log;slice.runsettings;work-item.json;$diagnosticsArchive")
+			$propsWriter.WriteElementString('DownloadFilesFromResults', "results.trx;retry-results.trx;console.log;slice.runsettings;work-item.json;$diagnosticsArchive")
 			$propsWriter.WriteElementString('EstimatedDurationMs', [string] $workItem.EstimatedDurationMs)
 			$propsWriter.WriteElementString('TestCount', [string] $workItem.Tests.Count)
 			$propsWriter.WriteEndElement()
