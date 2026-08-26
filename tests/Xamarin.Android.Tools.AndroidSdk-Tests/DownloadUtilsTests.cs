@@ -168,7 +168,7 @@ namespace Xamarin.Android.Tools.Tests
 		[TestCase ("../EXTRACTED/case.txt")]
 		public void ExtractZipSafe_UnsafeRelativePath_Throws (string entryName)
 		{
-			var zipPath = Path.Combine (tempDir, "evil.zip");
+			var zipPath = Path.Combine (tempDir, "unsafe.zip");
 			var extractPath = Path.Combine (tempDir, "extracted");
 			Directory.CreateDirectory (extractPath);
 
@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tools.Tests
 		[Test]
 		public void ExtractZipSafe_PlatformSeparatorTraversal_Throws ()
 		{
-			var zipPath = Path.Combine (tempDir, "evil.zip");
+			var zipPath = Path.Combine (tempDir, "unsafe.zip");
 			var extractPath = Path.Combine (tempDir, "extracted");
 			Directory.CreateDirectory (extractPath);
 
@@ -203,7 +203,7 @@ namespace Xamarin.Android.Tools.Tests
 		[Test]
 		public void ExtractZipSafe_RootedPath_Throws ()
 		{
-			var zipPath = Path.Combine (tempDir, "evil.zip");
+			var zipPath = Path.Combine (tempDir, "unsafe.zip");
 			var extractPath = Path.Combine (tempDir, "extracted");
 			Directory.CreateDirectory (extractPath);
 			var pathRoot = Path.GetPathRoot (extractPath);
