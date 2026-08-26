@@ -322,11 +322,9 @@ Add-DirectoryCorrelationPayloads -Source $payloadRepository -Destination 'repo'
 Add-DirectoryCorrelationPayloads `
 	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/$Configuration")) `
 	-Destination "repo/bin/$Configuration"
-if ($Platform -eq 'windows') {
-	Add-DirectoryCorrelationPayloads `
-		-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Build$Configuration/nuget-unsigned")) `
-		-Destination "repo/bin/Build$Configuration/nuget-unsigned"
-}
+Add-DirectoryCorrelationPayloads `
+	-Source (Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Build$Configuration/nuget-unsigned")) `
+	-Destination "repo/bin/Build$Configuration/nuget-unsigned"
 
 $testOutputRoot = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath "bin/Test$Configuration")
 $testAssembly = Join-Path $repositoryRootFullPath (ConvertTo-NativeRelativePath $TestAssemblyRelativePath)
