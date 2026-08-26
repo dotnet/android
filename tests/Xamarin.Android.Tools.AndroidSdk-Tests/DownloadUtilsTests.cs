@@ -259,6 +259,24 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void ExtractZipSafe_NonEmptyDestination_Throws ()
+		{
+			var zipPath = Path.Combine (tempDir, "test.zip");
+			var extractPath = Path.Combine (tempDir, "extracted");
+			Directory.CreateDirectory (Path.Combine (extractPath, "link"));
+
+			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				var entry = archive.CreateEntry ("link/outside.txt");
+				using var writer = new StreamWriter (entry.Open ());
+				writer.Write ("content");
+			}
+
+			var ex = Assert.Throws<InvalidOperationException> (() =>
+				DownloadUtils.ExtractZipSafe (zipPath, extractPath, CancellationToken.None));
+			Assert.That (ex!.Message, Does.Contain ("must be empty"));
+		}
+
+		[Test]
 		public void ExtractZipSafe_EmptyZip_NoFilesExtracted ()
 		{
 			var zipPath = Path.Combine (tempDir, "empty.zip");
