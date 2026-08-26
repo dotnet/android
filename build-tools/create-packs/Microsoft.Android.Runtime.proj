@@ -99,6 +99,12 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
           Condition=" '%(_AndroidNdkRedistributable.AndroidRID)' == '$(AndroidRID)' And '%(_AndroidNdkRedistributable.Kind)' == 'Toolchain' " />
     </ItemGroup>
 
+    <!-- NativeAOT applications do not link libc++, so its archives are only shipped for CoreCLR. -->
+    <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
+      <NativeRuntimeAsset Include="@(_AndroidNdkRedistributable)"
+          Condition=" '%(_AndroidNdkRedistributable.AndroidRID)' == '$(AndroidRID)' And '%(_AndroidNdkRedistributable.Kind)' == 'CplusPlus' " />
+    </ItemGroup>
+
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'NativeAOT' ">
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.debug-static-debug.a" />
       <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnaot-android.release-static-release.a" />
