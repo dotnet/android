@@ -319,7 +319,7 @@ AndroidSystem::lookup_system_property (std::string_view const& name, size_t &val
 	);
 }
 
-auto AndroidSystem::get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t
+auto AndroidSystem::format_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t
 {
 	bool is_rooted = Util::is_path_rooted (dso_path);
 	bool add_lib_prefix = !base_dir.empty () && !is_rooted && !Util::path_has_directory_components (dso_path);
