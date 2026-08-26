@@ -90,5 +90,36 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsFalse (Directory.Exists (target));
 		}
 
+		[Test]
+		public void IsUnderDirectory_ChildPath_ReturnsTrue ()
+		{
+			var parent = Path.Combine (tempDir, "programs");
+			var child = Path.Combine (parent, "java", "jdk-21");
+			Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
+		}
+
+		[Test]
+		public void IsUnderDirectory_ExactMatch_ReturnsTrue ()
+		{
+			var directory = Path.Combine (tempDir, "programs");
+			Assert.IsTrue (FileUtil.IsUnderDirectory (directory, directory));
+		}
+
+		[Test]
+		public void IsUnderDirectory_PrefixMatch_ReturnsFalse ()
+		{
+			var parent = Path.Combine (tempDir, "programs");
+			var sibling = Path.Combine (tempDir, "programs-extra", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
+		}
+
+		[Test]
+		public void IsUnderDirectory_CanonicalCaseMismatch_ReturnsFalse ()
+		{
+			var parent = Path.Combine (tempDir, "programs");
+			var sibling = Path.Combine (parent, "..", "PROGRAMS", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
+		}
+
 	}
 }

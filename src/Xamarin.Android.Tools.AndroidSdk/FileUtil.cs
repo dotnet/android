@@ -185,6 +185,21 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
+		/// <summary>Checks if a path is under a given directory.</summary>
+		internal static bool IsUnderDirectory (string path, string directory)
+		{
+			if (string.IsNullOrEmpty (directory) || string.IsNullOrEmpty (path))
+				return false;
+
+			var fullPath = Path.GetFullPath (path);
+			var fullDirectory = Path.GetFullPath (directory);
+			if (fullPath.Equals (fullDirectory, StringComparison.Ordinal))
+				return true;
+			if (!fullDirectory.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				fullDirectory += Path.DirectorySeparatorChar;
+			return fullPath.StartsWith (fullDirectory, StringComparison.Ordinal);
+		}
+
 		// Returns .msi (Windows), .pkg (macOS), or null (Linux)
 		internal static string? GetInstallerExtension ()
 		{
