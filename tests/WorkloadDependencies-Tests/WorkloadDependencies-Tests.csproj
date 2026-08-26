@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <AssemblyName>WorkloadDependencies-Tests</AssemblyName>
+    <RootNamespace>WorkloadDependencies.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <OutputPath>$(TestOutputDirectory)</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\tools\workload-dependencies\Extensions.cs" Link="Extensions.cs" />
+  </ItemGroup>
+
+</Project>

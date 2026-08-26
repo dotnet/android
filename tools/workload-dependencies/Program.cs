@@ -5,6 +5,8 @@ using Mono.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using static Extensions;
+
 const string AppName = "workload-dependencies";
 
 var help                    = false;
@@ -184,35 +186,6 @@ string GetMaxJdkVersion (Version v)
 	return new Version (v.Major+1, 0).ToString ();
 }
 
-IEnumerable<XElement> GetSupportedElements (XDocument doc, string element)
-{
-	if (doc.Root == null) {
-		return Array.Empty<XElement> ();
-	}
-	return doc.Root.Elements (element)
-		.Where (e =>
-			string.Equals ("False", e.ReqAttr ("obsolete"), StringComparison.OrdinalIgnoreCase) &&
-			string.Equals ("False", e.ReqAttr ("preview"), StringComparison.OrdinalIgnoreCase))
-		;
-}
-
-IEnumerable<(XElement Element, string Revision)> GetByRevisions (XDocument doc, string element)
-{
-	return GetSupportedElements (doc, element)
-		.OrderByRevision ();
-}
-
-string? GetLatestRevision (XDocument doc, string element, Version minimumVersion, Version maximumVersion)
-{
-	return GetByRevisions (doc, element)
-		.Where (item => {
-			var version = new Version (item.Revision);
-			return version >= minimumVersion && version < maximumVersion;
-		})
-		.LastOrDefault ()
-		.Revision;
-}
-
 IEnumerable<JObject> CreatePackageEntries (XDocument doc, string element, string? revision, bool optional = false)
 {
 	var item    = GetElementRevision (doc, element, revision);
@@ -364,25 +337,4 @@ JArray CreatePackagesArray (XDocument doc)
 		}
 	}
 	return packages;
-}
-
-static class Extensions
-{
-	public static string ReqAttr (this XElement e, string attribute)
-	{
-		var v = (string?) e.Attribute (attribute);
-		if (v == null) {
-			throw new InvalidOperationException ($"Missing required attribute `{attribute}` in: `{e}");
-		}
-		return v;
-	}
-
-	public static IEnumerable<(XElement Element, string Revision)> OrderByRevision (this IEnumerable<XElement> elements)
-	{
-		return from e in elements
-			let     revision    = e.ReqAttr ("revision")
-			let     version     = new Version (revision.Contains (".") ? revision : revision + ".0")
-			orderby version
-			select (e, revision);
-	}
 }
