@@ -1063,6 +1063,11 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>A propriedade '{0}' MSBuild tem um valor inválido de '{1}'. Um valor válido é um dos seguintes: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.

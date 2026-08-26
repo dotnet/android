@@ -1063,6 +1063,11 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>'{0}' MSBuild özelliğinin geçersiz '{1}' değeri var. Geçerli bir değer şunlardan biri: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.

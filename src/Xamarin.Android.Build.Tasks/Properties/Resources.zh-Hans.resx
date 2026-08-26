@@ -1063,6 +1063,11 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Maven
 {0} - User supplied Maven repository type</comment>
   </data>
+  <data name="XA4240" xml:space="preserve">
+    <value>The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.</value>
+    <comment>The following are literal names and should not be translated: _AndroidJcwCodegenTarget, XAJavaInterop1, XamarinAndroid, JavaInterop1
+{0} - The name of the current Java callable wrapper code generation target</comment>
+  </data>
   <data name="XA1038" xml:space="preserve">
     <value>"{0}" MSBuild 属性的 "{1}" 值无效。有效值为以下值之一: {2}。</value>
     <comment>The following are literal names and should not be translated: MSBuild.
