@@ -1737,7 +1737,9 @@ namespace Xamarin.Android.Net
 				(key, algorithmName) = (rsa, "RSA");
 			} else if (clientCertificate.GetECDsaPrivateKey () is {} ec) {
 				(key, algorithmName) = (ec, "EC");
-			} else if (clientCertificate.GetDSAPrivateKey () is {} dsa) {
+			// Retain DSA only for customer-provided client certificates after preferring RSA and ECDSA.
+			// No Microsoft-controlled signing, issuance, key generation, or password storage; removal breaks compatibility.
+			} else if (clientCertificate.GetDSAPrivateKey () is {} dsa) { // CodeQL [SM03800]
 				(key, algorithmName) = (dsa, "DSA");
 			} else {
 				return null;
