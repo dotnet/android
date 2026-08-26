@@ -1087,6 +1087,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		[NonParallelizable]
 		public void BuildWithDeviceLockedStateListener ()
 		{
 			var stableApiLevel = XABuildConfig.AndroidLatestStableApiLevel;
