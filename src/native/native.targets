@@ -372,6 +372,15 @@
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
+    <!-- NativeAOT applications do not link libc++, so its archives are only shipped for CoreCLR. -->
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_RuntimePackFiles Include="@(_AndroidNdkRedistributable)"
+                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'CplusPlus' "
+                         AndroidRID="%(_AndroidNdkRedistributable.AndroidRID)"
+                         AndroidRuntime="$(CMakeRuntimeFlavor)"
+                         RuntimePackName="$(_RuntimePackName)" />
+    </ItemGroup>
+
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"
         DestinationFolder="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(_RuntimePackFiles.RuntimePackName).$(AndroidApiLevel).%(_RuntimePackFiles.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_RuntimePackFiles.AndroidRID)\native"
