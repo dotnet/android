@@ -25,6 +25,8 @@ stages:
     - ${{ if eq(parameters.usePublicSetupTemplate, true) }}:
       - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
         parameters:
+          jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+          useAgentJdkPath: true
           use1ESTemplate: ${{ parameters.use1ESTemplate }}
     - ${{ else }}:
       - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
@@ -117,6 +119,8 @@ stages:
     - ${{ if eq(parameters.usePublicSetupTemplate, true) }}:
       - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
         parameters:
+          jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+          useAgentJdkPath: true
           use1ESTemplate: ${{ parameters.use1ESTemplate }}
     - ${{ else }}:
       - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
