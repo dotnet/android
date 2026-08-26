@@ -40,7 +40,11 @@ parameters:
   type: number
   default: 15
 - name: hostBuildTestsHelixDurationParallelism
-  displayName: Host build tests timing parallelism
+  displayName: Windows host build tests timing parallelism
+  type: number
+  default: 1.3
+- name: hostBuildTestsHelixLinuxDurationParallelism
+  displayName: Linux host build tests timing parallelism
   type: number
   default: 1.65
 - name: hostBuildTestsHelixFallbackTestDurationSeconds
@@ -241,7 +245,7 @@ stages:
           timingBuildId: ${{ parameters.hostBuildTestsHelixTimingBuildId }}
           timingArtifactName: Host Build Test Timings - linux
           targetMinutes: ${{ parameters.hostBuildTestsHelixTargetMinutes }}
-          durationParallelism: ${{ parameters.hostBuildTestsHelixDurationParallelism }}
+          durationParallelism: ${{ parameters.hostBuildTestsHelixLinuxDurationParallelism }}
           fallbackTestDurationSeconds: ${{ parameters.hostBuildTestsHelixFallbackTestDurationSeconds }}
           workItemTimeout: ${{ parameters.hostBuildTestsHelixWorkItemTimeout }}
 

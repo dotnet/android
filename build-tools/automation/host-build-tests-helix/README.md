@@ -18,8 +18,9 @@ and unrelated test assemblies are also excluded. The prepared NDK and the local
 decreasing bin packing. The target is `15` estimated wall-clock minutes by default.
 `durationParallelism` translates summed per-test elapsed time into expected wall time
 while preserving the current NUnit worker setting. The public prototype defaults this
-factor to `1.65`, uses `60` seconds per test for the explicit first-run fallback, and
-allows `90` minutes before Helix terminates a first-run work item.
+factor to `1.3` on Windows and `1.65` on Linux, uses `60` seconds per test for the
+explicit first-run fallback, and allows `90` minutes before Helix terminates a
+first-run work item.
 
 If no timing history is provided, generation explicitly reports `count-fallback` and
 uses the configured fallback duration per test. It does not label count-only slicing
