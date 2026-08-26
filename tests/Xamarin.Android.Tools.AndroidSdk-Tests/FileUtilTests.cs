@@ -106,11 +106,29 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
-		public void IsUnderDirectory_PrefixMatch_ReturnsFalse ()
+		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
 		{
 			var parent = Path.Combine (tempDir, "programs");
 			var sibling = Path.Combine (tempDir, "programs-extra", "java");
 			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
+		}
+
+		[TestCase (null, "/dir")]
+		[TestCase ("/dir", null)]
+		[TestCase ("", "/dir")]
+		[TestCase ("/dir", "")]
+		[TestCase (null, null)]
+		public void IsUnderDirectory_NullOrEmpty_ReturnsFalse (string path, string directory)
+		{
+			Assert.IsFalse (FileUtil.IsUnderDirectory (path, directory));
+		}
+
+		[Test]
+		public void IsUnderDirectory_CaseSensitive ()
+		{
+			var parent = Path.Combine (tempDir, "Programs");
+			var child = Path.Combine (tempDir, "PROGRAMS", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (child, parent));
 		}
 
 		[Test]

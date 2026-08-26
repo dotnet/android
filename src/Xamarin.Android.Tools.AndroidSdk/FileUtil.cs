@@ -186,7 +186,7 @@ namespace Xamarin.Android.Tools
 		}
 
 		/// <summary>Checks if a path is under a given directory.</summary>
-		internal static bool IsUnderDirectory (string path, string directory)
+		internal static bool IsUnderDirectory (string? path, string? directory)
 		{
 			if (string.IsNullOrEmpty (directory) || string.IsNullOrEmpty (path))
 				return false;
