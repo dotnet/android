@@ -42,9 +42,6 @@ resources:
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
-# Override for public pipeline
-- name: DefaultJavaSdkMajorVersion
-  value: 21
 # Override pool images for public Microsoft-hosted agents
 - name: LinuxPoolImage
   value: ubuntu-22.04
@@ -391,6 +388,8 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         installTestSlicer: true
         installApkDiff: false
         use1ESTemplate: false
@@ -505,7 +504,8 @@ stages:
         androidSdkPlatforms: $(DefaultTestSdkPlatforms)
         dotnetVersion: $(DotNetSdkVersion)
         dotnetQuality: $(DotNetSdkQuality)
-        useAgentJdkPath: false
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2

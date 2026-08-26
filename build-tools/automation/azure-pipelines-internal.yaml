@@ -63,9 +63,6 @@ variables:
   value: 'true'
 - name: NuGetAudit
   value: 'false'
-# Override for internal pipeline
-- name: DefaultJavaSdkMajorVersion
-  value: 21
 # Override pool images for internal (non-"-open") dnceng agents.
 # Confirm these pool/image names exist in the dnceng/internal project.
 # Match the public pipeline's Mac image (Apple Silicon). Using the x64
@@ -736,6 +733,8 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         installTestSlicer: true
         installApkDiff: false
         use1ESTemplate: false
@@ -829,7 +828,8 @@ stages:
         androidSdkPlatforms: $(DefaultTestSdkPlatforms)
         dotnetVersion: $(DotNetSdkVersion)
         dotnetQuality: $(DotNetSdkQuality)
-        useAgentJdkPath: false
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2

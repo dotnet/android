@@ -62,6 +62,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string JavaSdkPath { get; set; } = "";
 
+		public string? JdkVersion { get; set; }
+
 		/// <summary>
 		/// Location of an xml config files used to
 		/// determine whether issues are enabled or disabled
@@ -194,7 +196,8 @@ namespace Xamarin.Android.Tasks
 
 			bool fromCmdlineTools   = ToolPath.IndexOf ("cmdline-tools", StringComparison.OrdinalIgnoreCase) >= 0;
 
-			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool ());
+			var environmentVariables = GetJavaEnvironmentVariables ();
+			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool (), environmentVariables);
 			Log.LogDebugMessage ("  LintVersion: {0}", lintToolVersion);
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (fromCmdlineTools || lintToolVersion >= issue.Value) {
@@ -210,7 +213,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			EnvironmentVariables = new [] { "JAVA_HOME=" + JavaSdkPath };
+			EnvironmentVariables = environmentVariables.Select (variable => $"{variable.Key}={variable.Value}").ToArray ();
 
 			base.RunTask ();
 
@@ -348,7 +351,19 @@ namespace Xamarin.Android.Tasks
 			return config;
 		}
 
-		Version GetLintVersion (string tool)
+		Dictionary<string, string> GetJavaEnvironmentVariables ()
+		{
+			var environmentVariables = new Dictionary<string, string> {
+				{ "JAVA_HOME", JavaSdkPath },
+			};
+			var javaOptions = JavaToolTask.GetJavaOptions (Environment.GetEnvironmentVariable ("JAVA_OPTS"), JdkVersion);
+			if (!javaOptions.IsNullOrEmpty ()) {
+				environmentVariables.Add ("JAVA_OPTS", javaOptions);
+			}
+			return environmentVariables;
+		}
+
+		Version GetLintVersion (string tool, Dictionary<string, string> environmentVariables)
 		{
 			var sb = new StringBuilder ();
 			var result = MonoAndroidHelper.RunProcess (tool, "--version", (s, e) => {
@@ -357,10 +372,7 @@ namespace Xamarin.Android.Tasks
 			}, (s, e) => {
 				if (!e.Data.IsNullOrEmpty ())
 					sb.AppendLine (e.Data);
-			},
-			new Dictionary<string, string> {
-				{ "JAVA_HOME", JavaSdkPath }
-			});
+			}, environmentVariables);
 			var versionInfo = sb.ToString ();
 			if (result != 0 || versionInfo.Contains ("unknown")) {
 				// lets try to parse the lint-xx-x-x-dev.jar filename to get the version
@@ -391,4 +403,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-
