@@ -1,4 +1,3 @@
-#include <array>
 #include <cerrno>
 #include <cstdarg>
 #include <cstdlib>
@@ -76,15 +75,16 @@ auto Logger::open_file (LogCategories category, std::string_view const& custom_p
 	if (ret != nullptr) {
 		return log_and_return (ret, custom_path);
 	}
-
 	Util::create_public_directory (override_dir);
-	dynamic_local_string<Constants::SENSIBLE_PATH_MAX> p;
-	p.append (override_dir)
-		.append ("/")
-		.append (fallback_filename);
+	char stack_buffer [Util::LocalPathBufferSize];
+	char *path_buffer = Util::join_paths (stack_buffer, sizeof (stack_buffer), override_dir, fallback_filename);
 
-	std::string_view path = p.as_string_view ();
-	return log_and_return (open_file (path), path);
+	std::string_view path_view { path_buffer };
+	ret = log_and_return (open_file (path_view), path_view);
+	if (path_buffer != stack_buffer) {
+		std::free (path_buffer);
+	}
+	return ret;
 }
 
 void

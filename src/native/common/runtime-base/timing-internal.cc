@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdlib>
 
 #include <runtime-base/android-system.hh>
 #include <runtime-base/strings.hh>
@@ -190,27 +191,33 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	dynamic_local_path_string timing_log_path;
-
 	// We can count on the envvar being there, since we set it ourselves at startup
 	// Note that to access the file for a release app, the app must be made debuggable
 	// and `run-as` must be used.
-	timing_log_path.assign_c (getenv("TMPDIR"));
-	timing_log_path.append ("/"sv);
-	timing_log_path.append (output_file_name == nullptr ? default_timing_file_name : *output_file_name);
+	std::string_view file_name = output_file_name == nullptr ? default_timing_file_name : *output_file_name;
+	std::string_view temporary_directory = getenv ("TMPDIR");
+	char stack_buffer [Util::LocalPathBufferSize];
+	char *timing_log_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), temporary_directory, file_name);
 
-	FILE *timing_log = Util::monodroid_fopen (timing_log_path.get (), "w");
+	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path.get ());
+		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path);
+		if (timing_log_path != stack_buffer) {
+			std::free (timing_log_path);
+		}
 		return;
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path.get ());
+		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path);
+		fclose (timing_log);
+		if (timing_log_path != stack_buffer) {
+			std::free (timing_log_path);
+		}
 		return;
 	}
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path.get ());
+	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path);
 
 	auto line_writer = [=](std::string_view const& msg) {
 		if (!msg.empty ()) {
@@ -222,6 +229,9 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	dump (entries, true /* indent */, line_writer);
 	fflush (timing_log);
 	fclose (timing_log);
+	if (timing_log_path != stack_buffer) {
+		std::free (timing_log_path);
+	}
 }
 
 void FastTiming::dump () noexcept

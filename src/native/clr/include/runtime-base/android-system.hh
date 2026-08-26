@@ -148,7 +148,7 @@ namespace xamarin::android {
 #if defined(DEBUG)
 		static void add_system_property (const char *name, const char *value) noexcept;
 		static void setup_environment (const char *name, const char *value) noexcept;
-		static void setup_environment_from_override_file (dynamic_local_string<Constants::SENSIBLE_PATH_MAX> const& path) noexcept;
+		static void setup_environment_from_override_file (const char *path) noexcept;
 #endif
 
 		static void set_embedded_dso_mode_enabled (bool yesno) noexcept
