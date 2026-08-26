@@ -58,6 +58,23 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void JavaToManagedLongClickCallback_MarshalsBooleanReturn ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+			TrimmableRuntimeClickListener.Reset ();
+
+			using var listener = new TrimmableRuntimeClickListener ();
+			using var view = new View (Android.App.Application.Context);
+
+			var method = JNIEnv.GetMethodID (listener.Class.Handle, "onLongClick", "(Landroid/view/View;)Z");
+			var handled = JNIEnv.CallBooleanMethod (listener.Handle, method, new JValue (view.Handle));
+
+			Assert.IsTrue (handled);
+			Assert.AreEqual (1, TrimmableRuntimeClickListener.OnLongClickInvocations);
+			Assert.AreEqual (view.Handle, listener.ViewHandle);
+		}
+
+		[Test]
 		public void JavaToManagedInvocationHandlerCallback_MarshalsObjectArrayParameter ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
@@ -99,27 +116,56 @@ namespace Java.InteropTests
 		}
 
 		[Test]
-		public void ClosedGenericJavaList_CanWrapJavaCreatedArrayListHandle ()
+		public void JavaListAliasGroup_TargetHintSelectsGenericAndNonGenericManagedTypes ()
 		{
 			AssumeTrimmableTypeMapEnabled ();
+
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetTypes ("java/util/ArrayList", out var targetTypes));
+			if (targetTypes is null) {
+				Assert.Fail ("The java/util/ArrayList alias group was not generated.");
+				return;
+			}
+			CollectionAssert.Contains (targetTypes, typeof (JavaList));
+			CollectionAssert.Contains (targetTypes, typeof (JavaList<>));
 
 			var arrayListClass = JniEnvironment.Types.FindClass ("java/util/ArrayList");
 			try {
 				var constructor = JNIEnv.GetMethodID (arrayListClass.Handle, "<init>", "()V");
-				var handle = JNIEnv.NewObject (arrayListClass.Handle, constructor);
-				using (var list = Java.Lang.Object.GetObject<JavaList<string>> (handle, JniHandleOwnership.TransferLocalRef)) {
-					Assert.IsNotNull (list);
-					Assert.AreEqual (typeof (JavaList<string>), list.GetType ());
+				var genericHandle = JNIEnv.NewObject (arrayListClass.Handle, constructor);
+				using (var genericList = Java.Lang.Object.GetObject<JavaList<string>> (genericHandle, JniHandleOwnership.TransferLocalRef)) {
+					Assert.IsNotNull (genericList);
+					Assert.AreEqual (typeof (JavaList<string>), genericList.GetType ());
 
-					list.Add ("alpha");
-					list.Add ("beta");
+					genericList.Add ("alpha");
+					Assert.AreEqual ("alpha", genericList [0]);
+				}
 
-					Assert.AreEqual (2, list.Count);
-					Assert.AreEqual ("alpha", list [0]);
-					Assert.AreEqual ("beta", list [1]);
+				var nonGenericHandle = JNIEnv.NewObject (arrayListClass.Handle, constructor);
+				using (var nonGenericList = Java.Lang.Object.GetObject<JavaList> (nonGenericHandle, JniHandleOwnership.TransferLocalRef)) {
+					Assert.IsNotNull (nonGenericList);
+					Assert.AreEqual (typeof (JavaList), nonGenericList.GetType ());
+
+					nonGenericList.Add ("beta");
+					Assert.AreEqual ("beta", nonGenericList [0]);
 				}
 			} finally {
 				JniObjectReference.Dispose (ref arrayListClass);
+			}
+		}
+
+		[Test]
+		public void JavaCreatedHandle_UsesJavaInteropStyleActivationConstructor ()
+		{
+			AssumeTrimmableTypeMapEnabled ();
+			TrimmableRuntimeJavaInteropPeer.Reset ();
+
+			var handle = JNIEnv.CreateInstance ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer", "()V");
+			using (var peer = Java.Lang.Object.GetObject<TrimmableRuntimeJavaInteropPeer> (handle, JniHandleOwnership.TransferLocalRef)) {
+				Assert.IsNotNull (peer);
+				Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), peer.GetType ());
+				Assert.AreEqual (1, TrimmableRuntimeJavaInteropPeer.ConstructorInvocations);
+				Assert.AreEqual (JniObjectReferenceOptions.Copy, TrimmableRuntimeJavaInteropPeer.Options);
+				Assert.IsTrue (peer.PeerReference.IsValid);
 			}
 		}
 
@@ -259,9 +305,10 @@ namespace Java.InteropTests
 		}
 	}
 
-	class TrimmableRuntimeClickListener : Java.Lang.Object, View.IOnClickListener
+	class TrimmableRuntimeClickListener : Java.Lang.Object, View.IOnClickListener, View.IOnLongClickListener
 	{
 		public static int OnClickInvocations;
+		public static int OnLongClickInvocations;
 
 		public IntPtr ViewHandle;
 
@@ -271,9 +318,17 @@ namespace Java.InteropTests
 			ViewHandle = v.Handle;
 		}
 
+		public bool OnLongClick (View v)
+		{
+			OnLongClickInvocations++;
+			ViewHandle = v.Handle;
+			return true;
+		}
+
 		public static void Reset ()
 		{
 			OnClickInvocations = 0;
+			OnLongClickInvocations = 0;
 		}
 	}
 
@@ -335,6 +390,27 @@ namespace Java.InteropTests
 			DisposeInvocations = 0;
 			VirtualInvocationsDuringDispose = 0;
 			DisposeIdentityHashCode = 0;
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer", DoNotGenerateAcw = true)]
+	sealed class TrimmableRuntimeJavaInteropPeer : Java.Lang.Object
+	{
+		public static int ConstructorInvocations;
+		public static JniObjectReferenceOptions Options;
+
+		public TrimmableRuntimeJavaInteropPeer (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+		{
+			ConstructorInvocations++;
+			Options = options;
+			Construct (ref reference, options);
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+			Options = JniObjectReferenceOptions.None;
 		}
 	}
 }
