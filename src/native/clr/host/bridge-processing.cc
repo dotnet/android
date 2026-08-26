@@ -1,5 +1,6 @@
 #include <cinttypes>
 #include <cstdlib>
+#include <unistd.h>
 
 #include <host/bridge-processing.hh>
 #include <host/host-common.hh>
