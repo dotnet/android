@@ -74,6 +74,21 @@ steps:
     useAgentJdkPath: false
     use1ESTemplate: false
 
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+    $androidSdk = @(
+      $env:ANDROID_HOME
+      $env:ANDROID_SDK_ROOT
+      $env:AndroidSdkDirectory
+      $(if ($env:HOME) { Join-Path $env:HOME 'android-toolchain/sdk' })
+    ) | Where-Object { $_ -and (Test-Path (Join-Path $_ 'platform-tools')) } | Select-Object -First 1
+    if (-not $androidSdk) {
+      throw 'Could not locate the prepared Android SDK.'
+    }
+    New-Item -ItemType Directory -Force -Path '$(Build.StagingDirectory)/apk-tests-helix/results' | Out-Null
+    Write-Host "##vso[task.setvariable variable=ApkTestsAndroidSdkDirectory]$androidSdk"
+  displayName: Resolve APK test build paths
+
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: $(TestAssembliesArtifactName)
@@ -107,6 +122,8 @@ steps:
       arguments: >-
         -t:Clean
         -c ${{ testCase.configuration }}
+        -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
+        -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}
       displayName: Clean APK payload - ${{ testCase.displayName }}
       continueOnError: false
@@ -119,6 +136,8 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
+        -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
+        -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}
         -bl:$(Build.StagingDirectory)/apk-tests-helix/build-${{ testCase.name }}.binlog
       displayName: Build APK payload - ${{ testCase.displayName }}
