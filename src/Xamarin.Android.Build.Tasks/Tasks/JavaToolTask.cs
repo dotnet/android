@@ -83,6 +83,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? JavaMaximumHeapSize { get; set; }
 
+		public string? JdkVersion { get; set; }
+
 		public virtual string DefaultErrorCode => "JAVA0000";
 
 		public string? AssemblyIdentityMapFile { get; set; }
@@ -121,6 +123,26 @@ namespace Xamarin.Android.Tasks
 		protected override string GenerateFullPathToTool ()
 		{
 			return Path.Combine (ToolPath, ToolExe);
+		}
+
+		internal static string GetJavaOptions (string? javaOptions, string? jdkVersion)
+		{
+			string options = javaOptions ?? "";
+			if (!Version.TryParse (jdkVersion, out var version) || version.Major < 24) {
+				return options;
+			}
+
+			options = AppendJavaOption (options, "--enable-native-access=ALL-UNNAMED");
+			return AppendJavaOption (options, "--sun-misc-unsafe-memory-access=allow");
+		}
+
+		static string AppendJavaOption (string options, string option)
+		{
+			if (options.IndexOf (option, StringComparison.Ordinal) >= 0) {
+				return options;
+			}
+
+			return options.IsNullOrWhiteSpace () ? option : $"{options} {option}";
 		}
 
 		protected bool LogFromException (string exception, string error) {
@@ -231,4 +253,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-

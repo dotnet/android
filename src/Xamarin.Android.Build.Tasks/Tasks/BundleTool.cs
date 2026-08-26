@@ -19,8 +19,9 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
-			if (!JavaOptions.IsNullOrEmpty ()) {
-				cmd.AppendSwitch (JavaOptions);
+			var javaOptions = GetJavaOptions (JavaOptions, JdkVersion);
+			if (!javaOptions.IsNullOrEmpty ()) {
+				cmd.AppendSwitch (javaOptions);
 			}
 			cmd.AppendSwitchIfNotNull ("-Xmx", JavaMaximumHeapSize);
 			cmd.AppendSwitchIfNotNull ("-jar ", JarPath);

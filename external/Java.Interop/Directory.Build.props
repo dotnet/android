@@ -58,7 +58,7 @@
   <PropertyGroup>
     <DotnetToolPath Condition=" '$(DotnetToolPath)' == '' ">dotnet</DotnetToolPath>
     <CmakePath Condition=" '$(CmakePath)' == '' ">cmake</CmakePath>
-    <GradleHome Condition=" '$(GradleHome)' == '' ">$(MSBuildThisFileDirectory)build-tools\gradle</GradleHome>
+    <GradleHome Condition=" '$(GradleHome)' == '' ">$(MSBuildThisFileDirectory)..\..\build-tools\gradle</GradleHome>
     <GradleWPath Condition=" '$(GradleWPath)' == '' ">$(GradleHome)\gradlew</GradleWPath>
     <GradleArgs Condition=" '$(GradleArgs)' == '' ">--stacktrace --no-daemon</GradleArgs>
     <JavacSourceVersion Condition=" '$(JavacSourceVersion)' == '' ">11</JavacSourceVersion>
