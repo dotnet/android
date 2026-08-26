@@ -136,7 +136,12 @@
       Outputs="$(_PreBuiltTypeMapJcwJar)">
     <RemoveDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
     <MakeDir Directories="$(_PreBuiltTypeMapJcwClassesDir)" />
-    <WriteLinesToFile File="$(_PreBuiltTypeMapJcwSourceList)" Lines="@(_PreBuiltTypeMapJavaFile)" Overwrite="true" />
+    <ItemGroup>
+      <_PreBuiltTypeMapJavaFile>
+        <_JavacResponseFilePath>$([System.String]::Copy('%(Identity)').Replace('\', '\\'))</_JavacResponseFilePath>
+      </_PreBuiltTypeMapJavaFile>
+    </ItemGroup>
+    <WriteLinesToFile File="$(_PreBuiltTypeMapJcwSourceList)" Lines="@(_PreBuiltTypeMapJavaFile->'&quot;%(_JavacResponseFilePath)&quot;')" Overwrite="true" />
     <Exec Command="&quot;$(JavaCPath)&quot; -source $(JavacSourceVersion) -target $(JavacTargetVersion) -nowarn -d &quot;$(_PreBuiltTypeMapJcwClassesDir.TrimEnd('\'))&quot; -classpath &quot;$(_PreBuiltTypeMapAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapMonoAndroidJar)&quot;$(PathSeparator)&quot;$(_PreBuiltTypeMapRuntimeJar)&quot; @&quot;$(_PreBuiltTypeMapJcwSourceList)&quot;" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(_PreBuiltTypeMapJcwJar)&quot; -C &quot;$(_PreBuiltTypeMapJcwClassesDir.TrimEnd('\'))&quot; ." />
   </Target>
