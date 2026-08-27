@@ -1447,6 +1447,12 @@ because xbuild doesn't support framework reference assemblies.
       <_AndroidLinkNoShrinkOutput
           Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' != 'True' "
       >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)</_AndroidLinkNoShrinkOutput>
+      <JavaObjectsXmlFile
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</JavaObjectsXmlFile>
+      <TypeMapObjectsXmlFile
+          Condition=" '%(ResolvedAssemblies.AndroidSkipAssemblyModification)' == 'True' Or ('$(PublishTrimmed)' == 'true' And '$(AndroidTypeMapImplementation)' != 'trimmable' And $([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources'))) "
+      >$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubDirectory)%(Filename).scan.empty</TypeMapObjectsXmlFile>
     </ResolvedAssemblies>
     <_AndroidAssembliesToLinkNoShrink
         Include="@(ResolvedAssemblies)"
@@ -1510,6 +1516,7 @@ because xbuild doesn't support framework reference assemblies.
         Condition=" '$(_AndroidUseMarshalMethods)' != 'True' or !$([System.String]::Copy('%(ResolvedAssemblies.Filename)').ToLowerInvariant().EndsWith('.resources')) " />
     <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " Include="@(_AfterILLinkSourceFiles->'$(_AfterILLinkOutputDir)%(DestinationSubPath)')" />
     <_AfterILLinkDestFiles Condition=" '$(_AndroidUseMarshalMethods)' == 'True' " Include="@(_AfterILLinkSourceFiles)" />
+    <_AndroidScanMarkerFiles Include="@(ResolvedAssemblies->'%(JavaObjectsXmlFile)')" Condition=" '%(ResolvedAssemblies.JavaObjectsXmlFile)' != '' " />
   </ItemGroup>
   <AssemblyModifierPipeline
       ApplicationJavaClass="$(AndroidApplicationJavaClass)"
@@ -1526,10 +1533,14 @@ because xbuild doesn't support framework reference assemblies.
       SourceFiles="@(_AfterILLinkSourceFiles)"
       TargetName="$(TargetName)">
   </AssemblyModifierPipeline>
+  <MakeDir Directories="@(_AndroidScanMarkerFiles->'%(RootDir)%(Directory)')" />
+  <Touch Files="@(_AndroidScanMarkerFiles)" AlwaysCreate="true" />
   <Touch Files="$(_AdditionalPostLinkerStepsFlag)" AlwaysCreate="true" />
   <ItemGroup>
+    <FileWrites Include="@(_AndroidScanMarkerFiles)" />
     <_AfterILLinkSourceFiles Remove="@(_AfterILLinkSourceFiles)" />
     <_AfterILLinkDestFiles Remove="@(_AfterILLinkDestFiles)" />
+    <_AndroidScanMarkerFiles Remove="@(_AndroidScanMarkerFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">
     <FileWrites Include="$(_AfterILLinkOutputDir)**" />
