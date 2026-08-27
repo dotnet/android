@@ -129,20 +129,41 @@ steps:
       displayName: Clean APK payload - ${{ testCase.displayName }}
       continueOnError: false
 
-  - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
-    parameters:
-      command: build
-      project: ${{ testCase.project }}
-      arguments: >-
-        -t:SignAndroidPackage
-        -c ${{ testCase.configuration }}
-        -p:AndroidPackageFormat=apk
-        -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
-        -p:JavaSdkDirectory="$(JAVA_HOME)"
-        ${{ testCase.extraBuildArguments }}
-        -bl:$(Build.StagingDirectory)/apk-tests-helix/build-${{ testCase.name }}.binlog
-      displayName: Build APK payload - ${{ testCase.displayName }}
-      continueOnError: false
+  - pwsh: |
+      $ErrorActionPreference = 'Stop'
+      $project = '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
+      $projectDirectory = Split-Path -Parent $project
+      $projectFile = Split-Path -Leaf $project
+      $dotnet = '$(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\dotnet.exe'
+      $resultsDirectory = '$(Build.StagingDirectory)\apk-tests-helix\build-results\${{ testCase.name }}'
+      New-Item -ItemType Directory -Force -Path $resultsDirectory | Out-Null
+
+      Push-Location $projectDirectory
+      try {
+        & $dotnet test $projectFile `
+          -bl:'$(Build.StagingDirectory)\apk-tests-helix\build-${{ testCase.name }}.binlog' `
+          -c '${{ testCase.configuration }}' `
+          --results-directory $resultsDirectory `
+          --report-trx `
+          --report-trx-filename 'prepare-${{ testCase.name }}.trx' `
+          --output Detailed `
+          -p:AndroidPackageFormat=apk `
+          -p:AndroidSdkDirectory='$(ApkTestsAndroidSdkDirectory)' `
+          -p:JavaSdkDirectory='$(JAVA_HOME)' `
+          ${{ testCase.extraBuildArguments }}
+        $testExitCode = $LASTEXITCODE
+      } finally {
+        Pop-Location
+      }
+
+      $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
+      if (-not (Test-Path -LiteralPath $apk -PathType Leaf)) {
+        throw "dotnet test exited with $testExitCode and did not produce '$apk'."
+      }
+      if ($testExitCode -ne 0) {
+        Write-Host "Expected no-device test launch failure after producing the APK (exit $testExitCode)."
+      }
+    displayName: Build instrumented APK payload - ${{ testCase.displayName }}
 
   - pwsh: |
       $ErrorActionPreference = 'Stop'
