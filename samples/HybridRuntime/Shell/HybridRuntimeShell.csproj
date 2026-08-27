@@ -17,4 +17,19 @@
     <AndroidJavaSource Include="java/**/*.java" />
     <ProguardConfiguration Include="proguard.cfg" />
   </ItemGroup>
+
+  <Target Name="_AndroidReplaceCoreClrProcessRuntimeProvider"
+      AfterTargets="_GenerateTrimmableTypeMap"
+      Condition=" '$(_AndroidRuntime)' == 'NativeAOT' and Exists('$(_TypeMapBaseOutputDir)AndroidManifest.xml') "
+      Inputs="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+      Outputs="$(IntermediateOutputPath)replace-coreclr-runtime-provider.stamp">
+    <XmlPoke
+        XmlInputPath="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
+        Query="/*[local-name()='manifest']/*[local-name()='application']/*[local-name()='provider' and @*[local-name()='process']=':coreclr' and starts-with(@*[local-name()='name'], 'net.dot.jni.nativeaot.NativeAotRuntimeProvider')]/@*[local-name()='name']"
+        Value="net.dot.hybrid.NoOpRuntimeProvider" />
+    <Touch Files="$(IntermediateOutputPath)replace-coreclr-runtime-provider.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)replace-coreclr-runtime-provider.stamp" />
+    </ItemGroup>
+  </Target>
 </Project>

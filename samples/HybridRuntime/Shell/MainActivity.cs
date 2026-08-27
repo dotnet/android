@@ -68,7 +68,7 @@ public sealed class MainActivity : Activity
 	void ShowLanding ()
 	{
 		var status = new TextView (this) {
-			Text = "NativeAOT dashboard",
+			Text = $"NativeAOT dashboard\nProcess: {PackageName} (PID {Android.OS.Process.MyPid ()})",
 			TextSize = 20,
 		};
 		status.SetTextColor (Color.White);
@@ -83,7 +83,7 @@ public sealed class MainActivity : Activity
 		};
 
 		var coreClrButton = new Button (this) {
-			Text = "Initialize CoreCLR in this process",
+			Text = "Open CoreCLR process",
 		};
 		coreClrButton.Click += (_, _) => {
 			StartActivity (CreateExplicitIntent ("net.dot.hybrid.CoreClrBootstrapActivity"));

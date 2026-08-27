@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="A prototype for progressively loading CoreCLR behind a NativeAOT Android shell in one APK and one process.">
+	<meta name="description" content="A prototype for progressively loading CoreCLR behind a NativeAOT Android shell in one APK with isolated Android processes.">
 	<title>Progressive .NET for Android — NativeAOT + CoreCLR</title>
 	<style>
 		:root {
@@ -373,8 +373,8 @@
 		<div class="wrap">
 			<p class="eyebrow">Prototype · .NET for Android · August 2026</p>
 			<h1>Progressive<br><span class="aot">NativeAOT</span> + <span class="core">CoreCLR</span></h1>
-			<p class="lede">Render the first useful Android experience immediately, then load the full .NET MAUI application in the background—inside one APK and, in this prototype, one process.</p>
-			<div class="kicker"><span class="dot"></span> Proven: both runtimes alive, managed CoreCLR payload callable, NativeAOT UI still responsive</div>
+			<p class="lede">Render the first useful Android experience immediately, then load the full .NET MAUI application in the background—inside one APK, with each runtime isolated in its own process.</p>
+			<div class="kicker"><span class="dot"></span> Proven: independent runtimes, signal handlers, failure domains, heaps, and process lifecycles</div>
 		</div>
 	</section>
 
@@ -410,7 +410,7 @@
 			<div class="flow">
 				<div class="step"><span class="num">T + 0</span><h3 class="aot">NativeAOT shell</h3><p class="muted">Process starts and renders login or dashboard with a compact ahead-of-time compiled surface.</p></div>
 				<div class="arrow">→</div>
-				<div class="step"><span class="num">AFTER FIRST FOCUS</span><h3 class="warm">Background warmup</h3><p class="muted">A Java HandlerThread loads <code>libmonodroid</code>, starts CoreCLR, maps the assembly store, and prepares routes.</p></div>
+				<div class="step"><span class="num">AFTER FIRST FOCUS</span><h3 class="warm">Background warmup</h3><p class="muted">A bound Android service starts the <code>:coreclr</code> process, loads the runtime, maps the assembly store, and prepares routes.</p></div>
 				<div class="arrow">→</div>
 				<div class="step"><span class="num">ON NAVIGATION</span><h3 class="core">Full MAUI app</h3><p class="muted">Deep application screens use CoreCLR once readiness is signaled; the handoff should feel immediate.</p></div>
 			</div>
@@ -427,36 +427,33 @@
 			<h2>One package. Two runtimes. Explicit ownership.</h2>
 			<svg class="diagram" viewBox="0 0 1100 560" role="img" aria-labelledby="architecture-title architecture-desc">
 				<title id="architecture-title">Hybrid runtime APK and process architecture</title>
-				<desc id="architecture-desc">An Android APK contains a NativeAOT shell and CoreCLR payload. The NativeAOT runtime starts first and Java starts CoreCLR in the background on a HandlerThread. Both remain in one Linux process with separate managed heaps.</desc>
+				<desc id="architecture-desc">One Android APK contains a NativeAOT shell and CoreCLR payload. The NativeAOT runtime starts in the default process, then binds a service which starts CoreCLR in an isolated secondary process.</desc>
 				<defs>
 					<linearGradient id="apk" x1="0" x2="1"><stop stop-color="#151c35"/><stop offset="1" stop-color="#0c1123"/></linearGradient>
 					<marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#74809e"/></marker>
 				</defs>
 				<rect x="35" y="34" width="1030" height="488" rx="28" fill="url(#apk)" stroke="#293252" stroke-width="2"/>
 				<text x="65" y="78" fill="#aeb8d4" font-size="17" font-weight="700">SIGNED ANDROID APK</text>
-				<rect x="70" y="108" width="294" height="160" rx="18" fill="#10291f" stroke="#6ee7b7" stroke-width="2"/>
+				<rect x="70" y="108" width="440" height="160" rx="18" fill="#10291f" stroke="#6ee7b7" stroke-width="2"/>
 				<text x="96" y="145" fill="#6ee7b7" font-size="21" font-weight="800">NativeAOT shell</text>
-				<text x="96" y="180" fill="#dce4f8" font-size="15">Main Activity + login/dashboard</text>
-				<text x="96" y="208" fill="#dce4f8" font-size="15">libHybridRuntimeShell.so</text>
-				<text x="96" y="236" fill="#aeb8d4" font-size="14">Owns process startup and first UI</text>
-				<rect x="403" y="108" width="294" height="160" rx="18" fill="#231a3d" stroke="#a78bfa" stroke-width="2"/>
-				<text x="429" y="145" fill="#a78bfa" font-size="21" font-weight="800">CoreCLR payload</text>
-				<text x="429" y="180" fill="#dce4f8" font-size="15">libcoreclr + libclrjit</text>
-				<text x="429" y="208" fill="#dce4f8" font-size="15">libmonodroid + libxamarin-app</text>
-				<text x="429" y="236" fill="#aeb8d4" font-size="14">Loaded only after first window focus</text>
-				<rect x="736" y="108" width="294" height="160" rx="18" fill="#102238" stroke="#38bdf8" stroke-width="2"/>
-				<text x="762" y="145" fill="#38bdf8" font-size="21" font-weight="800">Shared app assets</text>
-				<text x="762" y="180" fill="#dce4f8" font-size="15">CoreCLR assembly store</text>
-				<text x="762" y="208" fill="#dce4f8" font-size="15">100 compiled XAML pages</text>
-				<text x="762" y="236" fill="#aeb8d4" font-size="14">Packaged once in the merged APK</text>
-				<path d="M218 290 V342 H510" fill="none" stroke="#74809e" stroke-width="2" marker-end="url(#arrowhead)"/>
-				<path d="M550 268 V342" fill="none" stroke="#74809e" stroke-width="2" marker-end="url(#arrowhead)"/>
-				<path d="M883 290 V342 H590" fill="none" stroke="#74809e" stroke-width="2" marker-end="url(#arrowhead)"/>
-				<rect x="170" y="350" width="760" height="125" rx="20" fill="#0a0e1d" stroke="#293252" stroke-width="2"/>
-				<text x="199" y="385" fill="#aeb8d4" font-size="14" font-weight="700">ONE ANDROID / LINUX PROCESS</text>
-				<circle cx="320" cy="426" r="24" fill="#6ee7b7"/><text x="358" y="432" fill="#f7f8ff" font-size="17">NativeAOT heap + threads</text>
-				<line x1="544" y1="400" x2="544" y2="454" stroke="#293252" stroke-width="2"/>
-				<circle cx="640" cy="426" r="24" fill="#a78bfa"/><text x="678" y="432" fill="#f7f8ff" font-size="17">CoreCLR heap + threads</text>
+				<text x="96" y="180" fill="#dce4f8" font-size="15">Default process · login/dashboard</text>
+				<text x="96" y="208" fill="#dce4f8" font-size="15">libHybridRuntimeShell.so only</text>
+				<text x="96" y="236" fill="#aeb8d4" font-size="14">Own heap, threads, signals, and crash boundary</text>
+				<rect x="590" y="108" width="440" height="160" rx="18" fill="#231a3d" stroke="#a78bfa" stroke-width="2"/>
+				<text x="616" y="145" fill="#a78bfa" font-size="21" font-weight="800">CoreCLR application</text>
+				<text x="616" y="180" fill="#dce4f8" font-size="15">:coreclr process · bound service + Activity</text>
+				<text x="616" y="208" fill="#dce4f8" font-size="15">libcoreclr + libclrjit + assembly store</text>
+				<text x="616" y="236" fill="#aeb8d4" font-size="14">Own heap, threads, signals, and crash boundary</text>
+				<path d="M510 188 H580" fill="none" stroke="#74809e" stroke-width="2" marker-end="url(#arrowhead)"/>
+				<text x="545" y="174" fill="#fbbf24" font-size="13" text-anchor="middle">bind</text>
+				<rect x="70" y="330" width="440" height="130" rx="20" fill="#0a0e1d" stroke="#6ee7b7" stroke-width="2"/>
+				<text x="96" y="368" fill="#6ee7b7" font-size="14" font-weight="700">PID A · net.dot.hybridruntime</text>
+				<text x="96" y="402" fill="#dce4f8" font-size="16">NativeAOT owns first frame + auth state</text>
+				<text x="96" y="432" fill="#aeb8d4" font-size="14">~20.3 MiB total PSS in this experiment</text>
+				<rect x="590" y="330" width="440" height="130" rx="20" fill="#0a0e1d" stroke="#a78bfa" stroke-width="2"/>
+				<text x="616" y="368" fill="#a78bfa" font-size="14" font-weight="700">PID B · net.dot.hybridruntime:coreclr</text>
+				<text x="616" y="402" fill="#dce4f8" font-size="16">CoreCLR owns deep MAUI application</text>
+				<text x="616" y="432" fill="#aeb8d4" font-size="14">~123.6 MiB total PSS after warmup</text>
 			</svg>
 		</div>
 	</section>
@@ -469,7 +466,7 @@
 				<title id="sequence-title">Sequence from Android process start through CoreCLR readiness</title>
 				<defs><marker id="seq-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#aeb8d4"/></marker></defs>
 				<g fill="#aeb8d4" font-size="16" font-weight="700" text-anchor="middle">
-					<text x="100" y="48">Android</text><text x="330" y="48">NativeAOT Activity</text><text x="570" y="48">Java bootstrap</text><text x="800" y="48">CoreCLR host</text><text x="1020" y="48">MAUI payload</text>
+					<text x="100" y="48">Android</text><text x="330" y="48">NativeAOT Activity</text><text x="570" y="48">Main-process receiver</text><text x="800" y="48">:coreclr service</text><text x="1020" y="48">MAUI payload</text>
 				</g>
 				<g stroke="#293252" stroke-width="2" stroke-dasharray="5 8"><line x1="100" y1="70" x2="100" y2="560"/><line x1="330" y1="70" x2="330" y2="560"/><line x1="570" y1="70" x2="570" y2="560"/><line x1="800" y1="70" x2="800" y2="560"/><line x1="1020" y1="70" x2="1020" y2="560"/></g>
 				<g fill="none" stroke="#aeb8d4" stroke-width="2" marker-end="url(#seq-arrow)">
@@ -478,9 +475,9 @@
 				<g font-size="14">
 					<text x="150" y="100" fill="#dfe7ff">Create process / load NativeAOT DSO</text>
 					<text x="135" y="162" fill="#6ee7b7">Login or dashboard is visible</text>
-					<text x="376" y="230" fill="#fbbf24">OnWindowFocusChanged → broadcast</text>
-					<text x="613" y="296" fill="#dfe7ff">HandlerThread: load + initInternal()</text>
-					<text x="840" y="366" fill="#dfe7ff">create managed delegate</text>
+					<text x="376" y="230" fill="#fbbf24">first focus → explicit broadcast</text>
+					<text x="613" y="296" fill="#dfe7ff">bindService(BIND_AUTO_CREATE)</text>
+					<text x="840" y="366" fill="#dfe7ff">start process + initInternal()</text>
 					<text x="836" y="434" fill="#a78bfa">prepare 100 XAML routes</text>
 					<text x="505" y="498" fill="#38bdf8">READY — navigation can cross the boundary</text>
 				</g>
@@ -525,8 +522,8 @@
 				<div class="card aot-border">
 					<h3 class="aot">Why after window focus?</h3>
 					<p class="muted">The shell gets first claim on CPU, linker activity, UI inflation, and first frame delivery. CoreCLR work begins only once useful pixels have won the race.</p>
-					<h3 class="warm">Why a broadcast?</h3>
-					<p class="muted">It crosses from the NativeAOT-bound Activity to Java without requiring the NativeAOT runtime to understand or directly host CoreCLR.</p>
+					<h3 class="warm">Why a receiver and bound service?</h3>
+					<p class="muted">The receiver bridges NativeAOT to Java, then holds a cross-process service binding. Android keeps the warmed process important and automatically reconnects it after a crash.</p>
 					<h3 class="hybrid">Why persist auth in the shell?</h3>
 					<p class="muted">Returning users bypass login before the heavy runtime exists. Android <code>SharedPreferences</code> provides the smallest durable decision point.</p>
 				</div>
@@ -537,31 +534,22 @@
 	<section class="slide" id="core-bootstrap" data-number="07 / 15">
 		<div class="wrap">
 			<p class="eyebrow">Implementation concept 2</p>
-			<h2>Java starts CoreCLR on a dedicated attached thread.</h2>
+			<h2>A bound service owns the CoreCLR process lifetime.</h2>
 			<div class="grid two">
 				<div>
-					<p class="code-label">CoreClrBootstrap.java</p>
-					<pre><span class="kw">static synchronized void</span> <span class="fn">initializeAsync</span> (<span class="ty">Context</span> context) {
-    <span class="kw">if</span> (state != State.NOT_STARTED)
-        <span class="kw">return</span>;
+					<p class="code-label">CoreClrWarmupReceiver.java</p>
+					<pre><span class="ty">Intent</span> serviceIntent = <span class="kw">new</span> <span class="ty">Intent</span> (
+    applicationContext,
+    <span class="ty">CoreClrWarmupService</span>.<span class="kw">class</span>);
 
-    state = State.INITIALIZING;
-    runtimeThread = <span class="kw">new</span> <span class="ty">HandlerThread</span> (
-        <span class="st">"CoreCLR runtime"</span>);
-    runtimeThread.start ();
+bound = applicationContext.bindService (
+    serviceIntent,
+    connection,
+    <span class="ty">Context</span>.BIND_AUTO_CREATE |
+        <span class="ty">Context</span>.BIND_IMPORTANT);
 
-    <span class="ty">Handler</span> handler =
-        <span class="kw">new</span> <span class="ty">Handler</span> (runtimeThread.getLooper ());
-    handler.post (() -&gt; {
-        <span class="kw">try</span> {
-            initialize (context.getApplicationContext ());
-            state = State.READY;
-        } <span class="kw">catch</span> (<span class="ty">Throwable</span> error) {
-            failure = error;
-            state = State.FAILED;
-        }
-    });
-}</pre>
+<span class="cm">// The service is declared with:</span>
+<span class="cm">// android:process=":coreclr"</span></pre>
 				</div>
 				<div>
 					<p class="code-label">Reflective runtime initialization</p>
@@ -590,7 +578,7 @@ init.invoke (
     hasSplitApks);</pre>
 				</div>
 			</div>
-			<div class="callout">The <code>HandlerThread</code> intentionally keeps a Java-attached thread and Looper alive. That matches Android runtime host assumptions better than a short-lived native worker.</div>
+			<div class="callout"><strong>Packaging wrinkle:</strong> the SDK generated a NativeAOT runtime provider for every declared process. The prototype rewrites the <code>:coreclr</code> provider to a Java no-op so that process loads CoreCLR—and never NativeAOT.</div>
 		</div>
 	</section>
 
@@ -728,7 +716,7 @@ callback ();</pre>
 				<tbody>
 					<tr><td><span class="core">●</span> CoreCLR MAUI</td><td>17.66 MiB</td><td>915 ms</td><td>903 ms</td></tr>
 					<tr><td><span class="aot">●</span> NativeAOT MAUI</td><td>14.30 MiB</td><td>483 ms</td><td>570 ms</td></tr>
-					<tr class="best"><td><span class="hybrid">●</span> Hybrid shell</td><td>47.91 MiB</td><td>312 ms</td><td>270 ms</td></tr>
+					<tr class="best"><td><span class="hybrid">●</span> Hybrid · two processes</td><td>47.91 MiB</td><td>259 ms</td><td>226 ms</td></tr>
 				</tbody>
 			</table>
 			<div class="grid two" style="margin-top:24px">
@@ -737,7 +725,7 @@ callback ();</pre>
 					<div class="bars">
 						<div class="bar-row"><span>CoreCLR</span><div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--core)"></div></div><strong>915</strong></div>
 						<div class="bar-row"><span>NativeAOT</span><div class="bar-bg"><div class="bar-fill" style="width:52.8%;background:var(--aot)"></div></div><strong>483</strong></div>
-						<div class="bar-row"><span>Hybrid</span><div class="bar-bg"><div class="bar-fill" style="width:34.1%;background:var(--hybrid)"></div></div><strong>312 ms</strong></div>
+						<div class="bar-row"><span>Hybrid</span><div class="bar-bg"><div class="bar-fill" style="width:28.3%;background:var(--hybrid)"></div></div><strong>259 ms</strong></div>
 					</div>
 				</div>
 				<div class="card">
@@ -745,7 +733,7 @@ callback ();</pre>
 					<div class="bars">
 						<div class="bar-row"><span>CoreCLR</span><div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--core)"></div></div><strong>903</strong></div>
 						<div class="bar-row"><span>NativeAOT</span><div class="bar-bg"><div class="bar-fill" style="width:63.1%;background:var(--aot)"></div></div><strong>570</strong></div>
-						<div class="bar-row"><span>Hybrid</span><div class="bar-bg"><div class="bar-fill" style="width:29.9%;background:var(--hybrid)"></div></div><strong>270 ms</strong></div>
+						<div class="bar-row"><span>Hybrid</span><div class="bar-bg"><div class="bar-fill" style="width:25.0%;background:var(--hybrid)"></div></div><strong>226 ms</strong></div>
 					</div>
 				</div>
 			</div>
@@ -756,27 +744,27 @@ callback ();</pre>
 	<section class="slide" id="readiness" data-number="12 / 15">
 		<div class="wrap">
 			<p class="eyebrow">The overlap matters</p>
-			<h2>CoreCLR was ready shortly after the shell appeared.</h2>
+			<h2>Process isolation is observable—and survives failure.</h2>
 			<div class="grid three">
-				<div class="card hybrid-border"><strong class="big hybrid">312 ms</strong><h3>Login visible</h3><p class="muted">Median first frame for a logged-out hybrid launch.</p></div>
-				<div class="card core-border"><strong class="big core">~504 ms</strong><h3>CoreCLR + MAUI ready</h3><p class="muted">Median background initialization and 100-page preparation.</p></div>
-				<div class="card aot-border"><strong class="big aot">~192 ms</strong><h3>Overlap window</h3><p class="muted">Approximate time after visible UI until the heavy payload is ready.</p></div>
+				<div class="card hybrid-border"><strong class="big hybrid">2 PIDs</strong><h3>Disjoint runtime DSOs</h3><p class="muted">The shell maps only <code>libHybridRuntimeShell.so</code>; <code>:coreclr</code> maps CoreCLR, JIT, host, and assembly-store libraries.</p></div>
+				<div class="card core-border"><strong class="big core">3 signals</strong><h3>Independent handlers</h3><p class="muted">The <code>SigCgt</code> masks differ for SIGINT, SIGQUIT, and SIGTERM. Handler installation is process-local.</p></div>
+				<div class="card aot-border"><strong class="big aot">298 ms</strong><h3>Crash and rebind</h3><p class="muted">After killing only CoreCLR, the NativeAOT UI stayed responsive and Android rebound a fresh CoreCLR process.</p></div>
 			</div>
-			<blockquote class="quote" style="margin-top:48px">If the user spends more than <em>~200 ms</em> reading or interacting, the heavy runtime can be ready before the first deep navigation.</blockquote>
-			<div class="callout">The current prototype prepares the CoreCLR-owned MAUI assembly but does not yet render a CoreCLR-owned Activity or page. Crossing that UI ownership boundary is the next decisive experiment.</div>
+			<blockquote class="quote" style="margin-top:48px">The runtimes share an APK and Android task—not a signal table, address space, GC heap, or crash fate.</blockquote>
+			<div class="callout">Median CoreCLR initialization and 100-page preparation was <strong>~387 ms</strong> after service creation. The current prototype opens a CoreCLR-process Activity; rendering a production MAUI navigation surface is the next decisive experiment.</div>
 		</div>
 	</section>
 
 	<section class="slide" id="risks" data-number="13 / 15">
 		<div class="wrap">
 			<p class="eyebrow">Engineering risks</p>
-			<h2>Separate heaps do not mean isolated processes.</h2>
+			<h2>Isolation resolves runtime collisions—but creates a distributed app.</h2>
 			<div class="grid two">
 				<ul class="checks risks">
-					<li><strong>Signals and exception handlers.</strong> Both runtimes may install process-global handlers or expect ownership of crash paths.</li>
-					<li><strong>Java peer ownership.</strong> JNI registration, managed peer lookup, and Java object lifetimes must route to the correct runtime.</li>
-					<li><strong>Native symbol collisions.</strong> DSO visibility and global symbol resolution need deliberate isolation.</li>
-					<li><strong>Lifecycle coordination.</strong> Trim-memory, configuration changes, shutdown, diagnostics, and uncaught exceptions reach one process.</li>
+					<li><strong>IPC and state transfer.</strong> Authentication, navigation arguments, session state, and readiness cross a process boundary.</li>
+					<li><strong>Lifecycle coordination.</strong> Android may reclaim or restart the CoreCLR process independently; every request needs disconnect and retry behavior.</li>
+					<li><strong>Activity integration.</strong> Back stack, results, transitions, themes, accessibility, and deep links must still feel like one app.</li>
+					<li><strong>Diagnostics.</strong> Logs, traces, crash reports, and health signals must correlate two PIDs into one user journey.</li>
 				</ul>
 				<ul class="checks risks">
 					<li><strong>Memory doubles quickly.</strong> Two GC heaps, two runtime infrastructures, JIT code, and duplicated framework assets trade memory for latency.</li>
@@ -785,7 +773,7 @@ callback ();</pre>
 					<li><strong>Unsupported assumptions.</strong> Runtime hosts were designed around one selected runtime; this path needs explicit contracts and tests.</li>
 				</ul>
 			</div>
-			<p class="small"><strong>Escape hatch:</strong> a two-process design gives stronger runtime isolation, but introduces IPC, duplicated application state, cross-process navigation complexity, and an Android task/Activity integration problem.</p>
+			<p class="small"><strong>Resolved by construction:</strong> NativeAOT and CoreCLR no longer compete for process-global signal handlers, exception machinery, native symbols, or address-space assumptions.</p>
 		</div>
 	</section>
 
@@ -798,10 +786,10 @@ callback ();</pre>
 					<h3 class="aot">Proven in the prototype</h3>
 					<ul class="checks">
 						<li>One signed APK contains NativeAOT and CoreCLR payloads</li>
-						<li>Both runtimes coexist in one PID with separate managed runtime threads</li>
-						<li>CoreCLR initializes asynchronously after first focus</li>
+						<li>Each runtime occupies an independent PID with disjoint runtime libraries and signal handlers</li>
+						<li>A bound service initializes CoreCLR asynchronously after first focus</li>
 						<li>CoreCLR invokes managed application code and prepares 100 XAML pages</li>
-						<li>NativeAOT callbacks remain responsive after CoreCLR initialization</li>
+						<li>NativeAOT remains responsive while CoreCLR is killed, rebound, and reinitialized</li>
 						<li>Authentication persists and returning users skip login</li>
 					</ul>
 				</div>
@@ -810,7 +798,7 @@ callback ();</pre>
 					<ol class="checks" style="counter-reset:item">
 						<li>Launch and display a CoreCLR-owned MAUI page from the NativeAOT shell</li>
 						<li>Implement seamless navigation, back stack, state transfer, and failure UX</li>
-						<li>Stress signals, crashes, JNI peers, GC pressure, suspend/resume, and low-memory events</li>
+						<li>Define IPC contracts, readiness, state transfer, disconnect, retry, and degraded-mode behavior</li>
 						<li>Create first-class dual-runtime build and packaging support</li>
 						<li>Deduplicate framework/runtime assets and establish size/memory budgets</li>
 						<li>Benchmark physical devices across cold install, warm cache, and representative app workloads</li>

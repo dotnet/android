@@ -1,10 +1,12 @@
 package net.dot.hybrid;
 
 import android.app.Activity;
+import android.app.Application;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Process;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -22,6 +24,7 @@ public final class CoreClrBootstrapActivity extends Activity {
 		status.setTextColor(Color.WHITE);
 		status.setTextSize(20);
 		setContentView(status);
+		CoreClrBootstrap.initializeAsync(this);
 		updateStatus();
 	}
 
@@ -35,9 +38,11 @@ public final class CoreClrBootstrapActivity extends Activity {
 			mainHandler.postDelayed(this::updateStatus, 100);
 			break;
 		case READY:
-			status.setText("CoreCLR initialized successfully in " +
+			status.setText("CoreCLR is isolated in process " +
+				Application.getProcessName() + " (PID " + Process.myPid() + ").\n\n" +
+				"Initialization completed in " +
 				CoreClrBootstrap.getInitializationDurationMilliseconds() +
-				" ms.\n\nPress Back and exercise NativeAOT again.");
+				" ms.\n\nPress Back to return to the NativeAOT process.");
 			break;
 		case FAILED:
 			Throwable error = CoreClrBootstrap.getFailure();
