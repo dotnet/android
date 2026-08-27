@@ -171,20 +171,15 @@ steps:
 
 - pwsh: |
     $ErrorActionPreference = 'Stop'
-    $platformTools = @(
-      $env:ANDROID_HOME
-      $env:ANDROID_SDK_ROOT
-      $env:AndroidSdkDirectory
-      $(if ($env:HOME) { Join-Path $env:HOME 'android-toolchain/sdk' })
-    ) | Where-Object { $_ -and (Test-Path (Join-Path $_ 'platform-tools')) } | Select-Object -First 1
-    if (-not $platformTools) {
+    $platformTools = Join-Path '$(ApkTestsAndroidSdkDirectory)' 'platform-tools'
+    if (-not (Test-Path -LiteralPath $platformTools -PathType Container)) {
       throw 'Could not locate Android platform-tools.'
     }
     & '$(System.DefaultWorkingDirectory)/build-tools/automation/apk-tests-helix/prepare-apk-test-helix-submission.ps1' `
       -WorkItemsDirectory '$(Build.StagingDirectory)/apk-tests-helix/work-items' `
       -ItemsPropsPath '$(Build.StagingDirectory)/apk-tests-helix/work-items.props' `
       -ResultsDirectory '$(Build.StagingDirectory)/apk-tests-helix/results' `
-      -PlatformToolsDirectory (Join-Path $platformTools 'platform-tools') `
+      -PlatformToolsDirectory $platformTools `
       -TargetMinutes ${{ parameters.targetMinutes }}
   displayName: Prepare APK test Helix submission
 
