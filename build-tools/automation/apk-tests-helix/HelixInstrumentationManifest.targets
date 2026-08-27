@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectFullPath)' == '$(HelixInstrumentationProject)'">
+    <AndroidManifest>$(HelixInstrumentationManifest)</AndroidManifest>
+  </PropertyGroup>
+</Project>
