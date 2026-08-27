@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdarg>
+#include <string_view>
 
 #include "java-interop-logger.h"
 #include <shared/log_level.hh>
@@ -15,4 +16,12 @@ namespace xamarin::android {
 	void log_infof (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
 	void log_warnf (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
 	void log_errorf (LogCategories category, const char *format, ...) noexcept __attribute__ ((format (printf, 2, 3)));
+
+	// `message` must be a NUL-terminated string, `std::string_view` is used here merely to avoid
+	// having to call `.data ()` at every call site that uses a string literal.
+	[[gnu::always_inline]]
+	static inline void log_write (LogCategories category, LogLevel level, std::string_view const& message) noexcept
+	{
+		log_write (category, level, message.data ());
+	}
 }
