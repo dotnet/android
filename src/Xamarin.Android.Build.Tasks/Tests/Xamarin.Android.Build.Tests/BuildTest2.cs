@@ -835,6 +835,7 @@ class MemTest {
 					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "118.2.0.5" },
 					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "118.2.0.5" },
 					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "118.0.2.6" },
+					KnownPackages.Xamarin_Build_Download,
 				}
 			};
 			proj.SetRuntime (runtime);
