@@ -197,7 +197,7 @@ void Host::map_assembly_store_via_dlopen (const char *store_path) noexcept
 	}
 
 	log_debugf (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: %p (%s)", payload, optional_string (store_path));
-	AssemblyStore::configure_from_payload (payload, [store_path]() -> std::string { return std::string { store_path }; });
+	AssemblyStore::configure_from_payload (payload, store_path);
 	found_assembly_store = true;
 }
 
