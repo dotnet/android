@@ -4,6 +4,7 @@ using System.Xml;
 using Android.App;
 using Android.Content;
 using Android.Runtime;
+using Android.Webkit;
 
 namespace Java.Lang
 {
@@ -275,10 +276,39 @@ namespace MyApp
 	}
 
 	[Register ("my/app/MyHelper")]
+	[JavaAnnotation (Text = "hello", Enabled = true)]
 	public class MyHelper : Java.Lang.Object
 	{
 		[Register ("doSomething", "()V", "GetDoSomethingHandler")]
 		public virtual void DoSomething () { }
+	}
+
+	[Register ("my/app/WebViewHandlerBase")]
+	public abstract class WebViewHandlerBase : Java.Lang.Object
+	{
+		[Register ("postMessage", "(Ljava/lang/String;)V", "GetPostMessage_Ljava_lang_String_Handler")]
+		public abstract void PostMessage (string? message);
+	}
+
+	public class MyWebViewHandler : WebViewHandlerBase
+	{
+		[JavascriptInterface]
+		public override void PostMessage (string? message) { }
+	}
+
+	[Register ("my/app/AnnotatedPropertyBase", DoNotGenerateAcw = true)]
+	public class AnnotatedPropertyBase : Java.Lang.Object
+	{
+		[Register ("getValue", "()I", "GetGetValueHandler")]
+		public virtual int Value => 0;
+	}
+
+	public class AnnotatedPropertyDerived : AnnotatedPropertyBase
+	{
+		public override int Value {
+			[JavaAnnotation]
+			get => 1;
+		}
 	}
 
 	// Fixture for the trimmable typemap's [JniAddNativeMethodRegistrationAttribute] detection.
@@ -350,6 +380,7 @@ namespace MyApp
 		protected CustomView (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
 
 		[Register ("<init>", "()V", "")]
+		[JavaAnnotation]
 		public CustomView () : base (default, default) { }
 
 		[Register ("<init>", "(Landroid/content/Context;)V", "")]
@@ -583,6 +614,7 @@ namespace MyApp
 		public static ExportFieldExample? GetInstance () => default;
 
 		[Java.Interop.ExportField ("VALUE")]
+		[JavaAnnotation]
 		public string GetValue () => "";
 	}
 

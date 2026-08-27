@@ -348,6 +348,38 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		}
 
 		[Fact]
+		public void Generate_MarshalMethod_ForwardsJavaAnnotation ()
+		{
+			var peer = FindFixtureByManagedName ("MyApp.MyWebViewHandler");
+			var java = GenerateToString (peer);
+
+			AssertContainsLine ("@android.webkit.JavascriptInterface\n\t@Override\n\tpublic void postMessage (java.lang.String p0)\n", java);
+		}
+
+		[Fact]
+		public void Generate_ForwardsAnnotationsOnJcwMembers ()
+		{
+			var typeJava = GenerateFixture ("my/app/MyHelper");
+			AssertContainsLine ("@com.example.Custom (text = \"hello\", Enabled = true)\npublic class MyHelper\n", typeJava);
+
+			var constructorJava = GenerateFixture ("my/app/CustomView");
+			AssertContainsLine ("@com.example.Custom\n\tpublic CustomView ()\n", constructorJava);
+
+			var fieldJava = GenerateFixture ("my/app/ExportFieldExample");
+			AssertContainsLine ("@com.example.Custom\n\tpublic java.lang.String VALUE = GetValue ();\n", fieldJava);
+			Assert.Equal (1, fieldJava.Split ("@com.example.Custom").Length - 1);
+		}
+
+		[Fact]
+		public void Generate_PropertyOverride_ForwardsGetterAnnotation ()
+		{
+			var peer = FindFixtureByManagedName ("MyApp.AnnotatedPropertyDerived");
+			var java = GenerateToString (peer);
+
+			AssertContainsLine ("@com.example.Custom\n\t@Override\n\tpublic int getValue ()\n", java);
+		}
+
+		[Fact]
 		public void Generate_OverrideAcrossIntermediateMcwBase_HasMethodStub ()
 		{
 			var java = GenerateFixture ("my/app/SelectableList");
