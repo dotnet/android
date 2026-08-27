@@ -174,7 +174,6 @@ stages:
     displayName: APK Tests Helix Prototype
     dependsOn:
     - mac_build
-    - linux_build
     condition: and(succeeded(), or(ne(variables['SkipTestStages'], 'true'), eq('${{ parameters.apkTestsHelixOnly }}', 'true')))
     jobs:
     - job: apk_tests_helix
@@ -182,7 +181,7 @@ stages:
       pool:
         name: $(NetCorePublicPoolName)
         demands:
-        - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+        - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
       timeoutInMinutes: 240
       workspace:
         clean: all

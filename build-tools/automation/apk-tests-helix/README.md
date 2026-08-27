@@ -1,7 +1,7 @@
 # APK tests in Helix prototype
 
-This guarded prototype builds the existing on-device APK test flavors once in Azure
-Pipelines, then submits one deterministic Helix work item per flavor. Existing
+This guarded prototype builds the existing on-device APK test flavors once on a
+Windows Azure Pipelines agent, then submits one deterministic Helix work item per flavor. Existing
 measurements put every device test invocation below the configurable 15-minute target,
 so splitting an APK's NUnit inventory further would add installation overhead without
 improving the tail.
