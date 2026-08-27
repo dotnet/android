@@ -300,7 +300,9 @@ public sealed class JcwJavaSourceGenerator
 					if (!first) {
 						writer.Write (", ");
 					}
-					writer.Write ($"{property.Key} = {property.Value}");
+					writer.Write (property.Key);
+					writer.Write (" = ");
+					writer.Write (property.Value);
 					first = false;
 				}
 				writer.Write (')');
