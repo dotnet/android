@@ -174,11 +174,33 @@ steps:
         throw "Could not find APK '$apk' for ${{ testCase.displayName }}."
       }
       Copy-Item -LiteralPath $apk -Destination (Join-Path $payloadDirectory 'app.apk')
+
+      $aapt = Get-ChildItem '$(ApkTestsAndroidSdkDirectory)\build-tools' -Recurse -Filter 'aapt.exe' |
+        Sort-Object FullName -Descending |
+        Select-Object -First 1
+      if (-not $aapt) {
+        throw 'Could not locate aapt.exe to inspect the APK manifest.'
+      }
+      $badging = @(& $aapt.FullName dump badging $apk)
+      if ($LASTEXITCODE -ne 0) {
+        throw "aapt dump badging failed with exit code $LASTEXITCODE."
+      }
+      $instrumentationMatch = [regex]::Match(
+        ($badging -join "`n"),
+        "(?m)^instrumentation: name='(?<name>[^']+)' targetPackage='(?<package>[^']+)'"
+      )
+      if (-not $instrumentationMatch.Success) {
+        throw "APK '$apk' does not contain an instrumentation entry."
+      }
+      $packageName = $instrumentationMatch.Groups['package'].Value
+      $instrumentation = $instrumentationMatch.Groups['name'].Value
+      Write-Host "APK instrumentation: $packageName/$instrumentation"
+
       [pscustomobject]@{
         name = '${{ testCase.name }}'
         displayName = '${{ testCase.displayName }}'
-        packageName = '${{ testCase.packageName }}'
-        instrumentation = '${{ testCase.instrumentation }}'
+        packageName = $packageName
+        instrumentation = $instrumentation
       } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $payloadDirectory 'case.json') -Encoding utf8NoBOM
     displayName: Stage APK payload - ${{ testCase.displayName }}
 

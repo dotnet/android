@@ -144,6 +144,8 @@ try {
 		(& $adb shell df /data 2>&1)
 		'===== packages ====='
 		(& $adb shell pm list packages -3 2>&1)
+		'===== instrumentation ====='
+		(& $adb shell pm list instrumentation 2>&1)
 	) | Set-Content -LiteralPath (Join-Path $upload 'device-state.log')
 	& $adb logcat -d -b all *> (Join-Path $upload 'logcat.log')
 	& $adb uninstall $packageName *> $null
