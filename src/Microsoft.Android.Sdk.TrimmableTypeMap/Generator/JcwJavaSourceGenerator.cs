@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -296,7 +295,14 @@ public sealed class JcwJavaSourceGenerator
 			writer.Write (annotation.Name);
 			if (annotation.Properties.Count > 0) {
 				writer.Write (" (");
-				writer.Write (string.Join (", ", annotation.Properties.Select (property => $"{property.Key} = {property.Value}")));
+				bool first = true;
+				foreach (var property in annotation.Properties) {
+					if (!first) {
+						writer.Write (", ");
+					}
+					writer.Write ($"{property.Key} = {property.Value}");
+					first = false;
+				}
 				writer.Write (')');
 			}
 			writer.WriteLine ();
