@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 
 #include <shared/log_types.hh>
-#include <runtime-base/strings.hh>
 #include <runtime-base/util.hh>
 
 using namespace xamarin::android;
