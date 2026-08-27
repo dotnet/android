@@ -62,9 +62,9 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	// NOTE: override_dir will be kept open, we have no way of knowing when it will be no longer
 	//       needed
 	if (override_dir_fd < 0) [[unlikely]] {
-		override_dir_lock.lock ();
+		pthread_mutex_lock (&override_dir_lock);
 		bool have_override_dir = ensure_override_dir_open_locked (override_dir_path);
-		override_dir_lock.unlock ();
+		pthread_mutex_unlock (&override_dir_lock);
 
 		if (!have_override_dir) [[unlikely]] {
 			return nullptr;

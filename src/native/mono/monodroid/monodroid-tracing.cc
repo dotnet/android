@@ -1,3 +1,5 @@
+#include <pthread.h>
+
 #include <android/log.h>
 #include <string>
 
@@ -15,14 +17,14 @@ namespace {
 	decltype(xa_get_java_backtrace)* _xa_get_java_backtrace;
 	decltype(xa_get_interesting_signal_handlers)* _xa_get_interesting_signal_handlers;
 	bool tracing_init_done;
-	xamarin::android::Mutex tracing_init_lock {};
+	pthread_mutex_t tracing_init_lock = PTHREAD_MUTEX_INITIALIZER;
 }
 
 void
 MonodroidRuntime::log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept
 {
 	if (!tracing_init_done) {
-		tracing_init_lock.lock ();
+		pthread_mutex_lock (&tracing_init_lock);
 
 		char *err = nullptr;
 		void *handle = MonodroidDl::monodroid_dlopen (SharedConstants::xamarin_native_tracing_name.data (), MONO_DL_EAGER, &err, nullptr);
@@ -36,7 +38,7 @@ MonodroidRuntime::log_traces (JNIEnv *env, TraceKind kind, const char *first_lin
 		}
 
 		tracing_init_done = true;
-		tracing_init_lock.unlock ();
+		pthread_mutex_unlock (&tracing_init_lock);
 	}
 
 	std::string trace;

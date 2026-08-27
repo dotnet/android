@@ -78,7 +78,7 @@ namespace {
 			Failed,
 		};
 
-		Mutex                             state_lock;
+		pthread_mutex_t                   state_lock = PTHREAD_MUTEX_INITIALIZER;
 		std::deque<WriteRequest>          write_queue;
 		std::string                       cache_dir;
 		std::unique_ptr<uint8_t*[]>       tracking;
@@ -203,9 +203,9 @@ namespace {
 		{
 			while (true) {
 				WriteRequest request;
-				state_lock.lock ();
+				pthread_mutex_lock (&state_lock);
 				bool have_request = dequeue_write_request_locked (request);
-				state_lock.unlock ();
+				pthread_mutex_unlock (&state_lock);
 
 				if (!have_request) {
 					return nullptr;
@@ -215,9 +215,9 @@ namespace {
 				WriteResult write_result = write_cache_file (request);
 				request.data.reset ();
 
-				state_lock.lock ();
+				pthread_mutex_lock (&state_lock);
 				bool keep_running = complete_write_request_locked (request_size, write_result);
-				state_lock.unlock ();
+				pthread_mutex_unlock (&state_lock);
 
 				if (!keep_running) {
 					return nullptr;
@@ -365,9 +365,9 @@ namespace {
 			}
 
 			{
-				state_lock.lock ();
+				pthread_mutex_lock (&state_lock);
 				writes_enabled = true;
-				state_lock.unlock ();
+				pthread_mutex_unlock (&state_lock);
 			}
 
 			log_debugf (
@@ -489,9 +489,9 @@ namespace {
 			size_t total = size + sizeof (CacheFileFooter);
 
 			size_t bytes_queued = 0;
-			state_lock.lock ();
+			pthread_mutex_lock (&state_lock);
 			ReserveResult reservation = reserve_queue_space_locked (total, bytes_queued);
-			state_lock.unlock ();
+			pthread_mutex_unlock (&state_lock);
 
 			if (reservation == ReserveResult::WritesDisabled) {
 				return;
@@ -522,9 +522,9 @@ namespace {
 
 			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
 			if (snapshot == nullptr) {
-				state_lock.lock ();
+				pthread_mutex_lock (&state_lock);
 				queued_bytes -= total;
-				state_lock.unlock ();
+				pthread_mutex_unlock (&state_lock);
 				return;
 			}
 			// The runtime can modify the shared decompression buffer after this
@@ -547,9 +547,9 @@ namespace {
 				.size = total,
 			};
 
-			state_lock.lock ();
+			pthread_mutex_lock (&state_lock);
 			queue_write_request_locked (std::move (req), total);
-			state_lock.unlock ();
+			pthread_mutex_unlock (&state_lock);
 		}
 	} // namespace asm_cache
 } // anonymous namespace
