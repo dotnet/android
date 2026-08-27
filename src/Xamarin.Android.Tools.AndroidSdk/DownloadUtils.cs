@@ -98,7 +98,9 @@ namespace Xamarin.Android.Tools
 
 		static HashAlgorithm CreateHashAlgorithm (ChecksumType checksumType) => checksumType switch {
 			ChecksumType.Sha256 => (HashAlgorithm) SHA256.Create (),
-			ChecksumType.Sha1 => SHA1.Create (),
+			// Google's manifest only provides SHA-1 checksums. This is not used for authentication,
+			// signing, passwords, or authorization. Review when Google provides a stronger checksum.
+			ChecksumType.Sha1 => SHA1.Create (), // CodeQL [SM02196]
 			_ => throw new NotSupportedException ($"Unsupported checksum type: '{checksumType}'."),
 		};
 
