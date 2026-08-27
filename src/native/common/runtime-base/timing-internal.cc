@@ -155,23 +155,41 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 		chrono::nanoseconds time_ns (ns);
 		// Do not change the string format after the first colon, its format is required by performance measuring
 		// utilities.
-		char buffer [256];
-		int n = snprintf (
-			buffer,
-			sizeof (buffer),
-			"  %.*s: %lld:%lld::%lld",
-			static_cast<int>(msg.length ()),
-			msg.data (),
-			static_cast<long long>(chrono::duration_cast<chrono::seconds> (time_ns).count ()),
-			static_cast<long long>(chrono::duration_cast<chrono::milliseconds> (time_ns).count ()),
-			static_cast<long long>((time_ns % 1ms).count ())
-		);
+		auto format_time = [&] (char *buffer, size_t buffer_size) noexcept -> int {
+			return snprintf (
+				buffer,
+				buffer_size,
+				"  %.*s: %lld:%lld::%lld",
+				static_cast<int>(msg.length ()),
+				msg.data (),
+				static_cast<long long>(chrono::duration_cast<chrono::seconds> (time_ns).count ()),
+				static_cast<long long>(chrono::duration_cast<chrono::milliseconds> (time_ns).count ()),
+				static_cast<long long>((time_ns % 1ms).count ())
+			);
+		};
 
-		size_t length = n < 0 ? 0uz : static_cast<size_t>(n);
-		if (length >= sizeof (buffer)) {
-			length = sizeof (buffer) - 1;
+		// Formatted into `stack_buffer`, falling back to a heap buffer when the message doesn't fit.
+		char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+		char *buffer = stack_buffer;
+		int result = format_time (stack_buffer, sizeof (stack_buffer));
+		abort_unless (result >= 0, "Failed to format the accumulated timing results");
+
+		size_t length = static_cast<size_t>(result);
+		if (length >= sizeof (stack_buffer)) {
+			size_t required_capacity = length + 1uz;
+			buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (buffer != nullptr, "Failed to allocate the accumulated timing results message");
+			result = format_time (buffer, required_capacity);
+			abort_unless (
+				result >= 0 && static_cast<size_t>(result) == length,
+				"Failed to format the accumulated timing results using the required capacity"
+			);
 		}
+
 		line_writer (std::string_view { buffer, length });
+		if (buffer != stack_buffer) {
+			std::free (buffer);
+		}
 	};
 
 	// Do not change the sequence numbers. If a measurement is removed, its sequence number must not be reused.
