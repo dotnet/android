@@ -48,10 +48,18 @@ AndroidSystem::monodroid__system_property_get (std::string_view const& name, cha
 	// `__system_property_get` always writes up to `PROP_VALUE_MAX` bytes and cannot be told about
 	// a smaller buffer, so callers must provide at least `PROPERTY_VALUE_BUFFER_LEN` bytes.
 	if (sp_value_len < Constants::PROPERTY_VALUE_BUFFER_LEN) {
-		log_warnf (LOG_DEFAULT, "Buffer to store system property '%s' is too small (%zu bytes)", name.data (), sp_value_len);
+		log_warnf (
+			LOG_DEFAULT,
+			"Buffer to store system property '%.*s' is too small (%zu bytes)",
+			static_cast<int>(name.length ()),
+			name.data (),
+			sp_value_len
+		);
 		return -1;
 	}
 
+	// `__system_property_get` takes a C string, so `name` must be NUL-terminated. All callers pass
+	// views over string literals, which satisfy that.
 	return __system_property_get (name.data (), sp_value);
 }
 
