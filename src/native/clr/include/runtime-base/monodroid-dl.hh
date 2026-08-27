@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mutex>
+#include <runtime-base/mutex.hh>
 #include <string_view>
 
 #include <dlfcn.h>
@@ -20,7 +20,7 @@ namespace xamarin::android
 {
 	class MonodroidDl
 	{
-		static inline std::mutex   dso_handle_write_lock;
+		static inline Mutex   dso_handle_write_lock;
 
 		[[gnu::always_inline]]
 		static constexpr auto ascii_to_lower (char c) noexcept -> char

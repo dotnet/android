@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
-#include <mutex>
+#include <runtime-base/mutex.hh>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -36,6 +36,6 @@ namespace xamarin::android {
 		// CRC32 hash collisions in the store index. Built once when the store is mapped.
 		static inline std::string_view *assembly_store_names = nullptr;
 		static inline uint64_t assembly_store_content_id = 0;
-		static inline std::mutex  assembly_decompress_mutex {};
+		static inline Mutex  assembly_decompress_mutex {};
 	};
 }
