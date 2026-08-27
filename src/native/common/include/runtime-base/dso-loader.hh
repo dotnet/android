@@ -96,7 +96,7 @@ namespace xamarin::android {
 
 		static auto load_jni (std::string_view const& name, bool name_is_path) -> void*
 		{
-			log_debugf (LOG_ASSEMBLY, "Trying to load loading shared JNI library %.*s with System.loadLibrary", static_cast<int>(name.length ()), name.data ());
+			log_debugf (LOG_ASSEMBLY, "Trying to load shared JNI library %.*s with System.loadLibrary", static_cast<int>(name.length ()), name.data ());
 
 			auto get_file_name = [](std::string_view const& full_name, bool is_path) -> std::string_view {
 				if (!is_path) {
