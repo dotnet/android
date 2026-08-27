@@ -3,6 +3,8 @@
 #include <atomic>
 #include <cerrno>
 #include <chrono>
+#include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <functional>
 #include <limits>
@@ -24,6 +26,7 @@ using namespace xamarin::android::internal;
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
+#include <shared/cpp-util.hh>
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
@@ -183,53 +186,78 @@ namespace xamarin::android {
 		// The [STAGE/EVENT] format is meant to help the test runner application, so that it can parse logcat without
 		// having to be kept in sync with the actual wording used for the event message.
 		//
-		template<size_t BufferSize> [[gnu::always_inline]]
-		static auto format_message (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept -> uint64_t
+		[[gnu::always_inline]]
+		static auto event_duration_ns (TimingEvent const& event) noexcept -> uint64_t
+		{
+			return static_cast<uint64_t>((event.end - event.start).count ());
+		}
+
+		// Returns the message length excluding NUL, or the negative required capacity including NUL.
+		static auto format_message (TimingEvent const& event, char *buffer, size_t buffer_size, bool indent) noexcept -> ssize_t
 		{
 			using namespace std::literals;
 
-			constexpr auto INDENT          = "  "sv;
-			constexpr auto NATIVE_INIT_TAG = "[0/"sv;
-			constexpr auto MANAGED_TAG     = "[1/"sv;
-
-			message.clear ();
-			if (indent) {
-				message.append (INDENT);
-			}
-
-			if (event.before_managed) {
-				message.append (NATIVE_INIT_TAG);
-			} else {
-				message.append (MANAGED_TAG);
-			}
-
-			message.append (static_cast<uint32_t>(event.kind));
-			message.append ("] "sv);
-
-			append_event_kind_description (event.kind, message);
-			if (event.more_info != nullptr && !event.more_info->empty ()) {
-				message.append (event.more_info->c_str (), event.more_info->length ());
-			}
-
 			auto interval = event.end - event.start; // nanoseconds
-			message.append ("; elapsed: "sv);
-			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::seconds>(interval).count ())));
-			message.append (":"sv);
-			message.append (static_cast<uint64_t>((chrono::duration_cast<chrono::milliseconds>(interval)).count ()));
-			message.append ("::"sv);
-			message.append (static_cast<uint64_t>((interval % 1ms).count ()));
+			int length = snprintf (
+				buffer,
+				buffer_size,
+				"%s%s%u] %s%s; elapsed: %llu:%llu::%llu",
+				indent ? "  " : "",
+				event.before_managed ? "[0/" : "[1/",
+				static_cast<unsigned int>(event.kind),
+				event_kind_description (event.kind),
+				event.more_info == nullptr ? "" : event.more_info->c_str (),
+				static_cast<unsigned long long>(chrono::duration_cast<chrono::seconds>(interval).count ()),
+				static_cast<unsigned long long>(chrono::duration_cast<chrono::milliseconds>(interval).count ()),
+				static_cast<unsigned long long>((interval % 1ms).count ())
+			);
+			if (length < 0) {
+				if (buffer != nullptr && buffer_size > 0uz) {
+					buffer [0] = '\0';
+				}
+				return 0;
+			}
 
-			return static_cast<uint64_t>(interval.count ());
+			size_t required_capacity = static_cast<size_t>(length) + 1uz;
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+
+			return static_cast<ssize_t>(length);
+		}
+
+		// Formats the event message into `stack_buffer`, falling back to a heap buffer when the message
+		// doesn't fit.  The returned pointer must be passed to `std::free` if it differs from `stack_buffer`.
+		static auto build_message (TimingEvent const& event, char *stack_buffer, size_t stack_buffer_size, size_t *message_length, bool indent) noexcept -> char*
+		{
+			ssize_t result = format_message (event, stack_buffer, stack_buffer_size, indent);
+			if (result < 0) {
+				size_t required_capacity = static_cast<size_t>(-result);
+				char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (heap_buffer != nullptr, "Failed to allocate the timing event message");
+				result = format_message (event, heap_buffer, required_capacity, indent);
+				abort_unless (result >= 0, "Failed to format the timing event message using the required capacity");
+				if (message_length != nullptr) {
+					*message_length = static_cast<size_t>(result);
+				}
+				return heap_buffer;
+			}
+
+			if (message_length != nullptr) {
+				*message_length = static_cast<size_t>(result);
+			}
+			return stack_buffer;
 		}
 
 		[[gnu::always_inline]]
 		static void format_and_log (TimingEvent const& event, bool indent = false) noexcept
 		{
-			// `message` isn't used here, it is passed to `format_and_log` so that the `dump()` function can
-			// be slightly more efficient when dumping the event buffer.
-			dynamic_local_string<Constants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
-			format_message (event, message, indent);
-			log_write (LOG_TIMING, LogLevel::Info, message.get ());
+			char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+			char *message = build_message (event, stack_buffer, sizeof (stack_buffer), nullptr, indent);
+			log_write (LOG_TIMING, LogLevel::Info, message);
+			if (message != stack_buffer) {
+				std::free (message);
+			}
 		}
 
 		[[gnu::always_inline]]
@@ -277,47 +305,32 @@ namespace xamarin::android {
 			}
 		}
 
-		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
 		[[gnu::always_inline]]
-		void add_more_info (string_base<MaxStackSize, TStorage, TChar> const& str) noexcept
+		void add_more_info (const char *str, size_t length) noexcept
 		{
-			TimingEvent *event = pop_sequence_event ();
-			if (event == nullptr) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
-				return;
-			}
+			store_more_info (new std::string (str, length));
+		}
 
-			event->more_info = new std::string (str.get (), str.length ());
-			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
-			log (*event, false /* skip_log_if_more_info_missing */);
+		// Builds the message from two parts, so that its exact length is known up front and the
+		// caller doesn't need a temporary buffer that the message might not fit into.
+		[[gnu::always_inline]]
+		void add_more_info (std::string_view const& first, std::string_view const& second) noexcept
+		{
+			auto *more_info = new std::string (first.data (), first.length ());
+			more_info->append (second);
+			store_more_info (more_info);
 		}
 
 		[[gnu::always_inline]]
 		void add_more_info (const char* str) noexcept
 		{
-			TimingEvent *event = pop_sequence_event ();
-			if (event == nullptr) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
-				return;
-			}
-
-			event->more_info = new std::string (str);
-			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
-			log (*event, false /* skip_log_if_more_info_missing */);
+			add_more_info (str, strlen (str));
 		}
 
 		[[gnu::always_inline]]
 		void add_more_info (std::string_view const& str) noexcept
 		{
-			TimingEvent *event = pop_sequence_event ();
-			if (event == nullptr) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
-				return;
-			}
-
-			event->more_info = new std::string (str);
-			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
-			log (*event, false /* skip_log_if_more_info_missing */);
+			add_more_info (str.data (), str.length ());
 		}
 
 		void dump () noexcept;
@@ -375,6 +388,22 @@ namespace xamarin::android {
 		void dump_to_file (size_t entries) noexcept;
 		void dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept;
 
+		// Takes ownership of `more_info`.
+		[[gnu::always_inline]]
+		void store_more_info (std::string *more_info) noexcept
+		{
+			TimingEvent *event = pop_sequence_event ();
+			if (event == nullptr) [[unlikely]] {
+				delete more_info;
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				return;
+			}
+
+			event->more_info = more_info;
+			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
+			log (*event, false /* skip_log_if_more_info_missing */);
+		}
+
 		[[gnu::always_inline]]
 		auto get_sequence_event () noexcept -> TimingEvent*
 		{
@@ -396,77 +425,57 @@ namespace xamarin::android {
 			return event;
 		}
 
-		template<size_t BufferSize> [[gnu::always_inline]]
-		static void append_event_kind_description (TimingEventKind kind, dynamic_local_string<BufferSize, char>& message) noexcept
+		[[gnu::always_inline]]
+		static auto event_kind_description (TimingEventKind kind) noexcept -> const char*
 		{
-			auto append_desc = [&message] (std::string_view const& desc) {
-				message.append (desc);
-			};
-
 			switch (kind) {
 				case TimingEventKind::AssemblyDecompression:
-					append_desc ("Zstd decompression time for "sv);
-					return;
+					return "Zstd decompression time for ";
 
 				case TimingEventKind::AssemblyLoad:
-					append_desc ("Assembly load for "sv);
-					return;
+					return "Assembly load for ";
 
 				case TimingEventKind::AssemblyPreload:
-					append_desc ("Finished preloading, number of loaded assemblies: "sv);
-					return;
+					return "Finished preloading, number of loaded assemblies: ";
 
 				case TimingEventKind::DebugStart:
-					append_desc ("Debug::start_debugging_and_profiling: end"sv);
-					return;
+					return "Debug::start_debugging_and_profiling: end";
 
 				case TimingEventKind::Init:
-					append_desc ("XATiming: init time"sv);
-					return;
+					return "XATiming: init time";
 
 				case TimingEventKind::JavaToManaged:
-					append_desc ("Typemap.java_to_managed: end, total time"sv);
-					return;
+					return "Typemap.java_to_managed: end, total time";
 
 				case TimingEventKind::ManagedToJava:
-					append_desc ("Typemap.managed_to_java: end, total time"sv);
-					return;
+					return "Typemap.managed_to_java: end, total time";
 
 				case TimingEventKind::ManagedRuntimeInit:
-					append_desc ("Runtime.init: Managed runtime init"sv);
-					return;
+					return "Runtime.init: Managed runtime init";
 
 				case TimingEventKind::NativeToManagedTransition:
-					append_desc ("Runtime.init: end native-to-managed transition"sv);
-					return;
+					return "Runtime.init: end native-to-managed transition";
 
 				case TimingEventKind::RuntimeConfigBlob:
-					append_desc ("Register runtimeconfig binary blob"sv);
-					return;
+					return "Register runtimeconfig binary blob";
 
 				case TimingEventKind::RuntimeRegister:
-					append_desc ("Runtime.register: end time. Registered type: "sv);
-					return;
+					return "Runtime.register: end time. Registered type: ";
 
 				case TimingEventKind::TotalRuntimeInit:
-					append_desc ("Runtime.init: end, total time"sv);
-					return;
+					return "Runtime.init: end, total time";
 
 				case TimingEventKind::GetTimeOverhead:
-					append_desc ("clock_gettime overhead"sv);
-					return;
+					return "clock_gettime overhead";
 
 				case TimingEventKind::StartEndOverhead:
-					append_desc ("start+end event overhead"sv);
-					return;
+					return "start+end event overhead";
 
 				case TimingEventKind::FunctionCall:
-					append_desc ("function call: "sv);
-					return;
+					return "function call: ";
 
 				case TimingEventKind::Unspecified:
-					append_desc ("unspecified event type: "sv);
-					return;
+					return "unspecified event type: ";
 			}
 
 			log_warnf (
@@ -474,11 +483,11 @@ namespace xamarin::android {
 				"Unknown event kind '%u' logged",
 				static_cast<unsigned int>(kind)
 			);
-			append_desc ("unknown event kind"sv);
+			return "unknown event kind";
 		}
 
 	private:
-		void parse_options (dynamic_local_property_string const& value) noexcept;
+		void parse_options (char *value) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
 
 		[[gnu::always_inline]]

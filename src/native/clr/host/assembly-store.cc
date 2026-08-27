@@ -589,11 +589,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 				if (FastTiming::enabled ()) [[unlikely]] {
 					internal_timing.end_event (true /* uses_more_info */);
-
-					dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-					msg.append (name);
-					msg.append (" (decompressed in another thread)"sv);
-					internal_timing.add_more_info (msg);
+					internal_timing.add_more_info (name, " (decompressed in another thread)"sv);
 				}
 				return {assembly_data, assembly_data_size};
 			}
@@ -660,13 +656,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			__atomic_store_n (&cad.loaded, true, __ATOMIC_RELEASE);
 			if (FastTiming::enabled ()) [[unlikely]] {
 				internal_timing.end_event (true /* uses_more_info */);
-
-				dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-				msg.append (name);
-				if (loaded_from_cache) {
-					msg.append (" (decompressed cache hit)"sv);
-				}
-				internal_timing.add_more_info (msg);
+				internal_timing.add_more_info (name, loaded_from_cache ? " (decompressed cache hit)"sv : ""sv);
 			}
 		}
 
@@ -690,11 +680,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.end_event (true /* uses more info */);
-
-			dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> msg;
-			msg.append (name);
-			msg.append (" (memcpy to r/w area, part of assembly load time)"sv);
-			internal_timing.add_more_info (msg);
+			internal_timing.add_more_info (name, " (memcpy to r/w area, part of assembly load time)"sv);
 		}
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);

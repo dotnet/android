@@ -106,6 +106,24 @@ namespace xamarin::android::internal {
 			return monodroid_get_system_property (name.data (), value);
 		}
 
+		template<size_t Size>
+		static int monodroid_get_system_property (std::string_view const& name, char (&value)[Size]) noexcept
+		{
+			dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> property_value;
+			int result = monodroid_get_system_property (name.data (), property_value);
+			if (result > 0) {
+				if (property_value.length () >= Size) {
+					value [0] = '\0';
+					return -1;
+				}
+				memcpy (value, property_value.get (), property_value.length ());
+				value [property_value.length ()] = '\0';
+			} else {
+				value [0] = '\0';
+			}
+			return result;
+		}
+
 		static void set_override_dir (uint32_t index, const char* dir) noexcept
 		{
 			if (index >= override_dirs.size ())

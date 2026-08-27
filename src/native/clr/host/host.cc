@@ -524,10 +524,8 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	int methods_len = env->GetStringLength (methods);
 	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
 
-	dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> managed_type_name;
 	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-	managed_type_name.assign (mt_ptr, strlen (mt_ptr));
-	log_debug (LOG_ASSEMBLY, "Registering type: '{}'"sv, managed_type_name.get ());
+	log_debug (LOG_ASSEMBLY, "Registering type: '{}'"sv, mt_ptr);
 	env->ReleaseStringUTFChars (managedType, mt_ptr);
 
 	// TODO: must attach thread to the runtime here
@@ -541,12 +539,9 @@ void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType,
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing.end_event (true /* uses_more_info */);
 
-		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
 		mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-		type.assign (mt_ptr, strlen (mt_ptr));
+		internal_timing.add_more_info (mt_ptr);
 		env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-		internal_timing.add_more_info (type);
 	}
 }
 

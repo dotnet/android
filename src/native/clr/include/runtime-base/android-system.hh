@@ -128,6 +128,25 @@ namespace xamarin::android {
 		}
 
 		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int;
+
+		template<size_t Size>
+		static auto monodroid_get_system_property (std::string_view const& name, char (&value)[Size]) noexcept -> int
+		{
+			dynamic_local_property_string property_value;
+			int result = monodroid_get_system_property (name, property_value);
+			if (result > 0) {
+				if (property_value.length () >= Size) {
+					value [0] = '\0';
+					return -1;
+				}
+				memcpy (value, property_value.get (), property_value.length ());
+				value [property_value.length ()] = '\0';
+			} else {
+				value [0] = '\0';
+			}
+			return result;
+		}
+
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
