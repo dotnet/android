@@ -316,7 +316,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
-		_timing = std::make_shared<Timing> ();
+		_timing = new Timing ();
 		internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
 	}
 

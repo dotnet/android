@@ -41,11 +41,8 @@ _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char
 
 managed_timing_sequence* monodroid_timing_start (const char *message)
 {
-	// Technically a reference here is against the idea of shared pointers, but
-	// in this instance it's fine since we know we won't be storing the pointer
-	// and this way things are slightly faster.
-	std::shared_ptr<Timing> const &timing = Host::get_timing ();
-	if (!timing) {
+	Timing *timing = Host::get_timing ();
+	if (timing == nullptr) {
 		return nullptr;
 	}
 
@@ -64,8 +61,8 @@ void monodroid_timing_stop (managed_timing_sequence *sequence, const char *messa
 		return;
 	}
 
-	std::shared_ptr<Timing> const &timing = Host::get_timing ();
-	if (!timing) [[unlikely]] {
+	Timing *timing = Host::get_timing ();
+	if (timing == nullptr) [[unlikely]] {
 		return;
 	}
 

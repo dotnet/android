@@ -23,7 +23,7 @@ namespace xamarin::android {
 		static void Java_mono_android_Runtime_registerNatives (JNIEnv *env, jclass nativeClass) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
 
-		static auto get_timing () -> std::shared_ptr<Timing>
+		static auto get_timing () noexcept -> Timing*
 		{
 			return _timing;
 		}
@@ -54,7 +54,7 @@ namespace xamarin::android {
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
-		static inline std::shared_ptr<Timing> _timing{};
+		static inline Timing *_timing = nullptr;
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
