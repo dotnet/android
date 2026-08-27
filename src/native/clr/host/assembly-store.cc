@@ -175,42 +175,35 @@ namespace {
 		{
 			while (true) {
 				WriteRequest request;
-				bool have_request = false;
 				{
 					pthread_mutex_lock (&state_lock);
-					have_request = !write_queue.empty ();
-					if (have_request) {
-						request = std::move (write_queue.front ());
-						write_queue.pop_front ();
-					} else {
+					if (write_queue.empty ()) {
 						writer_running = false;
+						pthread_mutex_unlock (&state_lock);
+						return nullptr;
 					}
-					pthread_mutex_unlock (&state_lock);
-				}
 
-				if (!have_request) {
-					return nullptr;
+					request = std::move (write_queue.front ());
+					write_queue.pop_front ();
+					pthread_mutex_unlock (&state_lock);
 				}
 
 				size_t request_size = request.size;
 				WriteResult write_result = write_cache_file (request);
 				request.data.reset ();
 
-				bool write_failed = (write_result == WriteResult::Failed);
 				{
 					pthread_mutex_lock (&state_lock);
 					queued_bytes -= request_size;
-					if (write_failed) {
+					if (write_result == WriteResult::Failed) {
 						writes_enabled = false;
 						clear_write_queue_locked ();
 						writer_running = false;
 						log_debugf (LOG_ASSEMBLY, "Disabling decompressed-assembly cache writes after a persistence failure");
+						pthread_mutex_unlock (&state_lock);
+						return nullptr;
 					}
 					pthread_mutex_unlock (&state_lock);
-				}
-
-				if (write_failed) {
-					return nullptr;
 				}
 			}
 		}
@@ -436,23 +429,19 @@ namespace {
 
 			size_t bytes_queued = 0;
 			bool queue_full = false;
-			bool writes_allowed = false;
 			{
 				pthread_mutex_lock (&state_lock);
-				writes_allowed = writes_enabled;
-				if (writes_allowed) {
-					if (total > MAX_QUEUED_BYTES || queued_bytes > MAX_QUEUED_BYTES - total) {
-						queue_full = true;
-						bytes_queued = queued_bytes;
-					} else {
-						queued_bytes += total;
-					}
+				if (!writes_enabled) {
+					pthread_mutex_unlock (&state_lock);
+					return;
+				}
+				if (total > MAX_QUEUED_BYTES || queued_bytes > MAX_QUEUED_BYTES - total) {
+					queue_full = true;
+					bytes_queued = queued_bytes;
+				} else {
+					queued_bytes += total;
 				}
 				pthread_mutex_unlock (&state_lock);
-			}
-
-			if (!writes_allowed) {
-				return;
 			}
 
 			if (queue_full) {
@@ -509,15 +498,17 @@ namespace {
 				pthread_mutex_lock (&state_lock);
 				if (!writes_enabled) {
 					queued_bytes -= total;
-				} else {
-					write_queue.push_back (std::move (req));
-					if (!writer_running) {
-						writer_running = true;
-						if (!start_writer_locked ()) {
-							writer_running = false;
-							writes_enabled = false;
-							clear_write_queue_locked ();
-						}
+					pthread_mutex_unlock (&state_lock);
+					return;
+				}
+
+				write_queue.push_back (std::move (req));
+				if (!writer_running) {
+					writer_running = true;
+					if (!start_writer_locked ()) {
+						writer_running = false;
+						writes_enabled = false;
+						clear_write_queue_locked ();
 					}
 				}
 				pthread_mutex_unlock (&state_lock);

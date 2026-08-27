@@ -46,21 +46,22 @@ namespace xamarin::android
 		{
 			pthread_mutex_lock (&sequence_lock);
 
-			managed_timing_sequence *ret = nullptr;
+			managed_timing_sequence *ret;
 			for (size_t i = 0uz; i < sequence_pool.size (); i++) {
-				if (!sequence_pool[i].in_use) {
-					ret = &sequence_pool[i];
-					break;
+				if (sequence_pool[i].in_use) {
+					continue;
 				}
-			}
 
-			if (ret == nullptr) {
-				ret = &sequence_pool.emplace_back ();
+				ret = &sequence_pool[i];
+				ret->in_use = true;
+
+				pthread_mutex_unlock (&sequence_lock);
+				return ret;
 			}
+			ret = &sequence_pool.emplace_back ();
 			ret->in_use = true;
 
 			pthread_mutex_unlock (&sequence_lock);
-
 			return ret;
 		}
 

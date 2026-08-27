@@ -46,20 +46,16 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	//       needed
 	if (override_dir_fd < 0) [[unlikely]] {
 		pthread_mutex_lock (&override_dir_lock);
-		// Another thread may have opened the directory while we waited for the lock.
 		if (override_dir_fd < 0) [[likely]] {
 			override_dir = opendir (override_dir_path.c_str ());
-			if (override_dir != nullptr) [[likely]] {
-				override_dir_fd = dirfd (override_dir);
-			} else {
+			if (override_dir == nullptr) [[unlikely]] {
 				log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path.c_str (), strerror (errno));
+				pthread_mutex_unlock (&override_dir_lock);
+				return nullptr;
 			}
+			override_dir_fd = dirfd (override_dir);
 		}
 		pthread_mutex_unlock (&override_dir_lock);
-
-		if (override_dir_fd < 0) [[unlikely]] {
-			return nullptr;
-		}
 	}
 
 	log_debugf (
