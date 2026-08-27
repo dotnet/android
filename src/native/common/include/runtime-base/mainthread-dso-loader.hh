@@ -77,12 +77,16 @@ namespace xamarin::android {
 			undecorated_library_name = undecorated_name;
 			load_success = false;
 			constexpr std::array<uint8_t, 1> payload { 0xFF };
-			ssize_t nbytes = write (pipe_fds[1], payload.data (), payload.size ());
-			if (nbytes == -1) {
+			ssize_t nbytes;
+			do {
+				nbytes = write (pipe_fds[1], payload.data (), payload.size ());
+			} while (nbytes == -1 && errno == EINTR);
+
+			if (nbytes != static_cast<ssize_t>(payload.size ())) {
 				log_warnf (
 					LOG_ASSEMBLY,
 					"Write failure when posting a DSO load event to main thread. %s",
-					strerror (errno)
+					nbytes == -1 ? strerror (errno) : "incomplete write"
 				);
 				return false;
 			}
