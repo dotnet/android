@@ -46,10 +46,6 @@ managed_timing_sequence* monodroid_timing_start (const char *message)
 	}
 
 	managed_timing_sequence *ret = Host::get_timing ().get_available_sequence ();
-	if (ret == nullptr) [[unlikely]] {
-		return nullptr;
-	}
-
 	if (message != nullptr) {
 		log_write (LOG_TIMING, LogLevel::Info, message);
 	}
