@@ -28,6 +28,10 @@ namespace xamarin::android {
 
 	private:
 #if defined(DEBUG)
+		// The caller must hold `override_dir_lock`. Returns false if the directory
+		// could not be opened.
+		static auto ensure_override_dir_open_locked (std::string const& override_dir_path) noexcept -> bool;
+
 		static inline DIR *override_dir = nullptr;
 		static inline int override_dir_fd = -1;
 		static inline Mutex override_dir_lock {};

@@ -15,6 +15,23 @@
 
 using namespace xamarin::android;
 
+auto FastDevAssemblies::ensure_override_dir_open_locked (std::string const& override_dir_path) noexcept -> bool
+{
+	// Another thread may have opened the directory while we waited for the lock.
+	if (override_dir_fd >= 0) [[unlikely]] {
+		return true;
+	}
+
+	override_dir = opendir (override_dir_path.c_str ());
+	if (override_dir == nullptr) [[unlikely]] {
+		log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path.c_str (), strerror (errno));
+		return false;
+	}
+
+	override_dir_fd = dirfd (override_dir);
+	return true;
+}
+
 auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
 {
 	size = 0;
@@ -45,14 +62,12 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	// NOTE: override_dir will be kept open, we have no way of knowing when it will be no longer
 	//       needed
 	if (override_dir_fd < 0) [[unlikely]] {
-		MutexGuard dir_lock { override_dir_lock };
-		if (override_dir_fd < 0) [[likely]] {
-			override_dir = opendir (override_dir_path.c_str ());
-			if (override_dir == nullptr) [[unlikely]] {
-				log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path.c_str (), strerror (errno));
-				return nullptr;
-			}
-			override_dir_fd = dirfd (override_dir);
+		override_dir_lock.lock ();
+		bool have_override_dir = ensure_override_dir_open_locked (override_dir_path);
+		override_dir_lock.unlock ();
+
+		if (!have_override_dir) [[unlikely]] {
+			return nullptr;
 		}
 	}
 

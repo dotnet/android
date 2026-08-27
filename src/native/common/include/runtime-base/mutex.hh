@@ -33,29 +33,4 @@ namespace xamarin::android
 	private:
 		pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	};
-
-	// A minimal replacement for `std::lock_guard`
-	class MutexGuard final
-	{
-	public:
-		explicit MutexGuard (Mutex &mutex) noexcept
-			: mutex (mutex)
-		{
-			mutex.lock ();
-		}
-
-		~MutexGuard () noexcept
-		{
-			mutex.unlock ();
-		}
-
-		MutexGuard (MutexGuard const&) = delete;
-		MutexGuard (MutexGuard&&) = delete;
-
-		auto operator= (MutexGuard const&) -> MutexGuard& = delete;
-		auto operator= (MutexGuard&&) -> MutexGuard& = delete;
-
-	private:
-		Mutex &mutex;
-	};
 }
