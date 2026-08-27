@@ -146,7 +146,7 @@
     <XAAndroidSourcesHash37_1>F63736E27B0D283298116DA8BCE2C024DE28C7E4081044B30716FCB6E0FA13F1</XAAndroidSourcesHash37_1>
     <XAAndroidSdkLicenseHash>24333f8a63b6825ea9c5514f83c2829b004d1fee</XAAndroidSdkLicenseHash>
     <!-- Android NDK: per-host zips. Use a private property name; the public
-         $(AndroidNdkVersion) is set to the pkg revision in Common.props.in. -->
+         $(AndroidNdkVersion) is set in Xamarin.Installer.Common.props. -->
     <_XAAndroidNdkRelease>28c</_XAAndroidNdkRelease>
     <_XAAndroidNdkPkgRevision>28.2.13676358</_XAAndroidNdkPkgRevision>
     <XAAndroidNdkHashMacOS>0D4599E8BBF1A1668A0D51A541729B2246360F350018A2081D0B302DBB594F2A</XAAndroidNdkHashMacOS>
