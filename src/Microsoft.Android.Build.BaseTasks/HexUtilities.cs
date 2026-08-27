@@ -2,11 +2,12 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace Microsoft.Android.Build.Tasks
 {
 	/// <summary>
-	/// Allocation-free helpers for rendering bytes as hexadecimal.
+	/// Allocation-free helpers for rendering values as hexadecimal.
 	/// </summary>
 	/// <remarks>
 	/// This file is also linked into <c>Microsoft.Android.Sdk.TrimmableTypeMap</c>, which
@@ -63,6 +64,21 @@ namespace Microsoft.Android.Build.Tasks
 
 			writer.Write (GetHexValue (value >> 4, upperCase));
 			writer.Write (GetHexValue (value & 0x0f, upperCase));
+		}
+
+		/// <summary>
+		/// Append <paramref name="value"/> to <paramref name="builder"/> as exactly four
+		/// hexadecimal digits, without allocating.
+		/// </summary>
+		public static void WriteHex (StringBuilder builder, ushort value, bool upperCase = true)
+		{
+			if (builder == null)
+				throw new ArgumentNullException (nameof (builder));
+
+			builder.Append (GetHexValue (value >> 12, upperCase));
+			builder.Append (GetHexValue ((value >> 8) & 0x0f, upperCase));
+			builder.Append (GetHexValue ((value >> 4) & 0x0f, upperCase));
+			builder.Append (GetHexValue (value & 0x0f, upperCase));
 		}
 
 		/// <summary>
