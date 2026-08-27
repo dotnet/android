@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mutex>
+#include <runtime-base/mutex.hh>
 
 #include "monodroid-state.hh"
 
@@ -9,7 +9,7 @@ namespace xamarin::android
 	class StartupAwareLock final
 	{
 	public:
-		explicit StartupAwareLock (std::mutex &m)
+		explicit StartupAwareLock (Mutex &m)
 			: lock (m)
 		{
 			if (MonodroidState::is_startup_in_progress ()) {
@@ -33,7 +33,7 @@ namespace xamarin::android
 		StartupAwareLock& operator= (StartupAwareLock const&) = delete;
 
 	private:
-		std::mutex& lock;
+		Mutex& lock;
 		bool owns_lock = false;
 	};
 }
