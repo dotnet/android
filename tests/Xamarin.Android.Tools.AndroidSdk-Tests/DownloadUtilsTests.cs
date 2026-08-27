@@ -175,23 +175,99 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("hello world", File.ReadAllText (extractedFile));
 		}
 
-		[Test]
-		public void ExtractZipSafe_ZipSlip_Throws ()
+		[TestCase ("../relative.txt")]
+		[TestCase ("../extracted-other/prefix.txt")]
+		[TestCase ("../EXTRACTED/case.txt")]
+		public void ExtractZipSafe_UnsafeRelativePath_Throws (string entryName)
 		{
-			var zipPath = Path.Combine (tempDir, "evil.zip");
+			var zipPath = Path.Combine (tempDir, "test.zip");
 			var extractPath = Path.Combine (tempDir, "extracted");
 			Directory.CreateDirectory (extractPath);
 
 			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
-				// Create an entry with a path traversal
-				var entry = archive.CreateEntry ("../relative.txt");
+				var entry = archive.CreateEntry (entryName);
 				using var writer = new StreamWriter (entry.Open ());
-				writer.Write ("malicious");
+				writer.Write ("foo");
 			}
 
 			var ex = Assert.Throws<InvalidOperationException> (() =>
 				DownloadUtils.ExtractZipSafe (zipPath, extractPath, CancellationToken.None));
 			Assert.That (ex!.Message, Does.Contain ("outside target directory"));
+		}
+
+		[Test]
+		public void ExtractZipSafe_PlatformSeparatorTraversal_Throws ()
+		{
+			var zipPath = Path.Combine (tempDir, "test.zip");
+			var extractPath = Path.Combine (tempDir, "extracted");
+			Directory.CreateDirectory (extractPath);
+
+			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				var entry = archive.CreateEntry ($"..{Path.DirectorySeparatorChar}relative.txt");
+				using var writer = new StreamWriter (entry.Open ());
+				writer.Write ("foo");
+			}
+
+			Assert.Throws<InvalidOperationException> (() =>
+				DownloadUtils.ExtractZipSafe (zipPath, extractPath, CancellationToken.None));
+		}
+
+		[Test]
+		public void ExtractZipSafe_RootedPath_Throws ()
+		{
+			var zipPath = Path.Combine (tempDir, "test.zip");
+			var extractPath = Path.Combine (tempDir, "extracted");
+			Directory.CreateDirectory (extractPath);
+			var pathRoot = Path.GetPathRoot (extractPath);
+			Assert.IsNotNull (pathRoot);
+
+			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				var entry = archive.CreateEntry (Path.Combine (pathRoot, "rooted.txt"));
+				using var writer = new StreamWriter (entry.Open ());
+				writer.Write ("foo");
+			}
+
+			Assert.Throws<InvalidOperationException> (() =>
+				DownloadUtils.ExtractZipSafe (zipPath, extractPath, CancellationToken.None));
+		}
+
+		[Test]
+		public void ExtractZipSafe_TrailingSeparator_ExtractsFiles ()
+		{
+			var zipPath = Path.Combine (tempDir, "test.zip");
+			var extractPath = Path.Combine (tempDir, "extracted") + Path.DirectorySeparatorChar;
+			Directory.CreateDirectory (extractPath);
+
+			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				var entry = archive.CreateEntry ("hello.txt");
+				using var writer = new StreamWriter (entry.Open ());
+				writer.Write ("hello world");
+			}
+
+			DownloadUtils.ExtractZipSafe (zipPath, extractPath, CancellationToken.None);
+
+			Assert.AreEqual ("hello world", File.ReadAllText (Path.Combine (extractPath, "hello.txt")));
+		}
+
+		[Test]
+		public void ExtractZipSafe_SymbolicLinkMetadata_ExtractsRegularFile ()
+		{
+			var zipPath = Path.Combine (tempDir, "test.zip");
+			var extractPath = Path.Combine (tempDir, "extracted");
+			Directory.CreateDirectory (extractPath);
+
+			using (var archive = ZipFile.Open (zipPath, ZipArchiveMode.Create)) {
+				var entry = archive.CreateEntry ("link");
+				entry.ExternalAttributes = unchecked ((0xA000 | 0x1FF) << 16);
+				using var writer = new StreamWriter (entry.Open ());
+				writer.Write ("../outside.txt");
+			}
+
+			DownloadUtils.ExtractZipSafe (zipPath, extractPath, CancellationToken.None);
+
+			var extractedFile = Path.Combine (extractPath, "link");
+			Assert.IsTrue (File.Exists (extractedFile));
+			Assert.IsFalse ((File.GetAttributes (extractedFile) & FileAttributes.ReparsePoint) != 0);
 		}
 
 		[Test]
