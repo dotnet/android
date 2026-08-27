@@ -1,6 +1,7 @@
 #pragma once
 
 #include <dlfcn.h>
+#include <pthread.h>
 #include <android/dlext.h>
 
 #include <mono/utils/mono-dl-fallback.h>
@@ -29,7 +30,7 @@ namespace xamarin::android::internal
 			DSO,
 		};
 
-		static inline xamarin::android::Mutex   dso_handle_write_lock {};
+		static inline pthread_mutex_t dso_handle_write_lock = PTHREAD_MUTEX_INITIALIZER;
 
 		constexpr static int convert_dl_flags (int flags) noexcept
 		{
