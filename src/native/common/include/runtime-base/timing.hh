@@ -1,9 +1,9 @@
 #pragma once
 
+#include <pthread.h>
 #include <sys/time.h>
 
 #include <chrono>
-#include <pthread.h>
 #include <vector>
 #include <string_view>
 
