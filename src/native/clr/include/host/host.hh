@@ -54,6 +54,8 @@ namespace xamarin::android {
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
+		// Allocated once, if fast timing is enabled, and intentionally never freed: the instance
+		// is used for the whole lifetime of the process and released by the OS when it exits.
 		static inline Timing *_timing = nullptr;
 		static inline bool found_assembly_store = false;
 		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
