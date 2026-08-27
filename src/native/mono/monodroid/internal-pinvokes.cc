@@ -160,6 +160,9 @@ monodroid_timing_start (const char *message)
 		return nullptr;
 
 	managed_timing_sequence *ret = timing->get_available_sequence ();
+	if (ret == nullptr)
+		return nullptr;
+
 	if (message != nullptr) {
 		log_write (LOG_TIMING, LogLevel::Info, message);
 	}

@@ -18,9 +18,6 @@ namespace xamarin::android
 		time_point  start;
 		time_point  end;
 		bool             in_use;
-
-		// Valid only while the sequence sits on `Timing::free_sequences`.
-		managed_timing_sequence *next_free;
 	};
 
 	// This class is intended to be used by the managed code. It can be used by the native code as
@@ -47,25 +44,16 @@ namespace xamarin::android
 		{
 			pthread_mutex_lock (&sequence_lock);
 
-			managed_timing_sequence *ret = free_sequences;
-			if (ret != nullptr) {
-				free_sequences = ret->next_free;
-			} else {
-				// Sequences are handed out to managed code, which holds on to them until it
-				// stops the measurement, so they must never move. Each one is therefore its
-				// own allocation, recycled through `free_sequences` rather than freed, for
-				// the lifetime of the process.
-				ret = static_cast<managed_timing_sequence*> (std::malloc (sizeof (managed_timing_sequence)));
-				if (ret == nullptr) [[unlikely]] {
-					pthread_mutex_unlock (&sequence_lock);
-					return nullptr;
-				}
+			managed_timing_sequence *ret = find_unused_sequence ();
+			if (ret == nullptr) {
+				ret = allocate_chunk ();
 			}
 
-			ret->start = time_point::min ();
-			ret->end = time_point::min ();
-			ret->in_use = true;
-			ret->next_free = nullptr;
+			if (ret != nullptr) [[likely]] {
+				ret->start = time_point::min ();
+				ret->end = time_point::min ();
+				ret->in_use = true;
+			}
 
 			pthread_mutex_unlock (&sequence_lock);
 			return ret;
@@ -78,21 +66,52 @@ namespace xamarin::android
 			}
 
 			pthread_mutex_lock (&sequence_lock);
-
-			// Ignore a sequence that isn't checked out, otherwise a double release would put
-			// it on the free list twice and it would then be handed to two callers at once.
-			if (sequence->in_use) {
-				sequence->start = time_point::min ();
-				sequence->end = time_point::min ();
-				sequence->in_use = false;
-				sequence->next_free = free_sequences;
-				free_sequences = sequence;
-			}
-
+			sequence->in_use = false;
 			pthread_mutex_unlock (&sequence_lock);
 		}
 
 	private:
+		// Sequences are handed out to managed code, which holds on to them until it stops the
+		// measurement, so they must never move. They are allocated in chunks that are chained
+		// together and never freed, and are recycled through `in_use`, so that every address
+		// handed out stays valid for the lifetime of the process.
+		static inline constexpr size_t SEQUENCE_CHUNK_SIZE = 16uz;
+
+		struct sequence_chunk
+		{
+			sequence_chunk           *next;
+			managed_timing_sequence   sequences[SEQUENCE_CHUNK_SIZE];
+		};
+
+		// Must be called with `sequence_lock` held.
+		auto find_unused_sequence () noexcept -> managed_timing_sequence*
+		{
+			for (sequence_chunk *chunk = sequence_chunks; chunk != nullptr; chunk = chunk->next) {
+				for (size_t i = 0uz; i < SEQUENCE_CHUNK_SIZE; i++) {
+					if (!chunk->sequences[i].in_use) {
+						return &chunk->sequences[i];
+					}
+				}
+			}
+
+			return nullptr;
+		}
+
+		// Must be called with `sequence_lock` held. `calloc` clears `in_use` for every entry in
+		// the new chunk, so all of them start out available.
+		auto allocate_chunk () noexcept -> managed_timing_sequence*
+		{
+			auto *chunk = static_cast<sequence_chunk*> (std::calloc (1uz, sizeof (sequence_chunk)));
+			if (chunk == nullptr) [[unlikely]] {
+				return nullptr;
+			}
+
+			chunk->next = sequence_chunks;
+			sequence_chunks = chunk;
+
+			return &chunk->sequences[0uz];
+		}
+
 		[[gnu::always_inline]]
 		static void do_log (LogLevel level, managed_timing_sequence const *seq, const char *message)
 		{
@@ -114,7 +133,7 @@ namespace xamarin::android
 		}
 
 	private:
-		managed_timing_sequence  *free_sequences = nullptr;
-		pthread_mutex_t           sequence_lock = PTHREAD_MUTEX_INITIALIZER;
+		sequence_chunk   *sequence_chunks = nullptr;
+		pthread_mutex_t   sequence_lock = PTHREAD_MUTEX_INITIALIZER;
 	};
 }
