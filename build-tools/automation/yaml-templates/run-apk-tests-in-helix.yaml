@@ -8,7 +8,7 @@ parameters:
     configuration: Debug
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Xamarin.Android.RuntimeTests
+    packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
   - name: release
@@ -16,7 +16,7 @@ parameters:
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Xamarin.Android.RuntimeTests
+    packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
   - name: no-aab
@@ -24,7 +24,7 @@ parameters:
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Xamarin.Android.RuntimeTests
+    packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NoAab'
   - name: coreclr
@@ -32,7 +32,7 @@ parameters:
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Xamarin.Android.RuntimeTests
+    packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false'
   - name: mono
@@ -40,7 +40,7 @@ parameters:
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Xamarin.Android.RuntimeTests
+    packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true'
   - name: coreclr-trimmable
@@ -48,7 +48,7 @@ parameters:
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Xamarin.Android.RuntimeTests
+    packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLRTrimmable -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false'
   - name: nativeaot
@@ -56,7 +56,7 @@ parameters:
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
     artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
-    packageName: Xamarin.Android.RuntimeTests
+    packageName: Mono.Android.NET_Tests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NativeAOT -p:PublishAot=true'
   - name: jcwgen
@@ -132,6 +132,14 @@ steps:
   - pwsh: |
       $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
       Remove-Item -LiteralPath $apk -Force -ErrorAction Ignore
+      $manifest = '$(Build.StagingDirectory)\apk-tests-helix\manifests\${{ testCase.name }}.xml'
+      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $manifest) | Out-Null
+      @'
+      <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${{ testCase.packageName }}">
+        <application />
+        <instrumentation android:name="${{ testCase.instrumentation }}" android:targetPackage="${{ testCase.packageName }}" />
+      </manifest>
+      '@ | Set-Content -LiteralPath $manifest -Encoding utf8NoBOM
     displayName: Remove stale APK - ${{ testCase.displayName }}
 
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
@@ -142,6 +150,7 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
+        -p:AndroidManifest="$(Build.StagingDirectory)/apk-tests-helix/manifests/${{ testCase.name }}.xml"
         -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
         -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}
