@@ -276,7 +276,7 @@ namespace MyApp
 	}
 
 	[Register ("my/app/MyHelper")]
-	[JavaAnnotation (Text = "hello", Enabled = true)]
+	[JavaAnnotation (Text = "say \"hi\"\\path\n", Enabled = true, Number = 1.5)]
 	public class MyHelper : Java.Lang.Object
 	{
 		[Register ("doSomething", "()V", "GetDoSomethingHandler")]

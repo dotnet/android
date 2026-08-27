@@ -60,5 +60,6 @@ namespace MyApp
 		public string? Text { get; set; }
 
 		public bool Enabled { get; set; }
+		public double Number { get; set; }
 	}
 }

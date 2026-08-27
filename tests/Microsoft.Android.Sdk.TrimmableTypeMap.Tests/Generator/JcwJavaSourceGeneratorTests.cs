@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -360,7 +361,7 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 		public void Generate_ForwardsAnnotationsOnJcwMembers ()
 		{
 			var typeJava = GenerateFixture ("my/app/MyHelper");
-			AssertContainsLine ("@com.example.Custom (text = \"hello\", Enabled = true)\npublic class MyHelper\n", typeJava);
+			AssertContainsLine ("@com.example.Custom (text = \"say \\\"hi\\\"\\\\path\\n\", Enabled = true, Number = 1.5)\npublic class MyHelper\n", typeJava);
 
 			var constructorJava = GenerateFixture ("my/app/CustomView");
 			AssertContainsLine ("@com.example.Custom\n\tpublic CustomView ()\n", constructorJava);
@@ -368,6 +369,21 @@ public class JcwJavaSourceGeneratorTests : FixtureTestBase
 			var fieldJava = GenerateFixture ("my/app/ExportFieldExample");
 			AssertContainsLine ("@com.example.Custom\n\tpublic java.lang.String VALUE = GetValue ();\n", fieldJava);
 			Assert.Equal (1, fieldJava.Split ("@com.example.Custom").Length - 1);
+		}
+
+		[Fact]
+		public void Generate_AnnotationValues_UseInvariantCulture ()
+		{
+			var originalCulture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("fr-FR");
+				var peer = FindFixtureByManagedName ("MyApp.MyHelper", "Crc64");
+				var java = GenerateToString (peer);
+
+				AssertContainsLine ("Number = 1.5", java);
+			} finally {
+				CultureInfo.CurrentCulture = originalCulture;
+			}
 		}
 
 		[Fact]

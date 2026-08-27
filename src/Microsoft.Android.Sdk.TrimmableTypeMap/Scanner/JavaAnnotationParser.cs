@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection.Metadata;
+using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -149,7 +151,7 @@ sealed class JavaAnnotationParser
 			return "null";
 		}
 		if (managedType == "String" || managedType == "System.String") {
-			return "\"" + value.ToString ()?.Replace ("\"", "\"\"") + '"';
+			return ToJavaStringLiteral (value.ToString () ?? "");
 		}
 		if (managedType == "System.Type" && value is string typeName) {
 			var javaName = resolveTypeName (typeName);
@@ -161,6 +163,50 @@ sealed class JavaAnnotationParser
 		if (value is bool boolean) {
 			return boolean ? "true" : "false";
 		}
+		if (value is IFormattable formattable) {
+			return formattable.ToString (null, CultureInfo.InvariantCulture) ?? "";
+		}
 		return value.ToString () ?? "";
+	}
+
+	static string ToJavaStringLiteral (string value)
+	{
+		var builder = new StringBuilder (value.Length + 2);
+		builder.Append ('"');
+		foreach (char c in value) {
+			switch (c) {
+				case '"':
+					builder.Append ("\\\"");
+					break;
+				case '\\':
+					builder.Append ("\\\\");
+					break;
+				case '\b':
+					builder.Append ("\\b");
+					break;
+				case '\t':
+					builder.Append ("\\t");
+					break;
+				case '\n':
+					builder.Append ("\\n");
+					break;
+				case '\f':
+					builder.Append ("\\f");
+					break;
+				case '\r':
+					builder.Append ("\\r");
+					break;
+				default:
+					if (char.IsControl (c)) {
+						builder.Append ("\\u");
+						builder.Append (((int)c).ToString ("x4", CultureInfo.InvariantCulture));
+					} else {
+						builder.Append (c);
+					}
+					break;
+			}
+		}
+		builder.Append ('"');
+		return builder.ToString ();
 	}
 }
