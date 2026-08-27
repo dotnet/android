@@ -14,6 +14,27 @@ using namespace std::literals;
 
 namespace chrono = std::chrono;
 
+namespace {
+	void write_line_to_logcat ([[maybe_unused]] FILE *output, std::string_view const& line) noexcept
+	{
+		// Don't add empty messages to the logcat, waste of time
+		if (line.empty ()) {
+			return;
+		}
+
+		log_writef (LOG_TIMING, LogLevel::Info, "%.*s", static_cast<int>(line.length ()), line.data ());
+	}
+
+	void write_line_to_file (FILE *output, std::string_view const& line) noexcept
+	{
+		if (!line.empty ()) {
+			fwrite (line.data (), line.size (), 1, output);
+		}
+
+		fwrite (Constants::NEWLINE.data (), Constants::NEWLINE.size (), 1, output);
+	}
+}
+
 void FastTiming::really_initialize (bool log_immediately) noexcept
 {
 	internal_timing.configure_for_use ();
@@ -221,14 +242,7 @@ void FastTiming::dump_to_logcat (size_t entries) noexcept
 		return;
 	}
 
-	auto line_writer = [](FILE *, std::string_view const& msg) {
-		// Don't add empty messages to the logcat, waste of time
-		if (msg.empty ()) {
-			return;
-		}
-		log_writef (LOG_TIMING, LogLevel::Info, "%.*s", static_cast<int>(msg.length ()), msg.data ());
-	};
-	dump (entries, true /* indent */, line_writer, nullptr);
+	dump (entries, true /* indent */, write_line_to_logcat, nullptr);
 }
 
 void FastTiming::dump_to_file (size_t entries) noexcept
@@ -270,14 +284,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 
 	log_infof (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path);
 
-	auto line_writer = [](FILE *output, std::string_view const& msg) {
-		if (!msg.empty ()) {
-			fwrite (msg.data (), msg.size (), 1, output);
-		}
-		fwrite (Constants::NEWLINE.data (), Constants::NEWLINE.size (), 1, output);
-	};
-
-	dump (entries, true /* indent */, line_writer, timing_log);
+	dump (entries, true /* indent */, write_line_to_file, timing_log);
 	fflush (timing_log);
 	fclose (timing_log);
 	if (timing_log_path != stack_buffer) {
