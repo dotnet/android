@@ -6,7 +6,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 #include "../constants.hh"
 #include <shared/log_types.hh>
@@ -14,9 +13,20 @@
 #include <runtime-base/jni-wrappers.hh>
 #include "util.hh"
 
-struct BundledProperty;
-
 namespace xamarin::android {
+#if defined (DEBUG)
+	// A system property bundled with the application, read from the environment override files.
+	// `name` is allocated together with the structure and never changes, `value` is allocated
+	// separately so that it can be replaced when the same property is set more than once.
+	struct BundledProperty
+	{
+		BundledProperty *next;
+		char            *name;
+		char            *value;
+		size_t           value_len;
+	};
+#endif
+
 	class AndroidSystem
 	{
 #if !defined (XA_HOST_NATIVEAOT)
@@ -164,6 +174,9 @@ namespace xamarin::android {
 		static auto load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*;
+#if defined (DEBUG)
+		static auto find_bundled_property (const char *name) noexcept -> BundledProperty*;
+#endif
 		static auto monodroid__system_property_get (const char *name, char *sp_value) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
 		static void add_apk_libdir (std::string_view const& apk, size_t &index, std::string_view const& abi) noexcept;
@@ -234,7 +247,7 @@ namespace xamarin::android {
 		static inline std::string app_code_cache_dir;
 
 #if defined (DEBUG)
-		static inline std::unordered_map<std::string, std::string> bundled_properties;
+		static inline BundledProperty *bundled_properties = nullptr;
 #endif
 #endif
 	};
