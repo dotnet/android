@@ -34,7 +34,7 @@ TemporaryPeerMap::TemporaryPeerMap (JNIEnv *jni_env, MarkCrossReferencesArgs *ar
 
 	if (env->EnsureLocalCapacity (requested_capacity) != JNI_OK) [[unlikely]] {
 		env->ExceptionClear ();
-		log_warn (LOG_GC, "Failed to reserve JNI local reference capacity for {} temporary peers", map_capacity);
+		log_warnf (LOG_GC, "Failed to reserve JNI local reference capacity for %zu temporary peers", map_capacity);
 	}
 
 	capacity = map_capacity;
@@ -596,5 +596,5 @@ void BridgeProcessing::log_gc_summary () noexcept
 		}
 	}
 
-	log_info (LOG_GC, "GC cleanup summary: {} objects tested - resurrecting {}.", total, alive);
+	log_infof (LOG_GC, "GC cleanup summary: %zu objects tested - resurrecting %zu.", total, alive);
 }
