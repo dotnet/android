@@ -195,14 +195,26 @@ AndroidSystem::add_apk_libdir (std::string_view const& apk, size_t &index, std::
 {
 	abort_unless (index < app_lib_directories.size (), "Index out of range");
 	static constexpr std::string_view lib_prefix { "!/lib/" };
-	std::string dir;
 
-	dir.reserve (apk.size () + lib_prefix.size () + abi.size ());
-	dir.assign (apk);
-	dir.append (lib_prefix);
-	dir.append (abi);
+	size_t dir_length = Helpers::add_with_overflow_check<size_t> (apk.length (), lib_prefix.length ());
+	dir_length = Helpers::add_with_overflow_check<size_t> (dir_length, abi.length ());
+
+	// The directory is used for as long as the process lives, it is never freed.
+	char *dir = static_cast<char*> (std::malloc (dir_length + 1uz));
+	if (dir == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for an application library directory");
+	}
+
+	char *destination = dir;
+	memcpy (destination, apk.data (), apk.length ());
+	destination += apk.length ();
+	memcpy (destination, lib_prefix.data (), lib_prefix.length ());
+	destination += lib_prefix.length ();
+	memcpy (destination, abi.data (), abi.length ());
+	dir [dir_length] = '\0';
+
 	app_lib_directories [index] = dir;
-	log_debugf (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", dir.c_str ());
+	log_debugf (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", dir);
 	index++;
 }
 
@@ -252,9 +264,12 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 	if (!is_embedded_dso_mode_enabled ()) {
 		log_debugf (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 
-		app_lib_directories = std::span<std::string> (single_app_lib_directory);
-		app_lib_directories [0] = std::string (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
-		log_debugf (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", app_lib_directories [0].c_str ());
+		app_lib_directories = std::span<const char*> (single_app_lib_directory);
+		app_lib_directories [0] = strdup (appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		if (app_lib_directories [0] == nullptr) [[unlikely]] {
+			Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for an application library directory");
+		}
+		log_debugf (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", app_lib_directories [0]);
 		return;
 	}
 
@@ -262,10 +277,14 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 	if (have_split_apks) {
 		// If split apks are used, then we will have just a single app library directory. Don't allocate any memory
 		// dynamically in this case
-		AndroidSystem::app_lib_directories = std::span<std::string> (single_app_lib_directory);
+		AndroidSystem::app_lib_directories = std::span<const char*> (single_app_lib_directory);
 	} else {
 		size_t app_lib_directories_size = runtimeApks.get_length ();
-		AndroidSystem::app_lib_directories = std::span<std::string> (new std::string[app_lib_directories_size], app_lib_directories_size);
+		auto directories = static_cast<const char**> (std::malloc (app_lib_directories_size * sizeof (const char*)));
+		if (directories == nullptr) [[unlikely]] {
+			Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for the application library directories");
+		}
+		AndroidSystem::app_lib_directories = std::span<const char*> (directories, app_lib_directories_size);
 	}
 
 	uint16_t built_for_cpu = 0, running_on_cpu = 0;
@@ -299,7 +318,7 @@ AndroidSystem::setup_environment () noexcept
 	log_debugf (LOG_DEFAULT, "Loading environment from the override directory.");
 
 	char stack_buffer [Util::LocalPathBufferSize];
-	char *env_override_file = Util::join_paths (stack_buffer, sizeof (stack_buffer), primary_override_dir, Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
+	char *env_override_file = Util::join_paths (stack_buffer, sizeof (stack_buffer), get_primary_override_dir (), Constants::OVERRIDE_ENVIRONMENT_FILE_NAME);
 
 	if (Util::file_exists (env_override_file)) {
 		log_debugf (LOG_DEFAULT, "Loading %s", env_override_file);
@@ -358,7 +377,7 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 	);
 }
 
-auto AndroidSystem::format_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t
+auto AndroidSystem::format_full_dso_path (std::string_view const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t
 {
 	bool is_rooted = Util::is_path_rooted (dso_path);
 	bool add_lib_prefix = !base_dir.empty () && !is_rooted && !Util::path_has_directory_components (dso_path);
@@ -394,9 +413,9 @@ auto AndroidSystem::load_dso_from_specified_dirs (TContainer directories, std::s
 		return nullptr;
 	}
 
-	for (std::string const& dir : directories) {
+	for (const char *dir : directories) {
 		char stack_buffer [Util::LocalPathBufferSize];
-		char *full_path = get_full_dso_path (dir, dso_name, stack_buffer, sizeof (stack_buffer));
+		char *full_path = get_full_dso_path (std::string_view { dir }, dso_name, stack_buffer, sizeof (stack_buffer));
 
 		std::string_view full_path_view { full_path };
 		void *handle = DsoLoader::load (full_path_view, dl_flags, is_jni);
