@@ -38,7 +38,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 
 	std::string const& override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
-		log_debug (LOG_ASSEMBLY, "Override directory '{}' does not exist"sv, override_dir_path);
+		log_debugf (LOG_ASSEMBLY, "Override directory '%s' does not exist", override_dir_path.c_str ());
 		return nullptr;
 	}
 
@@ -49,51 +49,50 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		if (override_dir_fd < 0) [[likely]] {
 			override_dir = opendir (override_dir_path.c_str ());
 			if (override_dir == nullptr) [[unlikely]] {
-				log_warn (LOG_ASSEMBLY, "Failed to open override dir '{}'. {}"sv, override_dir_path, strerror (errno));
+				log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path.c_str (), strerror (errno));
 				return nullptr;
 			}
 			override_dir_fd = dirfd (override_dir);
 		}
 	}
 
-	log_debug (
+	log_debugf (
 		LOG_ASSEMBLY,
-		"Attempting to load FastDev assembly '{}' from override directory '{}'"sv,
-		name,
-		override_dir_path
+		"Attempting to load FastDev assembly '%.*s' from override directory '%s'",
+		static_cast<int>(name.length ()), name.data (),
+		override_dir_path.c_str ()
 	);
 
 	if (!Util::file_exists (override_dir_fd, name)) {
-		log_warn (LOG_ASSEMBLY, "FastDev assembly '{}' not found."sv, name);
+		log_warnf (LOG_ASSEMBLY, "FastDev assembly '%.*s' not found.", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
-	log_debug (LOG_ASSEMBLY, "Found FastDev assembly '{}'"sv, name);
+	log_debugf (LOG_ASSEMBLY, "Found FastDev assembly '%.*s'", static_cast<int>(name.length ()), name.data ());
 
 	auto file_size = Util::get_file_size_at (override_dir_fd, name);
 	if (!file_size) [[unlikely]] {
-		log_warn (LOG_ASSEMBLY, "Unable to determine FastDev assembly '{}' file size"sv, name);
+		log_warnf (LOG_ASSEMBLY, "Unable to determine FastDev assembly '%.*s' file size", static_cast<int>(name.length ()), name.data ());
 		return nullptr;
 	}
 
 	constexpr size_t MAX_SIZE = std::numeric_limits<std::remove_reference_t<decltype(size)>>::max ();
 	if (file_size.value () > MAX_SIZE) [[unlikely]] {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
-			std::format (
-				"FastDev assembly '{}' size exceeds the maximum supported value of {}"sv,
-				name,
-				MAX_SIZE
-			)
+			std::source_location::current (),
+			"FastDev assembly '%.*s' size exceeds the maximum supported value of %zu",
+			static_cast<int>(name.length ()), name.data (),
+			MAX_SIZE
 		);
 	}
 
 	size = static_cast<int64_t>(file_size.value ());
 	int asm_fd = openat (override_dir_fd, name.data (), O_RDONLY);
 	if (asm_fd < 0) {
-		log_warn (
+		log_warnf (
 			LOG_ASSEMBLY,
-			"Failed to open FastDev assembly '{}' for reading. {}"sv,
-			name,
+			"Failed to open FastDev assembly '%.*s' for reading. %s",
+			static_cast<int>(name.length ()), name.data (),
 			strerror (errno)
 		);
 
@@ -115,17 +114,17 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	if (nread != size) [[unlikely]] {
 		delete[] buffer;
 
-		log_warn (
+		log_warnf (
 			LOG_ASSEMBLY,
-			"Failed to read FastDev assembly '{}' data. {}"sv,
-			name,
+			"Failed to read FastDev assembly '%.*s' data. %s",
+			static_cast<int>(name.length ()), name.data (),
 			strerror (errno)
 		);
 
 		size = 0;
 		return nullptr;
 	}
-	log_debug (LOG_ASSEMBLY, "Read {} bytes of FastDev assembly '{}'"sv, nread, name);
+	log_debugf (LOG_ASSEMBLY, "Read %zd bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
 
 	return reinterpret_cast<void*>(buffer);
 }
@@ -141,7 +140,7 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 
 	DIR *dir = opendir (override_dir_path.c_str ());
 	if (dir == nullptr) {
-		log_warn (LOG_ASSEMBLY, "FastDev: failed to open override dir '{}'. {}"sv, override_dir_path, std::strerror (errno));
+		log_warnf (LOG_ASSEMBLY, "FastDev: failed to open override dir '%s'. %s", override_dir_path.c_str (), std::strerror (errno));
 		return false;
 	}
 
@@ -180,13 +179,13 @@ auto FastDevAssemblies::build_tpa_list (std::string &tpa_list) noexcept -> bool
 	}
 	closedir (dir);
 
-	log_debug (
+	log_debugf (
 		LOG_ASSEMBLY,
-		"FastDev: built TPA list with {} assemblies from '{}' (corelib={}, r2r={})"sv,
+		"FastDev: built TPA list with %zu assemblies from '%s' (corelib=%s, r2r=%s)",
 		count,
-		override_dir_path,
-		found_corelib,
-		found_r2r
+		override_dir_path.c_str (),
+		found_corelib ? "true" : "false",
+		found_r2r ? "true" : "false"
 	);
 
 	// We can only safely hand a TPA list to CoreCLR when it contains
