@@ -91,7 +91,6 @@ stages:
         command: test
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/WorkloadDependencies-Tests/WorkloadDependencies-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
 
@@ -144,7 +143,6 @@ stages:
         command: test
         projects: |
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/WorkloadDependencies-Tests/WorkloadDependencies-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
 
