@@ -29,7 +29,7 @@ namespace xamarin::android::internal
 			DSO,
 		};
 
-		static inline xamarin::android::mutex   dso_handle_write_lock;
+		static inline xamarin::android::Mutex   dso_handle_write_lock {};
 
 		constexpr static int convert_dl_flags (int flags) noexcept
 		{

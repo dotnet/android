@@ -2,11 +2,11 @@
 
 #include <string>
 
-#include "cppcompat.hh"
+#include <runtime-base/mutex.hh>
 #include <shared/xxhash.hh>
 
-// NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
-// conflicts with our std::mutex definition in cppcompat.hh
+// NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>.
+// Both of those headers would make the runtime depend on libc++, see https://github.com/dotnet/android/issues/12533
 #if !defined (NDEBUG)
 #define NDEBUG
 #define NDEBUG_UNDEFINE
@@ -78,7 +78,7 @@ namespace xamarin::android {
 		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
 
 	private:
-		static xamarin::android::mutex  pinvoke_map_write_lock;
+		static xamarin::android::Mutex  pinvoke_map_write_lock;
 		static pinvoke_library_map    other_pinvoke_map;
 
 #if defined(PRECOMPILED)

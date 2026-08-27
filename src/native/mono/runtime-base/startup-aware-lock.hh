@@ -1,7 +1,7 @@
 #ifndef __STARTUP_AWARE_LOCK_HH
 #define __STARTUP_AWARE_LOCK_HH
 
-#include "cppcompat.hh"
+#include <runtime-base/mutex.hh>
 #include "monodroid-state.hh"
 
 namespace xamarin::android::internal
@@ -9,7 +9,7 @@ namespace xamarin::android::internal
 	class StartupAwareLock final
 	{
 	public:
-		explicit StartupAwareLock (xamarin::android::mutex &m)
+		explicit StartupAwareLock (xamarin::android::Mutex &m)
 			: lock (m)
 		{
 			if (MonodroidState::is_startup_in_progress ()) {
@@ -33,7 +33,7 @@ namespace xamarin::android::internal
 		StartupAwareLock& operator= (StartupAwareLock const&) = delete;
 
 	private:
-		xamarin::android::mutex& lock;
+		xamarin::android::Mutex& lock;
 		bool owns_lock = false;
 	};
 }
