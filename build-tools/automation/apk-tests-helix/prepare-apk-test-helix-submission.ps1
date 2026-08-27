@@ -35,6 +35,7 @@ function Copy-PayloadDirectory
 		if ($LASTEXITCODE -gt 7) {
 			throw "robocopy failed with exit code $LASTEXITCODE while copying '$Source'."
 		}
+		$global:LASTEXITCODE = 0
 	} else {
 		& cp -a "$Source/." "$Destination/"
 		if ($LASTEXITCODE -ne 0) {
