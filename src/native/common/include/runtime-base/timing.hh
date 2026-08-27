@@ -44,21 +44,9 @@ namespace xamarin::android
 
 		auto get_available_sequence () noexcept -> managed_timing_sequence*
 		{
-			MutexGuard lock (sequence_lock);
-
-			managed_timing_sequence *ret;
-			for (size_t i = 0uz; i < sequence_pool.size (); i++) {
-				if (sequence_pool[i].in_use) {
-					continue;
-				}
-
-				ret = &sequence_pool[i];
-				ret->in_use = true;
-
-				return ret;
-			}
-			ret = &sequence_pool.emplace_back ();
-			ret->in_use = true;
+			sequence_lock.lock ();
+			managed_timing_sequence *ret = acquire_sequence_locked ();
+			sequence_lock.unlock ();
 
 			return ret;
 		}
@@ -69,10 +57,32 @@ namespace xamarin::android
 				return;
 			}
 
-			MutexGuard lock (sequence_lock);
+			sequence_lock.lock ();
 			sequence->start = time_point::min ();
 			sequence->end = time_point::min ();
 			sequence->in_use = false;
+			sequence_lock.unlock ();
+		}
+
+	private:
+		// The caller must hold `sequence_lock`.
+		auto acquire_sequence_locked () noexcept -> managed_timing_sequence*
+		{
+			for (size_t i = 0uz; i < sequence_pool.size (); i++) {
+				if (sequence_pool[i].in_use) {
+					continue;
+				}
+
+				managed_timing_sequence *ret = &sequence_pool[i];
+				ret->in_use = true;
+
+				return ret;
+			}
+
+			managed_timing_sequence *ret = &sequence_pool.emplace_back ();
+			ret->in_use = true;
+
+			return ret;
 		}
 
 	private:

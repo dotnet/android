@@ -170,36 +170,57 @@ namespace {
 			write_queue.clear ();
 		}
 
+		// The caller must hold `state_lock`. Returns false when the writer thread should exit.
+		auto dequeue_write_request_locked (WriteRequest &request) noexcept -> bool
+		{
+			if (write_queue.empty ()) {
+				writer_running = false;
+				return false;
+			}
+
+			request = std::move (write_queue.front ());
+			write_queue.pop_front ();
+			return true;
+		}
+
+		// The caller must hold `state_lock`. Returns false when the writer thread should exit.
+		auto complete_write_request_locked (size_t request_size, WriteResult write_result) noexcept -> bool
+		{
+			queued_bytes -= request_size;
+			if (write_result == WriteResult::Failed) {
+				writes_enabled = false;
+				clear_write_queue_locked ();
+				writer_running = false;
+				log_debugf (LOG_ASSEMBLY, "Disabling decompressed-assembly cache writes after a persistence failure");
+				return false;
+			}
+
+			return true;
+		}
+
 		[[gnu::cold]]
 		auto writer_loop ([[maybe_unused]] void *arg) noexcept -> void*
 		{
 			while (true) {
 				WriteRequest request;
-				{
-					MutexGuard lock (state_lock);
-					if (write_queue.empty ()) {
-						writer_running = false;
-						return nullptr;
-					}
+				state_lock.lock ();
+				bool have_request = dequeue_write_request_locked (request);
+				state_lock.unlock ();
 
-					request = std::move (write_queue.front ());
-					write_queue.pop_front ();
+				if (!have_request) {
+					return nullptr;
 				}
 
 				size_t request_size = request.size;
 				WriteResult write_result = write_cache_file (request);
 				request.data.reset ();
 
-				{
-					MutexGuard lock (state_lock);
-					queued_bytes -= request_size;
-					if (write_result == WriteResult::Failed) {
-						writes_enabled = false;
-						clear_write_queue_locked ();
-						writer_running = false;
-						log_debugf (LOG_ASSEMBLY, "Disabling decompressed-assembly cache writes after a persistence failure");
-						return nullptr;
-					}
+				state_lock.lock ();
+				bool keep_running = complete_write_request_locked (request_size, write_result);
+				state_lock.unlock ();
+
+				if (!keep_running) {
+					return nullptr;
 				}
 			}
 		}
@@ -344,8 +365,9 @@ namespace {
 			}
 
 			{
-				MutexGuard lock (state_lock);
+				state_lock.lock ();
 				writes_enabled = true;
+				state_lock.unlock ();
 			}
 
 			log_debugf (
@@ -411,6 +433,50 @@ namespace {
 			return static_cast<uint8_t*>(mapped);
 		}
 
+		enum class ReserveResult
+		{
+			Reserved,
+			WritesDisabled,
+			QueueFull,
+		};
+
+		// The caller must hold `state_lock`. On `QueueFull`, `bytes_queued` receives the
+		// number of bytes currently in use by the queue.
+		auto reserve_queue_space_locked (size_t total, size_t &bytes_queued) noexcept -> ReserveResult
+		{
+			if (!writes_enabled) {
+				return ReserveResult::WritesDisabled;
+			}
+
+			if (total > MAX_QUEUED_BYTES || queued_bytes > MAX_QUEUED_BYTES - total) {
+				bytes_queued = queued_bytes;
+				return ReserveResult::QueueFull;
+			}
+
+			queued_bytes += total;
+			return ReserveResult::Reserved;
+		}
+
+		// The caller must hold `state_lock`. Takes ownership of the space reserved by
+		// `reserve_queue_space_locked`, releasing it again if writes were disabled meanwhile.
+		void queue_write_request_locked (WriteRequest &&request, size_t total) noexcept
+		{
+			if (!writes_enabled) {
+				queued_bytes -= total;
+				return;
+			}
+
+			write_queue.push_back (std::move (request));
+			if (!writer_running) {
+				writer_running = true;
+				if (!start_writer_locked ()) {
+					writer_running = false;
+					writes_enabled = false;
+					clear_write_queue_locked ();
+				}
+			}
+		}
+
 		void enqueue_write (uint32_t descriptor_index, std::string_view name, const uint8_t *data, size_t size) noexcept
 		{
 			if (!enabled) {
@@ -423,21 +489,15 @@ namespace {
 			size_t total = size + sizeof (CacheFileFooter);
 
 			size_t bytes_queued = 0;
-			bool queue_full = false;
-			{
-				MutexGuard lock (state_lock);
-				if (!writes_enabled) {
-					return;
-				}
-				if (total > MAX_QUEUED_BYTES || queued_bytes > MAX_QUEUED_BYTES - total) {
-					queue_full = true;
-					bytes_queued = queued_bytes;
-				} else {
-					queued_bytes += total;
-				}
+			state_lock.lock ();
+			ReserveResult reservation = reserve_queue_space_locked (total, bytes_queued);
+			state_lock.unlock ();
+
+			if (reservation == ReserveResult::WritesDisabled) {
+				return;
 			}
 
-			if (queue_full) {
+			if (reservation == ReserveResult::QueueFull) {
 				if (total > MAX_QUEUED_BYTES) {
 					log_debugf (
 						LOG_ASSEMBLY,
@@ -462,8 +522,9 @@ namespace {
 
 			auto snapshot = std::unique_ptr<uint8_t[]> (new (std::nothrow) uint8_t[total]);
 			if (snapshot == nullptr) {
-				MutexGuard lock (state_lock);
+				state_lock.lock ();
 				queued_bytes -= total;
+				state_lock.unlock ();
 				return;
 			}
 			// The runtime can modify the shared decompression buffer after this
@@ -486,23 +547,9 @@ namespace {
 				.size = total,
 			};
 
-			{
-				MutexGuard lock (state_lock);
-				if (!writes_enabled) {
-					queued_bytes -= total;
-					return;
-				}
-
-				write_queue.push_back (std::move (req));
-				if (!writer_running) {
-					writer_running = true;
-					if (!start_writer_locked ()) {
-						writer_running = false;
-						writes_enabled = false;
-						clear_write_queue_locked ();
-					}
-				}
-			}
+			state_lock.lock ();
+			queue_write_request_locked (std::move (req), total);
+			state_lock.unlock ();
 		}
 	} // namespace asm_cache
 } // anonymous namespace

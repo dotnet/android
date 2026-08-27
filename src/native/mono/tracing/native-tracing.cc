@@ -291,7 +291,7 @@ void init_jni (JNIEnv *env) noexcept
 		return;
 	}
 
-	xamarin::android::MutexGuard lock (java_init_lock);
+	java_init_lock.lock ();
 
 	java_lang_Thread = to_gref (env, env->FindClass ("java/lang/Thread"));
 	java_lang_Thread_currentThread = env->GetStaticMethodID (java_lang_Thread, "currentThread", "()Ljava/lang/Thread;");
@@ -316,6 +316,8 @@ void init_jni (JNIEnv *env) noexcept
 	if (!all_found) {
 		xamarin::android::Helpers::abort_application ("JNI failure to look up type or method pointers");
 	}
+
+	java_init_lock.unlock ();
 }
 
 bool assert_valid_jni_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept
