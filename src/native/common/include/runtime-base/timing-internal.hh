@@ -78,15 +78,18 @@ namespace xamarin::android {
 		// normal application startup.
 		static constexpr size_t EVENT_CHUNK_SIZE = 4096uz;
 
-		// Upper bound on how deeply timing events may nest on a single thread.  Every
-		// `start_event` is matched by exactly one `end_event` or `store_more_info`, so the
-		// depth is determined purely by how deeply the instrumented calls nest (currently 3).
-		static constexpr size_t MAX_OPEN_SEQUENCES = 16uz;
-
 		struct TimingEventChunk
 		{
 			TimingEvent events [EVENT_CHUNK_SIZE];
 			TimingEventChunk *next = nullptr;
+		};
+
+		// A single entry on the per-thread stack of timing events which have been started but
+		// not yet ended.
+		struct OpenSequence
+		{
+			TimingEvent *event;
+			OpenSequence *next;
 		};
 
 		// defaults
@@ -412,30 +415,38 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		static void push_sequence_event (TimingEvent *event) noexcept
 		{
-			size_t depth = open_sequence_depth++;
-			if (depth < MAX_OPEN_SEQUENCES) [[likely]] {
-				open_sequences [depth] = event;
+			auto *entry = static_cast<OpenSequence*> (std::malloc (sizeof (OpenSequence)));
+			if (entry == nullptr) [[unlikely]] {
+				Helpers::abort_application (LOG_TIMING, "Unable to allocate memory for an open timing sequence");
 			}
+
+			entry->event = event;
+			entry->next = open_sequences;
+			open_sequences = entry;
 		}
 
 		[[gnu::always_inline]]
 		static auto get_sequence_event () noexcept -> TimingEvent*
 		{
-			size_t depth = open_sequence_depth;
-			if (depth == 0uz || depth > MAX_OPEN_SEQUENCES) [[unlikely]] {
+			OpenSequence *entry = open_sequences;
+			if (entry == nullptr) [[unlikely]] {
 				return nullptr;
 			}
 
-			return open_sequences [depth - 1uz];
+			return entry->event;
 		}
 
 		[[gnu::always_inline]]
 		static auto pop_sequence_event () noexcept -> TimingEvent*
 		{
-			TimingEvent *event = get_sequence_event ();
-			if (open_sequence_depth > 0uz) [[likely]] {
-				open_sequence_depth--;
+			OpenSequence *entry = open_sequences;
+			if (entry == nullptr) [[unlikely]] {
+				return nullptr;
 			}
+
+			TimingEvent *event = entry->event;
+			open_sequences = entry->next;
+			std::free (entry);
 
 			return event;
 		}
@@ -566,8 +577,7 @@ namespace xamarin::android {
 		TimingEventChunk *first_event_chunk = nullptr;
 		std::unique_ptr<std::string> output_file_name{};
 
-		static inline thread_local TimingEvent *open_sequences [MAX_OPEN_SEQUENCES] {};
-		static inline thread_local size_t open_sequence_depth = 0uz;
+		static inline thread_local OpenSequence *open_sequences = nullptr;
 		static inline thread_local TimingEventChunk *cached_event_chunk = nullptr;
 		static inline thread_local size_t cached_event_chunk_index = 0uz;
 		static inline bool is_enabled = false;
