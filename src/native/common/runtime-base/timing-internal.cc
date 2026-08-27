@@ -105,15 +105,15 @@ bool FastTiming::no_events_logged (size_t entries) noexcept
 	return true;
 }
 
-void FastTiming::dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept
+void FastTiming::dump (size_t entries, bool indent, LineWriter line_writer, void *context) noexcept
 {
 	char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
 
-	line_writer ("Startup costs:"sv);
+	line_writer (context, "Startup costs:"sv);
 	auto log = [&] (TimingEvent const& event) -> uint64_t {
 		size_t message_length;
 		char *message = build_message (event, stack_buffer, sizeof (stack_buffer), &message_length, indent);
-		line_writer (std::string_view { message, message_length });
+		line_writer (context, std::string_view { message, message_length });
 		if (message != stack_buffer) {
 			std::free (message);
 		}
@@ -122,7 +122,7 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 	log (start_end_event_time);
 	log (get_time_overhead);
 	log (init_time);
-	line_writer (Constants::EMPTY);
+	line_writer (context, Constants::EMPTY);
 
 	// Values are in nanoseconds
 	uint64_t total_assembly_load_time = 0u;
@@ -130,7 +130,7 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 	uint64_t total_managed_to_java_time = 0u;
 	uint64_t total_assembly_decompression_time = 0u;
 
-	line_writer ("All logged events:"sv);
+	line_writer (context, "All logged events:"sv);
 	for (size_t i = 0uz; i < entries; i++) {
 		TimingEvent const& event = get_event (i);
 		if (!__atomic_load_n (&event.complete, __ATOMIC_ACQUIRE)) {
@@ -161,10 +161,10 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 		}
 	}
 
-	line_writer (Constants::EMPTY);
-	line_writer ("[2/4] Accumulated performance results"sv);
+	line_writer (context, Constants::EMPTY);
+	line_writer (context, "[2/4] Accumulated performance results"sv);
 
-	auto log_time = [&line_writer] (std::string_view const& msg, uint64_t ns)
+	auto log_time = [&line_writer, context] (std::string_view const& msg, uint64_t ns)
 	{
 		chrono::nanoseconds time_ns (ns);
 		// Do not change the string format after the first colon, its format is required by performance measuring
@@ -200,7 +200,7 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 			);
 		}
 
-		line_writer (std::string_view { buffer, length });
+		line_writer (context, std::string_view { buffer, length });
 		if (buffer != stack_buffer) {
 			std::free (buffer);
 		}
@@ -221,14 +221,14 @@ void FastTiming::dump_to_logcat (size_t entries) noexcept
 		return;
 	}
 
-	auto line_writer = [](std::string_view const& msg) {
+	auto line_writer = [](void *, std::string_view const& msg) {
 		// Don't add empty messages to the logcat, waste of time
 		if (msg.empty ()) {
 			return;
 		}
 		log_writef (LOG_TIMING, LogLevel::Info, "%.*s", static_cast<int>(msg.length ()), msg.data ());
 	};
-	dump (entries, true /* indent */, line_writer);
+	dump (entries, true /* indent */, line_writer, nullptr);
 }
 
 void FastTiming::dump_to_file (size_t entries) noexcept
@@ -270,14 +270,15 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 
 	log_infof (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path);
 
-	auto line_writer = [=](std::string_view const& msg) {
+	auto line_writer = [](void *context, std::string_view const& msg) {
+		auto *output = static_cast<FILE*> (context);
 		if (!msg.empty ()) {
-			fwrite (msg.data (), msg.size (), 1, timing_log);
+			fwrite (msg.data (), msg.size (), 1, output);
 		}
-		fwrite (Constants::NEWLINE.data (), Constants::NEWLINE.size (), 1, timing_log);
+		fwrite (Constants::NEWLINE.data (), Constants::NEWLINE.size (), 1, output);
 	};
 
-	dump (entries, true /* indent */, line_writer);
+	dump (entries, true /* indent */, line_writer, timing_log);
 	fflush (timing_log);
 	fclose (timing_log);
 	if (timing_log_path != stack_buffer) {

@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <functional>
 #include <limits>
 #include <string_view>
 #include <thread>
@@ -391,10 +390,14 @@ namespace xamarin::android {
 		}
 
 	private:
+		// Writes a single output line.  `context` is the opaque value passed to `dump`, which
+		// lets a caller thread state through without needing a capturing lambda.
+		using LineWriter = void (*) (void *context, std::string_view const& line);
+
 		bool no_events_logged (size_t entries) noexcept;
 		void dump_to_logcat (size_t entries) noexcept;
 		void dump_to_file (size_t entries) noexcept;
-		void dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept;
+		void dump (size_t entries, bool indent, LineWriter line_writer, void *context) noexcept;
 
 		// Returns a NUL-terminated copy of `first` and `second` concatenated, or `nullptr` if it
 		// cannot be allocated. Timing is a diagnostic facility, so a failure here only costs us the
