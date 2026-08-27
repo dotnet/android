@@ -3,542 +3,491 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="A prototype for progressively loading CoreCLR behind a NativeAOT Android shell in one APK with isolated Android processes.">
-	<title>Progressive .NET for Android — NativeAOT + CoreCLR</title>
+	<meta name="description" content="A two-process Android prototype combining a fast NativeAOT shell with a progressively warmed CoreCLR MAUI application.">
+	<title>Progressive .NET for Android — Two runtimes, two processes</title>
 	<style>
 		:root {
-			--ink: #f7f8ff;
-			--muted: #aeb8d4;
-			--dim: #74809e;
-			--bg: #080b16;
-			--panel: #11162a;
-			--panel-2: #171d35;
-			--line: #293252;
-			--aot: #6ee7b7;
-			--core: #a78bfa;
-			--hybrid: #38bdf8;
-			--warm: #fbbf24;
-			--danger: #fb7185;
-			--radius: 22px;
-			--shadow: 0 28px 80px rgba(0, 0, 0, .38);
+			--ink: #f7f7fb;
+			--muted: #a5adbd;
+			--dim: #697286;
+			--line: rgba(255, 255, 255, .11);
+			--panel: rgba(255, 255, 255, .055);
+			--panel-strong: rgba(255, 255, 255, .09);
+			--page: #080a0f;
+			--aot: #5ee6a8;
+			--core: #b094ff;
+			--bridge: #ffbd66;
+			--blue: #6dc8ff;
+			--danger: #ff7885;
+			--shadow: 0 28px 90px rgba(0, 0, 0, .35);
+			--sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			--mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 		}
 
 		* { box-sizing: border-box; }
-		html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+		html { scroll-behavior: smooth; scroll-snap-type: y mandatory; background: var(--page); }
 		body {
 			margin: 0;
 			color: var(--ink);
 			background:
-				radial-gradient(circle at 80% 10%, rgba(56, 189, 248, .10), transparent 28rem),
-				radial-gradient(circle at 15% 45%, rgba(167, 139, 250, .10), transparent 32rem),
-				var(--bg);
-			font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+				radial-gradient(circle at 12% 15%, rgba(94, 230, 168, .10), transparent 28rem),
+				radial-gradient(circle at 88% 42%, rgba(176, 148, 255, .10), transparent 30rem),
+				var(--page);
+			font: 16px/1.5 var(--sans);
 		}
-
-		button, a { font: inherit; }
-		a { color: var(--hybrid); }
-		::selection { color: #00131d; background: var(--hybrid); }
-
-		.progress {
+		body::before {
+			content: "";
 			position: fixed;
-			inset: 0 0 auto;
-			height: 3px;
-			z-index: 20;
-			background: rgba(255,255,255,.06);
-		}
-		.progress > span {
-			display: block;
-			width: 0;
-			height: 100%;
-			background: linear-gradient(90deg, var(--aot), var(--hybrid), var(--core));
-			transition: width .15s linear;
+			inset: 0;
+			pointer-events: none;
+			opacity: .17;
+			background-image:
+				linear-gradient(var(--line) 1px, transparent 1px),
+				linear-gradient(90deg, var(--line) 1px, transparent 1px);
+			background-size: 72px 72px;
+			mask-image: linear-gradient(to bottom, black, transparent 82%);
 		}
 
-		.deck-nav {
-			position: fixed;
-			z-index: 15;
-			right: 18px;
-			top: 50%;
-			display: grid;
-			gap: 9px;
-			transform: translateY(-50%);
+		a { color: inherit; }
+		code, pre { font-family: var(--mono); }
+		code {
+			padding: .1em .34em;
+			color: #e7ddff;
+			background: rgba(176, 148, 255, .1);
+			border: 1px solid rgba(176, 148, 255, .15);
+			border-radius: 5px;
 		}
-		.deck-nav a {
-			width: 8px;
-			height: 8px;
-			border: 1px solid var(--dim);
-			border-radius: 50%;
-			background: var(--bg);
-			transition: .2s ease;
+		pre {
+			margin: 0;
+			padding: 24px;
+			overflow: auto;
+			color: #d8deea;
+			background: #0c1018;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			font-size: clamp(12px, 1.12vw, 15px);
+			line-height: 1.65;
+			box-shadow: var(--shadow);
 		}
-		.deck-nav a:hover, .deck-nav a.active {
-			border-color: var(--hybrid);
-			background: var(--hybrid);
-			transform: scale(1.35);
-		}
+		pre code { padding: 0; border: 0; color: inherit; background: none; }
+		.kw { color: #ff91c8; }
+		.ty { color: #77d8ff; }
+		.st { color: #a8e892; }
+		.cm { color: #69758a; }
 
 		.slide {
 			position: relative;
-			min-height: 100vh;
-			padding: clamp(72px, 8vh, 110px) clamp(28px, 7vw, 110px);
 			display: grid;
-			align-items: center;
+			min-height: 100vh;
+			padding: clamp(58px, 7vh, 90px) clamp(32px, 7vw, 118px);
 			scroll-snap-align: start;
-			scroll-snap-stop: always;
-			overflow: hidden;
+			isolation: isolate;
 		}
 		.slide::after {
-			content: attr(data-number);
+			content: attr(data-index);
 			position: absolute;
-			right: clamp(32px, 6vw, 96px);
+			right: clamp(24px, 3vw, 50px);
 			bottom: 24px;
 			color: var(--dim);
-			font: 600 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
-			letter-spacing: .16em;
+			font: 700 12px/1 var(--mono);
+			letter-spacing: .12em;
 		}
-		.wrap { width: min(1180px, 100%); margin: auto; }
-		.narrow { width: min(920px, 100%); margin: auto; }
-
-		.eyebrow {
-			margin: 0 0 14px;
-			color: var(--hybrid);
-			font-size: 12px;
-			font-weight: 800;
-			letter-spacing: .18em;
+		.content {
+			width: min(1180px, 100%);
+			margin: auto;
+		}
+		.kicker {
+			margin: 0 0 18px;
+			color: var(--bridge);
+			font: 750 12px/1.2 var(--mono);
+			letter-spacing: .16em;
 			text-transform: uppercase;
 		}
 		h1, h2, h3, p { margin-top: 0; }
 		h1 {
-			margin-bottom: 26px;
-			font-size: clamp(48px, 8.5vw, 112px);
-			line-height: .92;
-			letter-spacing: -.065em;
-			max-width: 1080px;
+			margin-bottom: 28px;
+			font-size: clamp(54px, 8.8vw, 132px);
+			line-height: .9;
+			letter-spacing: -.07em;
+			font-weight: 820;
 		}
 		h2 {
-			margin-bottom: 22px;
-			font-size: clamp(34px, 5vw, 70px);
-			line-height: 1;
+			max-width: 1000px;
+			margin-bottom: 36px;
+			font-size: clamp(38px, 5.3vw, 76px);
+			line-height: 1.02;
 			letter-spacing: -.045em;
+			font-weight: 790;
 		}
 		h3 {
 			margin-bottom: 10px;
-			font-size: 19px;
+			font-size: 18px;
 			line-height: 1.25;
 		}
 		.lede {
-			max-width: 790px;
-			color: var(--muted);
-			font-size: clamp(19px, 2.1vw, 28px);
-			line-height: 1.42;
+			max-width: 900px;
+			color: #d5d9e2;
+			font-size: clamp(19px, 2.05vw, 29px);
+			line-height: 1.4;
+			letter-spacing: -.018em;
 		}
-		.small { color: var(--muted); font-size: 14px; }
 		.muted { color: var(--muted); }
-		.dim { color: var(--dim); }
+		.small { color: var(--muted); font-size: 13px; }
 		.aot { color: var(--aot); }
 		.core { color: var(--core); }
-		.hybrid { color: var(--hybrid); }
-		.warm { color: var(--warm); }
-		.kicker {
-			display: inline-flex;
-			gap: 10px;
-			align-items: center;
-			margin-top: 24px;
-			padding: 10px 14px;
-			color: var(--muted);
-			border: 1px solid var(--line);
-			border-radius: 999px;
-			background: rgba(17, 22, 42, .72);
-			font-size: 13px;
-		}
-		.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--aot); box-shadow: 0 0 16px var(--aot); }
+		.bridge { color: var(--bridge); }
+		.blue { color: var(--blue); }
+		.danger { color: var(--danger); }
 
 		.grid { display: grid; gap: 18px; }
 		.grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 		.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 		.grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 		.card {
-			padding: clamp(20px, 2.5vw, 32px);
+			padding: 26px;
+			background: var(--panel);
 			border: 1px solid var(--line);
-			border-radius: var(--radius);
-			background: linear-gradient(145deg, rgba(23, 29, 53, .94), rgba(13, 17, 33, .94));
-			box-shadow: var(--shadow);
+			border-radius: 18px;
+			backdrop-filter: blur(12px);
 		}
-		.card p:last-child { margin-bottom: 0; }
-		.card strong.big {
+		.card.aot-card { border-top: 3px solid var(--aot); }
+		.card.core-card { border-top: 3px solid var(--core); }
+		.card.bridge-card { border-top: 3px solid var(--bridge); }
+		.card.blue-card { border-top: 3px solid var(--blue); }
+		.metric {
 			display: block;
-			margin-bottom: 8px;
-			font-size: clamp(32px, 4vw, 56px);
+			margin-bottom: 12px;
+			font-size: clamp(28px, 3.3vw, 48px);
 			line-height: 1;
-			letter-spacing: -.045em;
+			letter-spacing: -.04em;
+			font-weight: 820;
 		}
-		.card.aot-border { border-top: 3px solid var(--aot); }
-		.card.core-border { border-top: 3px solid var(--core); }
-		.card.hybrid-border { border-top: 3px solid var(--hybrid); }
+		.pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 9px 14px;
+			color: #dce1ea;
+			background: var(--panel-strong);
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			font: 700 12px/1 var(--mono);
+		}
+		.pill::before {
+			content: "";
+			width: 8px;
+			height: 8px;
+			background: var(--aot);
+			border-radius: 50%;
+			box-shadow: 0 0 20px var(--aot);
+		}
+		.callout {
+			margin-top: 24px;
+			padding: 18px 22px;
+			color: #dce1ea;
+			background: linear-gradient(90deg, rgba(255, 189, 102, .12), rgba(255, 189, 102, .035));
+			border: 1px solid rgba(255, 189, 102, .24);
+			border-radius: 14px;
+		}
+		.quote {
+			max-width: 1080px;
+			margin: 0;
+			font-size: clamp(30px, 4.4vw, 64px);
+			line-height: 1.12;
+			letter-spacing: -.04em;
+			font-weight: 670;
+		}
+		.quote em { color: var(--aot); font-style: normal; }
 
 		.flow {
 			display: grid;
 			grid-template-columns: 1fr auto 1fr auto 1fr;
-			gap: 14px;
 			align-items: stretch;
-			margin-top: 32px;
+			gap: 14px;
 		}
-		.flow .step {
-			padding: 22px;
-			border: 1px solid var(--line);
-			border-radius: 18px;
-			background: var(--panel);
-		}
-		.arrow { align-self: center; color: var(--dim); font-size: 28px; }
-		.step .num {
-			display: block;
-			margin-bottom: 22px;
-			color: var(--dim);
-			font: 700 12px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
-		}
-
-		.diagram {
-			width: 100%;
-			height: auto;
-			margin-top: 22px;
-			border: 1px solid var(--line);
-			border-radius: var(--radius);
-			background: rgba(9, 13, 27, .82);
-			box-shadow: var(--shadow);
-		}
-		.diagram text { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-
-		.timeline {
-			display: grid;
-			gap: 16px;
-			margin-top: 32px;
-		}
-		.lane {
-			display: grid;
-			grid-template-columns: 116px 1fr;
-			gap: 18px;
-			align-items: center;
-		}
-		.track {
-			position: relative;
-			height: 54px;
-			border: 1px solid var(--line);
-			border-radius: 13px;
-			background: #0c1020;
-			overflow: hidden;
-		}
-		.track .segment {
-			position: absolute;
-			top: 8px;
-			bottom: 8px;
+		.flow .arrow {
 			display: grid;
 			place-items: center;
-			border-radius: 8px;
-			color: #061017;
-			font-size: 12px;
-			font-weight: 800;
-			white-space: nowrap;
+			color: var(--dim);
+			font-size: 30px;
 		}
-
-		pre {
-			position: relative;
-			margin: 0;
+		.step {
 			padding: 24px;
-			overflow: auto;
-			color: #dfe7ff;
+			background: var(--panel);
 			border: 1px solid var(--line);
 			border-radius: 18px;
-			background: #080b15;
-			font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-			tab-size: 4;
-			box-shadow: inset 0 1px rgba(255,255,255,.03);
 		}
-		code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-		.kw { color: #c4b5fd; }
-		.ty { color: #7dd3fc; }
-		.st { color: #86efac; }
-		.cm { color: #71809f; }
-		.fn { color: #fde68a; }
-		.code-label {
-			margin: 0 0 8px 4px;
+		.step .number {
+			display: block;
+			margin-bottom: 24px;
 			color: var(--dim);
-			font: 700 11px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
-			text-transform: uppercase;
-			letter-spacing: .12em;
+			font: 700 12px/1 var(--mono);
 		}
+
+		.architecture {
+			width: 100%;
+			height: auto;
+			filter: drop-shadow(0 22px 70px rgba(0, 0, 0, .3));
+		}
+		.architecture text { font-family: var(--sans); }
+		.architecture .mono { font-family: var(--mono); }
 
 		table {
 			width: 100%;
-			border-collapse: collapse;
 			overflow: hidden;
+			border-collapse: separate;
+			border-spacing: 0;
+			background: var(--panel);
 			border: 1px solid var(--line);
 			border-radius: 16px;
-			background: var(--panel);
+			font-variant-numeric: tabular-nums;
 		}
-		th, td { padding: 16px 18px; text-align: left; border-bottom: 1px solid var(--line); }
-		th { color: var(--muted); background: var(--panel-2); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-		td:not(:first-child), th:not(:first-child) { text-align: right; }
+		th, td { padding: 17px 20px; text-align: left; border-bottom: 1px solid var(--line); }
+		th { color: var(--muted); font: 700 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
 		tr:last-child td { border-bottom: 0; }
-		tr.best td { color: var(--hybrid); font-weight: 800; }
+		tr.highlight td { background: rgba(94, 230, 168, .06); font-weight: 700; }
 
-		.bars { display: grid; gap: 16px; margin-top: 28px; }
-		.bar-row { display: grid; grid-template-columns: 110px 1fr 80px; gap: 14px; align-items: center; }
-		.bar-bg { height: 32px; padding: 4px; border-radius: 9px; background: #090d1b; border: 1px solid var(--line); }
-		.bar-fill { height: 100%; min-width: 5px; border-radius: 5px; transform-origin: left; animation: grow .8s ease both; }
-		@keyframes grow { from { transform: scaleX(0); } }
-
-		.checks { display: grid; gap: 12px; padding: 0; list-style: none; }
+		.checks { padding: 0; margin: 0; list-style: none; }
 		.checks li {
 			position: relative;
-			padding: 15px 18px 15px 48px;
-			border: 1px solid var(--line);
-			border-radius: 14px;
-			background: rgba(17,22,42,.76);
+			margin: 0;
+			padding: 12px 0 12px 30px;
+			color: var(--muted);
+			border-bottom: 1px solid var(--line);
 		}
+		.checks li:last-child { border-bottom: 0; }
 		.checks li::before {
 			content: "✓";
 			position: absolute;
-			left: 18px;
+			left: 0;
 			color: var(--aot);
-			font-weight: 900;
-		}
-		.checks.risks li::before { content: "!"; color: var(--warm); }
-
-		.badge {
-			display: inline-block;
-			padding: 5px 9px;
-			border: 1px solid currentColor;
-			border-radius: 999px;
-			font-size: 11px;
 			font-weight: 800;
-			letter-spacing: .06em;
-			text-transform: uppercase;
+		}
+		.checks.risks li::before { content: "→"; color: var(--bridge); }
+		.checks strong { color: var(--ink); }
+
+		.timeline { display: grid; gap: 12px; margin-top: 30px; }
+		.lane { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 18px; }
+		.lane > strong { color: var(--muted); font-size: 13px; }
+		.track {
+			position: relative;
+			height: 42px;
+			background: rgba(255, 255, 255, .04);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+		}
+		.segment {
+			position: absolute;
+			top: 6px;
+			height: 28px;
+			padding: 7px 10px;
+			overflow: hidden;
+			color: #07100c;
+			border-radius: 7px;
+			font: 800 10px/1.4 var(--mono);
+			white-space: nowrap;
 		}
 
-		.quote {
-			max-width: 970px;
-			margin: 0;
-			font-size: clamp(30px, 5vw, 66px);
-			line-height: 1.12;
-			letter-spacing: -.04em;
+		.progress {
+			position: fixed;
+			z-index: 20;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 3px;
+			background: rgba(255, 255, 255, .05);
 		}
-		.quote em { color: var(--hybrid); font-style: normal; }
-
-		.callout {
-			margin-top: 24px;
-			padding: 18px 22px;
-			border-left: 3px solid var(--warm);
-			border-radius: 0 14px 14px 0;
-			color: var(--muted);
-			background: rgba(251, 191, 36, .07);
+		.progress span {
+			display: block;
+			width: 0;
+			height: 100%;
+			background: linear-gradient(90deg, var(--aot), var(--bridge), var(--core));
+			transition: width .2s ease;
+		}
+		.deck-nav {
+			position: fixed;
+			z-index: 20;
+			right: 22px;
+			top: 50%;
+			display: grid;
+			gap: 8px;
+			transform: translateY(-50%);
+		}
+		.deck-nav a {
+			width: 7px;
+			height: 7px;
+			background: var(--dim);
+			border-radius: 50%;
+			opacity: .48;
+			transition: .2s ease;
+		}
+		.deck-nav a.active { background: var(--aot); opacity: 1; transform: scale(1.45); }
+		.branch-link {
+			display: inline-flex;
+			margin-top: 28px;
+			padding: 13px 18px;
+			text-decoration: none;
+			background: rgba(94, 230, 168, .1);
+			border: 1px solid rgba(94, 230, 168, .3);
+			border-radius: 10px;
+			font: 700 13px/1 var(--mono);
 		}
 
-		.footer-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
-		.footer-links span, .footer-links a { padding: 8px 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; font: 12px/1.2 ui-monospace, monospace; }
-		.footer-links a { color: var(--hybrid); text-decoration: none; }
-		.footer-links a:hover { background: rgba(56, 189, 248, .10); border-color: var(--hybrid); }
-
-		@media (max-width: 840px) {
+		@media (max-width: 820px) {
 			html { scroll-snap-type: none; }
-			.slide { min-height: auto; padding-block: 80px; scroll-snap-align: none; }
+			.slide { min-height: auto; padding: 72px 24px; }
 			.grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
 			.flow { grid-template-columns: 1fr; }
-			.arrow { transform: rotate(90deg); justify-self: center; }
-			.deck-nav { display: none; }
+			.flow .arrow { transform: rotate(90deg); }
 			.lane { grid-template-columns: 1fr; gap: 6px; }
-			.bar-row { grid-template-columns: 82px 1fr 58px; }
-			th, td { padding: 12px 10px; font-size: 13px; }
-		}
-
-		@media (prefers-reduced-motion: reduce) {
-			*, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+			.deck-nav { display: none; }
+			th, td { padding: 12px 9px; font-size: 12px; }
 		}
 
 		@media print {
-			:root { --ink: #111827; --muted: #374151; --dim: #6b7280; --bg: #fff; --panel: #fff; --panel-2: #f3f4f6; --line: #d1d5db; }
-			html { scroll-snap-type: none; }
-			body { background: #fff; }
-			.progress, .deck-nav { display: none; }
-			.slide { min-height: 100vh; page-break-after: always; overflow: visible; }
-			.card, .diagram { box-shadow: none; }
-			pre { color: #111827; background: #f8fafc; }
+			body { background: #fff; color: #111; }
+			body::before, .progress, .deck-nav { display: none; }
+			.slide { min-height: 100vh; page-break-after: always; }
+			.card, table, pre { box-shadow: none; }
 		}
 	</style>
 </head>
 <body>
 	<div class="progress" aria-hidden="true"><span id="progress"></span></div>
-	<nav class="deck-nav" id="deck-nav" aria-label="Slide navigation"></nav>
+	<nav class="deck-nav" id="deck-nav" aria-label="Slides"></nav>
 
-	<section class="slide" id="idea" data-number="01 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Prototype · .NET for Android · August 2026</p>
-			<h1>Progressive<br><span class="aot">NativeAOT</span> + <span class="core">CoreCLR</span></h1>
-			<p class="lede">Render the first useful Android experience immediately, then load the full .NET MAUI application in the background—inside one APK, with each runtime isolated in its own process.</p>
-			<div class="kicker"><span class="dot"></span> Proven: independent runtimes, signal handlers, failure domains, heaps, and process lifecycles</div>
+	<section class="slide" id="opening" data-index="01 / 16">
+		<div class="content">
+			<p class="kicker">Prototype findings · August 2026</p>
+			<h1>Fast first.<br><span class="aot">Full later.</span></h1>
+			<p class="lede">A NativeAOT Android shell renders immediately while a large CoreCLR MAUI application warms in a second process—inside the same APK and Android task.</p>
+			<span class="pill">Working on Android 35 arm64</span>
 		</div>
 	</section>
 
-	<section class="slide" id="problem" data-number="02 / 15">
-		<div class="wrap">
-			<p class="eyebrow">The product problem</p>
-			<h2>Users wait for architecture they cannot see.</h2>
+	<section class="slide" id="premise" data-index="02 / 16">
+		<div class="content">
+			<p class="kicker">The premise</p>
+			<h2>Do not make the first pixel pay for the entire application.</h2>
 			<div class="grid three">
-				<article class="card core-border">
-					<strong class="big core">Heavy</strong>
-					<h3>Large MAUI startup graph</h3>
-					<p class="muted">Runtime initialization, assembly discovery, XAML pages, dependency injection, handlers, fonts, and application services compete before the first experience.</p>
+				<article class="card core-card">
+					<span class="metric core">100+</span>
+					<h3>Deep application routes</h3>
+					<p class="muted">XAML, handlers, dependency injection, services, runtime startup, and JIT work are valuable—but not all of them are needed for login.</p>
 				</article>
-				<article class="card aot-border">
-					<strong class="big aot">Small</strong>
-					<h3>First experience</h3>
-					<p class="muted">Login, onboarding, consent, and a lightweight dashboard often need only a fraction of the application’s code and state.</p>
+				<article class="card aot-card">
+					<span class="metric aot">2</span>
+					<h3>Latency-sensitive surfaces</h3>
+					<p class="muted">Login/onboarding and the first dashboard can be deliberately tiny, ahead-of-time compiled, and independent of the full app graph.</p>
 				</article>
-				<article class="card hybrid-border">
-					<strong class="big hybrid">Overlap</strong>
-					<h3>Perceived performance</h3>
-					<p class="muted">Move expensive work behind useful pixels. Spend idle think-time warming the full application before the first deep navigation.</p>
+				<article class="card bridge-card">
+					<span class="metric bridge">≈387 ms</span>
+					<h3>Work hidden behind attention</h3>
+					<p class="muted">CoreCLR initialization overlaps with the time a user spends reading and interacting with the first useful screen.</p>
 				</article>
 			</div>
-			<div class="callout"><strong>Web analogy:</strong> server-render or ship a small route first; download and initialize the larger application bundle while the user reads and interacts.</div>
 		</div>
 	</section>
 
-	<section class="slide" id="experience" data-number="03 / 15">
-		<div class="wrap">
-			<p class="eyebrow">The experience contract</p>
-			<h2>Useful UI first. Full runtime before it is needed.</h2>
+	<section class="slide" id="experience" data-index="03 / 16">
+		<div class="content">
+			<p class="kicker">Product contract</p>
+			<h2>One app experience. Progressive runtime capability.</h2>
 			<div class="flow">
-				<div class="step"><span class="num">T + 0</span><h3 class="aot">NativeAOT shell</h3><p class="muted">Process starts and renders login or dashboard with a compact ahead-of-time compiled surface.</p></div>
+				<div class="step">
+					<span class="number">T + 0</span>
+					<h3 class="aot">NativeAOT starts</h3>
+					<p class="muted">Show login on first launch or skip directly to the dashboard when authentication is persisted.</p>
+				</div>
 				<div class="arrow">→</div>
-				<div class="step"><span class="num">AFTER FIRST FOCUS</span><h3 class="warm">Background warmup</h3><p class="muted">A bound Android service starts the <code>:coreclr</code> process, loads the runtime, maps the assembly store, and prepares routes.</p></div>
+				<div class="step">
+					<span class="number">AFTER FIRST FOCUS</span>
+					<h3 class="bridge">CoreCLR warms</h3>
+					<p class="muted">Bind an important background service. Android creates the isolated runtime process and the large app prepares routes.</p>
+				</div>
 				<div class="arrow">→</div>
-				<div class="step"><span class="num">ON NAVIGATION</span><h3 class="core">Full MAUI app</h3><p class="muted">Deep application screens use CoreCLR once readiness is signaled; the handoff should feel immediate.</p></div>
+				<div class="step">
+					<span class="number">ON DEEP NAVIGATION</span>
+					<h3 class="core">MAUI takes over</h3>
+					<p class="muted">Open the CoreCLR-owned Activity only after readiness, preserving Android navigation and a responsive handoff.</p>
+				</div>
 			</div>
 			<div class="timeline">
-				<div class="lane"><strong>Traditional</strong><div class="track"><span class="segment" style="left:0;width:72%;background:var(--core)">runtime + app initialization</span><span class="segment" style="left:73%;width:25%;background:var(--aot)">first UI</span></div></div>
-				<div class="lane"><strong>Progressive</strong><div class="track"><span class="segment" style="left:0;width:28%;background:var(--aot)">first UI</span><span class="segment" style="left:18%;width:54%;background:var(--core);opacity:.8">CoreCLR warmup</span><span class="segment" style="left:73%;width:25%;background:var(--hybrid)">instant handoff</span></div></div>
+				<div class="lane"><strong>Traditional CoreCLR</strong><div class="track"><span class="segment" style="left:0;width:76%;background:var(--core)">runtime + full app graph</span><span class="segment" style="left:77%;width:22%;background:var(--blue)">first useful UI</span></div></div>
+				<div class="lane"><strong>Progressive hybrid</strong><div class="track"><span class="segment" style="left:0;width:28%;background:var(--aot)">first UI</span><span class="segment" style="left:20%;width:48%;background:var(--core)">background warmup</span><span class="segment" style="left:69%;width:30%;background:var(--bridge)">ready handoff</span></div></div>
 			</div>
 		</div>
 	</section>
 
-	<section class="slide" id="architecture" data-number="04 / 15">
-		<div class="wrap">
-			<p class="eyebrow">High-level architecture</p>
-			<h2>One package. Two runtimes. Explicit ownership.</h2>
-			<svg class="diagram" viewBox="0 0 1100 560" role="img" aria-labelledby="architecture-title architecture-desc">
-				<title id="architecture-title">Hybrid runtime APK and process architecture</title>
-				<desc id="architecture-desc">One Android APK contains a NativeAOT shell and CoreCLR payload. The NativeAOT runtime starts in the default process, then binds a service which starts CoreCLR in an isolated secondary process.</desc>
+	<section class="slide" id="architecture" data-index="04 / 16">
+		<div class="content">
+			<p class="kicker">Architecture</p>
+			<h2>One package. Two Linux processes. No shared runtime fate.</h2>
+			<svg class="architecture" viewBox="0 0 1180 590" role="img" aria-labelledby="arch-title arch-desc">
+				<title id="arch-title">Two-process hybrid runtime architecture</title>
+				<desc id="arch-desc">A NativeAOT shell in the default process binds a service that initializes CoreCLR in a secondary process. Both runtime payloads are delivered in one APK.</desc>
 				<defs>
-					<linearGradient id="apk" x1="0" x2="1"><stop stop-color="#151c35"/><stop offset="1" stop-color="#0c1123"/></linearGradient>
-					<marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#74809e"/></marker>
+					<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#ffbd66"/></marker>
+					<linearGradient id="apk-fill" x1="0" x2="1"><stop stop-color="#111820"/><stop offset="1" stop-color="#12101c"/></linearGradient>
 				</defs>
-				<rect x="35" y="34" width="1030" height="488" rx="28" fill="url(#apk)" stroke="#293252" stroke-width="2"/>
-				<text x="65" y="78" fill="#aeb8d4" font-size="17" font-weight="700">SIGNED ANDROID APK</text>
-				<rect x="70" y="108" width="440" height="160" rx="18" fill="#10291f" stroke="#6ee7b7" stroke-width="2"/>
-				<text x="96" y="145" fill="#6ee7b7" font-size="21" font-weight="800">NativeAOT shell</text>
-				<text x="96" y="180" fill="#dce4f8" font-size="15">Default process · login/dashboard</text>
-				<text x="96" y="208" fill="#dce4f8" font-size="15">libHybridRuntimeShell.so only</text>
-				<text x="96" y="236" fill="#aeb8d4" font-size="14">Own heap, threads, signals, and crash boundary</text>
-				<rect x="590" y="108" width="440" height="160" rx="18" fill="#231a3d" stroke="#a78bfa" stroke-width="2"/>
-				<text x="616" y="145" fill="#a78bfa" font-size="21" font-weight="800">CoreCLR application</text>
-				<text x="616" y="180" fill="#dce4f8" font-size="15">:coreclr process · bound service + Activity</text>
-				<text x="616" y="208" fill="#dce4f8" font-size="15">libcoreclr + libclrjit + assembly store</text>
-				<text x="616" y="236" fill="#aeb8d4" font-size="14">Own heap, threads, signals, and crash boundary</text>
-				<path d="M510 188 H580" fill="none" stroke="#74809e" stroke-width="2" marker-end="url(#arrowhead)"/>
-				<text x="545" y="174" fill="#fbbf24" font-size="13" text-anchor="middle">bind</text>
-				<rect x="70" y="330" width="440" height="130" rx="20" fill="#0a0e1d" stroke="#6ee7b7" stroke-width="2"/>
-				<text x="96" y="368" fill="#6ee7b7" font-size="14" font-weight="700">PID A · net.dot.hybridruntime</text>
-				<text x="96" y="402" fill="#dce4f8" font-size="16">NativeAOT owns first frame + auth state</text>
-				<text x="96" y="432" fill="#aeb8d4" font-size="14">~20.3 MiB total PSS in this experiment</text>
-				<rect x="590" y="330" width="440" height="130" rx="20" fill="#0a0e1d" stroke="#a78bfa" stroke-width="2"/>
-				<text x="616" y="368" fill="#a78bfa" font-size="14" font-weight="700">PID B · net.dot.hybridruntime:coreclr</text>
-				<text x="616" y="402" fill="#dce4f8" font-size="16">CoreCLR owns deep MAUI application</text>
-				<text x="616" y="432" fill="#aeb8d4" font-size="14">~123.6 MiB total PSS after warmup</text>
+				<rect x="24" y="22" width="1132" height="542" rx="26" fill="url(#apk-fill)" stroke="rgba(255,255,255,.14)" stroke-width="2"/>
+				<text x="54" y="62" fill="#a5adbd" font-size="14" font-weight="750" letter-spacing="2">SIGNED APK · 47.91 MiB</text>
+
+				<rect x="58" y="94" width="472" height="386" rx="22" fill="#0d1b17" stroke="#5ee6a8" stroke-width="2"/>
+				<text x="88" y="136" fill="#5ee6a8" font-size="25" font-weight="800">NativeAOT shell</text>
+				<text class="mono" x="88" y="166" fill="#8da79c" font-size="13">net.dot.hybridruntime · PID A</text>
+				<rect x="88" y="198" width="412" height="72" rx="12" fill="#10151d" stroke="rgba(255,255,255,.1)"/>
+				<text x="110" y="227" fill="#f7f7fb" font-size="16" font-weight="700">Main Activity</text>
+				<text x="110" y="251" fill="#a5adbd" font-size="14">login · persistent auth · first dashboard</text>
+				<rect x="88" y="288" width="412" height="72" rx="12" fill="#10151d" stroke="rgba(255,255,255,.1)"/>
+				<text x="110" y="317" fill="#f7f7fb" font-size="16" font-weight="700">Warmup receiver</text>
+				<text x="110" y="341" fill="#a5adbd" font-size="14">holds cross-process ServiceConnection</text>
+				<text x="88" y="405" fill="#5ee6a8" font-size="14" font-weight="700">Maps</text>
+				<text class="mono" x="142" y="405" fill="#dce1ea" font-size="13">libHybridRuntimeShell.so</text>
+				<text x="88" y="443" fill="#a5adbd" font-size="13">Own heap · signal table · exception machinery</text>
+
+				<rect x="650" y="94" width="472" height="386" rx="22" fill="#171329" stroke="#b094ff" stroke-width="2"/>
+				<text x="680" y="136" fill="#b094ff" font-size="25" font-weight="800">CoreCLR application</text>
+				<text class="mono" x="680" y="166" fill="#9d93bb" font-size="13">net.dot.hybridruntime:coreclr · PID B</text>
+				<rect x="680" y="198" width="412" height="72" rx="12" fill="#10151d" stroke="rgba(255,255,255,.1)"/>
+				<text x="702" y="227" fill="#f7f7fb" font-size="16" font-weight="700">Bound service</text>
+				<text x="702" y="251" fill="#a5adbd" font-size="14">runtime lifetime · warmup · automatic rebind</text>
+				<rect x="680" y="288" width="412" height="72" rx="12" fill="#10151d" stroke="rgba(255,255,255,.1)"/>
+				<text x="702" y="317" fill="#f7f7fb" font-size="16" font-weight="700">CoreCLR Activity + MAUI payload</text>
+				<text x="702" y="341" fill="#a5adbd" font-size="14">100 XAML pages · deep navigation surface</text>
+				<text x="680" y="405" fill="#b094ff" font-size="14" font-weight="700">Maps</text>
+				<text class="mono" x="734" y="405" fill="#dce1ea" font-size="13">libcoreclr · clrjit · monodroid · store</text>
+				<text x="680" y="443" fill="#a5adbd" font-size="13">Own heap · signal table · exception machinery</text>
+
+				<path d="M500 323 C570 323 580 230 650 230" fill="none" stroke="#ffbd66" stroke-width="3" marker-end="url(#arrow)"/>
+				<rect x="535" y="247" width="112" height="48" rx="24" fill="#2c2114" stroke="#ffbd66"/>
+				<text class="mono" x="591" y="276" fill="#ffbd66" font-size="12" font-weight="800" text-anchor="middle">bindService</text>
+				<text x="590" y="530" fill="#a5adbd" font-size="14" text-anchor="middle">Shared APK assets and Android task · isolated runtime ownership</text>
 			</svg>
 		</div>
 	</section>
 
-	<section class="slide" id="sequence" data-number="05 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Bootstrap sequence</p>
-			<h2>The first frame does not wait for CoreCLR.</h2>
-			<svg class="diagram" viewBox="0 0 1120 600" role="img" aria-labelledby="sequence-title">
-				<title id="sequence-title">Sequence from Android process start through CoreCLR readiness</title>
-				<defs><marker id="seq-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#aeb8d4"/></marker></defs>
-				<g fill="#aeb8d4" font-size="16" font-weight="700" text-anchor="middle">
-					<text x="100" y="48">Android</text><text x="330" y="48">NativeAOT Activity</text><text x="570" y="48">Main-process receiver</text><text x="800" y="48">:coreclr service</text><text x="1020" y="48">MAUI payload</text>
-				</g>
-				<g stroke="#293252" stroke-width="2" stroke-dasharray="5 8"><line x1="100" y1="70" x2="100" y2="560"/><line x1="330" y1="70" x2="330" y2="560"/><line x1="570" y1="70" x2="570" y2="560"/><line x1="800" y1="70" x2="800" y2="560"/><line x1="1020" y1="70" x2="1020" y2="560"/></g>
-				<g fill="none" stroke="#aeb8d4" stroke-width="2" marker-end="url(#seq-arrow)">
-					<path d="M100 110 H320"/><path d="M330 172 H110"/><path d="M330 240 H560"/><path d="M570 306 H790"/><path d="M800 376 H1010"/><path d="M1020 444 H810"/><path d="M800 508 H340"/>
-				</g>
-				<g font-size="14">
-					<text x="150" y="100" fill="#dfe7ff">Create process / load NativeAOT DSO</text>
-					<text x="135" y="162" fill="#6ee7b7">Login or dashboard is visible</text>
-					<text x="376" y="230" fill="#fbbf24">first focus → explicit broadcast</text>
-					<text x="613" y="296" fill="#dfe7ff">bindService(BIND_AUTO_CREATE)</text>
-					<text x="840" y="366" fill="#dfe7ff">start process + initInternal()</text>
-					<text x="836" y="434" fill="#a78bfa">prepare 100 XAML routes</text>
-					<text x="505" y="498" fill="#38bdf8">READY — navigation can cross the boundary</text>
-				</g>
-				<rect x="305" y="142" width="50" height="35" rx="8" fill="#123528" stroke="#6ee7b7"/>
-				<rect x="545" y="264" width="50" height="190" rx="8" fill="#392d12" stroke="#fbbf24"/>
-				<rect x="775" y="330" width="50" height="188" rx="8" fill="#291e47" stroke="#a78bfa"/>
-			</svg>
-		</div>
-	</section>
-
-	<section class="slide" id="native-shell" data-number="06 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Implementation concept 1</p>
-			<h2>NativeAOT owns startup and schedules warmup after focus.</h2>
-			<div class="grid two">
-				<div>
-					<p class="code-label">Shell/MainActivity.cs</p>
-					<pre><span class="kw">protected override void</span> <span class="fn">OnCreate</span> (<span class="ty">Bundle?</span> state)
-{
-    <span class="kw">base</span>.OnCreate (state);
-
-    <span class="kw">if</span> (GetPreferences ().GetBoolean (
-        <span class="st">"authenticated"</span>, <span class="kw">false</span>)) {
-        ShowLanding ();
-    } <span class="kw">else</span> {
-        ShowLogin ();
-    }
-}
-
-<span class="kw">public override void</span> <span class="fn">OnWindowFocusChanged</span> (<span class="ty">bool</span> hasFocus)
-{
-    <span class="kw">base</span>.OnWindowFocusChanged (hasFocus);
-    <span class="kw">if</span> (!hasFocus || coreClrWarmupRequested)
-        <span class="kw">return</span>;
-
-    coreClrWarmupRequested = <span class="kw">true</span>;
-    Window?.DecorView.Post (() =&gt;
-        SendBroadcast (CreateExplicitIntent (
-            <span class="st">"net.dot.hybrid.CoreClrWarmupReceiver"</span>)));
-}</pre>
-				</div>
-				<div class="card aot-border">
-					<h3 class="aot">Why after window focus?</h3>
-					<p class="muted">The shell gets first claim on CPU, linker activity, UI inflation, and first frame delivery. CoreCLR work begins only once useful pixels have won the race.</p>
-					<h3 class="warm">Why a receiver and bound service?</h3>
-					<p class="muted">The receiver bridges NativeAOT to Java, then holds a cross-process service binding. Android keeps the warmed process important and automatically reconnects it after a crash.</p>
-					<h3 class="hybrid">Why persist auth in the shell?</h3>
-					<p class="muted">Returning users bypass login before the heavy runtime exists. Android <code>SharedPreferences</code> provides the smallest durable decision point.</p>
-				</div>
+	<section class="slide" id="lifecycle" data-index="05 / 16">
+		<div class="content">
+			<p class="kicker">Lifecycle</p>
+			<h2>Android owns the process transition.</h2>
+			<div class="grid four">
+				<div class="card aot-card"><span class="metric aot">01</span><h3>Render</h3><p class="muted"><code>MainActivity</code> paints useful UI before requesting any CoreCLR work.</p></div>
+				<div class="card bridge-card"><span class="metric bridge">02</span><h3>Signal intent</h3><p class="muted">First focus posts an explicit broadcast to a Java receiver in PID A.</p></div>
+				<div class="card bridge-card"><span class="metric bridge">03</span><h3>Bind</h3><p class="muted"><code>BIND_AUTO_CREATE | BIND_IMPORTANT</code> starts and retains PID B.</p></div>
+				<div class="card core-card"><span class="metric core">04</span><h3>Initialize</h3><p class="muted">The service loads the host, starts CoreCLR, and prepares the MAUI route corpus.</p></div>
 			</div>
+			<div class="callout"><strong>Why binding matters:</strong> a one-shot broadcast left CoreCLR as a cached process that Android reclaimed quickly. A live service connection ties its importance to the foreground shell and gives Android a rebind path after failure.</div>
 		</div>
 	</section>
 
-	<section class="slide" id="core-bootstrap" data-number="07 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Implementation concept 2</p>
-			<h2>A bound service owns the CoreCLR process lifetime.</h2>
+	<section class="slide" id="binding-code" data-index="06 / 16">
+		<div class="content">
+			<p class="kicker">Implementation · process lifetime</p>
+			<h2>A narrow Java bridge keeps runtime concerns out of NativeAOT.</h2>
 			<div class="grid two">
-				<div>
-					<p class="code-label">CoreClrWarmupReceiver.java</p>
-					<pre><span class="ty">Intent</span> serviceIntent = <span class="kw">new</span> <span class="ty">Intent</span> (
+				<pre><code><span class="cm">// Runs in the NativeAOT/default process</span>
+<span class="ty">Intent</span> serviceIntent = <span class="kw">new</span> <span class="ty">Intent</span> (
     applicationContext,
     <span class="ty">CoreClrWarmupService</span>.<span class="kw">class</span>);
 
@@ -548,282 +497,273 @@ bound = applicationContext.bindService (
     <span class="ty">Context</span>.BIND_AUTO_CREATE |
         <span class="ty">Context</span>.BIND_IMPORTANT);
 
-<span class="cm">// The service is declared with:</span>
-<span class="cm">// android:process=":coreclr"</span></pre>
-				</div>
-				<div>
-					<p class="code-label">Reflective runtime initialization</p>
-					<pre><span class="ty">System</span>.loadLibrary (<span class="st">"monodroid"</span>);
-<span class="ty">Class&lt;?&gt;</span> runtime = <span class="ty">Class</span>.forName (
-    <span class="st">"mono.android.Runtime"</span>,
-    <span class="kw">true</span>,
-    context.getClassLoader ());
+<span class="kw">if</span> (!bound)
+    <span class="kw">throw new</span> <span class="ty">IllegalStateException</span> (
+        <span class="st">"Could not bind CoreCLR service."</span>);</code></pre>
+				<pre><code><span class="cm">&lt;!-- Runs in a private package process --&gt;</span>
+&lt;service
+    android:name=<span class="st">"net.dot.hybrid.CoreClrWarmupService"</span>
+    android:exported=<span class="st">"false"</span>
+    android:process=<span class="st">":coreclr"</span> /&gt;
 
-<span class="ty">Method</span> init = runtime.getDeclaredMethod (
-    <span class="st">"initInternal"</span>,
-    <span class="ty">String</span>.<span class="kw">class</span>,
-    <span class="ty">String[]</span>.<span class="kw">class</span>,
-    <span class="cm">/* native library and app directories… */</span>);
-
-init.invoke (
-    <span class="kw">null</span>,
-    language,
-    apks,
-    applicationInfo.nativeLibraryDir,
-    appDirs,
-    localDateTimeOffset,
-    context.getClassLoader (),
-    <span class="kw">null</span>,
-    isEmulator (),
-    hasSplitApks);</pre>
-				</div>
+&lt;activity
+    android:name=<span class="st">"net.dot.hybrid.CoreClrBootstrapActivity"</span>
+    android:exported=<span class="st">"false"</span>
+    android:process=<span class="st">":coreclr"</span> /&gt;</code></pre>
 			</div>
-			<div class="callout"><strong>Packaging wrinkle:</strong> the SDK generated a NativeAOT runtime provider for every declared process. The prototype rewrites the <code>:coreclr</code> provider to a Java no-op so that process loads CoreCLR—and never NativeAOT.</div>
 		</div>
 	</section>
 
-	<section class="slide" id="managed-bridge" data-number="08 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Implementation concept 3</p>
-			<h2>A narrow JNI bridge proves managed application code is callable.</h2>
+	<section class="slide" id="provider" data-index="07 / 16">
+		<div class="content">
+			<p class="kicker">The packaging trap</p>
+			<h2>The build injected NativeAOT into the CoreCLR process.</h2>
 			<div class="grid two">
 				<div>
-					<p class="code-label">Java → JNI → CoreCLR delegate</p>
-					<pre><span class="cm">// Java declaration kept by R8</span>
-<span class="kw">private static native void</span>
-<span class="fn">invokeStaticVoidMethod</span> (
-    <span class="ty">String</span> assembly,
-    <span class="ty">String</span> type,
-    <span class="ty">String</span> method);
-
-<span class="cm">// Host implementation</span>
-<span class="ty">void*</span> method_pointer = <span class="kw">nullptr</span>;
-<span class="ty">int</span> result = coreclr_create_delegate (
-    coreclr_host_handle,
-    coreclr_domain_id,
-    assembly_name,
-    type_name,
-    method_name,
-    &amp;method_pointer);
-
-<span class="kw">auto</span> callback =
-    <span class="kw">reinterpret_cast</span>&lt;<span class="ty">void (*) ()</span>&gt; (
-        method_pointer);
-callback ();</pre>
+					<p class="lede">Declaring any secondary Android process caused the SDK to generate another NativeAOT runtime <code>ContentProvider</code> for it—even though the Activity and service were Java-only.</p>
+					<div class="callout">Without intervention, PID B would initialize both NativeAOT and CoreCLR, recreating the signal and exception-handler problem we were trying to remove.</div>
 				</div>
-				<div>
-					<p class="code-label">CoreClrPayload/CoreClrPayload.cs</p>
-					<pre><span class="kw">public static class</span> <span class="ty">CoreClrPayload</span>
-{
-    [<span class="ty">UnmanagedCallersOnly</span>]
-    <span class="kw">public static void</span> <span class="fn">Warmup</span> ()
-    {
-        <span class="ty">long</span> start =
-            <span class="ty">SystemClock</span>.ElapsedRealtime ();
-
-        <span class="ty">PageCatalog</span>.PrepareForNavigation ();
-
-        <span class="ty">Log</span>.Info (
-            <span class="st">"HybridRuntime"</span>,
-            <span class="st">$"CoreCLR managed MAUI payload ready: "</span> +
-            <span class="st">$"{PageCatalog.Count} XAML pages"</span>);
-    }
-}</pre>
-					<div class="card hybrid-border" style="margin-top:18px">
-						<h3>Evidence, not just mapping</h3>
-						<p class="muted">Loading <code>libcoreclr.so</code> proves little. Creating and invoking a delegate into the packaged application assembly proves the host, assembly store, managed runtime, and app code are connected end-to-end.</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<section class="slide" id="packaging" data-number="09 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Implementation concept 4</p>
-			<h2>The prototype composes two normal builds at the APK boundary.</h2>
-			<div class="grid two">
-				<div class="card">
-					<span class="badge aot">Build A</span>
-					<h3 style="margin-top:16px">NativeAOT shell APK</h3>
-					<p class="muted">Launcher Activity, NativeAOT application DSO, Java bootstrap classes, authentication state, and lightweight UI.</p>
-				</div>
-				<div class="card">
-					<span class="badge core">Build B</span>
-					<h3 style="margin-top:16px">CoreCLR payload APK</h3>
-					<p class="muted">CoreCLR/JIT host libraries, <code>libmonodroid</code>, <code>libxamarin-app</code>, assembly store, and the 100-page MAUI workload.</p>
-				</div>
-			</div>
-			<div class="flow">
-				<div class="step"><span class="num">1</span><h3>Copy shell APK</h3><p class="muted">The NativeAOT package remains the manifest and launcher authority.</p></div>
-				<div class="arrow">+</div>
-				<div class="step"><span class="num">2</span><h3>Merge payload entries</h3><p class="muted">Add <code>lib/*</code> and <code>assemblies/*</code>; remove stale signatures.</p></div>
-				<div class="arrow">→</div>
-				<div class="step"><span class="num">3</span><h3>Align and sign</h3><p class="muted">Run <code>zipalign</code>, then produce one installable signed APK.</p></div>
-			</div>
-			<div class="callout"><strong>Prototype tradeoff:</strong> this avoids redesigning the SDK’s single <code>_AndroidRuntime</code> selection up front. A product implementation should make dual-runtime packaging a first-class build mode with deduplication and validation.</div>
-		</div>
-	</section>
-
-	<section class="slide" id="workload" data-number="10 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Representative workload</p>
-			<h2>Not a “Hello World”: 100 real XAML pages.</h2>
-			<div class="grid four">
-				<div class="card"><strong class="big hybrid">100</strong><p class="muted">XamlC-compiled MAUI <code>ContentPage</code> types</p></div>
-				<div class="card"><strong class="big core">2</strong><p class="muted">full-MAUI comparison variants using the same page corpus</p></div>
-				<div class="card"><strong class="big aot">1</strong><p class="muted">NativeAOT shell with login and returning-user dashboard</p></div>
-				<div class="card"><strong class="big warm">1 PID</strong><p class="muted">for both runtime heaps and their worker/finalizer threads</p></div>
-			</div>
-			<div class="grid two" style="margin-top:18px">
-				<div>
-					<p class="code-label">LargeMauiApp/PageCatalog.cs — warmup shape</p>
-					<pre><span class="kw">public static void</span> <span class="fn">PrepareForNavigation</span> ()
-{
-    <span class="kw">foreach</span> (<span class="ty">Type</span> pageType <span class="kw">in</span> PageTypes) {
-        <span class="kw">foreach</span> (<span class="ty">MethodInfo</span> method <span class="kw">in</span>
-            pageType.GetMethods (
-                BindingFlags.DeclaredOnly |
-                BindingFlags.Instance |
-                BindingFlags.Static |
-                BindingFlags.Public |
-                BindingFlags.NonPublic)) {
-            RuntimeHelpers.PrepareMethod (
-                method.MethodHandle);
-        }
-    }
-}</pre>
-				</div>
-				<div class="card">
-					<h3>What this exercises</h3>
+				<div class="card core-card">
+					<h3 class="core">Prototype workaround</h3>
 					<ul class="checks">
-						<li>MAUI controls and XAML-generated code in the assembly store</li>
-						<li>Type resolution and method preparation across many routes</li>
-						<li>Cold and returning-user startup decisions</li>
-						<li>CoreCLR initialization while NativeAOT remains interactive</li>
+						<li>Find the generated provider assigned to <code>:coreclr</code>.</li>
+						<li>Rewrite its class to a Java no-op provider after type-map generation.</li>
+						<li>Keep the primary NativeAOT provider and no-op provider through R8.</li>
+						<li>Verify packaged manifest and loaded DSOs, not just source declarations.</li>
+					</ul>
+				</div>
+			</div>
+			<p class="small" style="margin-top:20px">A product feature should let Java-only secondary processes opt out of automatic managed runtime initialization; manifest rewriting is prototype scaffolding.</p>
+		</div>
+	</section>
+
+	<section class="slide" id="payload" data-index="08 / 16">
+		<div class="content">
+			<p class="kicker">Payload boundaries</p>
+			<h2>The shell does not contain the hundred-page MAUI graph.</h2>
+			<div class="grid three">
+				<div class="card aot-card">
+					<span class="metric aot">Shell</span>
+					<h3>Cherry-picked surface</h3>
+					<p class="muted">NativeAOT compiles only login, dashboard, persistent auth, warmup trigger, and navigation handoff code.</p>
+				</div>
+				<div class="card core-card">
+					<span class="metric core">Store</span>
+					<h3>Large app corpus</h3>
+					<p class="muted">The 100 real XAML <code>ContentPage</code> types live only in the CoreCLR assembly store merged into the APK.</p>
+				</div>
+				<div class="card blue-card">
+					<span class="metric blue">Control</span>
+					<h3>Honest comparison</h3>
+					<p class="muted">The standalone NativeAOT benchmark intentionally includes all pages; the hybrid shell intentionally does not.</p>
+				</div>
+			</div>
+			<blockquote class="quote" style="margin-top:42px">Package together. <em>Reference selectively.</em></blockquote>
+		</div>
+	</section>
+
+	<section class="slide" id="bootstrap" data-index="09 / 16">
+		<div class="content">
+			<p class="kicker">Implementation · runtime bootstrap</p>
+			<h2>CoreCLR starts on a long-lived attached thread.</h2>
+			<div class="grid two">
+				<pre><code>runtimeThread = <span class="kw">new</span> <span class="ty">HandlerThread</span> (
+    <span class="st">"CoreCLR runtime"</span>);
+runtimeThread.start ();
+
+<span class="ty">Handler</span> handler =
+    <span class="kw">new</span> <span class="ty">Handler</span> (
+        runtimeThread.getLooper ());
+
+handler.post (() -&gt; {
+    <span class="ty">System</span>.loadLibrary (<span class="st">"monodroid"</span>);
+    initializeRuntime (applicationContext);
+    warmManagedPayload ();
+});</code></pre>
+				<div class="card core-card">
+					<h3 class="core">What warmup exercises</h3>
+					<ul class="checks">
+						<li>CoreCLR host creation and Android runtime initialization</li>
+						<li>Assembly-store discovery and managed delegate creation</li>
+						<li>100 XAML-generated page types and route registration</li>
+						<li><code>RuntimeHelpers.PrepareMethod</code> across route methods</li>
 					</ul>
 				</div>
 			</div>
 		</div>
 	</section>
 
-	<section class="slide" id="results" data-number="11 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Prototype measurements</p>
-			<h2>Hybrid delivered the earliest first frame.</h2>
-			<table aria-label="Median Android startup measurements and APK size">
-				<thead><tr><th>Variant</th><th>Signed APK</th><th>Logged out / login</th><th>Logged in / dashboard</th></tr></thead>
+	<section class="slide" id="startup-results" data-index="10 / 16">
+		<div class="content">
+			<p class="kicker">Measured startup</p>
+			<h2>The shell still wins the first-frame race.</h2>
+			<table aria-label="Android startup benchmark medians">
+				<thead>
+					<tr><th>Variant</th><th>Signed APK</th><th>Logged out · login</th><th>Logged in · dashboard</th></tr>
+				</thead>
 				<tbody>
 					<tr><td><span class="core">●</span> CoreCLR MAUI</td><td>17.66 MiB</td><td>915 ms</td><td>903 ms</td></tr>
 					<tr><td><span class="aot">●</span> NativeAOT MAUI</td><td>14.30 MiB</td><td>483 ms</td><td>570 ms</td></tr>
-					<tr class="best"><td><span class="hybrid">●</span> Hybrid · two processes</td><td>47.91 MiB</td><td>259 ms</td><td>226 ms</td></tr>
+					<tr class="highlight"><td><span class="bridge">●</span> Hybrid · two processes</td><td>47.91 MiB</td><td>259 ms</td><td>226 ms</td></tr>
 				</tbody>
 			</table>
-			<div class="grid two" style="margin-top:24px">
-				<div class="card">
-					<h3>Logged out — median first frame</h3>
-					<div class="bars">
-						<div class="bar-row"><span>CoreCLR</span><div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--core)"></div></div><strong>915</strong></div>
-						<div class="bar-row"><span>NativeAOT</span><div class="bar-bg"><div class="bar-fill" style="width:52.8%;background:var(--aot)"></div></div><strong>483</strong></div>
-						<div class="bar-row"><span>Hybrid</span><div class="bar-bg"><div class="bar-fill" style="width:28.3%;background:var(--hybrid)"></div></div><strong>259 ms</strong></div>
-					</div>
-				</div>
-				<div class="card">
-					<h3>Logged in — median first frame</h3>
-					<div class="bars">
-						<div class="bar-row"><span>CoreCLR</span><div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--core)"></div></div><strong>903</strong></div>
-						<div class="bar-row"><span>NativeAOT</span><div class="bar-bg"><div class="bar-fill" style="width:63.1%;background:var(--aot)"></div></div><strong>570</strong></div>
-						<div class="bar-row"><span>Hybrid</span><div class="bar-bg"><div class="bar-fill" style="width:25.0%;background:var(--hybrid)"></div></div><strong>226 ms</strong></div>
-					</div>
-				</div>
+			<div class="grid three" style="margin-top:22px">
+				<div class="card"><span class="metric aot">72%</span><h3>Earlier than CoreCLR login</h3><p class="muted">Difference between median hybrid and CoreCLR-only logged-out startup.</p></div>
+				<div class="card"><span class="metric aot">75%</span><h3>Earlier returning dashboard</h3><p class="muted">Persistent shell-owned auth avoids both login and CoreCLR on the first-frame path.</p></div>
+				<div class="card"><span class="metric bridge">≈387 ms</span><h3>CoreCLR warmup duration</h3><p class="muted">Median runtime initialization plus preparation after the service starts.</p></div>
 			</div>
-			<p class="small" style="margin-top:18px">Android 35 arm64 emulator; eight paced cold-process launches per state; <code>am start -W</code> TotalTime median. The emulator showed meaningful run-to-run host-load noise, so treat these as directional prototype results—not product claims.</p>
+			<p class="small" style="margin-top:16px">Android 35 arm64 emulator; eight paced process launches per state; <code>am start -W</code> TotalTime median. Directional prototype data, not a product performance claim.</p>
 		</div>
 	</section>
 
-	<section class="slide" id="readiness" data-number="12 / 15">
-		<div class="wrap">
-			<p class="eyebrow">The overlap matters</p>
-			<h2>Process isolation is observable—and survives failure.</h2>
-			<div class="grid three">
-				<div class="card hybrid-border"><strong class="big hybrid">2 PIDs</strong><h3>Disjoint runtime DSOs</h3><p class="muted">The shell maps only <code>libHybridRuntimeShell.so</code>; <code>:coreclr</code> maps CoreCLR, JIT, host, and assembly-store libraries.</p></div>
-				<div class="card core-border"><strong class="big core">3 signals</strong><h3>Independent handlers</h3><p class="muted">The <code>SigCgt</code> masks differ for SIGINT, SIGQUIT, and SIGTERM. Handler installation is process-local.</p></div>
-				<div class="card aot-border"><strong class="big aot">298 ms</strong><h3>Crash and rebind</h3><p class="muted">After killing only CoreCLR, the NativeAOT UI stayed responsive and Android rebound a fresh CoreCLR process.</p></div>
-			</div>
-			<blockquote class="quote" style="margin-top:48px">The runtimes share an APK and Android task—not a signal table, address space, GC heap, or crash fate.</blockquote>
-			<div class="callout">Median CoreCLR initialization and 100-page preparation was <strong>~387 ms</strong> after service creation. The current prototype opens a CoreCLR-process Activity; rendering a production MAUI navigation surface is the next decisive experiment.</div>
-		</div>
-	</section>
-
-	<section class="slide" id="risks" data-number="13 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Engineering risks</p>
-			<h2>Isolation resolves runtime collisions—but creates a distributed app.</h2>
+	<section class="slide" id="isolation-proof" data-index="11 / 16">
+		<div class="content">
+			<p class="kicker">Proof · loaded code</p>
+			<h2>The runtime libraries never overlap.</h2>
 			<div class="grid two">
-				<ul class="checks risks">
-					<li><strong>IPC and state transfer.</strong> Authentication, navigation arguments, session state, and readiness cross a process boundary.</li>
-					<li><strong>Lifecycle coordination.</strong> Android may reclaim or restart the CoreCLR process independently; every request needs disconnect and retry behavior.</li>
-					<li><strong>Activity integration.</strong> Back stack, results, transitions, themes, accessibility, and deep links must still feel like one app.</li>
-					<li><strong>Diagnostics.</strong> Logs, traces, crash reports, and health signals must correlate two PIDs into one user journey.</li>
-				</ul>
-				<ul class="checks risks">
-					<li><strong>Memory doubles quickly.</strong> Two GC heaps, two runtime infrastructures, JIT code, and duplicated framework assets trade memory for latency.</li>
-					<li><strong>Package size.</strong> The prototype APK is 47.91 MiB because it mechanically combines runtime payloads without product-level deduplication.</li>
-					<li><strong>UI handoff.</strong> Navigation, back stack, themes, accessibility, state, and transitions must look like one app across ownership.</li>
-					<li><strong>Unsupported assumptions.</strong> Runtime hosts were designed around one selected runtime; this path needs explicit contracts and tests.</li>
-				</ul>
+				<div class="card aot-card">
+					<p class="small">PID 10316 · DEFAULT PROCESS</p>
+					<span class="metric aot">NativeAOT</span>
+					<pre><code>libHybridRuntimeShell.so
+
+<span class="cm"># absent</span>
+libcoreclr.so
+libclrjit.so
+libmonodroid.so
+libassembly-store.so</code></pre>
+				</div>
+				<div class="card core-card">
+					<p class="small">PID 10344 · :CORECLR PROCESS</p>
+					<span class="metric core">CoreCLR</span>
+					<pre><code>libcoreclr.so
+libclrjit.so
+libmonodroid.so
+libxamarin-app.so
+libassembly-store.so
+
+<span class="cm"># absent: libHybridRuntimeShell.so</span></code></pre>
+				</div>
 			</div>
-			<p class="small"><strong>Resolved by construction:</strong> NativeAOT and CoreCLR no longer compete for process-global signal handlers, exception machinery, native symbols, or address-space assumptions.</p>
+			<div class="callout">Evidence comes from <code>/proc/&lt;pid&gt;/maps</code> on a rooted emulator and is enforced by <code>verify-process-isolation.sh</code>.</div>
 		</div>
 	</section>
 
-	<section class="slide" id="status" data-number="14 / 15">
-		<div class="wrap">
-			<p class="eyebrow">What is proven vs. what remains</p>
-			<h2>The runtime hypothesis works. The product boundary is next.</h2>
+	<section class="slide" id="signals" data-index="12 / 16">
+		<div class="content">
+			<p class="kicker">Proof · signal ownership</p>
+			<h2>Separate PIDs mean separate signal tables.</h2>
 			<div class="grid two">
-				<div class="card aot-border">
-					<h3 class="aot">Proven in the prototype</h3>
+				<div class="card aot-card">
+					<p class="small">NATIVEAOT · /proc/10316/status</p>
+					<span class="metric aot">SigCgt</span>
+					<pre><code>0000016e400084f8</code></pre>
+				</div>
+				<div class="card core-card">
+					<p class="small">CORECLR · /proc/10344/status</p>
+					<span class="metric core">SigCgt</span>
+					<pre><code>0000016e4000c4fe</code></pre>
+				</div>
+			</div>
+			<div class="grid three" style="margin-top:22px">
+				<div class="card"><span class="metric bridge">SIGINT</span><p class="muted">CoreCLR independently installs signal 2 handling.</p></div>
+				<div class="card"><span class="metric bridge">SIGQUIT</span><p class="muted">CoreCLR independently installs signal 3 handling.</p></div>
+				<div class="card"><span class="metric bridge">SIGTERM</span><p class="muted">CoreCLR independently installs signal 15 handling.</p></div>
+			</div>
+			<blockquote class="quote" style="margin-top:34px">Isolation is not a convention. <em>It is enforced by Linux.</em></blockquote>
+		</div>
+	</section>
+
+	<section class="slide" id="failure" data-index="13 / 16">
+		<div class="content">
+			<p class="kicker">Failure experiment</p>
+			<h2>Kill CoreCLR. Keep using NativeAOT.</h2>
+			<div class="flow">
+				<div class="step">
+					<span class="number">PID B · 10344</span>
+					<h3 class="danger">CoreCLR terminated</h3>
+					<p class="muted">Only the secondary process is killed after completing warmup.</p>
+				</div>
+				<div class="arrow">→</div>
+				<div class="step">
+					<span class="number">PID A · 10316</span>
+					<h3 class="aot">Shell stays responsive</h3>
+					<p class="muted">The process and Activity remain alive; NativeAOT button callbacks continue normally.</p>
+				</div>
+				<div class="arrow">→</div>
+				<div class="step">
+					<span class="number">PID B · 10398</span>
+					<h3 class="core">Android rebinds</h3>
+					<p class="muted">A fresh CoreCLR process starts and reinitializes in 298 ms.</p>
+				</div>
+			</div>
+			<div class="callout"><strong>Result:</strong> runtime failure becomes a recoverable service disconnection instead of a shared-process crash. Product code still needs explicit retry, degraded-state, and user-feedback contracts.</div>
+		</div>
+	</section>
+
+	<section class="slide" id="cost" data-index="14 / 16">
+		<div class="content">
+			<p class="kicker">What isolation costs</p>
+			<h2>The application is now a small distributed system.</h2>
+			<div class="grid two">
+				<div>
+					<div class="grid two">
+						<div class="card aot-card"><span class="metric aot">20.3 MiB</span><h3>NativeAOT total PSS</h3><p class="muted">Shell after the CoreCLR service is warm.</p></div>
+						<div class="card core-card"><span class="metric core">123.6 MiB</span><h3>CoreCLR total PSS</h3><p class="muted">Runtime plus prepared 100-page payload.</p></div>
+					</div>
+					<p class="small" style="margin-top:14px">Single emulator snapshot. Memory needs repeated physical-device measurement and a representative production graph.</p>
+				</div>
+				<ul class="checks risks card">
+					<li><strong>IPC:</strong> auth, navigation arguments, readiness, and results cross a boundary.</li>
+					<li><strong>Lifecycle:</strong> Android can reclaim or restart the heavy process independently.</li>
+					<li><strong>UX:</strong> task stack, transitions, themes, accessibility, and deep links must remain coherent.</li>
+					<li><strong>Operations:</strong> logs, traces, health, and crashes must correlate two PIDs.</li>
+					<li><strong>Distribution:</strong> the prototype mechanically duplicates runtime payloads and is 47.91 MiB.</li>
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<section class="slide" id="decision" data-index="15 / 16">
+		<div class="content">
+			<p class="kicker">Current verdict</p>
+			<h2>The runtime hypothesis works. The product boundary needs design.</h2>
+			<div class="grid two">
+				<div class="card aot-card">
+					<h3 class="aot">Proven</h3>
 					<ul class="checks">
-						<li>One signed APK contains NativeAOT and CoreCLR payloads</li>
-						<li>Each runtime occupies an independent PID with disjoint runtime libraries and signal handlers</li>
-						<li>A bound service initializes CoreCLR asynchronously after first focus</li>
-						<li>CoreCLR invokes managed application code and prepares 100 XAML pages</li>
-						<li>NativeAOT remains responsive while CoreCLR is killed, rebound, and reinitialized</li>
-						<li>Authentication persists and returning users skip login</li>
+						<li>One signed APK carries both complete runtime payloads.</li>
+						<li>NativeAOT renders login or persisted-auth dashboard first.</li>
+						<li>CoreCLR warms asynchronously in an isolated process.</li>
+						<li>The large MAUI assembly graph is callable and prepared.</li>
+						<li>Runtime DSOs, signals, heaps, and crash fate are separated.</li>
+						<li>Android can rebind and rebuild the heavy runtime process.</li>
 					</ul>
 				</div>
-				<div class="card core-border">
-					<h3 class="core">Required for a product direction</h3>
-					<ol class="checks" style="counter-reset:item">
-						<li>Launch and display a CoreCLR-owned MAUI page from the NativeAOT shell</li>
-						<li>Implement seamless navigation, back stack, state transfer, and failure UX</li>
-						<li>Define IPC contracts, readiness, state transfer, disconnect, retry, and degraded-mode behavior</li>
-						<li>Create first-class dual-runtime build and packaging support</li>
-						<li>Deduplicate framework/runtime assets and establish size/memory budgets</li>
-						<li>Benchmark physical devices across cold install, warm cache, and representative app workloads</li>
-					</ol>
+				<div class="card core-card">
+					<h3 class="core">Next decisive experiments</h3>
+					<ul class="checks risks">
+						<li><strong>Render real MAUI UI</strong> in the CoreCLR Activity and navigate back.</li>
+						<li><strong>Define the IPC contract</strong> for auth, routes, state, cancellation, and errors.</li>
+						<li><strong>Exercise lifecycle pressure</strong> across suspend, low memory, configuration, and upgrades.</li>
+						<li><strong>Measure physical devices</strong> across cold install, warm caches, and representative app graphs.</li>
+						<li><strong>Productize packaging</strong> with explicit process/runtime ownership and asset deduplication.</li>
+					</ul>
 				</div>
 			</div>
 		</div>
 	</section>
 
-	<section class="slide" id="conclusion" data-number="15 / 15">
-		<div class="wrap">
-			<p class="eyebrow">Conclusion</p>
-			<blockquote class="quote">Treat the runtime as a <em>progressively loaded capability</em>, not a prerequisite for the first pixel.</blockquote>
-			<p class="lede" style="margin-top:32px">The prototype demonstrates a credible path: NativeAOT handles the latency-sensitive edge, CoreCLR warms behind it, and a large MAUI payload becomes callable before the user needs it.</p>
-			<div class="grid three" style="margin-top:34px">
-				<div class="card"><h3 class="aot">Optimize perception</h3><p class="muted">Prioritize useful UI and interaction over completion of the entire application graph.</p></div>
-				<div class="card"><h3 class="hybrid">Make readiness explicit</h3><p class="muted">Model heavy runtime initialization as an observable state with success, failure, retry, and fallback behavior.</p></div>
-				<div class="card"><h3 class="core">Prove the handoff</h3><p class="muted">The next milestone is a production-shaped transition into a CoreCLR-owned MAUI screen.</p></div>
+	<section class="slide" id="closing" data-index="16 / 16">
+		<div class="content">
+			<p class="kicker">Progressive .NET for Android</p>
+			<blockquote class="quote">Make the runtime a <em>progressively loaded capability</em>, not a prerequisite for useful pixels.</blockquote>
+			<p class="lede" style="margin-top:36px">The two-process prototype preserves the startup advantage while replacing signal-handler coexistence with a stronger, testable isolation boundary.</p>
+			<div class="grid three" style="margin-top:32px">
+				<div class="card"><h3 class="aot">Fast edge</h3><p class="muted">A deliberately tiny NativeAOT surface owns latency-sensitive experiences.</p></div>
+				<div class="card"><h3 class="core">Full capability</h3><p class="muted">CoreCLR and MAUI arrive before the user asks for the deep application.</p></div>
+				<div class="card"><h3 class="bridge">Explicit boundary</h3><p class="muted">Android services, processes, and lifecycle become part of the architecture.</p></div>
 			</div>
-			<div class="footer-links">
-				<a href="https://github.com/dotnet/android/tree/simonrozsival-hybrid-runtime-apk">View source branch ↗</a>
-				<span>samples/HybridRuntime/</span>
-				<span>src/native/clr/host/</span>
-				<span>src/java-runtime/java/mono/android/Runtime.java</span>
-			</div>
+			<a class="branch-link" href="https://github.com/dotnet/android/tree/simonrozsival-hybrid-runtime-apk">github.com/dotnet/android/tree/simonrozsival-hybrid-runtime-apk ↗</a>
 		</div>
 	</section>
 
@@ -836,38 +776,37 @@ callback ();</pre>
 			for (const [index, slide] of slides.entries()) {
 				const link = document.createElement("a");
 				link.href = `#${slide.id}`;
-				link.setAttribute("aria-label", `Slide ${index + 1}: ${slide.querySelector("h1,h2")?.textContent || slide.id}`);
+				link.title = `${index + 1}. ${slide.querySelector("h1, h2, .quote")?.textContent.trim() ?? slide.id}`;
+				link.setAttribute("aria-label", link.title);
 				nav.appendChild(link);
 			}
 
 			const links = [...nav.children];
-			const update = () => {
-				const center = window.scrollY + window.innerHeight / 2;
-				let active = 0;
-				for (const [index, slide] of slides.entries()) {
-					if (center >= slide.offsetTop) active = index;
-				}
-				links.forEach((link, index) => link.classList.toggle("active", index === active));
-				progress.style.width = `${((active + 1) / slides.length) * 100}%`;
+			const select = (index) => {
+				links.forEach((link, item) => link.classList.toggle("active", item === index));
+				progress.style.width = `${((index + 1) / slides.length) * 100}%`;
 			};
 
-			window.addEventListener("scroll", update, { passive: true });
-			window.addEventListener("resize", update);
-			window.addEventListener("keydown", event => {
-				if (!["ArrowDown", "ArrowRight", "PageDown", " ", "ArrowUp", "ArrowLeft", "PageUp", "Home", "End"].includes(event.key)) return;
-				const active = Math.max(0, links.findIndex(link => link.classList.contains("active")));
-				let next = active;
-				if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(event.key)) next++;
-				if (["ArrowUp", "ArrowLeft", "PageUp"].includes(event.key)) next--;
-				if (event.key === "Home") next = 0;
-				if (event.key === "End") next = slides.length - 1;
-				next = Math.max(0, Math.min(slides.length - 1, next));
-				if (next !== active || event.key === "Home" || event.key === "End") {
-					event.preventDefault();
-					slides[next].scrollIntoView({ behavior: "smooth" });
-				}
+			const observer = new IntersectionObserver((entries) => {
+				const visible = entries
+					.filter(entry => entry.isIntersecting)
+					.sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+				if (visible)
+					select(slides.indexOf(visible.target));
+			}, { threshold: [.35, .6, .8] });
+
+			slides.forEach(slide => observer.observe(slide));
+			select(0);
+
+			document.addEventListener("keydown", event => {
+				if (!["ArrowDown", "ArrowRight", "PageDown", " ", "ArrowUp", "ArrowLeft", "PageUp"].includes(event.key))
+					return;
+				event.preventDefault();
+				const current = links.findIndex(link => link.classList.contains("active"));
+				const backwards = ["ArrowUp", "ArrowLeft", "PageUp"].includes(event.key);
+				const next = Math.max(0, Math.min(slides.length - 1, current + (backwards ? -1 : 1)));
+				slides[next].scrollIntoView({ behavior: "smooth" });
 			});
-			update();
 		})();
 	</script>
 </body>
