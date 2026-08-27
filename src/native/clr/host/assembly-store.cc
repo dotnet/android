@@ -297,10 +297,11 @@ namespace {
 			}
 			{
 				char prop_value[Constants::PROPERTY_VALUE_BUFFER_LEN];
-				if (AndroidSystem::monodroid_get_system_property ("debug.net.asmcache"sv, prop_value, sizeof (prop_value)) > 0) {
-					if (prop_value [0] == '0') {
+				std::string_view cache_prop = AndroidSystem::monodroid_get_system_property ("debug.net.asmcache"sv, prop_value, sizeof (prop_value));
+				if (!cache_prop.empty ()) {
+					if (cache_prop [0] == '0') {
 						cache_requested = false;
-					} else if (prop_value [0] == '1') {
+					} else if (cache_prop [0] == '1') {
 						cache_requested = true;
 					}
 				}

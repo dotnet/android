@@ -7,35 +7,30 @@ using namespace xamarin::android;
 
 using std::operator""sv;
 
-auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> int
+auto AndroidSystem::monodroid_get_system_property (std::string_view const& name, char *value, size_t value_size) noexcept -> std::string_view
 {
-	if (value == nullptr || value_size == 0) {
-		return -1;
+	if (value == nullptr || value_size < Constants::PROPERTY_VALUE_BUFFER_LEN) {
+		return {};
 	}
 
 	value [0] = '\0';
-	if (value_size < Constants::PROPERTY_VALUE_BUFFER_LEN) {
-		return -1;
-	}
 
 	int len = monodroid__system_property_get (name, value, value_size);
 	if (len > 0) {
-		return len;
+		return { value, static_cast<size_t>(len) };
 	}
 
 	size_t property_length;
 	const char *property_value = lookup_system_property (name, property_length);
 	if (property_value == nullptr) {
-		return len;
+		return {};
 	}
 
-	if (property_length >= value_size) {
-		return -1;
-	}
-
-	memcpy (value, property_value, property_length);
-	value [property_length] = '\0';
-	return Helpers::add_with_overflow_check<int> (property_length, 0);
+	// Bundled properties are NUL-terminated strings in static application data which live for as
+	// long as the process does, so we can return them directly instead of copying them into
+	// `value`. This also means that, unlike Android system properties, their length is not limited
+	// by `Constants::PROPERTY_VALUE_BUFFER_LEN`.
+	return { property_value, property_length };
 }
 
 auto
@@ -74,9 +69,10 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	}
 
 	char override[Constants::PROPERTY_VALUE_BUFFER_LEN];
-	if (monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override, sizeof (override)) > 0) {
+	std::string_view grefc = monodroid_get_system_property (Constants::DEBUG_MONO_MAX_GREFC, override, sizeof (override));
+	if (!grefc.empty ()) {
 		char *e;
-		max = strtol (override, &e, 10);
+		max = strtol (grefc.data (), &e, 10);
 		switch (*e) {
 			case 'k':
 				e++;
@@ -98,7 +94,7 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 				"Unsupported '%.*s' value '%s'.",
 				static_cast<int>(Constants::DEBUG_MONO_MAX_GREFC.length ()),
 				Constants::DEBUG_MONO_MAX_GREFC.data (),
-				override
+				grefc.data ()
 			);
 		}
 

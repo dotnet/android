@@ -487,7 +487,7 @@ namespace xamarin::android {
 		}
 
 	private:
-		void parse_options (char *value) noexcept;
+		void parse_options (std::string_view options) noexcept;
 		static void really_initialize (bool log_immediately) noexcept;
 
 		[[gnu::always_inline]]

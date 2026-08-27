@@ -141,12 +141,11 @@ Logger::init_logging_categories () noexcept
 	_log_timing_categories = LogTimingCategories::Default;
 
 	char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
-	int value_length = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_LOG_PROPERTY, value, sizeof (value));
-	if (value_length <= 0) {
+	std::string_view remaining = AndroidSystem::monodroid_get_system_property (Constants::DEBUG_MONO_LOG_PROPERTY, value, sizeof (value));
+	if (remaining.empty ()) {
 		return;
 	}
 
-	std::string_view remaining { value, static_cast<size_t>(value_length) };
 	while (!remaining.empty ()) {
 		size_t separator = remaining.find (',');
 		std::string_view param = remaining.substr (0, separator);
