@@ -39,6 +39,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
+			var outdatedCommandLineToolsRevision = new Version (19, 0);
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
 				string jdkPath = Path.Combine (Root, "temp", TestName, "android-jdk");
@@ -84,6 +85,12 @@ namespace Xamarin.Android.Build.Tests
 							Directory.CreateDirectory (path);
 						}
 
+						if (manifestType == "Xamarin") {
+							var commandLineToolsPath = Path.Combine (sdkPath, "cmdline-tools", "latest");
+							Directory.CreateDirectory (commandLineToolsPath);
+							File.WriteAllText (Path.Combine (commandLineToolsPath, "source.properties"), $"Pkg.Revision={outdatedCommandLineToolsRevision}");
+						}
+
 						if (b.Build (proj, parameters: buildArgs.ToArray ())) {
 							installSucceeded = true;
 							break;
@@ -94,6 +101,16 @@ namespace Xamarin.Android.Build.Tests
 							Thread.Sleep (TimeSpan.FromSeconds (10));
 					}
 					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
+
+					if (manifestType == "Xamarin") {
+						var sourceProperties = Path.Combine (sdkPath, "cmdline-tools", "latest", "source.properties");
+						var revisionProperty = File.ReadLines (sourceProperties)
+							.First (line => line.StartsWith ("Pkg.Revision", StringComparison.Ordinal));
+						int separator = revisionProperty.IndexOf ('=');
+						Assert.GreaterOrEqual (separator, 0, "The command-line tools revision property should contain a value.");
+						var installedRevision = Version.Parse (revisionProperty.Substring (separator + 1).Trim ());
+						Assert.Greater (installedRevision.CompareTo (outdatedCommandLineToolsRevision), 0, "The outdated command-line tools installation should have been updated.");
+					}
 
 					// When dependencies can not be resolved/installed a warning will be present in build output:
 					//    Dependency `platform-tools` should have been installed but could not be resolved.

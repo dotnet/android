@@ -184,11 +184,11 @@ namespace Xamarin.Installer.Build.Tasks
 					.FirstOrDefault ();
 				if (matchingComponent != null)
 				{
-					if (!matchingComponent.Present && !matchingComponent.Obsolete) {
+					if ((!matchingComponent.Present || matchingComponent.NeedsUpdate) && !matchingComponent.Obsolete) {
 						Debug ($"Adding dependency '{dependencyPath}/{version}'.");
 						components.Add (matchingComponent);
 					} else {
-						Debug ($"Skipping dependency '{dependencyPath}/{version}' as it is already installed or obsolete.");
+						Debug ($"Skipping dependency '{dependencyPath}/{version}' as it is already up-to-date or obsolete.");
 					}
 				}
 				else
