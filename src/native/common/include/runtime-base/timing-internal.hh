@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <cerrno>
-#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -28,9 +27,26 @@ using namespace xamarin::android::internal;
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
-	namespace chrono = std::chrono;
+	inline constexpr uint64_t NANOSECONDS_PER_MILLISECOND = 1000000ull;
+	inline constexpr uint64_t NANOSECONDS_PER_SECOND = 1000000000ull;
 
-	using time_point = chrono::time_point<chrono::steady_clock, chrono::nanoseconds>;
+	// A monotonic point in time, or an interval between two such points, in nanoseconds.
+	using time_point = uint64_t;
+
+	// Splits an interval into the components used by the timing output format: whole seconds,
+	// whole milliseconds and the nanoseconds left over within the last millisecond.
+	struct time_interval
+	{
+		unsigned long long seconds;
+		unsigned long long milliseconds;
+		unsigned long long nanoseconds;
+
+		explicit constexpr time_interval (time_point interval) noexcept
+			: seconds { interval / NANOSECONDS_PER_SECOND },
+			  milliseconds { interval / NANOSECONDS_PER_MILLISECOND },
+			  nanoseconds { interval % NANOSECONDS_PER_MILLISECOND }
+		{}
+	};
 
 	// Events should never change their assigned values and no values should be reused.
 	// Values are used by the test runner to determine what measurement was taken.
@@ -198,15 +214,13 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		static auto event_duration_ns (TimingEvent const& event) noexcept -> uint64_t
 		{
-			return static_cast<uint64_t>((event.end - event.start).count ());
+			return event.end - event.start;
 		}
 
 		// Returns the message length excluding NUL, or the negative required capacity including NUL.
 		static auto format_message (TimingEvent const& event, char *buffer, size_t buffer_size, bool indent) noexcept -> ssize_t
 		{
-			using namespace std::literals;
-
-			auto interval = event.end - event.start; // nanoseconds
+			time_interval interval { event.end - event.start };
 			int length = snprintf (
 				buffer,
 				buffer_size,
@@ -216,9 +230,9 @@ namespace xamarin::android {
 				static_cast<unsigned int>(event.kind),
 				event_kind_description (event.kind),
 				event.more_info == nullptr ? "" : event.more_info,
-				static_cast<unsigned long long>(chrono::duration_cast<chrono::seconds>(interval).count ()),
-				static_cast<unsigned long long>(chrono::duration_cast<chrono::milliseconds>(interval).count ()),
-				static_cast<unsigned long long>((interval % 1ms).count ())
+				interval.seconds,
+				interval.milliseconds,
+				interval.nanoseconds
 			);
 			if (length < 0) {
 				if (buffer != nullptr && buffer_size > 0uz) {
@@ -382,11 +396,11 @@ namespace xamarin::android {
 		static auto get_time () noexcept -> time_point
 		{
 			struct timespec t;
-			if (clock_gettime (CLOCK_MONOTONIC_RAW, &t) != 0) [[unlikely]] {
-				log_warnf (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC_RAW: %s", optional_string (strerror (errno)));
+			if (clock_gettime (CLOCK_MONOTONIC, &t) != 0) [[unlikely]] {
+				log_warnf (LOG_TIMING, "clock_gettime failed for CLOCK_MONOTONIC: %s", optional_string (strerror (errno)));
 				return {}; // Results will be nonsensical, but no point in aborting the app
 			}
-			return time_point (chrono::seconds (t.tv_sec) + chrono::nanoseconds (t.tv_nsec));
+			return (static_cast<time_point>(t.tv_sec) * NANOSECONDS_PER_SECOND) + static_cast<time_point>(t.tv_nsec);
 		}
 
 	private:
