@@ -38,7 +38,7 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 	log_write (
 		LOG_TIMING,
 		LogLevel::Info,
-		"[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application"sv
+		"[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application"
 	);
 }
 
@@ -87,7 +87,7 @@ bool FastTiming::no_events_logged (size_t entries) noexcept
 		return false;
 	}
 
-	log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged"sv);
+	log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged");
 	return true;
 }
 
@@ -184,7 +184,7 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 
 void FastTiming::dump_to_logcat (size_t entries) noexcept
 {
-	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results"sv);
+	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results");
 	if (no_events_logged (entries)) {
 		return;
 	}
@@ -194,7 +194,7 @@ void FastTiming::dump_to_logcat (size_t entries) noexcept
 		if (msg.empty ()) {
 			return;
 		}
-		log_write (LOG_TIMING, LogLevel::Info, msg);
+		log_writef (LOG_TIMING, LogLevel::Info, "%.*s", static_cast<int>(msg.length ()), msg.data ());
 	};
 	dump (entries, true /* indent */, line_writer);
 }
