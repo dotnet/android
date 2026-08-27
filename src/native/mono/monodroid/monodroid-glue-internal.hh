@@ -18,8 +18,8 @@
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
 
-// NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>.
-// Both of those headers would make the runtime depend on libc++, see https://github.com/dotnet/android/issues/12533
+// NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
+// conflicts with our std::mutex definition in cppcompat.hh
 #if !defined (NDEBUG)
 #define NDEBUG
 #define NDEBUG_UNDEFINE
