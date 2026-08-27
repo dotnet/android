@@ -3,7 +3,6 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#include <chrono>
 #include <cstdlib>
 #include <string_view>
 
@@ -51,8 +50,8 @@ namespace xamarin::android
 				ret = allocate_chunk ();
 			}
 
-			ret->start = time_point::min ();
-			ret->end = time_point::min ();
+			ret->start = 0;
+			ret->end = 0;
 			ret->in_use = true;
 
 			pthread_mutex_unlock (&sequence_lock);
@@ -119,16 +118,15 @@ namespace xamarin::android
 				return;
 			}
 
-			using namespace std::literals;
-			auto interval = seq->end - seq->start; // nanoseconds
+			time_interval interval { seq->end - seq->start };
 			log_writef (
 				LOG_TIMING,
 				level,
 				"%s; elapsed: %llu:%llu::%llu",
 				optional_string (message, ""),
-				static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::seconds>(interval).count ()),
-				static_cast<unsigned long long>(std::chrono::duration_cast<std::chrono::milliseconds>(interval).count ()),
-				static_cast<unsigned long long>((interval % 1ms).count ())
+				interval.seconds,
+				interval.milliseconds,
+				interval.nanoseconds
 			);
 		}
 

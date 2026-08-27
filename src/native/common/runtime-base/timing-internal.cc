@@ -1,4 +1,3 @@
-#include <chrono>
 #include <cstdlib>
 
 #include <runtime-base/android-system.hh>
@@ -11,8 +10,6 @@ namespace xamarin::android {
 
 using namespace xamarin::android;
 using namespace std::literals;
-
-namespace chrono = std::chrono;
 
 namespace {
 	void write_line_to_logcat ([[maybe_unused]] FILE *output, std::string_view const& line) noexcept
@@ -187,19 +184,19 @@ void FastTiming::dump (size_t entries, bool indent, LineWriter line_writer, FILE
 
 	auto log_time = [&line_writer, output] (std::string_view const& msg, uint64_t ns)
 	{
-		chrono::nanoseconds time_ns (ns);
+		time_interval interval { ns };
 		// Do not change the string format after the first colon, its format is required by performance measuring
 		// utilities.
 		auto format_time = [&] (char *buffer, size_t buffer_size) noexcept -> int {
 			return snprintf (
 				buffer,
 				buffer_size,
-				"  %.*s: %lld:%lld::%lld",
+				"  %.*s: %llu:%llu::%llu",
 				static_cast<int>(msg.length ()),
 				msg.data (),
-				static_cast<long long>(chrono::duration_cast<chrono::seconds> (time_ns).count ()),
-				static_cast<long long>(chrono::duration_cast<chrono::milliseconds> (time_ns).count ()),
-				static_cast<long long>((time_ns % 1ms).count ())
+				interval.seconds,
+				interval.milliseconds,
+				interval.nanoseconds
 			);
 		};
 
