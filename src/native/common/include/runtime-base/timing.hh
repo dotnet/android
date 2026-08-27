@@ -9,6 +9,8 @@
 
 #include <android/log.h>
 
+#include <shared/helpers.hh>
+
 #include "timing-internal.hh"
 
 namespace xamarin::android
@@ -44,11 +46,9 @@ namespace xamarin::android
 				ret = allocate_chunk ();
 			}
 
-			if (ret != nullptr) [[likely]] {
-				ret->start = time_point::min ();
-				ret->end = time_point::min ();
-				ret->in_use = true;
-			}
+			ret->start = time_point::min ();
+			ret->end = time_point::min ();
+			ret->in_use = true;
 
 			pthread_mutex_unlock (&sequence_lock);
 			return ret;
@@ -98,7 +98,7 @@ namespace xamarin::android
 		{
 			auto *chunk = static_cast<sequence_chunk*> (std::calloc (1uz, sizeof (sequence_chunk)));
 			if (chunk == nullptr) [[unlikely]] {
-				return nullptr;
+				Helpers::abort_application (LOG_TIMING, "Unable to allocate memory for timing sequences");
 			}
 
 			chunk->next = sequence_chunks;
