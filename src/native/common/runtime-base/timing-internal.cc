@@ -21,8 +21,8 @@ void FastTiming::really_initialize (bool log_immediately) noexcept
 
 	// TLS variables are initialized on first use, do it here so that we can have
 	// the overhead out of mind later, at least for the main thread.
-	open_sequences.push (0);
-	open_sequences.pop ();
+	push_sequence_event (nullptr);
+	pop_sequence_event ();
 
 	// Timing property options are relevant only when immediate logging is disabled
 	if (immediate_logging) {
