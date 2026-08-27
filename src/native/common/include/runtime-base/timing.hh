@@ -4,7 +4,7 @@
 #include <sys/time.h>
 
 #include <chrono>
-#include <vector>
+#include <cstdlib>
 #include <string_view>
 
 #include <android/log.h>
@@ -18,20 +18,16 @@ namespace xamarin::android
 		time_point  start;
 		time_point  end;
 		bool             in_use;
+
+		// Valid only while the sequence sits on `Timing::free_sequences`.
+		managed_timing_sequence *next_free;
 	};
 
 	// This class is intended to be used by the managed code. It can be used by the native code as
 	// well, but the overhead it has (out of necessity) might not be desirable in native code.
 	class Timing
 	{
-		static constexpr size_t DEFAULT_POOL_SIZE = 16uz;
-
 	public:
-		explicit Timing (size_t initial_pool_size = DEFAULT_POOL_SIZE) noexcept
-		{
-			sequence_pool.resize (initial_pool_size);
-		}
-
 		static void info (managed_timing_sequence const *seq, const char *message)
 		{
 			do_log (LogLevel::Info, seq, message);
@@ -46,20 +42,25 @@ namespace xamarin::android
 		{
 			pthread_mutex_lock (&sequence_lock);
 
-			managed_timing_sequence *ret;
-			for (size_t i = 0uz; i < sequence_pool.size (); i++) {
-				if (sequence_pool[i].in_use) {
-					continue;
+			managed_timing_sequence *ret = free_sequences;
+			if (ret != nullptr) {
+				free_sequences = ret->next_free;
+			} else {
+				// Sequences are handed out to managed code, which holds on to them until it
+				// stops the measurement, so they must never move. Each one is therefore its
+				// own allocation, recycled through `free_sequences` rather than freed, for
+				// the lifetime of the process.
+				ret = static_cast<managed_timing_sequence*> (std::malloc (sizeof (managed_timing_sequence)));
+				if (ret == nullptr) [[unlikely]] {
+					pthread_mutex_unlock (&sequence_lock);
+					return nullptr;
 				}
-
-				ret = &sequence_pool[i];
-				ret->in_use = true;
-
-				pthread_mutex_unlock (&sequence_lock);
-				return ret;
 			}
-			ret = &sequence_pool.emplace_back ();
+
+			ret->start = time_point::min ();
+			ret->end = time_point::min ();
 			ret->in_use = true;
+			ret->next_free = nullptr;
 
 			pthread_mutex_unlock (&sequence_lock);
 			return ret;
@@ -72,9 +73,17 @@ namespace xamarin::android
 			}
 
 			pthread_mutex_lock (&sequence_lock);
-			sequence->start = time_point::min ();
-			sequence->end = time_point::min ();
-			sequence->in_use = false;
+
+			// Ignore a sequence that isn't checked out, otherwise a double release would put
+			// it on the free list twice and it would then be handed to two callers at once.
+			if (sequence->in_use) {
+				sequence->start = time_point::min ();
+				sequence->end = time_point::min ();
+				sequence->in_use = false;
+				sequence->next_free = free_sequences;
+				free_sequences = sequence;
+			}
+
 			pthread_mutex_unlock (&sequence_lock);
 		}
 
@@ -100,7 +109,7 @@ namespace xamarin::android
 		}
 
 	private:
-		std::vector<managed_timing_sequence> sequence_pool;
+		managed_timing_sequence  *free_sequences = nullptr;
 		pthread_mutex_t           sequence_lock = PTHREAD_MUTEX_INITIALIZER;
 	};
 }
