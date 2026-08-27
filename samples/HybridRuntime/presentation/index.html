@@ -334,7 +334,9 @@
 		}
 
 		.footer-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
-		.footer-links span { padding: 8px 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; font: 12px/1.2 ui-monospace, monospace; }
+		.footer-links span, .footer-links a { padding: 8px 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; font: 12px/1.2 ui-monospace, monospace; }
+		.footer-links a { color: var(--hybrid); text-decoration: none; }
+		.footer-links a:hover { background: rgba(56, 189, 248, .10); border-color: var(--hybrid); }
 
 		@media (max-width: 840px) {
 			html { scroll-snap-type: none; }
@@ -829,6 +831,7 @@ callback ();</pre>
 				<div class="card"><h3 class="core">Prove the handoff</h3><p class="muted">The next milestone is a production-shaped transition into a CoreCLR-owned MAUI screen.</p></div>
 			</div>
 			<div class="footer-links">
+				<a href="https://github.com/dotnet/android/tree/simonrozsival-hybrid-runtime-apk">View source branch ↗</a>
 				<span>samples/HybridRuntime/</span>
 				<span>src/native/clr/host/</span>
 				<span>src/java-runtime/java/mono/android/Runtime.java</span>
