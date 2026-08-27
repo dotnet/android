@@ -664,6 +664,7 @@ extends:
         - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
             installTestSlicer: true
+            remove_dotnet: true
             use1ESTemplate: true
 
         # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -773,6 +774,7 @@ extends:
             useAgentJdkPath: true
             installTestSlicer: true
             installApkDiff: false
+            remove_dotnet: true
             use1ESTemplate: true
 
         - task: DownloadPipelineArtifact@2
