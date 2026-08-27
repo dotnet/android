@@ -589,16 +589,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 				if (FastTiming::enabled ()) [[unlikely]] {
 					internal_timing.end_event (true /* uses_more_info */);
-
-					char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
-					int message_length = snprintf (
-						message,
-						sizeof (message),
-						"%.*s (decompressed in another thread)",
-						static_cast<int>(name.length ()),
-						name.data ()
-					);
-					internal_timing.add_more_info (message, message_length);
+					internal_timing.add_more_info (name, " (decompressed in another thread)"sv);
 				}
 				return {assembly_data, assembly_data_size};
 			}
@@ -665,17 +656,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 			__atomic_store_n (&cad.loaded, true, __ATOMIC_RELEASE);
 			if (FastTiming::enabled ()) [[unlikely]] {
 				internal_timing.end_event (true /* uses_more_info */);
-
-				char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
-				int message_length = snprintf (
-					message,
-					sizeof (message),
-					"%.*s%s",
-					static_cast<int>(name.length ()),
-					name.data (),
-					loaded_from_cache ? " (decompressed cache hit)" : ""
-				);
-				internal_timing.add_more_info (message, message_length);
+				internal_timing.add_more_info (name, loaded_from_cache ? " (decompressed cache hit)"sv : ""sv);
 			}
 		}
 
@@ -699,16 +680,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData co
 
 		if (FastTiming::enabled ()) [[unlikely]] {
 			internal_timing.end_event (true /* uses more info */);
-
-			char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
-			int message_length = snprintf (
-				message,
-				sizeof (message),
-				"%.*s (memcpy to r/w area, part of assembly load time)",
-				static_cast<int>(name.length ()),
-				name.data ()
-			);
-			internal_timing.add_more_info (message, message_length);
+			internal_timing.add_more_info (name, " (memcpy to r/w area, part of assembly load time)"sv);
 		}
 
 		set_assembly_data_and_size (rw_pointer, e.descriptor->data_size, assembly_data, assembly_data_size);

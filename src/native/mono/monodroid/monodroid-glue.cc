@@ -1227,7 +1227,11 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 
 		char more_info [SharedConstants::INTEGER_BASE10_BUFFER_SIZE];
 		int more_info_length = snprintf (more_info, sizeof (more_info), "%zu", i + 1uz);
-		internal_timing.add_more_info (more_info, more_info_length);
+		abort_unless (
+			more_info_length >= 0 && static_cast<size_t>(more_info_length) < sizeof (more_info),
+			"Failed to format the assembly count"
+		);
+		internal_timing.add_more_info (more_info, static_cast<size_t>(more_info_length));
 	}
 }
 

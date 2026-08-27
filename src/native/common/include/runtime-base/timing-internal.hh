@@ -308,22 +308,17 @@ namespace xamarin::android {
 		[[gnu::always_inline]]
 		void add_more_info (const char *str, size_t length) noexcept
 		{
-			TimingEvent *event = pop_sequence_event ();
-			if (event == nullptr) [[unlikely]] {
-				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
-				return;
-			}
-
-			event->more_info = new std::string (str, length);
-			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
-			log (*event, false /* skip_log_if_more_info_missing */);
+			store_more_info (new std::string (str, length));
 		}
 
-		template<size_t Size> [[gnu::always_inline]]
-		void add_more_info (const char (&str)[Size], int formatted_length) noexcept
+		// Builds the message from two parts, so that its exact length is known up front and the
+		// caller doesn't need a temporary buffer that the message might not fit into.
+		[[gnu::always_inline]]
+		void add_more_info (std::string_view const& first, std::string_view const& second) noexcept
 		{
-			size_t length = formatted_length < 0 ? 0uz : static_cast<size_t>(formatted_length);
-			add_more_info (str, length >= Size ? Size - 1uz : length);
+			auto *more_info = new std::string (first.data (), first.length ());
+			more_info->append (second);
+			store_more_info (more_info);
 		}
 
 		[[gnu::always_inline]]
@@ -392,6 +387,22 @@ namespace xamarin::android {
 		void dump_to_logcat (size_t entries) noexcept;
 		void dump_to_file (size_t entries) noexcept;
 		void dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept;
+
+		// Takes ownership of `more_info`.
+		[[gnu::always_inline]]
+		void store_more_info (std::string *more_info) noexcept
+		{
+			TimingEvent *event = pop_sequence_event ();
+			if (event == nullptr) [[unlikely]] {
+				delete more_info;
+				log_warn (LOG_TIMING, "FastTiming::add_more_info called without prior FastTiming::start_event called"sv);
+				return;
+			}
+
+			event->more_info = more_info;
+			__atomic_store_n (&event->complete, true, __ATOMIC_RELEASE);
+			log (*event, false /* skip_log_if_more_info_missing */);
+		}
 
 		[[gnu::always_inline]]
 		auto get_sequence_event () noexcept -> TimingEvent*
