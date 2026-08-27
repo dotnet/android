@@ -7,7 +7,7 @@ parameters:
     displayName: Mono.Android.NET_Tests-Debug
     configuration: Debug
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-    artifactName: Mono.Android.NET_Tests-Signed.apk
+    artifactSource: bin/TestDebug/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Xamarin.Android.RuntimeTests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
@@ -15,7 +15,7 @@ parameters:
     displayName: Mono.Android.NET_Tests-Release
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-    artifactName: Mono.Android.NET_Tests-Signed.apk
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Xamarin.Android.RuntimeTests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: ''
@@ -23,7 +23,7 @@ parameters:
     displayName: Mono.Android.NET_Tests-NoAab
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-    artifactName: Mono.Android.NET_Tests-Signed.apk
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Xamarin.Android.RuntimeTests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NoAab'
@@ -31,7 +31,7 @@ parameters:
     displayName: Mono.Android.NET_Tests-CoreCLR
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-    artifactName: Mono.Android.NET_Tests-Signed.apk
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Xamarin.Android.RuntimeTests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLR -p:UseMonoRuntime=false'
@@ -39,7 +39,7 @@ parameters:
     displayName: Mono.Android.NET_Tests-Mono
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-    artifactName: Mono.Android.NET_Tests-Signed.apk
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Xamarin.Android.RuntimeTests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:UseMonoRuntime=true -p:_DisableCheckForUnsupportedMonoMobileRuntime=true'
@@ -47,7 +47,7 @@ parameters:
     displayName: Mono.Android.NET_Tests-CoreCLRTrimmable
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-    artifactName: Mono.Android.NET_Tests-Signed.apk
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Xamarin.Android.RuntimeTests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=CoreCLRTrimmable -p:AndroidTypeMapImplementation=trimmable -p:UseMonoRuntime=false'
@@ -55,7 +55,7 @@ parameters:
     displayName: Mono.Android.NET_Tests-NativeAOT
     configuration: $(XA.Build.Configuration)
     project: tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-    artifactName: Mono.Android.NET_Tests-Signed.apk
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
     packageName: Xamarin.Android.RuntimeTests
     instrumentation: xamarin.android.runtimetests.TestInstrumentation
     extraBuildArguments: '-p:TestsFlavor=NativeAOT -p:PublishAot=true'
@@ -63,7 +63,7 @@ parameters:
     displayName: Xamarin.Android.JcwGen_Tests
     configuration: $(XA.Build.Configuration)
     project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
-    artifactName: Xamarin.Android.JcwGen_Tests-Signed.apk
+    artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
     packageName: Xamarin.Android.JcwGen_Tests
     instrumentation: xamarin.android.jcwgentests.TestInstrumentation
     extraBuildArguments: ''
@@ -148,13 +148,11 @@ steps:
       $ErrorActionPreference = 'Stop'
       $payloadDirectory = '$(Build.StagingDirectory)/apk-tests-helix/work-items/${{ testCase.name }}'
       New-Item -ItemType Directory -Force -Path $payloadDirectory | Out-Null
-      $apk = Get-ChildItem '$(System.DefaultWorkingDirectory)/bin/Test${{ testCase.configuration }}' -Recurse -Filter '${{ testCase.artifactName }}' |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-      if (-not $apk) {
-        throw "Could not find ${{ testCase.artifactName }} for ${{ testCase.displayName }}."
+      $apk = '$(System.DefaultWorkingDirectory)/${{ testCase.artifactSource }}'
+      if (-not (Test-Path -LiteralPath $apk -PathType Leaf)) {
+        throw "Could not find APK '$apk' for ${{ testCase.displayName }}."
       }
-      Copy-Item -LiteralPath $apk.FullName -Destination (Join-Path $payloadDirectory 'app.apk')
+      Copy-Item -LiteralPath $apk -Destination (Join-Path $payloadDirectory 'app.apk')
       [pscustomobject]@{
         name = '${{ testCase.name }}'
         displayName = '${{ testCase.displayName }}'
