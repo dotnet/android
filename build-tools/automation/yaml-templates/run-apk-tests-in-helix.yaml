@@ -163,6 +163,12 @@ steps:
       } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $payloadDirectory 'case.json') -Encoding utf8NoBOM
     displayName: Stage APK payload - ${{ testCase.displayName }}
 
+  - pwsh: |
+      $dotnet = '$(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\dotnet.exe'
+      & $dotnet build-server shutdown
+      exit $LASTEXITCODE
+    displayName: Shut down build servers - ${{ testCase.displayName }}
+
 - pwsh: |
     $ErrorActionPreference = 'Stop'
     $platformTools = @(
