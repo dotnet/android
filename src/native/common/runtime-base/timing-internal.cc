@@ -60,7 +60,7 @@ void FastTiming::parse_options (char *value) noexcept
 			errno = 0;
 			unsigned long long parsed_duration = strtoull (duration, &end, 10);
 			if (end == duration || *end != '\0' || errno == ERANGE || parsed_duration > std::numeric_limits<size_t>::max ()) {
-				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '{}'"sv, param);
+				log_warnf (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'", param);
 				duration_ms = default_duration_milliseconds;
 			} else {
 				duration_ms = static_cast<size_t>(parsed_duration);
@@ -154,14 +154,23 @@ void FastTiming::dump (size_t entries, bool indent, std::function<void(std::stri
 		chrono::nanoseconds time_ns (ns);
 		// Do not change the string format after the first colon, its format is required by performance measuring
 		// utilities.
-		std::string s = std::format (
-			"  {}: {}:{}::{}",
-			msg,
-			chrono::duration_cast<chrono::seconds> (time_ns).count (),
-			chrono::duration_cast<chrono::milliseconds> (time_ns).count (),
-			(time_ns % 1ms).count ()
+		char buffer [256];
+		int n = snprintf (
+			buffer,
+			sizeof (buffer),
+			"  %.*s: %lld:%lld::%lld",
+			static_cast<int>(msg.length ()),
+			msg.data (),
+			static_cast<long long>(chrono::duration_cast<chrono::seconds> (time_ns).count ()),
+			static_cast<long long>(chrono::duration_cast<chrono::milliseconds> (time_ns).count ()),
+			static_cast<long long>((time_ns % 1ms).count ())
 		);
-		line_writer (s);
+
+		size_t length = n < 0 ? 0uz : static_cast<size_t>(n);
+		if (length >= sizeof (buffer)) {
+			length = sizeof (buffer) - 1;
+		}
+		line_writer (std::string_view { buffer, length });
 	};
 
 	// Do not change the sequence numbers. If a measurement is removed, its sequence number must not be reused.
@@ -200,7 +209,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	// and `run-as` must be used.
 	const char *temporary_directory = getenv ("TMPDIR");
 	if (temporary_directory == nullptr || *temporary_directory == '\0') {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file: TMPDIR is not set"sv);
+		log_errorf (LOG_TIMING, "[2/2] Unable to create the performance measurements file: TMPDIR is not set");
 		return;
 	}
 
@@ -210,7 +219,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 
 	FILE *timing_log = Util::monodroid_fopen (timing_log_path, "w");
 	if (timing_log == nullptr) {
-		log_error (LOG_TIMING, "[2/2] Unable to create the performance measurements file '{}'"sv, timing_log_path);
+		log_errorf (LOG_TIMING, "[2/2] Unable to create the performance measurements file '%s'", timing_log_path);
 		if (timing_log_path != stack_buffer) {
 			std::free (timing_log_path);
 		}
@@ -218,7 +227,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 	}
 
 	if (!Util::set_world_accessible (fileno (timing_log))) {
-		log_warn (LOG_TIMING, "[2/2] Failed to make performance measurements file '{}' world-readable"sv, timing_log_path);
+		log_warnf (LOG_TIMING, "[2/2] Failed to make performance measurements file '%s' world-readable", timing_log_path);
 		fclose (timing_log);
 		if (timing_log_path != stack_buffer) {
 			std::free (timing_log_path);
@@ -226,7 +235,7 @@ void FastTiming::dump_to_file (size_t entries) noexcept
 		return;
 	}
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: {}"sv, timing_log_path);
+	log_infof (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path);
 
 	auto line_writer = [=](std::string_view const& msg) {
 		if (!msg.empty ()) {
