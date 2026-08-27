@@ -1,0 +1,9 @@
+<ContentPage x:Class="LargeMauiApp.Pages.Page099"
+             Title="Page099">
+    <VerticalStackLayout>
+        <Label
+            Text="Welcome to .NET MAUI!"
+            VerticalOptions="Center"
+            HorizontalOptions="Center" />
+    </VerticalStackLayout>
+</ContentPage>

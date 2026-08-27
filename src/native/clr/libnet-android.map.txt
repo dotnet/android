@@ -3,6 +3,7 @@ LIBNET_ANDROID {
     JNI_OnLoad;
     Java_mono_android_Runtime_dumpTimingData;
     Java_mono_android_Runtime_initInternal;
+    Java_mono_android_Runtime_invokeStaticVoidMethod;
     Java_mono_android_Runtime_propagateUncaughtException;
     Java_mono_android_Runtime_register;
 

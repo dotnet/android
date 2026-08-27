@@ -1,0 +1,23 @@
+<ContentPage
+    x:Class="MauiBenchmarkApp.LoginPage"
+    Title="Login">
+    <VerticalStackLayout Padding="32" Spacing="20" VerticalOptions="Center">
+        <Label
+            FontSize="32"
+            HorizontalOptions="Center"
+            Text="Large MAUI app" />
+        <Entry
+            AutomationId="Username"
+            Placeholder="Username"
+            Text="benchmark@example.com" />
+        <Entry
+            AutomationId="Password"
+            IsPassword="True"
+            Placeholder="Password"
+            Text="password" />
+        <Button
+            AutomationId="Login"
+            Clicked="OnLoginClicked"
+            Text="Log in" />
+    </VerticalStackLayout>
+</ContentPage>

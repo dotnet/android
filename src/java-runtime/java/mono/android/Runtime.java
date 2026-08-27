@@ -27,6 +27,7 @@ public class Runtime {
 		boolean isEmulator,
 		boolean haveSplitApks
 	);
+	public static native void invokeStaticVoidMethod (String assemblyName, String typeName, String methodName);
 	public static native void register (String managedType, java.lang.Class nativeClass, String methods);
 	public static native void registerNatives (java.lang.Class nativeClass);
 	public static native int createNewContext (String[] runtimeApks, String[] assemblies, ClassLoader loader);
