@@ -18,6 +18,18 @@ using namespace xamarin::android;
 using std::operator""sv;
 
 #if defined(DEBUG)
+auto
+AndroidSystem::find_bundled_property (const char *name) noexcept -> BundledProperty*
+{
+	for (BundledProperty *p = bundled_properties; p != nullptr; p = p->next) {
+		if (strcmp (name, p->name) == 0) {
+			return p;
+		}
+	}
+
+	return nullptr;
+}
+
 [[gnu::always_inline]]
 void
 AndroidSystem::add_system_property (const char *name, const char *value) noexcept
@@ -31,7 +43,37 @@ AndroidSystem::add_system_property (const char *name, const char *value) noexcep
 		value = "";
 	}
 
-	bundled_properties[name] = value;
+	size_t value_len = strlen (value);
+	char *new_value = strdup (value);
+	if (new_value == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for a bundled system property value");
+	}
+
+	// Setting the same property again replaces its value, the name is kept.
+	BundledProperty *p = find_bundled_property (name);
+	if (p != nullptr) {
+		std::free (p->value);
+		p->value = new_value;
+		p->value_len = value_len;
+		return;
+	}
+
+	// The name is stored right after the structure, so that a single allocation covers both.
+	// Bundled properties are never removed, they live for as long as the process does.
+	size_t name_len = strlen (name);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (sizeof (BundledProperty), name_len + 1uz);
+	p = static_cast<BundledProperty*> (std::malloc (alloc_size));
+	if (p == nullptr) [[unlikely]] {
+		Helpers::abort_application (LOG_DEFAULT, "Unable to allocate memory for a bundled system property");
+	}
+
+	p->name = reinterpret_cast<char*>(p) + sizeof (BundledProperty);
+	memcpy (p->name, name, name_len);
+	p->name [name_len] = '\0';
+	p->value = new_value;
+	p->value_len = value_len;
+	p->next = bundled_properties;
+	bundled_properties = p;
 }
 
 void
@@ -296,12 +338,10 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 {
 	value_len = 0;
 #if defined (DEBUG)
-	if (!bundled_properties.empty ()) {
-		auto prop_iter = bundled_properties.find (name);
-		if (prop_iter != bundled_properties.end ()) {
-			value_len = prop_iter->second.length ();
-			return prop_iter->second.c_str ();
-		}
+	BundledProperty *p = find_bundled_property (name);
+	if (p != nullptr) {
+		value_len = p->value_len;
+		return p->value;
 	}
 #endif // DEBUG
 
