@@ -80,6 +80,7 @@ steps:
       $env:ANDROID_HOME
       $env:ANDROID_SDK_ROOT
       $env:AndroidSdkDirectory
+      $(if ($env:USERPROFILE) { Join-Path $env:USERPROFILE 'android-toolchain\sdk' })
       $(if ($env:HOME) { Join-Path $env:HOME 'android-toolchain/sdk' })
     ) | Where-Object { $_ -and (Test-Path (Join-Path $_ 'platform-tools')) } | Select-Object -First 1
     if (-not $androidSdk) {
