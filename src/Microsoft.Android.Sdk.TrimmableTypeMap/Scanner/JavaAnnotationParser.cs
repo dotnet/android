@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection.Metadata;
 using System.Text;
-using Microsoft.Android.Build.Tasks;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -200,10 +199,7 @@ sealed class JavaAnnotationParser
 				default:
 					if (char.IsControl (c)) {
 						builder.Append ("\\u");
-						builder.Append (HexUtilities.GetHexValue (c >> 12, upperCase: false));
-						builder.Append (HexUtilities.GetHexValue ((c >> 8) & 0x0f, upperCase: false));
-						builder.Append (HexUtilities.GetHexValue ((c >> 4) & 0x0f, upperCase: false));
-						builder.Append (HexUtilities.GetHexValue (c & 0x0f, upperCase: false));
+						builder.Append (((int)c).ToString ("x4", CultureInfo.InvariantCulture));
 					} else {
 						builder.Append (c);
 					}
