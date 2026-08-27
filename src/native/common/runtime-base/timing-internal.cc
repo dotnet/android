@@ -93,14 +93,17 @@ bool FastTiming::no_events_logged (size_t entries) noexcept
 
 void FastTiming::dump (size_t entries, bool indent, std::function<void(std::string_view const&)> line_writer) noexcept
 {
-	char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+	char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
 
 	line_writer ("Startup costs:"sv);
 	auto log = [&] (TimingEvent const& event) -> uint64_t {
 		size_t message_length;
-		uint64_t ret = format_message (event, message, &message_length, indent);
+		char *message = build_message (event, stack_buffer, sizeof (stack_buffer), &message_length, indent);
 		line_writer (std::string_view { message, message_length });
-		return ret;
+		if (message != stack_buffer) {
+			std::free (message);
+		}
+		return event_duration_ns (event);
 	};
 	log (start_end_event_time);
 	log (get_time_overhead);

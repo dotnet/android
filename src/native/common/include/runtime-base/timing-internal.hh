@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <functional>
 #include <limits>
@@ -25,6 +26,7 @@ using namespace xamarin::android::internal;
 #include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
+#include <shared/cpp-util.hh>
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
@@ -184,15 +186,21 @@ namespace xamarin::android {
 		// The [STAGE/EVENT] format is meant to help the test runner application, so that it can parse logcat without
 		// having to be kept in sync with the actual wording used for the event message.
 		//
-		template<size_t BufferSize> [[gnu::always_inline]]
-		static auto format_message (TimingEvent const& event, char (&message)[BufferSize], size_t *message_length, bool indent = false) noexcept -> uint64_t
+		[[gnu::always_inline]]
+		static auto event_duration_ns (TimingEvent const& event) noexcept -> uint64_t
+		{
+			return static_cast<uint64_t>((event.end - event.start).count ());
+		}
+
+		// Returns the message length excluding NUL, or the negative required capacity including NUL.
+		static auto format_message (TimingEvent const& event, char *buffer, size_t buffer_size, bool indent) noexcept -> ssize_t
 		{
 			using namespace std::literals;
 
 			auto interval = event.end - event.start; // nanoseconds
 			int length = snprintf (
-				message,
-				BufferSize,
+				buffer,
+				buffer_size,
 				"%s%s%u] %s%s; elapsed: %llu:%llu::%llu",
 				indent ? "  " : "",
 				event.before_managed ? "[0/" : "[1/",
@@ -204,25 +212,52 @@ namespace xamarin::android {
 				static_cast<unsigned long long>((interval % 1ms).count ())
 			);
 			if (length < 0) {
-				message [0] = '\0';
-				if (message_length != nullptr) {
-					*message_length = 0uz;
+				if (buffer != nullptr && buffer_size > 0uz) {
+					buffer [0] = '\0';
 				}
-			} else if (message_length != nullptr) {
-				*message_length = static_cast<size_t>(length) >= BufferSize ? BufferSize - 1uz : static_cast<size_t>(length);
+				return 0;
 			}
 
-			return static_cast<uint64_t>(interval.count ());
+			size_t required_capacity = static_cast<size_t>(length) + 1uz;
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+
+			return static_cast<ssize_t>(length);
+		}
+
+		// Formats the event message into `stack_buffer`, falling back to a heap buffer when the message
+		// doesn't fit.  The returned pointer must be passed to `std::free` if it differs from `stack_buffer`.
+		static auto build_message (TimingEvent const& event, char *stack_buffer, size_t stack_buffer_size, size_t *message_length, bool indent) noexcept -> char*
+		{
+			ssize_t result = format_message (event, stack_buffer, stack_buffer_size, indent);
+			if (result < 0) {
+				size_t required_capacity = static_cast<size_t>(-result);
+				char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (heap_buffer != nullptr, "Failed to allocate the timing event message");
+				result = format_message (event, heap_buffer, required_capacity, indent);
+				abort_unless (result >= 0, "Failed to format the timing event message using the required capacity");
+				if (message_length != nullptr) {
+					*message_length = static_cast<size_t>(result);
+				}
+				return heap_buffer;
+			}
+
+			if (message_length != nullptr) {
+				*message_length = static_cast<size_t>(result);
+			}
+			return stack_buffer;
 		}
 
 		[[gnu::always_inline]]
 		static void format_and_log (TimingEvent const& event, bool indent = false) noexcept
 		{
-			// `message` isn't used here, it is passed to `format_and_log` so that the `dump()` function can
-			// be slightly more efficient when dumping the event buffer.
-			char message [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
-			format_message (event, message, nullptr, indent);
+			char stack_buffer [Constants::MAX_LOGCAT_MESSAGE_LENGTH];
+			char *message = build_message (event, stack_buffer, sizeof (stack_buffer), nullptr, indent);
 			log_write (LOG_TIMING, LogLevel::Info, message);
+			if (message != stack_buffer) {
+				std::free (message);
+			}
 		}
 
 		[[gnu::always_inline]]
