@@ -171,9 +171,10 @@ steps:
       }
       $instrumentationMatch = [regex]::Match(
         ($badging -join "`n"),
-        "(?m)^instrumentation: name='(?<name>[^']+)' targetPackage='(?<package>[^']+)'"
+        "(?m)^instrumentation:.*name='(?<name>[^']+)'.*targetPackage='(?<package>[^']+)'"
       )
       if (-not $instrumentationMatch.Success) {
+        $badging | Write-Host
         throw "APK '$apk' does not contain an instrumentation entry."
       }
       $packageName = $instrumentationMatch.Groups['package'].Value
