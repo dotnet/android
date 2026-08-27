@@ -4,13 +4,13 @@
 #include <cstdio>
 #include <limits>
 #include <span>
-#include <string>
 #include <string_view>
 
 #include "../constants.hh"
 #include <shared/log_types.hh>
 #include "../runtime-base/cpu-arch.hh"
 #include <runtime-base/jni-wrappers.hh>
+#include "path-buffer.hh"
 #include "util.hh"
 
 namespace xamarin::android {
@@ -32,11 +32,11 @@ namespace xamarin::android {
 #if !defined (XA_HOST_NATIVEAOT)
 		// This optimizes things a little bit. The array is allocated at build time, so we pay no cost for its
 		// allocation and at run time it allows us to skip dynamic memory allocation.
-		inline static std::array<std::string, 1> single_app_lib_directory{};
-		inline static std::span<std::string> app_lib_directories;
+		inline static const char *single_app_lib_directory [1] { "" };
+		inline static std::span<const char*> app_lib_directories;
 
 		// TODO: override dirs not implemented
-		inline static std::array<std::string, 1> override_dirs{};
+		inline static const char *override_dirs [1] { "" };
 
 		static constexpr std::array<std::string_view, 7> android_abi_names {
 			std::string_view { "unknown" },     // CPU_KIND_UNKNOWN
@@ -73,32 +73,34 @@ namespace xamarin::android {
 			running_in_emulator = yesno;
 		}
 
-#if defined (XA_HOST_NATIVEAOT)
 		static auto get_primary_override_dir () noexcept -> const char*
 		{
-			return primary_override_dir;
+			return primary_override_dir.get ();
 		}
-#else
-		static auto get_primary_override_dir () noexcept -> std::string const&
-		{
-			return primary_override_dir;
-		}
-#endif
 
 		static void set_primary_override_dir (jstring_wrapper& home) noexcept
 		{
-#if defined (XA_HOST_NATIVEAOT)
-			ssize_t result = format_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
-			abort_unless (result >= 0, "Primary override directory path is too long");
-#else
-			primary_override_dir = determine_primary_override_dir (home);
-#endif
+			char stack_buffer [Constants::SENSIBLE_PATH_MAX];
+			char *path = stack_buffer;
+			ssize_t result = format_primary_override_dir (home, path, sizeof (stack_buffer));
+			if (result < 0) {
+				size_t required_capacity = static_cast<size_t>(-result);
+				path = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (path != nullptr, "Failed to allocate primary override directory path");
+				result = format_primary_override_dir (home, path, required_capacity);
+			}
+			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
+
+			primary_override_dir.assign (std::string_view { path, static_cast<size_t>(result) });
+			if (path != stack_buffer) {
+				std::free (path);
+			}
 		}
 
 #if !defined (XA_HOST_NATIVEAOT)
-		static auto get_app_code_cache_dir () noexcept -> std::string const&
+		static auto get_app_code_cache_dir () noexcept -> const char*
 		{
-			return app_code_cache_dir;
+			return app_code_cache_dir.get ();
 		}
 
 		static void set_app_code_cache_dir (jstring_wrapper& code_cache_dir) noexcept
@@ -106,12 +108,12 @@ namespace xamarin::android {
 			app_code_cache_dir.assign (code_cache_dir.get_cstr ());
 		}
 
-		static auto get_native_libraries_dir () noexcept -> std::string const&
+		static auto get_native_libraries_dir () noexcept -> const char*
 		{
-			return native_libraries_dir;
+			return native_libraries_dir.get ();
 		}
 
-		static void create_update_dir (std::string const& override_dir) noexcept
+		static void create_update_dir (const char *override_dir) noexcept
 		{
 			if constexpr (Constants::is_release_build) {
 				/*
@@ -129,8 +131,8 @@ namespace xamarin::android {
 				}
 			}
 
-			log_debugf (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir.c_str ());
-			Util::create_public_directory (override_dir.c_str ());
+			log_debugf (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
+			Util::create_public_directory (override_dir);
 		}
 #endif
 
@@ -158,9 +160,9 @@ namespace xamarin::android {
 		static auto load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 
 	private:
-		static auto format_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t;
+		static auto format_full_dso_path (std::string_view const& base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t;
 
-		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size) noexcept -> char*
+		static auto get_full_dso_path (std::string_view const& base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size) noexcept -> char*
 		{
 			ssize_t result = format_full_dso_path (base_dir, dso_path, stack_buffer, stack_buffer_size);
 			if (result >= 0) {
@@ -226,38 +228,14 @@ namespace xamarin::android {
 			return static_cast<ssize_t>(length);
 		}
 
-#if !defined (XA_HOST_NATIVEAOT)
-		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
-		{
-			char stack_buffer [Constants::SENSIBLE_PATH_MAX];
-			size_t length;
-			char *name = Util::format_with_retry (
-				stack_buffer,
-				sizeof (stack_buffer),
-				[&home](char *buffer, size_t buffer_size) noexcept {
-					return format_primary_override_dir (home, buffer, buffer_size);
-				},
-				&length
-			);
-
-			std::string path { name, length };
-			if (name != stack_buffer) {
-				std::free (name);
-			}
-			return path;
-		}
-#endif
-
 	private:
 		static inline long max_gref_count = 0;
 		static inline bool running_in_emulator = false;
 		static inline bool embedded_dso_mode_enabled = false;
-#if defined (XA_HOST_NATIVEAOT)
-		static inline char primary_override_dir[Constants::SENSIBLE_PATH_MAX] {};
-#else
-		static inline std::string primary_override_dir;
-		static inline std::string native_libraries_dir;
-		static inline std::string app_code_cache_dir;
+		static inline path_buffer<Constants::SENSIBLE_PATH_MAX> primary_override_dir {};
+#if !defined (XA_HOST_NATIVEAOT)
+		static inline path_buffer<Constants::SENSIBLE_PATH_MAX> native_libraries_dir {};
+		static inline path_buffer<Constants::SENSIBLE_PATH_MAX> app_code_cache_dir {};
 
 #if defined (DEBUG)
 		static inline BundledProperty *bundled_properties = nullptr;
