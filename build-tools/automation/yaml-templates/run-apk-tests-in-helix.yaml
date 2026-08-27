@@ -132,7 +132,8 @@ steps:
   - pwsh: |
       $apk = '$(System.DefaultWorkingDirectory)\${{ testCase.artifactSource }}'
       Remove-Item -LiteralPath $apk -Force -ErrorAction Ignore
-      $manifest = '$(Build.StagingDirectory)\apk-tests-helix\manifests\${{ testCase.name }}.xml'
+      $projectDirectory = Split-Path -Parent '$(System.DefaultWorkingDirectory)\${{ testCase.project }}'
+      $manifest = Join-Path $projectDirectory 'obj\Helix\${{ testCase.name }}\AndroidManifest.xml'
       New-Item -ItemType Directory -Force -Path (Split-Path -Parent $manifest) | Out-Null
       @'
       <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${{ testCase.packageName }}">
@@ -150,7 +151,7 @@ steps:
         -t:SignAndroidPackage
         -c ${{ testCase.configuration }}
         -p:AndroidPackageFormat=apk
-        -p:AndroidManifest="$(Build.StagingDirectory)/apk-tests-helix/manifests/${{ testCase.name }}.xml"
+        -p:AndroidManifest="obj/Helix/${{ testCase.name }}/AndroidManifest.xml"
         -p:AndroidSdkDirectory="$(ApkTestsAndroidSdkDirectory)"
         -p:JavaSdkDirectory="$(JAVA_HOME)"
         ${{ testCase.extraBuildArguments }}
