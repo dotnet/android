@@ -6,7 +6,6 @@
     <HelixType Condition="'$(HelixType)' == ''">tests/android/apk-tests/</HelixType>
     <HelixTestRunName Condition="'$(HelixTestRunName)' == ''">Android APK Tests - Helix</HelixTestRunName>
     <ApkTestsHelixWorkItemTimeout Condition="'$(ApkTestsHelixWorkItemTimeout)' == ''">00:30:00</ApkTestsHelixWorkItemTimeout>
-    <MaxRetryCount Condition="'$(MaxRetryCount)' == ''">1</MaxRetryCount>
   </PropertyGroup>
 
   <Import Project="$(ApkTestsHelixItemsProps)" Condition="Exists('$(ApkTestsHelixItemsProps)')" />

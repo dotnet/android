@@ -21,6 +21,6 @@ because direct APK installation cannot reproduce the existing fast-deployment st
 that deployment coverage remains in the original lane.
 
 The prototype uses `windows.11.amd64.android.open`, following the MAUI R2R Android
-Helix implementation, and retries a failed work item once to tolerate unhealthy
-physical-device assignments. The existing macOS emulator lanes remain enabled for
-same-build inventory and outcome comparison.
+Helix implementation. The runner waits for a delayed device assignment and retries
+instrumentation once while retaining both attempt TRXs. The existing macOS emulator
+lanes remain enabled for same-build inventory and outcome comparison.

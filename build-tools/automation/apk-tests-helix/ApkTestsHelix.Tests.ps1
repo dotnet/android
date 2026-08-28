@@ -50,7 +50,9 @@ try {
 	$script = Get-Content -LiteralPath (Join-Path $workItem 'run-apk-tests.ps1') -Raw
 	if (-not $script.Contains('$packageName = ''example.tests''') -or
 		-not $script.Contains('$instrumentation = ''example.tests.TestInstrumentation''') -or
-		-not $script.Contains('INSTRUMENTATION_RESULT: resultsPath=')) {
+		-not $script.Contains('INSTRUMENTATION_RESULT: resultsPath=') -or
+		-not $script.Contains('$attempt -le 12') -or
+		-not $script.Contains('$attempt -le 2')) {
 		throw 'Generated APK test script is missing required instrumentation values.'
 	}
 	if (-not (Test-Path -LiteralPath (Join-Path $workItem 'platform-tools\adb.exe') -PathType Leaf)) {

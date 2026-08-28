@@ -95,9 +95,28 @@ New-Item -ItemType Directory -Force -Path $upload | Out-Null
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'case.json') -Destination (Join-Path $upload 'case.json')
 
 try {
-	& $adb devices -l | Tee-Object -FilePath (Join-Path $upload 'adb-devices.log')
-	if ($LASTEXITCODE -ne 0) {
-		throw "adb devices failed with exit code $LASTEXITCODE."
+	$deviceLog = Join-Path $upload 'adb-devices.log'
+	$deviceReady = $false
+	for ($attempt = 1; $attempt -le 12; $attempt++) {
+		$deviceOutput = @(& $adb devices -l 2>&1)
+		"===== attempt $attempt =====" | Add-Content -LiteralPath $deviceLog
+		$deviceOutput | Tee-Object -FilePath $deviceLog -Append
+		if ($LASTEXITCODE -ne 0) {
+			throw "adb devices failed with exit code $LASTEXITCODE."
+		}
+		$onlineDevices = @($deviceOutput | Where-Object { $_ -match '\sdevice(?:\s|$)' })
+		if ($onlineDevices.Count -eq 1) {
+			$deviceReady = $true
+			break
+		}
+		if ($onlineDevices.Count -gt 1) {
+			throw "Expected one Android device, found $($onlineDevices.Count)."
+		}
+		& $adb kill-server *> $null
+		Start-Sleep -Seconds 10
+	}
+	if (-not $deviceReady) {
+		throw 'No Android device became available within two minutes.'
 	}
 
 	& $adb uninstall $packageName *> $null
@@ -125,35 +144,54 @@ try {
 	& $adb shell getprop | Set-Content -LiteralPath (Join-Path $upload 'getprop.log')
 	& $adb shell dumpsys package $packageName | Set-Content -LiteralPath (Join-Path $upload 'package-state.log')
 
-	& $adb logcat -c
-	$instrumentationOutput = @(& $adb shell am instrument -w -r "$packageName/$instrumentation" 2>&1)
-	$instrumentationOutput | Tee-Object -FilePath (Join-Path $upload 'console.log')
-	if ($LASTEXITCODE -ne 0) {
-		throw "adb instrument failed with exit code $LASTEXITCODE."
-	}
+	$consoleLog = Join-Path $upload 'console.log'
+	for ($attempt = 1; $attempt -le 2; $attempt++) {
+		& $adb logcat -c
+		$instrumentationOutput = @(& $adb shell am instrument -w -r "$packageName/$instrumentation" 2>&1)
+		"===== instrumentation attempt $attempt =====" | Add-Content -LiteralPath $consoleLog
+		$instrumentationOutput | Tee-Object -FilePath $consoleLog -Append
+		if ($LASTEXITCODE -ne 0) {
+			if ($attempt -lt 2) {
+				continue
+			}
+			throw "adb instrument failed with exit code $LASTEXITCODE."
+		}
 
-	$resultPathMatch = [regex]::Match(($instrumentationOutput -join "`n"), '(?m)^INSTRUMENTATION_RESULT: resultsPath=(?<path>.+)$')
-	if (-not $resultPathMatch.Success) {
-		throw 'Instrumentation did not report a TRX result path.'
-	}
+		$resultPathMatch = [regex]::Match(($instrumentationOutput -join "`n"), '(?m)^INSTRUMENTATION_RESULT: resultsPath=(?<path>.+)$')
+		if (-not $resultPathMatch.Success) {
+			if ($attempt -lt 2) {
+				continue
+			}
+			throw 'Instrumentation did not report a TRX result path.'
+		}
 
-	$deviceResultsPath = $resultPathMatch.Groups['path'].Value.Trim()
-	$localResultsPath = Join-Path $upload 'results.trx'
-	& $adb pull $deviceResultsPath $localResultsPath
-	if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $localResultsPath -PathType Leaf)) {
-		throw "Failed to pull TRX from '$deviceResultsPath'."
-	}
+		$deviceResultsPath = $resultPathMatch.Groups['path'].Value.Trim()
+		$attemptResultsPath = Join-Path $upload "attempt-$attempt.trx"
+		& $adb pull $deviceResultsPath $attemptResultsPath
+		if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $attemptResultsPath -PathType Leaf)) {
+			if ($attempt -lt 2) {
+				continue
+			}
+			throw "Failed to pull TRX from '$deviceResultsPath'."
+		}
 
-	[xml] $trx = Get-Content -LiteralPath $localResultsPath -Raw
-	$failed = @($trx.GetElementsByTagName('UnitTestResult') | Where-Object { $_.GetAttribute('outcome') -eq 'Failed' })
-	if ($failed.Count -gt 0) {
-		throw "$($failed.Count) on-device test(s) failed."
+		[xml] $trx = Get-Content -LiteralPath $attemptResultsPath -Raw
+		$failed = @($trx.GetElementsByTagName('UnitTestResult') | Where-Object { $_.GetAttribute('outcome') -eq 'Failed' })
+		if ($failed.Count -eq 0) {
+			Copy-Item -LiteralPath $attemptResultsPath -Destination (Join-Path $upload 'results.trx')
+			$exitCode = 0
+			break
+		}
+		if ($attempt -eq 2) {
+			Copy-Item -LiteralPath $attemptResultsPath -Destination (Join-Path $upload 'results.trx')
+			throw "$($failed.Count) on-device test(s) failed after two attempts."
+		}
 	}
-
-	$exitCode = 0
 } catch {
 	"ERROR: $($_.Exception.Message)" | Tee-Object -FilePath (Join-Path $upload 'work-item-error.log') -Append
 } finally {
+	$previousErrorActionPreference = $ErrorActionPreference
+	$ErrorActionPreference = 'Continue'
 	@(
 		'===== get-state ====='
 		(& $adb get-state 2>&1)
@@ -168,6 +206,7 @@ try {
 	) | Set-Content -LiteralPath (Join-Path $upload 'device-state.log')
 	& $adb logcat -d -b all *> (Join-Path $upload 'logcat.log')
 	& $adb uninstall $packageName *> $null
+	$ErrorActionPreference = $previousErrorActionPreference
 }
 
 exit $exitCode
