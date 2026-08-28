@@ -174,15 +174,13 @@ auto TypeMapper::index_to_name (ssize_t idx, const char* typeName, const TypeMap
 auto TypeMapper::managed_to_java_debug (const char *typeName, const char *assemblyFullName) noexcept -> const char*
 {
 	char stack_buffer [Constants::SENSIBLE_PATH_MAX];
-	char *full_type_name = stack_buffer;
-	ssize_t result = format_managed_type_name (typeName, assemblyFullName, full_type_name, sizeof (stack_buffer));
-	if (result < 0) {
-		size_t required_capacity = static_cast<size_t>(-result);
-		full_type_name = static_cast<char*> (std::malloc (required_capacity));
-		abort_unless (full_type_name != nullptr, "Failed to allocate managed type name");
-		result = format_managed_type_name (typeName, assemblyFullName, full_type_name, required_capacity);
-	}
-	abort_unless (result >= 0, "Failed to format managed type name using the required capacity");
+	char *full_type_name = Util::format_with_retry (
+		stack_buffer,
+		sizeof (stack_buffer),
+		[typeName, assemblyFullName](char *buffer, size_t buffer_size) noexcept {
+			return format_managed_type_name (typeName, assemblyFullName, buffer, buffer_size);
+		}
+	);
 
 	ssize_t idx = find_index_by_hash (full_type_name, type_map.managed_to_java, type_map_managed_type_names, MANAGED, JAVA);
 	const char *mapped_name = index_to_name (idx, full_type_name, type_map.managed_to_java, type_map_java_type_names, MANAGED, JAVA);

@@ -201,17 +201,17 @@ namespace xamarin::android {
 		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
 		{
 			char stack_buffer [Constants::SENSIBLE_PATH_MAX];
-			char *name = stack_buffer;
-			ssize_t result = format_primary_override_dir (home, name, sizeof (stack_buffer));
-			if (result < 0) {
-				size_t required_capacity = static_cast<size_t>(-result);
-				name = static_cast<char*> (std::malloc (required_capacity));
-				abort_unless (name != nullptr, "Failed to allocate primary override directory path");
-				result = format_primary_override_dir (home, name, required_capacity);
-			}
-			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
+			size_t length;
+			char *name = Util::format_with_retry (
+				stack_buffer,
+				sizeof (stack_buffer),
+				[&home](char *buffer, size_t buffer_size) noexcept {
+					return format_primary_override_dir (home, buffer, buffer_size);
+				},
+				&length
+			);
 
-			std::string path { name, static_cast<size_t>(result) };
+			std::string path { name, length };
 			if (name != stack_buffer) {
 				std::free (name);
 			}
