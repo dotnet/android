@@ -26,6 +26,7 @@ trigger:
 # Azure Repos PR validation is configured through branch policies, not YAML.
 pr: none
 
+# Repository resources - checkout macios-devtools to force multi-repo checkout behavior
 # NOTE: `endpoint` values below are GitHub service connections in the
 # dnceng/internal project. Confirm the connection name(s) available there.
 resources:
